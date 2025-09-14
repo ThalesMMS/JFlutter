@@ -1,0 +1,63 @@
+### Flutter app .gitignore
+
+# Dart/Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub/
+build/
+
+# IntelliJ / VS Code / macOS cruft
+.idea/
+.vscode/
+.DS_Store
+*.iml
+
+# Coverage
+coverage/
+
+# Android
+**/android/**/local.properties
+**/android/**/key.properties
+**/android/**/GeneratedPluginRegistrant.java
+**/android/**/captures/
+.gradle/
+*.keystore
+*.jks
+
+# iOS
+**/ios/**/Pods/
+**/ios/**/.symlinks/
+**/ios/**/xcuserdata/
+**/ios/**/DerivedData/
+**/ios/.generated/
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/ephemeral
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.*
+
+# macOS
+**/macos/Flutter/GeneratedPluginRegistrant.swift
+**/macos/Flutter/ephemeral
+**/macos/**/xcuserdata/
+**/macos/Pods/
+
+# Windows/Linux generated sources
+**/windows/flutter/generated_plugin_registrant.*
+**/windows/flutter/generated_plugins.cmake
+**/linux/flutter/generated_plugin_registrant.*
+**/linux/flutter/generated_plugins.cmake
+
+# Web
+**/web/.dart_tool/
+
+# Logs/temp
+*.log
+*.swp
+*.tmp

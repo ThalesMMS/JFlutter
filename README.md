@@ -1,135 +1,144 @@
-# JFlutter
+# JFlutter (Work in Progress)
 
-Um simulador interativo de autômatos e gramáticas desenvolvido em Flutter, derivado do JFLAP original. Oferece uma interface moderna e responsiva para trabalhar com autômatos finitos, gramáticas livres de contexto, máquinas de Turing, parsing LL/LR e muito mais.
+An interactive automata and grammars simulator developed in Flutter, derived from the original JFLAP. Offers a modern and responsive interface for working with finite automata, context-free grammars, Turing machines, LL/LR parsing, and much more.
 
-## 🚀 Funcionalidades Implementadas
+## 🚀 Implemented Features
 
-### Autômatos Finitos
-- **AFD (Autômatos Finitos Determinísticos)**: Criação, edição e simulação
-- **AFN (Autômatos Finitos Não-determinísticos)**: Suporte a transições lambda
-- **Conversões**: AFN → AFD, AFD → ER, ER → AFN
-- **Operações Básicas**: União, interseção, complemento, produto, reverso
-- **Operações Avançadas**: Homomorfismo, quociente à direita/esquerda, diferença
-- **Minimização**: Algoritmo de minimização de AFD com interface interativa
-- **Verificação de equivalência**: Comparação entre autômatos com contraexemplos
-- **Fechos**: Prefixos, sufixos e operações avançadas
-- **Completar AFD**: Adição automática de estado de armadilha
-- **ε-fecho**: Cálculo de fecho epsilon para AFNλ
+### Finite Automata
 
-### Gramáticas e Parsing
-- **Gramáticas Regulares**: Conversão GR ↔ AF
-- **Gramáticas Livres de Contexto**: Edição, análise e validação
-- **Parsing LL(1)**: Análise descendente com tabelas de parsing interativas
-- **Parsing LR(1)**: Análise ascendente com autômatos LR
-- **Forma Normal de Chomsky**: Conversão para CNF
-- **Algoritmo CYK**: Parsing para gramáticas em CNF
-- **Lema do Bombeamento**: Demonstração interativa para linguagens regulares e context-free
+- **DFA (Deterministic Finite Automata)**: Creation, editing, and simulation
+- **NFA (Nondeterministic Finite Automata)**: Support for lambda transitions
+- **Conversions**: NFA → DFA, DFA → RE, RE → NFA
+- **Basic Operations**: Union, intersection, complement, product, reverse
+- **Advanced Operations**: Homomorphism, right/left quotient, difference
+- **Minimization**: DFA minimization algorithm with interactive interface
+- **Equivalence checking**: Comparison between automata with counterexamples
+- **Closures**: Prefixes, suffixes, and advanced operations
+- **Complete DFA**: Automatic addition of trap state
+- **ε-closure**: Epsilon closure calculation for NFAλ
 
-### Autômatos Avançados
-- **PDA (Autômatos com Pilha)**: Simulação, validação e conversão para CFG
-- **Máquinas de Turing**: Suporte multi-fita (1-5 fitas) com simulação visual
-- **Máquinas de Mealy/Moore**: Autômatos com saída e conversão entre tipos
-- **Conversões**: Mealy ↔ Moore, TM → CSG, PDA → CFG
+### Grammars and Parsing
 
-### Interface e Visualização
-- **Canvas Interativo**: Edição visual com gestos touch e multi-seleção
-  - Multi-seleção com box-select e Shift-click
-  - Movimento conjunto de estados selecionados
-  - Edição inline de rótulos de transições
-  - Múltiplas arestas curvas entre mesmo par de estados
-  - Loops com curvatura ajustável e hit-test preciso
-  - Pinch-to-zoom com controles de zoom dedicados
-  - Pan e drag para navegação no canvas
-- **Simulação Passo-a-passo**: Visualização detalhada de execução
-  - Controles de execução (play/pause/step/reset)
-  - Controle de velocidade de execução
-  - Log de algoritmos em tempo real
-  - Visualização de estados ativos
-- **Layout Automático**: Presets de posicionamento de estados
-  - Compacto, Balanceado, Espalhar, Hierárquico, Automático
-  - Auto-centro e centralização manual
-  - Posicionamento inteligente com detecção de sobreposição
-- **Interface Responsiva**: Otimizada para mobile, tablet e desktop
-  - Navegação híbrida (tabs desktop / bottom nav mobile)
-  - Breakpoint responsivo em 800px
-  - Tabelas responsivas com scroll horizontal/vertical
-  - Menu contextual mobile com ações rápidas
-- **Sistema de Ajuda**: Tooltips e guias contextuais integrados
-  - Ajuda contextual por hover/toque
-  - Painel de ajuda completo
-  - Conteúdo específico para cada funcionalidade
-- **Atalhos de Teclado**: Sistema completo de atalhos
-  - Arquivo (Ctrl+N, Ctrl+O, Ctrl+S)
-  - Edição (Ctrl+Z, Ctrl+C, Ctrl+V)
-  - Navegação (setas, Alt+1/2/3)
-  - Simulação (Ctrl+R, F9, F10)
-  - Operações (Ctrl+M, Ctrl+F, Ctrl+G)
-- **Exportação Avançada**: Múltiplos formatos de saída
-  - PNG de alta qualidade com captura de canvas
-  - SVG vetorial para gráficos escaláveis
-  - LaTeX com TikZ para documentos acadêmicos
-  - LaTeX CFG para gramáticas livres de contexto
-  - Suporte mobile com compartilhamento de arquivos
-- **Importação JFLAP**: Suporte completo a arquivos .jff
-  - Parser XML robusto para todos os tipos de autômatos
-  - Validação completa com mensagens de erro detalhadas
-  - Compatibilidade total com formatos JFLAP existentes
+- **Regular Grammars**: RG ↔ FA conversion
+- **Context-Free Grammars**: Editing, analysis, and validation
+- **LL(1) Parsing**: Top-down analysis with interactive parsing tables
+- **LR(1) Parsing**: Bottom-up analysis with LR automata
+- **Chomsky Normal Form**: Conversion to CNF
+- **CYK Algorithm**: Parsing for grammars in CNF
+- **Pumping Lemma**: Interactive demonstration for regular and context-free languages
 
-### Ferramentas Educativas
-- **Interface de Minimização Interativa**: Baseada no JFLAP
-  - Árvore de minimização visual com nós clicáveis
-  - Expansão passo-a-passo de grupos distinguíveis
-  - Verificação interativa de decomposições
-  - Aplicação direta do resultado minimizado
-- **Interface do Lema do Bombeamento**: Demonstração educativa
-  - Lemas regulares e context-free com decomposições apropriadas
-  - Animação passo-a-passo do processo de bombeamento
-  - Teste de strings com parâmetros configuráveis
-  - Histórico de tentativas para acompanhamento do aprendizado
-- **Biblioteca de Exemplos Educativos**: Coleção de exemplos para aprendizado
-  - Categorias organizadas por tipo (DFA, NFA, Gramática, CFG, PDA, Turing)
-  - Sistema de busca e filtros por categoria
-  - Níveis de dificuldade (Fácil, Médio, Difícil)
-  - Conceitos e objetivos de aprendizado para cada exemplo
-  - Carregamento direto no canvas para experimentação
-- **Verificação de Equivalência Avançada**: Ferramenta educativa
-  - Teste de palavras em autômatos
-  - Verificação completa de equivalência
-  - Exibição de contraexemplos quando não equivalentes
-  - Múltiplos algoritmos de verificação
-  - Detalhes técnicos expandíveis
+### Advanced Automata
 
-### Funcionalidades de Persistência
-- **Armazenamento Local**: Persistência automática com SharedPreferences
-- **Serialização JSON**: Compatibilidade com versão web original
-- **Área de Transferência**: Cópia/cola de autômatos e gramáticas
-- **Suporte a Clipboard**: Cópia de resultados (regex, gramáticas)
+- **PDA (Pushdown Automata)**: Simulation, validation, and conversion to CFG
+- **Turing Machines**: Multi-tape support (1-5 tapes) with visual simulation
+- **Mealy/Moore Machines**: Output automata and conversion between types
+- **Conversions**: Mealy ↔ Moore, TM → CSG, PDA → CFG
 
-## 📱 Plataformas Suportadas
+### Interface and Visualization
+
+- **Interactive Canvas**: Visual editing with touch gestures and multi-selection
+  - Multi-selection with box-select and Shift-click
+  - Joint movement of selected states
+  - Inline editing of transition labels
+  - Multiple curved edges between same pair of states
+  - Loops with adjustable curvature and precise hit-test
+  - Pinch-to-zoom with dedicated zoom controls
+  - Pan and drag for canvas navigation
+- **Step-by-step Simulation**: Detailed execution visualization
+  - Execution controls (play/pause/step/reset)
+  - Execution speed control
+  - Real-time algorithm logging
+  - Active states visualization
+- **Auto Layout**: State positioning presets
+  - Compact, Balanced, Spread, Hierarchical, Automatic
+  - Auto-center and manual centering
+  - Smart positioning with overlap detection
+- **Responsive Interface**: Optimized for mobile, tablet, and desktop
+  - Hybrid navigation (desktop tabs / mobile bottom nav)
+  - 800px responsive breakpoint
+  - Responsive tables with horizontal/vertical scroll
+  - Mobile context menu with quick actions
+- **Help System**: Integrated contextual tooltips and guides
+  - Contextual help on hover/touch
+  - Complete help panel
+  - Feature-specific content
+- **Keyboard Shortcuts**: Complete shortcut system
+  - File (Ctrl+N, Ctrl+O, Ctrl+S)
+  - Edit (Ctrl+Z, Ctrl+C, Ctrl+V)
+  - Navigation (arrows, Alt+1/2/3)
+  - Simulation (Ctrl+R, F9, F10)
+  - Operations (Ctrl+M, Ctrl+F, Ctrl+G)
+- **Advanced Export**: Multiple output formats
+  - High-quality PNG with canvas capture
+  - Vector SVG for scalable graphics
+  - LaTeX with TikZ for academic documents
+  - LaTeX CFG for context-free grammars
+  - Mobile support with file sharing
+- **JFLAP Import**: Complete support for .jff files
+  - Robust XML parser for all automata types
+  - Complete validation with detailed error messages
+  - Full compatibility with existing JFLAP formats
+
+### Educational Tools
+
+- **Interactive Minimization Interface**: Based on JFLAP
+  - Visual minimization tree with clickable nodes
+  - Step-by-step expansion of distinguishable groups
+  - Interactive verification of decompositions
+  - Direct application of minimized result
+- **Pumping Lemma Interface**: Educational demonstration
+  - Regular and context-free lemmas with appropriate decompositions
+  - Step-by-step animation of pumping process
+  - String testing with configurable parameters
+  - Attempt history for learning tracking
+- **Educational Examples Library**: Collection of learning examples
+  - Categories organized by type (DFA, NFA, Grammar, CFG, PDA, Turing)
+  - Search system and category filters
+  - Difficulty levels (Easy, Medium, Hard)
+  - Learning concepts and objectives for each example
+  - Direct loading to canvas for experimentation
+- **Advanced Equivalence Checking**: Educational tool
+  - Word testing in automata
+  - Complete equivalence verification
+  - Counterexample display when not equivalent
+  - Multiple verification algorithms
+  - Expandable technical details
+
+### Persistence Features
+
+- **Local Storage**: Automatic persistence with SharedPreferences
+- **JSON Serialization**: Compatibility with original web version
+- **Clipboard**: Copy/paste of automata and grammars
+- **Clipboard Support**: Copy results (regex, grammars)
+
+## 📱 Supported Platforms
 
 - **Web**: Chrome, Firefox, Safari, Edge
-- **Mobile**: iOS e Android
-- **Desktop**: Windows, macOS e Linux
+- **Mobile**: iOS and Android
+- **Desktop**: Windows, macOS, and Linux
 
-## 🛠️ Instalação e Execução
+## 🛠️ Installation and Execution
 
-### Pré-requisitos
-- Flutter SDK (versão 3.9.2 ou superior)
-- Dart SDK (incluído com Flutter)
+### Prerequisites
 
-### Instalação
+- Flutter SDK (version 3.9.2 or higher)
+- Dart SDK (included with Flutter)
+
+### Installation
+
 ```bash
-# Clone o repositório
+# Clone the repository
 git clone https://github.com/ThalesMMS/jflutter.git
 cd jflutter
 
-# Instale as dependências
+# Install dependencies
 flutter pub get
 ```
 
-### Execução
+### Execution
+
 ```bash
-# Web (recomendado para desenvolvimento)
+# Web (recommended for development)
 flutter run -d chrome
 
 # Mobile
@@ -142,7 +151,8 @@ flutter run -d windows  # Windows
 flutter run -d linux    # Linux
 ```
 
-### Build para Produção
+### Production Build
+
 ```bash
 # Web
 flutter build web
@@ -157,123 +167,130 @@ flutter build windows   # Windows
 flutter build linux     # Linux
 ```
 
-## 🧪 Testes
+## 🧪 Testing
 
 ```bash
-# Executar todos os testes
+# Run all tests
 flutter test -r expanded
 
-# Testes específicos por categoria
-flutter test test/core_algorithms_test.dart        # Algoritmos fundamentais
-flutter test test/examples_roundtrip_test.dart     # Compatibilidade com versão web
-flutter test test/ll_lr_parsing_test.dart          # Parsing LL/LR
-flutter test test/dfa_minimization_test.dart       # Minimização de AFD
-flutter test test/nfa_to_dfa_test.dart             # Conversões NFA→DFA
-flutter test test/regex_to_nfa_test.dart           # Expressões regulares
-flutter test test/nfa_reversal_test.dart           # Operações avançadas
+# Specific tests by category
+flutter test test/core_algorithms_test.dart        # Fundamental algorithms
+flutter test test/examples_roundtrip_test.dart     # Web version compatibility
+flutter test test/ll_lr_parsing_test.dart          # LL/LR parsing
+flutter test test/dfa_minimization_test.dart       # DFA minimization
+flutter test test/nfa_to_dfa_test.dart             # NFA→DFA conversions
+flutter test test/regex_to_nfa_test.dart           # Regular expressions
+flutter test test/nfa_reversal_test.dart           # Advanced operations
 
-# Análise estática
+# Static analysis
 flutter analyze
 ```
 
-## 📚 Como Usar
+## 📚 How to Use
 
-### Criando um Autômato
-1. Abra a aba "AFD" ou "AFN"
-2. Defina o alfabeto na barra lateral
-3. Adicione estados clicando no canvas (duplo-clique para renomear)
-4. Conecte estados arrastando entre eles
-5. Marque estados iniciais e finais usando os botões na barra lateral
-6. Use os presets de layout para organizar automaticamente
+### Creating an Automaton
 
-### Simulando uma Palavra
-1. Digite a palavra no campo de entrada
-2. Clique em "Simular" para execução automática
-3. Use "Passo-a-passo" para visualização detalhada
-4. Visualize o log de execução no painel de algoritmos
+1. Open the “DFA” or “NFA” tab
+1. Define the alphabet in the sidebar
+1. Add states by clicking on the canvas (double-click to rename)
+1. Connect states by dragging between them
+1. Mark initial and final states using sidebar buttons
+1. Use layout presets to automatically organize
 
-### Análise de Gramáticas
-1. Vá para a aba "CFG" para gramáticas livres de contexto
-2. Digite uma gramática ou use os exemplos pré-definidos
-3. Use a aba "LL/LR" para análise de parsing
-4. Visualize as tabelas LL(1) e LR(1) interativas
-5. Teste o parsing com strings de entrada
+### Simulating a Word
 
-### Autômatos Avançados
-1. **PDA**: Use a aba "PDA" para autômatos com pilha
-2. **Turing**: Use a aba "Turing" para máquinas multi-fita
-3. **Mealy/Moore**: Use a aba "Mealy/Moore" para autômatos com saída
+1. Type the word in the input field
+1. Click “Simulate” for automatic execution
+1. Use “Step-by-step” for detailed visualization
+1. View the execution log in the algorithms panel
 
-### Ferramentas Avançadas
-1. **Minimização Interativa**: Use a interface de minimização com árvore visual
-2. **Lema do Bombeamento**: Demonstração interativa na aba CFG
-3. **Verificação de Equivalência**: Compare autômatos com contraexemplos
-4. **Biblioteca de Exemplos**: Explore exemplos educativos por categoria
-5. **Exportação Avançada**: Exporte para PNG, SVG, LaTeX ou LaTeX CFG
-6. **Importação JFLAP**: Carregue arquivos .jff do JFLAP original
-7. **Atalhos de Teclado**: Use atalhos para operações rápidas
-8. **Sistema de Ajuda**: Acesse ajuda contextual em qualquer momento
+### Grammar Analysis
 
-### Recursos Mobile
-1. **Gestos Touch**: Pinch-to-zoom, pan, duplo-toque para adicionar estados
-2. **Menu Contextual**: Pressionar e segurar para ações rápidas
-3. **Navegação Mobile**: Bottom navigation bar para mobile
-4. **Layout Responsivo**: Interface que se adapta ao tamanho da tela
-5. **Compartilhamento**: Exporte e compartilhe arquivos facilmente
+1. Go to the “CFG” tab for context-free grammars
+1. Type a grammar or use predefined examples
+1. Use the “LL/LR” tab for parsing analysis
+1. View interactive LL(1) and LR(1) tables
+1. Test parsing with input strings
 
-## 🏗️ Arquitetura
+### Advanced Automata
 
-### Estrutura do Projeto
+1. **PDA**: Use the “PDA” tab for pushdown automata
+1. **Turing**: Use the “Turing” tab for multi-tape machines
+1. **Mealy/Moore**: Use the “Mealy/Moore” tab for output automata
+
+### Advanced Tools
+
+1. **Interactive Minimization**: Use minimization interface with visual tree
+1. **Pumping Lemma**: Interactive demonstration in CFG tab
+1. **Equivalence Checking**: Compare automata with counterexamples
+1. **Examples Library**: Explore educational examples by category
+1. **Advanced Export**: Export to PNG, SVG, LaTeX, or LaTeX CFG
+1. **JFLAP Import**: Load .jff files from original JFLAP
+1. **Keyboard Shortcuts**: Use shortcuts for quick operations
+1. **Help System**: Access contextual help anytime
+
+### Mobile Features
+
+1. **Touch Gestures**: Pinch-to-zoom, pan, double-tap to add states
+1. **Context Menu**: Long press for quick actions
+1. **Mobile Navigation**: Bottom navigation bar for mobile
+1. **Responsive Layout**: Interface adapts to screen size
+1. **Sharing**: Export and share files easily
+
+## 🏗️ Architecture
+
+### Project Structure
+
 ```
 lib/
-├── core/                           # Algoritmos e modelos de dados
-│   ├── automaton.dart              # Modelo base de autômatos
-│   ├── algorithms.dart             # Algoritmos fundamentais
-│   ├── automaton_analysis.dart     # Análise de autômatos
-│   ├── cfg.dart                    # Gramáticas livres de contexto
-│   ├── cfg_algorithms.dart         # Algoritmos para CFG
-│   ├── dfa_algorithms.dart         # Algoritmos específicos para DFA
-│   ├── equivalence_checking.dart   # Verificação de equivalência
-│   ├── grammar.dart                # Gramáticas regulares
-│   ├── grammar_transformations.dart # Transformações de gramáticas
-│   ├── layout_algorithms.dart      # Algoritmos de layout
-│   ├── ll_parsing.dart             # Parsing LL(1)
-│   ├── lr_parsing.dart             # Parsing LR(1)
-│   ├── mealy_moore.dart            # Autômatos com saída
-│   ├── mealy_moore_algorithms.dart # Algoritmos Mealy/Moore
-│   ├── nfa_algorithms.dart         # Algoritmos específicos para NFA
-│   ├── pda.dart                    # Autômatos com pilha
-│   ├── pda_algorithms.dart         # Algoritmos para PDA
-│   ├── pumping_lemmas.dart         # Lema do bombeamento
-│   ├── regex.dart                  # Expressões regulares
-│   ├── run.dart                    # Simulação de autômatos
-│   ├── turing.dart                 # Máquinas de Turing
-│   ├── turing_algorithms.dart      # Algoritmos para Turing
-│   ├── algo_log.dart               # Log de algoritmos
-│   ├── error_handler.dart          # Tratamento de erros
-│   ├── result.dart                 # Resultados de operações
-│   ├── entities/                   # Entidades de domínio
+├── core/                           # Algorithms and data models
+│   ├── automaton.dart              # Base automaton model
+│   ├── algorithms.dart             # Fundamental algorithms
+│   ├── automaton_analysis.dart     # Automaton analysis
+│   ├── cfg.dart                    # Context-free grammars
+│   ├── cfg_algorithms.dart         # CFG algorithms
+│   ├── dfa_algorithms.dart         # DFA-specific algorithms
+│   ├── equivalence_checking.dart   # Equivalence verification
+│   ├── grammar.dart                # Regular grammars
+│   ├── grammar_transformations.dart # Grammar transformations
+│   ├── layout_algorithms.dart      # Layout algorithms
+│   ├── ll_parsing.dart             # LL(1) parsing
+│   ├── lr_parsing.dart             # LR(1) parsing
+│   ├── mealy_moore.dart            # Output automata
+│   ├── mealy_moore_algorithms.dart # Mealy/Moore algorithms
+│   ├── nfa_algorithms.dart         # NFA-specific algorithms
+│   ├── pda.dart                    # Pushdown automata
+│   ├── pda_algorithms.dart         # PDA algorithms
+│   ├── pumping_lemmas.dart         # Pumping lemma
+│   ├── regex.dart                  # Regular expressions
+│   ├── run.dart                    # Automaton simulation
+│   ├── turing.dart                 # Turing machines
+│   ├── turing_algorithms.dart      # Turing algorithms
+│   ├── algo_log.dart               # Algorithm logging
+│   ├── error_handler.dart          # Error handling
+│   ├── result.dart                 # Operation results
+│   ├── entities/                   # Domain entities
 │   │   └── automaton_entity.dart
-│   ├── parsers/                    # Parsers de arquivos
+│   ├── parsers/                    # File parsers
 │   │   └── jflap_xml_parser.dart
-│   ├── repositories/               # Interfaces de repositórios
+│   ├── repositories/               # Repository interfaces
 │   │   └── automaton_repository.dart
-│   └── use_cases/                  # Casos de uso
+│   └── use_cases/                  # Use cases
 │       ├── algorithm_use_cases.dart
 │       └── automaton_use_cases.dart
-├── presentation/                   # Interface de usuário
-│   ├── pages/                      # Páginas principais
-│   │   ├── cfg_page.dart           # Página de CFG
-│   │   ├── home_page.dart          # Página inicial
-│   │   ├── mealy_moore_page.dart   # Página Mealy/Moore
-│   │   ├── parsing_page.dart       # Página de parsing
-│   │   ├── pda_page.dart           # Página de PDA
-│   │   └── turing_page.dart        # Página de Turing
-│   ├── providers/                  # Gerenciamento de estado
+├── presentation/                   # User interface
+│   ├── pages/                      # Main pages
+│   │   ├── cfg_page.dart           # CFG page
+│   │   ├── home_page.dart          # Home page
+│   │   ├── mealy_moore_page.dart   # Mealy/Moore page
+│   │   ├── parsing_page.dart       # Parsing page
+│   │   ├── pda_page.dart           # PDA page
+│   │   └── turing_page.dart        # Turing page
+│   ├── providers/                  # State management
 │   │   ├── algorithm_execution_provider.dart
 │   │   ├── algorithm_provider.dart
 │   │   └── automaton_provider.dart
-│   └── widgets/                    # Componentes reutilizáveis
+│   └── widgets/                    # Reusable components
 │       ├── advanced_export_tools.dart
 │       ├── algorithm_panel.dart
 │       ├── automaton_canvas.dart
@@ -294,101 +311,106 @@ lib/
 │       ├── pumping_lemma_interface.dart
 │       ├── turing_canvas.dart
 │       ├── turing_controls.dart
-│       └── [outros widgets especializados]
-├── data/                           # Gerenciamento de dados
-│   ├── data_sources/               # Fontes de dados
+│       └── [other specialized widgets]
+├── data/                           # Data management
+│   ├── data_sources/               # Data sources
 │   │   ├── examples_data_source.dart
 │   │   └── local_storage_data_source.dart
-│   ├── models/                     # Modelos de dados
+│   ├── models/                     # Data models
 │   │   └── automaton_model.dart
-│   └── repositories/               # Implementações de repositórios
+│   └── repositories/               # Repository implementations
 │       ├── algorithm_repository_impl.dart
 │       ├── automaton_repository_impl.dart
 │       └── examples_repository_impl.dart
-├── injection/                      # Injeção de dependência
+├── injection/                      # Dependency injection
 │   └── dependency_injection.dart
-├── app.dart                        # Configuração da aplicação
-└── main.dart                       # Ponto de entrada
+├── app.dart                        # Application configuration
+└── main.dart                       # Entry point
 
-test/                               # Testes
-├── core/                           # Testes dos algoritmos core
+test/                               # Tests
+├── core/                           # Core algorithm tests
 │   ├── nfa_from_regex_test.dart
 │   ├── nfa_to_dfa_test.dart
 │   └── regex_test.dart
-├── core_algorithms_test.dart       # Testes de algoritmos fundamentais
-├── dfa_minimization_test.dart      # Testes de minimização
-├── examples_roundtrip_test.dart    # Testes de compatibilidade
-├── ll_lr_parsing_test.dart         # Testes de parsing
-├── presentation_automaton_provider_test.dart # Testes de providers
-└── [outros testes especializados]
+├── core_algorithms_test.dart       # Fundamental algorithm tests
+├── dfa_minimization_test.dart      # Minimization tests
+├── examples_roundtrip_test.dart    # Compatibility tests
+├── ll_lr_parsing_test.dart         # Parsing tests
+├── presentation_automaton_provider_test.dart # Provider tests
+└── [other specialized tests]
 ```
 
-### Componentes Principais
-- **Canvas Interativo**: Visualização e edição com gestos touch e multi-seleção
-- **Algoritmos Core**: Implementações completas dos algoritmos de teoria dos autômatos
-- **Providers**: Gerenciamento de estado com Provider pattern
-  - AlgorithmProvider: Operações algorítmicas
-  - AutomatonProvider: Gerenciamento de autômatos
-  - AlgorithmExecutionProvider: Execução e visualização de algoritmos
-- **Widgets Responsivos**: Componentes adaptativos para mobile/desktop
-- **Sistema de Persistência**: Armazenamento local com SharedPreferences
-- **Injeção de Dependência**: Arquitetura modular com GetIt
-- **Sistema de Logs**: Visualização de passos dos algoritmos em tempo real
-- **Ferramentas de Layout**: Presets automáticos de posicionamento
-- **Sistema de Ajuda**: Ajuda contextual integrada
-- **Atalhos de Teclado**: Sistema completo de atalhos
-- **Exportação Avançada**: Múltiplos formatos de saída
-- **Importação JFLAP**: Parser XML robusto para arquivos .jff
+### Main Components
 
-## 🤝 Contribuição
+- **Interactive Canvas**: Visualization and editing with touch gestures and multi-selection
+- **Core Algorithms**: Complete implementations of automata theory algorithms
+- **Providers**: State management with Provider pattern
+  - AlgorithmProvider: Algorithmic operations
+  - AutomatonProvider: Automaton management
+  - AlgorithmExecutionProvider: Algorithm execution and visualization
+- **Responsive Widgets**: Adaptive components for mobile/desktop
+- **Persistence System**: Local storage with SharedPreferences
+- **Dependency Injection**: Modular architecture with GetIt
+- **Logging System**: Real-time algorithm step visualization
+- **Layout Tools**: Automatic positioning presets
+- **Help System**: Integrated contextual help
+- **Keyboard Shortcuts**: Complete shortcut system
+- **Advanced Export**: Multiple output formats
+- **JFLAP Import**: Robust XML parser for .jff files
 
-1. Fork o projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/nova-funcionalidade`)
-3. Siga as diretrizes de código (veja `analysis_options.yaml`)
-4. Execute os testes (`flutter test`)
-5. Commit suas mudanças (`git commit -m 'Adiciona nova funcionalidade'`)
-6. Push para a branch (`git push origin feature/nova-funcionalidade`)
-7. Abra um Pull Request
+## 🤝 Contributing
 
-### Diretrizes de Desenvolvimento
-- Mantenha a arquitetura limpa (core/presentation/data)
-- Otimize para dispositivos móveis
-- Use os arquivos JFLAP como referência para algoritmos
-- Adicione testes para novas funcionalidades
-- Siga o padrão de nomenclatura do Flutter
+1. Fork the project
+1. Create a feature branch (`git checkout -b feature/new-feature`)
+1. Follow code guidelines (see `analysis_options.yaml`)
+1. Run tests (`flutter test`)
+1. Commit your changes (`git commit -m 'Add new feature'`)
+1. Push to the branch (`git push origin feature/new-feature`)
+1. Open a Pull Request
 
-## 📄 Licença
+### Development Guidelines
 
-Este projeto é derivado do JFLAP e está licenciado sob os termos da mesma licença. Veja o arquivo LICENCE para detalhes completos.
+- Maintain clean architecture (core/presentation/data)
+- Optimize for mobile devices
+- Use JFLAP files as reference for algorithms
+- Add tests for new features
+- Follow Flutter naming conventions
 
-**Resumo da Licença JFLAP:**
-- Você pode distribuir cópias não modificadas do JFLAP
-- Você pode distribuir cópias modificadas sob certas condições
-- Não é permitido cobrar taxas por produtos que incluam qualquer parte do JFLAP
-- Você deve incluir uma cópia do texto da licença
-- O nome do autor não pode ser usado para endossar produtos derivados sem permissão específica
+## 📄 License
 
-### Créditos Especiais
-- **Susan H. Rodger** (Duke University) - Criadora original do JFLAP
-- **Equipe JFLAP** - Thomas Finley, Ryan Cavalcante, Stephen Reading, Bart Bressler, Jinghui Lim, Chris Morgan, Kyung Min (Jason) Lee, Jonathan Su e Henry Qin
+This project is derived from JFLAP and is licensed under the same license terms. See the LICENSE file for complete details.
 
-## 📊 Status do Projeto
+**JFLAP License Summary:**
 
-### Funcionalidades Completamente Implementadas ✅
-- **Autômatos Finitos**: AFD, AFN, conversões, operações, minimização
-- **Gramáticas e Parsing**: CFG, LL(1), LR(1), CNF, CYK, lema do bombeamento
-- **PDA e Turing**: Autômatos com pilha e máquinas multi-fita
-- **Mealy/Moore**: Autômatos com saída e conversão entre tipos
-- **Interface Mobile**: Otimização completa para dispositivos móveis
-- **Exportação/Importação**: PNG, SVG, LaTeX, arquivos JFLAP
-- **Ferramentas Educativas**: Minimização interativa, lema do bombeamento
-- **Sistema de Ajuda**: Ajuda contextual integrada
-- **Atalhos de Teclado**: Sistema completo de atalhos
-- **Persistência**: Armazenamento local e serialização JSON
-- **Biblioteca de Exemplos**: Exemplos educativos organizados por categoria
+- You may distribute unmodified copies of JFLAP
+- You may distribute modified copies under certain conditions
+- You may not charge fees for products that include any part of JFLAP
+- You must include a copy of the license text
+- The author’s name may not be used to endorse derived products without specific permission
 
----
+### Special Credits
 
-**JFlutter** - Simulando autômatos de forma moderna e interativa! 🎯
+- **Susan H. Rodger** (Duke University) - Original JFLAP creator
+- **JFLAP Team** - Thomas Finley, Ryan Cavalcante, Stephen Reading, Bart Bressler, Jinghui Lim, Chris Morgan, Kyung Min (Jason) Lee, Jonathan Su, and Henry Qin
 
-*Derivado do JFLAP original - Uma ferramenta educacional para teoria dos autômatos e linguagens formais*
+## 📊 Project Status
+
+### Fully Implemented Features ✅
+
+- **Finite Automata**: DFA, NFA, conversions, operations, minimization
+- **Grammars and Parsing**: CFG, LL(1), LR(1), CNF, CYK, pumping lemma
+- **PDA and Turing**: Pushdown automata and multi-tape machines
+- **Mealy/Moore**: Output automata and conversion between types
+- **Mobile Interface**: Complete optimization for mobile devices
+- **Export/Import**: PNG, SVG, LaTeX, JFLAP files
+- **Educational Tools**: Interactive minimization, pumping lemma
+- **Help System**: Integrated contextual help
+- **Keyboard Shortcuts**: Complete shortcut system
+- **Persistence**: Local storage and JSON serialization
+- **Examples Library**: Educational examples organized by category
+
+-----
+
+**JFlutter** - Simulating automata in a modern and interactive way! 🎯
+
+*Derived from the original JFLAP - An educational tool for automata theory and formal languages*

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vector_math/vector_math_64.dart';
 
 /// Layout settings for mobile UI
 class LayoutSettings {
@@ -157,7 +158,7 @@ class LayoutSettings {
   }
 
   /// Snaps a position to the grid
-  Vector2 snapToGrid(Vector2 position) {
+  Vector2 snapPositionToGrid(Vector2 position) {
     if (!snapToGrid) return position;
     
     return Vector2(
@@ -177,8 +178,8 @@ class LayoutSettings {
   /// Gets the grid cell index for a given position
   Vector2 getGridCell(Vector2 position) {
     return Vector2(
-      (position.x / gridSize).floor(),
-      (position.y / gridSize).floor(),
+      (position.x / gridSize).floor().toDouble(),
+      (position.y / gridSize).floor().toDouble(),
     );
   }
 
@@ -239,6 +240,3 @@ class LayoutSettings {
     );
   }
 }
-
-/// Import for Vector2
-import 'package:vector_math/vector_math_64.dart';

@@ -25,7 +25,7 @@ class PDA extends Automaton {
     required super.modified,
     required super.bounds,
     super.zoomLevel,
-    super.panOffset = Vector2.zero(),
+    super.panOffset,
     required this.stackAlphabet,
     this.initialStackSymbol = 'Z',
   }) : super(type: AutomatonType.pda);

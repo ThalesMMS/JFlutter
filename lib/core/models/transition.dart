@@ -31,9 +31,9 @@ abstract class Transition {
     required this.fromState,
     required this.toState,
     required this.label,
-    this.controlPoint = Vector2.zero(),
+    Vector2? controlPoint,
     this.type = TransitionType.deterministic,
-  });
+  }) : controlPoint = controlPoint ?? Vector2.zero();
 
   /// Creates a copy of this transition with updated properties
   Transition copyWith({

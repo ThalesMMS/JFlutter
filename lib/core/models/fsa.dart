@@ -20,7 +20,7 @@ class FSA extends Automaton {
     required super.modified,
     required super.bounds,
     super.zoomLevel,
-    super.panOffset = Vector2.zero(),
+    super.panOffset,
     String? description,
   }) : super(type: AutomatonType.fsa);
 

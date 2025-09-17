@@ -1,6 +1,8 @@
 import '../entities/automaton_entity.dart';
 import '../result.dart';
 import '../repositories/automaton_repository.dart';
+import '../models/simulation_result.dart';
+import '../models/simulation_step.dart';
 
 /// Use case for NFA to DFA conversion
 class NfaToDfaUseCase {
@@ -162,7 +164,7 @@ class CreateStepByStepSimulationUseCase {
 
   CreateStepByStepSimulationUseCase(this._repository);
 
-  Future<Result<StepByStepSimulation>> execute(AutomatonEntity automaton, String word) async {
+  Future<Result<List<SimulationStep>>> execute(AutomatonEntity automaton, String word) async {
     return await _repository.createStepByStepSimulation(automaton, word);
   }
 }

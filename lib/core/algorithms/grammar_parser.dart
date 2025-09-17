@@ -1,7 +1,6 @@
 import '../models/grammar.dart';
 import '../models/production.dart';
 import '../models/parse_table.dart';
-import '../models/parse_action.dart' as pa;
 import '../result.dart';
 
 /// Parses strings using context-free grammars
@@ -164,7 +163,7 @@ class GrammarParser {
     for (int i = 0; i < currentDerivation.length; i++) {
       final symbol = currentDerivation[i];
       if (grammar.nonTerminals.contains(symbol)) {
-        final productions = grammar.productions.where((p) => p.leftSide == symbol).toList();
+        final productions = grammar.productions.where((p) => p.leftSide.isNotEmpty && p.leftSide.first == symbol).toList();
         for (final production in productions) {
           final newDerivation = List<String>.from(currentDerivation);
           newDerivation.removeAt(i);
@@ -201,7 +200,7 @@ class GrammarParser {
       final symbol = inputString[i];
       for (final production in cnfGrammar.productions) {
         if (production.rightSide.length == 1 && production.rightSide.first == symbol) {
-          table[i][i].add(production.leftSide);
+          table[i][i].add(production.leftSide.first);
         }
       }
     }
@@ -216,7 +215,7 @@ class GrammarParser {
               final left = production.rightSide.first;
               final right = production.rightSide.last;
               if (table[i][k].contains(left) && table[k + 1][j].contains(right)) {
-                table[i][j].add(production.leftSide);
+                table[i][j].add(production.leftSide.first);
               }
             }
           }
@@ -270,7 +269,7 @@ class GrammarParser {
     return Grammar(
       id: 'cnf_${grammar.id}',
       name: '${grammar.name} (CNF)',
-      productions: productions,
+      productions: productions.toSet(),
       startSymbol: grammar.startSymbol,
       nonterminals: grammar.nonterminals,
       terminals: grammar.terminals,
@@ -317,7 +316,7 @@ class GrammarParser {
         if (input.isNotEmpty) {
           final symbol = input[0];
           final action = parseTable.getAction(top, symbol);
-          if (action != null && action.type == pa.ParseActionType.production) {
+          if (action != null && action.type == ParseActionType.reduce) {
             final production = action.production!;
             for (int i = production.rightSide.length - 1; i >= 0; i--) {
               stack.add(production.rightSide[i]);
@@ -346,10 +345,10 @@ class GrammarParser {
   /// Builds LL parse table
   static ParseTable? _buildLLParseTable(Grammar grammar) {
     // This is a simplified LL table building - in practice, this would be more complex
-    final table = <String, Map<String, pa.ParseAction>>{};
+    final table = <String, Map<String, ParseAction>>{};
     
     for (final nonTerminal in grammar.nonTerminals) {
-      table[nonTerminal] = <String, pa.ParseAction>{};
+      table[nonTerminal] = <String, ParseAction>{};
     }
     
     for (final production in grammar.productions) {
@@ -361,13 +360,17 @@ class GrammarParser {
       
       for (final terminal in firstSet) {
         if (grammar.terminals.contains(terminal)) {
-          table[leftSide]![terminal] = pa.ParseAction.production(production);
+          table[leftSide]![terminal] = ParseAction(type: ParseActionType.reduce, stateNumber: 0, production: production);
         }
       }
     }
     
     return ParseTable(
-      actionTable: table,
+      actionTable: table.map((key, value) => MapEntry(key, value.map((k, v) => MapEntry(k, ParseAction(
+        type: v.type,
+        stateNumber: v.stateNumber,
+        production: v.production,
+      ))))),
       gotoTable: {}, // Tabela goto não é usada em LL
       grammar: grammar,
       type: ParseType.ll,
@@ -388,7 +391,7 @@ class GrammarParser {
     } else if (grammar.nonTerminals.contains(firstSymbol)) {
       // Add FIRST of non-terminal (simplified)
       for (final production in grammar.productions) {
-        if (production.leftSide == firstSymbol) {
+        if (production.leftSide.isNotEmpty && production.leftSide.first == firstSymbol) {
           first.addAll(_calculateFirst(grammar, production.rightSide));
         }
       }
@@ -432,11 +435,11 @@ class GrammarParser {
         return null; // Parse error
       }
       
-      if (action.type == pa.ParseActionType.shift) {
+      if (action.type == ParseActionType.shift) {
         stack.add(symbol);
-        stack.add(action.nextState!);
+        stack.add(action.stateNumber.toString());
         input.removeAt(0);
-      } else if (action.type == pa.ParseActionType.reduce) {
+      } else if (action.type == ParseActionType.reduce) {
         final production = action.production!;
         final rightSideLength = production.rightSide.length;
         
@@ -450,7 +453,7 @@ class GrammarParser {
         stack.add(parseTable.getGoto(newState, production.leftSide.first) ?? '');
         
         derivations.add([...production.leftSide, ...production.rightSide]);
-      } else if (action.type == pa.ParseActionType.accept) {
+      } else if (action.type == ParseActionType.accept) {
         return ParseResult.success(
           inputString: inputString,
           derivations: derivations,
@@ -463,20 +466,24 @@ class GrammarParser {
   /// Builds LR parse table
   static ParseTable? _buildLRParseTable(Grammar grammar) {
     // This is a simplified LR table building - in practice, this would be more complex
-    final table = <String, Map<String, pa.ParseAction>>{};
+    final table = <String, Map<String, ParseAction>>{};
     
     // Initialize table with states
-    table['0'] = <String, pa.ParseAction>{};
+    table['0'] = <String, ParseAction>{};
     
     // Add basic actions (simplified)
     for (final production in grammar.productions) {
-      if (production.leftSide == grammar.startSymbol) {
-        table['0']!['\$'] = pa.ParseAction.accept(state: '0', symbol: '\$');
+      if (production.leftSide.isNotEmpty && production.leftSide.first == grammar.startSymbol) {
+        table['0']!['\$'] = ParseAction(type: ParseActionType.accept, stateNumber: 0);
       }
     }
     
     return ParseTable(
-      actionTable: table,
+      actionTable: table.map((key, value) => MapEntry(key, value.map((k, v) => MapEntry(k, ParseAction(
+        type: v.type,
+        stateNumber: v.stateNumber,
+        production: v.production,
+      ))))),
       gotoTable: {}, // Tabela goto simplificada para LR
       grammar: grammar,
       type: ParseType.lr,

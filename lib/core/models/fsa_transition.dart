@@ -21,7 +21,7 @@ class FSATransition extends Transition {
     required super.fromState,
     required super.toState,
     required super.label,
-    super.controlPoint = Vector2.zero(),
+    super.controlPoint,
     super.type,
     required this.inputSymbols,
     this.lambdaSymbol,

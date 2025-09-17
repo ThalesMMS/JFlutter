@@ -28,7 +28,7 @@ class TM extends Automaton {
     required super.modified,
     required super.bounds,
     super.zoomLevel,
-    super.panOffset = Vector2.zero(),
+    super.panOffset,
     required this.tapeAlphabet,
     this.blankSymbol = 'B',
     this.tapeCount = 1,

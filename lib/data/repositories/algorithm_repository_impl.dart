@@ -5,13 +5,11 @@ import '../../core/entities/automaton_entity.dart';
 import '../../core/result.dart';
 import '../../core/models/automaton.dart' as model_automaton;
 import '../../core/models/state.dart' as automaton_state;
+import '../../core/models/transition.dart' as model_transition;
 import '../../core/models/fsa.dart';
 import '../../core/algorithms.dart' as algorithms;
 import '../../core/dfa_algorithms.dart' as dfa_alg;
 import '../../core/regex.dart' as regex_alg;
-import '../../core/grammar.dart';
-import '../../core/run.dart';
-import '../../core/equivalence_checking.dart';
 import '../../core/models/simulation_result.dart';
 import '../../core/models/simulation_step.dart';
 
@@ -20,10 +18,10 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
   @override
   Future<Result<AutomatonEntity>> nfaToDfa(AutomatonEntity nfaEntity) async {
     try {
-      final nfa = _entityToAutomaton(nfaEntity);
-      final result = algorithms.NFAToDFAConverter.convert(nfa as FSA);
+      final nfa = _entityToAutomaton(nfaEntity) as FSA; // Converte para o modelo
+      final result = algorithms.NFAToDFAConverter.convert(nfa);
       if (result.isSuccess) {
-        final resultEntity = _automatonToEntity(result.data!, model_automaton.AutomatonType.fsa);
+        final resultEntity = _automatonToEntity(result.data!, model_automaton.AutomatonType.fsa); // Converte de volta
         return Success(resultEntity);
       } else {
         return Failure(result.error!);
@@ -36,10 +34,10 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
   @override
   Future<Result<AutomatonEntity>> removeLambdaTransitions(AutomatonEntity nfaEntity) async {
     try {
-      final nfa = _entityToAutomaton(nfaEntity);
+      final nfa = _entityToAutomaton(nfaEntity) as FSA; // Converte para o modelo
       // For now, return the same NFA as lambda removal is not implemented
       final result = nfa;
-      final resultEntity = _automatonToEntity(result, model_automaton.AutomatonType.fsa);
+      final resultEntity = _automatonToEntity(result, model_automaton.AutomatonType.fsa); // Converte de volta
       return Success(resultEntity);
     } catch (e) {
       return Failure('Erro na remoção de transições lambda: $e');
@@ -49,10 +47,10 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
   @override
   Future<Result<AutomatonEntity>> minimizeDfa(AutomatonEntity dfaEntity) async {
     try {
-      final dfa = _entityToAutomaton(dfaEntity);
-      final result = dfa_alg.DFAMinimizer.minimize(dfa as FSA);
+      final dfa = _entityToAutomaton(dfaEntity) as FSA; // Converte para o modelo
+      final result = dfa_alg.DFAMinimizer.minimize(dfa);
       if (result.isSuccess) {
-        final resultEntity = _automatonToEntity(result.data!, model_automaton.AutomatonType.fsa);
+        final resultEntity = _automatonToEntity(result.data!, model_automaton.AutomatonType.fsa); // Converte de volta
         return Success(resultEntity);
       } else {
         return Failure(result.error!);
@@ -65,10 +63,10 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
   @override
   Future<Result<AutomatonEntity>> completeDfa(AutomatonEntity dfaEntity) async {
     try {
-      final dfa = _entityToAutomaton(dfaEntity);
+      final dfa = _entityToAutomaton(dfaEntity) as FSA; // Converte para o modelo
       // For now, return the same DFA as completion is not implemented
       final result = dfa;
-      final resultEntity = _automatonToEntity(result, model_automaton.AutomatonType.fsa);
+      final resultEntity = _automatonToEntity(result, model_automaton.AutomatonType.fsa); // Converte de volta
       return Success(resultEntity);
     } catch (e) {
       return Failure('Erro na completação do DFA: $e');
@@ -78,10 +76,10 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
   @override
   Future<Result<AutomatonEntity>> complementDfa(AutomatonEntity dfaEntity) async {
     try {
-      final dfa = _entityToAutomaton(dfaEntity);
+      final dfa = _entityToAutomaton(dfaEntity) as FSA; // Converte para o modelo
       // For now, return the same DFA as complement is not implemented
       final result = dfa;
-      final resultEntity = _automatonToEntity(result, model_automaton.AutomatonType.fsa);
+      final resultEntity = _automatonToEntity(result, model_automaton.AutomatonType.fsa); // Converte de volta
       return Success(resultEntity);
     } catch (e) {
       return Failure('Erro no complemento do DFA: $e');
@@ -91,11 +89,11 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
   @override
   Future<Result<AutomatonEntity>> unionDfa(AutomatonEntity aEntity, AutomatonEntity bEntity) async {
     try {
-      final a = _entityToAutomaton(aEntity);
-      final b = _entityToAutomaton(bEntity);
+      final a = _entityToAutomaton(aEntity) as FSA; // Converte para o modelo
+      final b = _entityToAutomaton(bEntity) as FSA; // Converte para o modelo
       // For now, return the first DFA as union is not implemented
       final result = a;
-      final resultEntity = _automatonToEntity(result, model_automaton.AutomatonType.fsa);
+      final resultEntity = _automatonToEntity(result, model_automaton.AutomatonType.fsa); // Converte de volta
       return Success(resultEntity);
     } catch (e) {
       return Failure('Erro na união de DFAs: $e');
@@ -105,11 +103,11 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
   @override
   Future<Result<AutomatonEntity>> intersectionDfa(AutomatonEntity aEntity, AutomatonEntity bEntity) async {
     try {
-      final a = _entityToAutomaton(aEntity);
-      final b = _entityToAutomaton(bEntity);
+      final a = _entityToAutomaton(aEntity) as FSA; // Converte para o modelo
+      final b = _entityToAutomaton(bEntity) as FSA; // Converte para o modelo
       // For now, return the first DFA as intersection is not implemented
       final result = a;
-      final resultEntity = _automatonToEntity(result, model_automaton.AutomatonType.fsa);
+      final resultEntity = _automatonToEntity(result, model_automaton.AutomatonType.fsa); // Converte de volta
       return Success(resultEntity);
     } catch (e) {
       return Failure('Erro na interseção de DFAs: $e');
@@ -119,11 +117,11 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
   @override
   Future<Result<AutomatonEntity>> differenceDfa(AutomatonEntity aEntity, AutomatonEntity bEntity) async {
     try {
-      final a = _entityToAutomaton(aEntity);
-      final b = _entityToAutomaton(bEntity);
+      final a = _entityToAutomaton(aEntity) as FSA; // Converte para o modelo
+      final b = _entityToAutomaton(bEntity) as FSA; // Converte para o modelo
       // For now, return the first DFA as difference is not implemented
       final result = a;
-      final resultEntity = _automatonToEntity(result, model_automaton.AutomatonType.fsa);
+      final resultEntity = _automatonToEntity(result, model_automaton.AutomatonType.fsa); // Converte de volta
       return Success(resultEntity);
     } catch (e) {
       return Failure('Erro na diferença de DFAs: $e');
@@ -133,10 +131,10 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
   @override
   Future<Result<AutomatonEntity>> prefixClosureDfa(AutomatonEntity dfaEntity) async {
     try {
-      final dfa = _entityToAutomaton(dfaEntity);
+      final dfa = _entityToAutomaton(dfaEntity) as FSA; // Converte para o modelo
       // For now, return the same DFA as prefix closure is not implemented
       final result = dfa;
-      final resultEntity = _automatonToEntity(result, model_automaton.AutomatonType.fsa);
+      final resultEntity = _automatonToEntity(result, model_automaton.AutomatonType.fsa); // Converte de volta
       return Success(resultEntity);
     } catch (e) {
       return Failure('Erro no fecho por prefixos: $e');
@@ -146,10 +144,10 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
   @override
   Future<Result<AutomatonEntity>> suffixClosureDfa(AutomatonEntity dfaEntity) async {
     try {
-      final dfa = _entityToAutomaton(dfaEntity);
+      final dfa = _entityToAutomaton(dfaEntity) as FSA; // Converte para o modelo
       // For now, return the same DFA as suffix closure is not implemented
       final result = dfa;
-      final resultEntity = _automatonToEntity(result, model_automaton.AutomatonType.fsa);
+      final resultEntity = _automatonToEntity(result, model_automaton.AutomatonType.fsa); // Converte de volta
       return Success(resultEntity);
     } catch (e) {
       return Failure('Erro no fecho por sufixos: $e');
@@ -161,7 +159,7 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
     try {
       final result = regex_alg.RegexToNFAConverter.convert(regex);
       if (result.isSuccess) {
-        final resultEntity = _automatonToEntity(result.data!, model_automaton.AutomatonType.fsa);
+        final resultEntity = _automatonToEntity(result.data!, model_automaton.AutomatonType.fsa); // Converte de volta
         return Success(resultEntity);
       } else {
         return Failure(result.error!);
@@ -184,8 +182,8 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
   @override
   Future<BoolResult> areEquivalent(AutomatonEntity aEntity, AutomatonEntity bEntity) async {
     try {
-      final a = _entityToAutomaton(aEntity);
-      final b = _entityToAutomaton(bEntity);
+      final a = _entityToAutomaton(aEntity) as FSA; // Converte para o modelo
+      final b = _entityToAutomaton(bEntity) as FSA; // Converte para o modelo
       // For now, return false as equivalence checking is not implemented
       final result = false;
       return Success(result);
@@ -197,7 +195,7 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
   @override
   Future<Result<SimulationResult>> simulateWord(AutomatonEntity automatonEntity, String word) async {
     try {
-      final automaton = _entityToAutomaton(automatonEntity);
+      final automaton = _entityToAutomaton(automatonEntity) as FSA; // Converte para o modelo
       // For now, return false as word running is not implemented
       final runResult = false;
       final simulationResult = SimulationResult.success(
@@ -217,8 +215,8 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
     String word,
   ) async {
     try {
-      final automaton = _entityToAutomaton(automatonEntity);
-      final simResult = algorithms.AutomatonSimulator.simulate(automaton as FSA, word);
+      final automaton = _entityToAutomaton(automatonEntity) as FSA; // Converte para o modelo
+      final simResult = algorithms.AutomatonSimulator.simulate(automaton, word);
 
       if (simResult.isFailure) {
         return Failure(simResult.error!);
@@ -232,7 +230,7 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
 
   // Helper methods for conversion between entities and core automaton objects
   model_automaton.Automaton _entityToAutomaton(AutomatonEntity entity) {
-        final states = entity.states.map((s) => automaton_state.State(
+    final states = entity.states.map((s) => automaton_state.State(
       id: s.id,
       label: s.name,
       position: Vector2(s.x, s.y),
@@ -240,17 +238,22 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
       isAccepting: s.isFinal,
     )).toSet();
 
-    final transitions = <String, List<String>>{};
-    for (final entry in entity.transitions.entries) {
-      transitions[entry.key] = entry.value;
-    }
+    // Mapeia o estado inicial corretamente
+    final initialState = entity.initialId != null 
+      ? states.firstWhere((s) => s.id == entity.initialId) 
+      : null;
 
-        return FSA(
+    // TODO: A lógica de transição precisa ser implementada corretamente.
+    // Por enquanto, vamos criar uma estrutura vazia para compilar.
+    final transitions = <model_transition.Transition>{};
+
+    return FSA(
       id: entity.id,
       name: entity.name,
       states: states,
-      transitions: const {},
+      transitions: transitions,
       alphabet: entity.alphabet,
+      initialState: initialState,
       acceptingStates: states.where((s) => s.isAccepting).toSet(),
       created: DateTime.now(),
       modified: DateTime.now(),
@@ -268,18 +271,19 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
       isFinal: s.isAccepting,
     )).toList();
 
+    // TODO: A lógica de transição reversa precisa ser implementada.
+    // Por enquanto, vamos criar uma estrutura vazia para compilar.
     final transitions = <String, List<String>>{};
-    // For now, create empty transitions as the automaton model doesn't have the same structure
 
     return AutomatonEntity(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: 'Resultado',
+      id: automaton.id,
+      name: automaton.name,
       type: AutomatonType.values.byName(type.name),
       states: states,
       transitions: transitions,
       alphabet: automaton.alphabet,
-      initialId: automaton.initialState?.id ?? '',
-      nextId: 0,
+      initialId: automaton.initialState?.id,
+      nextId: states.length, // Estimativa simples
     );
   }
 }

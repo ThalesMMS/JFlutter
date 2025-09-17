@@ -13,7 +13,7 @@ class PDA extends Automaton {
   /// Initial stack symbol
   final String initialStackSymbol;
 
-  const PDA({
+  PDA({
     required super.id,
     required super.name,
     required super.states,
@@ -25,7 +25,7 @@ class PDA extends Automaton {
     required super.modified,
     required super.bounds,
     super.zoomLevel,
-    super.panOffset,
+    super.panOffset = Vector2.zero(),
     required this.stackAlphabet,
     this.initialStackSymbol = 'Z',
   }) : super(type: AutomatonType.pda);
@@ -57,7 +57,6 @@ class PDA extends Automaton {
       alphabet: alphabet ?? this.alphabet,
       initialState: initialState ?? this.initialState,
       acceptingStates: acceptingStates ?? this.acceptingStates,
-      type: type ?? this.type,
       created: created ?? this.created,
       modified: modified ?? this.modified,
       bounds: bounds ?? this.bounds,

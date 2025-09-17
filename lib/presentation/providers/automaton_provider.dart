@@ -28,6 +28,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     required SimulationService simulationService,
     required ConversionService conversionService,
     required CreateAutomatonUseCase createAutomatonUseCase,
+    required LoadAutomatonUseCase loadAutomatonUseCase,
   })  : _automatonService = automatonService,
         _simulationService = simulationService,
         _conversionService = conversionService,
@@ -291,5 +292,6 @@ final automatonProvider = StateNotifierProvider<AutomatonProvider, AutomatonStat
     simulationService: SimulationService(),
     conversionService: ConversionService(),
     createAutomatonUseCase: CreateAutomatonUseCase(AutomatonRepositoryImpl(AutomatonService())),
+    loadAutomatonUseCase: LoadAutomatonUseCase(AutomatonRepositoryImpl(AutomatonService())),
   );
 });

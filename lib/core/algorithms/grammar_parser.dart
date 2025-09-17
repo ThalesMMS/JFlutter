@@ -1,7 +1,7 @@
 import '../models/grammar.dart';
 import '../models/production.dart';
 import '../models/parse_table.dart';
-import '../models/parse_action.dart';
+import '../models/parse_action.dart' as pa;
 import '../result.dart';
 
 /// Parses strings using context-free grammars
@@ -98,7 +98,7 @@ class GrammarParser {
     }
     
     // If all strategies fail, return failure
-    return ParseFailure(
+    return ParseResult.failure(
       inputString: inputString,
       errorMessage: 'All parsing strategies failed',
       executionTime: DateTime.now().difference(startTime),
@@ -123,7 +123,7 @@ class GrammarParser {
     _findDerivations(grammar, [grammar.startSymbol!], inputString, derivations, timeout);
     
     if (derivations.isNotEmpty) {
-      return ParseSuccess(
+      return ParseResult.success(
         inputString: inputString,
         derivations: derivations,
         executionTime: DateTime.now().difference(startTime),
@@ -200,7 +200,7 @@ class GrammarParser {
     for (int i = 0; i < n; i++) {
       final symbol = inputString[i];
       for (final production in cnfGrammar.productions) {
-        if (production.rightSide.length == 1 && production.rightSide[0] == symbol) {
+        if (production.rightSide.length == 1 && production.rightSide.first == symbol) {
           table[i][i].add(production.leftSide);
         }
       }
@@ -213,8 +213,8 @@ class GrammarParser {
         for (int k = i; k < j; k++) {
           for (final production in cnfGrammar.productions) {
             if (production.rightSide.length == 2) {
-              final left = production.rightSide[0];
-              final right = production.rightSide[1];
+              final left = production.rightSide.first;
+              final right = production.rightSide.last;
               if (table[i][k].contains(left) && table[k + 1][j].contains(right)) {
                 table[i][j].add(production.leftSide);
               }
@@ -226,7 +226,7 @@ class GrammarParser {
     
     // Check if start symbol is in table[0][n-1]
     if (table[0][n - 1].contains(cnfGrammar.startSymbol)) {
-      return ParseSuccess(
+      return ParseResult.success(
         inputString: inputString,
         derivations: [], // CYK doesn't provide derivations
         executionTime: DateTime.now().difference(startTime),
@@ -251,25 +251,32 @@ class GrammarParser {
           final newNonTerminal = '${currentLeft}_${i}';
           if (i == production.rightSide.length - 2) {
             productions.add(Production(
+              id: 'p_cnf_${productions.length}',
               leftSide: currentLeft,
               rightSide: [production.rightSide[i], production.rightSide[i + 1]],
             ));
           } else {
             productions.add(Production(
+              id: 'p_cnf_${productions.length}',
               leftSide: currentLeft,
               rightSide: [production.rightSide[i], newNonTerminal],
             ));
-            currentLeft = newNonTerminal;
+            currentLeft = [newNonTerminal];
           }
         }
       }
     }
     
     return Grammar(
+      id: 'cnf_${grammar.id}',
+      name: '${grammar.name} (CNF)',
       productions: productions,
       startSymbol: grammar.startSymbol,
-      nonTerminals: grammar.nonTerminals,
+      nonterminals: grammar.nonterminals,
       terminals: grammar.terminals,
+      type: grammar.type,
+      created: DateTime.now(),
+      modified: DateTime.now(),
     );
   }
 
@@ -310,7 +317,7 @@ class GrammarParser {
         if (input.isNotEmpty) {
           final symbol = input[0];
           final action = parseTable.getAction(top, symbol);
-          if (action != null && action.type == ParseActionType.production) {
+          if (action != null && action.type == pa.ParseActionType.production) {
             final production = action.production!;
             for (int i = production.rightSide.length - 1; i >= 0; i--) {
               stack.add(production.rightSide[i]);
@@ -326,7 +333,7 @@ class GrammarParser {
     }
     
     if (input.isEmpty) {
-      return ParseSuccess(
+      return ParseResult.success(
         inputString: inputString,
         derivations: derivations,
         executionTime: DateTime.now().difference(startTime),
@@ -339,10 +346,10 @@ class GrammarParser {
   /// Builds LL parse table
   static ParseTable? _buildLLParseTable(Grammar grammar) {
     // This is a simplified LL table building - in practice, this would be more complex
-    final table = <String, Map<String, ParseAction>>{};
+    final table = <String, Map<String, pa.ParseAction>>{};
     
     for (final nonTerminal in grammar.nonTerminals) {
-      table[nonTerminal] = <String, ParseAction>{};
+      table[nonTerminal] = <String, pa.ParseAction>{};
     }
     
     for (final production in grammar.productions) {
@@ -354,12 +361,17 @@ class GrammarParser {
       
       for (final terminal in firstSet) {
         if (grammar.terminals.contains(terminal)) {
-          table[leftSide]![terminal] = ParseAction.production(production);
+          table[leftSide]![terminal] = pa.ParseAction.production(production);
         }
       }
     }
     
-    return ParseTable(table);
+    return ParseTable(
+      actionTable: table,
+      gotoTable: {}, // Tabela goto não é usada em LL
+      grammar: grammar,
+      type: ParseType.ll,
+    );
   }
 
   /// Calculates FIRST set (simplified)
@@ -420,11 +432,11 @@ class GrammarParser {
         return null; // Parse error
       }
       
-      if (action.type == ParseActionType.shift) {
+      if (action.type == pa.ParseActionType.shift) {
         stack.add(symbol);
         stack.add(action.nextState!);
         input.removeAt(0);
-      } else if (action.type == ParseActionType.reduce) {
+      } else if (action.type == pa.ParseActionType.reduce) {
         final production = action.production!;
         final rightSideLength = production.rightSide.length;
         
@@ -434,12 +446,12 @@ class GrammarParser {
         }
         
         final newState = stack.last;
-        stack.add(production.leftSide);
-        stack.add(parseTable.getGoto(newState, production.leftSide) ?? '');
+        stack.add(production.leftSide.first);
+        stack.add(parseTable.getGoto(newState, production.leftSide.first) ?? '');
         
         derivations.add([...production.leftSide, ...production.rightSide]);
-      } else if (action.type == ParseActionType.accept) {
-        return ParseSuccess(
+      } else if (action.type == pa.ParseActionType.accept) {
+        return ParseResult.success(
           inputString: inputString,
           derivations: derivations,
           executionTime: DateTime.now().difference(startTime),
@@ -451,19 +463,24 @@ class GrammarParser {
   /// Builds LR parse table
   static ParseTable? _buildLRParseTable(Grammar grammar) {
     // This is a simplified LR table building - in practice, this would be more complex
-    final table = <String, Map<String, ParseAction>>{};
+    final table = <String, Map<String, pa.ParseAction>>{};
     
     // Initialize table with states
-    table['0'] = <String, ParseAction>{};
+    table['0'] = <String, pa.ParseAction>{};
     
     // Add basic actions (simplified)
     for (final production in grammar.productions) {
       if (production.leftSide == grammar.startSymbol) {
-        table['0']!['\$'] = ParseAction.accept();
+        table['0']!['\$'] = pa.ParseAction.accept(state: '0', symbol: '\$');
       }
     }
     
-    return ParseTable(table);
+    return ParseTable(
+      actionTable: table,
+      gotoTable: {}, // Tabela goto simplificada para LR
+      grammar: grammar,
+      type: ParseType.lr,
+    );
   }
 
   /// Tests if a grammar can generate a specific string
@@ -562,7 +579,7 @@ class ParseResult {
     required this.executionTime,
   });
 
-  factory ParseSuccess({
+  factory ParseResult.success({
     required String inputString,
     required List<List<String>> derivations,
     required Duration executionTime,
@@ -575,7 +592,7 @@ class ParseResult {
     );
   }
 
-  factory ParseFailure({
+  factory ParseResult.failure({
     required String inputString,
     required String errorMessage,
     required Duration executionTime,

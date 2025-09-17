@@ -5,7 +5,6 @@ import '../models/fsa_transition.dart';
 import '../models/simulation_result.dart';
 import '../models/simulation_step.dart';
 import '../result.dart';
-import 'automaton_analyzer.dart';
 
 /// Simulates Turing Machines (TM) with input strings
 class TMSimulator {
@@ -142,29 +141,22 @@ class TMSimulator {
       
       // Move head
       switch (transition.moveDirection) {
-        case 'L':
+        case TapeDirection.left:
           headPosition--;
           if (headPosition < 0) {
             headPosition = 0;
             tape.insert(0, tm.blankSymbol);
           }
           break;
-        case 'R':
+        case TapeDirection.right:
           headPosition++;
           if (headPosition >= tape.length) {
             tape.add(tm.blankSymbol);
           }
           break;
-        case 'S':
+        case TapeDirection.stay:
           // Stay
           break;
-        default:
-          return TMSimulationFailure(
-            inputString: inputString,
-            steps: steps,
-            errorMessage: 'Invalid move direction: ${transition.moveDirection}',
-            executionTime: DateTime.now().difference(startTime),
-          );
       }
       
       // Add step
@@ -189,7 +181,7 @@ class TMSimulator {
     }
     
     // Add final step
-        steps.add(SimulationStep.finalStepStep(
+        steps.add(SimulationStep.finalStep(
       finalState: currentState.id,
       remainingInput: '',
       stackContents: '',
@@ -201,13 +193,13 @@ class TMSimulator {
     final isAccepted = tm.acceptingStates.contains(currentState);
     
     if (isAccepted) {
-      return TMSimulationSuccess(
+      return TMSimulationResult.success(
         inputString: inputString,
         steps: steps,
         executionTime: DateTime.now().difference(startTime),
       );
     } else {
-      return TMSimulationFailure(
+      return TMSimulationResult.failure(
         inputString: inputString,
         steps: steps,
         errorMessage: 'Input not accepted - final state is not accepting',
@@ -422,12 +414,12 @@ class TMSimulator {
   }
 
   /// Analyzes the states of the TM
-  static StateAnalysis _analyzeStates(TM tm) {
+  static TMStateAnalysis _analyzeStates(TM tm) {
     final totalStates = tm.states.length;
     final acceptingStates = tm.acceptingStates.length;
     final nonAcceptingStates = totalStates - acceptingStates;
     
-    return StateAnalysis(
+    return TMStateAnalysis(
       totalStates: totalStates,
       acceptingStates: acceptingStates,
       nonAcceptingStates: nonAcceptingStates,
@@ -435,12 +427,12 @@ class TMSimulator {
   }
 
   /// Analyzes the transitions of the TM
-  static TransitionAnalysis _analyzeTransitions(TM tm) {
+  static TMTransitionAnalysis _analyzeTransitions(TM tm) {
     final totalTransitions = tm.transitions.length;
     final tmTransitions = tm.transitions.whereType<TMTransition>().length;
     final fsaTransitions = tm.transitions.whereType<FSATransition>().length;
     
-    return TransitionAnalysis(
+    return TMTransitionAnalysis(
       totalTransitions: totalTransitions,
       tmTransitions: tmTransitions,
       fsaTransitions: fsaTransitions,
@@ -458,7 +450,7 @@ class TMSimulator {
       if (transition is TMTransition) {
         writeOperations.add(transition.writeSymbol);
         readOperations.add(transition.readSymbol);
-            moveDirections.add(transition.moveDirection.toString());
+            moveDirections.add(transition.moveDirection.name);
         tapeSymbols.add(transition.readSymbol);
         tapeSymbols.add(transition.writeSymbol);
       }
@@ -473,7 +465,7 @@ class TMSimulator {
   }
 
   /// Analyzes the reachability of the TM
-  static ReachabilityAnalysis _analyzeReachability(TM tm) {
+  static TMReachabilityAnalysis _analyzeReachability(TM tm) {
     final reachableStates = <State>{};
     final unreachableStates = <State>{};
     
@@ -489,7 +481,7 @@ class TMSimulator {
       }
     }
     
-    return ReachabilityAnalysis(
+    return TMReachabilityAnalysis(
       reachableStates: reachableStates,
       unreachableStates: unreachableStates,
     );
@@ -532,7 +524,7 @@ class TMSimulationResult {
     required this.executionTime,
   });
 
-  factory TMSimulationSuccess({
+  factory TMSimulationResult.success({
     required String inputString,
     required List<SimulationStep> steps,
     required Duration executionTime,
@@ -545,7 +537,7 @@ class TMSimulationResult {
     );
   }
 
-  factory TMSimulationFailure({
+  factory TMSimulationResult.failure({
     required String inputString,
     required List<SimulationStep> steps,
     required String errorMessage,
@@ -607,10 +599,10 @@ class TMSimulationResult {
 
 /// Analysis result of a TM
 class TMAnalysis {
-  final StateAnalysis stateAnalysis;
-  final TransitionAnalysis transitionAnalysis;
+  final TMStateAnalysis stateAnalysis;
+  final TMTransitionAnalysis transitionAnalysis;
   final TapeAnalysis tapeAnalysis;
-  final ReachabilityAnalysis reachabilityAnalysis;
+  final TMReachabilityAnalysis reachabilityAnalysis;
   final Duration executionTime;
 
   const TMAnalysis({
@@ -622,10 +614,10 @@ class TMAnalysis {
   });
 
   TMAnalysis copyWith({
-    StateAnalysis? stateAnalysis,
-    TransitionAnalysis? transitionAnalysis,
+    TMStateAnalysis? stateAnalysis,
+    TMTransitionAnalysis? transitionAnalysis,
     TapeAnalysis? tapeAnalysis,
-    ReachabilityAnalysis? reachabilityAnalysis,
+    TMReachabilityAnalysis? reachabilityAnalysis,
     Duration? executionTime,
   }) {
     return TMAnalysis(

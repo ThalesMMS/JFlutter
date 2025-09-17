@@ -274,7 +274,7 @@ class PumpingLemmaGame {
     // Check if the decomposition is correct
     final originalString = attempt.x! + attempt.y! + attempt.z!;
     if (originalString != game.challengeString) {
-      return PumpingAttemptFailure(
+      return PumpingAttemptResult.failure(
         attempt: attempt,
         errorMessage: 'Decomposition does not match original string',
         executionTime: DateTime.now().difference(startTime),
@@ -283,7 +283,7 @@ class PumpingLemmaGame {
     
     // Check if |xy| <= pumping length
     if (attempt.x!.length + attempt.y!.length > game.pumpingLength) {
-      return PumpingAttemptFailure(
+      return PumpingAttemptResult.failure(
         attempt: attempt,
         errorMessage: '|xy| must be <= pumping length',
         executionTime: DateTime.now().difference(startTime),
@@ -292,7 +292,7 @@ class PumpingLemmaGame {
     
     // Check if |y| > 0
     if (attempt.y!.isEmpty) {
-      return PumpingAttemptFailure(
+      return PumpingAttemptResult.failure(
         attempt: attempt,
         errorMessage: 'y must be non-empty',
         executionTime: DateTime.now().difference(startTime),
@@ -310,12 +310,12 @@ class PumpingLemmaGame {
     }
     
     if (canPump) {
-      return PumpingAttemptSuccess(
+      return PumpingAttemptResult.success(
         attempt: attempt,
         executionTime: DateTime.now().difference(startTime),
       );
     } else {
-      return PumpingAttemptFailure(
+      return PumpingAttemptResult.failure(
         attempt: attempt,
         errorMessage: 'String cannot be pumped',
         executionTime: DateTime.now().difference(startTime),
@@ -496,7 +496,7 @@ class PumpingAttemptResult {
     required this.executionTime,
   });
 
-  factory PumpingAttemptSuccess({
+  factory PumpingAttemptResult.success({
     required PumpingAttempt attempt,
     required Duration executionTime,
   }) {
@@ -507,7 +507,7 @@ class PumpingAttemptResult {
     );
   }
 
-  factory PumpingAttemptFailure({
+  factory PumpingAttemptResult.failure({
     required PumpingAttempt attempt,
     required String errorMessage,
     required Duration executionTime,

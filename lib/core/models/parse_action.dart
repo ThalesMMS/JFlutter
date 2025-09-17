@@ -1,3 +1,5 @@
+import 'production.dart';
+
 /// Represents a parsing action in grammar parsing algorithms
 class ParseAction {
   /// Type of parsing action
@@ -121,39 +123,3 @@ enum ParseActionType {
   error,
 }
 
-/// Represents a production rule in a grammar
-class Production {
-  /// Left-hand side of the production
-  final String leftHandSide;
-  
-  /// Right-hand side of the production
-  final List<String> rightHandSide;
-  
-  /// Production number (for LR parsing)
-  final int number;
-
-  const Production({
-    required this.leftHandSide,
-    required this.rightHandSide,
-    required this.number,
-  });
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is Production &&
-        other.leftHandSide == leftHandSide &&
-        other.rightHandSide.toString() == rightHandSide.toString() &&
-        other.number == number;
-  }
-
-  @override
-  int get hashCode {
-    return Object.hash(leftHandSide, rightHandSide.toString(), number);
-  }
-
-  @override
-  String toString() {
-    return '$leftHandSide -> ${rightHandSide.join(' ')}';
-  }
-}

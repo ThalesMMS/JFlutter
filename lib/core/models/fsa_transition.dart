@@ -16,12 +16,12 @@ class FSATransition extends Transition {
     return inputSymbols.isNotEmpty ? inputSymbols.first : '';
   }
 
-  const FSATransition({
+  FSATransition({
     required super.id,
     required super.fromState,
     required super.toState,
     required super.label,
-    super.controlPoint,
+    super.controlPoint = Vector2.zero(),
     super.type,
     required this.inputSymbols,
     this.lambdaSymbol,

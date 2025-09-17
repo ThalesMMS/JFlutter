@@ -1,5 +1,7 @@
 import '../entities/automaton_entity.dart';
 import '../result.dart';
+import '../models/simulation_result.dart';
+import '../models/simulation_step.dart';
 
 /// Repository interface for automaton operations
 /// This defines the contract that all automaton repositories must implement
@@ -71,7 +73,7 @@ abstract class AlgorithmRepository {
   Future<Result<SimulationResult>> simulateWord(AutomatonEntity automaton, String word);
   
   /// Runs step-by-step simulation
-  Future<Result<StepByStepSimulation>> createStepByStepSimulation(
+  Future<Result<List<SimulationStep>>> createStepByStepSimulation(
     AutomatonEntity automaton, 
     String word
   );
@@ -107,58 +109,6 @@ abstract class LayoutRepository {
   Future<AutomatonResult> centerAutomaton(AutomatonEntity automaton);
 }
 
-/// Result entities for simulation
-class SimulationResult {
-  final bool accepted;
-  final List<Set<String>> visitedStates;
-  final List<String> messages;
-  final String? haltReason;
-
-  const SimulationResult({
-    required this.accepted,
-    required this.visitedStates,
-    required this.messages,
-    this.haltReason,
-  });
-}
-
-class StepByStepSimulation {
-  final AutomatonEntity automaton;
-  final String word;
-  final Set<String> currentStates;
-  final int stepIndex;
-  final List<String> messages;
-  final bool isComplete;
-  final String? haltReason;
-
-  const StepByStepSimulation({
-    required this.automaton,
-    required this.word,
-    required this.currentStates,
-    required this.stepIndex,
-    required this.messages,
-    required this.isComplete,
-    this.haltReason,
-  });
-
-  StepByStepSimulation copyWith({
-    Set<String>? currentStates,
-    int? stepIndex,
-    List<String>? messages,
-    bool? isComplete,
-    String? haltReason,
-  }) {
-    return StepByStepSimulation(
-      automaton: automaton,
-      word: word,
-      currentStates: currentStates ?? this.currentStates,
-      stepIndex: stepIndex ?? this.stepIndex,
-      messages: messages ?? this.messages,
-      isComplete: isComplete ?? this.isComplete,
-      haltReason: haltReason ?? this.haltReason,
-    );
-  }
-}
 
 /// Example entity
 class ExampleEntity {

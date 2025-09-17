@@ -166,6 +166,7 @@ Future<void> setupDependencyInjection() async {
       simulationService: getIt<SimulationService>(),
       conversionService: getIt<ConversionService>(),
       createAutomatonUseCase: getIt<CreateAutomatonUseCase>(),
+      loadAutomatonUseCase: getIt<LoadAutomatonUseCase>(),
     ),
   );
   

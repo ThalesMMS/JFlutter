@@ -5,7 +5,6 @@ import '../models/fsa_transition.dart';
 import '../models/simulation_result.dart';
 import '../models/simulation_step.dart';
 import '../result.dart';
-import 'automaton_analyzer.dart';
 
 /// Simulates Pushdown Automata (PDA) with input strings
 class PDASimulator {
@@ -119,13 +118,13 @@ class PDASimulator {
       
       // Find transition
       final transition = pda.getPDATransitionFromStateOnSymbolAndStackTop(
-        currentState,
+        currentState.id,
         symbol,
         stack.isNotEmpty ? stack.last : '',
       );
       
       if (transition == null) {
-        return PDASimulationFailure(
+        return PDASimulationResult.failure(
           inputString: inputString,
           steps: steps,
           errorMessage: 'No transition found for symbol $symbol and stack top ${stack.isNotEmpty ? stack.last : "empty"} in state ${currentState.id}',
@@ -138,7 +137,7 @@ class PDASimulator {
         if (stack.isNotEmpty && stack.last == transition.stackPop) {
           stack.removeLast();
         } else {
-          return PDASimulationFailure(
+          return PDASimulationResult.failure(
             inputString: inputString,
             steps: steps,
             errorMessage: 'Cannot pop ${transition.stackPop} from stack',
@@ -176,7 +175,7 @@ class PDASimulator {
     }
     
     // Add final step
-        steps.add(SimulationStep.finalStepStep(
+        steps.add(SimulationStep.finalStep(
       finalState: currentState.id,
       remainingInput: remainingInput,
       stackContents: stack.join(''),
@@ -188,13 +187,13 @@ class PDASimulator {
     final isAccepted = pda.acceptingStates.contains(currentState);
     
     if (isAccepted) {
-      return PDASimulationSuccess(
+      return PDASimulationResult.success(
         inputString: inputString,
         steps: steps,
         executionTime: DateTime.now().difference(startTime),
       );
     } else {
-      return PDASimulationFailure(
+      return PDASimulationResult.failure(
         inputString: inputString,
         steps: steps,
         errorMessage: 'Input not accepted - final state is not accepting',
@@ -409,12 +408,12 @@ class PDASimulator {
   }
 
   /// Analyzes the states of the PDA
-  static StateAnalysis _analyzeStates(PDA pda) {
+  static PDAStateAnalysis _analyzeStates(PDA pda) {
     final totalStates = pda.states.length;
     final acceptingStates = pda.acceptingStates.length;
     final nonAcceptingStates = totalStates - acceptingStates;
     
-    return StateAnalysis(
+    return PDAStateAnalysis(
       totalStates: totalStates,
       acceptingStates: acceptingStates,
       nonAcceptingStates: nonAcceptingStates,
@@ -422,12 +421,12 @@ class PDASimulator {
   }
 
   /// Analyzes the transitions of the PDA
-  static TransitionAnalysis _analyzeTransitions(PDA pda) {
+  static PDATransitionAnalysis _analyzeTransitions(PDA pda) {
     final totalTransitions = pda.transitions.length;
     final pdaTransitions = pda.transitions.whereType<PDATransition>().length;
     final fsaTransitions = pda.transitions.whereType<FSATransition>().length;
     
-    return TransitionAnalysis(
+    return PDATransitionAnalysis(
       totalTransitions: totalTransitions,
       pdaTransitions: pdaTransitions,
       fsaTransitions: fsaTransitions,
@@ -461,7 +460,7 @@ class PDASimulator {
   }
 
   /// Analyzes the reachability of the PDA
-  static ReachabilityAnalysis _analyzeReachability(PDA pda) {
+  static PDAReachabilityAnalysis _analyzeReachability(PDA pda) {
     final reachableStates = <State>{};
     final unreachableStates = <State>{};
     
@@ -477,7 +476,7 @@ class PDASimulator {
       }
     }
     
-    return ReachabilityAnalysis(
+    return PDAReachabilityAnalysis(
       reachableStates: reachableStates,
       unreachableStates: unreachableStates,
     );
@@ -520,7 +519,7 @@ class PDASimulationResult {
     required this.executionTime,
   });
 
-  factory PDASimulationSuccess({
+  factory PDASimulationResult.success({
     required String inputString,
     required List<SimulationStep> steps,
     required Duration executionTime,
@@ -533,7 +532,7 @@ class PDASimulationResult {
     );
   }
 
-  factory PDASimulationFailure({
+  factory PDASimulationResult.failure({
     required String inputString,
     required List<SimulationStep> steps,
     required String errorMessage,
@@ -595,10 +594,10 @@ class PDASimulationResult {
 
 /// Analysis result of a PDA
 class PDAAnalysis {
-  final StateAnalysis stateAnalysis;
-  final TransitionAnalysis transitionAnalysis;
+  final PDAStateAnalysis stateAnalysis;
+  final PDATransitionAnalysis transitionAnalysis;
   final StackAnalysis stackAnalysis;
-  final ReachabilityAnalysis reachabilityAnalysis;
+  final PDAReachabilityAnalysis reachabilityAnalysis;
   final Duration executionTime;
 
   const PDAAnalysis({
@@ -610,10 +609,10 @@ class PDAAnalysis {
   });
 
   PDAAnalysis copyWith({
-    StateAnalysis? stateAnalysis,
-    TransitionAnalysis? transitionAnalysis,
+    PDAStateAnalysis? stateAnalysis,
+    PDATransitionAnalysis? transitionAnalysis,
     StackAnalysis? stackAnalysis,
-    ReachabilityAnalysis? reachabilityAnalysis,
+    PDAReachabilityAnalysis? reachabilityAnalysis,
     Duration? executionTime,
   }) {
     return PDAAnalysis(

@@ -20,17 +20,17 @@ class AutomatonSimulator {
       // Validate input
       final validationResult = _validateInput(automaton, inputString);
       if (!validationResult.isSuccess) {
-        return SimulationFailure(validationResult.error!);
+        return Failure(validationResult.error!);
       }
 
       // Handle empty automaton
       if (automaton.states.isEmpty) {
-        return SimulationFailure('Cannot simulate empty automaton');
+        return Failure('Cannot simulate empty automaton');
       }
 
       // Handle automaton with no initial state
       if (automaton.initialState == null) {
-        return SimulationFailure('Automaton must have an initial state');
+        return Failure('Automaton must have an initial state');
       }
 
       // Simulate the automaton
@@ -40,29 +40,29 @@ class AutomatonSimulator {
       // Update execution time
       final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
       
-      return SimulationSuccess(finalResult);
+      return Success(finalResult);
     } catch (e) {
-      return SimulationFailure('Error simulating automaton: $e');
+      return Failure('Error simulating automaton: $e');
     }
   }
 
   /// Validates the input automaton and string
   static Result<void> _validateInput(FSA automaton, String inputString) {
     if (automaton.states.isEmpty) {
-      return SimulationFailure('Automaton must have at least one state');
+      return Failure('Automaton must have at least one state');
     }
     
     if (automaton.initialState == null) {
-      return SimulationFailure('Automaton must have an initial state');
+        return Failure('Automaton must have an initial state');
     }
     
     if (!automaton.states.contains(automaton.initialState)) {
-      return SimulationFailure('Initial state must be in the states set');
+      return Failure('Initial state must be in the states set');
     }
     
     for (final acceptingState in automaton.acceptingStates) {
       if (!automaton.states.contains(acceptingState)) {
-        return SimulationFailure('Accepting state must be in the states set');
+        return Failure('Accepting state must be in the states set');
       }
     }
     
@@ -70,11 +70,11 @@ class AutomatonSimulator {
     for (int i = 0; i < inputString.length; i++) {
       final symbol = inputString[i];
       if (!automaton.alphabet.contains(symbol)) {
-        return SimulationFailure('Input string contains invalid symbol: $symbol');
+        return Failure('Input string contains invalid symbol: $symbol');
       }
     }
     
-    return SimulationSuccess(null);
+    return Success(null);
   }
 
   /// Simulates the automaton with the input string
@@ -150,7 +150,7 @@ class AutomatonSimulator {
       
       // If no next states, reject
       if (currentStates.isEmpty) {
-        return SimulationFailure(
+        return SimulationResult.failure(
           inputString: inputString,
           steps: steps,
           errorMessage: 'No transition found for symbol $symbol',
@@ -167,7 +167,7 @@ class AutomatonSimulator {
         ? currentStates.first.id 
         : '{${currentStates.map((s) => s.id).join(',')}}';
     
-        steps.add(SimulationStep.finalStepStep(
+        steps.add(SimulationStep.finalStep(
       finalState: finalStateId,
       remainingInput: remainingInput,
       stackContents: '',
@@ -176,13 +176,13 @@ class AutomatonSimulator {
     ));
     
     if (isAccepted) {
-      return SimulationSuccess(
+      return SimulationResult.success(
         inputString: inputString,
         steps: steps,
         executionTime: DateTime.now().difference(startTime),
       );
     } else {
-      return SimulationFailure(
+      return SimulationResult.failure(
         inputString: inputString,
         steps: steps,
         errorMessage: 'Input not accepted - no accepting state reached',
@@ -204,17 +204,17 @@ class AutomatonSimulator {
       // Validate input
       final validationResult = _validateInput(nfa, inputString);
       if (!validationResult.isSuccess) {
-        return SimulationFailure(validationResult.error!);
+        return Failure(validationResult.error!);
       }
 
       // Handle empty automaton
       if (nfa.states.isEmpty) {
-        return SimulationFailure('Cannot simulate empty automaton');
+        return Failure('Cannot simulate empty automaton');
       }
 
       // Handle automaton with no initial state
       if (nfa.initialState == null) {
-        return SimulationFailure('Automaton must have an initial state');
+        return Failure('Automaton must have an initial state');
       }
 
       // Simulate the NFA
@@ -224,9 +224,9 @@ class AutomatonSimulator {
       // Update execution time
       final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
       
-      return SimulationSuccess(finalResult);
+      return Success(finalResult);
     } catch (e) {
-      return SimulationFailure('Error simulating NFA: $e');
+      return Failure('Error simulating NFA: $e');
     }
   }
 
@@ -310,7 +310,7 @@ class AutomatonSimulator {
       
       // If no next states, reject
       if (currentStates.isEmpty) {
-        return SimulationFailure(
+        return SimulationResult.failure(
           inputString: inputString,
           steps: steps,
           errorMessage: 'No transition found for symbol $symbol',
@@ -327,7 +327,7 @@ class AutomatonSimulator {
         ? currentStates.first.id 
         : '{${currentStates.map((s) => s.id).join(',')}}';
     
-        steps.add(SimulationStep.finalStepStep(
+        steps.add(SimulationStep.finalStep(
       finalState: finalStateId,
       remainingInput: remainingInput,
       stackContents: '',
@@ -336,13 +336,13 @@ class AutomatonSimulator {
     ));
     
     if (isAccepted) {
-      return SimulationSuccess(
+      return SimulationResult.success(
         inputString: inputString,
         steps: steps,
         executionTime: DateTime.now().difference(startTime),
       );
     } else {
-      return SimulationFailure(
+      return SimulationResult.failure(
         inputString: inputString,
         steps: steps,
         errorMessage: 'Input not accepted - no accepting state reached',
@@ -355,20 +355,20 @@ class AutomatonSimulator {
   static Result<bool> accepts(FSA automaton, String inputString) {
     final simulationResult = simulate(automaton, inputString);
     if (!simulationResult.isSuccess) {
-      return SimulationFailure(simulationResult.error!);
+      return Failure(simulationResult.error!);
     }
     
-    return SimulationSuccess(simulationResult.data!.accepted);
+    return Success(simulationResult.data!.accepted);
   }
 
   /// Tests if an automaton rejects a specific string
   static Result<bool> rejects(FSA automaton, String inputString) {
     final acceptsResult = accepts(automaton, inputString);
     if (!acceptsResult.isSuccess) {
-      return SimulationFailure(acceptsResult.error!);
+      return Failure(acceptsResult.error!);
     }
     
-    return SimulationSuccess(!acceptsResult.data!);
+    return Success(!acceptsResult.data!);
   }
 
   /// Finds all strings of a given length that the automaton accepts
@@ -393,9 +393,9 @@ class AutomatonSimulator {
         );
       }
       
-      return SimulationSuccess(acceptedStrings);
+      return Success(acceptedStrings);
     } catch (e) {
-      return SimulationFailure('Error finding accepted strings: $e');
+      return Failure('Error finding accepted strings: $e');
     }
   }
 
@@ -452,9 +452,9 @@ class AutomatonSimulator {
         );
       }
       
-      return SimulationSuccess(rejectedStrings);
+      return Success(rejectedStrings);
     } catch (e) {
-      return SimulationFailure('Error finding rejected strings: $e');
+      return Failure('Error finding rejected strings: $e');
     }
   }
 

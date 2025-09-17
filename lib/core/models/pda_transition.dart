@@ -31,12 +31,12 @@ class PDATransition extends Transition {
   /// Stack push symbol (alias for pushSymbol)
   String get stackPush => pushSymbol;
 
-  const PDATransition({
+  PDATransition({
     required super.id,
     required super.fromState,
     required super.toState,
     required super.label,
-    super.controlPoint,
+    super.controlPoint = Vector2.zero(),
     super.type,
     required this.inputSymbol,
     required this.popSymbol,

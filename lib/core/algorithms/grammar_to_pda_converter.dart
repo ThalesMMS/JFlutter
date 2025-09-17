@@ -19,7 +19,7 @@ class GrammarToPDAConverter {
       
       // Check if all productions are valid for PDA conversion
       for (final production in grammar.productions) {
-        if (production.leftHandSide.isEmpty) return false;
+        if (production.leftSide.isEmpty) return false;
         // Additional validation can be added here
       }
       

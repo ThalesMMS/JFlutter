@@ -1,7 +1,7 @@
 /// Analysis classes for automaton properties and characteristics
 
 /// Analysis of state-related properties
-class StateAnalysis {
+class AutomatonStateAnalysis {
   /// Total number of states in the automaton
   final int stateCount;
   
@@ -23,7 +23,7 @@ class StateAnalysis {
   /// Whether the automaton has accepting states
   final bool hasAcceptingStates;
 
-  const StateAnalysis({
+  const AutomatonStateAnalysis({
     required this.stateCount,
     required this.initialStateCount,
     required this.acceptingStateCount,
@@ -33,15 +33,15 @@ class StateAnalysis {
     required this.hasAcceptingStates,
   });
 
-  /// Creates a StateAnalysis from automaton data
-  factory StateAnalysis.fromAutomaton({
+  /// Creates a AutomatonStateAnalysis from automaton data
+  factory AutomatonStateAnalysis.fromAutomaton({
     required int stateCount,
     required int initialStateCount,
     required int acceptingStateCount,
     required int unreachableStateCount,
     required int deadStateCount,
   }) {
-    return StateAnalysis(
+    return AutomatonStateAnalysis(
       stateCount: stateCount,
       initialStateCount: initialStateCount,
       acceptingStateCount: acceptingStateCount,
@@ -54,14 +54,14 @@ class StateAnalysis {
 
   @override
   String toString() {
-    return 'StateAnalysis(states: $stateCount, initial: $initialStateCount, '
+    return 'AutomatonStateAnalysis(states: $stateCount, initial: $initialStateCount, '
         'accepting: $acceptingStateCount, unreachable: $unreachableStateCount, '
         'dead: $deadStateCount)';
   }
 }
 
 /// Analysis of transition-related properties
-class TransitionAnalysis {
+class AutomatonTransitionAnalysis {
   /// Total number of transitions in the automaton
   final int transitionCount;
   
@@ -80,7 +80,7 @@ class TransitionAnalysis {
   /// Whether the automaton has epsilon transitions
   final bool hasEpsilonTransitions;
 
-  const TransitionAnalysis({
+  const AutomatonTransitionAnalysis({
     required this.transitionCount,
     required this.deterministicTransitionCount,
     required this.nondeterministicTransitionCount,
@@ -89,14 +89,14 @@ class TransitionAnalysis {
     required this.hasEpsilonTransitions,
   });
 
-  /// Creates a TransitionAnalysis from automaton data
-  factory TransitionAnalysis.fromAutomaton({
+  /// Creates a AutomatonTransitionAnalysis from automaton data
+  factory AutomatonTransitionAnalysis.fromAutomaton({
     required int transitionCount,
     required int deterministicTransitionCount,
     required int nondeterministicTransitionCount,
     required int epsilonTransitionCount,
   }) {
-    return TransitionAnalysis(
+    return AutomatonTransitionAnalysis(
       transitionCount: transitionCount,
       deterministicTransitionCount: deterministicTransitionCount,
       nondeterministicTransitionCount: nondeterministicTransitionCount,
@@ -108,7 +108,7 @@ class TransitionAnalysis {
 
   @override
   String toString() {
-    return 'TransitionAnalysis(transitions: $transitionCount, '
+    return 'AutomatonTransitionAnalysis(transitions: $transitionCount, '
         'deterministic: $deterministicTransitionCount, '
         'nondeterministic: $nondeterministicTransitionCount, '
         'epsilon: $epsilonTransitionCount)';
@@ -116,7 +116,7 @@ class TransitionAnalysis {
 }
 
 /// Analysis of reachability properties
-class ReachabilityAnalysis {
+class AutomatonReachabilityAnalysis {
   /// Number of reachable states from the initial state
   final int reachableStates;
   
@@ -132,7 +132,7 @@ class ReachabilityAnalysis {
   /// Whether the automaton is universal (all reachable states are accepting)
   final bool isUniversal;
 
-  const ReachabilityAnalysis({
+  const AutomatonReachabilityAnalysis({
     required this.reachableStates,
     required this.unreachableStates,
     required this.allStatesReachable,
@@ -140,8 +140,8 @@ class ReachabilityAnalysis {
     required this.isUniversal,
   });
 
-  /// Creates a ReachabilityAnalysis from automaton data
-  factory ReachabilityAnalysis.fromAutomaton({
+  /// Creates a AutomatonReachabilityAnalysis from automaton data
+  factory AutomatonReachabilityAnalysis.fromAutomaton({
     required int totalStates,
     required int reachableStates,
     required int acceptingStates,
@@ -152,7 +152,7 @@ class ReachabilityAnalysis {
     final isEmpty = reachableAcceptingStates == 0;
     final isUniversal = reachableStates > 0 && reachableStates == reachableAcceptingStates;
     
-    return ReachabilityAnalysis(
+    return AutomatonReachabilityAnalysis(
       reachableStates: reachableStates,
       unreachableStates: unreachableStates,
       allStatesReachable: allStatesReachable,
@@ -163,7 +163,7 @@ class ReachabilityAnalysis {
 
   @override
   String toString() {
-    return 'ReachabilityAnalysis(reachable: $reachableStates, '
+    return 'AutomatonReachabilityAnalysis(reachable: $reachableStates, '
         'unreachable: $unreachableStates, allReachable: $allStatesReachable, '
         'isEmpty: $isEmpty, isUniversal: $isUniversal)';
   }
@@ -172,13 +172,13 @@ class ReachabilityAnalysis {
 /// Comprehensive analysis combining all analysis types
 class AutomatonAnalysis {
   /// State analysis
-  final StateAnalysis stateAnalysis;
+  final AutomatonStateAnalysis stateAnalysis;
   
   /// Transition analysis
-  final TransitionAnalysis transitionAnalysis;
+  final AutomatonTransitionAnalysis transitionAnalysis;
   
   /// Reachability analysis
-  final ReachabilityAnalysis reachabilityAnalysis;
+  final AutomatonReachabilityAnalysis reachabilityAnalysis;
   
   /// Overall validity of the automaton
   final bool isValid;
@@ -196,9 +196,9 @@ class AutomatonAnalysis {
 
   /// Creates a comprehensive analysis from individual analyses
   factory AutomatonAnalysis.combine({
-    required StateAnalysis stateAnalysis,
-    required TransitionAnalysis transitionAnalysis,
-    required ReachabilityAnalysis reachabilityAnalysis,
+    required AutomatonStateAnalysis stateAnalysis,
+    required AutomatonTransitionAnalysis transitionAnalysis,
+    required AutomatonReachabilityAnalysis reachabilityAnalysis,
     List<String> errors = const [],
   }) {
     final isValid = errors.isEmpty;

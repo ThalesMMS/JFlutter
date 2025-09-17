@@ -31,7 +31,7 @@ abstract class Transition {
     required this.fromState,
     required this.toState,
     required this.label,
-    this.controlPoint = const Vector2.zero(),
+    this.controlPoint = Vector2.zero(),
     this.type = TransitionType.deterministic,
   });
 

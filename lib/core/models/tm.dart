@@ -16,7 +16,7 @@ class TM extends Automaton {
   /// Number of tapes (1 for single-tape, >1 for multi-tape)
   final int tapeCount;
 
-  const TM({
+  TM({
     required super.id,
     required super.name,
     required super.states,
@@ -28,7 +28,7 @@ class TM extends Automaton {
     required super.modified,
     required super.bounds,
     super.zoomLevel,
-    super.panOffset,
+    super.panOffset = Vector2.zero(),
     required this.tapeAlphabet,
     this.blankSymbol = 'B',
     this.tapeCount = 1,
@@ -62,7 +62,6 @@ class TM extends Automaton {
       alphabet: alphabet ?? this.alphabet,
       initialState: initialState ?? this.initialState,
       acceptingStates: acceptingStates ?? this.acceptingStates,
-      type: type ?? this.type,
       created: created ?? this.created,
       modified: modified ?? this.modified,
       bounds: bounds ?? this.bounds,

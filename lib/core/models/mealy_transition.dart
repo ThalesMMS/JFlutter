@@ -10,12 +10,12 @@ class MealyTransition extends Transition {
   /// Output symbol produced by this transition
   final String outputSymbol;
 
-  const MealyTransition({
+  MealyTransition({
     required super.id,
     required super.fromState,
     required super.toState,
     required super.label,
-    super.controlPoint,
+    super.controlPoint = Vector2.zero(),
     super.type,
     required this.inputSymbol,
     required this.outputSymbol,

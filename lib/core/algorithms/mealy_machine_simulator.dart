@@ -4,7 +4,6 @@ import '../models/mealy_transition.dart';
 import '../models/simulation_result.dart';
 import '../models/simulation_step.dart';
 import '../result.dart';
-import 'automaton_analyzer.dart';
 
 /// Simulates Mealy machines with input strings
 class MealyMachineSimulator {
@@ -120,7 +119,7 @@ class MealyMachineSimulator {
       // Find transition
       final transition = automaton.getMealyTransitionFromStateOnSymbol(currentState, symbol);
       if (transition == null) {
-        return MealySimulationFailure(
+        return MealySimulationResult.failure(
           inputString: inputString,
           outputString: outputString,
           steps: steps,
@@ -130,15 +129,14 @@ class MealyMachineSimulator {
       }
       
       // Update output string
-      outputString += transition.output;
+      outputString += transition.outputSymbol;
       
       // Add step
       if (stepByStep) {
-        steps.add(SimulationStep.mealy(
+        steps.add(SimulationStep.fsa(
           currentState: currentState.id,
           remainingInput: remainingInput,
           usedTransition: symbol,
-          output: transition.output,
           stepNumber: stepNumber,
         ));
       }
@@ -170,14 +168,14 @@ class MealyMachineSimulator {
     final isAccepted = automaton.acceptingStates.contains(currentState);
     
     if (isAccepted) {
-      return MealySimulationSuccess(
+      return MealySimulationResult.success(
         inputString: inputString,
         outputString: outputString,
         steps: steps,
         executionTime: DateTime.now().difference(startTime),
       );
     } else {
-      return MealySimulationFailure(
+      return MealySimulationResult.failure(
         inputString: inputString,
         outputString: outputString,
         steps: steps,
@@ -407,12 +405,12 @@ class MealyMachineSimulator {
   }
 
   /// Analyzes the states of the Mealy machine
-  static StateAnalysis _analyzeStates(FSA automaton) {
+  static MealyStateAnalysis _analyzeStates(FSA automaton) {
     final totalStates = automaton.states.length;
     final acceptingStates = automaton.acceptingStates.length;
     final nonAcceptingStates = totalStates - acceptingStates;
     
-    return StateAnalysis(
+    return MealyStateAnalysis(
       totalStates: totalStates,
       acceptingStates: acceptingStates,
       nonAcceptingStates: nonAcceptingStates,
@@ -420,12 +418,12 @@ class MealyMachineSimulator {
   }
 
   /// Analyzes the transitions of the Mealy machine
-  static TransitionAnalysis _analyzeTransitions(FSA automaton) {
+  static MealyTransitionAnalysis _analyzeTransitions(FSA automaton) {
     final totalTransitions = automaton.transitions.length;
     final mealyTransitions = automaton.transitions.whereType<MealyTransition>().length;
-    final fsaTransitions = automaton.transitions.whereType<FSATransition>().length;
+    final fsaTransitions = automaton.transitions.whereType<MealyTransition>().length;
     
-    return TransitionAnalysis(
+    return MealyTransitionAnalysis(
       totalTransitions: totalTransitions,
       mealyTransitions: mealyTransitions,
       fsaTransitions: fsaTransitions,
@@ -462,7 +460,7 @@ class MealyMachineSimulator {
   }
 
   /// Analyzes the reachability of the Mealy machine
-  static ReachabilityAnalysis _analyzeReachability(FSA automaton) {
+  static MealyReachabilityAnalysis _analyzeReachability(FSA automaton) {
     final reachableStates = <State>{};
     final unreachableStates = <State>{};
     
@@ -478,7 +476,7 @@ class MealyMachineSimulator {
       }
     }
     
-    return ReachabilityAnalysis(
+    return MealyReachabilityAnalysis(
       reachableStates: reachableStates,
       unreachableStates: unreachableStates,
     );
@@ -523,7 +521,7 @@ class MealySimulationResult {
     required this.executionTime,
   });
 
-  factory MealySimulationSuccess({
+  factory MealySimulationResult.success({
     required String inputString,
     required String outputString,
     required List<SimulationStep> steps,
@@ -538,7 +536,7 @@ class MealySimulationResult {
     );
   }
 
-  factory MealySimulationFailure({
+  factory MealySimulationResult.failure({
     required String inputString,
     required String outputString,
     required List<SimulationStep> steps,
@@ -608,10 +606,10 @@ class MealySimulationResult {
 
 /// Analysis result of a Mealy machine
 class MealyAnalysis {
-  final StateAnalysis stateAnalysis;
-  final TransitionAnalysis transitionAnalysis;
+  final MealyStateAnalysis stateAnalysis;
+  final MealyTransitionAnalysis transitionAnalysis;
   final OutputAnalysis outputAnalysis;
-  final ReachabilityAnalysis reachabilityAnalysis;
+  final MealyReachabilityAnalysis reachabilityAnalysis;
   final Duration executionTime;
 
   const MealyAnalysis({
@@ -623,10 +621,10 @@ class MealyAnalysis {
   });
 
   MealyAnalysis copyWith({
-    StateAnalysis? stateAnalysis,
-    TransitionAnalysis? transitionAnalysis,
+    MealyStateAnalysis? stateAnalysis,
+    MealyTransitionAnalysis? transitionAnalysis,
     OutputAnalysis? outputAnalysis,
-    ReachabilityAnalysis? reachabilityAnalysis,
+    MealyReachabilityAnalysis? reachabilityAnalysis,
     Duration? executionTime,
   }) {
     return MealyAnalysis(

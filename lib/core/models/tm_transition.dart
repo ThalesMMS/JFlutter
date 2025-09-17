@@ -19,12 +19,12 @@ class TMTransition extends Transition {
   /// Head position (alias for direction)
   TapeDirection get headPosition => direction;
 
-  const TMTransition({
+  TMTransition({
     required super.id,
     required super.fromState,
     required super.toState,
     required super.label,
-    super.controlPoint,
+    super.controlPoint = Vector2.zero(),
     super.type,
     required this.readSymbol,
     required this.writeSymbol,

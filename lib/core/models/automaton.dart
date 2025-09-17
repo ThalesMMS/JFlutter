@@ -60,7 +60,7 @@ abstract class Automaton {
     required this.modified,
     required this.bounds,
     this.zoomLevel = 1.0,
-    this.panOffset = const Vector2.zero(),
+    this.panOffset = Vector2.zero(),
   });
 
   /// Creates a copy of this automaton with updated properties

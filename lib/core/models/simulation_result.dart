@@ -1,32 +1,76 @@
 import 'simulation_step.dart';
 
-/// Result of an automaton simulation
 class SimulationResult {
-  /// Input string that was simulated
   final String inputString;
-  
-  /// Whether the input was accepted
   final bool accepted;
-  
-  /// Is accepted (alias for accepted)
   bool get isAccepted => accepted;
-  
-  /// List of simulation steps
   final List<SimulationStep> steps;
-  
-  /// Error message if simulation failed
   final String errorMessage;
-  
-  /// Execution time of the simulation
   final Duration executionTime;
 
-  const SimulationResult({
+  const SimulationResult._({
     required this.inputString,
     required this.accepted,
     required this.steps,
     this.errorMessage = '',
     required this.executionTime,
   });
+
+  factory SimulationResult.success({
+    required String inputString,
+    required List<SimulationStep> steps,
+    required Duration executionTime,
+  }) {
+    return SimulationResult._(
+      inputString: inputString,
+      accepted: true,
+      steps: steps,
+      executionTime: executionTime,
+    );
+  }
+
+  factory SimulationResult.failure({
+    required String inputString,
+    required List<SimulationStep> steps,
+    required String errorMessage,
+    required Duration executionTime,
+  }) {
+    return SimulationResult._(
+      inputString: inputString,
+      accepted: false,
+      steps: steps,
+      errorMessage: errorMessage,
+      executionTime: executionTime,
+    );
+  }
+
+  factory SimulationResult.timeout({
+    required String inputString,
+    required List<SimulationStep> steps,
+    required Duration executionTime,
+  }) {
+    return SimulationResult._(
+      inputString: inputString,
+      accepted: false,
+      steps: steps,
+      errorMessage: 'Simulation timed out after ${executionTime.inSeconds} seconds',
+      executionTime: executionTime,
+    );
+  }
+
+  factory SimulationResult.infiniteLoop({
+    required String inputString,
+    required List<SimulationStep> steps,
+    required Duration executionTime,
+  }) {
+    return SimulationResult._(
+      inputString: inputString,
+      accepted: false,
+      steps: steps,
+      errorMessage: 'Infinite loop detected after ${steps.length} steps',
+      executionTime: executionTime,
+    );
+  }
 
   /// Creates a copy of this simulation result with updated properties
   SimulationResult copyWith({
@@ -36,7 +80,7 @@ class SimulationResult {
     String? errorMessage,
     Duration? executionTime,
   }) {
-    return SimulationResult(
+    return SimulationResult._(
       inputString: inputString ?? this.inputString,
       accepted: accepted ?? this.accepted,
       steps: steps ?? this.steps,
@@ -58,7 +102,7 @@ class SimulationResult {
 
   /// Creates a simulation result from a JSON representation
   factory SimulationResult.fromJson(Map<String, dynamic> json) {
-    return SimulationResult(
+    return SimulationResult._(
       inputString: json['inputString'] as String,
       accepted: json['accepted'] as bool,
       steps: (json['steps'] as List)
@@ -184,74 +228,13 @@ class SimulationResult {
   /// Gets the tape contents at the end of simulation (for TM)
   String get finalTapeContents => lastStep?.tapeContents ?? '';
 
-  /// Creates a successful simulation result
-  factory SimulationSuccess({
-    required String inputString,
-    required List<SimulationStep> steps,
-    required Duration executionTime,
-  }) {
-    return SimulationResult(
-      inputString: inputString,
-      accepted: true,
-      steps: steps,
-      errorMessage: '',
-      executionTime: executionTime,
-    );
-  }
-
-  /// Creates a failed simulation result
-  factory SimulationFailure({
-    required String inputString,
-    required List<SimulationStep> steps,
-    required String errorMessage,
-    required Duration executionTime,
-  }) {
-    return SimulationResult(
-      inputString: inputString,
-      accepted: false,
-      steps: steps,
-      errorMessage: errorMessage,
-      executionTime: executionTime,
-    );
-  }
-
-  /// Creates a timeout simulation result
-  factory SimulationResult.timeout({
-    required String inputString,
-    required List<SimulationStep> steps,
-    required Duration executionTime,
-  }) {
-    return SimulationResult(
-      inputString: inputString,
-      accepted: false,
-      steps: steps,
-      errorMessage: 'Simulation timed out after ${executionTime.inSeconds} seconds',
-      executionTime: executionTime,
-    );
-  }
-
-  /// Creates an infinite loop simulation result
-  factory SimulationResult.infiniteLoop({
-    required String inputString,
-    required List<SimulationStep> steps,
-    required Duration executionTime,
-  }) {
-    return SimulationResult(
-      inputString: inputString,
-      accepted: false,
-      steps: steps,
-      errorMessage: 'Infinite loop detected after ${steps.length} steps',
-      executionTime: executionTime,
-    );
-  }
-
   /// Creates an error simulation result
   factory SimulationResult.error({
     required String inputString,
     required String errorMessage,
     required Duration executionTime,
   }) {
-    return SimulationResult(
+    return SimulationResult._(
       inputString: inputString,
       accepted: false,
       steps: [],

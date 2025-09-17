@@ -1,458 +1,289 @@
-import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../core/entities/automaton_entity.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/models/fsa.dart';
+import '../../core/models/grammar.dart';
+import '../../core/models/pda.dart';
+import '../../core/models/tm.dart';
 import '../../core/result.dart';
-import '../../core/use_cases/automaton_use_cases.dart';
+import '../../core/algorithms/automaton_simulator.dart';
+import '../../core/algorithms/nfa_to_dfa_converter.dart';
+import '../../core/algorithms/dfa_minimizer.dart';
+import '../../core/algorithms/regex_to_nfa_converter.dart';
+import '../../core/algorithms/fa_to_regex_converter.dart';
+import '../../data/services/automaton_service.dart';
+import '../../data/services/simulation_service.dart';
+import '../../data/services/conversion_service.dart';
 
-/// Provider for managing automaton state and operations
-class AutomatonProvider extends ChangeNotifier {
-  final CreateAutomatonUseCase _createAutomatonUseCase;
-  final LoadAutomatonUseCase _loadAutomatonUseCase;
-  final SaveAutomatonUseCase _saveAutomatonUseCase;
-  final DeleteAutomatonUseCase _deleteAutomatonUseCase;
-  final ExportAutomatonUseCase _exportAutomatonUseCase;
-  final ImportAutomatonUseCase _importAutomatonUseCase;
-  final ValidateAutomatonUseCase _validateAutomatonUseCase;
-  final AddStateUseCase _addStateUseCase;
-  final RemoveStateUseCase _removeStateUseCase;
-  final AddTransitionUseCase _addTransitionUseCase;
-  final RemoveTransitionUseCase _removeTransitionUseCase;
-
-  AutomatonEntity? _currentAutomaton;
-  bool _isLoading = false;
-  String? _error;
-  List<String> _validationErrors = [];
-  Set<String> _selectedStates = {};
-  // UI interaction mode: connecting states for transition creation
-  bool _isConnectingStates = false;
-  String? _connectingFromState;
+/// Provider for automaton state management
+class AutomatonProvider extends StateNotifier<AutomatonState> {
+  final AutomatonService _automatonService;
+  final SimulationService _simulationService;
+  final ConversionService _conversionService;
 
   AutomatonProvider({
-    required CreateAutomatonUseCase createAutomatonUseCase,
-    required LoadAutomatonUseCase loadAutomatonUseCase,
-    required SaveAutomatonUseCase saveAutomatonUseCase,
-    required DeleteAutomatonUseCase deleteAutomatonUseCase,
-    required ExportAutomatonUseCase exportAutomatonUseCase,
-    required ImportAutomatonUseCase importAutomatonUseCase,
-    required ValidateAutomatonUseCase validateAutomatonUseCase,
-    required AddStateUseCase addStateUseCase,
-    required RemoveStateUseCase removeStateUseCase,
-    required AddTransitionUseCase addTransitionUseCase,
-    required RemoveTransitionUseCase removeTransitionUseCase,
-  })  : _createAutomatonUseCase = createAutomatonUseCase,
-        _loadAutomatonUseCase = loadAutomatonUseCase,
-        _saveAutomatonUseCase = saveAutomatonUseCase,
-        _deleteAutomatonUseCase = deleteAutomatonUseCase,
-        _exportAutomatonUseCase = exportAutomatonUseCase,
-        _importAutomatonUseCase = importAutomatonUseCase,
-        _validateAutomatonUseCase = validateAutomatonUseCase,
-        _addStateUseCase = addStateUseCase,
-        _removeStateUseCase = removeStateUseCase,
-        _addTransitionUseCase = addTransitionUseCase,
-        _removeTransitionUseCase = removeTransitionUseCase;
-
-  // Getters
-  AutomatonEntity? get currentAutomaton => _currentAutomaton;
-  Set<String> get selectedStates => _selectedStates;
-  bool get isConnectingStates => _isConnectingStates;
-  String? get connectingFromState => _connectingFromState;
-  
-  // Setters
-  set currentAutomaton(AutomatonEntity? automaton) {
-    _currentAutomaton = automaton;
-    notifyListeners();
-  }
-  set selectedStates(Set<String> states) {
-    _selectedStates = states;
-    notifyListeners();
-  }
-  bool get isLoading => _isLoading;
-  String? get error => _error;
-  List<String> get validationErrors => _validationErrors;
-
-  // Setters
-  void setCurrentAutomaton(AutomatonEntity? automaton) {
-    _currentAutomaton = automaton;
-    notifyListeners();
-  }
-  bool get hasAutomaton => _currentAutomaton != null;
-  bool get isValid => _validationErrors.isEmpty;
+    required AutomatonService automatonService,
+    required SimulationService simulationService,
+    required ConversionService conversionService,
+  })  : _automatonService = automatonService,
+        _simulationService = simulationService,
+        _conversionService = conversionService,
+        super(const AutomatonState());
 
   /// Creates a new automaton
   Future<void> createAutomaton({
     required String name,
-    required AutomatonType type,
-    Set<String> alphabet = const {},
+    String? description,
+    required List<String> alphabet,
   }) async {
-    _setLoading(true);
-    _clearError();
+    state = state.copyWith(isLoading: true, error: null);
+    
+    try {
+      // Create a simple automaton with one state
+      final result = _automatonService.createAutomaton(
+        CreateAutomatonRequest(
+          name: name,
+          description: description,
+          states: [
+            StateData(
+              id: 'q0',
+              name: 'q0',
+              position: Point(100, 100),
+              isInitial: true,
+              isAccepting: false,
+            ),
+          ],
+          transitions: [],
+          alphabet: alphabet,
+          bounds: Rect(0, 0, 400, 300),
+        ),
+      );
 
-    final result = await _createAutomatonUseCase.execute(
-      name: name,
-      type: type,
-      alphabet: alphabet,
-    );
-
-    result.onSuccess((automaton) {
-      _currentAutomaton = automaton;
-      notifyListeners();
-    });
-
-    result.onFailure((error) {
-      _setError(error);
-    });
-
-    _setLoading(false);
-  }
-
-  /// Loads an automaton by ID
-  Future<void> loadAutomaton(String id) async {
-    _setLoading(true);
-    _clearError();
-
-    final result = await _loadAutomatonUseCase.execute(id);
-
-    result.onSuccess((automaton) {
-      _currentAutomaton = automaton;
-      notifyListeners();
-    });
-
-    result.onFailure((error) {
-      _setError(error);
-    });
-
-    _setLoading(false);
-  }
-
-  /// Saves the current automaton
-  Future<void> saveAutomaton() async {
-    if (_currentAutomaton == null) return;
-
-    _setLoading(true);
-    _clearError();
-
-    final result = await _saveAutomatonUseCase.execute(_currentAutomaton!);
-
-    result.onSuccess((automaton) {
-      _currentAutomaton = automaton;
-      notifyListeners();
-    });
-
-    result.onFailure((error) {
-      _setError(error);
-    });
-
-    _setLoading(false);
-  }
-
-  /// Deletes an automaton
-  Future<void> deleteAutomaton(String id) async {
-    _setLoading(true);
-    _clearError();
-
-    final result = await _deleteAutomatonUseCase.execute(id);
-
-    result.onSuccess((_) {
-      if (_currentAutomaton?.id == id) {
-        _currentAutomaton = null;
-        notifyListeners();
+      if (result.isSuccess) {
+        state = state.copyWith(
+          currentAutomaton: result.data,
+          isLoading: false,
+        );
+      } else {
+        state = state.copyWith(
+          isLoading: false,
+          error: result.error,
+        );
       }
-    });
-
-    result.onFailure((error) {
-      _setError(error);
-    });
-
-    _setLoading(false);
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Error creating automaton: $e',
+      );
+    }
   }
 
-  /// Exports the current automaton
-  Future<String?> exportAutomaton() async {
-    if (_currentAutomaton == null) return null;
-
-    _setLoading(true);
-    _clearError();
-
-    final result = await _exportAutomatonUseCase.execute(_currentAutomaton!);
-
-    _setLoading(false);
-
-    return result.data;
+  /// Updates the current automaton
+  void updateAutomaton(FSA automaton) {
+    state = state.copyWith(currentAutomaton: automaton);
   }
 
-  /// Imports an automaton from JSON
-  Future<void> importAutomaton(String jsonString) async {
-    _setLoading(true);
-    _clearError();
+  /// Simulates the current automaton with input string
+  Future<void> simulateAutomaton(String inputString) async {
+    if (state.currentAutomaton == null) return;
 
-    final result = await _importAutomatonUseCase.execute(jsonString);
+    state = state.copyWith(isLoading: true, error: null);
 
-    result.onSuccess((automaton) {
-      _currentAutomaton = automaton;
-      notifyListeners();
-    });
+    try {
+      // Use the core algorithm directly
+      final result = AutomatonSimulator.simulate(
+        state.currentAutomaton!,
+        inputString,
+        stepByStep: true,
+        timeout: const Duration(seconds: 5),
+      );
 
-    result.onFailure((error) {
-      _setError(error);
-    });
-
-    _setLoading(false);
+      if (result.isSuccess) {
+        state = state.copyWith(
+          simulationResult: result.data,
+          isLoading: false,
+        );
+      } else {
+        state = state.copyWith(
+          isLoading: false,
+          error: result.error,
+        );
+      }
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Error simulating automaton: $e',
+      );
+    }
   }
 
-  /// Validates the current automaton
-  Future<void> validateAutomaton() async {
-    if (_currentAutomaton == null) return;
+  /// Converts NFA to DFA
+  Future<void> convertNfaToDfa() async {
+    if (state.currentAutomaton == null) return;
 
-    _setLoading(true);
-    _clearError();
+    state = state.copyWith(isLoading: true, error: null);
 
-    final result = await _validateAutomatonUseCase.execute(_currentAutomaton!);
+    try {
+      // Use the core algorithm directly
+      final result = NFAToDFAConverter.convert(state.currentAutomaton!);
 
-    result.onSuccess((isValid) {
-      _validationErrors = isValid ? [] : ['Automaton has validation errors'];
-      notifyListeners();
-    });
-
-    result.onFailure((error) {
-      _setError(error);
-    });
-
-    _setLoading(false);
+      if (result.isSuccess) {
+        state = state.copyWith(
+          currentAutomaton: result.data,
+          isLoading: false,
+        );
+      } else {
+        state = state.copyWith(
+          isLoading: false,
+          error: result.error,
+        );
+      }
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Error converting NFA to DFA: $e',
+      );
+    }
   }
 
-  /// Adds a state to the current automaton
-  Future<void> addState({
-    required String name,
-    required double x,
-    required double y,
-    bool isInitial = false,
-    bool isFinal = false,
-  }) async {
-    if (_currentAutomaton == null) return;
+  /// Minimizes DFA
+  Future<void> minimizeDfa() async {
+    if (state.currentAutomaton == null) return;
 
-    _setLoading(true);
-    _clearError();
+    state = state.copyWith(isLoading: true, error: null);
 
-    final result = await _addStateUseCase.execute(
-      automaton: _currentAutomaton!,
-      name: name,
-      x: x,
-      y: y,
-      isInitial: isInitial,
-      isFinal: isFinal,
-    );
+    try {
+      // Use the core algorithm directly
+      final result = DFAMinimizer.minimize(state.currentAutomaton!);
 
-    result.onSuccess((automaton) {
-      _currentAutomaton = automaton;
-      notifyListeners();
-    });
-
-    result.onFailure((error) {
-      _setError(error);
-    });
-
-    _setLoading(false);
+      if (result.isSuccess) {
+        state = state.copyWith(
+          currentAutomaton: result.data,
+          isLoading: false,
+        );
+      } else {
+        state = state.copyWith(
+          isLoading: false,
+          error: result.error,
+        );
+      }
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Error minimizing DFA: $e',
+      );
+    }
   }
 
-  /// Removes a state from the current automaton
-  Future<void> removeState(String stateId) async {
-    if (_currentAutomaton == null) return;
+  /// Converts regex to NFA
+  Future<void> convertRegexToNfa(String regex) async {
+    state = state.copyWith(isLoading: true, error: null);
 
-    _setLoading(true);
-    _clearError();
+    try {
+      // Use the core algorithm directly
+      final result = RegexToNFAConverter.convert(regex);
 
-    final result = await _removeStateUseCase.execute(
-      automaton: _currentAutomaton!,
-      stateId: stateId,
-    );
-
-    result.onSuccess((automaton) {
-      _currentAutomaton = automaton;
-      notifyListeners();
-    });
-
-    result.onFailure((error) {
-      _setError(error);
-    });
-
-    _setLoading(false);
+      if (result.isSuccess) {
+        state = state.copyWith(
+          currentAutomaton: result.data,
+          isLoading: false,
+        );
+      } else {
+        state = state.copyWith(
+          isLoading: false,
+          error: result.error,
+        );
+      }
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Error converting regex to NFA: $e',
+      );
+    }
   }
 
-  /// Adds a transition to the current automaton
-  Future<void> addTransition({
-    required String fromStateId,
-    required String symbol,
-    required String toStateId,
-  }) async {
-    if (_currentAutomaton == null) return;
+  /// Converts FA to regex
+  Future<void> convertFaToRegex() async {
+    if (state.currentAutomaton == null) return;
 
-    _setLoading(true);
-    _clearError();
+    state = state.copyWith(isLoading: true, error: null);
 
-    final result = await _addTransitionUseCase.execute(
-      automaton: _currentAutomaton!,
-      fromStateId: fromStateId,
-      symbol: symbol,
-      toStateId: toStateId,
-    );
+    try {
+      // Use the core algorithm directly
+      final result = FAToRegexConverter.convert(state.currentAutomaton!);
 
-    result.onSuccess((automaton) {
-      _currentAutomaton = automaton;
-      notifyListeners();
-    });
-
-    result.onFailure((error) {
-      _setError(error);
-    });
-
-    _setLoading(false);
-  }
-
-  /// Removes a transition from the current automaton
-  Future<void> removeTransition({
-    required String fromStateId,
-    required String symbol,
-    String? toStateId,
-  }) async {
-    if (_currentAutomaton == null) return;
-
-    _setLoading(true);
-    _clearError();
-
-    final result = await _removeTransitionUseCase.execute(
-      automaton: _currentAutomaton!,
-      fromStateId: fromStateId,
-      symbol: symbol,
-      toStateId: toStateId,
-    );
-
-    result.onSuccess((automaton) {
-      _currentAutomaton = automaton;
-      notifyListeners();
-    });
-
-    result.onFailure((error) {
-      _setError(error);
-    });
-
-    _setLoading(false);
+      if (result.isSuccess) {
+        // Store the regex result in state
+        state = state.copyWith(
+          regexResult: result.data,
+          isLoading: false,
+        );
+      } else {
+        state = state.copyWith(
+          isLoading: false,
+          error: result.error,
+        );
+      }
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Error converting FA to regex: $e',
+      );
+    }
   }
 
   /// Clears the current automaton
   void clearAutomaton() {
-    _currentAutomaton = null;
-    _clearError();
-    _validationErrors.clear();
-    notifyListeners();
+    state = state.copyWith(
+      currentAutomaton: null,
+      simulationResult: null,
+      regexResult: null,
+      error: null,
+    );
   }
 
-  /// Clears any error state
+  /// Clears any error messages
   void clearError() {
-    _clearError();
-  }
-
-  // Private methods
-  void _setLoading(bool loading) {
-    _isLoading = loading;
-    notifyListeners();
-  }
-
-  void _setError(String error) {
-    _error = error;
-    notifyListeners();
-  }
-
-  void _clearError() {
-    _error = null;
-    notifyListeners();
-  }
-
-  // CFG-related methods
-  static const String _cfgKey = 'cfg_grammar';
-
-  /// Save CFG grammar to shared preferences
-  Future<void> saveCFG(String grammar) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_cfgKey, grammar);
-    } catch (e) {
-      _setError('Erro ao salvar gramática CFG: $e');
-    }
-  }
-
-  /// Load CFG grammar from shared preferences
-  String? getSavedCFG() {
-    // This is a synchronous method for immediate access
-    // In a real implementation, you might want to make this async
-    return null; // Placeholder - would need to implement proper loading
-  }
-
-  /// Load CFG grammar from shared preferences (async)
-  Future<String?> loadCFG() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      return prefs.getString(_cfgKey);
-    } catch (e) {
-      _setError('Erro ao carregar gramática CFG: $e');
-      return null;
-    }
-  }
-
-  /// Sets the current automaton directly
-  void setAutomaton(AutomatonEntity automaton) {
-    _currentAutomaton = automaton;
-    _clearError();
-    _validationErrors.clear();
-    notifyListeners();
-  }
-
-  /// Clears validation errors
-  void clearValidationErrors() {
-    _validationErrors.clear();
-    notifyListeners();
-  }
-
-  /// Sets the selected states
-  void setSelectedStates(Set<String> states) {
-    _selectedStates = states;
-    notifyListeners();
-  }
-
-  /// Clears the selected states
-  void clearSelectedStates() {
-    _selectedStates.clear();
-    notifyListeners();
-  }
-
-  /// Adds a state to the selection
-  void addSelectedState(String stateId) {
-    _selectedStates.add(stateId);
-    notifyListeners();
-  }
-
-  /// Removes a state from the selection
-  void removeSelectedState(String stateId) {
-    _selectedStates.remove(stateId);
-    notifyListeners();
-  }
-
-  /// Begin transition creation mode. Optionally set the origin state.
-  void startConnecting({String? fromStateId}) {
-    _isConnectingStates = true;
-    _connectingFromState = fromStateId;
-    notifyListeners();
-  }
-
-  /// Set the origin state during connecting mode.
-  void setConnectingFromState(String stateId) {
-    _connectingFromState = stateId;
-    notifyListeners();
-  }
-
-  /// Finish/Cancel connecting mode.
-  void finishConnecting() {
-    _isConnectingStates = false;
-    _connectingFromState = null;
-    notifyListeners();
+    state = state.copyWith(error: null);
   }
 }
+
+/// State class for automaton provider
+class AutomatonState {
+  final FSA? currentAutomaton;
+  final SimulationResult? simulationResult;
+  final String? regexResult;
+  final bool isLoading;
+  final String? error;
+
+  const AutomatonState({
+    this.currentAutomaton,
+    this.simulationResult,
+    this.regexResult,
+    this.isLoading = false,
+    this.error,
+  });
+
+  AutomatonState copyWith({
+    FSA? currentAutomaton,
+    SimulationResult? simulationResult,
+    String? regexResult,
+    bool? isLoading,
+    String? error,
+  }) {
+    return AutomatonState(
+      currentAutomaton: currentAutomaton ?? this.currentAutomaton,
+      simulationResult: simulationResult ?? this.simulationResult,
+      regexResult: regexResult ?? this.regexResult,
+      isLoading: isLoading ?? this.isLoading,
+      error: error ?? this.error,
+    );
+  }
+}
+
+/// Provider instances
+final automatonProvider = StateNotifierProvider<AutomatonProvider, AutomatonState>((ref) {
+  return AutomatonProvider(
+    automatonService: AutomatonService(),
+    simulationService: SimulationService(),
+    conversionService: ConversionService(),
+  );
+});

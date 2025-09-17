@@ -7,6 +7,9 @@ import '../data/data_sources/examples_data_source.dart';
 import '../data/repositories/automaton_repository_impl.dart';
 import '../data/repositories/examples_repository_impl.dart';
 import '../data/repositories/algorithm_repository_impl.dart';
+import '../data/services/automaton_service.dart';
+import '../data/services/simulation_service.dart';
+import '../data/services/conversion_service.dart';
 import '../presentation/providers/automaton_provider.dart';
 import '../presentation/providers/algorithm_provider.dart';
 
@@ -22,6 +25,19 @@ Future<void> setupDependencyInjection() async {
   
   getIt.registerLazySingleton<ExamplesDataSource>(
     () => ExamplesDataSource(),
+  );
+
+  // Services
+  getIt.registerLazySingleton<AutomatonService>(
+    () => AutomatonService(),
+  );
+  
+  getIt.registerLazySingleton<SimulationService>(
+    () => SimulationService(),
+  );
+  
+  getIt.registerLazySingleton<ConversionService>(
+    () => ConversionService(),
   );
 
   // Repositories

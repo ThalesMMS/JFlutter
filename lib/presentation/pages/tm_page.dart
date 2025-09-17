@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-/// Page for working with Pushdown Automata
-class PDAPage extends StatelessWidget {
-  const PDAPage({super.key});
+/// Page for working with Turing Machines
+class TMPage extends StatelessWidget {
+  const TMPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -11,13 +11,13 @@ class PDAPage extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.storage,
+            Icons.settings,
             size: 64,
             color: Colors.grey,
           ),
           SizedBox(height: 16),
           Text(
-            'PDA Page',
+            'Turing Machine Page',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -25,7 +25,7 @@ class PDAPage extends StatelessWidget {
           ),
           SizedBox(height: 8),
           Text(
-            'Pushdown Automata tools coming soon!',
+            'Turing Machine tools coming soon!',
             style: TextStyle(
               fontSize: 16,
               color: Colors.grey,

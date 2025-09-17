@@ -21,8 +21,50 @@ linter:
   # `// ignore_for_file: name_of_lint` syntax on the line or in the file
   # producing the lint.
   rules:
-    # avoid_print: false  # Uncomment to disable the `avoid_print` rule
-    # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
+    # Code style rules
+    prefer_single_quotes: true
+    prefer_const_constructors: true
+    prefer_const_literals_to_create_immutables: true
+    prefer_const_declarations: true
+    prefer_final_fields: true
+    prefer_final_locals: true
+    
+    # Documentation rules
+    public_member_api_docs: false  # Disabled for internal project
+    
+    # Error prevention rules
+    avoid_print: false  # Allow print for debugging
+    avoid_unnecessary_containers: true
+    avoid_web_libraries_in_flutter: true
+    cancel_subscriptions: true
+    close_sinks: true
+    comment_references: true
+    control_flow_in_finally: true
+    empty_statements: true
+    hash_and_equals: true
+    invariant_booleans: true
+    iterable_contains_unrelated_type: true
+    list_remove_unrelated_type: true
+    literal_only_boolean_expressions: true
+    no_adjacent_strings_in_list: true
+    no_duplicate_case_values: true
+    no_logic_in_create_state: true
+    prefer_void_to_null: true
+    test_types_in_equals: true
+    throw_in_finally: true
+    unnecessary_statements: true
+    unrelated_type_equality_checks: true
+    valid_regexps: true
+    
+    # Performance rules
+    avoid_function_literals_in_foreach_calls: true
+    prefer_for_elements_to_map_fromIterable: true
+    prefer_if_elements_to_conditional_expressions: true
+    prefer_inlined_adds: true
+    prefer_is_empty: true
+    prefer_is_not_empty: true
+    prefer_iterable_whereType: true
+    prefer_spread_collections: true
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

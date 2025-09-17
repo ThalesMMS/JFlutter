@@ -8,6 +8,9 @@ class SimulationResult {
   /// Whether the input was accepted
   final bool accepted;
   
+  /// Is accepted (alias for accepted)
+  bool get isAccepted => accepted;
+  
   /// List of simulation steps
   final List<SimulationStep> steps;
   
@@ -182,7 +185,7 @@ class SimulationResult {
   String get finalTapeContents => lastStep?.tapeContents ?? '';
 
   /// Creates a successful simulation result
-  factory SimulationResult.success({
+  factory SimulationSuccess({
     required String inputString,
     required List<SimulationStep> steps,
     required Duration executionTime,
@@ -197,7 +200,7 @@ class SimulationResult {
   }
 
   /// Creates a failed simulation result
-  factory SimulationResult.failure({
+  factory SimulationFailure({
     required String inputString,
     required List<SimulationStep> steps,
     required String errorMessage,

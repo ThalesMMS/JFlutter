@@ -1,5 +1,10 @@
+import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';
 import 'state.dart';
+import 'fsa_transition.dart';
+import 'pda_transition.dart';
+import 'tm_transition.dart';
+import 'mealy_transition.dart';
 
 /// Abstract base class for transitions in an automaton
 abstract class Transition {
@@ -21,7 +26,7 @@ abstract class Transition {
   /// Type of the transition (deterministic, nondeterministic)
   final TransitionType type;
 
-  const Transition({
+  Transition({
     required this.id,
     required this.fromState,
     required this.toState,
@@ -168,5 +173,3 @@ extension TransitionTypeExtension on TransitionType {
   }
 }
 
-/// Import for math functions
-import 'dart:math' as math;

@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';
 import 'state.dart';
 import 'transition.dart';
@@ -19,6 +20,7 @@ class FSA extends Automaton {
     required super.bounds,
     super.zoomLevel,
     super.panOffset,
+    String? description,
   }) : super(type: AutomatonType.fsa);
 
   /// Creates a copy of this FSA with updated properties
@@ -31,9 +33,10 @@ class FSA extends Automaton {
     Set<String>? alphabet,
     State? initialState,
     Set<State>? acceptingStates,
+    AutomatonType? type,
     DateTime? created,
     DateTime? modified,
-    Rectangle? bounds,
+    math.Rectangle? bounds,
     double? zoomLevel,
     Vector2? panOffset,
   }) {
@@ -68,8 +71,8 @@ class FSA extends Automaton {
       'created': created.toIso8601String(),
       'modified': modified.toIso8601String(),
       'bounds': {
-        'x': bounds.x,
-        'y': bounds.y,
+        'x': bounds.left,
+        'y': bounds.top,
         'width': bounds.width,
         'height': bounds.height,
       },
@@ -101,7 +104,7 @@ class FSA extends Automaton {
           .toSet(),
       created: DateTime.parse(json['created'] as String),
       modified: DateTime.parse(json['modified'] as String),
-      bounds: Rectangle(
+          bounds: math.Rectangle(
         (json['bounds'] as Map<String, dynamic>)['x'] as double,
         (json['bounds'] as Map<String, dynamic>)['y'] as double,
         (json['bounds'] as Map<String, dynamic>)['width'] as double,
@@ -258,7 +261,7 @@ class FSA extends Automaton {
   factory FSA.empty({
     required String id,
     required String name,
-    Rectangle? bounds,
+        math.Rectangle? bounds,
   }) {
     final now = DateTime.now();
     return FSA(
@@ -270,7 +273,7 @@ class FSA extends Automaton {
       acceptingStates: {},
       created: now,
       modified: now,
-      bounds: bounds ?? const Rectangle(0, 0, 800, 600),
+          bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
     );
   }
 
@@ -283,7 +286,7 @@ class FSA extends Automaton {
     required Vector2 position,
     bool isInitial = false,
     bool isAccepting = false,
-    Rectangle? bounds,
+        math.Rectangle? bounds,
   }) {
     final now = DateTime.now();
     final state = State(
@@ -304,7 +307,7 @@ class FSA extends Automaton {
       acceptingStates: isAccepting ? {state} : {},
       created: now,
       modified: now,
-      bounds: bounds ?? const Rectangle(0, 0, 800, 600),
+          bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
     );
   }
 
@@ -318,7 +321,7 @@ class FSA extends Automaton {
     required Vector2 fromPosition,
     required Vector2 toPosition,
     bool toStateAccepting = true,
-    Rectangle? bounds,
+        math.Rectangle? bounds,
   }) {
     final now = DateTime.now();
     final fromState = State(
@@ -353,7 +356,7 @@ class FSA extends Automaton {
       acceptingStates: toStateAccepting ? {toState} : {},
       created: now,
       modified: now,
-      bounds: bounds ?? const Rectangle(0, 0, 800, 600),
+          bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
     );
   }
 }

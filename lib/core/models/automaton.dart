@@ -1,6 +1,10 @@
+import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';
 import 'state.dart';
 import 'transition.dart';
+import 'fsa.dart';
+import 'pda.dart';
+import 'tm.dart';
 
 /// Abstract base class for all types of automata
 abstract class Automaton {
@@ -35,7 +39,7 @@ abstract class Automaton {
   final DateTime modified;
   
   /// Bounding rectangle for mobile display
-  final Rectangle bounds;
+  final math.Rectangle bounds;
   
   /// Current zoom level (0.5 to 3.0)
   final double zoomLevel;
@@ -43,7 +47,7 @@ abstract class Automaton {
   /// Pan offset for mobile navigation
   final Vector2 panOffset;
 
-  const Automaton({
+  Automaton({
     required this.id,
     required this.name,
     required this.states,
@@ -71,7 +75,7 @@ abstract class Automaton {
     AutomatonType? type,
     DateTime? created,
     DateTime? modified,
-    Rectangle? bounds,
+    math.Rectangle? bounds,
     double? zoomLevel,
     Vector2? panOffset,
   });
@@ -269,7 +273,7 @@ abstract class Automaton {
 
   /// Calculates the center point of all states
   Vector2 get centerPoint {
-    if (states.isEmpty) return const Vector2.zero();
+    if (states.isEmpty) return Vector2.zero();
     
     double sumX = 0;
     double sumY = 0;
@@ -283,8 +287,8 @@ abstract class Automaton {
   }
 
   /// Calculates the bounding box of all states
-  Rectangle get statesBoundingBox {
-    if (states.isEmpty) return const Rectangle(0, 0, 0, 0);
+  math.Rectangle get statesBoundingBox {
+    if (states.isEmpty) return const math.Rectangle(0, 0, 0, 0);
     
     double minX = double.infinity;
     double minY = double.infinity;
@@ -298,7 +302,7 @@ abstract class Automaton {
       maxY = maxY > state.position.y ? maxY : state.position.y;
     }
     
-    return Rectangle(minX, minY, maxX - minX, maxY - minY);
+    return math.Rectangle(minX, minY, maxX - minX, maxY - minY);
   }
 
   /// Checks if the automaton is empty (no accepting states or no reachable accepting states)

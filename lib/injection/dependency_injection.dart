@@ -42,7 +42,7 @@ Future<void> setupDependencyInjection() async {
 
   // Repositories
   getIt.registerLazySingleton<AutomatonRepository>(
-    () => AutomatonRepositoryImpl(getIt<LocalStorageDataSource>()),
+    () => AutomatonRepositoryImpl(getIt<AutomatonService>()),
   );
   
   getIt.registerLazySingleton<ExamplesRepository>(
@@ -162,17 +162,10 @@ Future<void> setupDependencyInjection() async {
   // Providers
   getIt.registerFactory<AutomatonProvider>(
     () => AutomatonProvider(
+      automatonService: getIt<AutomatonService>(),
+      simulationService: getIt<SimulationService>(),
+      conversionService: getIt<ConversionService>(),
       createAutomatonUseCase: getIt<CreateAutomatonUseCase>(),
-      loadAutomatonUseCase: getIt<LoadAutomatonUseCase>(),
-      saveAutomatonUseCase: getIt<SaveAutomatonUseCase>(),
-      deleteAutomatonUseCase: getIt<DeleteAutomatonUseCase>(),
-      exportAutomatonUseCase: getIt<ExportAutomatonUseCase>(),
-      importAutomatonUseCase: getIt<ImportAutomatonUseCase>(),
-      validateAutomatonUseCase: getIt<ValidateAutomatonUseCase>(),
-      addStateUseCase: getIt<AddStateUseCase>(),
-      removeStateUseCase: getIt<RemoveStateUseCase>(),
-      addTransitionUseCase: getIt<AddTransitionUseCase>(),
-      removeTransitionUseCase: getIt<RemoveTransitionUseCase>(),
     ),
   );
   

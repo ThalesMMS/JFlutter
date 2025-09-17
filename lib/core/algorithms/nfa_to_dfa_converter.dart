@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+import 'package:vector_math/vector_math_64.dart';
 import '../models/fsa.dart';
 import '../models/state.dart';
 import '../models/fsa_transition.dart';
@@ -11,17 +13,17 @@ class NFAToDFAConverter {
       // Validate input
       final validationResult = _validateInput(nfa);
       if (!validationResult.isSuccess) {
-        return Result.failure(validationResult.error!);
+        return ResultFactory.failure(validationResult.error!);
       }
 
       // Handle empty NFA
       if (nfa.states.isEmpty) {
-        return Result.failure('Cannot convert empty NFA to DFA');
+        return ResultFactory.failure('Cannot convert empty NFA to DFA');
       }
 
       // Handle NFA with no initial state
       if (nfa.initialState == null) {
-        return Result.failure('NFA must have an initial state');
+        return ResultFactory.failure('NFA must have an initial state');
       }
 
       // Step 1: Remove epsilon transitions if present
@@ -30,33 +32,33 @@ class NFAToDFAConverter {
       // Step 2: Build DFA using subset construction
       final dfa = _buildDFA(nfaWithoutEpsilon);
       
-      return Result.success(dfa);
+      return ResultFactory.success(dfa);
     } catch (e) {
-      return Result.failure('Error converting NFA to DFA: $e');
+      return ResultFactory.failure('Error converting NFA to DFA: $e');
     }
   }
 
   /// Validates the input NFA
   static Result<void> _validateInput(FSA nfa) {
     if (nfa.states.isEmpty) {
-      return Result.failure('NFA must have at least one state');
+      return ResultFactory.failure('NFA must have at least one state');
     }
     
     if (nfa.initialState == null) {
-      return Result.failure('NFA must have an initial state');
+      return ResultFactory.failure('NFA must have an initial state');
     }
     
     if (!nfa.states.contains(nfa.initialState)) {
-      return Result.failure('Initial state must be in the states set');
+      return ResultFactory.failure('Initial state must be in the states set');
     }
     
     for (final acceptingState in nfa.acceptingStates) {
       if (!nfa.states.contains(acceptingState)) {
-        return Result.failure('Accepting state must be in the states set');
+        return ResultFactory.failure('Accepting state must be in the states set');
       }
     }
     
-    return Result.success(null);
+    return ResultFactory.success(null);
   }
 
   /// Removes epsilon transitions from the NFA
@@ -238,10 +240,10 @@ class NFAToDFAConverter {
   /// Converts an NFA to DFA with step-by-step information
   static Result<NFAToDFAConversionResult> convertWithSteps(FSA nfa) {
     try {
-      final steps = <ConversionStep>[];
+      final steps = <NFADFAConversionStep>[];
       
       // Step 1: Validate input
-      steps.add(ConversionStep(
+      steps.add(NFADFAConversionStep(
         stepNumber: 1,
         description: 'Validating input NFA',
         nfa: nfa,
@@ -250,11 +252,11 @@ class NFAToDFAConverter {
 
       final validationResult = _validateInput(nfa);
       if (!validationResult.isSuccess) {
-        return Result.failure(validationResult.error!);
+        return ResultFactory.failure(validationResult.error!);
       }
 
       // Step 2: Remove epsilon transitions
-      steps.add(ConversionStep(
+      steps.add(NFADFAConversionStep(
         stepNumber: 2,
         description: 'Removing epsilon transitions',
         nfa: nfa,
@@ -262,7 +264,7 @@ class NFAToDFAConverter {
       ));
 
       final nfaWithoutEpsilon = _removeEpsilonTransitions(nfa);
-      steps.add(ConversionStep(
+      steps.add(NFADFAConversionStep(
         stepNumber: 3,
         description: 'Epsilon transitions removed',
         nfa: nfaWithoutEpsilon,
@@ -270,7 +272,7 @@ class NFAToDFAConverter {
       ));
 
       // Step 3: Build DFA
-      steps.add(ConversionStep(
+      steps.add(NFADFAConversionStep(
         stepNumber: 4,
         description: 'Building DFA using subset construction',
         nfa: nfaWithoutEpsilon,
@@ -278,7 +280,7 @@ class NFAToDFAConverter {
       ));
 
       final dfa = _buildDFA(nfaWithoutEpsilon);
-      steps.add(ConversionStep(
+      steps.add(NFADFAConversionStep(
         stepNumber: 5,
         description: 'DFA construction completed',
         nfa: nfaWithoutEpsilon,
@@ -292,9 +294,9 @@ class NFAToDFAConverter {
         executionTime: Duration.zero, // Would be calculated in real implementation
       );
 
-      return Result.success(result);
+      return ResultFactory.success(result);
     } catch (e) {
-      return Result.failure('Error converting NFA to DFA with steps: $e');
+      return ResultFactory.failure('Error converting NFA to DFA with steps: $e');
     }
   }
 }
@@ -308,7 +310,7 @@ class NFAToDFAConversionResult {
   final FSA resultDFA;
   
   /// Conversion steps
-  final List<ConversionStep> steps;
+  final List<NFADFAConversionStep> steps;
   
   /// Execution time
   final Duration executionTime;
@@ -324,10 +326,10 @@ class NFAToDFAConversionResult {
   int get stepCount => steps.length;
 
   /// Gets the first step
-  ConversionStep? get firstStep => steps.isNotEmpty ? steps.first : null;
+  NFADFAConversionStep? get firstStep => steps.isNotEmpty ? steps.first : null;
 
   /// Gets the last step
-  ConversionStep? get lastStep => steps.isNotEmpty ? steps.last : null;
+  NFADFAConversionStep? get lastStep => steps.isNotEmpty ? steps.last : null;
 
   /// Gets the execution time in milliseconds
   int get executionTimeMs => executionTime.inMilliseconds;
@@ -337,7 +339,7 @@ class NFAToDFAConversionResult {
 }
 
 /// Single step in NFA to DFA conversion
-class ConversionStep {
+class NFADFAConversionStep {
   /// Step number
   final int stepNumber;
   
@@ -350,7 +352,7 @@ class ConversionStep {
   /// DFA at this step
   final FSA? dfa;
 
-  const ConversionStep({
+  const NFADFAConversionStep({
     required this.stepNumber,
     required this.description,
     this.nfa,
@@ -359,9 +361,7 @@ class ConversionStep {
 
   @override
   String toString() {
-    return 'ConversionStep(stepNumber: $stepNumber, description: $description)';
+    return 'NFADFAConversionStep(stepNumber: $stepNumber, description: $description)';
   }
 }
 
-/// Import for Vector2
-import 'package:vector_math/vector_math_64.dart';

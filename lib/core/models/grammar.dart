@@ -14,6 +14,9 @@ class Grammar {
   /// Set of non-terminal symbols
   final Set<String> nonterminals;
   
+  /// Non-terminals (alias for nonterminals)
+  Set<String> get nonTerminals => nonterminals;
+  
   /// Grammar start symbol
   final String startSymbol;
   

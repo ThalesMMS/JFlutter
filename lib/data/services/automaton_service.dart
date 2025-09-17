@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+import 'package:vector_math/vector_math_64.dart';
 import '../../core/models/fsa.dart';
 import '../../core/models/state.dart';
 import '../../core/models/fsa_transition.dart';
@@ -13,7 +15,7 @@ class AutomatonService {
     try {
       // Validate request
       if (request.name.isEmpty) {
-        return Result.failure('Automaton name cannot be empty');
+            return ResultFactory.failure('Automaton name cannot be empty');
       }
 
       // Create states
@@ -21,8 +23,8 @@ class AutomatonService {
       for (final stateData in request.states) {
         final state = State(
           id: stateData.id,
-          name: stateData.name,
-          position: stateData.position,
+          label: stateData.name,
+          position: Vector2(stateData.position.x, stateData.position.y),
           isInitial: stateData.isInitial,
           isAccepting: stateData.isAccepting,
         );
@@ -36,9 +38,11 @@ class AutomatonService {
         final toState = states.firstWhere((s) => s.id == transitionData.toStateId);
         
         final transition = FSATransition(
+          id: 't${_nextId++}',
           fromState: fromState,
           toState: toState,
-          symbol: transitionData.symbol,
+          label: transitionData.symbol,
+          inputSymbols: {transitionData.symbol},
         );
         transitions.add(transition);
       }
@@ -52,8 +56,13 @@ class AutomatonService {
         alphabet: request.alphabet.toSet(),
         initialState: states.firstWhere((s) => s.isInitial),
         acceptingStates: states.where((s) => s.isAccepting).toSet(),
-        transitions: transitions,
-        bounds: request.bounds,
+        transitions: transitions.toSet(),
+        bounds: math.Rectangle(
+          request.bounds.left,
+          request.bounds.top,
+          request.bounds.right - request.bounds.left,
+          request.bounds.bottom - request.bounds.top,
+        ),
         created: DateTime.now(),
         modified: DateTime.now(),
       );
@@ -61,9 +70,9 @@ class AutomatonService {
       _automata.add(automaton);
       _nextId++;
 
-      return Result.success(automaton);
+      return ResultFactory.success(automaton);
     } catch (e) {
-      return Result.failure('Error creating automaton: $e');
+          return ResultFactory.failure('Error creating automaton: $e');
     }
   }
 
@@ -71,9 +80,9 @@ class AutomatonService {
   Result<FSA> getAutomaton(String id) {
     try {
       final automaton = _automata.firstWhere((a) => a.id == id);
-      return Result.success(automaton);
+      return ResultFactory.success(automaton);
     } catch (e) {
-      return Result.failure('Automaton not found: $id');
+      return ResultFactory.failure('Automaton not found: $id');
     }
   }
 
@@ -82,7 +91,7 @@ class AutomatonService {
     try {
       final index = _automata.indexWhere((a) => a.id == id);
       if (index == -1) {
-        return Result.failure('Automaton not found: $id');
+        return ResultFactory.failure('Automaton not found: $id');
       }
 
       // Create updated automaton (similar to createAutomaton)
@@ -97,9 +106,9 @@ class AutomatonService {
       );
 
       _automata[index] = updatedAutomaton;
-      return Result.success(updatedAutomaton);
+          return ResultFactory.success(updatedAutomaton);
     } catch (e) {
-      return Result.failure('Error updating automaton: $e');
+          return ResultFactory.failure('Error updating automaton: $e');
     }
   }
 
@@ -108,26 +117,26 @@ class AutomatonService {
     try {
       final index = _automata.indexWhere((a) => a.id == id);
       if (index == -1) {
-        return Result.failure('Automaton not found: $id');
+        return ResultFactory.failure('Automaton not found: $id');
       }
 
       _automata.removeAt(index);
-      return Result.success(null);
+      return ResultFactory.success(null);
     } catch (e) {
-      return Result.failure('Error deleting automaton: $e');
+          return ResultFactory.failure('Error deleting automaton: $e');
     }
   }
 
   /// Lists all automata
   Result<List<FSA>> listAutomata() {
-    return Result.success(List.from(_automata));
+        return ResultFactory.success(List.from(_automata));
   }
 
   /// Clears all automata
   Result<void> clearAutomata() {
     _automata.clear();
     _nextId = 1;
-    return Result.success(null);
+    return ResultFactory.success(null);
   }
 }
 

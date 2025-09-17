@@ -214,6 +214,7 @@ class SimulationStep {
     required String tapeContents,
     String? usedTransition,
     required int stepNumber,
+    int? headPosition,
   }) {
     return SimulationStep(
       currentState: currentState,
@@ -241,7 +242,7 @@ class SimulationStep {
   }
 
   /// Creates a final simulation step
-  factory SimulationStep.final({
+  factory SimulationStep.finalStep({
     required String finalState,
     required String remainingInput,
     required String stackContents,

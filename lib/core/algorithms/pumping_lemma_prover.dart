@@ -17,17 +17,17 @@ class PumpingLemmaProver {
       // Validate input
       final validationResult = _validateInput(automaton);
       if (!validationResult.isSuccess) {
-        return Result.failure(validationResult.error!);
+        return Failure(validationResult.error!);
       }
 
       // Handle empty automaton
       if (automaton.states.isEmpty) {
-        return Result.failure('Cannot prove pumping lemma for empty automaton');
+        return Failure('Cannot prove pumping lemma for empty automaton');
       }
 
       // Handle automaton with no initial state
       if (automaton.initialState == null) {
-        return Result.failure('Automaton must have an initial state');
+        return Failure('Automaton must have an initial state');
       }
 
       // Prove the pumping lemma
@@ -37,33 +37,33 @@ class PumpingLemmaProver {
       // Update execution time
       final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
       
-      return Result.success(finalResult);
+      return Success(finalResult);
     } catch (e) {
-      return Result.failure('Error proving pumping lemma: $e');
+      return Failure('Error proving pumping lemma: $e');
     }
   }
 
   /// Validates the input automaton
   static Result<void> _validateInput(FSA automaton) {
     if (automaton.states.isEmpty) {
-      return Result.failure('Automaton must have at least one state');
+      return Failure('Automaton must have at least one state');
     }
     
     if (automaton.initialState == null) {
-      return Result.failure('Automaton must have an initial state');
+      return Failure('Automaton must have an initial state');
     }
     
     if (!automaton.states.contains(automaton.initialState)) {
-      return Result.failure('Initial state must be in the states set');
+      return Failure('Initial state must be in the states set');
     }
     
     for (final acceptingState in automaton.acceptingStates) {
       if (!automaton.states.contains(acceptingState)) {
-        return Result.failure('Accepting state must be in the states set');
+        return Failure('Accepting state must be in the states set');
       }
     }
     
-    return Result.success(null);
+    return Success(null);
   }
 
   /// Proves the pumping lemma for the automaton
@@ -257,17 +257,17 @@ class PumpingLemmaProver {
       // Validate input
       final validationResult = _validateInput(automaton);
       if (!validationResult.isSuccess) {
-        return Result.failure(validationResult.error!);
+        return Failure(validationResult.error!);
       }
 
       // Handle empty automaton
       if (automaton.states.isEmpty) {
-        return Result.failure('Cannot disprove pumping lemma for empty automaton');
+        return Failure('Cannot disprove pumping lemma for empty automaton');
       }
 
       // Handle automaton with no initial state
       if (automaton.initialState == null) {
-        return Result.failure('Automaton must have an initial state');
+        return Failure('Automaton must have an initial state');
       }
 
       // Disprove the pumping lemma
@@ -277,9 +277,9 @@ class PumpingLemmaProver {
       // Update execution time
       final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
       
-      return Result.success(finalResult);
+      return Success(finalResult);
     } catch (e) {
-      return Result.failure('Error disproving pumping lemma: $e');
+      return Failure('Error disproving pumping lemma: $e');
     }
   }
 
@@ -423,26 +423,26 @@ class PumpingLemmaProver {
       // Validate input
       final validationResult = _validateInput(automaton);
       if (!validationResult.isSuccess) {
-        return Result.failure(validationResult.error!);
+        return Failure(validationResult.error!);
       }
 
       // Handle empty automaton
       if (automaton.states.isEmpty) {
-        return Result.failure('Cannot test regularity for empty automaton');
+        return Failure('Cannot test regularity for empty automaton');
       }
 
       // Handle automaton with no initial state
       if (automaton.initialState == null) {
-        return Result.failure('Automaton must have an initial state');
+        return Failure('Automaton must have an initial state');
       }
 
       // Test regularity
       final result = _testRegularity(automaton, maxPumpingLength, timeout);
       stopwatch.stop();
       
-      return Result.success(result);
+      return Success(result);
     } catch (e) {
-      return Result.failure('Error testing regularity: $e');
+      return Failure('Error testing regularity: $e');
     }
   }
 

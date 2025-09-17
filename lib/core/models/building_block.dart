@@ -372,7 +372,7 @@ class RectangleBuildingBlock extends BuildingBlock {
 class PolygonBuildingBlock extends BuildingBlock {
   final List<Offset> points;
 
-  const PolygonBuildingBlock({
+  PolygonBuildingBlock({
     required super.id,
     required this.points,
     required super.color,

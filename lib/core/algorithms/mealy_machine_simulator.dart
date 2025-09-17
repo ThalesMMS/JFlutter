@@ -4,6 +4,7 @@ import '../models/mealy_transition.dart';
 import '../models/simulation_result.dart';
 import '../models/simulation_step.dart';
 import '../result.dart';
+import 'automaton_analyzer.dart';
 
 /// Simulates Mealy machines with input strings
 class MealyMachineSimulator {
@@ -20,17 +21,17 @@ class MealyMachineSimulator {
       // Validate input
       final validationResult = _validateInput(automaton, inputString);
       if (!validationResult.isSuccess) {
-        return Result.failure(validationResult.error!);
+        return Failure(validationResult.error!);
       }
 
       // Handle empty automaton
       if (automaton.states.isEmpty) {
-        return Result.failure('Cannot simulate empty Mealy machine');
+        return Failure('Cannot simulate empty Mealy machine');
       }
 
       // Handle automaton with no initial state
       if (automaton.initialState == null) {
-        return Result.failure('Mealy machine must have an initial state');
+        return Failure('Mealy machine must have an initial state');
       }
 
       // Simulate the Mealy machine
@@ -40,29 +41,29 @@ class MealyMachineSimulator {
       // Update execution time
       final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
       
-      return Result.success(finalResult);
+      return Success(finalResult);
     } catch (e) {
-      return Result.failure('Error simulating Mealy machine: $e');
+      return Failure('Error simulating Mealy machine: $e');
     }
   }
 
   /// Validates the input automaton and string
   static Result<void> _validateInput(FSA automaton, String inputString) {
     if (automaton.states.isEmpty) {
-      return Result.failure('Mealy machine must have at least one state');
+      return Failure('Mealy machine must have at least one state');
     }
     
     if (automaton.initialState == null) {
-      return Result.failure('Mealy machine must have an initial state');
+      return Failure('Mealy machine must have an initial state');
     }
     
     if (!automaton.states.contains(automaton.initialState)) {
-      return Result.failure('Initial state must be in the states set');
+      return Failure('Initial state must be in the states set');
     }
     
     for (final acceptingState in automaton.acceptingStates) {
       if (!automaton.states.contains(acceptingState)) {
-        return Result.failure('Accepting state must be in the states set');
+        return Failure('Accepting state must be in the states set');
       }
     }
     
@@ -70,11 +71,11 @@ class MealyMachineSimulator {
     for (int i = 0; i < inputString.length; i++) {
       final symbol = inputString[i];
       if (!automaton.alphabet.contains(symbol)) {
-        return Result.failure('Input string contains invalid symbol: $symbol');
+        return Failure('Input string contains invalid symbol: $symbol');
       }
     }
     
-    return Result.success(null);
+    return Success(null);
   }
 
   /// Simulates the Mealy machine with the input string
@@ -119,7 +120,7 @@ class MealyMachineSimulator {
       // Find transition
       final transition = automaton.getMealyTransitionFromStateOnSymbol(currentState, symbol);
       if (transition == null) {
-        return MealySimulationResult.failure(
+        return MealySimulationFailure(
           inputString: inputString,
           outputString: outputString,
           steps: steps,
@@ -157,7 +158,7 @@ class MealyMachineSimulator {
     }
     
     // Add final step
-    steps.add(SimulationStep.final(
+    steps.add(SimulationStep.finalStep(
       finalState: currentState.id,
       remainingInput: remainingInput,
       stackContents: '',
@@ -169,14 +170,14 @@ class MealyMachineSimulator {
     final isAccepted = automaton.acceptingStates.contains(currentState);
     
     if (isAccepted) {
-      return MealySimulationResult.success(
+      return MealySimulationSuccess(
         inputString: inputString,
         outputString: outputString,
         steps: steps,
         executionTime: DateTime.now().difference(startTime),
       );
     } else {
-      return MealySimulationResult.failure(
+      return MealySimulationFailure(
         inputString: inputString,
         outputString: outputString,
         steps: steps,
@@ -190,30 +191,30 @@ class MealyMachineSimulator {
   static Result<bool> accepts(FSA automaton, String inputString) {
     final simulationResult = simulate(automaton, inputString);
     if (!simulationResult.isSuccess) {
-      return Result.failure(simulationResult.error!);
+      return Failure(simulationResult.error!);
     }
     
-    return Result.success(simulationResult.data!.accepted);
+    return Success(simulationResult.data!.accepted);
   }
 
   /// Tests if a Mealy machine rejects a specific string
   static Result<bool> rejects(FSA automaton, String inputString) {
     final acceptsResult = accepts(automaton, inputString);
     if (!acceptsResult.isSuccess) {
-      return Result.failure(acceptsResult.error!);
+      return Failure(acceptsResult.error!);
     }
     
-    return Result.success(!acceptsResult.data!);
+    return Success(!acceptsResult.data!);
   }
 
   /// Gets the output string for a given input
   static Result<String> getOutput(FSA automaton, String inputString) {
     final simulationResult = simulate(automaton, inputString);
     if (!simulationResult.isSuccess) {
-      return Result.failure(simulationResult.error!);
+      return Failure(simulationResult.error!);
     }
     
-    return Result.success(simulationResult.data!.outputString);
+    return Success(simulationResult.data!.outputString);
   }
 
   /// Finds all input strings that produce a specific output
@@ -240,9 +241,9 @@ class MealyMachineSimulator {
         );
       }
       
-      return Result.success(inputStrings);
+      return Success(inputStrings);
     } catch (e) {
-      return Result.failure('Error finding inputs for output: $e');
+      return Failure('Error finding inputs for output: $e');
     }
   }
 
@@ -301,9 +302,9 @@ class MealyMachineSimulator {
         );
       }
       
-      return Result.success(outputStrings);
+      return Success(outputStrings);
     } catch (e) {
-      return Result.failure('Error finding possible outputs: $e');
+      return Failure('Error finding possible outputs: $e');
     }
   }
 
@@ -350,17 +351,17 @@ class MealyMachineSimulator {
       // Validate input
       final validationResult = _validateInput(automaton, '');
       if (!validationResult.isSuccess) {
-        return Result.failure(validationResult.error!);
+        return Failure(validationResult.error!);
       }
 
       // Handle empty automaton
       if (automaton.states.isEmpty) {
-        return Result.failure('Cannot analyze empty Mealy machine');
+        return Failure('Cannot analyze empty Mealy machine');
       }
 
       // Handle automaton with no initial state
       if (automaton.initialState == null) {
-        return Result.failure('Mealy machine must have an initial state');
+        return Failure('Mealy machine must have an initial state');
       }
 
       // Analyze the Mealy machine
@@ -370,9 +371,9 @@ class MealyMachineSimulator {
       // Update execution time
       final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
       
-      return Result.success(finalResult);
+      return Success(finalResult);
     } catch (e) {
-      return Result.failure('Error analyzing Mealy machine: $e');
+      return Failure('Error analyzing Mealy machine: $e');
     }
   }
 
@@ -522,7 +523,7 @@ class MealySimulationResult {
     required this.executionTime,
   });
 
-  factory MealySimulationResult.success({
+  factory MealySimulationSuccess({
     required String inputString,
     required String outputString,
     required List<SimulationStep> steps,
@@ -537,7 +538,7 @@ class MealySimulationResult {
     );
   }
 
-  factory MealySimulationResult.failure({
+  factory MealySimulationFailure({
     required String inputString,
     required String outputString,
     required List<SimulationStep> steps,
@@ -639,12 +640,12 @@ class MealyAnalysis {
 }
 
 /// Analysis of states
-class StateAnalysis {
+class MealyStateAnalysis {
   final int totalStates;
   final int acceptingStates;
   final int nonAcceptingStates;
 
-  const StateAnalysis({
+  const MealyStateAnalysis({
     required this.totalStates,
     required this.acceptingStates,
     required this.nonAcceptingStates,
@@ -652,12 +653,12 @@ class StateAnalysis {
 }
 
 /// Analysis of transitions
-class TransitionAnalysis {
+class MealyTransitionAnalysis {
   final int totalTransitions;
   final int mealyTransitions;
   final int fsaTransitions;
 
-  const TransitionAnalysis({
+  const MealyTransitionAnalysis({
     required this.totalTransitions,
     required this.mealyTransitions,
     required this.fsaTransitions,
@@ -676,11 +677,11 @@ class OutputAnalysis {
 }
 
 /// Analysis of reachability
-class ReachabilityAnalysis {
+class MealyReachabilityAnalysis {
   final Set<State> reachableStates;
   final Set<State> unreachableStates;
 
-  const ReachabilityAnalysis({
+  const MealyReachabilityAnalysis({
     required this.reachableStates,
     required this.unreachableStates,
   });

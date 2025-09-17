@@ -15,6 +15,9 @@ class TMTransition extends Transition {
   
   /// Tape number for multi-tape machines (0 for single-tape)
   final int tapeNumber;
+  
+  /// Head position (alias for direction)
+  TapeDirection get headPosition => direction;
 
   const TMTransition({
     required super.id,
@@ -187,7 +190,7 @@ class TMTransition extends Transition {
       fromState: fromState,
       toState: toState,
       label: label ?? '$symbol→$symbol,$direction',
-      controlPoint: controlPoint ?? const Vector2.zero(),
+          controlPoint: controlPoint ?? Vector2.zero(),
       type: TransitionType.deterministic,
       readSymbol: symbol,
       writeSymbol: symbol,
@@ -213,7 +216,7 @@ class TMTransition extends Transition {
       fromState: fromState,
       toState: toState,
       label: label ?? '$readSymbol→$writeSymbol,$direction',
-      controlPoint: controlPoint ?? const Vector2.zero(),
+          controlPoint: controlPoint ?? Vector2.zero(),
       type: TransitionType.deterministic,
       readSymbol: readSymbol,
       writeSymbol: writeSymbol,
@@ -238,7 +241,7 @@ class TMTransition extends Transition {
       fromState: fromState,
       toState: toState,
       label: label ?? '$symbol→$symbol,$direction',
-      controlPoint: controlPoint ?? const Vector2.zero(),
+          controlPoint: controlPoint ?? Vector2.zero(),
       type: TransitionType.deterministic,
       readSymbol: symbol,
       writeSymbol: symbol,

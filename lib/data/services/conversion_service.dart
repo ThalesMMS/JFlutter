@@ -14,18 +14,18 @@ class ConversionService {
     try {
       // Validate request
       if (request.automaton == null) {
-        return Result.failure('Automaton is required');
+        return ResultFactory.failure('Automaton is required');
       }
 
       if (request.conversionType != ConversionType.nfaToDfa) {
-        return Result.failure('Invalid conversion type for NFA to DFA conversion');
+        return ResultFactory.failure('Invalid conversion type for NFA to DFA conversion');
       }
 
       // Use the NFA to DFA converter
-      final result = NfaToDfaConverter.convert(request.automaton!);
+      final result = NFAToDFAConverter.convert(request.automaton!);
       return result;
     } catch (e) {
-      return Result.failure('Error converting NFA to DFA: $e');
+      return ResultFactory.failure('Error converting NFA to DFA: $e');
     }
   }
 
@@ -34,18 +34,18 @@ class ConversionService {
     try {
       // Validate request
       if (request.automaton == null) {
-        return Result.failure('Automaton is required');
+        return ResultFactory.failure('Automaton is required');
       }
 
       if (request.conversionType != ConversionType.dfaMinimization) {
-        return Result.failure('Invalid conversion type for DFA minimization');
+        return ResultFactory.failure('Invalid conversion type for DFA minimization');
       }
 
       // Use the DFA minimizer
-      final result = DfaMinimizer.minimize(request.automaton!);
+      final result = DFAMinimizer.minimize(request.automaton!);
       return result;
     } catch (e) {
-      return Result.failure('Error minimizing DFA: $e');
+      return ResultFactory.failure('Error minimizing DFA: $e');
     }
   }
 
@@ -54,18 +54,18 @@ class ConversionService {
     try {
       // Validate request
       if (request.regex == null) {
-        return Result.failure('Regular expression is required');
+        return ResultFactory.failure('Regular expression is required');
       }
 
       if (request.conversionType != ConversionType.regexToNfa) {
-        return Result.failure('Invalid conversion type for regex to NFA conversion');
+        return ResultFactory.failure('Invalid conversion type for regex to NFA conversion');
       }
 
       // Use the regex to NFA converter
-      final result = RegexToNfaConverter.convert(request.regex!);
+      final result = RegexToNFAConverter.convert(request.regex!);
       return result;
     } catch (e) {
-      return Result.failure('Error converting regex to NFA: $e');
+      return ResultFactory.failure('Error converting regex to NFA: $e');
     }
   }
 
@@ -74,18 +74,18 @@ class ConversionService {
     try {
       // Validate request
       if (request.automaton == null) {
-        return Result.failure('Automaton is required');
+        return ResultFactory.failure('Automaton is required');
       }
 
       if (request.conversionType != ConversionType.faToRegex) {
-        return Result.failure('Invalid conversion type for FA to regex conversion');
+        return ResultFactory.failure('Invalid conversion type for FA to regex conversion');
       }
 
       // Use the FA to regex converter
-      final result = FaToRegexConverter.convert(request.automaton!);
+      final result = FAToRegexConverter.convert(request.automaton!);
       return result;
     } catch (e) {
-      return Result.failure('Error converting FA to regex: $e');
+      return ResultFactory.failure('Error converting FA to regex: $e');
     }
   }
 
@@ -94,18 +94,18 @@ class ConversionService {
     try {
       // Validate request
       if (request.grammar == null) {
-        return Result.failure('Grammar is required');
+        return ResultFactory.failure('Grammar is required');
       }
 
       if (request.conversionType != ConversionType.grammarToPda) {
-        return Result.failure('Invalid conversion type for grammar to PDA conversion');
+        return ResultFactory.failure('Invalid conversion type for grammar to PDA conversion');
       }
 
       // Use the grammar to PDA converter
       final result = GrammarToPDAConverter.convertGrammarToPDA(request.grammar!);
       return result;
     } catch (e) {
-      return Result.failure('Error converting grammar to PDA: $e');
+      return ResultFactory.failure('Error converting grammar to PDA: $e');
     }
   }
 
@@ -114,18 +114,18 @@ class ConversionService {
     try {
       // Validate request
       if (request.grammar == null) {
-        return Result.failure('Grammar is required');
+        return ResultFactory.failure('Grammar is required');
       }
 
       if (request.conversionType != ConversionType.grammarToPdaStandard) {
-        return Result.failure('Invalid conversion type for grammar to PDA (standard) conversion');
+        return ResultFactory.failure('Invalid conversion type for grammar to PDA (standard) conversion');
       }
 
       // Use the grammar to PDA converter
       final result = GrammarToPDAConverter.convertGrammarToPDAStandard(request.grammar!);
       return result;
     } catch (e) {
-      return Result.failure('Error converting grammar to PDA (standard): $e');
+      return ResultFactory.failure('Error converting grammar to PDA (standard): $e');
     }
   }
 
@@ -134,18 +134,18 @@ class ConversionService {
     try {
       // Validate request
       if (request.grammar == null) {
-        return Result.failure('Grammar is required');
+        return ResultFactory.failure('Grammar is required');
       }
 
       if (request.conversionType != ConversionType.grammarToPdaGreibach) {
-        return Result.failure('Invalid conversion type for grammar to PDA (Greibach) conversion');
+        return ResultFactory.failure('Invalid conversion type for grammar to PDA (Greibach) conversion');
       }
 
       // Use the grammar to PDA converter
       final result = GrammarToPDAConverter.convertGrammarToPDAGreibach(request.grammar!);
       return result;
     } catch (e) {
-      return Result.failure('Error converting grammar to PDA (Greibach): $e');
+      return ResultFactory.failure('Error converting grammar to PDA (Greibach): $e');
     }
   }
 }

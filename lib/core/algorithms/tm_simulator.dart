@@ -1,9 +1,11 @@
 import '../models/tm.dart';
 import '../models/state.dart';
 import '../models/tm_transition.dart';
+import '../models/fsa_transition.dart';
 import '../models/simulation_result.dart';
 import '../models/simulation_step.dart';
 import '../result.dart';
+import 'automaton_analyzer.dart';
 
 /// Simulates Turing Machines (TM) with input strings
 class TMSimulator {
@@ -20,17 +22,17 @@ class TMSimulator {
       // Validate input
       final validationResult = _validateInput(tm, inputString);
       if (!validationResult.isSuccess) {
-        return Result.failure(validationResult.error!);
+        return Failure(validationResult.error!);
       }
 
       // Handle empty TM
       if (tm.states.isEmpty) {
-        return Result.failure('Cannot simulate empty Turing machine');
+        return Failure('Cannot simulate empty Turing machine');
       }
 
       // Handle TM with no initial state
       if (tm.initialState == null) {
-        return Result.failure('Turing machine must have an initial state');
+        return Failure('Turing machine must have an initial state');
       }
 
       // Simulate the TM
@@ -40,29 +42,29 @@ class TMSimulator {
       // Update execution time
       final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
       
-      return Result.success(finalResult);
+      return Success(finalResult);
     } catch (e) {
-      return Result.failure('Error simulating Turing machine: $e');
+      return Failure('Error simulating Turing machine: $e');
     }
   }
 
   /// Validates the input TM and string
   static Result<void> _validateInput(TM tm, String inputString) {
     if (tm.states.isEmpty) {
-      return Result.failure('Turing machine must have at least one state');
+      return Failure('Turing machine must have at least one state');
     }
     
     if (tm.initialState == null) {
-      return Result.failure('Turing machine must have an initial state');
+      return Failure('Turing machine must have an initial state');
     }
     
     if (!tm.states.contains(tm.initialState)) {
-      return Result.failure('Initial state must be in the states set');
+      return Failure('Initial state must be in the states set');
     }
     
     for (final acceptingState in tm.acceptingStates) {
       if (!tm.states.contains(acceptingState)) {
-        return Result.failure('Accepting state must be in the states set');
+        return Failure('Accepting state must be in the states set');
       }
     }
     
@@ -70,11 +72,11 @@ class TMSimulator {
     for (int i = 0; i < inputString.length; i++) {
       final symbol = inputString[i];
       if (!tm.alphabet.contains(symbol)) {
-        return Result.failure('Input string contains invalid symbol: $symbol');
+        return Failure('Input string contains invalid symbol: $symbol');
       }
     }
     
-    return Result.success(null);
+    return Success(null);
   }
 
   /// Simulates the TM with the input string
@@ -125,7 +127,7 @@ class TMSimulator {
       final currentSymbol = headPosition < tape.length ? tape[headPosition] : tm.blankSymbol;
       
       // Find transition
-      final transition = tm.getTMTransitionFromStateOnSymbol(currentState, currentSymbol);
+      final transition = tm.getTMTransitionFromStateOnSymbol(currentState.id, currentSymbol);
       if (transition == null) {
         // No transition found, halt
         break;
@@ -157,7 +159,7 @@ class TMSimulator {
           // Stay
           break;
         default:
-          return TMSimulationResult.failure(
+          return TMSimulationFailure(
             inputString: inputString,
             steps: steps,
             errorMessage: 'Invalid move direction: ${transition.moveDirection}',
@@ -169,10 +171,11 @@ class TMSimulator {
       if (stepByStep) {
         steps.add(SimulationStep.tm(
           currentState: currentState.id,
+          remainingInput: '',
           tapeContents: tape.join(''),
-          headPosition: headPosition,
           usedTransition: currentSymbol,
           stepNumber: stepNumber,
+          headPosition: headPosition,
         ));
       }
       
@@ -186,7 +189,7 @@ class TMSimulator {
     }
     
     // Add final step
-    steps.add(SimulationStep.final(
+        steps.add(SimulationStep.finalStepStep(
       finalState: currentState.id,
       remainingInput: '',
       stackContents: '',
@@ -198,13 +201,13 @@ class TMSimulator {
     final isAccepted = tm.acceptingStates.contains(currentState);
     
     if (isAccepted) {
-      return TMSimulationResult.success(
+      return TMSimulationSuccess(
         inputString: inputString,
         steps: steps,
         executionTime: DateTime.now().difference(startTime),
       );
     } else {
-      return TMSimulationResult.failure(
+      return TMSimulationFailure(
         inputString: inputString,
         steps: steps,
         errorMessage: 'Input not accepted - final state is not accepting',
@@ -217,20 +220,20 @@ class TMSimulator {
   static Result<bool> accepts(TM tm, String inputString) {
     final simulationResult = simulate(tm, inputString);
     if (!simulationResult.isSuccess) {
-      return Result.failure(simulationResult.error!);
+      return Failure(simulationResult.error!);
     }
     
-    return Result.success(simulationResult.data!.accepted);
+    return Success(simulationResult.data!.accepted);
   }
 
   /// Tests if a TM rejects a specific string
   static Result<bool> rejects(TM tm, String inputString) {
     final acceptsResult = accepts(tm, inputString);
     if (!acceptsResult.isSuccess) {
-      return Result.failure(acceptsResult.error!);
+      return Failure(acceptsResult.error!);
     }
     
-    return Result.success(!acceptsResult.data!);
+    return Success(!acceptsResult.data!);
   }
 
   /// Finds all strings of a given length that the TM accepts
@@ -255,9 +258,9 @@ class TMSimulator {
         );
       }
       
-      return Result.success(acceptedStrings);
+      return Success(acceptedStrings);
     } catch (e) {
-      return Result.failure('Error finding accepted strings: $e');
+      return Failure('Error finding accepted strings: $e');
     }
   }
 
@@ -314,9 +317,9 @@ class TMSimulator {
         );
       }
       
-      return Result.success(rejectedStrings);
+      return Success(rejectedStrings);
     } catch (e) {
-      return Result.failure('Error finding rejected strings: $e');
+      return Failure('Error finding rejected strings: $e');
     }
   }
 
@@ -363,17 +366,17 @@ class TMSimulator {
       // Validate input
       final validationResult = _validateInput(tm, '');
       if (!validationResult.isSuccess) {
-        return Result.failure(validationResult.error!);
+        return Failure(validationResult.error!);
       }
 
       // Handle empty TM
       if (tm.states.isEmpty) {
-        return Result.failure('Cannot analyze empty Turing machine');
+        return Failure('Cannot analyze empty Turing machine');
       }
 
       // Handle TM with no initial state
       if (tm.initialState == null) {
-        return Result.failure('Turing machine must have an initial state');
+        return Failure('Turing machine must have an initial state');
       }
 
       // Analyze the TM
@@ -383,9 +386,9 @@ class TMSimulator {
       // Update execution time
       final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
       
-      return Result.success(finalResult);
+      return Success(finalResult);
     } catch (e) {
-      return Result.failure('Error analyzing Turing machine: $e');
+      return Failure('Error analyzing Turing machine: $e');
     }
   }
 
@@ -455,7 +458,7 @@ class TMSimulator {
       if (transition is TMTransition) {
         writeOperations.add(transition.writeSymbol);
         readOperations.add(transition.readSymbol);
-        moveDirections.add(transition.moveDirection);
+            moveDirections.add(transition.moveDirection.toString());
         tapeSymbols.add(transition.readSymbol);
         tapeSymbols.add(transition.writeSymbol);
       }
@@ -529,7 +532,7 @@ class TMSimulationResult {
     required this.executionTime,
   });
 
-  factory TMSimulationResult.success({
+  factory TMSimulationSuccess({
     required String inputString,
     required List<SimulationStep> steps,
     required Duration executionTime,
@@ -542,7 +545,7 @@ class TMSimulationResult {
     );
   }
 
-  factory TMSimulationResult.failure({
+  factory TMSimulationFailure({
     required String inputString,
     required List<SimulationStep> steps,
     required String errorMessage,
@@ -636,12 +639,12 @@ class TMAnalysis {
 }
 
 /// Analysis of states
-class StateAnalysis {
+class TMStateAnalysis {
   final int totalStates;
   final int acceptingStates;
   final int nonAcceptingStates;
 
-  const StateAnalysis({
+  const TMStateAnalysis({
     required this.totalStates,
     required this.acceptingStates,
     required this.nonAcceptingStates,
@@ -649,12 +652,12 @@ class StateAnalysis {
 }
 
 /// Analysis of transitions
-class TransitionAnalysis {
+class TMTransitionAnalysis {
   final int totalTransitions;
   final int tmTransitions;
   final int fsaTransitions;
 
-  const TransitionAnalysis({
+  const TMTransitionAnalysis({
     required this.totalTransitions,
     required this.tmTransitions,
     required this.fsaTransitions,
@@ -677,11 +680,11 @@ class TapeAnalysis {
 }
 
 /// Analysis of reachability
-class ReachabilityAnalysis {
+class TMReachabilityAnalysis {
   final Set<State> reachableStates;
   final Set<State> unreachableStates;
 
-  const ReachabilityAnalysis({
+  const TMReachabilityAnalysis({
     required this.reachableStates,
     required this.unreachableStates,
   });

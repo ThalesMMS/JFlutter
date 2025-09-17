@@ -18,17 +18,17 @@ class GrammarParser {
       // Validate input
       final validationResult = _validateInput(grammar, inputString);
       if (!validationResult.isSuccess) {
-        return Result.failure(validationResult.error!);
+        return Failure(validationResult.error!);
       }
 
       // Handle empty grammar
       if (grammar.productions.isEmpty) {
-        return Result.failure('Cannot parse with empty grammar');
+        return Failure('Cannot parse with empty grammar');
       }
 
       // Handle grammar with no start symbol
       if (grammar.startSymbol == null) {
-        return Result.failure('Grammar must have a start symbol');
+        return Failure('Grammar must have a start symbol');
       }
 
       // Parse the string
@@ -38,35 +38,35 @@ class GrammarParser {
       // Update execution time
       final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
       
-      return Result.success(finalResult);
+      return Success(finalResult);
     } catch (e) {
-      return Result.failure('Error parsing string: $e');
+      return Failure('Error parsing string: $e');
     }
   }
 
   /// Validates the input grammar and string
   static Result<void> _validateInput(Grammar grammar, String inputString) {
     if (grammar.productions.isEmpty) {
-      return Result.failure('Grammar must have at least one production');
+      return Failure('Grammar must have at least one production');
     }
     
     if (grammar.startSymbol == null) {
-      return Result.failure('Grammar must have a start symbol');
+      return Failure('Grammar must have a start symbol');
     }
     
     if (!grammar.nonTerminals.contains(grammar.startSymbol)) {
-      return Result.failure('Start symbol must be a non-terminal');
+      return Failure('Start symbol must be a non-terminal');
     }
     
     // Validate input string symbols
     for (int i = 0; i < inputString.length; i++) {
       final symbol = inputString[i];
       if (!grammar.terminals.contains(symbol)) {
-        return Result.failure('Input string contains invalid symbol: $symbol');
+        return Failure('Input string contains invalid symbol: $symbol');
       }
     }
     
-    return Result.success(null);
+    return Success(null);
   }
 
   /// Parses the string using the grammar
@@ -98,7 +98,7 @@ class GrammarParser {
     }
     
     // If all strategies fail, return failure
-    return ParseResult.failure(
+    return ParseFailure(
       inputString: inputString,
       errorMessage: 'All parsing strategies failed',
       executionTime: DateTime.now().difference(startTime),
@@ -123,7 +123,7 @@ class GrammarParser {
     _findDerivations(grammar, [grammar.startSymbol!], inputString, derivations, timeout);
     
     if (derivations.isNotEmpty) {
-      return ParseResult.success(
+      return ParseSuccess(
         inputString: inputString,
         derivations: derivations,
         executionTime: DateTime.now().difference(startTime),
@@ -226,7 +226,7 @@ class GrammarParser {
     
     // Check if start symbol is in table[0][n-1]
     if (table[0][n - 1].contains(cnfGrammar.startSymbol)) {
-      return ParseResult.success(
+      return ParseSuccess(
         inputString: inputString,
         derivations: [], // CYK doesn't provide derivations
         executionTime: DateTime.now().difference(startTime),
@@ -326,7 +326,7 @@ class GrammarParser {
     }
     
     if (input.isEmpty) {
-      return ParseResult.success(
+      return ParseSuccess(
         inputString: inputString,
         derivations: derivations,
         executionTime: DateTime.now().difference(startTime),
@@ -437,9 +437,9 @@ class GrammarParser {
         stack.add(production.leftSide);
         stack.add(parseTable.getGoto(newState, production.leftSide) ?? '');
         
-        derivations.add([production.leftSide, ...production.rightSide]);
+        derivations.add([...production.leftSide, ...production.rightSide]);
       } else if (action.type == ParseActionType.accept) {
-        return ParseResult.success(
+        return ParseSuccess(
           inputString: inputString,
           derivations: derivations,
           executionTime: DateTime.now().difference(startTime),
@@ -470,20 +470,20 @@ class GrammarParser {
   static Result<bool> canGenerate(Grammar grammar, String inputString) {
     final parseResult = parse(grammar, inputString);
     if (!parseResult.isSuccess) {
-      return Result.failure(parseResult.error!);
+      return Failure(parseResult.error!);
     }
     
-    return Result.success(parseResult.data!.accepted);
+    return Success(parseResult.data!.accepted);
   }
 
   /// Tests if a grammar cannot generate a specific string
   static Result<bool> cannotGenerate(Grammar grammar, String inputString) {
     final canGenerateResult = canGenerate(grammar, inputString);
     if (!canGenerateResult.isSuccess) {
-      return Result.failure(canGenerateResult.error!);
+      return Failure(canGenerateResult.error!);
     }
     
-    return Result.success(!canGenerateResult.data!);
+    return Success(!canGenerateResult.data!);
   }
 
   /// Finds all strings of a given length that the grammar can generate
@@ -508,9 +508,9 @@ class GrammarParser {
         );
       }
       
-      return Result.success(generatedStrings);
+      return Success(generatedStrings);
     } catch (e) {
-      return Result.failure('Error finding generated strings: $e');
+      return Failure('Error finding generated strings: $e');
     }
   }
 
@@ -562,7 +562,7 @@ class ParseResult {
     required this.executionTime,
   });
 
-  factory ParseResult.success({
+  factory ParseSuccess({
     required String inputString,
     required List<List<String>> derivations,
     required Duration executionTime,
@@ -575,7 +575,7 @@ class ParseResult {
     );
   }
 
-  factory ParseResult.failure({
+  factory ParseFailure({
     required String inputString,
     required String errorMessage,
     required Duration executionTime,

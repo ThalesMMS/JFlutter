@@ -10,11 +10,11 @@ class SimulationService {
     try {
       // Validate request
       if (request.automaton == null) {
-        return Result.failure('Automaton is required');
+        return ResultFactory.failure('Automaton is required');
       }
 
       if (request.inputString == null) {
-        return Result.failure('Input string is required');
+        return ResultFactory.failure('Input string is required');
       }
 
       // Use the automaton simulator
@@ -27,7 +27,7 @@ class SimulationService {
 
       return result;
     } catch (e) {
-      return Result.failure('Error simulating automaton: $e');
+      return ResultFactory.failure('Error simulating automaton: $e');
     }
   }
 
@@ -36,11 +36,11 @@ class SimulationService {
     try {
       // Validate request
       if (request.automaton == null) {
-        return Result.failure('Automaton is required');
+        return ResultFactory.failure('Automaton is required');
       }
 
       if (request.inputString == null) {
-        return Result.failure('Input string is required');
+        return ResultFactory.failure('Input string is required');
       }
 
       // Use the NFA simulator
@@ -53,7 +53,7 @@ class SimulationService {
 
       return result;
     } catch (e) {
-      return Result.failure('Error simulating NFA: $e');
+      return ResultFactory.failure('Error simulating NFA: $e');
     }
   }
 
@@ -62,11 +62,11 @@ class SimulationService {
     try {
       // Validate request
       if (request.automaton == null) {
-        return Result.failure('Automaton is required');
+        return ResultFactory.failure('Automaton is required');
       }
 
       if (request.inputString == null) {
-        return Result.failure('Input string is required');
+        return ResultFactory.failure('Input string is required');
       }
 
       // Use the automaton simulator
@@ -77,7 +77,7 @@ class SimulationService {
 
       return result;
     } catch (e) {
-      return Result.failure('Error testing acceptance: $e');
+      return ResultFactory.failure('Error testing acceptance: $e');
     }
   }
 
@@ -86,11 +86,11 @@ class SimulationService {
     try {
       // Validate request
       if (request.automaton == null) {
-        return Result.failure('Automaton is required');
+        return ResultFactory.failure('Automaton is required');
       }
 
       if (request.inputString == null) {
-        return Result.failure('Input string is required');
+        return ResultFactory.failure('Input string is required');
       }
 
       // Use the automaton simulator
@@ -101,7 +101,7 @@ class SimulationService {
 
       return result;
     } catch (e) {
-      return Result.failure('Error testing rejection: $e');
+      return ResultFactory.failure('Error testing rejection: $e');
     }
   }
 
@@ -110,7 +110,7 @@ class SimulationService {
     try {
       // Validate request
       if (request.automaton == null) {
-        return Result.failure('Automaton is required');
+        return ResultFactory.failure('Automaton is required');
       }
 
       // Use the automaton simulator
@@ -122,7 +122,7 @@ class SimulationService {
 
       return result;
     } catch (e) {
-      return Result.failure('Error finding accepted strings: $e');
+      return ResultFactory.failure('Error finding accepted strings: $e');
     }
   }
 
@@ -131,7 +131,7 @@ class SimulationService {
     try {
       // Validate request
       if (request.automaton == null) {
-        return Result.failure('Automaton is required');
+        return ResultFactory.failure('Automaton is required');
       }
 
       // Use the automaton simulator
@@ -143,7 +143,7 @@ class SimulationService {
 
       return result;
     } catch (e) {
-      return Result.failure('Error finding rejected strings: $e');
+      return ResultFactory.failure('Error finding rejected strings: $e');
     }
   }
 }

@@ -1,9 +1,11 @@
 import '../models/pda.dart';
 import '../models/state.dart';
 import '../models/pda_transition.dart';
+import '../models/fsa_transition.dart';
 import '../models/simulation_result.dart';
 import '../models/simulation_step.dart';
 import '../result.dart';
+import 'automaton_analyzer.dart';
 
 /// Simulates Pushdown Automata (PDA) with input strings
 class PDASimulator {
@@ -20,17 +22,17 @@ class PDASimulator {
       // Validate input
       final validationResult = _validateInput(pda, inputString);
       if (!validationResult.isSuccess) {
-        return Result.failure(validationResult.error!);
+        return Failure(validationResult.error!);
       }
 
       // Handle empty PDA
       if (pda.states.isEmpty) {
-        return Result.failure('Cannot simulate empty PDA');
+        return Failure('Cannot simulate empty PDA');
       }
 
       // Handle PDA with no initial state
       if (pda.initialState == null) {
-        return Result.failure('PDA must have an initial state');
+        return Failure('PDA must have an initial state');
       }
 
       // Simulate the PDA
@@ -40,29 +42,29 @@ class PDASimulator {
       // Update execution time
       final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
       
-      return Result.success(finalResult);
+      return Success(finalResult);
     } catch (e) {
-      return Result.failure('Error simulating PDA: $e');
+      return Failure('Error simulating PDA: $e');
     }
   }
 
   /// Validates the input PDA and string
   static Result<void> _validateInput(PDA pda, String inputString) {
     if (pda.states.isEmpty) {
-      return Result.failure('PDA must have at least one state');
+      return Failure('PDA must have at least one state');
     }
     
     if (pda.initialState == null) {
-      return Result.failure('PDA must have an initial state');
+      return Failure('PDA must have an initial state');
     }
     
     if (!pda.states.contains(pda.initialState)) {
-      return Result.failure('Initial state must be in the states set');
+      return Failure('Initial state must be in the states set');
     }
     
     for (final acceptingState in pda.acceptingStates) {
       if (!pda.states.contains(acceptingState)) {
-        return Result.failure('Accepting state must be in the states set');
+        return Failure('Accepting state must be in the states set');
       }
     }
     
@@ -70,11 +72,11 @@ class PDASimulator {
     for (int i = 0; i < inputString.length; i++) {
       final symbol = inputString[i];
       if (!pda.alphabet.contains(symbol)) {
-        return Result.failure('Input string contains invalid symbol: $symbol');
+        return Failure('Input string contains invalid symbol: $symbol');
       }
     }
     
-    return Result.success(null);
+    return Success(null);
   }
 
   /// Simulates the PDA with the input string
@@ -123,7 +125,7 @@ class PDASimulator {
       );
       
       if (transition == null) {
-        return PDASimulationResult.failure(
+        return PDASimulationFailure(
           inputString: inputString,
           steps: steps,
           errorMessage: 'No transition found for symbol $symbol and stack top ${stack.isNotEmpty ? stack.last : "empty"} in state ${currentState.id}',
@@ -136,7 +138,7 @@ class PDASimulator {
         if (stack.isNotEmpty && stack.last == transition.stackPop) {
           stack.removeLast();
         } else {
-          return PDASimulationResult.failure(
+          return PDASimulationFailure(
             inputString: inputString,
             steps: steps,
             errorMessage: 'Cannot pop ${transition.stackPop} from stack',
@@ -174,7 +176,7 @@ class PDASimulator {
     }
     
     // Add final step
-    steps.add(SimulationStep.final(
+        steps.add(SimulationStep.finalStepStep(
       finalState: currentState.id,
       remainingInput: remainingInput,
       stackContents: stack.join(''),
@@ -186,13 +188,13 @@ class PDASimulator {
     final isAccepted = pda.acceptingStates.contains(currentState);
     
     if (isAccepted) {
-      return PDASimulationResult.success(
+      return PDASimulationSuccess(
         inputString: inputString,
         steps: steps,
         executionTime: DateTime.now().difference(startTime),
       );
     } else {
-      return PDASimulationResult.failure(
+      return PDASimulationFailure(
         inputString: inputString,
         steps: steps,
         errorMessage: 'Input not accepted - final state is not accepting',
@@ -205,20 +207,20 @@ class PDASimulator {
   static Result<bool> accepts(PDA pda, String inputString) {
     final simulationResult = simulate(pda, inputString);
     if (!simulationResult.isSuccess) {
-      return Result.failure(simulationResult.error!);
+      return Failure(simulationResult.error!);
     }
     
-    return Result.success(simulationResult.data!.accepted);
+    return Success(simulationResult.data!.accepted);
   }
 
   /// Tests if a PDA rejects a specific string
   static Result<bool> rejects(PDA pda, String inputString) {
     final acceptsResult = accepts(pda, inputString);
     if (!acceptsResult.isSuccess) {
-      return Result.failure(acceptsResult.error!);
+      return Failure(acceptsResult.error!);
     }
     
-    return Result.success(!acceptsResult.data!);
+    return Success(!acceptsResult.data!);
   }
 
   /// Finds all strings of a given length that the PDA accepts
@@ -243,9 +245,9 @@ class PDASimulator {
         );
       }
       
-      return Result.success(acceptedStrings);
+      return Success(acceptedStrings);
     } catch (e) {
-      return Result.failure('Error finding accepted strings: $e');
+      return Failure('Error finding accepted strings: $e');
     }
   }
 
@@ -302,9 +304,9 @@ class PDASimulator {
         );
       }
       
-      return Result.success(rejectedStrings);
+      return Success(rejectedStrings);
     } catch (e) {
-      return Result.failure('Error finding rejected strings: $e');
+      return Failure('Error finding rejected strings: $e');
     }
   }
 
@@ -351,17 +353,17 @@ class PDASimulator {
       // Validate input
       final validationResult = _validateInput(pda, '');
       if (!validationResult.isSuccess) {
-        return Result.failure(validationResult.error!);
+        return Failure(validationResult.error!);
       }
 
       // Handle empty PDA
       if (pda.states.isEmpty) {
-        return Result.failure('Cannot analyze empty PDA');
+        return Failure('Cannot analyze empty PDA');
       }
 
       // Handle PDA with no initial state
       if (pda.initialState == null) {
-        return Result.failure('PDA must have an initial state');
+        return Failure('PDA must have an initial state');
       }
 
       // Analyze the PDA
@@ -371,9 +373,9 @@ class PDASimulator {
       // Update execution time
       final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
       
-      return Result.success(finalResult);
+      return Success(finalResult);
     } catch (e) {
-      return Result.failure('Error analyzing PDA: $e');
+      return Failure('Error analyzing PDA: $e');
     }
   }
 
@@ -518,7 +520,7 @@ class PDASimulationResult {
     required this.executionTime,
   });
 
-  factory PDASimulationResult.success({
+  factory PDASimulationSuccess({
     required String inputString,
     required List<SimulationStep> steps,
     required Duration executionTime,
@@ -531,7 +533,7 @@ class PDASimulationResult {
     );
   }
 
-  factory PDASimulationResult.failure({
+  factory PDASimulationFailure({
     required String inputString,
     required List<SimulationStep> steps,
     required String errorMessage,
@@ -625,12 +627,12 @@ class PDAAnalysis {
 }
 
 /// Analysis of states
-class StateAnalysis {
+class PDAStateAnalysis {
   final int totalStates;
   final int acceptingStates;
   final int nonAcceptingStates;
 
-  const StateAnalysis({
+  const PDAStateAnalysis({
     required this.totalStates,
     required this.acceptingStates,
     required this.nonAcceptingStates,
@@ -638,12 +640,12 @@ class StateAnalysis {
 }
 
 /// Analysis of transitions
-class TransitionAnalysis {
+class PDATransitionAnalysis {
   final int totalTransitions;
   final int pdaTransitions;
   final int fsaTransitions;
 
-  const TransitionAnalysis({
+  const PDATransitionAnalysis({
     required this.totalTransitions,
     required this.pdaTransitions,
     required this.fsaTransitions,
@@ -664,11 +666,11 @@ class StackAnalysis {
 }
 
 /// Analysis of reachability
-class ReachabilityAnalysis {
+class PDAReachabilityAnalysis {
   final Set<State> reachableStates;
   final Set<State> unreachableStates;
 
-  const ReachabilityAnalysis({
+  const PDAReachabilityAnalysis({
     required this.reachableStates,
     required this.unreachableStates,
   });

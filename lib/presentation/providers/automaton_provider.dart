@@ -5,13 +5,17 @@ import '../../core/models/pda.dart';
 import '../../core/models/tm.dart';
 import '../../core/result.dart';
 import '../../core/algorithms/automaton_simulator.dart';
+import '../../core/models/simulation_result.dart' as sim_result;
 import '../../core/algorithms/nfa_to_dfa_converter.dart';
 import '../../core/algorithms/dfa_minimizer.dart';
 import '../../core/algorithms/regex_to_nfa_converter.dart';
 import '../../core/algorithms/fa_to_regex_converter.dart';
 import '../../data/services/automaton_service.dart';
+import '../../data/repositories/automaton_repository_impl.dart';
+import '../../core/repositories/automaton_repository.dart';
 import '../../data/services/simulation_service.dart';
 import '../../data/services/conversion_service.dart';
+import '../../core/use_cases/automaton_use_cases.dart';
 
 /// Provider for automaton state management
 class AutomatonProvider extends StateNotifier<AutomatonState> {
@@ -23,6 +27,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     required AutomatonService automatonService,
     required SimulationService simulationService,
     required ConversionService conversionService,
+    required CreateAutomatonUseCase createAutomatonUseCase,
   })  : _automatonService = automatonService,
         _simulationService = simulationService,
         _conversionService = conversionService,
@@ -249,7 +254,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
 /// State class for automaton provider
 class AutomatonState {
   final FSA? currentAutomaton;
-  final SimulationResult? simulationResult;
+  final sim_result.SimulationResult? simulationResult;
   final String? regexResult;
   final bool isLoading;
   final String? error;
@@ -264,7 +269,7 @@ class AutomatonState {
 
   AutomatonState copyWith({
     FSA? currentAutomaton,
-    SimulationResult? simulationResult,
+    sim_result.SimulationResult? simulationResult,
     String? regexResult,
     bool? isLoading,
     String? error,
@@ -285,5 +290,6 @@ final automatonProvider = StateNotifierProvider<AutomatonProvider, AutomatonStat
     automatonService: AutomatonService(),
     simulationService: SimulationService(),
     conversionService: ConversionService(),
+    createAutomatonUseCase: CreateAutomatonUseCase(AutomatonRepositoryImpl(AutomatonService())),
   );
 });

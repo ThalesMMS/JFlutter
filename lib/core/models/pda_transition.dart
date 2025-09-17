@@ -21,6 +21,15 @@ class PDATransition extends Transition {
   
   /// Whether the push operation is lambda (epsilon)
   final bool isLambdaPush;
+  
+  /// Read symbol (alias for inputSymbol)
+  String get readSymbol => inputSymbol;
+  
+  /// Stack pop symbol (alias for popSymbol)
+  String get stackPop => popSymbol;
+  
+  /// Stack push symbol (alias for pushSymbol)
+  String get stackPush => pushSymbol;
 
   const PDATransition({
     required super.id,
@@ -223,7 +232,7 @@ class PDATransition extends Transition {
       fromState: fromState,
       toState: toState,
       label: label ?? 'ε,ε→ε',
-      controlPoint: controlPoint ?? const Vector2.zero(),
+          controlPoint: controlPoint ?? Vector2.zero(),
       type: TransitionType.epsilon,
       inputSymbol: '',
       popSymbol: '',
@@ -250,7 +259,7 @@ class PDATransition extends Transition {
       fromState: fromState,
       toState: toState,
       label: label ?? '$inputSymbol,$popSymbol→$pushSymbol',
-      controlPoint: controlPoint ?? const Vector2.zero(),
+          controlPoint: controlPoint ?? Vector2.zero(),
       type: TransitionType.deterministic,
       inputSymbol: inputSymbol,
       popSymbol: popSymbol,
@@ -272,7 +281,7 @@ class PDATransition extends Transition {
       fromState: fromState,
       toState: toState,
       label: label ?? '$inputSymbol,ε→ε',
-      controlPoint: controlPoint ?? const Vector2.zero(),
+          controlPoint: controlPoint ?? Vector2.zero(),
       type: TransitionType.deterministic,
       inputSymbol: inputSymbol,
       popSymbol: '',
@@ -297,7 +306,7 @@ class PDATransition extends Transition {
       fromState: fromState,
       toState: toState,
       label: label ?? 'ε,$popSymbol→$pushSymbol',
-      controlPoint: controlPoint ?? const Vector2.zero(),
+          controlPoint: controlPoint ?? Vector2.zero(),
       type: TransitionType.deterministic,
       inputSymbol: '',
       popSymbol: popSymbol,

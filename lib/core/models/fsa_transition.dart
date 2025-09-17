@@ -9,6 +9,12 @@ class FSATransition extends Transition {
   
   /// Lambda symbol for epsilon transitions (null if not an epsilon transition)
   final String? lambdaSymbol;
+  
+  /// Primary symbol for this transition (first symbol from inputSymbols or lambdaSymbol)
+  String get symbol {
+    if (lambdaSymbol != null) return lambdaSymbol!;
+    return inputSymbols.isNotEmpty ? inputSymbols.first : '';
+  }
 
   const FSATransition({
     required super.id,
@@ -19,6 +25,7 @@ class FSATransition extends Transition {
     super.type,
     required this.inputSymbols,
     this.lambdaSymbol,
+    String? symbol,
   });
 
   /// Creates a copy of this FSA transition with updated properties
@@ -184,7 +191,7 @@ class FSATransition extends Transition {
       fromState: fromState,
       toState: toState,
       label: label ?? 'ε',
-      controlPoint: controlPoint ?? const Vector2.zero(),
+      controlPoint: controlPoint ?? Vector2.zero(),
       type: TransitionType.epsilon,
       inputSymbols: const {},
       lambdaSymbol: 'ε',
@@ -205,7 +212,7 @@ class FSATransition extends Transition {
       fromState: fromState,
       toState: toState,
       label: label ?? symbol,
-      controlPoint: controlPoint ?? const Vector2.zero(),
+      controlPoint: controlPoint ?? Vector2.zero(),
       type: TransitionType.deterministic,
       inputSymbols: {symbol},
       lambdaSymbol: null,
@@ -226,7 +233,7 @@ class FSATransition extends Transition {
       fromState: fromState,
       toState: toState,
       label: label ?? symbols.join(','),
-      controlPoint: controlPoint ?? const Vector2.zero(),
+      controlPoint: controlPoint ?? Vector2.zero(),
       type: TransitionType.nondeterministic,
       inputSymbols: symbols,
       lambdaSymbol: null,

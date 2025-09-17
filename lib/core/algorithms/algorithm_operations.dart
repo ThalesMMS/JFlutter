@@ -31,7 +31,7 @@ class AlgorithmOperations {
     try {
       return NFAToDFAConverter.convert(nfa);
     } catch (e) {
-      return Result.failure('Error converting NFA to DFA: $e');
+      return ResultFactory.failure('Error converting NFA to DFA: $e');
     }
   }
 
@@ -40,7 +40,7 @@ class AlgorithmOperations {
     try {
       return DFAMinimizer.minimize(dfa);
     } catch (e) {
-      return Result.failure('Error minimizing DFA: $e');
+      return ResultFactory.failure('Error minimizing DFA: $e');
     }
   }
 
@@ -49,7 +49,7 @@ class AlgorithmOperations {
     try {
       return RegexToNFAConverter.convert(regex);
     } catch (e) {
-      return Result.failure('Error converting regex to NFA: $e');
+      return ResultFactory.failure('Error converting regex to NFA: $e');
     }
   }
 
@@ -58,7 +58,7 @@ class AlgorithmOperations {
     try {
       return FAToRegexConverter.convert(fa);
     } catch (e) {
-      return Result.failure('Error converting FA to regex: $e');
+      return ResultFactory.failure('Error converting FA to regex: $e');
     }
   }
 
@@ -72,7 +72,7 @@ class AlgorithmOperations {
     try {
       return AutomatonSimulator.simulate(automaton, inputString, stepByStep: stepByStep, timeout: timeout);
     } catch (e) {
-      return Result.failure('Error simulating automaton: $e');
+      return ResultFactory.failure('Error simulating automaton: $e');
     }
   }
 
@@ -86,7 +86,7 @@ class AlgorithmOperations {
     try {
       return AutomatonSimulator.simulateNFA(nfa, inputString, stepByStep: stepByStep, timeout: timeout);
     } catch (e) {
-      return Result.failure('Error simulating NFA: $e');
+      return ResultFactory.failure('Error simulating NFA: $e');
     }
   }
 
@@ -99,7 +99,7 @@ class AlgorithmOperations {
     try {
       return GrammarParser.parse(grammar, inputString, timeout: timeout);
     } catch (e) {
-      return Result.failure('Error parsing string: $e');
+      return ResultFactory.failure('Error parsing string: $e');
     }
   }
 
@@ -112,7 +112,7 @@ class AlgorithmOperations {
     try {
       return PumpingLemmaProver.provePumpingLemma(automaton, maxPumpingLength: maxPumpingLength, timeout: timeout);
     } catch (e) {
-      return Result.failure('Error proving pumping lemma: $e');
+      return ResultFactory.failure('Error proving pumping lemma: $e');
     }
   }
 
@@ -125,7 +125,7 @@ class AlgorithmOperations {
     try {
       return PumpingLemmaProver.disprovePumpingLemma(automaton, maxPumpingLength: maxPumpingLength, timeout: timeout);
     } catch (e) {
-      return Result.failure('Error disproving pumping lemma: $e');
+      return ResultFactory.failure('Error disproving pumping lemma: $e');
     }
   }
 
@@ -138,7 +138,7 @@ class AlgorithmOperations {
     try {
       return PumpingLemmaProver.isLanguageRegular(automaton, maxPumpingLength: maxPumpingLength, timeout: timeout);
     } catch (e) {
-      return Result.failure('Error testing language regularity: $e');
+      return ResultFactory.failure('Error testing language regularity: $e');
     }
   }
 
@@ -151,7 +151,7 @@ class AlgorithmOperations {
     try {
       return LSystemGenerator.generateLSystem(lSystem, iterations, timeout: timeout);
     } catch (e) {
-      return Result.failure('Error generating L-system: $e');
+      return ResultFactory.failure('Error generating L-system: $e');
     }
   }
 
@@ -165,7 +165,7 @@ class AlgorithmOperations {
     try {
       return LSystemGenerator.generateVisualRepresentation(lSystem, iterations, parameters, timeout: timeout);
     } catch (e) {
-      return Result.failure('Error generating L-system visual: $e');
+      return ResultFactory.failure('Error generating L-system visual: $e');
     }
   }
 
@@ -179,7 +179,7 @@ class AlgorithmOperations {
     try {
       return LSystemGenerator.generateBuildingBlocks(lSystem, iterations, parameters, timeout: timeout);
     } catch (e) {
-      return Result.failure('Error generating L-system building blocks: $e');
+      return ResultFactory.failure('Error generating L-system building blocks: $e');
     }
   }
 
@@ -193,7 +193,7 @@ class AlgorithmOperations {
     try {
       return MealyMachineSimulator.simulate(automaton, inputString, stepByStep: stepByStep, timeout: timeout);
     } catch (e) {
-      return Result.failure('Error simulating Mealy machine: $e');
+      return ResultFactory.failure('Error simulating Mealy machine: $e');
     }
   }
 
@@ -207,7 +207,7 @@ class AlgorithmOperations {
     try {
       return PDASimulator.simulate(pda, inputString, stepByStep: stepByStep, timeout: timeout);
     } catch (e) {
-      return Result.failure('Error simulating PDA: $e');
+      return ResultFactory.failure('Error simulating PDA: $e');
     }
   }
 
@@ -221,7 +221,7 @@ class AlgorithmOperations {
     try {
       return TMSimulator.simulate(tm, inputString, stepByStep: stepByStep, timeout: timeout);
     } catch (e) {
-      return Result.failure('Error simulating Turing machine: $e');
+      return ResultFactory.failure('Error simulating Turing machine: $e');
     }
   }
 
@@ -233,7 +233,7 @@ class AlgorithmOperations {
     try {
       return GrammarToPDAConverter.convertGrammarToPDA(grammar, timeout: timeout);
     } catch (e) {
-      return Result.failure('Error converting grammar to PDA: $e');
+      return ResultFactory.failure('Error converting grammar to PDA: $e');
     }
   }
 
@@ -246,7 +246,7 @@ class AlgorithmOperations {
     try {
       return PumpingLemmaGame.createGame(automaton, maxPumpingLength: maxPumpingLength, timeout: timeout);
     } catch (e) {
-      return Result.failure('Error creating pumping lemma game: $e');
+      return ResultFactory.failure('Error creating pumping lemma game: $e');
     }
   }
 
@@ -259,7 +259,7 @@ class AlgorithmOperations {
     try {
       return PumpingLemmaGame.validateAttempt(game, attempt, timeout: timeout);
     } catch (e) {
-      return Result.failure('Error validating pumping attempt: $e');
+      return ResultFactory.failure('Error validating pumping attempt: $e');
     }
   }
 
@@ -272,7 +272,7 @@ class AlgorithmOperations {
     try {
       return PumpingLemmaGame.updateGame(game, attempt, timeout: timeout);
     } catch (e) {
-      return Result.failure('Error updating pumping lemma game: $e');
+      return ResultFactory.failure('Error updating pumping lemma game: $e');
     }
   }
 
@@ -284,7 +284,7 @@ class AlgorithmOperations {
     try {
       return PumpingLemmaGame.generateHint(game, timeout: timeout);
     } catch (e) {
-      return Result.failure('Error generating pumping lemma hint: $e');
+      return ResultFactory.failure('Error generating pumping lemma hint: $e');
     }
   }
 
@@ -296,7 +296,7 @@ class AlgorithmOperations {
     try {
       return PumpingLemmaGame.analyzeGame(game, timeout: timeout);
     } catch (e) {
-      return Result.failure('Error analyzing pumping lemma game: $e');
+      return ResultFactory.failure('Error analyzing pumping lemma game: $e');
     }
   }
 
@@ -305,7 +305,7 @@ class AlgorithmOperations {
     try {
       return LSystemGenerator.createPredefinedLSystem(name);
     } catch (e) {
-      return Result.failure('Error creating predefined L-system: $e');
+      return ResultFactory.failure('Error creating predefined L-system: $e');
     }
   }
 
@@ -314,7 +314,7 @@ class AlgorithmOperations {
     try {
       return LSystemGenerator.createPredefinedParameters(name);
     } catch (e) {
-      return Result.failure('Error creating predefined parameters: $e');
+      return ResultFactory.failure('Error creating predefined parameters: $e');
     }
   }
 
@@ -327,7 +327,7 @@ class AlgorithmOperations {
     try {
       return LSystemGenerator.analyzeLSystem(lSystem, iterations, timeout: timeout);
     } catch (e) {
-      return Result.failure('Error analyzing L-system: $e');
+      return ResultFactory.failure('Error analyzing L-system: $e');
     }
   }
 
@@ -336,7 +336,7 @@ class AlgorithmOperations {
     try {
       return AutomatonSimulator.accepts(automaton, inputString);
     } catch (e) {
-      return Result.failure('Error testing acceptance: $e');
+      return ResultFactory.failure('Error testing acceptance: $e');
     }
   }
 
@@ -345,7 +345,7 @@ class AlgorithmOperations {
     try {
       return AutomatonSimulator.rejects(automaton, inputString);
     } catch (e) {
-      return Result.failure('Error testing rejection: $e');
+      return ResultFactory.failure('Error testing rejection: $e');
     }
   }
 
@@ -354,7 +354,7 @@ class AlgorithmOperations {
     try {
       return GrammarParser.canGenerate(grammar, inputString);
     } catch (e) {
-      return Result.failure('Error testing generation: $e');
+      return ResultFactory.failure('Error testing generation: $e');
     }
   }
 
@@ -363,7 +363,7 @@ class AlgorithmOperations {
     try {
       return GrammarParser.cannotGenerate(grammar, inputString);
     } catch (e) {
-      return Result.failure('Error testing non-generation: $e');
+      return ResultFactory.failure('Error testing non-generation: $e');
     }
   }
 
@@ -376,7 +376,7 @@ class AlgorithmOperations {
     try {
       return AutomatonSimulator.findAcceptedStrings(automaton, maxLength, maxResults: maxResults);
     } catch (e) {
-      return Result.failure('Error finding accepted strings: $e');
+      return ResultFactory.failure('Error finding accepted strings: $e');
     }
   }
 
@@ -389,7 +389,7 @@ class AlgorithmOperations {
     try {
       return AutomatonSimulator.findRejectedStrings(automaton, maxLength, maxResults: maxResults);
     } catch (e) {
-      return Result.failure('Error finding rejected strings: $e');
+      return ResultFactory.failure('Error finding rejected strings: $e');
     }
   }
 
@@ -402,7 +402,7 @@ class AlgorithmOperations {
     try {
       return GrammarParser.findGeneratedStrings(grammar, maxLength, maxResults: maxResults);
     } catch (e) {
-      return Result.failure('Error finding generated strings: $e');
+      return ResultFactory.failure('Error finding generated strings: $e');
     }
   }
 
@@ -411,7 +411,7 @@ class AlgorithmOperations {
     try {
       return MealyMachineSimulator.getOutput(automaton, inputString);
     } catch (e) {
-      return Result.failure('Error getting Mealy output: $e');
+      return ResultFactory.failure('Error getting Mealy output: $e');
     }
   }
 
@@ -425,7 +425,7 @@ class AlgorithmOperations {
     try {
       return MealyMachineSimulator.findInputsForOutput(automaton, targetOutput, maxInputLength: maxInputLength, maxResults: maxResults);
     } catch (e) {
-      return Result.failure('Error finding inputs for output: $e');
+      return ResultFactory.failure('Error finding inputs for output: $e');
     }
   }
 
@@ -438,7 +438,7 @@ class AlgorithmOperations {
     try {
       return MealyMachineSimulator.findPossibleOutputs(automaton, maxInputLength: maxInputLength, maxResults: maxResults);
     } catch (e) {
-      return Result.failure('Error finding possible outputs: $e');
+      return ResultFactory.failure('Error finding possible outputs: $e');
     }
   }
 
@@ -451,7 +451,7 @@ class AlgorithmOperations {
     try {
       return MealyMachineSimulator.analyzeMealyMachine(automaton, maxInputLength: maxInputLength, timeout: timeout);
     } catch (e) {
-      return Result.failure('Error analyzing Mealy machine: $e');
+      return ResultFactory.failure('Error analyzing Mealy machine: $e');
     }
   }
 
@@ -464,7 +464,7 @@ class AlgorithmOperations {
     try {
       return PDASimulator.analyzePDA(pda, maxInputLength: maxInputLength, timeout: timeout);
     } catch (e) {
-      return Result.failure('Error analyzing PDA: $e');
+      return ResultFactory.failure('Error analyzing PDA: $e');
     }
   }
 
@@ -477,16 +477,17 @@ class AlgorithmOperations {
     try {
       return TMSimulator.analyzeTM(tm, maxInputLength: maxInputLength, timeout: timeout);
     } catch (e) {
-      return Result.failure('Error analyzing Turing machine: $e');
+      return ResultFactory.failure('Error analyzing Turing machine: $e');
     }
   }
 
   /// Tests if a grammar can be converted to a PDA
   static Result<bool> canConvertGrammarToPda(Grammar grammar) {
     try {
-      return GrammarToPDAConverter.canConvertToPDA(grammar);
+      final canConvert = GrammarToPDAConverter.canConvertToPDA(grammar);
+      return ResultFactory.success(canConvert);
     } catch (e) {
-      return Result.failure('Error testing grammar to PDA conversion: $e');
+      return ResultFactory.failure('Error testing grammar to PDA conversion: $e');
     }
   }
 
@@ -496,9 +497,9 @@ class AlgorithmOperations {
     Duration timeout = const Duration(seconds: 10),
   }) {
     try {
-      return GrammarToPDAConverter.analyzeConversion(grammar, timeout: timeout);
+      return GrammarToPDAConverter.analyzeConversion(grammar);
     } catch (e) {
-      return Result.failure('Error analyzing grammar to PDA conversion: $e');
+      return ResultFactory.failure('Error analyzing grammar to PDA conversion: $e');
     }
   }
 
@@ -510,7 +511,7 @@ class AlgorithmOperations {
     try {
       return GrammarToPDAConverter.convertGrammarToPDAStandard(grammar, timeout: timeout);
     } catch (e) {
-      return Result.failure('Error converting grammar to PDA (standard): $e');
+      return ResultFactory.failure('Error converting grammar to PDA (standard): $e');
     }
   }
 
@@ -522,7 +523,7 @@ class AlgorithmOperations {
     try {
       return GrammarToPDAConverter.convertGrammarToPDAGreibach(grammar, timeout: timeout);
     } catch (e) {
-      return Result.failure('Error converting grammar to PDA (Greibach): $e');
+      return ResultFactory.failure('Error converting grammar to PDA (Greibach): $e');
     }
   }
 }

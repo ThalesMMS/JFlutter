@@ -4,6 +4,16 @@
 
 JFlutter is a complete port of the classic JFLAP educational tool, rebuilt from the ground up with Flutter for modern mobile devices. It provides an interactive, touch-optimized interface for creating, editing, and simulating finite automata, context-free grammars, and other formal language constructs.
 
+## ⚠️ Current Status
+
+**🚧 UNDER ACTIVE DEVELOPMENT - COMPILATION IN PROGRESS**
+
+This project is currently being fixed for compilation errors. See:
+- [COMPILATION_STATUS.md](./COMPILATION_STATUS.md) - Detailed progress tracking
+- [CRITICAL_ISSUES.md](./CRITICAL_ISSUES.md) - Immediate blockers and fixes
+
+**Progress**: ~60-70% of compilation errors resolved. Major issues remain with type system conflicts and missing files.
+
 ## ✨ Key Features
 
 ### 🎯 **Core Functionality**

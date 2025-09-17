@@ -1,3 +1,4 @@
+import 'package:vector_math/vector_math_64.dart';
 import '../models/fsa.dart';
 import '../models/state.dart';
 import '../models/fsa_transition.dart';
@@ -11,17 +12,17 @@ class FAToRegexConverter {
       // Validate input
       final validationResult = _validateInput(fa);
       if (!validationResult.isSuccess) {
-        return Result.failure(validationResult.error!);
+        return ResultFactory.failure(validationResult.error!);
       }
 
       // Handle empty automaton
       if (fa.states.isEmpty) {
-        return Result.failure('Cannot convert empty automaton to regex');
+        return ResultFactory.failure('Cannot convert empty automaton to regex');
       }
 
       // Handle automaton with no initial state
       if (fa.initialState == null) {
-        return Result.failure('Automaton must have an initial state');
+        return ResultFactory.failure('Automaton must have an initial state');
       }
 
       // Step 1: Ensure single initial and final states
@@ -30,33 +31,33 @@ class FAToRegexConverter {
       // Step 2: Apply state elimination algorithm
       final regex = _stateElimination(faWithSingleStates);
       
-      return Result.success(regex);
+      return ResultFactory.success(regex);
     } catch (e) {
-      return Result.failure('Error converting FA to regex: $e');
+      return ResultFactory.failure('Error converting FA to regex: $e');
     }
   }
 
   /// Validates the input FA
   static Result<void> _validateInput(FSA fa) {
     if (fa.states.isEmpty) {
-      return Result.failure('FA must have at least one state');
+      return ResultFactory.failure('FA must have at least one state');
     }
     
     if (fa.initialState == null) {
-      return Result.failure('FA must have an initial state');
+      return ResultFactory.failure('FA must have an initial state');
     }
     
     if (!fa.states.contains(fa.initialState)) {
-      return Result.failure('Initial state must be in the states set');
+      return ResultFactory.failure('Initial state must be in the states set');
     }
     
     for (final acceptingState in fa.acceptingStates) {
       if (!fa.states.contains(acceptingState)) {
-        return Result.failure('Accepting state must be in the states set');
+        return ResultFactory.failure('Accepting state must be in the states set');
       }
     }
     
-    return Result.success(null);
+    return ResultFactory.success(null);
   }
 
   /// Ensures the FA has a single initial state and a single final state
@@ -304,10 +305,10 @@ class FAToRegexConverter {
   /// Converts FA to regex with step-by-step information
   static Result<FAToRegexConversionResult> convertWithSteps(FSA fa) {
     try {
-      final steps = <ConversionStep>[];
+      final steps = <FARegexConversionStep>[];
       
       // Step 1: Validate input
-      steps.add(ConversionStep(
+      steps.add(FARegexConversionStep(
         stepNumber: 1,
         description: 'Validating input FA',
         fa: fa,
@@ -316,11 +317,11 @@ class FAToRegexConverter {
 
       final validationResult = _validateInput(fa);
       if (!validationResult.isSuccess) {
-        return Result.failure(validationResult.error!);
+        return ResultFactory.failure(validationResult.error!);
       }
 
       // Step 2: Ensure single initial and final states
-      steps.add(ConversionStep(
+      steps.add(FARegexConversionStep(
         stepNumber: 2,
         description: 'Ensuring single initial and final states',
         fa: fa,
@@ -328,7 +329,7 @@ class FAToRegexConverter {
       ));
 
       final faWithSingleStates = _ensureSingleInitialAndFinalStates(fa);
-      steps.add(ConversionStep(
+      steps.add(FARegexConversionStep(
         stepNumber: 3,
         description: 'Single initial and final states ensured',
         fa: faWithSingleStates,
@@ -336,7 +337,7 @@ class FAToRegexConverter {
       ));
 
       // Step 3: Apply state elimination
-      steps.add(ConversionStep(
+      steps.add(FARegexConversionStep(
         stepNumber: 4,
         description: 'Applying state elimination algorithm',
         fa: faWithSingleStates,
@@ -344,7 +345,7 @@ class FAToRegexConverter {
       ));
 
       final regex = _stateElimination(faWithSingleStates);
-      steps.add(ConversionStep(
+      steps.add(FARegexConversionStep(
         stepNumber: 5,
         description: 'State elimination completed',
         fa: faWithSingleStates,
@@ -358,9 +359,9 @@ class FAToRegexConverter {
         executionTime: Duration.zero, // Would be calculated in real implementation
       );
 
-      return Result.success(result);
+      return ResultFactory.success(result);
     } catch (e) {
-      return Result.failure('Error converting FA to regex with steps: $e');
+      return ResultFactory.failure('Error converting FA to regex with steps: $e');
     }
   }
 }
@@ -374,7 +375,7 @@ class FAToRegexConversionResult {
   final String resultRegex;
   
   /// Conversion steps
-  final List<ConversionStep> steps;
+  final List<FARegexConversionStep> steps;
   
   /// Execution time
   final Duration executionTime;
@@ -390,10 +391,10 @@ class FAToRegexConversionResult {
   int get stepCount => steps.length;
 
   /// Gets the first step
-  ConversionStep? get firstStep => steps.isNotEmpty ? steps.first : null;
+  FARegexConversionStep? get firstStep => steps.isNotEmpty ? steps.first : null;
 
   /// Gets the last step
-  ConversionStep? get lastStep => steps.isNotEmpty ? steps.last : null;
+  FARegexConversionStep? get lastStep => steps.isNotEmpty ? steps.last : null;
 
   /// Gets the execution time in milliseconds
   int get executionTimeMs => executionTime.inMilliseconds;
@@ -403,7 +404,7 @@ class FAToRegexConversionResult {
 }
 
 /// Single step in FA to regex conversion
-class ConversionStep {
+class FARegexConversionStep {
   /// Step number
   final int stepNumber;
   
@@ -416,7 +417,7 @@ class ConversionStep {
   /// Regex at this step
   final String? regex;
 
-  const ConversionStep({
+  const FARegexConversionStep({
     required this.stepNumber,
     required this.description,
     this.fa,
@@ -425,9 +426,7 @@ class ConversionStep {
 
   @override
   String toString() {
-    return 'ConversionStep(stepNumber: $stepNumber, description: $description)';
+    return 'FARegexConversionStep(stepNumber: $stepNumber, description: $description)';
   }
 }
 
-/// Import for Vector2
-import 'package:vector_math/vector_math_64.dart';

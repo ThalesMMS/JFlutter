@@ -8,6 +8,9 @@ class State {
   /// Display label for the state (can be empty)
   final String label;
   
+  /// Name of the state (alias for label)
+  final String name;
+  
   /// Position of the state on the canvas (mobile-optimized)
   final Vector2 position;
   
@@ -31,7 +34,7 @@ class State {
     this.isAccepting = false,
     this.type = StateType.normal,
     this.properties = const {},
-  });
+  }) : name = label;
 
   /// Creates a copy of this state with updated properties
   State copyWith({

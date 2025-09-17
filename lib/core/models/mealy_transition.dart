@@ -147,7 +147,7 @@ class MealyTransition extends Transition {
       fromState: fromState,
       toState: toState,
       label: label ?? '$inputSymbol/$outputSymbol',
-      controlPoint: controlPoint ?? const Vector2.zero(),
+          controlPoint: controlPoint ?? Vector2.zero(),
       type: TransitionType.deterministic,
       inputSymbol: inputSymbol,
       outputSymbol: outputSymbol,

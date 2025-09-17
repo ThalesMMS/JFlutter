@@ -1,3 +1,4 @@
+import 'package:vector_math/vector_math_64.dart';
 import '../models/fsa.dart';
 import '../models/state.dart';
 import '../models/fsa_transition.dart';
@@ -11,17 +12,17 @@ class DFAMinimizer {
       // Validate input
       final validationResult = _validateInput(dfa);
       if (!validationResult.isSuccess) {
-        return Result.failure(validationResult.error!);
+        return ResultFactory.failure(validationResult.error!);
       }
 
       // Handle empty DFA
       if (dfa.states.isEmpty) {
-        return Result.failure('Cannot minimize empty DFA');
+        return ResultFactory.failure('Cannot minimize empty DFA');
       }
 
       // Handle DFA with no initial state
       if (dfa.initialState == null) {
-        return Result.failure('DFA must have an initial state');
+        return ResultFactory.failure('DFA must have an initial state');
       }
 
       // Step 1: Remove unreachable states
@@ -30,38 +31,38 @@ class DFAMinimizer {
       // Step 2: Minimize using Hopcroft algorithm
       final minimizedDFA = _minimizeWithHopcroft(dfaWithoutUnreachable);
       
-      return Result.success(minimizedDFA);
+      return ResultFactory.success(minimizedDFA);
     } catch (e) {
-      return Result.failure('Error minimizing DFA: $e');
+      return ResultFactory.failure('Error minimizing DFA: $e');
     }
   }
 
   /// Validates the input DFA
   static Result<void> _validateInput(FSA dfa) {
     if (dfa.states.isEmpty) {
-      return Result.failure('DFA must have at least one state');
+      return ResultFactory.failure('DFA must have at least one state');
     }
     
     if (dfa.initialState == null) {
-      return Result.failure('DFA must have an initial state');
+      return ResultFactory.failure('DFA must have an initial state');
     }
     
     if (!dfa.states.contains(dfa.initialState)) {
-      return Result.failure('Initial state must be in the states set');
+      return ResultFactory.failure('Initial state must be in the states set');
     }
     
     for (final acceptingState in dfa.acceptingStates) {
       if (!dfa.states.contains(acceptingState)) {
-        return Result.failure('Accepting state must be in the states set');
+        return ResultFactory.failure('Accepting state must be in the states set');
       }
     }
     
     // Check if DFA is deterministic
     if (!dfa.isDeterministic) {
-      return Result.failure('Input must be a deterministic automaton');
+      return ResultFactory.failure('Input must be a deterministic automaton');
     }
     
-    return Result.success(null);
+    return ResultFactory.success(null);
   }
 
   /// Removes unreachable states from the DFA
@@ -276,7 +277,7 @@ class DFAMinimizer {
 
       final validationResult = _validateInput(dfa);
       if (!validationResult.isSuccess) {
-        return Result.failure(validationResult.error!);
+        return ResultFactory.failure(validationResult.error!);
       }
 
       // Step 2: Remove unreachable states
@@ -332,9 +333,9 @@ class DFAMinimizer {
         executionTime: Duration.zero, // Would be calculated in real implementation
       );
 
-      return Result.success(result);
+      return ResultFactory.success(result);
     } catch (e) {
-      return Result.failure('Error minimizing DFA with steps: $e');
+      return ResultFactory.failure('Error minimizing DFA with steps: $e');
     }
   }
 }
@@ -412,5 +413,3 @@ class MinimizationStep {
   }
 }
 
-/// Import for Vector2
-import 'package:vector_math/vector_math_64.dart';

@@ -19,39 +19,39 @@ class LSystemGenerator {
       // Validate input
       final validationResult = _validateInput(lSystem, iterations);
       if (!validationResult.isSuccess) {
-        return Result.failure(validationResult.error!);
+        return Failure(validationResult.error!);
       }
 
       // Handle empty L-system
       if (lSystem.axiom.isEmpty) {
-        return Result.failure('Cannot generate L-system with empty axiom');
+        return Failure('Cannot generate L-system with empty axiom');
       }
 
       // Generate the L-system
       final result = _generateLSystem(lSystem, iterations, timeout);
       stopwatch.stop();
       
-      return Result.success(result);
+      return Success(result);
     } catch (e) {
-      return Result.failure('Error generating L-system: $e');
+      return Failure('Error generating L-system: $e');
     }
   }
 
   /// Validates the input L-system and iterations
   static Result<void> _validateInput(LSystem lSystem, int iterations) {
     if (lSystem.axiom.isEmpty) {
-      return Result.failure('L-system must have a non-empty axiom');
+      return Failure('L-system must have a non-empty axiom');
     }
     
     if (iterations < 0) {
-      return Result.failure('Iterations must be non-negative');
+      return Failure('Iterations must be non-negative');
     }
     
     if (iterations > 20) {
-      return Result.failure('Iterations must be at most 20 to prevent excessive computation');
+      return Failure('Iterations must be at most 20 to prevent excessive computation');
     }
     
-    return Result.success(null);
+    return Success(null);
   }
 
   /// Generates the L-system string
@@ -101,21 +101,21 @@ class LSystemGenerator {
       // Validate input
       final validationResult = _validateVisualInput(lSystem, iterations, parameters);
       if (!validationResult.isSuccess) {
-        return Result.failure(validationResult.error!);
+        return Failure(validationResult.error!);
       }
 
       // Handle empty L-system
       if (lSystem.axiom.isEmpty) {
-        return Result.failure('Cannot generate visual representation with empty axiom');
+        return Failure('Cannot generate visual representation with empty axiom');
       }
 
       // Generate the visual representation
       final result = _generateVisualRepresentation(lSystem, iterations, parameters, timeout);
       stopwatch.stop();
       
-      return Result.success(result);
+      return Success(result);
     } catch (e) {
-      return Result.failure('Error generating visual representation: $e');
+      return Failure('Error generating visual representation: $e');
     }
   }
 
@@ -126,30 +126,30 @@ class LSystemGenerator {
     LSystemParameters parameters,
   ) {
     if (lSystem.axiom.isEmpty) {
-      return Result.failure('L-system must have a non-empty axiom');
+      return Failure('L-system must have a non-empty axiom');
     }
     
     if (iterations < 0) {
-      return Result.failure('Iterations must be non-negative');
+      return Failure('Iterations must be non-negative');
     }
     
     if (iterations > 15) {
-      return Result.failure('Iterations must be at most 15 for visual generation');
+      return Failure('Iterations must be at most 15 for visual generation');
     }
     
     if (parameters.initialAngle < 0 || parameters.initialAngle >= 2 * math.pi) {
-      return Result.failure('Initial angle must be between 0 and 2π');
+      return Failure('Initial angle must be between 0 and 2π');
     }
     
     if (parameters.angleIncrement < 0 || parameters.angleIncrement >= 2 * math.pi) {
-      return Result.failure('Angle increment must be between 0 and 2π');
+      return Failure('Angle increment must be between 0 and 2π');
     }
     
     if (parameters.stepSize <= 0) {
-      return Result.failure('Step size must be positive');
+      return Failure('Step size must be positive');
     }
     
-    return Result.success(null);
+    return Success(null);
   }
 
   /// Generates the visual representation
@@ -260,21 +260,21 @@ class LSystemGenerator {
       // Validate input
       final validationResult = _validateVisualInput(lSystem, iterations, parameters);
       if (!validationResult.isSuccess) {
-        return Result.failure(validationResult.error!);
+        return Failure(validationResult.error!);
       }
 
       // Handle empty L-system
       if (lSystem.axiom.isEmpty) {
-        return Result.failure('Cannot generate building blocks with empty axiom');
+        return Failure('Cannot generate building blocks with empty axiom');
       }
 
       // Generate the building blocks
       final result = _generateBuildingBlocks(lSystem, iterations, parameters, timeout);
       stopwatch.stop();
       
-      return Result.success(result);
+      return Success(result);
     } catch (e) {
-      return Result.failure('Error generating building blocks: $e');
+      return Failure('Error generating building blocks: $e');
     }
   }
 
@@ -318,7 +318,8 @@ class LSystemGenerator {
           case 'G':
             // Move forward and draw
             final newState = turtleState.moveForward();
-            buildingBlocks.add(BuildingBlock.line(
+                buildingBlocks.add(BuildingBlock.line(
+                  id: 'line_${buildingBlocks.length}',
               startX: turtleState.x,
               startY: turtleState.y,
               endX: newState.x,
@@ -385,23 +386,23 @@ class LSystemGenerator {
   static Result<LSystem> createPredefinedLSystem(String name) {
     switch (name.toLowerCase()) {
       case 'dragon':
-        return Result.success(LSystem.dragon());
+        return Success(LSystem.dragon());
       case 'sierpinski':
-        return Result.success(LSystem.sierpinski());
+        return Success(LSystem.sierpinski());
       case 'koch':
-        return Result.success(LSystem.koch());
+        return Success(LSystem.koch());
       case 'hilbert':
-        return Result.success(LSystem.hilbert());
+        return Success(LSystem.hilbert());
       case 'peano':
-        return Result.success(LSystem.peano());
+        return Success(LSystem.peano());
       case 'gosper':
-        return Result.success(LSystem.gosper());
+        return Success(LSystem.gosper());
       case 'snowflake':
-        return Result.success(LSystem.snowflake());
+        return Success(LSystem.snowflake());
       case 'plant':
-        return Result.success(LSystem.plant());
+        return Success(LSystem.plant());
       default:
-        return Result.failure('Unknown predefined L-system: $name');
+        return Failure('Unknown predefined L-system: $name');
     }
   }
 
@@ -409,23 +410,23 @@ class LSystemGenerator {
   static Result<LSystemParameters> createPredefinedParameters(String name) {
     switch (name.toLowerCase()) {
       case 'dragon':
-        return Result.success(LSystemParameters.dragon());
+        return Success(LSystemParameters.dragon());
       case 'sierpinski':
-        return Result.success(LSystemParameters.sierpinski());
+        return Success(LSystemParameters.sierpinski());
       case 'koch':
-        return Result.success(LSystemParameters.koch());
+        return Success(LSystemParameters.koch());
       case 'hilbert':
-        return Result.success(LSystemParameters.hilbert());
+        return Success(LSystemParameters.hilbert());
       case 'peano':
-        return Result.success(LSystemParameters.peano());
+        return Success(LSystemParameters.peano());
       case 'gosper':
-        return Result.success(LSystemParameters.gosper());
+        return Success(LSystemParameters.gosper());
       case 'snowflake':
-        return Result.success(LSystemParameters.snowflake());
+        return Success(LSystemParameters.snowflake());
       case 'plant':
-        return Result.success(LSystemParameters.plant());
+        return Success(LSystemParameters.plant());
       default:
-        return Result.failure('Unknown predefined parameters: $name');
+        return Failure('Unknown predefined parameters: $name');
     }
   }
 
@@ -441,12 +442,12 @@ class LSystemGenerator {
       // Validate input
       final validationResult = _validateInput(lSystem, iterations);
       if (!validationResult.isSuccess) {
-        return Result.failure(validationResult.error!);
+        return Failure(validationResult.error!);
       }
 
       // Handle empty L-system
       if (lSystem.axiom.isEmpty) {
-        return Result.failure('Cannot analyze L-system with empty axiom');
+        return Failure('Cannot analyze L-system with empty axiom');
       }
 
       // Analyze the L-system
@@ -456,9 +457,9 @@ class LSystemGenerator {
       // Update execution time
       final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
       
-      return Result.success(finalResult);
+      return Success(finalResult);
     } catch (e) {
-      return Result.failure('Error analyzing L-system: $e');
+      return Failure('Error analyzing L-system: $e');
     }
   }
 

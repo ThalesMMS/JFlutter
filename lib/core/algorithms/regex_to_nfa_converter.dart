@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+import 'package:vector_math/vector_math_64.dart';
 import '../models/fsa.dart';
 import '../models/state.dart';
 import '../models/fsa_transition.dart';
@@ -11,28 +13,28 @@ class RegexToNFAConverter {
       // Validate input
       final validationResult = _validateRegex(regex);
       if (!validationResult.isSuccess) {
-        return Result.failure(validationResult.error!);
+        return ResultFactory.failure(validationResult.error!);
       }
 
       // Parse the regular expression
       final parsedRegex = _parseRegex(regex);
       if (parsedRegex == null) {
-        return Result.failure('Invalid regular expression syntax');
+        return ResultFactory.failure('Invalid regular expression syntax');
       }
 
       // Convert to NFA using Thompson's construction
       final nfa = _thompsonConstruction(parsedRegex);
       
-      return Result.success(nfa);
+      return ResultFactory.success(nfa);
     } catch (e) {
-      return Result.failure('Error converting regex to NFA: $e');
+      return ResultFactory.failure('Error converting regex to NFA: $e');
     }
   }
 
   /// Validates the regular expression
   static Result<void> _validateRegex(String regex) {
     if (regex.isEmpty) {
-      return Result.failure('Regular expression cannot be empty');
+      return ResultFactory.failure('Regular expression cannot be empty');
     }
 
     // Check for balanced parentheses
@@ -43,24 +45,24 @@ class RegexToNFAConverter {
       } else if (regex[i] == ')') {
         parenCount--;
         if (parenCount < 0) {
-          return Result.failure('Unbalanced parentheses in regular expression');
+          return ResultFactory.failure('Unbalanced parentheses in regular expression');
         }
       }
     }
     
     if (parenCount != 0) {
-      return Result.failure('Unbalanced parentheses in regular expression');
+      return ResultFactory.failure('Unbalanced parentheses in regular expression');
     }
 
     // Check for invalid characters
     final validChars = RegExp(r'[a-zA-Z0-9\(\)\|\*\+\?\.]');
     for (int i = 0; i < regex.length; i++) {
       if (!validChars.hasMatch(regex[i])) {
-        return Result.failure('Invalid character in regular expression: ${regex[i]}');
+        return ResultFactory.failure('Invalid character in regular expression: ${regex[i]}');
       }
     }
 
-    return Result.success(null);
+    return ResultFactory.success(null);
   }
 
   /// Parses the regular expression into an abstract syntax tree
@@ -263,7 +265,7 @@ class RegexToNFAConverter {
       acceptingStates: {q1},
       created: now,
       modified: now,
-      bounds: const Rectangle(0, 0, 800, 600),
+              bounds: math.Rectangle(0, 0, 800, 600),
     );
   }
 
@@ -303,7 +305,7 @@ class RegexToNFAConverter {
       acceptingStates: {q1},
       created: now,
       modified: now,
-      bounds: const Rectangle(0, 0, 800, 600),
+              bounds: math.Rectangle(0, 0, 800, 600),
     );
   }
 
@@ -376,7 +378,7 @@ class RegexToNFAConverter {
       acceptingStates: {newFinal},
       created: now,
       modified: now,
-      bounds: const Rectangle(0, 0, 800, 600),
+              bounds: math.Rectangle(0, 0, 800, 600),
     );
   }
 
@@ -413,7 +415,7 @@ class RegexToNFAConverter {
       acceptingStates: rightNFA.acceptingStates,
       created: leftNFA.created,
       modified: DateTime.now(),
-      bounds: const Rectangle(0, 0, 800, 600),
+              bounds: math.Rectangle(0, 0, 800, 600),
     );
   }
 
@@ -475,7 +477,7 @@ class RegexToNFAConverter {
       acceptingStates: {newFinal},
       created: now,
       modified: now,
-      bounds: const Rectangle(0, 0, 800, 600),
+              bounds: math.Rectangle(0, 0, 800, 600),
     );
   }
 
@@ -550,7 +552,7 @@ class RegexToNFAConverter {
       acceptingStates: {newFinal},
       created: now,
       modified: now,
-      bounds: const Rectangle(0, 0, 800, 600),
+              bounds: math.Rectangle(0, 0, 800, 600),
     );
   }
 }
@@ -623,5 +625,3 @@ class RegexToken {
   const RegexToken({required this.type, required this.value});
 }
 
-/// Import for Vector2
-import 'package:vector_math/vector_math_64.dart';

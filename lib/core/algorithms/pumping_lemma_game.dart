@@ -20,50 +20,50 @@ class PumpingLemmaGame {
       // Validate input
       final validationResult = _validateInput(automaton);
       if (!validationResult.isSuccess) {
-        return Result.failure(validationResult.error!);
+        return Failure(validationResult.error!);
       }
 
       // Handle empty automaton
       if (automaton.states.isEmpty) {
-        return Result.failure('Cannot create game with empty automaton');
+        return Failure('Cannot create game with empty automaton');
       }
 
       // Handle automaton with no initial state
       if (automaton.initialState == null) {
-        return Result.failure('Automaton must have an initial state');
+        return Failure('Automaton must have an initial state');
       }
 
       // Create the game
       final result = _createGame(automaton, maxPumpingLength, timeout);
       stopwatch.stop();
       
-      return Result.success(result);
+      return Success(result);
     } catch (e) {
-      return Result.failure('Error creating pumping lemma game: $e');
+      return Failure('Error creating pumping lemma game: $e');
     }
   }
 
   /// Validates the input automaton
   static Result<void> _validateInput(FSA automaton) {
     if (automaton.states.isEmpty) {
-      return Result.failure('Automaton must have at least one state');
+      return Failure('Automaton must have at least one state');
     }
     
     if (automaton.initialState == null) {
-      return Result.failure('Automaton must have an initial state');
+      return Failure('Automaton must have an initial state');
     }
     
     if (!automaton.states.contains(automaton.initialState)) {
-      return Result.failure('Initial state must be in the states set');
+      return Failure('Initial state must be in the states set');
     }
     
     for (final acceptingState in automaton.acceptingStates) {
       if (!automaton.states.contains(acceptingState)) {
-        return Result.failure('Accepting state must be in the states set');
+        return Failure('Accepting state must be in the states set');
       }
     }
     
-    return Result.success(null);
+    return Success(null);
   }
 
   /// Creates the game
@@ -227,7 +227,7 @@ class PumpingLemmaGame {
       // Validate input
       final validationResult = _validateAttemptInput(game, attempt);
       if (!validationResult.isSuccess) {
-        return Result.failure(validationResult.error!);
+        return Failure(validationResult.error!);
       }
 
       // Validate the attempt
@@ -237,9 +237,9 @@ class PumpingLemmaGame {
       // Update execution time
       final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
       
-      return Result.success(finalResult);
+      return Success(finalResult);
     } catch (e) {
-      return Result.failure('Error validating pumping attempt: $e');
+      return Failure('Error validating pumping attempt: $e');
     }
   }
 
@@ -249,18 +249,18 @@ class PumpingLemmaGame {
     PumpingAttempt attempt,
   ) {
     if (attempt.x == null || attempt.y == null || attempt.z == null) {
-      return Result.failure('Attempt must have x, y, and z components');
+      return Failure('Attempt must have x, y, and z components');
     }
     
     if (attempt.y!.isEmpty) {
-      return Result.failure('y component cannot be empty');
+      return Failure('y component cannot be empty');
     }
     
     if (attempt.x!.length + attempt.y!.length > game.pumpingLength) {
-      return Result.failure('|xy| must be <= pumping length');
+      return Failure('|xy| must be <= pumping length');
     }
     
-    return Result.success(null);
+    return Success(null);
   }
 
   /// Validates the attempt
@@ -274,7 +274,7 @@ class PumpingLemmaGame {
     // Check if the decomposition is correct
     final originalString = attempt.x! + attempt.y! + attempt.z!;
     if (originalString != game.challengeString) {
-      return PumpingAttemptResult.failure(
+      return PumpingAttemptFailure(
         attempt: attempt,
         errorMessage: 'Decomposition does not match original string',
         executionTime: DateTime.now().difference(startTime),
@@ -283,7 +283,7 @@ class PumpingLemmaGame {
     
     // Check if |xy| <= pumping length
     if (attempt.x!.length + attempt.y!.length > game.pumpingLength) {
-      return PumpingAttemptResult.failure(
+      return PumpingAttemptFailure(
         attempt: attempt,
         errorMessage: '|xy| must be <= pumping length',
         executionTime: DateTime.now().difference(startTime),
@@ -292,7 +292,7 @@ class PumpingLemmaGame {
     
     // Check if |y| > 0
     if (attempt.y!.isEmpty) {
-      return PumpingAttemptResult.failure(
+      return PumpingAttemptFailure(
         attempt: attempt,
         errorMessage: 'y must be non-empty',
         executionTime: DateTime.now().difference(startTime),
@@ -310,12 +310,12 @@ class PumpingLemmaGame {
     }
     
     if (canPump) {
-      return PumpingAttemptResult.success(
+      return PumpingAttemptSuccess(
         attempt: attempt,
         executionTime: DateTime.now().difference(startTime),
       );
     } else {
-      return PumpingAttemptResult.failure(
+      return PumpingAttemptFailure(
         attempt: attempt,
         errorMessage: 'String cannot be pumped',
         executionTime: DateTime.now().difference(startTime),
@@ -335,7 +335,7 @@ class PumpingLemmaGame {
       // Validate the attempt
       final validationResult = validateAttempt(game, attempt, timeout: timeout);
       if (!validationResult.isSuccess) {
-        return Result.failure(validationResult.error!);
+        return Failure(validationResult.error!);
       }
       
       final attemptResult = validationResult.data!;
@@ -357,9 +357,9 @@ class PumpingLemmaGame {
       
       stopwatch.stop();
       
-      return Result.success(updatedGame);
+      return Success(updatedGame);
     } catch (e) {
-      return Result.failure('Error updating game: $e');
+      return Failure('Error updating game: $e');
     }
   }
 
@@ -375,9 +375,9 @@ class PumpingLemmaGame {
       final hint = _generateHint(game, timeout);
       stopwatch.stop();
       
-      return Result.success(hint);
+      return Success(hint);
     } catch (e) {
-      return Result.failure('Error generating hint: $e');
+      return Failure('Error generating hint: $e');
     }
   }
 
@@ -436,9 +436,9 @@ class PumpingLemmaGame {
       // Update execution time
       final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
       
-      return Result.success(finalResult);
+      return Success(finalResult);
     } catch (e) {
-      return Result.failure('Error analyzing game: $e');
+      return Failure('Error analyzing game: $e');
     }
   }
 
@@ -496,7 +496,7 @@ class PumpingAttemptResult {
     required this.executionTime,
   });
 
-  factory PumpingAttemptResult.success({
+  factory PumpingAttemptSuccess({
     required PumpingAttempt attempt,
     required Duration executionTime,
   }) {
@@ -507,7 +507,7 @@ class PumpingAttemptResult {
     );
   }
 
-  factory PumpingAttemptResult.failure({
+  factory PumpingAttemptFailure({
     required PumpingAttempt attempt,
     required String errorMessage,
     required Duration executionTime,

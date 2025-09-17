@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';
 import 'state.dart';
 import 'transition.dart';
@@ -43,9 +44,10 @@ class TM extends Automaton {
     Set<String>? alphabet,
     State? initialState,
     Set<State>? acceptingStates,
+    AutomatonType? type,
     DateTime? created,
     DateTime? modified,
-    Rectangle? bounds,
+        math.Rectangle? bounds,
     double? zoomLevel,
     Vector2? panOffset,
     Set<String>? tapeAlphabet,
@@ -60,6 +62,7 @@ class TM extends Automaton {
       alphabet: alphabet ?? this.alphabet,
       initialState: initialState ?? this.initialState,
       acceptingStates: acceptingStates ?? this.acceptingStates,
+      type: type ?? this.type,
       created: created ?? this.created,
       modified: modified ?? this.modified,
       bounds: bounds ?? this.bounds,
@@ -86,8 +89,8 @@ class TM extends Automaton {
       'created': created.toIso8601String(),
       'modified': modified.toIso8601String(),
       'bounds': {
-        'x': bounds.x,
-        'y': bounds.y,
+        'x': bounds.left,
+        'y': bounds.top,
         'width': bounds.width,
         'height': bounds.height,
       },
@@ -122,7 +125,7 @@ class TM extends Automaton {
           .toSet(),
       created: DateTime.parse(json['created'] as String),
       modified: DateTime.parse(json['modified'] as String),
-      bounds: Rectangle(
+          bounds: math.Rectangle(
         (json['bounds'] as Map<String, dynamic>)['x'] as double,
         (json['bounds'] as Map<String, dynamic>)['y'] as double,
         (json['bounds'] as Map<String, dynamic>)['width'] as double,
@@ -277,7 +280,7 @@ class TM extends Automaton {
     Set<String>? tapeAlphabet,
     String? blankSymbol,
     int? tapeCount,
-    Rectangle? bounds,
+        math.Rectangle? bounds,
   }) {
     final now = DateTime.now();
     return TM(
@@ -289,7 +292,7 @@ class TM extends Automaton {
       acceptingStates: {},
       created: now,
       modified: now,
-      bounds: bounds ?? const Rectangle(0, 0, 800, 600),
+          bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
       tapeAlphabet: tapeAlphabet ?? {'0', '1', 'B'},
       blankSymbol: blankSymbol ?? 'B',
       tapeCount: tapeCount ?? 1,
@@ -308,7 +311,7 @@ class TM extends Automaton {
     Set<String>? tapeAlphabet,
     String? blankSymbol,
     int? tapeCount,
-    Rectangle? bounds,
+        math.Rectangle? bounds,
   }) {
     final now = DateTime.now();
     final state = State(
@@ -329,7 +332,7 @@ class TM extends Automaton {
       acceptingStates: isAccepting ? {state} : {},
       created: now,
       modified: now,
-      bounds: bounds ?? const Rectangle(0, 0, 800, 600),
+          bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
       tapeAlphabet: tapeAlphabet ?? {'0', '1', 'B'},
       blankSymbol: blankSymbol ?? 'B',
       tapeCount: tapeCount ?? 1,
@@ -340,7 +343,7 @@ class TM extends Automaton {
   factory TM.acceptAll({
     required String id,
     required String name,
-    Rectangle? bounds,
+        math.Rectangle? bounds,
   }) {
     final now = DateTime.now();
     final q0 = State(
@@ -361,7 +364,7 @@ class TM extends Automaton {
       acceptingStates: {q0},
       created: now,
       modified: now,
-      bounds: bounds ?? const Rectangle(0, 0, 800, 600),
+          bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
       tapeAlphabet: {'0', '1', 'B'},
       blankSymbol: 'B',
       tapeCount: 1,
@@ -372,7 +375,7 @@ class TM extends Automaton {
   factory TM.rejectAll({
     required String id,
     required String name,
-    Rectangle? bounds,
+        math.Rectangle? bounds,
   }) {
     final now = DateTime.now();
     final q0 = State(
@@ -393,7 +396,7 @@ class TM extends Automaton {
       acceptingStates: {},
       created: now,
       modified: now,
-      bounds: bounds ?? const Rectangle(0, 0, 800, 600),
+          bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
       tapeAlphabet: {'0', '1', 'B'},
       blankSymbol: 'B',
       tapeCount: 1,
@@ -404,7 +407,7 @@ class TM extends Automaton {
   factory TM.copyMachine({
     required String id,
     required String name,
-    Rectangle? bounds,
+        math.Rectangle? bounds,
   }) {
     final now = DateTime.now();
     final q0 = State(
@@ -456,10 +459,26 @@ class TM extends Automaton {
       acceptingStates: {q1},
       created: now,
       modified: now,
-      bounds: bounds ?? const Rectangle(0, 0, 800, 600),
+          bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
       tapeAlphabet: {'0', '1', 'B'},
       blankSymbol: 'B',
       tapeCount: 1,
     );
+  }
+  
+  /// Gets TM transition from state on symbol
+  TMTransition? getTMTransitionFromStateOnSymbol(
+    String stateId,
+    String symbol,
+  ) {
+    for (final transition in transitions) {
+      if (transition is TMTransition) {
+        if (transition.fromState.id == stateId &&
+            transition.readSymbol == symbol) {
+          return transition;
+        }
+      }
+    }
+    return null;
   }
 }

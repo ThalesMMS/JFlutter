@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';
 import 'state.dart';
 import 'transition.dart';
@@ -39,9 +40,10 @@ class PDA extends Automaton {
     Set<String>? alphabet,
     State? initialState,
     Set<State>? acceptingStates,
+    AutomatonType? type,
     DateTime? created,
     DateTime? modified,
-    Rectangle? bounds,
+        math.Rectangle? bounds,
     double? zoomLevel,
     Vector2? panOffset,
     Set<String>? stackAlphabet,
@@ -55,6 +57,7 @@ class PDA extends Automaton {
       alphabet: alphabet ?? this.alphabet,
       initialState: initialState ?? this.initialState,
       acceptingStates: acceptingStates ?? this.acceptingStates,
+      type: type ?? this.type,
       created: created ?? this.created,
       modified: modified ?? this.modified,
       bounds: bounds ?? this.bounds,
@@ -80,8 +83,8 @@ class PDA extends Automaton {
       'created': created.toIso8601String(),
       'modified': modified.toIso8601String(),
       'bounds': {
-        'x': bounds.x,
-        'y': bounds.y,
+        'x': bounds.left,
+        'y': bounds.top,
         'width': bounds.width,
         'height': bounds.height,
       },
@@ -115,7 +118,7 @@ class PDA extends Automaton {
           .toSet(),
       created: DateTime.parse(json['created'] as String),
       modified: DateTime.parse(json['modified'] as String),
-      bounds: Rectangle(
+          bounds: math.Rectangle(
         (json['bounds'] as Map<String, dynamic>)['x'] as double,
         (json['bounds'] as Map<String, dynamic>)['y'] as double,
         (json['bounds'] as Map<String, dynamic>)['width'] as double,
@@ -260,7 +263,7 @@ class PDA extends Automaton {
     required String name,
     Set<String>? stackAlphabet,
     String? initialStackSymbol,
-    Rectangle? bounds,
+        math.Rectangle? bounds,
   }) {
     final now = DateTime.now();
     return PDA(
@@ -272,7 +275,7 @@ class PDA extends Automaton {
       acceptingStates: {},
       created: now,
       modified: now,
-      bounds: bounds ?? const Rectangle(0, 0, 800, 600),
+          bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
       stackAlphabet: stackAlphabet ?? {'Z'},
       initialStackSymbol: initialStackSymbol ?? 'Z',
     );
@@ -289,7 +292,7 @@ class PDA extends Automaton {
     bool isAccepting = false,
     Set<String>? stackAlphabet,
     String? initialStackSymbol,
-    Rectangle? bounds,
+        math.Rectangle? bounds,
   }) {
     final now = DateTime.now();
     final state = State(
@@ -310,7 +313,7 @@ class PDA extends Automaton {
       acceptingStates: isAccepting ? {state} : {},
       created: now,
       modified: now,
-      bounds: bounds ?? const Rectangle(0, 0, 800, 600),
+          bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
       stackAlphabet: stackAlphabet ?? {'Z'},
       initialStackSymbol: initialStackSymbol ?? 'Z',
     );
@@ -320,7 +323,7 @@ class PDA extends Automaton {
   factory PDA.balancedParentheses({
     required String id,
     required String name,
-    Rectangle? bounds,
+        math.Rectangle? bounds,
   }) {
     final now = DateTime.now();
     final q0 = State(
@@ -384,9 +387,27 @@ class PDA extends Automaton {
       acceptingStates: {q1},
       created: now,
       modified: now,
-      bounds: bounds ?? const Rectangle(0, 0, 800, 600),
+          bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
       stackAlphabet: {'Z', '('},
       initialStackSymbol: 'Z',
     );
+  }
+  
+  /// Gets PDA transition from state on symbol and stack top
+  PDATransition? getPDATransitionFromStateOnSymbolAndStackTop(
+    String stateId,
+    String symbol,
+    String stackTop,
+  ) {
+    for (final transition in transitions) {
+      if (transition is PDATransition) {
+        if (transition.fromState.id == stateId &&
+            transition.inputSymbol == symbol &&
+            transition.popSymbol == stackTop) {
+          return transition;
+        }
+      }
+    }
+    return null;
   }
 }

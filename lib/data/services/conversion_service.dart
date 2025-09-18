@@ -6,6 +6,7 @@ import '../../core/algorithms/dfa_minimizer.dart';
 import '../../core/algorithms/regex_to_nfa_converter.dart';
 import '../../core/algorithms/fa_to_regex_converter.dart';
 import '../../core/algorithms/grammar_to_pda_converter.dart';
+import '../../core/algorithms/grammar_to_fsa_converter.dart';
 
 /// Service for automaton conversion operations
 class ConversionService {
@@ -148,6 +149,26 @@ class ConversionService {
       return ResultFactory.failure('Error converting grammar to PDA (Greibach): $e');
     }
   }
+
+  /// Converts a right-linear grammar to a finite automaton
+  Result<FSA> convertGrammarToFsa(ConversionRequest request) {
+    try {
+      if (request.grammar == null) {
+        return ResultFactory.failure('Grammar is required');
+      }
+
+      if (request.conversionType != ConversionType.grammarToFsa) {
+        return ResultFactory.failure(
+          'Invalid conversion type for grammar to automaton conversion',
+        );
+      }
+
+      final result = GrammarToFSAConverter.convert(request.grammar!);
+      return result;
+    } catch (e) {
+      return ResultFactory.failure('Error converting grammar to automaton: $e');
+    }
+  }
 }
 
 /// Request for conversion operations
@@ -219,6 +240,14 @@ class ConversionRequest {
       conversionType: ConversionType.grammarToPdaGreibach,
     );
   }
+
+  /// Creates a conversion request for grammar to FSA
+  factory ConversionRequest.grammarToFsa({required Grammar grammar}) {
+    return ConversionRequest(
+      grammar: grammar,
+      conversionType: ConversionType.grammarToFsa,
+    );
+  }
 }
 
 /// Types of conversions supported
@@ -230,6 +259,7 @@ enum ConversionType {
   grammarToPda,
   grammarToPdaStandard,
   grammarToPdaGreibach,
+  grammarToFsa,
 }
 
 /// Extension on ConversionType for better usability
@@ -250,6 +280,8 @@ extension ConversionTypeExtension on ConversionType {
         return 'Grammar to PDA (Standard)';
       case ConversionType.grammarToPdaGreibach:
         return 'Grammar to PDA (Greibach)';
+      case ConversionType.grammarToFsa:
+        return 'Grammar to FSA';
     }
   }
 }

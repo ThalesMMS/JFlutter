@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/grammar_provider.dart';
+import '../providers/automaton_provider.dart';
+import '../providers/home_navigation_provider.dart';
 
 /// Panel for grammar analysis algorithms
 class GrammarAlgorithmPanel extends ConsumerStatefulWidget {
@@ -51,8 +54,11 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
   }
 
   Widget _buildAlgorithmButtons(BuildContext context) {
+    final grammarState = ref.watch(grammarProvider);
     return Column(
       children: [
+        _buildConversionSection(context, grammarState),
+        const SizedBox(height: 24),
         _buildAlgorithmButton(
           context,
           title: 'Remove Left Recursion',
@@ -100,6 +106,60 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
           icon: Icons.help_outline,
           onPressed: _checkAmbiguity,
         ),
+      ],
+    );
+  }
+
+  Widget _buildConversionSection(BuildContext context, GrammarState grammarState) {
+    final isDisabled = grammarState.isConverting || grammarState.productions.isEmpty;
+    final buttonLabel = grammarState.isConverting
+        ? 'Converting...'
+        : 'Convert Right-Linear Grammar to FSA';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Conversions',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: isDisabled ? null : _convertToAutomaton,
+            icon: grammarState.isConverting
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.sync_alt),
+            label: Text(buttonLabel),
+          ),
+        ),
+        if (grammarState.productions.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              'Add at least one production rule to enable conversions.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                  ),
+            ),
+          ),
+        if (grammarState.error != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              grammarState.error!,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+            ),
+          ),
       ],
     );
   }
@@ -178,6 +238,36 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
         ),
       ),
     );
+  }
+
+  Future<void> _convertToAutomaton() async {
+    final result = await ref.read(grammarProvider.notifier).convertToAutomaton();
+
+    if (!mounted) return;
+
+    if (result.isSuccess) {
+      final automaton = result.data!;
+      ref.read(automatonProvider.notifier).updateAutomaton(automaton);
+
+      if (!mounted) return;
+
+      ref.read(homeNavigationProvider.notifier).goToFsa();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Grammar converted to automaton. Switched to FSA workspace.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } else {
+      final message = result.error ?? 'Failed to convert grammar to automaton.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
   }
 
   Widget _buildResultsSection(BuildContext context) {

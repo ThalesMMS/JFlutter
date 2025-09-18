@@ -164,7 +164,6 @@ class _TouchGestureHandlerState<T extends Transition>
     });
   }
 
-
   /// Handles scale start for zooming and panning
   void _handleScaleStart(ScaleStartDetails details) {
     _isZooming = true;
@@ -410,7 +409,7 @@ class _TouchGestureHandlerState<T extends Transition>
                 icon: Icons.edit,
                 label: 'Edit Transition',
                 onTap: () {
-                  widget.onTransitionEdited(_contextMenuTransition as T);
+                  widget.onTransitionEdited(_contextMenuTransition!);
                   _closeContextMenu();
                 },
               ),
@@ -419,7 +418,7 @@ class _TouchGestureHandlerState<T extends Transition>
                 icon: Icons.delete,
                 label: 'Delete Transition',
                 onTap: () {
-                  widget.onTransitionDeleted(_contextMenuTransition as T);
+                  widget.onTransitionDeleted(_contextMenuTransition!);
                   _closeContextMenu();
                 },
               ),
@@ -466,4 +465,3 @@ class _TouchGestureHandlerState<T extends Transition>
     );
   }
 }
-

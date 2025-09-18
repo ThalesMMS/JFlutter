@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/home_navigation_provider.dart';
 import '../widgets/mobile_navigation.dart';
 import 'fsa_page.dart';
 import 'grammar_page.dart';
@@ -19,8 +20,7 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
-  int _currentIndex = 0;
-  late PageController _pageController;
+  late final PageController _pageController;
 
   final List<NavigationItem> _navigationItems = const [
     NavigationItem(
@@ -58,7 +58,29 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void initState() {
     super.initState();
-    _pageController = PageController();
+    final initialIndex = ref.read(homeNavigationProvider);
+    _pageController = PageController(initialPage: initialIndex);
+
+    ref.listen<int>(homeNavigationProvider, (previous, next) {
+      if (previous == next) {
+        return;
+      }
+
+      if (_pageController.hasClients) {
+        _pageController.animateToPage(
+          next,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      } else {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted || !_pageController.hasClients) {
+            return;
+          }
+          _pageController.jumpToPage(next);
+        });
+      }
+    });
   }
 
   @override
@@ -68,44 +90,36 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   void _onNavigationTap(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
-    _pageController.animateToPage(
-      index,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
+    ref.read(homeNavigationProvider.notifier).setIndex(index);
   }
 
   void _onPageChanged(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
+    ref.read(homeNavigationProvider.notifier).setIndex(index);
   }
 
-  String _getCurrentPageTitle() {
-    return _navigationItems[_currentIndex].label;
+  String _getCurrentPageTitle(int currentIndex) {
+    return _navigationItems[currentIndex].label;
   }
 
-  String _getCurrentPageDescription() {
-    return _navigationItems[_currentIndex].description;
+  String _getCurrentPageDescription(int currentIndex) {
+    return _navigationItems[currentIndex].description;
   }
 
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
+    final currentIndex = ref.watch(homeNavigationProvider);
     final isMobile = screenSize.width < 1024; // Better breakpoint for modern devices
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(_getCurrentPageTitle()),
+            Text(_getCurrentPageTitle(currentIndex)),
             if (isMobile)
               Text(
-                _getCurrentPageDescription(),
+                _getCurrentPageDescription(currentIndex),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                 ),
@@ -140,18 +154,18 @@ class _HomePageState extends ConsumerState<HomePage> {
       ),
       bottomNavigationBar: isMobile
           ? MobileNavigation(
-              currentIndex: _currentIndex,
+              currentIndex: currentIndex,
               onTap: _onNavigationTap,
               items: _navigationItems,
             )
           : null,
-      floatingActionButton: _buildFloatingActionButton(context),
+      floatingActionButton: _buildFloatingActionButton(context, currentIndex),
     );
   }
 
-  Widget? _buildFloatingActionButton(BuildContext context) {
+  Widget? _buildFloatingActionButton(BuildContext context, int currentIndex) {
     // Show different FABs based on current page
-    switch (_currentIndex) {
+    switch (currentIndex) {
       case 0: // FSA
         return FloatingActionButton(
           onPressed: () => _createNewAutomaton(context),

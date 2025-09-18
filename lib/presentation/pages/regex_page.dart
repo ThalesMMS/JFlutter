@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/algorithms/automaton_simulator.dart';
+import '../../core/algorithms/dfa_completer.dart';
+import '../../core/algorithms/equivalence_checker.dart';
+import '../../core/algorithms/nfa_to_dfa_converter.dart';
+import '../../core/algorithms/regex_to_nfa_converter.dart';
+import '../../core/models/fsa.dart';
+import '../providers/automaton_provider.dart';
 import '../widgets/algorithm_panel.dart';
 import '../widgets/simulation_panel.dart';
+import 'fsa_page.dart';
 
 /// Regular Expression page for testing and converting regular expressions
 class RegexPage extends ConsumerStatefulWidget {
@@ -14,16 +22,20 @@ class RegexPage extends ConsumerStatefulWidget {
 class _RegexPageState extends ConsumerState<RegexPage> {
   final TextEditingController _regexController = TextEditingController();
   final TextEditingController _testStringController = TextEditingController();
+  final TextEditingController _comparisonRegexController = TextEditingController();
   String _currentRegex = '';
   String _testString = '';
   bool _isValid = false;
   bool _matches = false;
   String _errorMessage = '';
+  bool? _equivalenceResult;
+  String _equivalenceMessage = '';
 
   @override
   void dispose() {
     _regexController.dispose();
     _testStringController.dispose();
+    _comparisonRegexController.dispose();
     super.dispose();
   }
 
@@ -99,40 +111,40 @@ class _RegexPageState extends ConsumerState<RegexPage> {
   void _testStringMatch() {
     setState(() {
       _testString = _testStringController.text;
-      
+      _errorMessage = '';
+
       if (!_isValid || _currentRegex.isEmpty) {
         _matches = false;
         return;
       }
-      
+
       try {
-        // In a real implementation, you would use a proper regex engine
-        // For now, we'll do basic pattern matching
-        _matches = _basicPatternMatch(_currentRegex, _testString);
+        final conversionResult = RegexToNFAConverter.convert(_currentRegex);
+        if (!conversionResult.isSuccess || conversionResult.data == null) {
+          _matches = false;
+          _errorMessage =
+              conversionResult.error ?? 'Unable to convert regex to NFA';
+          return;
+        }
+
+        final simulationResult =
+            AutomatonSimulator.simulateNFA(conversionResult.data!, _testString);
+
+        if (simulationResult.isSuccess && simulationResult.data != null) {
+          _matches = simulationResult.data!.isAccepted;
+          if (!_matches && simulationResult.data!.errorMessage.isNotEmpty) {
+            _errorMessage = simulationResult.data!.errorMessage;
+          }
+        } else {
+          _matches = false;
+          _errorMessage =
+              simulationResult.error ?? 'Failed to simulate automaton';
+        }
       } catch (e) {
         _matches = false;
         _errorMessage = 'Error testing string: $e';
       }
     });
-  }
-
-  bool _basicPatternMatch(String pattern, String text) {
-    // Very basic pattern matching for demonstration
-    // In a real implementation, you would use a proper regex engine
-    if (pattern == text) return true;
-    if (pattern == '.*') return true;
-    if (pattern == '$text*') return true;
-    if (pattern == '$text+') return true;
-    
-    // Simple wildcard matching
-    if (pattern.contains('*')) {
-      final parts = pattern.split('*');
-      if (parts.length == 2) {
-        return text.startsWith(parts[0]) && text.endsWith(parts[1]);
-      }
-    }
-    
-    return false;
   }
 
   void _convertToNFA() {
@@ -145,11 +157,23 @@ class _RegexPageState extends ConsumerState<RegexPage> {
       );
       return;
     }
-    
-    // TODO: Implement regex to NFA conversion
+
+    final result = RegexToNFAConverter.convert(_currentRegex);
+    if (!result.isSuccess || result.data == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.error ?? 'Failed to convert regex to NFA'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    _pushAutomatonToProvider(result.data!);
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Regex to NFA conversion - Coming soon!'),
+        content: Text('Converted regex to NFA. View it in the FSA workspace.'),
       ),
     );
   }
@@ -164,13 +188,128 @@ class _RegexPageState extends ConsumerState<RegexPage> {
       );
       return;
     }
-    
-    // TODO: Implement regex to DFA conversion
+
+    final regexToNfaResult = RegexToNFAConverter.convert(_currentRegex);
+    if (!regexToNfaResult.isSuccess || regexToNfaResult.data == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Text(regexToNfaResult.error ?? 'Failed to convert regex to NFA'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final nfa = regexToNfaResult.data!;
+    final nfaToDfaResult = NFAToDFAConverter.convert(nfa);
+    if (!nfaToDfaResult.isSuccess || nfaToDfaResult.data == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Text(nfaToDfaResult.error ?? 'Failed to convert NFA to DFA'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final completedDfa = DFACompleter.complete(nfaToDfaResult.data!);
+    _pushAutomatonToProvider(completedDfa);
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Regex to DFA conversion - Coming soon!'),
+        content:
+            Text('Converted regex to DFA. Opening the DFA in the FSA workspace.'),
       ),
     );
+
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const FSAPage()),
+    );
+  }
+
+  void _pushAutomatonToProvider(FSA automaton) {
+    ref.read(automatonProvider.notifier).updateAutomaton(automaton);
+  }
+
+  void _compareRegexEquivalence() {
+    final primary = _regexController.text.trim();
+    final secondary = _comparisonRegexController.text.trim();
+
+    setState(() {
+      _equivalenceResult = null;
+      _equivalenceMessage = '';
+    });
+
+    if (primary.isEmpty || secondary.isEmpty) {
+      setState(() {
+        _equivalenceResult = false;
+        _equivalenceMessage =
+            'Enter both regular expressions to compare.';
+      });
+      return;
+    }
+
+    try {
+      final firstConversion = RegexToNFAConverter.convert(primary);
+      if (!firstConversion.isSuccess || firstConversion.data == null) {
+        setState(() {
+          _equivalenceResult = false;
+          _equivalenceMessage =
+              firstConversion.error ?? 'Unable to convert first regex to NFA';
+        });
+        return;
+      }
+
+      final secondConversion = RegexToNFAConverter.convert(secondary);
+      if (!secondConversion.isSuccess || secondConversion.data == null) {
+        setState(() {
+          _equivalenceResult = false;
+          _equivalenceMessage = secondConversion.error ??
+              'Unable to convert second regex to NFA';
+        });
+        return;
+      }
+
+      final firstDfaResult = NFAToDFAConverter.convert(firstConversion.data!);
+      if (!firstDfaResult.isSuccess || firstDfaResult.data == null) {
+        setState(() {
+          _equivalenceResult = false;
+          _equivalenceMessage =
+              firstDfaResult.error ?? 'Unable to convert first regex to DFA';
+        });
+        return;
+      }
+
+      final secondDfaResult = NFAToDFAConverter.convert(secondConversion.data!);
+      if (!secondDfaResult.isSuccess || secondDfaResult.data == null) {
+        setState(() {
+          _equivalenceResult = false;
+          _equivalenceMessage = secondDfaResult.error ??
+              'Unable to convert second regex to DFA';
+        });
+        return;
+      }
+
+      final completedFirst = DFACompleter.complete(firstDfaResult.data!);
+      final completedSecond = DFACompleter.complete(secondDfaResult.data!);
+
+      final equivalent =
+          EquivalenceChecker.areEquivalent(completedFirst, completedSecond);
+
+      setState(() {
+        _equivalenceResult = equivalent;
+        _equivalenceMessage = equivalent
+            ? 'The regular expressions are equivalent.'
+            : 'The regular expressions are not equivalent.';
+      });
+    } catch (e) {
+      setState(() {
+        _equivalenceResult = false;
+        _equivalenceMessage = 'Error comparing regular expressions: $e';
+      });
+    }
   }
 
   @override
@@ -315,7 +454,62 @@ class _RegexPageState extends ConsumerState<RegexPage> {
             ),
             
             const SizedBox(height: 24),
-            
+
+            // Compare regular expressions
+            Text(
+              'Compare Regular Expressions:',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _comparisonRegexController,
+              decoration: const InputDecoration(
+                hintText: 'Enter second regular expression',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton.icon(
+                onPressed: _compareRegexEquivalence,
+                icon: const Icon(Icons.compare_arrows),
+                label: const Text('Compare Equivalence'),
+              ),
+            ),
+            if (_equivalenceMessage.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(
+                    _equivalenceResult == true
+                        ? Icons.check_circle
+                        : Icons.error_outline,
+                    color: _equivalenceResult == true
+                        ? Colors.green
+                        : Colors.orange,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _equivalenceMessage,
+                      style: TextStyle(
+                        color: _equivalenceResult == true
+                            ? Colors.green
+                            : Colors.orange,
+                        fontSize: 14,
+                        fontWeight:
+                            _equivalenceResult == true ? FontWeight.bold : null,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+
+            const SizedBox(height: 24),
+
             // Help section
             Card(
               child: Padding(
@@ -492,7 +686,63 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                     ),
                     
                     const SizedBox(height: 24),
-                    
+
+                    // Compare regular expressions
+                    Text(
+                      'Compare Regular Expressions:',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _comparisonRegexController,
+                      decoration: const InputDecoration(
+                        hintText: 'Enter second regular expression',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: ElevatedButton.icon(
+                        onPressed: _compareRegexEquivalence,
+                        icon: const Icon(Icons.compare_arrows),
+                        label: const Text('Compare Equivalence'),
+                      ),
+                    ),
+                    if (_equivalenceMessage.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(
+                            _equivalenceResult == true
+                                ? Icons.check_circle
+                                : Icons.error_outline,
+                            color: _equivalenceResult == true
+                                ? Colors.green
+                                : Colors.orange,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _equivalenceMessage,
+                              style: TextStyle(
+                                color: _equivalenceResult == true
+                                    ? Colors.green
+                                    : Colors.orange,
+                                fontSize: 14,
+                                fontWeight: _equivalenceResult == true
+                                    ? FontWeight.bold
+                                    : null,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+
+                    const SizedBox(height: 24),
+
                     // Help section
                     Card(
                       child: Padding(
@@ -546,39 +796,15 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                   // Algorithm panel
                   Expanded(
                     child: AlgorithmPanel(
-                      onNfaToDfa: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('NFA to DFA - Coming soon!')),
-                        );
-                      },
-                      onMinimizeDfa: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('DFA Minimization - Coming soon!')),
-                        );
-                      },
-                      onClear: () {
-                        _regexController.clear();
-                        _testStringController.clear();
-                        setState(() {
-                          _currentRegex = '';
-                          _testString = '';
-                          _isValid = false;
-                          _matches = false;
-                          _errorMessage = '';
-                        });
-                      },
+                      onNfaToDfa: _convertToDFA,
+                      onMinimizeDfa: null,
+                      onClear: _clearInputs,
                       onRegexToNfa: (regex) {
                         _regexController.text = regex;
                         _validateRegex();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Regex to NFA - Coming soon!')),
-                        );
+                        _convertToNFA();
                       },
-                      onFaToRegex: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('FA to Regex - Coming soon!')),
-                        );
-                      },
+                      onFaToRegex: null,
                     ),
                   ),
                   
@@ -600,5 +826,20 @@ class _RegexPageState extends ConsumerState<RegexPage> {
         ],
       ),
     );
+  }
+
+  void _clearInputs() {
+    _regexController.clear();
+    _testStringController.clear();
+    _comparisonRegexController.clear();
+    setState(() {
+      _currentRegex = '';
+      _testString = '';
+      _isValid = false;
+      _matches = false;
+      _errorMessage = '';
+      _equivalenceResult = null;
+      _equivalenceMessage = '';
+    });
   }
 }

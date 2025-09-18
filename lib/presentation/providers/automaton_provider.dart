@@ -1,24 +1,25 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/algorithms/automaton_simulator.dart';
+import '../../core/algorithms/dfa_completer.dart';
+import '../../core/algorithms/dfa_minimizer.dart';
+import '../../core/algorithms/equivalence_checker.dart';
+import '../../core/algorithms/fa_to_regex_converter.dart';
+import '../../core/algorithms/fsa_to_grammar_converter.dart';
+import '../../core/algorithms/nfa_to_dfa_converter.dart';
+import '../../core/algorithms/regex_to_nfa_converter.dart';
 import '../../core/models/fsa.dart';
 import '../../core/models/grammar.dart';
 import '../../core/models/pda.dart';
-import '../../core/models/tm.dart';
-import '../../core/result.dart';
-import '../../core/algorithms/automaton_simulator.dart';
 import '../../core/models/simulation_result.dart' as sim_result;
-import '../../core/algorithms/nfa_to_dfa_converter.dart';
-import '../../core/algorithms/dfa_minimizer.dart';
-import '../../core/algorithms/dfa_completer.dart';
-import '../../core/algorithms/fsa_to_grammar_converter.dart';
-import '../../core/algorithms/regex_to_nfa_converter.dart';
-import '../../core/algorithms/fa_to_regex_converter.dart';
-import '../../features/layout/layout_repository_impl.dart';
-import '../../data/services/automaton_service.dart';
-import '../../data/repositories/automaton_repository_impl.dart';
+import '../../core/models/tm.dart';
 import '../../core/repositories/automaton_repository.dart';
-import '../../data/services/simulation_service.dart';
-import '../../data/services/conversion_service.dart';
+import '../../core/result.dart';
 import '../../core/use_cases/automaton_use_cases.dart';
+import '../../data/repositories/automaton_repository_impl.dart';
+import '../../data/services/automaton_service.dart';
+import '../../data/services/conversion_service.dart';
+import '../../data/services/simulation_service.dart';
+import '../../features/layout/layout_repository_impl.dart';
 
 /// Provider for automaton state management
 class AutomatonProvider extends StateNotifier<AutomatonState> {
@@ -90,14 +91,23 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
 
   /// Updates the current automaton
   void updateAutomaton(FSA automaton) {
-    state = state.copyWith(currentAutomaton: automaton);
+    state = state.copyWith(
+      currentAutomaton: automaton,
+      equivalenceResult: null,
+      equivalenceDetails: null,
+    );
   }
 
   /// Simulates the current automaton with input string
   Future<void> simulateAutomaton(String inputString) async {
     if (state.currentAutomaton == null) return;
 
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      equivalenceResult: null,
+      equivalenceDetails: null,
+    );
 
     try {
       // Use the core algorithm directly
@@ -131,7 +141,12 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
   Future<void> convertNfaToDfa() async {
     if (state.currentAutomaton == null) return;
 
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      equivalenceResult: null,
+      equivalenceDetails: null,
+    );
 
     try {
       // Use the core algorithm directly
@@ -141,6 +156,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
         state = state.copyWith(
           currentAutomaton: result.data,
           isLoading: false,
+          simulationResult: null,
         );
       } else {
         state = state.copyWith(
@@ -160,7 +176,12 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
   Future<void> minimizeDfa() async {
     if (state.currentAutomaton == null) return;
 
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      equivalenceResult: null,
+      equivalenceDetails: null,
+    );
 
     try {
       // Use the core algorithm directly
@@ -170,6 +191,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
         state = state.copyWith(
           currentAutomaton: result.data,
           isLoading: false,
+          simulationResult: null,
         );
       } else {
         state = state.copyWith(
@@ -189,13 +211,19 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
   Future<void> completeDfa() async {
     if (state.currentAutomaton == null) return;
 
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      equivalenceResult: null,
+      equivalenceDetails: null,
+    );
 
     try {
       final result = DFACompleter.complete(state.currentAutomaton!);
       state = state.copyWith(
         currentAutomaton: result,
         isLoading: false,
+        simulationResult: null,
       );
     } catch (e) {
       state = state.copyWith(
@@ -206,22 +234,24 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
   }
 
   /// Converts FSA to Grammar
-  Future<void> convertFsaToGrammar() async {
-    if (state.currentAutomaton == null) return;
+  Future<Grammar?> convertFsaToGrammar() async {
+    if (state.currentAutomaton == null) return null;
 
     state = state.copyWith(isLoading: true, error: null);
 
     try {
       final result = FSAToGrammarConverter.convert(state.currentAutomaton!);
-      // TODO: Handle grammar result
       state = state.copyWith(
         isLoading: false,
+        grammarResult: result,
       );
+      return result;
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
         error: 'Error converting FSA to Grammar: $e',
       );
+      return null;
     }
   }
 
@@ -229,7 +259,12 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
   Future<void> applyAutoLayout() async {
     if (state.currentAutomaton == null) return;
 
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      equivalenceResult: null,
+      equivalenceDetails: null,
+    );
 
     try {
       final result = await _layoutRepository.applyAutoLayout(state.currentAutomaton!);
@@ -238,6 +273,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
         state = state.copyWith(
           currentAutomaton: result.data,
           isLoading: false,
+          simulationResult: null,
         );
       } else {
         state = state.copyWith(
@@ -255,7 +291,12 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
 
   /// Converts regex to NFA
   Future<void> convertRegexToNfa(String regex) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      equivalenceResult: null,
+      equivalenceDetails: null,
+    );
 
     try {
       // Use the core algorithm directly
@@ -265,6 +306,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
         state = state.copyWith(
           currentAutomaton: result.data,
           isLoading: false,
+          simulationResult: null,
         );
       } else {
         state = state.copyWith(
@@ -281,8 +323,8 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
   }
 
   /// Converts FA to regex
-  Future<void> convertFaToRegex() async {
-    if (state.currentAutomaton == null) return;
+  Future<String?> convertFaToRegex() async {
+    if (state.currentAutomaton == null) return null;
 
     state = state.copyWith(isLoading: true, error: null);
 
@@ -296,17 +338,53 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
           regexResult: result.data,
           isLoading: false,
         );
+        return result.data;
       } else {
         state = state.copyWith(
           isLoading: false,
           error: result.error,
         );
+        return null;
       }
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
         error: 'Error converting FA to regex: $e',
       );
+      return null;
+    }
+  }
+
+  /// Compares the current automaton with another automaton for equivalence
+  Future<bool?> compareEquivalence(FSA other) async {
+    if (state.currentAutomaton == null) return null;
+
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      equivalenceResult: null,
+      equivalenceDetails: null,
+    );
+
+    try {
+      final areEquivalent =
+          EquivalenceChecker.areEquivalent(state.currentAutomaton!, other);
+      state = state.copyWith(
+        isLoading: false,
+        equivalenceResult: areEquivalent,
+        equivalenceDetails: areEquivalent
+            ? 'The automata accept the same language.'
+            : 'A distinguishing string was found between the automata.',
+      );
+      return areEquivalent;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        equivalenceResult: null,
+        equivalenceDetails: 'Error comparing automata: $e',
+        error: 'Error comparing automata: $e',
+      );
+      return null;
     }
   }
 
@@ -316,6 +394,9 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       currentAutomaton: null,
       simulationResult: null,
       regexResult: null,
+      grammarResult: null,
+      equivalenceResult: null,
+      equivalenceDetails: null,
       error: null,
     );
   }
@@ -331,6 +412,9 @@ class AutomatonState {
   final FSA? currentAutomaton;
   final sim_result.SimulationResult? simulationResult;
   final String? regexResult;
+  final Grammar? grammarResult;
+  final bool? equivalenceResult;
+  final String? equivalenceDetails;
   final bool isLoading;
   final String? error;
 
@@ -338,23 +422,45 @@ class AutomatonState {
     this.currentAutomaton,
     this.simulationResult,
     this.regexResult,
+    this.grammarResult,
+    this.equivalenceResult,
+    this.equivalenceDetails,
     this.isLoading = false,
     this.error,
   });
 
+  static const _unset = Object();
+
   AutomatonState copyWith({
-    FSA? currentAutomaton,
-    sim_result.SimulationResult? simulationResult,
-    String? regexResult,
+    Object? currentAutomaton = _unset,
+    Object? simulationResult = _unset,
+    Object? regexResult = _unset,
+    Object? grammarResult = _unset,
+    Object? equivalenceResult = _unset,
+    Object? equivalenceDetails = _unset,
     bool? isLoading,
-    String? error,
+    Object? error = _unset,
   }) {
     return AutomatonState(
-      currentAutomaton: currentAutomaton ?? this.currentAutomaton,
-      simulationResult: simulationResult ?? this.simulationResult,
-      regexResult: regexResult ?? this.regexResult,
+      currentAutomaton: currentAutomaton == _unset
+          ? this.currentAutomaton
+          : currentAutomaton as FSA?,
+      simulationResult: simulationResult == _unset
+          ? this.simulationResult
+          : simulationResult as sim_result.SimulationResult?,
+      regexResult:
+          regexResult == _unset ? this.regexResult : regexResult as String?,
+      grammarResult: grammarResult == _unset
+          ? this.grammarResult
+          : grammarResult as Grammar?,
+      equivalenceResult: equivalenceResult == _unset
+          ? this.equivalenceResult
+          : equivalenceResult as bool?,
+      equivalenceDetails: equivalenceDetails == _unset
+          ? this.equivalenceDetails
+          : equivalenceDetails as String?,
       isLoading: isLoading ?? this.isLoading,
-      error: error ?? this.error,
+      error: error == _unset ? this.error : error as String?,
     );
   }
 }

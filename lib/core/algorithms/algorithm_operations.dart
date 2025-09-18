@@ -2,10 +2,6 @@ import '../models/fsa.dart';
 import '../models/pda.dart';
 import '../models/tm.dart';
 import '../models/grammar.dart';
-import '../models/l_system.dart';
-import '../models/l_system_parameters.dart';
-import '../models/turtle_state.dart';
-import '../models/building_block.dart';
 import '../models/pumping_lemma_game.dart' as models;
 import '../models/pumping_attempt.dart';
 import '../models/simulation_result.dart';
@@ -17,8 +13,6 @@ import 'fa_to_regex_converter.dart';
 import 'automaton_simulator.dart';
 import 'grammar_parser.dart';
 import 'pumping_lemma_prover.dart';
-import 'l_system_generator.dart';
-import 'mealy_machine_simulator.dart';
 import 'pda_simulator.dart';
 import 'tm_simulator.dart';
 import 'grammar_to_pda_converter.dart';
@@ -142,60 +136,6 @@ class AlgorithmOperations {
     }
   }
 
-  /// Generates an L-system string
-  static Result<String> generateLSystem(
-    LSystem lSystem,
-    int iterations, {
-    Duration timeout = const Duration(seconds: 10),
-  }) {
-    try {
-      return LSystemGenerator.generateLSystem(lSystem, iterations, timeout: timeout);
-    } catch (e) {
-      return ResultFactory.failure('Error generating L-system: $e');
-    }
-  }
-
-  /// Generates a visual representation of an L-system
-  static Result<List<TurtleState>> generateLSystemVisual(
-    LSystem lSystem,
-    int iterations,
-    LSystemParameters parameters, {
-    Duration timeout = const Duration(seconds: 10),
-  }) {
-    try {
-      return LSystemGenerator.generateVisualRepresentation(lSystem, iterations, parameters, timeout: timeout);
-    } catch (e) {
-      return ResultFactory.failure('Error generating L-system visual: $e');
-    }
-  }
-
-  /// Generates building blocks for an L-system
-  static Result<List<BuildingBlock>> generateLSystemBuildingBlocks(
-    LSystem lSystem,
-    int iterations,
-    LSystemParameters parameters, {
-    Duration timeout = const Duration(seconds: 10),
-  }) {
-    try {
-      return LSystemGenerator.generateBuildingBlocks(lSystem, iterations, parameters, timeout: timeout);
-    } catch (e) {
-      return ResultFactory.failure('Error generating L-system building blocks: $e');
-    }
-  }
-
-  /// Simulates a Mealy machine
-  static Result<MealySimulationResult> simulateMealyMachine(
-    FSA automaton,
-    String inputString, {
-    bool stepByStep = false,
-    Duration timeout = const Duration(seconds: 5),
-  }) {
-    try {
-      return MealyMachineSimulator.simulate(automaton, inputString, stepByStep: stepByStep, timeout: timeout);
-    } catch (e) {
-      return ResultFactory.failure('Error simulating Mealy machine: $e');
-    }
-  }
 
   /// Simulates a PDA
   static Result<PDASimulationResult> simulatePda(
@@ -300,36 +240,6 @@ class AlgorithmOperations {
     }
   }
 
-  /// Creates a predefined L-system
-  static Result<LSystem> createPredefinedLSystem(String name) {
-    try {
-      return LSystemGenerator.createPredefinedLSystem(name);
-    } catch (e) {
-      return ResultFactory.failure('Error creating predefined L-system: $e');
-    }
-  }
-
-  /// Creates predefined L-system parameters
-  static Result<LSystemParameters> createPredefinedParameters(String name) {
-    try {
-      return LSystemGenerator.createPredefinedParameters(name);
-    } catch (e) {
-      return ResultFactory.failure('Error creating predefined parameters: $e');
-    }
-  }
-
-  /// Analyzes an L-system
-  static Result<LSystemAnalysis> analyzeLSystem(
-    LSystem lSystem,
-    int iterations, {
-    Duration timeout = const Duration(seconds: 10),
-  }) {
-    try {
-      return LSystemGenerator.analyzeLSystem(lSystem, iterations, timeout: timeout);
-    } catch (e) {
-      return ResultFactory.failure('Error analyzing L-system: $e');
-    }
-  }
 
   /// Tests if an automaton accepts a specific string
   static Result<bool> accepts(FSA automaton, String inputString) {
@@ -406,54 +316,6 @@ class AlgorithmOperations {
     }
   }
 
-  /// Gets the output string for a given input in a Mealy machine
-  static Result<String> getMealyOutput(FSA automaton, String inputString) {
-    try {
-      return MealyMachineSimulator.getOutput(automaton, inputString);
-    } catch (e) {
-      return ResultFactory.failure('Error getting Mealy output: $e');
-    }
-  }
-
-  /// Finds all input strings that produce a specific output in a Mealy machine
-  static Result<Set<String>> findInputsForOutput(
-    FSA automaton,
-    String targetOutput, {
-    int maxInputLength = 10,
-    int maxResults = 100,
-  }) {
-    try {
-      return MealyMachineSimulator.findInputsForOutput(automaton, targetOutput, maxInputLength: maxInputLength, maxResults: maxResults);
-    } catch (e) {
-      return ResultFactory.failure('Error finding inputs for output: $e');
-    }
-  }
-
-  /// Finds all output strings that can be produced by a Mealy machine
-  static Result<Set<String>> findPossibleOutputs(
-    FSA automaton, {
-    int maxInputLength = 10,
-    int maxResults = 100,
-  }) {
-    try {
-      return MealyMachineSimulator.findPossibleOutputs(automaton, maxInputLength: maxInputLength, maxResults: maxResults);
-    } catch (e) {
-      return ResultFactory.failure('Error finding possible outputs: $e');
-    }
-  }
-
-  /// Analyzes a Mealy machine
-  static Result<MealyAnalysis> analyzeMealyMachine(
-    FSA automaton, {
-    int maxInputLength = 10,
-    Duration timeout = const Duration(seconds: 10),
-  }) {
-    try {
-      return MealyMachineSimulator.analyzeMealyMachine(automaton, maxInputLength: maxInputLength, timeout: timeout);
-    } catch (e) {
-      return ResultFactory.failure('Error analyzing Mealy machine: $e');
-    }
-  }
 
   /// Analyzes a PDA
   static Result<PDAAnalysis> analyzePda(

@@ -443,8 +443,7 @@ testWidgets('Complete FSA workflow', (tester) async {
 
 - Grammar editing and parsing
 - PDA visualization and simulation
-- Turing machine multi-tape support
-- L-system pattern generation
+- Turing machine single-tape support
 - Interactive pumping lemma game
 
 ### Extension Points

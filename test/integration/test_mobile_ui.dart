@@ -17,7 +17,7 @@ void main() {
       expect(find.text('Grammar'), findsOneWidget);
       expect(find.text('PDA'), findsOneWidget);
       expect(find.text('TM'), findsOneWidget);
-      expect(find.text('L-Systems'), findsOneWidget);
+      expect(find.text('Regex'), findsOneWidget);
       expect(find.text('Pumping'), findsOneWidget);
     });
     

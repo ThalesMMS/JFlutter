@@ -4,7 +4,6 @@ import 'state.dart';
 import 'fsa_transition.dart';
 import 'pda_transition.dart';
 import 'tm_transition.dart';
-import 'mealy_transition.dart';
 
 /// Abstract base class for transitions in an automaton
 abstract class Transition {
@@ -59,8 +58,6 @@ abstract class Transition {
         return PDATransition.fromJson(json);
       case 'tm':
         return TMTransition.fromJson(json);
-      case 'mealy':
-        return MealyTransition.fromJson(json);
       default:
         throw ArgumentError('Unknown transition type: $type');
     }

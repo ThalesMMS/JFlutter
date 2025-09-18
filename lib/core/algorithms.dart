@@ -7,8 +7,6 @@ export 'algorithms/nfa_to_dfa_converter.dart';
 export 'algorithms/regex_to_nfa_converter.dart';
 export 'algorithms/grammar_to_pda_converter.dart';
 export 'algorithms/grammar_parser.dart';
-export 'algorithms/l_system_generator.dart';
-export 'algorithms/mealy_machine_simulator.dart';
 export 'algorithms/pda_simulator.dart';
 export 'algorithms/pumping_lemma_game.dart';
 export 'algorithms/pumping_lemma_prover.dart';

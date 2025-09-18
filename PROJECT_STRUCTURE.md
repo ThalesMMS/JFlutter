@@ -71,8 +71,6 @@ algorithms/
 ├── fa_to_regex_converter.dart     # FA to regular expression conversion
 ├── grammar_parser.dart             # Context-free grammar parsing
 ├── grammar_to_pda_converter.dart  # Grammar to PDA conversion
-├── l_system_generator.dart        # L-system generation
-├── mealy_machine_simulator.dart   # Mealy machine simulation
 ├── nfa_to_dfa_converter.dart      # NFA to DFA conversion
 ├── pda_simulator.dart             # PDA simulation
 ├── pumping_lemma_game.dart        # Interactive pumping lemma game
@@ -88,14 +86,10 @@ Domain models representing core concepts:
 ```
 models/
 ├── automaton.dart                 # Abstract automaton base class
-├── building_block.dart            # L-system building blocks
 ├── fsa.dart                       # Finite state automaton
 ├── fsa_transition.dart            # FSA transition
 ├── grammar.dart                   # Context-free grammar
 ├── layout_settings.dart           # Layout configuration
-├── l_system.dart                  # Lindenmayer system
-├── l_system_parameters.dart       # L-system rendering parameters
-├── mealy_transition.dart          # Mealy machine transition
 ├── parse_action.dart              # Parsing action
 ├── parse_table.dart               # LL/LR parsing table
 ├── pda.dart                       # Pushdown automaton
@@ -184,8 +178,8 @@ pages/
 ├── fsa_page.dart                  # Finite state automata page
 ├── grammar_page.dart              # Context-free grammar page
 ├── home_page.dart                 # Main navigation page
-├── l_system_page.dart             # L-system page
 ├── pda_page.dart                  # Pushdown automata page
+├── regex_page.dart                # Regular expression page
 ├── pumping_lemma_page.dart        # Pumping lemma game page
 └── tm_page.dart                   # Turing machine page
 ```

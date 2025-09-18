@@ -573,9 +573,6 @@ class AutomatonPainter extends CustomPainter {
   }
 
   void _drawTransition(Canvas canvas, FSATransition transition, Paint paint) {
-    final from = transition.fromState.position;
-    final to = transition.toState.position;
-
     final transitionColor = _epsilonTransitionIds.contains(transition.id)
         ? Colors.purple
         : _nondeterministicTransitionIds.contains(transition.id)
@@ -590,36 +587,47 @@ class AutomatonPainter extends CustomPainter {
     if (transition.fromState.id == transition.toState.id) {
       _drawSelfLoop(canvas, transition, strokePaint);
     } else {
-      final angle = math.atan2(to.y - from.y, to.x - from.x);
-      const arrowLength = 15.0;
-      const arrowAngle = 0.5;
       const stateRadius = 30.0;
+      const arrowLength = 12.0;
+      const arrowAngle = 0.5;
 
-      final arrowEnd = Offset(
-        to.x - stateRadius * math.cos(angle),
-        to.y - stateRadius * math.sin(angle),
+      final curve = TransitionCurve.compute(
+        transitions,
+        transition,
+        stateRadius: stateRadius,
+        curvatureStrength: 45,
+        labelOffset: 16,
       );
 
-      canvas.drawLine(Offset(from.x, from.y), arrowEnd, strokePaint);
+      final path = Path()
+        ..moveTo(curve.start.dx, curve.start.dy)
+        ..quadraticBezierTo(
+          curve.control.dx,
+          curve.control.dy,
+          curve.end.dx,
+          curve.end.dy,
+        );
+      canvas.drawPath(path, strokePaint);
 
+      final angle = curve.tangentAngle;
       final arrow1 = Offset(
-        arrowEnd.dx - arrowLength * math.cos(angle - arrowAngle),
-        arrowEnd.dy - arrowLength * math.sin(angle - arrowAngle),
+        curve.end.dx - arrowLength * math.cos(angle - arrowAngle),
+        curve.end.dy - arrowLength * math.sin(angle - arrowAngle),
       );
       final arrow2 = Offset(
-        arrowEnd.dx - arrowLength * math.cos(angle + arrowAngle),
-        arrowEnd.dy - arrowLength * math.sin(angle + arrowAngle),
+        curve.end.dx - arrowLength * math.cos(angle + arrowAngle),
+        curve.end.dy - arrowLength * math.sin(angle + arrowAngle),
       );
 
-      canvas.drawLine(arrowEnd, arrow1, strokePaint);
-      canvas.drawLine(arrowEnd, arrow2, strokePaint);
+      canvas.drawLine(curve.end, arrow1, strokePaint);
+      canvas.drawLine(curve.end, arrow2, strokePaint);
 
-      final midPoint = Offset(
-        (from.x + arrowEnd.dx) / 2,
-        (from.y + arrowEnd.dy) / 2,
+      _drawTransitionLabel(
+        canvas,
+        transition,
+        curve.labelPosition,
+        transitionColor,
       );
-
-      _drawTransitionLabel(canvas, transition, midPoint, transitionColor);
     }
   }
 

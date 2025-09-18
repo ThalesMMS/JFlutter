@@ -1,4 +1,5 @@
 import 'entities/automaton_entity.dart';
+import 'entities/grammar_entity.dart';
 
 /// Standardized Result type for consistent error handling across the application
 sealed class Result<T> {
@@ -131,6 +132,7 @@ extension ResultListExtension<T> on List<Result<T>> {
 
 /// Specific result types for common operations
 typedef AutomatonResult = Result<AutomatonEntity>;
+typedef GrammarResult = Result<GrammarEntity>;
 typedef StringResult = Result<String>;
 typedef BoolResult = Result<bool>;
 typedef ListResult<T> = Result<List<T>>;

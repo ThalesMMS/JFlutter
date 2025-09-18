@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/use_cases/algorithm_use_cases.dart';
 import '../../core/entities/automaton_entity.dart';
+import '../../core/entities/grammar_entity.dart';
 import '../../core/models/grammar.dart';
 import '../../core/result.dart';
 
@@ -18,6 +19,7 @@ class AlgorithmProvider extends StateNotifier<AlgorithmState> {
   final SuffixClosureUseCase _suffixClosureUseCase;
   final RegexToNfaUseCase _regexToNfaUseCase;
   final DfaToRegexUseCase _dfaToRegexUseCase;
+  final FsaToGrammarUseCase _fsaToGrammarUseCase;
   final CheckEquivalenceUseCase _checkEquivalenceUseCase;
   final SimulateWordUseCase _simulateWordUseCase;
   final CreateStepByStepSimulationUseCase _createStepByStepSimulationUseCase;
@@ -35,6 +37,7 @@ class AlgorithmProvider extends StateNotifier<AlgorithmState> {
     required SuffixClosureUseCase suffixClosureUseCase,
     required RegexToNfaUseCase regexToNfaUseCase,
     required DfaToRegexUseCase dfaToRegexUseCase,
+    required FsaToGrammarUseCase fsaToGrammarUseCase,
     required CheckEquivalenceUseCase checkEquivalenceUseCase,
     required SimulateWordUseCase simulateWordUseCase,
     required CreateStepByStepSimulationUseCase createStepByStepSimulationUseCase,
@@ -50,6 +53,7 @@ class AlgorithmProvider extends StateNotifier<AlgorithmState> {
        _suffixClosureUseCase = suffixClosureUseCase,
        _regexToNfaUseCase = regexToNfaUseCase,
        _dfaToRegexUseCase = dfaToRegexUseCase,
+       _fsaToGrammarUseCase = fsaToGrammarUseCase,
        _checkEquivalenceUseCase = checkEquivalenceUseCase,
        _simulateWordUseCase = simulateWordUseCase,
        _createStepByStepSimulationUseCase = createStepByStepSimulationUseCase,
@@ -270,6 +274,25 @@ class AlgorithmProvider extends StateNotifier<AlgorithmState> {
     
     final result = await _dfaToRegexUseCase.execute(dfa);
     
+    if (result.isSuccess) {
+      state = state.copyWith(
+        isLoading: false,
+        result: result.data,
+      );
+    } else {
+      state = state.copyWith(
+        isLoading: false,
+        error: result.error,
+      );
+    }
+  }
+
+  /// Converts FSA to grammar
+  Future<void> convertFsaToGrammar(AutomatonEntity fsa) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    final result = await _fsaToGrammarUseCase.execute(fsa);
+
     if (result.isSuccess) {
       state = state.copyWith(
         isLoading: false,

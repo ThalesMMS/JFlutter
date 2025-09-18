@@ -8,6 +8,9 @@ class AlgorithmPanel extends StatefulWidget {
   final VoidCallback? onClear;
   final Function(String)? onRegexToNfa;
   final VoidCallback? onFaToRegex;
+  final VoidCallback? onCompleteDfa;
+  final VoidCallback? onFsaToGrammar;
+  final VoidCallback? onAutoLayout;
 
   const AlgorithmPanel({
     super.key,
@@ -16,6 +19,9 @@ class AlgorithmPanel extends StatefulWidget {
     this.onClear,
     this.onRegexToNfa,
     this.onFaToRegex,
+    this.onCompleteDfa,
+    this.onFsaToGrammar,
+    this.onAutoLayout,
   });
 
   @override
@@ -78,7 +84,18 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
               icon: Icons.compress,
               onPressed: () => _executeAlgorithm('Minimize DFA', widget.onMinimizeDfa),
             ),
-            
+
+            const SizedBox(height: 12),
+
+            // Complete DFA
+            _buildAlgorithmButton(
+              context,
+              title: 'Complete DFA',
+              description: 'Add trap state to make DFA complete',
+              icon: Icons.add_circle_outline,
+              onPressed: () => _executeAlgorithm('Complete DFA', widget.onCompleteDfa),
+            ),
+
             const SizedBox(height: 12),
             
             // FA to Regex conversion
@@ -88,6 +105,39 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
               description: 'Convert finite automaton to regular expression',
               icon: Icons.text_fields,
               onPressed: () => _executeAlgorithm('FA to Regex', widget.onFaToRegex),
+            ),
+
+            const SizedBox(height: 12),
+
+            // FSA to Grammar conversion
+            _buildAlgorithmButton(
+              context,
+              title: 'FSA to Grammar',
+              description: 'Convert finite automaton to regular grammar',
+              icon: Icons.transform,
+              onPressed: () => _executeAlgorithm('FSA to Grammar', widget.onFsaToGrammar),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Auto Layout
+            _buildAlgorithmButton(
+              context,
+              title: 'Auto Layout',
+              description: 'Arrange states in a circle',
+              icon: Icons.auto_awesome_motion,
+              onPressed: widget.onAutoLayout,
+            ),
+
+            const SizedBox(height: 12),
+
+            // Compare Equivalence
+            _buildAlgorithmButton(
+              context,
+              title: 'Compare Equivalence',
+              description: 'Compare two DFAs for equivalence (Not implemented)',
+              icon: Icons.compare_arrows,
+              onPressed: null, // TODO: Implement UI for selecting second automaton
             ),
             
             const SizedBox(height: 12),
@@ -174,7 +224,7 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
     final colorScheme = Theme.of(context).colorScheme;
     final color = isDestructive ? colorScheme.error : colorScheme.primary;
     final isCurrentAlgorithm = _currentAlgorithm == title;
-    final isDisabled = _isExecuting && !isCurrentAlgorithm;
+    final isDisabled = (_isExecuting && !isCurrentAlgorithm) || onPressed == null;
     
     return InkWell(
       onTap: isDisabled ? null : onPressed,

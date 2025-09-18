@@ -7,6 +7,7 @@ import '../data/data_sources/examples_data_source.dart';
 import '../data/repositories/automaton_repository_impl.dart';
 import '../data/repositories/examples_repository_impl.dart';
 import '../data/repositories/algorithm_repository_impl.dart';
+import '../features/layout/layout_repository_impl.dart';
 import '../data/services/automaton_service.dart';
 import '../data/services/simulation_service.dart';
 import '../data/services/conversion_service.dart';
@@ -51,6 +52,10 @@ Future<void> setupDependencyInjection() async {
   
   getIt.registerLazySingleton<AlgorithmRepository>(
     () => AlgorithmRepositoryImpl(),
+  );
+
+  getIt.registerLazySingleton<LayoutRepository>(
+    () => LayoutRepositoryImpl(),
   );
 
   // Use Cases
@@ -145,6 +150,10 @@ Future<void> setupDependencyInjection() async {
   
   getIt.registerLazySingleton<DfaToRegexUseCase>(
     () => DfaToRegexUseCase(getIt<AlgorithmRepository>()),
+  );
+  
+  getIt.registerLazySingleton<FsaToGrammarUseCase>(
+    () => FsaToGrammarUseCase(getIt<AlgorithmRepository>()),
   );
   
   getIt.registerLazySingleton<CheckEquivalenceUseCase>(

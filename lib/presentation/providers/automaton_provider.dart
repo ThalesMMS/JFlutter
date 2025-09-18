@@ -8,8 +8,11 @@ import '../../core/algorithms/automaton_simulator.dart';
 import '../../core/models/simulation_result.dart' as sim_result;
 import '../../core/algorithms/nfa_to_dfa_converter.dart';
 import '../../core/algorithms/dfa_minimizer.dart';
+import '../../core/algorithms/dfa_completer.dart';
+import '../../core/algorithms/fsa_to_grammar_converter.dart';
 import '../../core/algorithms/regex_to_nfa_converter.dart';
 import '../../core/algorithms/fa_to_regex_converter.dart';
+import '../../features/layout/layout_repository_impl.dart';
 import '../../data/services/automaton_service.dart';
 import '../../data/repositories/automaton_repository_impl.dart';
 import '../../core/repositories/automaton_repository.dart';
@@ -22,6 +25,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
   final AutomatonService _automatonService;
   final SimulationService _simulationService;
   final ConversionService _conversionService;
+  final LayoutRepository _layoutRepository;
 
   AutomatonProvider({
     required AutomatonService automatonService,
@@ -29,9 +33,11 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     required ConversionService conversionService,
     required CreateAutomatonUseCase createAutomatonUseCase,
     required LoadAutomatonUseCase loadAutomatonUseCase,
+    required LayoutRepository layoutRepository,
   })  : _automatonService = automatonService,
         _simulationService = simulationService,
         _conversionService = conversionService,
+        _layoutRepository = layoutRepository,
         super(const AutomatonState());
 
   /// Creates a new automaton
@@ -179,6 +185,74 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     }
   }
 
+  /// Completes DFA
+  Future<void> completeDfa() async {
+    if (state.currentAutomaton == null) return;
+
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final result = DFACompleter.complete(state.currentAutomaton!);
+      state = state.copyWith(
+        currentAutomaton: result,
+        isLoading: false,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Error completing DFA: $e',
+      );
+    }
+  }
+
+  /// Converts FSA to Grammar
+  Future<void> convertFsaToGrammar() async {
+    if (state.currentAutomaton == null) return;
+
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final result = FSAToGrammarConverter.convert(state.currentAutomaton!);
+      // TODO: Handle grammar result
+      state = state.copyWith(
+        isLoading: false,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Error converting FSA to Grammar: $e',
+      );
+    }
+  }
+
+  /// Applies auto layout
+  Future<void> applyAutoLayout() async {
+    if (state.currentAutomaton == null) return;
+
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final result = await _layoutRepository.applyAutoLayout(state.currentAutomaton!);
+
+      if (result.isSuccess) {
+        state = state.copyWith(
+          currentAutomaton: result.data,
+          isLoading: false,
+        );
+      } else {
+        state = state.copyWith(
+          isLoading: false,
+          error: result.error,
+        );
+      }
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Error applying auto layout: $e',
+      );
+    }
+  }
+
   /// Converts regex to NFA
   Future<void> convertRegexToNfa(String regex) async {
     state = state.copyWith(isLoading: true, error: null);
@@ -293,5 +367,6 @@ final automatonProvider = StateNotifierProvider<AutomatonProvider, AutomatonStat
     conversionService: ConversionService(),
     createAutomatonUseCase: CreateAutomatonUseCase(AutomatonRepositoryImpl(AutomatonService())),
     loadAutomatonUseCase: LoadAutomatonUseCase(AutomatonRepositoryImpl(AutomatonService())),
+    layoutRepository: LayoutRepositoryImpl(),
   );
 });

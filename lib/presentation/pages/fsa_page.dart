@@ -147,6 +147,9 @@ class _FSAPageState extends ConsumerState<FSAPage> {
               AlgorithmPanel(
                 onNfaToDfa: () => ref.read(automatonProvider.notifier).convertNfaToDfa(),
                 onMinimizeDfa: () => ref.read(automatonProvider.notifier).minimizeDfa(),
+                onCompleteDfa: () => ref.read(automatonProvider.notifier).completeDfa(),
+                onFsaToGrammar: () => ref.read(automatonProvider.notifier).convertFsaToGrammar(),
+                onAutoLayout: () => ref.read(automatonProvider.notifier).applyAutoLayout(),
                 onClear: () => ref.read(automatonProvider.notifier).clearAutomaton(),
                 onRegexToNfa: (regex) => ref.read(automatonProvider.notifier).convertRegexToNfa(regex),
                 onFaToRegex: () => ref.read(automatonProvider.notifier).convertFaToRegex(),

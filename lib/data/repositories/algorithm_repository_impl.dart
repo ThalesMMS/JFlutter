@@ -12,6 +12,10 @@ import '../../core/dfa_algorithms.dart' as dfa_alg;
 import '../../core/regex.dart' as regex_alg;
 import '../../core/models/simulation_result.dart';
 import '../../core/models/simulation_step.dart';
+import '../../core/algorithms/equivalence_checker.dart';
+import '../../core/algorithms/fsa_to_grammar_converter.dart';
+import '../../core/entities/grammar_entity.dart';
+import '../../core/models/grammar.dart' as model_grammar;
 
 /// Implementation of AlgorithmRepository
 class AlgorithmRepositoryImpl implements AlgorithmRepository {
@@ -64,8 +68,7 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
   Future<Result<AutomatonEntity>> completeDfa(AutomatonEntity dfaEntity) async {
     try {
       final dfa = _entityToAutomaton(dfaEntity) as FSA; // Converte para o modelo
-      // For now, return the same DFA as completion is not implemented
-      final result = dfa;
+      final result = dfa_alg.DFACompleter.complete(dfa);
       final resultEntity = _automatonToEntity(result, model_automaton.AutomatonType.fsa); // Converte de volta
       return Success(resultEntity);
     } catch (e) {
@@ -180,12 +183,23 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
   }
 
   @override
+  Future<GrammarResult> fsaToGrammar(AutomatonEntity fsaEntity) async {
+    try {
+      final fsa = _entityToAutomaton(fsaEntity) as FSA;
+      final result = FSAToGrammarConverter.convert(fsa);
+      final resultEntity = _grammarToEntity(result);
+      return Success(resultEntity);
+    } catch (e) {
+      return Failure('Erro na conversão FSA → Gramática: $e');
+    }
+  }
+
+  @override
   Future<BoolResult> areEquivalent(AutomatonEntity aEntity, AutomatonEntity bEntity) async {
     try {
-      final a = _entityToAutomaton(aEntity) as FSA; // Converte para o modelo
-      final b = _entityToAutomaton(bEntity) as FSA; // Converte para o modelo
-      // For now, return false as equivalence checking is not implemented
-      final result = false;
+      final a = _entityToAutomaton(aEntity) as FSA;
+      final b = _entityToAutomaton(bEntity) as FSA;
+      final result = EquivalenceChecker.areEquivalent(a, b);
       return Success(result);
     } catch (e) {
       return Failure('Erro na verificação de equivalência: $e');
@@ -284,6 +298,23 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
       alphabet: automaton.alphabet,
       initialId: automaton.initialState?.id,
       nextId: states.length, // Estimativa simples
+    );
+  }
+
+  GrammarEntity _grammarToEntity(model_grammar.Grammar grammar) {
+    final productions = grammar.productions.map((p) => ProductionEntity(
+      id: p.id,
+      leftSide: p.leftSide,
+      rightSide: p.rightSide,
+    )).toList();
+
+    return GrammarEntity(
+      id: grammar.id,
+      name: grammar.name,
+      terminals: grammar.terminals,
+      nonTerminals: grammar.nonterminals,
+      startSymbol: grammar.startSymbol,
+      productions: productions,
     );
   }
 }

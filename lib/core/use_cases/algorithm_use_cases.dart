@@ -136,6 +136,17 @@ class DfaToRegexUseCase {
   }
 }
 
+/// Use case for FSA to grammar conversion
+class FsaToGrammarUseCase {
+  final AlgorithmRepository _repository;
+
+  FsaToGrammarUseCase(this._repository);
+
+  Future<GrammarResult> execute(AutomatonEntity fsa) async {
+    return await _repository.fsaToGrammar(fsa);
+  }
+}
+
 /// Use case for checking DFA equivalence
 class CheckEquivalenceUseCase {
   final AlgorithmRepository _repository;

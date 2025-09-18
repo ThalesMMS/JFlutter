@@ -65,6 +65,9 @@ abstract class AlgorithmRepository {
   
   /// Converts DFA to regex
   Future<StringResult> dfaToRegex(AutomatonEntity dfa, {bool allowLambda = false});
+
+  /// Converts FSA to regular grammar
+  Future<GrammarResult> fsaToGrammar(AutomatonEntity fsa);
   
   /// Checks if two DFAs are equivalent
   Future<BoolResult> areEquivalent(AutomatonEntity a, AutomatonEntity b);

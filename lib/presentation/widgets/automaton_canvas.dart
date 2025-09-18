@@ -6,6 +6,7 @@ import '../../core/models/state.dart' as automaton_state;
 import '../../core/models/fsa_transition.dart';
 import 'touch_gesture_handler.dart';
 import 'mobile_automaton_controls.dart';
+import 'transition_geometry.dart';
 
 /// Interactive canvas for drawing and editing automata
 class AutomatonCanvas extends StatefulWidget {
@@ -195,29 +196,100 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
     }
   }
 
-  void _addTransition(automaton_state.State from, automaton_state.State to) {
-    final symbol = _showSymbolDialog();
-    if (symbol != null) {
-      final transition = FSATransition(
-        id: 't${_transitions.length + 1}',
-        fromState: from,
-        toState: to,
-        label: symbol,
-        inputSymbols: {symbol},
-      );
-      
-      setState(() {
-        _transitions.add(transition);
-      });
-      
-      _notifyAutomatonChanged();
+  Future<void> _addTransition(
+    automaton_state.State from,
+    automaton_state.State to,
+  ) async {
+    final symbolInput = await _showSymbolDialog();
+    if (symbolInput == null) {
+      return;
     }
+
+    final transition = FSATransition(
+      id: 't${_transitions.length + 1}',
+      fromState: from,
+      toState: to,
+      label: symbolInput.label,
+      inputSymbols: symbolInput.inputSymbols,
+      lambdaSymbol: symbolInput.lambdaSymbol,
+    );
+
+    setState(() {
+      _transitions.add(transition);
+    });
+
+    _notifyAutomatonChanged();
   }
 
-  String? _showSymbolDialog() {
-    // For now, return a default symbol
-    // TODO: Implement proper symbol input dialog
-    return 'a';
+  Future<_TransitionSymbolInput?> _showSymbolDialog({FSATransition? transition}) {
+    final existingSymbols = transition?.lambdaSymbol != null
+        ? 'ε'
+        : transition?.inputSymbols.join(', ') ?? '';
+    final controller = TextEditingController(text: existingSymbols);
+    final result = await showDialog<_TransitionSymbolInput>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(transition == null ? 'Transition Symbols' : 'Edit Transition'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Enter symbols separated by commas or ε for epsilon'),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Symbols',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final parsed = _TransitionSymbolInput.parse(controller.text);
+                if (parsed == null) {
+                  Navigator.of(context).pop();
+                  return;
+                }
+                Navigator.of(context).pop(parsed);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+
+    controller.dispose();
+    return result;
+  }
+
+  Future<void> _editTransition(FSATransition transition) async {
+    final symbolInput = await _showSymbolDialog(transition: transition);
+    if (symbolInput == null) {
+      return;
+    }
+
+    setState(() {
+      final index = _transitions.indexWhere((t) => t.id == transition.id);
+      if (index != -1) {
+        _transitions[index] = transition.copyWith(
+          label: symbolInput.label,
+          inputSymbols: symbolInput.inputSymbols,
+          lambdaSymbol: symbolInput.lambdaSymbol,
+        );
+      }
+    });
+
+    _notifyAutomatonChanged();
   }
 
   bool _isPointInState(Offset point, automaton_state.State state) {
@@ -245,7 +317,7 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
       ),
       child: Stack(
         children: [
-          TouchGestureHandler(
+          TouchGestureHandler<FSATransition>(
             states: _states,
             transitions: _transitions,
             selectedState: _selectedState,
@@ -291,6 +363,9 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
                 _transitions.removeWhere((t) => t.id == transition.id);
               });
               _notifyAutomatonChanged();
+            },
+            onTransitionEdited: (transition) {
+              _editTransition(transition);
             },
             child: CustomPaint(
               painter: AutomatonPainter(
@@ -468,62 +543,32 @@ class AutomatonPainter extends CustomPainter {
   }
 
   void _drawTransition(Canvas canvas, FSATransition transition, Paint paint) {
-    final from = transition.fromState.position;
-    final to = transition.toState.position;
-    
     paint.color = Colors.black;
     paint.style = PaintingStyle.stroke;
-    
-    // Draw arrow
-        final angle = math.atan2(to.y - from.y, to.x - from.x);
-    final arrowLength = 15.0;
-    final arrowAngle = 0.5;
-    
-    final arrowEnd = Offset(
-          to.x - 30 * math.cos(angle),
-          to.y - 30 * math.sin(angle),
+
+    if (transition.fromState == transition.toState) {
+      _drawSelfLoop(canvas, transition, paint);
+      return;
+    }
+
+    final curve = TransitionCurve.compute(
+      transitions,
+      transition,
+      stateRadius: 30,
     );
-    
-        canvas.drawLine(Offset(from.x, from.y), Offset(arrowEnd.dx, arrowEnd.dy), paint);
-    
-    // Draw arrowhead
-    final arrow1 = Offset(
-      arrowEnd.dx - arrowLength * math.cos(angle - arrowAngle),
-      arrowEnd.dy - arrowLength * math.sin(angle - arrowAngle),
-    );
-    final arrow2 = Offset(
-      arrowEnd.dx - arrowLength * math.cos(angle + arrowAngle),
-      arrowEnd.dy - arrowLength * math.sin(angle + arrowAngle),
-    );
-    
-    canvas.drawLine(arrowEnd, arrow1, paint);
-    canvas.drawLine(arrowEnd, arrow2, paint);
-    
-    // Draw transition label
-    final midPoint = Offset(
-          (from.x + arrowEnd.dx) / 2,
-          (from.y + arrowEnd.dy) / 2,
-    );
-    
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: transition.symbol,
-        style: const TextStyle(
-          color: Colors.black,
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    );
-    textPainter.layout();
-    textPainter.paint(
-      canvas,
-      Offset(
-        midPoint.dx - textPainter.width / 2,
-        midPoint.dy - textPainter.height / 2,
-      ),
-    );
+
+    final path = Path()
+      ..moveTo(curve.start.dx, curve.start.dy)
+      ..quadraticBezierTo(
+        curve.control.dx,
+        curve.control.dy,
+        curve.end.dx,
+        curve.end.dy,
+      );
+    canvas.drawPath(path, paint);
+
+    _drawArrowhead(canvas, curve.end, curve.tangentAngle, paint);
+    _drawTransitionLabel(canvas, curve.labelPosition, transition.label);
   }
 
   void _drawInitialArrow(Canvas canvas, Offset center, Paint paint) {
@@ -545,6 +590,87 @@ class AutomatonPainter extends CustomPainter {
 
   void _drawTransitionPreview(Canvas canvas, automaton_state.State start, Paint paint) {
     // TODO: Implement transition preview
+  }
+
+  void _drawSelfLoop(Canvas canvas, FSATransition transition, Paint paint) {
+    final center = Offset(
+      transition.fromState.position.x,
+      transition.fromState.position.y,
+    );
+    const baseRadius = 40.0;
+
+    final loopsForState = transitions
+        .where((t) => t.fromState.id == transition.fromState.id && t.fromState == t.toState)
+        .toList();
+    final index = loopsForState.indexOf(transition);
+    final radius = baseRadius + index * 12.0;
+
+    final rect = Rect.fromCircle(
+      center: Offset(center.dx, center.dy - radius),
+      radius: radius,
+    );
+
+    const startAngle = 1.1 * math.pi;
+    const sweepAngle = 1.6 * math.pi;
+    final path = Path()..addArc(rect, startAngle, sweepAngle);
+    canvas.drawPath(path, paint);
+
+    final endAngle = startAngle + sweepAngle;
+    final arrowPoint = Offset(
+      rect.center.dx + rect.width / 2 * math.cos(endAngle),
+      rect.center.dy + rect.height / 2 * math.sin(endAngle),
+    );
+    _drawArrowhead(canvas, arrowPoint, endAngle + math.pi / 2, paint);
+
+    final labelPosition = Offset(
+      rect.center.dx,
+      rect.top - 14,
+    );
+    _drawTransitionLabel(canvas, labelPosition, transition.label);
+  }
+
+  void _drawArrowhead(
+    Canvas canvas,
+    Offset position,
+    double angle,
+    Paint paint,
+  ) {
+    const arrowLength = 12.0;
+    const arrowAngle = 0.45;
+
+    final arrow1 = Offset(
+      position.dx - arrowLength * math.cos(angle - arrowAngle),
+      position.dy - arrowLength * math.sin(angle - arrowAngle),
+    );
+    final arrow2 = Offset(
+      position.dx - arrowLength * math.cos(angle + arrowAngle),
+      position.dy - arrowLength * math.sin(angle + arrowAngle),
+    );
+
+    canvas.drawLine(position, arrow1, paint);
+    canvas.drawLine(position, arrow2, paint);
+  }
+
+  void _drawTransitionLabel(Canvas canvas, Offset position, String label) {
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: label,
+        style: const TextStyle(
+          color: Colors.black,
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(
+      canvas,
+      Offset(
+        position.dx - textPainter.width / 2,
+        position.dy - textPainter.height / 2,
+      ),
+    );
   }
 
   @override
@@ -643,6 +769,51 @@ class _StateEditDialogState extends State<_StateEditDialog> {
           child: const Text('Save'),
         ),
       ],
+    );
+  }
+}
+
+class _TransitionSymbolInput {
+  final Set<String> inputSymbols;
+  final String? lambdaSymbol;
+  final String label;
+
+  const _TransitionSymbolInput({
+    required this.inputSymbols,
+    required this.lambdaSymbol,
+    required this.label,
+  });
+
+  static _TransitionSymbolInput? parse(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return null;
+    }
+
+    final parts = trimmed
+        .split(',')
+        .map((part) => part.trim())
+        .where((part) => part.isNotEmpty)
+        .toList();
+
+    if (parts.isEmpty) {
+      return null;
+    }
+
+    if (parts.length == 1 &&
+        (parts.first == 'ε' || parts.first.toLowerCase() == 'epsilon' || parts.first.toLowerCase() == 'lambda')) {
+      return _TransitionSymbolInput(
+        inputSymbols: {},
+        lambdaSymbol: 'ε',
+        label: 'ε',
+      );
+    }
+
+    final symbols = parts.toSet();
+    return _TransitionSymbolInput(
+      inputSymbols: symbols,
+      lambdaSymbol: null,
+      label: symbols.join(', '),
     );
   }
 }

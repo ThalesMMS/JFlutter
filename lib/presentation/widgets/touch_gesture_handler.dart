@@ -263,7 +263,7 @@ class _TouchGestureHandlerState<T extends Transition>
       transition,
       stateRadius: widget.stateRadius,
       curvatureStrength: 45,
-      labelOffset: 12,
+      labelOffset: 16,
     );
 
     return _distanceToQuadratic(point, curve.start, curve.control, curve.end) <= 18;

@@ -83,7 +83,8 @@ class _TMCanvasState extends State<TMCanvas> {
   Widget _buildToolbar(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'TM Canvas',
@@ -91,34 +92,38 @@ class _TMCanvasState extends State<TMCanvas> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const Spacer(),
-          _buildToolButton(
-            context,
-            icon: Icons.add_circle,
-            label: 'Add State',
-            isSelected: _isAddingState,
-            onPressed: () => setState(() {
-              _isAddingState = !_isAddingState;
-              _isAddingTransition = false;
-            }),
-          ),
-          const SizedBox(width: 8),
-          _buildToolButton(
-            context,
-            icon: Icons.arrow_forward,
-            label: 'Add Transition',
-            isSelected: _isAddingTransition,
-            onPressed: () => setState(() {
-              _isAddingTransition = !_isAddingTransition;
-              _isAddingState = false;
-            }),
-          ),
-          const SizedBox(width: 8),
-          _buildToolButton(
-            context,
-            icon: Icons.clear,
-            label: 'Clear',
-            onPressed: _clearCanvas,
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            children: [
+              _buildToolButton(
+                context,
+                icon: Icons.add_circle,
+                label: 'Add State',
+                isSelected: _isAddingState,
+                onPressed: () => setState(() {
+                  _isAddingState = !_isAddingState;
+                  _isAddingTransition = false;
+                }),
+              ),
+              _buildToolButton(
+                context,
+                icon: Icons.arrow_forward,
+                label: 'Add Transition',
+                isSelected: _isAddingTransition,
+                onPressed: () => setState(() {
+                  _isAddingTransition = !_isAddingTransition;
+                  _isAddingState = false;
+                }),
+              ),
+              _buildToolButton(
+                context,
+                icon: Icons.clear,
+                label: 'Clear',
+                onPressed: _clearCanvas,
+              ),
+            ],
           ),
         ],
       ),

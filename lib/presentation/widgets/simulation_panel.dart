@@ -141,82 +141,88 @@ class _SimulationPanelState extends State<SimulationPanel> {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Simulation',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            
-            // Input field
-            TextField(
-              controller: _inputController,
-              decoration: const InputDecoration(
-                labelText: 'Input String',
-                hintText: 'Enter string to test',
-                border: OutlineInputBorder(),
-              ),
-              onSubmitted: (_) => _simulate(),
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Simulate button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _isSimulating ? null : _simulate,
-                icon: _isSimulating
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.play_arrow),
-                label: Text(_isSimulating ? 'Simulating...' : 'Simulate'),
-              ),
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Step-by-step controls
-            _buildStepByStepControls(context),
-            
-            // Results
-            if (widget.simulationResult != null) ...[
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Text(
-                'Simulation Result',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
+                'Simulation',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 8),
-              _buildResultCard(context, widget.simulationResult!),
-            ],
-            
-            // Step-by-step execution
-            if (_isStepByStep && _simulationSteps.isNotEmpty) ...[
               const SizedBox(height: 16),
-              _buildStepByStepExecution(context),
-            ],
-            
-            // Regex Result
-            if (widget.regexResult != null) ...[
-              const SizedBox(height: 16),
-              Text(
-                'Regex Result',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
+              
+              // Input field
+              TextField(
+                controller: _inputController,
+                decoration: const InputDecoration(
+                  labelText: 'Input String',
+                  hintText: 'Enter string to test',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+                onSubmitted: (_) => _simulate(),
+              ),
+              
+              const SizedBox(height: 12),
+              
+              // Simulate button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _isSimulating ? null : _simulate,
+                  icon: _isSimulating
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.play_arrow, size: 18),
+                  label: Text(_isSimulating ? 'Simulating...' : 'Simulate'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
                 ),
               ),
-              const SizedBox(height: 8),
-              _buildRegexResultCard(context, widget.regexResult!),
+              
+              const SizedBox(height: 12),
+              
+              // Step-by-step controls
+              _buildStepByStepControls(context),
+              
+              // Results
+              if (widget.simulationResult != null) ...[
+                Text(
+                  'Simulation Result',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _buildResultCard(context, widget.simulationResult!),
+              ],
+              
+              // Step-by-step execution
+              if (_isStepByStep && _simulationSteps.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                _buildStepByStepExecution(context),
+              ],
+              
+              // Regex Result
+              if (widget.regexResult != null) ...[
+                const SizedBox(height: 16),
+                Text(
+                  'Regex Result',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _buildRegexResultCard(context, widget.regexResult!),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

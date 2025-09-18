@@ -5,6 +5,7 @@ import '../../core/models/grammar.dart';
 import '../../core/models/production.dart';
 import '../../core/result.dart';
 import '../../data/services/conversion_service.dart';
+import '../../injection/dependency_injection.dart';
 
 /// State for managing grammar editing and conversions.
 class GrammarState {
@@ -226,5 +227,5 @@ class GrammarProvider extends StateNotifier<GrammarState> {
 /// Global grammar provider instance.
 final grammarProvider =
     StateNotifierProvider<GrammarProvider, GrammarState>((ref) {
-  return GrammarProvider();
+  return getIt<GrammarProvider>();
 });

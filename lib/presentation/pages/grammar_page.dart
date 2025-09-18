@@ -175,10 +175,7 @@ class _GrammarPageState extends ConsumerState<GrammarPage> {
       children: [
         // Grammar editor
         if (_showControls) ...[
-          Container(
-            constraints: const BoxConstraints(maxHeight: 300),
-            child: const GrammarEditor(),
-          ),
+          const GrammarEditor(),
           const SizedBox(height: 8),
         ],
 

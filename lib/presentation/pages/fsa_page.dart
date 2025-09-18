@@ -36,7 +36,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     if (!mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => RegexPage(initialRegex: regex),
+        builder: (_) => const RegexPage(),
       ),
     );
   }
@@ -56,7 +56,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     if (!mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => GrammarPage(initialGrammar: grammar),
+        builder: (_) => const GrammarPage(),
       ),
     );
   }

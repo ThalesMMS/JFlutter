@@ -80,33 +80,45 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
   }
 
   Widget _buildHeader(BuildContext context) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          Icons.games,
-          color: Theme.of(context).colorScheme.primary,
+        Row(
+          children: [
+            Icon(
+              Icons.games,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Pumping Lemma Game',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 8),
-        Text(
-          'Pumping Lemma Game',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const Spacer(),
-        Text(
-          'Level: ${_currentLevel + 1}/${_challenges.length}',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Text(
-          'Score: $_score',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.primary,
-          ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Text(
+              'Level: ${_currentLevel + 1}/${_challenges.length}',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Text(
+              'Score: $_score',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ],
         ),
       ],
     );

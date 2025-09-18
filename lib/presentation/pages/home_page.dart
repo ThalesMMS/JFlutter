@@ -21,6 +21,7 @@ class HomePage extends ConsumerStatefulWidget {
 
 class _HomePageState extends ConsumerState<HomePage> {
   late final PageController _pageController;
+  int? _lastNavigationIndex;
 
   final List<NavigationItem> _navigationItems = const [
     NavigationItem(
@@ -51,7 +52,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     NavigationItem(
       label: 'Pumping',
       icon: Icons.games,
-      description: 'Pumping Lemma Game',
+      description: 'Pumping Lemma',
     ),
   ];
 
@@ -60,27 +61,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     super.initState();
     final initialIndex = ref.read(homeNavigationProvider);
     _pageController = PageController(initialPage: initialIndex);
-
-    ref.listen<int>(homeNavigationProvider, (previous, next) {
-      if (previous == next) {
-        return;
-      }
-
-      if (_pageController.hasClients) {
-        _pageController.animateToPage(
-          next,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-      } else {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted || !_pageController.hasClients) {
-            return;
-          }
-          _pageController.jumpToPage(next);
-        });
-      }
-    });
+    _lastNavigationIndex = initialIndex;
   }
 
   @override
@@ -110,6 +91,20 @@ class _HomePageState extends ConsumerState<HomePage> {
     final screenSize = MediaQuery.of(context).size;
     final currentIndex = ref.watch(homeNavigationProvider);
     final isMobile = screenSize.width < 1024; // Better breakpoint for modern devices
+
+    // Handle navigation changes
+    if (_lastNavigationIndex != currentIndex) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _pageController.hasClients) {
+          _pageController.animateToPage(
+            currentIndex,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+        }
+      });
+      _lastNavigationIndex = currentIndex;
+    }
 
     return Scaffold(
       appBar: AppBar(

@@ -13,6 +13,7 @@ import '../data/services/simulation_service.dart';
 import '../data/services/conversion_service.dart';
 import '../presentation/providers/automaton_provider.dart';
 import '../presentation/providers/algorithm_provider.dart';
+import '../presentation/providers/grammar_provider.dart';
 
 /// Global service locator instance
 final GetIt getIt = GetIt.instance;
@@ -176,6 +177,7 @@ Future<void> setupDependencyInjection() async {
       conversionService: getIt<ConversionService>(),
       createAutomatonUseCase: getIt<CreateAutomatonUseCase>(),
       loadAutomatonUseCase: getIt<LoadAutomatonUseCase>(),
+      layoutRepository: getIt<LayoutRepository>(),
     ),
   );
   
@@ -193,9 +195,16 @@ Future<void> setupDependencyInjection() async {
       suffixClosureUseCase: getIt<SuffixClosureUseCase>(),
       regexToNfaUseCase: getIt<RegexToNfaUseCase>(),
       dfaToRegexUseCase: getIt<DfaToRegexUseCase>(),
+      fsaToGrammarUseCase: getIt<FsaToGrammarUseCase>(),
       checkEquivalenceUseCase: getIt<CheckEquivalenceUseCase>(),
       simulateWordUseCase: getIt<SimulateWordUseCase>(),
       createStepByStepSimulationUseCase: getIt<CreateStepByStepSimulationUseCase>(),
+    ),
+  );
+  
+  getIt.registerFactory<GrammarProvider>(
+    () => GrammarProvider(
+      conversionService: getIt<ConversionService>(),
     ),
   );
 }

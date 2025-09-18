@@ -221,7 +221,7 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
     _notifyAutomatonChanged();
   }
 
-  Future<_TransitionSymbolInput?> _showSymbolDialog({FSATransition? transition}) {
+  Future<_TransitionSymbolInput?> _showSymbolDialog({FSATransition? transition}) async {
     final existingSymbols = transition?.lambdaSymbol != null
         ? 'ε'
         : transition?.inputSymbols.join(', ') ?? '';

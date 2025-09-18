@@ -46,6 +46,7 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             _buildHeader(context),
             const SizedBox(height: 16),
@@ -62,7 +63,7 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
 
   Widget _buildHeader(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 400;
+    final isSmallScreen = screenWidth < 600; // Increased breakpoint for better mobile support
 
     if (isSmallScreen) {
       return Column(
@@ -89,6 +90,7 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
+            runSpacing: 4,
             children: [
               ElevatedButton.icon(
                 onPressed: _addProduction,
@@ -121,26 +123,32 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
           color: Theme.of(context).colorScheme.primary,
         ),
         const SizedBox(width: 8),
-        Text(
-          'Grammar Editor',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
+        Expanded(
+          child: Text(
+            'Grammar Editor',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
-        const Spacer(),
+        const SizedBox(width: 8),
         ElevatedButton.icon(
           onPressed: _addProduction,
-          icon: const Icon(Icons.add),
+          icon: const Icon(Icons.add, size: 18),
           label: const Text('Add Rule'),
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          ),
         ),
         const SizedBox(width: 8),
         ElevatedButton.icon(
           onPressed: _clearGrammar,
-          icon: const Icon(Icons.clear),
+          icon: const Icon(Icons.clear, size: 18),
           label: const Text('Clear'),
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(context).colorScheme.error,
             foregroundColor: Theme.of(context).colorScheme.onError,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           ),
         ),
       ],
@@ -164,32 +172,64 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
             ),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _grammarNameController,
-                  onChanged: (value) => ref.read(grammarProvider.notifier).updateName(value.trim()),
-                  decoration: const InputDecoration(
-                    labelText: 'Grammar Name',
-                    border: OutlineInputBorder(),
-                    isDense: true,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isSmallScreen = constraints.maxWidth < 500;
+              
+              if (isSmallScreen) {
+                return Column(
+                  children: [
+                    TextField(
+                      controller: _grammarNameController,
+                      onChanged: (value) => ref.read(grammarProvider.notifier).updateName(value.trim()),
+                      decoration: const InputDecoration(
+                        labelText: 'Grammar Name',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _startSymbolController,
+                      onChanged: (value) => ref.read(grammarProvider.notifier).updateStartSymbol(value.trim()),
+                      decoration: const InputDecoration(
+                        labelText: 'Start Symbol',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                    ),
+                  ],
+                );
+              }
+              
+              return Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _grammarNameController,
+                      onChanged: (value) => ref.read(grammarProvider.notifier).updateName(value.trim()),
+                      decoration: const InputDecoration(
+                        labelText: 'Grammar Name',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextField(
-                  controller: _startSymbolController,
-                  onChanged: (value) => ref.read(grammarProvider.notifier).updateStartSymbol(value.trim()),
-                  decoration: const InputDecoration(
-                    labelText: 'Start Symbol',
-                    border: OutlineInputBorder(),
-                    isDense: true,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _startSymbolController,
+                      onChanged: (value) => ref.read(grammarProvider.notifier).updateStartSymbol(value.trim()),
+                      decoration: const InputDecoration(
+                        labelText: 'Start Symbol',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ],
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -213,60 +253,128 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
             ),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _leftSideController,
-                  decoration: const InputDecoration(
-                    labelText: 'Left Side (Variable)',
-                    hintText: 'e.g., S, A, B',
-                    border: OutlineInputBorder(),
-                    isDense: true,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isSmallScreen = constraints.maxWidth < 500;
+              
+              if (isSmallScreen) {
+                return Column(
+                  children: [
+                    TextField(
+                      controller: _leftSideController,
+                      decoration: const InputDecoration(
+                        labelText: 'Left Side (Variable)',
+                        hintText: 'e.g., S, A, B',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Icon(
+                      Icons.arrow_downward,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _rightSideController,
+                      decoration: const InputDecoration(
+                        labelText: 'Right Side (Production)',
+                        hintText: 'e.g., aA, bB, ε',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                    ),
+                  ],
+                );
+              }
+              
+              return Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _leftSideController,
+                      decoration: const InputDecoration(
+                        labelText: 'Left Side (Variable)',
+                        hintText: 'e.g., S, A, B',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Icon(
-                Icons.arrow_forward,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                flex: 2,
-                child: TextField(
-                  controller: _rightSideController,
-                  decoration: const InputDecoration(
-                    labelText: 'Right Side (Production)',
-                    hintText: 'e.g., aA, bB, ε',
-                    border: OutlineInputBorder(),
-                    isDense: true,
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.arrow_forward,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
-                ),
-              ),
-            ],
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 2,
+                    child: TextField(
+                      controller: _rightSideController,
+                      decoration: const InputDecoration(
+                        labelText: 'Right Side (Production)',
+                        hintText: 'e.g., aA, bB, ε',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              ElevatedButton.icon(
-                onPressed: _isEditing ? _updateProduction : _addProduction,
-                icon: Icon(_isEditing ? Icons.save : Icons.add),
-                label: Text(_isEditing ? 'Update' : 'Add'),
-              ),
-              if (_isEditing) ...[
-                const SizedBox(width: 8),
-                ElevatedButton.icon(
-                  onPressed: _cancelEdit,
-                  icon: const Icon(Icons.cancel),
-                  label: const Text('Cancel'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.surface,
-                    foregroundColor: Theme.of(context).colorScheme.onSurface,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isSmallScreen = constraints.maxWidth < 400;
+              
+              if (isSmallScreen) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: _isEditing ? _updateProduction : _addProduction,
+                      icon: Icon(_isEditing ? Icons.save : Icons.add),
+                      label: Text(_isEditing ? 'Update' : 'Add'),
+                    ),
+                    if (_isEditing) ...[
+                      const SizedBox(height: 8),
+                      ElevatedButton.icon(
+                        onPressed: _cancelEdit,
+                        icon: const Icon(Icons.cancel),
+                        label: const Text('Cancel'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).colorScheme.surface,
+                          foregroundColor: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ],
+                );
+              }
+              
+              return Row(
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: _isEditing ? _updateProduction : _addProduction,
+                    icon: Icon(_isEditing ? Icons.save : Icons.add),
+                    label: Text(_isEditing ? 'Update' : 'Add'),
                   ),
-                ),
-              ],
-            ],
+                  if (_isEditing) ...[
+                    const SizedBox(width: 8),
+                    ElevatedButton.icon(
+                      onPressed: _cancelEdit,
+                      icon: const Icon(Icons.cancel),
+                      label: const Text('Cancel'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.surface,
+                        foregroundColor: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                  ],
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -274,30 +382,28 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
   }
 
   Widget _buildProductionsList(BuildContext context, List<Production> productions) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Production Rules (${productions.length})',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          'Production Rules (${productions.length})',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
           ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: productions.isEmpty
-                ? _buildEmptyState(context)
-                : ListView.builder(
-                    itemCount: productions.length,
-                    itemBuilder: (context, index) {
-                      final production = productions[index];
-                      return _buildProductionItem(context, production, index);
-                    },
-                  ),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 8),
+        productions.isEmpty
+            ? _buildEmptyState(context)
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: productions.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final production = entry.value;
+                  return _buildProductionItem(context, production, index);
+                }).toList(),
+              ),
+      ],
     );
   }
 
@@ -368,20 +474,37 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
           'Rule ${index + 1}',
           style: Theme.of(context).textTheme.bodySmall,
         ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              onPressed: () => _editProduction(production),
-              icon: const Icon(Icons.edit),
-              tooltip: 'Edit',
+        trailing: PopupMenuButton<String>(
+          onSelected: (value) {
+            if (value == 'edit') {
+              _editProduction(production);
+            } else if (value == 'delete') {
+              _deleteProduction(production);
+            }
+          },
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'edit',
+              child: Row(
+                children: [
+                  Icon(Icons.edit, size: 18),
+                  SizedBox(width: 8),
+                  Text('Edit'),
+                ],
+              ),
             ),
-            IconButton(
-              onPressed: () => _deleteProduction(production),
-              icon: const Icon(Icons.delete),
-              tooltip: 'Delete',
+            const PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  Icon(Icons.delete, size: 18),
+                  SizedBox(width: 8),
+                  Text('Delete'),
+                ],
+              ),
             ),
           ],
+          child: const Icon(Icons.more_vert),
         ),
         onTap: () => _selectProduction(production),
         selected: isSelected,

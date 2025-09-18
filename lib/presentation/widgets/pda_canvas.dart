@@ -8,6 +8,7 @@ import '../../core/models/pda_transition.dart';
 import '../../core/models/transition.dart';
 import '../providers/pda_editor_provider.dart';
 import 'touch_gesture_handler.dart';
+import 'transition_geometry.dart';
 
 /// Interactive canvas for drawing and editing Pushdown Automata
 class PDACanvas extends ConsumerStatefulWidget {
@@ -20,7 +21,6 @@ class PDACanvas extends ConsumerStatefulWidget {
     required this.onPDAModified,
   });
 
-  @override
   @override
   ConsumerState<PDACanvas> createState() => _PDACanvasState();
 }
@@ -59,17 +59,18 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: TouchGestureHandler(
+                child: TouchGestureHandler<PDATransition>(
                   states: _states,
-                  transitions: _transitions.cast<Transition>().toList(),
+                  transitions: _transitions,
                   selectedState: _selectedState,
                   onStateSelected: _selectState,
                   onStateMoved: _moveState,
                   onStateAdded: _addState,
-                  onTransitionAdded: _addTransition,
+                  onTransitionAdded: _addTransitionFromHandler,
                   onStateEdited: _editState,
                   onStateDeleted: _deleteState,
                   onTransitionDeleted: _deleteTransition,
+                  onTransitionEdited: _editTransition,
                   child: CustomPaint(
                     key: widget.canvasKey,
                     painter: _PDACanvasPainter(
@@ -82,6 +83,9 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
                     ),
                     size: Size.infinite,
                   ),
+                  stateRadius: 25,
+                  selfLoopBaseRadius: 36,
+                  selfLoopSpacing: 10,
                 ),
               ),
             ),
@@ -92,6 +96,7 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
   }
 
   Widget _buildToolbar(BuildContext context) {
+    final editorState = ref.watch(pdaEditorProvider);
     return Container(
       padding: const EdgeInsets.all(12),
       child: Column(
@@ -232,7 +237,7 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
     _notifyEditor();
   }
 
-  void _addTransition(Transition transition) async {
+  void _addTransitionFromHandler(Transition transition) async {
     final config = await _showTransitionEditDialog(
       context,
       fromState: transition.fromState,
@@ -248,7 +253,7 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
     final labelPush = config.isLambdaPush ? 'λ' : config.pushSymbol;
 
     final pdaTransition = PDATransition(
-      id: transition.id,
+      id: 't${_transitions.length + 1}',
       fromState: config.fromState,
       toState: config.toState,
       label: '$labelInput, $labelPop/$labelPush',
@@ -262,6 +267,7 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
 
     setState(() {
       _transitions.add(pdaTransition);
+      _isAddingTransition = false;
     });
     _notifyEditor();
   }
@@ -285,6 +291,42 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
   void _deleteTransition(Transition transition) {
     setState(() {
       _transitions.removeWhere((t) => t.id == transition.id);
+    });
+    _notifyEditor();
+  }
+
+  void _editTransition(Transition transition) async {
+    if (transition is! PDATransition) return;
+    
+    final config = await _showTransitionEditDialog(
+      context,
+      fromState: transition.fromState,
+      toState: transition.toState,
+      existing: transition,
+    );
+
+    if (config == null) return;
+
+    setState(() {
+      final index = _transitions.indexWhere((t) => t.id == transition.id);
+      if (index != -1) {
+        final labelInput = config.isLambdaInput ? 'λ' : config.inputSymbol;
+        final labelPop = config.isLambdaPop ? 'λ' : config.popSymbol;
+        final labelPush = config.isLambdaPush ? 'λ' : config.pushSymbol;
+
+        _transitions[index] = PDATransition(
+          id: transition.id,
+          fromState: config.fromState,
+          toState: config.toState,
+          label: '$labelInput, $labelPop/$labelPush',
+          inputSymbol: config.inputSymbol,
+          popSymbol: config.popSymbol,
+          pushSymbol: config.pushSymbol,
+          isLambdaInput: config.isLambdaInput,
+          isLambdaPop: config.isLambdaPop,
+          isLambdaPush: config.isLambdaPush,
+        );
+      }
     });
     _notifyEditor();
   }
@@ -376,17 +418,24 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
     BuildContext context, {
     required automaton_state.State fromState,
     required automaton_state.State toState,
+    PDATransition? existing,
   }) {
-    final inputController = TextEditingController();
-    final popController = TextEditingController(text: 'Z');
-    final pushController = TextEditingController();
+    final inputController = TextEditingController(
+      text: existing?.inputSymbol ?? ''
+    );
+    final popController = TextEditingController(
+      text: existing?.popSymbol ?? 'Z'
+    );
+    final pushController = TextEditingController(
+      text: existing?.pushSymbol ?? ''
+    );
 
     return showDialog<_PDATransitionConfig?>(
       context: context,
       builder: (context) {
-        bool lambdaInput = false;
-        bool lambdaPop = false;
-        bool lambdaPush = false;
+        bool lambdaInput = existing?.isLambdaInput ?? false;
+        bool lambdaPop = existing?.isLambdaPop ?? false;
+        bool lambdaPush = existing?.isLambdaPush ?? false;
         String? inputError;
         String? popError;
         String? pushError;
@@ -394,7 +443,7 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('Configure PDA Transition'),
+              title: Text(existing == null ? 'Configure PDA Transition' : 'Edit PDA Transition'),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -651,9 +700,6 @@ class _PDACanvasPainter extends CustomPainter {
   }
 
   void _drawTransition(Canvas canvas, PDATransition transition) {
-    final fromPos = Offset(transition.fromState.position.x, transition.fromState.position.y);
-    final toPos = Offset(transition.toState.position.x, transition.toState.position.y);
-
     Color transitionColor = Colors.black;
     if (nondeterministicTransitionIds.contains(transition.id)) {
       transitionColor = Colors.redAccent;
@@ -666,87 +712,59 @@ class _PDACanvasPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
 
-    // Draw transition line
-    canvas.drawLine(fromPos, toPos, paint);
+    if (transition.fromState == transition.toState) {
+      _drawSelfLoop(canvas, transition, paint);
+      return;
+    }
 
-    // Draw arrow
-    _drawArrow(canvas, fromPos, toPos, color: transitionColor);
-
-    // Draw transition label
-    final midPoint = Offset(
-      (fromPos.dx + toPos.dx) / 2,
-      (fromPos.dy + toPos.dy) / 2 - 20,
+    final curve = TransitionCurve.compute(
+      transitions,
+      transition,
+      stateRadius: 25,
+      curvatureStrength: 38,
+      labelOffset: 14,
     );
 
-    final labelBackground = Paint()
-      ..color = transitionColor.withOpacity(0.1)
-      ..style = PaintingStyle.fill;
+    final path = Path()
+      ..moveTo(curve.start.dx, curve.start.dy)
+      ..quadraticBezierTo(
+        curve.control.dx,
+        curve.control.dy,
+        curve.end.dx,
+        curve.end.dy,
+      );
+    canvas.drawPath(path, paint);
 
-    final input = transition.isLambdaInput || transition.inputSymbol.isEmpty
-        ? 'λ'
-        : transition.inputSymbol;
-    final pop = transition.isLambdaPop || transition.popSymbol.isEmpty
-        ? 'λ'
-        : transition.popSymbol;
-    final push = transition.isLambdaPush || transition.pushSymbol.isEmpty
-        ? 'λ'
-        : transition.pushSymbol;
-
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: '$input, $pop/$push',
-        style: TextStyle(
-          color: transitionColor,
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    );
-    textPainter.layout();
-
-    final rect = Rect.fromCenter(
-      center: midPoint,
-      width: textPainter.width + 8,
-      height: textPainter.height + 4,
-    );
-
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(rect, const Radius.circular(6)),
-      labelBackground,
-    );
-
-    textPainter.paint(
+    _drawArrow(canvas, curve.end, curve.tangentAngle, paint);
+    _drawLabel(
       canvas,
-      Offset(
-        midPoint.dx - textPainter.width / 2,
-        midPoint.dy - textPainter.height / 2,
-      ),
+      curve.labelPosition,
+      _formatTransitionLabel(transition),
+      transitionColor,
     );
   }
 
-  void _drawArrow(Canvas canvas, Offset from, Offset to, {Color color = Colors.black}) {
-    final angle = math.atan2(to.dy - from.dy, to.dx - from.dx);
+  void _drawArrow(
+    Canvas canvas,
+    Offset position,
+    double angle,
+    Paint paint,
+  ) {
     const arrowLength = 15.0;
     const arrowAngle = math.pi / 6;
 
     final arrow1 = Offset(
-      to.dx - arrowLength * math.cos(angle - arrowAngle),
-      to.dy - arrowLength * math.sin(angle - arrowAngle),
+      position.dx - arrowLength * math.cos(angle - arrowAngle),
+      position.dy - arrowLength * math.sin(angle - arrowAngle),
     );
 
     final arrow2 = Offset(
-      to.dx - arrowLength * math.cos(angle + arrowAngle),
-      to.dy - arrowLength * math.sin(angle + arrowAngle),
+      position.dx - arrowLength * math.cos(angle + arrowAngle),
+      position.dy - arrowLength * math.sin(angle + arrowAngle),
     );
 
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-
-    canvas.drawLine(to, arrow1, paint);
-    canvas.drawLine(to, arrow2, paint);
+    canvas.drawLine(position, arrow1, paint);
+    canvas.drawLine(position, arrow2, paint);
   }
 
   void _drawInitialArrow(Canvas canvas, Offset center) {
@@ -759,7 +777,97 @@ class _PDACanvasPainter extends CustomPainter {
       ..strokeWidth = 3;
 
     canvas.drawLine(arrowStart, arrowEnd, paint);
-    _drawArrow(canvas, arrowStart, arrowEnd);
+    final angle = math.atan2(arrowEnd.dy - arrowStart.dy, arrowEnd.dx - arrowStart.dx);
+    _drawArrow(canvas, arrowEnd, angle, paint);
+  }
+
+  void _drawSelfLoop(Canvas canvas, PDATransition transition, Paint paint) {
+    final center = Offset(
+      transition.fromState.position.x,
+      transition.fromState.position.y,
+    );
+
+    const baseRadius = 36.0;
+    const spacing = 10.0;
+
+    final loops = transitions
+        .where((t) => t.fromState.id == transition.fromState.id && t.fromState == t.toState)
+        .toList();
+    final index = loops.indexOf(transition);
+    final radius = baseRadius + index * spacing;
+
+    final rect = Rect.fromCircle(
+      center: Offset(center.dx, center.dy - radius),
+      radius: radius,
+    );
+
+    const startAngle = 1.1 * math.pi;
+    const sweepAngle = 1.6 * math.pi;
+    final path = Path()..addArc(rect, startAngle, sweepAngle);
+    canvas.drawPath(path, paint);
+
+    final endAngle = startAngle + sweepAngle;
+    final arrowPoint = Offset(
+      rect.center.dx + rect.width / 2 * math.cos(endAngle),
+      rect.center.dy + rect.height / 2 * math.sin(endAngle),
+    );
+    _drawArrow(canvas, arrowPoint, endAngle + math.pi / 2, paint);
+
+    final labelPosition = Offset(
+      rect.center.dx,
+      rect.top - 12,
+    );
+    _drawLabel(
+      canvas,
+      labelPosition,
+      _formatTransitionLabel(transition),
+      paint.color,
+    );
+  }
+
+  void _drawLabel(Canvas canvas, Offset position, String text, Color color) {
+    final labelBackground = Paint()
+      ..color = color.withOpacity(0.1)
+      ..style = PaintingStyle.fill;
+
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+
+    final rect = Rect.fromCenter(
+      center: position,
+      width: textPainter.width + 8,
+      height: textPainter.height + 4,
+    );
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, const Radius.circular(6)),
+      labelBackground,
+    );
+
+    textPainter.paint(
+      canvas,
+      Offset(
+        position.dx - textPainter.width / 2,
+        position.dy - textPainter.height / 2,
+      ),
+    );
+  }
+
+  String _formatTransitionLabel(PDATransition transition) {
+    final input = transition.isLambdaInput ? 'λ' : transition.inputSymbol;
+    final pop = transition.isLambdaPop ? 'λ' : transition.popSymbol;
+    final push = transition.isLambdaPush ? 'λ' : transition.pushSymbol;
+    return '$input, $pop/$push';
   }
 
   @override

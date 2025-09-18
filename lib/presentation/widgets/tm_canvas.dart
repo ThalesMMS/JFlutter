@@ -49,9 +49,9 @@ class _TMCanvasState extends State<TMCanvas> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: TouchGestureHandler(
+                child: TouchGestureHandler<TMTransition>(
                   states: _states,
-                  transitions: _transitions.cast(),
+                  transitions: _transitions,
                   selectedState: _selectedState,
                   onStateSelected: _selectState,
                   onStateMoved: _moveState,
@@ -60,6 +60,7 @@ class _TMCanvasState extends State<TMCanvas> {
                   onStateEdited: _editState,
                   onStateDeleted: _deleteState,
                   onTransitionDeleted: _deleteTransition,
+                  onTransitionEdited: _editTransition,
                   child: CustomPaint(
                     key: widget.canvasKey,
                     painter: _TMCanvasPainter(
@@ -69,6 +70,7 @@ class _TMCanvasState extends State<TMCanvas> {
                     ),
                     size: Size.infinite,
                   ),
+                  stateRadius: 30,
                 ),
               ),
             ),
@@ -156,7 +158,7 @@ class _TMCanvasState extends State<TMCanvas> {
 
   void _moveState(automaton_state.State state) {
     setState(() {
-      final index = _states.indexOf(state);
+      final index = _states.indexWhere((s) => s.id == state.id);
       if (index != -1) {
         _states[index] = state;
       }
@@ -202,6 +204,20 @@ class _TMCanvasState extends State<TMCanvas> {
     _showStateEditDialog(state);
   }
 
+  Future<void> _editTransition(Transition transition) async {
+    if (transition is! TMTransition) return;
+    
+    final result = await _showTransitionDialog(transition);
+    if (result == null) return;
+
+    setState(() {
+      final index = _transitions.indexWhere((t) => t.id == transition.id);
+      if (index != -1) {
+        _transitions[index] = result;
+      }
+    });
+  }
+
   void _deleteState(automaton_state.State state) {
     setState(() {
       _states.remove(state);
@@ -227,6 +243,82 @@ class _TMCanvasState extends State<TMCanvas> {
       _isAddingState = false;
       _isAddingTransition = false;
     });
+  }
+
+  Future<TMTransition?> _showTransitionDialog(TMTransition transition) async {
+    final readController = TextEditingController(text: transition.readSymbol);
+    final writeController = TextEditingController(text: transition.writeSymbol);
+    TapeDirection direction = transition.direction;
+
+    final result = await showDialog<TMTransition>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Transition'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildTextField(readController, 'Read Symbol'),
+              const SizedBox(height: 12),
+              _buildTextField(writeController, 'Write Symbol'),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<TapeDirection>(
+                value: direction,
+                items: TapeDirection.values
+                    .map(
+                      (dir) => DropdownMenuItem(
+                        value: dir,
+                        child: Text(dir.name.toUpperCase()),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    direction = value;
+                  }
+                },
+                decoration: const InputDecoration(
+                  labelText: 'Direction',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(context).pop(
+                  transition.copyWith(
+                    readSymbol: readController.text.trim(),
+                    writeSymbol: writeController.text.trim(),
+                    direction: direction,
+                  ),
+                );
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+
+    readController.dispose();
+    writeController.dispose();
+    return result;
+  }
+
+  Widget _buildTextField(TextEditingController controller, String label) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+      ),
+    );
   }
 
   void _showStateEditDialog(automaton_state.State state) {

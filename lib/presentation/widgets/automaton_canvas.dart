@@ -6,6 +6,7 @@ import '../../core/models/state.dart' as automaton_state;
 import '../../core/models/fsa_transition.dart';
 import 'touch_gesture_handler.dart';
 import 'mobile_automaton_controls.dart';
+import 'transition_geometry.dart';
 
 /// Interactive canvas for drawing and editing automata
 class AutomatonCanvas extends StatefulWidget {
@@ -195,29 +196,100 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
     }
   }
 
-  void _addTransition(automaton_state.State from, automaton_state.State to) {
-    final symbol = _showSymbolDialog();
-    if (symbol != null) {
-      final transition = FSATransition(
-        id: 't${_transitions.length + 1}',
-        fromState: from,
-        toState: to,
-        label: symbol,
-        inputSymbols: {symbol},
-      );
-      
-      setState(() {
-        _transitions.add(transition);
-      });
-      
-      _notifyAutomatonChanged();
+  Future<void> _addTransition(
+    automaton_state.State from,
+    automaton_state.State to,
+  ) async {
+    final symbolInput = await _showSymbolDialog();
+    if (symbolInput == null) {
+      return;
     }
+
+    final transition = FSATransition(
+      id: 't${_transitions.length + 1}',
+      fromState: from,
+      toState: to,
+      label: symbolInput.label,
+      inputSymbols: symbolInput.inputSymbols,
+      lambdaSymbol: symbolInput.lambdaSymbol,
+    );
+
+    setState(() {
+      _transitions.add(transition);
+    });
+
+    _notifyAutomatonChanged();
   }
 
-  String? _showSymbolDialog() {
-    // For now, return a default symbol
-    // TODO: Implement proper symbol input dialog
-    return 'a';
+  Future<_TransitionSymbolInput?> _showSymbolDialog({FSATransition? transition}) {
+    final existingSymbols = transition?.lambdaSymbol != null
+        ? 'ε'
+        : transition?.inputSymbols.join(', ') ?? '';
+    final controller = TextEditingController(text: existingSymbols);
+    final result = await showDialog<_TransitionSymbolInput>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(transition == null ? 'Transition Symbols' : 'Edit Transition'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Enter symbols separated by commas or ε for epsilon'),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Symbols',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final parsed = _TransitionSymbolInput.parse(controller.text);
+                if (parsed == null) {
+                  Navigator.of(context).pop();
+                  return;
+                }
+                Navigator.of(context).pop(parsed);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+
+    controller.dispose();
+    return result;
+  }
+
+  Future<void> _editTransition(FSATransition transition) async {
+    final symbolInput = await _showSymbolDialog(transition: transition);
+    if (symbolInput == null) {
+      return;
+    }
+
+    setState(() {
+      final index = _transitions.indexWhere((t) => t.id == transition.id);
+      if (index != -1) {
+        _transitions[index] = transition.copyWith(
+          label: symbolInput.label,
+          inputSymbols: symbolInput.inputSymbols,
+          lambdaSymbol: symbolInput.lambdaSymbol,
+        );
+      }
+    });
+
+    _notifyAutomatonChanged();
   }
 
   bool _isPointInState(Offset point, automaton_state.State state) {
@@ -245,7 +317,7 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
       ),
       child: Stack(
         children: [
-          TouchGestureHandler(
+          TouchGestureHandler<FSATransition>(
             states: _states,
             transitions: _transitions,
             selectedState: _selectedState,
@@ -293,6 +365,9 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
                 _transitions.removeWhere((t) => t.id == transition.id);
               });
               _notifyAutomatonChanged();
+            },
+            onTransitionEdited: (transition) {
+              _editTransition(transition);
             },
             child: CustomPaint(
               painter: AutomatonPainter(
@@ -809,3 +884,47 @@ class _StateEditDialogState extends State<_StateEditDialog> {
   }
 }
 
+class _TransitionSymbolInput {
+  final Set<String> inputSymbols;
+  final String? lambdaSymbol;
+  final String label;
+
+  const _TransitionSymbolInput({
+    required this.inputSymbols,
+    required this.lambdaSymbol,
+    required this.label,
+  });
+
+  static _TransitionSymbolInput? parse(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return null;
+    }
+
+    final parts = trimmed
+        .split(',')
+        .map((part) => part.trim())
+        .where((part) => part.isNotEmpty)
+        .toList();
+
+    if (parts.isEmpty) {
+      return null;
+    }
+
+    if (parts.length == 1 &&
+        (parts.first == 'ε' || parts.first.toLowerCase() == 'epsilon' || parts.first.toLowerCase() == 'lambda')) {
+      return _TransitionSymbolInput(
+        inputSymbols: {},
+        lambdaSymbol: 'ε',
+        label: 'ε',
+      );
+    }
+
+    final symbols = parts.toSet();
+    return _TransitionSymbolInput(
+      inputSymbols: symbols,
+      lambdaSymbol: null,
+      label: symbols.join(', '),
+    );
+  }
+}

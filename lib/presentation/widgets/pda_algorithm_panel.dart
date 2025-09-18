@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/algorithms/pda_simulator.dart';
+import '../../core/algorithms/pda_to_cfg_converter.dart';
+import '../providers/pda_editor_provider.dart';
+
 /// Panel for PDA analysis algorithms
 class PDAAlgorithmPanel extends ConsumerStatefulWidget {
   const PDAAlgorithmPanel({super.key});
@@ -264,171 +268,329 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
   }
 
   void _convertToCFG() {
-    _performAnalysis('PDA to CFG Conversion', () {
-      return '''PDA to Context-Free Grammar Conversion:
+    final editorState = ref.read(pdaEditorProvider);
+    final pda = editorState.pda;
 
-Original PDA:
-- States: {q0, q1, q2}
-- Transitions: 
-  q0 --a,Z/AZ--> q0
-  q0 --b,A/ε--> q1
-  q1 --b,A/ε--> q1
-  q1 --ε,Z/Z--> q2
+    if (pda == null) {
+      _showSnackbar('Draw a PDA before converting to a grammar.');
+      return;
+    }
 
-Equivalent CFG:
-S → [q0,Z,q2]
-[q0,Z,q0] → a[q0,A,q0][q0,Z,q0]
-[q0,Z,q1] → a[q0,A,q1][q1,Z,q1]
-[q0,A,q0] → a[q0,A,q0][q0,A,q0]
-[q0,A,q1] → a[q0,A,q1][q1,A,q1]
-[q0,A,q1] → b
-[q1,A,q1] → b
-[q1,Z,q2] → ε
+    _performAnalysis('PDA to CFG Conversion', () async {
+      final conversionResult = PDAtoCFGConverter.convert(pda);
+      if (conversionResult.isSuccess) {
+        return conversionResult.data!;
+      }
 
-Analysis:
-- Grammar has 7 production rules
-- Variables represent state-stack combinations
-- Language: a^n b^n (n ≥ 1)''';
+      final message = 'Conversion failed: ${conversionResult.error}';
+      _showSnackbar(message);
+      return message;
     });
   }
 
   void _minimizePDA() {
-    _performAnalysis('PDA Minimization', () {
-      return '''PDA Minimization Analysis:
+    final editorState = ref.read(pdaEditorProvider);
+    final pda = editorState.pda;
 
-Original PDA:
-- States: {q0, q1, q2, q3}
-- Transitions: 8 transitions
+    if (pda == null) {
+      _showSnackbar('Create a PDA to analyze minimization.');
+      return;
+    }
 
-Minimization Process:
-1. Remove unreachable states: q3 (unreachable)
-2. Merge equivalent states: q1 and q2 (equivalent behavior)
-3. Remove redundant transitions
+    _performAnalysis('PDA Minimization', () async {
+      final analysisResult = PDASimulator.analyzePDA(pda);
+      if (!analysisResult.isSuccess) {
+        final message = 'Analysis failed: ${analysisResult.error}';
+        _showSnackbar(message);
+        return message;
+      }
 
-Minimized PDA:
-- States: {q0, q1}
-- Transitions: 4 transitions
-- Reduction: 50% fewer states, 50% fewer transitions
+      final analysis = analysisResult.data!;
+      final reachableStates = analysis.reachabilityAnalysis.reachableStates.length;
+      final unreachableStates =
+          analysis.reachabilityAnalysis.unreachableStates.length;
 
-Analysis:
-- Language remains unchanged
-- Improved efficiency
-- Reduced complexity''';
+      final buffer = StringBuffer();
+      buffer.writeln(
+        'Automatic PDA minimization is not implemented yet. Use the summary below '
+        'to guide manual simplifications.',
+      );
+      buffer.writeln('');
+      buffer.writeln('States: ${analysis.stateAnalysis.totalStates}');
+      buffer.writeln('Accepting states: ${analysis.stateAnalysis.acceptingStates}');
+      buffer.writeln('Non-accepting states: ${analysis.stateAnalysis.nonAcceptingStates}');
+      buffer.writeln('Reachable states: $reachableStates');
+      buffer.writeln('Unreachable states: $unreachableStates');
+      buffer.writeln('Transitions: ${analysis.transitionAnalysis.totalTransitions}');
+
+      return buffer.toString();
     });
   }
 
   void _checkDeterminism() {
-    _performAnalysis('Determinism Check', () {
-      return '''PDA Determinism Analysis:
+    final editorState = ref.read(pdaEditorProvider);
+    final pda = editorState.pda;
 
-Current PDA Configuration:
-- States: {q0, q1, q2}
-- Transitions: 6 transitions
+    if (pda == null) {
+      _showSnackbar('Create a PDA to analyze determinism.');
+      return;
+    }
 
-Determinism Check:
-✓ No ε-transitions with same input symbol
-✓ No multiple transitions from same state with same input/stack symbol
-✓ All transitions are deterministic
+    _performAnalysis('Determinism Check', () async {
+      final nondeterministicTransitions = editorState.nondeterministicTransitionIds;
+      final buffer = StringBuffer();
+      buffer.writeln('Determinism Analysis');
+      buffer.writeln('Total transitions: ${pda.transitions.length}');
+      buffer.writeln('');
 
-Result: PDA is DETERMINISTIC (DPDA)
+      if (nondeterministicTransitions.isEmpty) {
+        buffer.writeln('Result: PDA is deterministic (no conflicting transitions).');
+      } else {
+        buffer.writeln('Result: PDA is NON-deterministic.');
+        buffer.writeln('Conflicting transitions:');
+        for (final transition in pda.pdaTransitions) {
+          if (nondeterministicTransitions.contains(transition.id)) {
+            final input = transition.isLambdaInput || transition.inputSymbol.isEmpty
+                ? 'λ'
+                : transition.inputSymbol;
+            final pop = transition.isLambdaPop || transition.popSymbol.isEmpty
+                ? 'λ'
+                : transition.popSymbol;
+            final push = transition.isLambdaPush || transition.pushSymbol.isEmpty
+                ? 'λ'
+                : transition.pushSymbol;
+            buffer.writeln(
+              '  ${transition.fromState.label} -- $input, pop $pop / push $push → ${transition.toState.label}',
+            );
+          }
+        }
+      }
 
-Properties:
-- Can be parsed efficiently
-- Unique computation path for each input
-- Suitable for real-time parsing applications''';
+      if (editorState.lambdaTransitionIds.isNotEmpty) {
+        buffer.writeln('');
+        buffer.writeln('Lambda transitions present: ${editorState.lambdaTransitionIds.length}');
+      }
+
+      return buffer.toString();
     });
   }
 
   void _findReachableStates() {
-    _performAnalysis('Reachable States Analysis', () {
-      return '''Reachable States Analysis:
+    final editorState = ref.read(pdaEditorProvider);
+    final pda = editorState.pda;
 
-PDA States: {q0, q1, q2, q3}
+    if (pda == null) {
+      _showSnackbar('Create a PDA to analyze reachability.');
+      return;
+    }
 
-Reachability Analysis:
-Starting from q0 (initial state):
+    _performAnalysis('Reachable States Analysis', () async {
+      final analysisResult = PDASimulator.analyzePDA(pda);
+      if (!analysisResult.isSuccess) {
+        final message = 'Analysis failed: ${analysisResult.error}';
+        _showSnackbar(message);
+        return message;
+      }
 
-Level 0: {q0}
-Level 1: {q1} (reachable via 'a' transition)
-Level 2: {q2} (reachable via 'b' transition from q1)
-Level 3: {} (no further reachable states)
+      final analysis = analysisResult.data!;
+      final reachable = analysis.reachabilityAnalysis.reachableStates
+          .map((state) => state.label)
+          .toList()
+        ..sort();
+      final unreachable = analysis.reachabilityAnalysis.unreachableStates
+          .map((state) => state.label)
+          .toList()
+        ..sort();
 
-Reachable States: {q0, q1, q2}
-Unreachable States: {q3}
+      final buffer = StringBuffer();
+      buffer.writeln('Initial state: ${pda.initialState?.label ?? '—'}');
+      buffer.writeln('Reachable states (${reachable.length}):');
+      buffer.writeln(reachable.isEmpty ? '  ∅' : '  {${reachable.join(', ')}}');
+      buffer.writeln('');
+      buffer.writeln('Unreachable states (${unreachable.length}):');
+      buffer.writeln(unreachable.isEmpty ? '  ∅' : '  {${unreachable.join(', ')}}');
 
-Analysis:
-- 75% of states are reachable
-- State q3 can be removed
-- PDA can be simplified''';
+      return buffer.toString();
     });
   }
 
   void _analyzeLanguage() {
-    _performAnalysis('Language Analysis', () {
-      return '''Language Analysis:
+    final editorState = ref.read(pdaEditorProvider);
+    final pda = editorState.pda;
 
-PDA Language Properties:
-- Language Type: Context-Free
-- Language Class: Deterministic Context-Free
-- Pumping Lemma: Satisfies CFL pumping lemma
+    if (pda == null) {
+      _showSnackbar('Create a PDA to analyze its language.');
+      return;
+    }
 
-Language Description:
-L = {a^n b^n | n ≥ 1}
+    _performAnalysis('Language Analysis', () async {
+      final analysisResult = PDASimulator.analyzePDA(pda);
+      if (!analysisResult.isSuccess) {
+        final message = 'Analysis failed: ${analysisResult.error}';
+        _showSnackbar(message);
+        return message;
+      }
 
-Properties:
-✓ Not regular (requires stack)
-✓ Context-free (can be recognized by PDA)
-✓ Deterministic (unique parsing)
-✓ Inherently ambiguous
-✓ Not inherently ambiguous for this specific PDA
+      final acceptedStringsResult = PDASimulator.findAcceptedStrings(
+        pda,
+        3,
+        maxResults: 10,
+      );
+      final rejectedStringsResult = PDASimulator.findRejectedStrings(
+        pda,
+        3,
+        maxResults: 10,
+      );
 
-Complexity:
-- Time: O(n) for recognition
-- Space: O(n) for stack depth
-- Parsing: Linear time''';
+      final acceptedStrings = acceptedStringsResult.isSuccess
+          ? acceptedStringsResult.data!.toList()
+          : <String>[];
+      final rejectedStrings = rejectedStringsResult.isSuccess
+          ? rejectedStringsResult.data!.toList()
+          : <String>[];
+      acceptedStrings.sort();
+      rejectedStrings.sort();
+
+      final analysis = analysisResult.data!;
+      final buffer = StringBuffer();
+      buffer.writeln('Input alphabet:');
+      if (pda.alphabet.isEmpty) {
+        buffer.writeln('  ∅');
+      } else {
+        final sortedAlphabet = pda.alphabet.toList()..sort();
+        buffer.writeln('  {${sortedAlphabet.join(', ')}}');
+      }
+      buffer.writeln('Stack alphabet symbols observed:');
+      final stackSymbols = analysis.stackAnalysis.stackSymbols.toList()..sort();
+      buffer.writeln(stackSymbols.isEmpty ? '  ∅' : '  {${stackSymbols.join(', ')}}');
+      buffer.writeln('Accepting states:');
+      final acceptingLabels = pda.acceptingStates.map((s) => s.label).toList()
+        ..sort();
+      buffer.writeln(
+        acceptingLabels.isEmpty ? '  ∅' : '  {${acceptingLabels.join(', ')}}',
+      );
+      buffer.writeln('');
+      buffer.writeln('Sample accepted strings (length ≤ 3):');
+      buffer.writeln(
+        acceptedStrings.isEmpty
+            ? '  None found'
+            : '  {${acceptedStrings.join(', ')}}',
+      );
+      buffer.writeln('Sample rejected strings (length ≤ 3):');
+      buffer.writeln(
+        rejectedStrings.isEmpty
+            ? '  None found'
+            : '  {${rejectedStrings.join(', ')}}',
+      );
+      buffer.writeln('');
+      buffer.writeln('Determinism:');
+      buffer.writeln(
+        editorState.nondeterministicTransitionIds.isEmpty
+            ? '  Appears deterministic'
+            : '  Contains nondeterministic branching',
+      );
+
+      if (!acceptedStringsResult.isSuccess) {
+        buffer.writeln('');
+        buffer.writeln(
+          'Warning: Failed to enumerate accepted strings: ${acceptedStringsResult.error}.',
+        );
+      }
+      if (!rejectedStringsResult.isSuccess) {
+        buffer.writeln('');
+        buffer.writeln(
+          'Warning: Failed to enumerate rejected strings: ${rejectedStringsResult.error}.',
+        );
+      }
+
+      return buffer.toString();
     });
   }
 
   void _analyzeStackOperations() {
-    _performAnalysis('Stack Operations Analysis', () {
-      return '''Stack Operations Analysis:
+    final editorState = ref.read(pdaEditorProvider);
+    final pda = editorState.pda;
 
-Stack Operations Summary:
-- Push Operations: 2 (on 'a' symbols)
-- Pop Operations: 2 (on 'b' symbols)
-- No-Change Operations: 1 (final transition)
+    if (pda == null) {
+      _showSnackbar('Create a PDA to inspect stack operations.');
+      return;
+    }
 
-Stack Depth Analysis:
-- Maximum Stack Depth: n (for input a^n b^n)
-- Average Stack Depth: n/2
-- Stack Growth Pattern: Linear
+    _performAnalysis('Stack Operations Analysis', () async {
+      final analysisResult = PDASimulator.analyzePDA(pda);
+      if (!analysisResult.isSuccess) {
+        final message = 'Analysis failed: ${analysisResult.error}';
+        _showSnackbar(message);
+        return message;
+      }
 
-Stack Symbol Usage:
-- Initial Symbol: Z
-- Working Symbols: A
-- Symbol Count: 2
+      final analysis = analysisResult.data!;
+      final pushOps = analysis.stackAnalysis.pushOperations.toList()..sort();
+      final popOps = analysis.stackAnalysis.popOperations.toList()..sort();
+      final stackSymbols = analysis.stackAnalysis.stackSymbols.toList()..sort();
 
-Efficiency Metrics:
-- Push/Pop Ratio: 1:1 (balanced)
-- Stack Utilization: High
-- Memory Efficiency: Optimal for this language''';
+      final buffer = StringBuffer();
+      buffer.writeln('Initial stack symbol: ${pda.initialStackSymbol}');
+      buffer.writeln('Push operations (${pushOps.length}):');
+      buffer.writeln(pushOps.isEmpty ? '  None' : '  {${pushOps.join(', ')}}');
+      buffer.writeln('Pop operations (${popOps.length}):');
+      buffer.writeln(popOps.isEmpty ? '  None' : '  {${popOps.join(', ')}}');
+      buffer.writeln('Stack symbols touched (${stackSymbols.length}):');
+      buffer.writeln(
+        stackSymbols.isEmpty ? '  None' : '  {${stackSymbols.join(', ')}}',
+      );
+      buffer.writeln('');
+      buffer.writeln('Total transitions: ${analysis.transitionAnalysis.totalTransitions}');
+      buffer.writeln(
+        'PDA transitions: ${analysis.transitionAnalysis.pdaTransitions}, '
+        'FSA transitions: ${analysis.transitionAnalysis.fsaTransitions}',
+      );
+
+      return buffer.toString();
     });
   }
 
-  void _performAnalysis(String algorithmName, String Function() analysisFunction) {
+  void _performAnalysis(
+    String algorithmName,
+    Future<String> Function() analysisFunction,
+  ) {
     setState(() {
       _isAnalyzing = true;
       _analysisResult = null;
     });
 
-    // Simulate analysis delay
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
+    Future.microtask(() async {
+      try {
+        final output = await analysisFunction();
+        if (!mounted) {
+          return;
+        }
         setState(() {
           _isAnalyzing = false;
-          _analysisResult = analysisFunction();
+          _analysisResult = '=== $algorithmName ===\n\n$output';
+        });
+      } catch (error) {
+        if (!mounted) {
+          return;
+        }
+        setState(() {
+          _isAnalyzing = false;
+          _analysisResult =
+              '=== $algorithmName ===\n\nError running analysis: $error';
         });
       }
     });
+  }
+
+  void _showSnackbar(String message) {
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    if (messenger == null) {
+      return;
+    }
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(content: Text(message)),
+      );
   }
 }

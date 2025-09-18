@@ -1,14 +1,16 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 import '../../core/models/pda.dart';
 import '../../core/models/state.dart' as automaton_state;
 import '../../core/models/pda_transition.dart';
-import '../../core/models/fsa_transition.dart';
+import '../../core/models/transition.dart';
+import '../providers/pda_editor_provider.dart';
 import 'touch_gesture_handler.dart';
 
 /// Interactive canvas for drawing and editing Pushdown Automata
-class PDACanvas extends StatefulWidget {
+class PDACanvas extends ConsumerStatefulWidget {
   final GlobalKey canvasKey;
   final ValueChanged<PDA> onPDAModified;
 
@@ -19,10 +21,11 @@ class PDACanvas extends StatefulWidget {
   });
 
   @override
-  State<PDACanvas> createState() => _PDACanvasState();
+  @override
+  ConsumerState<PDACanvas> createState() => _PDACanvasState();
 }
 
-class _PDACanvasState extends State<PDACanvas> {
+class _PDACanvasState extends ConsumerState<PDACanvas> {
   final List<automaton_state.State> _states = [];
   final List<PDATransition> _transitions = [];
   automaton_state.State? _selectedState;
@@ -31,7 +34,15 @@ class _PDACanvasState extends State<PDACanvas> {
   automaton_state.State? _transitionStart;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _notifyEditor());
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final editorState = ref.watch(pdaEditorProvider);
+
     return Card(
       child: Column(
         children: [
@@ -50,7 +61,7 @@ class _PDACanvasState extends State<PDACanvas> {
                 borderRadius: BorderRadius.circular(8),
                 child: TouchGestureHandler(
                   states: _states,
-                  transitions: _transitions.cast(),
+                  transitions: _transitions.cast<Transition>().toList(),
                   selectedState: _selectedState,
                   onStateSelected: _selectState,
                   onStateMoved: _moveState,
@@ -65,6 +76,9 @@ class _PDACanvasState extends State<PDACanvas> {
                       states: _states,
                       transitions: _transitions,
                       selectedState: _selectedState,
+                      nondeterministicTransitionIds:
+                          editorState.nondeterministicTransitionIds,
+                      lambdaTransitionIds: editorState.lambdaTransitionIds,
                     ),
                     size: Size.infinite,
                   ),
@@ -119,8 +133,42 @@ class _PDACanvasState extends State<PDACanvas> {
                 tooltip: 'Clear',
                 onPressed: _clearCanvas,
               ),
+              IconButton(
+                icon: const Icon(Icons.auto_fix_high),
+                tooltip: 'Auto layout',
+                onPressed: _autoLayoutStates,
+              ),
             ],
           ),
+          if (editorState.nondeterministicTransitionIds.isNotEmpty ||
+              editorState.lambdaTransitionIds.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Wrap(
+                spacing: 8,
+                children: [
+                  if (editorState.nondeterministicTransitionIds.isNotEmpty)
+                    Chip(
+                      avatar: const Icon(Icons.report, color: Colors.white, size: 18),
+                      backgroundColor:
+                          Theme.of(context).colorScheme.errorContainer,
+                      label: Text(
+                        '${editorState.nondeterministicTransitionIds.length} nondeterministic',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onErrorContainer,
+                        ),
+                      ),
+                    ),
+                  if (editorState.lambdaTransitionIds.isNotEmpty)
+                    Chip(
+                      avatar: const Icon(Icons.blur_on, size: 18),
+                      label: Text(
+                        '${editorState.lambdaTransitionIds.length} λ-transition',
+                      ),
+                    ),
+                ],
+              ),
+            ),
         ],
       ),
     );
@@ -159,11 +207,13 @@ class _PDACanvasState extends State<PDACanvas> {
 
   void _moveState(automaton_state.State state) {
     setState(() {
-      final index = _states.indexOf(state);
+      final index = _states.indexWhere((s) => s.id == state.id);
       if (index != -1) {
         _states[index] = state;
+        _syncTransitionsForState(state);
       }
     });
+    _notifyEditor();
   }
 
   void _addState(Offset position) {
@@ -179,23 +229,41 @@ class _PDACanvasState extends State<PDACanvas> {
       _states.add(newState);
       _isAddingState = false;
     });
+    _notifyEditor();
   }
 
-  void _addTransition(FSATransition transition) {
-    // Convert FSA transition to PDA transition
-    final pdaTransition = PDATransition(
-      id: transition.id,
+  void _addTransition(Transition transition) async {
+    final config = await _showTransitionEditDialog(
+      context,
       fromState: transition.fromState,
       toState: transition.toState,
-      label: transition.label,
-      inputSymbol: transition.label,
-      popSymbol: 'Z', // Default stack symbol
-      pushSymbol: 'Z', // Default stack symbol
+    );
+
+    if (config == null) {
+      return;
+    }
+
+    final labelInput = config.isLambdaInput ? 'λ' : config.inputSymbol;
+    final labelPop = config.isLambdaPop ? 'λ' : config.popSymbol;
+    final labelPush = config.isLambdaPush ? 'λ' : config.pushSymbol;
+
+    final pdaTransition = PDATransition(
+      id: transition.id,
+      fromState: config.fromState,
+      toState: config.toState,
+      label: '$labelInput, $labelPop/$labelPush',
+      inputSymbol: config.inputSymbol,
+      popSymbol: config.popSymbol,
+      pushSymbol: config.pushSymbol,
+      isLambdaInput: config.isLambdaInput,
+      isLambdaPop: config.isLambdaPop,
+      isLambdaPush: config.isLambdaPush,
     );
 
     setState(() {
       _transitions.add(pdaTransition);
     });
+    _notifyEditor();
   }
 
   void _editState(automaton_state.State state) {
@@ -204,19 +272,21 @@ class _PDACanvasState extends State<PDACanvas> {
 
   void _deleteState(automaton_state.State state) {
     setState(() {
-      _states.remove(state);
-      _transitions.removeWhere((t) => 
-          t.fromState == state || t.toState == state);
-      if (_selectedState == state) {
+      _states.removeWhere((s) => s.id == state.id);
+      _transitions.removeWhere(
+          (t) => t.fromState.id == state.id || t.toState.id == state.id);
+      if (_selectedState?.id == state.id) {
         _selectedState = null;
       }
     });
+    _notifyEditor();
   }
 
-  void _deleteTransition(FSATransition transition) {
+  void _deleteTransition(Transition transition) {
     setState(() {
-      _transitions.remove(transition);
+      _transitions.removeWhere((t) => t.id == transition.id);
     });
+    _notifyEditor();
   }
 
   void _clearCanvas() {
@@ -227,6 +297,7 @@ class _PDACanvasState extends State<PDACanvas> {
       _isAddingState = false;
       _isAddingTransition = false;
     });
+    _notifyEditor();
   }
 
   void _showStateEditDialog(automaton_state.State state) {
@@ -236,15 +307,263 @@ class _PDACanvasState extends State<PDACanvas> {
         state: state,
         onStateUpdated: (updatedState) {
           setState(() {
-            final index = _states.indexOf(state);
+            final index = _states.indexWhere((s) => s.id == state.id);
             if (index != -1) {
               _states[index] = updatedState;
+              _syncTransitionsForState(updatedState);
             }
           });
+          _notifyEditor();
         },
       ),
     );
   }
+
+  void _autoLayoutStates() {
+    if (_states.isEmpty) {
+      return;
+    }
+
+    final renderBox = widget.canvasKey.currentContext?.findRenderObject() as RenderBox?;
+    final size = renderBox?.size ?? const Size(600, 400);
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = math.max(100, math.min(size.width, size.height) / 2 - 60);
+
+    setState(() {
+      for (var i = 0; i < _states.length; i++) {
+        final angle = (2 * math.pi * i) / _states.length;
+        final position = Offset(
+          center.dx + radius * math.cos(angle),
+          center.dy + radius * math.sin(angle),
+        );
+        final updated = _states[i].copyWith(
+          position: Vector2(position.dx, position.dy),
+        );
+        _states[i] = updated;
+        _syncTransitionsForState(updated);
+      }
+    });
+    _notifyEditor();
+  }
+
+  void _notifyEditor() {
+    ref.read(pdaEditorProvider.notifier).updateFromCanvas(
+          states: _states,
+          transitions: _transitions,
+        );
+    final currentPda = ref.read(pdaEditorProvider).pda;
+    if (currentPda != null) {
+      widget.onPDAModified(currentPda);
+    }
+  }
+
+  void _syncTransitionsForState(automaton_state.State state) {
+    for (var i = 0; i < _transitions.length; i++) {
+      final transition = _transitions[i];
+      if (transition.fromState.id == state.id ||
+          transition.toState.id == state.id) {
+        _transitions[i] = transition.copyWith(
+          fromState:
+              transition.fromState.id == state.id ? state : transition.fromState,
+          toState:
+              transition.toState.id == state.id ? state : transition.toState,
+        );
+      }
+    }
+  }
+
+  Future<_PDATransitionConfig?> _showTransitionEditDialog(
+    BuildContext context, {
+    required automaton_state.State fromState,
+    required automaton_state.State toState,
+  }) {
+    final inputController = TextEditingController();
+    final popController = TextEditingController(text: 'Z');
+    final pushController = TextEditingController();
+
+    return showDialog<_PDATransitionConfig?>(
+      context: context,
+      builder: (context) {
+        bool lambdaInput = false;
+        bool lambdaPop = false;
+        bool lambdaPush = false;
+        String? inputError;
+        String? popError;
+        String? pushError;
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Configure PDA Transition'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('From ${fromState.label} to ${toState.label}'),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: inputController,
+                            enabled: !lambdaInput,
+                            decoration: InputDecoration(
+                              labelText: 'Input symbol',
+                              hintText: 'e.g. a',
+                              errorText: inputError,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Checkbox(
+                          value: lambdaInput,
+                          onChanged: (value) {
+                            setState(() {
+                              lambdaInput = value ?? false;
+                              inputError = null;
+                            });
+                          },
+                        ),
+                        const Text('λ')
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: popController,
+                            enabled: !lambdaPop,
+                            decoration: InputDecoration(
+                              labelText: 'Pop symbol',
+                              hintText: 'e.g. Z',
+                              errorText: popError,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Checkbox(
+                          value: lambdaPop,
+                          onChanged: (value) {
+                            setState(() {
+                              lambdaPop = value ?? false;
+                              popError = null;
+                            });
+                          },
+                        ),
+                        const Text('λ'),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: pushController,
+                            enabled: !lambdaPush,
+                            decoration: InputDecoration(
+                              labelText: 'Push symbol',
+                              hintText: 'Leave empty for λ',
+                              errorText: pushError,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Checkbox(
+                          value: lambdaPush,
+                          onChanged: (value) {
+                            setState(() {
+                              lambdaPush = value ?? false;
+                              pushError = null;
+                            });
+                          },
+                        ),
+                        const Text('λ'),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final trimmedInput = inputController.text.trim();
+                    final trimmedPop = popController.text.trim();
+                    final trimmedPush = pushController.text.trim();
+
+                    bool hasError = false;
+                    if (!lambdaInput && trimmedInput.isEmpty) {
+                      setState(() {
+                        inputError = 'Required';
+                      });
+                      hasError = true;
+                    }
+                    if (!lambdaPop && trimmedPop.isEmpty) {
+                      setState(() {
+                        popError = 'Required';
+                      });
+                      hasError = true;
+                    }
+                    if (!lambdaPush && trimmedPush.isEmpty) {
+                      setState(() {
+                        pushError = 'Required';
+                      });
+                      hasError = true;
+                    }
+
+                    if (hasError) {
+                      return;
+                    }
+
+                    Navigator.of(context).pop(
+                      _PDATransitionConfig(
+                        fromState: fromState,
+                        toState: toState,
+                        inputSymbol: lambdaInput ? '' : trimmedInput,
+                        popSymbol: lambdaPop ? '' : trimmedPop,
+                        pushSymbol: lambdaPush ? '' : trimmedPush,
+                        isLambdaInput: lambdaInput,
+                        isLambdaPop: lambdaPop,
+                        isLambdaPush: lambdaPush,
+                      ),
+                    );
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _PDATransitionConfig {
+  final automaton_state.State fromState;
+  final automaton_state.State toState;
+  final String inputSymbol;
+  final String popSymbol;
+  final String pushSymbol;
+  final bool isLambdaInput;
+  final bool isLambdaPop;
+  final bool isLambdaPush;
+
+  const _PDATransitionConfig({
+    required this.fromState,
+    required this.toState,
+    required this.inputSymbol,
+    required this.popSymbol,
+    required this.pushSymbol,
+    required this.isLambdaInput,
+    required this.isLambdaPop,
+    required this.isLambdaPush,
+  });
 }
 
 /// Custom painter for PDA canvas
@@ -252,11 +571,15 @@ class _PDACanvasPainter extends CustomPainter {
   final List<automaton_state.State> states;
   final List<PDATransition> transitions;
   final automaton_state.State? selectedState;
+  final Set<String> nondeterministicTransitionIds;
+  final Set<String> lambdaTransitionIds;
 
   _PDACanvasPainter({
     required this.states,
     required this.transitions,
     required this.selectedState,
+    required this.nondeterministicTransitionIds,
+    required this.lambdaTransitionIds,
   });
 
   @override
@@ -331,8 +654,15 @@ class _PDACanvasPainter extends CustomPainter {
     final fromPos = Offset(transition.fromState.position.x, transition.fromState.position.y);
     final toPos = Offset(transition.toState.position.x, transition.toState.position.y);
 
+    Color transitionColor = Colors.black;
+    if (nondeterministicTransitionIds.contains(transition.id)) {
+      transitionColor = Colors.redAccent;
+    } else if (lambdaTransitionIds.contains(transition.id)) {
+      transitionColor = Colors.deepPurple;
+    }
+
     final paint = Paint()
-      ..color = Colors.black
+      ..color = transitionColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
 
@@ -340,7 +670,7 @@ class _PDACanvasPainter extends CustomPainter {
     canvas.drawLine(fromPos, toPos, paint);
 
     // Draw arrow
-    _drawArrow(canvas, fromPos, toPos);
+    _drawArrow(canvas, fromPos, toPos, color: transitionColor);
 
     // Draw transition label
     final midPoint = Offset(
@@ -348,11 +678,25 @@ class _PDACanvasPainter extends CustomPainter {
       (fromPos.dy + toPos.dy) / 2 - 20,
     );
 
+    final labelBackground = Paint()
+      ..color = transitionColor.withOpacity(0.1)
+      ..style = PaintingStyle.fill;
+
+    final input = transition.isLambdaInput || transition.inputSymbol.isEmpty
+        ? 'λ'
+        : transition.inputSymbol;
+    final pop = transition.isLambdaPop || transition.popSymbol.isEmpty
+        ? 'λ'
+        : transition.popSymbol;
+    final push = transition.isLambdaPush || transition.pushSymbol.isEmpty
+        ? 'λ'
+        : transition.pushSymbol;
+
     final textPainter = TextPainter(
       text: TextSpan(
-        text: '${transition.inputSymbol}, ${transition.stackPop}/${transition.stackPush}',
-        style: const TextStyle(
-          color: Colors.black,
+        text: '$input, $pop/$push',
+        style: TextStyle(
+          color: transitionColor,
           fontSize: 12,
           fontWeight: FontWeight.bold,
         ),
@@ -360,6 +704,18 @@ class _PDACanvasPainter extends CustomPainter {
       textDirection: TextDirection.ltr,
     );
     textPainter.layout();
+
+    final rect = Rect.fromCenter(
+      center: midPoint,
+      width: textPainter.width + 8,
+      height: textPainter.height + 4,
+    );
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, const Radius.circular(6)),
+      labelBackground,
+    );
+
     textPainter.paint(
       canvas,
       Offset(
@@ -369,7 +725,7 @@ class _PDACanvasPainter extends CustomPainter {
     );
   }
 
-  void _drawArrow(Canvas canvas, Offset from, Offset to) {
+  void _drawArrow(Canvas canvas, Offset from, Offset to, {Color color = Colors.black}) {
     final angle = math.atan2(to.dy - from.dy, to.dx - from.dx);
     const arrowLength = 15.0;
     const arrowAngle = math.pi / 6;
@@ -385,7 +741,7 @@ class _PDACanvasPainter extends CustomPainter {
     );
 
     final paint = Paint()
-      ..color = Colors.black
+      ..color = color
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
 

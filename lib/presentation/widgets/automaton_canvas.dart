@@ -267,10 +267,12 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
               _addState(position);
             },
             onTransitionAdded: (transition) {
-              setState(() {
-                _transitions.add(transition);
-              });
-              _notifyAutomatonChanged();
+              if (transition is FSATransition) {
+                setState(() {
+                  _transitions.add(transition);
+                });
+                _notifyAutomatonChanged();
+              }
             },
             onStateEdited: (state) {
               _editState(state);

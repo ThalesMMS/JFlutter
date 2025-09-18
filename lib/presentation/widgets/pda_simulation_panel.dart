@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/algorithms/pda_simulator.dart';
+import '../../core/models/simulation_step.dart';
+import '../../core/result.dart';
+import '../providers/pda_editor_provider.dart';
+
 /// Panel for PDA simulation and string testing
 class PDASimulationPanel extends ConsumerStatefulWidget {
   const PDASimulationPanel({super.key});
@@ -12,12 +17,11 @@ class PDASimulationPanel extends ConsumerStatefulWidget {
 class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
   final TextEditingController _inputController = TextEditingController();
   final TextEditingController _initialStackController = TextEditingController(text: 'Z');
-  
+
   bool _isSimulating = false;
-  String? _simulationResult;
-  List<String> _simulationSteps = [];
-  List<String> _stackHistory = [];
-  String _currentStack = 'Z';
+  PDASimulationResult? _simulationResult;
+  String? _errorMessage;
+  bool _stepByStep = true;
 
   @override
   void dispose() {
@@ -100,6 +104,17 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
             ),
           ),
           const SizedBox(height: 8),
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Record step-by-step trace'),
+            value: _stepByStep,
+            onChanged: (value) {
+              setState(() {
+                _stepByStep = value;
+              });
+            },
+          ),
+          const SizedBox(height: 8),
           Text(
             'Examples: aabb (for balanced parentheses), abab (for palindromes)',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -140,8 +155,8 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
         ),
         const SizedBox(height: 8),
         Container(
-          constraints: const BoxConstraints(maxHeight: 200),
-          child: _simulationResult == null
+          constraints: const BoxConstraints(maxHeight: 220),
+          child: _simulationResult == null && _errorMessage == null
               ? _buildEmptyResults(context)
               : _buildResults(context),
         ),
@@ -189,9 +204,15 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
   }
 
   Widget _buildResults(BuildContext context) {
-    final isAccepted = _simulationResult == 'Accepted';
+    final result = _simulationResult;
+    final isAccepted = result?.accepted ?? false;
+    final hasResult = result != null;
     final color = isAccepted ? Colors.green : Colors.red;
-    
+    final message = hasResult
+        ? (isAccepted ? 'Accepted' : 'Rejected')
+        : 'Simulation failed';
+    final errorText = _errorMessage ?? result?.errorMessage;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -211,7 +232,7 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
               ),
               const SizedBox(width: 8),
               Text(
-                _simulationResult!,
+                message,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   color: color,
                   fontWeight: FontWeight.bold,
@@ -219,8 +240,28 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
               ),
             ],
           ),
-          
-          if (_simulationSteps.isNotEmpty) ...[
+
+          if (hasResult)
+            Padding(
+              padding: const EdgeInsets.only(top: 4.0),
+              child: Text(
+                'Time: ${result!.executionTime.inMilliseconds} ms',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+
+          if (errorText != null && errorText.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Text(
+                errorText,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+              ),
+            ),
+
+          if (hasResult && result!.steps.isNotEmpty) ...[
             const SizedBox(height: 16),
             Text(
               'Simulation Steps:',
@@ -232,8 +273,12 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: _simulationSteps.length,
+              itemCount: result.steps.length,
               itemBuilder: (context, index) {
+                final step = result.steps[index];
+                final remainingInput =
+                    step.remainingInput.isEmpty ? 'λ' : step.remainingInput;
+                final stack = step.stackContents.isEmpty ? 'λ' : step.stackContents;
                 return Container(
                   margin: const EdgeInsets.only(bottom: 4),
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -252,26 +297,12 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          _simulationSteps[index],
+                          'State ${step.currentState} | Remaining: $remainingInput | Stack: $stack${step.usedTransition != null ? ' | Transition: ${step.usedTransition}' : ''}',
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             fontFamily: 'monospace',
                           ),
                         ),
                       ),
-                      if (index < _stackHistory.length)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primaryContainer,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            'Stack: ${_stackHistory[index]}',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
                     ],
                   ),
                 );
@@ -286,99 +317,72 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
   void _simulatePDA() {
     final inputString = _inputController.text.trim();
     final initialStack = _initialStackController.text.trim();
-    
+
     if (inputString.isEmpty) {
       _showError('Please enter an input string');
       return;
     }
-    
+
     if (initialStack.isEmpty) {
       _showError('Please enter an initial stack symbol');
       return;
     }
-    
+
+    final editorState = ref.read(pdaEditorProvider);
+    final currentPda = editorState.pda;
+
+    if (currentPda == null) {
+      _showError('Create a PDA on the canvas before simulating.');
+      return;
+    }
+
     setState(() {
       _isSimulating = true;
       _simulationResult = null;
-      _simulationSteps.clear();
-      _stackHistory.clear();
-      _currentStack = initialStack;
+      _errorMessage = null;
     });
-    
-    // Simulate PDA execution
-    Future.delayed(const Duration(seconds: 1), () {
-      if (mounted) {
-        _simulatePDAExecution(inputString, initialStack);
-      }
-    });
-  }
 
-  void _simulatePDAExecution(String inputString, String initialStack) {
-    // Simple simulation for demonstration
-    // In real implementation, this would use the actual PDA simulator
-    final steps = <String>[];
-    final stackHistory = <String>[];
-    
-    steps.add('Start: State q0, Stack: $initialStack, Input: $inputString');
-    stackHistory.add(initialStack);
-    
-    // Simulate a simple PDA that accepts a^n b^n
-    if (_simulateBalancedPDA(inputString, initialStack, steps, stackHistory)) {
+    final stackAlphabet = {...currentPda.stackAlphabet};
+    stackAlphabet.add(initialStack);
+
+    final simulationPda = currentPda.copyWith(
+      stackAlphabet: stackAlphabet,
+      initialStackSymbol: initialStack,
+    );
+
+    final Result<PDASimulationResult> result = PDASimulator.simulate(
+      simulationPda,
+      inputString,
+      stepByStep: _stepByStep,
+      timeout: const Duration(seconds: 5),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    if (result.isSuccess) {
       setState(() {
         _isSimulating = false;
-        _simulationResult = 'Accepted';
-        _simulationSteps = steps;
-        _stackHistory = stackHistory;
+        _simulationResult = result.data;
+        _errorMessage = result.data?.errorMessage?.isNotEmpty == true
+            ? result.data!.errorMessage
+            : null;
       });
     } else {
       setState(() {
         _isSimulating = false;
-        _simulationResult = 'Rejected';
-        _simulationSteps = steps;
-        _stackHistory = stackHistory;
+        _simulationResult = null;
+        _errorMessage = result.error;
       });
-    }
-  }
-
-  bool _simulateBalancedPDA(String input, String initialStack, List<String> steps, List<String> stackHistory) {
-    // Simple simulation for a^n b^n language
-    String currentStack = initialStack;
-    int inputIndex = 0;
-    
-    // Phase 1: Read 'a's and push to stack
-    while (inputIndex < input.length && input[inputIndex] == 'a') {
-      currentStack += 'A';
-      steps.add('Read \'a\': Push A, Stack: $currentStack');
-      stackHistory.add(currentStack);
-      inputIndex++;
-    }
-    
-    // Phase 2: Read 'b's and pop from stack
-    while (inputIndex < input.length && input[inputIndex] == 'b') {
-      if (currentStack.isEmpty || !currentStack.endsWith('A')) {
-        steps.add('Read \'b\': Cannot pop A, Stack: $currentStack');
-        stackHistory.add(currentStack);
-        return false;
-      }
-      currentStack = currentStack.substring(0, currentStack.length - 1);
-      steps.add('Read \'b\': Pop A, Stack: $currentStack');
-      stackHistory.add(currentStack);
-      inputIndex++;
-    }
-    
-    // Check if input is fully consumed and stack is back to initial
-    if (inputIndex == input.length && currentStack == initialStack) {
-      steps.add('End: Input consumed, Stack: $currentStack');
-      stackHistory.add(currentStack);
-      return true;
-    } else {
-      steps.add('End: Input not fully consumed or stack not empty');
-      stackHistory.add(currentStack);
-      return false;
     }
   }
 
   void _showError(String message) {
+    setState(() {
+      _errorMessage = message;
+      _simulationResult = null;
+    });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),

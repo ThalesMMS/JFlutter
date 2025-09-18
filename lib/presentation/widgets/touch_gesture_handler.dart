@@ -3,20 +3,20 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart';
 import '../../core/models/state.dart' as automaton_state;
-import '../../core/models/fsa_transition.dart';
+import '../../core/models/transition.dart';
 
 /// Comprehensive touch gesture handler for mobile automaton editing
 class TouchGestureHandler extends StatefulWidget {
   final List<automaton_state.State> states;
-  final List<FSATransition> transitions;
+  final List<Transition> transitions;
   final automaton_state.State? selectedState;
   final ValueChanged<automaton_state.State?> onStateSelected;
   final ValueChanged<automaton_state.State> onStateMoved;
   final ValueChanged<Offset> onStateAdded;
-  final ValueChanged<FSATransition> onTransitionAdded;
+  final ValueChanged<Transition> onTransitionAdded;
   final ValueChanged<automaton_state.State> onStateEdited;
   final ValueChanged<automaton_state.State> onStateDeleted;
-  final ValueChanged<FSATransition> onTransitionDeleted;
+  final ValueChanged<Transition> onTransitionDeleted;
   final Widget child;
 
   const TouchGestureHandler({
@@ -59,7 +59,7 @@ class _TouchGestureHandlerState extends State<TouchGestureHandler> {
   bool _showContextMenu = false;
   Offset? _contextMenuPosition;
   automaton_state.State? _contextMenuState;
-  FSATransition? _contextMenuTransition;
+  Transition? _contextMenuTransition;
 
   @override
   void dispose() {
@@ -185,7 +185,7 @@ class _TouchGestureHandlerState extends State<TouchGestureHandler> {
   }
 
   /// Finds transition at given position
-  FSATransition? _findTransitionAt(Offset position) {
+  Transition? _findTransitionAt(Offset position) {
     for (final transition in widget.transitions) {
       if (_isPointOnTransition(position, transition)) {
         return transition;
@@ -202,7 +202,7 @@ class _TouchGestureHandlerState extends State<TouchGestureHandler> {
   }
 
   /// Checks if point is on a transition line
-  bool _isPointOnTransition(Offset point, FSATransition transition) {
+  bool _isPointOnTransition(Offset point, Transition transition) {
     final fromPos = Offset(transition.fromState.position.x, transition.fromState.position.y);
     final toPos = Offset(transition.toState.position.x, transition.toState.position.y);
     

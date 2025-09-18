@@ -394,13 +394,27 @@ class AutomatonPainter extends CustomPainter {
   final List<FSATransition> transitions;
   final automaton_state.State? selectedState;
   final automaton_state.State? transitionStart;
+  final Set<String> _nondeterministicTransitionIds;
+  final Set<String> _epsilonTransitionIds;
+  final Set<String> _nondeterministicStateIds;
 
   AutomatonPainter({
     required this.states,
     required this.transitions,
     this.selectedState,
     this.transitionStart,
-  });
+  })  : _nondeterministicTransitionIds = <String>{},
+        _epsilonTransitionIds = transitions
+            .where((t) => t.isEpsilonTransition)
+            .map((t) => t.id)
+            .toSet(),
+        _nondeterministicStateIds = <String>{} {
+    _nondeterministicTransitionIds
+        .addAll(_identifyNondeterministicTransitions(transitions));
+    _nondeterministicStateIds.addAll(
+      _identifyNondeterministicStates(transitions, _nondeterministicTransitionIds),
+    );
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -426,26 +440,40 @@ class AutomatonPainter extends CustomPainter {
 
   void _drawState(Canvas canvas, automaton_state.State state, Paint paint) {
     final center = state.position;
-    final radius = 30.0;
-    
-    // State circle
-    paint.color = state == selectedState ? Colors.blue : Colors.black;
-    paint.style = PaintingStyle.stroke;
-    canvas.drawCircle(Offset(center.x, center.y), radius, paint);
-    
-    // Fill for accepting states
+    const radius = 30.0;
+    final isSelected = state == selectedState;
+    final isNondeterministic = _nondeterministicStateIds.contains(state.id);
+    final stateCenter = Offset(center.x, center.y);
+
+    if (isNondeterministic) {
+      final highlightPaint = Paint()
+        ..style = PaintingStyle.fill
+        ..color = Colors.deepOrange.withOpacity(0.15);
+      canvas.drawCircle(stateCenter, radius, highlightPaint);
+    }
+
+    final borderPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = isSelected ? 3 : 2
+      ..color = isSelected
+          ? Colors.blue
+          : isNondeterministic
+              ? Colors.deepOrange
+              : Colors.black;
+    canvas.drawCircle(stateCenter, radius, borderPaint);
+
     if (state.isAccepting) {
-      paint.color = Colors.green.withOpacity(0.3);
-      paint.style = PaintingStyle.fill;
-      canvas.drawCircle(Offset(center.x, center.y), radius - 2, paint);
+      final acceptPaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = borderPaint.color;
+      canvas.drawCircle(stateCenter, radius - 6, acceptPaint);
     }
-    
-    // Initial state arrow
+
     if (state.isInitial) {
-      _drawInitialArrow(canvas, Offset(center.x, center.y), paint);
+      _drawInitialArrow(canvas, stateCenter, borderPaint);
     }
-    
-    // State label
+
     final textPainter = TextPainter(
       text: TextSpan(
         text: state.name,
@@ -470,46 +498,107 @@ class AutomatonPainter extends CustomPainter {
   void _drawTransition(Canvas canvas, FSATransition transition, Paint paint) {
     final from = transition.fromState.position;
     final to = transition.toState.position;
-    
-    paint.color = Colors.black;
-    paint.style = PaintingStyle.stroke;
-    
-    // Draw arrow
-        final angle = math.atan2(to.y - from.y, to.x - from.x);
-    final arrowLength = 15.0;
-    final arrowAngle = 0.5;
-    
-    final arrowEnd = Offset(
-          to.x - 30 * math.cos(angle),
-          to.y - 30 * math.sin(angle),
+
+    final transitionColor = _epsilonTransitionIds.contains(transition.id)
+        ? Colors.purple
+        : _nondeterministicTransitionIds.contains(transition.id)
+            ? Colors.deepOrange
+            : Colors.black;
+
+    final strokePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..color = transitionColor;
+
+    if (transition.fromState.id == transition.toState.id) {
+      _drawSelfLoop(canvas, transition, strokePaint);
+    } else {
+      final angle = math.atan2(to.y - from.y, to.x - from.x);
+      const arrowLength = 15.0;
+      const arrowAngle = 0.5;
+      const stateRadius = 30.0;
+
+      final arrowEnd = Offset(
+        to.x - stateRadius * math.cos(angle),
+        to.y - stateRadius * math.sin(angle),
+      );
+
+      canvas.drawLine(Offset(from.x, from.y), arrowEnd, strokePaint);
+
+      final arrow1 = Offset(
+        arrowEnd.dx - arrowLength * math.cos(angle - arrowAngle),
+        arrowEnd.dy - arrowLength * math.sin(angle - arrowAngle),
+      );
+      final arrow2 = Offset(
+        arrowEnd.dx - arrowLength * math.cos(angle + arrowAngle),
+        arrowEnd.dy - arrowLength * math.sin(angle + arrowAngle),
+      );
+
+      canvas.drawLine(arrowEnd, arrow1, strokePaint);
+      canvas.drawLine(arrowEnd, arrow2, strokePaint);
+
+      final midPoint = Offset(
+        (from.x + arrowEnd.dx) / 2,
+        (from.y + arrowEnd.dy) / 2,
+      );
+
+      _drawTransitionLabel(canvas, transition, midPoint, transitionColor);
+    }
+  }
+
+  void _drawSelfLoop(Canvas canvas, FSATransition transition, Paint paint) {
+    const loopRadius = 35.0;
+    const stateRadius = 30.0;
+    final center = Offset(
+      transition.fromState.position.x,
+      transition.fromState.position.y,
     );
-    
-        canvas.drawLine(Offset(from.x, from.y), Offset(arrowEnd.dx, arrowEnd.dy), paint);
-    
-    // Draw arrowhead
+
+    final loopRect = Rect.fromCircle(
+      center: Offset(center.dx, center.dy - stateRadius),
+      radius: loopRadius,
+    );
+
+    canvas.drawArc(loopRect, -math.pi / 2, 1.8 * math.pi, false, paint);
+
+    final arrowBase = Offset(
+      center.dx + loopRadius * math.cos(-math.pi / 6),
+      center.dy - stateRadius + loopRadius * math.sin(-math.pi / 6),
+    );
+    const arrowLength = 12.0;
+    const arrowAngle = 0.5;
+
     final arrow1 = Offset(
-      arrowEnd.dx - arrowLength * math.cos(angle - arrowAngle),
-      arrowEnd.dy - arrowLength * math.sin(angle - arrowAngle),
+      arrowBase.dx - arrowLength * math.cos(-math.pi / 6 - arrowAngle),
+      arrowBase.dy - arrowLength * math.sin(-math.pi / 6 - arrowAngle),
     );
     final arrow2 = Offset(
-      arrowEnd.dx - arrowLength * math.cos(angle + arrowAngle),
-      arrowEnd.dy - arrowLength * math.sin(angle + arrowAngle),
+      arrowBase.dx - arrowLength * math.cos(-math.pi / 6 + arrowAngle),
+      arrowBase.dy - arrowLength * math.sin(-math.pi / 6 + arrowAngle),
     );
-    
-    canvas.drawLine(arrowEnd, arrow1, paint);
-    canvas.drawLine(arrowEnd, arrow2, paint);
-    
-    // Draw transition label
-    final midPoint = Offset(
-          (from.x + arrowEnd.dx) / 2,
-          (from.y + arrowEnd.dy) / 2,
+
+    canvas.drawLine(arrowBase, arrow1, paint);
+    canvas.drawLine(arrowBase, arrow2, paint);
+
+    final labelPosition = Offset(
+      center.dx,
+      center.dy - stateRadius - loopRadius - 12,
     );
-    
+
+    _drawTransitionLabel(canvas, transition, labelPosition, paint.color);
+  }
+
+  void _drawTransitionLabel(
+    Canvas canvas,
+    FSATransition transition,
+    Offset position,
+    Color color,
+  ) {
     final textPainter = TextPainter(
       text: TextSpan(
-        text: transition.symbol,
-        style: const TextStyle(
-          color: Colors.black,
+        text: _formatTransitionLabel(transition),
+        style: TextStyle(
+          color: color,
           fontSize: 14,
           fontWeight: FontWeight.bold,
         ),
@@ -520,10 +609,24 @@ class AutomatonPainter extends CustomPainter {
     textPainter.paint(
       canvas,
       Offset(
-        midPoint.dx - textPainter.width / 2,
-        midPoint.dy - textPainter.height / 2,
+        position.dx - textPainter.width / 2,
+        position.dy - textPainter.height / 2,
       ),
     );
+  }
+
+  String _formatTransitionLabel(FSATransition transition) {
+    if (transition.isEpsilonTransition) {
+      return transition.lambdaSymbol ?? 'ε';
+    }
+    if (transition.inputSymbols.isEmpty) {
+      return transition.label;
+    }
+    if (transition.inputSymbols.length == 1) {
+      return transition.inputSymbols.first;
+    }
+    final symbols = transition.inputSymbols.toList()..sort();
+    return symbols.join(', ');
   }
 
   void _drawInitialArrow(Canvas canvas, Offset center, Paint paint) {
@@ -543,7 +646,8 @@ class AutomatonPainter extends CustomPainter {
     canvas.drawLine(arrowEnd, arrow2, paint);
   }
 
-  void _drawTransitionPreview(Canvas canvas, automaton_state.State start, Paint paint) {
+  void _drawTransitionPreview(
+      Canvas canvas, automaton_state.State start, Paint paint) {
     // TODO: Implement transition preview
   }
 
@@ -554,6 +658,62 @@ class AutomatonPainter extends CustomPainter {
             oldDelegate.transitions != transitions ||
             oldDelegate.selectedState != selectedState ||
             oldDelegate.transitionStart != transitionStart);
+  }
+
+  static Set<String> _identifyNondeterministicTransitions(
+    List<FSATransition> transitions,
+  ) {
+    final nondeterministicIds = <String>{};
+    final outgoingByState = <String, Map<String, List<FSATransition>>>{};
+
+    for (final transition in transitions) {
+      if (transition.inputSymbols.length > 1) {
+        nondeterministicIds.add(transition.id);
+      }
+
+      final symbols = transition.isEpsilonTransition
+          ? <String>{transition.lambdaSymbol ?? 'ε'}
+          : transition.inputSymbols.isEmpty
+              ? {transition.label}
+              : transition.inputSymbols;
+
+      final symbolBuckets = outgoingByState.putIfAbsent(
+        transition.fromState.id,
+        () => <String, List<FSATransition>>{},
+      );
+
+      for (final rawSymbol in symbols) {
+        final symbol = rawSymbol.isEmpty ? 'ε' : rawSymbol;
+        final transitionsForSymbol =
+            symbolBuckets.putIfAbsent(symbol, () => <FSATransition>[]);
+        transitionsForSymbol.add(transition);
+      }
+    }
+
+    for (final symbolBuckets in outgoingByState.values) {
+      for (final transitionsForSymbol in symbolBuckets.values) {
+        if (transitionsForSymbol.length > 1) {
+          nondeterministicIds
+              .addAll(transitionsForSymbol.map((transition) => transition.id));
+        }
+      }
+    }
+
+    return nondeterministicIds;
+  }
+
+  static Set<String> _identifyNondeterministicStates(
+    List<FSATransition> transitions,
+    Set<String> nondeterministicTransitionIds,
+  ) {
+    final stateIds = <String>{};
+    for (final transition in transitions) {
+      if (nondeterministicTransitionIds.contains(transition.id) ||
+          transition.isEpsilonTransition) {
+        stateIds.add(transition.fromState.id);
+      }
+    }
+    return stateIds;
   }
 }
 

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/simulation_result.dart';
 import '../../core/models/simulation_step.dart';
 
@@ -34,6 +33,19 @@ class _SimulationPanelState extends State<SimulationPanel> {
     super.dispose();
   }
 
+  @override
+  void didUpdateWidget(covariant SimulationPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.simulationResult != oldWidget.simulationResult) {
+      setState(() {
+        _isSimulating = false;
+      });
+      if (_isStepByStep) {
+        _loadSimulationSteps();
+      }
+    }
+  }
+
   void _simulate() {
     final inputString = _inputController.text.trim();
     if (inputString.isNotEmpty) {
@@ -42,17 +54,12 @@ class _SimulationPanelState extends State<SimulationPanel> {
         _currentStepIndex = 0;
         _simulationSteps.clear();
       });
-      
+
       widget.onSimulate(inputString);
-      
-      // Generate step-by-step simulation
-      if (_isStepByStep) {
-        _generateStepByStepSimulation(inputString);
-      }
-      
-      // Reset simulation state after a delay
-      Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) {
+
+      // Safety timeout in case no result is produced
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted && _isSimulating) {
           setState(() {
             _isSimulating = false;
           });
@@ -61,70 +68,72 @@ class _SimulationPanelState extends State<SimulationPanel> {
     }
   }
 
-  void _generateStepByStepSimulation(String inputString) {
-    // Generate detailed simulation steps
-    final steps = <SimulationStep>[];
-    
-    // Initial step
-    steps.add(SimulationStep(
-      stepNumber: 0,
-      currentState: 'q0',
-      remainingInput: inputString,
-      description: 'Start simulation at initial state q0',
-      isAccepted: false,
-    ));
-    
-    // Simulate each character
-    String currentState = 'q0';
-    String remainingInput = inputString;
-    
-    for (int i = 0; i < inputString.length; i++) {
-      final char = inputString[i];
-      final nextState = _getNextState(currentState, char);
-      
-      steps.add(SimulationStep(
-        stepNumber: i + 1,
-        currentState: currentState,
-        inputSymbol: char,
-        nextState: nextState,
-        remainingInput: remainingInput.substring(1),
-        description: 'Read "$char" from state $currentState, move to state $nextState',
-        isAccepted: false,
-      ));
-      
-      currentState = nextState;
-      remainingInput = remainingInput.substring(1);
+  void _loadSimulationSteps() {
+    if (!_isStepByStep) {
+      setState(() {
+        _simulationSteps.clear();
+        _currentStepIndex = 0;
+        _isPlaying = false;
+      });
+      return;
     }
-    
-    // Final step
-    final isAccepted = _isAcceptingState(currentState);
-    steps.add(SimulationStep(
-      stepNumber: steps.length,
-      currentState: currentState,
-      remainingInput: '',
-      description: isAccepted 
-          ? 'Reached accepting state $currentState - String accepted!'
-          : 'Reached non-accepting state $currentState - String rejected!',
-      isAccepted: isAccepted,
-    ));
-    
+
+    final result = widget.simulationResult;
+    if (result == null) {
+      setState(() {
+        _simulationSteps.clear();
+        _currentStepIndex = 0;
+        _isPlaying = false;
+      });
+      return;
+    }
+
     setState(() {
-      _simulationSteps = steps;
+      _simulationSteps = List<SimulationStep>.from(result.steps);
+      _currentStepIndex = 0;
+      _isPlaying = false;
     });
   }
 
-  String _getNextState(String currentState, String inputSymbol) {
-    // Simple state transition logic for demonstration
-    // In real implementation, this would use the actual automaton
-    if (currentState == 'q0' && inputSymbol == 'a') return 'q1';
-    if (currentState == 'q1' && inputSymbol == 'b') return 'q2';
-    if (currentState == 'q2' && inputSymbol == 'a') return 'q1';
-    return 'q0'; // Default transition
+  String _describeStep(int index) {
+    if (index < 0 || index >= _simulationSteps.length) {
+      return '';
+    }
+    final step = _simulationSteps[index];
+
+    if (index == 0) {
+      final input = step.remainingInput.isEmpty
+          ? 'ε'
+          : '"${step.remainingInput}"';
+      return 'Start at ${_formatState(step.currentState)} with input $input.';
+    }
+
+    final bool isFinal = index == _simulationSteps.length - 1;
+    if (isFinal) {
+      final accepted = widget.simulationResult?.isAccepted ?? false;
+      final verdict = accepted ? 'accepted' : 'rejected';
+      return 'Final configuration ${_formatState(step.currentState)} – input $verdict.';
+    }
+
+    final consumed = step.usedTransition ??
+        (_simulationSteps[index - 1].remainingInput.isNotEmpty
+            ? _simulationSteps[index - 1].remainingInput[0]
+            : 'ε');
+    final remaining = step.remainingInput.isEmpty
+        ? 'no input remaining'
+        : 'remaining "${step.remainingInput}"';
+    final nextState = _nextStateFor(index) ?? step.currentState;
+
+    return 'Read "$consumed" from ${_formatState(step.currentState)} → ${_formatState(nextState)} with $remaining.';
   }
 
-  bool _isAcceptingState(String state) {
-    // Simple accepting state check for demonstration
-    return state == 'q2';
+  String _formatState(String state) {
+    return state.isEmpty ? '∅' : state;
+  }
+
+  String? _nextStateFor(int index) {
+    if (index + 1 >= _simulationSteps.length) return null;
+    return _simulationSteps[index + 1].currentState;
   }
 
   @override
@@ -254,7 +263,7 @@ class _SimulationPanelState extends State<SimulationPanel> {
             ),
           ],
           
-          if (result.errorMessage != null) ...[
+          if (result.errorMessage.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
               'Error: ${result.errorMessage}',
@@ -352,9 +361,13 @@ class _SimulationPanelState extends State<SimulationPanel> {
                     _isStepByStep = value;
                     if (!value) {
                       _currentStepIndex = 0;
+                      _isPlaying = false;
                       _simulationSteps.clear();
                     }
                   });
+                  if (value) {
+                    _loadSimulationSteps();
+                  }
                 },
               ),
             ],
@@ -412,13 +425,24 @@ class _SimulationPanelState extends State<SimulationPanel> {
   }
 
   Widget _buildCurrentStep(BuildContext context, SimulationStep step) {
-    final color = (step.isAccepted ?? false) ? Colors.green : Colors.blue;
-    
+    final bool isFinal = _currentStepIndex == _simulationSteps.length - 1;
+    final bool accepted = widget.simulationResult?.isAccepted ?? false;
+    final color = isFinal
+        ? (accepted ? Colors.green : Colors.red)
+        : Theme.of(context).colorScheme.primary;
+    final icon = isFinal
+        ? (accepted ? Icons.check_circle : Icons.cancel)
+        : Icons.play_circle;
+    final description = _describeStep(_currentStepIndex);
+    final consumed = _currentStepIndex == 0 ? null : step.usedTransition;
+    final nextState = _nextStateFor(_currentStepIndex);
+    final remaining = step.remainingInput;
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withOpacity(0.12),
+        border: Border.all(color: color.withOpacity(0.35)),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -426,44 +450,47 @@ class _SimulationPanelState extends State<SimulationPanel> {
         children: [
           Row(
             children: [
-              Icon(
-                (step.isAccepted ?? false) ? Icons.check_circle : Icons.play_circle,
-                color: color,
-                size: 20,
-              ),
+              Icon(icon, color: color, size: 20),
               const SizedBox(width: 8),
               Text(
-                'Step ${step.stepNumber}',
+                'Step ${_currentStepIndex + 1}',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
+                      color: color,
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
             ],
           ),
           const SizedBox(height: 8),
           Text(
-            step.description ?? 'No description',
+            description,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
-          if (step.inputSymbol != null) ...[
+          if (consumed != null) ...[
             const SizedBox(height: 4),
             Text(
-              'Input: "${step.inputSymbol}"',
+              'Consumed: "$consumed"',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontFamily: 'monospace',
-              ),
+                    fontFamily: 'monospace',
+                  ),
             ),
           ],
-          if (step.nextState != null) ...[
+          if (nextState != null) ...[
             const SizedBox(height: 4),
             Text(
-              'Next State: ${step.nextState}',
+              'Next state: ${_formatState(nextState)}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontFamily: 'monospace',
-              ),
+                    fontFamily: 'monospace',
+                  ),
             ),
           ],
+          const SizedBox(height: 4),
+          Text(
+            'Remaining input: ${remaining.isEmpty ? 'ε' : '"$remaining"'}',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontFamily: 'monospace',
+                ),
+          ),
         ],
       ),
     );
@@ -512,7 +539,10 @@ class _SimulationPanelState extends State<SimulationPanel> {
         itemBuilder: (context, index) {
           final step = _simulationSteps[index];
           final isCurrentStep = index == _currentStepIndex;
-          
+          final isFinal = index == _simulationSteps.length - 1;
+          final isAcceptedStep =
+              isFinal ? (widget.simulationResult?.isAccepted ?? false) : false;
+
           return Container(
             margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             padding: const EdgeInsets.all(8),
@@ -526,13 +556,13 @@ class _SimulationPanelState extends State<SimulationPanel> {
               children: [
                 CircleAvatar(
                   radius: 12,
-                  backgroundColor: isCurrentStep 
+                  backgroundColor: isCurrentStep
                       ? Theme.of(context).colorScheme.primary
                       : Theme.of(context).colorScheme.outline.withOpacity(0.3),
                   child: Text(
-                    '${step.stepNumber}',
+                    '${index + 1}',
                     style: TextStyle(
-                      color: isCurrentStep 
+                      color: isCurrentStep
                           ? Theme.of(context).colorScheme.onPrimary
                           : Theme.of(context).colorScheme.onSurface,
                       fontSize: 10,
@@ -543,13 +573,13 @@ class _SimulationPanelState extends State<SimulationPanel> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    step.description ?? 'No description',
+                    _describeStep(index),
                     style: Theme.of(context).textTheme.bodySmall,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                if (step.isAccepted ?? false)
+                if (isAcceptedStep)
                   Icon(
                     Icons.check_circle,
                     color: Colors.green,

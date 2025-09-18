@@ -1,5 +1,7 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/models/fsa.dart';
+import '../../data/services/file_operations_service.dart';
 
 /// Panel for algorithm operations and controls
 class AlgorithmPanel extends StatefulWidget {
@@ -11,6 +13,9 @@ class AlgorithmPanel extends StatefulWidget {
   final VoidCallback? onCompleteDfa;
   final VoidCallback? onFsaToGrammar;
   final VoidCallback? onAutoLayout;
+  final Future<void> Function(FSA other)? onCompareEquivalence;
+  final bool? equivalenceResult;
+  final String? equivalenceDetails;
 
   const AlgorithmPanel({
     super.key,
@@ -22,6 +27,9 @@ class AlgorithmPanel extends StatefulWidget {
     this.onCompleteDfa,
     this.onFsaToGrammar,
     this.onAutoLayout,
+    this.onCompareEquivalence,
+    this.equivalenceResult,
+    this.equivalenceDetails,
   });
 
   @override
@@ -30,6 +38,7 @@ class AlgorithmPanel extends StatefulWidget {
 
 class _AlgorithmPanelState extends State<AlgorithmPanel> {
   final TextEditingController _regexController = TextEditingController();
+  final FileOperationsService _fileService = FileOperationsService();
   bool _isExecuting = false;
   String? _currentAlgorithm;
   double _executionProgress = 0.0;
@@ -135,9 +144,9 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
             _buildAlgorithmButton(
               context,
               title: 'Compare Equivalence',
-              description: 'Compare two DFAs for equivalence (Not implemented)',
+              description: 'Compare two DFAs for equivalence',
               icon: Icons.compare_arrows,
-              onPressed: null, // TODO: Implement UI for selecting second automaton
+              onPressed: _onCompareEquivalencePressed,
             ),
             
             const SizedBox(height: 12),
@@ -162,6 +171,12 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
             if (_algorithmSteps.isNotEmpty) ...[
               const SizedBox(height: 16),
               _buildAlgorithmSteps(context),
+            ],
+
+            if (widget.equivalenceResult != null ||
+                (widget.equivalenceDetails?.isNotEmpty ?? false)) ...[
+              const SizedBox(height: 16),
+              _buildEquivalenceResult(context),
             ],
           ],
         ),
@@ -458,6 +473,144 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
               },
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _onCompareEquivalencePressed() async {
+    if (widget.onCompareEquivalence == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Load a DFA before comparing equivalence.')),
+      );
+      return;
+    }
+
+    final selection = await FilePicker.platform.pickFiles(
+      dialogTitle: 'Select DFA to compare',
+      type: FileType.custom,
+      allowedExtensions: const ['jff'],
+    );
+
+    if (selection == null || selection.files.single.path == null) {
+      return;
+    }
+
+    setState(() {
+      _isExecuting = true;
+      _currentAlgorithm = 'Compare Equivalence';
+      _executionStatus = 'Loading automaton...';
+      _executionProgress = 0.25;
+      _algorithmSteps = [
+        AlgorithmStep(
+          title: 'Load Automaton',
+          description: 'Parse the selected JFLAP file',
+        ),
+        AlgorithmStep(
+          title: 'Normalize DFAs',
+          description: 'Prepare automata for comparison',
+        ),
+        AlgorithmStep(
+          title: 'Compare Languages',
+          description: 'Search for distinguishing strings',
+        ),
+      ];
+      _currentStepIndex = 0;
+    });
+
+    final loadResult =
+        await _fileService.loadAutomatonFromJFLAP(selection.files.single.path!);
+
+    if (!mounted) return;
+
+    if (!loadResult.isSuccess) {
+      setState(() {
+        _isExecuting = false;
+        _executionStatus = 'Failed to load automaton';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(loadResult.error ?? 'Unable to load automaton.')),
+      );
+      return;
+    }
+
+    setState(() {
+      _currentStepIndex = 1;
+      _executionProgress = 0.6;
+      _executionStatus = 'Comparing automata...';
+    });
+
+    try {
+      await widget.onCompareEquivalence!(loadResult.data!);
+      if (!mounted) return;
+      setState(() {
+        _isExecuting = false;
+        _executionStatus = 'Comparison complete';
+        _executionProgress = 1.0;
+        _currentStepIndex = _algorithmSteps.length - 1;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isExecuting = false;
+        _executionStatus = 'Comparison failed';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Comparison failed: $e')),
+      );
+    }
+  }
+
+  Widget _buildEquivalenceResult(BuildContext context) {
+    final result = widget.equivalenceResult;
+    final message = widget.equivalenceDetails ?? '';
+    final theme = Theme.of(context);
+    final Color accent;
+    IconData icon;
+
+    if (result == null) {
+      accent = theme.colorScheme.secondary;
+      icon = Icons.info_outline;
+    } else if (result) {
+      accent = Colors.green;
+      icon = Icons.check_circle;
+    } else {
+      accent = Colors.red;
+      icon = Icons.cancel;
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: accent.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: accent.withOpacity(0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: accent),
+              const SizedBox(width: 8),
+              Text(
+                result == null
+                    ? 'Equivalence comparison'
+                    : result
+                        ? 'Automata are equivalent'
+                        : 'Automata are not equivalent',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: accent,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          if (message.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(message, style: theme.textTheme.bodyMedium),
+          ],
         ],
       ),
     );

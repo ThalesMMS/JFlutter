@@ -1,54 +1,45 @@
 import 'package:flutter/foundation.dart';
 
-class AlgoEvent {
-  const AlgoEvent({required this.algo, required this.step, this.data = const {}});
-  final String algo; // e.g., removeLambda, nfaToDfa, dfaToRegex, run
-  final String step; // e.g., start, transition, newState, closure, eliminate, final
-  final Map<String, dynamic> data;
-}
-
+/// Centralized logging for algorithm execution steps
 class AlgoLog {
-  // Plain text lines (back-compat and quick logs)
-  static final ValueNotifier<List<String>> lines = ValueNotifier<List<String>>(<String>[]);
-
-  // Structured events (Algoview mapping)
-  static final ValueNotifier<List<AlgoEvent>> events = ValueNotifier<List<AlgoEvent>>(<AlgoEvent>[]);
-
-  // Highlight set for canvas (updated by algorithms while emitting events)
-  static final ValueNotifier<Set<String>> highlights = ValueNotifier<Set<String>>(<String>{});
-
-  // Start a generic log section (e.g., Simulation)
-  static void start(String title) {
-    lines.value = [title];
+  static final ValueNotifier<List<String>> _lines = ValueNotifier<List<String>>([]);
+  static final ValueNotifier<Set<String>> _highlights = ValueNotifier<Set<String>>({});
+  
+  /// Stream of log lines
+  static ValueNotifier<List<String>> get lines => _lines;
+  
+  /// Stream of highlighted states
+  static ValueNotifier<Set<String>> get highlights => _highlights;
+  
+  /// Adds a log line
+  static void addLine(String line) {
+    _lines.value = [..._lines.value, line];
   }
-
-  // Start an algorithm section with a known code and title (resets events and highlights)
-  static void startAlgo(String algo, String title) {
-    lines.value = [title];
-    events.value = <AlgoEvent>[];
-    highlights.value = <String>{};
+  
+  /// Adds multiple log lines
+  static void addLines(List<String> lines) {
+    _lines.value = [..._lines.value, ...lines];
   }
-
+  
+  /// Clears all log lines
   static void clear() {
-    lines.value = <String>[];
-    events.value = <AlgoEvent>[];
-    highlights.value = <String>{};
+    _lines.value = [];
+    _highlights.value = {};
   }
-
-  static void add(String message) {
-    final next = List<String>.from(lines.value)..add(message);
-    lines.value = next;
+  
+  /// Highlights specific states
+  static void highlightStates(Set<String> stateIds) {
+    _highlights.value = stateIds;
   }
-
-  static void step(String algo, String step, {Map<String, dynamic> data = const {}, Set<String>? highlight}) {
-    final next = List<AlgoEvent>.from(events.value)..add(AlgoEvent(algo: algo, step: step, data: data));
-    events.value = next;
-    if (highlight != null) {
-      highlights.value = highlight;
-    }
+  
+  /// Clears highlights
+  static void clearHighlights() {
+    _highlights.value = {};
   }
-
-  static void setHighlight(Iterable<String> ids) {
-    highlights.value = ids.toSet();
-  }
+  
+  /// Gets current log lines
+  static List<String> get currentLines => _lines.value;
+  
+  /// Gets current highlighted states
+  static Set<String> get currentHighlights => _highlights.value;
 }

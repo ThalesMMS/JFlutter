@@ -7,6 +7,9 @@ import '../data/data_sources/examples_data_source.dart';
 import '../data/repositories/automaton_repository_impl.dart';
 import '../data/repositories/examples_repository_impl.dart';
 import '../data/repositories/algorithm_repository_impl.dart';
+import '../data/services/automaton_service.dart';
+import '../data/services/simulation_service.dart';
+import '../data/services/conversion_service.dart';
 import '../presentation/providers/automaton_provider.dart';
 import '../presentation/providers/algorithm_provider.dart';
 
@@ -24,9 +27,22 @@ Future<void> setupDependencyInjection() async {
     () => ExamplesDataSource(),
   );
 
+  // Services
+  getIt.registerLazySingleton<AutomatonService>(
+    () => AutomatonService(),
+  );
+  
+  getIt.registerLazySingleton<SimulationService>(
+    () => SimulationService(),
+  );
+  
+  getIt.registerLazySingleton<ConversionService>(
+    () => ConversionService(),
+  );
+
   // Repositories
   getIt.registerLazySingleton<AutomatonRepository>(
-    () => AutomatonRepositoryImpl(getIt<LocalStorageDataSource>()),
+    () => AutomatonRepositoryImpl(getIt<AutomatonService>()),
   );
   
   getIt.registerLazySingleton<ExamplesRepository>(
@@ -146,17 +162,11 @@ Future<void> setupDependencyInjection() async {
   // Providers
   getIt.registerFactory<AutomatonProvider>(
     () => AutomatonProvider(
+      automatonService: getIt<AutomatonService>(),
+      simulationService: getIt<SimulationService>(),
+      conversionService: getIt<ConversionService>(),
       createAutomatonUseCase: getIt<CreateAutomatonUseCase>(),
       loadAutomatonUseCase: getIt<LoadAutomatonUseCase>(),
-      saveAutomatonUseCase: getIt<SaveAutomatonUseCase>(),
-      deleteAutomatonUseCase: getIt<DeleteAutomatonUseCase>(),
-      exportAutomatonUseCase: getIt<ExportAutomatonUseCase>(),
-      importAutomatonUseCase: getIt<ImportAutomatonUseCase>(),
-      validateAutomatonUseCase: getIt<ValidateAutomatonUseCase>(),
-      addStateUseCase: getIt<AddStateUseCase>(),
-      removeStateUseCase: getIt<RemoveStateUseCase>(),
-      addTransitionUseCase: getIt<AddTransitionUseCase>(),
-      removeTransitionUseCase: getIt<RemoveTransitionUseCase>(),
     ),
   );
   

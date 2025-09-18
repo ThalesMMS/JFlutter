@@ -1,5 +1,10 @@
 name: jflutter
-description: "A new Flutter project."
+description: "A modern, mobile-first Flutter application for learning formal language theory and automata. Interactive educational tool for finite automata, context-free grammars, and formal language concepts."
+homepage: https://github.com/ThalesMMS/jflutter
+repository: https://github.com/ThalesMMS/jflutter
+issue_tracker: https://github.com/ThalesMMS/jflutter/issues
+documentation: https://github.com/ThalesMMS/jflutter#readme
+
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -19,7 +24,8 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.9.2
+  sdk: ^3.0.0
+  flutter: ^3.16.0
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -49,12 +55,22 @@ dependencies:
   # State management and dependency injection
   provider: ^6.1.2
   get_it: ^8.0.0
+  riverpod: ^2.5.1
+  flutter_riverpod: ^2.5.1
   
   # XML parsing for JFLAP file import
   xml: ^6.5.0
   
   # File picker for importing files
   file_picker: ^8.0.0+1
+  
+  # Gesture detection is built into Flutter
+  
+  # Vector math for positioning and calculations
+  vector_math: ^2.1.4
+  
+  # Collection utilities
+  collection: ^1.18.0
 
 dev_dependencies:
   flutter_test:

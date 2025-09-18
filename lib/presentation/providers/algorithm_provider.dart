@@ -1,11 +1,11 @@
-import 'package:flutter/foundation.dart';
-import '../../core/entities/automaton_entity.dart';
-import '../../core/result.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/use_cases/algorithm_use_cases.dart';
-import '../../core/repositories/automaton_repository.dart';
+import '../../core/entities/automaton_entity.dart';
+import '../../core/models/grammar.dart';
+import '../../core/result.dart';
 
-/// Provider for managing algorithm operations
-class AlgorithmProvider extends ChangeNotifier {
+/// Provider for algorithm operations
+class AlgorithmProvider extends StateNotifier<AlgorithmState> {
   final NfaToDfaUseCase _nfaToDfaUseCase;
   final RemoveLambdaTransitionsUseCase _removeLambdaTransitionsUseCase;
   final MinimizeDfaUseCase _minimizeDfaUseCase;
@@ -21,11 +21,6 @@ class AlgorithmProvider extends ChangeNotifier {
   final CheckEquivalenceUseCase _checkEquivalenceUseCase;
   final SimulateWordUseCase _simulateWordUseCase;
   final CreateStepByStepSimulationUseCase _createStepByStepSimulationUseCase;
-
-  bool _isLoading = false;
-  String? _error;
-  String? _lastRegexResult;
-  bool? _lastEquivalenceResult;
 
   AlgorithmProvider({
     required NfaToDfaUseCase nfaToDfaUseCase,
@@ -43,307 +38,343 @@ class AlgorithmProvider extends ChangeNotifier {
     required CheckEquivalenceUseCase checkEquivalenceUseCase,
     required SimulateWordUseCase simulateWordUseCase,
     required CreateStepByStepSimulationUseCase createStepByStepSimulationUseCase,
-  })  : _nfaToDfaUseCase = nfaToDfaUseCase,
-        _removeLambdaTransitionsUseCase = removeLambdaTransitionsUseCase,
-        _minimizeDfaUseCase = minimizeDfaUseCase,
-        _completeDfaUseCase = completeDfaUseCase,
-        _complementDfaUseCase = complementDfaUseCase,
-        _unionDfaUseCase = unionDfaUseCase,
-        _intersectionDfaUseCase = intersectionDfaUseCase,
-        _differenceDfaUseCase = differenceDfaUseCase,
-        _prefixClosureUseCase = prefixClosureUseCase,
-        _suffixClosureUseCase = suffixClosureUseCase,
-        _regexToNfaUseCase = regexToNfaUseCase,
-        _dfaToRegexUseCase = dfaToRegexUseCase,
-        _checkEquivalenceUseCase = checkEquivalenceUseCase,
-        _simulateWordUseCase = simulateWordUseCase,
-        _createStepByStepSimulationUseCase = createStepByStepSimulationUseCase;
-
-  // Getters
-  bool get isLoading => _isLoading;
-  String? get error => _error;
-  String? get lastRegexResult => _lastRegexResult;
-  bool? get lastEquivalenceResult => _lastEquivalenceResult;
+  }) : _nfaToDfaUseCase = nfaToDfaUseCase,
+       _removeLambdaTransitionsUseCase = removeLambdaTransitionsUseCase,
+       _minimizeDfaUseCase = minimizeDfaUseCase,
+       _completeDfaUseCase = completeDfaUseCase,
+       _complementDfaUseCase = complementDfaUseCase,
+       _unionDfaUseCase = unionDfaUseCase,
+       _intersectionDfaUseCase = intersectionDfaUseCase,
+       _differenceDfaUseCase = differenceDfaUseCase,
+       _prefixClosureUseCase = prefixClosureUseCase,
+       _suffixClosureUseCase = suffixClosureUseCase,
+       _regexToNfaUseCase = regexToNfaUseCase,
+       _dfaToRegexUseCase = dfaToRegexUseCase,
+       _checkEquivalenceUseCase = checkEquivalenceUseCase,
+       _simulateWordUseCase = simulateWordUseCase,
+       _createStepByStepSimulationUseCase = createStepByStepSimulationUseCase,
+       super(AlgorithmState.initial());
 
   /// Converts NFA to DFA
-  Future<AutomatonEntity?> nfaToDfa(AutomatonEntity nfa) async {
-    _setLoading(true);
-    _clearError();
-
+  Future<void> convertNfaToDfa(AutomatonEntity nfa) async {
+    state = state.copyWith(isLoading: true, error: null);
+    
     final result = await _nfaToDfaUseCase.execute(nfa);
-
-    _setLoading(false);
-
+    
     if (result.isSuccess) {
-      return result.data;
+      state = state.copyWith(
+        isLoading: false,
+        result: result.data,
+      );
     } else {
-      _setError(result.error!);
-      return null;
+      state = state.copyWith(
+        isLoading: false,
+        error: result.error,
+      );
     }
   }
 
   /// Removes lambda transitions from NFA
-  Future<AutomatonEntity?> removeLambdaTransitions(AutomatonEntity nfa) async {
-    _setLoading(true);
-    _clearError();
-
+  Future<void> removeLambdaTransitions(AutomatonEntity nfa) async {
+    state = state.copyWith(isLoading: true, error: null);
+    
     final result = await _removeLambdaTransitionsUseCase.execute(nfa);
-
-    _setLoading(false);
-
+    
     if (result.isSuccess) {
-      return result.data;
+      state = state.copyWith(
+        isLoading: false,
+        result: result.data,
+      );
     } else {
-      _setError(result.error!);
-      return null;
+      state = state.copyWith(
+        isLoading: false,
+        error: result.error,
+      );
     }
   }
 
-  /// Minimizes a DFA
-  Future<AutomatonEntity?> minimizeDfa(AutomatonEntity dfa) async {
-    _setLoading(true);
-    _clearError();
-
+  /// Minimizes DFA
+  Future<void> minimizeDfa(AutomatonEntity dfa) async {
+    state = state.copyWith(isLoading: true, error: null);
+    
     final result = await _minimizeDfaUseCase.execute(dfa);
-
-    _setLoading(false);
-
+    
     if (result.isSuccess) {
-      return result.data;
+      state = state.copyWith(
+        isLoading: false,
+        result: result.data,
+      );
     } else {
-      _setError(result.error!);
-      return null;
+      state = state.copyWith(
+        isLoading: false,
+        error: result.error,
+      );
     }
   }
 
-  /// Completes a DFA
-  Future<AutomatonEntity?> completeDfa(AutomatonEntity dfa) async {
-    _setLoading(true);
-    _clearError();
-
+  /// Completes DFA
+  Future<void> completeDfa(AutomatonEntity dfa) async {
+    state = state.copyWith(isLoading: true, error: null);
+    
     final result = await _completeDfaUseCase.execute(dfa);
-
-    _setLoading(false);
-
+    
     if (result.isSuccess) {
-      return result.data;
+      state = state.copyWith(
+        isLoading: false,
+        result: result.data,
+      );
     } else {
-      _setError(result.error!);
-      return null;
+      state = state.copyWith(
+        isLoading: false,
+        error: result.error,
+      );
     }
   }
 
-  /// Creates complement of a DFA
-  Future<AutomatonEntity?> complementDfa(AutomatonEntity dfa) async {
-    _setLoading(true);
-    _clearError();
-
+  /// Complements DFA
+  Future<void> complementDfa(AutomatonEntity dfa) async {
+    state = state.copyWith(isLoading: true, error: null);
+    
     final result = await _complementDfaUseCase.execute(dfa);
-
-    _setLoading(false);
-
+    
     if (result.isSuccess) {
-      return result.data;
+      state = state.copyWith(
+        isLoading: false,
+        result: result.data,
+      );
     } else {
-      _setError(result.error!);
-      return null;
+      state = state.copyWith(
+        isLoading: false,
+        error: result.error,
+      );
     }
   }
 
-  /// Creates union of two DFAs
-  Future<AutomatonEntity?> unionDfa(AutomatonEntity a, AutomatonEntity b) async {
-    _setLoading(true);
-    _clearError();
-
-    final result = await _unionDfaUseCase.execute(a, b);
-
-    _setLoading(false);
-
+  /// Unions two DFAs
+  Future<void> unionDfa(AutomatonEntity dfa1, AutomatonEntity dfa2) async {
+    state = state.copyWith(isLoading: true, error: null);
+    
+    final result = await _unionDfaUseCase.execute(dfa1, dfa2);
+    
     if (result.isSuccess) {
-      return result.data;
+      state = state.copyWith(
+        isLoading: false,
+        result: result.data,
+      );
     } else {
-      _setError(result.error!);
-      return null;
+      state = state.copyWith(
+        isLoading: false,
+        error: result.error,
+      );
     }
   }
 
-  /// Creates intersection of two DFAs
-  Future<AutomatonEntity?> intersectionDfa(AutomatonEntity a, AutomatonEntity b) async {
-    _setLoading(true);
-    _clearError();
-
-    final result = await _intersectionDfaUseCase.execute(a, b);
-
-    _setLoading(false);
-
+  /// Intersects two DFAs
+  Future<void> intersectionDfa(AutomatonEntity dfa1, AutomatonEntity dfa2) async {
+    state = state.copyWith(isLoading: true, error: null);
+    
+    final result = await _intersectionDfaUseCase.execute(dfa1, dfa2);
+    
     if (result.isSuccess) {
-      return result.data;
+      state = state.copyWith(
+        isLoading: false,
+        result: result.data,
+      );
     } else {
-      _setError(result.error!);
-      return null;
+      state = state.copyWith(
+        isLoading: false,
+        error: result.error,
+      );
     }
   }
 
-  /// Creates difference of two DFAs
-  Future<AutomatonEntity?> differenceDfa(AutomatonEntity a, AutomatonEntity b) async {
-    _setLoading(true);
-    _clearError();
-
-    final result = await _differenceDfaUseCase.execute(a, b);
-
-    _setLoading(false);
-
+  /// Differences two DFAs
+  Future<void> differenceDfa(AutomatonEntity dfa1, AutomatonEntity dfa2) async {
+    state = state.copyWith(isLoading: true, error: null);
+    
+    final result = await _differenceDfaUseCase.execute(dfa1, dfa2);
+    
     if (result.isSuccess) {
-      return result.data;
+      state = state.copyWith(
+        isLoading: false,
+        result: result.data,
+      );
     } else {
-      _setError(result.error!);
-      return null;
+      state = state.copyWith(
+        isLoading: false,
+        error: result.error,
+      );
     }
   }
 
-  /// Creates prefix closure of a DFA
-  Future<AutomatonEntity?> prefixClosureDfa(AutomatonEntity dfa) async {
-    _setLoading(true);
-    _clearError();
-
+  /// Prefix closure of DFA
+  Future<void> prefixClosureDfa(AutomatonEntity dfa) async {
+    state = state.copyWith(isLoading: true, error: null);
+    
     final result = await _prefixClosureUseCase.execute(dfa);
-
-    _setLoading(false);
-
+    
     if (result.isSuccess) {
-      return result.data;
+      state = state.copyWith(
+        isLoading: false,
+        result: result.data,
+      );
     } else {
-      _setError(result.error!);
-      return null;
+      state = state.copyWith(
+        isLoading: false,
+        error: result.error,
+      );
     }
   }
 
-  /// Creates suffix closure of a DFA
-  Future<AutomatonEntity?> suffixClosureDfa(AutomatonEntity dfa) async {
-    _setLoading(true);
-    _clearError();
-
+  /// Suffix closure of DFA
+  Future<void> suffixClosureDfa(AutomatonEntity dfa) async {
+    state = state.copyWith(isLoading: true, error: null);
+    
     final result = await _suffixClosureUseCase.execute(dfa);
-
-    _setLoading(false);
-
+    
     if (result.isSuccess) {
-      return result.data;
+      state = state.copyWith(
+        isLoading: false,
+        result: result.data,
+      );
     } else {
-      _setError(result.error!);
-      return null;
+      state = state.copyWith(
+        isLoading: false,
+        error: result.error,
+      );
     }
   }
 
   /// Converts regex to NFA
-  Future<AutomatonEntity?> regexToNfa(String regex) async {
-    _setLoading(true);
-    _clearError();
-
+  Future<void> convertRegexToNfa(String regex) async {
+    state = state.copyWith(isLoading: true, error: null);
+    
     final result = await _regexToNfaUseCase.execute(regex);
-
-    _setLoading(false);
-
+    
     if (result.isSuccess) {
-      return result.data;
+      state = state.copyWith(
+        isLoading: false,
+        result: result.data,
+      );
     } else {
-      _setError(result.error!);
-      return null;
+      state = state.copyWith(
+        isLoading: false,
+        error: result.error,
+      );
     }
   }
 
   /// Converts DFA to regex
-  Future<String?> dfaToRegex(AutomatonEntity dfa, {bool allowLambda = false}) async {
-    _setLoading(true);
-    _clearError();
-
-    final result = await _dfaToRegexUseCase.execute(dfa, allowLambda: allowLambda);
-
-    _setLoading(false);
-
+  Future<void> convertDfaToRegex(AutomatonEntity dfa) async {
+    state = state.copyWith(isLoading: true, error: null);
+    
+    final result = await _dfaToRegexUseCase.execute(dfa);
+    
     if (result.isSuccess) {
-      _lastRegexResult = result.data!;
-      return result.data;
+      state = state.copyWith(
+        isLoading: false,
+        result: result.data,
+      );
     } else {
-      _setError(result.error!);
-      return null;
+      state = state.copyWith(
+        isLoading: false,
+        error: result.error,
+      );
     }
   }
 
-  /// Checks if two DFAs are equivalent
-  Future<bool?> checkEquivalence(AutomatonEntity a, AutomatonEntity b) async {
-    _setLoading(true);
-    _clearError();
-
-    final result = await _checkEquivalenceUseCase.execute(a, b);
-
-    _setLoading(false);
-
+  /// Checks equivalence of two automata
+  Future<void> checkEquivalence(AutomatonEntity automaton1, AutomatonEntity automaton2) async {
+    state = state.copyWith(isLoading: true, error: null);
+    
+    final result = await _checkEquivalenceUseCase.execute(automaton1, automaton2);
+    
     if (result.isSuccess) {
-      _lastEquivalenceResult = result.data!;
-      return result.data;
+      state = state.copyWith(
+        isLoading: false,
+        result: result.data,
+      );
     } else {
-      _setError(result.error!);
-      return null;
+      state = state.copyWith(
+        isLoading: false,
+        error: result.error,
+      );
     }
   }
 
-  /// Simulates a word on an automaton
-  Future<SimulationResult?> simulateWord(AutomatonEntity automaton, String word) async {
-    _setLoading(true);
-    _clearError();
-
+  /// Simulates word on automaton
+  Future<void> simulateWord(AutomatonEntity automaton, String word) async {
+    state = state.copyWith(isLoading: true, error: null);
+    
     final result = await _simulateWordUseCase.execute(automaton, word);
-
-    _setLoading(false);
-
+    
     if (result.isSuccess) {
-      return result.data;
+      state = state.copyWith(
+        isLoading: false,
+        result: result.data,
+      );
     } else {
-      _setError(result.error!);
-      return null;
+      state = state.copyWith(
+        isLoading: false,
+        error: result.error,
+      );
     }
   }
 
   /// Creates step-by-step simulation
-  Future<StepByStepSimulation?> createStepByStepSimulation(
-    AutomatonEntity automaton, 
-    String word
-  ) async {
-    _setLoading(true);
-    _clearError();
-
+  Future<void> createStepByStepSimulation(AutomatonEntity automaton, String word) async {
+    state = state.copyWith(isLoading: true, error: null);
+    
     final result = await _createStepByStepSimulationUseCase.execute(automaton, word);
-
-    _setLoading(false);
-
+    
     if (result.isSuccess) {
-      return result.data;
+      state = state.copyWith(
+        isLoading: false,
+        result: result.data,
+      );
     } else {
-      _setError(result.error!);
-      return null;
+      state = state.copyWith(
+        isLoading: false,
+        error: result.error,
+      );
     }
   }
 
-  /// Clears any error state
-  void clearError() {
-    _clearError();
-  }
-
-  // Private methods
-  void _setLoading(bool loading) {
-    _isLoading = loading;
-    notifyListeners();
-  }
-
-  void _setError(String error) {
-    _error = error;
-    notifyListeners();
-  }
-
-  void _clearError() {
-    _error = null;
-    notifyListeners();
+  /// Clears the current result
+  void clearResult() {
+    state = state.copyWith(result: null, error: null);
   }
 }
 
+/// State for algorithm operations
+class AlgorithmState {
+  final bool isLoading;
+  final String? error;
+  final dynamic result;
+
+  const AlgorithmState({
+    required this.isLoading,
+    this.error,
+    this.result,
+  });
+
+  factory AlgorithmState.initial() {
+    return const AlgorithmState(
+      isLoading: false,
+      error: null,
+      result: null,
+    );
+  }
+
+  AlgorithmState copyWith({
+    bool? isLoading,
+    String? error,
+    dynamic result,
+  }) {
+    return AlgorithmState(
+      isLoading: isLoading ?? this.isLoading,
+      error: error ?? this.error,
+      result: result ?? this.result,
+    );
+  }
+}

@@ -1,936 +1,562 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
-import '../../core/entities/automaton_entity.dart';
-import '../providers/automaton_provider.dart';
-import '../providers/algorithm_provider.dart';
-import '../../injection/dependency_injection.dart';
-import '../../core/grammar.dart';
-import '../../core/algorithms.dart';
-import '../../core/automaton.dart';
-import '../../core/cfg.dart';
-import '../../core/ll_parsing.dart';
-import '../../core/lr_parsing.dart';
-import 'minimization_interface.dart';
-import 'pumping_lemma_interface.dart';
-import 'examples_library.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Panel for algorithm operations
-class AlgorithmPanel extends StatelessWidget {
-  final AutomatonType type;
+/// Panel for algorithm operations and controls
+class AlgorithmPanel extends StatefulWidget {
+  final VoidCallback? onNfaToDfa;
+  final VoidCallback? onMinimizeDfa;
+  final VoidCallback? onClear;
+  final Function(String)? onRegexToNfa;
+  final VoidCallback? onFaToRegex;
 
   const AlgorithmPanel({
     super.key,
-    required this.type,
+    this.onNfaToDfa,
+    this.onMinimizeDfa,
+    this.onClear,
+    this.onRegexToNfa,
+    this.onFaToRegex,
   });
+
+  @override
+  State<AlgorithmPanel> createState() => _AlgorithmPanelState();
+}
+
+class _AlgorithmPanelState extends State<AlgorithmPanel> {
+  final TextEditingController _regexController = TextEditingController();
+  bool _isExecuting = false;
+  String? _currentAlgorithm;
+  double _executionProgress = 0.0;
+  String? _executionStatus;
+  List<AlgorithmStep> _algorithmSteps = [];
+  int _currentStepIndex = 0;
+
+  @override
+  void dispose() {
+    _regexController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             Text(
-              'Algoritmos',
-              style: Theme.of(context).textTheme.titleMedium,
+              'Algorithms',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 16),
-            ..._buildAlgorithmButtons(context),
+            
+            // Regex to NFA conversion
+            _buildRegexInput(context),
+            
+            const SizedBox(height: 12),
+            
+            // NFA to DFA conversion
+            _buildAlgorithmButton(
+              context,
+              title: 'NFA to DFA',
+              description: 'Convert non-deterministic to deterministic automaton',
+              icon: Icons.transform,
+              onPressed: () => _executeAlgorithm('NFA to DFA', widget.onNfaToDfa),
+            ),
+            
+            const SizedBox(height: 12),
+            
+            // DFA minimization
+            _buildAlgorithmButton(
+              context,
+              title: 'Minimize DFA',
+              description: 'Minimize deterministic finite automaton',
+              icon: Icons.compress,
+              onPressed: () => _executeAlgorithm('Minimize DFA', widget.onMinimizeDfa),
+            ),
+            
+            const SizedBox(height: 12),
+            
+            // FA to Regex conversion
+            _buildAlgorithmButton(
+              context,
+              title: 'FA to Regex',
+              description: 'Convert finite automaton to regular expression',
+              icon: Icons.text_fields,
+              onPressed: () => _executeAlgorithm('FA to Regex', widget.onFaToRegex),
+            ),
+            
+            const SizedBox(height: 12),
+            
+            // Clear automaton
+            _buildAlgorithmButton(
+              context,
+              title: 'Clear',
+              description: 'Clear current automaton',
+              icon: Icons.clear,
+              onPressed: widget.onClear,
+              isDestructive: true,
+            ),
+            
+            // Progress indicator
+            if (_isExecuting) ...[
+              const SizedBox(height: 16),
+              _buildProgressIndicator(context),
+            ],
+            
+            // Algorithm execution steps
+            if (_algorithmSteps.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _buildAlgorithmSteps(context),
+            ],
           ],
         ),
       ),
+        ),
     );
   }
 
-  List<Widget> _buildAlgorithmButtons(BuildContext context) {
-    switch (type) {
-      case AutomatonType.dfa:
-        return _buildDfaAlgorithms(context);
-      case AutomatonType.nfa:
-      case AutomatonType.nfaLambda:
-        return _buildNfaAlgorithms(context);
-      case AutomatonType.grammar:
-      case AutomatonType.regex:
-        return _buildGrammarAlgorithms(context);
-    }
-  }
-
-  List<Widget> _buildDfaAlgorithms(BuildContext context) {
-    return [
-      _buildAlgorithmButton(
-        context,
-        'Biblioteca de Exemplos',
-        Icons.library_books,
-        () => _showExamplesLibrary(context),
-      ),
-      const SizedBox(height: 8),
-      _buildAlgorithmButton(
-        context,
-        'Completar AFD',
-        Icons.check_circle,
-        () => _completeDfa(context),
-      ),
-      const SizedBox(height: 8),
-      _buildAlgorithmButton(
-        context,
-        'Complemento',
-        Icons.flip,
-        () => _complementDfa(context),
-      ),
-      const SizedBox(height: 8),
-      _buildAlgorithmButton(
-        context,
-        'Minimizar AFD (Interativo)',
-        Icons.compress,
-        () => _showMinimizationInterface(context),
-      ),
-      const SizedBox(height: 8),
-      _buildAlgorithmButton(
-        context,
-        'Lema do Bombeamento',
-        Icons.water_drop,
-        () => _showPumpingLemmaInterface(context),
-      ),
-      const SizedBox(height: 8),
-      _buildAlgorithmButton(
-        context,
-        'Fecho por Prefixos',
-        Icons.arrow_forward,
-        () => _prefixClosure(context),
-      ),
-      const SizedBox(height: 8),
-      _buildAlgorithmButton(
-        context,
-        'Fecho por Sufixos',
-        Icons.arrow_back,
-        () => _suffixClosure(context),
-      ),
-      const SizedBox(height: 8),
-      _buildAlgorithmButton(
-        context,
-        'AFD → ER',
-        Icons.text_fields,
-        () => _dfaToRegex(context),
-      ),
-    ];
-  }
-
-  List<Widget> _buildNfaAlgorithms(BuildContext context) {
-    return [
-      _buildAlgorithmButton(
-        context,
-        'AFNλ → AFN',
-        Icons.remove_circle,
-        () => _removeLambdaTransitions(context),
-      ),
-      const SizedBox(height: 8),
-      _buildAlgorithmButton(
-        context,
-        'AFN → AFD',
-        Icons.transform,
-        () => _nfaToDfa(context),
-      ),
-      const SizedBox(height: 8),
-      _buildAlgorithmButton(
-        context,
-        'AFN → AFD e abrir',
-        Icons.open_in_new,
-        () => _nfaToDfaAndOpen(context),
-      ),
-    ];
-  }
-
-  List<Widget> _buildGrammarAlgorithms(BuildContext context) {
-    return [
-      _buildAlgorithmButton(
-        context,
-        'ER → AF',
-        Icons.auto_awesome,
-        () => _regexToNfa(context),
-      ),
-      const SizedBox(height: 8),
-      _buildAlgorithmButton(
-        context,
-        'GR → AF',
-        Icons.account_tree,
-        () => _grammarToNfa(context),
-      ),
-      const SizedBox(height: 8),
-      _buildAlgorithmButton(
-        context,
-        'GR → AFD',
-        Icons.account_tree,
-        () => _grammarToDfa(context),
-      ),
-      const SizedBox(height: 8),
-      _buildAlgorithmButton(
-        context,
-        'AF → GR',
-        Icons.text_snippet,
-        () => _automatonToGrammar(context),
-      ),
-      const SizedBox(height: 8),
-      _buildAlgorithmButton(
-        context,
-        'LL(1) Parsing',
-        Icons.arrow_forward,
-        () => _llParsing(context),
-      ),
-      const SizedBox(height: 8),
-      _buildAlgorithmButton(
-        context,
-        'LR(1) Parsing',
-        Icons.arrow_back,
-        () => _lrParsing(context),
-      ),
-    ];
+  Widget _buildRegexInput(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Regex to NFA',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _regexController,
+                decoration: const InputDecoration(
+                  labelText: 'Regular Expression',
+                  hintText: 'e.g., (a|b)*',
+                  border: OutlineInputBorder(),
+                ),
+                onSubmitted: (value) {
+                  if (value.isNotEmpty && widget.onRegexToNfa != null) {
+                    widget.onRegexToNfa!(value);
+                  }
+                },
+              ),
+            ),
+            const SizedBox(width: 8),
+            ElevatedButton(
+              onPressed: () {
+                if (_regexController.text.isNotEmpty && widget.onRegexToNfa != null) {
+                  widget.onRegexToNfa!(_regexController.text);
+                }
+              },
+              child: const Icon(Icons.arrow_forward),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 
   Widget _buildAlgorithmButton(
-    BuildContext context,
-    String title,
-    IconData icon,
-    VoidCallback onPressed,
-  ) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: onPressed,
-        icon: Icon(icon),
-        label: Text(title),
-        style: ElevatedButton.styleFrom(
-          alignment: Alignment.centerLeft,
-        ),
-      ),
-    );
-  }
-
-  // Algorithm handlers
-  void _completeDfa(BuildContext context) async {
-    final automatonProvider = Provider.of<AutomatonProvider>(context, listen: false);
-    final algorithmProvider = getIt<AlgorithmProvider>();
+    BuildContext context, {
+    required String title,
+    required String description,
+    required IconData icon,
+    VoidCallback? onPressed,
+    bool isDestructive = false,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final color = isDestructive ? colorScheme.error : colorScheme.primary;
+    final isCurrentAlgorithm = _currentAlgorithm == title;
+    final isDisabled = _isExecuting && !isCurrentAlgorithm;
     
-    if (automatonProvider.currentAutomaton == null) {
-      _showError(context, 'Nenhum autômato carregado');
-      return;
-    }
-
-    final result = await algorithmProvider.completeDfa(automatonProvider.currentAutomaton!);
-    if (result != null) {
-      automatonProvider.setCurrentAutomaton(result);
-      _showSuccess(context, 'AFD completado com sucesso');
-    } else {
-      _showError(context, algorithmProvider.error ?? 'Erro desconhecido');
-    }
-  }
-
-  void _complementDfa(BuildContext context) async {
-    final automatonProvider = Provider.of<AutomatonProvider>(context, listen: false);
-    final algorithmProvider = getIt<AlgorithmProvider>();
-    
-    if (automatonProvider.currentAutomaton == null) {
-      _showError(context, 'Nenhum autômato carregado');
-      return;
-    }
-
-    final result = await algorithmProvider.complementDfa(automatonProvider.currentAutomaton!);
-    if (result != null) {
-      automatonProvider.setCurrentAutomaton(result);
-      _showSuccess(context, 'Complemento do AFD criado com sucesso');
-    } else {
-      _showError(context, algorithmProvider.error ?? 'Erro desconhecido');
-    }
-  }
-
-  void _minimizeDfa(BuildContext context) async {
-    final automatonProvider = Provider.of<AutomatonProvider>(context, listen: false);
-    final algorithmProvider = getIt<AlgorithmProvider>();
-    
-    if (automatonProvider.currentAutomaton == null) {
-      _showError(context, 'Nenhum autômato carregado');
-      return;
-    }
-
-    final result = await algorithmProvider.minimizeDfa(automatonProvider.currentAutomaton!);
-    if (result != null) {
-      automatonProvider.setCurrentAutomaton(result);
-      _showSuccess(context, 'AFD minimizado com sucesso');
-    } else {
-      _showError(context, algorithmProvider.error ?? 'Erro desconhecido');
-    }
-  }
-
-  void _showMinimizationInterface(BuildContext context) {
-    final automatonProvider = Provider.of<AutomatonProvider>(context, listen: false);
-    
-    if (automatonProvider.currentAutomaton == null) {
-      _showError(context, 'Nenhum autômato carregado');
-      return;
-    }
-
-    if (automatonProvider.currentAutomaton!.type != AutomatonType.dfa) {
-      _showError(context, 'A interface de minimização só funciona com DFAs');
-      return;
-    }
-
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        child: Container(
-          width: MediaQuery.of(context).size.width * 0.9,
-          height: MediaQuery.of(context).size.height * 0.8,
-          child: const MinimizationInterface(),
-        ),
-      ),
-    );
-  }
-
-  void _showPumpingLemmaInterface(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        child: Container(
-          width: MediaQuery.of(context).size.width * 0.9,
-          height: MediaQuery.of(context).size.height * 0.8,
-          child: const PumpingLemmaInterface(),
-        ),
-      ),
-    );
-  }
-
-  void _showExamplesLibrary(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        child: Container(
-          width: MediaQuery.of(context).size.width * 0.9,
-          height: MediaQuery.of(context).size.height * 0.8,
-          child: const ExamplesLibrary(),
-        ),
-      ),
-    );
-  }
-
-  void _prefixClosure(BuildContext context) async {
-    final automatonProvider = Provider.of<AutomatonProvider>(context, listen: false);
-    final algorithmProvider = getIt<AlgorithmProvider>();
-    
-    if (automatonProvider.currentAutomaton == null) {
-      _showError(context, 'Nenhum autômato carregado');
-      return;
-    }
-
-    final result = await algorithmProvider.prefixClosureDfa(automatonProvider.currentAutomaton!);
-    if (result != null) {
-      automatonProvider.setCurrentAutomaton(result);
-      _showSuccess(context, 'Fecho por prefixos criado com sucesso');
-    } else {
-      _showError(context, algorithmProvider.error ?? 'Erro desconhecido');
-    }
-  }
-
-  void _suffixClosure(BuildContext context) async {
-    final automatonProvider = Provider.of<AutomatonProvider>(context, listen: false);
-    final algorithmProvider = getIt<AlgorithmProvider>();
-    
-    if (automatonProvider.currentAutomaton == null) {
-      _showError(context, 'Nenhum autômato carregado');
-      return;
-    }
-
-    final result = await algorithmProvider.suffixClosureDfa(automatonProvider.currentAutomaton!);
-    if (result != null) {
-      automatonProvider.setCurrentAutomaton(result);
-      _showSuccess(context, 'Fecho por sufixos criado com sucesso');
-    } else {
-      _showError(context, algorithmProvider.error ?? 'Erro desconhecido');
-    }
-  }
-
-  void _dfaToRegex(BuildContext context) async {
-    final automatonProvider = Provider.of<AutomatonProvider>(context, listen: false);
-    final algorithmProvider = getIt<AlgorithmProvider>();
-    
-    if (automatonProvider.currentAutomaton == null) {
-      _showError(context, 'Nenhum autômato carregado');
-      return;
-    }
-
-    final result = await algorithmProvider.dfaToRegex(automatonProvider.currentAutomaton!);
-    if (result != null) {
-      _showRegexResult(context, result);
-    } else {
-      _showError(context, algorithmProvider.error ?? 'Erro desconhecido');
-    }
-  }
-
-  void _removeLambdaTransitions(BuildContext context) async {
-    final automatonProvider = Provider.of<AutomatonProvider>(context, listen: false);
-    final algorithmProvider = getIt<AlgorithmProvider>();
-    
-    if (automatonProvider.currentAutomaton == null) {
-      _showError(context, 'Nenhum autômato carregado');
-      return;
-    }
-
-    final result = await algorithmProvider.removeLambdaTransitions(automatonProvider.currentAutomaton!);
-    if (result != null) {
-      automatonProvider.setCurrentAutomaton(result);
-      _showSuccess(context, 'Transições lambda removidas com sucesso');
-    } else {
-      _showError(context, algorithmProvider.error ?? 'Erro desconhecido');
-    }
-  }
-
-  void _nfaToDfa(BuildContext context) async {
-    final automatonProvider = Provider.of<AutomatonProvider>(context, listen: false);
-    final algorithmProvider = getIt<AlgorithmProvider>();
-    
-    if (automatonProvider.currentAutomaton == null) {
-      _showError(context, 'Nenhum autômato carregado');
-      return;
-    }
-
-    final result = await algorithmProvider.nfaToDfa(automatonProvider.currentAutomaton!);
-    if (result != null) {
-      automatonProvider.setCurrentAutomaton(result);
-      _showSuccess(context, 'AFN convertido para AFD com sucesso');
-    } else {
-      _showError(context, algorithmProvider.error ?? 'Erro desconhecido');
-    }
-  }
-
-  void _nfaToDfaAndOpen(BuildContext context) async {
-    final automatonProvider = Provider.of<AutomatonProvider>(context, listen: false);
-    final algorithmProvider = getIt<AlgorithmProvider>();
-    
-    if (automatonProvider.currentAutomaton == null) {
-      _showError(context, 'Nenhum autômato carregado');
-      return;
-    }
-
-    final result = await algorithmProvider.nfaToDfa(automatonProvider.currentAutomaton!);
-    if (result != null) {
-      // TODO: Open in new tab - for now, just replace current
-      automatonProvider.setCurrentAutomaton(result);
-      _showSuccess(context, 'AFN convertido para AFD e aberto com sucesso');
-    } else {
-      _showError(context, algorithmProvider.error ?? 'Erro desconhecido');
-    }
-  }
-
-  void _regexToNfa(BuildContext context) async {
-    final algorithmProvider = getIt<AlgorithmProvider>();
-    
-    final regex = await _showRegexInputDialog(context);
-    if (regex != null && regex.isNotEmpty) {
-      final result = await algorithmProvider.regexToNfa(regex);
-      if (result != null) {
-        final automatonProvider = Provider.of<AutomatonProvider>(context, listen: false);
-        automatonProvider.setCurrentAutomaton(result);
-        _showSuccess(context, 'Expressão regular convertida para AFN com sucesso');
-      } else {
-        _showError(context, algorithmProvider.error ?? 'Erro desconhecido');
-      }
-    }
-  }
-
-  void _grammarToNfa(BuildContext context) async {
-    final grammar = await _showGrammarInputDialog(context);
-    if (grammar != null && grammar.isNotEmpty) {
-      try {
-        // Import the grammar conversion function
-        final automaton = automatonFromGrammar(grammar);
-        final automatonProvider = Provider.of<AutomatonProvider>(context, listen: false);
-        
-        // Convert to entity
-        final entity = _convertAutomatonToEntity(automaton, 'Gramática Convertida');
-        automatonProvider.setCurrentAutomaton(entity);
-        
-        _showSuccess(context, 'Gramática convertida para AFN com sucesso');
-      } catch (e) {
-        _showError(context, 'Erro ao converter gramática: $e');
-      }
-    }
-  }
-
-  void _grammarToDfa(BuildContext context) async {
-    final grammar = await _showGrammarInputDialog(context);
-    if (grammar != null && grammar.isNotEmpty) {
-      try {
-        // First convert to NFA, then to DFA
-        final nfa = automatonFromGrammar(grammar);
-        final dfa = nfaToDfa(nfa);
-        final automatonProvider = Provider.of<AutomatonProvider>(context, listen: false);
-        
-        // Convert to entity
-        final entity = _convertAutomatonToEntity(dfa, 'Gramática Convertida');
-        automatonProvider.setCurrentAutomaton(entity);
-        
-        _showSuccess(context, 'Gramática convertida para AFD com sucesso');
-      } catch (e) {
-        _showError(context, 'Erro ao converter gramática: $e');
-      }
-    }
-  }
-
-  void _automatonToGrammar(BuildContext context) async {
-    final automatonProvider = Provider.of<AutomatonProvider>(context, listen: false);
-    
-    if (automatonProvider.currentAutomaton == null) {
-      _showError(context, 'Nenhum autômato carregado');
-      return;
-    }
-
-    try {
-      // Convert entity to automaton
-      final automaton = _convertEntityToAutomaton(automatonProvider.currentAutomaton!);
-      final grammar = exportGrammarFromAutomaton(automaton);
-      
-      _showGrammarResult(context, grammar);
-    } catch (e) {
-      _showError(context, 'Erro ao converter automaton para gramática: $e');
-    }
-  }
-
-  // Helper methods
-  void _showError(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
-    );
-  }
-
-  void _showSuccess(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.green,
-      ),
-    );
-  }
-
-  void _showRegexResult(BuildContext context, String regex) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Expressão Regular Resultante'),
-        content: SelectableText(
-          regex,
-          style: const TextStyle(fontFamily: 'monospace', fontSize: 16),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Fechar'),
+    return InkWell(
+      onTap: isDisabled ? null : onPressed,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: isCurrentAlgorithm 
+                ? color
+                : color.withOpacity(0.3),
+            width: isCurrentAlgorithm ? 2 : 1,
           ),
-          TextButton(
-            onPressed: () async {
-              await Clipboard.setData(ClipboardData(text: regex));
-              Navigator.pop(context);
-              _showSuccess(context, 'Expressão regular copiada para a área de transferência');
-            },
-            child: const Text('Copiar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<String?> _showRegexInputDialog(BuildContext context) async {
-    final controller = TextEditingController();
-    
-    return showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Expressão Regular'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            labelText: 'Digite a expressão regular',
-            hintText: 'Ex: (a|b)*, a*b+, etc.',
-            border: OutlineInputBorder(),
-          ),
-          autofocus: true,
+          borderRadius: BorderRadius.circular(8),
+          color: isCurrentAlgorithm 
+              ? color.withOpacity(0.1)
+              : isDisabled 
+                  ? colorScheme.surfaceVariant.withOpacity(0.5)
+                  : null,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: const Text('Converter'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<String?> _showGrammarInputDialog(BuildContext context) async {
-    final controller = TextEditingController();
-    
-    return showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Gramática Regular'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            const Text(
-              'Digite a gramática regular no formato:\n'
-              'S -> aA | bB\n'
-              'A -> aA | λ\n'
-              'B -> bB | λ',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              maxLines: 6,
-              decoration: const InputDecoration(
-                labelText: 'Gramática',
-                hintText: 'S -> aA | bB\nA -> aA | λ',
-                border: OutlineInputBorder(),
+            if (isCurrentAlgorithm && _isExecuting)
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(color),
+                ),
+              )
+            else
+              Icon(
+                icon,
+                color: isDisabled 
+                    ? colorScheme.outline.withOpacity(0.5)
+                    : color,
+                size: 24,
               ),
-              autofocus: true,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: isDisabled 
+                          ? colorScheme.outline.withOpacity(0.5)
+                          : color,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    isCurrentAlgorithm && _executionStatus != null
+                        ? _executionStatus!
+                        : description,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: isDisabled 
+                          ? colorScheme.outline.withOpacity(0.5)
+                          : colorScheme.onSurface.withOpacity(0.7),
+                    ),
+                  ),
+                ],
+              ),
             ),
+            if (isCurrentAlgorithm && _isExecuting)
+              Text(
+                '${(_executionProgress * 100).toInt()}%',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
+              )
+            else
+              Icon(
+                Icons.arrow_forward_ios,
+                color: isDisabled 
+                    ? colorScheme.outline.withOpacity(0.5)
+                    : color.withOpacity(0.5),
+                size: 16,
+              ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: const Text('Converter'),
-          ),
-        ],
       ),
     );
   }
 
-  void _showGrammarResult(BuildContext context, String grammar) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Gramática Regular Resultante'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Gramática gerada a partir do autômato:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.shade300),
+  Widget _buildProgressIndicator(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceVariant,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.auto_awesome,
+                color: Theme.of(context).colorScheme.primary,
+                size: 20,
               ),
-              child: SelectableText(
-                grammar,
-                style: const TextStyle(
-                  fontFamily: 'monospace',
-                  fontSize: 14,
+              const SizedBox(width: 8),
+              Text(
+                'Executing $_currentAlgorithm',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Fechar'),
+            ],
           ),
-          TextButton(
-            onPressed: () async {
-              await Clipboard.setData(ClipboardData(text: grammar));
-              Navigator.pop(context);
-              _showSuccess(context, 'Gramática copiada para a área de transferência');
-            },
-            child: const Text('Copiar'),
+          const SizedBox(height: 12),
+          LinearProgressIndicator(
+            value: _executionProgress,
+            backgroundColor: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            valueColor: AlwaysStoppedAnimation<Color>(
+              Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _executionStatus ?? 'Processing...',
+            style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
       ),
     );
   }
 
-  // Conversion helper methods
-  AutomatonEntity _convertAutomatonToEntity(Automaton automaton, String name) {
-    final states = automaton.states.map((state) => StateEntity(
-      id: state.id,
-      name: state.name,
-      x: state.x,
-      y: state.y,
-      isInitial: state.isInitial,
-      isFinal: state.isFinal,
-    )).toList();
-
-    return AutomatonEntity(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: name,
-      alphabet: automaton.alphabet,
-      states: states,
-      transitions: automaton.transitions,
-      initialId: automaton.initialId,
-      nextId: automaton.nextId,
-      type: automaton.isDfa ? AutomatonType.dfa : AutomatonType.nfa,
-    );
-  }
-
-  Automaton _convertEntityToAutomaton(AutomatonEntity entity) {
-    final states = entity.states.map((state) => StateNode(
-      id: state.id,
-      name: state.name,
-      x: state.x,
-      y: state.y,
-      isInitial: state.isInitial,
-      isFinal: state.isFinal,
-    )).toList();
-
-    return Automaton(
-      alphabet: entity.alphabet,
-      states: states,
-      transitions: entity.transitions,
-      initialId: entity.initialId,
-      nextId: entity.nextId,
-    );
-  }
-
-  void _llParsing(BuildContext context) {
-    // Show LL parsing dialog
-    showDialog(
-      context: context,
-      builder: (context) => _LLParsingDialog(),
-    );
-  }
-
-  void _lrParsing(BuildContext context) {
-    // Show LR parsing dialog
-    showDialog(
-      context: context,
-      builder: (context) => _LRParsingDialog(),
-    );
-  }
-}
-
-/// Dialog for LL(1) parsing
-class _LLParsingDialog extends StatefulWidget {
-  @override
-  State<_LLParsingDialog> createState() => _LLParsingDialogState();
-}
-
-class _LLParsingDialogState extends State<_LLParsingDialog> {
-  final TextEditingController _grammarController = TextEditingController();
-  final TextEditingController _inputController = TextEditingController();
-  String _result = '';
-  List<String> _steps = [];
-
-  @override
-  void dispose() {
-    _grammarController.dispose();
-    _inputController.dispose();
-    super.dispose();
-  }
-
-  void _parse() {
-    try {
-      final grammar = ContextFreeGrammar.fromString(_grammarController.text);
-      final result = LLParsing.parseString(grammar, _inputController.text);
-      
-      setState(() {
-        _result = result.accepted ? 'Aceita' : 'Rejeitada';
-        _steps = result.steps;
-      });
-    } catch (e) {
-      setState(() {
-        _result = 'Erro: $e';
-        _steps = [];
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('LL(1) Parsing'),
-      content: SizedBox(
-        width: 400,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _grammarController,
-              decoration: const InputDecoration(
-                labelText: 'Gramática (ex: S → aSb | λ)',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
+  Widget _buildAlgorithmSteps(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceVariant,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Algorithm Steps',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _inputController,
-              decoration: const InputDecoration(
-                labelText: 'String de entrada',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _parse,
-              child: const Text('Parsear'),
-            ),
-            if (_result.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Text('Resultado: $_result'),
-              if (_steps.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Container(
-                  height: 200,
+          ),
+          const SizedBox(height: 12),
+          Container(
+            height: 200,
+            child: ListView.builder(
+              itemCount: _algorithmSteps.length,
+              itemBuilder: (context, index) {
+                final step = _algorithmSteps[index];
+                final isCurrentStep = index == _currentStepIndex;
+                final isCompleted = index < _currentStepIndex;
+                
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
+                    color: isCurrentStep 
+                        ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
+                        : isCompleted
+                            ? Theme.of(context).colorScheme.surface
+                            : null,
+                    border: Border.all(
+                      color: isCurrentStep 
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                    ),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: ListView.builder(
-                    itemCount: _steps.length,
-                    itemBuilder: (context, index) {
-                      return ListTile(
-                        leading: CircleAvatar(
-                          radius: 12,
-                          child: Text('${index + 1}'),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 12,
+                        backgroundColor: isCompleted
+                            ? Colors.green
+                            : isCurrentStep
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                        child: isCompleted
+                            ? const Icon(Icons.check, size: 16, color: Colors.white)
+                            : Text(
+                                '${index + 1}',
+                                style: TextStyle(
+                                  color: isCurrentStep 
+                                      ? Theme.of(context).colorScheme.onPrimary
+                                      : Theme.of(context).colorScheme.onSurface,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              step.title,
+                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              step.description,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
                         ),
-                        title: Text(_steps[index]),
-                      );
-                    },
+                      ),
+                      if (isCurrentStep)
+                        SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-                ),
-              ],
-            ],
-          ],
-        ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Fechar'),
-        ),
-      ],
     );
   }
-}
 
-/// Dialog for LR(1) parsing
-class _LRParsingDialog extends StatefulWidget {
-  @override
-  State<_LRParsingDialog> createState() => _LRParsingDialogState();
-}
-
-class _LRParsingDialogState extends State<_LRParsingDialog> {
-  final TextEditingController _grammarController = TextEditingController();
-  final TextEditingController _inputController = TextEditingController();
-  String _result = '';
-  List<String> _steps = [];
-
-  @override
-  void dispose() {
-    _grammarController.dispose();
-    _inputController.dispose();
-    super.dispose();
+  void _executeAlgorithm(String algorithmName, VoidCallback? callback) {
+    if (callback == null) return;
+    
+    setState(() {
+      _isExecuting = true;
+      _currentAlgorithm = algorithmName;
+      _executionProgress = 0.0;
+      _executionStatus = 'Initializing...';
+      _algorithmSteps.clear();
+      _currentStepIndex = 0;
+    });
+    
+    // Generate algorithm steps
+    _generateAlgorithmSteps(algorithmName);
+    
+    // Execute the algorithm with progress simulation
+    _simulateAlgorithmExecution(callback);
   }
 
-  void _parse() {
-    try {
-      final grammar = ContextFreeGrammar.fromString(_grammarController.text);
-      final result = LRParsing.parseString(grammar, _inputController.text);
-      
-      setState(() {
-        _result = result.accepted ? 'Aceita' : 'Rejeitada';
-        _steps = result.steps;
-      });
-    } catch (e) {
-      setState(() {
-        _result = 'Erro: $e';
-        _steps = [];
-      });
+  void _generateAlgorithmSteps(String algorithmName) {
+    final steps = <AlgorithmStep>[];
+    
+    switch (algorithmName) {
+      case 'NFA to DFA':
+        steps.addAll([
+          AlgorithmStep(
+            title: 'Initialize',
+            description: 'Set up DFA states and transitions',
+          ),
+          AlgorithmStep(
+            title: 'Find Epsilon Closures',
+            description: 'Calculate epsilon closures for NFA states',
+          ),
+          AlgorithmStep(
+            title: 'Build State Transitions',
+            description: 'Create DFA transitions from NFA transitions',
+          ),
+          AlgorithmStep(
+            title: 'Determine Accepting States',
+            description: 'Mark DFA states that contain NFA accepting states',
+          ),
+          AlgorithmStep(
+            title: 'Optimize',
+            description: 'Remove unreachable states and optimize structure',
+          ),
+        ]);
+        break;
+      case 'Minimize DFA':
+        steps.addAll([
+          AlgorithmStep(
+            title: 'Initialize',
+            description: 'Set up equivalence classes',
+          ),
+          AlgorithmStep(
+            title: 'Find Distinguishable States',
+            description: 'Identify states that can be distinguished',
+          ),
+          AlgorithmStep(
+            title: 'Merge Equivalent States',
+            description: 'Combine indistinguishable states',
+          ),
+          AlgorithmStep(
+            title: 'Update Transitions',
+            description: 'Redirect transitions to merged states',
+          ),
+          AlgorithmStep(
+            title: 'Finalize',
+            description: 'Create minimized DFA',
+          ),
+        ]);
+        break;
+      case 'FA to Regex':
+        steps.addAll([
+          AlgorithmStep(
+            title: 'Initialize',
+            description: 'Set up state elimination process',
+          ),
+          AlgorithmStep(
+            title: 'Add New Start/End States',
+            description: 'Create single start and end states',
+          ),
+          AlgorithmStep(
+            title: 'Eliminate States',
+            description: 'Remove states one by one, updating transitions',
+          ),
+          AlgorithmStep(
+            title: 'Combine Transitions',
+            description: 'Merge parallel transitions with union',
+          ),
+          AlgorithmStep(
+            title: 'Extract Regex',
+            description: 'Extract final regular expression',
+          ),
+        ]);
+        break;
     }
+    
+    setState(() {
+      _algorithmSteps = steps;
+    });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('LR(1) Parsing'),
-      content: SizedBox(
-        width: 400,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _grammarController,
-              decoration: const InputDecoration(
-                labelText: 'Gramática (ex: S → aSb | λ)',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _inputController,
-              decoration: const InputDecoration(
-                labelText: 'String de entrada',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _parse,
-              child: const Text('Parsear'),
-            ),
-            if (_result.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Text('Resultado: $_result'),
-              if (_steps.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Container(
-                  height: 200,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: ListView.builder(
-                    itemCount: _steps.length,
-                    itemBuilder: (context, index) {
-                      return ListTile(
-                        leading: CircleAvatar(
-                          radius: 12,
-                          child: Text('${index + 1}'),
-                        ),
-                        title: Text(_steps[index]),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ],
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Fechar'),
-        ),
-      ],
-    );
+  void _simulateAlgorithmExecution(VoidCallback callback) {
+    _executeStep(0, callback);
   }
+
+  void _executeStep(int stepIndex, VoidCallback callback) {
+    if (stepIndex >= _algorithmSteps.length) {
+      // Algorithm completed
+      setState(() {
+        _isExecuting = false;
+        _executionProgress = 1.0;
+        _executionStatus = 'Completed successfully';
+      });
+      
+      // Execute the actual callback
+      callback();
+      return;
+    }
+    
+    setState(() {
+      _currentStepIndex = stepIndex;
+      _executionProgress = stepIndex / _algorithmSteps.length;
+      _executionStatus = 'Executing step ${stepIndex + 1} of ${_algorithmSteps.length}';
+    });
+    
+    // Simulate step execution time
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (mounted) {
+        _executeStep(stepIndex + 1, callback);
+      }
+    });
+  }
+}
+
+/// Data class for algorithm execution steps
+class AlgorithmStep {
+  final String title;
+  final String description;
+  final Map<String, dynamic>? data;
+
+  AlgorithmStep({
+    required this.title,
+    required this.description,
+    this.data,
+  });
 }

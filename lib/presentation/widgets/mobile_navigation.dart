@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Mobile-optimized navigation widget
+/// Mobile-optimized bottom navigation widget
 class MobileNavigation extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -28,8 +28,8 @@ class MobileNavigation extends StatelessWidget {
       ),
       child: SafeArea(
         child: Container(
-          height: 80,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          height: 70, // Reduced height for better space usage
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: items.asMap().entries.map((entry) {
@@ -58,36 +58,29 @@ class MobileNavigation extends StatelessWidget {
     bool isSelected,
     VoidCallback onTap,
   ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final color = isSelected ? colorScheme.primary : colorScheme.onSurface.withOpacity(0.6);
+    
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected 
-              ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               item.icon,
-              color: isSelected 
-                  ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.onSurfaceVariant,
-              size: 24,
+              color: color,
+              size: 18, // Smaller icons for better fit
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               item.label,
-              style: TextStyle(
-                color: isSelected 
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.onSurfaceVariant,
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: color,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                fontSize: 9, // Even smaller text
               ),
               textAlign: TextAlign.center,
               maxLines: 1,
@@ -104,119 +97,11 @@ class MobileNavigation extends StatelessWidget {
 class NavigationItem {
   final String label;
   final IconData icon;
-  final String? tooltip;
+  final String description;
 
   const NavigationItem({
     required this.label,
     required this.icon,
-    this.tooltip,
+    required this.description,
   });
-}
-
-/// Mobile-optimized tab bar that switches between bottom navigation and regular tabs
-class ResponsiveTabBar extends StatelessWidget implements PreferredSizeWidget {
-  final TabController controller;
-  final List<Widget> tabs;
-  final bool isScrollable;
-  final bool useBottomNavigation;
-
-  const ResponsiveTabBar({
-    super.key,
-    required this.controller,
-    required this.tabs,
-    this.isScrollable = false,
-    this.useBottomNavigation = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (useBottomNavigation) {
-      return const SizedBox.shrink(); // Bottom navigation is handled separately
-    }
-    
-    return TabBar(
-      controller: controller,
-      isScrollable: isScrollable,
-      tabs: tabs,
-      labelStyle: TextStyle(
-        fontSize: isScrollable ? 14 : 16,
-        fontWeight: FontWeight.bold,
-      ),
-      unselectedLabelStyle: TextStyle(
-        fontSize: isScrollable ? 12 : 14,
-        fontWeight: FontWeight.normal,
-      ),
-    );
-  }
-
-  @override
-  Size get preferredSize => const Size.fromHeight(48);
-}
-
-/// Mobile-optimized page view that works with bottom navigation
-class MobilePageView extends StatelessWidget {
-  final PageController controller;
-  final List<Widget> children;
-  final ValueChanged<int>? onPageChanged;
-
-  const MobilePageView({
-    super.key,
-    required this.controller,
-    required this.children,
-    this.onPageChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return PageView(
-      controller: controller,
-      // Disable swipe navigation to avoid conflicts with canvas pan/zoom
-      physics: const NeverScrollableScrollPhysics(),
-      onPageChanged: onPageChanged,
-      children: children,
-    );
-  }
-}
-
-/// Mobile-optimized app bar that adapts to screen size
-class ResponsiveAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final String title;
-  final List<Widget>? actions;
-  final bool showBackButton;
-  final VoidCallback? onBackPressed;
-
-  const ResponsiveAppBar({
-    super.key,
-    required this.title,
-    this.actions,
-    this.showBackButton = false,
-    this.onBackPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 768;
-    
-    return AppBar(
-      title: Text(
-        title,
-        style: TextStyle(
-          fontSize: isMobile ? 18 : 20,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      leading: showBackButton
-          ? IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: onBackPressed ?? () => Navigator.of(context).pop(),
-            )
-          : null,
-      actions: actions,
-      elevation: isMobile ? 2 : 4,
-      centerTitle: isMobile,
-    );
-  }
-
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }

@@ -10,13 +10,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/app.dart';
 
 void main() {
-  testWidgets('App shell renders tabs', (WidgetTester tester) async {
+  testWidgets('App shell renders navigation tabs', (WidgetTester tester) async {
     await tester.pumpWidget(const JFlutterApp());
 
-    // Title and the three tabs should be present
-    expect(find.text('JFlutter'), findsOneWidget);
-    expect(find.text('AFD'), findsOneWidget);
-    expect(find.text('AFN'), findsOneWidget);
-    expect(find.text('GR'), findsOneWidget);
+    // Navigation tabs should be present (multiple FSA texts exist - app bar and navigation)
+    expect(find.text('FSA'), findsWidgets);
+    expect(find.text('Grammar'), findsOneWidget);
+    expect(find.text('PDA'), findsOneWidget);
+    expect(find.text('TM'), findsOneWidget);
   });
 }

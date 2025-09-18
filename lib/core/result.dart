@@ -89,12 +89,12 @@ class Failure<T> extends Result<T> {
 }
 
 /// Convenience functions for creating results
-extension ResultFactory<T> on T {
+extension ResultExtensions<T> on T {
   /// Creates a success result
   Result<T> toSuccess() => Success(this);
 }
 
-extension StringResultFactory on String {
+extension StringResultExtensions on String {
   /// Creates a failure result
   Result<T> toFailure<T>() => Failure<T>(this);
 }
@@ -136,7 +136,7 @@ typedef BoolResult = Result<bool>;
 typedef ListResult<T> = Result<List<T>>;
 
 /// Static factory methods for creating results
-extension ResultFactoryStatic on Result {
+class ResultFactory {
   /// Creates a success result
   static Result<T> success<T>(T data) => Success(data);
   

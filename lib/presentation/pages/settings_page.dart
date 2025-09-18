@@ -451,7 +451,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           '• Pushdown Automata (PDA)\n'
           '• Turing Machines (TM)\n'
           '• Context-Free Grammars\n'
-          '• L-Systems\n'
+          '• Regular Expressions\n'
           '• Pumping Lemma Game\n\n'
           'Built with Flutter for mobile learning.',
         ),

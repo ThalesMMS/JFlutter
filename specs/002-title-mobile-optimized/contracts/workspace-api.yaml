@@ -1,0 +1,506 @@
+openapi: 3.0.3
+info:
+  title: JFlutter Workspace API
+  description: API contracts for mobile-optimized JFlutter core features
+  version: 1.0.0
+  contact:
+    name: JFlutter Team
+    email: support@jflutter.app
+
+servers:
+  - url: /api/v1
+    description: Local Flutter app API
+
+paths:
+  /workspaces:
+    get:
+      summary: Get all workspaces
+      description: Retrieve all workspace data for the six core features
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  workspaces:
+                    type: object
+                    properties:
+                      finite_automaton:
+                        $ref: '#/components/schemas/AutomatonData'
+                      pushdown_automaton:
+                        $ref: '#/components/schemas/AutomatonData'
+                      turing_machine:
+                        $ref: '#/components/schemas/AutomatonData'
+                      grammar:
+                        $ref: '#/components/schemas/GrammarData'
+                      regular_expression:
+                        $ref: '#/components/schemas/RegularExpressionData'
+                      pumping_lemma:
+                        $ref: '#/components/schemas/PumpingLemmaData'
+                  viewSettings:
+                    $ref: '#/components/schemas/ViewSettings'
+                  appState:
+                    $ref: '#/components/schemas/AppState'
+
+  /workspaces/{workspaceId}:
+    get:
+      summary: Get workspace by ID
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [finite_automaton, pushdown_automaton, turing_machine, grammar, regular_expression, pumping_lemma]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/AutomatonData'
+                  - $ref: '#/components/schemas/GrammarData'
+                  - $ref: '#/components/schemas/RegularExpressionData'
+                  - $ref: '#/components/schemas/PumpingLemmaData'
+        '404':
+          description: Workspace not found
+
+    put:
+      summary: Update workspace
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [finite_automaton, pushdown_automaton, turing_machine, grammar, regular_expression, pumping_lemma]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/AutomatonData'
+                - $ref: '#/components/schemas/GrammarData'
+                - $ref: '#/components/schemas/RegularExpressionData'
+                - $ref: '#/components/schemas/PumpingLemmaData'
+      responses:
+        '200':
+          description: Workspace updated successfully
+        '400':
+          description: Invalid workspace data
+        '404':
+          description: Workspace not found
+
+  /workspaces/{workspaceId}/states:
+    post:
+      summary: Add state to automaton
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [finite_automaton, pushdown_automaton, turing_machine]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/State'
+      responses:
+        '201':
+          description: State created successfully
+        '400':
+          description: Invalid state data
+        '404':
+          description: Workspace not found
+
+    delete:
+      summary: Delete state from automaton
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [finite_automaton, pushdown_automaton, turing_machine]
+        - name: stateId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: State deleted successfully
+        '404':
+          description: State or workspace not found
+
+  /workspaces/{workspaceId}/transitions:
+    post:
+      summary: Add transition to automaton
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [finite_automaton, pushdown_automaton, turing_machine]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Transition'
+      responses:
+        '201':
+          description: Transition created successfully
+        '400':
+          description: Invalid transition data
+        '404':
+          description: Workspace not found
+
+  /workspaces/{workspaceId}/simulate:
+    post:
+      summary: Simulate automaton with input string
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [finite_automaton, pushdown_automaton, turing_machine]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                inputString:
+                  type: string
+              required:
+                - inputString
+      responses:
+        '200':
+          description: Simulation completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accepted:
+                    type: boolean
+                  steps:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SimulationStep'
+        '400':
+          description: Invalid input string
+        '404':
+          description: Workspace not found
+
+  /workspaces/grammar/productions:
+    post:
+      summary: Add production to grammar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Production'
+      responses:
+        '201':
+          description: Production created successfully
+        '400':
+          description: Invalid production data
+
+  /workspaces/regular_expression/test:
+    post:
+      summary: Test regular expression against string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                expression:
+                  type: string
+                testString:
+                  type: string
+              required:
+                - expression
+                - testString
+      responses:
+        '200':
+          description: Test completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  matches:
+                    type: boolean
+                  groups:
+                    type: array
+                    items:
+                      type: string
+        '400':
+          description: Invalid expression or test string
+
+components:
+  schemas:
+    AutomatonData:
+      type: object
+      properties:
+        states:
+          type: array
+          items:
+            $ref: '#/components/schemas/State'
+        transitions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transition'
+        alphabet:
+          type: array
+          items:
+            type: string
+        initialState:
+          type: string
+          nullable: true
+        finalStates:
+          type: array
+          items:
+            type: string
+        metadata:
+          type: object
+      required:
+        - states
+        - transitions
+        - alphabet
+        - finalStates
+
+    State:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        position:
+          $ref: '#/components/schemas/Point'
+        isInitial:
+          type: boolean
+        isFinal:
+          type: boolean
+        isSelected:
+          type: boolean
+      required:
+        - id
+        - label
+        - position
+        - isInitial
+        - isFinal
+
+    Transition:
+      type: object
+      properties:
+        id:
+          type: string
+        fromState:
+          type: string
+        toState:
+          type: string
+        label:
+          type: string
+        controlPoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/Point'
+        isSelected:
+          type: boolean
+      required:
+        - id
+        - fromState
+        - toState
+        - label
+
+    Point:
+      type: object
+      properties:
+        x:
+          type: number
+        y:
+          type: number
+      required:
+        - x
+        - y
+
+    GrammarData:
+      type: object
+      properties:
+        variables:
+          type: array
+          items:
+            type: string
+        terminals:
+          type: array
+          items:
+            type: string
+        productions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Production'
+        startVariable:
+          type: string
+        metadata:
+          type: object
+      required:
+        - variables
+        - terminals
+        - productions
+        - startVariable
+
+    Production:
+      type: object
+      properties:
+        id:
+          type: string
+        leftSide:
+          type: string
+        rightSide:
+          type: string
+        isSelected:
+          type: boolean
+      required:
+        - id
+        - leftSide
+        - rightSide
+
+    RegularExpressionData:
+      type: object
+      properties:
+        expression:
+          type: string
+        alphabet:
+          type: array
+          items:
+            type: string
+        testStrings:
+          type: array
+          items:
+            type: string
+        metadata:
+          type: object
+      required:
+        - expression
+        - alphabet
+
+    PumpingLemmaData:
+      type: object
+      properties:
+        language:
+          type: string
+        pumpingLength:
+          type: integer
+          nullable: true
+        decomposition:
+          type: object
+          additionalProperties:
+            type: string
+        testCases:
+          type: array
+          items:
+            $ref: '#/components/schemas/TestCase'
+        metadata:
+          type: object
+      required:
+        - language
+        - testCases
+
+    TestCase:
+      type: object
+      properties:
+        id:
+          type: string
+        string:
+          type: string
+        expectedResult:
+          type: boolean
+        actualResult:
+          type: boolean
+          nullable: true
+        isCorrect:
+          type: boolean
+          nullable: true
+      required:
+        - id
+        - string
+        - expectedResult
+
+    ViewSettings:
+      type: object
+      properties:
+        zoomLevel:
+          type: number
+          minimum: 0.1
+          maximum: 5.0
+        panOffset:
+          $ref: '#/components/schemas/Point'
+        showGrid:
+          type: boolean
+        gridSize:
+          type: number
+          minimum: 0
+        showLabels:
+          type: boolean
+        theme:
+          type: string
+          enum: [light, dark]
+      required:
+        - zoomLevel
+        - panOffset
+        - showGrid
+        - gridSize
+        - showLabels
+        - theme
+
+    AppState:
+      type: object
+      properties:
+        activeTab:
+          type: string
+          enum: [finite_automaton, pushdown_automaton, turing_machine, grammar, regular_expression, pumping_lemma]
+        lastModified:
+          type: string
+          format: date-time
+      required:
+        - activeTab
+        - lastModified
+
+    SimulationStep:
+      type: object
+      properties:
+        stepNumber:
+          type: integer
+        currentState:
+          type: string
+        inputSymbol:
+          type: string
+        stackState:
+          type: string
+          nullable: true
+        tapeState:
+          type: string
+          nullable: true
+        description:
+          type: string
+      required:
+        - stepNumber
+        - currentState
+        - inputSymbol
+        - description

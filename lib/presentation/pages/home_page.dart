@@ -5,7 +5,7 @@ import 'fsa_page.dart';
 import 'grammar_page.dart';
 import 'pda_page.dart';
 import 'tm_page.dart';
-import 'l_system_page.dart';
+import 'regex_page.dart';
 import 'pumping_lemma_page.dart';
 import 'settings_page.dart';
 import 'help_page.dart';
@@ -44,9 +44,9 @@ class _HomePageState extends ConsumerState<HomePage> {
       description: 'Turing Machines',
     ),
     NavigationItem(
-      label: 'L-Systems',
-      icon: Icons.auto_awesome,
-      description: 'Lindenmayer Systems',
+      label: 'Regex',
+      icon: Icons.pattern,
+      description: 'Regular Expressions',
     ),
     NavigationItem(
       label: 'Pumping',
@@ -134,7 +134,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           GrammarPage(),
           PDAPage(),
           TMPage(),
-          LSystemPage(),
+          RegexPage(),
           PumpingLemmaPage(),
         ],
       ),

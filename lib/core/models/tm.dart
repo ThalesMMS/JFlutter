@@ -13,7 +13,7 @@ class TM extends Automaton {
   /// Blank symbol
   final String blankSymbol;
   
-  /// Number of tapes (1 for single-tape, >1 for multi-tape)
+  /// Number of tapes (always 1 for single-tape TM)
   final int tapeCount;
 
   TM({
@@ -31,7 +31,7 @@ class TM extends Automaton {
     super.panOffset,
     required this.tapeAlphabet,
     this.blankSymbol = 'B',
-    this.tapeCount = 1,
+    this.tapeCount = 1, // Always 1 for single-tape TM
   }) : super(type: AutomatonType.tm);
 
   /// Creates a copy of this TM with updated properties

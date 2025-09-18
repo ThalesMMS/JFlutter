@@ -31,9 +31,8 @@ This project is currently being fixed for compilation errors. See:
 - **Automaton Simulation** - Real-time string testing and validation
 - **Grammar Parsing** - Context-free grammar analysis
 - **Pumping Lemma** - Interactive educational game
-- **L-Systems** - Lindenmayer system generation
 - **PDA Simulation** - Pushdown automata simulation
-- **Turing Machine** - Multi-tape Turing machine simulation
+- **Turing Machine** - Single-tape Turing machine simulation
 
 ### 📱 **Mobile Experience**
 - **Touch Gestures** - Pinch-to-zoom, pan, tap-to-add states
@@ -82,7 +81,7 @@ lib/
 │   │   ├── grammar_page.dart       # Context-free grammars
 │   │   ├── pda_page.dart           # Pushdown automata
 │   │   ├── tm_page.dart            # Turing machines
-│   │   ├── l_system_page.dart      # L-systems
+│   │   ├── regex_page.dart         # Regular expressions
 │   │   └── pumping_lemma_page.dart # Pumping lemma game
 │   ├── widgets/                    # Reusable UI components
 │   │   ├── automaton_canvas.dart   # Interactive drawing canvas
@@ -186,8 +185,8 @@ flutter analyze
 ### 📋 **Planned Features**
 - **Grammar Editor** - Visual context-free grammar editing
 - **PDA Canvas** - Pushdown automata visualization
-- **Turing Machine** - Multi-tape machine interface
-- **L-System Visualizer** - Fractal pattern generation
+- **Turing Machine** - Single-tape machine interface
+- **Regular Expression** - Pattern matching and conversion
 - **Pumping Lemma Game** - Interactive educational game
 
 ## 🛠️ Development

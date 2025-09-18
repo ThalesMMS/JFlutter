@@ -3,7 +3,6 @@ import 'package:vector_math/vector_math_64.dart';
 import 'state.dart';
 import 'transition.dart';
 import 'fsa_transition.dart';
-import 'mealy_transition.dart';
 import 'automaton.dart';
 
 /// Finite State Automaton (FSA) implementation
@@ -312,17 +311,6 @@ class FSA extends Automaton {
     );
   }
 
-  /// Gets Mealy transition from state on a specific symbol
-  MealyTransition? getMealyTransitionFromStateOnSymbol(State state, String symbol) {
-    for (final transition in transitions) {
-      if (transition is MealyTransition &&
-          transition.fromState == state &&
-          transition.inputSymbol == symbol) {
-        return transition;
-      }
-    }
-    return null;
-  }
 
   /// Creates a simple FSA with two states and one transition
   factory FSA.twoState({

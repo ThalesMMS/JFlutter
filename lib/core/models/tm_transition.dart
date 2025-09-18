@@ -13,7 +13,7 @@ class TMTransition extends Transition {
   /// Direction to move the tape head
   final TapeDirection direction;
   
-  /// Tape number for multi-tape machines (0 for single-tape)
+  /// Tape number (always 0 for single-tape TM)
   final int tapeNumber;
   
   /// Head position (alias for direction)
@@ -29,7 +29,7 @@ class TMTransition extends Transition {
     required this.readSymbol,
     required this.writeSymbol,
     required this.direction,
-    this.tapeNumber = 0,
+    this.tapeNumber = 0, // Always 0 for single-tape TM
   });
 
   /// Creates a copy of this TM transition with updated properties

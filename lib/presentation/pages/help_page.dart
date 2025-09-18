@@ -41,9 +41,9 @@ class _HelpPageState extends ConsumerState<HelpPage> {
       content: _TMHelpContent(),
     ),
     HelpSection(
-      title: 'L-Systems',
-      icon: Icons.auto_awesome,
-      content: _LSystemHelpContent(),
+      title: 'Regular Expression',
+      icon: Icons.pattern,
+      content: _RegexHelpContent(),
     ),
     HelpSection(
       title: 'Pumping Lemma',
@@ -270,9 +270,9 @@ class _GettingStartedContent extends StatelessWidget {
             'Turing Machines - Learn about computational models',
           ),
           _buildFeatureCard(
-            'L-Systems',
-            Icons.auto_awesome,
-            'Lindenmayer Systems - Generate fractal patterns',
+            'Regex',
+            Icons.pattern,
+            'Regular Expressions - Pattern matching and conversion',
           ),
           _buildFeatureCard(
             'Pumping',
@@ -626,7 +626,7 @@ class _TMHelpContent extends StatelessWidget {
   }
 }
 
-class _LSystemHelpContent extends StatelessWidget {
+class _RegexHelpContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -634,43 +634,55 @@ class _LSystemHelpContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionTitle('Lindenmayer Systems'),
+          _buildSectionTitle('Regular Expressions'),
           const SizedBox(height: 16),
           const Text(
-            'L-Systems are parallel rewriting systems used to model the growth '
-            'processes of plant development and generate fractal patterns.',
+            'Regular Expressions (regex) are patterns used to match character combinations in strings. '
+            'They are fundamental to formal language theory and are equivalent to finite automata.',
           ),
           const SizedBox(height: 24),
           
-          _buildSectionTitle('L-System Components'),
+          _buildSectionTitle('Basic Syntax'),
           const SizedBox(height: 16),
-          _buildComponentCard('Axiom', 'Initial string (starting point)'),
-          _buildComponentCard('Rules', 'Production rules for rewriting'),
-          _buildComponentCard('Angle', 'Rotation angle for drawing'),
-          _buildComponentCard('Iterations', 'Number of rewriting steps'),
+          _buildSyntaxCard('a', 'Matches the literal character "a"'),
+          _buildSyntaxCard('a*', 'Zero or more occurrences of "a"'),
+          _buildSyntaxCard('a+', 'One or more occurrences of "a"'),
+          _buildSyntaxCard('a?', 'Zero or one occurrence of "a"'),
+          _buildSyntaxCard('a|b', 'Either "a" or "b"'),
+          _buildSyntaxCard('(ab)*', 'Zero or more occurrences of "ab"'),
+          _buildSyntaxCard('[abc]', 'Any character from the set {a, b, c}'),
+          _buildSyntaxCard('[a-z]', 'Any lowercase letter'),
+          _buildSyntaxCard('.', 'Any single character'),
           
           const SizedBox(height: 24),
-          _buildSectionTitle('Turtle Graphics'),
+          _buildSectionTitle('Common Patterns'),
+          const SizedBox(height: 16),
+          _buildPatternCard('Email', r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'),
+          _buildPatternCard('Phone Number', r'^\+?[\d\s\-\(\)]+$'),
+          _buildPatternCard('Integer', r'^-?\d+$'),
+          _buildPatternCard('Decimal', r'^-?\d+\.?\d*$'),
+          _buildPatternCard('Identifier', r'^[a-zA-Z_][a-zA-Z0-9_]*$'),
+          
+          const SizedBox(height: 24),
+          _buildSectionTitle('Conversion to Automata'),
           const SizedBox(height: 16),
           const Text(
-            'L-Systems use turtle graphics for visualization:\n'
-            '• F: Move forward and draw\n'
-            '• f: Move forward without drawing\n'
-            '• +: Turn right by angle\n'
-            '• -: Turn left by angle\n'
-            '• [: Push current state\n'
-            '• ]: Pop state (branch)',
+            'Regular expressions can be converted to equivalent finite automata:\n\n'
+            '1. **Regex to NFA**: Thompson\'s construction algorithm\n'
+            '2. **NFA to DFA**: Subset construction algorithm\n'
+            '3. **DFA Minimization**: Hopcroft\'s algorithm\n'
+            '4. **FA to Regex**: State elimination method\n\n'
+            'These conversions preserve the language recognized by the expression.',
           ),
           
           const SizedBox(height: 24),
-          _buildSectionTitle('Example: Koch Curve'),
+          _buildSectionTitle('Testing and Validation'),
           const SizedBox(height: 16),
-          const Text(
-            'Axiom: F\n'
-            'Rule: F → F+F-F-F+F\n'
-            'Angle: 90°\n\n'
-            'This creates a fractal curve that becomes more complex with each iteration.',
-          ),
+          _buildStepCard('1', 'Enter Regex', 'Type your regular expression in the input field'),
+          _buildStepCard('2', 'Validate', 'Check if the syntax is correct'),
+          _buildStepCard('3', 'Test String', 'Enter a string to test against the regex'),
+          _buildStepCard('4', 'View Results', 'See if the string matches the pattern'),
+          _buildStepCard('5', 'Convert', 'Convert the regex to an equivalent automaton'),
         ],
       ),
     );
@@ -686,10 +698,54 @@ class _LSystemHelpContent extends StatelessWidget {
     );
   }
 
-  Widget _buildComponentCard(String title, String description) {
+  Widget _buildSyntaxCard(String pattern, String description) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8.0),
       child: ListTile(
+        leading: Container(
+          width: 60,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.blue.shade100,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            pattern,
+            style: const TextStyle(
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        title: Text(description),
+      ),
+    );
+  }
+
+  Widget _buildPatternCard(String name, String pattern) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8.0),
+      child: ListTile(
+        title: Text(name),
+        subtitle: Text(
+          pattern,
+          style: const TextStyle(
+            fontFamily: 'monospace',
+            fontSize: 12,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStepCard(String number, String title, String description) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8.0),
+      child: ListTile(
+        leading: CircleAvatar(
+          child: Text(number),
+        ),
         title: Text(title),
         subtitle: Text(description),
       ),

@@ -57,52 +57,10 @@ class _FSAPageState extends ConsumerState<FSAPage> {
             ],
           ),
         ),
-        
-        // Collapsible panels with better space management
-        if (_showControls || _showSimulation) ...[
-          Expanded(
-            flex: 1,
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 8),
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    // Controls panel
-                    if (_showControls) ...[
-                      Container(
-                        constraints: const BoxConstraints(maxHeight: 300),
-                        child: AlgorithmPanel(
-                          onNfaToDfa: () => ref.read(automatonProvider.notifier).convertNfaToDfa(),
-                          onMinimizeDfa: () => ref.read(automatonProvider.notifier).minimizeDfa(),
-                          onClear: () => ref.read(automatonProvider.notifier).clearAutomaton(),
-                          onRegexToNfa: (regex) => ref.read(automatonProvider.notifier).convertRegexToNfa(regex),
-                          onFaToRegex: () => ref.read(automatonProvider.notifier).convertFaToRegex(),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                    ],
-                    
-                    // Simulation panel
-                    if (_showSimulation) ...[
-                      Container(
-                        constraints: const BoxConstraints(maxHeight: 250),
-                        child: SimulationPanel(
-                          onSimulate: (inputString) => ref.read(automatonProvider.notifier).simulateAutomaton(inputString),
-                          simulationResult: state.simulationResult,
-                          regexResult: state.regexResult,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-        
+
         // Canvas - gets maximum available space
         Expanded(
-          flex: _showControls || _showSimulation ? 3 : 1,
+          flex: 3,
           child: Container(
             margin: const EdgeInsets.all(8),
             child: AutomatonCanvas(
@@ -114,6 +72,43 @@ class _FSAPageState extends ConsumerState<FSAPage> {
             ),
           ),
         ),
+
+        // Collapsible panels with better space management
+        if (_showControls || _showSimulation) ...[
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            child: Column(
+              children: [
+                // Controls panel
+                if (_showControls) ...[
+                  Container(
+                    constraints: const BoxConstraints(maxHeight: 200),
+                    child: AlgorithmPanel(
+                          onNfaToDfa: () => ref.read(automatonProvider.notifier).convertNfaToDfa(),
+                          onMinimizeDfa: () => ref.read(automatonProvider.notifier).minimizeDfa(),
+                          onClear: () => ref.read(automatonProvider.notifier).clearAutomaton(),
+                          onRegexToNfa: (regex) => ref.read(automatonProvider.notifier).convertRegexToNfa(regex),
+                      onFaToRegex: () => ref.read(automatonProvider.notifier).convertFaToRegex(),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+
+                // Simulation panel
+                if (_showSimulation) ...[
+                  Container(
+                    constraints: const BoxConstraints(maxHeight: 200),
+                    child: SimulationPanel(
+                          onSimulate: (inputString) => ref.read(automatonProvider.notifier).simulateAutomaton(inputString),
+                          simulationResult: state.simulationResult,
+                      regexResult: state.regexResult,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
       ],
     );
   }

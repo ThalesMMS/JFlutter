@@ -29,139 +29,120 @@ class _PDAPageState extends ConsumerState<PDAPage> {
   }
 
   Widget _buildMobileLayout() {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          // Mobile controls toggle - more compact
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _buildToggleButton(
-                    icon: Icons.edit,
-                    label: 'Editor',
-                    isActive: _showControls,
-                    onPressed: () => setState(() => _showControls = !_showControls),
-                  ),
+    return Column(
+      children: [
+        // Mobile controls toggle - more compact
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildToggleButton(
+                  icon: Icons.edit,
+                  label: 'Editor',
+                  isActive: _showControls,
+                  onPressed: () => setState(() => _showControls = !_showControls),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildToggleButton(
-                    icon: Icons.play_arrow,
-                    label: 'Simulate',
-                    isActive: _showSimulation,
-                    onPressed: () => setState(() => _showSimulation = !_showSimulation),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildToggleButton(
-                    icon: Icons.auto_awesome,
-                    label: 'Algorithms',
-                    isActive: _showAlgorithms,
-                    onPressed: () => setState(() => _showAlgorithms = !_showAlgorithms),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
-          // Collapsible panels with better space management
-          if (_showControls || _showSimulation || _showAlgorithms) ...[
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 8),
-              child: Column(
-                children: [
-                  // PDA canvas
-                  if (_showControls) ...[
-                    Container(
-                      constraints: const BoxConstraints(maxHeight: 300),
-                      child: PDACanvas(
-                        canvasKey: _canvasKey,
-                        onPDAModified: (pda) {
-                          // Handle PDA modifications
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                  
-                  // Simulation panel
-                  if (_showSimulation) ...[
-                    Container(
-                      constraints: const BoxConstraints(maxHeight: 250),
-                      child: const PDASimulationPanel(),
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                  
-                  // Algorithm panel
-                  if (_showAlgorithms) ...[
-                    Container(
-                      constraints: const BoxConstraints(maxHeight: 250),
-                      child: const PDAAlgorithmPanel(),
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                ],
               ),
-            ),
-          ],
-          
-          // Info panel (always visible)
-          Container(
-            margin: const EdgeInsets.all(8),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceVariant,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Pushdown Automata Editor',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildToggleButton(
+                  icon: Icons.play_arrow,
+                  label: 'Simulate',
+                  isActive: _showSimulation,
+                  onPressed: () => setState(() => _showSimulation = !_showSimulation),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Create PDA transitions, test strings, and analyze pushdown automata. Use the panels above to edit, simulate, and apply algorithms.',
-                  style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildToggleButton(
+                  icon: Icons.auto_awesome,
+                  label: 'Algorithms',
+                  isActive: _showAlgorithms,
+                  onPressed: () => setState(() => _showAlgorithms = !_showAlgorithms),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Content area with proper scrolling
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                // Collapsible panels with better space management
+                if (_showControls || _showSimulation || _showAlgorithms) ...[
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Column(
+                      children: [
+                        // PDA canvas
+                        if (_showControls) ...[
+                          Container(
+                            constraints: const BoxConstraints(maxHeight: 300),
+                            child: PDACanvas(
+                              canvasKey: _canvasKey,
+                              onPDAModified: (pda) {
+                                // Handle PDA modifications
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+
+                        // Simulation panel
+                        if (_showSimulation) ...[
+                          Container(
+                            constraints: const BoxConstraints(maxHeight: 250),
+                            child: const PDASimulationPanel(),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+
+                        // Algorithm panel
+                        if (_showAlgorithms) ...[
+                          Container(
+                            constraints: const BoxConstraints(maxHeight: 250),
+                            child: const PDAAlgorithmPanel(),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+
+                // Info panel (always visible)
+                Container(
+                  margin: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceVariant,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Pushdown Automata Editor',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Create states, transitions with stack operations, and test strings. PDAs can recognize context-free languages.',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
-          
-          // Info panel (always visible)
-          Container(
-            margin: const EdgeInsets.all(8),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceVariant,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Pushdown Automaton Editor',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Create states, transitions with stack operations, and test strings. PDAs can recognize context-free languages.',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

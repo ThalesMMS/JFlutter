@@ -28,84 +28,89 @@ class _GrammarPageState extends ConsumerState<GrammarPage> {
   }
 
   Widget _buildMobileLayout() {
-    return Column(
-      children: [
-        // Mobile controls toggle - more compact
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Column(
-            children: [
-              Row(
+    return SafeArea(
+      child: Column(
+        children: [
+          // Mobile controls toggle - more compact
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildToggleButton(
+                    icon: Icons.edit,
+                    label: 'Editor',
+                    isActive: _showControls,
+                    onPressed: () => setState(() => _showControls = !_showControls),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildToggleButton(
+                    icon: Icons.play_arrow,
+                    label: 'Parse',
+                    isActive: _showSimulation,
+                    onPressed: () => setState(() => _showSimulation = !_showSimulation),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildToggleButton(
+                    icon: Icons.auto_awesome,
+                    label: 'Algorithms',
+                    isActive: _showAlgorithms,
+                    onPressed: () => setState(() => _showAlgorithms = !_showAlgorithms),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Content area with proper scrolling
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Column(
                 children: [
-                  Expanded(
-                    child: _buildToggleButton(
-                      icon: Icons.edit,
-                      label: 'Editor',
-                      isActive: _showControls,
-                      onPressed: () => setState(() => _showControls = !_showControls),
+                  // Collapsible panels with better space management
+                  if (_showControls || _showSimulation || _showAlgorithms) ...[
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                      child: _buildPanelsColumn(),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildToggleButton(
-                      icon: Icons.play_arrow,
-                      label: 'Parse',
-                      isActive: _showSimulation,
-                      onPressed: () => setState(() => _showSimulation = !_showSimulation),
+                  ],
+
+                  // Info panel (always visible)
+                  Container(
+                    margin: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceVariant,
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildToggleButton(
-                      icon: Icons.auto_awesome,
-                      label: 'Algorithms',
-                      isActive: _showAlgorithms,
-                      onPressed: () => setState(() => _showAlgorithms = !_showAlgorithms),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Context-Free Grammar Editor',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Create production rules, test strings, and analyze grammars. Use the panels above to edit, simulate, and apply algorithms.',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-            ],
-          ),
-        ),
-        
-        // Collapsible panels with better space management
-        if (_showControls || _showSimulation || _showAlgorithms) ...[
-          Expanded(
-            flex: 1,
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 8),
-              child: _buildPanelsColumn(),
             ),
           ),
         ],
-        
-        // Info panel (always visible)
-        Container(
-          margin: const EdgeInsets.all(8),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceVariant,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Context-Free Grammar Editor',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Create production rules, test strings, and analyze grammars. Use the panels above to edit, simulate, and apply algorithms.',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ],
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -166,36 +171,34 @@ class _GrammarPageState extends ConsumerState<GrammarPage> {
   }
 
   Widget _buildPanelsColumn() {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          // Grammar editor
-          if (_showControls) ...[
-            Container(
-              constraints: const BoxConstraints(maxHeight: 300),
-              child: const SingleChildScrollView(child: GrammarEditor()),
-            ),
-            const SizedBox(height: 8),
-          ],
-          
-          // Simulation panel
-          if (_showSimulation) ...[
-            Container(
-              constraints: const BoxConstraints(maxHeight: 250),
-              child: const SingleChildScrollView(child: GrammarSimulationPanel()),
-            ),
-            const SizedBox(height: 8),
-          ],
-          
-          // Algorithm panel
-          if (_showAlgorithms) ...[
-            Container(
-              constraints: const BoxConstraints(maxHeight: 250),
-              child: const SingleChildScrollView(child: GrammarAlgorithmPanel()),
-            ),
-          ],
+    return Column(
+      children: [
+        // Grammar editor
+        if (_showControls) ...[
+          Container(
+            constraints: const BoxConstraints(maxHeight: 300),
+            child: const GrammarEditor(),
+          ),
+          const SizedBox(height: 8),
         ],
-      ),
+
+        // Simulation panel
+        if (_showSimulation) ...[
+          Container(
+            constraints: const BoxConstraints(maxHeight: 250),
+            child: const GrammarSimulationPanel(),
+          ),
+          const SizedBox(height: 8),
+        ],
+
+        // Algorithm panel
+        if (_showAlgorithms) ...[
+          Container(
+            constraints: const BoxConstraints(maxHeight: 250),
+            child: const GrammarAlgorithmPanel(),
+          ),
+        ],
+      ],
     );
   }
 }

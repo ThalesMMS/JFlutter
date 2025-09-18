@@ -79,8 +79,9 @@ class _PDACanvasState extends State<PDACanvas> {
 
   Widget _buildToolbar(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
-      child: Row(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'PDA Canvas',
@@ -88,34 +89,37 @@ class _PDACanvasState extends State<PDACanvas> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const Spacer(),
-          _buildToolButton(
-            context,
-            icon: Icons.add_circle,
-            label: 'Add State',
-            isSelected: _isAddingState,
-            onPressed: () => setState(() {
-              _isAddingState = !_isAddingState;
-              _isAddingTransition = false;
-            }),
-          ),
-          const SizedBox(width: 8),
-          _buildToolButton(
-            context,
-            icon: Icons.arrow_forward,
-            label: 'Add Transition',
-            isSelected: _isAddingTransition,
-            onPressed: () => setState(() {
-              _isAddingTransition = !_isAddingTransition;
-              _isAddingState = false;
-            }),
-          ),
-          const SizedBox(width: 8),
-          _buildToolButton(
-            context,
-            icon: Icons.clear,
-            label: 'Clear',
-            onPressed: _clearCanvas,
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _buildToolButton(
+                context,
+                icon: Icons.add_circle,
+                label: 'Add State',
+                isSelected: _isAddingState,
+                onPressed: () => setState(() {
+                  _isAddingState = !_isAddingState;
+                  _isAddingTransition = false;
+                }),
+              ),
+              _buildToolButton(
+                context,
+                icon: Icons.arrow_forward,
+                label: 'Add Transition',
+                isSelected: _isAddingTransition,
+                onPressed: () => setState(() {
+                  _isAddingTransition = !_isAddingTransition;
+                  _isAddingState = false;
+                }),
+              ),
+              IconButton(
+                icon: const Icon(Icons.clear),
+                tooltip: 'Clear',
+                onPressed: _clearCanvas,
+              ),
+            ],
           ),
         ],
       ),

@@ -82,6 +82,36 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
     });
   }
 
+  void _addStateAtCenter() {
+    // Add state at a reasonable position in the canvas
+    // Use a fixed center position that works for most screen sizes
+    final canvasCenter = const Offset(200, 150);
+
+    // Check if there's already a state at this position and offset if needed
+    Offset position = canvasCenter;
+    int attempts = 0;
+    while (attempts < 10) {
+      bool hasConflict = false;
+      for (final state in _states) {
+        if ((Offset(state.position.x, state.position.y) - position).distance < 60) {
+          hasConflict = true;
+          break;
+        }
+      }
+
+      if (!hasConflict) break;
+
+      // Offset position in a spiral pattern
+      position = Offset(
+        canvasCenter.dx + (attempts * 30) * math.cos(attempts * 0.8),
+        canvasCenter.dy + (attempts * 30) * math.sin(attempts * 0.8),
+      );
+      attempts++;
+    }
+
+    _addState(position);
+  }
+
   void _enableTransitionAdding() {
     setState(() {
       _isAddingTransition = true;
@@ -329,7 +359,7 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
-            onPressed: _enableStateAdding,
+            onPressed: _addStateAtCenter,
             icon: const Icon(Icons.add_circle),
             tooltip: 'Add State',
             color: _isAddingState ? Theme.of(context).colorScheme.primary : null,

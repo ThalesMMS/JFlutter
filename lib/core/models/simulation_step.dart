@@ -17,6 +17,18 @@ class SimulationStep {
   
   /// Step number in the simulation
   final int stepNumber;
+  
+  /// Description of what happens in this step
+  final String? description;
+  
+  /// Whether this step results in acceptance
+  final bool? isAccepted;
+  
+  /// Input symbol processed in this step
+  final String? inputSymbol;
+  
+  /// Next state after this step
+  final String? nextState;
 
   const SimulationStep({
     required this.currentState,
@@ -25,6 +37,10 @@ class SimulationStep {
     this.tapeContents = '',
     this.usedTransition,
     required this.stepNumber,
+    this.description,
+    this.isAccepted,
+    this.inputSymbol,
+    this.nextState,
   });
 
   /// Creates a copy of this simulation step with updated properties
@@ -35,6 +51,10 @@ class SimulationStep {
     String? tapeContents,
     String? usedTransition,
     int? stepNumber,
+    String? description,
+    bool? isAccepted,
+    String? inputSymbol,
+    String? nextState,
   }) {
     return SimulationStep(
       currentState: currentState ?? this.currentState,
@@ -43,6 +63,10 @@ class SimulationStep {
       tapeContents: tapeContents ?? this.tapeContents,
       usedTransition: usedTransition ?? this.usedTransition,
       stepNumber: stepNumber ?? this.stepNumber,
+      description: description ?? this.description,
+      isAccepted: isAccepted ?? this.isAccepted,
+      inputSymbol: inputSymbol ?? this.inputSymbol,
+      nextState: nextState ?? this.nextState,
     );
   }
 
@@ -55,6 +79,10 @@ class SimulationStep {
       'tapeContents': tapeContents,
       'usedTransition': usedTransition,
       'stepNumber': stepNumber,
+      'description': description,
+      'isAccepted': isAccepted,
+      'inputSymbol': inputSymbol,
+      'nextState': nextState,
     };
   }
 
@@ -67,6 +95,10 @@ class SimulationStep {
       tapeContents: json['tapeContents'] as String? ?? '',
       usedTransition: json['usedTransition'] as String?,
       stepNumber: json['stepNumber'] as int,
+      description: json['description'] as String?,
+      isAccepted: json['isAccepted'] as bool?,
+      inputSymbol: json['inputSymbol'] as String?,
+      nextState: json['nextState'] as String?,
     );
   }
 
@@ -79,7 +111,11 @@ class SimulationStep {
         other.stackContents == stackContents &&
         other.tapeContents == tapeContents &&
         other.usedTransition == usedTransition &&
-        other.stepNumber == stepNumber;
+        other.stepNumber == stepNumber &&
+        other.description == description &&
+        other.isAccepted == isAccepted &&
+        other.inputSymbol == inputSymbol &&
+        other.nextState == nextState;
   }
 
   @override
@@ -91,6 +127,10 @@ class SimulationStep {
       tapeContents,
       usedTransition,
       stepNumber,
+      description,
+      isAccepted,
+      inputSymbol,
+      nextState,
     );
   }
 

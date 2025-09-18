@@ -21,7 +21,8 @@ class _FSAPageState extends ConsumerState<FSAPage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(automatonProvider);
-    final isMobile = MediaQuery.of(context).size.width < 768;
+    final screenSize = MediaQuery.of(context).size;
+    final isMobile = screenSize.width < 1024;
 
     return Scaffold(
       body: isMobile ? _buildMobileLayout(state) : _buildDesktopLayout(state),
@@ -31,65 +32,77 @@ class _FSAPageState extends ConsumerState<FSAPage> {
   Widget _buildMobileLayout(AutomatonState state) {
     return Column(
       children: [
-        // Mobile controls toggle
+        // Mobile controls toggle - more compact
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             children: [
               Expanded(
-                child: ElevatedButton.icon(
+                child: _buildToggleButton(
+                  icon: Icons.tune,
+                  label: 'Controls',
+                  isActive: _showControls,
                   onPressed: () => setState(() => _showControls = !_showControls),
-                  icon: Icon(_showControls ? Icons.visibility_off : Icons.visibility),
-                  label: Text(_showControls ? 'Hide Controls' : 'Show Controls'),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: ElevatedButton.icon(
+                child: _buildToggleButton(
+                  icon: Icons.play_arrow,
+                  label: 'Simulate',
+                  isActive: _showSimulation,
                   onPressed: () => setState(() => _showSimulation = !_showSimulation),
-                  icon: Icon(_showSimulation ? Icons.visibility_off : Icons.play_arrow),
-                  label: Text(_showSimulation ? 'Hide Simulation' : 'Show Simulation'),
                 ),
               ),
             ],
           ),
         ),
         
-        // Controls panel (collapsible on mobile)
-        if (_showControls) ...[
+        // Collapsible panels with better space management
+        if (_showControls || _showSimulation) ...[
           Expanded(
             flex: 1,
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  AlgorithmPanel(
-                    onNfaToDfa: () => ref.read(automatonProvider.notifier).convertNfaToDfa(),
-                    onMinimizeDfa: () => ref.read(automatonProvider.notifier).minimizeDfa(),
-                    onClear: () => ref.read(automatonProvider.notifier).clearAutomaton(),
-                    onRegexToNfa: (regex) => ref.read(automatonProvider.notifier).convertRegexToNfa(regex),
-                    onFaToRegex: () => ref.read(automatonProvider.notifier).convertFaToRegex(),
-                  ),
-                ],
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 8),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    // Controls panel
+                    if (_showControls) ...[
+                      Container(
+                        constraints: const BoxConstraints(maxHeight: 300),
+                        child: AlgorithmPanel(
+                          onNfaToDfa: () => ref.read(automatonProvider.notifier).convertNfaToDfa(),
+                          onMinimizeDfa: () => ref.read(automatonProvider.notifier).minimizeDfa(),
+                          onClear: () => ref.read(automatonProvider.notifier).clearAutomaton(),
+                          onRegexToNfa: (regex) => ref.read(automatonProvider.notifier).convertRegexToNfa(regex),
+                          onFaToRegex: () => ref.read(automatonProvider.notifier).convertFaToRegex(),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                    
+                    // Simulation panel
+                    if (_showSimulation) ...[
+                      Container(
+                        constraints: const BoxConstraints(maxHeight: 250),
+                        child: SimulationPanel(
+                          onSimulate: (inputString) => ref.read(automatonProvider.notifier).simulateAutomaton(inputString),
+                          simulationResult: state.simulationResult,
+                          regexResult: state.regexResult,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
           ),
         ],
         
-        // Simulation panel (collapsible on mobile)
-        if (_showSimulation) ...[
-          Expanded(
-            flex: 1,
-            child: SimulationPanel(
-              onSimulate: (inputString) => ref.read(automatonProvider.notifier).simulateAutomaton(inputString),
-              simulationResult: state.simulationResult,
-              regexResult: state.regexResult,
-            ),
-          ),
-        ],
-        
-        // Canvas (full width on mobile)
+        // Canvas - gets maximum available space
         Expanded(
-          flex: _showControls || _showSimulation ? 2 : 1,
+          flex: _showControls || _showSimulation ? 3 : 1,
           child: Container(
             margin: const EdgeInsets.all(8),
             child: AutomatonCanvas(
@@ -102,6 +115,29 @@ class _FSAPageState extends ConsumerState<FSAPage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildToggleButton({
+    required IconData icon,
+    required String label,
+    required bool isActive,
+    required VoidCallback onPressed,
+  }) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 18),
+      label: Text(label, style: const TextStyle(fontSize: 12)),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isActive 
+            ? Theme.of(context).colorScheme.primary 
+            : Theme.of(context).colorScheme.surface,
+        foregroundColor: isActive 
+            ? Theme.of(context).colorScheme.onPrimary 
+            : Theme.of(context).colorScheme.onSurface,
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        minimumSize: Size.zero,
+      ),
     );
   }
 

@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/automaton_provider.dart';
-import '../widgets/automaton_canvas.dart';
-import '../widgets/algorithm_panel.dart';
 import '../widgets/mobile_navigation.dart';
 import 'fsa_page.dart';
 import 'grammar_page.dart';
@@ -10,6 +7,8 @@ import 'pda_page.dart';
 import 'tm_page.dart';
 import 'l_system_page.dart';
 import 'pumping_lemma_page.dart';
+import 'settings_page.dart';
+import 'help_page.dart';
 
 /// Main home page with modern design and mobile-first approach
 class HomePage extends ConsumerStatefulWidget {
@@ -95,7 +94,8 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 768;
+    final screenSize = MediaQuery.of(context).size;
+    final isMobile = screenSize.width < 1024; // Better breakpoint for modern devices
     
     return Scaffold(
       appBar: AppBar(
@@ -128,6 +128,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       body: PageView(
         controller: _pageController,
         onPageChanged: _onPageChanged,
+        physics: const NeverScrollableScrollPhysics(), // Disable swipe gestures
         children: const [
           FSAPage(),
           GrammarPage(),
@@ -183,41 +184,17 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   void _showHelpDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Help'),
-        content: const Text(
-          'JFlutter is a mobile app for learning formal language theory.\n\n'
-          '• FSA: Create and simulate finite state automata\n'
-          '• Grammar: Work with context-free grammars\n'
-          '• PDA: Explore pushdown automata\n'
-          '• TM: Learn about Turing machines\n'
-          '• L-Systems: Generate fractal patterns\n'
-          '• Pumping: Play the pumping lemma game',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
-        ],
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const HelpPage(),
       ),
     );
   }
 
   void _showSettingsDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Settings'),
-        content: const Text('Settings panel - Coming soon!'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
-        ],
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const SettingsPage(),
       ),
     );
   }

@@ -135,26 +135,32 @@ class NFAToDFAConverter {
 
   /// Builds DFA using subset construction
   static FSA _buildDFA(FSA nfa) {
-    final dfaStates = <Set<State>, State>{};
+    final dfaStates = <String, State>{}; // Use string keys instead of Set<State>
     final dfaTransitions = <FSATransition>{};
     final dfaAcceptingStates = <State>{};
-    final queue = <Set<State>>[];
-    final processed = <Set<State>>{};
+    final queue = <String>[];
+    final processed = <String>{};
+    final stateSetMap = <String, Set<State>>{}; // Map string keys to actual state sets
 
     // Start with the initial state
     final initialStateSet = {nfa.initialState!};
+    final initialStateKey = _getStateSetKey(initialStateSet);
     final initialState = _createDFAState(initialStateSet, 0);
-    dfaStates[initialStateSet] = initialState;
-    queue.add(initialStateSet);
+    dfaStates[initialStateKey] = initialState;
+    stateSetMap[initialStateKey] = initialStateSet;
+    queue.add(initialStateKey);
 
     // Process each state set
     int stateCounter = 1;
-    while (queue.isNotEmpty) {
-      final currentStateSet = queue.removeAt(0);
-      if (processed.contains(currentStateSet)) continue;
-      processed.add(currentStateSet);
+    int maxStates = 1000; // Performance safeguard
+    while (queue.isNotEmpty && stateCounter < maxStates) {
+      final currentStateKey = queue.removeAt(0);
+      if (processed.contains(currentStateKey)) continue;
+      processed.add(currentStateKey);
+      
+      final currentStateSet = stateSetMap[currentStateKey]!;
 
-      final currentDFAState = dfaStates[currentStateSet]!;
+      final currentDFAState = dfaStates[currentStateKey]!;
 
       // Check if this state set contains any accepting states
       if (currentStateSet.intersection(nfa.acceptingStates).isNotEmpty) {
@@ -174,14 +180,17 @@ class NFAToDFAConverter {
         }
 
         if (nextStateSet.isNotEmpty) {
+          final nextStateKey = _getStateSetKey(nextStateSet);
+          
           // Create or get the DFA state for this set
           State nextDFAState;
-          if (dfaStates.containsKey(nextStateSet)) {
-            nextDFAState = dfaStates[nextStateSet]!;
+          if (dfaStates.containsKey(nextStateKey)) {
+            nextDFAState = dfaStates[nextStateKey]!;
           } else {
             nextDFAState = _createDFAState(nextStateSet, stateCounter++);
-            dfaStates[nextStateSet] = nextDFAState;
-            queue.add(nextStateSet);
+            dfaStates[nextStateKey] = nextDFAState;
+            stateSetMap[nextStateKey] = nextStateSet;
+            queue.add(nextStateKey);
           }
 
           // Add transition
@@ -211,6 +220,12 @@ class NFAToDFAConverter {
       zoomLevel: nfa.zoomLevel,
       panOffset: nfa.panOffset,
     );
+  }
+
+  /// Creates a string key for a set of states
+  static String _getStateSetKey(Set<State> stateSet) {
+    final stateIds = stateSet.map((s) => s.id).toList()..sort();
+    return stateIds.join(',');
   }
 
   /// Creates a DFA state from a set of NFA states

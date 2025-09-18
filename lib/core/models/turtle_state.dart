@@ -9,6 +9,7 @@ class TurtleState {
   final double angleIncrement;
   final double pitch;
   final double roll;
+  final bool isDrawing;
 
   const TurtleState({
     required this.x,
@@ -18,6 +19,7 @@ class TurtleState {
     required this.angleIncrement,
     this.pitch = 0.0,
     this.roll = 0.0,
+    this.isDrawing = true,
   });
 
   /// Creates a new turtle state at the origin
@@ -47,6 +49,7 @@ class TurtleState {
       angleIncrement: angleIncrement,
       pitch: pitch,
       roll: roll,
+      isDrawing: isDrawing,
     );
   }
 
@@ -63,6 +66,7 @@ class TurtleState {
       angleIncrement: angleIncrement,
       pitch: pitch,
       roll: roll,
+      isDrawing: isDrawing,
     );
   }
 
@@ -180,6 +184,7 @@ class TurtleState {
       angleIncrement: angleIncrement,
       pitch: pitch,
       roll: roll,
+      isDrawing: isDrawing,
     );
   }
 
@@ -267,6 +272,7 @@ class TurtleState {
     double? angleIncrement,
     double? pitch,
     double? roll,
+    bool? isDrawing,
   }) {
     return TurtleState(
       x: x ?? this.x,
@@ -276,6 +282,7 @@ class TurtleState {
       angleIncrement: angleIncrement ?? this.angleIncrement,
       pitch: pitch ?? this.pitch,
       roll: roll ?? this.roll,
+      isDrawing: isDrawing ?? this.isDrawing,
     );
   }
 
@@ -290,16 +297,17 @@ class TurtleState {
         other.stepSize == stepSize &&
         other.angleIncrement == angleIncrement &&
         other.pitch == pitch &&
-        other.roll == roll;
+        other.roll == roll &&
+        other.isDrawing == isDrawing;
   }
 
   @override
   int get hashCode {
-    return Object.hash(x, y, angle, stepSize, angleIncrement, pitch, roll);
+    return Object.hash(x, y, angle, stepSize, angleIncrement, pitch, roll, isDrawing);
   }
 
   @override
   String toString() {
-    return 'TurtleState(x: $x, y: $y, angle: $angle, stepSize: $stepSize, angleIncrement: $angleIncrement, pitch: $pitch, roll: $roll)';
+    return 'TurtleState(x: $x, y: $y, angle: $angle, stepSize: $stepSize, angleIncrement: $angleIncrement, pitch: $pitch, roll: $roll, isDrawing: $isDrawing)';
   }
 }

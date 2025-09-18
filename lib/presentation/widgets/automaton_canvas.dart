@@ -4,6 +4,8 @@ import 'package:vector_math/vector_math_64.dart' hide Colors;
 import '../../core/models/fsa.dart';
 import '../../core/models/state.dart' as automaton_state;
 import '../../core/models/fsa_transition.dart';
+import 'touch_gesture_handler.dart';
+import 'mobile_automaton_controls.dart';
 
 /// Interactive canvas for drawing and editing automata
 class AutomatonCanvas extends StatefulWidget {
@@ -89,7 +91,7 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
   }
 
   void _addState(Offset position) {
-        final newState = automaton_state.State(
+    final newState = automaton_state.State(
       id: 'q${_states.length}',
       label: 'q${_states.length}',
       position: Vector2(position.dx, position.dy),
@@ -103,6 +105,24 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
     });
     
     _notifyAutomatonChanged();
+  }
+
+  void _editState(automaton_state.State state) {
+    showDialog(
+      context: context,
+      builder: (context) => _StateEditDialog(
+        state: state,
+        onStateUpdated: (updatedState) {
+          setState(() {
+            final index = _states.indexWhere((s) => s.id == state.id);
+            if (index != -1) {
+              _states[index] = updatedState;
+            }
+          });
+          _notifyAutomatonChanged();
+        },
+      ),
+    );
   }
 
   void _selectStateAt(Offset position) {
@@ -195,8 +215,53 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
       ),
       child: Stack(
         children: [
-          GestureDetector(
-            onTapDown: _onCanvasTap,
+          TouchGestureHandler(
+            states: _states,
+            transitions: _transitions,
+            selectedState: _selectedState,
+            onStateSelected: (state) {
+              setState(() {
+                _selectedState = state;
+              });
+            },
+            onStateMoved: (state) {
+              setState(() {
+                final index = _states.indexWhere((s) => s.id == state.id);
+                if (index != -1) {
+                  _states[index] = state;
+                }
+              });
+              _notifyAutomatonChanged();
+            },
+            onStateAdded: (position) {
+              _addState(position);
+            },
+            onTransitionAdded: (transition) {
+              setState(() {
+                _transitions.add(transition);
+              });
+              _notifyAutomatonChanged();
+            },
+            onStateEdited: (state) {
+              _editState(state);
+            },
+            onStateDeleted: (state) {
+              setState(() {
+                _states.removeWhere((s) => s.id == state.id);
+                _transitions.removeWhere((t) => 
+                  t.fromState.id == state.id || t.toState.id == state.id);
+                if (_selectedState?.id == state.id) {
+                  _selectedState = null;
+                }
+              });
+              _notifyAutomatonChanged();
+            },
+            onTransitionDeleted: (transition) {
+              setState(() {
+                _transitions.removeWhere((t) => t.id == transition.id);
+              });
+              _notifyAutomatonChanged();
+            },
             child: CustomPaint(
               painter: AutomatonPainter(
                 states: _states,
@@ -459,6 +524,96 @@ class AutomatonPainter extends CustomPainter {
             oldDelegate.transitions != transitions ||
             oldDelegate.selectedState != selectedState ||
             oldDelegate.transitionStart != transitionStart);
+  }
+}
+
+/// Dialog for editing state properties
+class _StateEditDialog extends StatefulWidget {
+  final automaton_state.State state;
+  final ValueChanged<automaton_state.State> onStateUpdated;
+
+  const _StateEditDialog({
+    required this.state,
+    required this.onStateUpdated,
+  });
+
+  @override
+  State<_StateEditDialog> createState() => _StateEditDialogState();
+}
+
+class _StateEditDialogState extends State<_StateEditDialog> {
+  late TextEditingController _labelController;
+  late bool _isInitial;
+  late bool _isAccepting;
+
+  @override
+  void initState() {
+    super.initState();
+    _labelController = TextEditingController(text: widget.state.label);
+    _isInitial = widget.state.isInitial;
+    _isAccepting = widget.state.isAccepting;
+  }
+
+  @override
+  void dispose() {
+    _labelController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Edit State'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _labelController,
+            decoration: const InputDecoration(
+              labelText: 'State Label',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 16),
+          CheckboxListTile(
+            title: const Text('Initial State'),
+            value: _isInitial,
+            onChanged: (value) {
+              setState(() {
+                _isInitial = value ?? false;
+              });
+            },
+          ),
+          CheckboxListTile(
+            title: const Text('Accepting State'),
+            value: _isAccepting,
+            onChanged: (value) {
+              setState(() {
+                _isAccepting = value ?? false;
+              });
+            },
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            final updatedState = widget.state.copyWith(
+              label: _labelController.text,
+              isInitial: _isInitial,
+              isAccepting: _isAccepting,
+            );
+            widget.onStateUpdated(updatedState);
+            Navigator.of(context).pop();
+          },
+          child: const Text('Save'),
+        ),
+      ],
+    );
   }
 }
 

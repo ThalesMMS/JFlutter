@@ -28,8 +28,8 @@ class MobileNavigation extends StatelessWidget {
       ),
       child: SafeArea(
         child: Container(
-          height: 80,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          height: 70, // Reduced height for better space usage
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: items.asMap().entries.map((entry) {
@@ -65,21 +65,22 @@ class MobileNavigation extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               item.icon,
               color: color,
-              size: 24,
+              size: 18, // Smaller icons for better fit
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               item.label,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 color: color,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                fontSize: 9, // Even smaller text
               ),
               textAlign: TextAlign.center,
               maxLines: 1,

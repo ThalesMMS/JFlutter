@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/grammar.dart';
 import '../../core/models/production.dart';
+import '../providers/grammar_provider.dart';
 
 /// Comprehensive grammar editor widget
 class GrammarEditor extends ConsumerStatefulWidget {
@@ -12,14 +13,21 @@ class GrammarEditor extends ConsumerStatefulWidget {
 }
 
 class _GrammarEditorState extends ConsumerState<GrammarEditor> {
-  final List<Production> _productions = [];
   final TextEditingController _startSymbolController = TextEditingController(text: 'S');
   final TextEditingController _leftSideController = TextEditingController();
   final TextEditingController _rightSideController = TextEditingController();
   final TextEditingController _grammarNameController = TextEditingController(text: 'My Grammar');
-  
-  Production? _selectedProduction;
+
+  String? _selectedProductionId;
   bool _isEditing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final state = ref.read(grammarProvider);
+    _startSymbolController.text = state.startSymbol;
+    _grammarNameController.text = state.name;
+  }
 
   @override
   void dispose() {
@@ -32,6 +40,7 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
 
   @override
   Widget build(BuildContext context) {
+    final grammarState = ref.watch(grammarProvider);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -44,7 +53,7 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
             const SizedBox(height: 16),
             _buildProductionEditor(context),
             const SizedBox(height: 16),
-            _buildProductionsList(context),
+            _buildProductionsList(context, grammarState.productions),
           ],
         ),
       ),
@@ -160,6 +169,7 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
               Expanded(
                 child: TextField(
                   controller: _grammarNameController,
+                  onChanged: (value) => ref.read(grammarProvider.notifier).updateName(value.trim()),
                   decoration: const InputDecoration(
                     labelText: 'Grammar Name',
                     border: OutlineInputBorder(),
@@ -171,6 +181,7 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
               Expanded(
                 child: TextField(
                   controller: _startSymbolController,
+                  onChanged: (value) => ref.read(grammarProvider.notifier).updateStartSymbol(value.trim()),
                   decoration: const InputDecoration(
                     labelText: 'Start Symbol',
                     border: OutlineInputBorder(),
@@ -262,25 +273,25 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
     );
   }
 
-  Widget _buildProductionsList(BuildContext context) {
+  Widget _buildProductionsList(BuildContext context, List<Production> productions) {
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Production Rules (${_productions.length})',
+            'Production Rules (${productions.length})',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),
           Expanded(
-            child: _productions.isEmpty
+            child: productions.isEmpty
                 ? _buildEmptyState(context)
                 : ListView.builder(
-                    itemCount: _productions.length,
+                    itemCount: productions.length,
                     itemBuilder: (context, index) {
-                      final production = _productions[index];
+                      final production = productions[index];
                       return _buildProductionItem(context, production, index);
                     },
                   ),
@@ -320,12 +331,12 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
   }
 
   Widget _buildProductionItem(BuildContext context, Production production, int index) {
-    final isSelected = _selectedProduction == production;
-    
+    final isSelected = _selectedProductionId == production.id;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: isSelected 
+        color: isSelected
             ? Theme.of(context).colorScheme.primaryContainer
             : Theme.of(context).colorScheme.surface,
         border: Border.all(
@@ -347,7 +358,7 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
           ),
         ),
         title: Text(
-          '${production.leftSide} → ${production.rightSide}',
+          '${_formatSymbols(production.leftSide)} → ${_formatRightSide(production)}',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontFamily: 'monospace',
             fontWeight: FontWeight.w600,
@@ -381,87 +392,110 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
   void _addProduction() {
     final leftSide = _leftSideController.text.trim();
     final rightSide = _rightSideController.text.trim();
-    
+
     if (leftSide.isEmpty || rightSide.isEmpty) {
       _showError('Both left side and right side must be specified');
       return;
     }
-    
-    final production = Production(
-      id: 'p${_productions.length + 1}',
-      leftSide: [leftSide],
-      rightSide: [rightSide],
-    );
-    
-    setState(() {
-      _productions.add(production);
-    });
-    
+
+    final parsedLeft = _parseLeftSide(leftSide);
+    if (parsedLeft.isEmpty) {
+      _showError('Left side must contain a non-terminal symbol');
+      return;
+    }
+    if (parsedLeft.length != 1) {
+      _showError('Left side must contain exactly one non-terminal symbol');
+      return;
+    }
+
+    final parsedRight = _parseRightSide(rightSide);
+    final isLambda = parsedRight.length == 1 && _isLambdaSymbol(parsedRight.first);
+    final normalizedRight = isLambda ? <String>[] : parsedRight;
+
+    ref.read(grammarProvider.notifier).addProduction(
+          leftSide: parsedLeft,
+          rightSide: normalizedRight,
+          isLambda: isLambda,
+        );
     _clearFields();
   }
 
   void _updateProduction() {
-    if (_selectedProduction == null) return;
-    
+    if (_selectedProductionId == null) return;
+
     final leftSide = _leftSideController.text.trim();
     final rightSide = _rightSideController.text.trim();
-    
+
     if (leftSide.isEmpty || rightSide.isEmpty) {
       _showError('Both left side and right side must be specified');
       return;
     }
-    
+
+    final parsedLeft = _parseLeftSide(leftSide);
+    if (parsedLeft.isEmpty) {
+      _showError('Left side must contain a non-terminal symbol');
+      return;
+    }
+    if (parsedLeft.length != 1) {
+      _showError('Left side must contain exactly one non-terminal symbol');
+      return;
+    }
+
+    final parsedRight = _parseRightSide(rightSide);
+    final isLambda = parsedRight.length == 1 && _isLambdaSymbol(parsedRight.first);
+    final normalizedRight = isLambda ? <String>[] : parsedRight;
+
+    ref.read(grammarProvider.notifier).updateProduction(
+          _selectedProductionId!,
+          leftSide: parsedLeft,
+          rightSide: normalizedRight,
+          isLambda: isLambda,
+        );
     setState(() {
-      final index = _productions.indexOf(_selectedProduction!);
-      _productions[index] = _selectedProduction!.copyWith(
-        leftSide: [leftSide],
-        rightSide: [rightSide],
-      );
-      _selectedProduction = _productions[index];
       _isEditing = false;
+      _selectedProductionId = null;
     });
-    
     _clearFields();
   }
 
   void _editProduction(Production production) {
     setState(() {
-      _selectedProduction = production;
+      _selectedProductionId = production.id;
       _isEditing = true;
-      _leftSideController.text = production.leftSide.join(' ');
-      _rightSideController.text = production.rightSide.join(' ');
+      _leftSideController.text = _formatSymbols(production.leftSide);
+      _rightSideController.text = _formatRightSide(production);
     });
   }
 
   void _deleteProduction(Production production) {
-    setState(() {
-      _productions.remove(production);
-      if (_selectedProduction == production) {
-        _selectedProduction = null;
+    ref.read(grammarProvider.notifier).deleteProduction(production.id);
+    if (_selectedProductionId == production.id) {
+      setState(() {
+        _selectedProductionId = null;
         _isEditing = false;
-        _clearFields();
-      }
-    });
+      });
+      _clearFields();
+    }
   }
 
   void _selectProduction(Production production) {
     setState(() {
-      _selectedProduction = production;
+      _selectedProductionId = production.id;
     });
   }
 
   void _cancelEdit() {
     setState(() {
       _isEditing = false;
-      _selectedProduction = null;
+      _selectedProductionId = null;
     });
     _clearFields();
   }
 
   void _clearGrammar() {
+    ref.read(grammarProvider.notifier).clearProductions();
     setState(() {
-      _productions.clear();
-      _selectedProduction = null;
+      _selectedProductionId = null;
       _isEditing = false;
     });
     _clearFields();
@@ -479,5 +513,50 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
         backgroundColor: Theme.of(context).colorScheme.error,
       ),
     );
+  }
+
+  List<String> _parseLeftSide(String input) {
+    final trimmed = input.trim();
+    if (trimmed.isEmpty) {
+      return const [];
+    }
+    if (trimmed.contains(RegExp(r'\s+'))) {
+      return trimmed
+          .split(RegExp(r'\s+'))
+          .where((token) => token.isNotEmpty)
+          .toList();
+    }
+    return [trimmed];
+  }
+
+  List<String> _parseRightSide(String input) {
+    final trimmed = input.trim();
+    if (trimmed.isEmpty) {
+      return const [];
+    }
+    if (trimmed.contains(RegExp(r'\s+'))) {
+      return trimmed
+          .split(RegExp(r'\s+'))
+          .where((token) => token.isNotEmpty)
+          .toList();
+    }
+    return trimmed.split('');
+  }
+
+  bool _isLambdaSymbol(String symbol) =>
+      symbol == 'ε' || symbol == 'λ' || symbol.toLowerCase() == 'lambda';
+
+  String _formatSymbols(List<String> symbols) {
+    if (symbols.isEmpty) {
+      return '';
+    }
+    return symbols.join();
+  }
+
+  String _formatRightSide(Production production) {
+    if (production.isLambda || production.rightSide.isEmpty) {
+      return 'ε';
+    }
+    return _formatSymbols(production.rightSide);
   }
 }

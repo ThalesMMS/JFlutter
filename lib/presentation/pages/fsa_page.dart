@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/models/fsa.dart';
 import '../providers/automaton_provider.dart';
-import '../widgets/automaton_canvas.dart';
 import '../widgets/algorithm_panel.dart';
+import '../widgets/automaton_canvas.dart';
 import '../widgets/simulation_panel.dart';
+import 'grammar_page.dart';
+import 'regex_page.dart';
 
 /// Page for working with Finite State Automata
 class FSAPage extends ConsumerStatefulWidget {
@@ -17,6 +20,57 @@ class _FSAPageState extends ConsumerState<FSAPage> {
   final GlobalKey _canvasKey = GlobalKey();
   bool _showControls = true;
   bool _showSimulation = false;
+
+  Future<void> _handleFaToRegex() async {
+    final notifier = ref.read(automatonProvider.notifier);
+    final regex = await notifier.convertFaToRegex();
+    if (!mounted || regex == null) {
+      if (mounted && ref.read(automatonProvider).error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(ref.read(automatonProvider).error!)),
+        );
+      }
+      return;
+    }
+
+    if (!mounted) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => RegexPage(initialRegex: regex),
+      ),
+    );
+  }
+
+  Future<void> _handleFsaToGrammar() async {
+    final notifier = ref.read(automatonProvider.notifier);
+    final grammar = await notifier.convertFsaToGrammar();
+    if (!mounted || grammar == null) {
+      if (mounted && ref.read(automatonProvider).error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(ref.read(automatonProvider).error!)),
+        );
+      }
+      return;
+    }
+
+    if (!mounted) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => GrammarPage(initialGrammar: grammar),
+      ),
+    );
+  }
+
+  Future<void> _handleCompareEquivalence(FSA other) async {
+    await ref.read(automatonProvider.notifier).compareEquivalence(other);
+    if (!mounted) return;
+    final message = ref.read(automatonProvider).equivalenceDetails;
+    if (message != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -84,11 +138,17 @@ class _FSAPageState extends ConsumerState<FSAPage> {
                   Container(
                     constraints: const BoxConstraints(maxHeight: 200),
                     child: AlgorithmPanel(
-                          onNfaToDfa: () => ref.read(automatonProvider.notifier).convertNfaToDfa(),
-                          onMinimizeDfa: () => ref.read(automatonProvider.notifier).minimizeDfa(),
-                          onClear: () => ref.read(automatonProvider.notifier).clearAutomaton(),
-                          onRegexToNfa: (regex) => ref.read(automatonProvider.notifier).convertRegexToNfa(regex),
-                      onFaToRegex: () => ref.read(automatonProvider.notifier).convertFaToRegex(),
+                      onNfaToDfa: () => ref.read(automatonProvider.notifier).convertNfaToDfa(),
+                      onMinimizeDfa: () => ref.read(automatonProvider.notifier).minimizeDfa(),
+                      onCompleteDfa: () => ref.read(automatonProvider.notifier).completeDfa(),
+                      onFsaToGrammar: _handleFsaToGrammar,
+                      onAutoLayout: () => ref.read(automatonProvider.notifier).applyAutoLayout(),
+                      onClear: () => ref.read(automatonProvider.notifier).clearAutomaton(),
+                      onRegexToNfa: (regex) => ref.read(automatonProvider.notifier).convertRegexToNfa(regex),
+                      onFaToRegex: _handleFaToRegex,
+                      onCompareEquivalence: _handleCompareEquivalence,
+                      equivalenceResult: state.equivalenceResult,
+                      equivalenceDetails: state.equivalenceDetails,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -148,11 +208,14 @@ class _FSAPageState extends ConsumerState<FSAPage> {
                 onNfaToDfa: () => ref.read(automatonProvider.notifier).convertNfaToDfa(),
                 onMinimizeDfa: () => ref.read(automatonProvider.notifier).minimizeDfa(),
                 onCompleteDfa: () => ref.read(automatonProvider.notifier).completeDfa(),
-                onFsaToGrammar: () => ref.read(automatonProvider.notifier).convertFsaToGrammar(),
+                onFsaToGrammar: _handleFsaToGrammar,
                 onAutoLayout: () => ref.read(automatonProvider.notifier).applyAutoLayout(),
                 onClear: () => ref.read(automatonProvider.notifier).clearAutomaton(),
                 onRegexToNfa: (regex) => ref.read(automatonProvider.notifier).convertRegexToNfa(regex),
-                onFaToRegex: () => ref.read(automatonProvider.notifier).convertFaToRegex(),
+                onFaToRegex: _handleFaToRegex,
+                onCompareEquivalence: _handleCompareEquivalence,
+                equivalenceResult: state.equivalenceResult,
+                equivalenceDetails: state.equivalenceDetails,
               ),
             ],
           ),

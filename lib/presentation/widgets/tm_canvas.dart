@@ -5,6 +5,7 @@ import '../../core/models/tm.dart';
 import '../../core/models/state.dart' as automaton_state;
 import '../../core/models/tm_transition.dart';
 import '../../core/models/fsa_transition.dart';
+import '../../core/models/transition.dart';
 import 'touch_gesture_handler.dart';
 
 /// Interactive canvas for drawing and editing Turing Machines
@@ -177,7 +178,10 @@ class _TMCanvasState extends State<TMCanvas> {
     });
   }
 
-  void _addTransition(FSATransition transition) {
+  void _addTransition(Transition transition) {
+    if (transition is! FSATransition) {
+      return;
+    }
     // Convert FSA transition to TM transition
     final tmTransition = TMTransition(
       id: transition.id,
@@ -209,9 +213,9 @@ class _TMCanvasState extends State<TMCanvas> {
     });
   }
 
-  void _deleteTransition(FSATransition transition) {
+  void _deleteTransition(Transition transition) {
     setState(() {
-      _transitions.remove(transition);
+      _transitions.removeWhere((t) => t.id == transition.id);
     });
   }
 

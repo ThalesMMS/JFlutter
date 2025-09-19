@@ -272,7 +272,10 @@ class GrammarAnalyzer {
 
             final source = first[symbol]!;
             final withoutEpsilon = source.where((s) => s != 'ε').toSet();
-            if (first[left]!.addAll(withoutEpsilon)) {
+            final targetFirst = first[left]!;
+            final previousLength = targetFirst.length;
+            targetFirst.addAll(withoutEpsilon);
+            if (targetFirst.length != previousLength) {
               changed = true;
               derivations.add(
                   "FIRST($left) absorbs FIRST($symbol) − {ε} via production $left → ${_formatSymbols(right)}");
@@ -343,14 +346,19 @@ class GrammarAnalyzer {
             final suffix = right.sublist(i + 1);
             final firstOfSuffix = _firstOfSequence(suffix, first);
             final withoutEpsilon = firstOfSuffix.where((s) => s != 'ε').toSet();
-            if (follow[symbol]!.addAll(withoutEpsilon)) {
+            final targetFollow = follow[symbol]!;
+            final previousLength = targetFollow.length;
+            targetFollow.addAll(withoutEpsilon);
+            if (targetFollow.length != previousLength) {
               changed = true;
               derivations.add(
                   "FOLLOW($symbol) gains ${withoutEpsilon.join(', ')} from FIRST of suffix in $left → ${_formatSymbols(right)}");
             }
 
             if (suffix.isEmpty || firstOfSuffix.contains('ε')) {
-              if (follow[symbol]!.addAll(follow[left]!)) {
+              final previousFollowLength = targetFollow.length;
+              targetFollow.addAll(follow[left]!);
+              if (targetFollow.length != previousFollowLength) {
                 changed = true;
                 derivations.add(
                     "FOLLOW($symbol) absorbs FOLLOW($left) because suffix can derive ε in $left → ${_formatSymbols(right)}");

@@ -31,7 +31,7 @@
 - Phase 3-4: Implementation execution (manual or via tools)
 
 ## Summary
-Mobile-optimized Flutter application porting six core JFLAP features (Finite Automaton, Pushdown Automaton, Turing Machine, Grammar, Regular Expression, Pumping Lemma) with clean interface design, expandable menus, and compact toolbars. Removes unnecessary features (Mealy Machine, Moore Machine, Multi-Tape Turing Machine, L-System) and maintains algorithmic consistency with original Java implementation.
+Mobile-optimized Flutter application porting six core JFLAP features (Finite Automaton, Pushdown Automaton, Turing Machine, Grammar, Regular Expression, Pumping Lemma) with clean interface design, expandable menus, and compact toolbars. Removes unnecessary features (Moore Machine, Multi-Tape Turing Machine, L-System) and maintains algorithmic consistency with original Java implementation.
 
 ## Technical Context
 **Language/Version**: Dart 3.0+, Flutter 3.16+  

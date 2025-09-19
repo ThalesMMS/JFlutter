@@ -88,7 +88,6 @@
 - [x] T014 [P] FSATransition model in lib/core/models/fsa_transition.dart
 - [x] T015 [P] PDATransition model in lib/core/models/pda_transition.dart
 - [x] T016 [P] TMTransition model in lib/core/models/tm_transition.dart
-- [x] T017 [P] MealyTransition model in lib/core/models/mealy_transition.dart
 - [x] T018 [P] Grammar model in lib/core/models/grammar.dart
 - [x] T019 [P] Production model in lib/core/models/production.dart
 - [x] T020 [P] SimulationResult model in lib/core/models/simulation_result.dart

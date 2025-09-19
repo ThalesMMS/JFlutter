@@ -3,7 +3,7 @@
 **Feature Branch**: `002-title-mobile-optimized`  
 **Created**: 2024-12-19  
 **Status**: Draft  
-**Input**: User description: "Atualizar as especificações para: Mealy Machine, Moore Machine, Multi-Tape Turing Machine e L-System NÃO serão necessários neste projeto, não serão portados e, se portados ou parcialmente portados, devem ser removidos. O aplicativo deve ser otimizado para dispositivos móveis, e terá as seguintes abas (que podem ser abreviadas): Finite Automaton, Pushdown Automaton, Turing Machine, Grammar, Regular Expression, Pumping Lemma. Os códigos java dentro da pasta JFLAP_source devem ser usados como referência de funcionalidades para as sessões que estamos portando, bem como referência lógica dos algoritmos. A interface, em cada aba, deve ser clean, com menus expansíveis e barras de ferramentas que não ocupem muito espaço no layout padrão da aba."
+**Input**: User description: "Atualizar as especificações para remover determinadas máquinas avançadas que não serão necessárias neste projeto (como Moore Machine, Multi-Tape Turing Machine e L-System). O aplicativo deve ser otimizado para dispositivos móveis, e terá as seguintes abas (que podem ser abreviadas): Finite Automaton, Pushdown Automaton, Turing Machine, Grammar, Regular Expression, Pumping Lemma. Os códigos java dentro da pasta JFLAP_source devem ser usados como referência de funcionalidades para as sessões que estamos portando, bem como referência lógica dos algoritmos. A interface, em cada aba, deve ser clean, com menus expansíveis e barras de ferramentas que não ocupem muito espaço no layout padrão da aba."
 
 ## Execution Flow (main)
 ```
@@ -67,7 +67,7 @@ A computer science student or educator needs to interact with various automata a
 ### Edge Cases
 - What happens when the user rotates their device between portrait and landscape modes?
 - How does the system handle limited screen space on smaller mobile devices?
-- What occurs when users try to access removed features (Mealy Machine, Moore Machine, Multi-Tape Turing Machine, L-System) if they were previously available?
+- What occurs when users try to access removed advanced features (e.g., Moore Machine, Multi-Tape Turing Machine, L-System) if they were previously available?
 
 ## Requirements *(mandatory)*
 
@@ -76,7 +76,7 @@ A computer science student or educator needs to interact with various automata a
 - **FR-002**: System MUST optimize all interfaces for mobile device interaction (touch, limited screen space)
 - **FR-003**: System MUST implement expandable menus that remain collapsed by default to preserve screen space
 - **FR-004**: System MUST provide compact toolbars that don't obstruct the main workspace area
-- **FR-005**: System MUST remove or prevent access to Mealy Machine, Moore Machine, Multi-Tape Turing Machine, and L-System features
+- **FR-005**: System MUST remove or prevent access to legacy advanced automata features (including Moore Machine, Multi-Tape Turing Machine, and L-System capabilities)
 - **FR-006**: System MUST maintain functional consistency with the original JFLAP Java implementation for core algorithms
 - **FR-007**: System MUST allow tab abbreviations for better mobile display [NEEDS CLARIFICATION: which specific abbreviations should be used for each tab?]
 - **FR-008**: System MUST preserve user work when switching between tabs

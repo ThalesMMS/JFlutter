@@ -98,39 +98,46 @@ As a computer science student or educator, I want to create, manipulate, and ana
 - **FR-015**: System MUST support creation and editing of finite state automata (DFA/NFA) with touch-optimized interface
 - **FR-016**: System MUST support creation and editing of pushdown automata (PDA) with mobile-friendly controls
 - **FR-017**: System MUST support creation and editing of Turing machines (single and multi-tape) with touch gestures
-- **FR-018**: System MUST support creation and editing of Mealy machines with input/output transitions
-- **FR-019**: System MUST support regular grammar creation and editing with mobile input methods
-- **FR-020**: System MUST support context-free grammar creation and editing with touch-optimized table editing
-- **FR-021**: System MUST support unrestricted grammar creation and editing with mobile interface
+- **FR-018**: System MUST support regular grammar creation and editing with mobile input methods
+- **FR-019**: System MUST support context-free grammar creation and editing with touch-optimized table editing
+- **FR-020**: System MUST support unrestricted grammar creation and editing with mobile interface
 
 #### Interface and Usability Features
-- **FR-022**: System MUST support zoom functionality in editing area
-- **FR-023**: System MUST support undo/redo operations for all editing actions
-- **FR-024**: System MUST support saving in multiple image formats (SVG, PNG, etc.)
-- **FR-025**: System MUST support multiple window visualization
-- **FR-026**: System MUST support color and style customization
-- **FR-027**: System MUST support automatic trap state addition in DFAs
-- **FR-028**: System MUST support reading input strings from files
-- **FR-029**: System MUST support tree visualization for DFA minimization
-- **FR-030**: System MUST support interactive step-by-step minimization process
-- **FR-031**: System MUST support value ranges in transitions (e.g., [0-9])
-- **FR-032**: System MUST support Building Block mode for Turing machines
-- **FR-033**: System MUST support transition customization (curvature adjustment, individual selection, multiple labels)
-- **FR-034**: System MUST support derivation tree visualization
-- **FR-035**: System MUST support non-deterministic automaton input analysis
+- **FR-021**: System MUST support zoom functionality in editing area
+- **FR-022**: System MUST support undo/redo operations for all editing actions
+- **FR-023**: System MUST support saving in multiple image formats (SVG, PNG, etc.)
+- **FR-024**: System MUST support multiple window visualization
+- **FR-025**: System MUST support color and style customization
+- **FR-026**: System MUST support automatic trap state addition in DFAs
+- **FR-027**: System MUST support reading input strings from files
+- **FR-028**: System MUST support tree visualization for DFA minimization
+- **FR-029**: System MUST support interactive step-by-step minimization process
+- **FR-030**: System MUST support value ranges in transitions (e.g., [0-9])
+- **FR-031**: System MUST support Building Block mode for Turing machines
+- **FR-032**: System MUST support transition customization (curvature adjustment, individual selection, multiple labels)
+- **FR-033**: System MUST support derivation tree visualization
+- **FR-034**: System MUST support non-deterministic automaton input analysis
+
+#### L-Systems
+- **FR-035**: System MUST support L-system creation with axiom and production rule definition
+- **FR-036**: System MUST support multiple derivation steps with graphical visualization
+- **FR-037**: System MUST support turtle commands (forward, rotation, line width, color control)
+- **FR-038**: System MUST support customizable parameters (angles, distance, line width, colors)
+- **FR-039**: System MUST support fractal generation and natural structure modeling
 
 #### Simulation and Analysis
-- **FR-036**: System MUST simulate automata execution with step-by-step visualization
-- **FR-037**: System MUST validate automata properties (determinism, completeness, reachability)
-- **FR-038**: System MUST support batch simulation of multiple input strings
-- **FR-039**: System MUST detect and highlight nondeterminism in automata
-- **FR-040**: System MUST support multiple executions for grammars
-- **FR-041**: System MUST support system evaluation for multiple files
+- **FR-040**: System MUST simulate automata execution with step-by-step visualization
+- **FR-041**: System MUST validate automata properties (determinism, completeness, reachability)
+- **FR-042**: System MUST support batch simulation of multiple input strings
+- **FR-043**: System MUST detect and highlight nondeterminism in automata
+- **FR-044**: System MUST support multiple executions for grammars
+- **FR-045**: System MUST support system evaluation for multiple files
 
 #### File Operations and Export
-- **FR-047**: System MUST support file operations (save, load, export) with mobile-optimized file management
-- **FR-048**: System MUST support JFLAP file format compatibility
-- **FR-049**: System MUST support export of generated automata and grammars
+- **FR-046**: System MUST support file operations (save, load, export) with mobile-optimized file management
+- **FR-047**: System MUST support JFLAP file format compatibility
+- **FR-048**: System MUST support export of generated automata and grammars
+- **FR-049**: System MUST support import/export of L-system configurations
 
 #### Mobile-Specific Features
 - **FR-050**: System MUST provide visual feedback for touch interactions (selection, dragging, resizing)
@@ -141,9 +148,9 @@ As a computer science student or educator, I want to create, manipulate, and ana
 - **FR-055**: System MUST provide help documentation accessible through mobile interface
 
 ### Key Entities
-- **Automaton**: Represents finite state automata, pushdown automata, Turing machines, or Mealy machines with states, transitions, and input/output alphabets
-- **State**: Individual nodes in automata with position, label, acceptance properties, and Mealy machine output functions
-- **Transition**: Connections between states with input symbols, stack operations (for PDA), tape operations (for TM), or input/output pairs (for Mealy)
+- **Automaton**: Represents finite state automata, pushdown automata, or Turing machines with states, transitions, and appropriate alphabets
+- **State**: Individual nodes in automata with position, label, and acceptance properties, along with optional output annotations
+- **Transition**: Connections between states with input symbols, stack operations (for PDA), or tape operations (for TM)
 - **Grammar**: Regular, context-free, or unrestricted grammar with productions and terminals/nonterminals
 - **Production**: Grammar rules with left-hand side and right-hand side symbols, supporting multiple symbols on left side for unrestricted grammars
 - **Parse Table**: Generated tables for LL/LR/SLR parsing with action and goto entries

@@ -30,7 +30,7 @@
 - Phase 3-4: Implementation execution (manual or via tools)
 
 ## Summary
-Port JFLAP desktop application to Flutter mobile app (JFlutter) with fully mobile-optimized layout maintaining same section divisions. Implement comprehensive formal language theory functionality including grammar-automaton conversions (LL, LR, SLR), pumping lemma games, Turing machines with building blocks, Mealy machines, and advanced parsing algorithms (CYK, brute force). Prioritize basic functions first, then advanced features with touch-optimized user interactions.
+Port JFLAP desktop application to Flutter mobile app (JFlutter) with fully mobile-optimized layout maintaining same section divisions. Implement comprehensive formal language theory functionality including grammar-automaton conversions (LL, LR, SLR), pumping lemma games, L-systems, Turing machines with building blocks, and advanced parsing algorithms (CYK, brute force). Prioritize basic functions first, then advanced features with touch-optimized user interactions.
 
 ## Technical Context
 **Language/Version**: Dart 3.0+, Flutter 3.16+  

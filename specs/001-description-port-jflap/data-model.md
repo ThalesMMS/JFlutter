@@ -125,14 +125,6 @@ class TMTransition extends Transition {
 }
 ```
 
-### MealyTransition
-```dart
-class MealyTransition extends Transition {
-  String inputSymbol;
-  String outputSymbol;
-}
-```
-
 ### Grammar
 ```dart
 class Grammar {

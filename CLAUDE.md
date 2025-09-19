@@ -51,7 +51,7 @@ lib/
 - PDA to CFG conversion
 - Right-linear grammar to FA conversion
 - Pumping lemma games for regular and context-free languages
-- Mealy machine simulation
+- L-system interpretation and visualization
 - Turing machine with building blocks
 
 ## Mobile-Specific Considerations
@@ -71,8 +71,8 @@ lib/
 1. **Phase 1**: Mobile UI foundation with basic FSA operations
 2. **Phase 2**: Core algorithms (NFA→DFA, minimization, regex conversion)
 3. **Phase 3**: Grammar-automaton conversions (LL, LR, SLR)
-4. **Phase 4**: Advanced features (PDA, TM with building blocks, Mealy machines)
-5. **Phase 5**: Interactive features (pumping lemma games)
+4. **Phase 4**: Advanced features (PDA, TM with building blocks)
+5. **Phase 5**: Interactive features (pumping lemma games, L-systems)
 6. **Phase 6**: Performance optimization and testing
 
 ## Code Standards

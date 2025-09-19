@@ -1,11 +1,13 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
-import '../../core/models/tm.dart';
-import '../../core/models/state.dart' as automaton_state;
-import '../../core/models/tm_transition.dart';
+
 import '../../core/models/fsa_transition.dart';
+import '../../core/models/state.dart' as automaton_state;
+import '../../core/models/tm.dart';
+import '../../core/models/tm_transition.dart';
 import '../../core/models/transition.dart';
 import '../providers/tm_editor_provider.dart';
 import 'touch_gesture_handler.dart';
@@ -286,13 +288,14 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
   }
 
   void _notifyEditor() {
-    ref.read(tmEditorProvider.notifier).updateFromCanvas(
-          states: _states,
-          transitions: _transitions,
-        );
-    final currentTm = ref.read(tmEditorProvider).tm;
-    if (currentTm != null) {
-      widget.onTMModified(currentTm);
+    final notifier = ref.read(tmEditorProvider.notifier);
+    final tm = notifier.updateFromCanvas(
+      states: List<automaton_state.State>.unmodifiable(_states),
+      transitions: List<TMTransition>.unmodifiable(_transitions),
+    );
+
+    if (tm != null) {
+      widget.onTMModified(tm);
     }
   }
 
@@ -517,6 +520,7 @@ class _TMCanvasPainter extends CustomPainter {
       TapeDirection.right => 'R',
       TapeDirection.stay => 'S',
     };
+    
     final textPainter = TextPainter(
       text: TextSpan(
         text: '${transition.readSymbol}/${transition.writeSymbol},$directionSymbol',

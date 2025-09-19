@@ -1,6 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/algorithms/algorithm_operations.dart';
+import '../../core/models/state.dart';
+import '../../core/models/tm.dart';
+import '../../core/models/tm_transition.dart';
+import '../../core/models/tm_transition.dart' as tm_models show TapeDirection;
+import '../../core/result.dart';
+import '../providers/tm_editor_provider.dart';
+
+enum _TMAnalysisFocus {
+  decidability,
+  reachability,
+  language,
+  tape,
+  time,
+  space,
+}
+
+enum _TMAnalysisSection {
+  state,
+  transition,
+  tape,
+  reachability,
+  timing,
+  issues,
+}
+
 /// Panel for Turing Machine analysis algorithms
 class TMAlgorithmPanel extends ConsumerStatefulWidget {
   const TMAlgorithmPanel({super.key});
@@ -11,7 +37,10 @@ class TMAlgorithmPanel extends ConsumerStatefulWidget {
 
 class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
   bool _isAnalyzing = false;
-  String? _analysisResult;
+  TMAnalysis? _analysis;
+  String? _analysisError;
+  TM? _analyzedTm;
+  _TMAnalysisFocus? _currentFocus;
 
   @override
   Widget build(BuildContext context) {
@@ -43,8 +72,8 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
         Text(
           'TM Analysis',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+                fontWeight: FontWeight.bold,
+              ),
         ),
       ],
     );
@@ -56,49 +85,49 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
         _buildAlgorithmButton(
           context,
           title: 'Check Decidability',
-          description: 'Determine if TM halts on all inputs',
+          description: 'Verify halting states and potential infinite loops',
           icon: Icons.help_outline,
-          onPressed: _checkDecidability,
+          focus: _TMAnalysisFocus.decidability,
         ),
         const SizedBox(height: 12),
         _buildAlgorithmButton(
           context,
           title: 'Find Reachable States',
-          description: 'Identify reachable states from initial state',
+          description: 'Identify which states can be reached from the start',
           icon: Icons.explore,
-          onPressed: _findReachableStates,
+          focus: _TMAnalysisFocus.reachability,
         ),
         const SizedBox(height: 12),
         _buildAlgorithmButton(
           context,
           title: 'Language Analysis',
-          description: 'Analyze the language accepted by TM',
+          description: 'Inspect accepting structure and transition coverage',
           icon: Icons.analytics,
-          onPressed: _analyzeLanguage,
+          focus: _TMAnalysisFocus.language,
         ),
         const SizedBox(height: 12),
         _buildAlgorithmButton(
           context,
           title: 'Tape Operations',
-          description: 'Analyze tape operations and complexity',
+          description: 'Review read/write symbols and head movements',
           icon: Icons.storage,
-          onPressed: _analyzeTapeOperations,
+          focus: _TMAnalysisFocus.tape,
         ),
         const SizedBox(height: 12),
         _buildAlgorithmButton(
           context,
-          title: 'Time Complexity',
-          description: 'Analyze time complexity of TM',
+          title: 'Time Characteristics',
+          description: 'Understand analysis runtime and processed elements',
           icon: Icons.timer,
-          onPressed: _analyzeTimeComplexity,
+          focus: _TMAnalysisFocus.time,
         ),
         const SizedBox(height: 12),
         _buildAlgorithmButton(
           context,
-          title: 'Space Complexity',
-          description: 'Analyze space complexity of TM',
+          title: 'Space Characteristics',
+          description: 'Assess tape alphabet and movement coverage',
           icon: Icons.memory,
-          onPressed: _analyzeSpaceComplexity,
+          focus: _TMAnalysisFocus.space,
         ),
       ],
     );
@@ -109,31 +138,36 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
     required String title,
     required String description,
     required IconData icon,
-    required VoidCallback onPressed,
+    required _TMAnalysisFocus focus,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+    final isSelected = _currentFocus == focus;
+
     return InkWell(
-      onTap: _isAnalyzing ? null : onPressed,
+      onTap: _isAnalyzing ? null : () => _performAnalysis(focus),
       borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           border: Border.all(
-            color: _isAnalyzing 
+            color: _isAnalyzing
                 ? colorScheme.outline.withOpacity(0.3)
-                : colorScheme.primary.withOpacity(0.3),
+                : isSelected
+                    ? colorScheme.primary
+                    : colorScheme.primary.withOpacity(0.3),
           ),
           borderRadius: BorderRadius.circular(8),
-          color: _isAnalyzing 
+          color: _isAnalyzing
               ? colorScheme.surfaceVariant.withOpacity(0.5)
-              : null,
+              : isSelected
+                  ? colorScheme.primaryContainer.withOpacity(0.35)
+                  : null,
         ),
         child: Row(
           children: [
             Icon(
               icon,
-              color: _isAnalyzing 
+              color: _isAnalyzing
                   ? colorScheme.outline
                   : colorScheme.primary,
               size: 24,
@@ -146,18 +180,18 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: _isAnalyzing 
-                          ? colorScheme.outline
-                          : colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
+                          color: _isAnalyzing
+                              ? colorScheme.outline
+                              : colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     description,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withOpacity(0.7),
-                    ),
+                          color: colorScheme.onSurface.withOpacity(0.7),
+                        ),
                   ),
                 ],
               ),
@@ -181,6 +215,7 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
   }
 
   Widget _buildResultsSection(BuildContext context) {
+    final hasData = _analysis != null || _analysisError != null;
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -188,14 +223,12 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
           Text(
             'Analysis Results',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+                  fontWeight: FontWeight.w600,
+                ),
           ),
           const SizedBox(height: 8),
           Expanded(
-            child: _analysisResult == null
-                ? _buildEmptyResults(context)
-                : _buildResults(context),
+            child: hasData ? _buildResults(context) : _buildEmptyResults(context),
           ),
         ],
       ),
@@ -225,15 +258,15 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
           Text(
             'No analysis results yet',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+                  color: Theme.of(context).colorScheme.outline,
+                ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Select an algorithm above to analyze your TM',
+            'Select an algorithm above to analyze your TM.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+                  color: Theme.of(context).colorScheme.outline,
+                ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -242,194 +275,569 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
   }
 
   Widget _buildResults(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    if (_analysisError != null) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: colorScheme.error.withOpacity(0.2)),
+          color: colorScheme.errorContainer.withOpacity(0.4),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.error_outline, color: colorScheme.error),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                _analysisError!,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onErrorContainer,
+                    ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final analysis = _analysis;
+    final tm = _analyzedTm;
+    if (analysis == null || tm == null) {
+      return _buildEmptyResults(context);
+    }
+
+    final reachability = analysis.reachabilityAnalysis;
+    final unreachableStates = reachability.unreachableStates;
+    final haltingStates = tm.acceptingStates;
+    final reachableHaltingStates = haltingStates
+        .where((state) => reachability.reachableStates.contains(state))
+        .toSet();
+    final unreachableHaltingStates = haltingStates
+        .where((state) => !reachability.reachableStates.contains(state))
+        .toSet();
+    final potentialInfinite = _findPotentialInfiniteLoops(tm);
+
+    final children = <Widget>[
+      if (_currentFocus != null) ...[
+        _buildFocusBanner(context, _currentFocus!),
+        const SizedBox(height: 12),
+      ],
+      _buildSectionCard(
+        context,
+        title: 'State Analysis',
+        section: _TMAnalysisSection.state,
+        children: [
+          _buildMetricRow(
+            context,
+            'Total states',
+            analysis.stateAnalysis.totalStates.toString(),
+          ),
+          _buildMetricRow(
+            context,
+            'Accepting states',
+            analysis.stateAnalysis.acceptingStates.toString(),
+          ),
+          _buildMetricRow(
+            context,
+            'Non-accepting states',
+            analysis.stateAnalysis.nonAcceptingStates.toString(),
+          ),
+          _buildMetricRow(
+            context,
+            'Reachable halting states',
+            '${reachableHaltingStates.length} of ${haltingStates.length}',
+            highlight: unreachableHaltingStates.isEmpty,
+            isWarning: unreachableHaltingStates.isNotEmpty,
+          ),
+          if (unreachableHaltingStates.isNotEmpty)
+            _buildChipList(
+              context,
+              label: 'Halting states not reached',
+              values: _formatStates(unreachableHaltingStates),
+              isWarning: true,
+            ),
+        ],
+      ),
+      const SizedBox(height: 12),
+      _buildSectionCard(
+        context,
+        title: 'Transition Analysis',
+        section: _TMAnalysisSection.transition,
+        children: [
+          _buildMetricRow(
+            context,
+            'Total transitions',
+            analysis.transitionAnalysis.totalTransitions.toString(),
+          ),
+          _buildMetricRow(
+            context,
+            'TM transitions',
+            analysis.transitionAnalysis.tmTransitions.toString(),
+          ),
+          _buildMetricRow(
+            context,
+            'Non-TM transitions',
+            analysis.transitionAnalysis.fsaTransitions.toString(),
+            isError: analysis.transitionAnalysis.fsaTransitions > 0,
+          ),
+        ],
+      ),
+      const SizedBox(height: 12),
+      _buildSectionCard(
+        context,
+        title: 'Tape Operations',
+        section: _TMAnalysisSection.tape,
+        children: [
+          _buildChipList(
+            context,
+            label: 'Read symbols',
+            values: _sorted(analysis.tapeAnalysis.readOperations),
+          ),
+          _buildChipList(
+            context,
+            label: 'Write symbols',
+            values: _sorted(analysis.tapeAnalysis.writeOperations),
+          ),
+          _buildChipList(
+            context,
+            label: 'Move directions',
+            values: _sorted(analysis.tapeAnalysis.moveDirections),
+          ),
+          _buildChipList(
+            context,
+            label: 'Tape alphabet',
+            values: _sorted(analysis.tapeAnalysis.tapeSymbols),
+          ),
+        ],
+      ),
+      const SizedBox(height: 12),
+      _buildSectionCard(
+        context,
+        title: 'Reachability',
+        section: _TMAnalysisSection.reachability,
+        children: [
+          _buildMetricRow(
+            context,
+            'Reachable states',
+            reachability.reachableStates.length.toString(),
+          ),
+          _buildChipList(
+            context,
+            label: 'Reachable',
+            values: _formatStates(reachability.reachableStates),
+          ),
+          _buildMetricRow(
+            context,
+            'Unreachable states',
+            unreachableStates.length.toString(),
+            isWarning: unreachableStates.isNotEmpty,
+          ),
+          if (unreachableStates.isNotEmpty)
+            _buildChipList(
+              context,
+              label: 'Unreachable',
+              values: _formatStates(unreachableStates),
+              isWarning: true,
+            ),
+        ],
+      ),
+      const SizedBox(height: 12),
+      _buildSectionCard(
+        context,
+        title: 'Execution Timing',
+        section: _TMAnalysisSection.timing,
+        children: [
+          _buildMetricRow(
+            context,
+            'Analysis time',
+            _formatDuration(analysis.executionTime),
+          ),
+          _buildMetricRow(
+            context,
+            'States processed',
+            analysis.stateAnalysis.totalStates.toString(),
+          ),
+          _buildMetricRow(
+            context,
+            'Transitions inspected',
+            analysis.transitionAnalysis.totalTransitions.toString(),
+          ),
+        ],
+      ),
+      const SizedBox(height: 12),
+      _buildSectionCard(
+        context,
+        title: 'Potential Issues',
+        section: _TMAnalysisSection.issues,
+        children: [
+          if (unreachableStates.isEmpty && potentialInfinite.isEmpty)
+            _buildStatusMessage(
+              context,
+              message: 'No structural issues detected.',
+              isPositive: true,
+            ),
+          if (unreachableStates.isNotEmpty)
+            _buildStatusMessage(
+              context,
+              message:
+                  '${unreachableStates.length} state(s) cannot be reached from the initial state.',
+              isWarning: true,
+            ),
+          if (potentialInfinite.isNotEmpty)
+            _buildStatusMessage(
+              context,
+              message:
+                  'Detected ${potentialInfinite.length} self-loop transition(s) that do not move the head.',
+              isWarning: true,
+            ),
+          if (potentialInfinite.isNotEmpty)
+            _buildChipList(
+              context,
+              label: 'Potentially non-halting transitions',
+              values: potentialInfinite
+                  .map(
+                    (t) =>
+                        '${t.fromState.label.isNotEmpty ? t.fromState.label : t.fromState.id} • ${t.readSymbol}→${t.writeSymbol} (${t.direction.name})',
+                  )
+                  .toList(),
+              isWarning: true,
+            ),
+        ],
+      ),
+    ];
+
     return Container(
-      width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-        ),
+        color: colorScheme.surfaceVariant,
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: colorScheme.outline.withOpacity(0.4)),
       ),
       child: SingleChildScrollView(
-        child: Text(
-          _analysisResult!,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontFamily: 'monospace',
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: children,
         ),
       ),
     );
   }
 
-  void _checkDecidability() {
-    _performAnalysis('Decidability Check', () {
-      return '''TM Decidability Analysis:
-
-Current TM Configuration:
-- States: {q0, q1, q2, q3}
-- Transitions: 8 transitions
-- Halting States: {q2, q3}
-
-Decidability Analysis:
-✓ All states have defined transitions
-✓ No infinite loops detected
-✓ Halting states are reachable
-✓ TM halts on all inputs
-
-Result: TM is DECIDABLE
-
-Properties:
-- Computes a total function
-- Always halts (accepts or rejects)
-- Solves a decidable problem
-- Time complexity: O(n) where n is input length''';
-    });
-  }
-
-  void _findReachableStates() {
-    _performAnalysis('Reachable States Analysis', () {
-      return '''Reachable States Analysis:
-
-TM States: {q0, q1, q2, q3}
-
-Reachability Analysis:
-Starting from q0 (initial state):
-
-Level 0: {q0}
-Level 1: {q1} (reachable via '0' transition)
-Level 2: {q2} (reachable via '1' transition from q1)
-Level 3: {q3} (reachable via 'ε' transition from q2)
-
-Reachable States: {q0, q1, q2, q3}
-Unreachable States: {}
-
-Analysis:
-- 100% of states are reachable
-- All states are necessary
-- TM is fully connected''';
-    });
-  }
-
-  void _analyzeLanguage() {
-    _performAnalysis('Language Analysis', () {
-      return '''Language Analysis:
-
-TM Language Properties:
-- Language Type: Recursively Enumerable
-- Language Class: Decidable
-- Computability: Computable
-
-Language Description:
-L = {w ∈ {0,1}* | w has equal number of 0s and 1s}
-
-Properties:
-✓ Decidable (TM always halts)
-✓ Context-sensitive
-✓ Not context-free
-✓ Not regular
-
-Complexity:
-- Time: O(n) for recognition
-- Space: O(n) for tape usage
-- Parsing: Linear time''';
-    });
-  }
-
-  void _analyzeTapeOperations() {
-    _performAnalysis('Tape Operations Analysis', () {
-      return '''Tape Operations Analysis:
-
-Tape Operations Summary:
-- Read Operations: n (one per input symbol)
-- Write Operations: n (one per input symbol)
-- Move Operations: n (one per input symbol)
-
-Tape Usage Analysis:
-- Maximum Tape Usage: n + 2 (input + boundaries)
-- Average Tape Usage: n + 1
-- Tape Growth Pattern: Linear
-
-Symbol Usage:
-- Input Symbols: {0, 1}
-- Tape Symbols: {0, 1, B (blank)}
-- Symbol Count: 3
-
-Efficiency Metrics:
-- Read/Write Ratio: 1:1 (balanced)
-- Tape Utilization: High
-- Memory Efficiency: Optimal for this problem''';
-    });
-  }
-
-  void _analyzeTimeComplexity() {
-    _performAnalysis('Time Complexity Analysis', () {
-      return '''Time Complexity Analysis:
-
-TM Time Complexity:
-- Input Length: n
-- Maximum Steps: n + 2
-- Average Steps: n + 1
-- Minimum Steps: n
-
-Step Analysis:
-- Initialization: 1 step
-- Processing: n steps (one per input symbol)
-- Finalization: 1 step
-
-Complexity Class: O(n) - Linear Time
-
-Comparison:
-- Faster than: O(n²), O(n³), O(2ⁿ)
-- Same as: O(n), O(n log n)
-- Slower than: O(1), O(log n)
-
-Efficiency: Optimal for this problem type''';
-    });
-  }
-
-  void _analyzeSpaceComplexity() {
-    _performAnalysis('Space Complexity Analysis', () {
-      return '''Space Complexity Analysis:
-
-TM Space Complexity:
-- Tape Length: n + 2
-- State Space: 4 states
-- Transition Table: 8 entries
-
-Space Usage:
-- Input Tape: n cells
-- Working Tape: 0 cells (in-place)
-- Boundary Cells: 2 cells
-- Total: n + 2 cells
-
-Complexity Class: O(n) - Linear Space
-
-Memory Analysis:
-- Tape Memory: O(n)
-- State Memory: O(1)
-- Transition Memory: O(1)
-- Total Memory: O(n)
-
-Efficiency: Linear space usage is optimal for this problem''';
-    });
-  }
-
-  void _performAnalysis(String algorithmName, String Function() analysisFunction) {
+  Future<void> _performAnalysis(_TMAnalysisFocus focus) async {
     setState(() {
       _isAnalyzing = true;
-      _analysisResult = null;
+      _analysis = null;
+      _analysisError = null;
+      _currentFocus = focus;
     });
 
-    // Simulate analysis delay
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _isAnalyzing = false;
-          _analysisResult = analysisFunction();
-        });
+    final tm = ref.read(tmEditorProvider).tm;
+    if (tm == null) {
+      setState(() {
+        _isAnalyzing = false;
+        _analysisError =
+            'No Turing machine available. Draw states and transitions on the canvas to analyze.';
+      });
+      return;
+    }
+
+    final Result<TMAnalysis> result;
+    try {
+      result = AlgorithmOperations.analyzeTm(tm);
+    } catch (error) {
+      setState(() {
+        _isAnalyzing = false;
+        _analysisError = 'Failed to analyze the Turing machine: $error';
+      });
+      return;
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      _isAnalyzing = false;
+      if (result.isSuccess) {
+        _analysis = result.data;
+        _analyzedTm = tm;
+      } else {
+        _analysisError = result.error ??
+            'Analysis failed due to an unknown error. Please verify the machine configuration.';
       }
     });
+  }
+
+  Widget _buildFocusBanner(BuildContext context, _TMAnalysisFocus focus) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.auto_awesome, color: colorScheme.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Analysis focus: ${_focusLabel(focus)}',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _focusLabel(_TMAnalysisFocus focus) {
+    switch (focus) {
+      case _TMAnalysisFocus.decidability:
+        return 'Decidability';
+      case _TMAnalysisFocus.reachability:
+        return 'Reachability';
+      case _TMAnalysisFocus.language:
+        return 'Language structure';
+      case _TMAnalysisFocus.tape:
+        return 'Tape operations';
+      case _TMAnalysisFocus.time:
+        return 'Time characteristics';
+      case _TMAnalysisFocus.space:
+        return 'Space characteristics';
+    }
+  }
+
+  Widget _buildSectionCard(
+    BuildContext context, {
+    required String title,
+    required _TMAnalysisSection section,
+    required List<Widget> children,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final highlight = _shouldHighlight(section);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: highlight
+              ? colorScheme.primary
+              : colorScheme.outline.withOpacity(0.4),
+        ),
+        color: highlight
+            ? colorScheme.primaryContainer.withOpacity(0.35)
+            : colorScheme.surface,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+          const SizedBox(height: 8),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  bool _shouldHighlight(_TMAnalysisSection section) {
+    final focus = _currentFocus;
+    if (focus == null) return false;
+
+    switch (focus) {
+      case _TMAnalysisFocus.decidability:
+        return {
+          _TMAnalysisSection.state,
+          _TMAnalysisSection.reachability,
+          _TMAnalysisSection.issues,
+        }.contains(section);
+      case _TMAnalysisFocus.reachability:
+        return section == _TMAnalysisSection.reachability;
+      case _TMAnalysisFocus.language:
+        return {
+          _TMAnalysisSection.state,
+          _TMAnalysisSection.transition,
+        }.contains(section);
+      case _TMAnalysisFocus.tape:
+        return section == _TMAnalysisSection.tape;
+      case _TMAnalysisFocus.time:
+        return section == _TMAnalysisSection.timing;
+      case _TMAnalysisFocus.space:
+        return section == _TMAnalysisSection.tape;
+    }
+  }
+
+  Widget _buildMetricRow(
+    BuildContext context,
+    String label,
+    String value, {
+    bool highlight = false,
+    bool isWarning = false,
+    bool isError = false,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    Color? valueColor;
+    if (isError) {
+      valueColor = colorScheme.error;
+    } else if (isWarning) {
+      valueColor = colorScheme.tertiary;
+    } else if (highlight) {
+      valueColor = colorScheme.primary;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: valueColor,
+                  fontWeight: highlight ? FontWeight.bold : null,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChipList(
+    BuildContext context, {
+    required String label,
+    required List<String> values,
+    bool isWarning = false,
+  }) {
+    if (values.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: values
+                .map(
+                  (value) => Chip(
+                    label: Text(value),
+                    backgroundColor: isWarning
+                        ? colorScheme.errorContainer.withOpacity(0.5)
+                        : colorScheme.secondaryContainer.withOpacity(0.4),
+                    side: BorderSide(
+                      color: isWarning
+                          ? colorScheme.error
+                          : colorScheme.secondary.withOpacity(0.5),
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusMessage(
+    BuildContext context, {
+    required String message,
+    bool isWarning = false,
+    bool isPositive = false,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    Color? textColor;
+    IconData icon;
+    if (isPositive) {
+      textColor = colorScheme.primary;
+      icon = Icons.check_circle_outline;
+    } else if (isWarning) {
+      textColor = colorScheme.error;
+      icon = Icons.warning_amber_outlined;
+    } else {
+      textColor = colorScheme.onSurfaceVariant;
+      icon = Icons.info_outline;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: textColor),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              message,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: textColor,
+                  ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<String> _formatStates(Set<State> states) {
+    final labels = states
+        .map((state) => state.label.isNotEmpty ? state.label : state.id)
+        .toList();
+    labels.sort();
+    return labels;
+  }
+
+  List<String> _sorted(Set<String> values) {
+    final list = values.toList();
+    list.sort();
+    return list;
+  }
+
+  String _formatDuration(Duration duration) {
+    if (duration.inMilliseconds >= 1) {
+      return '${duration.inMilliseconds} ms';
+    }
+    if (duration.inMicroseconds >= 1) {
+      return '${duration.inMicroseconds} μs';
+    }
+    return '${duration.inNanoseconds} ns';
+  }
+
+  List<TMTransition> _findPotentialInfiniteLoops(TM tm) {
+    final transitions = tm.transitions.whereType<TMTransition>();
+    return transitions
+        .where(
+          (transition) =>
+              transition.fromState == transition.toState &&
+              transition.readSymbol == transition.writeSymbol &&
+              transition.direction == tm_models.TapeDirection.stay,
+        )
+        .toList();
   }
 }

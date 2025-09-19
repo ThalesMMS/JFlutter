@@ -8,46 +8,58 @@ import '../../core/models/tm.dart';
 import '../../core/models/tm_transition.dart';
 import '../../core/models/transition.dart';
 
-/// Holds the current TM being edited in the canvas together with
-/// metadata used by other widgets (e.g. highlighting information).
+/// Holds the current TM being edited in the canvas together with metadata
+/// that other widgets might be interested in (like tape symbol usage and
+/// highlighting information).
 class TMEditorState {
   /// The TM built from the canvas contents.
   final TM? tm;
+
+  /// Unique tape symbols discovered while building the TM.
+  final Set<String> tapeSymbols;
+
+  /// Directions that appear in transitions.
+  final Set<String> moveDirections;
 
   /// Identifiers of transitions that participate in nondeterministic choices.
   final Set<String> nondeterministicTransitionIds;
 
   const TMEditorState({
     this.tm,
+    this.tapeSymbols = const {},
+    this.moveDirections = const {},
     this.nondeterministicTransitionIds = const {},
   });
 
   TMEditorState copyWith({
     TM? tm,
+    Set<String>? tapeSymbols,
+    Set<String>? moveDirections,
     Set<String>? nondeterministicTransitionIds,
   }) {
     return TMEditorState(
       tm: tm ?? this.tm,
+      tapeSymbols: tapeSymbols ?? this.tapeSymbols,
+      moveDirections: moveDirections ?? this.moveDirections,
       nondeterministicTransitionIds:
           nondeterministicTransitionIds ?? this.nondeterministicTransitionIds,
     );
   }
 }
 
-/// Riverpod notifier responsible for maintaining the TM that is edited by
-/// the TM canvas.
+/// Riverpod notifier responsible for maintaining the TM that is edited on the canvas.
 class TMEditorNotifier extends StateNotifier<TMEditorState> {
   TMEditorNotifier() : super(const TMEditorState());
 
   /// Updates the notifier using the raw state and transition collections
-  /// maintained by the canvas.
-  void updateFromCanvas({
+  /// maintained by the canvas and returns the resulting TM.
+  TM? updateFromCanvas({
     required List<State> states,
     required List<TMTransition> transitions,
   }) {
     if (states.isEmpty) {
       state = const TMEditorState(tm: null);
-      return;
+      return null;
     }
 
     final stateSet = states.toSet();
@@ -61,7 +73,8 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
     final acceptingStates = states.where((s) => s.isAccepting).toSet();
 
     final alphabet = <String>{};
-    final tapeAlphabet = <String>{};
+    final tapeAlphabet = <String>{'B'};
+    final moveDirections = <String>{};
 
     for (final transition in transitionSet) {
       if (transition.readSymbol.isNotEmpty) {
@@ -72,6 +85,8 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
       if (transition.writeSymbol.isNotEmpty) {
         tapeAlphabet.add(transition.writeSymbol);
       }
+
+      moveDirections.add(transition.direction.name);
     }
 
     // Ensure at least the blank symbol is present in the tape alphabet.
@@ -93,6 +108,7 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
       bounds: const math.Rectangle(0, 0, 800, 600),
       tapeAlphabet: tapeAlphabet,
       blankSymbol: blankSymbol,
+      tapeCount: 1,
       zoomLevel: 1,
       panOffset: Vector2.zero(),
     );
@@ -102,8 +118,12 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
 
     state = state.copyWith(
       tm: tm,
+      tapeSymbols: tapeAlphabet,
+      moveDirections: moveDirections,
       nondeterministicTransitionIds: nondeterministicTransitionIds,
     );
+
+    return tm;
   }
 
   Set<String> _findNondeterministicTransitions(

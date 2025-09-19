@@ -61,13 +61,15 @@ This is the first major release of JFlutter, featuring a complete implementation
 - **Bottom Navigation** - Mobile-optimized navigation system
 
 #### Pages and Navigation
-- **HomePage** - Main navigation hub with 6 sections
+- **HomePage** - Main navigation hub with dedicated tabs for each toolset
 - **FSAPage** - Complete finite state automata interface
-- **GrammarPage** - Context-free grammar tools (placeholder)
-- **PDAPage** - Pushdown automata tools (placeholder)
-- **TMPage** - Turing machine tools (placeholder)
-- **LSystemPage** - L-system visualization (placeholder)
-- **PumpingLemmaPage** - Interactive pumping lemma game (placeholder)
+- **GrammarPage** - Full grammar editor with production management and conversion tools
+- **PDAPage** - Pushdown automata workspace with stack-aware simulation controls
+- **TMPage** - Turing machine construction and simulation environment
+- **RegexPage** - Regular expression testing and conversion utilities
+- **PumpingLemmaPage** - Interactive pumping lemma game with guided challenges
+- **SettingsPage** - Persistent preferences including symbols, themes, and canvas defaults
+- **HelpPage** - In-app documentation with tutorials for every major feature
 
 #### Interactive Components
 - **AutomatonCanvas** - Full-featured drawing canvas with:
@@ -181,22 +183,19 @@ This is the first major release of JFlutter, featuring a complete implementation
 #### Algorithm Coverage
 - **Finite Automata** - Complete DFA/NFA support
 - **Regular Expressions** - Regex to NFA and FA to regex conversion
-- **Context-Free Grammars** - Grammar parsing and analysis
+- **Context-Free Grammars** - Grammar parsing, editing, and PDA conversion
 - **Pumping Lemma** - Interactive educational game
-- **L-Systems** - Fractal pattern generation
-- **Advanced Automata** - PDA, TM, Mealy/Moore machines
+- **Advanced Automata** - PDA, TM, Mealy/Moore machines with dedicated tooling
 
 ### 🔮 Future Roadmap
 
 #### Planned Features
-- **Enhanced Visualizations** - Advanced algorithm step visualization
-- **File Import/Export** - JFLAP file compatibility
-- **Advanced Grammar Editor** - Visual context-free grammar editing
-- **PDA Canvas** - Pushdown automata visualization
-- **Turing Machine Interface** - Multi-tape machine interface
-- **L-System Visualizer** - Interactive fractal pattern generation
-- **Collaborative Features** - Share and collaborate on automata
-- **Educational Content** - Built-in tutorials and examples
+- **Enhanced Visualizations** - Deeper step-by-step explainers for algorithms
+- **Expanded Testing** - High-coverage unit and widget test suites
+- **Performance Tooling** - Profiling utilities for large automata
+- **Accessibility Improvements** - Screen reader and keyboard navigation support
+- **Collaboration Enhancements** - Shared workspaces and export options
+- **Educational Content** - Additional guided examples and lesson plans
 
 #### Technical Improvements
 - **Performance Optimization** - Further mobile performance improvements

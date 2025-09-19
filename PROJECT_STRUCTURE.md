@@ -177,10 +177,12 @@ Main application screens:
 pages/
 ├── fsa_page.dart                  # Finite state automata page
 ├── grammar_page.dart              # Context-free grammar page
+├── help_page.dart                 # In-app help center
 ├── home_page.dart                 # Main navigation page
 ├── pda_page.dart                  # Pushdown automata page
 ├── regex_page.dart                # Regular expression page
 ├── pumping_lemma_page.dart        # Pumping lemma game page
+├── settings_page.dart             # Application preferences page
 └── tm_page.dart                   # Turing machine page
 ```
 

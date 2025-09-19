@@ -143,6 +143,7 @@ class AutomatonSimulator {
           remainingInput: remainingInput,
           usedTransition: symbol,
           stepNumber: stepNumber,
+          consumedInput: symbol,
         ));
       }
       
@@ -303,6 +304,7 @@ class AutomatonSimulator {
           remainingInput: remainingInput,
           usedTransition: symbol,
           stepNumber: stepNumber,
+          consumedInput: symbol,
         ));
       }
       

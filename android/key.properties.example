@@ -1,0 +1,7 @@
+# Example release keystore configuration for JFlutter.
+# Copy this file to android/key.properties and replace the placeholder values.
+# Never commit the real key.properties file because it contains sensitive credentials.
+storeFile=keystores/jflutter-release.jks
+storePassword=changeit
+keyAlias=jflutter
+keyPassword=changeit

@@ -386,37 +386,8 @@ class RegexToNFAConverter {
   static FSA _buildConcatenationNFA(RegexNode left, RegexNode right) {
     final leftNFA = _buildNFA(left);
     final rightNFA = _buildNFA(right);
-    
-    // Combine states and transitions
-    final allStates = <State>{};
-    allStates.addAll(leftNFA.states);
-    allStates.addAll(rightNFA.states);
-    
-    final allTransitions = <FSATransition>{};
-    allTransitions.addAll(leftNFA.fsaTransitions);
-    allTransitions.addAll(rightNFA.fsaTransitions);
-    
-    // Add epsilon transitions from left accepting states to right initial state
-    for (final acceptingState in leftNFA.acceptingStates) {
-      allTransitions.add(FSATransition.epsilon(
-        id: 't_eps_${acceptingState.id}',
-        fromState: acceptingState,
-        toState: rightNFA.initialState!,
-      ));
-    }
-    
-    return FSA(
-      id: 'concat_${DateTime.now().millisecondsSinceEpoch}',
-      name: 'Concatenation',
-      states: allStates,
-      transitions: allTransitions,
-      alphabet: leftNFA.alphabet.union(rightNFA.alphabet),
-      initialState: leftNFA.initialState,
-      acceptingStates: rightNFA.acceptingStates,
-      created: leftNFA.created,
-      modified: DateTime.now(),
-              bounds: math.Rectangle(0, 0, 800, 600),
-    );
+
+    return _concatenateAutomata(leftNFA, rightNFA);
   }
 
   /// Builds NFA for Kleene star (*)
@@ -486,10 +457,72 @@ class RegexToNFAConverter {
     // Plus is equivalent to concatenation of child and Kleene star of child
     final childNFA = _buildNFA(child);
     final kleeneNFA = _buildKleeneStarNFA(child);
-    
-    return _buildConcatenationNFA(
-      SymbolNode(symbol: 'dummy'), // This would need proper handling
-      SymbolNode(symbol: 'dummy'),
+
+    return _concatenateAutomata(childNFA, kleeneNFA);
+  }
+
+  /// Concatenates two pre-built NFAs
+  static FSA _concatenateAutomata(FSA leftNFA, FSA rightNFA) {
+    final rightInitial = rightNFA.initialState;
+    if (rightInitial == null) {
+      throw ArgumentError('Right automaton must have an initial state for concatenation');
+    }
+
+    final allStates = <State>{...leftNFA.states, ...rightNFA.states};
+    final allTransitions = <FSATransition>{
+      ...leftNFA.fsaTransitions,
+      ...rightNFA.fsaTransitions,
+    };
+
+    int epsilonIndex = 0;
+    for (final acceptingState in leftNFA.acceptingStates) {
+      allTransitions.add(
+        FSATransition.epsilon(
+          id:
+              't_eps_concat_${acceptingState.id}_${rightInitial.id}_${epsilonIndex++}',
+          fromState: acceptingState,
+          toState: rightInitial,
+        ),
+      );
+    }
+
+    final created = leftNFA.created.isBefore(rightNFA.created)
+        ? leftNFA.created
+        : rightNFA.created;
+    final modified = leftNFA.modified.isAfter(rightNFA.modified)
+        ? leftNFA.modified
+        : rightNFA.modified;
+    final bounds = _combineBounds(leftNFA.bounds, rightNFA.bounds);
+
+    return FSA(
+      id: 'concat_${DateTime.now().millisecondsSinceEpoch}',
+      name: 'Concatenation',
+      states: allStates,
+      transitions: allTransitions,
+      alphabet: leftNFA.alphabet.union(rightNFA.alphabet),
+      initialState: leftNFA.initialState,
+      acceptingStates: Set<State>.from(rightNFA.acceptingStates),
+      created: created,
+      modified: modified,
+      bounds: bounds,
+    );
+  }
+
+  static math.Rectangle<double> _combineBounds(
+    math.Rectangle leftBounds,
+    math.Rectangle rightBounds,
+  ) {
+    final left = math.min(leftBounds.left.toDouble(), rightBounds.left.toDouble());
+    final top = math.min(leftBounds.top.toDouble(), rightBounds.top.toDouble());
+    final right = math.max(leftBounds.right.toDouble(), rightBounds.right.toDouble());
+    final bottom =
+        math.max(leftBounds.bottom.toDouble(), rightBounds.bottom.toDouble());
+
+    return math.Rectangle<double>(
+      left,
+      top,
+      right - left,
+      bottom - top,
     );
   }
 

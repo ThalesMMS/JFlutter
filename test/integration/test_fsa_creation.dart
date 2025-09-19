@@ -137,6 +137,76 @@ void main() {
       expect(simulateResult.data!.accepted, isFalse);
       expect(simulateResult.data!.inputString, equals('bb'));
     });
+
+    test('step-by-step simulation tracks consumed input', () async {
+      final request = CreateAutomatonRequest(
+        name: 'Ends with a',
+        description: 'Accepts strings ending with a',
+        states: [
+          StateData(
+            id: 'q0',
+            name: 'q0',
+            position: Point(100, 100),
+            isInitial: true,
+            isAccepting: false,
+          ),
+          StateData(
+            id: 'q1',
+            name: 'q1',
+            position: Point(200, 100),
+            isInitial: false,
+            isAccepting: true,
+          ),
+        ],
+        transitions: [
+          TransitionData(
+            fromStateId: 'q0',
+            toStateId: 'q0',
+            symbol: 'b',
+          ),
+          TransitionData(
+            fromStateId: 'q0',
+            toStateId: 'q1',
+            symbol: 'a',
+          ),
+          TransitionData(
+            fromStateId: 'q1',
+            toStateId: 'q0',
+            symbol: 'b',
+          ),
+          TransitionData(
+            fromStateId: 'q1',
+            toStateId: 'q1',
+            symbol: 'a',
+          ),
+        ],
+        alphabet: ['a', 'b'],
+        bounds: Rect(0, 0, 300, 200),
+      );
+
+      final createResult = service.createAutomaton(request);
+      expect(createResult.isSuccess, isTrue);
+      final fsa = createResult.data!;
+
+      final simulateResult = AutomatonSimulator.simulate(
+        fsa,
+        'ba',
+        stepByStep: true,
+      );
+
+      expect(simulateResult.isSuccess, isTrue);
+
+      final steps = simulateResult.data!.steps;
+      final consumedSymbols = steps
+          .where((step) => step.consumedInput.isNotEmpty)
+          .map((step) => step.consumedInput)
+          .toList();
+
+      expect(consumedSymbols, equals(['b', 'a']));
+      for (final step in steps.where((step) => step.usedTransition != null)) {
+        expect(step.consumedInput, equals(step.usedTransition));
+      }
+    });
     
     test('should create FSA with epsilon transitions', () async {
       // Arrange - Create FSA with epsilon transitions

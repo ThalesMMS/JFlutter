@@ -158,6 +158,7 @@ class PDASimulator {
           usedTransition: symbol,
           stackContents: stack.join(''),
           stepNumber: stepNumber,
+          consumedInput: symbol,
         ));
       }
       

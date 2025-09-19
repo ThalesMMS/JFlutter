@@ -68,51 +68,32 @@ The project has been successfully fixed and is now fully functional on all suppo
 ### **Project Structure**
 ```
 lib/
+├── app.dart                        # Root widget and global configuration
 ├── core/                           # Core business logic
-│   ├── algorithms/                 # 13 core algorithms
-│   │   ├── automaton_simulator.dart
-│   │   ├── nfa_to_dfa_converter.dart
-│   │   ├── dfa_minimizer.dart
-│   │   ├── regex_to_nfa_converter.dart
-│   │   ├── fa_to_regex_converter.dart
-│   │   └── [8 more algorithms]
-│   ├── models/                     # Data models
-│   │   ├── fsa.dart
-│   │   ├── state.dart
-│   │   ├── transition.dart
-│   │   └── [12 more models]
-│   └── result.dart                 # Error handling
-├── presentation/                   # User interface
-│   ├── pages/                      # Main application pages
-│   │   ├── home_page.dart          # Main navigation
-│   │   ├── fsa_page.dart           # Finite state automata
-│   │   ├── grammar_page.dart       # Context-free grammars
-│   │   ├── pda_page.dart           # Pushdown automata
-│   │   ├── tm_page.dart            # Turing machines
-│   │   ├── regex_page.dart         # Regular expressions
-│   │   └── pumping_lemma_page.dart # Pumping lemma game
-│   ├── widgets/                    # Reusable UI components
-│   │   ├── automaton_canvas.dart   # Interactive drawing canvas
-│   │   ├── algorithm_panel.dart    # Algorithm controls
-│   │   ├── simulation_panel.dart   # Simulation interface
-│   │   ├── grammar_editor.dart     # Grammar editing interface
-│   │   ├── tm_canvas.dart          # Turing machine canvas
-│   │   └── pumping_lemma_game.dart # Interactive game
-│   ├── providers/                  # State management
-│   │   ├── automaton_provider.dart # Riverpod state management
-│   │   ├── algorithm_provider.dart # Algorithm state management
-│   │   └── grammar_provider.dart   # Grammar state management
-│   └── theme/                      # App theming
-│       └── app_theme.dart          # Material 3 themes
-├── data/                           # Data management
-│   └── services/                   # Business services
-│       ├── automaton_service.dart  # CRUD operations
-│       ├── simulation_service.dart # Simulation operations
-│       └── conversion_service.dart # Algorithm operations
-├── injection/                      # Dependency injection
-│   └── dependency_injection.dart   # Service registration
-├── app.dart                        # App configuration
-└── main.dart                       # Entry point
+│   ├── algorithms/                 # Automata algorithms and utilities
+│   ├── entities/                   # Domain entities shared across layers
+│   ├── models/                     # Immutable data models and value objects
+│   ├── parsers/                    # File/grammar parsing helpers
+│   ├── repositories/               # Repository contracts
+│   ├── use_cases/                  # Application-specific business rules
+│   ├── algo_log.dart               # Algorithm execution logging
+│   ├── error_handler.dart          # Error handling helpers
+│   └── result.dart                 # Result/Either pattern implementation
+├── data/                           # Data layer implementations
+│   ├── data_sources/               # Concrete data sources (e.g., file system)
+│   ├── models/                     # DTOs and serialization helpers
+│   ├── repositories/               # Repository implementations
+│   └── services/                   # High-level services used by the app
+├── features/                       # Cross-cutting feature modules
+│   └── layout/                     # Layout helpers and view-specific configs
+├── injection/                      # Dependency injection setup
+│   └── dependency_injection.dart   # Service registration and bootstrap
+├── main.dart                       # Application entry point
+└── presentation/                   # UI layer and state management
+    ├── pages/                      # Screens and navigation flows
+    ├── providers/                  # Riverpod providers
+    ├── theme/                      # App theming (Material 3)
+    └── widgets/                    # Reusable UI components
 ```
 
 ## 🚀 Getting Started

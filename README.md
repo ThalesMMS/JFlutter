@@ -322,6 +322,7 @@ This project is distributed under a dual license structure:
 - **Flutter Team** - For the excellent mobile framework
 - **Dart Team** - For the programming language
 - **Open Source Community** - For inspiration and support
+- **[@Gaok1](https://github.com/Gaok1)** - Luis Phillip Lemos Martins - For inspiring this Flutter port project
 
 ---
 

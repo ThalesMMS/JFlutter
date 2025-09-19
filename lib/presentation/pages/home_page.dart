@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/automaton_provider.dart';
+import '../providers/grammar_provider.dart';
 import '../providers/home_navigation_provider.dart';
 import '../widgets/mobile_navigation.dart';
 import 'fsa_page.dart';
@@ -178,18 +180,32 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
   }
 
-  void _createNewAutomaton(BuildContext context) {
-    // TODO: Implement new automaton creation
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Create new automaton - Coming soon!')),
+  Future<void> _createNewAutomaton(BuildContext context) async {
+    final automatonNotifier = ref.read(automatonProvider.notifier);
+
+    await automatonNotifier.createAutomaton(
+      name: 'Untitled Automaton',
+      alphabet: const ['0', '1'],
     );
+
+    if (!mounted) return;
+
+    final automatonState = ref.read(automatonProvider);
+    if (automatonState.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(automatonState.error!)),
+      );
+      return;
+    }
+
+    ref.read(homeNavigationProvider.notifier).goToFsa();
   }
 
   void _createNewGrammar(BuildContext context) {
-    // TODO: Implement new grammar creation
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Create new grammar - Coming soon!')),
-    );
+    ref.read(grammarProvider.notifier).createNewGrammar();
+    ref
+        .read(homeNavigationProvider.notifier)
+        .setIndex(HomeNavigationNotifier.grammarIndex);
   }
 
   void _showHelpDialog(BuildContext context) {

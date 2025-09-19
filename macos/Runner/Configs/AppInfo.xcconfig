@@ -8,7 +8,7 @@
 PRODUCT_NAME = jflutter
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.jflutter
+PRODUCT_BUNDLE_IDENTIFIER = dev.jflutter.app
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2025 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2024 JFlutter Labs, Inc. All rights reserved.

@@ -827,7 +827,8 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
     if (duration.inMicroseconds >= 1) {
       return '${duration.inMicroseconds} μs';
     }
-    return '${duration.inMicroseconds * 1000} ns';
+    final nanoseconds = duration.inMicroseconds * 1000;
+    return '$nanoseconds ns';
   }
 
   List<TMTransition> _findPotentialInfiniteLoops(TM tm) {

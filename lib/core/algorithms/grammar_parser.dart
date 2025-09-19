@@ -4,16 +4,25 @@ import '../models/parse_table.dart';
 import '../result.dart';
 
 /// Parses strings using context-free grammars
+enum ParsingStrategyHint { auto, bruteForce, cyk, ll, lr }
+
+typedef _ParsingStrategy = ParseResult? Function(
+  Grammar grammar,
+  String inputString,
+  Duration timeout,
+);
+
 class GrammarParser {
   /// Parses a string using a grammar
   static Result<ParseResult> parse(
     Grammar grammar,
     String inputString, {
     Duration timeout = const Duration(seconds: 5),
+    ParsingStrategyHint strategyHint = ParsingStrategyHint.auto,
   }) {
     try {
       final stopwatch = Stopwatch()..start();
-      
+
       // Validate input
       final validationResult = _validateInput(grammar, inputString);
       if (!validationResult.isSuccess) {
@@ -31,12 +40,19 @@ class GrammarParser {
       }
 
       // Parse the string
-      final result = _parseString(grammar, inputString, timeout);
+      final strategies = _resolveStrategies(strategyHint);
+      final result = _parseString(
+        grammar,
+        inputString,
+        timeout,
+        strategies,
+        strategyHint,
+      );
       stopwatch.stop();
-      
+
       // Update execution time
       final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
-      
+
       return Success(finalResult);
     } catch (e) {
       return Failure('Error parsing string: $e');
@@ -73,17 +89,11 @@ class GrammarParser {
     Grammar grammar,
     String inputString,
     Duration timeout,
+    List<_ParsingStrategy> strategies,
+    ParsingStrategyHint strategyHint,
   ) {
     final startTime = DateTime.now();
-    
-    // Try different parsing strategies
-    final strategies = [
-      _parseWithBruteForce,
-      _parseWithCYK,
-      _parseWithLL,
-      _parseWithLR,
-    ];
-    
+
     for (final strategy in strategies) {
       try {
         final result = strategy(grammar, inputString, timeout);
@@ -97,11 +107,50 @@ class GrammarParser {
     }
     
     // If all strategies fail, return failure
+    final failureMessage = strategyHint == ParsingStrategyHint.auto
+        ? 'All parsing strategies failed'
+        : 'Parsing using the ${_strategyDisplayName(strategyHint)} parser failed';
     return ParseResult.failure(
       inputString: inputString,
-      errorMessage: 'All parsing strategies failed',
+      errorMessage: failureMessage,
       executionTime: DateTime.now().difference(startTime),
     );
+  }
+
+  static List<_ParsingStrategy> _resolveStrategies(ParsingStrategyHint hint) {
+    switch (hint) {
+      case ParsingStrategyHint.bruteForce:
+        return [_parseWithBruteForce];
+      case ParsingStrategyHint.cyk:
+        return [_parseWithCYK];
+      case ParsingStrategyHint.ll:
+        return [_parseWithLL];
+      case ParsingStrategyHint.lr:
+        return [_parseWithLR];
+      case ParsingStrategyHint.auto:
+      default:
+        return [
+          _parseWithBruteForce,
+          _parseWithCYK,
+          _parseWithLL,
+          _parseWithLR,
+        ];
+    }
+  }
+
+  static String _strategyDisplayName(ParsingStrategyHint hint) {
+    switch (hint) {
+      case ParsingStrategyHint.bruteForce:
+        return 'brute force';
+      case ParsingStrategyHint.cyk:
+        return 'CYK';
+      case ParsingStrategyHint.ll:
+        return 'LL';
+      case ParsingStrategyHint.lr:
+        return 'LR';
+      case ParsingStrategyHint.auto:
+        return 'auto';
+    }
   }
 
   /// Parses using brute force (exhaustive search)

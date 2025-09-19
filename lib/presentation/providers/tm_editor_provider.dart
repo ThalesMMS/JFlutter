@@ -9,7 +9,8 @@ import '../../core/models/tm_transition.dart';
 import '../../core/models/transition.dart';
 
 /// Holds the current TM being edited in the canvas together with metadata
-/// that other widgets might be interested in (like tape symbol usage).
+/// that other widgets might be interested in (like tape symbol usage and
+/// highlighting information).
 class TMEditorState {
   /// The TM built from the canvas contents.
   final TM? tm;
@@ -20,26 +21,33 @@ class TMEditorState {
   /// Directions that appear in transitions.
   final Set<String> moveDirections;
 
+  /// Identifiers of transitions that participate in nondeterministic choices.
+  final Set<String> nondeterministicTransitionIds;
+
   const TMEditorState({
     this.tm,
     this.tapeSymbols = const {},
     this.moveDirections = const {},
+    this.nondeterministicTransitionIds = const {},
   });
 
   TMEditorState copyWith({
     TM? tm,
     Set<String>? tapeSymbols,
     Set<String>? moveDirections,
+    Set<String>? nondeterministicTransitionIds,
   }) {
     return TMEditorState(
       tm: tm ?? this.tm,
       tapeSymbols: tapeSymbols ?? this.tapeSymbols,
       moveDirections: moveDirections ?? this.moveDirections,
+      nondeterministicTransitionIds:
+          nondeterministicTransitionIds ?? this.nondeterministicTransitionIds,
     );
   }
 }
 
-/// Notifier responsible for maintaining the TM that is edited on the canvas.
+/// Riverpod notifier responsible for maintaining the TM that is edited on the canvas.
 class TMEditorNotifier extends StateNotifier<TMEditorState> {
   TMEditorNotifier() : super(const TMEditorState());
 
@@ -81,6 +89,10 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
       moveDirections.add(transition.direction.name);
     }
 
+    // Ensure at least the blank symbol is present in the tape alphabet.
+    const blankSymbol = 'B';
+    tapeAlphabet.add(blankSymbol);
+
     final now = DateTime.now();
 
     final tm = TM(
@@ -90,24 +102,49 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
       transitions: transitionSet.map<Transition>((t) => t).toSet(),
       alphabet: alphabet,
       initialState: initialState,
-      acceptingStates: acceptingStates,
+      acceptingStates: acceptingStates.isEmpty ? {states.last} : acceptingStates,
       created: now,
       modified: now,
       bounds: const math.Rectangle(0, 0, 800, 600),
       tapeAlphabet: tapeAlphabet,
-      blankSymbol: 'B',
+      blankSymbol: blankSymbol,
       tapeCount: 1,
       zoomLevel: 1,
       panOffset: Vector2.zero(),
     );
 
+    final nondeterministicTransitionIds =
+        _findNondeterministicTransitions(transitionSet);
+
     state = state.copyWith(
       tm: tm,
       tapeSymbols: tapeAlphabet,
       moveDirections: moveDirections,
+      nondeterministicTransitionIds: nondeterministicTransitionIds,
     );
 
     return tm;
+  }
+
+  Set<String> _findNondeterministicTransitions(
+    Set<TMTransition> transitions,
+  ) {
+    final grouped = <String, List<TMTransition>>{};
+
+    for (final transition in transitions) {
+      final key = [
+        transition.fromState.id,
+        transition.readSymbol,
+        transition.tapeNumber.toString(),
+      ].join('|');
+
+      grouped.putIfAbsent(key, () => []).add(transition);
+    }
+
+    return grouped.values
+        .where((list) => list.length > 1)
+        .expand((list) => list.map((transition) => transition.id))
+        .toSet();
   }
 }
 

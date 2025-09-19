@@ -390,25 +390,27 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
             onTransitionEdited: (transition) {
               _editTransition(transition);
             },
-            child: Listener(
-              onPointerHover: (event) =>
-                  _updateTransitionPreview(event.localPosition),
-              onPointerMove: (event) =>
-                  _updateTransitionPreview(event.localPosition),
-              onPointerDown: (event) =>
-                  _updateTransitionPreview(event.localPosition),
-              onPointerUp: (_) => _updateTransitionPreview(null),
-              onPointerCancel: (_) => _updateTransitionPreview(null),
-              onPointerExit: (_) => _updateTransitionPreview(null),
-              child: CustomPaint(
-                painter: AutomatonPainter(
-                  states: _states,
-                  transitions: _transitions,
-                  selectedState: _selectedState,
-                  transitionStart: _transitionStart,
-                  transitionPreviewPosition: _transitionPreviewPosition,
+            child: MouseRegion(
+              onExit: (_) => _updateTransitionPreview(null),
+              child: Listener(
+                onPointerHover: (event) =>
+                    _updateTransitionPreview(event.localPosition),
+                onPointerMove: (event) =>
+                    _updateTransitionPreview(event.localPosition),
+                onPointerDown: (event) =>
+                    _updateTransitionPreview(event.localPosition),
+                onPointerUp: (_) => _updateTransitionPreview(null),
+                onPointerCancel: (_) => _updateTransitionPreview(null),
+                child: CustomPaint(
+                  painter: AutomatonPainter(
+                    states: _states,
+                    transitions: _transitions,
+                    selectedState: _selectedState,
+                    transitionStart: _transitionStart,
+                    transitionPreviewPosition: _transitionPreviewPosition,
+                  ),
+                  size: Size.infinite,
                 ),
-                size: Size.infinite,
               ),
             ),
           ),

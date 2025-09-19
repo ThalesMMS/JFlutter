@@ -272,7 +272,7 @@ This project is distributed under a dual license structure:
 
 ### Port to Flutter
 - **License**: Apache License 2.0
-- **Copyright**: 2024 Thales Matheus Mendonça Santos
+- **Copyright**: 2025 Thales Matheus Mendonça Santos
 - **Contact**: thalesmmsradio@gmail.com
 - **File**: [LICENSE.txt](LICENSE.txt)
 
@@ -291,7 +291,7 @@ This project is distributed under a dual license structure:
 ### Port Development
 - **Thales Matheus Mendonça Santos** - Complete Flutter port development
 - **Email**: thalesmmsradio@gmail.com
-- **Year**: 2024
+- **Year**: 2025
 
 ### Original Project
 - **Susan H. Rodger** (Duke University) - Original JFLAP creator and maintainer

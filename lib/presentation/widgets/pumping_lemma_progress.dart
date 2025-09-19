@@ -1,23 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Progress tracking panel for the Pumping Lemma Game
-class PumpingLemmaProgress extends ConsumerStatefulWidget {
+import '../providers/pumping_lemma_progress_provider.dart';
+
+/// Progress tracking panel for the Pumping Lemma Game.
+class PumpingLemmaProgress extends ConsumerWidget {
   const PumpingLemmaProgress({super.key});
 
   @override
-  ConsumerState<PumpingLemmaProgress> createState() => _PumpingLemmaProgressState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final progress = ref.watch(pumpingLemmaProgressProvider);
 
-class _PumpingLemmaProgressState extends ConsumerState<PumpingLemmaProgress> {
-  int _totalChallenges = 5;
-  int _completedChallenges = 0;
-  int _correctAnswers = 0;
-  int _totalAttempts = 0;
-  List<ChallengeResult> _challengeResults = [];
-
-  @override
-  Widget build(BuildContext context) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -26,11 +19,11 @@ class _PumpingLemmaProgressState extends ConsumerState<PumpingLemmaProgress> {
           children: [
             _buildHeader(context),
             const SizedBox(height: 16),
-            _buildOverallProgress(context),
+            _buildOverallProgress(context, progress),
             const SizedBox(height: 16),
-            _buildStatistics(context),
+            _buildStatistics(context, progress),
             const SizedBox(height: 16),
-            _buildChallengeHistory(context),
+            _buildChallengeHistory(context, progress),
           ],
         ),
       ),
@@ -48,16 +41,21 @@ class _PumpingLemmaProgressState extends ConsumerState<PumpingLemmaProgress> {
         Text(
           'Progress',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+                fontWeight: FontWeight.bold,
+              ),
         ),
       ],
     );
   }
 
-  Widget _buildOverallProgress(BuildContext context) {
-    final progress = _totalChallenges > 0 ? _completedChallenges / _totalChallenges : 0.0;
-    
+  Widget _buildOverallProgress(
+    BuildContext context,
+    PumpingLemmaProgressState progress,
+  ) {
+    final ratio = progress.totalChallenges > 0
+        ? progress.completedChallenges / progress.totalChallenges
+        : 0.0;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -70,13 +68,14 @@ class _PumpingLemmaProgressState extends ConsumerState<PumpingLemmaProgress> {
           Text(
             'Overall Progress',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+                  fontWeight: FontWeight.w600,
+                ),
           ),
           const SizedBox(height: 12),
           LinearProgressIndicator(
-            value: progress,
-            backgroundColor: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            value: ratio,
+            backgroundColor:
+                Theme.of(context).colorScheme.outline.withOpacity(0.2),
             valueColor: AlwaysStoppedAnimation<Color>(
               Theme.of(context).colorScheme.primary,
             ),
@@ -86,15 +85,15 @@ class _PumpingLemmaProgressState extends ConsumerState<PumpingLemmaProgress> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '$_completedChallenges / $_totalChallenges challenges completed',
+                '${progress.completedChallenges} / ${progress.totalChallenges} challenges completed',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               Text(
-                '${(progress * 100).toInt()}%',
+                '${(ratio * 100).toInt()}%',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
               ),
             ],
           ),
@@ -103,9 +102,14 @@ class _PumpingLemmaProgressState extends ConsumerState<PumpingLemmaProgress> {
     );
   }
 
-  Widget _buildStatistics(BuildContext context) {
-    final accuracy = _totalAttempts > 0 ? _correctAnswers / _totalAttempts : 0.0;
-    
+  Widget _buildStatistics(
+    BuildContext context,
+    PumpingLemmaProgressState progress,
+  ) {
+    final accuracy = progress.attempts > 0
+        ? progress.score / progress.attempts
+        : 0.0;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -118,8 +122,8 @@ class _PumpingLemmaProgressState extends ConsumerState<PumpingLemmaProgress> {
           Text(
             'Statistics',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+                  fontWeight: FontWeight.w600,
+                ),
           ),
           const SizedBox(height: 12),
           Row(
@@ -138,7 +142,7 @@ class _PumpingLemmaProgressState extends ConsumerState<PumpingLemmaProgress> {
                 child: _buildStatCard(
                   context,
                   title: 'Correct',
-                  value: '$_correctAnswers',
+                  value: '${progress.score}',
                   icon: Icons.check_circle,
                   color: Colors.green,
                 ),
@@ -152,7 +156,7 @@ class _PumpingLemmaProgressState extends ConsumerState<PumpingLemmaProgress> {
                 child: _buildStatCard(
                   context,
                   title: 'Attempts',
-                  value: '$_totalAttempts',
+                  value: '${progress.attempts}',
                   icon: Icons.quiz,
                   color: Colors.blue,
                 ),
@@ -162,7 +166,7 @@ class _PumpingLemmaProgressState extends ConsumerState<PumpingLemmaProgress> {
                 child: _buildStatCard(
                   context,
                   title: 'Score',
-                  value: '$_correctAnswers/$_totalChallenges',
+                  value: '${progress.score}/${progress.totalChallenges}',
                   icon: Icons.star,
                   color: Colors.orange,
                 ),
@@ -199,46 +203,64 @@ class _PumpingLemmaProgressState extends ConsumerState<PumpingLemmaProgress> {
           Text(
             value,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: color,
-              fontWeight: FontWeight.bold,
-            ),
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           Text(
             title,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: color,
-            ),
+                  color: color,
+                ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildChallengeHistory(BuildContext context) {
+  Widget _buildChallengeHistory(
+    BuildContext context,
+    PumpingLemmaProgressState progress,
+  ) {
+    final entries = progress.history;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Challenge History',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+                fontWeight: FontWeight.w600,
+              ),
         ),
         const SizedBox(height: 8),
         Container(
           constraints: const BoxConstraints(maxHeight: 200),
-          child: _challengeResults.isEmpty
+          child: entries.isEmpty
               ? _buildEmptyHistory(context)
               : ListView.builder(
-                  itemCount: _challengeResults.length,
+                  itemCount: entries.length,
                   itemBuilder: (context, index) {
-                    final result = _challengeResults[index];
-                    return _buildChallengeResultItem(context, result, index);
+                    final entry = entries[index];
+                    return _buildHistoryItem(context, entry, index);
                   },
                 ),
         ),
       ],
     );
+  }
+
+  Widget _buildHistoryItem(
+    BuildContext context,
+    PumpingLemmaHistoryEntry entry,
+    int index,
+  ) {
+    switch (entry.type) {
+      case PumpingLemmaHistoryType.attempt:
+        return _buildAttemptItem(context, entry, index);
+      case PumpingLemmaHistoryType.retry:
+        return _buildRetryItem(context, entry);
+    }
   }
 
   Widget _buildEmptyHistory(BuildContext context) {
@@ -255,15 +277,15 @@ class _PumpingLemmaProgressState extends ConsumerState<PumpingLemmaProgress> {
           Text(
             'No challenges completed yet',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+                  color: Theme.of(context).colorScheme.outline,
+                ),
           ),
           const SizedBox(height: 8),
           Text(
             'Complete some challenges to see your progress here',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+                  color: Theme.of(context).colorScheme.outline,
+                ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -271,9 +293,14 @@ class _PumpingLemmaProgressState extends ConsumerState<PumpingLemmaProgress> {
     );
   }
 
-  Widget _buildChallengeResultItem(BuildContext context, ChallengeResult result, int index) {
-    final color = result.isCorrect ? Colors.green : Colors.red;
-    
+  Widget _buildAttemptItem(
+    BuildContext context,
+    PumpingLemmaHistoryEntry entry,
+    int index,
+  ) {
+    final color = entry.isCorrect == true ? Colors.green : Colors.red;
+    final title = entry.challengeTitle ?? 'Challenge ${entry.challengeId ?? index + 1}';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
@@ -289,7 +316,7 @@ class _PumpingLemmaProgressState extends ConsumerState<PumpingLemmaProgress> {
             backgroundColor: color,
             child: Text(
               '${index + 1}',
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
@@ -302,16 +329,23 @@ class _PumpingLemmaProgressState extends ConsumerState<PumpingLemmaProgress> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  result.challengeTitle,
+                  title,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
-                Text(
-                  result.language,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontFamily: 'monospace',
+                if (entry.language != null)
+                  Text(
+                    entry.language!,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontFamily: 'monospace',
+                        ),
                   ),
+                Text(
+                  _formatTime(entry.timestamp),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: color,
+                      ),
                 ),
               ],
             ),
@@ -319,18 +353,81 @@ class _PumpingLemmaProgressState extends ConsumerState<PumpingLemmaProgress> {
           Column(
             children: [
               Icon(
-                result.isCorrect ? Icons.check_circle : Icons.cancel,
+                entry.isCorrect == true ? Icons.check_circle : Icons.cancel,
                 color: color,
                 size: 20,
               ),
               Text(
-                result.isCorrect ? 'Correct' : 'Wrong',
+                entry.isCorrect == true ? 'Correct' : 'Wrong',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
+                      color: color,
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRetryItem(
+    BuildContext context,
+    PumpingLemmaHistoryEntry entry,
+  ) {
+    final color = Colors.amber.shade700;
+    final title = entry.challengeTitle ?? 'Challenge ${entry.challengeId ?? '-'}';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        border: Border.all(color: color.withOpacity(0.3)),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 16,
+            backgroundColor: color,
+            child: const Icon(
+              Icons.refresh,
+              color: Colors.white,
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Retry selected',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: color,
+                      ),
+                ),
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                if (entry.language != null)
+                  Text(
+                    entry.language!,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontFamily: 'monospace',
+                        ),
+                  ),
+                Text(
+                  _formatTime(entry.timestamp),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: color,
+                      ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -343,37 +440,11 @@ class _PumpingLemmaProgressState extends ConsumerState<PumpingLemmaProgress> {
     return Colors.red;
   }
 
-  // Methods to update progress (would be called from the game)
-  void updateProgress(int completed, int correct, int attempts, List<ChallengeResult> results) {
-    setState(() {
-      _completedChallenges = completed;
-      _correctAnswers = correct;
-      _totalAttempts = attempts;
-      _challengeResults = results;
-    });
+  String _formatTime(DateTime timestamp) {
+    final local = timestamp.toLocal();
+    final hours = local.hour.toString().padLeft(2, '0');
+    final minutes = local.minute.toString().padLeft(2, '0');
+    final seconds = local.second.toString().padLeft(2, '0');
+    return '$hours:$minutes:$seconds';
   }
-
-  void resetProgress() {
-    setState(() {
-      _completedChallenges = 0;
-      _correctAnswers = 0;
-      _totalAttempts = 0;
-      _challengeResults.clear();
-    });
-  }
-}
-
-/// Data class for challenge results
-class ChallengeResult {
-  final String challengeTitle;
-  final String language;
-  final bool isCorrect;
-  final DateTime completedAt;
-
-  ChallengeResult({
-    required this.challengeTitle,
-    required this.language,
-    required this.isCorrect,
-    required this.completedAt,
-  });
 }

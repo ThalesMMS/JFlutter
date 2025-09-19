@@ -287,13 +287,40 @@ JFlutter is designed for:
 
 ## 📄 License
 
-This project is derived from JFLAP and maintains compatibility with the original educational goals. See [LICENSE.txt](LICENSE.txt) for details.
+This project is distributed under a dual license structure:
+
+### Port to Flutter
+- **License**: Apache License 2.0
+- **Copyright**: 2024 Thales Matheus Mendonça Santos
+- **Contact**: thalesmmsradio@gmail.com
+- **File**: [LICENSE.txt](LICENSE.txt)
+
+### Original JFLAP Code
+- **License**: JFLAP 7.1 License (Non-commercial)
+- **Copyright**: 2002-2009 Susan H. Rodger (Duke University)
+- **File**: [LICENSE_JFLAP.txt](LICENSE_JFLAP.txt)
+
+### License Summary
+- The **Flutter port** (all new code) is licensed under Apache 2.0, allowing free use, modification, and distribution with proper attribution
+- The **original JFLAP algorithms and concepts** remain under the original JFLAP license, which prohibits commercial use
+- This dual structure ensures compliance with the original license while allowing the Flutter port to be freely used and modified
 
 ## 🙏 Acknowledgments
 
-- **Susan H. Rodger** (Duke University) - Original JFLAP creator
-- **JFLAP Team** - For the foundational educational tool
+### Port Development
+- **Thales Matheus Mendonça Santos** - Complete Flutter port development
+- **Email**: thalesmmsradio@gmail.com
+- **Year**: 2024
+
+### Original Project
+- **Susan H. Rodger** (Duke University) - Original JFLAP creator and maintainer
+- **JFLAP Team** - Thomas Finley, Ryan Cavalcante, Stephen Reading, Bart Bressler, Jinghui Lim, Chris Morgan, Kyung Min (Jason) Lee, Jonathan Su, Henry Qin
+- **Duke University** - For the foundational educational tool
+- **Website**: http://www.jflap.org
+
+### Technology Stack
 - **Flutter Team** - For the excellent mobile framework
+- **Dart Team** - For the programming language
 - **Open Source Community** - For inspiration and support
 
 ---

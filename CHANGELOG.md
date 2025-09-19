@@ -41,10 +41,6 @@ This is the first major release of JFlutter, featuring a complete implementation
 - **ParseAction** - Parsing action (shift, reduce, accept, error)
 - **TouchInteraction** - Mobile touch interaction data
 - **LayoutSettings** - Canvas layout and positioning settings
-- **LSystem** - Lindenmayer system with rules and parameters
-- **LSystemParameters** - Rendering parameters for L-systems
-- **TurtleState** - Turtle graphics state for L-system visualization
-- **BuildingBlock** - Visual building blocks for L-systems
 - **PumpingLemmaGame** - Interactive pumping lemma game state
 - **PumpingAttempt** - Individual pumping lemma attempt
 
@@ -64,7 +60,6 @@ This is the first major release of JFlutter, featuring a complete implementation
 - **GrammarPage** - Context-free grammar tools (placeholder)
 - **PDAPage** - Pushdown automata tools (placeholder)
 - **TMPage** - Turing machine tools (placeholder)
-- **LSystemPage** - L-system visualization (placeholder)
 - **PumpingLemmaPage** - Interactive pumping lemma game (placeholder)
 
 #### Interactive Components

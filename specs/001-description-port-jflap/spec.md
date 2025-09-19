@@ -155,8 +155,6 @@ As a computer science student or educator, I want to create, manipulate, and ana
 - **Production**: Grammar rules with left-hand side and right-hand side symbols, supporting multiple symbols on left side for unrestricted grammars
 - **Parse Table**: Generated tables for LL/LR/SLR parsing with action and goto entries
 - **Simulation Result**: Output of automaton execution showing acceptance/rejection and computation trace
-- **L-System**: Formal system with axiom and production rules for generating fractal patterns
-- **Turtle State**: Graphics state for L-system visualization including position, angle, line width, and color
 - **Building Block**: Reusable component for Turing machine construction with import/export capabilities
 - **Pumping Lemma Game**: Interactive interface for proving languages are not regular or context-free
 - **File Format**: Persistent storage format compatible with JFLAP desktop version (.jff, .cfg files)

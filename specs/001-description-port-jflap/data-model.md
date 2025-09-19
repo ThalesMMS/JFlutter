@@ -247,43 +247,6 @@ class LayoutSettings {
 }
 ```
 
-### L-System
-```dart
-class LSystem {
-  String id;
-  String name;
-  String axiom;
-  Map<String, String> productions; // Symbol -> replacement string
-  int iterations;
-  LSystemParameters parameters;
-  DateTime created;
-  DateTime modified;
-}
-
-class LSystemParameters {
-  double angle;
-  double distance;
-  double lineWidth;
-  Color lineColor;
-  Color fillColor;
-  double lineWidthIncrement;
-  double hueVariation;
-}
-```
-
-### TurtleState
-```dart
-class TurtleState {
-  Point position;
-  double angle;
-  double lineWidth;
-  Color lineColor;
-  Color fillColor;
-  bool penDown;
-  Stack<TurtleState> stateStack; // For save/restore operations
-}
-```
-
 ### BuildingBlock
 ```dart
 class BuildingBlock {

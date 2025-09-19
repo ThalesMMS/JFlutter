@@ -97,11 +97,11 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - jflutter_js/examples/afd_binary_divisible_by_3.json
-  #   - jflutter_js/examples/afd_ends_with_a.json
-  #   - jflutter_js/examples/afd_parity_AB.json
-  #   - jflutter_js/examples/afn_lambda_a_or_ab.json
+  assets:
+    - jflutter_js/examples/afd_binary_divisible_by_3.json
+    - jflutter_js/examples/afd_ends_with_a.json
+    - jflutter_js/examples/afd_parity_AB.json
+    - jflutter_js/examples/afn_lambda_a_or_ab.json
 
 flutter_launcher_icons:
   image_path: "icon.PNG"

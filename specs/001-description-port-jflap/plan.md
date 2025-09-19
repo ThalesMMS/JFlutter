@@ -41,7 +41,7 @@ Port JFLAP desktop application to Flutter mobile app (JFlutter) with fully mobil
 **Project Type**: mobile (Flutter app with local storage)  
 **Performance Goals**: 60fps UI, <500ms algorithm execution for automata <50 states, <2s for <100 states, <5s for <200 states  
 **Constraints**: Offline operation, <150MB app size, touch-optimized (44dp minimum touch targets), memory efficient for mobile devices  
-**Scale/Scope**: Single-user educational app, support automata with up to 200 states/nodes, L-systems with up to 1000 iterations, 10MB file size limit
+**Scale/Scope**: Single-user educational app, support automata with up to 200 states/nodes, 10MB file size limit
 
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*

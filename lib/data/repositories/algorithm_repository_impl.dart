@@ -276,12 +276,12 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
   // Helper methods for conversion between entities and core automaton objects
   model_automaton.Automaton _entityToAutomaton(AutomatonEntity entity) {
     final states = entity.states.map((s) => automaton_state.State(
-          id: s.id,
-          label: s.name,
-          position: Vector2(s.x, s.y),
-          isInitial: s.isInitial,
-          isAccepting: s.isFinal,
-        )).toSet();
+      id: s.id,
+      label: s.name,
+      position: Vector2(s.x, s.y),
+      isInitial: s.isInitial,
+      isAccepting: s.isFinal,
+    )).toSet();
 
     final stateMap = {for (final state in states) state.id: state};
 
@@ -290,6 +290,8 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
         : states.firstWhereOrNull((s) => s.isInitial);
 
     final transitions = <model_transition.Transition>{};
+    var transitionId = 1;
+
     entity.transitions.forEach((key, destinations) {
       final parts = key.split('|');
       if (parts.length != 2) {
@@ -314,7 +316,7 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
         }
 
         transitions.add(fsa_transition.FSATransition(
-          id: 't_${fromState.id}_${symbol}_${toState.id}',
+          id: 't${transitionId++}',
           fromState: fromState,
           toState: toState,
           label: symbol,
@@ -411,4 +413,3 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
     );
   }
 }
-

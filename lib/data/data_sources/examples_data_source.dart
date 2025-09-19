@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' as foundation;
 import 'package:flutter/services.dart';
 import '../models/automaton_model.dart';
 import '../../core/result.dart';
@@ -56,7 +56,7 @@ class ExamplesDataSource {
       );
 
       return Success(example);
-    } on FlutterError catch (e) {
+    } on foundation.FlutterError catch (e) {
       final message = e.message ?? e.toString();
       if (message.contains('Unable to load asset')) {
         return Failure(

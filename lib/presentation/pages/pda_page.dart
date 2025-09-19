@@ -17,9 +17,6 @@ class PDAPage extends ConsumerStatefulWidget {
 
 class _PDAPageState extends ConsumerState<PDAPage> {
   final GlobalKey _canvasKey = GlobalKey();
-  bool _showControls = true;
-  bool _showSimulation = false;
-  bool _showAlgorithms = false;
   PDA? _latestPda;
   int _stateCount = 0;
   int _transitionCount = 0;
@@ -47,138 +44,199 @@ class _PDAPageState extends ConsumerState<PDAPage> {
   }
 
   Widget _buildMobileLayout() {
-    return Column(
-      children: [
-        // Mobile controls toggle - more compact
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
+    return SafeArea(
+      child: Stack(
+        children: [
+          Column(
             children: [
               Expanded(
-                child: _buildToggleButton(
-                  icon: Icons.edit,
-                  label: 'Editor',
-                  isActive: _showControls,
-                  onPressed: () => setState(() => _showControls = !_showControls),
+                child: Container(
+                  margin: const EdgeInsets.all(8),
+                  child: PDACanvas(
+                    canvasKey: _canvasKey,
+                    onPDAModified: _handlePdaModified,
+                  ),
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildToggleButton(
-                  icon: Icons.play_arrow,
-                  label: 'Simulate',
-                  isActive: _showSimulation,
-                  onPressed: () => setState(() => _showSimulation = !_showSimulation),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildToggleButton(
-                  icon: Icons.auto_awesome,
-                  label: 'Algorithms',
-                  isActive: _showAlgorithms,
-                  onPressed: () => setState(() => _showAlgorithms = !_showAlgorithms),
-                ),
-              ),
+              _buildMobileInfoPanel(context),
             ],
           ),
-        ),
-
-        // Content area with proper scrolling
-        Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                // Collapsible panels with better space management
-                if (_showControls || _showSimulation || _showAlgorithms) ...[
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Column(
-                      children: [
-                        // PDA canvas
-                        if (_showControls) ...[
-                          Container(
-                            constraints: const BoxConstraints(maxHeight: 300),
-                            child: PDACanvas(
-                              canvasKey: _canvasKey,
-                              onPDAModified: _handlePdaModified,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                        ],
-
-                        // Simulation panel
-                        if (_showSimulation) ...[
-                          Container(
-                            constraints: const BoxConstraints(maxHeight: 250),
-                            child: const PDASimulationPanel(),
-                          ),
-                          const SizedBox(height: 8),
-                        ],
-
-                        // Algorithm panel
-                        if (_showAlgorithms) ...[
-                          Container(
-                            constraints: const BoxConstraints(maxHeight: 250),
-                            child: const PDAAlgorithmPanel(),
-                          ),
-                          const SizedBox(height: 8),
-                        ],
-                      ],
+          Align(
+            alignment: Alignment.bottomRight,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  FloatingActionButton.extended(
+                    heroTag: 'simulate_pda',
+                    icon: const Icon(Icons.play_arrow),
+                    label: const Text('Simulate'),
+                    onPressed: () => _showPanelSheet(
+                      context: context,
+                      title: 'PDA Simulation',
+                      icon: Icons.play_arrow,
+                      child: const PDASimulationPanel(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  FloatingActionButton.extended(
+                    heroTag: 'pda_algorithms',
+                    icon: const Icon(Icons.auto_awesome),
+                    label: const Text('Algorithms'),
+                    onPressed: () => _showPanelSheet(
+                      context: context,
+                      title: 'PDA Algorithms',
+                      icon: Icons.auto_awesome,
+                      child: const PDAAlgorithmPanel(),
                     ),
                   ),
                 ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-                // Info panel (always visible)
-                Container(
-                  margin: const EdgeInsets.all(8),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceVariant,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Pushdown Automata Editor',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Create states, transitions with stack operations, and test strings. PDAs can recognize context-free languages.',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildPdaInfoMetrics(context),
-                      if (_hasUnsavedChanges) ...[
-                        const SizedBox(height: 12),
-                        Row(
-                          key: const ValueKey('pda_info_unsaved_changes'),
-                          children: [
-                            Icon(
-                              Icons.warning_amber_rounded,
-                              color: Theme.of(context).colorScheme.tertiary,
-                              size: 18,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Unsaved changes',
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ],
-                  ),
+  Widget _buildMobileInfoPanel(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceVariant,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Pushdown Automata Editor',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Create states, transitions with stack operations, and test strings. PDAs can recognize context-free languages.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 16),
+          _buildPdaInfoMetrics(context),
+          if (_hasUnsavedChanges) ...[
+            const SizedBox(height: 12),
+            Row(
+              key: const ValueKey('pda_info_unsaved_changes'),
+              children: [
+                Icon(
+                  Icons.warning_amber_rounded,
+                  color: Theme.of(context).colorScheme.tertiary,
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Unsaved changes',
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
             ),
-          ),
-        ),
-      ],
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showPanelSheet({
+    required BuildContext context,
+    required String title,
+    required Widget child,
+    IconData? icon,
+  }) async {
+    final theme = Theme.of(context);
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.7,
+          minChildSize: 0.4,
+          maxChildSize: 0.95,
+          builder: (context, scrollController) {
+            return SafeArea(
+              top: false,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 12,
+                      offset: const Offset(0, -4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 12),
+                    Container(
+                      width: 36,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.outline.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 8, 12),
+                      child: Row(
+                        children: [
+                          if (icon != null) ...[
+                            Icon(
+                              icon,
+                              color: theme.colorScheme.primary,
+                            ),
+                            const SizedBox(width: 12),
+                          ],
+                          Expanded(
+                            child: Text(
+                              title,
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.of(sheetContext).pop(),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    Expanded(
+                      child: ListView(
+                        controller: scrollController,
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                        children: [
+                          child,
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -275,29 +333,6 @@ class _PDAPageState extends ConsumerState<PDAPage> {
       key: key,
       label: Text('$label: $value'),
       backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
-    );
-  }
-
-  Widget _buildToggleButton({
-    required IconData icon,
-    required String label,
-    required bool isActive,
-    required VoidCallback onPressed,
-  }) {
-    return ElevatedButton.icon(
-      onPressed: onPressed,
-      icon: Icon(icon, size: 16),
-      label: Text(label, style: const TextStyle(fontSize: 11)),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: isActive 
-            ? Theme.of(context).colorScheme.primary 
-            : Theme.of(context).colorScheme.surface,
-        foregroundColor: isActive 
-            ? Theme.of(context).colorScheme.onPrimary 
-            : Theme.of(context).colorScheme.onSurface,
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-        minimumSize: Size.zero,
-      ),
     );
   }
 }

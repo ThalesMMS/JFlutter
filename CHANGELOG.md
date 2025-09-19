@@ -22,7 +22,6 @@ This is the first major release of JFlutter, featuring a complete implementation
 - **GrammarParser** - Parse and analyze context-free grammars
 - **PumpingLemmaProver** - Prove pumping lemma for regular and context-free languages
 - **LSystemGenerator** - Generate Lindenmayer systems and fractal patterns
-- **MealyMachineSimulator** - Simulate Mealy machines with output functions
 - **PDASimulator** - Simulate pushdown automata with stack operations
 - **TMSimulator** - Simulate Turing machines with tape operations
 - **GrammarToPDAConverter** - Convert context-free grammars to pushdown automata
@@ -34,7 +33,6 @@ This is the first major release of JFlutter, featuring a complete implementation
 - **FSATransition** - Transition between states with symbol
 - **PDATransition** - Pushdown automaton transition with stack operations
 - **TMTransition** - Turing machine transition with tape operations
-- **MealyTransition** - Mealy machine transition with output
 - **Grammar** - Context-free grammar with productions
 - **Production** - Grammar production rule
 - **SimulationResult** - Result of automaton simulation
@@ -43,10 +41,6 @@ This is the first major release of JFlutter, featuring a complete implementation
 - **ParseAction** - Parsing action (shift, reduce, accept, error)
 - **TouchInteraction** - Mobile touch interaction data
 - **LayoutSettings** - Canvas layout and positioning settings
-- **LSystem** - Lindenmayer system with rules and parameters
-- **LSystemParameters** - Rendering parameters for L-systems
-- **TurtleState** - Turtle graphics state for L-system visualization
-- **BuildingBlock** - Visual building blocks for L-systems
 - **PumpingLemmaGame** - Interactive pumping lemma game state
 - **PumpingAttempt** - Individual pumping lemma attempt
 

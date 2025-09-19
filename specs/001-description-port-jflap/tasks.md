@@ -8,7 +8,7 @@
 
 ### ✅ Already Implemented:
 - **Core Models**: All data models (Automaton, State, Transition, FSA, PDA, TM, Grammar, etc.)
-- **Algorithms**: NFA to DFA converter, DFA minimizer, simulators, parsers, L-system generator
+- **Algorithms**: NFA to DFA converter, DFA minimizer, simulators, parsers
 - **Services**: AutomatonService, SimulationService, ConversionService, FileOperationsService
 - **Data Layer**: Repositories, data sources, JFLAP XML parser, file operations
 - **Presentation**: Complete UI implementation with all pages and widgets
@@ -88,7 +88,6 @@
 - [x] T014 [P] FSATransition model in lib/core/models/fsa_transition.dart
 - [x] T015 [P] PDATransition model in lib/core/models/pda_transition.dart
 - [x] T016 [P] TMTransition model in lib/core/models/tm_transition.dart
-- [x] T017 [P] MealyTransition model in lib/core/models/mealy_transition.dart
 - [x] T018 [P] Grammar model in lib/core/models/grammar.dart
 - [x] T019 [P] Production model in lib/core/models/production.dart
 - [x] T020 [P] SimulationResult model in lib/core/models/simulation_result.dart
@@ -97,9 +96,6 @@
 - [x] T023 [P] ParseAction model in lib/core/models/parse_action.dart
 - [x] T024 [P] TouchInteraction model in lib/core/models/touch_interaction.dart
 - [x] T025 [P] LayoutSettings model in lib/core/models/layout_settings.dart
-- [x] T026 [P] LSystem model in lib/core/models/l_system.dart
-- [x] T027 [P] TurtleState model in lib/core/models/turtle_state.dart
-- [x] T028 [P] BuildingBlock model in lib/core/models/building_block.dart
 - [x] T029 [P] PumpingLemmaGame model in lib/core/models/pumping_lemma_game.dart
 
 ## Phase 3.4: Core Algorithms ✅ COMPLETED
@@ -110,7 +106,6 @@
 - [x] T034 [P] TM simulator in lib/core/algorithms/tm_simulator.dart
 - [x] T035 [P] Grammar parser (LL/LR) in lib/core/algorithms/grammar_parser.dart
 - [x] T036 [P] CYK parser in lib/core/algorithms/grammar_parser.dart
-- [x] T037 [P] L-System processor in lib/core/algorithms/l_system_generator.dart
 - [x] T038 [P] Pumping lemma game engine in lib/core/algorithms/pumping_lemma_game.dart
 
 ## Phase 3.5: Data Layer ✅ COMPLETED
@@ -137,9 +132,6 @@
 - [x] T053 [P] Simulation panel widget in lib/presentation/widgets/simulation_panel.dart
 - [x] T054 [P] Touch gesture handler in lib/presentation/widgets/touch_gesture_handler.dart
 - [x] T055 [P] Grammar editor widget in lib/presentation/widgets/grammar_editor.dart
-- [x] T056 [P] L-System controls widget in lib/presentation/widgets/l_system_controls.dart
-- [x] T057 [P] L-System editor widget in lib/presentation/widgets/l_system_editor.dart
-- [x] T058 [P] L-System visualizer widget in lib/presentation/widgets/l_system_visualizer.dart
 - [x] T059 [P] Mobile automaton controls in lib/presentation/widgets/mobile_automaton_controls.dart
 - [x] T060 [P] PDA algorithm panel in lib/presentation/widgets/pda_algorithm_panel.dart
 - [x] T061 [P] PDA canvas widget in lib/presentation/widgets/pda_canvas.dart
@@ -160,13 +152,11 @@
 - [x] T074 [P] PDA page in lib/presentation/pages/pda_page.dart
 - [x] T075 [P] TM page in lib/presentation/pages/tm_page.dart
 - [x] T076 [P] Grammar page in lib/presentation/pages/grammar_page.dart
-- [x] T077 [P] L-System page in lib/presentation/pages/l_system_page.dart
 - [x] T078 [P] Pumping lemma page in lib/presentation/pages/pumping_lemma_page.dart
 - [x] T079 [P] Complete FSA editor functionality in lib/presentation/pages/fsa_page.dart
 - [x] T080 [P] Complete PDA editor functionality in lib/presentation/pages/pda_page.dart
 - [x] T081 [P] Complete TM editor functionality in lib/presentation/pages/tm_page.dart
 - [x] T082 [P] Complete grammar editor functionality in lib/presentation/pages/grammar_page.dart
-- [x] T083 [P] Complete L-System functionality in lib/presentation/pages/l_system_page.dart
 - [x] T084 [P] Complete pumping lemma game in lib/presentation/pages/pumping_lemma_page.dart
 - [x] T085 [P] Settings page in lib/presentation/pages/settings_page.dart
 - [x] T086 [P] Help page in lib/presentation/pages/help_page.dart

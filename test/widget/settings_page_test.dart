@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:jflutter/data/storage/settings_storage.dart';
 import 'package:jflutter/presentation/pages/settings_page.dart';
 
 void main() {
-  setUp(() {
-    SharedPreferences.setMockInitialValues({});
-  });
-
   testWidgets('loads settings from stored preferences', (WidgetTester tester) async {
-    SharedPreferences.setMockInitialValues({
+    final storage = InMemorySettingsStorage({
       'settings_empty_string_symbol': 'ε',
       'settings_epsilon_symbol': 'λ',
       'settings_theme_mode': 'dark',
@@ -23,7 +19,7 @@ void main() {
       'settings_font_size': 16.0,
     });
 
-    await tester.pumpWidget(const MaterialApp(home: SettingsPage()));
+    await tester.pumpWidget(MaterialApp(home: SettingsPage(storage: storage)));
     await tester.pumpAndSettle();
 
     final emptyStringChip = tester.widget<FilterChip>(
@@ -53,7 +49,9 @@ void main() {
   });
 
   testWidgets('saves settings and restores them on next load', (WidgetTester tester) async {
-    await tester.pumpWidget(const MaterialApp(home: SettingsPage()));
+    final storage = InMemorySettingsStorage();
+
+    await tester.pumpWidget(MaterialApp(home: SettingsPage(storage: storage)));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const ValueKey('settings_show_grid_switch')));
@@ -75,7 +73,7 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
 
-    await tester.pumpWidget(const MaterialApp(home: SettingsPage()));
+    await tester.pumpWidget(MaterialApp(home: SettingsPage(storage: storage)));
     await tester.pumpAndSettle();
 
     final reloadedGridSwitch = tester.widget<Switch>(

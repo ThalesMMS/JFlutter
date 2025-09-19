@@ -76,6 +76,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   test: ^1.24.0
+  shared_preferences_platform_interface: ^2.4.1
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

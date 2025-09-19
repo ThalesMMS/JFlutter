@@ -1,15 +1,19 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
-import '../../core/models/tm.dart';
-import '../../core/models/state.dart' as automaton_state;
-import '../../core/models/tm_transition.dart';
+
 import '../../core/models/fsa_transition.dart';
+import '../../core/models/state.dart' as automaton_state;
+import '../../core/models/tm.dart';
+import '../../core/models/tm_transition.dart';
 import '../../core/models/transition.dart';
+import '../providers/tm_editor_provider.dart';
 import 'touch_gesture_handler.dart';
 
 /// Interactive canvas for drawing and editing Turing Machines
-class TMCanvas extends StatefulWidget {
+class TMCanvas extends ConsumerStatefulWidget {
   final GlobalKey canvasKey;
   final ValueChanged<TM> onTMModified;
 
@@ -20,16 +24,22 @@ class TMCanvas extends StatefulWidget {
   });
 
   @override
-  State<TMCanvas> createState() => _TMCanvasState();
+  ConsumerState<TMCanvas> createState() => _TMCanvasState();
 }
 
-class _TMCanvasState extends State<TMCanvas> {
+class _TMCanvasState extends ConsumerState<TMCanvas> {
   final List<automaton_state.State> _states = [];
   final List<TMTransition> _transitions = [];
   automaton_state.State? _selectedState;
   bool _isAddingState = false;
   bool _isAddingTransition = false;
   automaton_state.State? _transitionStart;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _notifyEditor());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -168,6 +178,8 @@ class _TMCanvasState extends State<TMCanvas> {
         _states[index] = state;
       }
     });
+
+    _notifyEditor();
   }
 
   void _addState(Offset position) {
@@ -183,6 +195,8 @@ class _TMCanvasState extends State<TMCanvas> {
       _states.add(newState);
       _isAddingState = false;
     });
+
+    _notifyEditor();
   }
 
   void _addTransition(Transition transition) {
@@ -203,6 +217,8 @@ class _TMCanvasState extends State<TMCanvas> {
     setState(() {
       _transitions.add(tmTransition);
     });
+
+    _notifyEditor();
   }
 
   void _editState(automaton_state.State state) {
@@ -221,6 +237,8 @@ class _TMCanvasState extends State<TMCanvas> {
         _transitions[index] = result;
       }
     });
+
+    _notifyEditor();
   }
 
   void _deleteState(automaton_state.State state) {
@@ -232,12 +250,16 @@ class _TMCanvasState extends State<TMCanvas> {
         _selectedState = null;
       }
     });
+
+    _notifyEditor();
   }
 
   void _deleteTransition(Transition transition) {
     setState(() {
       _transitions.removeWhere((t) => t.id == transition.id);
     });
+
+    _notifyEditor();
   }
 
   void _clearCanvas() {
@@ -248,6 +270,8 @@ class _TMCanvasState extends State<TMCanvas> {
       _isAddingState = false;
       _isAddingTransition = false;
     });
+
+    _notifyEditor();
   }
 
   Future<TMTransition?> _showTransitionDialog(TMTransition transition) async {
@@ -338,9 +362,23 @@ class _TMCanvasState extends State<TMCanvas> {
               _states[index] = updatedState;
             }
           });
+
+          _notifyEditor();
         },
       ),
     );
+  }
+
+  void _notifyEditor() {
+    final notifier = ref.read(tmEditorProvider.notifier);
+    final tm = notifier.updateFromCanvas(
+      states: List<automaton_state.State>.unmodifiable(_states),
+      transitions: List<TMTransition>.unmodifiable(_transitions),
+    );
+
+    if (tm != null) {
+      widget.onTMModified(tm);
+    }
   }
 }
 

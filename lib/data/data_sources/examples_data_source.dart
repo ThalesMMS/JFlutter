@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../models/automaton_model.dart';
 import '../../core/result.dart';
@@ -31,13 +32,14 @@ class ExamplesDataSource {
 
   /// Loads a specific example by name
   Future<Result<ExampleEntity>> loadExample(String name) async {
-    try {
-      final fileName = _exampleFiles[name];
-      if (fileName == null) {
-        return Failure('Example not found: $name');
-      }
+    final fileName = _exampleFiles[name];
+    if (fileName == null) {
+      return Failure('Example not found: $name');
+    }
 
-      final assetPath = 'jflutter_js/examples/$fileName';
+    final assetPath = 'jflutter_js/examples/$fileName';
+
+    try {
 
       final jsonString = await rootBundle.loadString(assetPath);
       final json = jsonDecode(jsonString) as Map<String, dynamic>;

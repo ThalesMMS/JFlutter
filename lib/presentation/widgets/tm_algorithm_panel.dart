@@ -807,7 +807,7 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
   }
 
   List<String> _formatStates(Set<automaton_models.State> states) {
-    final labels = states
+    final List<String> labels = states
         .map((state) => state.label.isNotEmpty ? state.label : state.id)
         .toList();
     labels.sort();

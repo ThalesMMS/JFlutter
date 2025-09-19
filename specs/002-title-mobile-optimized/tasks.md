@@ -125,7 +125,7 @@
 - [ ] T068 Error handling and user feedback
 - [ ] T069 [P] Update API documentation in docs/api.md
 - [ ] T070 [P] Update user guide in docs/user_guide.md
-- [ ] T071 Remove any remaining Mealy/Moore/Multi-Tape/L-System code
+- [ ] T071 Remove any remaining Moore/Multi-Tape/L-System code
 - [ ] T072 Run quickstart validation scenarios
 
 ## Dependencies
@@ -233,4 +233,4 @@ flutter test test/unit/test_storage.dart
 - Mobile-first design principles throughout
 - Maintain JFLAP algorithmic consistency
 - Focus on touch interaction and responsive design
-- Remove unnecessary features (Mealy, Moore, Multi-Tape, L-System)
+- Remove unnecessary features (Moore, Multi-Tape, L-System)

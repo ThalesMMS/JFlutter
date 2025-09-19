@@ -7,12 +7,35 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+fun envOrNull(name: String): String? = System.getenv(name)?.takeIf { it.isNotBlank() }
+
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
     keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
 } else {
-    println("Warning: key.properties not found. Release builds will require a signing configuration.")
+    val envStorePassword = envOrNull("JFLUTTER_KEYSTORE_PASSWORD")
+    val envKeyAlias = envOrNull("JFLUTTER_KEY_ALIAS")
+    val envKeyPassword = envOrNull("JFLUTTER_KEY_PASSWORD")
+    if (envStorePassword != null && envKeyAlias != null && envKeyPassword != null) {
+        val envStoreFile = envOrNull("JFLUTTER_KEYSTORE_PATH") ?: "keystores/jflutter-release.jks"
+        keystoreProperties.setProperty("storeFile", envStoreFile)
+        keystoreProperties.setProperty("storePassword", envStorePassword)
+        keystoreProperties.setProperty("keyAlias", envKeyAlias)
+        keystoreProperties.setProperty("keyPassword", envKeyPassword)
+        println("Loaded release keystore credentials from environment variables.")
+    } else {
+        val providedEnv = listOfNotNull(
+            envStorePassword?.let { "JFLUTTER_KEYSTORE_PASSWORD" },
+            envKeyAlias?.let { "JFLUTTER_KEY_ALIAS" },
+            envKeyPassword?.let { "JFLUTTER_KEY_PASSWORD" }
+        )
+        if (providedEnv.isNotEmpty()) {
+            println("Warning: Incomplete keystore environment configuration. Provided: ${'$'}{providedEnv.joinToString()}.")
+        } else {
+            println("Warning: key.properties not found and no keystore environment variables are set. Release builds will require a signing configuration.")
+        }
+    }
 }
 
 android {

@@ -3,12 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:jflutter/core/models/settings_model.dart';
 import 'package:jflutter/core/repositories/settings_repository.dart';
 import 'package:jflutter/data/repositories/settings_repository_impl.dart';
+import 'package:jflutter/data/storage/settings_storage.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({
     super.key,
     SettingsRepository? repository,
-  }) : repository = repository ?? const SharedPreferencesSettingsRepository();
+    SettingsStorage? storage,
+  }) : repository = repository ??
+            SharedPreferencesSettingsRepository(
+              storage: storage ?? const SharedPreferencesSettingsStorage(),
+            );
 
   final SettingsRepository repository;
 

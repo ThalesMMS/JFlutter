@@ -22,12 +22,26 @@
 
 JFlutter has 6 main sections accessible via bottom navigation (mobile) or tabs (desktop):
 
-- **FSA** - Finite State Automata
-- **Grammar** - Context-Free Grammars
-- **PDA** - Pushdown Automata
-- **TM** - Turing Machines
-- **L-Systems** - Lindenmayer Systems
-- **Pumping** - Pumping Lemma Game
+- **FSA** - Finite State Automata workspace
+- **Grammar** - Context-free grammar editor and analysis tools
+- **PDA** - Pushdown automata construction and simulation
+- **TM** - Turing machine design environment
+- **Regex** - Regular expression testing and conversions
+- **Pumping** - Pumping Lemma challenges and tutorials
+
+Additional icons in the app bar provide quick access to:
+
+- **Help** (question mark icon) - Opens the multi-section help center
+- **Settings** (gear icon) - Opens application preferences such as theme, canvas, and symbol defaults
+
+### Tab Highlights
+
+- **FSA** – Draw deterministic or non-deterministic automata, run simulations, and execute conversions such as NFA→DFA, DFA minimization, and FA→Regex.
+- **Grammar** – Manage productions with the grammar editor, parse example strings, and run conversions like FSA→Grammar from the algorithm panel.
+- **PDA** – Define stack-based transitions, simulate inputs with optional trace recording, and inspect execution steps.
+- **TM** – Configure tape alphabets and transitions, then run simulations with real-time tape visualization.
+- **Regex** – Test regular expressions, convert them to NFAs, and compare equivalent DFAs using shared algorithm tools.
+- **Pumping** – Practice the pumping lemma through interactive challenges, guided help, and progress tracking panels.
 
 ### Layout Modes
 
@@ -109,7 +123,7 @@ JFlutter has 6 main sections accessible via bottom navigation (mobile) or tabs (
 4. **See step count** and execution details
 
 #### Step-by-Step Simulation
-1. **Enable step-by-step mode** in settings
+1. **Toggle "Record step-by-step trace"** in the simulation panel when available
 2. **Watch states highlight** as the automaton processes
 3. **See transition paths** taken during execution
 4. **Understand the process** visually

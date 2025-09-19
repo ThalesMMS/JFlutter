@@ -7,10 +7,10 @@ import '../../core/repositories/automaton_repository.dart';
 import '../../core/result.dart';
 
 class LayoutRepositoryImpl implements LayoutRepository {
-  static const Vector2 _canvasSize = Vector2(800, 600);
+  static final Vector2 _canvasSize = Vector2(800, 600);
   static const double _canvasPadding = 60;
   static const double _minLayoutSize = 160;
-  static const double _goldenAngle = math.pi * (3 - math.sqrt(5));
+  static final double _goldenAngle = math.pi * (3 - math.sqrt(5));
 
   static Vector2 get _canvasCenter =>
       Vector2(_canvasSize.x / 2, _canvasSize.y / 2);

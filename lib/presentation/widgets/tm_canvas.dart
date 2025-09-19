@@ -1,15 +1,17 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 import '../../core/models/tm.dart';
 import '../../core/models/state.dart' as automaton_state;
 import '../../core/models/tm_transition.dart';
 import '../../core/models/fsa_transition.dart';
 import '../../core/models/transition.dart';
+import '../providers/tm_editor_provider.dart';
 import 'touch_gesture_handler.dart';
 
 /// Interactive canvas for drawing and editing Turing Machines
-class TMCanvas extends StatefulWidget {
+class TMCanvas extends ConsumerStatefulWidget {
   final GlobalKey canvasKey;
   final ValueChanged<TM> onTMModified;
 
@@ -20,10 +22,10 @@ class TMCanvas extends StatefulWidget {
   });
 
   @override
-  State<TMCanvas> createState() => _TMCanvasState();
+  ConsumerState<TMCanvas> createState() => _TMCanvasState();
 }
 
-class _TMCanvasState extends State<TMCanvas> {
+class _TMCanvasState extends ConsumerState<TMCanvas> {
   final List<automaton_state.State> _states = [];
   final List<TMTransition> _transitions = [];
   automaton_state.State? _selectedState;
@@ -32,11 +34,19 @@ class _TMCanvasState extends State<TMCanvas> {
   automaton_state.State? _transitionStart;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _notifyEditor());
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final editorState = ref.watch(tmEditorProvider);
+
     return Card(
       child: Column(
         children: [
-          _buildToolbar(context),
+          _buildToolbar(context, editorState),
           Expanded(
             child: Container(
               margin: const EdgeInsets.all(8),
@@ -67,6 +77,8 @@ class _TMCanvasState extends State<TMCanvas> {
                       states: _states,
                       transitions: _transitions,
                       selectedState: _selectedState,
+                      nondeterministicTransitionIds:
+                          editorState.nondeterministicTransitionIds,
                     ),
                     size: Size.infinite,
                   ),
@@ -80,7 +92,7 @@ class _TMCanvasState extends State<TMCanvas> {
     );
   }
 
-  Widget _buildToolbar(BuildContext context) {
+  Widget _buildToolbar(BuildContext context, TMEditorState editorState) {
     return Container(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -125,6 +137,21 @@ class _TMCanvasState extends State<TMCanvas> {
               ),
             ],
           ),
+          if (editorState.nondeterministicTransitionIds.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Chip(
+                avatar: const Icon(Icons.report, color: Colors.white, size: 18),
+                backgroundColor:
+                    Theme.of(context).colorScheme.errorContainer,
+                label: Text(
+                  '${editorState.nondeterministicTransitionIds.length} nondeterministic',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onErrorContainer,
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -166,8 +193,10 @@ class _TMCanvasState extends State<TMCanvas> {
       final index = _states.indexWhere((s) => s.id == state.id);
       if (index != -1) {
         _states[index] = state;
+        _syncTransitionsForState(state);
       }
     });
+    _notifyEditor();
   }
 
   void _addState(Offset position) {
@@ -183,6 +212,7 @@ class _TMCanvasState extends State<TMCanvas> {
       _states.add(newState);
       _isAddingState = false;
     });
+    _notifyEditor();
   }
 
   void _addTransition(Transition transition) {
@@ -203,6 +233,7 @@ class _TMCanvasState extends State<TMCanvas> {
     setState(() {
       _transitions.add(tmTransition);
     });
+    _notifyEditor();
   }
 
   void _editState(automaton_state.State state) {
@@ -211,7 +242,7 @@ class _TMCanvasState extends State<TMCanvas> {
 
   Future<void> _editTransition(Transition transition) async {
     if (transition is! TMTransition) return;
-    
+
     final result = await _showTransitionDialog(transition);
     if (result == null) return;
 
@@ -221,6 +252,7 @@ class _TMCanvasState extends State<TMCanvas> {
         _transitions[index] = result;
       }
     });
+    _notifyEditor();
   }
 
   void _deleteState(automaton_state.State state) {
@@ -232,12 +264,14 @@ class _TMCanvasState extends State<TMCanvas> {
         _selectedState = null;
       }
     });
+    _notifyEditor();
   }
 
   void _deleteTransition(Transition transition) {
     setState(() {
       _transitions.removeWhere((t) => t.id == transition.id);
     });
+    _notifyEditor();
   }
 
   void _clearCanvas() {
@@ -248,6 +282,33 @@ class _TMCanvasState extends State<TMCanvas> {
       _isAddingState = false;
       _isAddingTransition = false;
     });
+    _notifyEditor();
+  }
+
+  void _notifyEditor() {
+    ref.read(tmEditorProvider.notifier).updateFromCanvas(
+          states: _states,
+          transitions: _transitions,
+        );
+    final currentTm = ref.read(tmEditorProvider).tm;
+    if (currentTm != null) {
+      widget.onTMModified(currentTm);
+    }
+  }
+
+  void _syncTransitionsForState(automaton_state.State state) {
+    for (var i = 0; i < _transitions.length; i++) {
+      final transition = _transitions[i];
+      if (transition.fromState.id == state.id ||
+          transition.toState.id == state.id) {
+        _transitions[i] = transition.copyWith(
+          fromState:
+              transition.fromState.id == state.id ? state : transition.fromState,
+          toState:
+              transition.toState.id == state.id ? state : transition.toState,
+        );
+      }
+    }
   }
 
   Future<TMTransition?> _showTransitionDialog(TMTransition transition) async {
@@ -336,8 +397,10 @@ class _TMCanvasState extends State<TMCanvas> {
             final index = _states.indexOf(state);
             if (index != -1) {
               _states[index] = updatedState;
+              _syncTransitionsForState(updatedState);
             }
           });
+          _notifyEditor();
         },
       ),
     );
@@ -349,11 +412,13 @@ class _TMCanvasPainter extends CustomPainter {
   final List<automaton_state.State> states;
   final List<TMTransition> transitions;
   final automaton_state.State? selectedState;
+  final Set<String> nondeterministicTransitionIds;
 
   _TMCanvasPainter({
     required this.states,
     required this.transitions,
     required this.selectedState,
+    this.nondeterministicTransitionIds = const {},
   });
 
   @override
@@ -428,8 +493,10 @@ class _TMCanvasPainter extends CustomPainter {
     final fromPos = Offset(transition.fromState.position.x, transition.fromState.position.y);
     final toPos = Offset(transition.toState.position.x, transition.toState.position.y);
 
+    final isNondeterministic =
+        nondeterministicTransitionIds.contains(transition.id);
     final paint = Paint()
-      ..color = Colors.black
+      ..color = isNondeterministic ? Colors.red : Colors.black
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
 
@@ -445,12 +512,16 @@ class _TMCanvasPainter extends CustomPainter {
       (fromPos.dy + toPos.dy) / 2 - 20,
     );
 
-    final directionSymbol = transition.direction == TapeDirection.left ? 'L' : 'R';
+    final directionSymbol = switch (transition.direction) {
+      TapeDirection.left => 'L',
+      TapeDirection.right => 'R',
+      TapeDirection.stay => 'S',
+    };
     final textPainter = TextPainter(
       text: TextSpan(
         text: '${transition.readSymbol}/${transition.writeSymbol},$directionSymbol',
-        style: const TextStyle(
-          color: Colors.black,
+        style: TextStyle(
+          color: isNondeterministic ? Colors.red : Colors.black,
           fontSize: 12,
           fontWeight: FontWeight.bold,
         ),

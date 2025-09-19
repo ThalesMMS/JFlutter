@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/algorithms/tm_simulator.dart';
+import '../../core/models/simulation_step.dart';
+import '../providers/tm_editor_provider.dart';
+
 /// Panel for Turing Machine simulation and string testing
 class TMSimulationPanel extends ConsumerStatefulWidget {
   const TMSimulationPanel({super.key});
@@ -11,14 +15,13 @@ class TMSimulationPanel extends ConsumerStatefulWidget {
 
 class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
   final TextEditingController _inputController = TextEditingController();
-  
+
   bool _isSimulating = false;
+  bool _hasSimulationResult = false;
+  bool? _isAccepted;
   String? _simulationResult;
   List<String> _simulationSteps = [];
   List<String> _tapeHistory = [];
-  String _currentTape = '';
-  int _headPosition = 0;
-  int _currentStep = 0;
 
   @override
   void dispose() {
@@ -132,9 +135,9 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
           ),
           const SizedBox(height: 8),
           Expanded(
-            child: _simulationResult == null
-                ? _buildEmptyResults(context)
-                : _buildResults(context),
+            child: _hasSimulationResult
+                ? _buildResults(context)
+                : _buildEmptyResults(context),
           ),
         ],
       ),
@@ -181,9 +184,38 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
   }
 
   Widget _buildResults(BuildContext context) {
-    final isAccepted = _simulationResult == 'Accepted';
+    if (_isAccepted == null) {
+      final colorScheme = Theme.of(context).colorScheme;
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: colorScheme.errorContainer,
+          border: Border.all(color: colorScheme.error.withOpacity(0.4)),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.error, color: colorScheme.error),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                _simulationResult ?? 'Simulation error',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: colorScheme.onErrorContainer,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final isAccepted = _isAccepted!;
     final color = isAccepted ? Colors.green : Colors.red;
-    
+    final message = _simulationResult ?? (isAccepted ? 'Accepted' : 'Rejected');
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -202,23 +234,25 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
                 size: 24,
               ),
               const SizedBox(width: 8),
-              Text(
-                _simulationResult!,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Text(
+                  message,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: color,
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
               ),
             ],
           ),
-          
+
           if (_simulationSteps.isNotEmpty) ...[
             const SizedBox(height: 16),
             Text(
               'Simulation Steps:',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
             const SizedBox(height: 8),
             Expanded(
@@ -237,19 +271,20 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
                         Text(
                           '${index + 1}.',
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             _simulationSteps[index],
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontFamily: 'monospace',
-                            ),
+                                  fontFamily: 'monospace',
+                                ),
                           ),
                         ),
-                        if (index < _tapeHistory.length)
+                        if (index < _tapeHistory.length &&
+                            _tapeHistory[index].isNotEmpty)
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
@@ -259,8 +294,8 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
                             child: Text(
                               'Tape: ${_tapeHistory[index]}',
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                                    fontWeight: FontWeight.bold,
+                                  ),
                             ),
                           ),
                       ],
@@ -275,82 +310,87 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
     );
   }
 
-  void _simulateTM() {
+  Future<void> _simulateTM() async {
     final inputString = _inputController.text.trim();
-    
+
     if (inputString.isEmpty) {
       _showError('Please enter an input string');
       return;
     }
-    
+
+    final tm = ref.read(tmEditorProvider).tm;
+    if (tm == null) {
+      _showError('Create a Turing machine on the canvas before simulating');
+      return;
+    }
+
     setState(() {
       _isSimulating = true;
+      _hasSimulationResult = false;
+      _isAccepted = null;
       _simulationResult = null;
-      _simulationSteps.clear();
-      _tapeHistory.clear();
-      _currentTape = inputString;
-      _headPosition = 0;
-      _currentStep = 0;
+      _simulationSteps = [];
+      _tapeHistory = [];
     });
-    
-    // Simulate TM execution
-    Future.delayed(const Duration(seconds: 1), () {
-      if (mounted) {
-        _simulateTMExecution(inputString);
+
+    final result = await Future(
+      () => TMSimulator.simulate(
+        tm,
+        inputString,
+        stepByStep: true,
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    if (result.isFailure) {
+      final message = result.error ?? 'Simulation failed';
+      setState(() {
+        _isSimulating = false;
+        _hasSimulationResult = true;
+        _isAccepted = null;
+        _simulationResult = message;
+        _simulationSteps = [];
+        _tapeHistory = [];
+      });
+      _showError(message);
+      return;
+    }
+
+    final simulation = result.data!;
+    final steps = _describeSteps(simulation.steps);
+    final tapeHistory = simulation.steps.map((step) => step.tapeContents).toList();
+
+    setState(() {
+      _isSimulating = false;
+      _hasSimulationResult = true;
+      _isAccepted = simulation.accepted;
+      _simulationResult = simulation.accepted
+          ? 'Accepted'
+          : simulation.errorMessage != null
+              ? 'Rejected: ${simulation.errorMessage}'
+              : 'Rejected';
+      _simulationSteps = steps;
+      _tapeHistory = tapeHistory;
+    });
+  }
+
+  List<String> _describeSteps(List<SimulationStep> simulationSteps) {
+    final descriptions = <String>[];
+    for (var i = 0; i < simulationSteps.length; i++) {
+      final step = simulationSteps[i];
+      final buffer = StringBuffer('State ${step.currentState}');
+      if (step.tapeContents.isNotEmpty) {
+        buffer.write(' | Tape: ${step.tapeContents}');
       }
-    });
-  }
-
-  void _simulateTMExecution(String inputString) {
-    // Simple simulation for demonstration
-    // In real implementation, this would use the actual TM simulator
-    final steps = <String>[];
-    final tapeHistory = <String>[];
-    
-    steps.add('Start: State q0, Tape: $inputString, Head: 0');
-    tapeHistory.add(inputString);
-    
-    // Simulate a simple TM that accepts strings with equal number of 0s and 1s
-    if (_simulateEqualOnesZerosTM(inputString, steps, tapeHistory)) {
-      setState(() {
-        _isSimulating = false;
-        _simulationResult = 'Accepted';
-        _simulationSteps = steps;
-        _tapeHistory = tapeHistory;
-      });
-    } else {
-      setState(() {
-        _isSimulating = false;
-        _simulationResult = 'Rejected';
-        _simulationSteps = steps;
-        _tapeHistory = tapeHistory;
-      });
+      if (step.usedTransition != null) {
+        buffer.write(' | Read: ${step.usedTransition}');
+      }
+      descriptions.add(buffer.toString());
     }
-  }
-
-  bool _simulateEqualOnesZerosTM(String input, List<String> steps, List<String> tapeHistory) {
-    // Simple simulation for a TM that accepts strings with equal number of 0s and 1s
-    String tape = input;
-    int head = 0;
-    String state = 'q0';
-    
-    // Count 0s and 1s
-    int zeros = input.split('0').length - 1;
-    int ones = input.split('1').length - 1;
-    
-    if (zeros == ones && zeros > 0) {
-      steps.add('Count: 0s=$zeros, 1s=$ones (equal)');
-      tapeHistory.add(tape);
-      steps.add('Accept: Equal number of 0s and 1s');
-      tapeHistory.add(tape);
-      return true;
-    } else {
-      steps.add('Count: 0s=$zeros, 1s=$ones (not equal)');
-      tapeHistory.add(tape);
-      steps.add('Reject: Unequal number of 0s and 1s');
-      tapeHistory.add(tape);
-      return false;
-    }
+    return descriptions;
   }
 
   void _showError(String message) {

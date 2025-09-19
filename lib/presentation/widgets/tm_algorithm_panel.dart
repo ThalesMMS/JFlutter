@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/algorithms/algorithm_operations.dart';
-import '../../core/algorithms/tm_simulator.dart';
 import '../../core/models/state.dart' as automaton_models;
 import '../../core/models/tm.dart';
+import '../../core/models/tm_analysis.dart';
 import '../../core/models/tm_transition.dart';
 import '../../core/models/tm_transition.dart' as tm_models show TapeDirection;
 import '../../core/result.dart';

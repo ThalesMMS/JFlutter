@@ -1,9 +1,12 @@
+import 'dart:collection';
+
 import '../models/pda.dart';
 import '../models/state.dart';
 import '../models/pda_transition.dart';
 import '../models/fsa_transition.dart';
 import '../models/simulation_result.dart';
 import '../models/simulation_step.dart';
+import '../models/transition.dart';
 import '../result.dart';
 
 /// Simulates Pushdown Automata (PDA) with input strings
@@ -201,6 +204,200 @@ class PDASimulator {
         executionTime: DateTime.now().difference(startTime),
       );
     }
+  }
+
+  /// Produces a simplified PDA by pruning unreachable/nonproductive states
+  /// and merging obviously equivalent configurations.
+  static Result<PDASimplificationSummary> simplify(PDA pda) {
+    if (pda.states.isEmpty) {
+      return Failure('Cannot minimize an empty PDA.');
+    }
+
+    final initialState = pda.initialState;
+    if (initialState == null) {
+      return Failure('PDA must define an initial state before minimization.');
+    }
+
+    if (pda.acceptingStates.isEmpty) {
+      return Failure('PDA must define at least one accepting state.');
+    }
+
+    final reachableStates = <State>{};
+    _findReachableStates(pda, initialState, reachableStates);
+
+    final productiveStates = _findProductiveStates(pda);
+
+    final usefulStates = reachableStates.intersection(productiveStates);
+    if (usefulStates.isEmpty) {
+      return Failure(
+        'Initial state cannot reach any accepting configuration. '
+        'Add transitions that lead to an accepting state before minimization.',
+      );
+    }
+
+    final unreachableStates = pda.states.difference(reachableStates);
+    final nonProductiveStates = pda.states.difference(productiveStates);
+
+    final usefulStateIds = usefulStates.map((s) => s.id).toSet();
+
+    final filteredStates = pda.states.where((s) => usefulStateIds.contains(s.id)).toSet();
+    final prunedStates = pda.states.difference(filteredStates);
+
+    final filteredTransitions = pda.pdaTransitions
+        .where(
+          (transition) =>
+              usefulStateIds.contains(transition.fromState.id) &&
+              usefulStateIds.contains(transition.toState.id),
+        )
+        .toList();
+
+    final removedTransitionsFromPruning = pda.pdaTransitions
+        .where(
+          (transition) =>
+              !usefulStateIds.contains(transition.fromState.id) ||
+              !usefulStateIds.contains(transition.toState.id),
+        )
+        .map((transition) => transition.id)
+        .toSet();
+
+    final canonicalStateMap = {for (final state in filteredStates) state.id: state};
+
+    final mergeTargets = <String, String>{};
+    final signatureOwners = <String, String>{};
+    final sortedStates = filteredStates.toList()
+      ..sort((a, b) => a.id.compareTo(b.id));
+
+    for (final state in sortedStates) {
+      final signature = _stateSignature(state, filteredTransitions, mergeTargets, canonicalStateMap);
+      final owner = signatureOwners[signature];
+      if (owner != null && owner != state.id) {
+        mergeTargets[state.id] = owner;
+      } else {
+        signatureOwners[signature] = state.id;
+      }
+    }
+
+    final mergeGroups = <PDAMergeGroup>[];
+    final removedStatesFromMerging = <State>{};
+
+    final groupedMerges = <String, Set<State>>{};
+    mergeTargets.forEach((stateId, targetId) {
+      final mergedState = canonicalStateMap[stateId];
+      final targetState = canonicalStateMap[targetId];
+      if (mergedState == null || targetState == null) {
+        return;
+      }
+      groupedMerges.putIfAbsent(targetId, () => <State>{}).add(mergedState);
+      removedStatesFromMerging.add(mergedState);
+    });
+
+    groupedMerges.forEach((targetId, mergedStates) {
+      final representative = canonicalStateMap[targetId];
+      if (representative != null) {
+        mergeGroups.add(PDAMergeGroup(representative: representative, mergedStates: mergedStates));
+      }
+    });
+
+    final canonicalStates = <String, State>{};
+    for (final state in sortedStates) {
+      final targetId = mergeTargets[state.id] ?? state.id;
+      final representative = canonicalStateMap[targetId];
+      if (representative != null) {
+        canonicalStates[targetId] = representative;
+      }
+    }
+
+    final canonicalTransitions = <String, PDATransition>{};
+    final duplicateTransitionIds = <String>{};
+
+    for (final transition in filteredTransitions) {
+      final canonicalFromId = mergeTargets[transition.fromState.id] ?? transition.fromState.id;
+      final canonicalToId = mergeTargets[transition.toState.id] ?? transition.toState.id;
+
+      final canonicalFrom = canonicalStates[canonicalFromId];
+      final canonicalTo = canonicalStates[canonicalToId];
+      if (canonicalFrom == null || canonicalTo == null) {
+        continue;
+      }
+
+      final canonicalTransition = transition.copyWith(
+        fromState: canonicalFrom,
+        toState: canonicalTo,
+      );
+
+      final key = _transitionKey(canonicalTransition);
+      if (canonicalTransitions.containsKey(key)) {
+        duplicateTransitionIds.add(transition.id);
+      } else {
+        canonicalTransitions[key] = canonicalTransition;
+      }
+    }
+
+    final finalTransitions = canonicalTransitions.values.toSet();
+    final removedTransitions = <String>{}
+      ..addAll(removedTransitionsFromPruning)
+      ..addAll(duplicateTransitionIds);
+
+    final finalStates = canonicalStates.values.toSet();
+    final finalAcceptingStates = finalStates.where((state) => state.isAccepting).toSet();
+    if (finalAcceptingStates.isEmpty) {
+      return Failure(
+        'Minimization removed all accepting states. Ensure at least one accepting state is reachable before retrying.',
+      );
+    }
+
+    final canonicalInitialId = mergeTargets[initialState.id] ?? initialState.id;
+    final finalInitialState = canonicalStates[canonicalInitialId];
+    if (finalInitialState == null) {
+      return Failure('Initial state became invalid after simplification.');
+    }
+
+    final recomputedAlphabet = <String>{};
+    final recomputedStackAlphabet = <String>{};
+    for (final transition in finalTransitions) {
+      if (!transition.isLambdaInput && transition.inputSymbol.isNotEmpty) {
+        recomputedAlphabet.add(transition.inputSymbol);
+      }
+      if (!transition.isLambdaPop && transition.popSymbol.isNotEmpty) {
+        recomputedStackAlphabet.add(transition.popSymbol);
+      }
+      if (!transition.isLambdaPush && transition.pushSymbol.isNotEmpty) {
+        recomputedStackAlphabet.add(transition.pushSymbol);
+      }
+    }
+
+    if (recomputedStackAlphabet.isEmpty) {
+      recomputedStackAlphabet.add(pda.initialStackSymbol);
+    } else if (!recomputedStackAlphabet.contains(pda.initialStackSymbol)) {
+      recomputedStackAlphabet.add(pda.initialStackSymbol);
+    }
+
+    final minimizedPda = pda.copyWith(
+      states: finalStates,
+      transitions: finalTransitions.map<Transition>((transition) => transition).toSet(),
+      alphabet: recomputedAlphabet.isEmpty ? pda.alphabet : recomputedAlphabet,
+      initialState: finalInitialState,
+      acceptingStates: finalAcceptingStates,
+      stackAlphabet: recomputedStackAlphabet,
+      modified: DateTime.now(),
+    );
+
+    final removedStates = <State>{}
+      ..addAll(prunedStates)
+      ..addAll(removedStatesFromMerging);
+
+    final summary = PDASimplificationSummary(
+      minimizedPda: minimizedPda,
+      removedStates: removedStates,
+      unreachableStates: unreachableStates,
+      nonProductiveStates: nonProductiveStates,
+      removedTransitionIds: removedTransitions,
+      mergeGroups: mergeGroups,
+      changed: removedStates.isNotEmpty || removedTransitions.isNotEmpty,
+      warnings: const [],
+    );
+
+    return Success(summary);
   }
 
   /// Tests if a PDA accepts a specific string
@@ -492,15 +689,69 @@ class PDASimulator {
     if (reachableStates.contains(currentState)) {
       return; // Already visited
     }
-    
+
     reachableStates.add(currentState);
-    
+
     // Find all states reachable from current state
     for (final transition in pda.transitions) {
       if (transition.fromState == currentState) {
         _findReachableStates(pda, transition.toState, reachableStates);
       }
     }
+  }
+
+  /// Finds all states that can eventually reach an accepting state.
+  static Set<State> _findProductiveStates(PDA pda) {
+    final productiveStates = <State>{};
+    final workQueue = Queue<State>();
+
+    for (final accepting in pda.acceptingStates) {
+      if (productiveStates.add(accepting)) {
+        workQueue.add(accepting);
+      }
+    }
+
+    while (workQueue.isNotEmpty) {
+      final current = workQueue.removeFirst();
+      for (final transition in pda.pdaTransitions) {
+        if (transition.toState == current) {
+          if (productiveStates.add(transition.fromState)) {
+            workQueue.add(transition.fromState);
+          }
+        }
+      }
+    }
+
+    return productiveStates;
+  }
+
+  static String _stateSignature(
+    State state,
+    List<PDATransition> transitions,
+    Map<String, String> mergeTargets,
+    Map<String, State> canonicalStateMap,
+  ) {
+    final outgoing = transitions
+        .where((transition) => transition.fromState.id == state.id)
+        .map((transition) {
+      final canonicalToId = mergeTargets[transition.toState.id] ?? transition.toState.id;
+      final canonicalTo = canonicalStateMap[canonicalToId];
+      final toId = canonicalTo?.id ?? canonicalToId;
+      final input = transition.isLambdaInput ? 'λ' : transition.inputSymbol;
+      final pop = transition.isLambdaPop ? 'λ' : transition.popSymbol;
+      final push = transition.isLambdaPush ? 'λ' : transition.pushSymbol;
+      return '$toId|$input|$pop|$push';
+    }).toList()
+      ..sort();
+
+    return '${state.isInitial}|${state.isAccepting}|${outgoing.join(';')}';
+  }
+
+  static String _transitionKey(PDATransition transition) {
+    final input = transition.isLambdaInput ? 'λ' : transition.inputSymbol;
+    final pop = transition.isLambdaPop ? 'λ' : transition.popSymbol;
+    final push = transition.isLambdaPush ? 'λ' : transition.pushSymbol;
+    return '${transition.fromState.id}|${transition.toState.id}|$input|$pop|$push';
   }
 }
 
@@ -674,4 +925,42 @@ class PDAReachabilityAnalysis {
     required this.reachableStates,
     required this.unreachableStates,
   });
+}
+
+/// Summary of the PDA simplification step.
+class PDASimplificationSummary {
+  final PDA minimizedPda;
+  final Set<State> removedStates;
+  final Set<State> unreachableStates;
+  final Set<State> nonProductiveStates;
+  final Set<String> removedTransitionIds;
+  final List<PDAMergeGroup> mergeGroups;
+  final bool changed;
+  final List<String> warnings;
+
+  const PDASimplificationSummary({
+    required this.minimizedPda,
+    required this.removedStates,
+    required this.unreachableStates,
+    required this.nonProductiveStates,
+    required this.removedTransitionIds,
+    required this.mergeGroups,
+    required this.changed,
+    required this.warnings,
+  });
+
+  bool get hasMerges => mergeGroups.any((group) => group.mergedStates.isNotEmpty);
+}
+
+/// Represents a group of states merged into a representative state.
+class PDAMergeGroup {
+  final State representative;
+  final Set<State> mergedStates;
+
+  const PDAMergeGroup({
+    required this.representative,
+    required this.mergedStates,
+  });
+
+  bool get isMeaningful => mergedStates.isNotEmpty;
 }

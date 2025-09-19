@@ -18,9 +18,6 @@ class TMPage extends ConsumerStatefulWidget {
 
 class _TMPageState extends ConsumerState<TMPage> {
   final GlobalKey _canvasKey = GlobalKey();
-  bool _showControls = true;
-  bool _showSimulation = false;
-  bool _showAlgorithms = false;
   TM? _currentTM;
   int _stateCount = 0;
   int _transitionCount = 0;
@@ -51,8 +48,6 @@ class _TMPageState extends ConsumerState<TMPage> {
           _nondeterministicTransitionIds = const <String>{};
           _hasInitialState = false;
           _hasAcceptingState = false;
-          _showSimulation = false;
-          _showAlgorithms = false;
         });
       }
     });
@@ -72,97 +67,47 @@ class _TMPageState extends ConsumerState<TMPage> {
     return SafeArea(
       child: Column(
         children: [
-          // Mobile controls toggle - more compact
+          // Mobile action buttons for additional panels
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: [
                 Expanded(
-                  child: _buildToggleButton(
-                    icon: Icons.edit,
-                    label: 'Editor',
-                    isActive: _showControls,
-                    onPressed: () => setState(() => _showControls = !_showControls),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildToggleButton(
+                  child: _buildActionButton(
                     icon: Icons.play_arrow,
                     label: 'Simulate',
-                    isActive: _showSimulation,
-                    onPressed: () =>
-                        setState(() => _showSimulation = !_showSimulation),
+                    onPressed: _openSimulationSheet,
                     isEnabled: _isMachineReady,
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: _buildToggleButton(
+                  child: _buildActionButton(
                     icon: Icons.auto_awesome,
                     label: 'Algorithms',
-                    isActive: _showAlgorithms,
-                    onPressed: () =>
-                        setState(() => _showAlgorithms = !_showAlgorithms),
+                    onPressed: _openAlgorithmSheet,
                     isEnabled: _hasMachine,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildActionButton(
+                    icon: Icons.bar_chart,
+                    label: 'Metrics',
+                    onPressed: _openMetricsSheet,
                   ),
                 ),
               ],
             ),
           ),
 
-          // Content area with proper scrolling
+          // Canvas occupies the remaining viewport height
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Column(
-                children: [
-                  // Collapsible panels with better space management
-                  if (_showControls || _showSimulation || _showAlgorithms) ...[
-                    Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Column(
-                        children: [
-                          // TM canvas
-                          if (_showControls) ...[
-                            Container(
-                              constraints: const BoxConstraints(maxHeight: 300),
-                              child: TMCanvas(
-                                canvasKey: _canvasKey,
-                                onTMModified: _handleTMUpdate,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                          ],
-
-                          // Simulation panel
-                          if (_showSimulation) ...[
-                            Container(
-                              constraints: const BoxConstraints(maxHeight: 250),
-                              child: const TMSimulationPanel(),
-                            ),
-                            const SizedBox(height: 8),
-                          ],
-
-                          // Algorithm panel
-                          if (_showAlgorithms) ...[
-                            Container(
-                              constraints: const BoxConstraints(maxHeight: 250),
-                              child: const TMAlgorithmPanel(),
-                            ),
-                            const SizedBox(height: 8),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ],
-
-                  // Info panel (always visible)
-                  _buildInfoPanel(
-                    context,
-                    margin: const EdgeInsets.all(8),
-                  ),
-                ],
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: TMCanvas(
+                canvasKey: _canvasKey,
+                onTMModified: _handleTMUpdate,
               ),
             ),
           ),
@@ -219,8 +164,6 @@ class _TMPageState extends ConsumerState<TMPage> {
     final nondeterministic = _findNondeterministicTransitions(transitions);
     final hasInitial = tm.initialState != null;
     final hasAccepting = tm.acceptingStates.isNotEmpty;
-    final machineReady = hasInitial && hasAccepting;
-    final machineAvailable = tm.states.isNotEmpty;
 
     setState(() {
       _currentTM = tm;
@@ -233,15 +176,96 @@ class _TMPageState extends ConsumerState<TMPage> {
       _nondeterministicTransitionIds = nondeterministic;
       _hasInitialState = hasInitial;
       _hasAcceptingState = hasAccepting;
-
-      if (!machineReady) {
-        _showSimulation = false;
-      }
-
-      if (!machineAvailable) {
-        _showAlgorithms = false;
-      }
     });
+  }
+
+  void _openSimulationSheet() {
+    if (!_isMachineReady) return;
+
+    _showDraggableSheet(
+      builder: (context, controller) {
+        return ListView(
+          controller: controller,
+          padding: const EdgeInsets.all(16),
+          children: const [
+            TMSimulationPanel(),
+          ],
+        );
+      },
+      initialChildSize: 0.7,
+    );
+  }
+
+  void _openAlgorithmSheet() {
+    if (!_hasMachine) return;
+
+    _showDraggableSheet(
+      builder: (context, controller) {
+        return ListView(
+          controller: controller,
+          padding: const EdgeInsets.all(16),
+          children: const [
+            TMAlgorithmPanel(),
+          ],
+        );
+      },
+      initialChildSize: 0.6,
+    );
+  }
+
+  void _openMetricsSheet() {
+    _showDraggableSheet(
+      builder: (context, controller) {
+        return ListView(
+          controller: controller,
+          padding: const EdgeInsets.all(16),
+          children: [
+            _buildInfoPanel(context),
+          ],
+        );
+      },
+      initialChildSize: 0.45,
+      maxChildSize: 0.75,
+    );
+  }
+
+  Future<void> _showDraggableSheet({
+    required Widget Function(BuildContext context, ScrollController controller)
+        builder,
+    double initialChildSize = 0.6,
+    double minChildSize = 0.3,
+    double maxChildSize = 0.9,
+  }) {
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: initialChildSize,
+          minChildSize: minChildSize,
+          maxChildSize: maxChildSize,
+          builder: (sheetContext, controller) {
+            final color = Theme.of(sheetContext).colorScheme.surface;
+            return Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(16)),
+                child: Material(
+                  color: color,
+                  child: SafeArea(
+                    top: false,
+                    child: builder(sheetContext, controller),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   Widget _buildInfoPanel(
@@ -338,10 +362,9 @@ class _TMPageState extends ConsumerState<TMPage> {
         .toSet();
   }
 
-  Widget _buildToggleButton({
+  Widget _buildActionButton({
     required IconData icon,
     required String label,
-    required bool isActive,
     required VoidCallback onPressed,
     bool isEnabled = true,
   }) {
@@ -350,12 +373,6 @@ class _TMPageState extends ConsumerState<TMPage> {
       icon: Icon(icon, size: 16),
       label: Text(label, style: const TextStyle(fontSize: 11)),
       style: ElevatedButton.styleFrom(
-        backgroundColor: isActive
-            ? Theme.of(context).colorScheme.primary
-            : Theme.of(context).colorScheme.surface,
-        foregroundColor: isActive 
-            ? Theme.of(context).colorScheme.onPrimary 
-            : Theme.of(context).colorScheme.onSurface,
         padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
         minimumSize: Size.zero,
       ),

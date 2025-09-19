@@ -5,6 +5,7 @@ import '../models/grammar.dart';
 import '../models/pumping_lemma_game.dart' as models;
 import '../models/pumping_attempt.dart';
 import '../models/simulation_result.dart';
+import '../models/tm_analysis.dart';
 import '../result.dart';
 import 'nfa_to_dfa_converter.dart';
 import 'dfa_minimizer.dart';

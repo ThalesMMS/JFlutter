@@ -257,9 +257,44 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
       ? states.firstWhere((s) => s.id == entity.initialId) 
       : null;
 
-    // TODO: A lógica de transição precisa ser implementada corretamente.
-    // Por enquanto, vamos criar uma estrutura vazia para compilar.
     final transitions = <model_transition.Transition>{};
+
+    final stateById = {for (final state in states) state.id: state};
+    var transitionId = 1;
+
+    entity.transitions.forEach((key, destinations) {
+      final parts = key.split('|');
+      if (parts.length != 2) {
+        return;
+      }
+
+      final fromState = stateById[parts[0]];
+      if (fromState == null) {
+        return;
+      }
+
+      final symbol = parts[1];
+      final isLambda = symbol == 'λ' || symbol == 'ε';
+
+      for (final destinationId in destinations) {
+        final toState = stateById[destinationId];
+        if (toState == null) {
+          continue;
+        }
+
+        transitions.add(FSATransition(
+          id: 't${transitionId++}',
+          fromState: fromState,
+          toState: toState,
+          label: symbol,
+          inputSymbols: isLambda ? const {} : {symbol},
+          lambdaSymbol: isLambda ? symbol : null,
+          type: isLambda
+              ? model_transition.TransitionType.epsilon
+              : model_transition.TransitionType.deterministic,
+        ));
+      }
+    });
 
     return FSA(
       id: entity.id,
@@ -285,9 +320,29 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
       isFinal: s.isAccepting,
     )).toList();
 
-    // TODO: A lógica de transição reversa precisa ser implementada.
-    // Por enquanto, vamos criar uma estrutura vazia para compilar.
     final transitions = <String, List<String>>{};
+
+    for (final transition in automaton.transitions) {
+      if (transition is FSATransition) {
+        final symbols = <String>{};
+        if (transition.lambdaSymbol != null) {
+          symbols.add(transition.lambdaSymbol!);
+        } else {
+          symbols.addAll(transition.inputSymbols);
+        }
+
+        for (final symbol in symbols) {
+          final key = '${transition.fromState.id}|$symbol';
+          transitions.putIfAbsent(key, () => <String>[]);
+          transitions[key]!.add(transition.toState.id);
+        }
+      }
+    }
+
+    transitions.updateAll((key, value) {
+      value.sort();
+      return value;
+    });
 
     return AutomatonEntity(
       id: automaton.id,

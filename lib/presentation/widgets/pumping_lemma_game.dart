@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../providers/pumping_lemma_progress_provider.dart';
+
 /// Interactive Pumping Lemma Game widget
 class PumpingLemmaGame extends ConsumerStatefulWidget {
   const PumpingLemmaGame({super.key});
@@ -15,7 +17,6 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
   bool _isPlaying = false;
   String? _selectedAnswer;
   String? _gameResult;
-  List<String> _attempts = [];
 
   final List<PumpingLemmaChallenge> _challenges = [
     PumpingLemmaChallenge(
@@ -59,6 +60,14 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
       examples: ['ε', 'abc', 'aabbcc', 'aaabbbccc'],
     ),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    ref
+        .read(pumpingLemmaProgressProvider.notifier)
+        .startNewGame(totalChallenges: _challenges.length);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -474,16 +483,23 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
       _score = 0;
       _selectedAnswer = null;
       _gameResult = null;
-      _attempts.clear();
     });
   }
 
   void _submitAnswer() {
     if (_selectedAnswer == null) return;
-    
+
     final challenge = _challenges[_currentLevel];
-    final isCorrect = _selectedAnswer == (challenge.isRegular ? 'regular' : 'not_regular');
-    
+    final isCorrect =
+        _selectedAnswer == (challenge.isRegular ? 'regular' : 'not_regular');
+
+    ref.read(pumpingLemmaProgressProvider.notifier).recordAnswer(
+          challengeId: challenge.id,
+          challengeTitle: 'Challenge ${challenge.id}: ${challenge.description}',
+          language: challenge.language,
+          isCorrect: isCorrect,
+        );
+
     setState(() {
       if (isCorrect) {
         _score++;
@@ -493,6 +509,11 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
   }
 
   void _nextChallenge() {
+    final challenge = _challenges[_currentLevel];
+    ref
+        .read(pumpingLemmaProgressProvider.notifier)
+        .markChallengeCompleted(challenge.id);
+
     setState(() {
       _currentLevel++;
       _selectedAnswer = null;
@@ -501,6 +522,13 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
   }
 
   void _retryChallenge() {
+    final challenge = _challenges[_currentLevel];
+    ref.read(pumpingLemmaProgressProvider.notifier).recordRetry(
+          challengeId: challenge.id,
+          challengeTitle: 'Challenge ${challenge.id}: ${challenge.description}',
+          language: challenge.language,
+        );
+
     setState(() {
       _selectedAnswer = null;
       _gameResult = null;
@@ -508,13 +536,14 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
   }
 
   void _restartGame() {
+    ref.read(pumpingLemmaProgressProvider.notifier).restartGame();
+
     setState(() {
       _isPlaying = false;
       _currentLevel = 0;
       _score = 0;
       _selectedAnswer = null;
       _gameResult = null;
-      _attempts.clear();
     });
   }
 }

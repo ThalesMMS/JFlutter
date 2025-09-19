@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../core/models/pda.dart';
+import '../providers/pda_editor_provider.dart';
 import '../widgets/pda_canvas.dart';
 import '../widgets/pda_simulation_panel.dart';
 import '../widgets/pda_algorithm_panel.dart';
@@ -17,6 +20,21 @@ class _PDAPageState extends ConsumerState<PDAPage> {
   bool _showControls = true;
   bool _showSimulation = false;
   bool _showAlgorithms = false;
+  PDA? _latestPda;
+  int _stateCount = 0;
+  int _transitionCount = 0;
+  bool _hasUnsavedChanges = false;
+
+  void _handlePdaModified(PDA pda) {
+    setState(() {
+      _latestPda = pda;
+      _stateCount = pda.states.length;
+      _transitionCount = pda.pdaTransitions.length;
+      _hasUnsavedChanges = true;
+    });
+
+    ref.read(pdaEditorProvider.notifier).setPda(pda);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -83,9 +101,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
                             constraints: const BoxConstraints(maxHeight: 300),
                             child: PDACanvas(
                               canvasKey: _canvasKey,
-                              onPDAModified: (pda) {
-                                // Handle PDA modifications
-                              },
+                              onPDAModified: _handlePdaModified,
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -135,6 +151,26 @@ class _PDAPageState extends ConsumerState<PDAPage> {
                         'Create states, transitions with stack operations, and test strings. PDAs can recognize context-free languages.',
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
+                      const SizedBox(height: 16),
+                      _buildPdaInfoMetrics(context),
+                      if (_hasUnsavedChanges) ...[
+                        const SizedBox(height: 12),
+                        Row(
+                          key: const ValueKey('pda_info_unsaved_changes'),
+                          children: [
+                            Icon(
+                              Icons.warning_amber_rounded,
+                              color: Theme.of(context).colorScheme.tertiary,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Unsaved changes',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -156,9 +192,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
             margin: const EdgeInsets.all(8),
             child: PDACanvas(
               canvasKey: _canvasKey,
-              onPDAModified: (pda) {
-                // Handle PDA modifications
-              },
+              onPDAModified: _handlePdaModified,
             ),
           ),
         ),
@@ -181,6 +215,66 @@ class _PDAPageState extends ConsumerState<PDAPage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildPdaInfoMetrics(BuildContext context) {
+    final chips = <Widget>[
+      _buildInfoChip(
+        context,
+        label: 'States',
+        value: _stateCount.toString(),
+        key: const ValueKey('pda_info_state_count'),
+      ),
+      _buildInfoChip(
+        context,
+        label: 'Transitions',
+        value: _transitionCount.toString(),
+        key: const ValueKey('pda_info_transition_count'),
+      ),
+    ];
+
+    if (_latestPda != null) {
+      chips.add(
+        _buildInfoChip(
+          context,
+          label: 'Stack symbols',
+          value: _latestPda!.stackAlphabet.length.toString(),
+          key: const ValueKey('pda_info_stack_count'),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Current PDA: ${_latestPda?.name ?? 'None'}',
+          key: const ValueKey('pda_info_current_name'),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: chips,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoChip(
+    BuildContext context, {
+    required String label,
+    required String value,
+    Key? key,
+  }) {
+    return Chip(
+      key: key,
+      label: Text('$label: $value'),
+      backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
     );
   }
 

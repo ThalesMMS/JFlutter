@@ -106,17 +106,7 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
       panOffset: Vector2.zero(),
     );
 
-    final nondeterministicTransitionIds = _findNondeterministicTransitions(transitionSet);
-    final lambdaTransitionIds = transitionSet
-        .where((t) => t.isLambdaInput || t.isLambdaPop || t.isLambdaPush)
-        .map((t) => t.id)
-        .toSet();
-
-    state = state.copyWith(
-      pda: pda,
-      nondeterministicTransitionIds: nondeterministicTransitionIds,
-      lambdaTransitionIds: lambdaTransitionIds,
-    );
+    _updateStateWithPda(pda);
   }
 
   Set<String> _findNondeterministicTransitions(Set<PDATransition> transitions) {
@@ -136,6 +126,26 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
         .where((list) => list.length > 1)
         .expand((list) => list.map((transition) => transition.id))
         .toSet();
+  }
+
+  /// Replaces the current PDA with a new instance, recalculating metadata.
+  void setPda(PDA pda) {
+    _updateStateWithPda(pda);
+  }
+
+  void _updateStateWithPda(PDA pda) {
+    final transitions = pda.pdaTransitions;
+    final nondeterministicTransitionIds = _findNondeterministicTransitions(transitions);
+    final lambdaTransitionIds = transitions
+        .where((t) => t.isLambdaInput || t.isLambdaPop || t.isLambdaPush)
+        .map((t) => t.id)
+        .toSet();
+
+    state = state.copyWith(
+      pda: pda,
+      nondeterministicTransitionIds: nondeterministicTransitionIds,
+      lambdaTransitionIds: lambdaTransitionIds,
+    );
   }
 }
 

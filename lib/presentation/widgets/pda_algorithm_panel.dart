@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/algorithms/pda_simulator.dart';
 import '../../core/algorithms/pda_to_cfg_converter.dart';
+import '../../core/models/state.dart';
 import '../providers/pda_editor_provider.dart';
 
 /// Panel for PDA analysis algorithms
@@ -298,30 +299,69 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
     }
 
     _performAnalysis('PDA Minimization', () async {
-      final analysisResult = PDASimulator.analyzePDA(pda);
-      if (!analysisResult.isSuccess) {
-        final message = 'Analysis failed: ${analysisResult.error}';
+      final simplificationResult = PDASimulator.simplify(pda);
+      if (!simplificationResult.isSuccess) {
+        final message = 'Minimization failed: ${simplificationResult.error}';
         _showSnackbar(message);
         return message;
       }
 
-      final analysis = analysisResult.data!;
-      final reachableStates = analysis.reachabilityAnalysis.reachableStates.length;
-      final unreachableStates =
-          analysis.reachabilityAnalysis.unreachableStates.length;
+      final summary = simplificationResult.data!;
+      ref.read(pdaEditorProvider.notifier).setPda(summary.minimizedPda);
 
       final buffer = StringBuffer();
+
       buffer.writeln(
-        'Automatic PDA minimization is not implemented yet. Use the summary below '
-        'to guide manual simplifications.',
+        summary.changed
+            ? 'PDA minimization applied successfully.'
+            : 'The PDA is already minimal; no structural changes were required.',
       );
+      buffer.writeln(
+        'States: ${pda.states.length} → ${summary.minimizedPda.states.length}',
+      );
+      buffer.writeln(
+        'Transitions: ${pda.pdaTransitions.length} → ${summary.minimizedPda.pdaTransitions.length}',
+      );
+
+      if (summary.unreachableStates.isNotEmpty) {
+        buffer.writeln(
+          'Removed unreachable states: ${_formatStateList(summary.unreachableStates)}',
+        );
+      }
+
+      final removedNonProductive = summary.nonProductiveStates
+          .difference(summary.unreachableStates)
+          .intersection(summary.removedStates);
+      if (removedNonProductive.isNotEmpty) {
+        buffer.writeln(
+          'Removed nonproductive states: ${_formatStateList(removedNonProductive)}',
+        );
+      }
+
+      final mergedGroups = summary.mergeGroups.where((group) => group.isMeaningful);
+      if (mergedGroups.isNotEmpty) {
+        buffer.writeln('Merged equivalent states:');
+        for (final group in mergedGroups) {
+          final mergedNames = _formatStateList(group.mergedStates);
+          buffer.writeln('  $mergedNames → ${_formatStateName(group.representative)}');
+        }
+      }
+
+      if (summary.removedTransitionIds.isNotEmpty) {
+        buffer.writeln(
+          'Removed redundant transitions: ${summary.removedTransitionIds.length}',
+        );
+      }
+
+      if (summary.warnings.isNotEmpty) {
+        buffer.writeln('Warnings:');
+        for (final warning in summary.warnings) {
+          buffer.writeln('  • $warning');
+        }
+      }
+
       buffer.writeln('');
-      buffer.writeln('States: ${analysis.stateAnalysis.totalStates}');
-      buffer.writeln('Accepting states: ${analysis.stateAnalysis.acceptingStates}');
-      buffer.writeln('Non-accepting states: ${analysis.stateAnalysis.nonAcceptingStates}');
-      buffer.writeln('Reachable states: $reachableStates');
-      buffer.writeln('Unreachable states: $unreachableStates');
-      buffer.writeln('Transitions: ${analysis.transitionAnalysis.totalTransitions}');
+      buffer.writeln('Resulting states: ${_formatStateList(summary.minimizedPda.states)}');
 
       return buffer.toString();
     });
@@ -592,5 +632,17 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
       ..showSnackBar(
         SnackBar(content: Text(message)),
       );
+  }
+
+  String _formatStateList(Iterable<State> states) {
+    final names = states.map(_formatStateName).toList()..sort();
+    if (names.isEmpty) {
+      return '∅';
+    }
+    return names.join(', ');
+  }
+
+  String _formatStateName(State state) {
+    return state.label.isNotEmpty ? state.label : state.id;
   }
 }

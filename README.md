@@ -136,6 +136,31 @@ flutter pub get
 flutter run
 ```
 
+### Android release signing
+
+Android release builds are signed with the `dev.jflutter.app` application ID. The Gradle script reads release keystore
+credentials from `android/key.properties`, so make sure the file exists before building a release artifact.
+
+1. Generate or obtain a release keystore (for example `android/keystores/jflutter-release.jks`). Keep this file out of
+   version control.
+2. Copy `android/key.properties.example` to `android/key.properties`.
+3. Replace the placeholder passwords and alias information with the values that match your keystore. The `storeFile`
+   entry can be an absolute path or a path relative to the project root.
+
+For CI/CD, store the keystore and credential values as encrypted secrets. During the workflow, recreate the keystore file
+and write `key.properties` before calling `flutter build`. Example (GitHub Actions):
+
+```bash
+mkdir -p android/keystores
+echo "$JFLUTTER_KEYSTORE_BASE64" | base64 --decode > android/keystores/jflutter-release.jks
+cat <<'EOF' > android/key.properties
+storeFile=keystores/jflutter-release.jks
+storePassword=$JFLUTTER_KEYSTORE_PASSWORD
+keyAlias=$JFLUTTER_KEY_ALIAS
+keyPassword=$JFLUTTER_KEY_PASSWORD
+EOF
+```
+
 ### Platform Support
 - ✅ **Android** - Full support with touch optimization
 - ✅ **iOS** - Full support with native feel (tested on iPhone 17 Pro Max)

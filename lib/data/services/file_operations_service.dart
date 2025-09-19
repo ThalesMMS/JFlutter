@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'package:xml/xml.dart';
@@ -70,9 +70,31 @@ class FileOperationsService {
   /// Exports automaton to PNG image
   Future<StringResult> exportAutomatonToPNG(FSA automaton, String filePath) async {
     try {
-      // TODO: Implement PNG export using Flutter's image generation
-      // This would require custom painting and image generation
-      return Failure('PNG export not yet implemented');
+      const size = Size(_kCanvasWidth, _kCanvasHeight);
+      final recorder = ui.PictureRecorder();
+      final canvas = Canvas(recorder, Rect.fromLTWH(0, 0, size.width, size.height));
+
+      // Fill background
+      canvas.drawRect(
+        Rect.fromLTWH(0, 0, size.width, size.height),
+        Paint()..color = _kBackgroundColor,
+      );
+
+      final drawingData = _prepareDrawingData(automaton);
+      final painter = _AutomatonPainter(drawingData);
+      painter.paint(canvas, size);
+
+      final picture = recorder.endRecording();
+      final image = await picture.toImage(size.width.toInt(), size.height.toInt());
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) {
+        return const Failure('Failed to encode PNG data');
+      }
+
+      final pngBytes = byteData.buffer.asUint8List();
+      final file = File(filePath);
+      await file.writeAsBytes(pngBytes);
+      return Success(filePath);
     } catch (e) {
       return Failure('Failed to export automaton to PNG: $e');
     }
@@ -300,38 +322,214 @@ class FileOperationsService {
 
   /// Builds SVG representation of automaton
   String _buildSVG(FSA automaton) {
+    final drawingData = _prepareDrawingData(automaton);
     final buffer = StringBuffer();
     buffer.writeln('<?xml version="1.0" encoding="UTF-8"?>');
-    buffer.writeln('<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600">');
-    
+    buffer.writeln('<svg xmlns="http://www.w3.org/2000/svg" width="${_kCanvasWidth}" height="${_kCanvasHeight}">');
+
     // Draw transitions first (so they appear behind states)
-    for (final transition in automaton.transitions) {
-      if (transition is FSATransition) {
-        final from = transition.fromState.position;
-        final to = transition.toState.position;
-        buffer.writeln('  <line x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}" stroke="black" stroke-width="2"/>');
-        
-        // Draw transition label
-        final midX = (from.x + to.x) / 2;
-        final midY = (from.y + to.y) / 2;
-        buffer.writeln('  <text x="$midX" y="$midY" text-anchor="middle" font-family="Arial" font-size="12">${transition.symbol}</text>');
-      }
+    for (final transition in drawingData.transitions) {
+      final from = transition.from;
+      final to = transition.to;
+      buffer.writeln(
+        '  <line x1="${from.dx}" y1="${from.dy}" x2="${to.dx}" y2="${to.dy}" stroke="${_colorToHex(_kStrokeColor)}" stroke-width="$_kDefaultStrokeWidth"/>',
+      );
+
+      // Draw transition label
+      final midX = (from.dx + to.dx) / 2;
+      final midY = (from.dy + to.dy) / 2;
+      buffer.writeln(
+        '  <text x="$midX" y="$midY" text-anchor="middle" font-family="Arial" font-size="12" fill="${_colorToHex(_kTextColor)}">${transition.label}</text>',
+      );
     }
-    
+
     // Draw states
-    for (final state in automaton.states) {
-      final x = state.position.x;
-      final y = state.position.y;
-      final fill = state.isAccepting ? 'lightblue' : 'white';
-      final stroke = state.isInitial ? 'red' : 'black';
-      final strokeWidth = state.isInitial ? '3' : '2';
-      
-      buffer.writeln('  <circle cx="$x" cy="$y" r="30" fill="$fill" stroke="$stroke" stroke-width="$strokeWidth"/>');
-      buffer.writeln('  <text x="$x" y="${y + 5}" text-anchor="middle" font-family="Arial" font-size="14">${state.label}</text>');
+    for (final state in drawingData.states) {
+      final x = state.center.dx;
+      final y = state.center.dy;
+      buffer.writeln(
+        '  <circle cx="$x" cy="$y" r="$_kStateRadius" fill="${_colorToHex(state.fillColor)}" stroke="${_colorToHex(state.strokeColor)}" stroke-width="${state.strokeWidth}"/>',
+      );
+      buffer.writeln(
+        '  <text x="$x" y="${y + 5}" text-anchor="middle" font-family="Arial" font-size="14" fill="${_colorToHex(_kTextColor)}">${state.label}</text>',
+      );
     }
-    
+
     buffer.writeln('</svg>');
     return buffer.toString();
   }
+
+  _AutomatonDrawingData _prepareDrawingData(FSA automaton) {
+    final states = automaton.states.toList()
+      ..sort((a, b) => a.id.compareTo(b.id));
+    final transitions = automaton.transitions.whereType<FSATransition>().toList()
+      ..sort((a, b) => a.id.compareTo(b.id));
+
+    final drawableStates = states
+        .map(
+          (state) => _DrawableState(
+            center: Offset(state.position.x, state.position.y),
+            label: state.label,
+            fillColor: state.isAccepting ? _kAcceptingFillColor : _kDefaultFillColor,
+            strokeColor: state.isInitial ? _kInitialStrokeColor : _kStrokeColor,
+            strokeWidth: state.isInitial ? _kInitialStrokeWidth : _kDefaultStrokeWidth,
+          ),
+        )
+        .toList();
+
+    final drawableTransitions = transitions
+        .map(
+          (transition) => _DrawableTransition(
+            from: Offset(transition.fromState.position.x, transition.fromState.position.y),
+            to: Offset(transition.toState.position.x, transition.toState.position.y),
+            label: transition.symbol,
+          ),
+        )
+        .toList();
+
+    return _AutomatonDrawingData(
+      states: drawableStates,
+      transitions: drawableTransitions,
+    );
+  }
+}
+
+const double _kCanvasWidth = 800;
+const double _kCanvasHeight = 600;
+const double _kStateRadius = 30;
+const double _kDefaultStrokeWidth = 2;
+const double _kInitialStrokeWidth = 3;
+
+const Color _kBackgroundColor = Color(0xFFFFFFFF);
+const Color _kDefaultFillColor = Color(0xFFFFFFFF);
+const Color _kAcceptingFillColor = Color(0xFFADD8E6);
+const Color _kStrokeColor = Color(0xFF000000);
+const Color _kInitialStrokeColor = Color(0xFFFF0000);
+const Color _kTextColor = Color(0xFF000000);
+
+String _colorToHex(Color color) {
+  final value = color.value & 0xFFFFFF;
+  return '#${value.toRadixString(16).padLeft(6, '0')}';
+}
+
+class _AutomatonDrawingData {
+  const _AutomatonDrawingData({
+    required this.states,
+    required this.transitions,
+  });
+
+  final List<_DrawableState> states;
+  final List<_DrawableTransition> transitions;
+}
+
+class _DrawableState {
+  const _DrawableState({
+    required this.center,
+    required this.label,
+    required this.fillColor,
+    required this.strokeColor,
+    required this.strokeWidth,
+  });
+
+  final Offset center;
+  final String label;
+  final Color fillColor;
+  final Color strokeColor;
+  final double strokeWidth;
+}
+
+class _DrawableTransition {
+  const _DrawableTransition({
+    required this.from,
+    required this.to,
+    required this.label,
+  });
+
+  final Offset from;
+  final Offset to;
+  final String label;
+}
+
+class _AutomatonPainter extends CustomPainter {
+  _AutomatonPainter(this.data);
+
+  final _AutomatonDrawingData data;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final transitionPaint = Paint()
+      ..color = _kStrokeColor
+      ..strokeWidth = _kDefaultStrokeWidth
+      ..style = PaintingStyle.stroke;
+
+    for (final transition in data.transitions) {
+      canvas.drawLine(transition.from, transition.to, transitionPaint);
+
+      if (transition.label.isNotEmpty) {
+        final textPainter = TextPainter(
+          text: TextSpan(
+            text: transition.label,
+            style: const TextStyle(
+              color: _kTextColor,
+              fontSize: 12,
+              fontFamily: 'Arial',
+            ),
+          ),
+          textAlign: TextAlign.center,
+          textDirection: TextDirection.ltr,
+        )
+          ..layout();
+
+        final midPoint = Offset(
+          (transition.from.dx + transition.to.dx) / 2,
+          (transition.from.dy + transition.to.dy) / 2,
+        );
+
+        final textOffset = Offset(
+          midPoint.dx - (textPainter.width / 2),
+          midPoint.dy - (textPainter.height / 2),
+        );
+
+        textPainter.paint(canvas, textOffset);
+      }
+    }
+
+    for (final state in data.states) {
+      final fillPaint = Paint()
+        ..color = state.fillColor
+        ..style = PaintingStyle.fill;
+      final strokePaint = Paint()
+        ..color = state.strokeColor
+        ..strokeWidth = state.strokeWidth
+        ..style = PaintingStyle.stroke;
+
+      canvas.drawCircle(state.center, _kStateRadius, fillPaint);
+      canvas.drawCircle(state.center, _kStateRadius, strokePaint);
+
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: state.label,
+          style: const TextStyle(
+            color: _kTextColor,
+            fontSize: 14,
+            fontFamily: 'Arial',
+          ),
+        ),
+        textAlign: TextAlign.center,
+        textDirection: TextDirection.ltr,
+      )
+        ..layout();
+
+      final textOffset = Offset(
+        state.center.dx - (textPainter.width / 2),
+        state.center.dy - (textPainter.height / 2),
+      );
+
+      textPainter.paint(canvas, textOffset);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _AutomatonPainter oldDelegate) => false;
 }
 

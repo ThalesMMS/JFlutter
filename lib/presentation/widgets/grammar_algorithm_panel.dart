@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/grammar_provider.dart';
+
+import '../../core/algorithms/grammar_analyzer.dart';
+import '../../core/models/grammar.dart';
+import '../../core/result.dart';
 import '../providers/automaton_provider.dart';
+import '../providers/grammar_provider.dart';
 import '../providers/home_navigation_provider.dart';
 
 /// Panel for grammar analysis algorithms
@@ -354,130 +358,268 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
   }
 
   void _removeLeftRecursion() {
-    _performAnalysis('Remove Left Recursion', () {
-      return '''Left Recursion Removal Analysis:
-
-Original Grammar:
-S → Sa | b
-
-After Left Recursion Removal:
-S → bS'
-S' → aS' | ε
-
-Analysis:
-- Left recursion detected in S → Sa
-- New non-terminal S' introduced
-- Grammar is now right-recursive
-- Language remains unchanged''';
-    });
+    _performAnalysis<Grammar>(
+      'Remove Left Recursion',
+      (grammar) async => GrammarAnalyzer.removeDirectLeftRecursion(grammar),
+      (original, report) => _formatTransformationResult(
+        title: 'Left Recursion Removal Analysis',
+        original: original,
+        transformed: report.value,
+        notes: report.notes,
+        derivations: report.derivations,
+      ),
+    );
   }
 
   void _leftFactor() {
-    _performAnalysis('Left Factoring', () {
-      return '''Left Factoring Analysis:
-
-Original Grammar:
-S → aAb | aAc | aAd
-
-After Left Factoring:
-S → aA
-A → b | c | d
-
-Analysis:
-- Common prefix 'aA' factored out
-- New non-terminal A introduced
-- Grammar is now left-factored
-- Reduces parsing conflicts''';
-    });
+    _performAnalysis<Grammar>(
+      'Left Factoring',
+      (grammar) async => GrammarAnalyzer.leftFactor(grammar),
+      (original, report) => _formatTransformationResult(
+        title: 'Left Factoring Analysis',
+        original: original,
+        transformed: report.value,
+        notes: report.notes,
+        derivations: report.derivations,
+      ),
+    );
   }
 
   void _findFirstSets() {
-    _performAnalysis('First Sets Calculation', () {
-      return '''FIRST Sets Analysis:
-
-Grammar:
-S → aSb | ab
-
-FIRST(S) = {a}
-
-Calculation:
-- S → aSb: FIRST(S) includes 'a'
-- S → ab: FIRST(S) includes 'a'
-- No ε-productions for S
-
-Result: FIRST(S) = {a}''';
-    });
+    _performAnalysis<Map<String, Set<String>>>(
+      'FIRST Sets',
+      (grammar) async => GrammarAnalyzer.computeFirstSets(grammar),
+      (original, report) => _formatSetResult(
+        title: 'FIRST Sets Analysis',
+        sets: report.value,
+        notes: report.notes,
+        derivations: report.derivations,
+      ),
+    );
   }
 
   void _findFollowSets() {
-    _performAnalysis('Follow Sets Calculation', () {
-      return '''FOLLOW Sets Analysis:
-
-Grammar:
-S → aSb | ab
-
-FOLLOW(S) = {\$, b}
-
-Calculation:
-- S → aSb: S followed by 'b'
-- S → ab: S at end of production
-- S is start symbol, so \$ is in FOLLOW(S)
-
-Result: FOLLOW(S) = {\$, b}''';
-    });
+    _performAnalysis<Map<String, Set<String>>>(
+      'FOLLOW Sets',
+      (grammar) async => GrammarAnalyzer.computeFollowSets(grammar),
+      (original, report) => _formatSetResult(
+        title: 'FOLLOW Sets Analysis',
+        sets: report.value,
+        notes: report.notes,
+        derivations: report.derivations,
+      ),
+    );
   }
 
   void _buildParseTable() {
-    _performAnalysis('Parse Table Construction', () {
-      return '''LL(1) Parse Table:
-
-Grammar:
-S → aSb | ab
-
-Parse Table:
-     | a    | b    | \$
------|------|------|-----
-S    | S→aSb|      |     
-     | S→ab |      |     
-
-Analysis:
-- Grammar is LL(1)
-- No conflicts in parse table
-- Can be parsed deterministically''';
-    });
+    _performAnalysis<LL1ParseTable>(
+      'LL(1) Parse Table',
+      (grammar) async => GrammarAnalyzer.buildLL1ParseTable(grammar),
+      (original, report) => _formatParseTableResult(report),
+    );
   }
 
   void _checkAmbiguity() {
-    _performAnalysis('Ambiguity Check', () {
-      return '''Ambiguity Analysis:
-
-Grammar:
-S → aSb | ab
-
-Ambiguity Check:
-- No multiple leftmost derivations
-- No multiple rightmost derivations
-- Parse table has no conflicts
-- Grammar is unambiguous
-
-Result: Grammar is unambiguous''';
-    });
+    _performAnalysis<bool>(
+      'Ambiguity Check',
+      (grammar) async => GrammarAnalyzer.detectAmbiguity(grammar),
+      (original, report) => _formatAmbiguityResult(report),
+    );
   }
 
-  void _performAnalysis(String algorithmName, String Function() analysisFunction) {
+  Future<void> _performAnalysis<T>(
+    String algorithmName,
+    Future<Result<GrammarAnalysisReport<T>>> Function(Grammar grammar)
+        runAnalysis,
+    String Function(Grammar original, GrammarAnalysisReport<T> report) formatter,
+  ) async {
     setState(() {
       _isAnalyzing = true;
       _analysisResult = null;
     });
 
-    // Simulate analysis delay
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _isAnalyzing = false;
-          _analysisResult = analysisFunction();
-        });
+    final grammar = ref.read(grammarProvider.notifier).buildGrammar();
+    final validationErrors = grammar.validate();
+
+    if (validationErrors.isNotEmpty) {
+      if (!mounted) return;
+      setState(() {
+        _isAnalyzing = false;
+        _analysisResult = _formatError(
+          'Cannot run $algorithmName due to grammar validation errors',
+          validationErrors,
+        );
+      });
+      return;
+    }
+
+    try {
+      final result = await runAnalysis(grammar);
+      if (!mounted) {
+        return;
       }
-    });
+
+      setState(() {
+        _isAnalyzing = false;
+        _analysisResult = result.isSuccess
+            ? formatter(grammar, result.data!)
+            : '$algorithmName failed: ${result.error}';
+      });
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isAnalyzing = false;
+        _analysisResult = '$algorithmName failed: $error';
+      });
+    }
+  }
+
+  String _formatTransformationResult({
+    required String title,
+    required Grammar original,
+    required Grammar transformed,
+    required List<String> notes,
+    required List<String> derivations,
+  }) {
+    final buffer = StringBuffer()
+      ..writeln(title)
+      ..writeln('')
+      ..writeln('Original Grammar:')
+      ..writeln(_formatGrammar(original))
+      ..writeln('')
+      ..writeln('Transformed Grammar:')
+      ..writeln(_formatGrammar(transformed));
+
+    _appendSection(buffer, 'Notes', notes);
+    _appendSection(buffer, 'Derivations', derivations);
+
+    return buffer.toString();
+  }
+
+  String _formatSetResult({
+    required String title,
+    required Map<String, Set<String>> sets,
+    required List<String> notes,
+    required List<String> derivations,
+  }) {
+    final entries = sets.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+    final buffer = StringBuffer()
+      ..writeln(title)
+      ..writeln('');
+
+    for (final entry in entries) {
+      final values = entry.value.toList()..sort(_symbolComparator);
+      final label = title.contains('FOLLOW') ? 'FOLLOW' : 'FIRST';
+      buffer.writeln('$label(${entry.key}) = {${values.join(', ')}}');
+    }
+
+    _appendSection(buffer, 'Notes', notes);
+    _appendSection(buffer, 'Derivations', derivations);
+
+    return buffer.toString();
+  }
+
+  String _formatParseTableResult(GrammarAnalysisReport<LL1ParseTable> report) {
+    final table = report.value;
+    final terminals = table.terminals.toList()..sort(_symbolComparator);
+    final nonTerminals = table.nonTerminals.toList()..sort(_symbolComparator);
+    final buffer = StringBuffer()
+      ..writeln('LL(1) Parse Table Analysis')
+      ..writeln('');
+
+    buffer.writeln(['NT', ...terminals].join('\t'));
+    for (final nt in nonTerminals) {
+      final row = <String>[nt];
+      for (final terminal in terminals) {
+        final entries = table.table[nt]?[terminal] ?? const <List<String>>[];
+        if (entries.isEmpty) {
+          row.add('-');
+        } else {
+          row.add(entries
+              .map((symbols) => symbols.isEmpty ? 'ε' : symbols.join(' '))
+              .join(' | '));
+        }
+      }
+      buffer.writeln(row.join('\t'));
+    }
+
+    _appendSection(buffer, 'Notes', report.notes);
+    _appendSection(buffer, 'Conflicts', report.conflicts);
+    _appendSection(buffer, 'Derivations', report.derivations);
+
+    return buffer.toString();
+  }
+
+  String _formatAmbiguityResult(GrammarAnalysisReport<bool> report) {
+    final status = report.value ? 'Unambiguous' : 'Ambiguous';
+    final buffer = StringBuffer()
+      ..writeln('Ambiguity Analysis')
+      ..writeln('')
+      ..writeln('Status: $status');
+
+    _appendSection(buffer, 'Notes', report.notes);
+    _appendSection(buffer, 'Conflicts', report.conflicts);
+    _appendSection(buffer, 'Derivations', report.derivations);
+
+    return buffer.toString();
+  }
+
+  String _formatGrammar(Grammar grammar) {
+    final productions = grammar.productions.toList()
+      ..sort((a, b) => a.order.compareTo(b.order));
+    final grouped = <String, List<String>>{};
+
+    for (final production in productions) {
+      if (production.leftSide.isEmpty) {
+        continue;
+      }
+      final left = production.leftSide.first;
+      final right =
+          production.isLambda || production.rightSide.isEmpty
+              ? 'ε'
+              : production.rightSide.join(' ');
+      grouped.putIfAbsent(left, () => <String>[]).add(right);
+    }
+
+    final nonTerminals = grouped.keys.toList()..sort(_symbolComparator);
+    return nonTerminals
+        .map((nt) => '$nt → ${grouped[nt]!.join(' | ')}')
+        .join('\n');
+  }
+
+  void _appendSection(StringBuffer buffer, String title, List<String> entries) {
+    if (entries.isEmpty) {
+      return;
+    }
+
+    buffer
+      ..writeln('')
+      ..writeln('$title:');
+    for (final entry in entries) {
+      buffer.writeln('- $entry');
+    }
+  }
+
+  String _formatError(String heading, List<String> messages) {
+    final buffer = StringBuffer()
+      ..writeln(heading)
+      ..writeln('');
+
+    for (final message in messages) {
+      buffer.writeln('- $message');
+    }
+
+    return buffer.toString();
+  }
+
+  int _symbolComparator(String a, String b) {
+    if (a == b) {
+      return 0;
+    }
+    return a.compareTo(b);
   }
 }

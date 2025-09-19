@@ -9,6 +9,7 @@ import 'package:jflutter/core/models/fsa_transition.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('File Operations Service Tests', () {
     late FileOperationsService service;
     late FSA testAutomaton;
@@ -83,7 +84,7 @@ void main() {
     test('should export automaton to SVG format', () async {
       // Arrange
       final filePath = '$tempDir/test_automaton.svg';
-      
+
       // Act
       final exportResult = await service.exportAutomatonToSVG(testAutomaton, filePath);
       
@@ -100,6 +101,31 @@ void main() {
       expect(content, contains('q0'));
       expect(content, contains('q1'));
       
+      // Clean up
+      await file.delete();
+    });
+
+    test('should export automaton to PNG format', () async {
+      // Arrange
+      final filePath = '$tempDir/test_automaton.png';
+
+      // Act
+      final exportResult = await service.exportAutomatonToPNG(testAutomaton, filePath);
+
+      // Assert
+      expect(exportResult.isSuccess, isTrue, reason: exportResult.error);
+
+      final file = File(filePath);
+      expect(await file.exists(), isTrue);
+      final bytes = await file.readAsBytes();
+      expect(bytes.length, greaterThan(0));
+
+      // PNG signature check
+      expect(bytes[0], equals(0x89));
+      expect(bytes[1], equals(0x50));
+      expect(bytes[2], equals(0x4E));
+      expect(bytes[3], equals(0x47));
+
       // Clean up
       await file.delete();
     });

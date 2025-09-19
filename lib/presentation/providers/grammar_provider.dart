@@ -147,6 +147,23 @@ class GrammarProvider extends StateNotifier<GrammarState> {
     }
   }
 
+  /// Resets the grammar editor to a fresh grammar definition.
+  void createNewGrammar({
+    String? name,
+    String? startSymbol,
+    GrammarType? type,
+  }) {
+    state = GrammarState(
+      name: name ?? 'My Grammar',
+      startSymbol: startSymbol ?? 'S',
+      productions: const [],
+      type: type ?? GrammarType.regular,
+      isConverting: false,
+      nextProductionId: 1,
+      error: null,
+    );
+  }
+
   Grammar buildGrammar() {
     final now = DateTime.now();
     final nonTerminals = <String>{state.startSymbol};

@@ -32,6 +32,7 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
   bool _isAddingState = false;
   bool _isAddingTransition = false;
   automaton_state.State? _transitionStart;
+  Offset? _transitionPreviewPosition;
 
   @override
   void initState() {
@@ -118,6 +119,7 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
       _isAddingTransition = true;
       _isAddingState = false;
       _selectedState = null;
+      _transitionPreviewPosition = null;
     });
   }
 
@@ -177,6 +179,7 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
         if (_isPointInState(position, state)) {
           setState(() {
             _transitionStart = state;
+            _transitionPreviewPosition = position;
           });
           break;
         }
@@ -192,6 +195,24 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
       setState(() {
         _transitionStart = null;
         _isAddingTransition = false;
+        _transitionPreviewPosition = null;
+      });
+    }
+  }
+
+  void _updateTransitionPreview(Offset? position) {
+    if (_transitionStart == null) {
+      if (_transitionPreviewPosition != null) {
+        setState(() {
+          _transitionPreviewPosition = null;
+        });
+      }
+      return;
+    }
+
+    if (_transitionPreviewPosition != position) {
+      setState(() {
+        _transitionPreviewPosition = position;
       });
     }
   }
@@ -369,14 +390,26 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
             onTransitionEdited: (transition) {
               _editTransition(transition);
             },
-            child: CustomPaint(
-              painter: AutomatonPainter(
-                states: _states,
-                transitions: _transitions,
-                selectedState: _selectedState,
-                transitionStart: _transitionStart,
+            child: Listener(
+              onPointerHover: (event) =>
+                  _updateTransitionPreview(event.localPosition),
+              onPointerMove: (event) =>
+                  _updateTransitionPreview(event.localPosition),
+              onPointerDown: (event) =>
+                  _updateTransitionPreview(event.localPosition),
+              onPointerUp: (_) => _updateTransitionPreview(null),
+              onPointerCancel: (_) => _updateTransitionPreview(null),
+              onPointerExit: (_) => _updateTransitionPreview(null),
+              child: CustomPaint(
+                painter: AutomatonPainter(
+                  states: _states,
+                  transitions: _transitions,
+                  selectedState: _selectedState,
+                  transitionStart: _transitionStart,
+                  transitionPreviewPosition: _transitionPreviewPosition,
+                ),
+                size: Size.infinite,
               ),
-              size: Size.infinite,
             ),
           ),
           // Canvas controls
@@ -471,6 +504,7 @@ class AutomatonPainter extends CustomPainter {
   final List<FSATransition> transitions;
   final automaton_state.State? selectedState;
   final automaton_state.State? transitionStart;
+  final Offset? transitionPreviewPosition;
   final Set<String> _nondeterministicTransitionIds;
   final Set<String> _epsilonTransitionIds;
   final Set<String> _nondeterministicStateIds;
@@ -480,6 +514,7 @@ class AutomatonPainter extends CustomPainter {
     required this.transitions,
     this.selectedState,
     this.transitionStart,
+    this.transitionPreviewPosition,
   })  : _nondeterministicTransitionIds = <String>{},
         _epsilonTransitionIds = transitions
             .where((t) => t.isEpsilonTransition)
@@ -733,7 +768,74 @@ class AutomatonPainter extends CustomPainter {
 
   void _drawTransitionPreview(
       Canvas canvas, automaton_state.State start, Paint paint) {
-    // TODO: Implement transition preview
+    if (transitionPreviewPosition == null) {
+      return;
+    }
+
+    final previewPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..color = Colors.black.withOpacity(0.4);
+
+    final startCenter = Offset(start.position.x, start.position.y);
+    final pointer = transitionPreviewPosition!;
+    final delta = pointer - startCenter;
+
+    if (delta.distance < 1) {
+      return;
+    }
+
+    const stateRadius = 30.0;
+    const arrowLength = 12.0;
+    const arrowAngle = 0.5;
+
+    if (delta.distance < stateRadius * 0.8) {
+      final previewTransition = FSATransition(
+        id: '__preview_self__',
+        fromState: start,
+        toState: start,
+        label: '',
+        inputSymbols: const {},
+      );
+      _drawSelfLoop(canvas, previewTransition, previewPaint);
+      return;
+    }
+
+    final unit = Offset(delta.dx / delta.distance, delta.dy / delta.distance);
+    final startPoint = startCenter + unit * stateRadius;
+    final endPoint = pointer;
+    final midPoint = Offset(
+      (startPoint.dx + endPoint.dx) / 2,
+      (startPoint.dy + endPoint.dy) / 2,
+    );
+    final normal = Offset(-unit.dy, unit.dx);
+    final curvatureScale = math.min(1.0, 120 / delta.distance);
+    final control = midPoint + normal * 45 * curvatureScale;
+
+    final path = Path()
+      ..moveTo(startPoint.dx, startPoint.dy)
+      ..quadraticBezierTo(
+        control.dx,
+        control.dy,
+        endPoint.dx,
+        endPoint.dy,
+      );
+
+    canvas.drawPath(path, previewPaint);
+
+    final derivative = (endPoint - control) * 2;
+    final angle = math.atan2(derivative.dy, derivative.dx);
+    final arrow1 = Offset(
+      endPoint.dx - arrowLength * math.cos(angle - arrowAngle),
+      endPoint.dy - arrowLength * math.sin(angle - arrowAngle),
+    );
+    final arrow2 = Offset(
+      endPoint.dx - arrowLength * math.cos(angle + arrowAngle),
+      endPoint.dy - arrowLength * math.sin(angle + arrowAngle),
+    );
+
+    canvas.drawLine(endPoint, arrow1, previewPaint);
+    canvas.drawLine(endPoint, arrow2, previewPaint);
   }
 
   @override
@@ -742,7 +844,8 @@ class AutomatonPainter extends CustomPainter {
         (oldDelegate.states != states ||
             oldDelegate.transitions != transitions ||
             oldDelegate.selectedState != selectedState ||
-            oldDelegate.transitionStart != transitionStart);
+            oldDelegate.transitionStart != transitionStart ||
+            oldDelegate.transitionPreviewPosition != transitionPreviewPosition);
   }
 
   static Set<String> _identifyNondeterministicTransitions(

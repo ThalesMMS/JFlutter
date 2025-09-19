@@ -168,6 +168,7 @@ class TMSimulator {
           usedTransition: currentSymbol,
           stepNumber: stepNumber,
           headPosition: headPosition,
+          consumedInput: currentSymbol,
         ));
       }
       

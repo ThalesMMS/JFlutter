@@ -14,7 +14,7 @@ class SimulationStep {
   
   /// Transition used in this step (if any)
   final String? usedTransition;
-  
+
   /// Step number in the simulation
   final int stepNumber;
   
@@ -30,6 +30,9 @@ class SimulationStep {
   /// Next state after this step
   final String? nextState;
 
+  /// Input consumed while taking this step
+  final String consumedInput;
+
   const SimulationStep({
     required this.currentState,
     required this.remainingInput,
@@ -41,6 +44,7 @@ class SimulationStep {
     this.isAccepted,
     this.inputSymbol,
     this.nextState,
+    this.consumedInput = '',
   });
 
   /// Creates a copy of this simulation step with updated properties
@@ -55,6 +59,7 @@ class SimulationStep {
     bool? isAccepted,
     String? inputSymbol,
     String? nextState,
+    String? consumedInput,
   }) {
     return SimulationStep(
       currentState: currentState ?? this.currentState,
@@ -67,6 +72,7 @@ class SimulationStep {
       isAccepted: isAccepted ?? this.isAccepted,
       inputSymbol: inputSymbol ?? this.inputSymbol,
       nextState: nextState ?? this.nextState,
+      consumedInput: consumedInput ?? this.consumedInput,
     );
   }
 
@@ -83,6 +89,7 @@ class SimulationStep {
       'isAccepted': isAccepted,
       'inputSymbol': inputSymbol,
       'nextState': nextState,
+      'consumedInput': consumedInput,
     };
   }
 
@@ -99,6 +106,7 @@ class SimulationStep {
       isAccepted: json['isAccepted'] as bool?,
       inputSymbol: json['inputSymbol'] as String?,
       nextState: json['nextState'] as String?,
+      consumedInput: json['consumedInput'] as String? ?? '',
     );
   }
 
@@ -115,7 +123,8 @@ class SimulationStep {
         other.description == description &&
         other.isAccepted == isAccepted &&
         other.inputSymbol == inputSymbol &&
-        other.nextState == nextState;
+        other.nextState == nextState &&
+        other.consumedInput == consumedInput;
   }
 
   @override
@@ -131,6 +140,7 @@ class SimulationStep {
       isAccepted,
       inputSymbol,
       nextState,
+      consumedInput,
     );
   }
 
@@ -171,13 +181,6 @@ class SimulationStep {
 
   /// Gets the next input symbol
   String? get nextInputSymbol => remainingInput.isNotEmpty ? remainingInput[0] : null;
-
-  /// Gets the consumed input in this step
-  String get consumedInput {
-    // This would need to be calculated based on the previous step
-    // For now, return empty string
-    return '';
-  }
 
   /// Gets the stack operation performed (for PDA)
   String get stackOperation {
@@ -221,12 +224,14 @@ class SimulationStep {
     required String remainingInput,
     String? usedTransition,
     required int stepNumber,
+    String consumedInput = '',
   }) {
     return SimulationStep(
       currentState: currentState,
       remainingInput: remainingInput,
       usedTransition: usedTransition,
       stepNumber: stepNumber,
+      consumedInput: consumedInput,
     );
   }
 
@@ -237,6 +242,7 @@ class SimulationStep {
     required String stackContents,
     String? usedTransition,
     required int stepNumber,
+    String consumedInput = '',
   }) {
     return SimulationStep(
       currentState: currentState,
@@ -244,6 +250,7 @@ class SimulationStep {
       stackContents: stackContents,
       usedTransition: usedTransition,
       stepNumber: stepNumber,
+      consumedInput: consumedInput,
     );
   }
 
@@ -255,6 +262,7 @@ class SimulationStep {
     String? usedTransition,
     required int stepNumber,
     int? headPosition,
+    String consumedInput = '',
   }) {
     return SimulationStep(
       currentState: currentState,
@@ -262,6 +270,7 @@ class SimulationStep {
       tapeContents: tapeContents,
       usedTransition: usedTransition,
       stepNumber: stepNumber,
+      consumedInput: consumedInput,
     );
   }
 
@@ -271,6 +280,7 @@ class SimulationStep {
     required String inputString,
     String? initialStackSymbol,
     String? initialTapeSymbol,
+    String consumedInput = '',
   }) {
     return SimulationStep(
       currentState: initialState,
@@ -278,6 +288,7 @@ class SimulationStep {
       stackContents: initialStackSymbol ?? '',
       tapeContents: initialTapeSymbol ?? '',
       stepNumber: 0,
+      consumedInput: consumedInput,
     );
   }
 
@@ -288,6 +299,7 @@ class SimulationStep {
     required String stackContents,
     required String tapeContents,
     required int stepNumber,
+    String consumedInput = '',
   }) {
     return SimulationStep(
       currentState: finalState,
@@ -295,6 +307,7 @@ class SimulationStep {
       stackContents: stackContents,
       tapeContents: tapeContents,
       stepNumber: stepNumber,
+      consumedInput: consumedInput,
     );
   }
 }

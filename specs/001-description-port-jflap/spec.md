@@ -119,34 +119,26 @@ As a computer science student or educator, I want to create, manipulate, and ana
 - **FR-034**: System MUST support derivation tree visualization
 - **FR-035**: System MUST support non-deterministic automaton input analysis
 
-#### L-Systems
-- **FR-036**: System MUST support L-system creation with axiom and production rule definition
-- **FR-037**: System MUST support multiple derivation steps with graphical visualization
-- **FR-038**: System MUST support turtle commands (forward, rotation, line width, color control)
-- **FR-039**: System MUST support customizable parameters (angles, distance, line width, colors)
-- **FR-040**: System MUST support fractal generation and natural structure modeling
-
 #### Simulation and Analysis
-- **FR-041**: System MUST simulate automata execution with step-by-step visualization
-- **FR-042**: System MUST validate automata properties (determinism, completeness, reachability)
-- **FR-043**: System MUST support batch simulation of multiple input strings
-- **FR-044**: System MUST detect and highlight nondeterminism in automata
-- **FR-045**: System MUST support multiple executions for grammars
-- **FR-046**: System MUST support system evaluation for multiple files
+- **FR-036**: System MUST simulate automata execution with step-by-step visualization
+- **FR-037**: System MUST validate automata properties (determinism, completeness, reachability)
+- **FR-038**: System MUST support batch simulation of multiple input strings
+- **FR-039**: System MUST detect and highlight nondeterminism in automata
+- **FR-040**: System MUST support multiple executions for grammars
+- **FR-041**: System MUST support system evaluation for multiple files
 
 #### File Operations and Export
 - **FR-047**: System MUST support file operations (save, load, export) with mobile-optimized file management
 - **FR-048**: System MUST support JFLAP file format compatibility
 - **FR-049**: System MUST support export of generated automata and grammars
-- **FR-050**: System MUST support import/export of L-system configurations
 
 #### Mobile-Specific Features
-- **FR-051**: System MUST provide visual feedback for touch interactions (selection, dragging, resizing)
-- **FR-052**: System MUST support multi-touch gestures for zooming and panning automata
-- **FR-053**: System MUST provide accessibility features for mobile devices (WCAG 2.1 AA compliance)
-- **FR-054**: System MUST support offline operation with no network dependencies
-- **FR-055**: System MUST maintain performance with automata containing up to 200 states/nodes
-- **FR-056**: System MUST provide help documentation accessible through mobile interface
+- **FR-050**: System MUST provide visual feedback for touch interactions (selection, dragging, resizing)
+- **FR-051**: System MUST support multi-touch gestures for zooming and panning automata
+- **FR-052**: System MUST provide accessibility features for mobile devices (WCAG 2.1 AA compliance)
+- **FR-053**: System MUST support offline operation with no network dependencies
+- **FR-054**: System MUST maintain performance with automata containing up to 200 states/nodes
+- **FR-055**: System MUST provide help documentation accessible through mobile interface
 
 ### Key Entities
 - **Automaton**: Represents finite state automata, pushdown automata, Turing machines, or Mealy machines with states, transitions, and input/output alphabets
@@ -156,8 +148,6 @@ As a computer science student or educator, I want to create, manipulate, and ana
 - **Production**: Grammar rules with left-hand side and right-hand side symbols, supporting multiple symbols on left side for unrestricted grammars
 - **Parse Table**: Generated tables for LL/LR/SLR parsing with action and goto entries
 - **Simulation Result**: Output of automaton execution showing acceptance/rejection and computation trace
-- **L-System**: Formal system with axiom and production rules for generating fractal patterns
-- **Turtle State**: Graphics state for L-system visualization including position, angle, line width, and color
 - **Building Block**: Reusable component for Turing machine construction with import/export capabilities
 - **Pumping Lemma Game**: Interactive interface for proving languages are not regular or context-free
 - **File Format**: Persistent storage format compatible with JFLAP desktop version (.jff, .cfg files)

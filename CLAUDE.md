@@ -51,7 +51,6 @@ lib/
 - PDA to CFG conversion
 - Right-linear grammar to FA conversion
 - Pumping lemma games for regular and context-free languages
-- L-system interpretation and visualization
 - Mealy machine simulation
 - Turing machine with building blocks
 
@@ -73,7 +72,7 @@ lib/
 2. **Phase 2**: Core algorithms (NFA→DFA, minimization, regex conversion)
 3. **Phase 3**: Grammar-automaton conversions (LL, LR, SLR)
 4. **Phase 4**: Advanced features (PDA, TM with building blocks, Mealy machines)
-5. **Phase 5**: Interactive features (pumping lemma games, L-systems)
+5. **Phase 5**: Interactive features (pumping lemma games)
 6. **Phase 6**: Performance optimization and testing
 
 ## Code Standards

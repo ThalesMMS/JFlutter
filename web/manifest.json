@@ -1,11 +1,11 @@
 {
-    "name": "jflutter",
-    "short_name": "jflutter",
+    "name": "JFlutter Formal Language Toolkit",
+    "short_name": "JFlutter",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#ffffff",
-    "description": "A new Flutter project.",
+    "description": "Suite of Flutter tools for designing and simulating formal languages and automata.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

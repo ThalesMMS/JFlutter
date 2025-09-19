@@ -18,8 +18,6 @@ class FSAPage extends ConsumerStatefulWidget {
 
 class _FSAPageState extends ConsumerState<FSAPage> {
   final GlobalKey _canvasKey = GlobalKey();
-  bool _showControls = true;
-  bool _showSimulation = false;
 
   Future<void> _handleFaToRegex() async {
     final notifier = ref.read(automatonProvider.notifier);
@@ -86,27 +84,21 @@ class _FSAPageState extends ConsumerState<FSAPage> {
   Widget _buildMobileLayout(AutomatonState state) {
     return Column(
       children: [
-        // Mobile controls toggle - more compact
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              Expanded(
-                child: _buildToggleButton(
-                  icon: Icons.tune,
-                  label: 'Controls',
-                  isActive: _showControls,
-                  onPressed: () => setState(() => _showControls = !_showControls),
-                ),
+              IconButton(
+                tooltip: 'Show controls',
+                icon: const Icon(Icons.tune),
+                onPressed: _openAlgorithmSheet,
               ),
               const SizedBox(width: 8),
-              Expanded(
-                child: _buildToggleButton(
-                  icon: Icons.play_arrow,
-                  label: 'Simulate',
-                  isActive: _showSimulation,
-                  onPressed: () => setState(() => _showSimulation = !_showSimulation),
-                ),
+              IconButton(
+                tooltip: 'Run simulation',
+                icon: const Icon(Icons.play_arrow),
+                onPressed: _openSimulationSheet,
               ),
             ],
           ),
@@ -114,7 +106,6 @@ class _FSAPageState extends ConsumerState<FSAPage> {
 
         // Canvas - gets maximum available space
         Expanded(
-          flex: 3,
           child: Container(
             margin: const EdgeInsets.all(8),
             child: AutomatonCanvas(
@@ -126,73 +117,87 @@ class _FSAPageState extends ConsumerState<FSAPage> {
             ),
           ),
         ),
-
-        // Collapsible panels with better space management
-        if (_showControls || _showSimulation) ...[
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            child: Column(
-              children: [
-                // Controls panel
-                if (_showControls) ...[
-                  Container(
-                    constraints: const BoxConstraints(maxHeight: 200),
-                    child: AlgorithmPanel(
-                      onNfaToDfa: () => ref.read(automatonProvider.notifier).convertNfaToDfa(),
-                      onMinimizeDfa: () => ref.read(automatonProvider.notifier).minimizeDfa(),
-                      onCompleteDfa: () => ref.read(automatonProvider.notifier).completeDfa(),
-                      onFsaToGrammar: _handleFsaToGrammar,
-                      onAutoLayout: () => ref.read(automatonProvider.notifier).applyAutoLayout(),
-                      onClear: () => ref.read(automatonProvider.notifier).clearAutomaton(),
-                      onRegexToNfa: (regex) => ref.read(automatonProvider.notifier).convertRegexToNfa(regex),
-                      onFaToRegex: _handleFaToRegex,
-                      onCompareEquivalence: _handleCompareEquivalence,
-                      equivalenceResult: state.equivalenceResult,
-                      equivalenceDetails: state.equivalenceDetails,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                ],
-
-                // Simulation panel
-                if (_showSimulation) ...[
-                  Container(
-                    constraints: const BoxConstraints(maxHeight: 200),
-                    child: SimulationPanel(
-                          onSimulate: (inputString) => ref.read(automatonProvider.notifier).simulateAutomaton(inputString),
-                          simulationResult: state.simulationResult,
-                      regexResult: state.regexResult,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
       ],
     );
   }
 
-  Widget _buildToggleButton({
-    required IconData icon,
-    required String label,
-    required bool isActive,
-    required VoidCallback onPressed,
-  }) {
-    return ElevatedButton.icon(
-      onPressed: onPressed,
-      icon: Icon(icon, size: 18),
-      label: Text(label, style: const TextStyle(fontSize: 12)),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: isActive 
-            ? Theme.of(context).colorScheme.primary 
-            : Theme.of(context).colorScheme.surface,
-        foregroundColor: isActive 
-            ? Theme.of(context).colorScheme.onPrimary 
-            : Theme.of(context).colorScheme.onSurface,
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-        minimumSize: Size.zero,
-      ),
+  Future<void> _openAlgorithmSheet() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return SafeArea(
+          child: DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.7,
+            minChildSize: 0.4,
+            maxChildSize: 0.95,
+            builder: (context, scrollController) {
+              return SingleChildScrollView(
+                controller: scrollController,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: AlgorithmPanel(
+                    onNfaToDfa: () =>
+                        ref.read(automatonProvider.notifier).convertNfaToDfa(),
+                    onMinimizeDfa: () =>
+                        ref.read(automatonProvider.notifier).minimizeDfa(),
+                    onCompleteDfa: () =>
+                        ref.read(automatonProvider.notifier).completeDfa(),
+                    onFsaToGrammar: _handleFsaToGrammar,
+                    onAutoLayout: () =>
+                        ref.read(automatonProvider.notifier).applyAutoLayout(),
+                    onClear: () =>
+                        ref.read(automatonProvider.notifier).clearAutomaton(),
+                    onRegexToNfa: (regex) => ref
+                        .read(automatonProvider.notifier)
+                        .convertRegexToNfa(regex),
+                    onFaToRegex: _handleFaToRegex,
+                    onCompareEquivalence: _handleCompareEquivalence,
+                    equivalenceResult:
+                        ref.read(automatonProvider).equivalenceResult,
+                    equivalenceDetails:
+                        ref.read(automatonProvider).equivalenceDetails,
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _openSimulationSheet() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return SafeArea(
+          child: DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.6,
+            minChildSize: 0.4,
+            maxChildSize: 0.95,
+            builder: (context, scrollController) {
+              return SingleChildScrollView(
+                controller: scrollController,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: SimulationPanel(
+                    onSimulate: (inputString) => ref
+                        .read(automatonProvider.notifier)
+                        .simulateAutomaton(inputString),
+                    simulationResult:
+                        ref.read(automatonProvider).simulationResult,
+                    regexResult: ref.read(automatonProvider).regexResult,
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 

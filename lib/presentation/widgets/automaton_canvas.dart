@@ -391,7 +391,9 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
               _editTransition(transition);
             },
             child: MouseRegion(
-              onExit: (_) => _updateTransitionPreview(null),
+              onExit: (_) {
+                _updateTransitionPreview(null);
+              },
               child: Listener(
                 onPointerHover: (event) =>
                     _updateTransitionPreview(event.localPosition),

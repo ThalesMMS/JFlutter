@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/algorithms/pda_simulator.dart';
 import '../../core/algorithms/pda_to_cfg_converter.dart';
-import '../../core/models/state.dart';
+import '../../core/models/state.dart' as automaton_models;
 import '../providers/pda_editor_provider.dart';
 
 /// Panel for PDA analysis algorithms
@@ -634,7 +634,7 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
       );
   }
 
-  String _formatStateList(Iterable<State> states) {
+  String _formatStateList(Iterable<automaton_models.State> states) {
     final names = states.map(_formatStateName).toList()..sort();
     if (names.isEmpty) {
       return '∅';
@@ -642,7 +642,7 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
     return names.join(', ');
   }
 
-  String _formatStateName(State state) {
+  String _formatStateName(automaton_models.State state) {
     return state.label.isNotEmpty ? state.label : state.id;
   }
 }

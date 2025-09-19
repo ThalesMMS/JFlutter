@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../core/algorithms/grammar_parser.dart';
 import '../../core/models/grammar.dart';
-import '../../core/models/production.dart';
+import '../../core/result.dart';
+import '../providers/grammar_provider.dart';
 
 /// Panel for grammar parsing and string testing
 class GrammarSimulationPanel extends ConsumerStatefulWidget {
@@ -13,14 +16,11 @@ class GrammarSimulationPanel extends ConsumerStatefulWidget {
 
 class _GrammarSimulationPanelState extends ConsumerState<GrammarSimulationPanel> {
   final TextEditingController _inputController = TextEditingController();
-  final List<Production> _sampleProductions = [
-    Production(id: 'p1', leftSide: ['S'], rightSide: ['a', 'S', 'b']),
-    Production(id: 'p2', leftSide: ['S'], rightSide: ['a', 'b']),
-  ];
-  
+
   bool _isParsing = false;
   String? _parseResult;
   List<String> _parseSteps = [];
+  Duration? _executionTime;
   String _selectedAlgorithm = 'CYK';
 
   @override
@@ -256,7 +256,15 @@ class _GrammarSimulationPanelState extends ConsumerState<GrammarSimulationPanel>
               ),
             ],
           ),
-          
+
+          if (_executionTime != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Execution time: ${_formatExecutionTime(_executionTime!)}',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ],
+
           if (_parseSteps.isNotEmpty) ...[
             const SizedBox(height: 16),
             Text(
@@ -293,90 +301,119 @@ class _GrammarSimulationPanelState extends ConsumerState<GrammarSimulationPanel>
     );
   }
 
-  void _parseString() {
+  Future<void> _parseString() async {
     final inputString = _inputController.text.trim();
-    
+
     if (inputString.isEmpty) {
       _showError('Please enter a string to parse');
       return;
     }
-    
+
+    final grammar = _buildCurrentGrammar();
+
     setState(() {
       _isParsing = true;
       _parseResult = null;
       _parseSteps.clear();
+      _executionTime = null;
     });
-    
-    // Simulate parsing (in real implementation, this would call the actual parser)
-    Future.delayed(const Duration(seconds: 1), () {
-      if (mounted) {
-        _simulateParse(inputString);
+
+    try {
+      final parseOutcome = await Future<Result<ParseResult>>(() {
+        return GrammarParser.parse(
+          grammar,
+          inputString,
+          strategyHint: _mapSelectedAlgorithmToHint(),
+        );
+      });
+
+      if (!mounted) {
+        return;
       }
-    });
-  }
 
-  void _simulateParse(String inputString) {
-    // Simple simulation for demonstration
-    // In real implementation, this would use the actual grammar parser
-    final isAccepted = _simulateCYKParse(inputString);
-    
-    setState(() {
-      _isParsing = false;
-      _parseResult = isAccepted ? 'Accepted' : 'Rejected';
-      _parseSteps = _generateParseSteps(inputString, isAccepted);
-    });
-  }
+      if (!parseOutcome.isSuccess) {
+        setState(() {
+          _isParsing = false;
+          _parseResult = null;
+          _parseSteps = [];
+          _executionTime = null;
+        });
+        _showError(parseOutcome.error ?? 'Failed to parse string');
+        return;
+      }
 
-  bool _simulateCYKParse(String inputString) {
-    // Simple simulation for the grammar S → aSb | ab
-    // This is just for demonstration - real implementation would be more complex
-    if (inputString == 'ab') return true;
-    if (inputString == 'aabb') return true;
-    if (inputString == 'aaabbb') return true;
-    if (inputString == '') return false;
-    
-    // Check if string matches pattern a^n b^n
-    final aCount = inputString.split('a').length - 1;
-    final bCount = inputString.split('b').length - 1;
-    final hasOnlyAB = inputString.replaceAll('a', '').replaceAll('b', '').isEmpty;
-    
-    return hasOnlyAB && aCount == bCount && aCount > 0;
-  }
+      final parseResult = parseOutcome.data!;
+      final steps = _buildParseSteps(parseResult);
 
-  List<String> _generateParseSteps(String inputString, bool isAccepted) {
-    if (!isAccepted) {
-      return [
-        'Input: $inputString',
-        'No valid derivation found',
-        'String rejected by grammar'
-      ];
+      setState(() {
+        _isParsing = false;
+        _parseResult = parseResult.accepted ? 'Accepted' : 'Rejected';
+        _parseSteps = steps;
+        _executionTime = parseResult.executionTime;
+      });
+
+      if (!parseResult.accepted && parseResult.errorMessage != null) {
+        _showError(parseResult.errorMessage!);
+      }
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isParsing = false;
+        _parseResult = null;
+        _parseSteps = [];
+        _executionTime = null;
+      });
+
+      _showError('Failed to parse string: $e');
     }
-    
-    final steps = <String>['Input: $inputString'];
-    
-    if (inputString == 'ab') {
-      steps.addAll([
-        'Apply rule: S → ab',
-        'Derivation: S ⇒ ab',
-        'String accepted!'
-      ]);
-    } else if (inputString == 'aabb') {
-      steps.addAll([
-        'Apply rule: S → aSb',
-        'Derivation: S ⇒ aSb',
-        'Apply rule: S → ab',
-        'Derivation: S ⇒ aSb ⇒ aabb',
-        'String accepted!'
-      ]);
-    } else {
-      steps.addAll([
-        'Apply rule: S → aSb (multiple times)',
-        'Apply rule: S → ab (final step)',
-        'String accepted!'
-      ]);
+  }
+
+  Grammar _buildCurrentGrammar() {
+    return ref.read(grammarProvider.notifier).buildGrammar();
+  }
+
+  ParsingStrategyHint _mapSelectedAlgorithmToHint() {
+    switch (_selectedAlgorithm) {
+      case 'CYK':
+        return ParsingStrategyHint.cyk;
+      case 'LL':
+        return ParsingStrategyHint.ll;
+      case 'LR':
+        return ParsingStrategyHint.lr;
+      default:
+        return ParsingStrategyHint.auto;
     }
-    
+  }
+
+  List<String> _buildParseSteps(ParseResult parseResult) {
+    final steps = <String>[];
+
+    if (parseResult.derivations.isNotEmpty) {
+      for (final derivation in parseResult.derivations) {
+        steps.add(derivation.join(' ⇒ '));
+      }
+    } else if (parseResult.accepted) {
+      steps.add('No derivation steps available for this parser.');
+    }
+
+    if (parseResult.errorMessage != null && parseResult.errorMessage!.isNotEmpty) {
+      steps.add(parseResult.errorMessage!);
+    }
+
     return steps;
+  }
+
+  String _formatExecutionTime(Duration duration) {
+    if (duration.inMicroseconds < 1000) {
+      return '${duration.inMicroseconds} μs';
+    }
+    if (duration.inMilliseconds < 1000) {
+      return '${duration.inMilliseconds} ms';
+    }
+    return '${duration.inSeconds}.${(duration.inMilliseconds % 1000).toString().padLeft(3, '0')} s';
   }
 
   void _showError(String message) {

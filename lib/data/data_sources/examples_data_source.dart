@@ -37,7 +37,9 @@ class ExamplesDataSource {
         return Failure('Example not found: $name');
       }
 
-      final jsonString = await rootBundle.loadString('jflutter_js/examples/$fileName');
+      final assetPath = 'jflutter_js/examples/$fileName';
+
+      final jsonString = await rootBundle.loadString(assetPath);
       final json = jsonDecode(jsonString) as Map<String, dynamic>;
       
       // Convert legacy format to new format
@@ -52,6 +54,14 @@ class ExamplesDataSource {
       );
 
       return Success(example);
+    } on FlutterError catch (e) {
+      final message = e.message ?? e.toString();
+      if (message.contains('Unable to load asset')) {
+        return Failure(
+          'Example asset not found for $name. Expected at $assetPath',
+        );
+      }
+      return Failure('Error loading example $name: $message');
     } catch (e) {
       return Failure('Error loading example $name: $e');
     }
@@ -79,6 +89,8 @@ class ExamplesDataSource {
       }
     }
 
+    final type = json['type'] as String? ?? 'dfa';
+
     return AutomatonModel(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       name: 'Example Automaton',
@@ -87,7 +99,7 @@ class ExamplesDataSource {
       transitions: transitions,
       initialId: json['initialId'] as String?,
       nextId: json['nextId'] as int? ?? states.length,
-      type: 'dfa', // Default type
+      type: type,
     );
   }
 

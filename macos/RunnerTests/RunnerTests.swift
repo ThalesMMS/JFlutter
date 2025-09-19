@@ -4,9 +4,19 @@ import XCTest
 
 class RunnerTests: XCTestCase {
 
-  func testExample() {
-    // If you add code to the Runner application, consider adding tests here.
-    // See https://developer.apple.com/documentation/xctest for more information about using XCTest.
+  func testFlutterWindowIsConfiguredWithFlutterViewController() {
+    // Access the shared application instance to match the runner's startup path.
+    let app = NSApplication.shared
+    XCTAssertNotNil(app)
+
+    // Instantiate the runner window and trigger the wiring performed in awakeFromNib.
+    let window = MainFlutterWindow()
+    defer { window.close() }
+
+    window.awakeFromNib()
+
+    // The runner should host a FlutterViewController after setup.
+    XCTAssertTrue(window.contentViewController is FlutterViewController)
   }
 
 }

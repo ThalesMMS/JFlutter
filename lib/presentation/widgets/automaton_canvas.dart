@@ -330,88 +330,93 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
 
   @override
   Widget build(BuildContext context) {
+    final borderRadius = BorderRadius.circular(8);
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.grey[50],
         border: Border.all(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: borderRadius,
       ),
       child: Stack(
         children: [
-          TouchGestureHandler<FSATransition>(
-            states: _states,
-            transitions: _transitions,
-            selectedState: _selectedState,
-            onStateSelected: (state) {
-              setState(() {
-                _selectedState = state;
-              });
-            },
-            onStateMoved: (state) {
-              setState(() {
-                final index = _states.indexWhere((s) => s.id == state.id);
-                if (index != -1) {
-                  _states[index] = state;
-                }
-              });
-              _notifyAutomatonChanged();
-            },
-            onStateAdded: (position) {
-              _addState(position);
-            },
-            onTransitionAdded: (transition) {
-              if (transition is FSATransition) {
+          ClipRRect(
+            borderRadius: borderRadius,
+            child: TouchGestureHandler<FSATransition>(
+              states: _states,
+              transitions: _transitions,
+              selectedState: _selectedState,
+              onStateSelected: (state) {
                 setState(() {
-                  _transitions.add(transition);
+                  _selectedState = state;
+                });
+              },
+              onStateMoved: (state) {
+                setState(() {
+                  final index = _states.indexWhere((s) => s.id == state.id);
+                  if (index != -1) {
+                    _states[index] = state;
+                  }
                 });
                 _notifyAutomatonChanged();
-              }
-            },
-            onStateEdited: (state) {
-              _editState(state);
-            },
-            onStateDeleted: (state) {
-              setState(() {
-                _states.removeWhere((s) => s.id == state.id);
-                _transitions.removeWhere((t) => 
-                  t.fromState.id == state.id || t.toState.id == state.id);
-                if (_selectedState?.id == state.id) {
-                  _selectedState = null;
-                }
-              });
-              _notifyAutomatonChanged();
-            },
-            onTransitionDeleted: (transition) {
-              setState(() {
-                _transitions.removeWhere((t) => t.id == transition.id);
-              });
-              _notifyAutomatonChanged();
-            },
-            onTransitionEdited: (transition) {
-              _editTransition(transition);
-            },
-            child: MouseRegion(
-              onExit: (_) {
-                _updateTransitionPreview(null);
               },
-              child: Listener(
-                onPointerHover: (event) =>
-                    _updateTransitionPreview(event.localPosition),
-                onPointerMove: (event) =>
-                    _updateTransitionPreview(event.localPosition),
-                onPointerDown: (event) =>
-                    _updateTransitionPreview(event.localPosition),
-                onPointerUp: (_) => _updateTransitionPreview(null),
-                onPointerCancel: (_) => _updateTransitionPreview(null),
-                child: CustomPaint(
-                  painter: AutomatonPainter(
-                    states: _states,
-                    transitions: _transitions,
-                    selectedState: _selectedState,
-                    transitionStart: _transitionStart,
-                    transitionPreviewPosition: _transitionPreviewPosition,
+              onStateAdded: (position) {
+                _addState(position);
+              },
+              onTransitionAdded: (transition) {
+                if (transition is FSATransition) {
+                  setState(() {
+                    _transitions.add(transition);
+                  });
+                  _notifyAutomatonChanged();
+                }
+              },
+              onStateEdited: (state) {
+                _editState(state);
+              },
+              onStateDeleted: (state) {
+                setState(() {
+                  _states.removeWhere((s) => s.id == state.id);
+                  _transitions.removeWhere((t) =>
+                      t.fromState.id == state.id || t.toState.id == state.id);
+                  if (_selectedState?.id == state.id) {
+                    _selectedState = null;
+                  }
+                });
+                _notifyAutomatonChanged();
+              },
+              onTransitionDeleted: (transition) {
+                setState(() {
+                  _transitions.removeWhere((t) => t.id == transition.id);
+                });
+                _notifyAutomatonChanged();
+              },
+              onTransitionEdited: (transition) {
+                _editTransition(transition);
+              },
+              child: MouseRegion(
+                onExit: (_) {
+                  _updateTransitionPreview(null);
+                },
+                child: Listener(
+                  onPointerHover: (event) =>
+                      _updateTransitionPreview(event.localPosition),
+                  onPointerMove: (event) =>
+                      _updateTransitionPreview(event.localPosition),
+                  onPointerDown: (event) =>
+                      _updateTransitionPreview(event.localPosition),
+                  onPointerUp: (_) => _updateTransitionPreview(null),
+                  onPointerCancel: (_) => _updateTransitionPreview(null),
+                  child: CustomPaint(
+                    painter: AutomatonPainter(
+                      states: _states,
+                      transitions: _transitions,
+                      selectedState: _selectedState,
+                      transitionStart: _transitionStart,
+                      transitionPreviewPosition: _transitionPreviewPosition,
+                    ),
+                    size: Size.infinite,
                   ),
-                  size: Size.infinite,
                 ),
               ),
             ),

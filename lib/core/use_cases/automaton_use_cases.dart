@@ -121,18 +121,18 @@ class AddStateUseCase {
         isFinal: isFinal,
       );
 
-      final updatedStates = [...automaton.states, newState];
-      
+      final updatedStates = isInitial
+          ? [
+              ...automaton.states
+                  .map((state) => state.copyWith(isInitial: false)),
+              newState,
+            ]
+          : [...automaton.states, newState];
+
       // If this is the initial state, update initialId
       String? newInitialId = automaton.initialId;
       if (isInitial) {
         newInitialId = newState.id;
-        // Remove initial flag from other states
-        updatedStates.forEach((state) {
-          if (state.id != newState.id && state.isInitial) {
-            state = state.copyWith(isInitial: false);
-          }
-        });
       }
 
       final updatedAutomaton = automaton.copyWith(

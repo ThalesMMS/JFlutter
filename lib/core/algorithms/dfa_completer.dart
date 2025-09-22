@@ -12,9 +12,18 @@ class DFACompleter {
 
     State? trapState;
 
+    final existingSymbolsByState = <State, Set<String>>{};
+    for (final transition in transitions) {
+      final existingSymbols =
+          existingSymbolsByState.putIfAbsent(transition.fromState, () => <String>{});
+      existingSymbols.addAll(transition.inputSymbols);
+    }
+
     for (final state in states) {
       for (final symbol in alphabet) {
-        final hasTransition = transitions.any((t) => t.fromState == state && t.inputSymbols.contains(symbol));
+        final existingSymbols =
+            existingSymbolsByState.putIfAbsent(state, () => <String>{});
+        final hasTransition = existingSymbols.contains(symbol);
         if (!hasTransition) {
           trapState ??= State(
             id: 'q_trap',
@@ -29,12 +38,18 @@ class DFACompleter {
             toState: trapState,
             symbol: symbol,
           ));
+          existingSymbols.add(symbol);
+          existingSymbolsByState
+              .putIfAbsent(trapState, () => <String>{})
+              .add(symbol);
         }
       }
     }
 
     if (trapState != null) {
       states.add(trapState);
+      final trapSymbols =
+          existingSymbolsByState.putIfAbsent(trapState, () => <String>{});
       for (final symbol in alphabet) {
         transitions.add(FSATransition.deterministic(
           id: 't_trap_${symbol}_trap',
@@ -42,6 +57,7 @@ class DFACompleter {
           toState: trapState,
           symbol: symbol,
         ));
+        trapSymbols.add(symbol);
       }
     }
 

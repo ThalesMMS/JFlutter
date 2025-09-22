@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:vector_math/vector_math_64.dart';
 import '../models/fsa.dart';
 import '../models/state.dart';
@@ -111,16 +113,21 @@ class DFAMinimizer {
     partition.removeWhere((set) => set.isEmpty);
 
     // Worklist for processing
-    final worklist = <Set<State>>[];
+    final worklist = ListQueue<Set<State>>();
     for (final set in partition) {
       if (set.isNotEmpty) {
-        worklist.add(set);
+        // Preserve the original FIFO traversal order by enqueuing the
+        // non-empty equivalence classes exactly as they appear.
+        worklist.addLast(set);
       }
     }
 
     // Process worklist
     while (worklist.isNotEmpty) {
-      final currentSet = worklist.removeAt(0);
+      // Hopcroft processes the pending splitters in a FIFO fashion. Using
+      // [ListQueue.removeFirst] keeps the semantics identical to the
+      // previous list-based implementation while avoiding O(n) shifts.
+      final currentSet = worklist.removeFirst();
       
       // For each symbol in the alphabet
       for (final symbol in dfa.alphabet) {
@@ -148,9 +155,9 @@ class DFAMinimizer {
               
               // Add smaller set to worklist
               if (intersection.length <= difference.length) {
-                worklist.add(intersection);
+                worklist.addLast(intersection);
               } else {
-                worklist.add(difference);
+                worklist.addLast(difference);
               }
             } else {
               newPartition.add(set);

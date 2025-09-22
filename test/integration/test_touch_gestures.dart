@@ -13,7 +13,8 @@ void main() {
     late List<automaton_state.State?> stateSelectedCalls;
     late List<automaton_state.State> stateMovedCalls;
     late List<Offset> stateAddedCalls;
-    late List<FSATransition> transitionAddedCalls;
+    late List<({automaton_state.State from, automaton_state.State to})>
+        transitionAddedCalls;
     late List<automaton_state.State> stateEditedCalls;
     late List<automaton_state.State> stateDeletedCalls;
     late List<FSATransition> transitionDeletedCalls;
@@ -72,8 +73,8 @@ void main() {
             onStateAdded: (position) {
               stateAddedCalls.add(position);
             },
-            onTransitionAdded: (transition) {
-              transitionAddedCalls.add(transition);
+            onTransitionAdded: (from, to) {
+              transitionAddedCalls.add((from: from, to: to));
             },
             onStateEdited: (state) {
               stateEditedCalls.add(state);

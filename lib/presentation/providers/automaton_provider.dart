@@ -18,9 +18,7 @@ import '../../core/models/simulation_result.dart' as sim_result;
 import '../../core/models/tm.dart';
 import '../../core/repositories/automaton_repository.dart';
 import '../../core/result.dart';
-import '../../core/use_cases/automaton_use_cases.dart';
 import '../../core/entities/automaton_entity.dart';
-import '../../data/repositories/automaton_repository_impl.dart';
 import '../../data/services/automaton_service.dart';
 import '../../data/services/conversion_service.dart';
 import '../../data/services/simulation_service.dart';
@@ -37,8 +35,6 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     required AutomatonService automatonService,
     required SimulationService simulationService,
     required ConversionService conversionService,
-    required CreateAutomatonUseCase createAutomatonUseCase,
-    required LoadAutomatonUseCase loadAutomatonUseCase,
     required LayoutRepository layoutRepository,
   })  : _automatonService = automatonService,
         _simulationService = simulationService,
@@ -428,17 +424,25 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
 
     // Build transitions map from FSA transitions
     final transitions = <String, List<String>>{};
-    for (final transition in fsa.transitions) {
-      if (transition is FSATransition) {
-        for (final symbol in transition.inputSymbols) {
-          final key = '${transition.fromState.id}|$symbol';
-          if (!transitions.containsKey(key)) {
-            transitions[key] = [];
-          }
-          transitions[key]!.add(transition.toState.id);
-        }
+    for (final transition in fsa.transitions.whereType<FSATransition>()) {
+      final symbols = <String>{};
+      if (transition.lambdaSymbol != null) {
+        symbols.add(transition.lambdaSymbol!);
+      } else {
+        symbols.addAll(transition.inputSymbols);
+      }
+
+      for (final symbol in symbols) {
+        final key = '${transition.fromState.id}|$symbol';
+        transitions.putIfAbsent(key, () => <String>[]).add(transition.toState.id);
       }
     }
+
+    final type = fsa.hasEpsilonTransitions
+        ? AutomatonType.nfaLambda
+        : fsa.isDeterministic
+            ? AutomatonType.dfa
+            : AutomatonType.nfa;
 
     return AutomatonEntity(
       id: fsa.id,
@@ -448,7 +452,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       transitions: transitions,
       initialId: fsa.initialState?.id,
       nextId: states.length + 1,
-      type: AutomatonType.dfa, // Default to DFA
+      type: type,
     );
   }
 
@@ -480,7 +484,10 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
         if (fromState == null) {
           throw StateError('State $fromStateId not found');
         }
-
+        
+        final isLambda =
+            symbol == 'λ' || symbol == 'ε' || symbol.toLowerCase() == 'lambda';
+            
         for (final toStateId in entry.value) {
           final toState = stateById[toStateId];
           if (toState == null) {
@@ -491,7 +498,8 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
             fromState: fromState,
             toState: toState,
             label: symbol,
-            inputSymbols: {symbol},
+            inputSymbols: isLambda ? <String>{} : {symbol},
+            lambdaSymbol: isLambda ? symbol : null,
           ));
         }
       }
@@ -571,13 +579,14 @@ class AutomatonState {
 }
 
 /// Provider instances
-final automatonProvider = StateNotifierProvider<AutomatonProvider, AutomatonState>((ref) {
+final automatonProvider =
+    StateNotifierProvider<AutomatonProvider, AutomatonState>((ref) {
+  final automatonService = AutomatonService();
+
   return AutomatonProvider(
-    automatonService: AutomatonService(),
+    automatonService: automatonService,
     simulationService: SimulationService(),
     conversionService: ConversionService(),
-    createAutomatonUseCase: CreateAutomatonUseCase(AutomatonRepositoryImpl(AutomatonService())),
-    loadAutomatonUseCase: LoadAutomatonUseCase(AutomatonRepositoryImpl(AutomatonService())),
     layoutRepository: LayoutRepositoryImpl(),
   );
 });

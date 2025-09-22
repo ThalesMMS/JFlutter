@@ -22,6 +22,7 @@ class AutomatonCanvasController extends ChangeNotifier {
 
   final List<automaton_state.State> _states = [];
   final List<FSATransition> _transitions = [];
+  int _nextStateIndex = 0;
 
   automaton_state.State? _selectedState;
   bool _isAddingState = false;
@@ -70,6 +71,15 @@ class AutomatonCanvasController extends ChangeNotifier {
       ..addAll(
         automaton?.transitions.cast<FSATransition>() ?? const <FSATransition>{},
       );
+    _nextStateIndex = _states.fold<int>(0, (maxIndex, state) {
+      final match = RegExp(r'\d+$').firstMatch(state.id);
+      if (match == null) {
+        return maxIndex;
+      }
+
+      final value = int.tryParse(match.group(0)!) ?? 0;
+      return math.max(maxIndex, value + 1);
+    });
     _selectedState = null;
     _isAddingState = false;
     _isAddingTransition = false;
@@ -108,14 +118,15 @@ class AutomatonCanvasController extends ChangeNotifier {
   /// Adds a new state at the provided canvas position.
   void addState(Offset position) {
     final newState = automaton_state.State(
-      id: 'q${_states.length}',
-      label: 'q${_states.length}',
+      id: 'q$_nextStateIndex',
+      label: 'q$_nextStateIndex',
       position: Vector2(position.dx, position.dy),
       isInitial: _states.isEmpty,
       isAccepting: false,
     );
 
     _states.add(newState);
+    _nextStateIndex++;
     _isAddingState = false;
     notifyListeners();
     _emitAutomatonChanged();

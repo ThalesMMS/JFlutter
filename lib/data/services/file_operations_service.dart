@@ -146,12 +146,13 @@ class FileOperationsService {
       if (!dirResult.isSuccess) return Failure(dirResult.error!);
       
       final directory = Directory(dirResult.data!);
-      final files = directory
-          .listSync()
-          .where((file) => file.path.endsWith('.$extension'))
-          .map((file) => file.path)
-          .toList();
-      
+      final files = <String>[];
+      await for (final entity in directory.list()) {
+        if (entity is File && entity.path.endsWith('.$extension')) {
+          files.add(entity.path);
+        }
+      }
+
       return Success(files);
     } catch (e) {
       return Failure('Failed to list files: $e');

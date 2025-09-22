@@ -6,18 +6,30 @@ import 'package:jflutter/data/services/file_operations_service.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
 import 'package:jflutter/core/models/fsa_transition.dart';
+import 'package:jflutter/core/result.dart';
 import 'package:vector_math/vector_math_64.dart';
+
+class _TestFileOperationsService extends FileOperationsService {
+  _TestFileOperationsService(this._documentsPath);
+
+  final String _documentsPath;
+
+  @override
+  Future<StringResult> getDocumentsDirectory() async {
+    return Success(_documentsPath);
+  }
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   group('File Operations Service Tests', () {
     late FileOperationsService service;
     late FSA testAutomaton;
-    late String tempDir;
+    late Directory tempDir;
 
     setUp(() async {
-      service = FileOperationsService();
-      tempDir = Directory.systemTemp.path;
+      tempDir = await Directory.systemTemp.createTemp('file_operations_test');
+      service = _TestFileOperationsService(tempDir.path);
       
       // Create test automaton
       final state1 = automaton_state.State(
@@ -58,9 +70,15 @@ void main() {
       );
     });
 
+    tearDown(() async {
+      if (await tempDir.exists()) {
+        await tempDir.delete(recursive: true);
+      }
+    });
+
     test('should save and load automaton in JFLAP format', () async {
       // Arrange
-      final filePath = '$tempDir/test_automaton.jff';
+      final filePath = '${tempDir.path}/test_automaton.jff';
       
       // Act - Save automaton
       final saveResult = await service.saveAutomatonToJFLAP(testAutomaton, filePath);
@@ -83,7 +101,7 @@ void main() {
 
     test('should export automaton to SVG format', () async {
       // Arrange
-      final filePath = '$tempDir/test_automaton.svg';
+      final filePath = '${tempDir.path}/test_automaton.svg';
 
       // Act
       final exportResult = await service.exportAutomatonToSVG(testAutomaton, filePath);
@@ -107,7 +125,7 @@ void main() {
 
     test('should export automaton to PNG format', () async {
       // Arrange
-      final filePath = '$tempDir/test_automaton.png';
+      final filePath = '${tempDir.path}/test_automaton.png';
 
       // Act
       final exportResult = await service.exportAutomatonToPNG(testAutomaton, filePath);
@@ -136,7 +154,7 @@ void main() {
       
       // Assert
       expect(result.isSuccess, isTrue);
-      expect(result.data, isNotEmpty);
+      expect(result.data, equals(tempDir.path));
     });
 
     test('should create unique file name', () async {
@@ -151,23 +169,34 @@ void main() {
 
     test('should list files with specific extension', () async {
       // Arrange - Create a test file
-      final testFile = File('$tempDir/test_file.jff');
-      await testFile.writeAsString('test content');
-      
+      final jffFiles = List.generate(
+        150,
+        (index) => File('${tempDir.path}/test_file_$index.jff'),
+      );
+      final nonMatchingFile = File('${tempDir.path}/ignore.txt');
+
+      for (final file in [...jffFiles, nonMatchingFile]) {
+        await file.writeAsString('test content');
+      }
+
       // Act
       final result = await service.listFiles('jff');
-      
+
       // Assert
-      expect(result.isSuccess, isTrue);
-      expect(result.data, contains(testFile.path));
-      
+      expect(result.isSuccess, isTrue, reason: result.error);
+      final paths = result.data!;
+      expect(paths.length, equals(jffFiles.length));
+      expect(paths, containsAll(jffFiles.map((file) => file.path)));
+
       // Clean up
-      await testFile.delete();
+      for (final file in [...jffFiles, nonMatchingFile]) {
+        await file.delete();
+      }
     });
 
     test('should delete file', () async {
       // Arrange - Create a test file
-      final testFile = File('$tempDir/test_delete.jff');
+      final testFile = File('${tempDir.path}/test_delete.jff');
       await testFile.writeAsString('test content');
       expect(await testFile.exists(), isTrue);
       
@@ -181,7 +210,7 @@ void main() {
 
     test('should handle non-existent file deletion', () async {
       // Act
-      final result = await service.deleteFile('$tempDir/non_existent.jff');
+      final result = await service.deleteFile('${tempDir.path}/non_existent.jff');
       
       // Assert
       expect(result.isSuccess, isFalse);
@@ -190,7 +219,7 @@ void main() {
 
     test('should handle invalid JFLAP file loading', () async {
       // Arrange - Create invalid XML file
-      final invalidFile = File('$tempDir/invalid.jff');
+      final invalidFile = File('${tempDir.path}/invalid.jff');
       await invalidFile.writeAsString('invalid xml content');
       
       // Act
@@ -206,7 +235,7 @@ void main() {
 
     test('should preserve automaton properties in JFLAP format', () async {
       // Arrange
-      final filePath = '$tempDir/preserve_test.jff';
+      final filePath = '${tempDir.path}/preserve_test.jff';
       
       // Act - Save and load
       await service.saveAutomatonToJFLAP(testAutomaton, filePath);

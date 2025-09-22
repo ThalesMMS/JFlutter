@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/models/fsa.dart';
@@ -127,6 +128,13 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
     _controller.updateTransition(transition, input);
   }
 
+  @visibleForTesting
+  Future<TransitionSymbolInput?> showTransitionSymbolDialogForTest({
+    FSATransition? transition,
+  }) {
+    return _showSymbolDialog(transition: transition);
+  }
+
   Future<TransitionSymbolInput?> _showSymbolDialog({
     FSATransition? transition,
   }) async {
@@ -134,44 +142,59 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
         ? 'ε'
         : transition?.inputSymbols.join(', ') ?? '';
     final controller = TextEditingController(text: existingSymbols);
+    String? errorText;
     final result = await showDialog<TransitionSymbolInput>(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text(transition == null ? 'Transition Symbols' : 'Edit Transition'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Enter symbols separated by commas or ε for epsilon'),
-              const SizedBox(height: 12),
-              TextField(
-                controller: controller,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Symbols',
-                ),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(
+                transition == null ? 'Transition Symbols' : 'Edit Transition',
               ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                final parsed = TransitionSymbolInput.parse(controller.text);
-                if (parsed == null) {
-                  Navigator.of(context).pop();
-                  return;
-                }
-                Navigator.of(context).pop(parsed);
-              },
-              child: const Text('Save'),
-            ),
-          ],
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Enter symbols separated by commas or ε for epsilon',
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: controller,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(),
+                      labelText: 'Symbols',
+                      errorText: errorText,
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    final parsed = TransitionSymbolInput.parse(controller.text);
+                    if (parsed == null) {
+                      setState(() {
+                        errorText = 'Please enter at least one symbol or ε.';
+                      });
+                      return;
+                    }
+                    setState(() {
+                      errorText = null;
+                    });
+                    Navigator.of(context).pop(parsed);
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
         );
       },
     );

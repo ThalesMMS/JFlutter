@@ -428,17 +428,25 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
 
     // Build transitions map from FSA transitions
     final transitions = <String, List<String>>{};
-    for (final transition in fsa.transitions) {
-      if (transition is FSATransition) {
-        for (final symbol in transition.inputSymbols) {
-          final key = '${transition.fromState.id}|$symbol';
-          if (!transitions.containsKey(key)) {
-            transitions[key] = [];
-          }
-          transitions[key]!.add(transition.toState.id);
-        }
+    for (final transition in fsa.transitions.whereType<FSATransition>()) {
+      final symbols = <String>{};
+      if (transition.lambdaSymbol != null) {
+        symbols.add(transition.lambdaSymbol!);
+      } else {
+        symbols.addAll(transition.inputSymbols);
+      }
+
+      for (final symbol in symbols) {
+        final key = '${transition.fromState.id}|$symbol';
+        transitions.putIfAbsent(key, () => <String>[]).add(transition.toState.id);
       }
     }
+
+    final type = fsa.hasEpsilonTransitions
+        ? AutomatonType.nfaLambda
+        : fsa.isDeterministic
+            ? AutomatonType.dfa
+            : AutomatonType.nfa;
 
     return AutomatonEntity(
       id: fsa.id,
@@ -448,7 +456,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       transitions: transitions,
       initialId: fsa.initialState?.id,
       nextId: states.length + 1,
-      type: AutomatonType.dfa, // Default to DFA
+      type: type,
     );
   }
 
@@ -476,6 +484,9 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
         final symbol = parts[1];
         final fromState = states.firstWhere((s) => s.id == fromStateId);
         
+        final isLambda =
+            symbol == 'λ' || symbol == 'ε' || symbol.toLowerCase() == 'lambda';
+
         for (final toStateId in entry.value) {
           final toState = states.firstWhere((s) => s.id == toStateId);
           transitions.add(FSATransition(
@@ -483,7 +494,8 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
             fromState: fromState,
             toState: toState,
             label: symbol,
-            inputSymbols: {symbol},
+            inputSymbols: isLambda ? <String>{} : {symbol},
+            lambdaSymbol: isLambda ? symbol : null,
           ));
         }
       }

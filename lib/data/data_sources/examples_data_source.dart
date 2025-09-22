@@ -60,11 +60,9 @@ class ExamplesDataSource {
       final message = e.message ?? e.toString();
       if (message.contains('Unable to load asset')) {
         return Failure(
-          'Example asset not found for $name. Expected at $assetPath',
+          'Example asset not found for $name. Expected at jflutter_js/examples/$fileName',
         );
       }
-      return Failure('Error loading example $name: $message');
-    } catch (e) {
       return Failure('Error loading example $name: $e');
     }
   }

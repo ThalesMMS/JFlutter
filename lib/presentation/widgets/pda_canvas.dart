@@ -43,62 +43,69 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
   Widget build(BuildContext context) {
     final editorState = ref.watch(pdaEditorProvider);
 
-    return Card(
-      child: Column(
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        border: Border.all(color: Colors.grey[300]!),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Stack(
         children: [
-          _buildToolbar(context),
-          Expanded(
-            child: Container(
-              margin: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-                ),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: TouchGestureHandler<PDATransition>(
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: TouchGestureHandler<PDATransition>(
+              states: _states,
+              transitions: _transitions,
+              selectedState: _selectedState,
+              onStateSelected: _selectState,
+              onStateMoved: _moveState,
+              onStateAdded: _addState,
+              onTransitionAdded: _addTransitionFromHandler,
+              onStateEdited: _editState,
+              onStateDeleted: _deleteState,
+              onTransitionDeleted: _deleteTransition,
+              onTransitionEdited: _editTransition,
+              child: CustomPaint(
+                key: widget.canvasKey,
+                painter: _PDACanvasPainter(
                   states: _states,
                   transitions: _transitions,
                   selectedState: _selectedState,
-                  onStateSelected: _selectState,
-                  onStateMoved: _moveState,
-                  onStateAdded: _addState,
-                  onTransitionAdded: _addTransitionFromHandler,
-                  onStateEdited: _editState,
-                  onStateDeleted: _deleteState,
-                  onTransitionDeleted: _deleteTransition,
-                  onTransitionEdited: _editTransition,
-                  child: CustomPaint(
-                    key: widget.canvasKey,
-                    painter: _PDACanvasPainter(
-                      states: _states,
-                      transitions: _transitions,
-                      selectedState: _selectedState,
-                      nondeterministicTransitionIds:
-                          editorState.nondeterministicTransitionIds,
-                      lambdaTransitionIds: editorState.lambdaTransitionIds,
-                    ),
-                    size: Size.infinite,
-                  ),
-                  stateRadius: 25,
-                  selfLoopBaseRadius: 36,
-                  selfLoopSpacing: 10,
+                  nondeterministicTransitionIds:
+                      editorState.nondeterministicTransitionIds,
+                  lambdaTransitionIds: editorState.lambdaTransitionIds,
                 ),
+                size: Size.infinite,
               ),
+              stateRadius: 25,
+              selfLoopBaseRadius: 36,
+              selfLoopSpacing: 10,
             ),
+          ),
+          Positioned(
+            top: 8,
+            left: 8,
+            child: _buildToolbar(context, editorState),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildToolbar(BuildContext context) {
-    final editorState = ref.watch(pdaEditorProvider);
+  Widget _buildToolbar(BuildContext context, PDAEditorState editorState) {
     return Container(
       padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -219,7 +219,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   void _showSettingsDialog(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => const SettingsPage(),
+        builder: (context) => SettingsPage(),
       ),
     );
   }

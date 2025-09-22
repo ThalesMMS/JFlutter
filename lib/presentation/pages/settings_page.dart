@@ -6,7 +6,7 @@ import 'package:jflutter/data/repositories/settings_repository_impl.dart';
 import 'package:jflutter/data/storage/settings_storage.dart';
 
 class SettingsPage extends StatefulWidget {
-  const SettingsPage({
+  SettingsPage({
     super.key,
     SettingsRepository? repository,
     SettingsStorage? storage,

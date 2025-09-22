@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
@@ -118,8 +119,8 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
     setState(() {
       _isAddingTransition = true;
       _isAddingState = false;
-      _selectedState = null;
       _transitionPreviewPosition = null;
+      _transitionStart = _selectedState;
     });
   }
 
@@ -173,31 +174,30 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
   }
 
   void _handleTransitionTap(Offset position) {
-    if (_transitionStart == null) {
-      // Start transition
-      for (final state in _states.reversed) {
-        if (_isPointInState(position, state)) {
-          setState(() {
-            _transitionStart = state;
-            _transitionPreviewPosition = position;
-          });
-          break;
-        }
+    automaton_state.State? tappedState;
+    for (final state in _states.reversed) {
+      if (_isPointInState(position, state)) {
+        tappedState = state;
+        break;
       }
-    } else {
-      // End transition
-      for (final state in _states.reversed) {
-        if (_isPointInState(position, state) && state != _transitionStart) {
-          _addTransition(_transitionStart!, state);
-          break;
-        }
-      }
-      setState(() {
-        _transitionStart = null;
-        _isAddingTransition = false;
-        _transitionPreviewPosition = null;
-      });
     }
+
+    if (tappedState == null) {
+      if (_transitionStart != null) {
+        _updateTransitionPreview(position);
+      }
+      return;
+    }
+
+    if (_transitionStart == null) {
+      setState(() {
+        _transitionStart = tappedState;
+        _transitionPreviewPosition = position;
+      });
+      return;
+    }
+
+    unawaited(_completeTransitionAddition(_transitionStart!, tappedState));
   }
 
   void _updateTransitionPreview(Offset? position) {
@@ -215,6 +215,57 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
         _transitionPreviewPosition = position;
       });
     }
+  }
+
+  Future<void> _completeTransitionAddition(
+    automaton_state.State from,
+    automaton_state.State to,
+  ) async {
+    await _addTransition(from, to);
+    setState(() {
+      _transitionStart = null;
+      _transitionPreviewPosition = null;
+      _isAddingTransition = false;
+    });
+  }
+
+  void _handleTransitionDragOriginChanged(automaton_state.State? state) {
+    if (!_isAddingTransition) {
+      return;
+    }
+
+    if (state == null) {
+      if (_transitionStart != null || _transitionPreviewPosition != null) {
+        setState(() {
+          _transitionStart = null;
+          _transitionPreviewPosition = null;
+        });
+      }
+      return;
+    }
+
+    if (_transitionStart != state) {
+      setState(() {
+        _transitionStart = state;
+      });
+    }
+  }
+
+  void _handleTransitionDragPreviewChanged(Offset? position) {
+    if (!_isAddingTransition) {
+      return;
+    }
+    _updateTransitionPreview(position);
+  }
+
+  void _handleTransitionGestureAdded(
+    automaton_state.State from,
+    automaton_state.State to,
+  ) {
+    if (!_isAddingTransition) {
+      return;
+    }
+    unawaited(_completeTransitionAddition(from, to));
   }
 
   Future<void> _addTransition(
@@ -338,74 +389,75 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
       ),
       child: Stack(
         children: [
-          TouchGestureHandler<FSATransition>(
-            states: _states,
-            transitions: _transitions,
-            selectedState: _selectedState,
-            onStateSelected: (state) {
-              setState(() {
-                _selectedState = state;
-              });
-            },
-            onStateMoved: (state) {
-              setState(() {
-                final index = _states.indexWhere((s) => s.id == state.id);
-                if (index != -1) {
-                  _states[index] = state;
-                }
-              });
-              _notifyAutomatonChanged();
-            },
-            onStateAdded: (position) {
-              _addState(position);
-            },
-            onTransitionAdded: (transition) {
-              if (transition is FSATransition) {
+          GestureDetector(
+            behavior: HitTestBehavior.deferToChild,
+            onTapDown: (_isAddingState || _isAddingTransition)
+                ? _onCanvasTap
+                : null,
+            child: TouchGestureHandler<FSATransition>(
+              states: _states,
+              transitions: _transitions,
+              selectedState: _selectedState,
+              onStateSelected: (state) {
                 setState(() {
-                  _transitions.add(transition);
+                  _selectedState = state;
+                });
+              },
+              onStateMoved: (state) {
+                setState(() {
+                  final index = _states.indexWhere((s) => s.id == state.id);
+                  if (index != -1) {
+                    _states[index] = state;
+                  }
                 });
                 _notifyAutomatonChanged();
-              }
-            },
-            onStateEdited: (state) {
-              _editState(state);
-            },
-            onStateDeleted: (state) {
-              setState(() {
-                _states.removeWhere((s) => s.id == state.id);
-                _transitions.removeWhere((t) => 
-                  t.fromState.id == state.id || t.toState.id == state.id);
-                if (_selectedState?.id == state.id) {
-                  _selectedState = null;
-                }
-              });
-              _notifyAutomatonChanged();
-            },
-            onTransitionDeleted: (transition) {
-              setState(() {
-                _transitions.removeWhere((t) => t.id == transition.id);
-              });
-              _notifyAutomatonChanged();
-            },
-            onTransitionEdited: (transition) {
-              _editTransition(transition);
-            },
-            child: MouseRegion(
-              onExit: (_) {
-                _updateTransitionPreview(null);
               },
-              child: Listener(
-                onPointerHover: (event) =>
-                    _updateTransitionPreview(event.localPosition),
-                onPointerMove: (event) =>
-                    _updateTransitionPreview(event.localPosition),
-                onPointerDown: (event) =>
-                    _updateTransitionPreview(event.localPosition),
-                onPointerUp: (_) => _updateTransitionPreview(null),
-                onPointerCancel: (_) => _updateTransitionPreview(null),
-                child: CustomPaint(
-                  painter: AutomatonPainter(
-                    states: _states,
+              onStateAdded: (position) {
+                _addState(position);
+              },
+              onTransitionAdded: _handleTransitionGestureAdded,
+              onStateEdited: (state) {
+                _editState(state);
+              },
+              onStateDeleted: (state) {
+                setState(() {
+                  _states.removeWhere((s) => s.id == state.id);
+                  _transitions.removeWhere((t) =>
+                      t.fromState.id == state.id || t.toState.id == state.id);
+                  if (_selectedState?.id == state.id) {
+                    _selectedState = null;
+                  }
+                });
+                _notifyAutomatonChanged();
+              },
+              onTransitionDeleted: (transition) {
+                setState(() {
+                  _transitions.removeWhere((t) => t.id == transition.id);
+                });
+                _notifyAutomatonChanged();
+              },
+              onTransitionEdited: (transition) {
+                _editTransition(transition);
+              },
+              isAddingTransition: _isAddingTransition,
+              onTransitionOriginChanged: _handleTransitionDragOriginChanged,
+                onTransitionPreviewChanged: _handleTransitionDragPreviewChanged,
+                child: MouseRegion(
+                  onExit: (_) {
+                    _updateTransitionPreview(null);
+                  },
+                  child: Listener(
+                    onPointerHover: (event) =>
+                        _updateTransitionPreview(event.localPosition),
+                    onPointerMove: (event) =>
+                        _updateTransitionPreview(event.localPosition),
+                    onPointerDown: (event) =>
+                        _updateTransitionPreview(event.localPosition),
+                    onPointerUp: (_) => _updateTransitionPreview(null),
+                    onPointerCancel: (_) => _updateTransitionPreview(null),
+                    child: CustomPaint(
+                      painter: AutomatonPainter(
+                        states: _states,
                     transitions: _transitions,
                     selectedState: _selectedState,
                     transitionStart: _transitionStart,

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -68,7 +69,9 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
                   onStateSelected: _selectState,
                   onStateMoved: _moveState,
                   onStateAdded: _addState,
-                  onTransitionAdded: _addTransition,
+                  onTransitionAdded: (from, to) {
+                    unawaited(_addTransition(from, to));
+                  },
                   onStateEdited: _editState,
                   onStateDeleted: _deleteState,
                   onTransitionDeleted: _deleteTransition,
@@ -85,6 +88,7 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
                     size: Size.infinite,
                   ),
                   stateRadius: 30,
+                  isAddingTransition: _isAddingTransition,
                 ),
               ),
             ),
@@ -217,23 +221,40 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
     _notifyEditor();
   }
 
-  void _addTransition(Transition transition) {
-    if (transition is! FSATransition) {
-      return;
-    }
-    // Convert FSA transition to TM transition
-    final tmTransition = TMTransition(
-      id: transition.id,
-      fromState: transition.fromState,
-      toState: transition.toState,
-      label: transition.label,
-      readSymbol: transition.label,
-      writeSymbol: transition.label,
+  Future<void> _addTransition(
+    automaton_state.State from,
+    automaton_state.State to,
+  ) async {
+    final nextId = 't${_transitions.length + 1}';
+    final initialTransition = TMTransition(
+      id: nextId,
+      fromState: from,
+      toState: to,
+      label: '',
+      readSymbol: '',
+      writeSymbol: '',
       direction: TapeDirection.right,
     );
 
+    final result = await _showTransitionDialog(initialTransition);
+    if (result == null) {
+      setState(() {
+        _isAddingTransition = false;
+      });
+      return;
+    }
+
+    final label = result.label.isNotEmpty
+        ? result.label
+        : '${result.readSymbol}/${result.writeSymbol},${result.direction.name.toUpperCase()}';
+
     setState(() {
-      _transitions.add(tmTransition);
+      _transitions.add(
+        result.copyWith(
+          label: label,
+        ),
+      );
+      _isAddingTransition = false;
     });
     _notifyEditor();
   }

@@ -86,6 +86,7 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
                   stateRadius: 25,
                   selfLoopBaseRadius: 36,
                   selfLoopSpacing: 10,
+                  isAddingTransition: _isAddingTransition,
                 ),
               ),
             ),
@@ -237,11 +238,14 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
     _notifyEditor();
   }
 
-  void _addTransitionFromHandler(Transition transition) async {
+  void _addTransitionFromHandler(
+    automaton_state.State from,
+    automaton_state.State to,
+  ) async {
     final config = await _showTransitionEditDialog(
       context,
-      fromState: transition.fromState,
-      toState: transition.toState,
+      fromState: from,
+      toState: to,
     );
 
     if (config == null) {

@@ -14,7 +14,8 @@ class TouchGestureHandler<T extends Transition> extends StatefulWidget {
   final ValueChanged<automaton_state.State?> onStateSelected;
   final ValueChanged<automaton_state.State> onStateMoved;
   final ValueChanged<Offset> onStateAdded;
-  final ValueChanged<T> onTransitionAdded;
+  final void Function(automaton_state.State from, automaton_state.State to)
+      onTransitionAdded;
   final ValueChanged<automaton_state.State> onStateEdited;
   final ValueChanged<automaton_state.State> onStateDeleted;
   final ValueChanged<T> onTransitionDeleted;
@@ -23,6 +24,9 @@ class TouchGestureHandler<T extends Transition> extends StatefulWidget {
   final double stateRadius;
   final double selfLoopBaseRadius;
   final double selfLoopSpacing;
+  final bool isAddingTransition;
+  final ValueChanged<automaton_state.State?>? onTransitionOriginChanged;
+  final ValueChanged<Offset?>? onTransitionPreviewChanged;
 
   const TouchGestureHandler({
     super.key,
@@ -41,6 +45,9 @@ class TouchGestureHandler<T extends Transition> extends StatefulWidget {
     this.stateRadius = 30,
     this.selfLoopBaseRadius = 40,
     this.selfLoopSpacing = 12,
+    this.isAddingTransition = false,
+    this.onTransitionOriginChanged,
+    this.onTransitionPreviewChanged,
   });
 
   @override
@@ -60,6 +67,9 @@ class _TouchGestureHandlerState<T extends Transition>
   Offset _panOffset = Offset.zero;
   Offset _initialPanOffset = Offset.zero;
   bool _isPanning = false;
+  bool _isTransitionDrag = false;
+  automaton_state.State? _transitionDragStart;
+  Offset? _transitionDragPosition;
 
   // Long press handling
   Timer? _longPressTimer;
@@ -95,6 +105,10 @@ class _TouchGestureHandlerState<T extends Transition>
     final position = details.localPosition;
     final canvasPosition = _toCanvasCoordinates(position);
     final now = DateTime.now();
+
+    if (widget.isAddingTransition) {
+      return;
+    }
 
     // Check for double tap
     if (_lastTapTime != null &&
@@ -139,6 +153,9 @@ class _TouchGestureHandlerState<T extends Transition>
 
   /// Handles long press for context menu
   void _handleLongPressStart(LongPressStartDetails details) {
+    if (widget.isAddingTransition) {
+      return;
+    }
     _longPressPosition = details.localPosition;
     _longPressTimer = Timer(const Duration(milliseconds: 500), () {
       _showContextMenuAt(details.localPosition);
@@ -168,6 +185,19 @@ class _TouchGestureHandlerState<T extends Transition>
   void _handleScaleStart(ScaleStartDetails details) {
     _isZooming = true;
 
+    if (widget.isAddingTransition && details.pointerCount == 1) {
+      final canvasPoint = _toCanvasCoordinates(details.localFocalPoint);
+      final state = _findStateAt(canvasPoint);
+      if (state != null) {
+        _isTransitionDrag = true;
+        _transitionDragStart = state;
+        _transitionDragPosition = canvasPoint;
+        widget.onTransitionOriginChanged?.call(state);
+        widget.onTransitionPreviewChanged?.call(canvasPoint);
+        return;
+      }
+    }
+
     // Check if this is a single finger drag (pan)
     if (details.pointerCount == 1) {
       final canvasPoint = _toCanvasCoordinates(details.localFocalPoint);
@@ -193,6 +223,13 @@ class _TouchGestureHandlerState<T extends Transition>
 
   /// Handles scale update for zooming and panning
   void _handleScaleUpdate(ScaleUpdateDetails details) {
+    if (_isTransitionDrag && details.pointerCount == 1) {
+      final canvasPoint = _toCanvasCoordinates(details.localFocalPoint);
+      _transitionDragPosition = canvasPoint;
+      widget.onTransitionPreviewChanged?.call(canvasPoint);
+      return;
+    }
+
     if (_isDragging && _draggedState != null && details.pointerCount == 1) {
       // Handle single finger drag
       final deltaLocal = details.localFocalPoint - _dragStartPosition!;
@@ -217,12 +254,27 @@ class _TouchGestureHandlerState<T extends Transition>
 
   /// Handles scale end
   void _handleScaleEnd(ScaleEndDetails details) {
+    if (_isTransitionDrag) {
+      final startState = _transitionDragStart;
+      final endState = _transitionDragPosition != null
+          ? _findStateAt(_transitionDragPosition!)
+          : null;
+      if (startState != null && endState != null) {
+        widget.onTransitionAdded(startState, endState);
+      }
+      widget.onTransitionPreviewChanged?.call(null);
+      widget.onTransitionOriginChanged?.call(null);
+    }
+
     _isZooming = false;
     _isDragging = false;
     _isPanning = false;
     _draggedState = null;
     _dragStartPosition = null;
     _dragStartCanvasPosition = null;
+    _isTransitionDrag = false;
+    _transitionDragStart = null;
+    _transitionDragPosition = null;
   }
 
   /// Finds state at given position

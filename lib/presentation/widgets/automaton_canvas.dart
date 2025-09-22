@@ -1027,13 +1027,19 @@ class _TransitionSymbolInput {
       return null;
     }
 
-    if (parts.length == 1 &&
-        (parts.first == 'ε' || parts.first.toLowerCase() == 'epsilon' || parts.first.toLowerCase() == 'lambda')) {
-      return _TransitionSymbolInput(
-        inputSymbols: {},
-        lambdaSymbol: 'ε',
-        label: 'ε',
-      );
+    if (parts.length == 1) {
+      final normalized = parts.first.toLowerCase();
+      if (parts.first == 'ε' ||
+          normalized == 'epsilon' ||
+          normalized == 'lambda' ||
+          normalized == '£' ||
+          normalized == '€') {
+        return _TransitionSymbolInput(
+          inputSymbols: {},
+          lambdaSymbol: 'ε',
+          label: 'ε',
+        );
+      }
     }
 
     final symbols = parts.toSet();

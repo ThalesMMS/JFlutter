@@ -69,4 +69,34 @@ void main() {
       );
     });
   });
+
+  group('RegexToNFAConverter long expressions', () {
+    test('handles long concatenation chains efficiently', () {
+      final regex = 'a' * 5000;
+
+      final result = RegexToNFAConverter.convert(regex);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.data!.states, isNotEmpty);
+    });
+
+    test('handles extensive unions without degradation', () {
+      final regex = List.filled(2000, 'a').join('|');
+
+      final result = RegexToNFAConverter.convert(regex);
+
+      expect(result.isSuccess, isTrue);
+    });
+
+    test('handles repeated grouped expressions with unary operators', () {
+      final buffer = StringBuffer();
+      for (int i = 0; i < 1000; i++) {
+        buffer.write('(ab)+');
+      }
+
+      final result = RegexToNFAConverter.convert(buffer.toString());
+
+      expect(result.isSuccess, isTrue);
+    });
+  });
 }

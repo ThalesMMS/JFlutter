@@ -462,6 +462,8 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       isAccepting: s.isFinal,
     )).toSet();
 
+    final stateById = {for (final state in states) state.id: state};
+
     final initialState = states.where((s) => s.isInitial).firstOrNull;
     final acceptingStates = states.where((s) => s.isAccepting).toSet();
 
@@ -474,10 +476,16 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       if (parts.length == 2) {
         final fromStateId = parts[0];
         final symbol = parts[1];
-        final fromState = states.firstWhere((s) => s.id == fromStateId);
-        
+        final fromState = stateById[fromStateId];
+        if (fromState == null) {
+          throw StateError('State $fromStateId not found');
+        }
+
         for (final toStateId in entry.value) {
-          final toState = states.firstWhere((s) => s.id == toStateId);
+          final toState = stateById[toStateId];
+          if (toState == null) {
+            throw StateError('State $toStateId not found');
+          }
           transitions.add(FSATransition(
             id: 't${transitionId++}',
             fromState: fromState,

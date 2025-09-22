@@ -150,6 +150,15 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
             final index = _states.indexWhere((s) => s.id == state.id);
             if (index != -1) {
               _states[index] = updatedState;
+              if (updatedState.isInitial) {
+                for (var i = 0; i < _states.length; i++) {
+                  if (i == index) continue;
+                  final current = _states[i];
+                  if (current.isInitial) {
+                    _states[i] = current.copyWith(isInitial: false);
+                  }
+                }
+              }
             }
           });
           _notifyAutomatonChanged();
@@ -320,9 +329,20 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
 
   void _notifyAutomatonChanged() {
     if (widget.automaton != null) {
+      automaton_state.State? initialState;
+      for (final state in _states) {
+        if (state.isInitial) {
+          initialState = state;
+          break;
+        }
+      }
+      final acceptingStates =
+          _states.where((state) => state.isAccepting).toSet();
       final updatedAutomaton = widget.automaton!.copyWith(
         states: _states.toSet(),
         transitions: _transitions.toSet(),
+        initialState: initialState,
+        acceptingStates: acceptingStates,
       );
       widget.onAutomatonChanged(updatedAutomaton);
     }

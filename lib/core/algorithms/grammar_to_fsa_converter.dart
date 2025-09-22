@@ -207,7 +207,12 @@ class GrammarToFSAConverter {
   }
 
   static bool _isLambdaSymbol(String symbol) {
-    return symbol == 'ε' || symbol == 'λ' || symbol.toLowerCase() == 'lambda';
+    final normalized = symbol.toLowerCase();
+    return symbol == 'ε' ||
+        symbol == 'λ' ||
+        normalized == 'lambda' ||
+        normalized == '£' ||
+        normalized == '€';
   }
 
   static bool _isTerminalSymbol(String symbol, Grammar grammar) {

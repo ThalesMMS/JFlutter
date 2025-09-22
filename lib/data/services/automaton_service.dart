@@ -47,7 +47,12 @@ class AutomatonService {
       }
 
       final symbol = transitionData.symbol;
-      final isLambda = symbol == 'λ' || symbol == 'ε' || symbol.toLowerCase() == 'lambda';
+      final lowerSymbol = symbol.toLowerCase();
+      final isLambda = symbol == 'λ' ||
+          symbol == 'ε' ||
+          lowerSymbol == 'lambda' ||
+          lowerSymbol == '£' ||
+          lowerSymbol == '€';
 
       transitions.add(FSATransition(
         id: 't${id}_$transitionIndex',

@@ -235,7 +235,12 @@ class AutomatonRepositoryImpl implements AutomatonRepository {
       }
 
       final symbol = parts[1];
-      final isLambda = symbol == 'λ' || symbol == 'ε' || symbol.toLowerCase() == 'lambda';
+      final normalized = symbol.toLowerCase();
+      final isLambda = symbol == 'λ' ||
+          symbol == 'ε' ||
+          normalized == 'lambda' ||
+          normalized == '£' ||
+          normalized == '€';
 
       for (final destination in destinations) {
         final toState = stateById[destination];

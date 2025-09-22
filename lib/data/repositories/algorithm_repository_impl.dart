@@ -393,7 +393,11 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
 
   bool _isLambdaSymbol(String symbol) {
     final normalized = symbol.trim().toLowerCase();
-    return normalized == 'ε' || normalized == 'lambda' || normalized == 'λ';
+    return normalized == 'ε' ||
+        normalized == 'lambda' ||
+        normalized == 'λ' ||
+        normalized == '£' ||
+        normalized == '€';
   }
 
   GrammarEntity _grammarToEntity(model_grammar.Grammar grammar) {

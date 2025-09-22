@@ -485,8 +485,12 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
           throw StateError('State $fromStateId not found');
         }
         
-        final isLambda =
-            symbol == 'λ' || symbol == 'ε' || symbol.toLowerCase() == 'lambda';
+        final normalized = symbol.toLowerCase();
+        final isLambda = symbol == 'λ' ||
+            symbol == 'ε' ||
+            normalized == 'lambda' ||
+            normalized == '£' ||
+            normalized == '€';
             
         for (final toStateId in entry.value) {
           final toState = stateById[toStateId];

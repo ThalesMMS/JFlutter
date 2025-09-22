@@ -467,6 +467,10 @@ class FSAOperations {
 
   static bool _isLambdaSymbol(String symbol) {
     final normalized = symbol.trim().toLowerCase();
-    return normalized == 'ε' || normalized == 'λ' || normalized == 'lambda';
+    return normalized == 'ε' ||
+        normalized == 'λ' ||
+        normalized == 'lambda' ||
+        normalized == '£' ||
+        normalized == '€';
   }
 }

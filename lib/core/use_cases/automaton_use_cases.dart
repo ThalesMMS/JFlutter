@@ -273,3 +273,14 @@ class RemoveTransitionUseCase {
     }
   }
 }
+
+/// Use case for applying automatic layout to an automaton
+class ApplyAutoLayoutUseCase {
+  final LayoutRepository _repository;
+
+  ApplyAutoLayoutUseCase(this._repository);
+
+  Future<AutomatonResult> execute(AutomatonEntity automaton) async {
+    return await _repository.applyAutoLayout(automaton);
+  }
+}

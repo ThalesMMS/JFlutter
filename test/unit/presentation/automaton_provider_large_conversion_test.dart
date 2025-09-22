@@ -9,11 +9,11 @@ import 'package:jflutter/core/models/fsa_transition.dart';
 import 'package:jflutter/core/models/state.dart';
 import 'package:jflutter/core/repositories/automaton_repository.dart';
 import 'package:jflutter/core/result.dart';
+import 'package:jflutter/core/use_cases/algorithm_use_cases.dart';
 import 'package:jflutter/core/use_cases/automaton_use_cases.dart';
+import 'package:jflutter/data/repositories/algorithm_repository_impl.dart';
 import 'package:jflutter/data/repositories/automaton_repository_impl.dart';
 import 'package:jflutter/data/services/automaton_service.dart';
-import 'package:jflutter/data/services/conversion_service.dart';
-import 'package:jflutter/data/services/simulation_service.dart';
 import 'package:jflutter/presentation/providers/automaton_provider.dart';
 
 class _StubLayoutRepository implements LayoutRepository {
@@ -129,13 +129,21 @@ void main() {
 
     final automatonService = AutomatonService();
     final repository = AutomatonRepositoryImpl(automatonService);
+    final algorithmRepository = AlgorithmRepositoryImpl();
     final provider = AutomatonProvider(
-      automatonService: automatonService,
-      simulationService: SimulationService(),
-      conversionService: ConversionService(),
       createAutomatonUseCase: CreateAutomatonUseCase(repository),
-      loadAutomatonUseCase: LoadAutomatonUseCase(repository),
-      layoutRepository: _StubLayoutRepository(layoutEntity),
+      addStateUseCase: AddStateUseCase(repository),
+      nfaToDfaUseCase: NfaToDfaUseCase(algorithmRepository),
+      minimizeDfaUseCase: MinimizeDfaUseCase(algorithmRepository),
+      completeDfaUseCase: CompleteDfaUseCase(algorithmRepository),
+      regexToNfaUseCase: RegexToNfaUseCase(algorithmRepository),
+      dfaToRegexUseCase: DfaToRegexUseCase(algorithmRepository),
+      fsaToGrammarUseCase: FsaToGrammarUseCase(algorithmRepository),
+      checkEquivalenceUseCase: CheckEquivalenceUseCase(algorithmRepository),
+      simulateWordUseCase: SimulateWordUseCase(algorithmRepository),
+      applyAutoLayoutUseCase: ApplyAutoLayoutUseCase(
+        _StubLayoutRepository(layoutEntity),
+      ),
     );
 
     provider.updateAutomaton(initialAutomaton);

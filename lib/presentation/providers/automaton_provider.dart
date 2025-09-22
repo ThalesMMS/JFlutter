@@ -1,87 +1,103 @@
-import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:vector_math/vector_math_64.dart';
-import '../../core/algorithms/automaton_simulator.dart';
-import '../../core/algorithms/dfa_completer.dart';
-import '../../core/algorithms/dfa_minimizer.dart';
-import '../../core/algorithms/equivalence_checker.dart';
-import '../../core/algorithms/fa_to_regex_converter.dart';
-import '../../core/algorithms/fsa_to_grammar_converter.dart';
-import '../../core/algorithms/nfa_to_dfa_converter.dart';
-import '../../core/algorithms/regex_to_nfa_converter.dart';
-import '../../core/models/fsa.dart';
-import '../../core/models/fsa_transition.dart';
-import '../../core/models/state.dart';
-import '../../core/models/grammar.dart';
-import '../../core/models/pda.dart';
-import '../../core/models/simulation_result.dart' as sim_result;
-import '../../core/models/tm.dart';
-import '../../core/repositories/automaton_repository.dart';
-import '../../core/result.dart';
+
 import '../../core/entities/automaton_entity.dart';
+import '../../core/models/fsa.dart';
+import '../../core/models/grammar.dart';
+import '../../core/models/simulation_result.dart' as sim_result;
+import '../../core/result.dart';
+import '../../core/use_cases/algorithm_use_cases.dart';
+import '../../core/use_cases/automaton_use_cases.dart';
+import '../../core/utils/automaton_entity_mapper.dart';
+import '../../data/repositories/algorithm_repository_impl.dart';
+import '../../data/repositories/automaton_repository_impl.dart';
 import '../../data/services/automaton_service.dart';
-import '../../data/services/conversion_service.dart';
-import '../../data/services/simulation_service.dart';
 import '../../features/layout/layout_repository_impl.dart';
 
 /// Provider for automaton state management
 class AutomatonProvider extends StateNotifier<AutomatonState> {
-  final AutomatonService _automatonService;
-  final SimulationService _simulationService;
-  final ConversionService _conversionService;
-  final LayoutRepository _layoutRepository;
+  final CreateAutomatonUseCase _createAutomatonUseCase;
+  final AddStateUseCase _addStateUseCase;
+  final NfaToDfaUseCase _nfaToDfaUseCase;
+  final MinimizeDfaUseCase _minimizeDfaUseCase;
+  final CompleteDfaUseCase _completeDfaUseCase;
+  final RegexToNfaUseCase _regexToNfaUseCase;
+  final DfaToRegexUseCase _dfaToRegexUseCase;
+  final FsaToGrammarUseCase _fsaToGrammarUseCase;
+  final CheckEquivalenceUseCase _checkEquivalenceUseCase;
+  final SimulateWordUseCase _simulateWordUseCase;
+  final ApplyAutoLayoutUseCase _applyAutoLayoutUseCase;
 
   AutomatonProvider({
-    required AutomatonService automatonService,
-    required SimulationService simulationService,
-    required ConversionService conversionService,
-    required LayoutRepository layoutRepository,
-  })  : _automatonService = automatonService,
-        _simulationService = simulationService,
-        _conversionService = conversionService,
-        _layoutRepository = layoutRepository,
+    required CreateAutomatonUseCase createAutomatonUseCase,
+    required AddStateUseCase addStateUseCase,
+    required NfaToDfaUseCase nfaToDfaUseCase,
+    required MinimizeDfaUseCase minimizeDfaUseCase,
+    required CompleteDfaUseCase completeDfaUseCase,
+    required RegexToNfaUseCase regexToNfaUseCase,
+    required DfaToRegexUseCase dfaToRegexUseCase,
+    required FsaToGrammarUseCase fsaToGrammarUseCase,
+    required CheckEquivalenceUseCase checkEquivalenceUseCase,
+    required SimulateWordUseCase simulateWordUseCase,
+    required ApplyAutoLayoutUseCase applyAutoLayoutUseCase,
+  })  : _createAutomatonUseCase = createAutomatonUseCase,
+        _addStateUseCase = addStateUseCase,
+        _nfaToDfaUseCase = nfaToDfaUseCase,
+        _minimizeDfaUseCase = minimizeDfaUseCase,
+        _completeDfaUseCase = completeDfaUseCase,
+        _regexToNfaUseCase = regexToNfaUseCase,
+        _dfaToRegexUseCase = dfaToRegexUseCase,
+        _fsaToGrammarUseCase = fsaToGrammarUseCase,
+        _checkEquivalenceUseCase = checkEquivalenceUseCase,
+        _simulateWordUseCase = simulateWordUseCase,
+        _applyAutoLayoutUseCase = applyAutoLayoutUseCase,
         super(const AutomatonState());
 
   /// Creates a new automaton
   Future<void> createAutomaton({
     required String name,
-    String? description,
     required List<String> alphabet,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     try {
-      // Create a simple automaton with one state
-      final result = _automatonService.createAutomaton(
-        CreateAutomatonRequest(
-          name: name,
-          description: description,
-          states: [
-            StateData(
-              id: 'q0',
-              name: 'q0',
-              position: Point(100, 100),
-              isInitial: true,
-              isAccepting: false,
-            ),
-          ],
-          transitions: [],
-          alphabet: alphabet,
-          bounds: Rect(0, 0, 400, 300),
-        ),
+      final createResult = await _createAutomatonUseCase.execute(
+        name: name,
+        type: AutomatonType.dfa,
+        alphabet: alphabet.toSet(),
       );
 
-      if (result.isSuccess) {
-        state = state.copyWith(
-          currentAutomaton: result.data,
-          isLoading: false,
-        );
-      } else {
+      if (createResult.isFailure) {
         state = state.copyWith(
           isLoading: false,
-          error: result.error,
+          error: createResult.error,
         );
+        return;
       }
+
+      var automatonEntity = createResult.data!;
+      final addInitialStateResult = await _addStateUseCase.execute(
+        automaton: automatonEntity,
+        name: 'q0',
+        x: 100,
+        y: 100,
+        isInitial: true,
+        isFinal: false,
+      );
+
+      if (addInitialStateResult.isFailure) {
+        state = state.copyWith(
+          isLoading: false,
+          error: addInitialStateResult.error,
+        );
+        return;
+      }
+
+      automatonEntity = addInitialStateResult.data!;
+
+      state = state.copyWith(
+        currentAutomaton: automatonEntityToFsa(automatonEntity),
+        isLoading: false,
+      );
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -111,12 +127,10 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     );
 
     try {
-      // Use the core algorithm directly
-      final result = AutomatonSimulator.simulate(
-        state.currentAutomaton!,
+      final automatonEntity = fsaToAutomatonEntity(state.currentAutomaton!);
+      final result = await _simulateWordUseCase.execute(
+        automatonEntity,
         inputString,
-        stepByStep: true,
-        timeout: const Duration(seconds: 5),
       );
 
       if (result.isSuccess) {
@@ -150,12 +164,12 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     );
 
     try {
-      // Use the core algorithm directly
-      final result = NFAToDFAConverter.convert(state.currentAutomaton!);
+      final automatonEntity = fsaToAutomatonEntity(state.currentAutomaton!);
+      final result = await _nfaToDfaUseCase.execute(automatonEntity);
 
       if (result.isSuccess) {
         state = state.copyWith(
-          currentAutomaton: result.data,
+          currentAutomaton: automatonEntityToFsa(result.data!),
           isLoading: false,
           simulationResult: null,
         );
@@ -185,12 +199,12 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     );
 
     try {
-      // Use the core algorithm directly
-      final result = DFAMinimizer.minimize(state.currentAutomaton!);
+      final automatonEntity = fsaToAutomatonEntity(state.currentAutomaton!);
+      final result = await _minimizeDfaUseCase.execute(automatonEntity);
 
       if (result.isSuccess) {
         state = state.copyWith(
-          currentAutomaton: result.data,
+          currentAutomaton: automatonEntityToFsa(result.data!),
           isLoading: false,
           simulationResult: null,
         );
@@ -220,12 +234,21 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     );
 
     try {
-      final result = DFACompleter.complete(state.currentAutomaton!);
-      state = state.copyWith(
-        currentAutomaton: result,
-        isLoading: false,
-        simulationResult: null,
-      );
+      final automatonEntity = fsaToAutomatonEntity(state.currentAutomaton!);
+      final result = await _completeDfaUseCase.execute(automatonEntity);
+
+      if (result.isSuccess) {
+        state = state.copyWith(
+          currentAutomaton: automatonEntityToFsa(result.data!),
+          isLoading: false,
+          simulationResult: null,
+        );
+      } else {
+        state = state.copyWith(
+          isLoading: false,
+          error: result.error,
+        );
+      }
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -241,12 +264,22 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final result = FSAToGrammarConverter.convert(state.currentAutomaton!);
-      state = state.copyWith(
-        isLoading: false,
-        grammarResult: result,
-      );
-      return result;
+      final automatonEntity = fsaToAutomatonEntity(state.currentAutomaton!);
+      final result = await _fsaToGrammarUseCase.execute(automatonEntity);
+
+      if (result.isSuccess) {
+        state = state.copyWith(
+          isLoading: false,
+          grammarResult: result.data,
+        );
+        return result.data;
+      } else {
+        state = state.copyWith(
+          isLoading: false,
+          error: result.error,
+        );
+        return null;
+      }
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -268,15 +301,12 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     );
 
     try {
-      // Convert FSA to AutomatonEntity for layout repository
-      final automatonEntity = _convertFsaToEntity(state.currentAutomaton!);
-      final result = await _layoutRepository.applyAutoLayout(automatonEntity);
+      final automatonEntity = fsaToAutomatonEntity(state.currentAutomaton!);
+      final result = await _applyAutoLayoutUseCase.execute(automatonEntity);
 
       if (result.isSuccess) {
-        // Convert back to FSA
-        final updatedFsa = _convertEntityToFsa(result.data!);
         state = state.copyWith(
-          currentAutomaton: updatedFsa,
+          currentAutomaton: automatonEntityToFsa(result.data!),
           isLoading: false,
           simulationResult: null,
         );
@@ -304,12 +334,11 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     );
 
     try {
-      // Use the core algorithm directly
-      final result = RegexToNFAConverter.convert(regex);
+      final result = await _regexToNfaUseCase.execute(regex);
 
       if (result.isSuccess) {
         state = state.copyWith(
-          currentAutomaton: result.data,
+          currentAutomaton: automatonEntityToFsa(result.data!),
           isLoading: false,
           simulationResult: null,
         );
@@ -334,11 +363,10 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      // Use the core algorithm directly
-      final result = FAToRegexConverter.convert(state.currentAutomaton!);
+      final automatonEntity = fsaToAutomatonEntity(state.currentAutomaton!);
+      final result = await _dfaToRegexUseCase.execute(automatonEntity);
 
       if (result.isSuccess) {
-        // Store the regex result in state
         state = state.copyWith(
           regexResult: result.data,
           isLoading: false,
@@ -372,16 +400,32 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     );
 
     try {
-      final areEquivalent =
-          EquivalenceChecker.areEquivalent(state.currentAutomaton!, other);
-      state = state.copyWith(
-        isLoading: false,
-        equivalenceResult: areEquivalent,
-        equivalenceDetails: areEquivalent
-            ? 'The automata accept the same language.'
-            : 'A distinguishing string was found between the automata.',
+      final currentEntity = fsaToAutomatonEntity(state.currentAutomaton!);
+      final otherEntity = fsaToAutomatonEntity(other);
+      final result = await _checkEquivalenceUseCase.execute(
+        currentEntity,
+        otherEntity,
       );
-      return areEquivalent;
+
+      if (result.isSuccess) {
+        final areEquivalent = result.data!;
+        state = state.copyWith(
+          isLoading: false,
+          equivalenceResult: areEquivalent,
+          equivalenceDetails: areEquivalent
+              ? 'The automata accept the same language.'
+              : 'A distinguishing string was found between the automata.',
+        );
+        return areEquivalent;
+      } else {
+        state = state.copyWith(
+          isLoading: false,
+          equivalenceResult: null,
+          equivalenceDetails: result.error,
+          error: result.error,
+        );
+        return null;
+      }
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -411,117 +455,6 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     state = state.copyWith(error: null);
   }
 
-  /// Converts FSA to AutomatonEntity
-  AutomatonEntity _convertFsaToEntity(FSA fsa) {
-    final states = fsa.states.map((s) => StateEntity(
-      id: s.id,
-      name: s.label,
-      x: s.position.x,
-      y: s.position.y,
-      isInitial: s.isInitial,
-      isFinal: s.isAccepting,
-    )).toList();
-
-    // Build transitions map from FSA transitions
-    final transitions = <String, List<String>>{};
-    for (final transition in fsa.transitions.whereType<FSATransition>()) {
-      final symbols = <String>{};
-      if (transition.lambdaSymbol != null) {
-        symbols.add(transition.lambdaSymbol!);
-      } else {
-        symbols.addAll(transition.inputSymbols);
-      }
-
-      for (final symbol in symbols) {
-        final key = '${transition.fromState.id}|$symbol';
-        transitions.putIfAbsent(key, () => <String>[]).add(transition.toState.id);
-      }
-    }
-
-    final type = fsa.hasEpsilonTransitions
-        ? AutomatonType.nfaLambda
-        : fsa.isDeterministic
-            ? AutomatonType.dfa
-            : AutomatonType.nfa;
-
-    return AutomatonEntity(
-      id: fsa.id,
-      name: fsa.name,
-      alphabet: fsa.alphabet,
-      states: states,
-      transitions: transitions,
-      initialId: fsa.initialState?.id,
-      nextId: states.length + 1,
-      type: type,
-    );
-  }
-
-  /// Converts AutomatonEntity to FSA
-  FSA _convertEntityToFsa(AutomatonEntity entity) {
-    final states = entity.states.map((s) => State(
-      id: s.id,
-      label: s.name,
-      position: Vector2(s.x, s.y),
-      isInitial: s.isInitial,
-      isAccepting: s.isFinal,
-    )).toSet();
-
-    final stateById = {for (final state in states) state.id: state};
-
-    final initialState = states.where((s) => s.isInitial).firstOrNull;
-    final acceptingStates = states.where((s) => s.isAccepting).toSet();
-
-    // Build FSA transitions from transitions map
-    final transitions = <FSATransition>{};
-    int transitionId = 1;
-    
-    for (final entry in entity.transitions.entries) {
-      final parts = entry.key.split('|');
-      if (parts.length == 2) {
-        final fromStateId = parts[0];
-        final symbol = parts[1];
-        final fromState = stateById[fromStateId];
-        if (fromState == null) {
-          throw StateError('State $fromStateId not found');
-        }
-        
-        final normalized = symbol.toLowerCase();
-        final isLambda = symbol == 'λ' ||
-            symbol == 'ε' ||
-            normalized == 'lambda' ||
-            normalized == '£' ||
-            normalized == '€';
-            
-        for (final toStateId in entry.value) {
-          final toState = stateById[toStateId];
-          if (toState == null) {
-            throw StateError('State $toStateId not found');
-          }
-          transitions.add(FSATransition(
-            id: 't${transitionId++}',
-            fromState: fromState,
-            toState: toState,
-            label: symbol,
-            inputSymbols: isLambda ? <String>{} : {symbol},
-            lambdaSymbol: isLambda ? symbol : null,
-          ));
-        }
-      }
-    }
-
-    return FSA(
-      id: entity.id,
-      name: entity.name,
-      states: states,
-      transitions: transitions,
-      alphabet: entity.alphabet,
-      initialState: initialState,
-      acceptingStates: acceptingStates,
-      created: DateTime.now(),
-      modified: DateTime.now(),
-      bounds: Rectangle(0, 0, 800, 600),
-    );
-  }
 }
 
 /// State class for automaton provider
@@ -586,11 +519,21 @@ class AutomatonState {
 final automatonProvider =
     StateNotifierProvider<AutomatonProvider, AutomatonState>((ref) {
   final automatonService = AutomatonService();
+  final automatonRepository = AutomatonRepositoryImpl(automatonService);
+  final algorithmRepository = AlgorithmRepositoryImpl();
+  final layoutRepository = LayoutRepositoryImpl();
 
   return AutomatonProvider(
-    automatonService: automatonService,
-    simulationService: SimulationService(),
-    conversionService: ConversionService(),
-    layoutRepository: LayoutRepositoryImpl(),
+    createAutomatonUseCase: CreateAutomatonUseCase(automatonRepository),
+    addStateUseCase: AddStateUseCase(automatonRepository),
+    nfaToDfaUseCase: NfaToDfaUseCase(algorithmRepository),
+    minimizeDfaUseCase: MinimizeDfaUseCase(algorithmRepository),
+    completeDfaUseCase: CompleteDfaUseCase(algorithmRepository),
+    regexToNfaUseCase: RegexToNfaUseCase(algorithmRepository),
+    dfaToRegexUseCase: DfaToRegexUseCase(algorithmRepository),
+    fsaToGrammarUseCase: FsaToGrammarUseCase(algorithmRepository),
+    checkEquivalenceUseCase: CheckEquivalenceUseCase(algorithmRepository),
+    simulateWordUseCase: SimulateWordUseCase(algorithmRepository),
+    applyAutoLayoutUseCase: ApplyAutoLayoutUseCase(layoutRepository),
   );
 });

@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 import 'package:jflutter/core/models/state.dart' as automaton_state;
-import 'package:jflutter/presentation/widgets/automaton_canvas.dart';
+import 'package:jflutter/presentation/widgets/automaton_canvas/index.dart';
 
 Future<bool> _hasStrokeNear(ui.Image image, Offset point, {int radius = 3}) async {
   final byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);

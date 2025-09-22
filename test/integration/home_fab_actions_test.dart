@@ -6,7 +6,7 @@ import 'package:jflutter/core/models/grammar.dart';
 import 'package:jflutter/presentation/pages/fsa_page.dart';
 import 'package:jflutter/presentation/providers/automaton_provider.dart';
 import 'package:jflutter/presentation/providers/grammar_provider.dart';
-import 'package:jflutter/presentation/widgets/automaton_canvas.dart';
+import 'package:jflutter/presentation/widgets/automaton_canvas/index.dart';
 import 'package:jflutter/presentation/widgets/grammar_editor.dart';
 
 void main() {

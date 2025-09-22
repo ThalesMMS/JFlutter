@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/app.dart';
 import 'package:jflutter/presentation/pages/home_page.dart';
-import 'package:jflutter/presentation/widgets/automaton_canvas.dart';
+import 'package:jflutter/presentation/widgets/automaton_canvas/index.dart';
 import 'package:jflutter/presentation/widgets/mobile_navigation.dart';
 
 void main() {

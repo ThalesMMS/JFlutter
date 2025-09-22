@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/fsa.dart';
 import '../providers/automaton_provider.dart';
 import '../widgets/algorithm_panel.dart';
-import '../widgets/automaton_canvas.dart';
+import '../widgets/automaton_canvas/index.dart';
 import '../widgets/simulation_panel.dart';
 import 'grammar_page.dart';
 import 'regex_page.dart';

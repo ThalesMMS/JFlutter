@@ -3,10 +3,9 @@ import 'dart:math' as math;
 import 'package:jflutter/core/entities/automaton_entity.dart';
 import 'package:jflutter/core/repositories/automaton_repository.dart';
 import 'package:jflutter/core/result.dart';
+import 'package:jflutter/core/use_cases/algorithm_use_cases.dart';
 import 'package:jflutter/core/use_cases/automaton_use_cases.dart';
-import 'package:jflutter/data/services/automaton_service.dart';
-import 'package:jflutter/data/services/conversion_service.dart';
-import 'package:jflutter/data/services/simulation_service.dart';
+import 'package:jflutter/data/repositories/algorithm_repository_impl.dart';
 import 'package:jflutter/presentation/providers/automaton_provider.dart';
 import 'package:test/test.dart';
 import 'package:vector_math/vector_math_64.dart';
@@ -68,7 +67,7 @@ class _FakeAutomatonRepository implements AutomatonRepository {
 
   @override
   Future<AutomatonResult> saveAutomaton(AutomatonEntity automaton) =>
-      throw UnimplementedError();
+      Future.value(Success(automaton));
 
   @override
   Future<BoolResult> validateAutomaton(AutomatonEntity automaton) =>
@@ -117,13 +116,20 @@ void main() {
       );
 
       final layoutRepository = _RecordingLayoutRepository();
+      final algorithmRepository = AlgorithmRepositoryImpl();
+      final automatonRepository = _FakeAutomatonRepository();
       final provider = AutomatonProvider(
-        automatonService: AutomatonService(),
-        simulationService: SimulationService(),
-        conversionService: ConversionService(),
-        createAutomatonUseCase: CreateAutomatonUseCase(_FakeAutomatonRepository()),
-        loadAutomatonUseCase: LoadAutomatonUseCase(_FakeAutomatonRepository()),
-        layoutRepository: layoutRepository,
+        createAutomatonUseCase: CreateAutomatonUseCase(automatonRepository),
+        addStateUseCase: AddStateUseCase(automatonRepository),
+        nfaToDfaUseCase: NfaToDfaUseCase(algorithmRepository),
+        minimizeDfaUseCase: MinimizeDfaUseCase(algorithmRepository),
+        completeDfaUseCase: CompleteDfaUseCase(algorithmRepository),
+        regexToNfaUseCase: RegexToNfaUseCase(algorithmRepository),
+        dfaToRegexUseCase: DfaToRegexUseCase(algorithmRepository),
+        fsaToGrammarUseCase: FsaToGrammarUseCase(algorithmRepository),
+        checkEquivalenceUseCase: CheckEquivalenceUseCase(algorithmRepository),
+        simulateWordUseCase: SimulateWordUseCase(algorithmRepository),
+        applyAutoLayoutUseCase: ApplyAutoLayoutUseCase(layoutRepository),
       );
 
       provider.updateAutomaton(fsa);

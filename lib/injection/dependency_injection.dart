@@ -104,6 +104,10 @@ Future<void> setupDependencyInjection() async {
     () => RemoveTransitionUseCase(getIt<AutomatonRepository>()),
   );
 
+  getIt.registerLazySingleton<ApplyAutoLayoutUseCase>(
+    () => ApplyAutoLayoutUseCase(getIt<LayoutRepository>()),
+  );
+
   // Algorithm Use Cases
   getIt.registerLazySingleton<NfaToDfaUseCase>(
     () => NfaToDfaUseCase(getIt<AlgorithmRepository>()),
@@ -172,10 +176,17 @@ Future<void> setupDependencyInjection() async {
   // Providers
   getIt.registerFactory<AutomatonProvider>(
     () => AutomatonProvider(
-      automatonService: getIt<AutomatonService>(),
-      simulationService: getIt<SimulationService>(),
-      conversionService: getIt<ConversionService>(),
-      layoutRepository: getIt<LayoutRepository>(),
+      createAutomatonUseCase: getIt<CreateAutomatonUseCase>(),
+      addStateUseCase: getIt<AddStateUseCase>(),
+      nfaToDfaUseCase: getIt<NfaToDfaUseCase>(),
+      minimizeDfaUseCase: getIt<MinimizeDfaUseCase>(),
+      completeDfaUseCase: getIt<CompleteDfaUseCase>(),
+      regexToNfaUseCase: getIt<RegexToNfaUseCase>(),
+      dfaToRegexUseCase: getIt<DfaToRegexUseCase>(),
+      fsaToGrammarUseCase: getIt<FsaToGrammarUseCase>(),
+      checkEquivalenceUseCase: getIt<CheckEquivalenceUseCase>(),
+      simulateWordUseCase: getIt<SimulateWordUseCase>(),
+      applyAutoLayoutUseCase: getIt<ApplyAutoLayoutUseCase>(),
     ),
   );
   

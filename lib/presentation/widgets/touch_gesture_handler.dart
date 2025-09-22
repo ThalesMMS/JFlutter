@@ -102,6 +102,11 @@ class _TouchGestureHandlerState<T extends Transition>
 
   /// Handles tap gestures
   void _handleTap(TapDownDetails details) {
+    if (_showContextMenu) {
+      _closeContextMenu();
+      return;
+    }
+
     final position = details.localPosition;
     final canvasPosition = _toCanvasCoordinates(position);
     final now = DateTime.now();
@@ -183,6 +188,8 @@ class _TouchGestureHandlerState<T extends Transition>
 
   /// Handles scale start for zooming and panning
   void _handleScaleStart(ScaleStartDetails details) {
+    _closeContextMenu();
+
     _isZooming = true;
 
     if (widget.isAddingTransition && details.pointerCount == 1) {

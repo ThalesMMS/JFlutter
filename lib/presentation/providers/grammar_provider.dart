@@ -232,8 +232,14 @@ class GrammarProvider extends StateNotifier<GrammarState> {
     return result;
   }
 
-  bool _isLambda(String symbol) =>
-      symbol == 'ε' || symbol == 'λ' || symbol.toLowerCase() == 'lambda';
+  bool _isLambda(String symbol) {
+    final normalized = symbol.toLowerCase();
+    return symbol == 'ε' ||
+        symbol == 'λ' ||
+        normalized == 'lambda' ||
+        normalized == '£' ||
+        normalized == '€';
+  }
 
   bool _looksLikeNonTerminal(String symbol) {
     final uppercaseRegex = RegExp(r'^[A-Z]$');

@@ -666,8 +666,14 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
     return trimmed.split('');
   }
 
-  bool _isLambdaSymbol(String symbol) =>
-      symbol == 'ε' || symbol == 'λ' || symbol.toLowerCase() == 'lambda';
+  bool _isLambdaSymbol(String symbol) {
+    final normalized = symbol.toLowerCase();
+    return symbol == 'ε' ||
+        symbol == 'λ' ||
+        normalized == 'lambda' ||
+        normalized == '£' ||
+        normalized == '€';
+  }
 
   String _formatSymbols(List<String> symbols) {
     if (symbols.isEmpty) {

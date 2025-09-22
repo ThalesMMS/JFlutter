@@ -431,11 +431,667 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
     required automaton_state.State toState,
     PDATransition? existing,
   }) {
-    // Full dialog implementation continues...
-    // [Rest of the dialog code remains the same]
-    return Future.value(null); // Placeholder
+    final inputController = TextEditingController(
+      text: existing != null && !existing.isLambdaInput
+          ? existing.inputSymbol
+          : '',
+    );
+    final popController = TextEditingController(
+      text:
+          existing != null && !existing.isLambdaPop ? existing.popSymbol : '',
+    );
+    final pushController = TextEditingController(
+      text: existing != null && !existing.isLambdaPush
+          ? existing.pushSymbol
+          : '',
+    );
+
+    automaton_state.State selectedFrom = existing?.fromState ?? fromState;
+    automaton_state.State selectedTo = existing?.toState ?? toState;
+
+    bool isLambdaInput = existing?.isLambdaInput ?? false;
+    bool isLambdaPop = existing?.isLambdaPop ?? false;
+    bool isLambdaPush = existing?.isLambdaPush ?? false;
+    String? errorMessage;
+
+    Future<_PDATransitionConfig?> result = showDialog<_PDATransitionConfig>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            void setError(String? message) {
+              setDialogState(() {
+                errorMessage = message;
+              });
+            }
+
+            void handleSubmit() {
+              final inputSymbol = inputController.text.trim();
+              final popSymbol = popController.text.trim();
+              final pushSymbol = pushController.text.trim();
+
+              if (!isLambdaInput && inputSymbol.isEmpty) {
+                setError('Input symbol cannot be empty unless λ is selected.');
+                return;
+              }
+
+              if (!isLambdaPop && popSymbol.isEmpty) {
+                setError('Pop symbol cannot be empty unless λ is selected.');
+                return;
+              }
+
+              if (!isLambdaPush && pushSymbol.isEmpty) {
+                setError('Push symbol cannot be empty unless λ is selected.');
+                return;
+              }
+
+              setError(null);
+              Navigator.of(context).pop(
+                _PDATransitionConfig(
+                  fromState: selectedFrom,
+                  toState: selectedTo,
+                  inputSymbol: inputSymbol,
+                  popSymbol: popSymbol,
+                  pushSymbol: pushSymbol,
+                  isLambdaInput: isLambdaInput,
+                  isLambdaPop: isLambdaPop,
+                  isLambdaPush: isLambdaPush,
+                ),
+              );
+            }
+
+            return AlertDialog(
+              title: Text(existing == null ? 'Create Transition' : 'Edit Transition'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    DropdownButtonFormField<automaton_state.State>(
+                      value: selectedFrom,
+                      decoration: const InputDecoration(
+                        labelText: 'From state',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: _states
+                          .map(
+                            (state) => DropdownMenuItem(
+                              value: state,
+                              child: Text(state.label.isEmpty ? state.id : state.label),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setDialogState(() {
+                            selectedFrom = value;
+                          });
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<automaton_state.State>(
+                      value: selectedTo,
+                      decoration: const InputDecoration(
+                        labelText: 'To state',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: _states
+                          .map(
+                            (state) => DropdownMenuItem(
+                              value: state,
+                              child: Text(state.label.isEmpty ? state.id : state.label),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setDialogState(() {
+                            selectedTo = value;
+                          });
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    _TransitionSymbolField(
+                      controller: inputController,
+                      label: 'Input symbol',
+                      helperText: 'Use λ to consume no input.',
+                      isLambdaSelected: isLambdaInput,
+                      onLambdaChanged: (value) => setDialogState(() {
+                        isLambdaInput = value;
+                        if (value) inputController.clear();
+                      }),
+                    ),
+                    const SizedBox(height: 12),
+                    _TransitionSymbolField(
+                      controller: popController,
+                      label: 'Pop symbol',
+                      helperText: 'Use λ to avoid popping a symbol.',
+                      isLambdaSelected: isLambdaPop,
+                      onLambdaChanged: (value) => setDialogState(() {
+                        isLambdaPop = value;
+                        if (value) popController.clear();
+                      }),
+                    ),
+                    const SizedBox(height: 12),
+                    _TransitionSymbolField(
+                      controller: pushController,
+                      label: 'Push symbol',
+                      helperText: 'Use λ to avoid pushing to the stack.',
+                      isLambdaSelected: isLambdaPush,
+                      onLambdaChanged: (value) => setDialogState(() {
+                        isLambdaPush = value;
+                        if (value) pushController.clear();
+                      }),
+                    ),
+                    if (errorMessage != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        errorMessage!,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: handleSubmit,
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    return result.whenComplete(() {
+      inputController.dispose();
+      popController.dispose();
+      pushController.dispose();
+    });
   }
 }
 
-// Rest of the file continues with _PDATransitionConfig, _PDACanvasPainter, _StateEditDialog, etc.
-// [Truncated for brevity - the rest remains the same as in the original]
+class _PDATransitionConfig {
+  final automaton_state.State fromState;
+  final automaton_state.State toState;
+  final String inputSymbol;
+  final String popSymbol;
+  final String pushSymbol;
+  final bool isLambdaInput;
+  final bool isLambdaPop;
+  final bool isLambdaPush;
+
+  const _PDATransitionConfig({
+    required this.fromState,
+    required this.toState,
+    required this.inputSymbol,
+    required this.popSymbol,
+    required this.pushSymbol,
+    required this.isLambdaInput,
+    required this.isLambdaPop,
+    required this.isLambdaPush,
+  });
+
+  factory _PDATransitionConfig.fromTransition(PDATransition transition) {
+    return _PDATransitionConfig(
+      fromState: transition.fromState,
+      toState: transition.toState,
+      inputSymbol: transition.inputSymbol,
+      popSymbol: transition.popSymbol,
+      pushSymbol: transition.pushSymbol,
+      isLambdaInput: transition.isLambdaInput,
+      isLambdaPop: transition.isLambdaPop,
+      isLambdaPush: transition.isLambdaPush,
+    );
+  }
+
+  String get inputLabel => isLambdaInput ? 'λ' : inputSymbol;
+
+  String get popLabel => isLambdaPop ? 'λ' : popSymbol;
+
+  String get pushLabel => isLambdaPush ? 'λ' : pushSymbol;
+}
+
+class _PDACanvasPainter extends CustomPainter {
+  static const double _stateRadius = 25.0;
+  final List<automaton_state.State> states;
+  final List<PDATransition> transitions;
+  final automaton_state.State? selectedState;
+  final Set<String> nondeterministicTransitionIds;
+  final Set<String> lambdaTransitionIds;
+
+  const _PDACanvasPainter({
+    required this.states,
+    required this.transitions,
+    required this.selectedState,
+    this.nondeterministicTransitionIds = const {},
+    this.lambdaTransitionIds = const {},
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final transition in transitions) {
+      _drawTransition(canvas, transition);
+    }
+
+    for (final state in states) {
+      _drawState(canvas, state);
+    }
+  }
+
+  void _drawState(Canvas canvas, automaton_state.State state) {
+    final center = Offset(state.position.x, state.position.y);
+
+    final fillPaint = Paint()
+      ..color = state == selectedState
+          ? Colors.blue.withOpacity(0.25)
+          : Colors.grey.withOpacity(0.15)
+      ..style = PaintingStyle.fill;
+
+    final borderColor = state.isInitial
+        ? Colors.green
+        : state.isAccepting
+            ? Colors.red
+            : Colors.black;
+
+    final strokePaint = Paint()
+      ..color = borderColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+
+    canvas.drawCircle(center, _stateRadius, fillPaint);
+    canvas.drawCircle(center, _stateRadius, strokePaint);
+
+    if (state.isAccepting) {
+      canvas.drawCircle(center, _stateRadius - 5, strokePaint);
+    }
+
+    if (state.isInitial) {
+      _drawInitialIndicator(canvas, center, borderColor);
+    }
+
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: state.label.isEmpty ? state.id : state.label,
+        style: const TextStyle(
+          color: Colors.black,
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: _stateRadius * 2);
+
+    textPainter.paint(
+      canvas,
+      Offset(
+        center.dx - textPainter.width / 2,
+        center.dy - textPainter.height / 2,
+      ),
+    );
+  }
+
+  void _drawTransition(Canvas canvas, PDATransition transition) {
+    final isSelfLoop = transition.fromState.id == transition.toState.id;
+    final isNondeterministic =
+        nondeterministicTransitionIds.contains(transition.id);
+    final isLambda = lambdaTransitionIds.contains(transition.id);
+
+    Color strokeColor = Colors.black;
+    if (isNondeterministic && isLambda) {
+      strokeColor = Colors.deepPurple;
+    } else if (isNondeterministic) {
+      strokeColor = Colors.orange[700] ?? Colors.orange;
+    } else if (isLambda) {
+      strokeColor = Colors.indigo;
+    }
+
+    final paint = Paint()
+      ..color = strokeColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = isNondeterministic || isLambda ? 3.0 : 2.0;
+
+    if (isSelfLoop) {
+      _drawSelfLoop(canvas, transition, paint, isLambda, isNondeterministic);
+      return;
+    }
+
+    final curve = TransitionCurve.compute(
+      transitions,
+      transition,
+      stateRadius: _stateRadius,
+      curvatureStrength: 45,
+      labelOffset: 18,
+    );
+
+    final path = Path()
+      ..moveTo(curve.start.dx, curve.start.dy)
+      ..quadraticBezierTo(
+        curve.control.dx,
+        curve.control.dy,
+        curve.end.dx,
+        curve.end.dy,
+      );
+
+    canvas.drawPath(path, paint);
+
+    final derivative = TransitionCurve.derivativeAt(
+      curve.start,
+      curve.control,
+      curve.end,
+      1.0,
+    );
+
+    final angle = math.atan2(derivative.dy, derivative.dx);
+    _drawArrowHead(canvas, curve.end, angle, strokeColor);
+
+    _drawTransitionLabel(
+      canvas,
+      curve.labelPosition,
+      transition.label,
+      strokeColor,
+      isLambda: isLambda,
+      isNondeterministic: isNondeterministic,
+    );
+  }
+
+  void _drawSelfLoop(
+    Canvas canvas,
+    PDATransition transition,
+    Paint paint,
+    bool isLambda,
+    bool isNondeterministic,
+  ) {
+    final center = Offset(
+      transition.fromState.position.x,
+      transition.fromState.position.y,
+    );
+
+    const double loopRadius = 40;
+    final start = Offset(center.dx, center.dy - _stateRadius);
+    final controlLeft = Offset(center.dx - loopRadius, center.dy - loopRadius);
+    final controlRight = Offset(center.dx + loopRadius, center.dy - loopRadius);
+    final path = Path()
+      ..moveTo(start.dx, start.dy)
+      ..cubicTo(
+        controlLeft.dx,
+        controlLeft.dy,
+        controlRight.dx,
+        controlRight.dy,
+        start.dx,
+        start.dy,
+      );
+
+    canvas.drawPath(path, paint);
+
+    _drawArrowHead(canvas, start, -math.pi / 2, paint.color);
+
+    final labelPosition = Offset(center.dx, center.dy - loopRadius - 16);
+    _drawTransitionLabel(
+      canvas,
+      labelPosition,
+      transition.label,
+      paint.color,
+      isLambda: isLambda,
+      isNondeterministic: isNondeterministic,
+    );
+  }
+
+  void _drawArrowHead(Canvas canvas, Offset tip, double angle, Color color) {
+    const double arrowLength = 12;
+    const double arrowAngle = math.pi / 6;
+
+    final path = Path()
+      ..moveTo(
+        tip.dx - arrowLength * math.cos(angle - arrowAngle),
+        tip.dy - arrowLength * math.sin(angle - arrowAngle),
+      )
+      ..lineTo(tip.dx, tip.dy)
+      ..lineTo(
+        tip.dx - arrowLength * math.cos(angle + arrowAngle),
+        tip.dy - arrowLength * math.sin(angle + arrowAngle),
+      );
+
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
+    );
+  }
+
+  void _drawTransitionLabel(
+    Canvas canvas,
+    Offset position,
+    String text,
+    Color accentColor, {
+    required bool isLambda,
+    required bool isNondeterministic,
+  }) {
+    if (text.isEmpty) return;
+
+    final textStyle = TextStyle(
+      color: Colors.black,
+      fontSize: 12,
+      fontStyle: isLambda ? FontStyle.italic : FontStyle.normal,
+      fontWeight: isNondeterministic ? FontWeight.bold : FontWeight.w500,
+    );
+
+    final textPainter = TextPainter(
+      text: TextSpan(text: text, style: textStyle),
+      maxLines: 2,
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: 160);
+
+    final padding = const EdgeInsets.symmetric(horizontal: 8, vertical: 4);
+    final rect = Rect.fromCenter(
+      center: position,
+      width: textPainter.width + padding.horizontal,
+      height: textPainter.height + padding.vertical,
+    );
+
+    final backgroundPaint = Paint()
+      ..color = Colors.white.withOpacity(0.8)
+      ..style = PaintingStyle.fill;
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, const Radius.circular(6)),
+      backgroundPaint,
+    );
+
+    if (isNondeterministic || isLambda) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(rect, const Radius.circular(6)),
+        Paint()
+          ..color = accentColor.withOpacity(0.4)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5,
+      );
+    }
+
+    textPainter.paint(
+      canvas,
+      Offset(
+        rect.left + padding.left,
+        rect.top + padding.top,
+      ),
+    );
+  }
+
+  void _drawInitialIndicator(Canvas canvas, Offset center, Color color) {
+    final start = Offset(center.dx - 40, center.dy);
+    final end = Offset(center.dx - _stateRadius, center.dy);
+
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5;
+
+    canvas.drawLine(start, end, paint);
+    _drawArrowHead(canvas, end, 0, color);
+  }
+
+  @override
+  bool shouldRepaint(covariant _PDACanvasPainter oldDelegate) {
+    return oldDelegate.states != states ||
+        oldDelegate.transitions != transitions ||
+        oldDelegate.selectedState != selectedState ||
+        oldDelegate.nondeterministicTransitionIds !=
+            nondeterministicTransitionIds ||
+        oldDelegate.lambdaTransitionIds != lambdaTransitionIds;
+  }
+}
+
+class _StateEditDialog extends StatefulWidget {
+  final automaton_state.State state;
+  final ValueChanged<automaton_state.State> onStateUpdated;
+
+  const _StateEditDialog({
+    required this.state,
+    required this.onStateUpdated,
+  });
+
+  @override
+  State<_StateEditDialog> createState() => _StateEditDialogState();
+}
+
+class _StateEditDialogState extends State<_StateEditDialog> {
+  late TextEditingController _nameController;
+  late bool _isInitial;
+  late bool _isAccepting;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.state.label);
+    _isInitial = widget.state.isInitial;
+    _isAccepting = widget.state.isAccepting;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Edit State'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _nameController,
+            decoration: const InputDecoration(
+              labelText: 'State label',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 16),
+          CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Initial state'),
+            value: _isInitial,
+            onChanged: (value) => setState(() {
+              _isInitial = value ?? false;
+            }),
+          ),
+          CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Accepting state'),
+            value: _isAccepting,
+            onChanged: (value) => setState(() {
+              _isAccepting = value ?? false;
+            }),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _saveState,
+          child: const Text('Save'),
+        ),
+      ],
+    );
+  }
+
+  void _saveState() {
+    final updatedState = widget.state.copyWith(
+      label: _nameController.text.trim().isEmpty
+          ? widget.state.id
+          : _nameController.text.trim(),
+      isInitial: _isInitial,
+      isAccepting: _isAccepting,
+    );
+
+    widget.onStateUpdated(updatedState);
+    Navigator.of(context).pop();
+  }
+}
+
+class _TransitionSymbolField extends StatelessWidget {
+  final TextEditingController controller;
+  final String label;
+  final String helperText;
+  final bool isLambdaSelected;
+  final ValueChanged<bool> onLambdaChanged;
+
+  const _TransitionSymbolField({
+    required this.controller,
+    required this.label,
+    required this.helperText,
+    required this.isLambdaSelected,
+    required this.onLambdaChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: controller,
+                enabled: !isLambdaSelected,
+                decoration: InputDecoration(
+                  labelText: label,
+                  helperText: helperText,
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Switch(
+                  value: isLambdaSelected,
+                  onChanged: (value) => onLambdaChanged(value),
+                ),
+                const Text('λ'),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}

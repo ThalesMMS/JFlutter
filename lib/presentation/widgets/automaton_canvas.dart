@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 import '../../core/models/fsa.dart';
@@ -845,8 +846,8 @@ class AutomatonPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
     return oldDelegate is AutomatonPainter &&
-        (oldDelegate.states != states ||
-            oldDelegate.transitions != transitions ||
+        (!listEquals(oldDelegate.states, states) ||
+            !listEquals(oldDelegate.transitions, transitions) ||
             oldDelegate.selectedState != selectedState ||
             oldDelegate.transitionStart != transitionStart ||
             oldDelegate.transitionPreviewPosition != transitionPreviewPosition);

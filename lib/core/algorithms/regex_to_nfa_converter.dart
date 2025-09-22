@@ -119,86 +119,125 @@ class RegexToNFAConverter {
   /// Parses the expression from tokens
   static RegexNode? _parseExpression(List<RegexToken> tokens) {
     if (tokens.isEmpty) return null;
-    
-    final node = _parseUnion(tokens);
+
+    final stream = _TokenStream(tokens);
+    final node = _parseUnion(stream);
+    if (node == null || !stream.isAtEnd) {
+      return null;
+    }
     return node;
   }
 
   /// Parses union expressions (|)
-  static RegexNode? _parseUnion(List<RegexToken> tokens) {
-    var node = _parseConcatenation(tokens);
-    
-    while (tokens.isNotEmpty && tokens.first.type == TokenType.union) {
-      tokens.removeAt(0); // Remove |
+  static RegexNode? _parseUnion(_TokenStream tokens) {
+    final left = _parseConcatenation(tokens);
+    if (left == null) return null;
+
+    var node = left;
+
+    while (tokens.peek()?.type == TokenType.union) {
+      tokens.next(); // Consume |
       final right = _parseConcatenation(tokens);
       if (right == null) return null;
-      node = UnionNode(left: node!, right: right);
+      node = UnionNode(left: node, right: right);
     }
-    
+
     return node;
   }
 
   /// Parses concatenation expressions
-  static RegexNode? _parseConcatenation(List<RegexToken> tokens) {
-    var node = _parseUnary(tokens);
-    
-    while (tokens.isNotEmpty && 
-           tokens.first.type != TokenType.union &&
-           tokens.first.type != TokenType.rightParen) {
+  static RegexNode? _parseConcatenation(_TokenStream tokens) {
+    final first = _parseUnary(tokens);
+    if (first == null) return null;
+
+    var node = first;
+
+    while (true) {
+      final nextToken = tokens.peek();
+      if (nextToken == null ||
+          nextToken.type == TokenType.union ||
+          nextToken.type == TokenType.rightParen) {
+        break;
+      }
+
       final right = _parseUnary(tokens);
       if (right == null) return null;
-      node = ConcatenationNode(left: node!, right: right);
+      node = ConcatenationNode(left: node, right: right);
     }
-    
+
     return node;
   }
 
   /// Parses unary expressions (*, +, ?)
-  static RegexNode? _parseUnary(List<RegexToken> tokens) {
-    var node = _parsePrimary(tokens);
-    
-    while (tokens.isNotEmpty) {
-      final token = tokens.first;
+  static RegexNode? _parseUnary(_TokenStream tokens) {
+    final primary = _parsePrimary(tokens);
+    if (primary == null) return null;
+
+    var node = primary;
+
+    while (true) {
+      final token = tokens.peek();
+      if (token == null) return node;
+
       switch (token.type) {
         case TokenType.kleeneStar:
-          tokens.removeAt(0);
-          node = KleeneStarNode(child: node!);
+          tokens.next();
+          node = KleeneStarNode(child: node);
           break;
         case TokenType.plus:
-          tokens.removeAt(0);
-          node = PlusNode(child: node!);
+          tokens.next();
+          node = PlusNode(child: node);
           break;
         case TokenType.question:
-          tokens.removeAt(0);
-          node = QuestionNode(child: node!);
+          tokens.next();
+          node = QuestionNode(child: node);
           break;
         default:
           return node;
       }
     }
-    
-    return node;
   }
 
   /// Parses primary expressions (symbols, parentheses)
-  static RegexNode? _parsePrimary(List<RegexToken> tokens) {
-    if (tokens.isEmpty) return null;
-    
-    final token = tokens.removeAt(0);
-    
+  static RegexNode? _parsePrimary(_TokenStream tokens) {
+    final token = tokens.next();
+    if (token == null) return null;
+
     switch (token.type) {
       case TokenType.symbol:
         return SymbolNode(symbol: token.value);
       case TokenType.dot:
         return DotNode();
       case TokenType.leftParen:
-        final node = _parseExpression(tokens);
-        if (tokens.isEmpty || tokens.removeAt(0).type != TokenType.rightParen) {
+        final node = _parseUnion(tokens);
+        if (node == null) return null;
+        if (tokens.peek()?.type != TokenType.rightParen) {
           return null;
         }
+        tokens.next();
         return node;
       default:
         return null;
+    }
+  }
+
+  /// Token stream helper to provide O(1) access to regex tokens during parsing.
+  class _TokenStream {
+    _TokenStream(this._tokens);
+
+    final List<RegexToken> _tokens;
+    int _index = 0;
+
+    bool get isAtEnd => _index >= _tokens.length;
+
+    RegexToken? peek() {
+      if (_index >= _tokens.length) return null;
+      return _tokens[_index];
+    }
+
+    RegexToken? next() {
+      if (_index >= _tokens.length) return null;
+      return _tokens[_index++];
     }
   }
 

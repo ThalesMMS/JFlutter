@@ -18,9 +18,7 @@ import '../../core/models/simulation_result.dart' as sim_result;
 import '../../core/models/tm.dart';
 import '../../core/repositories/automaton_repository.dart';
 import '../../core/result.dart';
-import '../../core/use_cases/automaton_use_cases.dart';
 import '../../core/entities/automaton_entity.dart';
-import '../../data/repositories/automaton_repository_impl.dart';
 import '../../data/services/automaton_service.dart';
 import '../../data/services/conversion_service.dart';
 import '../../data/services/simulation_service.dart';
@@ -37,8 +35,6 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     required AutomatonService automatonService,
     required SimulationService simulationService,
     required ConversionService conversionService,
-    required CreateAutomatonUseCase createAutomatonUseCase,
-    required LoadAutomatonUseCase loadAutomatonUseCase,
     required LayoutRepository layoutRepository,
   })  : _automatonService = automatonService,
         _simulationService = simulationService,
@@ -575,13 +571,14 @@ class AutomatonState {
 }
 
 /// Provider instances
-final automatonProvider = StateNotifierProvider<AutomatonProvider, AutomatonState>((ref) {
+final automatonProvider =
+    StateNotifierProvider<AutomatonProvider, AutomatonState>((ref) {
+  final automatonService = AutomatonService();
+
   return AutomatonProvider(
-    automatonService: AutomatonService(),
+    automatonService: automatonService,
     simulationService: SimulationService(),
     conversionService: ConversionService(),
-    createAutomatonUseCase: CreateAutomatonUseCase(AutomatonRepositoryImpl(AutomatonService())),
-    loadAutomatonUseCase: LoadAutomatonUseCase(AutomatonRepositoryImpl(AutomatonService())),
     layoutRepository: LayoutRepositoryImpl(),
   );
 });

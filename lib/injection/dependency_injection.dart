@@ -175,8 +175,6 @@ Future<void> setupDependencyInjection() async {
       automatonService: getIt<AutomatonService>(),
       simulationService: getIt<SimulationService>(),
       conversionService: getIt<ConversionService>(),
-      createAutomatonUseCase: getIt<CreateAutomatonUseCase>(),
-      loadAutomatonUseCase: getIt<LoadAutomatonUseCase>(),
       layoutRepository: getIt<LayoutRepository>(),
     ),
   );

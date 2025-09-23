@@ -76,8 +76,14 @@ void main() {
 
       final svgContent = await File(filePath).readAsString();
 
-      expect(svgContent, contains('S &amp;&lt;&gt;&quot;&apos;'));
-      expect(svgContent, contains('a&amp;&lt;&gt;&quot;&apos;'));
+      expect(
+        svgContent,
+        contains('<text x="100.0" y="105.0" text-anchor="middle" font-family="Arial" font-size="14" fill="#000000">S &amp;&lt;&gt;&quot;&apos;</text>'),
+      );
+      expect(
+        svgContent,
+        contains('<text x="150.0" y="100.0" text-anchor="middle" font-family="Arial" font-size="12" fill="#000000">a&amp;&lt;&gt;&quot;&apos;</text>'),
+      );
       expect(svgContent, contains('&apos;'));
       expect(svgContent, isNot(contains('S &<')));
       expect(svgContent, isNot(contains('a&<')));

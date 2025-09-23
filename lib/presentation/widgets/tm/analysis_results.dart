@@ -7,18 +7,19 @@ import '../../core/models/tm_transition.dart';
 import '../../core/models/tm_transition.dart' as tm_models show TapeDirection;
 import '../../providers/tm_algorithm_view_model.dart';
 
-/// Presents a summary of the TM analysis metrics collected by the selected
-/// algorithm, including states, transitions, tape usage, and detected issues.
-class AnalysisResults extends StatelessWidget {
+/// Resume de forma consolidada as métricas levantadas pela análise da Máquina
+/// de Turing selecionada, cobrindo estados, transições, operações de fita e
+/// eventuais problemas detectados.
+  class AnalysisResults extends StatelessWidget {
   const AnalysisResults({super.key, required this.state});
 
   final TMAlgorithmState state;
 
   @override
   Widget build(BuildContext context) {
-    // `hasData` ensures the widget switches between the empty placeholder and
-    // the populated analysis view depending on whether the algorithm produced
-    // metrics or surfaced an error message.
+    // `hasData` decide se o componente exibe o placeholder vazio ou os cartões
+    // com resultados, dependendo se a execução retornou métricas ou alguma
+    // mensagem de erro.
     final hasData = state.analysis != null || state.errorMessage != null;
 
     return Expanded(
@@ -40,7 +41,7 @@ class AnalysisResults extends StatelessWidget {
     );
   }
 
-  /// Placeholder shown while no analysis has been executed yet.
+  /// Placeholder exibido enquanto nenhuma análise foi disparada.
   Widget _buildEmptyResults(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -82,8 +83,8 @@ class AnalysisResults extends StatelessWidget {
     );
   }
 
-  /// Populates each section with analysis details once metrics or errors are
-  /// available.
+  /// Exibe o conteúdo completo com os blocos de alcance, loops infinitos,
+  /// operações de fita e demais métricas assim que houver dados ou erros.
   Widget _buildResults(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -132,13 +133,13 @@ class AnalysisResults extends StatelessWidget {
 
     final children = <Widget>[
       if (state.focus != null) ...[
-        // When a focus is selected, render a banner so users know which
-        // analysis dimension is emphasized and highlighted below.
+        // Quando há um foco selecionado (`state.focus`), um banner identifica a
+        // dimensão destacada e orienta quais cartões aparecerão realçados.
         _buildFocusBanner(context, state.focus!),
         const SizedBox(height: 12),
       ],
-      // Overview of state counts, including halting coverage to assess
-      // reachability of accepting states.
+      // Bloco de estados: apresenta contagens gerais e cobertura de estados de
+      // parada para avaliar o alcance dos estados de aceitação.
       _buildSectionCard(
         context,
         title: 'State Analysis',
@@ -176,7 +177,8 @@ class AnalysisResults extends StatelessWidget {
         ],
       ),
       const SizedBox(height: 12),
-      // Transition overview summarizing TM-specific and non-TM edges.
+      // Bloco de transições: resume arestas específicas de TM e transições
+      // genéricas para detectar elementos fora do formalismo.
       _buildSectionCard(
         context,
         title: 'Transition Analysis',
@@ -201,7 +203,8 @@ class AnalysisResults extends StatelessWidget {
         ],
       ),
       const SizedBox(height: 12),
-      // Tape operations card listing read/write symbols and head moves.
+      // Bloco de operações de fita: lista símbolos lidos/escritos e movimentos
+      // da cabeça para entender o uso da fita.
       _buildSectionCard(
         context,
         title: 'Tape Operations',
@@ -230,7 +233,8 @@ class AnalysisResults extends StatelessWidget {
         ],
       ),
       const SizedBox(height: 12),
-      // Reachability metrics showing which states can be visited.
+      // Bloco de alcançabilidade: mostra quais estados podem ser visitados e
+      // quais permanecem inacessíveis.
       _buildSectionCard(
         context,
         title: 'Reachability',
@@ -262,7 +266,8 @@ class AnalysisResults extends StatelessWidget {
         ],
       ),
       const SizedBox(height: 12),
-      // Execution timing that reports performance-related counters.
+      // Bloco de tempo de execução: exibe contadores relacionados ao custo de
+      // processamento da análise.
       _buildSectionCard(
         context,
         title: 'Execution Timing',
@@ -291,8 +296,9 @@ class AnalysisResults extends StatelessWidget {
         title: 'Potential Issues',
         section: _TMAnalysisSection.issues,
         children: [
-          // Highlights structural issues such as unreachable states and
-          // self-loops that keep the head stationary.
+          // Bloco de problemas potenciais: ressalta questões estruturais, como
+          // estados inalcançáveis e auto-transições que mantêm a cabeça parada
+          // (possível loop infinito).
           if (unreachableStates.isEmpty && potentialInfinite.isEmpty)
             _buildStatusMessage(
               context,
@@ -345,8 +351,8 @@ class AnalysisResults extends StatelessWidget {
     );
   }
 
-  /// Highlights the currently selected focus area so users understand which
-  /// metrics are being emphasized.
+  /// Exibe o banner de foco para indicar qual dimensão da análise está
+  /// destacada, controlando os realces aplicados às seções abaixo.
   Widget _buildFocusBanner(BuildContext context, TMAnalysisFocus focus) {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
@@ -389,9 +395,9 @@ class AnalysisResults extends StatelessWidget {
     }
   }
 
-  /// Wraps each metrics group in a card and determines whether it should be
-  /// highlighted when the current focus targets the underlying topic (states,
-  /// reachability, tape usage, etc.).
+  /// Envolve cada grupo de métricas em um cartão e define se ele será
+  /// destacado quando o foco atual apontar para o tema (estados, alcance,
+  /// fita, etc.).
   Widget _buildSectionCard(
     BuildContext context, {
     required String title,
@@ -430,8 +436,8 @@ class AnalysisResults extends StatelessWidget {
     );
   }
 
-  /// Decides if a section should stand out based on the current analysis focus
-  /// set by the algorithm controls (`state.focus`).
+  /// Decide se um cartão deve ganhar destaque conforme o foco atual
+  /// configurado pelos controles da análise (`state.focus`).
   bool _shouldHighlight(_TMAnalysisSection section) {
     final focus = state.focus;
     if (focus == null) return false;
@@ -500,8 +506,8 @@ class AnalysisResults extends StatelessWidget {
     );
   }
 
-  /// Visualizes sets of symbols or states (e.g., tape alphabet, reachability)
-  /// using chips to quickly scan which elements are involved.
+  /// Visualiza conjuntos de símbolos ou estados (alfabeto da fita, alcance) em
+  /// chips para leitura rápida dos elementos envolvidos.
   Widget _buildChipList(
     BuildContext context, {
     required String label,

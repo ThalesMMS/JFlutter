@@ -2,10 +2,10 @@
 import '../models/fsa.dart';
 import '../models/state.dart';
 
-/// Implements DFA equivalence checking by exploring pairs of states in
-/// breadth-first order. The algorithm assumes the provided automata are
-/// complete; complete them explicitly before invoking this checker to avoid
-/// false negatives.
+/// Implements DFA equivalence checking by performing a breadth-first search
+/// over pairs of states. The algorithm relies on the DFAs being complete, so
+/// ensure both automata are completed (e.g., by adding sink states) before
+/// invoking this checker to avoid spurious inequivalence results.
 class EquivalenceChecker {
   static bool areEquivalent(FSA a, FSA b) {
     final alphabet = a.alphabet.union(b.alphabet);
@@ -19,9 +19,10 @@ class EquivalenceChecker {
     final visited = <String>{};
     final queue = <List<State>>[];
 
-    // Track visited pairs using the concatenated state IDs so that each
-    // combination is processed only once, regardless of which automaton the
-    // individual states belong to.
+    // Track visited pairs by concatenating the state IDs. This creates a
+    // deterministic identifier for each combination of states encountered
+    // during the pairwise search, preventing the queue from processing the
+    // same pair more than once.
 
     queue.add([initialStateA, initialStateB]);
     visited.add('${initialStateA.id},${initialStateB.id}');
@@ -47,10 +48,11 @@ class EquivalenceChecker {
           }
         } else if (nextStateA != null || nextStateB != null) {
           // If only one DFA defines a transition for this symbol, the search
-          // observes different behaviours. The checker expects complete DFAs,
-          // where missing transitions would lead to an explicit sink state.
-          // Complete both automata before comparing to prevent spurious
-          // inequivalence results.
+          // observes different behaviours. This branch exists solely because
+          // the algorithm assumes complete DFAs; a missing transition should
+          // have been directed to an explicit sink state. Complete the
+          // automata before comparing to ensure the equivalence result is
+          // meaningful.
           return false;
         }
       }

@@ -22,6 +22,28 @@ AutomatonEntity _createLambdaNfa() {
   );
 }
 
+AutomatonEntity _createChainedLambdaNfa() {
+  return AutomatonEntity(
+    id: 'lambda_chain_nfa',
+    name: 'Lambda Chain NFA',
+    alphabet: {'b', 'ε'},
+    states: const [
+      StateEntity(id: 'q0', name: 'q0', x: 0, y: 0, isInitial: true, isFinal: false),
+      StateEntity(id: 'q1', name: 'q1', x: 100, y: 0, isInitial: false, isFinal: false),
+      StateEntity(id: 'q2', name: 'q2', x: 200, y: 0, isInitial: false, isFinal: false),
+      StateEntity(id: 'q3', name: 'q3', x: 300, y: 0, isInitial: false, isFinal: true),
+    ],
+    transitions: {
+      'q0|ε': ['q1'],
+      'q1|ε': ['q2'],
+      'q2|b': ['q3'],
+    },
+    initialId: 'q0',
+    nextId: 4,
+    type: AutomatonType.nfaLambda,
+  );
+}
+
 AutomatonEntity _createEvenZeroDfa() {
   return AutomatonEntity(
     id: 'even_zero',
@@ -124,6 +146,23 @@ void main() {
 
       expect(await _accepts(repository, automaton, ''), isTrue);
       expect(await _accepts(repository, automaton, 'aa'), isTrue);
+    });
+
+    test('removeLambdaTransitions preserves chained epsilon closures', () async {
+      final result = await repository.removeLambdaTransitions(
+        _createChainedLambdaNfa(),
+      );
+      expect(result.isSuccess, isTrue, reason: result.error);
+      final automaton = result.data!;
+
+      expect(automaton.transitions.keys.any((key) => key.contains('ε')), isFalse);
+
+      expect(automaton.transitions['q0|b'], contains('q3'));
+      expect(automaton.transitions['q1|b'], contains('q3'));
+      expect(automaton.transitions['q2|b'], contains('q3'));
+
+      expect(await _accepts(repository, automaton, ''), isFalse);
+      expect(await _accepts(repository, automaton, 'b'), isTrue);
     });
 
     test('complementDfa toggles acceptance', () async {

@@ -365,9 +365,10 @@ class FSAOperations {
           ),
       };
 
+      final epsilonTransitionMap = _epsilonTransitionsByFromState(automaton);
       final epsilonClosures = <String, Set<State>>{
         for (final state in automaton.states)
-          state.id: _epsilonClosure(automaton, state),
+          state.id: _epsilonClosure(state, epsilonTransitionMap),
       };
 
       final acceptingStates = <State>{};
@@ -443,16 +444,32 @@ class FSAOperations {
     }
   }
 
-  static Set<State> _epsilonClosure(FSA automaton, State start) {
+  static Map<String, List<FSATransition>> _epsilonTransitionsByFromState(
+    FSA automaton,
+  ) {
+    final transitionsByState = <String, List<FSATransition>>{};
+    for (final transition in automaton.fsaTransitions) {
+      if (!transition.isEpsilonTransition) {
+        continue;
+      }
+      transitionsByState
+          .putIfAbsent(transition.fromState.id, () => <FSATransition>[])
+          .add(transition);
+    }
+    return transitionsByState;
+  }
+
+  static Set<State> _epsilonClosure(
+    State start,
+    Map<String, List<FSATransition>> epsilonTransitionMap,
+  ) {
     final closure = <State>{start};
     final queue = Queue<State>()..add(start);
 
     while (queue.isNotEmpty) {
       final state = queue.removeFirst();
-      final epsilonTransitions = automaton.fsaTransitions.where(
-        (transition) =>
-            transition.isEpsilonTransition && transition.fromState.id == state.id,
-      );
+      final epsilonTransitions =
+          epsilonTransitionMap[state.id] ?? const <FSATransition>[];
 
       for (final transition in epsilonTransitions) {
         final target = transition.toState;

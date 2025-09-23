@@ -181,13 +181,17 @@ export JFLUTTER_KEY_PASSWORD="$JFLUTTER_KEY_PASSWORD"
 ## 🧪 Testing
 
 ```bash
-# Run all tests
+# Run the full automated test suite (contract, integration, widget, and unit tests)
 flutter test
 
-# Run specific test categories
-flutter test test/core/                    # Core algorithm tests
-flutter test test/integration/             # Integration tests
-flutter test test/contract/                # Contract tests
+# Run targeted suites
+flutter test test/contract/                # Service contract coverage
+flutter test test/integration/             # End-to-end feature workflows
+flutter test test/unit/                    # Model/algorithm/service units
+flutter test test/widget/                  # Widget-level regressions
+
+# Generate coverage data (stored under coverage/lcov.info)
+flutter test --coverage
 
 # Static analysis
 flutter analyze

@@ -2,9 +2,33 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/algorithms/pda_simulator.dart';
+import '../../core/models/pda.dart';
 import '../../core/models/simulation_step.dart';
 import '../../core/result.dart';
 import '../providers/pda_editor_provider.dart';
+
+typedef PDASimulatorRunner = Result<PDASimulationResult> Function(
+  PDA,
+  String, {
+  bool stepByStep,
+  Duration timeout,
+});
+
+final pdaSimulatorRunnerProvider = Provider<PDASimulatorRunner>(
+  (ref) => (
+    pda,
+    inputString, {
+    bool stepByStep = false,
+    Duration timeout = const Duration(seconds: 5),
+  }) {
+    return PDASimulator.simulate(
+      pda,
+      inputString,
+      stepByStep: stepByStep,
+      timeout: timeout,
+    );
+  },
+);
 
 /// Encapsulates the PDA input controls, execution trigger, and results view
 /// so the widget can manage the full life cycle of a simulation from the same
@@ -366,7 +390,8 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
       initialStackSymbol: initialStack,
     );
 
-    final Result<PDASimulationResult> result = PDASimulator.simulate(
+    final simulator = ref.read(pdaSimulatorRunnerProvider);
+    final Result<PDASimulationResult> result = simulator(
       simulationPda,
       inputString,
       stepByStep: _stepByStep,

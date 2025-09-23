@@ -7,6 +7,8 @@ import '../../core/models/tm_transition.dart';
 import '../../core/models/tm_transition.dart' as tm_models show TapeDirection;
 import '../../providers/tm_algorithm_view_model.dart';
 
+/// Presents a summary of the TM analysis metrics collected by the selected
+/// algorithm, including states, transitions, tape usage, and detected issues.
 class AnalysisResults extends StatelessWidget {
   const AnalysisResults({super.key, required this.state});
 
@@ -14,6 +16,9 @@ class AnalysisResults extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // `hasData` ensures the widget switches between the empty placeholder and
+    // the populated analysis view depending on whether the algorithm produced
+    // metrics or surfaced an error message.
     final hasData = state.analysis != null || state.errorMessage != null;
 
     return Expanded(
@@ -35,6 +40,7 @@ class AnalysisResults extends StatelessWidget {
     );
   }
 
+  /// Placeholder shown while no analysis has been executed yet.
   Widget _buildEmptyResults(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -76,6 +82,8 @@ class AnalysisResults extends StatelessWidget {
     );
   }
 
+  /// Populates each section with analysis details once metrics or errors are
+  /// available.
   Widget _buildResults(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -124,9 +132,13 @@ class AnalysisResults extends StatelessWidget {
 
     final children = <Widget>[
       if (state.focus != null) ...[
+        // When a focus is selected, render a banner so users know which
+        // analysis dimension is emphasized and highlighted below.
         _buildFocusBanner(context, state.focus!),
         const SizedBox(height: 12),
       ],
+      // Overview of state counts, including halting coverage to assess
+      // reachability of accepting states.
       _buildSectionCard(
         context,
         title: 'State Analysis',
@@ -164,6 +176,7 @@ class AnalysisResults extends StatelessWidget {
         ],
       ),
       const SizedBox(height: 12),
+      // Transition overview summarizing TM-specific and non-TM edges.
       _buildSectionCard(
         context,
         title: 'Transition Analysis',
@@ -188,6 +201,7 @@ class AnalysisResults extends StatelessWidget {
         ],
       ),
       const SizedBox(height: 12),
+      // Tape operations card listing read/write symbols and head moves.
       _buildSectionCard(
         context,
         title: 'Tape Operations',
@@ -216,6 +230,7 @@ class AnalysisResults extends StatelessWidget {
         ],
       ),
       const SizedBox(height: 12),
+      // Reachability metrics showing which states can be visited.
       _buildSectionCard(
         context,
         title: 'Reachability',
@@ -247,6 +262,7 @@ class AnalysisResults extends StatelessWidget {
         ],
       ),
       const SizedBox(height: 12),
+      // Execution timing that reports performance-related counters.
       _buildSectionCard(
         context,
         title: 'Execution Timing',
@@ -275,6 +291,8 @@ class AnalysisResults extends StatelessWidget {
         title: 'Potential Issues',
         section: _TMAnalysisSection.issues,
         children: [
+          // Highlights structural issues such as unreachable states and
+          // self-loops that keep the head stationary.
           if (unreachableStates.isEmpty && potentialInfinite.isEmpty)
             _buildStatusMessage(
               context,
@@ -327,6 +345,8 @@ class AnalysisResults extends StatelessWidget {
     );
   }
 
+  /// Highlights the currently selected focus area so users understand which
+  /// metrics are being emphasized.
   Widget _buildFocusBanner(BuildContext context, TMAnalysisFocus focus) {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
@@ -369,6 +389,9 @@ class AnalysisResults extends StatelessWidget {
     }
   }
 
+  /// Wraps each metrics group in a card and determines whether it should be
+  /// highlighted when the current focus targets the underlying topic (states,
+  /// reachability, tape usage, etc.).
   Widget _buildSectionCard(
     BuildContext context, {
     required String title,
@@ -407,6 +430,8 @@ class AnalysisResults extends StatelessWidget {
     );
   }
 
+  /// Decides if a section should stand out based on the current analysis focus
+  /// set by the algorithm controls (`state.focus`).
   bool _shouldHighlight(_TMAnalysisSection section) {
     final focus = state.focus;
     if (focus == null) return false;
@@ -434,6 +459,7 @@ class AnalysisResults extends StatelessWidget {
     }
   }
 
+  /// Shows a single labelled metric inside a section.
   Widget _buildMetricRow(
     BuildContext context,
     String label,
@@ -474,6 +500,8 @@ class AnalysisResults extends StatelessWidget {
     );
   }
 
+  /// Visualizes sets of symbols or states (e.g., tape alphabet, reachability)
+  /// using chips to quickly scan which elements are involved.
   Widget _buildChipList(
     BuildContext context, {
     required String label,
@@ -523,6 +551,8 @@ class AnalysisResults extends StatelessWidget {
     );
   }
 
+  /// Conveys contextual status messages for each section, highlighting
+  /// warnings or positive findings.
   Widget _buildStatusMessage(
     BuildContext context, {
     required String message,
@@ -563,6 +593,7 @@ class AnalysisResults extends StatelessWidget {
     );
   }
 
+  /// Formats state identifiers for display while keeping labels sorted.
   List<String> _formatStates(Set<automaton_models.State> states) {
     final labels = states
         .map((state) => state.label.isNotEmpty ? state.label : state.id)
@@ -571,12 +602,16 @@ class AnalysisResults extends StatelessWidget {
     return labels;
   }
 
+  /// Sorts sets of symbols (used for tape operations) alphabetically before
+  /// rendering.
   List<String> _sorted(Set<String> values) {
     final list = values.toList();
     list.sort();
     return list;
   }
 
+  /// Chooses the most appropriate time unit for reporting the analysis
+  /// duration.
   String _formatDuration(Duration duration) {
     if (duration.inMilliseconds >= 1) {
       return '${duration.inMilliseconds} ms';
@@ -588,6 +623,8 @@ class AnalysisResults extends StatelessWidget {
     return '$nanoseconds ns';
   }
 
+  /// Detects self-loop transitions that keep the head still and may signal
+  /// potential infinite loops in the TM.
   List<TMTransition> _findPotentialInfiniteLoops(TM tm) {
     final transitions = tm.transitions.whereType<TMTransition>();
     return transitions

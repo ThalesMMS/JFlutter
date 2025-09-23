@@ -25,8 +25,15 @@
 - Escape SVG text labels before serialization to avoid corrupt exports when automata names include reserved XML characters.【F:lib/data/services/file_operations_service.dart†L324-L370】
 
 ### 📊 Updated Metrics
-- **Automated coverage**: +5 dedicated test suites spanning widget, service, and algorithm layers, plus broader repository validation for epsilon removal and DFA operations.【F:test/presentation/widgets/pda_simulation_panel_test.dart†L1-L126】【F:test/data/services/file_operations_service_svg_test.dart†L1-L84】【F:test/unit/algorithms/automaton_simulator_test.dart†L10-L146】【F:test/unit/algorithms/fa_to_regex_converter_test.dart†L10-L110】【F:test/unit/algorithms/grammar_to_pda_converter_test.dart†L7-L138】【F:test/unit/algorithms/test_algorithm_repository_impl.dart†L68-L154】
-- **Algorithm throughput**: Queue-based traversals and cached transition maps now back DFA/NFA conversions and string enumeration, reducing redundant scans during analysis operations.【F:lib/core/algorithms/dfa_minimizer.dart†L115-L193】【F:lib/core/algorithms/nfa_to_dfa_converter.dart†L139-L200】【F:lib/core/algorithms/automaton_simulator.dart†L377-L485】【F:lib/core/algorithms/fa_to_regex_converter.dart†L213-L274】
+- **Automated coverage**: +5 dedicated test suites spanning widget, service, and algorithm layers, plus broader repository validation for epsilon removal and DFA operations.
+- **Algorithm throughput**: Queue-based traversals and cached transition maps now back DFA/NFA conversions and string enumeration, reducing redundant scans during analysis operations.
+
+### ✅ Weekly PR Clarification Review
+- **PR #109 – PDA simulation panel tests**: Added widget coverage confirming the panel disables controls during execution and resets results, addressing prior uncertainty about regression coverage for asynchronous simulations.
+- **PR #108 – TM metrics subscription**: Introduced an explicit provider subscription that closes on dispose, resolving the question about metrics updates continuing after navigation changes.
+- **PR #107 – File operations panel guards**: Centralized loading handling and `mounted` checks so file pickers and SnackBars behave safely when dialogs close, closing the open doubt about error handling on unsupported platforms.
+- **PR #106 – TM canvas safety checks**: Added `mounted` guards around async canvas updates to settle reports of setState calls after widget disposal.
+- **Navigation abbreviations**: Current home navigation uses the agreed labels `FSA`, `Grammar`, `PDA`, `TM`, `Regex`, and `Pumping`, confirming the clarification request about tab abbreviations has been implemented.
 
 ### 🚧 Next Steps
 - Extend unit coverage to remaining models, services, and widgets highlighted as gaps in the current coverage assessment.【F:TEST_COVERAGE_ASSESSMENT.md†L32-L118】
@@ -148,6 +155,7 @@
 ### New Services
 - `lib/data/services/file_operations_service.dart` - Complete file operations
 
+### New Tests
 - `test/contract/test_automaton_service.dart` - Service contract tests
 - `test/integration/home_fab_actions_test.dart` - Floating action button workflow tests
 - `test/integration/test_file_operations.dart` - File operations tests

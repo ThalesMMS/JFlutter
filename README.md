@@ -11,14 +11,36 @@ JFlutter is a complete port of the classic JFLAP educational tool, rebuilt from 
 The project has been successfully fixed and is now fully functional on all supported platforms. All major compilation errors, runtime issues, and UI layout problems have been resolved.
 
 **Latest Updates**:
-- ✅ All compilation errors fixed
-- ✅ Runtime errors resolved (Riverpod state management)
-- ✅ UI layout issues fixed (responsive design)
-- ✅ Grammar screen working properly
-- ✅ Settings screen fully functional
-- ✅ TM Canvas layout optimized
-- ✅ Pumping Lemma Game responsive
-- ✅ All screens tested on iPhone 17 Pro Max
+
+### 2025-09-23
+
+- **Activity:** 116 PRs merged nos últimos 7 dias,
+  cobrindo otimizações de algoritmos,
+  arquitetura de estado e documentação.
+- **Performance & Algoritmos:** Melhorias substanciais no
+  desempenho do conversor e simulador de autômatos, como as
+  otimizações do minimizador de DFA e do conversor FA→Regex
+  ([#104](https://github.com/ThalesMMS/JFlutter/pull/104),
+  [#103](https://github.com/ThalesMMS/JFlutter/pull/103),
+  [#102](https://github.com/ThalesMMS/JFlutter/pull/102),
+  [#101](https://github.com/ThalesMMS/JFlutter/pull/101),
+  [#100](https://github.com/ThalesMMS/JFlutter/pull/100)).
+- **Arquitetura & Experiência:** Reestruturação de módulos e
+  ajustes de estado/tela para fluxos mais consistentes, incluindo
+  novos controladores e workflows de transição
+  ([#109](https://github.com/ThalesMMS/JFlutter/pull/109),
+  [#108](https://github.com/ThalesMMS/JFlutter/pull/108),
+  [#83](https://github.com/ThalesMMS/JFlutter/pull/83),
+  [#81](https://github.com/ThalesMMS/JFlutter/pull/81),
+  [#67](https://github.com/ThalesMMS/JFlutter/pull/67)).
+- **Qualidade & Documentação:** Ampliação da cobertura de testes
+  e documentação para widgets, canvas e guias de usuário,
+  fortalecendo a manutenção contínua
+  ([#109](https://github.com/ThalesMMS/JFlutter/pull/109),
+  [#95](https://github.com/ThalesMMS/JFlutter/pull/95),
+  [#94](https://github.com/ThalesMMS/JFlutter/pull/94),
+  [#87](https://github.com/ThalesMMS/JFlutter/pull/87),
+  [#86](https://github.com/ThalesMMS/JFlutter/pull/86)).
 
 ## ✨ Key Features
 
@@ -153,14 +175,14 @@ export JFLUTTER_KEY_PASSWORD="$JFLUTTER_KEY_PASSWORD"
 ## 📱 How to Use
 
 ### Creating an Automaton
-1. Open the **FSA** tab
-2. Tap the **"+"** button to add states
-3. Tap the **arrow** button to add transitions
-4. Tap on states to mark them as initial/final
-5. Use the **algorithms panel** to convert or minimize
+1. Open the **FSA** tab from the bottom navigation (mobile) or side tab list (desktop).
+2. Use the **Add State** icon in the floating canvas toolbar to insert a state, then drag it into place.
+3. Press the **Add Transition** icon, tap the origin and destination states, and enter the symbols in the dialog.
+4. Double-tap a state to toggle its **Initial** or **Accepting** flags inside the edit dialog.
+5. Open the **Algorithms** quick action (tune icon on mobile, left panel on desktop) to run conversions or minimization.
 
 ### Testing Strings
-1. Enter a string in the **simulation panel**
+1. On mobile, open the **Simulation** quick action (play icon) to reveal the panel, then enter a string.
 2. Tap **"Simulate"** to test acceptance
 3. View **step-by-step execution** results
 4. See **visual feedback** on the canvas
@@ -181,13 +203,17 @@ export JFLUTTER_KEY_PASSWORD="$JFLUTTER_KEY_PASSWORD"
 ## 🧪 Testing
 
 ```bash
-# Run all tests
+# Run the full automated test suite (contract, integration, widget, and unit tests)
 flutter test
 
-# Run specific test categories
-flutter test test/core/                    # Core algorithm tests
-flutter test test/integration/             # Integration tests
-flutter test test/contract/                # Contract tests
+# Run targeted suites
+flutter test test/contract/                # Service contract coverage
+flutter test test/integration/             # End-to-end feature workflows
+flutter test test/unit/                    # Model/algorithm/service units
+flutter test test/widget/                  # Widget-level regressions
+
+# Generate coverage data (stored under coverage/lcov.info)
+flutter test --coverage
 
 # Static analysis
 flutter analyze

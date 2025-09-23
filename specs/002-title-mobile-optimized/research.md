@@ -143,3 +143,63 @@ This research addresses the technical decisions needed to port JFLAP's core auto
 - <50MB app size
 - Successful port of all 6 core features
 - Positive user feedback on mobile interface design
+
+## TM Metrics Synchronization Lifecycle
+### Decision
+Track the `tmEditorProvider` listener with an explicit `ProviderSubscription` that is created in `initState` and disposed safely when the page is destroyed.
+
+### Rationale
+- Prevents leaking listeners or dispatching updates to disposed widgets.
+- Ensures the metrics panel receives the most recent editor state as soon as the page is initialized.
+- Aligns with Riverpod lifecycle guidance for long-lived subscriptions.
+- **Referência**: PR #108 (`212749744317c2f7c53dc5ba1310a79302f7053b`).
+
+### Alternatives Considered
+- Invoke `ref.listen` inside `build` (risk of duplicate subscriptions on rebuilds).
+- Use `ref.read` with manual polling (would miss live updates).
+- Trigger updates via callbacks from widgets (tighter coupling between UI components).
+
+## Safe Async Updates in File Operations Panel
+### Decision
+Guard asynchronous callbacks in the file operations panel with `mounted` checks, centralize loading teardown through `_finishLoading`, and surface null path selections with user-facing snackbars.
+
+### Rationale
+- Avoids calling `setState` after widget disposal, preventing runtime exceptions.
+- Guarantees the loading indicator is cleared regardless of early exits or errors.
+- Improves UX on platforms where `FilePicker` returns null paths (e.g., restricted sandboxes).
+- **Referência**: PR #107 (`25a8d25abdaf0c35e598cb862fc3745eb7d83935`).
+
+### Alternatives Considered
+- Rely on implicit widget disposal behavior (still throws in debug and masks bugs).
+- Duplicate loading reset code in every branch (higher maintenance cost).
+- Ignore null paths and fail silently (confusing for users without actionable feedback).
+
+## TM Canvas Transition Handling
+### Decision
+Add a `_clearAddingTransitionFlag` helper and `mounted` checks around transition dialog results to guarantee consistent state updates when editing or cancelling transitions.
+
+### Rationale
+- Ensures `_isAddingTransition` resets even when dialogs return null, preventing the canvas from getting stuck in transition-adding mode.
+- Protects against asynchronous dialog callbacks firing after widget disposal.
+- Provides a single point of truth for managing the flag, reducing duplication.
+- **Referência**: PR #106 (`f16f4052f79e437e3b0adc4e602ad9a7dd42649d`).
+
+### Alternatives Considered
+- Leave inline `setState` calls without guards (risk of stale UI state and exceptions).
+- Track dialog lifecycle externally (adds complexity without extra benefits).
+- Force users to refresh the canvas when stuck (poor UX).
+
+## PDA Simulation Panel Testing
+### Decision
+Introduce widget tests that override `pdaEditorProvider` with a fake notifier to validate empty input handling, missing PDA safeguards, and successful simulation flows.
+
+### Rationale
+- Provides automated coverage for key success and failure states of the simulation panel.
+- Uses Riverpod overrides to isolate the widget under test without touching production providers.
+- Catches regressions in snackbar messaging and result summaries early in CI.
+- **Referência**: PR #109 (`48e8e798c1925937c6cda61b5e6e9239c20da762`).
+
+### Alternatives Considered
+- Depend solely on manual QA (slow feedback and brittle).
+- Write end-to-end tests for the entire editor (heavier to maintain for UI copy changes).
+- Mock services without exercising the widget tree (misses layout and interaction issues).

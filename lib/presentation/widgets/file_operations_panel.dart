@@ -128,9 +128,9 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
 
   Future<void> _saveAutomatonAsJFLAP() async {
     if (widget.automaton == null) return;
-    
+
     setState(() => _isLoading = true);
-    
+
     try {
       final result = await FilePicker.platform.saveFile(
         dialogTitle: 'Save Automaton as JFLAP',
@@ -138,13 +138,15 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
         type: FileType.custom,
         allowedExtensions: ['jff'],
       );
-      
+      if (!mounted) return;
+
       if (result != null) {
         final saveResult = await _fileService.saveAutomatonToJFLAP(
           widget.automaton!,
           result,
         );
-        
+        if (!mounted) return;
+
         if (saveResult.isSuccess) {
           _showSuccessMessage('Automaton saved successfully');
         } else {
@@ -154,24 +156,37 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
     } catch (e) {
       _showErrorMessage('Error saving automaton: $e');
     } finally {
-      setState(() => _isLoading = false);
+      _finishLoading();
     }
   }
 
   Future<void> _loadAutomatonFromJFLAP() async {
     setState(() => _isLoading = true);
-    
+
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['jff'],
         dialogTitle: 'Load JFLAP Automaton',
       );
-      
+      if (!mounted) return;
+
       if (result != null && result.files.isNotEmpty) {
-        final filePath = result.files.first.path!;
+        final filePath = result.files.first.path;
+        if (filePath == null) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Unable to access the selected file in this environment.',
+              ),
+            ),
+          );
+          return;
+        }
         final loadResult = await _fileService.loadAutomatonFromJFLAP(filePath);
-        
+        if (!mounted) return;
+
         if (loadResult.isSuccess) {
           widget.onAutomatonLoaded?.call(loadResult.data!);
           _showSuccessMessage('Automaton loaded successfully');
@@ -182,7 +197,7 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
     } catch (e) {
       _showErrorMessage('Error loading automaton: $e');
     } finally {
-      setState(() => _isLoading = false);
+      _finishLoading();
     }
   }
 
@@ -198,13 +213,15 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
         type: FileType.custom,
         allowedExtensions: ['svg'],
       );
-      
+      if (!mounted) return;
+
       if (result != null) {
         final exportResult = await _fileService.exportAutomatonToSVG(
           widget.automaton!,
           result,
         );
-        
+        if (!mounted) return;
+
         if (exportResult.isSuccess) {
           _showSuccessMessage('Automaton exported successfully');
         } else {
@@ -214,7 +231,7 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
     } catch (e) {
       _showErrorMessage('Error exporting automaton: $e');
     } finally {
-      setState(() => _isLoading = false);
+      _finishLoading();
     }
   }
 
@@ -230,13 +247,15 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
         type: FileType.custom,
         allowedExtensions: ['cfg'],
       );
-      
+      if (!mounted) return;
+
       if (result != null) {
         final saveResult = await _fileService.saveGrammarToJFLAP(
           widget.grammar!,
           result,
         );
-        
+        if (!mounted) return;
+
         if (saveResult.isSuccess) {
           _showSuccessMessage('Grammar saved successfully');
         } else {
@@ -246,24 +265,37 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
     } catch (e) {
       _showErrorMessage('Error saving grammar: $e');
     } finally {
-      setState(() => _isLoading = false);
+      _finishLoading();
     }
   }
 
   Future<void> _loadGrammarFromJFLAP() async {
     setState(() => _isLoading = true);
-    
+
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['cfg'],
         dialogTitle: 'Load JFLAP Grammar',
       );
-      
+      if (!mounted) return;
+
       if (result != null && result.files.isNotEmpty) {
-        final filePath = result.files.first.path!;
+        final filePath = result.files.first.path;
+        if (filePath == null) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Unable to access the selected file in this environment.',
+              ),
+            ),
+          );
+          return;
+        }
         final loadResult = await _fileService.loadGrammarFromJFLAP(filePath);
-        
+        if (!mounted) return;
+
         if (loadResult.isSuccess) {
           widget.onGrammarLoaded?.call(loadResult.data!);
           _showSuccessMessage('Grammar loaded successfully');
@@ -274,11 +306,17 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
     } catch (e) {
       _showErrorMessage('Error loading grammar: $e');
     } finally {
-      setState(() => _isLoading = false);
+      _finishLoading();
     }
   }
 
+  void _finishLoading() {
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+  }
+
   void _showSuccessMessage(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
@@ -288,6 +326,7 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
   }
 
   void _showErrorMessage(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),

@@ -27,28 +27,28 @@ class _StubLayoutRepository implements LayoutRepository {
   }
 
   @override
-  Future<AutomatonResult> applyBalancedLayout(AutomatonEntity automaton) {
-    throw UnimplementedError();
+  Future<AutomatonResult> applyBalancedLayout(AutomatonEntity automaton) async {
+    return Success(_entityToReturn);
   }
 
   @override
-  Future<AutomatonResult> applyCompactLayout(AutomatonEntity automaton) {
-    throw UnimplementedError();
+  Future<AutomatonResult> applyCompactLayout(AutomatonEntity automaton) async {
+    return Success(_entityToReturn);
   }
 
   @override
-  Future<AutomatonResult> applyHierarchicalLayout(AutomatonEntity automaton) {
-    throw UnimplementedError();
+  Future<AutomatonResult> applyHierarchicalLayout(AutomatonEntity automaton) async {
+    return Success(_entityToReturn);
   }
 
   @override
-  Future<AutomatonResult> applySpreadLayout(AutomatonEntity automaton) {
-    throw UnimplementedError();
+  Future<AutomatonResult> applySpreadLayout(AutomatonEntity automaton) async {
+    return Success(_entityToReturn);
   }
 
   @override
-  Future<AutomatonResult> centerAutomaton(AutomatonEntity automaton) {
-    throw UnimplementedError();
+  Future<AutomatonResult> centerAutomaton(AutomatonEntity automaton) async {
+    return Success(_entityToReturn);
   }
 }
 

@@ -192,6 +192,22 @@ The floating toolbar in the top-right corner of the canvas houses quick actions 
 - **Symbol Validation** - Single character symbols
 - **Error Messages** - Clear feedback for invalid inputs
 
+### Turing Machine Analysis
+
+1. **Abra a aba TM** pela navegação principal e garanta que sua máquina possua um estado inicial, pelo menos um estado de aceitação e transições salvas.
+2. **Toque no botão *Algorithms*** (mobile) ou localize o cartão **TM Analysis** (desktop) para abrir o painel dedicado, onde o cabeçalho *TM Analysis* e a seção **Analysis Results** aparecem logo abaixo da lista de focos disponíveis.
+3. **Escolha um foco analítico** — *Check Decidability*, *Find Reachable States*, *Language Analysis*, *Tape Operations*, *Time Characteristics* ou *Space Characteristics*. Cada botão dispara a execução do algoritmo correspondente e mostra um indicador de progresso enquanto a análise é processada.
+4. **Observe o espaço de resultados:** até que um foco seja executado, o painel apresenta o placeholder "No analysis results yet" seguido da instrução "Select an algorithm above to analyze your TM." Assim que a análise termina, a seção **Analysis Results** é atualizada automaticamente.
+5. **Revise as métricas exibidas**:
+   - **State Analysis** resume totais e destaca *Reachable halting states*, listando estados de parada inalcançáveis para facilitar correções estruturais.
+   - **Transition Analysis** mostra contagens de transições TM/FSA e sinaliza transições não compatíveis.
+   - **Tape Operations** detalha símbolos lidos/escritos, direções de movimento e o alfabeto da fita.
+   - **Reachability** lista estados alcançáveis e inalcançáveis detectados.
+   - **Execution Timing** informa tempo de análise, estados processados e transições inspecionadas para aquele foco.
+   - **Potential Issues** evidencia loops que mantêm a cabeça parada (*Potentially non-halting transitions*) ou outros alertas, ajudando a eliminar ciclos infinitos antes de executar simulações.
+6. **Execute novos focos quando necessário**; cada execução substitui o conteúdo de **Analysis Results**, permitindo comparar perspectivas diferentes sobre a mesma máquina.
+
+
 ## Working with Grammars
 
 ### Building a Grammar

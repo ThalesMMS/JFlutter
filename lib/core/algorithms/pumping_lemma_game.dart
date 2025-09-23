@@ -78,7 +78,13 @@ class PumpingLemmaGame {
     final pumpingLength = _findPumpingLength(automaton, maxPumpingLength, timeout);
     
     // Generate a challenge string
-    final challengeString = _generateChallengeString(automaton, pumpingLength, timeout);
+    final acceptanceCache = <String, bool>{};
+    final challengeString = _generateChallengeString(
+      automaton,
+      pumpingLength,
+      timeout,
+      acceptanceCache: acceptanceCache,
+    );
     
     // Create the game
     return models.PumpingLemmaGame(
@@ -116,9 +122,11 @@ class PumpingLemmaGame {
   static String _generateChallengeString(
     FSA automaton,
     int pumpingLength,
-    Duration timeout,
-  ) {
+    Duration timeout, {
+    Map<String, bool>? acceptanceCache,
+  }) {
     final startTime = DateTime.now();
+    final cache = acceptanceCache ?? <String, bool>{};
     
     // Generate a string that can be pumped
     final alphabet = automaton.alphabet.toList();
@@ -138,7 +146,12 @@ class PumpingLemmaGame {
       }
       
       // Check if string can be pumped
-      if (_canStringBePumped(automaton, string, pumpingLength)) {
+      if (_canStringBePumped(
+        automaton,
+        string,
+        pumpingLength,
+        cache,
+      )) {
         return string;
       }
     }
@@ -148,9 +161,14 @@ class PumpingLemmaGame {
   }
 
   /// Checks if a string can be pumped
-  static bool _canStringBePumped(FSA automaton, String string, int pumpingLength) {
+  static bool _canStringBePumped(
+    FSA automaton,
+    String string,
+    int pumpingLength,
+    Map<String, bool> acceptanceCache,
+  ) {
     // Check if string is accepted by automaton
-    if (!_isStringAccepted(automaton, string)) {
+    if (!_isStringAccepted(automaton, string, acceptanceCache)) {
       return false;
     }
     
@@ -175,7 +193,7 @@ class PumpingLemmaGame {
         bool canPump = true;
         for (int k = 0; k <= 3; k++) { // Test i = 0, 1, 2, 3
           final pumpedString = x + (y * k) + z;
-          if (!_isStringAccepted(automaton, pumpedString)) {
+          if (!_isStringAccepted(automaton, pumpedString, acceptanceCache)) {
             canPump = false;
             break;
           }
@@ -191,9 +209,17 @@ class PumpingLemmaGame {
   }
 
   /// Checks if a string is accepted by the automaton
-  static bool _isStringAccepted(FSA automaton, String string) {
+  static bool _isStringAccepted(
+    FSA automaton,
+    String string,
+    Map<String, bool> acceptanceCache,
+  ) {
+    if (acceptanceCache.containsKey(string)) {
+      return acceptanceCache[string]!;
+    }
+
     var currentStates = {automaton.initialState!};
-    
+
     for (int i = 0; i < string.length; i++) {
       final symbol = string[i];
       final nextStates = <State>{};
@@ -208,11 +234,15 @@ class PumpingLemmaGame {
       currentStates = nextStates;
       
       if (currentStates.isEmpty) {
+        acceptanceCache[string] = false;
         return false;
       }
     }
-    
-    return currentStates.intersection(automaton.acceptingStates).isNotEmpty;
+
+    final isAccepted =
+        currentStates.intersection(automaton.acceptingStates).isNotEmpty;
+    acceptanceCache[string] = isAccepted;
+    return isAccepted;
   }
 
   /// Validates a pumping attempt
@@ -231,7 +261,13 @@ class PumpingLemmaGame {
       }
 
       // Validate the attempt
-      final result = _validateAttempt(game, attempt, timeout);
+      final acceptanceCache = <String, bool>{};
+      final result = _validateAttempt(
+        game,
+        attempt,
+        timeout,
+        acceptanceCache: acceptanceCache,
+      );
       stopwatch.stop();
       
       // Update execution time
@@ -267,9 +303,11 @@ class PumpingLemmaGame {
   static PumpingAttemptResult _validateAttempt(
     models.PumpingLemmaGame game,
     PumpingAttempt attempt,
-    Duration timeout,
-  ) {
+    Duration timeout, {
+    Map<String, bool>? acceptanceCache,
+  }) {
     final startTime = DateTime.now();
+    final cache = acceptanceCache ?? <String, bool>{};
     
     // Check if the decomposition is correct
     final originalString = attempt.x! + attempt.y! + attempt.z!;
@@ -303,7 +341,7 @@ class PumpingLemmaGame {
     bool canPump = true;
     for (int i = 0; i <= 3; i++) { // Test i = 0, 1, 2, 3
       final pumpedString = attempt.x! + (attempt.y! * i) + attempt.z!;
-      if (!_isStringAccepted(game.automaton, pumpedString)) {
+      if (!_isStringAccepted(game.automaton, pumpedString, cache)) {
         canPump = false;
         break;
       }
@@ -372,7 +410,12 @@ class PumpingLemmaGame {
       final stopwatch = Stopwatch()..start();
       
       // Generate a hint
-      final hint = _generateHint(game, timeout);
+      final acceptanceCache = <String, bool>{};
+      final hint = _generateHint(
+        game,
+        timeout,
+        acceptanceCache: acceptanceCache,
+      );
       stopwatch.stop();
       
       return Success(hint);
@@ -384,9 +427,11 @@ class PumpingLemmaGame {
   /// Generates a hint
   static String _generateHint(
     models.PumpingLemmaGame game,
-    Duration timeout,
-  ) {
+    Duration timeout, {
+    Map<String, bool>? acceptanceCache,
+  }) {
     final startTime = DateTime.now();
+    final cache = acceptanceCache ?? <String, bool>{};
     
     // Try to find a valid decomposition
     final string = game.challengeString;
@@ -406,7 +451,7 @@ class PumpingLemmaGame {
         bool canPump = true;
         for (int k = 0; k <= 3; k++) {
           final pumpedString = x + (y * k) + z;
-          if (!_isStringAccepted(game.automaton, pumpedString)) {
+          if (!_isStringAccepted(game.automaton, pumpedString, cache)) {
             canPump = false;
             break;
           }
@@ -451,8 +496,16 @@ class PumpingLemmaGame {
     
     // Analyze attempts
     final totalAttempts = game.attempts.length;
-    final successfulAttempts = game.attempts.where((a) => 
-        _validateAttempt(game, a, timeout).isSuccess).length;
+    final acceptanceCache = <String, bool>{};
+    final successfulAttempts = game.attempts
+        .where((a) =>
+            _validateAttempt(
+              game,
+              a,
+              timeout,
+              acceptanceCache: acceptanceCache,
+            ).isSuccess)
+        .length;
     final failedAttempts = totalAttempts - successfulAttempts;
     
     // Analyze score

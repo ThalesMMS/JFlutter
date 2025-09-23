@@ -2,6 +2,10 @@
 import '../models/fsa.dart';
 import '../models/state.dart';
 
+/// Implements DFA equivalence checking by exploring pairs of states in
+/// breadth-first order. The algorithm assumes the provided automata are
+/// complete; complete them explicitly before invoking this checker to avoid
+/// false negatives.
 class EquivalenceChecker {
   static bool areEquivalent(FSA a, FSA b) {
     final alphabet = a.alphabet.union(b.alphabet);
@@ -14,6 +18,10 @@ class EquivalenceChecker {
 
     final visited = <String>{};
     final queue = <List<State>>[];
+
+    // Track visited pairs using the concatenated state IDs so that each
+    // combination is processed only once, regardless of which automaton the
+    // individual states belong to.
 
     queue.add([initialStateA, initialStateB]);
     visited.add('${initialStateA.id},${initialStateB.id}');
@@ -38,10 +46,11 @@ class EquivalenceChecker {
             visited.add(pairKey);
           }
         } else if (nextStateA != null || nextStateB != null) {
-          // One automaton has a transition and the other doesn't.
-          // This can only happen if one of the DFAs is not complete.
-          // Assuming complete DFAs for equivalence checking.
-          // If they are not complete, they should be completed first.
+          // If only one DFA defines a transition for this symbol, the search
+          // observes different behaviours. The checker expects complete DFAs,
+          // where missing transitions would lead to an explicit sink state.
+          // Complete both automata before comparing to prevent spurious
+          // inequivalence results.
           return false;
         }
       }

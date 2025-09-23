@@ -175,14 +175,14 @@ export JFLUTTER_KEY_PASSWORD="$JFLUTTER_KEY_PASSWORD"
 ## 📱 How to Use
 
 ### Creating an Automaton
-1. Open the **FSA** tab
-2. Tap the **"+"** button to add states
-3. Tap the **arrow** button to add transitions
-4. Tap on states to mark them as initial/final
-5. Use the **algorithms panel** to convert or minimize
+1. Open the **FSA** tab from the bottom navigation (mobile) or side tab list (desktop).
+2. Use the **Add State** icon in the floating canvas toolbar to insert a state, then drag it into place.
+3. Press the **Add Transition** icon, tap the origin and destination states, and enter the symbols in the dialog.
+4. Double-tap a state to toggle its **Initial** or **Accepting** flags inside the edit dialog.
+5. Open the **Algorithms** quick action (tune icon on mobile, left panel on desktop) to run conversions or minimization.
 
 ### Testing Strings
-1. Enter a string in the **simulation panel**
+1. On mobile, open the **Simulation** quick action (play icon) to reveal the panel, then enter a string.
 2. Tap **"Simulate"** to test acceptance
 3. View **step-by-step execution** results
 4. See **visual feedback** on the canvas

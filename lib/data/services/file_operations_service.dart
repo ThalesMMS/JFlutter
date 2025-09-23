@@ -340,7 +340,7 @@ class FileOperationsService {
       final midX = (from.dx + to.dx) / 2;
       final midY = (from.dy + to.dy) / 2;
       buffer.writeln(
-        '  <text x="$midX" y="$midY" text-anchor="middle" font-family="Arial" font-size="12" fill="${_colorToHex(_kTextColor)}">${transition.label}</text>',
+        '  <text x="$midX" y="$midY" text-anchor="middle" font-family="Arial" font-size="12" fill="${_colorToHex(_kTextColor)}">${_escapeXml(transition.label)}</text>',
       );
     }
 
@@ -352,12 +352,21 @@ class FileOperationsService {
         '  <circle cx="$x" cy="$y" r="$_kStateRadius" fill="${_colorToHex(state.fillColor)}" stroke="${_colorToHex(state.strokeColor)}" stroke-width="${state.strokeWidth}"/>',
       );
       buffer.writeln(
-        '  <text x="$x" y="${y + 5}" text-anchor="middle" font-family="Arial" font-size="14" fill="${_colorToHex(_kTextColor)}">${state.label}</text>',
+        '  <text x="$x" y="${y + 5}" text-anchor="middle" font-family="Arial" font-size="14" fill="${_colorToHex(_kTextColor)}">${_escapeXml(state.label)}</text>',
       );
     }
 
     buffer.writeln('</svg>');
     return buffer.toString();
+  }
+
+  String _escapeXml(String value) {
+    return value
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&apos;');
   }
 
   _AutomatonDrawingData _prepareDrawingData(FSA automaton) {

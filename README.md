@@ -11,14 +11,36 @@ JFlutter is a complete port of the classic JFLAP educational tool, rebuilt from 
 The project has been successfully fixed and is now fully functional on all supported platforms. All major compilation errors, runtime issues, and UI layout problems have been resolved.
 
 **Latest Updates**:
-- ✅ All compilation errors fixed
-- ✅ Runtime errors resolved (Riverpod state management)
-- ✅ UI layout issues fixed (responsive design)
-- ✅ Grammar screen working properly
-- ✅ Settings screen fully functional
-- ✅ TM Canvas layout optimized
-- ✅ Pumping Lemma Game responsive
-- ✅ All screens tested on iPhone 17 Pro Max
+
+### 2025-09-23
+
+- **Activity:** 116 PRs merged nos últimos 7 dias,
+  cobrindo otimizações de algoritmos,
+  arquitetura de estado e documentação.
+- **Performance & Algoritmos:** Melhorias substanciais no
+  desempenho do conversor e simulador de autômatos, como as
+  otimizações do minimizador de DFA e do conversor FA→Regex
+  ([#104](https://github.com/ThalesMMS/JFlutter/pull/104),
+  [#103](https://github.com/ThalesMMS/JFlutter/pull/103),
+  [#102](https://github.com/ThalesMMS/JFlutter/pull/102),
+  [#101](https://github.com/ThalesMMS/JFlutter/pull/101),
+  [#100](https://github.com/ThalesMMS/JFlutter/pull/100)).
+- **Arquitetura & Experiência:** Reestruturação de módulos e
+  ajustes de estado/tela para fluxos mais consistentes, incluindo
+  novos controladores e workflows de transição
+  ([#109](https://github.com/ThalesMMS/JFlutter/pull/109),
+  [#108](https://github.com/ThalesMMS/JFlutter/pull/108),
+  [#83](https://github.com/ThalesMMS/JFlutter/pull/83),
+  [#81](https://github.com/ThalesMMS/JFlutter/pull/81),
+  [#67](https://github.com/ThalesMMS/JFlutter/pull/67)).
+- **Qualidade & Documentação:** Ampliação da cobertura de testes
+  e documentação para widgets, canvas e guias de usuário,
+  fortalecendo a manutenção contínua
+  ([#109](https://github.com/ThalesMMS/JFlutter/pull/109),
+  [#95](https://github.com/ThalesMMS/JFlutter/pull/95),
+  [#94](https://github.com/ThalesMMS/JFlutter/pull/94),
+  [#87](https://github.com/ThalesMMS/JFlutter/pull/87),
+  [#86](https://github.com/ThalesMMS/JFlutter/pull/86)).
 
 ## ✨ Key Features
 

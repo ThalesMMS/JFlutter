@@ -4,6 +4,12 @@
 
 JFlutter provides a comprehensive API for working with formal language theory concepts including finite automata, context-free grammars, and various algorithms. This documentation covers the core APIs, data models, and integration patterns.
 
+**Highlights of the latest architecture changes:**
+- Automaton flows are coordinated by specialised controllers that plug into a
+  shared `AutomatonProvider` for Riverpod-driven state management.【F:lib/presentation/providers/automaton_provider.dart†L1-L194】
+- Application settings now use a dedicated repository, storage abstraction, and
+  `SettingsViewModel` to deliver robust persistence and UI feedback.【F:lib/presentation/providers/settings_view_model.dart†L1-L109】【F:lib/data/repositories/settings_repository_impl.dart†L1-L59】
+
 ## Core Architecture
 
 ### Clean Architecture Layers
@@ -156,38 +162,10 @@ class Failure<T> extends Result<T> {
 
 ## Presentation Layer
 
-### AutomatonProvider
-
-State management using Riverpod:
-
-```dart
-class AutomatonProvider extends StateNotifier<AutomatonState> {
-  // Create new automaton
-  Future<void> createAutomaton({
-    required String name,
-    String? description,
-    required List<String> alphabet,
-  });
-  
-  // Update current automaton
-  void updateAutomaton(FSA automaton);
-  
-  // Simulate automaton
-  Future<void> simulateAutomaton(String inputString);
-  
-  // Convert NFA to DFA
-  Future<void> convertNfaToDfa();
-  
-  // Minimize DFA
-  Future<void> minimizeDfa();
-  
-  // Convert regex to NFA
-  Future<void> convertRegexToNfa(String regex);
-  
-  // Convert FA to regex
-  Future<void> convertFaToRegex();
-}
-```
+Recent refactors split the monolithic automaton provider into focused
+controllers that coordinate creation, simulation, conversion, and layout
+concerns. `AutomatonProvider` now composes these controllers while exposing a
+single Riverpod state notifier to the UI.
 
 ### AutomatonState
 
@@ -196,10 +174,215 @@ class AutomatonState {
   final FSA? currentAutomaton;
   final SimulationResult? simulationResult;
   final String? regexResult;
+  final Grammar? grammarResult;
+  final bool? equivalenceResult;
+  final String? equivalenceDetails;
   final bool isLoading;
   final String? error;
+
+  const AutomatonState({ ... });
+
+  AutomatonState copyWith({ ... });
 }
 ```
+
+**Highlights:**
+- Holds the current automaton plus derived results (simulation, regex,
+  grammar conversion, and equivalence feedback).【F:lib/presentation/providers/automaton/automaton_state.dart†L1-L52】
+- Provides a `copyWith` helper that lets controllers update individual fields
+  while preserving the rest of the state.【F:lib/presentation/providers/automaton/automaton_state.dart†L23-L51】
+
+### AutomatonCreationController
+
+```dart
+class AutomatonCreationController {
+  Future<AutomatonState> createAutomaton(
+    AutomatonState state, {
+    required String name,
+    required List<String> alphabet,
+  });
+
+  AutomatonState updateAutomaton(AutomatonState state, FSA automaton);
+  AutomatonState clearAutomaton(AutomatonState state);
+  AutomatonState clearError(AutomatonState state);
+}
+```
+
+Responsible for provisioning new automata and resetting state while delegating
+to use cases such as `CreateAutomatonUseCase` and `AddStateUseCase`. Each
+method returns an updated `AutomatonState` so that orchestration remains pure
+and testable.【F:lib/presentation/providers/automaton/automaton_creation_controller.dart†L1-L74】
+
+### AutomatonConversionController
+
+```dart
+class AutomatonConversionController {
+  Future<AutomatonState> convertNfaToDfa(AutomatonState state);
+  Future<AutomatonState> minimizeDfa(AutomatonState state);
+  Future<AutomatonState> completeDfa(AutomatonState state);
+  Future<AutomatonState> convertRegexToNfa(
+    AutomatonState state,
+    String regex,
+  );
+  Future<AutomatonState> convertFsaToGrammar(AutomatonState state);
+  Future<AutomatonState> convertFaToRegex(AutomatonState state);
+  Future<AutomatonState> compareEquivalence(
+    AutomatonState state,
+    FSA other,
+  );
+}
+```
+
+Wraps the suite of algorithmic conversion use cases, maps entities back to UI
+models, and normalises error handling. Every branch funnels through
+`AutomatonState.copyWith` to clear loading flags and populate results or
+messages.【F:lib/presentation/providers/automaton/automaton_conversion_controller.dart†L1-L136】
+
+### AutomatonSimulationController
+
+```dart
+class AutomatonSimulationController {
+  Future<AutomatonState> simulate(
+    AutomatonState state,
+    String inputString,
+  );
+}
+```
+
+Executes word simulations through `SimulateWordUseCase` and records the latest
+`SimulationResult` while handling common loading/error flows.【F:lib/presentation/providers/automaton/automaton_simulation_controller.dart†L1-L45】
+
+### AutomatonLayoutController
+
+```dart
+class AutomatonLayoutController {
+  Future<AutomatonState> applyAutoLayout(AutomatonState state);
+}
+```
+
+Applies automatic layout strategies by delegating to `ApplyAutoLayoutUseCase`
+and refreshing the state with the updated automaton geometry.【F:lib/presentation/providers/automaton/automaton_layout_controller.dart†L1-L33】
+
+### AutomatonProvider
+
+```dart
+class AutomatonProvider extends StateNotifier<AutomatonState> {
+  AutomatonProvider({
+    required AutomatonCreationController creationController,
+    required AutomatonSimulationController simulationController,
+    required AutomatonConversionController conversionController,
+    required AutomatonLayoutController layoutController,
+  });
+
+  Future<void> createAutomaton({
+    required String name,
+    required List<String> alphabet,
+  });
+  void updateAutomaton(FSA automaton);
+  Future<void> simulateAutomaton(String inputString);
+  Future<void> convertNfaToDfa();
+  Future<void> minimizeDfa();
+  Future<void> completeDfa();
+  Future<Grammar?> convertFsaToGrammar();
+  Future<void> applyAutoLayout();
+  Future<void> convertRegexToNfa(String regex);
+  Future<String?> convertFaToRegex();
+  Future<bool?> compareEquivalence(FSA other);
+  void clearAutomaton();
+  void clearError();
+}
+```
+
+`AutomatonProvider` stitches the specialised controllers together. Riverpod
+providers expose concrete controller instances and the state notifier in a
+composable way:
+
+```dart
+final automatonProvider =
+    StateNotifierProvider<AutomatonProvider, AutomatonState>((ref) {
+  final creation = ref.watch(automatonCreationControllerProvider);
+  final simulation = ref.watch(automatonSimulationControllerProvider);
+  final conversion = ref.watch(automatonConversionControllerProvider);
+  final layout = ref.watch(automatonLayoutControllerProvider);
+  return AutomatonProvider(
+    creationController: creation,
+    simulationController: simulation,
+    conversionController: conversion,
+    layoutController: layout,
+  );
+});
+```
+【F:lib/presentation/providers/automaton_provider.dart†L1-L134】【F:lib/presentation/providers/automaton_provider.dart†L137-L194】
+
+**Usage Example:**
+
+```dart
+class AutomatonActionsBar extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(automatonProvider);
+    final controller = ref.watch(automatonProvider.notifier);
+
+    return Row(children: [
+      ElevatedButton(
+        onPressed: state.isLoading
+            ? null
+            : () => controller.convertNfaToDfa(),
+        child: const Text('Convert NFA → DFA'),
+      ),
+      ElevatedButton(
+        onPressed: state.currentAutomaton == null
+            ? null
+            : () => controller.simulateAutomaton('abba'),
+        child: const Text('Simulate'),
+      ),
+    ]);
+  }
+}
+```
+
+### SettingsViewModel
+
+```dart
+class SettingsViewModel extends StateNotifier<AsyncValue<SettingsModel>> {
+  SettingsViewModel(SettingsRepository repository);
+
+  Future<String?> load();
+  Future<String?> save();
+  Future<String?> reset();
+  void updateEmptyStringSymbol(String value);
+  void updateEpsilonSymbol(String value);
+  void updateThemeMode(String value);
+  void updateShowGrid(bool value);
+  void updateShowCoordinates(bool value);
+  void updateGridSize(double value);
+  void updateNodeSize(double value);
+  void updateFontSize(double value);
+  void updateAutoSave(bool value);
+  void updateShowTooltips(bool value);
+}
+```
+
+Manages asynchronous loading and persistence of user settings, exposing
+optimistic updates with detailed error messages for UI presentation.
+【F:lib/presentation/providers/settings_view_model.dart†L1-L109】
+
+### Settings Providers
+
+```dart
+final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
+  throw UnimplementedError('settingsRepositoryProvider must be overridden');
+});
+
+final settingsViewModelProvider =
+    StateNotifierProvider<SettingsViewModel, AsyncValue<SettingsModel>>(
+  (ref) => SettingsViewModel(ref.watch(settingsRepositoryProvider)),
+);
+```
+
+These providers make it easy to inject the repository implementation at the
+app root while offering a strongly typed view model to widgets.
+【F:lib/presentation/providers/settings_providers.dart†L1-L16】
 
 ## UI Components
 
@@ -248,6 +431,70 @@ class SimulationPanel extends StatefulWidget {
 ```
 
 ## Data Services
+
+### SettingsRepository
+
+```dart
+abstract class SettingsRepository {
+  Future<SettingsModel> loadSettings();
+  Future<void> saveSettings(SettingsModel settings);
+}
+```
+
+Defines the contract for persisting user preferences; implementations provide
+asynchronous loading and saving semantics.【F:lib/core/repositories/settings_repository.dart†L1-L10】
+
+### SharedPreferencesSettingsRepository
+
+```dart
+class SharedPreferencesSettingsRepository implements SettingsRepository {
+  Future<SettingsModel> loadSettings();
+  Future<void> saveSettings(SettingsModel settings);
+}
+```
+
+Backs the repository contract with `SharedPreferences`, mapping every setting
+to a dedicated key and ensuring batch writes succeed before resolving.
+【F:lib/data/repositories/settings_repository_impl.dart†L1-L59】
+
+### SettingsStorage
+
+```dart
+abstract class SettingsStorage {
+  Future<String?> readString(String key);
+  Future<bool?> readBool(String key);
+  Future<double?> readDouble(String key);
+  Future<bool> writeString(String key, String value);
+  Future<bool> writeBool(String key, bool value);
+  Future<bool> writeDouble(String key, double value);
+}
+```
+
+`SharedPreferencesSettingsStorage` offers a production-ready implementation,
+while `InMemorySettingsStorage` powers tests with synchronous in-memory
+behaviour.【F:lib/data/storage/settings_storage.dart†L1-L71】【F:lib/data/storage/settings_storage.dart†L73-L103】
+
+### FileOperationsService
+
+```dart
+class FileOperationsService {
+  Future<StringResult> saveAutomatonToJFLAP(FSA automaton, String filePath);
+  Future<Result<FSA>> loadAutomatonFromJFLAP(String filePath);
+  Future<StringResult> saveGrammarToJFLAP(Grammar grammar, String filePath);
+  Future<Result<Grammar>> loadGrammarFromJFLAP(String filePath);
+  Future<StringResult> exportAutomatonToPNG(FSA automaton, String filePath);
+  Future<StringResult> exportAutomatonToSVG(FSA automaton, String filePath);
+  Future<StringResult> getDocumentsDirectory();
+  Future<StringResult> createUniqueFile(String baseName, String extension);
+  Future<ListResult<String>> listFiles(String extension);
+  Future<BoolResult> deleteFile(String filePath);
+}
+```
+
+Refined this week to rely on async iteration for directory traversal while
+providing comprehensive import/export utilities for automata and grammars.
+All operations surface typed `Result` wrappers for consistent error handling.
+【F:lib/data/services/file_operations_service.dart†L1-L114】
 
 ### AutomatonService
 

@@ -129,7 +129,7 @@
 ### Interface e Usabilidade
 1. Zoom na área de edição
 2. Botão de desfazer ações
-3. Salvamento em vários formatos de imagem (SVG, PNG, etc.)
+3. Salvamento em vários formatos de imagem (SVG, PNG, etc.) — ⚠️ Implementado export para SVG via painel de operações de arquivo; formatos adicionais (PNG, etc.) pendentes.
 4. Visualização de múltiplas janelas
 5. Personalização de cores e estilos
 6. Adição automática de estado de rejeição (trap state) em DFAs
@@ -149,6 +149,8 @@
     - Suporte a duplo clique para edição de rótulos
 13. Visualização de árvores de derivação
 14. Análise de entrada em autômatos não-determinísticos
+
+15. Tratamento de cenários sem acesso ao sistema de arquivos — ✅ Painel de operações de arquivo exibe Snackbar orientando o usuário quando o caminho selecionado não está disponível.
 
 ### Linguagens Regulares
 1. Criar Autômatos Finitos Determinísticos (DFA)
@@ -185,7 +187,7 @@
 6. Sistema de avaliação para múltiplos arquivos
 
 ### Linguagens Livres de Contexto
-7. Criar Autômatos de Pilha (PDA)
+7. Criar Autômatos de Pilha (PDA) — ⚠️ Simulação interativa validada com novos testes de widget; fluxos avançados de edição continuam em evolução.
 8. Criar Gramáticas Livres de Contexto (CFG)
 9. Experimentar com o Lema do Bombeamento para linguagens livres de contexto
 10. Realizar transformações:
@@ -212,7 +214,7 @@
    - Fita infinita em ambas as direções
    - Símbolos de fita personalizáveis
    - Estados de aceitação e rejeição explícitos
-   - Visualização do estado atual e da fita durante a execução
+   - Visualização do estado atual e da fita durante a execução — ⚠️ Atualização das métricas sincronizada com o editor em tempo real; refinamentos de visualização ainda necessários.
    - Controle de execução (passo a passo, execução contínua, pausa)
    - Visualização da pilha de execução
    - Suporte a Building Blocks (Blocos de Construção):

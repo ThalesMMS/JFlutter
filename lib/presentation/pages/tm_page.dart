@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/models/tm.dart';
-import '../../core/models/tm_transition.dart';
-import '../providers/tm_editor_provider.dart';
+import '../providers/tm_metrics_controller.dart';
+import '../widgets/tm/tm_desktop_layout.dart';
+import '../widgets/tm/tm_metrics_panel.dart';
+import '../widgets/tm/tm_mobile_layout.dart';
 import '../widgets/tm_algorithm_panel.dart';
-import '../widgets/tm_canvas.dart';
 import '../widgets/tm_simulation_panel.dart';
 
 /// Page for working with Turing Machines
@@ -18,169 +18,33 @@ class TMPage extends ConsumerStatefulWidget {
 
 class _TMPageState extends ConsumerState<TMPage> {
   final GlobalKey _canvasKey = GlobalKey();
-  TM? _currentTM;
-  int _stateCount = 0;
-  int _transitionCount = 0;
-  Set<String> _tapeSymbols = const <String>{};
-  Set<String> _moveDirections = const <String>{};
-  Set<String> _nondeterministicTransitionIds = const <String>{};
-  bool _hasInitialState = false;
-  bool _hasAcceptingState = false;
-
-  bool get _isMachineReady =>
-      _currentTM != null && _hasInitialState && _hasAcceptingState;
-
-  bool get _hasMachine => _currentTM != null && _stateCount > 0;
-
-  @override
-  void initState() {
-    super.initState();
-
-    ref.listen<TMEditorState>(tmEditorProvider, (previous, next) {
-      if (!mounted) return;
-      if (next.tm == null && _currentTM != null) {
-        setState(() {
-          _currentTM = null;
-          _stateCount = 0;
-          _transitionCount = 0;
-          _tapeSymbols = const <String>{};
-          _moveDirections = const <String>{};
-          _nondeterministicTransitionIds = const <String>{};
-          _hasInitialState = false;
-          _hasAcceptingState = false;
-        });
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
+    final metrics = ref.watch(tmMetricsControllerProvider);
     final screenSize = MediaQuery.of(context).size;
     final isMobile = screenSize.width < 1024;
 
     return Scaffold(
-      body: isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
-    );
-  }
-
-  Widget _buildMobileLayout() {
-    return SafeArea(
-      child: Column(
-        children: [
-          // Mobile action buttons for additional panels
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _buildActionButton(
-                    icon: Icons.play_arrow,
-                    label: 'Simulate',
-                    onPressed: _openSimulationSheet,
-                    isEnabled: _isMachineReady,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildActionButton(
-                    icon: Icons.auto_awesome,
-                    label: 'Algorithms',
-                    onPressed: _openAlgorithmSheet,
-                    isEnabled: _hasMachine,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildActionButton(
-                    icon: Icons.bar_chart,
-                    label: 'Metrics',
-                    onPressed: _openMetricsSheet,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Canvas occupies the remaining viewport height
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: TMCanvas(
-                canvasKey: _canvasKey,
-                onTMModified: _handleTMUpdate,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDesktopLayout() {
-    return Row(
-      children: [
-        // Left panel - TM Canvas
-        Expanded(
-          flex: 2,
-          child: Container(
-            margin: const EdgeInsets.all(8),
-            child: TMCanvas(
+      body: isMobile
+          ? TMMobileLayout(
               canvasKey: _canvasKey,
-              onTMModified: _handleTMUpdate,
+              onOpenSimulation: _openSimulationSheet,
+              onOpenAlgorithms: _openAlgorithmSheet,
+              onOpenMetrics: _openMetricsSheet,
+              isMachineReady: metrics.isMachineReady,
+              hasMachine: metrics.hasMachine,
+            )
+          : TMDesktopLayout(
+              canvasKey: _canvasKey,
+              metrics: metrics,
             ),
-          ),
-        ),
-        const SizedBox(width: 16),
-        // Center panel - Simulation
-        Expanded(
-          flex: 1,
-          child: Container(
-            margin: const EdgeInsets.all(8),
-            child: const TMSimulationPanel(),
-          ),
-        ),
-        const SizedBox(width: 16),
-        // Right panel - Algorithms
-        Expanded(
-          flex: 1,
-          child: Container(
-            margin: const EdgeInsets.all(8),
-            child: const TMAlgorithmPanel(),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Flexible(
-          child: Container(
-            margin: const EdgeInsets.all(8),
-            child: _buildInfoPanel(context),
-          ),
-        ),
-      ],
     );
-  }
-
-  void _handleTMUpdate(TM tm) {
-    final transitions = tm.tmTransitions;
-    final nondeterministic = _findNondeterministicTransitions(transitions);
-    final hasInitial = tm.initialState != null;
-    final hasAccepting = tm.acceptingStates.isNotEmpty;
-
-    setState(() {
-      _currentTM = tm;
-      _stateCount = tm.states.length;
-      _transitionCount = transitions.length;
-      _tapeSymbols = Set<String>.unmodifiable(tm.tapeAlphabet);
-      _moveDirections = Set<String>.unmodifiable(
-        transitions.map((t) => t.direction.name.toUpperCase()),
-      );
-      _nondeterministicTransitionIds = nondeterministic;
-      _hasInitialState = hasInitial;
-      _hasAcceptingState = hasAccepting;
-    });
   }
 
   void _openSimulationSheet() {
-    if (!_isMachineReady) return;
+    final metrics = ref.read(tmMetricsControllerProvider);
+    if (!metrics.isMachineReady) return;
 
     _showDraggableSheet(
       builder: (context, controller) {
@@ -197,7 +61,8 @@ class _TMPageState extends ConsumerState<TMPage> {
   }
 
   void _openAlgorithmSheet() {
-    if (!_hasMachine) return;
+    final metrics = ref.read(tmMetricsControllerProvider);
+    if (!metrics.hasMachine) return;
 
     _showDraggableSheet(
       builder: (context, controller) {
@@ -214,13 +79,15 @@ class _TMPageState extends ConsumerState<TMPage> {
   }
 
   void _openMetricsSheet() {
+    final metrics = ref.read(tmMetricsControllerProvider);
+
     _showDraggableSheet(
       builder: (context, controller) {
         return ListView(
           controller: controller,
           padding: const EdgeInsets.all(16),
           children: [
-            _buildInfoPanel(context),
+            TMMetricsPanel(metrics: metrics),
           ],
         );
       },
@@ -265,117 +132,6 @@ class _TMPageState extends ConsumerState<TMPage> {
           },
         );
       },
-    );
-  }
-
-  Widget _buildInfoPanel(
-    BuildContext context, {
-    EdgeInsetsGeometry? margin,
-  }) {
-    final theme = Theme.of(context);
-    return Container(
-      margin: margin,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Turing Machine Overview',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Monitor the structure of your machine and resolve issues before running simulations or algorithms.',
-            style: theme.textTheme.bodyMedium,
-          ),
-          const SizedBox(height: 12),
-          _buildInfoRow('States', '$_stateCount', theme),
-          _buildInfoRow('Transitions', '$_transitionCount', theme),
-          _buildInfoRow('Tape Symbols', _formatSet(_tapeSymbols), theme),
-          _buildInfoRow('Move Directions', _formatSet(_moveDirections), theme),
-          _buildInfoRow('Initial State', _hasInitialState ? 'Yes' : 'No', theme),
-          _buildInfoRow('Accepting State', _hasAcceptingState ? 'Yes' : 'No', theme),
-          _buildInfoRow('Simulation Ready', _isMachineReady ? 'Yes' : 'No', theme),
-          _buildInfoRow(
-            'Nondeterministic Transitions',
-            _nondeterministicTransitionIds.isEmpty
-                ? '0'
-                : '${_nondeterministicTransitionIds.length}',
-            theme,
-          ),
-          if (_nondeterministicTransitionIds.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
-              'Resolve nondeterminism before running deterministic algorithms.',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.error,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value, ThemeData theme) {
-    final textStyle = theme.textTheme.bodyMedium;
-    final emphasizedStyle = textStyle?.copyWith(fontWeight: FontWeight.w600);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Text(
-        '$label: $value',
-        style: emphasizedStyle,
-      ),
-    );
-  }
-
-  String _formatSet(Set<String> values) {
-    if (values.isEmpty) {
-      return '-';
-    }
-    final sorted = values.toList()..sort();
-    return sorted.join(', ');
-  }
-
-  Set<String> _findNondeterministicTransitions(Set<TMTransition> transitions) {
-    final grouped = <String, List<TMTransition>>{};
-
-    for (final transition in transitions) {
-      final key = [
-        transition.fromState.id,
-        transition.readSymbol,
-        transition.tapeNumber.toString(),
-      ].join('|');
-
-      grouped.putIfAbsent(key, () => <TMTransition>[]).add(transition);
-    }
-
-    return grouped.values
-        .where((list) => list.length > 1)
-        .expand((list) => list.map((transition) => transition.id))
-        .toSet();
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onPressed,
-    bool isEnabled = true,
-  }) {
-    return ElevatedButton.icon(
-      onPressed: isEnabled ? onPressed : null,
-      icon: Icon(icon, size: 16),
-      label: Text(label, style: const TextStyle(fontSize: 11)),
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-        minimumSize: Size.zero,
-      ),
     );
   }
 }

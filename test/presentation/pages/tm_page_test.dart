@@ -6,17 +6,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
 import 'package:jflutter/core/models/tm.dart';
 import 'package:jflutter/core/models/tm_transition.dart';
-import 'package:jflutter/core/models/transition.dart';
 import 'package:jflutter/presentation/pages/tm_page.dart';
-import 'package:jflutter/presentation/widgets/tm_canvas.dart';
+import 'package:jflutter/presentation/providers/tm_editor_provider.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 void main() {
   final binding = TestWidgetsFlutterBinding.ensureInitialized();
 
   group('TMPage', () {
-    testWidgets('updates metadata when TMCanvas notifies about changes',
-        (tester) async {
+    testWidgets('updates metadata when editor changes', (tester) async {
       binding.window.physicalSizeTestValue = const Size(900, 1600);
       binding.window.devicePixelRatioTestValue = 1.0;
       addTearDown(() {
@@ -24,9 +22,12 @@ void main() {
         binding.window.clearDevicePixelRatioTestValue();
       });
 
+      final scopeKey = GlobalKey();
+
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
+        ProviderScope(
+          key: scopeKey,
+          child: const MaterialApp(
             home: TMPage(),
           ),
         ),
@@ -37,6 +38,8 @@ void main() {
           find.widgetWithText(ElevatedButton, 'Simulate');
       final algorithmButtonFinder =
           find.widgetWithText(ElevatedButton, 'Algorithms');
+      final metricsButtonFinder =
+          find.widgetWithText(ElevatedButton, 'Metrics');
 
       final simulateButtonInitial =
           tester.widget<ElevatedButton>(simulateButtonFinder);
@@ -46,17 +49,17 @@ void main() {
           tester.widget<ElevatedButton>(algorithmButtonFinder);
       expect(algorithmButtonInitial.onPressed, isNull);
 
-      final tmCanvas = tester.widget<TMCanvas>(find.byType(TMCanvas));
+      final container =
+          ProviderScope.containerOf(scopeKey.currentContext!, listen: false);
       final tm = _buildSampleTM();
 
-      tmCanvas.onTMModified(tm);
-      await tester.pumpAndSettle();
+      container.read(tmEditorProvider.notifier).state = TMEditorState(
+        tm: tm,
+        tapeSymbols: {'B', 'a'},
+        moveDirections: {'right'},
+      );
 
-      expect(find.text('States: 2'), findsOneWidget);
-      expect(find.text('Transitions: 1'), findsOneWidget);
-      expect(find.text('Tape Symbols: B, a'), findsOneWidget);
-      expect(find.text('Move Directions: RIGHT'), findsOneWidget);
-      expect(find.text('Simulation Ready: Yes'), findsOneWidget);
+      await tester.pumpAndSettle();
 
       final simulateButtonUpdated =
           tester.widget<ElevatedButton>(simulateButtonFinder);
@@ -65,6 +68,15 @@ void main() {
       final algorithmButtonUpdated =
           tester.widget<ElevatedButton>(algorithmButtonFinder);
       expect(algorithmButtonUpdated.onPressed, isNotNull);
+
+      await tester.tap(metricsButtonFinder);
+      await tester.pumpAndSettle();
+
+      expect(find.text('States: 2'), findsOneWidget);
+      expect(find.text('Transitions: 1'), findsOneWidget);
+      expect(find.text('Tape Symbols: B, a'), findsOneWidget);
+      expect(find.text('Move Directions: RIGHT'), findsOneWidget);
+      expect(find.text('Simulation Ready: Yes'), findsOneWidget);
     });
   });
 }

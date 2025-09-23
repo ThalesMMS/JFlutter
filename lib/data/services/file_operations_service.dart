@@ -339,8 +339,9 @@ class FileOperationsService {
       // Draw transition label
       final midX = (from.dx + to.dx) / 2;
       final midY = (from.dy + to.dy) / 2;
+      final escapedLabel = _escapeXml(transition.label);
       buffer.writeln(
-        '  <text x="$midX" y="$midY" text-anchor="middle" font-family="Arial" font-size="12" fill="${_colorToHex(_kTextColor)}">${_escapeXml(transition.label)}</text>',
+        '  <text x="$midX" y="$midY" text-anchor="middle" font-family="Arial" font-size="12" fill="${_colorToHex(_kTextColor)}">$escapedLabel</text>',
       );
     }
 
@@ -348,25 +349,17 @@ class FileOperationsService {
     for (final state in drawingData.states) {
       final x = state.center.dx;
       final y = state.center.dy;
+      final escapedLabel = _escapeXml(state.label);
       buffer.writeln(
         '  <circle cx="$x" cy="$y" r="$_kStateRadius" fill="${_colorToHex(state.fillColor)}" stroke="${_colorToHex(state.strokeColor)}" stroke-width="${state.strokeWidth}"/>',
       );
       buffer.writeln(
-        '  <text x="$x" y="${y + 5}" text-anchor="middle" font-family="Arial" font-size="14" fill="${_colorToHex(_kTextColor)}">${_escapeXml(state.label)}</text>',
+        '  <text x="$x" y="${y + 5}" text-anchor="middle" font-family="Arial" font-size="14" fill="${_colorToHex(_kTextColor)}">$escapedLabel</text>',
       );
     }
 
     buffer.writeln('</svg>');
     return buffer.toString();
-  }
-
-  String _escapeXml(String value) {
-    return value
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&apos;');
   }
 
   _AutomatonDrawingData _prepareDrawingData(FSA automaton) {
@@ -430,6 +423,15 @@ class _AutomatonDrawingData {
 
   final List<_DrawableState> states;
   final List<_DrawableTransition> transitions;
+}
+
+String _escapeXml(String value) {
+  return value
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&apos;');
 }
 
 class _DrawableState {

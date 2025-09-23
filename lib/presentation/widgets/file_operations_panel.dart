@@ -154,6 +154,7 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
         }
       }
     } catch (e) {
+      if (!mounted) return;
       _showErrorMessage('Error saving automaton: $e');
     } finally {
       _finishLoading();
@@ -174,14 +175,7 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
       if (result != null && result.files.isNotEmpty) {
         final filePath = result.files.first.path;
         if (filePath == null) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Unable to access the selected file in this environment.',
-              ),
-            ),
-          );
+          _showUnavailableFileMessage();
           return;
         }
         final loadResult = await _fileService.loadAutomatonFromJFLAP(filePath);
@@ -195,6 +189,7 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
         }
       }
     } catch (e) {
+      if (!mounted) return;
       _showErrorMessage('Error loading automaton: $e');
     } finally {
       _finishLoading();
@@ -229,6 +224,7 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
         }
       }
     } catch (e) {
+      if (!mounted) return;
       _showErrorMessage('Error exporting automaton: $e');
     } finally {
       _finishLoading();
@@ -263,6 +259,7 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
         }
       }
     } catch (e) {
+      if (!mounted) return;
       _showErrorMessage('Error saving grammar: $e');
     } finally {
       _finishLoading();
@@ -283,14 +280,7 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
       if (result != null && result.files.isNotEmpty) {
         final filePath = result.files.first.path;
         if (filePath == null) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Unable to access the selected file in this environment.',
-              ),
-            ),
-          );
+          _showUnavailableFileMessage();
           return;
         }
         final loadResult = await _fileService.loadGrammarFromJFLAP(filePath);
@@ -304,6 +294,7 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
         }
       }
     } catch (e) {
+      if (!mounted) return;
       _showErrorMessage('Error loading grammar: $e');
     } finally {
       _finishLoading();
@@ -331,6 +322,17 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
       SnackBar(
         content: Text(message),
         backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+  void _showUnavailableFileMessage() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Unable to access the selected file in this environment.',
+        ),
       ),
     );
   }

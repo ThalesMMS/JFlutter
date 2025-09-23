@@ -157,6 +157,22 @@ Additional icons in the app bar provide quick access to:
 - **Symbol Validation** - Single character symbols
 - **Error Messages** - Clear feedback for invalid inputs
 
+### Turing Machine Analysis
+
+1. **Open the TM tab** from the main navigation to reveal the dedicated **TM Analysis** card next to the tape editor.
+2. **Load or design your Turing machine**, ensuring states, transitions, and tape symbols are defined before running any checks.
+3. **Tap one of the focus buttons** (e.g., *Check Decidability*, *Find Reachable States*, *Language Analysis*, *Tape Operations*, *Time Characteristics*, or *Space Characteristics*). Each button launches an algorithm run with a brief progress indicator on the selected card.
+4. **Review the Analysis Results panel** that expands underneath the focus selector. When no algorithm has been executed yet, the panel shows the placeholder message *“No analysis results yet”* followed by the hint *“Select an algorithm above to analyze your TM.”*
+5. **Re-run analyses whenever you edit the machine** by tapping the desired focus button again; the panel updates live and highlights the active focus with an “Analysis focus” banner.
+
+#### Interpreting Analysis Results
+- **State Analysis** – Displays *Total states*, *Accepting states*, and *Non-accepting states*, and summarizes *Reachable halting states* while flagging any *Halting states not reached*.
+- **Transition Analysis** – Lists *Total transitions*, distinguishes *TM transitions* from unexpected *Non-TM transitions*, and highlights issues if any finite-automaton-only transitions remain.
+- **Tape Operations** – Groups observed *Read symbols*, *Write symbols*, *Move directions*, and the detected *Tape alphabet* to verify coverage of tape actions.
+- **Reachability** – Counts *Reachable states* and *Unreachable states*, providing chip lists that mirror the reachability analysis for quick inspection.
+- **Execution Timing** – Reports *Analysis time*, *States processed*, and *Transitions inspected* so you can evaluate performance characteristics of the selected focus.
+- **Potential Issues** – Surfaces structural warnings such as states that cannot be reached and *Potentially non-halting transitions* (self-loops that do not move the head) while confirming *No structural issues detected* when the machine passes every check.
+
 ### Results Display
 
 #### Simulation Results

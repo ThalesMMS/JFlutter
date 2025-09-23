@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../providers/tm_editor_provider.dart';
 import '../providers/tm_metrics_controller.dart';
 import '../widgets/tm/tm_desktop_layout.dart';
 import '../widgets/tm/tm_metrics_panel.dart';
@@ -18,6 +19,25 @@ class TMPage extends ConsumerStatefulWidget {
 
 class _TMPageState extends ConsumerState<TMPage> {
   final GlobalKey _canvasKey = GlobalKey();
+  ProviderSubscription<TMEditorState>? _subscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _subscription?.close();
+    _subscription = ref.listen<TMEditorState>(
+      tmEditorProvider,
+      (_, next) =>
+          ref.read(tmMetricsControllerProvider.notifier).updateFromEditor(next),
+      fireImmediately: true,
+    );
+  }
+
+  @override
+  void dispose() {
+    _subscription?.close();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

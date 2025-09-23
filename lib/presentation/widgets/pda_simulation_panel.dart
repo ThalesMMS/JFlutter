@@ -6,7 +6,9 @@ import '../../core/models/simulation_step.dart';
 import '../../core/result.dart';
 import '../providers/pda_editor_provider.dart';
 
-/// Panel for PDA simulation and string testing
+/// Encapsulates the PDA input controls, execution trigger, and results view
+/// so the widget can manage the full life cycle of a simulation from the same
+/// panel.
 class PDASimulationPanel extends ConsumerStatefulWidget {
   const PDASimulationPanel({super.key});
 
@@ -69,6 +71,8 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
     );
   }
 
+  // Presents the input fields, including the `_stepByStep` switch that toggles
+  // whether the simulator collects the detailed transition trace.
   Widget _buildInputSection(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -126,6 +130,9 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
     );
   }
 
+  // Provides the execute button, reflecting the loading state while the
+  // simulation runs and delegating to `_simulatePDA` with the current
+  // `_stepByStep` selection.
   Widget _buildSimulateButton(BuildContext context) {
     return SizedBox(
       width: double.infinity,
@@ -143,6 +150,9 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
     );
   }
 
+  // Shows the results container, falling back to placeholder or error
+  // messaging when `_simulationResult` is empty due to validation or runtime
+  // failures.
   Widget _buildResultsSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,6 +175,8 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
   }
 
   Widget _buildEmptyResults(BuildContext context) {
+    // Placeholder shown before any simulation has been run or when errors clear
+    // previous output.
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -212,6 +224,10 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
         ? (isAccepted ? 'Accepted' : 'Rejected')
         : 'Simulation failed';
     final errorText = _errorMessage ?? result?.errorMessage;
+
+    // Displays either the simulator error (if available) or the last
+    // validation error bubbled up via `_showError` when no results can be
+    // produced.
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -383,6 +399,8 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
       _errorMessage = message;
       _simulationResult = null;
     });
+    // Surface the validation issue in both the snackbar and results section so
+    // the UI clarifies why no simulation output is currently available.
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),

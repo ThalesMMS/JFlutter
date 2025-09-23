@@ -10,11 +10,11 @@
 
 ### First Steps
 
-1. **Open the FSA tab** to start with finite state automata
-2. **Tap the "+" button** to add your first state
-3. **Tap the arrow button** to add transitions
-4. **Enter a test string** in the simulation panel
-5. **Tap "Simulate"** to see the result
+1. **Open the FSA tab** using the bottom navigation bar (mobile) or the side tab list (desktop).
+2. **Use the canvas toolbar’s "Add State" button** (top-right of the canvas) to drop your first state near the center, then drag it into position.
+3. **Tap "Add Transition" on the same toolbar**, tap the origin state, tap the destination state, and enter the transition symbols when prompted.
+4. **Open the simulation sheet** by tapping the play icon in the top-right quick actions (mobile) or by using the simulation panel on desktop.
+5. **Enter a test string and tap "Simulate"** to see the acceptance result.
 
 ## Interface Overview
 
@@ -28,6 +28,8 @@ JFlutter has 6 main sections accessible via bottom navigation (mobile) or tabs (
 - **TM** - Turing machine design environment
 - **Regex** - Regular expression testing and conversions
 - **Pumping** - Pumping Lemma challenges and tutorials
+
+On mobile, navigation happens exclusively through taps on the bottom navigation icons—page swiping is disabled so you always stay aligned with the selected tab indicator. Desktop layouts keep the same ordering using a tab strip on the left.
 
 Additional icons in the app bar provide quick access to:
 
@@ -49,6 +51,7 @@ Additional icons in the app bar provide quick access to:
 - **Collapsible panels** - Tap buttons to show/hide controls
 - **Bottom navigation** - Easy thumb navigation
 - **Touch-optimized** - Large touch targets
+- **Top quick actions** - Tune (algorithms) and Play (simulation) icons open draggable bottom sheets
 - **Responsive design** - Adapts to screen size
 
 #### Desktop Layout
@@ -62,21 +65,22 @@ Additional icons in the app bar provide quick access to:
 ### Creating an Automaton
 
 #### Adding States
-1. **Tap the "+" button** in the canvas controls
-2. **Tap on the canvas** where you want the state
+1. **Tap the "Add State" (plus) icon** in the floating canvas toolbar (top-right of the canvas).
+2. **Drag the newly created state** to its final position using a standard tap-and-drag gesture.
 3. **States are automatically named** (q0, q1, q2, etc.)
-4. **First state is automatically initial**
+4. **The first state is marked as initial automatically**
 
 #### Adding Transitions
-1. **Tap the arrow button** in the canvas controls
-2. **Tap the source state** (where transition starts)
-3. **Tap the destination state** (where transition ends)
-4. **Enter the symbol** when prompted (e.g., 'a', 'b', '0', '1')
+1. **Tap the "Add Transition" (arrow) icon** in the canvas toolbar to enable transition mode.
+2. **Tap the source state**, then **tap the destination state**.
+3. **Enter the transition symbols** in the dialog that appears (commas separate multiple symbols, or type ε for epsilon).
+4. **Tap “Save”** to confirm the transition and exit the dialog.
 
 #### Marking States
-- **Initial State** - First state is automatically initial
-- **Accepting State** - Tap a state to toggle accepting status
-- **Visual Indicators** - Initial states have arrows, accepting states have double circles
+- **Initial State** - Double-tap a state and enable the **Initial state** checkbox in the edit dialog.
+- **Accepting State** - Double-tap the state and toggle the **Accepting state** checkbox.
+- **Context Menu** - Long-press a state (or empty space) to open quick options for editing, deleting, or adding new states.
+- **Visual Indicators** - Initial states have arrows, accepting states have double circles.
 
 ### Example: Binary String Divisible by 3
 
@@ -89,6 +93,8 @@ Additional icons in the app bar provide quick access to:
 4. **Test with strings** like "110" (6, divisible by 3)
 
 ### Using Algorithms
+
+On mobile devices, tap the **tune icon** in the top-right quick actions to open the algorithm bottom sheet; on desktop, the algorithm panel is always visible in the left column.
 
 #### Regex to NFA
 1. **Enter a regular expression** in the algorithm panel
@@ -116,6 +122,8 @@ Additional icons in the app bar provide quick access to:
 
 ### Simulation and Testing
 
+Tap the **play icon** in the mobile quick actions to open the simulation bottom sheet. Desktop layouts keep the simulation panel on the right-hand column.
+
 #### Testing Strings
 1. **Enter a string** in the simulation input field
 2. **Tap "Simulate"** to test acceptance
@@ -128,20 +136,26 @@ Additional icons in the app bar provide quick access to:
 3. **See transition paths** taken during execution
 4. **Understand the process** visually
 
+#### Handling Validation Errors
+- **Grammar algorithms** – If the grammar has issues, running an analysis shows a detailed list of validation errors directly in the results area. Fix the highlighted productions and run the algorithm again.
+- **Regex conversions** – Leaving the regular expression empty triggers the inline warning *“Regular expression cannot be empty.”* Enter a value to enable the conversion buttons.
+
 ## Advanced Features
 
 ### Canvas Controls
 
+The floating toolbar in the top-right corner of the canvas houses quick actions for **Add State**, **Add Transition**, and **Cancel**. Use these before interacting with the canvas so the gesture handler knows which editing flow you want to perform.
+
 #### Navigation
 - **Pan** - Drag to move around the canvas
-- **Zoom** - Pinch to zoom in/out
-- **Reset View** - Double-tap to reset zoom and position
+- **Zoom** - Pinch to zoom in/out or use the zoom controls available in mobile quick menus
+- **Recenter** - Combine pan and zoom gestures (or the quick menu’s reset option when available) to return to a comfortable view
 
 #### Editing
 - **Select States** - Tap to select, drag to move
-- **Delete Elements** - Long-press for context menu
-- **Edit Labels** - Double-tap states or transitions
-- **Undo/Redo** - Use gesture or menu options
+- **Delete Elements** - Long-press for the context menu and choose *Delete*
+- **Edit Labels** - Double-tap states or transitions to open edit dialogs
+- **Undo/Redo** - Use the toolbar buttons or gesture shortcuts provided on desktop
 
 ### Algorithm Panel
 
@@ -159,19 +173,20 @@ Additional icons in the app bar provide quick access to:
 
 ### Turing Machine Analysis
 
-1. **Open the TM tab** from the main navigation to reveal the dedicated **TM Analysis** card next to the tape editor.
-2. **Load or design your Turing machine**, ensuring states, transitions, and tape symbols are defined before running any checks.
-3. **Tap one of the focus buttons** (e.g., *Check Decidability*, *Find Reachable States*, *Language Analysis*, *Tape Operations*, *Time Characteristics*, or *Space Characteristics*). Each button launches an algorithm run with a brief progress indicator on the selected card.
-4. **Review the Analysis Results panel** that expands underneath the focus selector. When no algorithm has been executed yet, the panel shows the placeholder message *“No analysis results yet”* followed by the hint *“Select an algorithm above to analyze your TM.”*
-5. **Re-run analyses whenever you edit the machine** by tapping the desired focus button again; the panel updates live and highlights the active focus with an “Analysis focus” banner.
+1. **Open the TM tab** from the main navigation. On mobile, the TM Action Bar appears at the top with three buttons: **Simulate**, **Algorithms**, and **Metrics**.
+2. **Design or load your Turing machine**, making sure you have an initial state, at least one accepting state, and the required transitions.
+3. **Use the action bar buttons** to open draggable bottom sheets:
+   - **Simulate** becomes active only when the machine is ready to run.
+   - **Algorithms** activates once the machine has any states/transitions.
+   - **Metrics** is always available and summarizes machine health.
+4. **Adjust the machine as needed**; the buttons automatically enable or disable based on readiness, so you know when the configuration is valid for each task.
+5. **Reopen the sheets after edits** to see updated simulations, algorithm outputs, or metrics.
 
 #### Interpreting Analysis Results
-- **State Analysis** – Displays *Total states*, *Accepting states*, and *Non-accepting states*, and summarizes *Reachable halting states* while flagging any *Halting states not reached*.
-- **Transition Analysis** – Lists *Total transitions*, distinguishes *TM transitions* from unexpected *Non-TM transitions*, and highlights issues if any finite-automaton-only transitions remain.
-- **Tape Operations** – Groups observed *Read symbols*, *Write symbols*, *Move directions*, and the detected *Tape alphabet* to verify coverage of tape actions.
-- **Reachability** – Counts *Reachable states* and *Unreachable states*, providing chip lists that mirror the reachability analysis for quick inspection.
-- **Execution Timing** – Reports *Analysis time*, *States processed*, and *Transitions inspected* so you can evaluate performance characteristics of the selected focus.
-- **Potential Issues** – Surfaces structural warnings such as states that cannot be reached and *Potentially non-halting transitions* (self-loops that do not move the head) while confirming *No structural issues detected* when the machine passes every check.
+- **State & transition counts** – Review totals for states, transitions, and nondeterministic edges to confirm the machine structure.
+- **Tape operations** – Inspect the sets of tape symbols and move directions that appear in your transitions.
+- **Readiness flags** – Check whether an initial state and accepting state exist and whether the simulator considers the machine ready.
+- **Warnings** – Resolve highlighted nondeterministic transition IDs or other notices before running deterministic algorithms.
 
 ### Results Display
 
@@ -283,14 +298,12 @@ Additional icons in the app bar provide quick access to:
 - **Tap** - Select states or add elements
 - **Drag** - Move states or pan canvas
 - **Pinch** - Zoom in/out
-- **Long press** - Context menu
-- **Double tap** - Reset view or edit
+- **Long press** - Open the contextual menu for add/edit/delete actions
+- **Double tap** - Edit the tapped state or transition
 
 #### Navigation
-- **Swipe** - Switch between tabs
-- **Pull down** - Refresh or reset
-- **Bottom navigation** - Quick section access
-- **Back button** - Navigate back
+- **Bottom navigation** - Tap icons to change sections
+- **Back button** - Navigate back (Android) or close open sheets/dialogs
 
 ### Mobile Optimization
 

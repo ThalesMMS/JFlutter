@@ -16,12 +16,12 @@ import 'touch_gesture_handler.dart';
 /// Interactive canvas for drawing and editing Turing Machines
 class TMCanvas extends ConsumerStatefulWidget {
   final GlobalKey canvasKey;
-  final ValueChanged<TM> onTMModified;
+  final ValueChanged<TM>? onTMModified;
 
   const TMCanvas({
     super.key,
     required this.canvasKey,
-    required this.onTMModified,
+    this.onTMModified,
   });
 
   @override
@@ -315,8 +315,9 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
       transitions: List<TMTransition>.unmodifiable(_transitions),
     );
 
-    if (tm != null) {
-      widget.onTMModified(tm);
+    final callback = widget.onTMModified;
+    if (tm != null && callback != null) {
+      callback(tm);
     }
   }
 

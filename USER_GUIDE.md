@@ -1,5 +1,14 @@
 # JFlutter User Guide
 
+## What's New This Week
+
+- **File Operations card** – Save and load automata or grammars in JFLAP format and export automata as SVG directly from the new *File Operations* card available in the FSA and Grammar workspaces.
+- **Mobile quick controls** – A redesigned floating control hub now groups add state/transition, undo/redo, zoom, reset view, and clear actions with haptic feedback for faster touch workflows.
+- **Expanded Grammar workspace** – The refreshed *Grammar Editor*, *Grammar Parser*, and *Grammar Analysis* cards streamline production management, conversions to automata, and FIRST/FOLLOW or parse-table calculations.
+- **New PDA insights** – The *PDA Analysis* card introduces one-tap actions such as determinism checks, minimization, reachability, and stack operation summaries.
+- **Richer Pumping Lemma experience** – Dedicated *Pumping Lemma Game*, *Help*, and *Progress* cards guide you through challenges with theory tabs, examples, and score tracking.
+- **Actionable Settings page** – Symbols, theme, canvas, and general preferences are grouped into cards with persistent Save and Reset buttons so you can quickly apply or revert configuration changes.
+
 ## Getting Started
 
 ### Installation
@@ -50,6 +59,7 @@ Additional icons in the app bar provide quick access to:
 - **Bottom navigation** - Easy thumb navigation
 - **Touch-optimized** - Large touch targets
 - **Responsive design** - Adapts to screen size
+- **Floating quick controls** - Tap the main FAB to reveal grouped canvas actions with haptic feedback
 
 #### Desktop Layout
 - **Side-by-side panels** - Controls, canvas, and results
@@ -128,6 +138,17 @@ Additional icons in the app bar provide quick access to:
 3. **See transition paths** taken during execution
 4. **Understand the process** visually
 
+### File Operations Card
+
+Use the **File Operations** card (available on the FSA and Grammar tabs) to manage your projects:
+
+1. **Open the File Operations card** from the right-hand panel on desktop or via the collapsible panels on mobile.
+2. **Choose the Automaton or Grammar section** depending on the active workspace.
+3. **Tap "Save as JFLAP"** to export the current model (`.jff` for automata, `.cfg` for grammars). You will be prompted to pick a file name and destination.
+4. **Tap "Load JFLAP"** to import an existing file. After selecting a file, the workspace updates instantly and shows a success message.
+5. **Tap "Export SVG"** (automata only) to capture the current canvas as a vector diagram for reports or slides.
+6. **Watch the status indicator** on the card; buttons are disabled while operations are running and toast messages confirm success or errors.
+
 ## Advanced Features
 
 ### Canvas Controls
@@ -156,6 +177,58 @@ Additional icons in the app bar provide quick access to:
 - **Regex Syntax** - Standard regular expression syntax
 - **Symbol Validation** - Single character symbols
 - **Error Messages** - Clear feedback for invalid inputs
+
+## Working with Grammars
+
+### Building a Grammar
+
+1. **Open the Grammar tab** to display the *Grammar Editor*, *Grammar Parser*, and *Grammar Analysis* cards.
+2. **Set the grammar name and start symbol** in the *Grammar Info* section at the top of the editor.
+3. **Add production rules** by entering the left-hand variable and right-hand expansion, then tapping **Add Rule**. Rules appear in the productions list with inline edit and delete controls.
+4. **Edit or remove productions** by selecting a rule from the list; the editor toggles into edit mode with the fields pre-filled so you can update or delete the rule.
+5. **Use the quick toolbar buttons** (*Add Rule* and *Clear*) to manage the grammar rapidly on both desktop and mobile layouts.
+
+### Converting Grammars to Automata
+
+1. **Populate at least one production rule** in the *Grammar Editor*.
+2. **Scroll to the "Conversions" section** in the *Grammar Analysis* card.
+3. **Tap "Convert Right-Linear Grammar to FSA"** to build an automaton that recognizes the same language.
+4. **Wait for the progress indicator** to complete; successful conversions automatically open the FSA tab with the generated automaton.
+5. **Review any validation messages** displayed beneath the button when rules are incomplete or incompatible.
+
+### Grammar Analysis
+
+Use the buttons in the *Grammar Analysis* card to inspect and refine your grammar:
+
+- **Remove Left Recursion** – Cleans up productions and updates the editor with the transformed grammar.
+- **Left Factor** – Extracts shared prefixes so predictive parsers can choose unique branches.
+- **Find First Sets** and **Find Follow Sets** – Generates sets for each non-terminal, displayed in a formatted results panel.
+- **Build Parse Table** – Produces LL(1) or LR(1) tables depending on grammar characteristics.
+- **Check Ambiguity** – Highlights productions or derivations that introduce ambiguity, helping you resolve conflicts early.
+
+### Parsing Strings
+
+1. **Open the *Grammar Parser* card** next to the editor.
+2. **Pick a parsing algorithm** (CYK, LL, or LR) from the dropdown to match your grammar form.
+3. **Enter a test string** and press **Parse String**. Examples below the field illustrate accepted formats.
+4. **Review the results area** for acceptance, execution time, and step-by-step derivations. Expand the steps list to trace how the parser processed the string.
+
+## Working with Pushdown Automata
+
+### Designing the PDA
+
+1. **Navigate to the PDA tab** to access the dedicated canvas, simulation controls, and *PDA Analysis* card.
+2. **Add states and transitions** using the same canvas gestures and quick controls as the FSA workspace, including stack operations when defining transitions.
+3. **Label push and pop symbols** directly in the transition dialog to reflect stack behavior.
+
+### Analyzing a PDA
+
+1. **Locate the *PDA Analysis* card** beside the canvas.
+2. **Choose an action button** such as *Convert to CFG*, *Minimize PDA*, *Check Determinism*, *Find Reachable States*, *Language Analysis*, or *Stack Operations*.
+3. **Wait for the inline progress indicator**; results appear in a formatted panel with summaries, merged state lists, and warnings.
+4. **Apply suggested changes** (for example, minimized PDAs or cleaned-up transitions) directly through the automated updates triggered by the analysis.
+
+## Working with Turing Machines
 
 ### Turing Machine Analysis
 
@@ -186,6 +259,27 @@ Additional icons in the app bar provide quick access to:
 - **State Counts** - Before and after comparison
 - **Visual Feedback** - Color-coded result cards
 - **Copy Functionality** - Easy result copying
+
+## Pumping Lemma Challenges
+
+### Playing the Pumping Lemma Game
+
+1. **Switch to the Pumping tab** to reveal the *Pumping Lemma Game*, *Help*, and *Progress* cards.
+2. **Press "Start Challenge"** on the game card to begin a run of curated languages.
+3. **Read the language description** and decide whether it is regular; pick an answer to receive immediate feedback, explanations, and score updates.
+4. **Advance through levels** to increase your streak and mastery. The header shows the current level and cumulative score.
+
+### Using the Pumping Lemma Help Card
+
+1. **Consult the Help card** whenever you need a refresher.
+2. **Switch between the Theory, Steps, and Examples tabs** to view concise explanations, the three-part pumping strategy, and ready-made sample languages.
+3. **Combine the guidance** with the game or your own proofs to strengthen intuition.
+
+### Tracking Progress
+
+1. **Open the Pumping Lemma Progress card** to monitor completed challenges.
+2. **Review badges and streaks** to see how many correct answers you have accumulated and which difficulty tiers you have cleared.
+3. **Reset or continue sessions**; the progress provider keeps your latest run visible so you can resume later.
 
 ## Educational Use Cases
 
@@ -274,6 +368,15 @@ Additional icons in the app bar provide quick access to:
 - **Wrong results** - Verify input automaton
 - **Performance slow** - Try smaller automata
 - **Error messages** - Read error details carefully
+
+## Personalizing Settings
+
+1. **Open the Settings screen** via the gear icon in the app bar.
+2. **Adjust the Symbols card** to customize the empty string and epsilon glyphs used across simulations.
+3. **Pick a Theme mode** (System, Light, or Dark) inside the Theme card for consistent visuals.
+4. **Tune the Canvas card** to show grids or coordinates and to set grid spacing, node size, and label font size.
+5. **Use the General card** to toggle autosave and contextual tooltips according to your workflow.
+6. **Apply changes with the Save button** in the app bar or the *Save Settings* button in the Actions card. Use *Reset to Defaults* to revert all preferences instantly.
 
 ## Mobile-Specific Features
 

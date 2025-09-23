@@ -79,7 +79,26 @@
 - ✅ Conversion buttons trigger SnackBars and navigate to the FSA page.
 - ✅ Equivalence checks surface match results without leaving the page.
 
-### Scenario 5: Pushdown Automaton and Turing Machine Interactions
+### Scenario 5: Mobile Navigation and Controls
+
+**Objective**: Validate tab navigation, compact controls, and canvas gestures on mobile
+
+**Steps**:
+1. Launch JFlutter on a phone-sized emulator
+2. Verify the bottom navigation shows the six abbreviated tabs (FSA, Grammar, PDA, TM, Regex, Pumping)
+3. Tap through Grammar, PDA, and TM tabs and confirm each screen renders its respective editor without losing existing canvas content
+4. On the FSA tab, tap the "tune" icon to open the algorithm sheet and verify the menu expands over the workspace without hiding the canvas
+5. Tap the "play" icon to open the simulation sheet and confirm it can be dismissed via swipe
+6. Interact with the automaton canvas: tap to select, long-press to open state editing, drag to reposition a state, and perform a pinch gesture to zoom
+7. Return to the Pumping tab and ensure the collapsible buttons toggle the game/help/progress panels as expected
+
+**Expected Results**:
+- ✅ Navigation between tabs is instantaneous and preserves each editor's state
+- ✅ Bottom sheets provide expandable menus that close cleanly without obstructing controls when dismissed
+- ✅ Canvas gestures (tap, long press, drag, pinch) respond smoothly on mobile
+- ✅ Collapsible panels react to button toggles on the Pumping tab
+
+### Scenario 6: Pushdown Automaton and Turing Machine Interactions
 
 **Objective**: Confirm complex editor controls remain responsive on mobile layouts.
 
@@ -127,9 +146,52 @@
 3. In Settings, attempt to save with an empty epsilon symbol and ensure validation feedback appears.
 4. Use **Convert to NFA** on the Regex page with an empty regex and confirm the validation message prevents conversion.
 
+### Edge Cases Test
+1. Create automaton with no accepting states
+2. Create grammar with no productions
+3. Test empty string handling
+4. Test lambda transition handling
+5. Verify all edge cases handled gracefully
+
 ## Accessibility & Mobile UI Validation
 1. Confirm all floating buttons expose tooltips when **Show Tooltips** is enabled in Settings.
 2. Verify touch targets (state nodes, toolbar buttons) remain at least 44dp on small devices.
 3. Test pinch-to-zoom and two-finger pan on each canvas (FSA, PDA, TM).
 4. Rotate the device to landscape; ensure panels reposition without clipping content.
 5. Enable screen reader support on the emulator and verify that primary buttons are announced.
+
+## Success Criteria
+
+### Confirmed This Week
+- ✅ Core algorithms (NFA→DFA, DFA minimization, CFG parsing, PDA conversions) pass the documented scenarios
+- ✅ Mobile interface delivers touch-friendly navigation, bottom sheets, and gesture-responsive canvases
+- ✅ File operations (save, load, export to JFLAP/SVG/PNG) succeed across the scenarios above
+
+### Pending Validation
+- ⏳ Long-run performance benchmarking with 100+ states and batch simulations
+- ⏳ Accessibility audits (screen reader, focus order, contrast)
+- ⏳ Explicit offline usage verification and large test suites for failure cases
+
+## Troubleshooting
+
+**Common Issues**:
+1. **Simulation hangs**: Check for infinite loops in automaton
+2. **Conversion fails**: Verify automaton is valid before conversion
+3. **File won't load**: Check file format compatibility
+4. **UI unresponsive**: Check for large automaton size
+5. **Touch not working**: Verify gesture recognizers are properly configured
+
+**Debug Commands**:
+```bash
+# Check Flutter installation
+flutter doctor
+
+# Run tests
+flutter test
+
+# Check performance
+flutter run --profile
+
+# Debug mode
+flutter run --debug
+```

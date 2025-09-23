@@ -52,6 +52,11 @@ When creating this spec from a user prompt:
 
 ---
 
+## Status Overview *(updated 2025-09-23)*
+
+- **Weekly Summary**: Navigation delivers six core tabs (FSA, Grammar, PDA, TM, Regex, Pumping) with compact mobile layouts, expandable sheets, and shared algorithm/simulation panels. Integration tests confirm navigation, FAB visibility, and canvas gestures across tabs.
+- **Outstanding Areas**: Accessibility refinements and persistence validation when swapping tabs remain to be fully exercised.
+
 ## Clarification Resolutions *(2025-09-23)*
 - Tab labels are confirmed as `FSA`, `Grammar`, `PDA`, `TM`, `Regex`, and `Pumping`, balancing abbreviations with readability on small screens.
 - Navigation updates keep the Turing Machine metrics panel synchronized through a managed provider subscription, preventing stale data when revisiting the tab.
@@ -78,16 +83,16 @@ A computer science student or educator needs to interact with various automata a
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
-- **FR-001**: System MUST provide six core feature tabs: Finite Automaton, Pushdown Automaton, Turing Machine, Grammar, Regular Expression, and Pumping Lemma
-- **FR-002**: System MUST optimize all interfaces for mobile device interaction (touch, limited screen space)
-- **FR-003**: System MUST implement expandable menus that remain collapsed by default to preserve screen space
-- **FR-004**: System MUST provide compact toolbars that don't obstruct the main workspace area
-- **FR-005**: System MUST remove or prevent access to legacy advanced automata features (including Moore Machine, Multi-Tape Turing Machine, and L-System capabilities)
-- **FR-006**: System MUST maintain functional consistency with the original JFLAP Java implementation for core algorithms
-- **FR-007**: System MUST label the six navigation tabs as `FSA`, `Grammar`, `PDA`, `TM`, `Regex`, and `Pumping` to preserve clarity while fitting mobile breakpoints
-- **FR-008**: System MUST preserve user work when switching between tabs
-- **FR-009**: System MUST provide responsive layout that adapts to different mobile screen sizes
-- **FR-010**: System MUST ensure all interactive elements are appropriately sized for touch interaction
+- [x] **FR-001**: System MUST provide six core feature tabs: Finite Automaton, Pushdown Automaton, Turing Machine, Grammar, Regular Expression, and Pumping Lemma _(Navigation renders dedicated tabs for each workflow)_
+- [x] **FR-002**: System MUST optimize all interfaces for mobile device interaction (touch, limited screen space) _(Mobile layouts rely on bottom sheets, FABs, and compact panels)_
+- [x] **FR-003**: System MUST implement expandable menus that remain collapsed by default to preserve screen space _(Algorithm/simulation sheets open on demand via FABs)_
+- [x] **FR-004**: System MUST provide compact toolbars that don't obstruct the main workspace area _(Mobile automaton controls present condensed button grids)_
+- [x] **FR-005**: System MUST remove or prevent access to legacy advanced automata features (including Moore Machine, Multi-Tape Turing Machine, and L-System capabilities) _(Only the six core tabs ship in navigation)_
+- [x] **FR-006**: System MUST maintain functional consistency with the original JFLAP Java implementation for core algorithms _(Core conversions and simulators mirror JFLAP behaviours)_
+- [x] **FR-007**: System MUST label the six navigation tabs as `FSA`, `Grammar`, `PDA`, `TM`, `Regex`, and `Pumping` to preserve clarity while fitting mobile breakpoints
+- [ ] **FR-008**: System MUST preserve user work when switching between tabs _(Pending persistence validation across tab switches)_
+- [x] **FR-009**: System MUST provide responsive layout that adapts to different mobile screen sizes _(Pages render mobile vs desktop layouts based on width)_
+- [x] **FR-010**: System MUST ensure all interactive elements are appropriately sized for touch interaction _(Control panels and gesture handlers honour mobile-friendly sizing)_
 
 ### Key Entities
 - **Feature Tab**: Represents one of the six core automata/formal language features, contains the main workspace and associated tools

@@ -109,54 +109,24 @@
 - ✅ All properties are preserved
 - ✅ Export format compatible with desktop JFLAP
 
-### Scenario 5: Mobile UI Interactions
+### Scenario 5: Mobile Navigation and Controls
 
-**Objective**: Validate mobile-optimized interface
+**Objective**: Validate tab navigation, compact controls, and canvas gestures on mobile
 
 **Steps**:
-1. Open automaton with 10+ states
-2. Test pinch-to-zoom gesture
-3. Test pan gesture with single finger
-4. Test tap to select states
-5. Test long press for context menus
-6. Test double-tap to edit labels
-7. Test drag to move states
-8. Verify touch targets are at least 44dp
-9. Test with screen reader enabled
-10. Test in landscape orientation
+1. Launch JFlutter on a phone-sized emulator
+2. Verify the bottom navigation shows the six abbreviated tabs (FSA, Grammar, PDA, TM, Regex, Pumping)
+3. Tap through Grammar, PDA, and TM tabs and confirm each screen renders its respective editor without losing existing canvas content
+4. On the FSA tab, tap the "tune" icon to open the algorithm sheet and verify the menu expands over the workspace without hiding the canvas
+5. Tap the "play" icon to open the simulation sheet and confirm it can be dismissed via swipe
+6. Interact with the automaton canvas: tap to select, long-press to open state editing, drag to reposition a state, and perform a pinch gesture to zoom
+7. Return to the Pumping tab and ensure the collapsible buttons toggle the game/help/progress panels as expected
 
 **Expected Results**:
-- ✅ Zoom and pan gestures work smoothly
-- ✅ Touch interactions are responsive
-- ✅ All touch targets meet accessibility standards
-- ✅ Interface adapts to orientation changes
-- ✅ Screen reader compatibility works
-
-## Performance Validation
-
-### Large Automaton Test
-1. Create automaton with 50 states
-2. Add 100 transitions
-3. Test simulation with 100-character input string
-4. Verify execution completes within 500ms
-5. Test conversion algorithms
-6. Verify memory usage stays under 100MB
-
-### Stress Test
-1. Create automaton with 200 states (maximum)
-2. Add maximum number of transitions
-3. Test all operations (simulate, convert, save)
-4. Verify app remains responsive
-5. Verify no crashes or memory leaks
-
-## Error Handling Validation
-
-### Invalid Input Test
-1. Test simulation with invalid characters
-2. Test grammar with malformed productions
-3. Test file operations with corrupted files
-4. Verify appropriate error messages
-5. Verify app doesn't crash
+- ✅ Navigation between tabs is instantaneous and preserves each editor's state
+- ✅ Bottom sheets provide expandable menus that close cleanly without obstructing controls when dismissed
+- ✅ Canvas gestures (tap, long press, drag, pinch) respond smoothly on mobile
+- ✅ Collapsible panels react to button toggles on the Pumping tab
 
 ### Edge Cases Test
 1. Create automaton with no accepting states
@@ -167,23 +137,15 @@
 
 ## Success Criteria
 
-**Functional Requirements Met**:
-- ✅ All core algorithms work correctly
-- ✅ Mobile interface is touch-optimized
-- ✅ File operations work reliably
-- ✅ Performance targets are met
+### Confirmed This Week
+- ✅ Core algorithms (NFA→DFA, DFA minimization, CFG parsing, PDA conversions) pass the documented scenarios
+- ✅ Mobile interface delivers touch-friendly navigation, bottom sheets, and gesture-responsive canvases
+- ✅ File operations (save, load, export to JFLAP/SVG/PNG) succeed across the scenarios above
 
-**User Experience**:
-- ✅ Interface is intuitive for mobile users
-- ✅ All gestures work as expected
-- ✅ App responds quickly to user input
-- ✅ Error messages are clear and helpful
-
-**Technical Requirements**:
-- ✅ App works offline
-- ✅ Memory usage is optimized
-- ✅ Code is maintainable and testable
-- ✅ All tests pass
+### Pending Validation
+- ⏳ Long-run performance benchmarking with 100+ states and batch simulations
+- ⏳ Accessibility audits (screen reader, focus order, contrast)
+- ⏳ Explicit offline usage verification and large test suites for failure cases
 
 ## Troubleshooting
 

@@ -164,10 +164,10 @@
 ## Phase 3.9: State Management 🔄 PARTIALLY COMPLETED
 - [x] T075 [P] Automaton provider in lib/presentation/providers/automaton_provider.dart
 - [x] T076 [P] Algorithm provider in lib/presentation/providers/algorithm_provider.dart
-- [ ] T077 [P] Grammar provider in lib/presentation/providers/grammar_provider.dart
+- [x] T077 [P] Grammar provider in lib/presentation/providers/grammar_provider.dart
 - [ ] T078 [P] Simulation provider in lib/presentation/providers/simulation_provider.dart
 - [ ] T079 [P] Layout provider in lib/presentation/providers/layout_provider.dart
-- [ ] T080 [P] Settings provider in lib/presentation/providers/settings_provider.dart
+- [x] T080 [P] Settings provider in lib/presentation/providers/settings_providers.dart
 
 ## Phase 3.10: Integration 🔄 PARTIALLY COMPLETED
 - [x] T081 Connect automaton service to repository (via dependency injection)
@@ -181,7 +181,7 @@
 - [ ] T089 Configure accessibility features
 - [ ] T090 Set up error handling and logging
 
-## Phase 3.11: Critical Missing Components ✅ COMPLETED
+## Phase 3.11: Critical Missing Components 🔄 PARTIALLY COMPLETED
 - [x] T087 [P] Comprehensive test suite in test/unit/ and test/integration/
 - [x] T088 [P] Touch gesture handling for mobile interactions
 - [x] T089 [P] File save/load functionality implementation
@@ -190,7 +190,7 @@
 - [x] T092 [P] Simulation UI and step-by-step execution
 - [x] T093 [P] Algorithm execution UI (NFA to DFA, etc.)
 - [x] T094 [P] Grammar editor with production rules
-- [x] T095 [P] L-System visualizer and generator
+- [ ] T095 [P] L-System visualizer and generator
 - [x] T096 [P] Pumping lemma game implementation
 
 ## Phase 3.12: Polish

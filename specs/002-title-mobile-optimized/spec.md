@@ -2,7 +2,7 @@
 
 **Feature Branch**: `002-title-mobile-optimized`  
 **Created**: 2024-12-19  
-**Status**: Draft  
+**Status**: In Review
 **Input**: User description: "Atualizar as especificações para remover determinadas máquinas avançadas que não serão necessárias neste projeto (como Moore Machine, Multi-Tape Turing Machine e L-System). O aplicativo deve ser otimizado para dispositivos móveis, e terá as seguintes abas (que podem ser abreviadas): Finite Automaton, Pushdown Automaton, Turing Machine, Grammar, Regular Expression, Pumping Lemma. Os códigos java dentro da pasta JFLAP_source devem ser usados como referência de funcionalidades para as sessões que estamos portando, bem como referência lógica dos algoritmos. A interface, em cada aba, deve ser clean, com menus expansíveis e barras de ferramentas que não ocupem muito espaço no layout padrão da aba."
 
 ## Execution Flow (main)
@@ -52,6 +52,11 @@ When creating this spec from a user prompt:
 
 ---
 
+## Status Overview *(updated this week)*
+
+- **Weekly Summary**: Navigation delivers six core tabs (FSA, Grammar, PDA, TM, Regex, Pumping) with compact mobile layouts, expandable sheets, and shared algorithm/simulation panels. Integration tests confirm navigation, FAB visibility, and canvas gestures across tabs.
+- **Outstanding Areas**: Accessibility refinements and persistence validation when swapping tabs remain to be fully exercised.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### Primary User Story
@@ -72,16 +77,16 @@ A computer science student or educator needs to interact with various automata a
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
-- **FR-001**: System MUST provide six core feature tabs: Finite Automaton, Pushdown Automaton, Turing Machine, Grammar, Regular Expression, and Pumping Lemma
-- **FR-002**: System MUST optimize all interfaces for mobile device interaction (touch, limited screen space)
-- **FR-003**: System MUST implement expandable menus that remain collapsed by default to preserve screen space
-- **FR-004**: System MUST provide compact toolbars that don't obstruct the main workspace area
-- **FR-005**: System MUST remove or prevent access to legacy advanced automata features (including Moore Machine, Multi-Tape Turing Machine, and L-System capabilities)
-- **FR-006**: System MUST maintain functional consistency with the original JFLAP Java implementation for core algorithms
-- **FR-007**: System MUST allow tab abbreviations for better mobile display [NEEDS CLARIFICATION: which specific abbreviations should be used for each tab?]
-- **FR-008**: System MUST preserve user work when switching between tabs
-- **FR-009**: System MUST provide responsive layout that adapts to different mobile screen sizes
-- **FR-010**: System MUST ensure all interactive elements are appropriately sized for touch interaction
+- [x] **FR-001**: System MUST provide six core feature tabs: Finite Automaton, Pushdown Automaton, Turing Machine, Grammar, Regular Expression, and Pumping Lemma _(Navigation renders dedicated tabs for each workflow)_
+- [x] **FR-002**: System MUST optimize all interfaces for mobile device interaction (touch, limited screen space) _(Mobile layouts rely on bottom sheets, FABs, and compact panels)_
+- [x] **FR-003**: System MUST implement expandable menus that remain collapsed by default to preserve screen space _(Algorithm/simulation sheets open on demand via FABs)_
+- [x] **FR-004**: System MUST provide compact toolbars that don't obstruct the main workspace area _(Mobile automaton controls present condensed button grids)_
+- [x] **FR-005**: System MUST remove or prevent access to legacy advanced automata features (including Moore Machine, Multi-Tape Turing Machine, and L-System capabilities) _(Only the six core tabs ship in navigation)_
+- [x] **FR-006**: System MUST maintain functional consistency with the original JFLAP Java implementation for core algorithms _(Core conversions and simulators mirror JFLAP behaviours)_
+- [x] **FR-007**: System MUST allow tab abbreviations for better mobile display (use FSA, Grammar, PDA, TM, Regex, Pumping)
+- [ ] **FR-008**: System MUST preserve user work when switching between tabs _(Pending persistence validation across tab switches)_
+- [x] **FR-009**: System MUST provide responsive layout that adapts to different mobile screen sizes _(Pages render mobile vs desktop layouts based on width)_
+- [x] **FR-010**: System MUST ensure all interactive elements are appropriately sized for touch interaction _(Control panels and gesture handlers honour mobile-friendly sizing)_
 
 ### Key Entities
 - **Feature Tab**: Represents one of the six core automata/formal language features, contains the main workspace and associated tools
@@ -101,8 +106,8 @@ A computer science student or educator needs to interact with various automata a
 - [x] All mandatory sections completed
 
 ### Requirement Completeness
-- [ ] No [NEEDS CLARIFICATION] markers remain
-- [x] Requirements are testable and unambiguous  
+- [x] No [NEEDS CLARIFICATION] markers remain
+- [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Scope is clearly bounded
 - [x] Dependencies and assumptions identified

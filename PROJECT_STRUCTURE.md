@@ -8,49 +8,77 @@ JFlutter follows Clean Architecture principles with clear separation of concerns
 
 ```
 jflutter/
-├── lib/                           # Main application code
-│   ├── core/                      # Core business logic
-│   │   ├── algorithms/            # Core algorithm implementations
-│   │   ├── models/                # Domain models and entities
-│   │   ├── entities/              # Business entities
-│   │   ├── parsers/               # File parsing utilities
-│   │   ├── repositories/          # Repository interfaces
-│   │   ├── use_cases/             # Business use cases
-│   │   ├── algo_log.dart          # Algorithm logging
-│   │   ├── error_handler.dart     # Error handling utilities
+├── lib/                           # Main application source code
+│   ├── app.dart                   # App configuration and MaterialApp wiring
+│   ├── main.dart                  # Flutter entry point
+│   ├── core/                      # Core business logic and domain abstractions
+│   │   ├── algorithms/            # Deterministic implementations of automata/grammar algorithms
+│   │   ├── entities/              # Domain entities shared across layers
+│   │   ├── models/                # Immutable domain models
+│   │   ├── parsers/               # JFLAP XML parsing utilities
+│   │   ├── repositories/          # Repository contracts
+│   │   ├── use_cases/             # Aggregated use cases per bounded context
+│   │   ├── utils/                 # Core mappers and helpers
+│   │   ├── algo_log.dart          # Algorithm logging helpers
+│   │   ├── automaton.dart         # Base automaton definitions
+│   │   ├── error_handler.dart     # Global error handling
 │   │   └── result.dart            # Result pattern implementation
-│   ├── data/                      # Data layer
-│   │   ├── data_sources/          # Data source implementations
-│   │   ├── models/                # Data transfer objects
+│   ├── data/                      # Data access and persistence layer
+│   │   ├── data_sources/          # Concrete data source adapters
+│   │   ├── models/                # Transfer/data models for persistence
 │   │   ├── repositories/          # Repository implementations
-│   │   └── services/              # Business services
-│   ├── presentation/              # Presentation layer
-│   │   ├── pages/                 # Application pages/screens
-│   │   ├── widgets/               # Reusable UI components
-│   │   ├── providers/             # State management
-│   │   └── theme/                 # App theming
-│   ├── injection/                 # Dependency injection
-│   ├── app.dart                   # App configuration
-│   └── main.dart                  # Application entry point
-├── test/                          # Test files
-│   ├── contract/                  # Contract tests
-│   ├── core/                      # Core algorithm tests
-│   ├── integration/               # Integration tests
-│   ├── unit/                      # Unit tests
-│   └── widget/                    # Widget tests
-├── specs/                         # Project specifications
-├── android/                       # Android-specific files
-├── ios/                           # iOS-specific files
-├── web/                           # Web-specific files
-├── windows/                       # Windows-specific files
-├── linux/                         # Linux-specific files
-├── macos/                         # macOS-specific files
-├── pubspec.yaml                   # Project dependencies
+│   │   ├── services/              # High level data services and orchestrators
+│   │   └── storage/               # Local storage bridges (e.g. shared preferences)
+│   ├── features/                  # Cross-cutting feature modules
+│   │   └── layout/                # Layout persistence implementations
+│   ├── injection/                 # Dependency injection configuration
+│   └── presentation/              # UI layer and presentation logic
+│       ├── pages/                 # Screen widgets
+│       ├── providers/             # Riverpod view models and controllers
+│       ├── theme/                 # Material 3 theming
+│       └── widgets/               # Reusable UI components grouped by feature
+│           ├── automaton_canvas/  # Canvas composition and dialog widgets
+│           ├── gestures/          # Canvas gesture controllers
+│           ├── help/              # In-app contextual help sections
+│           ├── regex/             # Regex-specific UI pieces
+│           ├── settings/          # Settings cards and toggles
+│           └── tm/                # Turing machine layouts and controls
+├── test/                          # Automated tests
+│   ├── contract/                  # Service contract tests
+│   ├── data/                      # Data layer tests (repositories, services)
+│   │   ├── repositories/          # Repository behaviour tests
+│   │   └── services/              # Service integration tests
+│   ├── integration/               # End-to-end workflow coverage
+│   ├── presentation/              # Presentation layer unit/widget tests
+│   │   ├── pages/                 # Page level rendering tests
+│   │   ├── providers/             # View model behaviour tests
+│   │   └── widgets/               # Widget logic and painter tests
+│   ├── test_utils/                # Shared test helpers
+│   ├── unit/                      # Fine grained unit suites grouped by layer
+│   │   ├── algorithms/            # Algorithm-focused unit tests
+│   │   ├── core/                  # Core utilities and entities tests
+│   │   ├── data/                  # Data contracts and mappers
+│   │   ├── features/              # Feature module tests
+│   │   ├── models/                # Domain model tests
+│   │   ├── presentation/          # Presentation utilities tests
+│   │   └── repositories/          # Repository contract tests
+│   └── widget/                    # Golden/widget regression tests
+├── specs/                         # Project specifications and documentation
+├── jflutter_js/                   # JavaScript interop experiments and examples
+├── android/                       # Android-specific configuration and tooling
+│   └── scripts/                   # Gradle helper scripts
+├── ios/                           # iOS-specific configuration
+├── web/                           # Web platform assets
+├── windows/                       # Windows desktop runner
+├── linux/                         # Linux desktop runner
+├── macos/                         # macOS desktop runner
+├── pubspec.yaml                   # Project dependencies and metadata
 ├── analysis_options.yaml          # Static analysis configuration
 ├── README.md                      # Project documentation
 ├── API_DOCUMENTATION.md           # API reference
 ├── USER_GUIDE.md                  # User instructions
 ├── CHANGELOG.md                   # Change history
+├── DEVELOPMENT_LOG.md             # Weekly development journal
 ├── PROJECT_STRUCTURE.md           # This file
 └── LICENSE.txt                    # License information
 ```
@@ -61,20 +89,28 @@ The core layer contains the business logic and domain models. It's independent o
 
 ### Algorithms (`lib/core/algorithms/`)
 
-Contains 13 core algorithm implementations:
+Contains the main algorithm implementations that power automaton creation, analysis, and conversion workflows:
 
 ```
 algorithms/
-├── algorithm_operations.dart      # High-level algorithm operations
+├── algorithm_operations.dart      # High-level algorithm orchestration
+├── automaton_analyzer.dart        # Automaton statistics and metrics
 ├── automaton_simulator.dart       # Automaton simulation
-├── dfa_minimizer.dart             # DFA minimization (Hopcroft's algorithm)
+├── dfa_completer.dart             # DFA completion utilities
+├── dfa_minimizer.dart             # DFA minimization (Hopcroft)
+├── dfa_operations.dart            # DFA set operations and helpers
+├── equivalence_checker.dart       # Automata equivalence checking
 ├── fa_to_regex_converter.dart     # FA to regular expression conversion
-├── grammar_parser.dart             # Context-free grammar parsing
+├── fsa_to_grammar_converter.dart  # Automaton to grammar conversion
+├── grammar_analyzer.dart          # Grammar metrics and validation
+├── grammar_parser.dart            # Context-free grammar parsing
+├── grammar_to_fsa_converter.dart  # Grammar to automaton conversion
 ├── grammar_to_pda_converter.dart  # Grammar to PDA conversion
 ├── nfa_to_dfa_converter.dart      # NFA to DFA conversion
 ├── pda_simulator.dart             # PDA simulation
-├── pumping_lemma_game.dart        # Interactive pumping lemma game
-├── pumping_lemma_prover.dart      # Pumping lemma proof
+├── pda_to_cfg_converter.dart      # PDA to CFG conversion utilities
+├── pumping_lemma_game.dart        # Interactive pumping lemma game logic
+├── pumping_lemma_prover.dart      # Pumping lemma proof assistant
 ├── regex_to_nfa_converter.dart    # Regex to NFA conversion
 └── tm_simulator.dart              # Turing machine simulation
 ```
@@ -86,23 +122,26 @@ Domain models representing core concepts:
 ```
 models/
 ├── automaton.dart                 # Abstract automaton base class
-├── fsa.dart                       # Finite state automaton
+├── fsa.dart                       # Finite state automaton definition
 ├── fsa_transition.dart            # FSA transition
-├── grammar.dart                   # Context-free grammar
-├── layout_settings.dart           # Layout configuration
-├── parse_action.dart              # Parsing action
-├── parse_table.dart               # LL/LR parsing table
-├── pda.dart                       # Pushdown automaton
+├── grammar.dart                   # Context-free grammar aggregate
+├── layout_settings.dart           # Layout configuration persistence model
+├── parse_action.dart              # Parsing action descriptor
+├── parse_table.dart               # LL/LR parsing table structure
+├── pda.dart                       # Pushdown automaton representation
 ├── pda_transition.dart            # PDA transition
-├── production.dart                # Grammar production
-├── pumping_attempt.dart           # Pumping lemma attempt
+├── production.dart                # Grammar production rules
+├── pumping_attempt.dart           # Pumping lemma attempt snapshot
 ├── pumping_lemma_game.dart        # Pumping lemma game state
-├── simulation_result.dart         # Simulation result
-├── simulation_step.dart           # Simulation step
-├── state.dart                     # Automaton state
-├── tm.dart                        # Turing machine
-├── tm_transition.dart             # TM transition
-└── touch_interaction.dart         # Mobile touch data
+├── settings_model.dart            # Persisted user settings
+├── simulation_result.dart         # Simulation output envelope
+├── simulation_step.dart           # Simulation step details
+├── state.dart                     # Automaton state definition
+├── tm.dart                        # Turing machine representation
+├── tm_analysis.dart               # TM analysis report
+├── tm_transition.dart             # TM transition definition
+├── touch_interaction.dart         # Mobile touch interaction data
+└── transition.dart                # Shared transition abstraction
 ```
 
 ### Entities (`lib/core/entities/`)
@@ -111,14 +150,17 @@ Business entities for domain logic:
 
 ```
 entities/
-└── automaton_entity.dart          # Core automaton entity
+├── automaton_entity.dart          # Core automaton entity
+└── grammar_entity.dart            # Grammar aggregate root
 ```
 
-### Other Core Files
+### Utilities and Shared Core Files
 
 - `algo_log.dart` - Centralized algorithm logging
-- `error_handler.dart` - Global error handling
+- `automaton.dart` - Base automaton definitions shared by algorithms
+- `error_handler.dart` - Global error handling helpers
 - `result.dart` - Result pattern for error handling
+- `utils/automaton_entity_mapper.dart` - Mapping helpers between entities and models
 
 ## Data Layer (`lib/data/`)
 
@@ -126,12 +168,13 @@ The data layer handles data persistence, external services, and data transformat
 
 ### Services (`lib/data/services/`)
 
-Business services for data operations:
+Business services for data operations and platform orchestration:
 
 ```
 services/
 ├── automaton_service.dart         # Automaton CRUD operations
 ├── conversion_service.dart        # Algorithm conversion services
+├── file_operations_service.dart   # Import/export and file helpers
 └── simulation_service.dart        # Simulation services
 ```
 
@@ -141,8 +184,8 @@ Data source implementations:
 
 ```
 data_sources/
-├── examples_data_source.dart      # Example data source
-└── local_storage_data_source.dart # Local storage implementation
+├── examples_data_source.dart      # Bundled examples data
+└── local_storage_data_source.dart # Shared preferences and disk access
 ```
 
 ### Repositories (`lib/data/repositories/`)
@@ -153,7 +196,17 @@ Repository pattern implementations:
 repositories/
 ├── algorithm_repository_impl.dart # Algorithm repository
 ├── automaton_repository_impl.dart # Automaton repository
-└── examples_repository_impl.dart  # Examples repository
+├── examples_repository_impl.dart  # Examples repository
+└── settings_repository_impl.dart  # Persisted settings repository
+```
+
+### Storage (`lib/data/storage/`)
+
+Persistence adapters that back repositories:
+
+```
+storage/
+└── settings_storage.dart          # Shared preferences backed storage
 ```
 
 ### Models (`lib/data/models/`)
@@ -188,23 +241,56 @@ pages/
 
 ### Widgets (`lib/presentation/widgets/`)
 
-Reusable UI components:
+Reusable UI components organized by feature:
 
 ```
 widgets/
-├── algorithm_panel.dart           # Algorithm control panel
-├── automaton_canvas.dart          # Interactive drawing canvas
-├── mobile_navigation.dart         # Mobile bottom navigation
-└── simulation_panel.dart          # Simulation interface
+├── algorithm_panel.dart           # Algorithm selection hub
+├── file_operations_panel.dart     # Import/export surface
+├── grammar_algorithm_panel.dart   # Grammar-specific controls
+├── grammar_editor.dart            # Grammar editing surface
+├── grammar_simulation_panel.dart  # Grammar simulation controls
+├── mobile_automaton_controls.dart # Mobile-friendly automaton controls
+├── mobile_navigation.dart         # Bottom navigation for mobile
+├── pda_algorithm_panel.dart       # PDA algorithm controls
+├── pda_canvas.dart                # PDA editor canvas
+├── pda_simulation_panel.dart      # PDA simulation controls
+├── pumping_lemma_game.dart        # Pumping lemma interaction widget
+├── pumping_lemma_help.dart        # Pumping lemma assistance content
+├── pumping_lemma_progress.dart    # Pumping lemma progress tracker
+├── simulation_panel.dart          # Shared simulation interface
+├── tm_algorithm_panel.dart        # TM algorithm controls
+├── tm_canvas.dart                 # TM editor canvas
+├── tm_simulation_panel.dart       # TM simulation controls
+├── touch_gesture_handler.dart     # Gesture bridge for canvases
+├── transition_geometry.dart       # Canvas geometry helpers
+├── automaton_canvas/              # Canvas composition widgets and dialogs
+├── gestures/                      # Canvas gesture controllers
+├── help/                          # In-app help section widgets
+├── regex/                         # Regex conversion/test widgets
+├── settings/                      # Settings cards and toggles
+└── tm/                            # TM layout composites
 ```
 
 ### Providers (`lib/presentation/providers/`)
 
-State management using Riverpod:
+State management using Riverpod view models and controllers:
 
 ```
 providers/
-└── automaton_provider.dart        # Automaton state management
+├── algorithm_provider.dart             # Algorithm execution orchestrator
+├── automaton_canvas_controller.dart    # Canvas transform and gesture state
+├── automaton_provider.dart             # Automaton state management
+├── grammar_provider.dart               # Grammar editing state
+├── home_navigation_provider.dart       # Home page navigation
+├── pda_editor_provider.dart            # PDA editing workflow
+├── pumping_lemma_progress_provider.dart # Pumping lemma game state
+├── regex_page_view_model.dart          # Regex conversion state
+├── settings_providers.dart             # Provider definitions for settings
+├── settings_view_model.dart            # Settings state management
+├── tm_algorithm_view_model.dart        # TM algorithm execution state
+├── tm_editor_provider.dart             # TM editor state
+└── tm_metrics_controller.dart          # TM metrics aggregation
 ```
 
 ### Theme (`lib/presentation/theme/`)
@@ -218,11 +304,21 @@ theme/
 
 ## Dependency Injection (`lib/injection/`)
 
-Service registration and dependency management:
+Service registration and dependency management with GetIt:
 
 ```
 injection/
-└── dependency_injection.dart      # GetIt service registration
+└── dependency_injection.dart      # Registers repositories, services, and use cases
+```
+
+## Feature Modules (`lib/features/`)
+
+Cross-cutting feature packages that augment core functionality:
+
+```
+features/
+└── layout/
+    └── layout_repository_impl.dart    # Persists and restores layout preferences
 ```
 
 ## Test Structure (`test/`)
@@ -231,75 +327,37 @@ Comprehensive testing across all layers:
 
 ### Contract Tests (`test/contract/`)
 
-API contract validation:
+Service API validation to ensure external behaviour remains stable.
 
-```
-contract/
-├── test_automaton_contract.dart   # Automaton service contracts
-├── test_conversion_contract.dart  # Conversion service contracts
-└── test_simulation_contract.dart  # Simulation service contracts
-```
+### Data Tests (`test/data/`)
+
+Repository and service level tests, including shared preferences backed settings and SVG export workflows.
 
 ### Integration Tests (`test/integration/`)
 
-End-to-end workflow testing:
+End-to-end workflow testing that stitches together UI, core, and data layers.
 
-```
-integration/
-├── test_file_operations.dart      # File I/O integration
-├── test_fsa_creation.dart         # FSA creation workflow
-├── test_grammar_parsing.dart      # Grammar parsing workflow
-├── test_mobile_ui.dart            # Mobile UI integration
-└── test_nfa_to_dfa.dart           # NFA to DFA conversion
-```
+### Presentation Tests (`test/presentation/`)
 
-### Core Tests (`test/core/`)
+Focused coverage for Riverpod providers, widgets, and pages to guarantee UI logic.
 
-Core algorithm testing:
+### Test Utilities (`test/test_utils/`)
 
-```
-core/
-├── nfa_from_regex_test.dart       # Regex to NFA tests
-├── nfa_to_dfa_test.dart           # NFA to DFA tests
-└── regex_test.dart                # Regex algorithm tests
-```
+Helper classes and fixtures shared across suites.
 
-### Unit Tests
+### Unit Tests (`test/unit/`)
 
-Individual component testing:
+Fine grained unit suites grouped by domain (algorithms, core, data, features, models, presentation, repositories).
 
-```
-unit/
-├── algorithms/                    # Algorithm unit tests
-├── models/                        # Model unit tests
-└── services/                      # Service unit tests
-```
+### Widget Regression (`test/widget/`)
 
-### Widget Tests (`test/widget/`)
-
-UI component testing:
-
-```
-widget/
-└── [widget test files]            # Individual widget tests
-```
+Widget snapshot and golden tests.
 
 ## Platform-Specific Directories
 
 ### Android (`android/`)
 
-Android-specific configuration and native code:
-
-```
-android/
-├── app/
-│   ├── build.gradle.kts          # Android build configuration
-│   └── src/main/
-│       ├── kotlin/               # Kotlin native code
-│       └── res/                  # Android resources
-├── build.gradle.kts              # Project build configuration
-└── gradle/                       # Gradle wrapper
-```
+Android-specific configuration and native code. The `scripts/` directory contains helper shell scripts used by CI to fix Gradle wrappers.
 
 ### iOS (`ios/`)
 
@@ -314,14 +372,7 @@ ios/
 
 ### Web (`web/`)
 
-Web-specific assets and configuration:
-
-```
-web/
-├── index.html                    # Web app entry point
-├── manifest.json                 # Web app manifest
-└── icons/                        # Web app icons
-```
+Contains `index.html`, `manifest.json`, and platform icons for Flutter web builds.
 
 ### Desktop Platforms
 
@@ -343,6 +394,7 @@ web/
 - `API_DOCUMENTATION.md` - Comprehensive API reference
 - `USER_GUIDE.md` - User instructions and tutorials
 - `CHANGELOG.md` - Detailed change history
+- `DEVELOPMENT_LOG.md` - Weekly merge and progress notes
 - `PROJECT_STRUCTURE.md` - This file
 
 ### Specifications

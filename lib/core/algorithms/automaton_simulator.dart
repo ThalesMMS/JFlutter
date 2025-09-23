@@ -1,6 +1,7 @@
+import 'dart:collection';
+
 import '../models/fsa.dart';
 import '../models/state.dart';
-import '../models/fsa_transition.dart';
 import '../models/simulation_result.dart';
 import '../models/simulation_step.dart';
 import '../result.dart';
@@ -380,55 +381,32 @@ class AutomatonSimulator {
     int maxResults = 100,
   }) {
     try {
+      final initialState = automaton.initialState;
+      if (initialState == null) {
+        return Failure('Automaton must have an initial state');
+      }
+
       final acceptedStrings = <String>{};
       final alphabet = automaton.alphabet.toList();
-      
-      // Generate all possible strings up to maxLength
-      for (int length = 0; length <= maxLength && acceptedStrings.length < maxResults; length++) {
-        _generateStrings(
-          automaton,
-          alphabet,
-          '',
-          length,
-          acceptedStrings,
-          maxResults,
-        );
+
+      for (final entry in _generateStringStates(
+        automaton,
+        alphabet,
+        initialState,
+        maxLength,
+      )) {
+        if (acceptedStrings.length >= maxResults) {
+          break;
+        }
+
+        if (entry.states.intersection(automaton.acceptingStates).isNotEmpty) {
+          acceptedStrings.add(entry.value);
+        }
       }
-      
+
       return Success(acceptedStrings);
     } catch (e) {
       return Failure('Error finding accepted strings: $e');
-    }
-  }
-
-  /// Recursively generates strings and tests them
-  static void _generateStrings(
-    FSA automaton,
-    List<String> alphabet,
-    String currentString,
-    int remainingLength,
-    Set<String> acceptedStrings,
-    int maxResults,
-  ) {
-    if (acceptedStrings.length >= maxResults) return;
-    
-    if (remainingLength == 0) {
-      final acceptsResult = accepts(automaton, currentString);
-      if (acceptsResult.isSuccess && acceptsResult.data!) {
-        acceptedStrings.add(currentString);
-      }
-      return;
-    }
-    
-    for (final symbol in alphabet) {
-      _generateStrings(
-        automaton,
-        alphabet,
-        currentString + symbol,
-        remainingLength - 1,
-        acceptedStrings,
-        maxResults,
-      );
     }
   }
 
@@ -439,55 +417,77 @@ class AutomatonSimulator {
     int maxResults = 100,
   }) {
     try {
+      final initialState = automaton.initialState;
+      if (initialState == null) {
+        return Failure('Automaton must have an initial state');
+      }
+
       final rejectedStrings = <String>{};
       final alphabet = automaton.alphabet.toList();
-      
-      // Generate all possible strings up to maxLength
-      for (int length = 0; length <= maxLength && rejectedStrings.length < maxResults; length++) {
-        _generateRejectedStrings(
-          automaton,
-          alphabet,
-          '',
-          length,
-          rejectedStrings,
-          maxResults,
-        );
+
+      for (final entry in _generateStringStates(
+        automaton,
+        alphabet,
+        initialState,
+        maxLength,
+      )) {
+        if (rejectedStrings.length >= maxResults) {
+          break;
+        }
+
+        final isAccepted =
+            entry.states.intersection(automaton.acceptingStates).isNotEmpty;
+        if (!isAccepted) {
+          rejectedStrings.add(entry.value);
+        }
       }
-      
+
       return Success(rejectedStrings);
     } catch (e) {
       return Failure('Error finding rejected strings: $e');
     }
   }
 
-  /// Recursively generates strings and tests them for rejection
-  static void _generateRejectedStrings(
+  static Iterable<_StringWithStates> _generateStringStates(
     FSA automaton,
     List<String> alphabet,
-    String currentString,
-    int remainingLength,
-    Set<String> rejectedStrings,
-    int maxResults,
-  ) {
-    if (rejectedStrings.length >= maxResults) return;
-    
-    if (remainingLength == 0) {
-      final acceptsResult = accepts(automaton, currentString);
-      if (acceptsResult.isSuccess && !acceptsResult.data!) {
-        rejectedStrings.add(currentString);
+    State initialState,
+    int maxLength,
+  ) sync* {
+    final queue = Queue<_StringWithStates>();
+    queue.add(_StringWithStates('', {initialState}));
+
+    while (queue.isNotEmpty) {
+      final current = queue.removeFirst();
+
+      if (current.value.length > maxLength) {
+        continue;
       }
-      return;
-    }
-    
-    for (final symbol in alphabet) {
-      _generateRejectedStrings(
-        automaton,
-        alphabet,
-        currentString + symbol,
-        remainingLength - 1,
-        rejectedStrings,
-        maxResults,
-      );
+
+      yield current;
+
+      if (current.value.length == maxLength) {
+        continue;
+      }
+
+      for (final symbol in alphabet) {
+        final nextStates = <State>{};
+        for (final state in current.states) {
+          final transitions =
+              automaton.getTransitionsFromStateOnSymbol(state, symbol);
+          for (final transition in transitions) {
+            nextStates.add(transition.toState);
+          }
+        }
+        queue.add(_StringWithStates(current.value + symbol, nextStates));
+      }
     }
   }
+}
+
+class _StringWithStates {
+  final String value;
+  final Set<State> states;
+
+  const _StringWithStates(this.value, this.states);
 }

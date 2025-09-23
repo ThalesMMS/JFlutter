@@ -21,34 +21,38 @@ class _StubLayoutRepository implements LayoutRepository {
 
   final AutomatonEntity _entityToReturn;
 
+  Future<AutomatonResult> _returnPreparedEntity() async {
+    return Success(_entityToReturn);
+  }
+
   @override
   Future<AutomatonResult> applyAutoLayout(AutomatonEntity automaton) async {
-    return Success(_entityToReturn);
+    return _returnPreparedEntity();
   }
 
   @override
   Future<AutomatonResult> applyBalancedLayout(AutomatonEntity automaton) async {
-    return Success(_entityToReturn);
+    return _returnPreparedEntity();
   }
 
   @override
   Future<AutomatonResult> applyCompactLayout(AutomatonEntity automaton) async {
-    return Success(_entityToReturn);
+    return _returnPreparedEntity();
   }
 
   @override
   Future<AutomatonResult> applyHierarchicalLayout(AutomatonEntity automaton) async {
-    return Success(_entityToReturn);
+    return _returnPreparedEntity();
   }
 
   @override
   Future<AutomatonResult> applySpreadLayout(AutomatonEntity automaton) async {
-    return Success(_entityToReturn);
+    return _returnPreparedEntity();
   }
 
   @override
   Future<AutomatonResult> centerAutomaton(AutomatonEntity automaton) async {
-    return Success(_entityToReturn);
+    return _returnPreparedEntity();
   }
 }
 

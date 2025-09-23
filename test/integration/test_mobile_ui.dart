@@ -177,6 +177,26 @@ void main() {
       expect(canvas, findsOneWidget);
     });
     
+    testWidgets('should allow swipe gestures between tabs', (WidgetTester tester) async {
+      // Arrange
+      await tester.pumpWidget(const JFlutterApp());
+      await tester.pumpAndSettle();
+
+      // Assert initial page description is shown
+      expect(find.text('Finite State Automata'), findsOneWidget);
+
+      // Verify that the PageView uses scrollable physics
+      final pageView = tester.widget<PageView>(find.byType(PageView));
+      expect(pageView.physics, isA<PageScrollPhysics>());
+
+      // Act - Swipe to next tab
+      await tester.drag(find.byType(PageView), const Offset(-400, 0));
+      await tester.pumpAndSettle();
+
+      // Assert - The next page is visible and description updated
+      expect(find.text('Context-Free Grammars'), findsOneWidget);
+    });
+
     testWidgets('should maintain touch target size of at least 44dp', (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(const JFlutterApp());

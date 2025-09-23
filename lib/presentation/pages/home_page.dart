@@ -77,6 +77,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   void _onPageChanged(int index) {
+    _lastNavigationIndex = index;
     ref.read(homeNavigationProvider.notifier).setIndex(index);
   }
 
@@ -145,7 +146,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       body: PageView(
         controller: _pageController,
         onPageChanged: _onPageChanged,
-        physics: const NeverScrollableScrollPhysics(), // Disable swipe gestures
+        physics: const PageScrollPhysics(),
         children: const [
           FSAPage(),
           GrammarPage(),

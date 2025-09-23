@@ -12,6 +12,9 @@ import 'automaton_painter.dart';
 import 'state_edit_dialog.dart';
 import 'transition_symbol_input.dart';
 
+/// Canvas widget responsible for rendering and coordinating user gestures with
+/// [AutomatonCanvasController], delegating the state machine drawing logic and
+/// persisting modifications through the controller callbacks.
 class AutomatonCanvas extends StatefulWidget {
   final FSA? automaton;
   final GlobalKey canvasKey;
@@ -57,6 +60,8 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
     super.dispose();
   }
 
+  // Handles taps when the canvas is in add-state or add-transition mode before
+  // delegating to the controller for the actual state/transition creation flow.
   void _handleCanvasTap(TapDownDetails details) {
     final position = details.localPosition;
 
@@ -99,6 +104,8 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
     unawaited(_handleTransitionCreation(from, to));
   }
 
+  // Invoked once a transition gesture identifies origin and target, triggering
+  // the symbol dialog and forwarding the result back to the controller.
   Future<void> _handleTransitionCreation(
     automaton_state.State from,
     automaton_state.State to,
@@ -110,6 +117,8 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
     _controller.completeTransitionAddition();
   }
 
+  // Opens the state edit dialog after a state tap-and-hold gesture, and routes
+  // the confirmed updates to the controller.
   Future<void> _editState(automaton_state.State state) async {
     await showDialog<void>(
       context: context,
@@ -120,6 +129,8 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
     );
   }
 
+  // Displays the transition symbol dialog when an existing transition is
+  // edited, propagating the new symbols to the controller.
   Future<void> _editTransition(FSATransition transition) async {
     final input = await _showSymbolDialog(transition: transition);
     if (input == null) {
@@ -135,6 +146,8 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
     return _showSymbolDialog(transition: transition);
   }
 
+  // Shared dialog used for both creation and edition of transitions, feeding
+  // user-provided symbols back into the transition update flow.
   Future<TransitionSymbolInput?> _showSymbolDialog({
     FSATransition? transition,
   }) async {

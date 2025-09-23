@@ -178,10 +178,7 @@ class FakeAlgorithmRepository implements AlgorithmRepository {
     if (unaryOperationHandler != null) {
       return unaryOperationHandler!('nfaToDfa', _cloneAutomaton(nfa));
     }
-    final clone = _cloneAutomaton(nfa).copyWith(
-      type: AutomatonType.dfa,
-      name: '${nfa.name} (DFA)',
-    );
+    final clone = _cloneAutomaton(nfa).copyWith(type: AutomatonType.dfa);
     return Success(clone);
   }
 
@@ -196,10 +193,9 @@ class FakeAlgorithmRepository implements AlgorithmRepository {
         _cloneAutomaton(nfa),
       );
     }
-    final clone = _cloneAutomaton(nfa).copyWith(
-      alphabet: {...nfa.alphabet}..remove('λ'),
-    );
-    return Success(clone);
+    final clone = _cloneAutomaton(nfa);
+    final alphabet = Set<String>.from(clone.alphabet)..remove('λ');
+    return Success(clone.copyWith(alphabet: alphabet));
   }
 
   @override
@@ -210,10 +206,7 @@ class FakeAlgorithmRepository implements AlgorithmRepository {
     if (unaryOperationHandler != null) {
       return unaryOperationHandler!('minimizeDfa', _cloneAutomaton(dfa));
     }
-    final clone = _cloneAutomaton(dfa).copyWith(
-      name: '${dfa.name} (minimized)',
-    );
-    return Success(clone);
+    return Success(_cloneAutomaton(dfa));
   }
 
   @override
@@ -224,10 +217,7 @@ class FakeAlgorithmRepository implements AlgorithmRepository {
     if (unaryOperationHandler != null) {
       return unaryOperationHandler!('completeDfa', _cloneAutomaton(dfa));
     }
-    final clone = _cloneAutomaton(dfa).copyWith(
-      name: '${dfa.name} (complete)',
-    );
-    return Success(clone);
+    return Success(_cloneAutomaton(dfa));
   }
 
   @override
@@ -238,10 +228,7 @@ class FakeAlgorithmRepository implements AlgorithmRepository {
     if (unaryOperationHandler != null) {
       return unaryOperationHandler!('complementDfa', _cloneAutomaton(dfa));
     }
-    final clone = _cloneAutomaton(dfa).copyWith(
-      name: '${dfa.name} (complement)',
-    );
-    return Success(clone);
+    return Success(_cloneAutomaton(dfa));
   }
 
   @override
@@ -256,7 +243,7 @@ class FakeAlgorithmRepository implements AlgorithmRepository {
         _cloneAutomaton(b),
       );
     }
-    return Success(_combineAutomata(a, b, 'union'));
+    return Success(_cloneAutomaton(a));
   }
 
   @override
@@ -272,7 +259,7 @@ class FakeAlgorithmRepository implements AlgorithmRepository {
         _cloneAutomaton(b),
       );
     }
-    return Success(_combineAutomata(a, b, 'intersection'));
+    return Success(_cloneAutomaton(a));
   }
 
   @override
@@ -288,7 +275,7 @@ class FakeAlgorithmRepository implements AlgorithmRepository {
         _cloneAutomaton(b),
       );
     }
-    return Success(_combineAutomata(a, b, 'difference'));
+    return Success(_cloneAutomaton(a));
   }
 
   @override
@@ -299,10 +286,7 @@ class FakeAlgorithmRepository implements AlgorithmRepository {
     if (unaryOperationHandler != null) {
       return unaryOperationHandler!('prefixClosureDfa', _cloneAutomaton(dfa));
     }
-    final clone = _cloneAutomaton(dfa).copyWith(
-      name: '${dfa.name} (prefix closure)',
-    );
-    return Success(clone);
+    return Success(_cloneAutomaton(dfa));
   }
 
   @override
@@ -313,10 +297,7 @@ class FakeAlgorithmRepository implements AlgorithmRepository {
     if (unaryOperationHandler != null) {
       return unaryOperationHandler!('suffixClosureDfa', _cloneAutomaton(dfa));
     }
-    final clone = _cloneAutomaton(dfa).copyWith(
-      name: '${dfa.name} (suffix closure)',
-    );
-    return Success(clone);
+    return Success(_cloneAutomaton(dfa));
   }
 
   @override
@@ -725,20 +706,6 @@ AutomatonType _parseAutomatonType(String? rawType) {
   return AutomatonType.values.firstWhere(
     (type) => type.name == rawType || type.displayName == rawType,
     orElse: () => AutomatonType.dfa,
-  );
-}
-
-AutomatonEntity _combineAutomata(
-  AutomatonEntity a,
-  AutomatonEntity b,
-  String operation,
-) {
-  final clone = _cloneAutomaton(a);
-  final combinedAlphabet = {...a.alphabet, ...b.alphabet};
-  return clone.copyWith(
-    id: '${a.id}_$operation_${b.id}',
-    name: '${a.name} $operation ${b.name}',
-    alphabet: combinedAlphabet,
   );
 }
 

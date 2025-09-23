@@ -1,11 +1,13 @@
 import 'dart:math' as math;
+
 import 'package:vector_math/vector_math_64.dart';
+
 import '../models/grammar.dart';
-import '../models/production.dart';
 import '../models/pda.dart';
+import '../models/pda_transition.dart';
+import '../models/production.dart';
 import '../models/state.dart';
 import '../models/transition.dart';
-import '../models/pda_transition.dart';
 import '../result.dart';
 
 /// Converts context-free grammars to pushdown automata
@@ -76,8 +78,8 @@ class GrammarToPDAConverter {
         return ResultFactory.failure('Grammar must have a start symbol');
       }
 
-      // Create a simple PDA
-      final result = _createSimplePDA(grammar);
+      // Build PDA using the standard construction
+      final result = _buildStandardPDA(grammar);
       
       stopwatch.stop();
       if (stopwatch.elapsed > timeout) {
@@ -88,80 +90,6 @@ class GrammarToPDAConverter {
     } catch (e) {
       return ResultFactory.failure('Error converting grammar to PDA: $e');
     }
-  }
-
-  /// Creates a simple PDA from grammar
-  static PDA _createSimplePDA(Grammar grammar) {
-    final now = DateTime.now();
-    
-    // Create states
-    final q0 = State(
-      id: 'q0',
-      label: 'Initial',
-      position: Vector2(100, 100),
-      isInitial: true,
-      isAccepting: false,
-    );
-    
-    final q1 = State(
-      id: 'q1',
-      label: 'Processing',
-      position: Vector2(200, 100),
-      isInitial: false,
-      isAccepting: false,
-    );
-    
-    final q2 = State(
-      id: 'q2',
-      label: 'Accepting',
-      position: Vector2(300, 100),
-      isInitial: false,
-      isAccepting: true,
-    );
-    
-    // Create transitions
-    final transitions = <PDATransition>[];
-    
-    // Transition from q0 to q1: push start symbol
-    transitions.add(PDATransition(
-      id: 't1',
-      fromState: q0,
-      toState: q1,
-      label: 'ε,ε/${grammar.startSymbol}',
-      inputSymbol: '',
-      popSymbol: '',
-      pushSymbol: grammar.startSymbol,
-    ));
-    
-    // Transition from q1 to q2: pop start symbol
-    transitions.add(PDATransition(
-      id: 't2',
-      fromState: q1,
-      toState: q2,
-      label: 'ε,${grammar.startSymbol}/ε',
-      inputSymbol: '',
-      popSymbol: grammar.startSymbol,
-      pushSymbol: '',
-    ));
-    
-    return PDA(
-      id: 'pda_${DateTime.now().millisecondsSinceEpoch}',
-      name: 'PDA from Grammar',
-      states: {q0, q1, q2},
-      transitions: transitions.toSet(),
-      alphabet: grammar.terminals,
-      initialState: q0,
-      acceptingStates: {q2},
-      created: now,
-      modified: now,
-      bounds: math.Rectangle(0, 0, 800, 600),
-      stackAlphabet: {
-        ...grammar.terminals,
-        ...grammar.nonTerminals,
-        'Z', // Initial stack symbol
-      },
-      initialStackSymbol: 'Z',
-    );
   }
 
   /// Validates input grammar
@@ -205,8 +133,7 @@ class GrammarToPDAConverter {
         return ResultFactory.failure('Grammar must have a start symbol');
       }
 
-      // Create a simple PDA
-      final result = _createSimplePDA(grammar);
+      final result = _buildStandardPDA(grammar);
       
       stopwatch.stop();
       if (stopwatch.elapsed > timeout) {
@@ -243,8 +170,7 @@ class GrammarToPDAConverter {
         return ResultFactory.failure('Grammar must have a start symbol');
       }
 
-      // Create a simple PDA
-      final result = _createSimplePDA(grammar);
+      final result = _buildGreibachPDA(grammar);
       
       stopwatch.stop();
       if (stopwatch.elapsed > timeout) {
@@ -335,6 +261,262 @@ class GrammarToPDAConverter {
       return ResultFactory.failure('Error analyzing grammar to PDA conversion: $e');
     }
   }
+
+  static PDA _buildStandardPDA(Grammar grammar) {
+    _ensureContextFree(grammar);
+
+    final now = DateTime.now();
+    final states = _createCanonicalStates();
+    final transitions = <PDATransition>[];
+    final bottomSymbol = _initialStackSymbol;
+
+    var transitionCounter = 0;
+
+    transitions.add(_initialPushTransition(
+      states: states,
+      startSymbol: grammar.startSymbol,
+      transitionId: 'init_${transitionCounter++}',
+    ));
+
+    for (final production in grammar.productions) {
+      final leftSide = production.leftSide;
+      if (leftSide.length != 1) {
+        throw ArgumentError('Standard PDA conversion requires CFG productions with a single left-hand symbol.');
+      }
+
+      final leftSymbol = leftSide.first;
+      final rightSymbols = production.isLambda ? <String>[] : production.rightSide;
+      final pushSymbols = rightSymbols.reversed.toList();
+
+      transitions.add(
+        PDATransition(
+          id: 'expand_${transitionCounter++}',
+          fromState: states.processing,
+          toState: states.processing,
+          label: 'ε,$leftSymbol/${pushSymbols.isEmpty ? 'ε' : pushSymbols.join(' ')}',
+          inputSymbol: '',
+          popSymbol: leftSymbol,
+          pushSymbol: pushSymbols.join(' '),
+          isLambdaInput: true,
+          isLambdaPush: pushSymbols.isEmpty,
+        ),
+      );
+    }
+
+    for (final terminal in grammar.terminals) {
+      transitions.add(
+        PDATransition(
+          id: 'read_${transitionCounter++}_$terminal',
+          fromState: states.processing,
+          toState: states.processing,
+          label: '$terminal,$terminal/ε',
+          inputSymbol: terminal,
+          popSymbol: terminal,
+          pushSymbol: '',
+          isLambdaPush: true,
+        ),
+      );
+    }
+
+    transitions.add(
+      _acceptanceTransition(
+        states: states,
+        transitionId: 'accept_${transitionCounter++}',
+        bottomSymbol: bottomSymbol,
+      ),
+    );
+
+    return PDA(
+      id: 'pda_${DateTime.now().millisecondsSinceEpoch}',
+      name: 'PDA from ${grammar.name}',
+      states: {states.start, states.processing, states.accepting},
+      transitions: transitions.map<Transition>((t) => t).toSet(),
+      alphabet: grammar.terminals,
+      initialState: states.start,
+      acceptingStates: {states.accepting},
+      created: now,
+      modified: now,
+      bounds: const math.Rectangle(0, 0, 800, 600),
+      stackAlphabet: {
+        ...grammar.terminals,
+        ...grammar.nonTerminals,
+        bottomSymbol,
+      },
+      initialStackSymbol: bottomSymbol,
+    );
+  }
+
+  static PDA _buildGreibachPDA(Grammar grammar) {
+    _ensureContextFree(grammar);
+
+    final now = DateTime.now();
+    final states = _createCanonicalStates();
+    final transitions = <PDATransition>[];
+    var transitionCounter = 0;
+
+    transitions.add(_initialPushTransition(
+      states: states,
+      startSymbol: grammar.startSymbol,
+      transitionId: 'init_${transitionCounter++}',
+    ));
+
+    for (final production in grammar.productions) {
+      final leftSide = production.leftSide;
+      if (leftSide.length != 1) {
+        throw ArgumentError('Greibach conversion requires CFG productions with a single left-hand symbol.');
+      }
+
+      final leftSymbol = leftSide.first;
+      if (production.isLambda || production.rightSide.isEmpty) {
+        transitions.add(
+          PDATransition(
+            id: 'gnf_eps_${transitionCounter++}',
+            fromState: states.processing,
+            toState: states.processing,
+            label: 'ε,$leftSymbol/ε',
+            inputSymbol: '',
+            popSymbol: leftSymbol,
+            pushSymbol: '',
+            isLambdaInput: true,
+            isLambdaPush: true,
+          ),
+        );
+        continue;
+      }
+
+      final firstSymbol = production.rightSide.first;
+      if (!grammar.terminals.contains(firstSymbol)) {
+        throw ArgumentError(
+          'Greibach conversion expects productions to begin with a terminal. Found "$firstSymbol" in ${production.stringRepresentation}.',
+        );
+      }
+
+      final remainingSymbols = production.rightSide.skip(1).toList();
+      final pushSymbols = remainingSymbols.reversed.toList();
+
+      transitions.add(
+        PDATransition(
+          id: 'gnf_${transitionCounter++}',
+          fromState: states.processing,
+          toState: states.processing,
+          label: '${firstSymbol},$leftSymbol/${pushSymbols.isEmpty ? 'ε' : pushSymbols.join(' ')}',
+          inputSymbol: firstSymbol,
+          popSymbol: leftSymbol,
+          pushSymbol: pushSymbols.join(' '),
+          isLambdaPush: pushSymbols.isEmpty,
+        ),
+      );
+    }
+
+    transitions.add(
+      _acceptanceTransition(
+        states: states,
+        transitionId: 'accept_${transitionCounter++}',
+        bottomSymbol: _initialStackSymbol,
+      ),
+    );
+
+    return PDA(
+      id: 'pda_${DateTime.now().millisecondsSinceEpoch}',
+      name: 'Greibach PDA from ${grammar.name}',
+      states: {states.start, states.processing, states.accepting},
+      transitions: transitions.map<Transition>((t) => t).toSet(),
+      alphabet: grammar.terminals,
+      initialState: states.start,
+      acceptingStates: {states.accepting},
+      created: now,
+      modified: now,
+      bounds: const math.Rectangle(0, 0, 800, 600),
+      stackAlphabet: {
+        ...grammar.terminals,
+        ...grammar.nonTerminals,
+        _initialStackSymbol,
+      },
+      initialStackSymbol: _initialStackSymbol,
+    );
+  }
+
+  static _PDAStates _createCanonicalStates() {
+    final start = State(
+      id: 'q_start',
+      label: 'Start',
+      position: Vector2(100, 200),
+      isInitial: true,
+    );
+
+    final processing = State(
+      id: 'q_process',
+      label: 'Process',
+      position: Vector2(300, 200),
+    );
+
+    final accepting = State(
+      id: 'q_accept',
+      label: 'Accept',
+      position: Vector2(520, 200),
+      isAccepting: true,
+    );
+
+    return _PDAStates(start: start, processing: processing, accepting: accepting);
+  }
+
+  static PDATransition _initialPushTransition({
+    required _PDAStates states,
+    required String startSymbol,
+    required String transitionId,
+  }) {
+    final pushSymbols = [_initialStackSymbol, startSymbol];
+    return PDATransition(
+      id: transitionId,
+      fromState: states.start,
+      toState: states.processing,
+      label: 'ε,$_initialStackSymbol/${pushSymbols.join(' ')}',
+      inputSymbol: '',
+      popSymbol: _initialStackSymbol,
+      pushSymbol: pushSymbols.join(' '),
+      isLambdaInput: true,
+    );
+  }
+
+  static PDATransition _acceptanceTransition({
+    required _PDAStates states,
+    required String transitionId,
+    required String bottomSymbol,
+  }) {
+    return PDATransition(
+      id: transitionId,
+      fromState: states.processing,
+      toState: states.accepting,
+      label: 'ε,$bottomSymbol/ε',
+      inputSymbol: '',
+      popSymbol: bottomSymbol,
+      pushSymbol: '',
+      isLambdaInput: true,
+      isLambdaPush: true,
+    );
+  }
+
+  static void _ensureContextFree(Grammar grammar) {
+    final hasInvalidProduction =
+        grammar.productions.any((production) => production.leftSide.length != 1);
+    if (hasInvalidProduction) {
+      throw ArgumentError('Grammar must be context-free (single-symbol left side) for PDA conversion.');
+    }
+  }
+}
+
+const String _initialStackSymbol = 'Z';
+
+class _PDAStates {
+  final State start;
+  final State processing;
+  final State accepting;
+
+  const _PDAStates({
+    required this.start,
+    required this.processing,
+    required this.accepting,
+  });
 }
 
 /// Analysis result for grammar to PDA conversion

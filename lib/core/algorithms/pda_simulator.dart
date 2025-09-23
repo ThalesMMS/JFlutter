@@ -88,122 +88,241 @@ class PDASimulator {
     bool stepByStep,
     Duration timeout,
   ) {
-    final steps = <SimulationStep>[];
     final startTime = DateTime.now();
-    
-    // Initialize simulation
-    var currentState = pda.initialState!;
-    var remainingInput = inputString;
-    var stack = <String>[pda.initialStackSymbol];
-    int stepNumber = 0;
-    
-    // Add initial step
-    steps.add(SimulationStep.initial(
-      initialState: currentState.id,
-      inputString: inputString,
-    ));
-    
-    // Process each input symbol
-    while (remainingInput.isNotEmpty) {
-      stepNumber++;
-      
-      // Check timeout
+    final initialState = pda.initialState!;
+    final initialStack = <String>[pda.initialStackSymbol];
+    final initialSteps = <SimulationStep>[
+      SimulationStep.initial(
+        initialState: initialState.id,
+        inputString: inputString,
+        initialStackSymbol: _formatStack(initialStack),
+      ),
+    ];
+
+    final initialConfiguration = _PDAConfiguration(
+      state: initialState,
+      remainingInput: inputString,
+      stack: initialStack,
+      steps: initialSteps,
+      stepCount: 0,
+    );
+
+    final queue = Queue<_PDAConfiguration>()..add(initialConfiguration);
+    final visited = <String>{};
+    _PDAConfiguration? lastExplored;
+
+    while (queue.isNotEmpty) {
       if (DateTime.now().difference(startTime) > timeout) {
+        final timeoutSteps = List<SimulationStep>.from(
+          (lastExplored ?? initialConfiguration).steps,
+        );
         return PDASimulationResult.timeout(
           inputString: inputString,
-          steps: steps,
+          steps: timeoutSteps,
           executionTime: DateTime.now().difference(startTime),
         );
       }
-      
-      final symbol = remainingInput[0];
-      remainingInput = remainingInput.substring(1);
-      
-      // Find transition
-      final transition = pda.getPDATransitionFromStateOnSymbolAndStackTop(
-        currentState.id,
-        symbol,
-        stack.isNotEmpty ? stack.last : '',
+
+      final configuration = queue.removeFirst();
+      lastExplored = configuration;
+
+      final configurationKey = _configurationKey(
+        configuration.state.id,
+        configuration.remainingInput,
+        configuration.stack,
       );
-      
-      if (transition == null) {
-        return PDASimulationResult.failure(
+
+      if (!visited.add(configurationKey)) {
+        continue;
+      }
+
+      if (configuration.remainingInput.isEmpty &&
+          pda.acceptingStates.contains(configuration.state)) {
+        final successSteps = List<SimulationStep>.from(configuration.steps)
+          ..add(
+            SimulationStep.finalStep(
+              finalState: configuration.state.id,
+              remainingInput: configuration.remainingInput,
+              stackContents: _formatStack(configuration.stack),
+              tapeContents: '',
+              stepNumber: configuration.stepCount + 1,
+            ),
+          );
+
+        return PDASimulationResult.success(
           inputString: inputString,
-          steps: steps,
-          errorMessage: 'No transition found for symbol $symbol and stack top ${stack.isNotEmpty ? stack.last : "empty"} in state ${currentState.id}',
+          steps: successSteps,
           executionTime: DateTime.now().difference(startTime),
         );
       }
-      
-      // Update stack
-      if (transition.stackPop.isNotEmpty) {
-        if (stack.isNotEmpty && stack.last == transition.stackPop) {
-          stack.removeLast();
-        } else {
-          return PDASimulationResult.failure(
-            inputString: inputString,
-            steps: steps,
-            errorMessage: 'Cannot pop ${transition.stackPop} from stack',
-            executionTime: DateTime.now().difference(startTime),
-          );
+
+      if (configuration.stepCount >= 1000) {
+        continue;
+      }
+
+      final enabledTransitions = _availableTransitions(pda, configuration);
+      for (final transition in enabledTransitions) {
+        final nextConfiguration =
+            _advanceConfiguration(configuration, transition, stepByStep);
+        if (nextConfiguration == null) {
+          continue;
+        }
+
+        final nextKey = _configurationKey(
+          nextConfiguration.state.id,
+          nextConfiguration.remainingInput,
+          nextConfiguration.stack,
+        );
+
+        if (nextKey == configurationKey) {
+          continue;
+        }
+
+        queue.add(nextConfiguration);
+      }
+    }
+
+    final failureConfiguration = lastExplored ?? initialConfiguration;
+    final failureSteps = List<SimulationStep>.from(failureConfiguration.steps)
+      ..add(
+        SimulationStep.finalStep(
+          finalState: failureConfiguration.state.id,
+          remainingInput: failureConfiguration.remainingInput,
+          stackContents: _formatStack(failureConfiguration.stack),
+          tapeContents: '',
+          stepNumber: failureConfiguration.stepCount + 1,
+        ),
+      );
+
+    return PDASimulationResult.failure(
+      inputString: inputString,
+      steps: failureSteps,
+      errorMessage: 'Input not accepted - no accepting configuration found',
+      executionTime: DateTime.now().difference(startTime),
+    );
+  }
+
+  static Iterable<PDATransition> _availableTransitions(
+    PDA pda,
+    _PDAConfiguration configuration,
+  ) sync* {
+    for (final transition in pda.pdaTransitions) {
+      if (transition.fromState != configuration.state) {
+        continue;
+      }
+
+      final requiresPop =
+          !(transition.isLambdaPop || transition.popSymbol.isEmpty);
+      if (requiresPop) {
+        if (configuration.stack.isEmpty) {
+          continue;
+        }
+        if (configuration.stack.last != transition.popSymbol) {
+          continue;
         }
       }
-      
-      if (transition.stackPush.isNotEmpty) {
-        stack.add(transition.stackPush);
+
+      final consumesInput =
+          !(transition.isLambdaInput || transition.inputSymbol.isEmpty);
+      if (consumesInput) {
+        if (!configuration.remainingInput.startsWith(transition.inputSymbol)) {
+          continue;
+        }
       }
-      
-      // Add step
-      if (stepByStep) {
-        steps.add(SimulationStep.pda(
-          currentState: currentState.id,
-          remainingInput: remainingInput,
-          usedTransition: symbol,
-          stackContents: stack.join(''),
-          stepNumber: stepNumber,
-          consumedInput: symbol,
-        ));
-      }
-      
-      // Move to next state
-      currentState = transition.toState;
-      
-      // Check for infinite loop (simplified)
-      if (steps.length > 1000) {
-        return PDASimulationResult.infiniteLoop(
-          inputString: inputString,
-          steps: steps,
-          executionTime: DateTime.now().difference(startTime),
-        );
-      }
+
+      yield transition;
     }
-    
-    // Add final step
-        steps.add(SimulationStep.finalStep(
-      finalState: currentState.id,
-      remainingInput: remainingInput,
-      stackContents: stack.join(''),
-      tapeContents: '',
-      stepNumber: stepNumber + 1,
-    ));
-    
-    // Check if final state is accepting
-    final isAccepted = pda.acceptingStates.contains(currentState);
-    
-    if (isAccepted) {
-      return PDASimulationResult.success(
-        inputString: inputString,
-        steps: steps,
-        executionTime: DateTime.now().difference(startTime),
-      );
-    } else {
-      return PDASimulationResult.failure(
-        inputString: inputString,
-        steps: steps,
-        errorMessage: 'Input not accepted - final state is not accepting',
-        executionTime: DateTime.now().difference(startTime),
-      );
+  }
+
+  static _PDAConfiguration? _advanceConfiguration(
+    _PDAConfiguration configuration,
+    PDATransition transition,
+    bool stepByStep,
+  ) {
+    final nextStack = List<String>.from(configuration.stack);
+
+    final requiresPop =
+        !(transition.isLambdaPop || transition.popSymbol.isEmpty);
+    if (requiresPop) {
+      if (nextStack.isEmpty || nextStack.last != transition.popSymbol) {
+        return null;
+      }
+      nextStack.removeLast();
     }
+
+    final pushSymbols = _extractPushSymbols(transition);
+    for (final symbol in pushSymbols) {
+      if (symbol.isEmpty) {
+        continue;
+      }
+      if (symbol == 'ε' || symbol == 'λ') {
+        continue;
+      }
+      nextStack.add(symbol);
+    }
+
+    final consumesInput =
+        !(transition.isLambdaInput || transition.inputSymbol.isEmpty);
+    final nextRemainingInput = consumesInput
+        ? configuration.remainingInput.substring(transition.inputSymbol.length)
+        : configuration.remainingInput;
+
+    final consumedInput = consumesInput ? transition.inputSymbol : '';
+
+    final nextSteps = stepByStep
+        ? (List<SimulationStep>.from(configuration.steps)
+          ..add(
+            SimulationStep.pda(
+              currentState: transition.toState.id,
+              remainingInput: nextRemainingInput,
+              stackContents: _formatStack(nextStack),
+              usedTransition: transition.id,
+              stepNumber: configuration.stepCount + 1,
+              consumedInput: consumedInput,
+            ),
+          ))
+        : configuration.steps;
+
+    return _PDAConfiguration(
+      state: transition.toState,
+      remainingInput: nextRemainingInput,
+      stack: nextStack,
+      steps: nextSteps,
+      stepCount: configuration.stepCount + 1,
+    );
+  }
+
+  static List<String> _extractPushSymbols(PDATransition transition) {
+    if (transition.isLambdaPush || transition.pushSymbol.isEmpty) {
+      return const [];
+    }
+
+    final trimmed = transition.pushSymbol.trim();
+    if (trimmed.isEmpty) {
+      return const [];
+    }
+
+    return trimmed.split(RegExp(r'\s+'));
+  }
+
+  static String _formatStack(List<String> stack) {
+    if (stack.isEmpty) {
+      return 'ε';
+    }
+    return stack.join(' ');
+  }
+
+  static String _configurationKey(
+    String stateId,
+    String remainingInput,
+    List<String> stack,
+  ) {
+    final buffer = StringBuffer(stateId)
+      ..write('::')
+      ..write(remainingInput)
+      ..write('::')
+      ..writeAll(stack, '|');
+    return buffer.toString();
   }
 
   /// Produces a simplified PDA by pruning unreachable/nonproductive states
@@ -753,6 +872,22 @@ class PDASimulator {
     final push = transition.isLambdaPush ? 'λ' : transition.pushSymbol;
     return '${transition.fromState.id}|${transition.toState.id}|$input|$pop|$push';
   }
+}
+
+class _PDAConfiguration {
+  final State state;
+  final String remainingInput;
+  final List<String> stack;
+  final List<SimulationStep> steps;
+  final int stepCount;
+
+  const _PDAConfiguration({
+    required this.state,
+    required this.remainingInput,
+    required this.stack,
+    required this.steps,
+    required this.stepCount,
+  });
 }
 
 /// Result of simulating a PDA

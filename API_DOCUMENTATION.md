@@ -251,34 +251,41 @@ class SimulationPanel extends StatefulWidget {
 
 ### AutomatonService
 
-CRUD operations for automata:
+Full CRUD and management operations for automata:
 
 ```dart
 class AutomatonService {
   Result<FSA> createAutomaton(CreateAutomatonRequest request);
   Result<FSA> getAutomaton(String id);
   Result<FSA> updateAutomaton(String id, CreateAutomatonRequest request);
+  Result<FSA> saveAutomaton(String id, CreateAutomatonRequest request);
   Result<void> deleteAutomaton(String id);
   Result<List<FSA>> listAutomata();
+  Result<void> clearAutomata();
+  Result<String> exportAutomaton(FSA automaton);
+  Result<FSA> importAutomaton(String jsonString);
+  Result<bool> validateAutomaton(FSA automaton);
 }
 ```
 
 ### SimulationService
 
-Simulation operations:
+Simulation utilities, including deterministic and nondeterministic flows:
 
 ```dart
 class SimulationService {
   Result<SimulationResult> simulate(SimulationRequest request);
+  Result<SimulationResult> simulateNFA(SimulationRequest request);
   Result<bool> accepts(SimulationRequest request);
   Result<bool> rejects(SimulationRequest request);
   Result<Set<String>> findAcceptedStrings(SimulationRequest request);
+  Result<Set<String>> findRejectedStrings(SimulationRequest request);
 }
 ```
 
 ### ConversionService
 
-Algorithm conversion operations:
+Conversions across automata, grammars, and regular expressions:
 
 ```dart
 class ConversionService {
@@ -286,25 +293,213 @@ class ConversionService {
   Result<FSA> minimizeDfa(ConversionRequest request);
   Result<FSA> convertRegexToNfa(ConversionRequest request);
   Result<String> convertFaToRegex(ConversionRequest request);
+  Result<dynamic> convertGrammarToPda(ConversionRequest request);
+  Result<dynamic> convertGrammarToPdaStandard(ConversionRequest request);
+  Result<dynamic> convertGrammarToPdaGreibach(ConversionRequest request);
+  Result<FSA> convertGrammarToFsa(ConversionRequest request);
 }
 ```
+
+### Data Transfer Objects
+
+#### CreateAutomatonRequest
+
+```dart
+class CreateAutomatonRequest {
+  final String name;
+  final String? description;
+  final List<StateData> states;
+  final List<TransitionData> transitions;
+  final List<String> alphabet;
+  final Rect bounds;
+
+  const CreateAutomatonRequest({
+    required this.name,
+    this.description,
+    required this.states,
+    required this.transitions,
+    required this.alphabet,
+    required this.bounds,
+  });
+}
+```
+
+`CreateAutomatonRequest` encapsulates all information required to build an automaton, including geometry (`Rect`) and full state/transition payloads.
+
+#### StateData
+
+```dart
+class StateData {
+  final String id;
+  final String name;
+  final Point position;
+  final bool isInitial;
+  final bool isAccepting;
+
+  const StateData({
+    required this.id,
+    required this.name,
+    required this.position,
+    required this.isInitial,
+    required this.isAccepting,
+  });
+}
+```
+
+#### TransitionData
+
+```dart
+class TransitionData {
+  final String fromStateId;
+  final String toStateId;
+  final String symbol;
+
+  const TransitionData({
+    required this.fromStateId,
+    required this.toStateId,
+    required this.symbol,
+  });
+}
+```
+
+`StateData` and `TransitionData` provide the minimal information needed for topology definitions when creating or updating automata.
+
+#### SimulationRequest
+
+```dart
+class SimulationRequest {
+  final FSA? automaton;
+  final String? inputString;
+  final bool? stepByStep;
+  final Duration? timeout;
+  final int? maxLength;
+  final int? maxResults;
+
+  const SimulationRequest({
+    this.automaton,
+    this.inputString,
+    this.stepByStep,
+    this.timeout,
+    this.maxLength,
+    this.maxResults,
+  });
+
+  factory SimulationRequest.forInput({
+    required FSA automaton,
+    required String inputString,
+    bool stepByStep = false,
+    Duration? timeout,
+  });
+
+  factory SimulationRequest.forFinding({
+    required FSA automaton,
+    int maxLength = 10,
+    int maxResults = 100,
+  });
+}
+```
+
+`SimulationRequest.forInput` and `.forFinding` provide convenient factory constructors for the most common workflows (single-string simulations and language exploration).
+
+#### ConversionRequest
+
+```dart
+class ConversionRequest {
+  final FSA? automaton;
+  final Grammar? grammar;
+  final String? regex;
+  final ConversionType conversionType;
+
+  const ConversionRequest({
+    this.automaton,
+    this.grammar,
+    this.regex,
+    required this.conversionType,
+  });
+
+  factory ConversionRequest.nfaToDfa({required FSA automaton});
+  factory ConversionRequest.dfaMinimization({required FSA automaton});
+  factory ConversionRequest.regexToNfa({required String regex});
+  factory ConversionRequest.faToRegex({required FSA automaton});
+  factory ConversionRequest.grammarToPda({required Grammar grammar});
+  factory ConversionRequest.grammarToPdaStandard({required Grammar grammar});
+  factory ConversionRequest.grammarToPdaGreibach({required Grammar grammar});
+  factory ConversionRequest.grammarToFsa({required Grammar grammar});
+}
+```
+
+`ConversionRequest` captures all supported conversion entry points. Each factory automatically tags the request with the correct `ConversionType` so the service can validate intent.
 
 ## Integration Patterns
 
 ### Using Algorithms in UI
 
 ```dart
-// In a widget
-final provider = ref.read(automatonProvider.notifier);
+final automatonService = AutomatonService();
+final simulationService = SimulationService();
+final conversionService = ConversionService();
 
-// Convert NFA to DFA
-await provider.convertNfaToDfa();
+// Create or update an automaton
+final createRequest = CreateAutomatonRequest(
+  name: 'Example DFA',
+  description: 'Accepts strings ending with 01',
+  alphabet: ['0', '1'],
+  states: [
+    const StateData(
+      id: 'q0',
+      name: 'q0',
+      position: Point(0, 0),
+      isInitial: true,
+      isAccepting: false,
+    ),
+    const StateData(
+      id: 'q1',
+      name: 'q1',
+      position: Point(100, 0),
+      isInitial: false,
+      isAccepting: true,
+    ),
+  ],
+  transitions: [
+    const TransitionData(fromStateId: 'q0', toStateId: 'q0', symbol: '0'),
+    const TransitionData(fromStateId: 'q0', toStateId: 'q1', symbol: '1'),
+    const TransitionData(fromStateId: 'q1', toStateId: 'q0', symbol: '0'),
+    const TransitionData(fromStateId: 'q1', toStateId: 'q1', symbol: '1'),
+  ],
+  bounds: const Rect(-50, -50, 200, 100),
+);
 
-// Simulate automaton
-await provider.simulateAutomaton("abab");
+final automaton = automatonService.createAutomaton(createRequest).data!;
 
-// Convert regex to NFA
-await provider.convertRegexToNfa("(a|b)*");
+// Simulate deterministically
+final simulation = simulationService.simulate(
+  SimulationRequest.forInput(
+    automaton: automaton,
+    inputString: '0101',
+    stepByStep: true,
+  ),
+);
+
+// Explore accepted and rejected strings
+final accepted = simulationService.findAcceptedStrings(
+  SimulationRequest.forFinding(automaton: automaton, maxLength: 4),
+);
+final rejected = simulationService.findRejectedStrings(
+  SimulationRequest.forFinding(automaton: automaton, maxLength: 4),
+);
+
+// Convert NFA to DFA and minimize using factories
+final dfaResult = conversionService.convertNfaToDfa(
+  ConversionRequest.nfaToDfa(automaton: automaton),
+);
+final minimized = conversionService.minimizeDfa(
+  ConversionRequest.dfaMinimization(automaton: dfaResult.data!),
+);
+
+// Convert DFA to regex
+final regexResult = conversionService.convertFaToRegex(
+  ConversionRequest.faToRegex(automaton: minimized.data!),
+);
 ```
 
 ### Error Handling

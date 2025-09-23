@@ -33,15 +33,20 @@
 Port JFLAP desktop application to Flutter mobile app (JFlutter) with fully mobile-optimized layout maintaining same section divisions. Implement comprehensive formal language theory functionality including grammar-automaton conversions (LL, LR, SLR), pumping lemma games, L-systems, Turing machines with building blocks, and advanced parsing algorithms (CYK, brute force). Prioritize basic functions first, then advanced features with touch-optimized user interactions.
 
 ## Technical Context
-**Language/Version**: Dart 3.0+, Flutter 3.16+  
-**Primary Dependencies**: Flutter SDK, flutter_gesture_detector, path_provider, shared_preferences, vector_math, collection  
-**Storage**: Local file system (JSON/XML), SharedPreferences for settings, JFLAP file format compatibility  
-**Testing**: Flutter test framework, widget tests, integration tests, performance tests  
-**Target Platform**: iOS 12+, Android API 21+ (mobile-first, responsive design)  
-**Project Type**: mobile (Flutter app with local storage)  
-**Performance Goals**: 60fps UI, <500ms algorithm execution for automata <50 states, <2s for <100 states, <5s for <200 states  
-**Constraints**: Offline operation, <150MB app size, touch-optimized (44dp minimum touch targets), memory efficient for mobile devices  
+**Language/Version**: Dart 3.0+, Flutter 3.16+
+**Primary Dependencies**: Flutter SDK, flutter_gesture_detector, path_provider, shared_preferences, vector_math, collection
+**Storage**: Local file system (JSON/XML), SharedPreferences for settings, JFLAP file format compatibility
+**Testing**: Flutter test framework, widget tests, integration tests, performance tests
+**Target Platform**: iOS 12+, Android API 21+ (mobile-first, responsive design)
+**Project Type**: mobile (Flutter app with local storage)
+**Performance Goals**: 60fps UI, <500ms algorithm execution for automata <50 states, <2s for <100 states, <5s for <200 states
+**Constraints**: Offline operation, <150MB app size, touch-optimized (44dp minimum touch targets), memory efficient for mobile devices
 **Scale/Scope**: Single-user educational app, support automata with up to 200 states/nodes, 10MB file size limit
+
+**Recent Learnings & Adjustments**:
+- Consolidated gesture handling and algorithm controls into shared widgets, which reduced duplication across pages and will guide future refactors toward reusable components.
+- Full mobile-first page implementations validated the navigation flow; upcoming work must focus on rounding out automated tests to lock regression safety.
+- File operations now cover JFLAP XML compatibility, confirming the offline-first constraint is practical, while performance profiling and accessibility gaps remain open items for the next iteration.
 
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
@@ -190,23 +195,33 @@ test/
 | Multiple automaton types | Educational completeness | Students need to learn all types, not just FSA |
 | Complex algorithms | Academic accuracy | Incorrect algorithms would mislead students |
 | Touch gesture system | Mobile usability | Desktop mouse interactions don't work on mobile |
+| Shared simulation widgets | Maintains consistent UX across automata types | Separate implementations created maintenance risk and inconsistent behavior |
 
 ## Progress Tracking
 *This checklist is updated during execution flow*
 
 **Phase Status**:
-- [ ] Phase 0: Research complete (/plan command)
-- [ ] Phase 1: Design complete (/plan command)
-- [ ] Phase 2: Task planning complete (/plan command - describe approach only)
-- [ ] Phase 3: Tasks generated (/tasks command)
+- [x] Phase 0: Research complete (/plan command)
+- [x] Phase 1: Design complete (/plan command)
+- [x] Phase 2: Task planning complete (/plan command - describe approach only)
+- [x] Phase 3: Tasks generated (/tasks command)
 - [ ] Phase 4: Implementation complete
 - [ ] Phase 5: Validation passed
 
 **Gate Status**:
-- [ ] Initial Constitution Check: PASS
-- [ ] Post-Design Constitution Check: PASS
-- [ ] All NEEDS CLARIFICATION resolved
-- [ ] Complexity deviations documented
+- [x] Initial Constitution Check: PASS
+- [x] Post-Design Constitution Check: PASS
+- [x] All NEEDS CLARIFICATION resolved
+- [x] Complexity deviations documented
+
+### Weekly Activity Mapping
+- **Phase 4 – Implementation**: Delivered the core widget library, page flows, and JFLAP-compatible file operations while expanding integration and contract tests around the new functionality.
+- **Phase 5 – Validation Prep**: Identified remaining gaps in unit coverage, performance profiling, and accessibility so that validation efforts can proceed with clear acceptance targets.
+
+### Near-Term Next Steps
+1. Add comprehensive unit tests for models, algorithms, and services to stabilize recent UI work.
+2. Profile and optimize rendering for large automata scenarios to meet performance targets.
+3. Implement accessibility affordances (screen reader labels, focus order, high contrast themes) before final validation.
 
 ---
 *Based on Constitution v2.1.1 - See `/memory/constitution.md`*

@@ -1,5 +1,5 @@
-/// Parses user provided transition symbols, keeping an ordered label and
-/// exposing the optional epsilon marker when present.
+/// Parses user provided transition symbols written as a comma-separated list,
+/// while tracking whether any token corresponds to an epsilon transition.
 class TransitionSymbolInput {
   final String label;
   final Set<String> inputSymbols;
@@ -11,10 +11,10 @@ class TransitionSymbolInput {
     required this.lambdaSymbol,
   });
 
-  /// Parses a comma-separated list of symbols, recognizing aliases for the
-  /// epsilon transition (e.g. "ε", "epsilon", "lambda"). Tokens are trimmed
-  /// and empty entries are ignored while preserving the original ordering of
-  /// unique symbols.
+  /// Parses the [raw] comma-separated input, trimming tokens, discarding empty
+  /// entries and recognizing epsilon aliases ("ε", "epsilon", "eps",
+  /// "lambda"). The resulting label keeps the original order of unique
+  /// non-epsilon symbols.
   static TransitionSymbolInput? parse(String raw) {
     final text = raw.trim();
     if (text.isEmpty) {
@@ -35,7 +35,7 @@ class TransitionSymbolInput {
     final orderedSymbols = <String>[];
 
     for (final token in tokens) {
-      // Treat the token as epsilon when it matches any known alias.
+      // Treat the current token as ε when it matches any known alias.
       if (_isEpsilonToken(token)) {
         containsEpsilon = true;
       } else {
@@ -58,7 +58,7 @@ class TransitionSymbolInput {
     final uniqueSymbols = <String>{};
     final preservedOrder = <String>[];
     for (final symbol in orderedSymbols) {
-      // Retain the original appearance order while removing duplicates.
+      // Preserve the first appearance order while removing duplicates.
       if (uniqueSymbols.add(symbol)) {
         preservedOrder.add(symbol);
       }
@@ -72,8 +72,8 @@ class TransitionSymbolInput {
     );
   }
 
-  /// Returns `true` when [token] represents epsilon. Accepted aliases include
-  /// "ε", "epsilon", "eps" and "lambda" (case-insensitive).
+  /// Returns `true` when [token] represents epsilon. Accepted case-insensitive
+  /// aliases are: "ε", "epsilon", "eps" and "lambda".
   static bool _isEpsilonToken(String token) {
     final normalized = token.toLowerCase();
     return normalized == 'ε' ||

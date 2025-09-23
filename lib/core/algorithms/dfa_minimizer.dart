@@ -112,6 +112,23 @@ class DFAMinimizer {
     // Remove empty sets
     partition.removeWhere((set) => set.isEmpty);
 
+    // Precompute predecessor states for each symbol and destination to avoid
+    // repeatedly scanning the full transition set inside the Hopcroft loop.
+    final predecessorMap = <String, Map<State, Set<State>>>{};
+    for (final transition in dfa.transitions) {
+      if (transition is! FSATransition || transition.isEpsilonTransition) {
+        continue;
+      }
+
+      for (final symbol in transition.inputSymbols) {
+        final destinationMap =
+            predecessorMap.putIfAbsent(symbol, () => <State, Set<State>>{});
+        final predecessors =
+            destinationMap.putIfAbsent(transition.toState, () => <State>{});
+        predecessors.add(transition.fromState);
+      }
+    }
+
     // Worklist for processing
     final worklist = ListQueue<Set<State>>();
     for (final set in partition) {
@@ -131,14 +148,16 @@ class DFAMinimizer {
       
       // For each symbol in the alphabet
       for (final symbol in dfa.alphabet) {
+        final destinationMap = predecessorMap[symbol];
+        if (destinationMap == null) {
+          continue;
+        }
+
         final predecessors = <State>{};
-        
-        // Find all states that transition to current set on this symbol
-        for (final transition in dfa.transitions) {
-          if (transition is FSATransition &&
-              transition.inputSymbols.contains(symbol) &&
-              currentSet.contains(transition.toState)) {
-            predecessors.add(transition.fromState);
+        for (final state in currentSet) {
+          final fromStates = destinationMap[state];
+          if (fromStates != null) {
+            predecessors.addAll(fromStates);
           }
         }
 

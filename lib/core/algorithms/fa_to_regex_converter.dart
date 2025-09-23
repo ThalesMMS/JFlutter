@@ -164,46 +164,44 @@ class FAToRegexConverter {
   /// Eliminates a single state from the FA
   static FSA _eliminateState(FSA fa, State stateToEliminate) {
     final newTransitions = <FSATransition>{};
+    final transitionByStates = <(State, State), FSATransition>{};
     final newStates = fa.states.where((s) => s != stateToEliminate).toSet();
-    
-    // Keep all transitions not involving the state to eliminate
-    for (final transition in fa.fsaTransitions) {
-      if (transition.fromState != stateToEliminate && 
-          transition.toState != stateToEliminate) {
-        newTransitions.add(transition);
-      }
-    }
-    
-    // Find all states that have transitions to the state to eliminate
-    final incomingStates = <State>{};
-    final incomingTransitions = <FSATransition>[];
-    for (final transition in fa.fsaTransitions) {
-      if (transition.toState == stateToEliminate) {
-        incomingStates.add(transition.fromState);
-        incomingTransitions.add(transition);
-      }
-    }
-    
-    // Find all states that have transitions from the state to eliminate
-    final outgoingStates = <State>{};
-    final outgoingTransitions = <FSATransition>[];
-    for (final transition in fa.fsaTransitions) {
-      if (transition.fromState == stateToEliminate) {
-        outgoingStates.add(transition.toState);
-        outgoingTransitions.add(transition);
-      }
-    }
-    
-    // Find self-loop on the state to eliminate
+
+    final incomingBySource = <State, List<FSATransition>>{};
+    final outgoingByTarget = <State, List<FSATransition>>{};
+
     String selfLoopRegex = '';
+
+    // Keep all transitions not involving the state to eliminate while
+    // precomputing incoming/outgoing maps and detecting self-loops.
     for (final transition in fa.fsaTransitions) {
-      if (transition.fromState == stateToEliminate && 
-          transition.toState == stateToEliminate) {
+      final fromState = transition.fromState;
+      final toState = transition.toState;
+
+      if (fromState == stateToEliminate && toState == stateToEliminate) {
         if (selfLoopRegex.isEmpty) {
           selfLoopRegex = transition.label;
         } else {
           selfLoopRegex = '($selfLoopRegex|${transition.label})';
         }
+        continue;
+      }
+
+      if (toState == stateToEliminate) {
+        incomingBySource
+            .putIfAbsent(fromState, () => <FSATransition>[])
+            .add(transition);
+      }
+
+      if (fromState == stateToEliminate) {
+        outgoingByTarget
+            .putIfAbsent(toState, () => <FSATransition>[])
+            .add(transition);
+      }
+
+      if (fromState != stateToEliminate && toState != stateToEliminate) {
+        newTransitions.add(transition);
+        transitionByStates[(fromState, toState)] = transition;
       }
     }
     
@@ -213,51 +211,47 @@ class FAToRegexConverter {
     }
     
     // Create new transitions for all combinations of incoming and outgoing states
-    for (final incomingState in incomingStates) {
-      for (final outgoingState in outgoingStates) {
-        // Find the incoming transition
-        final incomingTransition = incomingTransitions
-            .where((t) => t.fromState == incomingState)
-            .firstOrNull;
-        
-        // Find the outgoing transition
-        final outgoingTransition = outgoingTransitions
-            .where((t) => t.toState == outgoingState)
-            .firstOrNull;
-        
-        if (incomingTransition != null && outgoingTransition != null) {
-          // Build the regex for this path
-          String pathRegex = incomingTransition.label;
-          if (selfLoopRegex.isNotEmpty) {
-            pathRegex += selfLoopRegex;
-          }
-          pathRegex += outgoingTransition.label;
-          
-          // Check if there's already a transition between these states
-          final existingTransition = newTransitions
-              .where((t) => t.fromState == incomingState && t.toState == outgoingState)
-              .firstOrNull;
-          
-          if (existingTransition != null) {
-            // Combine with existing transition
-            final combinedRegex = '(${existingTransition.label}|$pathRegex)';
-            newTransitions.remove(existingTransition);
-            newTransitions.add(FSATransition(
-              id: 't_combined_${incomingState.id}_${outgoingState.id}',
-              fromState: incomingState,
-              toState: outgoingState,
-              label: combinedRegex,
-              inputSymbols: {combinedRegex}, // Simplified
-            ));
-          } else {
-            // Add new transition
-            newTransitions.add(FSATransition(
-              id: 't_new_${incomingState.id}_${outgoingState.id}',
-              fromState: incomingState,
-              toState: outgoingState,
-              label: pathRegex,
-              inputSymbols: {pathRegex}, // Simplified
-            ));
+    for (final MapEntry(key: incomingState, value: incomingTransitions)
+        in incomingBySource.entries) {
+      for (final MapEntry(key: outgoingState, value: outgoingTransitions)
+          in outgoingByTarget.entries) {
+        for (final incomingTransition in incomingTransitions) {
+          for (final outgoingTransition in outgoingTransitions) {
+            // Build the regex for this path
+            String pathRegex = incomingTransition.label;
+            if (selfLoopRegex.isNotEmpty) {
+              pathRegex += selfLoopRegex;
+            }
+            pathRegex += outgoingTransition.label;
+
+            final key = (incomingState, outgoingState);
+            final existingTransition = transitionByStates[key];
+
+            if (existingTransition != null) {
+              final combinedRegex =
+                  '(${existingTransition.label}|$pathRegex)';
+              final combinedTransition = FSATransition(
+                id: 't_combined_${incomingState.id}_${outgoingState.id}',
+                fromState: incomingState,
+                toState: outgoingState,
+                label: combinedRegex,
+                inputSymbols: {combinedRegex}, // Simplified
+              );
+              newTransitions
+                ..remove(existingTransition)
+                ..add(combinedTransition);
+              transitionByStates[key] = combinedTransition;
+            } else {
+              final newTransition = FSATransition(
+                id: 't_new_${incomingState.id}_${outgoingState.id}',
+                fromState: incomingState,
+                toState: outgoingState,
+                label: pathRegex,
+                inputSymbols: {pathRegex}, // Simplified
+              );
+              newTransitions.add(newTransition);
+              transitionByStates[key] = newTransition;
+            }
           }
         }
       }

@@ -1,98 +1,152 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:jflutter/core/models/settings_model.dart';
-import 'package:jflutter/core/repositories/settings_repository.dart';
-import 'package:jflutter/data/repositories/settings_repository_impl.dart';
-import 'package:jflutter/data/storage/settings_storage.dart';
+import '../../core/models/settings_model.dart';
+import '../providers/settings_providers.dart';
+import '../providers/settings_view_model.dart';
+import '../widgets/settings/settings_actions_card.dart';
+import '../widgets/settings/settings_canvas_card.dart';
+import '../widgets/settings/settings_general_card.dart';
+import '../widgets/settings/settings_symbols_card.dart';
+import '../widgets/settings/settings_theme_card.dart';
 
-class SettingsPage extends StatefulWidget {
-  SettingsPage({
-    super.key,
-    SettingsRepository? repository,
-    SettingsStorage? storage,
-  }) : repository = repository ??
-            SharedPreferencesSettingsRepository(
-              storage: storage ?? const SharedPreferencesSettingsStorage(),
-            );
+class SettingsPage extends ConsumerWidget {
+  const SettingsPage({super.key});
 
-  final SettingsRepository repository;
-
-  @override
-  State<SettingsPage> createState() => _SettingsPageState();
-}
-
-class _SettingsPageState extends State<SettingsPage> {
-  bool _isLoading = false;
-  SettingsModel _settings = const SettingsModel();
+  static const String _saveSuccessMessage = 'Settings saved!';
+  static const String _resetSuccessMessage = 'Settings reset to defaults!';
 
   @override
-  void initState() {
-    super.initState();
-    _loadSettings();
-  }
-
-  Future<void> _loadSettings() async {
-    setState(() {
-      _isLoading = true;
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen<AsyncValue<SettingsModel>>(settingsViewModelProvider,
+        (previous, next) {
+      final hasNewError = next.hasError && previous?.hasError != true;
+      if (hasNewError && context.mounted) {
+        _showError(context, SettingsViewModel.loadErrorMessage);
+      }
     });
 
-    try {
-      final settings = await widget.repository.loadSettings();
-      if (!mounted) return;
-      setState(() {
-        _settings = settings;
-        _isLoading = false;
-      });
-    } catch (error, stackTrace) {
-      debugPrint('Failed to load settings: $error');
-      debugPrintStack(stackTrace: stackTrace);
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-      });
-      _showError('Failed to load settings. Please try again.');
+    final settingsState = ref.watch(settingsViewModelProvider);
+    final viewModel = ref.read(settingsViewModelProvider.notifier);
+
+    return settingsState.when(
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, __) => _SettingsErrorView(
+        onRetry: () async {
+          final message = await viewModel.load();
+          if (!context.mounted) return;
+          if (message != null) {
+            _showError(context, message);
+          }
+        },
+      ),
+      data: (settings) => Scaffold(
+        appBar: AppBar(
+          title: const Text('Settings'),
+          actions: [
+            IconButton(
+              onPressed: () => _handleSave(context, viewModel),
+              icon: const Icon(Icons.save),
+              tooltip: 'Save Settings',
+            ),
+            IconButton(
+              onPressed: () => _handleReset(context, viewModel),
+              icon: const Icon(Icons.restore),
+              tooltip: 'Reset to Defaults',
+            ),
+          ],
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const _SectionHeader(title: 'Symbols'),
+              SettingsSymbolsCard(
+                emptyStringSymbol: settings.emptyStringSymbol,
+                epsilonSymbol: settings.epsilonSymbol,
+                onEmptyStringSymbolChanged:
+                    viewModel.updateEmptyStringSymbol,
+                onEpsilonSymbolChanged: viewModel.updateEpsilonSymbol,
+              ),
+              const SizedBox(height: 24),
+              const _SectionHeader(title: 'Theme'),
+              SettingsThemeCard(
+                themeMode: settings.themeMode,
+                onThemeModeChanged: viewModel.updateThemeMode,
+              ),
+              const SizedBox(height: 24),
+              const _SectionHeader(title: 'Canvas'),
+              SettingsCanvasCard(
+                showGrid: settings.showGrid,
+                showCoordinates: settings.showCoordinates,
+                gridSize: settings.gridSize,
+                nodeSize: settings.nodeSize,
+                fontSize: settings.fontSize,
+                onShowGridChanged: viewModel.updateShowGrid,
+                onShowCoordinatesChanged: viewModel.updateShowCoordinates,
+                onGridSizeChanged: viewModel.updateGridSize,
+                onNodeSizeChanged: viewModel.updateNodeSize,
+                onFontSizeChanged: viewModel.updateFontSize,
+              ),
+              const SizedBox(height: 24),
+              const _SectionHeader(title: 'General'),
+              SettingsGeneralCard(
+                autoSave: settings.autoSave,
+                showTooltips: settings.showTooltips,
+                onAutoSaveChanged: viewModel.updateAutoSave,
+                onShowTooltipsChanged: viewModel.updateShowTooltips,
+              ),
+              const SizedBox(height: 24),
+              const _SectionHeader(title: 'Actions'),
+              SettingsActionsCard(
+                onSave: () => _handleSave(context, viewModel),
+                onReset: () => _handleReset(context, viewModel),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  static Future<void> _handleSave(
+    BuildContext context,
+    SettingsViewModel viewModel,
+  ) async {
+    final message = await viewModel.save();
+    if (!context.mounted) return;
+
+    if (message == null) {
+      _showMessage(context, _saveSuccessMessage);
+    } else {
+      _showError(context, message);
     }
   }
 
-  Future<void> _saveSettings() async {
-    final currentSettings = _settings;
+  static Future<void> _handleReset(
+    BuildContext context,
+    SettingsViewModel viewModel,
+  ) async {
+    final message = await viewModel.reset();
+    if (!context.mounted) return;
 
-    try {
-      await widget.repository.saveSettings(currentSettings);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Settings saved!')),
-      );
-    } catch (error, stackTrace) {
-      debugPrint('Failed to save settings: $error');
-      debugPrintStack(stackTrace: stackTrace);
-      if (!mounted) return;
-      _showError('Failed to save settings. Please try again.');
+    if (message == null) {
+      _showMessage(context, _resetSuccessMessage);
+    } else {
+      _showError(context, message);
     }
   }
 
-  Future<void> _resetToDefaults() async {
-    const defaults = SettingsModel();
-
-    setState(() {
-      _settings = defaults;
-    });
-
-    try {
-      await widget.repository.saveSettings(defaults);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Settings reset to defaults!')),
-      );
-    } catch (error, stackTrace) {
-      debugPrint('Failed to reset settings: $error');
-      debugPrintStack(stackTrace: stackTrace);
-      if (!mounted) return;
-      _showError('Failed to reset settings. Please try again.');
-    }
+  static void _showMessage(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
-  void _showError(String message) {
+  static void _showError(BuildContext context, String message) {
     final theme = Theme.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -107,61 +161,15 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
   }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.title});
+
+  final String title;
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-        actions: [
-          IconButton(
-            onPressed: _saveSettings,
-            icon: const Icon(Icons.save),
-            tooltip: 'Save Settings',
-          ),
-          IconButton(
-            onPressed: _resetToDefaults,
-            icon: const Icon(Icons.restore),
-            tooltip: 'Reset to Defaults',
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionHeader('Symbols'),
-            _buildSymbolSettings(),
-            const SizedBox(height: 24),
-
-            _buildSectionHeader('Theme'),
-            _buildThemeSettings(),
-            const SizedBox(height: 24),
-
-            _buildSectionHeader('Canvas'),
-            _buildCanvasSettings(),
-            const SizedBox(height: 24),
-
-            _buildSectionHeader('General'),
-            _buildGeneralSettings(),
-            const SizedBox(height: 24),
-
-            _buildSectionHeader('Actions'),
-            _buildActionButtons(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Text(
@@ -172,350 +180,37 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
   }
+}
 
-  Widget _buildSymbolSettings() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSimpleSetting(
-              'Empty String Symbol',
-              'Symbol used to represent empty string (λ or ε)',
-              _settings.emptyStringSymbol,
-              const ['λ (Lambda)', 'ε (Epsilon)'],
-              (value) {
-                setState(() {
-                  _settings = _settings.copyWith(
-                    emptyStringSymbol: value == 'λ (Lambda)' ? 'λ' : 'ε',
-                  );
-                });
-              },
-              chipKeyBuilder: (option) => ValueKey(
-                'settings_empty_string_${option.contains('Lambda') ? 'lambda' : 'epsilon'}',
-              ),
-            ),
-            const SizedBox(height: 16),
-            _buildSimpleSetting(
-              'Epsilon Symbol',
-              'Symbol used to represent epsilon transitions',
-              _settings.epsilonSymbol,
-              const ['ε (Epsilon)', 'λ (Lambda)'],
-              (value) {
-                setState(() {
-                  _settings = _settings.copyWith(
-                    epsilonSymbol: value == 'ε (Epsilon)' ? 'ε' : 'λ',
-                  );
-                });
-              },
-              chipKeyBuilder: (option) => ValueKey(
-                'settings_epsilon_${option.contains('Epsilon') ? 'epsilon' : 'lambda'}',
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+class _SettingsErrorView extends StatelessWidget {
+  const _SettingsErrorView({required this.onRetry});
 
-  Widget _buildThemeSettings() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSimpleSetting(
-              'Theme Mode',
-              'Choose your preferred theme',
-              _settings.themeMode,
-              const ['System', 'Light', 'Dark'],
-              (value) {
-                setState(() {
-                  _settings = _settings.copyWith(themeMode: value.toLowerCase());
-                });
-              },
-              chipKeyBuilder: (option) => ValueKey(
-                'settings_theme_${option.toLowerCase()}',
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  final Future<void> Function() onRetry;
 
-  Widget _buildCanvasSettings() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSwitchSetting(
-              'Show Grid',
-              'Display grid lines on canvas',
-              _settings.showGrid,
-              (value) {
-                setState(() {
-                  _settings = _settings.copyWith(showGrid: value);
-                });
-              },
-              switchKey: const ValueKey('settings_show_grid_switch'),
-            ),
-            const SizedBox(height: 16),
-            _buildSwitchSetting(
-              'Show Coordinates',
-              'Display coordinate information',
-              _settings.showCoordinates,
-              (value) {
-                setState(() {
-                  _settings = _settings.copyWith(showCoordinates: value);
-                });
-              },
-              switchKey: const ValueKey('settings_show_coordinates_switch'),
-            ),
-            const SizedBox(height: 16),
-            _buildSliderSetting(
-              'Grid Size',
-              'Size of grid cells',
-              _settings.gridSize,
-              10.0,
-              50.0,
-              (value) {
-                setState(() {
-                  _settings = _settings.copyWith(gridSize: value);
-                });
-              },
-              sliderKey: const ValueKey('settings_grid_size_slider'),
-            ),
-            const SizedBox(height: 16),
-            _buildSliderSetting(
-              'Node Size',
-              'Size of automaton nodes',
-              _settings.nodeSize,
-              20.0,
-              60.0,
-              (value) {
-                setState(() {
-                  _settings = _settings.copyWith(nodeSize: value);
-                });
-              },
-              sliderKey: const ValueKey('settings_node_size_slider'),
-            ),
-            const SizedBox(height: 16),
-            _buildSliderSetting(
-              'Font Size',
-              'Text size in the interface',
-              _settings.fontSize,
-              12.0,
-              20.0,
-              (value) {
-                setState(() {
-                  _settings = _settings.copyWith(fontSize: value);
-                });
-              },
-              sliderKey: const ValueKey('settings_font_size_slider'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGeneralSettings() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSwitchSetting(
-              'Auto Save',
-              'Automatically save changes',
-              _settings.autoSave,
-              (value) {
-                setState(() {
-                  _settings = _settings.copyWith(autoSave: value);
-                });
-              },
-              switchKey: const ValueKey('settings_auto_save_switch'),
-            ),
-            const SizedBox(height: 16),
-            _buildSwitchSetting(
-              'Show Tooltips',
-              'Display helpful tooltips',
-              _settings.showTooltips,
-              (value) {
-                setState(() {
-                  _settings = _settings.copyWith(showTooltips: value);
-                });
-              },
-              switchKey: const ValueKey('settings_show_tooltips_switch'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionButtons() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _saveSettings,
-                icon: const Icon(Icons.save),
-                label: const Text('Save Settings'),
-                key: const ValueKey('settings_save_button'),
-              ),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: _resetToDefaults,
-                icon: const Icon(Icons.restore),
-                label: const Text('Reset to Defaults'),
-                key: const ValueKey('settings_reset_button'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSimpleSetting(
-    String title,
-    String subtitle,
-    String currentValue,
-    List<String> options,
-    Function(String) onChanged, {
-    Key Function(String option)? chipKeyBuilder,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          subtitle,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          children: options.map((option) {
-            final isSelected = option.toLowerCase().contains(currentValue.toLowerCase()) ||
-                (currentValue == 'λ' && option.contains('Lambda')) ||
-                (currentValue == 'ε' && option.contains('Epsilon')) ||
-                (currentValue == 'system' && option == 'System') ||
-                (currentValue == 'light' && option == 'Light') ||
-                (currentValue == 'dark' && option == 'Dark');
-
-            return FilterChip(
-              key: chipKeyBuilder?.call(option),
-              label: Text(option),
-              selected: isSelected,
-              onSelected: (selected) {
-                if (selected) {
-                  onChanged(option);
-                }
-              },
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSwitchSetting(
-    String title,
-    String subtitle,
-    bool value,
-    Function(bool) onChanged, {
-    Key? switchKey,
-  }) {
-    return Row(
-      children: [
-        Expanded(
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                title,
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                SettingsViewModel.loadErrorMessage,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium,
               ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: Theme.of(context).textTheme.bodySmall,
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Try Again'),
               ),
             ],
           ),
         ),
-        Switch(
-          key: switchKey,
-          value: value,
-          onChanged: onChanged,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSliderSetting(
-    String title,
-    String subtitle,
-    double value,
-    double min,
-    double max,
-    Function(double) onChanged, {
-    Key? sliderKey,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          subtitle,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: Slider(
-                key: sliderKey,
-                value: value,
-                min: min,
-                max: max,
-                divisions: ((max - min) / 5).round(),
-                label: value.round().toString(),
-                onChanged: onChanged,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Text(
-              value.round().toString(),
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-      ],
+      ),
     );
   }
 }
-

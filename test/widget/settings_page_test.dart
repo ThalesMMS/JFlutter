@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:jflutter/data/repositories/settings_repository_impl.dart';
 import 'package:jflutter/data/storage/settings_storage.dart';
 import 'package:jflutter/presentation/pages/settings_page.dart';
+import 'package:jflutter/presentation/providers/settings_providers.dart';
 
 void main() {
   testWidgets('loads settings from stored preferences', (WidgetTester tester) async {
@@ -19,7 +22,7 @@ void main() {
       'settings_font_size': 16.0,
     });
 
-    await tester.pumpWidget(MaterialApp(home: SettingsPage(storage: storage)));
+    await _pumpSettingsPage(tester, storage);
     await tester.pumpAndSettle();
 
     final emptyStringChip = tester.widget<FilterChip>(
@@ -51,7 +54,7 @@ void main() {
   testWidgets('saves settings and restores them on next load', (WidgetTester tester) async {
     final storage = InMemorySettingsStorage();
 
-    await tester.pumpWidget(MaterialApp(home: SettingsPage(storage: storage)));
+    await _pumpSettingsPage(tester, storage);
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const ValueKey('settings_show_grid_switch')));
@@ -73,7 +76,7 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
 
-    await tester.pumpWidget(MaterialApp(home: SettingsPage(storage: storage)));
+    await _pumpSettingsPage(tester, storage);
     await tester.pumpAndSettle();
 
     final reloadedGridSwitch = tester.widget<Switch>(
@@ -96,4 +99,20 @@ void main() {
     );
     expect(reloadedThemeChip.selected, isTrue);
   });
+}
+
+Future<void> _pumpSettingsPage(
+  WidgetTester tester,
+  SettingsStorage storage,
+) {
+  return tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        settingsRepositoryProvider.overrideWithValue(
+          SharedPreferencesSettingsRepository(storage: storage),
+        ),
+      ],
+      child: const MaterialApp(home: SettingsPage()),
+    ),
+  );
 }

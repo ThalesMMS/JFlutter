@@ -1,125 +1,55 @@
 # Flutter App Compilation Status
 
 ## Overview
-This document tracks the progress of the JFlutter automaton theory application development, including compilation status and implementation progress.
+This document tracks the progress of the JFlutter automaton theory application development. It consolidates build status, the outcome of the latest maintenance PRs, and the next actionable items for the team.
 
-## Project Structure
-This is a comprehensive Flutter application for automaton theory education, including:
-- Finite State Automata (FSA)
-- Pushdown Automata (PDA) 
-- Turing Machines (TM)
-- Regular Expressions
-- Context-Free Grammars
-- Pumping Lemma games
-- Various algorithms and simulations
+## 🔍 Build & Test Validation
+- :warning: **Local Flutter tooling unavailable.** Attempts to run `flutter --version` and `dart --version` failed because the SDKs are not installed on the current environment. As a result, `flutter test` / `flutter build` could not be executed locally.
+- ✅ **Repository state is clean.** Latest merges are present locally (HEAD at `work` branch) and there are no uncommitted changes blocking automation.
+- 🔄 **Action required:** Re-run the pipeline or a local build once Flutter tooling is available to confirm the stability of the recent changes.
 
-## ✅ COMPLETED TASKS
+## ✅ Completed Work (Current Week)
+### Stability & Lifecycle
+- Added mounted state guards to the TM canvas transition updates to avoid setState calls on disposed widgets (#106).
+- Hardened the File Operations panel with additional mounted checks and loading helpers to keep async handlers safe (#107).
 
-### Core Infrastructure
-- [x] **Complete UI Implementation** - All core pages and widgets implemented
-- [x] **Mobile Optimization** - Touch gesture handling and mobile controls
-- [x] **File Operations** - Complete JFLAP format support with save/load
-- [x] **Test Suite** - Contract and integration tests implemented
-
-### UI Components
-- [x] **Touch Gesture Handler** - Mobile-optimized touch interactions
-- [x] **Grammar Editor** - Production rule management interface
-- [x] **PDA/TM Components** - Algorithm panels, canvases, and simulation controls
-- [x] **Pumping Lemma Game** - Interactive game with help and progress tracking
-- [x] **File Operations Panel** - File management UI with JFLAP support
-- [x] **Algorithm Panels** - Shared controls for conversions and analysis
-- [x] **Settings Interface** - Persisted preferences with theming and canvas controls
-- [x] **Help Center** - In-app documentation with multi-section tutorials
-
-### Services and Data
-- [x] **File Operations Service** - Complete file management with JFLAP XML support
-- [x] **SVG Export** - Automaton visualization export
-- [x] **File Management** - Create, list, delete operations
-- [x] **JFLAP Compatibility** - Full import/export support
+### State Management
+- Introduced an explicit `ProviderSubscription` in `_TMPageState` to dispose listeners correctly when the page is rebuilt (#108).
 
 ### Testing
-- [x] **Contract Tests** - Service contract validation
-- [x] **Integration Tests** - FSA creation, NFA to DFA conversion, grammar parsing
-- [x] **File Operations Tests** - File management and JFLAP format testing
-- [x] **Mobile UI Tests** - Touch gesture and mobile interaction testing
+- Created dedicated widget coverage for the PDA Simulation Panel, exercising accepted/rejected runs and UI feedback paths (#109).
 
-## 🚧 REMAINING TASKS
+## 🚧 Remaining Tasks
+1. **Environment & CI Restoration**
+   - Install/configure the Flutter SDK in the execution environment.
+   - Re-enable automated `flutter test` execution to cover the growing widget test suite.
+2. **Regression Test Sweep**
+   - After SDK setup, execute the full widget and integration test packages to confirm no regressions from the lifecycle fixes.
+3. **Documentation Sync**
+   - Cross-check CHANGELOG and README sections with the latest stability improvements to keep user-facing docs accurate.
+4. **Performance & Accessibility Follow-up**
+   - Resume earlier backlog items around large automata performance and accessibility tooling once stability validation is complete.
 
-### High Priority
-1. **Unit Test Coverage**
-   - Comprehensive unit tests for all models
-   - Algorithm testing and validation
-   - Service layer testing
-   - Widget testing for all components
-
-### Medium Priority
-2. **Performance Optimization**
-   - Handle large automata efficiently
-   - Memory optimization for complex simulations
-   - Rendering performance improvements
-   - Algorithm optimization for large datasets
-
-3. **Accessibility Features**
-   - Screen reader support
-   - Keyboard navigation
-   - High contrast themes
-   - Voice-over compatibility
-
-### Low Priority
-4. **Documentation**
-   - API documentation updates
-   - User guide completion
-   - Developer documentation
-   - Code comments and examples
-
-5. **Polish and Refinement**
-   - UI/UX improvements
-   - Error handling enhancements
-   - Loading states and feedback
-   - Animation and transitions
-
-## 🔧 NEXT STEPS
-
-### Immediate Actions Needed
-1. **Add Unit Test Coverage**
-   - Create comprehensive unit tests for all models
-   - Add algorithm validation tests
-   - Implement service layer testing
-   - Add widget testing for all components
-
-2. **Performance Optimization**
-   - Optimize for large automata handling
-   - Implement memory management improvements
-   - Add rendering performance enhancements
-
-### Recommended Approach
-1. **Add Unit Tests** - Comprehensive test coverage for all components
-2. **Performance Testing** - Optimize for large datasets and complex simulations
-3. **Accessibility Features** - Screen reader support and keyboard navigation
-4. **Documentation** - Complete API docs and user guides
+## 🔧 Next Steps
+1. **Provision Flutter Tooling** – Prepare the CI runner or local machine with Flutter so the pending tests can run.
+2. **Execute Test Suite** – Run `flutter test` focusing on the widget suite introduced this week.
+3. **Monitor File Operations UX** – Validate that the mounted guards removed the previously observed crashes when dismissing dialogs mid-operation.
+4. **Track TM Page Listener Lifecycle** – Confirm via manual QA that listeners detach properly during navigation flows.
 
 ## 📊 Progress Summary
-- **Completed**: Core UI implementation, navigation pages, mobile optimization, file operations, test suite
-- **Remaining**: Unit tests, performance optimization, accessibility, documentation polish
-- **Estimated Completion**: 90%+ of core functionality complete
-- **Critical Path**: Unit tests → Performance optimization → Accessibility improvements
+- **Focus of the Week:** Stabilization and test hardening for automaton interaction widgets.
+- **Recent Merges:** #106 (TM canvas guards), #107 (File operations panel safety), #108 (TM page subscription management), #109 (PDA simulation widget tests).
+- **Build Status:** Blocked locally pending Flutter SDK availability; CI rerun required.
+- **Quality Trend:** Widget coverage increasing, lifecycle bugs being addressed.
 
 ## 🎯 Success Criteria
-- [x] Complete UI implementation for all core features
-- [x] Mobile-optimized touch interactions
-- [x] File operations with JFLAP format support
-- [x] Comprehensive test suite (contract and integration)
-- [x] Settings and Help pages
-- [ ] Unit test coverage
-- [ ] Performance optimization
-- [ ] Accessibility features
-
-## 📝 Notes
-- This is a comprehensive educational application with advanced automaton theory features
-- Core functionality is complete and fully implemented
-- Focus is now on polish, testing, and user experience improvements
-- The application is ready for educational use with current feature set
+- [x] Guard TM canvas updates with mounted checks (#106).
+- [x] Ensure File Operations panel defers UI updates until mounted (#107).
+- [x] Manage TM editor subscriptions to avoid leaks (#108).
+- [x] Provide widget tests for PDA simulation panel (#109).
+- [ ] Validate the full Flutter test suite on a configured environment.
+- [ ] Reconfirm performance and accessibility backlog after stability passes.
 
 ---
 *Last Updated: Current Session*
-*Status: Core functionality complete - focusing on polish and optimization*
+*Status: Stability fixes merged – waiting on Flutter tooling to validate builds*

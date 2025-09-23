@@ -199,12 +199,12 @@ ios/ or android/
 *This checklist is updated during execution flow*
 
 **Phase Status**:
-- [x] Phase 0: Research complete (/plan command)
-- [x] Phase 1: Design complete (/plan command)
-- [x] Phase 2: Task planning complete (/plan command - describe approach only)
-- [x] Phase 3: Tasks generated (/tasks command)
-- [ ] Phase 4: Implementation complete
-- [ ] Phase 5: Validation passed
+- [x] Phase 0: Research complete (/plan command) — concluído em 2024-12-19; nenhum ajuste necessário nesta semana de PRs.
+- [x] Phase 1: Design complete (/plan command) — concluído em 2024-12-19 e ainda válido segundo os merges recentes.
+- [x] Phase 2: Task planning complete (/plan command - describe approach only) — concluído em 2024-12-19; permanece alinhado com o escopo atual.
+- [x] Phase 3: Tasks generated (/tasks command) — concluído em 2024-12-19; tarefas continuam servindo de referência para execução.
+- [ ] Phase 4: Implementation in progress — PRs #105-#109 (merge em 2025-09-23) focaram em robustez de UI e correção de exportação, mas ainda restam entregas do backlog original.
+- [ ] Phase 5: Validation pending — validações completas aguardando após consolidação das próximas entregas.
 
 **Gate Status**:
 - [x] Initial Constitution Check: PASS
@@ -214,3 +214,15 @@ ios/ or android/
 
 ---
 *Based on Constitution v2.1.1 - See `/memory/constitution.md`*
+
+## Weekly Progress — 2025-09-23
+- **PR #105 — XML escaping helper**: adicionou sanitização para exportação SVG e testes dedicados, reforçando requisitos de integridade de arquivo antes da conclusão total da Fase 4.
+- **PR #106 — Mounted checks in transitions**: fortaleceu os controles de ciclo de vida em `tm_canvas` para evitar atualizações após descarte.
+- **PR #107 — File operations panel guards**: consolidou verificações de montagem e estado de carregamento, mitigando riscos de race conditions na UI móvel.
+- **PR #108 — Provider subscription lifecycle**: garantiu cancelamento correto do listener no `tm_page`, reduzindo vazamentos.
+- **PR #109 — PDA simulation panel tests**: expandiu a cobertura de widget tests, preparando terreno para a futura validação integral da Fase 5.
+
+## Scope Adjustments & Learnings
+- A exportação SVG deve escapar textos dinâmicos para evitar caracteres inválidos na saída; manter o helper introduzido no PR #105 como requisito permanente.
+- Widgets que operam com streams/listeners precisam verificar `mounted` antes de atualizar estado (e.g., TM canvas e painéis de arquivo); esse padrão passa a ser adotado como baseline para tarefas restantes da Fase 4.
+- Testes de widgets direcionados (como o painel de simulação de PDA) ajudam a capturar regressões específicas; futuras tarefas de validação devem priorizar cenários críticos semelhantes antes do fechamento da Fase 5.

@@ -1,221 +1,105 @@
 # Test Coverage Assessment - JFlutter
 
-## Overview
-This document provides a comprehensive assessment of the current test coverage in the JFlutter automaton theory application.
+## Latest Coverage Execution
+- **Command**: `flutter test --coverage`
+- **Execution Time**: 2025-09-23T10:10:08Z (UTC) *(container clock)*
+- **Result**: ❌ Failed — Flutter SDK is not available in the current container (`bash: command not found: flutter`). No coverage artefacts were generated. The next run must either install Flutter locally or download the coverage report produced by CI before updating this section with execution metrics.
 
-## Current Test Status
+## Test Suite Inventory (2025-09-23)
+The current `test/` tree contains 41 Dart test files (matching the `*_test.dart` pattern). Distribution by domain:
 
-### ✅ COMPLETED TESTS
+| Domain / Folder | Files | Notes |
+| --- | ---: | --- |
+| `test/data/` | 2 | Repository/service persistence coverage (SharedPreferences, SVG export). |
+| `test/integration/` | 1 | Only the `home_fab_actions_test.dart` end-to-end flow remains after recent refactors. |
+| `test/presentation/` | 18 | Riverpod view-models, widgets, and TM page coverage. |
+| `test/unit/` | 15 | Core algorithm suites, repositories, and targeted presentation/unit helpers. |
+| `test/widget/` | 4 | Legacy widget harnesses (PDA page, pumping lemma progress, settings page, transition dialog). |
+| `widget_test.dart` | 1 | Default Flutter counter smoke test (still present). |
+| `test/contract/`, `test/test_utils/` | 0 | No executable tests under these directories. |
 
-#### Contract Tests
-- **Location**: `test/contract/`
-- **Files**: 1
-  - `test_automaton_service.dart` - Service contract validation
-- **Coverage**: Service layer contracts
-- **Status**: ✅ Complete
+### Unit Test Breakdown
 
-#### Integration Tests
-- **Location**: `test/integration/`
-- **Files**: 9
-  - `test_automaton_service.dart` - Service contract validation
-  - `test_fsa_creation.dart` - FSA creation and validation
-  - `test_nfa_to_dfa.dart` - NFA to DFA conversion testing
-  - `test_grammar_parsing.dart` - Grammar parsing and validation
-  - `test_file_operations.dart` - File operations and JFLAP format
-  - `test_mobile_ui.dart` - Mobile UI interactions
-  - `test_simple_grammar.dart` - Simple grammar testing
-  - `test_simple_nfa_to_dfa.dart` - Simple NFA to DFA testing
-  - `test_touch_gestures.dart` - Touch gesture handling
-  - `test_working_nfa_to_dfa.dart` - Working NFA to DFA conversion
-- **Coverage**: Core functionality, algorithms, file operations, mobile UI
-- **Status**: ✅ Complete
+| Sub-domain | Files | Coverage Focus |
+| --- | ---: | --- |
+| `unit/algorithms` | 8 | DFA minimizer, automaton simulator, regex/NFA converters, pumping lemma, grammar ↔ PDA, PDA simplification. |
+| `unit/core` | 1 | `add_state_use_case`. |
+| `unit/data` | 1 | Examples data source. |
+| `unit/features` | 1 | Layout repository implementation. |
+| `unit/presentation` | 3 | Automaton conversion providers, TM metrics controller. |
+| `unit/repositories` | 1 | Automaton repository implementation. |
+| `unit/models` | 0 | No discoverable model tests (legacy files exist without the `_test.dart` suffix, so they are ignored by Flutter). |
 
-#### Widget Tests
-- **Location**: `test/widget_test.dart`
-- **Files**: 1
-  - Basic widget test for home page
-- **Coverage**: Basic widget functionality
-- **Status**: ✅ Basic coverage
+### Presentation Test Coverage Highlights
+- Controllers for automaton conversion/creation/layout/simulation have focused coverage.
+- Widget harnesses exist for PDA simulation panel, transition hit testing, regex panes, and TM analysis widgets.
+- Settings and regex view models now include regression tests.
 
-### ❌ MISSING TESTS
+## Coverage Gaps and Opportunities
+1. **Missing Flutter Coverage Artefact** – Until `flutter test --coverage` runs successfully (locally or via CI artefact), we cannot quantify statement/branch coverage. Prioritize fixing the toolchain so coverage can be tracked sprint-to-sprint.
+2. **Model Layer Blind Spot** – `test/unit/models/` is still empty. Core automaton/grammar/TM model behaviour lacks regression protection.
+3. **Contract Tests Deprecated** – Legacy contract suites were removed; reintroduce only if service contracts diverge significantly from integration coverage.
+4. **Integration Regression Holes** – Only one integration test remains. Recent refactors around navigation, settings persistence, and TM flows are uncovered end-to-end.
+5. **Widget Harness Modernisation** – Legacy widget tests (e.g., `pda_page_test.dart`) predate Riverpod migrations and no longer exercise the latest UI state management.
 
-#### Unit Tests - Models
-- **Location**: `test/unit/models/`
-- **Status**: ❌ Empty directory
-- **Missing Tests**:
-  - `test_automaton.dart` - Automaton model testing
-  - `test_state.dart` - State model testing
-  - `test_transition.dart` - Transition model testing
-  - `test_fsa.dart` - FSA model testing
-  - `test_pda.dart` - PDA model testing
-  - `test_tm.dart` - TM model testing
-  - `test_grammar.dart` - Grammar model testing
-  - `test_production.dart` - Production model testing
-  - `test_simulation_result.dart` - Simulation result testing
-  - `test_simulation_step.dart` - Simulation step testing
-  - `test_l_system.dart` - L-System model testing
-  - `test_pumping_lemma_game.dart` - Pumping lemma game testing
+## New Tests Added This Week (since 2025-09-17)
+- `test/data/repositories/shared_preferences_settings_repository_test.dart`
+- `test/data/services/file_operations_service_svg_test.dart`
+- `test/integration/home_fab_actions_test.dart`
+- `test/presentation/pages/tm_page_test.dart`
+- `test/presentation/providers/automaton/automaton_conversion_controller_test.dart`
+- `test/presentation/providers/automaton/automaton_creation_controller_test.dart`
+- `test/presentation/providers/automaton/automaton_layout_controller_test.dart`
+- `test/presentation/providers/automaton/automaton_simulation_controller_test.dart`
+- `test/presentation/providers/automaton_canvas_controller_test.dart`
+- `test/presentation/providers/regex_page_view_model_test.dart`
+- `test/presentation/providers/settings_view_model_test.dart`
+- `test/presentation/providers/tm_algorithm_view_model_test.dart`
+- `test/presentation/widgets/automaton_painter_test.dart`
+- `test/presentation/widgets/gestures/canvas_transform_controller_test.dart`
+- `test/presentation/widgets/gestures/transition_hit_tester_test.dart`
+- `test/presentation/widgets/pda_simulation_panel_test.dart`
+- `test/presentation/widgets/regex/regex_widgets_test.dart`
+- `test/presentation/widgets/tm/analysis_header_test.dart`
+- `test/presentation/widgets/tm/analysis_results_test.dart`
+- `test/presentation/widgets/tm/focus_selector_test.dart`
+- `test/presentation/widgets/tm/tm_algorithm_panel_test.dart`
+- `test/unit/algorithms/algorithm_repository_impl_test.dart`
+- `test/unit/algorithms/automaton_simulator_test.dart`
+- `test/unit/algorithms/dfa_minimizer_test.dart`
+- `test/unit/algorithms/fa_to_regex_converter_test.dart`
+- `test/unit/algorithms/grammar_to_pda_converter_test.dart`
+- `test/unit/algorithms/pda_simplification_test.dart`
+- `test/unit/algorithms/pumping_lemma_game_test.dart`
+- `test/unit/algorithms/regex_to_nfa_converter_test.dart`
+- `test/unit/core/use_cases/add_state_use_case_test.dart`
+- `test/unit/data/examples_data_source_test.dart`
+- `test/unit/features/layout_repository_impl_test.dart`
+- `test/unit/presentation/automaton_provider_conversion_test.dart`
+- `test/unit/presentation/automaton_provider_large_conversion_test.dart`
+- `test/unit/presentation/providers/tm_metrics_controller_test.dart`
+- `test/unit/repositories/automaton_repository_impl_test.dart`
+- `test/widget/pda_page_test.dart`
+- `test/widget/pumping_lemma_progress_test.dart`
+- `test/widget/settings_page_test.dart`
+- `test/widget/transition_symbol_dialog_test.dart`
+- `test/widget_test.dart`
+- *(Support file)* `test/presentation/providers/automaton/test_helpers.dart`
 
-#### Unit Tests - Algorithms
-- **Location**: `test/unit/algorithms/`
-- **Status**: ❌ Empty directory
-- **Missing Tests**:
-  - `test_automaton_simulator.dart` - Automaton simulation testing
-  - `test_nfa_to_dfa_converter.dart` - NFA to DFA conversion testing
-  - `test_dfa_minimizer.dart` - DFA minimization testing
-  - `test_pda_simulator.dart` - PDA simulation testing
-  - `test_tm_simulator.dart` - TM simulation testing
-  - `test_grammar_parser.dart` - Grammar parsing testing
-  - `test_l_system_generator.dart` - L-System generation testing
-  - `test_pumping_lemma_game.dart` - Pumping lemma game testing
+*(Derived from `git log --since="1 week ago" --diff-filter=A -- test/`.)*
 
-#### Unit Tests - Services
-- **Location**: `test/unit/services/`
-- **Status**: ❌ Empty directory
-- **Missing Tests**:
-  - `test_automaton_service.dart` - Automaton service testing
-  - `test_simulation_service.dart` - Simulation service testing
-  - `test_conversion_service.dart` - Conversion service testing
-  - `test_file_operations_service.dart` - File operations testing
-
-#### Widget Tests
-- **Location**: `test/widget/`
-- **Status**: ❌ Empty directory
-- **Missing Tests**:
-  - `test_automaton_canvas.dart` - Automaton canvas widget testing
-  - `test_algorithm_panel.dart` - Algorithm panel widget testing
-  - `test_simulation_panel.dart` - Simulation panel widget testing
-  - `test_touch_gesture_handler.dart` - Touch gesture handler testing
-  - `test_grammar_editor.dart` - Grammar editor widget testing
-  - `test_l_system_visualizer.dart` - L-System visualizer testing
-  - `test_pumping_lemma_game.dart` - Pumping lemma game widget testing
-  - `test_file_operations_panel.dart` - File operations panel testing
-
-## Test Coverage Analysis
-
-### Current Coverage
-- **Contract Tests**: ✅ 100% (1/1)
-- **Integration Tests**: ✅ 100% (9/9)
-- **Unit Tests - Models**: ❌ 0% (0/12)
-- **Unit Tests - Algorithms**: ❌ 0% (0/8)
-- **Unit Tests - Services**: ❌ 0% (0/4)
-- **Widget Tests**: ❌ 5% (1/20)
-
-### Overall Coverage
-- **Total Test Files**: 11/54 (20%)
-- **Critical Coverage**: Contract and Integration tests complete
-- **Missing Coverage**: Unit tests and comprehensive widget tests
-
-## Priority for Test Implementation
-
-### High Priority (Critical)
-1. **Unit Tests - Models** (12 files)
-   - Essential for data integrity
-   - Foundation for all other tests
-   - Model validation and edge cases
-
-2. **Unit Tests - Algorithms** (8 files)
-   - Core algorithm validation
-   - Edge case handling
-   - Performance testing
-
-### Medium Priority (Important)
-3. **Unit Tests - Services** (4 files)
-   - Service layer validation
-   - Error handling testing
-   - Integration point testing
-
-4. **Widget Tests** (19 additional files)
-   - UI component testing
-   - User interaction testing
-   - Responsive design testing
-
-## Recommended Test Implementation Strategy
-
-### Phase 1: Model Testing (Week 1)
-```bash
-# Create model tests
-touch test/unit/models/test_automaton.dart
-touch test/unit/models/test_state.dart
-touch test/unit/models/test_transition.dart
-# ... continue for all models
-```
-
-### Phase 2: Algorithm Testing (Week 2)
-```bash
-# Create algorithm tests
-touch test/unit/algorithms/test_automaton_simulator.dart
-touch test/unit/algorithms/test_nfa_to_dfa_converter.dart
-# ... continue for all algorithms
-```
-
-### Phase 3: Service Testing (Week 3)
-```bash
-# Create service tests
-touch test/unit/services/test_automaton_service.dart
-touch test/unit/services/test_simulation_service.dart
-# ... continue for all services
-```
-
-### Phase 4: Widget Testing (Week 4)
-```bash
-# Create widget tests
-touch test/widget/test_automaton_canvas.dart
-touch test/widget/test_algorithm_panel.dart
-# ... continue for all widgets
-```
-
-## Test Quality Standards
-
-### Model Tests Should Include:
-- Constructor validation
-- Property access and modification
-- Equality and comparison
-- Serialization/deserialization
-- Edge cases and error conditions
-
-### Algorithm Tests Should Include:
-- Input validation
-- Expected output verification
-- Edge case handling
-- Performance benchmarks
-- Error condition testing
-
-### Service Tests Should Include:
-- Method functionality
-- Error handling
-- Dependency injection
-- State management
-- Integration points
-
-### Widget Tests Should Include:
-- Rendering verification
-- User interaction testing
-- State changes
-- Responsive behavior
-- Accessibility features
-
-## Success Metrics
-
-### Target Coverage Goals:
-- **Unit Tests**: 90%+ coverage for all models, algorithms, and services
-- **Widget Tests**: 80%+ coverage for all UI components
-- **Integration Tests**: Maintain 100% coverage
-- **Contract Tests**: Maintain 100% coverage
-
-### Quality Metrics:
-- All tests should pass consistently
-- Tests should be fast (< 1 second per test)
-- Tests should be isolated and independent
-- Tests should cover edge cases and error conditions
-
-## Notes
-- Current integration and contract tests provide good coverage of core functionality
-- Unit tests are critical for maintaining code quality and preventing regressions
-- Widget tests ensure UI components work correctly across different screen sizes
-- Test implementation should follow TDD principles where possible
-- All tests should be run as part of CI/CD pipeline
+## Recommended Next Steps
+1. **Restore Automated Coverage Reporting**
+   - Install Flutter SDK in the local environment or fetch CI-generated `coverage/lcov.info` before each update cycle.
+   - Publish summary metrics (overall %, per-package) once artefacts are available.
+2. **Model Regression Suite**
+   - Add targeted tests for automaton, state, transition, grammar, PDA, and TM models covering serialization, validation, and edge cases.
+3. **Integration Path Smoke Tests**
+   - Recreate end-to-end flows for settings persistence, regex workspace, TM analysis, and PDA conversions to guard Riverpod controllers.
+4. **Widget Harness Refresh**
+   - Replace legacy widget tests with new golden/widget harnesses aligned with current widgets (canvas painter, metrics panels, dialog flows).
+5. **Service Layer Coverage**
+   - Expand `test/data/` to include negative scenarios (I/O errors, malformed SVG) and coverage for any remaining repositories/services.
 
 ---
-*Last Updated: Current Session*
-*Status: Contract and Integration tests complete, Unit and Widget tests needed*
+*Last updated: 2025-09-23*

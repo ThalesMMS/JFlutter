@@ -7,6 +7,8 @@ import '../../../core/models/fsa_transition.dart';
 import '../../../core/models/state.dart' as automaton_state;
 import '../transition_geometry.dart';
 
+/// Painter responsável por renderizar estados e transições do autômato,
+/// incluindo pré-visualizações, setas iniciais e rótulos.
 class AutomatonPainter extends CustomPainter {
   final List<automaton_state.State> states;
   final List<FSATransition> transitions;
@@ -45,6 +47,9 @@ class AutomatonPainter extends CustomPainter {
     }
   }
 
+  // Desenha transições direcionadas utilizando uma curva quadrática de Bézier,
+  // onde o ponto de controle é calculado pela `TransitionCurve` para manter o
+  // afastamento visual entre múltiplas arestas entre os mesmos estados.
   void _drawDirectedTransition(Canvas canvas, FSATransition transition) {
     final geometry = TransitionCurve.compute(
       transitions,
@@ -72,6 +77,10 @@ class AutomatonPainter extends CustomPainter {
     _drawTransitionLabel(canvas, transition, geometry.labelPosition);
   }
 
+  // Constrói laços próprios posicionando um arco acima do estado; o raio base
+  // (_selfLoopBaseRadius) e o espaçamento incremental (_selfLoopSpacing)
+  // garantem que múltiplos loops sejam deslocados radialmente para evitar
+  // sobreposição.
   void _drawSelfLoop(Canvas canvas, FSATransition transition) {
     final center = Offset(
       transition.fromState.position.x,
@@ -123,6 +132,9 @@ class AutomatonPainter extends CustomPainter {
     _drawTransitionLabel(canvas, transition, labelPosition);
   }
 
+  // Posiciona o rótulo da transição no ponto médio da curva, deslocando o
+  // texto na direção do vetor tangente para manter legibilidade em curvas
+  // inclinadas e loops.
   void _drawTransitionLabel(
     Canvas canvas,
     FSATransition transition,
@@ -167,6 +179,8 @@ class AutomatonPainter extends CustomPainter {
     return '';
   }
 
+  // Calcula o triângulo da seta deslocando-se a partir do ponto final na
+  // direção da tangente e aplicando rotação simétrica pelo ângulo da seta.
   void _drawArrowhead(
     Canvas canvas,
     Offset tip,

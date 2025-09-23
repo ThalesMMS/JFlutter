@@ -237,10 +237,9 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
     );
 
     final result = await _showTransitionDialog(initialTransition);
+    if (!mounted) return;
     if (result == null) {
-      setState(() {
-        _isAddingTransition = false;
-      });
+      _clearAddingTransitionFlag();
       return;
     }
 
@@ -254,8 +253,8 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
           label: label,
         ),
       );
-      _isAddingTransition = false;
     });
+    _clearAddingTransitionFlag();
     _notifyEditor();
   }
 
@@ -267,6 +266,7 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
     if (transition is! TMTransition) return;
 
     final result = await _showTransitionDialog(transition);
+    if (!mounted) return;
     if (result == null) return;
 
     setState(() {
@@ -276,6 +276,14 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
       }
     });
     _notifyEditor();
+  }
+
+  void _clearAddingTransitionFlag() {
+    if (!mounted) return;
+    if (!_isAddingTransition) return;
+    setState(() {
+      _isAddingTransition = false;
+    });
   }
 
   void _deleteState(automaton_state.State state) {

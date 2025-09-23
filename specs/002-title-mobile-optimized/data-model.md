@@ -11,7 +11,7 @@
 **Fields**:
 - `id`: String (unique identifier: "finite_automaton", "pushdown_automaton", etc.)
 - `displayName`: String (full name for display)
-- `abbreviation`: String (short name for mobile display)
+- `abbreviation`: String (short label used on mobile navigation, e.g., "FSA", "Grammar", "PDA", "TM", "Regex", "Pumping")
 - `icon`: String (icon identifier)
 - `isActive`: Boolean (currently selected tab)
 - `workspace`: Workspace (associated workspace instance)
@@ -23,7 +23,7 @@
 **Validation Rules**:
 - id must be one of: finite_automaton, pushdown_automaton, turing_machine, grammar, regular_expression, pumping_lemma
 - displayName cannot be empty
-- abbreviation must be 1-4 characters
+- abbreviation must match one of the approved navigation labels (FSA, Grammar, PDA, TM, Regex, Pumping)
 - Only one tab can be active at a time
 
 ### 2. Workspace

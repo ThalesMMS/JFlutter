@@ -2,7 +2,7 @@
 
 **Feature Branch**: `002-title-mobile-optimized`  
 **Created**: 2024-12-19  
-**Status**: Draft  
+**Status**: In Review *(updated 2025-09-23)*
 **Input**: User description: "Atualizar as especificações para remover determinadas máquinas avançadas que não serão necessárias neste projeto (como Moore Machine, Multi-Tape Turing Machine e L-System). O aplicativo deve ser otimizado para dispositivos móveis, e terá as seguintes abas (que podem ser abreviadas): Finite Automaton, Pushdown Automaton, Turing Machine, Grammar, Regular Expression, Pumping Lemma. Os códigos java dentro da pasta JFLAP_source devem ser usados como referência de funcionalidades para as sessões que estamos portando, bem como referência lógica dos algoritmos. A interface, em cada aba, deve ser clean, com menus expansíveis e barras de ferramentas que não ocupem muito espaço no layout padrão da aba."
 
 ## Execution Flow (main)
@@ -52,6 +52,11 @@ When creating this spec from a user prompt:
 
 ---
 
+## Clarification Resolutions *(2025-09-23)*
+- Tab labels are confirmed as `FSA`, `Grammar`, `PDA`, `TM`, `Regex`, and `Pumping`, balancing abbreviations with readability on small screens.
+- Navigation updates keep the Turing Machine metrics panel synchronized through a managed provider subscription, preventing stale data when revisiting the tab.
+- File operation buttons now guard against double triggers and inform users when platform limitations prevent file access.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### Primary User Story
@@ -63,11 +68,12 @@ A computer science student or educator needs to interact with various automata a
 3. **Given** a user needs to access advanced features, **When** they tap on expandable menu items, **Then** additional tools and options become available without cluttering the default view
 4. **Given** a user is working with automata, **When** they perform operations, **Then** the system behaves consistently with the original JFLAP Java implementation logic
 5. **Given** a user has created or modified content, **When** they switch between tabs, **Then** their work is preserved and accessible when they return
+6. **Given** a user revisits the Turing Machine tab after editing a machine, **When** the page loads, **Then** the metrics panel refreshes immediately with the latest editor state
 
 ### Edge Cases
-- What happens when the user rotates their device between portrait and landscape modes?
-- How does the system handle limited screen space on smaller mobile devices?
-- What occurs when users try to access removed advanced features (e.g., Moore Machine, Multi-Tape Turing Machine, L-System) if they were previously available?
+- How does the system communicate when a platform (e.g., web sandbox) prevents returning a file path during load/save operations?
+- What safeguards prevent asynchronous canvas or dialog callbacks from running after their widgets are disposed?
+- How does the app keep long-running simulations from leaving the UI in a loading state if the user navigates away mid-execution?
 
 ## Requirements *(mandatory)*
 
@@ -78,7 +84,7 @@ A computer science student or educator needs to interact with various automata a
 - **FR-004**: System MUST provide compact toolbars that don't obstruct the main workspace area
 - **FR-005**: System MUST remove or prevent access to legacy advanced automata features (including Moore Machine, Multi-Tape Turing Machine, and L-System capabilities)
 - **FR-006**: System MUST maintain functional consistency with the original JFLAP Java implementation for core algorithms
-- **FR-007**: System MUST allow tab abbreviations for better mobile display [NEEDS CLARIFICATION: which specific abbreviations should be used for each tab?]
+- **FR-007**: System MUST label the six navigation tabs as `FSA`, `Grammar`, `PDA`, `TM`, `Regex`, and `Pumping` to preserve clarity while fitting mobile breakpoints
 - **FR-008**: System MUST preserve user work when switching between tabs
 - **FR-009**: System MUST provide responsive layout that adapts to different mobile screen sizes
 - **FR-010**: System MUST ensure all interactive elements are appropriately sized for touch interaction
@@ -101,8 +107,8 @@ A computer science student or educator needs to interact with various automata a
 - [x] All mandatory sections completed
 
 ### Requirement Completeness
-- [ ] No [NEEDS CLARIFICATION] markers remain
-- [x] Requirements are testable and unambiguous  
+- [x] No [NEEDS CLARIFICATION] markers remain
+- [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Scope is clearly bounded
 - [x] Dependencies and assumptions identified
@@ -118,6 +124,6 @@ A computer science student or educator needs to interact with various automata a
 - [x] User scenarios defined
 - [x] Requirements generated
 - [x] Entities identified
-- [ ] Review checklist passed
+- [x] Review checklist passed
 
 ---

@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';
 import '../models/fsa.dart';
@@ -138,7 +139,7 @@ class NFAToDFAConverter {
     final dfaStates = <String, State>{}; // Use string keys instead of Set<State>
     final dfaTransitions = <FSATransition>{};
     final dfaAcceptingStates = <State>{};
-    final queue = <String>[];
+    final queue = ListQueue<String>();
     final processed = <String>{};
     final stateSetMap = <String, Set<State>>{}; // Map string keys to actual state sets
 
@@ -148,13 +149,13 @@ class NFAToDFAConverter {
     final initialState = _createDFAState(initialStateSet, 0);
     dfaStates[initialStateKey] = initialState;
     stateSetMap[initialStateKey] = initialStateSet;
-    queue.add(initialStateKey);
+    queue.addLast(initialStateKey);
 
     // Process each state set
     int stateCounter = 1;
     int maxStates = 1000; // Performance safeguard
     while (queue.isNotEmpty && stateCounter < maxStates) {
-      final currentStateKey = queue.removeAt(0);
+      final currentStateKey = queue.removeFirst();
       if (processed.contains(currentStateKey)) continue;
       processed.add(currentStateKey);
       
@@ -190,7 +191,7 @@ class NFAToDFAConverter {
             nextDFAState = _createDFAState(nextStateSet, stateCounter++);
             dfaStates[nextStateKey] = nextDFAState;
             stateSetMap[nextStateKey] = nextStateSet;
-            queue.add(nextStateKey);
+            queue.addLast(nextStateKey);
           }
 
           // Add transition

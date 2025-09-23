@@ -4,9 +4,9 @@ import '../models/fsa.dart';
 import '../models/state.dart';
 import '../models/fsa_transition.dart';
 
-/// Completes a deterministic finite automaton by ensuring every state has a
-/// transition for each symbol in the alphabet, introducing a trap state when
-/// necessary to absorb missing transitions.
+/// Completa um autômato finito determinístico garantindo que cada estado tenha
+/// transições definidas para todo símbolo do alfabeto, recorrendo a um estado
+/// armadilha quando necessário para absorver lacunas.
 class DFACompleter {
   static FSA complete(FSA dfa) {
     final alphabet = dfa.alphabet;
@@ -15,9 +15,9 @@ class DFACompleter {
 
     State? trapState;
 
-    // Track, for each state, the set of symbols that already have outgoing
-    // transitions. This allows the algorithm to identify the missing symbols
-    // that need to be completed.
+    // Mapeia cada estado para o conjunto de símbolos já cobertos por suas
+    // transições determinísticas. A estrutura permite identificar com rapidez
+    // quais símbolos ainda precisam ser completados para cada estado.
     final existingSymbolsByState = <State, Set<String>>{};
     for (final transition in transitions) {
       final existingSymbols =
@@ -31,10 +31,10 @@ class DFACompleter {
             existingSymbolsByState.putIfAbsent(state, () => <String>{});
         final hasTransition = existingSymbols.contains(symbol);
         if (!hasTransition) {
-          // Lazily create a single trap state that can be reused for every
-          // missing transition. The same instance is kept and recycled so that
-          // all unmatched symbols across the DFA share the same non-accepting
-          // sink.
+          // Cria sob demanda um único estado armadilha reutilizável para todas
+          // as transições ausentes. A mesma instância é reciclada para que
+          // todo símbolo sem destino compartilhe o mesmo sumidouro não
+          // aceitador.
           trapState ??= State(
             id: 'q_trap',
             label: 'Trap',
@@ -42,9 +42,9 @@ class DFACompleter {
             isInitial: false,
             isAccepting: false,
           );
-          // Use deterministic transitions so that every missing symbol is
-          // explicitly mapped to the trap state while respecting the DFA's
-          // semantics of one target per symbol.
+          // Usa transições determinísticas para mapear explicitamente cada
+          // símbolo faltante ao estado armadilha, preservando a propriedade de
+          // que um DFA possui exatamente um destino por símbolo.
           transitions.add(FSATransition.deterministic(
             id: 't_${state.id}_${symbol}_trap',
             fromState: state,
@@ -64,9 +64,9 @@ class DFACompleter {
       final trapSymbols =
           existingSymbolsByState.putIfAbsent(trapState, () => <String>{});
       for (final symbol in alphabet) {
-        // Create self-loop transitions on the trap state for all symbols, using
-        // the deterministic constructor to emphasize that the trap absorbs
-        // every possible input without introducing nondeterminism.
+        // Cria auto-loops determinísticos no estado armadilha para todo
+        // símbolo, reforçando que ele absorve qualquer entrada sem introduzir
+        // não determinismo.
         transitions.add(FSATransition.deterministic(
           id: 't_trap_${symbol}_trap',
           fromState: trapState,
@@ -87,8 +87,8 @@ class DFACompleter {
       acceptingStates: dfa.acceptingStates,
       created: dfa.created,
       modified: DateTime.now(),
-      // Preserve the visual metadata (bounds, zoom level, and pan offset) so
-      // that completing the DFA does not disturb the user's canvas state.
+      // Preserva os metadados visuais (bounds, zoomLevel e panOffset) para que
+      // completar o DFA não altere a visualização atual do usuário.
       bounds: dfa.bounds,
       zoomLevel: dfa.zoomLevel,
       panOffset: dfa.panOffset,

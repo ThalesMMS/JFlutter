@@ -20,8 +20,6 @@
 - **Mobile Optimization**: Touch gesture handling, mobile-optimized controls
 
 ### ❌ Still Needed:
-- **Settings Page**: User preferences and configuration
-- **Help Page**: User documentation and tutorials
 - **Unit Tests**: Comprehensive unit test coverage for all components
 - **Performance**: Optimization for large automata
 - **Accessibility**: Screen reader support and accessibility features
@@ -79,15 +77,15 @@
 - [x] T008 [P] Integration test grammar creation and parsing in test/integration/test_grammar_parsing.dart
 - [x] T009 [P] Integration test file operations in test/integration/test_file_operations.dart
 - [x] T010 [P] Integration test mobile UI interactions in test/integration/test_mobile_ui.dart
-- [x] T011 [P] Additional integration tests in test/integration/ (simple_grammar, simple_nfa_to_dfa, touch_gestures, working_nfa_to_dfa)
+- [x] T011 [P] Additional integration tests in test/integration/ (home_fab_actions_test.dart, test_simple_grammar.dart, test_simple_nfa_to_dfa.dart, test_touch_gestures.dart, test_working_nfa_to_dfa.dart)
 
 ## Phase 3.3: Core Data Models ✅ COMPLETED
-- [x] T011 [P] Automaton abstract class in lib/core/models/automaton.dart
-- [x] T012 [P] State model in lib/core/models/state.dart
-- [x] T013 [P] Transition abstract class in lib/core/models/transition.dart
-- [x] T014 [P] FSATransition model in lib/core/models/fsa_transition.dart
-- [x] T015 [P] PDATransition model in lib/core/models/pda_transition.dart
-- [x] T016 [P] TMTransition model in lib/core/models/tm_transition.dart
+- [x] T012 [P] Automaton abstract class in lib/core/models/automaton.dart
+- [x] T013 [P] State model in lib/core/models/state.dart
+- [x] T014 [P] Transition abstract class in lib/core/models/transition.dart
+- [x] T015 [P] FSATransition model in lib/core/models/fsa_transition.dart
+- [x] T016 [P] PDATransition model in lib/core/models/pda_transition.dart
+- [x] T017 [P] TMTransition model in lib/core/models/tm_transition.dart
 - [x] T018 [P] Grammar model in lib/core/models/grammar.dart
 - [x] T019 [P] Production model in lib/core/models/production.dart
 - [x] T020 [P] SimulationResult model in lib/core/models/simulation_result.dart
@@ -96,6 +94,9 @@
 - [x] T023 [P] ParseAction model in lib/core/models/parse_action.dart
 - [x] T024 [P] TouchInteraction model in lib/core/models/touch_interaction.dart
 - [x] T025 [P] LayoutSettings model in lib/core/models/layout_settings.dart
+- [x] T026 [P] FSA model in lib/core/models/fsa.dart
+- [x] T027 [P] PDA model in lib/core/models/pda.dart
+- [x] T028 [P] TM model in lib/core/models/tm.dart
 - [x] T029 [P] PumpingLemmaGame model in lib/core/models/pumping_lemma_game.dart
 
 ## Phase 3.4: Core Algorithms ✅ COMPLETED
@@ -106,6 +107,7 @@
 - [x] T034 [P] TM simulator in lib/core/algorithms/tm_simulator.dart
 - [x] T035 [P] Grammar parser (LL/LR) in lib/core/algorithms/grammar_parser.dart
 - [x] T036 [P] CYK parser in lib/core/algorithms/grammar_parser.dart
+- [x] T037 [P] Regex to NFA converter in lib/core/algorithms/regex_to_nfa_converter.dart
 - [x] T038 [P] Pumping lemma game engine in lib/core/algorithms/pumping_lemma_game.dart
 
 ## Phase 3.5: Data Layer ✅ COMPLETED
@@ -126,12 +128,13 @@
 - [x] T051 [P] File operations service in lib/data/services/file_operations_service.dart
 
 ## Phase 3.7: Presentation Layer - Core Widgets ✅ COMPLETED
-- [x] T050 [P] Automaton canvas widget in lib/presentation/widgets/automaton_canvas.dart
-- [x] T051 [P] Algorithm panel widget in lib/presentation/widgets/algorithm_panel.dart
-- [x] T052 [P] Mobile navigation widget in lib/presentation/widgets/mobile_navigation.dart
-- [x] T053 [P] Simulation panel widget in lib/presentation/widgets/simulation_panel.dart
-- [x] T054 [P] Touch gesture handler in lib/presentation/widgets/touch_gesture_handler.dart
-- [x] T055 [P] Grammar editor widget in lib/presentation/widgets/grammar_editor.dart
+- [x] T052 [P] Automaton canvas module in lib/presentation/widgets/automaton_canvas/ (canvas, painter, dialogs)
+- [x] T053 [P] Algorithm panel widget in lib/presentation/widgets/algorithm_panel.dart
+- [x] T054 [P] Mobile navigation widget in lib/presentation/widgets/mobile_navigation.dart
+- [x] T055 [P] Simulation panel widget in lib/presentation/widgets/simulation_panel.dart
+- [x] T056 [P] Touch gesture handler in lib/presentation/widgets/touch_gesture_handler.dart
+- [x] T057 [P] Grammar editor widget in lib/presentation/widgets/grammar_editor.dart
+- [x] T058 [P] State dialog widget in lib/presentation/widgets/ (via automaton canvas)
 - [x] T059 [P] Mobile automaton controls in lib/presentation/widgets/mobile_automaton_controls.dart
 - [x] T060 [P] PDA algorithm panel in lib/presentation/widgets/pda_algorithm_panel.dart
 - [x] T061 [P] PDA canvas widget in lib/presentation/widgets/pda_canvas.dart
@@ -148,95 +151,115 @@
 
 ## Phase 3.8: Presentation Layer - Pages ✅ COMPLETED
 - [x] T072 [P] Home page in lib/presentation/pages/home_page.dart
-- [x] T073 [P] FSA page in lib/presentation/pages/fsa_page.dart
+- [x] T073 [P] FSA and Regex pages in lib/presentation/pages/fsa_page.dart & lib/presentation/pages/regex_page.dart
 - [x] T074 [P] PDA page in lib/presentation/pages/pda_page.dart
 - [x] T075 [P] TM page in lib/presentation/pages/tm_page.dart
 - [x] T076 [P] Grammar page in lib/presentation/pages/grammar_page.dart
+- [x] T077 [P] Regex page in lib/presentation/pages/regex_page.dart
 - [x] T078 [P] Pumping lemma page in lib/presentation/pages/pumping_lemma_page.dart
 - [x] T079 [P] Complete FSA editor functionality in lib/presentation/pages/fsa_page.dart
 - [x] T080 [P] Complete PDA editor functionality in lib/presentation/pages/pda_page.dart
 - [x] T081 [P] Complete TM editor functionality in lib/presentation/pages/tm_page.dart
 - [x] T082 [P] Complete grammar editor functionality in lib/presentation/pages/grammar_page.dart
+- [x] T083 [P] Complete regex editor functionality in lib/presentation/pages/regex_page.dart
 - [x] T084 [P] Complete pumping lemma game in lib/presentation/pages/pumping_lemma_page.dart
 - [x] T085 [P] Settings page in lib/presentation/pages/settings_page.dart
 - [x] T086 [P] Help page in lib/presentation/pages/help_page.dart
 
-## Phase 3.9: State Management 🔄 PARTIALLY COMPLETED
-- [x] T075 [P] Automaton provider in lib/presentation/providers/automaton_provider.dart
-- [x] T076 [P] Algorithm provider in lib/presentation/providers/algorithm_provider.dart
-- [x] T077 [P] Grammar provider in lib/presentation/providers/grammar_provider.dart
-- [ ] T078 [P] Simulation provider in lib/presentation/providers/simulation_provider.dart
-- [ ] T079 [P] Layout provider in lib/presentation/providers/layout_provider.dart
-- [x] T080 [P] Settings provider in lib/presentation/providers/settings_providers.dart
+## Phase 3.9: State Management ✅ COMPLETED
+- [x] T087 [P] Automaton provider in lib/presentation/providers/automaton_provider.dart
+- [x] T088 [P] Algorithm provider in lib/presentation/providers/algorithm_provider.dart
+- [x] T089 [P] Grammar provider in lib/presentation/providers/grammar_provider.dart
+- [x] T090 [P] Automaton simulation controller provider in lib/presentation/providers/automaton/automaton_simulation_controller.dart
+- [x] T091 [P] Automaton layout controller provider in lib/presentation/providers/automaton/automaton_layout_controller.dart
+- [x] T092 [P] Settings providers and view model in lib/presentation/providers/settings_providers.dart & settings_view_model.dart
 
-## Phase 3.10: Integration 🔄 PARTIALLY COMPLETED
-- [x] T081 Connect automaton service to repository (via dependency injection)
-- [x] T082 Connect providers to services (via dependency injection)
-- [x] T083 Connect pages to providers (basic structure)
-- [x] T084 Configure dependency injection (complete)
-- [x] T085 Set up navigation routing (basic)
-- [ ] T086 Connect grammar service to repository
-- [ ] T087 Connect file service to data sources
-- [ ] T088 Complete page-to-provider connections
-- [ ] T089 Configure accessibility features
-- [ ] T090 Set up error handling and logging
+## Phase 3.10: Integration ✅ COMPLETED
+- [x] T093 Connect automaton service to repository (via dependency injection)
+- [x] T094 Connect providers to services (via dependency injection)
+- [x] T095 Connect pages to providers (basic structure)
+- [x] T096 Configure dependency injection (complete)
+- [x] T097 Set up navigation routing (basic)
+- [x] T098 Connect conversion/grammar services in lib/injection/dependency_injection.dart
+- [x] T099 Wire file operations service with storage & export flows in lib/data/services/file_operations_service.dart
+- [x] T100 Complete page-to-provider connections across lib/presentation/pages/
 
-## Phase 3.11: Critical Missing Components 🔄 PARTIALLY COMPLETED
-- [x] T087 [P] Comprehensive test suite in test/unit/ and test/integration/
-- [x] T088 [P] Touch gesture handling for mobile interactions
-- [x] T089 [P] File save/load functionality implementation
-- [x] T090 [P] Complete UI functionality for all pages
-- [x] T091 [P] Mobile-optimized automaton editing
-- [x] T092 [P] Simulation UI and step-by-step execution
-- [x] T093 [P] Algorithm execution UI (NFA to DFA, etc.)
-- [x] T094 [P] Grammar editor with production rules
-- [ ] T095 [P] L-System visualizer and generator
-- [x] T096 [P] Pumping lemma game implementation
+## Phase 3.11: Critical Missing Components ✅ COMPLETED
+- [x] T101 [P] Comprehensive test suite in test/unit/ and test/integration/
+- [x] T102 [P] Touch gesture handling for mobile interactions
+- [x] T103 [P] File save/load functionality implementation
+- [x] T104 [P] Complete UI functionality for all pages
+- [x] T105 [P] Mobile-optimized automaton editing
+- [x] T106 [P] Simulation UI and step-by-step execution
+- [x] T107 [P] Algorithm execution UI (NFA to DFA, etc.)
+- [x] T108 [P] Grammar editor with production rules
+- [x] T109 [P] Regular expression workspace (page + conversions) in lib/presentation/pages/regex_page.dart
+- [x] T110 [P] Pumping lemma game implementation
 
-## Phase 3.12: Polish
-- [ ] T101 [P] Unit tests for all models in test/unit/models/
-- [ ] T102 [P] Unit tests for all algorithms in test/unit/algorithms/
-- [ ] T103 [P] Unit tests for all services in test/unit/services/
-- [ ] T104 [P] Widget tests for all widgets in test/widget/
-- [ ] T105 Performance tests for large automata
-- [ ] T106 [P] Update API documentation
-- [x] T107 [P] Update user guide
-- [ ] T108 Remove code duplication
-- [ ] T109 Run quickstart.md validation scenarios
-- [ ] T110 Final integration testing
+## Phase 3.12: Polish & Quality Assurance 🔄 IN PROGRESS
+- [ ] T111 [P] Add remaining model unit tests (FSA, PDA, TM, Grammar, Production) in test/unit/models/
+- [ ] T112 [P] Add algorithm regression tests for TM simulator & grammar parser in test/unit/algorithms/
+- [ ] T113 [P] Add service/storage unit tests (conversion, file operations, settings) in test/unit/data/
+- [ ] T114 [P] Add widget tests for automaton canvas & settings flows in test/widget/
+- [ ] T115 Performance profiling for large automata (document results in DEVELOPMENT_LOG.md)
+- [ ] T116 [P] Update API documentation in API_DOCUMENTATION.md for new services
+- [x] T117 [P] Update user guide in USER_GUIDE.md
+- [ ] T118 Refine duplicated UI logic across lib/presentation/pages/ (extract shared components)
+- [ ] T119 Run specs/001-description-port-jflap/quickstart.md validation scenarios
+- [ ] T120 Final integration testing (flutter test && manual smoke run)
+
+## Phase 3.13: UX Polish & Accessibility 🔄 NEW
+- [ ] T121 [P] Widget tests for settings persistence & theme toggles in test/widget/settings_page_test.dart
+- [ ] T122 [P] Widget tests for help navigation & quick start dialog in test/widget/help_page_test.dart
+- [ ] T123 Document accessibility audit findings in DEVELOPMENT_LOG.md (semantics, focus order, contrast)
+- [ ] T124 [P] Add semantics/focus management to lib/presentation/widgets/automaton_canvas/automaton_canvas.dart
+- [ ] T125 [P] Add semantics and keyboard navigation hints to lib/presentation/pages/help_page.dart & settings_page.dart
+- [ ] T126 Optimize automaton canvas rendering for large automata in lib/presentation/widgets/automaton_canvas/ (caching, throttling)
+- [ ] T127 [P] Harden settings persistence with unit tests in test/unit/data/settings_repository_impl_test.dart
+- [ ] T128 [P] Surface error states with ErrorHandler in settings/help flows (lib/presentation/pages/)
+- [ ] T129 Configure accessibility features (semantics, focus order, touch targets)
+- [ ] T130 Integrate global error handling and logging using lib/core/error_handler.dart
 
 ## Dependencies
-- **COMPLETED**: Core models, algorithms, services, and basic structure are done
-- **CURRENT FOCUS**: Tests (T005-T010) should be written first for TDD approach
-- **HIGH PRIORITY**: Critical missing components (T091-T100) are the main blockers
-- **INTEGRATION**: Complete page functionality (T067-T074) before polish (T101-T110)
-- **TESTING**: All tests (T091, T101-T104) can be done in parallel
-- **UI COMPONENTS**: Touch interactions (T092) before mobile editing (T095)
-- **FILE OPS**: File functionality (T093) before complete UI (T094)
+- **COMPLETED**: Core models, algorithms, services, UI shell, and provider wiring are in place
+- **CURRENT FOCUS**: Quality & polish tasks (T111-T130) covering unit tests, widget coverage, accessibility, and performance
+- **TESTING**: Model/service/widget tests (T111-T114, T121-T122, T127) can execute in parallel once scaffolding exists
+- **ACCESSIBILITY**: Implement semantics tasks (T124-T125) before final QA passes (T119-T120)
+- **PERFORMANCE**: Run profiling/optimizations (T115, T126) after automated tests are stable
+- **DOCUMENTATION**: Update docs (T116, T123) after implementing the related code changes
 
 ## Parallel Execution Examples
 
-### Phase 3.2: Launch all contract tests together (HIGH PRIORITY)
+### Phase 3.2: Regression test bundle (HIGH PRIORITY)
 ```
-Task: "Contract test automaton service in test/contract/test_automaton_service.dart"
-Task: "Integration test FSA creation and simulation in test/integration/test_fsa_creation.dart"
-Task: "Integration test NFA to DFA conversion in test/integration/test_nfa_to_dfa.dart"
-Task: "Integration test grammar creation and parsing in test/integration/test_grammar_parsing.dart"
-Task: "Integration test file operations in test/integration/test_file_operations.dart"
-Task: "Integration test mobile UI interactions in test/integration/test_mobile_ui.dart"
+flutter test test/contract/test_automaton_service.dart
+flutter test test/integration/test_fsa_creation.dart
+flutter test test/integration/test_nfa_to_dfa.dart
+flutter test test/integration/test_grammar_parsing.dart
+flutter test test/integration/test_file_operations.dart
+flutter test test/integration/test_mobile_ui.dart
+flutter test test/integration/home_fab_actions_test.dart
 ```
 
-### Phase 3.11: Launch critical missing components together
+### Phase 3.12: Unit & Widget Coverage Sprint (T111-T114, T121-T122, T127)
 ```
-Task: "Touch gesture handling for mobile interactions"
-Task: "File save/load functionality implementation"
-Task: "Complete UI functionality for all pages"
-Task: "Mobile-optimized automaton editing"
-Task: "Simulation UI and step-by-step execution"
-Task: "Algorithm execution UI (NFA to DFA, etc.)"
-Task: "Grammar editor with production rules"
-Task: "L-System visualizer and generator"
-Task: "Pumping lemma game implementation"
+flutter test test/unit/models/test_fsa.dart
+flutter test test/unit/models/test_pda.dart
+flutter test test/unit/algorithms/tm_simulator_test.dart
+flutter test test/unit/algorithms/grammar_parser_test.dart
+flutter test test/unit/data/settings_repository_impl_test.dart
+flutter test test/widget/settings_page_test.dart
+flutter test test/widget/help_page_test.dart
+```
+
+### Phase 3.13: Accessibility & Performance Polish (T115, T123-T126, T128)
+```
+# Profile automaton canvas rendering on a representative device
+flutter run --profile -d <device-id>
+
+# Re-run focused widget tests after semantics/error-handling updates
+flutter test test/widget/settings_page_test.dart
+flutter test test/widget/help_page_test.dart
 ```
 
 ## Summary of Current State
@@ -258,10 +281,10 @@ Task: "Pumping lemma game implementation"
 4. **Documentation**: Continue refining API and developer guides
 
 ### 🎯 Recommended Next Steps:
-1. **Add Unit Tests** (T097-T100): Comprehensive unit test coverage
-2. **Performance Optimization** (T101-T105): Handle large automata efficiently
-3. **Documentation** (T106-T107): API docs and user guides
-4. **Accessibility** (T108-T110): Screen reader support and accessibility features
+1. **Expand Automated Tests** (T111-T114, T121-T122, T127): Cover remaining models, algorithms, services, and critical widgets
+2. **Performance Profiling** (T115, T126): Benchmark large automata workflows and optimize canvas rendering
+3. **Accessibility & Error Handling** (T123-T125, T128): Add semantics, focus management, and robust feedback across settings/help flows
+4. **Documentation & QA** (T116, T119-T120): Update reference docs and run full quickstart + integration validation
 
 ## Notes
 - [P] tasks = different files, no dependencies

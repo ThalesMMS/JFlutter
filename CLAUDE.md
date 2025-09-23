@@ -1,6 +1,6 @@
 # Claude Code Assistant Context - JFlutter Project
 
-**Last Updated**: 2024-12-19  
+**Last Updated**: 2025-09-23
 **Feature**: 001-description-port-jflap
 
 ## Project Overview
@@ -9,9 +9,9 @@ JFlutter is a Flutter mobile port of JFLAP (Java Formal Languages and Automata P
 ## Technical Stack
 - **Language**: Dart 3.0+, Flutter 3.16+
 - **Platform**: iOS 12+, Android API 21+
-- **Architecture**: Clean Architecture with Provider/Riverpod state management
+- **Architecture**: Clean Architecture (Presentation/Core/Data) with Riverpod & Provider orchestrated through GetIt
 - **Storage**: Local file system (JSON/XML), SharedPreferences
-- **Testing**: Flutter test framework, widget tests, integration tests
+- **Testing**: flutter_test suite (unit, widget, integration, contract)
 
 ## Key Technologies
 - Flutter SDK for cross-platform mobile development
@@ -61,19 +61,19 @@ lib/
 - Offline operation with local file storage
 - Performance optimization for mobile devices (200 state limit)
 
-## Recent Changes
-- Created comprehensive feature specification
-- Designed mobile-optimized data models
-- Established API contracts for local services
-- Defined testing strategy and quickstart scenarios
+## Weekly Snapshot (2025-09-23)
+- **Architecture**: Clean Architecture layering reaffirmed; dependency injection consolidated via GetIt to simplify wiring between presentation providers and data services.
+- **Completed Areas**: Full mobile UI implementation (all primary pages and reusable widgets), touch gesture handler, comprehensive file operations service with JFLAP XML + SVG support, expanded integration and contract test suites.
+- **Quality Status**: UI feature set considered feature-complete; automated tests cover end-to-end workflows, while granular unit coverage remains outstanding.
 
-## Development Priorities
-1. **Phase 1**: Mobile UI foundation with basic FSA operations
-2. **Phase 2**: Core algorithms (NFA→DFA, minimization, regex conversion)
-3. **Phase 3**: Grammar-automaton conversions (LL, LR, SLR)
-4. **Phase 4**: Advanced features (PDA, TM with building blocks)
-5. **Phase 5**: Interactive features (pumping lemma games, L-systems)
-6. **Phase 6**: Performance optimization and testing
+## Current Priorities
+1. **High** – Expand unit test coverage across core models, algorithms, services, and widgets.
+2. **Medium** – Profile and optimize performance for large automata (memory + rendering).
+3. **Low** – Implement accessibility enhancements (screen readers, keyboard navigation, high-contrast themes).
+
+## In Progress / Upcoming Tasks
+- Execute Phase 1 testing push (unit coverage and targeted performance validations).
+- Prepare accessibility roadmap once testing milestones are met.
 
 ## Code Standards
 - Follow Flutter/Dart best practices
@@ -82,8 +82,10 @@ lib/
 - Maintain accessibility standards (WCAG 2.1 AA)
 - Optimize for mobile performance and battery life
 
-## Key Files
-- `/specs/001-description-port-jflap/spec.md` - Feature specification
-- `/specs/001-description-port-jflap/plan.md` - Implementation plan
-- `/specs/001-description-port-jflap/data-model.md` - Data structures
-- `/JFLAP_source/` - Original Java reference implementation
+## Key Files & References
+- `/specs/001-description-port-jflap/spec.md` – Feature specification
+- `/specs/001-description-port-jflap/plan.md` – Implementation plan
+- `/specs/001-description-port-jflap/data-model.md` – Data structures
+- `/DEVELOPMENT_LOG.md` – Weekly progress + remaining work
+- `/PROJECT_STRUCTURE.md` – Architecture breakdown
+- `/JFLAP_source/` – Original Java reference implementation

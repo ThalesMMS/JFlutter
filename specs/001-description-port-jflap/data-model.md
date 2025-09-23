@@ -1,343 +1,206 @@
-# Data Model: JFlutter
+# Data Model: JFlutter Core Automata & Grammar Layer
 
-**Date**: 2024-12-19  
-**Purpose**: Define core data structures for automata and grammars
+**Last updated**: 2025-01-20  
+**Scope**: Mirrors the concrete implementations that live under `lib/core/models`.
 
-## Core Entities
+## Overview
+
+The core models are organised around three pillars:
+
+1. **Shared graph primitives** – `State`, `Transition` and `Automaton` define the common surface for every automaton-like structure. Their data includes spatial metadata (`Vector2`, `math.Rectangle`) that powers the mobile canvas, lifecycle timestamps and convenience accessors for derived analytics (reachability, counts, etc.).
+
+2. **Domain specialisations** – `FSA`, `PDA`, `TM` and their transition variants extend the base types with alphabet constraints, stack/tape semantics and domain validation rules. Grammar parsing relies on `Grammar`, `Production`, `ParseTable` and two flavours of `ParseAction`.
+
+3. **Support models** – Simulation (`SimulationStep`, `SimulationResult`), gameplay (`PumpingLemmaGame`, `PumpingAttempt`), analysis (`TMAnalysis`), interaction (`TouchInteraction`, `LayoutSettings`) and persistence preferences (`SettingsModel`) round out the UX-centric behaviour.
+
+All classes favour immutable fields with `copyWith` helpers and JSON factories where serialisation is necessary.
+
+## Core Automata Layer
 
 ### Automaton
-```dart
-abstract class Automaton {
-  String id;
-  String name;
-  Set<State> states;
-  Set<Transition> transitions;
-  Set<String> alphabet;
-  State? initialState;
-  Set<State> acceptingStates;
-  AutomatonType type;
-  DateTime created;
-  DateTime modified;
-  Rectangle bounds; // For mobile layout
-  double zoomLevel;
-  Point panOffset;
-}
-```
-
-**Properties**:
-- `id`: Unique identifier for persistence
-- `name`: User-defined name
-- `states`: Set of all states in the automaton
-- `transitions`: Set of all transitions between states
-- `alphabet`: Input alphabet symbols
-- `initialState`: Starting state (can be null)
-- `acceptingStates`: Set of accepting/final states
-- `type`: FSA, PDA, or TM
-- `bounds`: Bounding rectangle for mobile display
-- `zoomLevel`: Current zoom level (0.5 to 3.0)
-- `panOffset`: Pan offset for mobile navigation
-
-**Validation Rules**:
-- Must have at least one state
-- Initial state must be in states set
-- All accepting states must be in states set
-- Transitions must reference valid states
+| Field | Type | Notes |
+| --- | --- | --- |
+| `id` | `String` | Immutable unique identifier used across persistence and services. |
+| `name` | `String` | Required display name. Empty names are rejected during validation. |
+| `states` | `Set<State>` | Complete set of states belonging to the automaton. |
+| `transitions` | `Set<Transition>` | All transitions between states (specialised per automaton subtype). |
+| `alphabet` | `Set<String>` | Input alphabet; must not be empty. |
+| `initialState` | `State?` | Nullable start state; when present it must belong to `states`. |
+| `acceptingStates` | `Set<State>` | Final states; each entry must exist in `states`. |
+| `type` | `AutomatonType` | Discriminator (`fsa`, `pda`, `tm`). |
+| `created` / `modified` | `DateTime` | Timestamps maintained by persistence. |
+| `bounds` | `math.Rectangle<double>` | Canvas rectangle used by the mobile layout engine. |
+| `zoomLevel` | `double` | Defaults to `1.0`; validation enforces the inclusive range `[0.5, 3.0]`. |
+| `panOffset` | `Vector2` | Defaults to `Vector2.zero()`; stores the current pan delta. |
 
 ### State
-```dart
-class State {
-  String id;
-  String label;
-  Point position; // Mobile-optimized positioning
-  bool isInitial;
-  bool isAccepting;
-  StateType type;
-  Map<String, dynamic> properties; // For extensions
-}
-```
-
-**Properties**:
-- `id`: Unique identifier within automaton
-- `label`: Display label (can be empty)
-- `position`: Screen position for mobile layout
-- `isInitial`: Whether this is the initial state
-- `isAccepting`: Whether this is an accepting state
-- `type`: State type (normal, trap, etc.)
-- `properties`: Additional properties for different automaton types
-
-**Validation Rules**:
-- Position must be within automaton bounds
-- Label must be unique within automaton (if not empty)
-- Only one initial state per automaton
+| Field | Type | Notes |
+| --- | --- | --- |
+| `id` | `String` | Unique within the parent automaton. |
+| `label` | `String` | User-visible label; `name` mirrors `label`. |
+| `position` | `Vector2` | Canvas coordinates (>= 0 on both axes). |
+| `isInitial` | `bool` | Marks the unique initial state. |
+| `isAccepting` | `bool` | Marks accepting/final states. |
+| `type` | `StateType` | Semantic hint (`normal`, `trap`, `accepting`, `initial`, `dead`). |
+| `properties` | `Map<String, dynamic>` | Extension hook for automaton-specific metadata. |
 
 ### Transition
-```dart
-abstract class Transition {
-  String id;
-  State fromState;
-  State toState;
-  String label;
-  Point controlPoint; // For curved transitions on mobile
-  TransitionType type;
-}
-```
+| Field | Type | Notes |
+| --- | --- | --- |
+| `id` | `String` | Unique per automaton. |
+| `fromState` / `toState` | `State` | Source and destination states. |
+| `label` | `String` | Rendered caption for UI. |
+| `controlPoint` | `Vector2` | Defaults to `Vector2.zero()`; offsets curved edges/self-loops. |
+| `type` | `TransitionType` | Defaults to `TransitionType.deterministic`. |
 
-**Properties**:
-- `id`: Unique identifier within automaton
-- `fromState`: Source state
-- `toState`: Destination state
-- `label`: Input symbol(s) or operation
-- `controlPoint`: Control point for curved rendering
-- `type`: Type of transition (deterministic, nondeterministic)
+## Specialised Automata Models
 
-**Validation Rules**:
-- fromState and toState must be in automaton states
-- Label must be valid for automaton type
-- Control point must be reasonable for display
+### FSA / FSATransition
+- **FSA** inherits `Automaton` without extra fields
+- **FSATransition** adds:
+  - `inputSymbols` (`Set<String>`) - Symbols that trigger the transition
+  - `lambdaSymbol` (`String?`) - Marks epsilon transitions when set
 
-### FSATransition
-```dart
-class FSATransition extends Transition {
-  Set<String> inputSymbols; // Can be multiple for NFA
-  String? lambdaSymbol; // For lambda transitions
-}
-```
+### PDA / PDATransition  
+- **PDA** extends `Automaton` with:
+  - `stackAlphabet` (`Set<String>`)
+  - `initialStackSymbol` (`String`, default `'Z'`)
+- **PDATransition** adds:
+  - `inputSymbol`, `popSymbol`, `pushSymbol` (`String`)
+  - `isLambdaInput`, `isLambdaPop`, `isLambdaPush` (`bool`)
 
-### PDATransition
-```dart
-class PDATransition extends Transition {
-  String inputSymbol;
-  String popSymbol;
-  String pushSymbol;
-  bool isLambdaInput;
-  bool isLambdaPop;
-  bool isLambdaPush;
-}
-```
+### TM / TMTransition
+- **TM** extends `Automaton` with:
+  - `tapeAlphabet` (`Set<String>`)
+  - `blankSymbol` (`String`, default `'B'`)
+  - `tapeCount` (`int`, default `1`)
+- **TMTransition** adds:
+  - `readSymbol`, `writeSymbol` (`String`)
+  - `direction` (`TapeDirection`)
+  - `tapeNumber` (`int`, default `0`)
 
-### TMTransition
-```dart
-class TMTransition extends Transition {
-  String readSymbol;
-  String writeSymbol;
-  TapeDirection direction; // LEFT, RIGHT, STAY
-  int tapeNumber; // For multi-tape machines
-}
-```
+## Grammar Layer
 
 ### Grammar
-```dart
-class Grammar {
-  String id;
-  String name;
-  Set<String> terminals;
-  Set<String> nonterminals;
-  String startSymbol;
-  Set<Production> productions;
-  GrammarType type;
-  DateTime created;
-  DateTime modified;
-}
-```
-
-**Properties**:
-- `id`: Unique identifier for persistence
-- `name`: User-defined name
-- `terminals`: Terminal symbols
-- `nonterminals`: Non-terminal symbols
-- `startSymbol`: Grammar start symbol
-- `productions`: Set of production rules
-- `type`: Regular, Context-Free, or Unrestricted
-
-**Validation Rules**:
-- Start symbol must be in nonterminals
-- Productions must use only defined symbols
-- Must have at least one production
+| Field | Type | Notes |
+| --- | --- | --- |
+| `id`, `name` | `String` | Required identifiers |
+| `terminals` | `Set<String>` | Terminal alphabet |
+| `nonterminals` | `Set<String>` | Non-terminal alphabet |
+| `startSymbol` | `String` | Must belong to `nonterminals` |
+| `productions` | `Set<Production>` | Complete production set |
+| `type` | `GrammarType` | `regular`, `contextFree`, `contextSensitive`, or `unrestricted` |
 
 ### Production
-```dart
-class Production {
-  String id;
-  List<String> leftSide; // Support multiple symbols for unrestricted grammars
-  List<String> rightSide;
-  bool isLambda; // For lambda productions
-  int order; // For display ordering
-}
-```
-
-**Properties**:
-- `id`: Unique identifier within grammar
-- `leftSide`: Left-hand side symbol
-- `rightSide`: List of right-hand side symbols
-- `isLambda`: Whether this is a lambda production
-- `order`: Display order in UI
-
-**Validation Rules**:
-- Left side must be non-terminal
-- Right side symbols must be terminals or non-terminals
-- Lambda productions must have empty right side
-
-### SimulationResult
-```dart
-class SimulationResult {
-  String inputString;
-  bool accepted;
-  List<SimulationStep> steps;
-  String errorMessage;
-  Duration executionTime;
-}
-```
-
-### SimulationStep
-```dart
-class SimulationStep {
-  State currentState;
-  String remainingInput;
-  String stackContents; // For PDA
-  String tapeContents; // For TM
-  Transition? usedTransition;
-  int stepNumber;
-}
-```
+| Field | Type | Notes |
+| --- | --- | --- |
+| `id` | `String` | Unique per grammar |
+| `leftSide` | `List<String>` | Supports multi-symbol left-hand sides |
+| `rightSide` | `List<String>` | Empty when `isLambda` is `true` |
+| `isLambda` | `bool` | Indicates λ-production |
+| `order` | `int` | Used for UI ordering |
 
 ### ParseTable
-```dart
-class ParseTable {
-  Map<String, Map<String, ParseAction>> actionTable;
-  Map<String, Map<String, String>> gotoTable;
-  Grammar grammar;
-  ParseType type; // LL or LR
-}
-```
+| Field | Type | Notes |
+| --- | --- | --- |
+| `actionTable` | `Map<String, Map<String, ParseAction>>` | LR/LL action matrix |
+| `gotoTable` | `Map<String, Map<String, String>>` | Non-terminal transitions |
+| `grammar` | `Grammar` | Grammar on which the table is built |
+| `type` | `ParseType` | Parsing strategy |
 
-### ParseAction
-```dart
-enum ParseActionType { SHIFT, REDUCE, ACCEPT, ERROR }
+## Simulation & Results
 
-class ParseAction {
-  ParseActionType type;
-  int? stateNumber; // For shift
-  Production? production; // For reduce
-  String? errorMessage;
-}
-```
+### SimulationResult
+| Field | Type | Notes |
+| --- | --- | --- |
+| `inputString` | `String` | Input evaluated during simulation |
+| `accepted` | `bool` | Outcome flag |
+| `steps` | `List<SimulationStep>` | Detailed execution trace |
+| `errorMessage` | `String` | Populated for failure/timeout/infinite-loop |
+| `executionTime` | `Duration` | Total runtime |
 
-## Mobile-Specific Extensions
+### SimulationStep
+| Field | Type | Notes |
+| --- | --- | --- |
+| `currentState` | `String` | Identifier of the active state |
+| `remainingInput` | `String` | Unconsumed input suffix |
+| `stackContents` | `String` | PDA stack snapshot |
+| `tapeContents` | `String` | TM tape snapshot |
+| `usedTransition` | `String?` | Applied transition identifier |
+| `stepNumber` | `int` | 1-based index |
+
+## Interaction & Layout
 
 ### TouchInteraction
-```dart
-class TouchInteraction {
-  InteractionType type;
-  Point position;
-  Set<String> selectedStates;
-  Set<String> selectedTransitions;
-  DateTime timestamp;
-}
-```
+| Field | Type | Notes |
+| --- | --- | --- |
+| `type` | `InteractionType` | Gesture classification |
+| `position` | `Vector2` | Touch point |
+| `selectedStates` | `Set<String>` | IDs of highlighted states |
+| `selectedTransitions` | `Set<String>` | IDs of highlighted transitions |
+| `timestamp` | `DateTime` | Interaction time |
 
 ### LayoutSettings
-```dart
-class LayoutSettings {
-  double nodeRadius;
-  double edgeThickness;
-  ColorScheme colorScheme;
-  bool showGrid;
-  bool snapToGrid;
-  double gridSize;
-}
-```
+| Field | Type | Notes |
+| --- | --- | --- |
+| `nodeRadius` | `double` | Defaults to `20.0` |
+| `edgeThickness` | `double` | Defaults to `2.0` |
+| `colorScheme` | `ColorScheme` | Serialized by RGBA components |
+| `showGrid` / `snapToGrid` | `bool` | UI toggles |
+| `gridSize` | `double` | Grid spacing (default `20.0`) |
 
-### BuildingBlock
-```dart
-class BuildingBlock {
-  String id;
-  String name;
-  String description;
-  Automaton automaton;
-  List<String> inputParameters;
-  List<String> outputParameters;
-  bool isSystemBlock;
-  DateTime created;
-  DateTime modified;
-}
-```
+### SettingsModel
+| Field | Type | Notes |
+| --- | --- | --- |
+| `emptyStringSymbol` | `String` | Defaults to `'λ'` |
+| `epsilonSymbol` | `String` | Defaults to `'ε'` |
+| `themeMode` | `String` | `'system'`, `'light'`, or `'dark'` |
+| `showGrid` / `showCoordinates` | `bool` | Canvas preferences |
+| `autoSave` | `bool` | Autosave toggle |
+| `showTooltips` | `bool` | Tooltip visibility |
+| `gridSize` | `double` | Defaults to `20.0` |
+| `nodeSize` | `double` | Defaults to `30.0` |
+| `fontSize` | `double` | Defaults to `14.0` |
+
+## Educational Games
 
 ### PumpingLemmaGame
-```dart
-class PumpingLemmaGame {
-  String id;
-  String language;
-  GameType type; // REGULAR or CONTEXT_FREE
-  GameMode mode; // USER_FIRST or COMPUTER_FIRST
-  int pumpingConstant;
-  List<PumpingAttempt> attempts;
-  GameState state;
-}
+| Field | Type | Notes |
+| --- | --- | --- |
+| `automaton` | `FSA` | Machine underpinning the challenge |
+| `pumpingLength` | `int` | The pumping constant |
+| `challengeString` | `String` | Word chosen for the exercise |
+| `attempts` | `List<PumpingAttempt>` | Attempt history |
+| `isCompleted` | `bool` | Whether the game concluded |
+| `score` / `maxScore` | `int` | Progress tracking (default max = 100) |
 
-class PumpingAttempt {
-  String decomposition;
-  String pumpedString;
-  bool isValid;
-  String explanation;
-  DateTime timestamp;
-}
-
-enum GameType { REGULAR, CONTEXT_FREE }
-enum GameMode { USER_FIRST, COMPUTER_FIRST }
-enum GameState { ACTIVE, COMPLETED, FAILED }
-```
+### PumpingAttempt
+| Field | Type | Notes |
+| --- | --- | --- |
+| `x` / `y` / `z` | `String?` | Decomposition parts |
+| `isCorrect` | `bool` | Outcome flag |
+| `errorMessage` | `String?` | Explanation for incorrect attempts |
+| `timestamp` | `DateTime` | Creation time |
 
 ## Data Relationships
+- `Automaton` 1 ──▶ * `State`
+- `Automaton` 1 ──▶ * `Transition`
+- `FSA` 1 ──▶ * `FSATransition`
+- `PDA` 1 ──▶ * `PDATransition`
+- `TM` 1 ──▶ * `TMTransition`
+- `Grammar` 1 ──▶ * `Production`
+- `ParseTable` 1 ──▶ * `ParseAction`
+- `SimulationResult` 1 ──▶ * `SimulationStep`
+- `PumpingLemmaGame` 1 ──▶ * `PumpingAttempt`
 
-```
-Automaton (1) ──→ (many) State
-Automaton (1) ──→ (many) Transition
-State (1) ──→ (many) Transition [as fromState]
-State (1) ──→ (many) Transition [as toState]
-Grammar (1) ──→ (many) Production
-Automaton ──→ SimulationResult [1:many]
-Grammar ──→ ParseTable [1:many]
-```
+## Validation Summary
+1. **Automata**: must define at least one state, maintain consistent state references, respect zoom limits, and keep transition endpoints valid.
+2. **FSA**: transitions must be `FSATransition` objects with coherent symbol sets; duplicate outgoing symbols indicate non-determinism.
+3. **PDA**: require non-empty stack alphabets, valid initial stack symbols, and lambda flag consistency across transitions.
+4. **TM**: enforce non-empty tape alphabets, valid blank symbols, minimum tape counts, and transition tape indices within range.
+5. **Transitions**: IDs/labels must be non-empty; self-loops require explicit control points; epsilon settings must not conflict with symbol values.
+6. **Grammars**: start symbols must be declared non-terminals, productions must reference declared symbols only, and each production must satisfy lambda/arity constraints.
+7. **Simulation records**: maintain chronological steps with consistent identifiers and summarise execution metadata for reporting.
 
-## State Transitions
-
-### Automaton States
-- `CREATING` → `EDITING` → `VALIDATING` → `READY`
-- `READY` → `SIMULATING` → `READY`
-- `READY` → `SAVING` → `READY`
-
-### Grammar States  
-- `CREATING` → `EDITING` → `VALIDATING` → `READY`
-- `READY` → `PARSING` → `READY`
-- `READY` → `TRANSFORMING` → `READY`
-
-## Validation Rules Summary
-
-1. **Automaton Validation**:
-   - Must have at least one state
-   - Initial state must exist and be unique
-   - All transitions must reference valid states
-   - Alphabet must be non-empty
-
-2. **State Validation**:
-   - Position must be within bounds
-   - Labels must be unique (if not empty)
-   - Only one initial state per automaton
-
-3. **Transition Validation**:
-   - Input symbols must be in alphabet
-   - Stack operations must be valid for PDA
-   - Tape operations must be valid for TM
-
-4. **Grammar Validation**:
-   - Start symbol must be non-terminal
-   - All symbols in productions must be defined
-   - Must have at least one production
-
-## Performance Considerations
-
-- Use `Set` for states and transitions for O(1) lookup
-- Cache simulation results for repeated inputs
-- Limit automaton size to 200 states for mobile performance
-- Use lazy loading for large parse tables
-- Implement efficient layout algorithms for mobile screens
+---
+*This document reflects the concrete contracts available in `lib/core/models` so that feature work and external integrations stay aligned with the evolving code.*

@@ -22,7 +22,7 @@ class FSALanguageOperations {
     try {
       if (first.initialState == null || second.initialState == null) {
         return ResultFactory.failure(
-          'Ambos autômatos precisam ter estado inicial definido.',
+          'Both automata must have an initial state defined.',
         );
       }
 

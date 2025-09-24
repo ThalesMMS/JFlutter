@@ -545,7 +545,7 @@ class FSALanguageOperations {
 
       return ResultFactory.success(results);
     } catch (error) {
-      return ResultFactory.failure('Erro ao gerar palavras: $error');
+      return ResultFactory.failure('Error generating words: $error');
     }
   }
 

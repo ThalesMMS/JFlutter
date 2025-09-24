@@ -169,20 +169,34 @@ class TM extends Automaton {
       } else {
         final tmTransition = transition as TMTransition;
         final transitionErrors = tmTransition.validate();
-        errors.addAll(transitionErrors.map((e) => 'Transition ${tmTransition.id}: $e'));
-        
-        // Validate tape symbols
-        if (!tapeAlphabet.contains(tmTransition.readSymbol)) {
-          errors.add('Transition ${tmTransition.id} references invalid read symbol');
+        errors.addAll(
+          transitionErrors.map((e) => 'Transition ${tmTransition.id}: $e'),
+        );
+
+        if (tmTransition.actions.length != tapeCount) {
+          errors.add(
+            'Transition ${tmTransition.id} must define actions for each of the $tapeCount tapes',
+          );
         }
-        
-        if (!tapeAlphabet.contains(tmTransition.writeSymbol)) {
-          errors.add('Transition ${tmTransition.id} references invalid write symbol');
-        }
-        
-        // Validate tape number
-        if (tmTransition.tapeNumber >= tapeCount) {
-          errors.add('Transition ${tmTransition.id} references invalid tape number');
+
+        for (final action in tmTransition.actions) {
+          if (action.tape >= tapeCount) {
+            errors.add(
+              'Transition ${tmTransition.id} references invalid tape number ${action.tape}',
+            );
+          }
+
+          if (!tapeAlphabet.contains(action.readSymbol)) {
+            errors.add(
+              'Transition ${tmTransition.id} references invalid read symbol ${action.readSymbol}',
+            );
+          }
+
+          if (!tapeAlphabet.contains(action.writeSymbol)) {
+            errors.add(
+              'Transition ${tmTransition.id} references invalid write symbol ${action.writeSymbol}',
+            );
+          }
         }
       }
     }
@@ -197,7 +211,9 @@ class TM extends Automaton {
 
   /// Gets all transitions for a specific tape
   Set<TMTransition> getTransitionsForTape(int tapeNumber) {
-    return tmTransitions.where((t) => t.tapeNumber == tapeNumber).toSet();
+    return tmTransitions
+        .where((t) => t.actions.any((action) => action.tape == tapeNumber))
+        .toSet();
   }
 
   /// Gets all transitions from a state that can read a specific symbol
@@ -214,46 +230,59 @@ class TM extends Automaton {
     int tapeNumber,
   ) {
     return tmTransitions
-        .where((t) => 
+        .where((t) =>
             t.fromState == state &&
-            t.canRead(symbol) &&
-            t.tapeNumber == tapeNumber)
+            t.actions.any(
+              (action) => action.tape == tapeNumber && action.readSymbol == symbol,
+            ))
         .toSet();
   }
 
   /// Gets all transitions that move left
   Set<TMTransition> get leftMovingTransitions {
-    return tmTransitions.where((t) => t.movesLeft).toSet();
+    return tmTransitions
+        .where((t) => t.actions.any((action) => action.direction == TapeDirection.left))
+        .toSet();
   }
 
   /// Gets all transitions that move right
   Set<TMTransition> get rightMovingTransitions {
-    return tmTransitions.where((t) => t.movesRight).toSet();
+    return tmTransitions
+        .where((t) => t.actions.any((action) => action.direction == TapeDirection.right))
+        .toSet();
   }
 
   /// Gets all transitions that stay in place
   Set<TMTransition> get stayTransitions {
-    return tmTransitions.where((t) => t.staysInPlace).toSet();
+    return tmTransitions
+        .where((t) => t.actions.any((action) => action.direction == TapeDirection.stay))
+        .toSet();
   }
 
   /// Checks if the TM is deterministic
   bool get isDeterministic {
     for (final state in states) {
-      final outgoingTransitions = getTransitionsFrom(state);
-      final tapeSymbols = <String, int>{};
-      
+      final outgoingTransitions =
+          tmTransitions.where((transition) => transition.fromState == state);
+      final seenKeys = <String>{};
+
       for (final transition in outgoingTransitions) {
-        if (transition is TMTransition) {
-          final key = '${transition.readSymbol}_${transition.tapeNumber}';
-          tapeSymbols[key] = (tapeSymbols[key] ?? 0) + 1;
+        final buffer = StringBuffer();
+        for (final action in transition.actions) {
+          buffer
+            ..write(action.tape)
+            ..write(':')
+            ..write(action.readSymbol)
+            ..write('|');
         }
-      }
-      
-      if (tapeSymbols.values.any((count) => count > 1)) {
-        return false;
+        final key = buffer.toString();
+        if (seenKeys.contains(key)) {
+          return false;
+        }
+        seenKeys.add(key);
       }
     }
-    
+
     return true;
   }
 
@@ -264,12 +293,24 @@ class TM extends Automaton {
 
   /// Gets all symbols that can be read from the tape
   Set<String> get readableSymbols {
-    return tmTransitions.map((t) => t.readSymbol).toSet();
+    final symbols = <String>{};
+    for (final transition in tmTransitions) {
+      for (final action in transition.actions) {
+        symbols.add(action.readSymbol);
+      }
+    }
+    return symbols;
   }
 
   /// Gets all symbols that can be written to the tape
   Set<String> get writableSymbols {
-    return tmTransitions.map((t) => t.writeSymbol).toSet();
+    final symbols = <String>{};
+    for (final transition in tmTransitions) {
+      for (final action in transition.actions) {
+        symbols.add(action.writeSymbol);
+      }
+    }
+    return symbols;
   }
 
   /// Creates an empty TM
@@ -470,12 +511,10 @@ class TM extends Automaton {
     String stateId,
     String symbol,
   ) {
-    for (final transition in transitions) {
-      if (transition is TMTransition) {
-        if (transition.fromState.id == stateId &&
-            transition.readSymbol == symbol) {
-          return transition;
-        }
+    for (final transition in tmTransitions) {
+      if (transition.fromState.id == stateId &&
+          transition.readSymbol == symbol) {
+        return transition;
       }
     }
     return null;

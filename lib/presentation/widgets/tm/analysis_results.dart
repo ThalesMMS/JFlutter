@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../../core/models/state.dart' as automaton_models;
-import '../../core/models/tm.dart';
-import '../../core/models/tm_analysis.dart';
-import '../../core/models/tm_transition.dart';
-import '../../core/models/tm_transition.dart' as tm_models show TapeDirection;
+import '../../../core/models/state.dart' as automaton_models;
+import '../../../core/models/tm.dart';
+import '../../../core/models/tm_analysis.dart';
+import '../../../core/models/tm_transition.dart';
+import '../../../core/models/tm_transition.dart' as tm_models show TapeDirection;
 import '../../providers/tm_algorithm_view_model.dart';
 
 /// Resume de forma consolidada as métricas levantadas pela análise da Máquina

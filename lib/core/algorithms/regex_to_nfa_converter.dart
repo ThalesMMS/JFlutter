@@ -609,6 +609,26 @@ class RegexToNFAConverter {
   }
 }
 
+/// Token stream helper to provide O(1) access to regex tokens during parsing.
+class _TokenStream {
+  _TokenStream(this._tokens);
+
+  final List<RegexToken> _tokens;
+  int _index = 0;
+
+  bool get isAtEnd => _index >= _tokens.length;
+
+  RegexToken? peek() {
+    if (_index >= _tokens.length) return null;
+    return _tokens[_index];
+  }
+
+  RegexToken? next() {
+    if (_index >= _tokens.length) return null;
+    return _tokens[_index++];
+  }
+}
+
 /// Abstract base class for regex nodes
 abstract class RegexNode {
   const RegexNode();

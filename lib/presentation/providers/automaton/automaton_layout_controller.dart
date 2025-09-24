@@ -1,4 +1,4 @@
-import '../../../core/use_cases/algorithm_use_cases.dart';
+import '../../../core/use_cases/automaton_use_cases.dart';
 import '../../../core/utils/automaton_entity_mapper.dart';
 
 import 'automaton_state.dart';

@@ -490,7 +490,7 @@ class FSALanguageOperations {
 
       return ResultFactory.success(true);
     } catch (error) {
-      return ResultFactory.failure('Erro ao verificar finitude da linguagem: $error');
+      return ResultFactory.failure('Error checking language finiteness: $error');
     }
   }
 

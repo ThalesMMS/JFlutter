@@ -12,6 +12,7 @@ typedef PDASimulatorRunner = Result<PDASimulationResult> Function(
   String, {
   bool stepByStep,
   Duration timeout,
+  int maxAcceptedPaths,
 });
 
 final pdaSimulatorRunnerProvider = Provider<PDASimulatorRunner>(
@@ -20,12 +21,14 @@ final pdaSimulatorRunnerProvider = Provider<PDASimulatorRunner>(
     inputString, {
     bool stepByStep = false,
     Duration timeout = const Duration(seconds: 5),
+    int maxAcceptedPaths = 5,
   }) {
     return PDASimulator.simulate(
       pda,
       inputString,
       stepByStep: stepByStep,
       timeout: timeout,
+      maxAcceptedPaths: maxAcceptedPaths,
     );
   },
 );
@@ -44,6 +47,7 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
   final TextEditingController _inputController = TextEditingController();
   final TextEditingController _initialStackController = TextEditingController(text: 'Z');
 
+  static const int _maxAcceptedPaths = 8;
   bool _isSimulating = false;
   PDASimulationResult? _simulationResult;
   String? _errorMessage;
@@ -283,7 +287,7 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
             ],
           ),
 
-          if (hasResult)
+          if (hasResult) ...[
             Padding(
               padding: const EdgeInsets.only(top: 4.0),
               child: Text(
@@ -291,6 +295,23 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.only(top: 2.0),
+              child: Text(
+                'Acceptance mode: ${_describeAcceptanceMode(result!.acceptanceMode)}',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 4.0),
+              child: _buildDeterminismIndicator(context, result!),
+            ),
+            if (result!.acceptedBranches.isNotEmpty || result!.branchesTruncated)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: _buildAcceptedPathsSummary(context, result!),
+              ),
+          ],
 
           if (errorText != null && errorText.isNotEmpty)
             Padding(
@@ -301,6 +322,12 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
                       color: Theme.of(context).colorScheme.error,
                     ),
               ),
+            ),
+
+          if (hasResult && result!.determinismConflicts.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 12.0),
+              child: _buildDeterminismConflicts(context, result!),
             ),
 
           if (hasResult && result!.steps.isNotEmpty) ...[
@@ -338,11 +365,26 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: Text(
-                          'State ${step.currentState} | Remaining: $remainingInput | Stack: $stack${step.usedTransition != null ? ' | Transition: ${step.usedTransition}' : ''}',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontFamily: 'monospace',
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'State ${step.currentState} | Remaining: $remainingInput | Stack: $stack${step.usedTransition != null ? ' | Transition: ${step.usedTransition}' : ''}',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    fontFamily: 'monospace',
+                                  ),
+                            ),
+                            if (step.description != null && step.description!.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2.0),
+                                child: Text(
+                                  step.description!,
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                     ],
@@ -398,6 +440,7 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
       inputString,
       stepByStep: _stepByStep,
       timeout: const Duration(seconds: 5),
+      maxAcceptedPaths: _maxAcceptedPaths,
     );
 
     if (!mounted) {
@@ -419,6 +462,124 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
         _errorMessage = result.error;
       });
     }
+  }
+
+  String _describeAcceptanceMode(PDAAcceptanceMode mode) {
+    switch (mode) {
+      case PDAAcceptanceMode.finalState:
+        return 'final state acceptance';
+      case PDAAcceptanceMode.emptyStack:
+        return 'empty stack acceptance';
+      case PDAAcceptanceMode.either:
+        return 'either final state or empty stack';
+      case PDAAcceptanceMode.both:
+        return 'final state and empty stack';
+    }
+  }
+
+  Widget _buildDeterminismIndicator(BuildContext context, PDASimulationResult result) {
+    final theme = Theme.of(context);
+    final isDeterministic = result.isDeterministic;
+    final color = isDeterministic
+        ? theme.colorScheme.secondary
+        : theme.colorScheme.tertiary;
+    final icon = isDeterministic ? Icons.check_circle : Icons.alt_route;
+    final text = isDeterministic
+        ? 'Deterministic execution (no conflicting transitions)'
+        : 'Non-deterministic execution with ${result.determinismConflicts.length} conflict(s)';
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: color, size: 16),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            text,
+            style: theme.textTheme.bodySmall?.copyWith(color: color),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAcceptedPathsSummary(BuildContext context, PDASimulationResult result) {
+    final theme = Theme.of(context);
+    final details = <Widget>[
+      Text(
+        'Accepting paths found: ${result.acceptedBranches.length}',
+        style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+      ),
+    ];
+
+    if (result.hasMultipleAcceptingBranches) {
+      details.add(
+        Text(
+          'Displaying the first accepting path below.',
+          style: theme.textTheme.bodySmall,
+        ),
+      );
+    }
+
+    if (result.branchesTruncated) {
+      details.add(
+        Text(
+          'Exploration limited to ${result.acceptedBranches.length} branches (cap $_maxAcceptedPaths).',
+          style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: details,
+    );
+  }
+
+  Widget _buildDeterminismConflicts(BuildContext context, PDASimulationResult result) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.errorContainer.withOpacity(0.25),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: theme.colorScheme.errorContainer),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.warning_amber, color: theme.colorScheme.error, size: 18),
+              const SizedBox(width: 6),
+              Text(
+                'Deterministic conflicts detected',
+                style: theme.textTheme.titleSmall?.copyWith(
+                      color: theme.colorScheme.error,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ...result.determinismConflicts.map((conflict) {
+            final input = conflict.inputSymbol;
+            final stack = conflict.stackSymbol;
+            final transitions = conflict.transitionIds.join(', ');
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 6.0),
+              child: Text(
+                'State ${conflict.stateId} with input "${input}" and stack "${stack}" -> transitions: $transitions',
+                style: theme.textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
   }
 
   void _showError(String message) {

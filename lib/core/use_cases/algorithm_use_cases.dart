@@ -3,6 +3,8 @@ import '../result.dart';
 import '../repositories/automaton_repository.dart';
 import '../models/simulation_result.dart';
 import '../models/simulation_step.dart';
+import '../regex/ast.dart';
+import '../grammar/grammar_definition_parser.dart';
 
 /// Use case for NFA to DFA conversion
 class NfaToDfaUseCase {
@@ -207,6 +209,28 @@ class RegexToNfaUseCase {
 
   Future<AutomatonResult> execute(String regex) async {
     return await _repository.regexToNfa(regex);
+  }
+}
+
+/// Use case for parsing a regex into its AST.
+class ParseRegexUseCase {
+  final AlgorithmRepository _repository;
+
+  ParseRegexUseCase(this._repository);
+
+  Future<Result<RegexAst>> execute(String pattern) async {
+    return await _repository.parseRegex(pattern);
+  }
+}
+
+/// Use case for parsing textual grammar definitions.
+class ParseGrammarDefinitionUseCase {
+  final AlgorithmRepository _repository;
+
+  ParseGrammarDefinitionUseCase(this._repository);
+
+  Future<Result<GrammarDefinitionAnalysis>> execute(String source) async {
+    return await _repository.parseGrammarDefinition(source);
   }
 }
 

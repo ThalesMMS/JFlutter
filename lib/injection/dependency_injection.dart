@@ -184,13 +184,21 @@ Future<void> setupDependencyInjection() async {
   getIt.registerLazySingleton<RegexToNfaUseCase>(
     () => RegexToNfaUseCase(getIt<AlgorithmRepository>()),
   );
-  
+
+  getIt.registerLazySingleton<ParseRegexUseCase>(
+    () => ParseRegexUseCase(getIt<AlgorithmRepository>()),
+  );
+
   getIt.registerLazySingleton<DfaToRegexUseCase>(
     () => DfaToRegexUseCase(getIt<AlgorithmRepository>()),
   );
-  
+
   getIt.registerLazySingleton<FsaToGrammarUseCase>(
     () => FsaToGrammarUseCase(getIt<AlgorithmRepository>()),
+  );
+
+  getIt.registerLazySingleton<ParseGrammarDefinitionUseCase>(
+    () => ParseGrammarDefinitionUseCase(getIt<AlgorithmRepository>()),
   );
   
   getIt.registerLazySingleton<CheckEquivalenceUseCase>(

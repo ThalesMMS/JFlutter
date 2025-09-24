@@ -71,6 +71,7 @@ dependencies:
   
   # Collection utilities
   collection: ^1.18.0
+  petitparser: ^7.0.0
 
 dev_dependencies:
   flutter_test:

@@ -402,7 +402,7 @@ class FSALanguageOperations {
 
       return ResultFactory.success(true);
     } catch (error) {
-      return ResultFactory.failure('Erro ao verificar linguagem vazia: $error');
+      return ResultFactory.failure('Error checking if language is empty: $error');
     }
   }
 

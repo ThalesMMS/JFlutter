@@ -1,19 +1,24 @@
 import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';
+
+import '../packages/core_base/automaton_transition.dart';
 import 'state.dart';
 import 'fsa_transition.dart';
 import 'pda_transition.dart';
 import 'tm_transition.dart';
 
 /// Abstract base class for transitions in an automaton
-abstract class Transition {
+abstract class Transition implements AutomatonTransition<State> {
   /// Unique identifier for the transition within the automaton
+  @override
   final String id;
   
   /// Source state of the transition
+  @override
   final State fromState;
   
   /// Destination state of the transition
+  @override
   final State toState;
   
   /// Display label for the transition
@@ -33,6 +38,16 @@ abstract class Transition {
     Vector2? controlPoint,
     this.type = TransitionType.deterministic,
   }) : controlPoint = controlPoint ?? Vector2.zero();
+
+  @override
+  Map<String, Object?> get metadata => {
+        'label': label,
+        'type': type.name,
+        'controlPoint': {
+          'x': controlPoint.x,
+          'y': controlPoint.y,
+        },
+      };
 
   /// Creates a copy of this transition with updated properties
   Transition copyWith({

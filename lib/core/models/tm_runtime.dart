@@ -1,5 +1,7 @@
 import 'dart:collection';
 
+import '../packages/core_base/configuration.dart';
+import '../packages/core_base/trace.dart';
 import 'state.dart';
 import 'tm_transition.dart';
 
@@ -134,7 +136,7 @@ class TMTape {
 }
 
 /// Immutable snapshot of a TM configuration.
-class TMConfigurationSnapshot {
+class TMConfigurationSnapshot implements Configuration {
   TMConfigurationSnapshot({
     required this.state,
     required this.tapes,
@@ -142,10 +144,28 @@ class TMConfigurationSnapshot {
     this.transition,
   });
 
+  @override
   final State state;
   final List<TMTape> tapes;
   final int step;
   final TMTransition? transition;
+
+  @override
+  Map<String, Object?> get metadata => {
+        'step': step,
+        'transition': transition?.id,
+        'tapes': tapes
+            .map(
+              (tape) => {
+                'head': tape.headPosition,
+                'cells': tape.populatedCells,
+              },
+            )
+            .toList(growable: false),
+      };
+
+  @override
+  bool get isAccepting => state.isAccepting;
 
   /// Generates a summary of the transition that led to this configuration.
   String describeTransition() {
@@ -177,20 +197,37 @@ class TMConfigurationSnapshot {
 enum TMHaltReason { accepted, rejected, timeout, exceededLimit }
 
 /// Full execution trace for a single branch explored during simulation.
-class TMBranchTrace {
+class TMBranchTrace implements Trace<TMConfigurationSnapshot> {
   TMBranchTrace({
     required this.configurations,
     required this.reason,
-    required this.accepted,
-  });
+    required bool accepted,
+  }) : _accepted = accepted;
 
+  @override
   final List<TMConfigurationSnapshot> configurations;
   final TMHaltReason reason;
-  final bool accepted;
+  final bool _accepted;
 
   TMConfigurationSnapshot get terminalConfiguration => configurations.last;
 
+  @override
+  TMConfigurationSnapshot get terminal => terminalConfiguration;
+
+  @override
+  Trace<TMConfigurationSnapshot> append(TMConfigurationSnapshot configuration) {
+    return TMBranchTrace(
+      configurations: [...configurations, configuration],
+      reason: reason,
+      accepted: _accepted || configuration.isAccepting,
+    );
+  }
+
+  @override
   int get steps => configurations.length - 1;
+
+  @override
+  bool get accepted => _accepted;
 }
 
 /// Details about deterministic conflicts detected for a TM.

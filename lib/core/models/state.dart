@@ -1,11 +1,15 @@
 import 'package:vector_math/vector_math_64.dart';
 
+import '../packages/core_base/automaton_state.dart';
+
 /// Represents a state in an automaton
-class State {
+class State implements AutomatonState {
   /// Unique identifier for the state within the automaton
+  @override
   final String id;
   
   /// Display label for the state (can be empty)
+  @override
   final String label;
   
   /// Name of the state (alias for label)
@@ -24,7 +28,7 @@ class State {
   final StateType type;
   
   /// Additional properties for different automaton types
-  final Map<String, dynamic> properties;
+  final Map<String, Object?> properties;
 
   const State({
     required this.id,
@@ -44,7 +48,7 @@ class State {
     bool? isInitial,
     bool? isAccepting,
     StateType? type,
-    Map<String, dynamic>? properties,
+    Map<String, Object?>? properties,
   }) {
     return State(
       id: id ?? this.id,
@@ -57,8 +61,11 @@ class State {
     );
   }
 
+  @override
+  Map<String, Object?> get metadata => properties;
+
   /// Converts the state to a JSON representation
-  Map<String, dynamic> toJson() {
+  Map<String, Object?> toJson() {
     return {
       'id': id,
       'label': label,
@@ -88,7 +95,7 @@ class State {
         (e) => e.name == json['type'],
         orElse: () => StateType.normal,
       ),
-      properties: Map<String, dynamic>.from(json['properties'] as Map? ?? {}),
+      properties: Map<String, Object?>.from(json['properties'] as Map? ?? {}),
     );
   }
 

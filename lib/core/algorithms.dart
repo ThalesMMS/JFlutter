@@ -3,6 +3,7 @@ export 'algorithms/algorithm_operations.dart';
 export 'algorithms/automaton_simulator.dart';
 export 'algorithms/dfa_minimizer.dart';
 export 'algorithms/dfa_operations.dart';
+export 'algorithms/fsa_language_operations.dart';
 export 'algorithms/fa_to_regex_converter.dart';
 export 'algorithms/nfa_to_dfa_converter.dart';
 export 'algorithms/regex_to_nfa_converter.dart';

@@ -152,6 +152,34 @@ Future<void> setupDependencyInjection() async {
   getIt.registerLazySingleton<SuffixClosureUseCase>(
     () => SuffixClosureUseCase(getIt<AlgorithmRepository>()),
   );
+
+  getIt.registerLazySingleton<ConcatenateFsaUseCase>(
+    () => ConcatenateFsaUseCase(getIt<AlgorithmRepository>()),
+  );
+
+  getIt.registerLazySingleton<KleeneStarFsaUseCase>(
+    () => KleeneStarFsaUseCase(getIt<AlgorithmRepository>()),
+  );
+
+  getIt.registerLazySingleton<ReverseFsaUseCase>(
+    () => ReverseFsaUseCase(getIt<AlgorithmRepository>()),
+  );
+
+  getIt.registerLazySingleton<ShuffleFsaUseCase>(
+    () => ShuffleFsaUseCase(getIt<AlgorithmRepository>()),
+  );
+
+  getIt.registerLazySingleton<IsLanguageEmptyUseCase>(
+    () => IsLanguageEmptyUseCase(getIt<AlgorithmRepository>()),
+  );
+
+  getIt.registerLazySingleton<IsLanguageFiniteUseCase>(
+    () => IsLanguageFiniteUseCase(getIt<AlgorithmRepository>()),
+  );
+
+  getIt.registerLazySingleton<GenerateWordsUseCase>(
+    () => GenerateWordsUseCase(getIt<AlgorithmRepository>()),
+  );
   
   getIt.registerLazySingleton<RegexToNfaUseCase>(
     () => RegexToNfaUseCase(getIt<AlgorithmRepository>()),
@@ -231,6 +259,13 @@ Future<void> setupDependencyInjection() async {
       differenceDfaUseCase: getIt<DifferenceDfaUseCase>(),
       prefixClosureUseCase: getIt<PrefixClosureUseCase>(),
       suffixClosureUseCase: getIt<SuffixClosureUseCase>(),
+      concatenateFsaUseCase: getIt<ConcatenateFsaUseCase>(),
+      kleeneStarFsaUseCase: getIt<KleeneStarFsaUseCase>(),
+      reverseFsaUseCase: getIt<ReverseFsaUseCase>(),
+      shuffleFsaUseCase: getIt<ShuffleFsaUseCase>(),
+      isLanguageEmptyUseCase: getIt<IsLanguageEmptyUseCase>(),
+      isLanguageFiniteUseCase: getIt<IsLanguageFiniteUseCase>(),
+      generateWordsUseCase: getIt<GenerateWordsUseCase>(),
       regexToNfaUseCase: getIt<RegexToNfaUseCase>(),
       dfaToRegexUseCase: getIt<DfaToRegexUseCase>(),
       fsaToGrammarUseCase: getIt<FsaToGrammarUseCase>(),

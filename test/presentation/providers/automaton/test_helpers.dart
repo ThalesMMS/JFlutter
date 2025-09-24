@@ -301,6 +301,114 @@ class FakeAlgorithmRepository implements AlgorithmRepository {
   }
 
   @override
+  Future<AutomatonResult> concatenateFsa(
+    AutomatonEntity first,
+    AutomatonEntity second,
+  ) async {
+    lastBinaryAutomatonInput['concatenateFsa'] = [
+      _cloneAutomaton(first),
+      _cloneAutomaton(second),
+    ];
+    final failure = _maybeFailure<AutomatonEntity>('concatenateFsa');
+    if (failure != null) return failure;
+    if (binaryOperationHandler != null) {
+      return binaryOperationHandler!(
+        'concatenateFsa',
+        _cloneAutomaton(first),
+        _cloneAutomaton(second),
+      );
+    }
+    return Success(_cloneAutomaton(first));
+  }
+
+  @override
+  Future<AutomatonResult> kleeneStarFsa(AutomatonEntity automaton) async {
+    lastUnaryAutomatonInput['kleeneStarFsa'] = _cloneAutomaton(automaton);
+    final failure = _maybeFailure<AutomatonEntity>('kleeneStarFsa');
+    if (failure != null) return failure;
+    if (unaryOperationHandler != null) {
+      return unaryOperationHandler!('kleeneStarFsa', _cloneAutomaton(automaton));
+    }
+    final clone = _cloneAutomaton(automaton);
+    final states = clone.states
+        .map((state) => state.id == clone.initialId
+            ? state.copyWith(isFinal: true)
+            : state)
+        .toList();
+    return Success(clone.copyWith(states: states));
+  }
+
+  @override
+  Future<AutomatonResult> reverseFsa(AutomatonEntity automaton) async {
+    lastUnaryAutomatonInput['reverseFsa'] = _cloneAutomaton(automaton);
+    final failure = _maybeFailure<AutomatonEntity>('reverseFsa');
+    if (failure != null) return failure;
+    if (unaryOperationHandler != null) {
+      return unaryOperationHandler!('reverseFsa', _cloneAutomaton(automaton));
+    }
+    return Success(_cloneAutomaton(automaton));
+  }
+
+  @override
+  Future<AutomatonResult> shuffleFsa(
+    AutomatonEntity a,
+    AutomatonEntity b,
+  ) async {
+    lastBinaryAutomatonInput['shuffleFsa'] = [
+      _cloneAutomaton(a),
+      _cloneAutomaton(b),
+    ];
+    final failure = _maybeFailure<AutomatonEntity>('shuffleFsa');
+    if (failure != null) return failure;
+    if (binaryOperationHandler != null) {
+      return binaryOperationHandler!(
+        'shuffleFsa',
+        _cloneAutomaton(a),
+        _cloneAutomaton(b),
+      );
+    }
+    return Success(_cloneAutomaton(a));
+  }
+
+  @override
+  Future<BoolResult> isLanguageEmpty(AutomatonEntity automaton) async {
+    lastUnaryAutomatonInput['isLanguageEmpty'] = _cloneAutomaton(automaton);
+    final failure = _maybeFailure<bool>('isLanguageEmpty');
+    if (failure != null) return failure;
+    final hasFinal = automaton.states.any((state) => state.isFinal);
+    return Success(!hasFinal);
+  }
+
+  @override
+  Future<BoolResult> isLanguageFinite(AutomatonEntity automaton) async {
+    lastUnaryAutomatonInput['isLanguageFinite'] = _cloneAutomaton(automaton);
+    final failure = _maybeFailure<bool>('isLanguageFinite');
+    if (failure != null) return failure;
+    final hasLoop = automaton.transitions.keys.any((key) {
+      final parts = key.split('|');
+      if (parts.length != 2) return false;
+      return automaton.transitions[key]?.contains(parts[0]) ?? false;
+    });
+    return Success(!hasLoop);
+  }
+
+  @override
+  Future<Result<Set<String>>> generateWords(
+    AutomatonEntity automaton, {
+    int maxLength = 6,
+    int maxWords = 32,
+  }) async {
+    lastUnaryAutomatonInput['generateWords'] = _cloneAutomaton(automaton);
+    final failure = _maybeFailure<Set<String>>('generateWords');
+    if (failure != null) return failure;
+    final results = <String>{};
+    if (automaton.states.any((state) => state.isFinal)) {
+      results.add('');
+    }
+    return Success(results);
+  }
+
+  @override
   Future<AutomatonResult> regexToNfa(String regex) async {
     lastRegexInput = regex;
     final failure = _maybeFailure<AutomatonEntity>('regexToNfa');

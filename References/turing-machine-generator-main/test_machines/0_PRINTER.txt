@@ -1,0 +1,5 @@
+   M-Config        Symbol  Actions  Final 
+
+       B           NONE    P0,R        Q
+       Q           NONE    L           Q
+       Q           0       R, P0       Q

@@ -1,0 +1,8 @@
+*.iml
+.dart_tool/
+.DS_Store
+.idea/
+.packages
+.pub/
+petitparser_examples/build
+pubspec.lock

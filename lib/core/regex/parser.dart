@@ -9,7 +9,7 @@ import 'thompson.dart';
 
 /// Parser for building [RegexAst] instances using PetitParser's expression
 /// builder. Inspired by the reference implementation in the PetitParser
-/// examples repository.【F:References/dart-petitparser-examples-main/lib/src/regexp/parser.dart†L1-L45】
+/// [examples repository](https://github.com/petitparser/dart-petitparser-examples/blob/main/lib/src/regexp/parser.dart).
 class RegexExpressionParser {
   RegexExpressionParser._();
 

@@ -78,7 +78,7 @@ class FSALanguageOperations {
 
       return ResultFactory.success(automaton);
     } catch (error) {
-      return ResultFactory.failure('Erro ao concatenar FSAs: $error');
+      return ResultFactory.failure('Error concatenating FSAs: $error');
     }
   }
 

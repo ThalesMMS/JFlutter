@@ -25,22 +25,16 @@ class _RegexPageState extends ConsumerState<RegexPage> {
   final TextEditingController _testStringController = TextEditingController();
   final TextEditingController _comparisonRegexController =
       TextEditingController();
-  ProviderSubscription<RegexPageState>? _subscription;
 
   @override
   void initState() {
     super.initState();
     final initialState = ref.read(regexPageViewModelProvider);
     _syncControllers(initialState);
-    _subscription = ref.listen<RegexPageState>(
-      regexPageViewModelProvider,
-      (previous, next) => _syncControllers(next),
-    );
   }
 
   @override
   void dispose() {
-    _subscription?.close();
     _regexController.dispose();
     _testStringController.dispose();
     _comparisonRegexController.dispose();
@@ -72,6 +66,13 @@ class _RegexPageState extends ConsumerState<RegexPage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(regexPageViewModelProvider);
+
+    // Listen for state changes to sync controllers
+    ref.listen<RegexPageState>(
+      regexPageViewModelProvider,
+      (previous, next) => _syncControllers(next),
+    );
+
     final screenSize = MediaQuery.of(context).size;
     final isMobile = screenSize.width < 768;
 

@@ -177,11 +177,22 @@ Future<void> setupDependencyInjection() async {
     () => CreateStepByStepSimulationUseCase(getIt<AlgorithmRepository>()),
   );
 
-  // Providers
-  getIt.registerFactory<AutomatonProvider>(
-    () => AutomatonProvider(
+  // Controllers
+  getIt.registerLazySingleton<AutomatonCreationController>(
+    () => AutomatonCreationController(
       createAutomatonUseCase: getIt<CreateAutomatonUseCase>(),
       addStateUseCase: getIt<AddStateUseCase>(),
+    ),
+  );
+
+  getIt.registerLazySingleton<AutomatonSimulationController>(
+    () => AutomatonSimulationController(
+      simulateWordUseCase: getIt<SimulateWordUseCase>(),
+    ),
+  );
+
+  getIt.registerLazySingleton<AutomatonConversionController>(
+    () => AutomatonConversionController(
       nfaToDfaUseCase: getIt<NfaToDfaUseCase>(),
       minimizeDfaUseCase: getIt<MinimizeDfaUseCase>(),
       completeDfaUseCase: getIt<CompleteDfaUseCase>(),
@@ -189,8 +200,22 @@ Future<void> setupDependencyInjection() async {
       dfaToRegexUseCase: getIt<DfaToRegexUseCase>(),
       fsaToGrammarUseCase: getIt<FsaToGrammarUseCase>(),
       checkEquivalenceUseCase: getIt<CheckEquivalenceUseCase>(),
-      simulateWordUseCase: getIt<SimulateWordUseCase>(),
+    ),
+  );
+
+  getIt.registerLazySingleton<AutomatonLayoutController>(
+    () => AutomatonLayoutController(
       applyAutoLayoutUseCase: getIt<ApplyAutoLayoutUseCase>(),
+    ),
+  );
+
+  // Providers
+  getIt.registerFactory<AutomatonProvider>(
+    () => AutomatonProvider(
+      creationController: getIt<AutomatonCreationController>(),
+      simulationController: getIt<AutomatonSimulationController>(),
+      conversionController: getIt<AutomatonConversionController>(),
+      layoutController: getIt<AutomatonLayoutController>(),
     ),
   );
   

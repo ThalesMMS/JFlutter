@@ -1,6 +1,6 @@
-import '../../core/models/fsa.dart';
-import '../../core/models/grammar.dart';
-import '../../core/models/simulation_result.dart' as sim_result;
+import '../../../core/models/fsa.dart';
+import '../../../core/models/grammar.dart';
+import '../../../core/models/simulation_result.dart' as sim_result;
 
 class AutomatonState {
   final FSA? currentAutomaton;

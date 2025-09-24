@@ -14,6 +14,10 @@ import '../data/services/conversion_service.dart';
 import '../presentation/providers/automaton_provider.dart';
 import '../presentation/providers/algorithm_provider.dart';
 import '../presentation/providers/grammar_provider.dart';
+import '../presentation/providers/automaton/automaton_creation_controller.dart';
+import '../presentation/providers/automaton/automaton_simulation_controller.dart';
+import '../presentation/providers/automaton/automaton_conversion_controller.dart';
+import '../presentation/providers/automaton/automaton_layout_controller.dart';
 
 /// Global service locator instance
 final GetIt getIt = GetIt.instance;

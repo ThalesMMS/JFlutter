@@ -1,7 +1,13 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+
 import '../../core/models/fsa.dart';
 import '../../data/services/file_operations_service.dart';
+import 'algorithm_panel/algorithm_action_button.dart';
+import 'algorithm_panel/algorithm_progress_indicator.dart';
+import 'algorithm_panel/algorithm_step.dart';
+import 'algorithm_panel/algorithm_steps_list.dart';
+import 'algorithm_panel/equivalence_result_card.dart';
 
 /// Panel for algorithm operations and controls
 class AlgorithmPanel extends StatefulWidget {
@@ -75,108 +81,142 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
             const SizedBox(height: 12),
             
             // NFA to DFA conversion
-            _buildAlgorithmButton(
-              context,
+            AlgorithmActionButton(
               title: 'NFA to DFA',
               description: 'Convert non-deterministic to deterministic automaton',
               icon: Icons.transform,
               onPressed: () => _executeAlgorithm('NFA to DFA', widget.onNfaToDfa),
+              isExecuting: _isExecuting,
+              isCurrentAlgorithm: _currentAlgorithm == 'NFA to DFA',
+              executionProgress: _executionProgress,
+              executionStatus: _executionStatus,
             ),
             
             const SizedBox(height: 12),
             
             // DFA minimization
-            _buildAlgorithmButton(
-              context,
+            AlgorithmActionButton(
               title: 'Minimize DFA',
               description: 'Minimize deterministic finite automaton',
               icon: Icons.compress,
               onPressed: () => _executeAlgorithm('Minimize DFA', widget.onMinimizeDfa),
+              isExecuting: _isExecuting,
+              isCurrentAlgorithm: _currentAlgorithm == 'Minimize DFA',
+              executionProgress: _executionProgress,
+              executionStatus: _executionStatus,
             ),
 
             const SizedBox(height: 12),
 
             // Complete DFA
-            _buildAlgorithmButton(
-              context,
+            AlgorithmActionButton(
               title: 'Complete DFA',
               description: 'Add trap state to make DFA complete',
               icon: Icons.add_circle_outline,
               onPressed: () => _executeAlgorithm('Complete DFA', widget.onCompleteDfa),
+              isExecuting: _isExecuting,
+              isCurrentAlgorithm: _currentAlgorithm == 'Complete DFA',
+              executionProgress: _executionProgress,
+              executionStatus: _executionStatus,
             ),
 
             const SizedBox(height: 12),
             
             // FA to Regex conversion
-            _buildAlgorithmButton(
-              context,
+            AlgorithmActionButton(
               title: 'FA to Regex',
               description: 'Convert finite automaton to regular expression',
               icon: Icons.text_fields,
               onPressed: () => _executeAlgorithm('FA to Regex', widget.onFaToRegex),
+              isExecuting: _isExecuting,
+              isCurrentAlgorithm: _currentAlgorithm == 'FA to Regex',
+              executionProgress: _executionProgress,
+              executionStatus: _executionStatus,
             ),
 
             const SizedBox(height: 12),
 
             // FSA to Grammar conversion
-            _buildAlgorithmButton(
-              context,
+            AlgorithmActionButton(
               title: 'FSA to Grammar',
               description: 'Convert finite automaton to regular grammar',
               icon: Icons.transform,
               onPressed: () => _executeAlgorithm('FSA to Grammar', widget.onFsaToGrammar),
+              isExecuting: _isExecuting,
+              isCurrentAlgorithm: _currentAlgorithm == 'FSA to Grammar',
+              executionProgress: _executionProgress,
+              executionStatus: _executionStatus,
             ),
 
             const SizedBox(height: 12),
 
             // Auto Layout
-            _buildAlgorithmButton(
-              context,
+            AlgorithmActionButton(
               title: 'Auto Layout',
               description: 'Arrange states in a circle',
               icon: Icons.auto_awesome_motion,
               onPressed: widget.onAutoLayout,
+              isExecuting: _isExecuting,
+              isCurrentAlgorithm: _currentAlgorithm == 'Auto Layout',
+              executionProgress: _executionProgress,
+              executionStatus: _executionStatus,
             ),
 
             const SizedBox(height: 12),
 
             // Compare Equivalence
-            _buildAlgorithmButton(
-              context,
+            AlgorithmActionButton(
               title: 'Compare Equivalence',
               description: 'Compare two DFAs for equivalence',
               icon: Icons.compare_arrows,
               onPressed: _onCompareEquivalencePressed,
+              isExecuting: _isExecuting,
+              isCurrentAlgorithm: _currentAlgorithm == 'Compare Equivalence',
+              executionProgress: _executionProgress,
+              executionStatus: _executionStatus,
             ),
             
             const SizedBox(height: 12),
             
             // Clear automaton
-            _buildAlgorithmButton(
-              context,
+            AlgorithmActionButton(
               title: 'Clear',
               description: 'Clear current automaton',
               icon: Icons.clear,
               onPressed: widget.onClear,
               isDestructive: true,
+              isExecuting: _isExecuting,
+              isCurrentAlgorithm: _currentAlgorithm == 'Clear',
+              executionProgress: _executionProgress,
+              executionStatus: _executionStatus,
             ),
             
             // Progress indicator
             if (_isExecuting) ...[
               const SizedBox(height: 16),
-              _buildProgressIndicator(context),
+              AlgorithmProgressIndicator(
+                algorithmName: _currentAlgorithm,
+                progress: _executionProgress,
+                status: _executionStatus,
+              ),
             ],
             
             // Algorithm execution steps
             if (_algorithmSteps.isNotEmpty) ...[
               const SizedBox(height: 16),
-              _buildAlgorithmSteps(context),
+              AlgorithmStepsList(
+                steps: _algorithmSteps,
+                currentStepIndex: _currentStepIndex,
+              ),
             ],
 
             if (widget.equivalenceResult != null ||
                 (widget.equivalenceDetails?.isNotEmpty ?? false)) ...[
               const SizedBox(height: 16),
-              _buildEquivalenceResult(context),
+              EquivalenceResultCard(
+                result: widget.equivalenceResult,
+                details: widget.equivalenceDetails,
+              ),
             ],
           ],
         ),
@@ -225,256 +265,6 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
           ],
         ),
       ],
-    );
-  }
-
-  Widget _buildAlgorithmButton(
-    BuildContext context, {
-    required String title,
-    required String description,
-    required IconData icon,
-    VoidCallback? onPressed,
-    bool isDestructive = false,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final color = isDestructive ? colorScheme.error : colorScheme.primary;
-    final isCurrentAlgorithm = _currentAlgorithm == title;
-    final isDisabled = (_isExecuting && !isCurrentAlgorithm) || onPressed == null;
-    
-    return InkWell(
-      onTap: isDisabled ? null : onPressed,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: isCurrentAlgorithm 
-                ? color
-                : color.withOpacity(0.3),
-            width: isCurrentAlgorithm ? 2 : 1,
-          ),
-          borderRadius: BorderRadius.circular(8),
-          color: isCurrentAlgorithm 
-              ? color.withOpacity(0.1)
-              : isDisabled 
-                  ? colorScheme.surfaceVariant.withOpacity(0.5)
-                  : null,
-        ),
-        child: Row(
-          children: [
-            if (isCurrentAlgorithm && _isExecuting)
-              SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(color),
-                ),
-              )
-            else
-              Icon(
-                icon,
-                color: isDisabled 
-                    ? colorScheme.outline.withOpacity(0.5)
-                    : color,
-                size: 24,
-              ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: isDisabled 
-                          ? colorScheme.outline.withOpacity(0.5)
-                          : color,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    isCurrentAlgorithm && _executionStatus != null
-                        ? _executionStatus!
-                        : description,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: isDisabled 
-                          ? colorScheme.outline.withOpacity(0.5)
-                          : colorScheme.onSurface.withOpacity(0.7),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (isCurrentAlgorithm && _isExecuting)
-              Text(
-                '${(_executionProgress * 100).toInt()}%',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
-              )
-            else
-              Icon(
-                Icons.arrow_forward_ios,
-                color: isDisabled 
-                    ? colorScheme.outline.withOpacity(0.5)
-                    : color.withOpacity(0.5),
-                size: 16,
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProgressIndicator(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.auto_awesome,
-                color: Theme.of(context).colorScheme.primary,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Executing $_currentAlgorithm',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          LinearProgressIndicator(
-            value: _executionProgress,
-            backgroundColor: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-            valueColor: AlwaysStoppedAnimation<Color>(
-              Theme.of(context).colorScheme.primary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _executionStatus ?? 'Processing...',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAlgorithmSteps(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Algorithm Steps',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            height: 200,
-            child: ListView.builder(
-              itemCount: _algorithmSteps.length,
-              itemBuilder: (context, index) {
-                final step = _algorithmSteps[index];
-                final isCurrentStep = index == _currentStepIndex;
-                final isCompleted = index < _currentStepIndex;
-                
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: isCurrentStep 
-                        ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
-                        : isCompleted
-                            ? Theme.of(context).colorScheme.surface
-                            : null,
-                    border: Border.all(
-                      color: isCurrentStep 
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.outline.withOpacity(0.2),
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 12,
-                        backgroundColor: isCompleted
-                            ? Colors.green
-                            : isCurrentStep
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.outline.withOpacity(0.3),
-                        child: isCompleted
-                            ? const Icon(Icons.check, size: 16, color: Colors.white)
-                            : Text(
-                                '${index + 1}',
-                                style: TextStyle(
-                                  color: isCurrentStep 
-                                      ? Theme.of(context).colorScheme.onPrimary
-                                      : Theme.of(context).colorScheme.onSurface,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              step.title,
-                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              step.description,
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (isCurrentStep)
-                        SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -559,61 +349,6 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
         SnackBar(content: Text('Comparison failed: $e')),
       );
     }
-  }
-
-  Widget _buildEquivalenceResult(BuildContext context) {
-    final result = widget.equivalenceResult;
-    final message = widget.equivalenceDetails ?? '';
-    final theme = Theme.of(context);
-    final Color accent;
-    IconData icon;
-
-    if (result == null) {
-      accent = theme.colorScheme.secondary;
-      icon = Icons.info_outline;
-    } else if (result) {
-      accent = Colors.green;
-      icon = Icons.check_circle;
-    } else {
-      accent = Colors.red;
-      icon = Icons.cancel;
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: accent.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: accent.withOpacity(0.4)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: accent),
-              const SizedBox(width: 8),
-              Text(
-                result == null
-                    ? 'Equivalence comparison'
-                    : result
-                        ? 'Automata are equivalent'
-                        : 'Automata are not equivalent',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: accent,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          if (message.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(message, style: theme.textTheme.bodyMedium),
-          ],
-        ],
-      ),
-    );
   }
 
   void _executeAlgorithm(String algorithmName, VoidCallback? callback) {
@@ -751,15 +486,3 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
   }
 }
 
-/// Data class for algorithm execution steps
-class AlgorithmStep {
-  final String title;
-  final String description;
-  final Map<String, dynamic>? data;
-
-  AlgorithmStep({
-    required this.title,
-    required this.description,
-    this.data,
-  });
-}

@@ -3,7 +3,7 @@
 ## Latest Coverage Execution
 - **Command**: `flutter test --coverage`
 - **Execution Time**: 2025-09-23T10:10:08Z (UTC) *(container clock)*
-- **Result**: ❌ Failed — Flutter SDK is not available in the current container (`bash: command not found: flutter`). No coverage artefacts were generated. The next run must either install Flutter locally or download the coverage report produced by CI before updating this section with execution metrics.
+- **Result**: ❌ Failed — Flutter SDK is not available in the current container (`bash: command not found: flutter`). No coverage artefacts were generated. The next run must either install Flutter locally or download the coverage report produced by CI (`make ci` / `scripts/ci_pipeline.sh`) before updating this section with execution metrics.
 
 ## Test Suite Inventory (2025-09-23)
 The current `test/` tree contains 41 Dart test files (matching the `*_test.dart` pattern). Distribution by domain:

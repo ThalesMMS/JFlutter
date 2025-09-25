@@ -132,8 +132,8 @@ lib/
 git clone https://github.com/ThalesMMS/jflutter.git
 cd jflutter
 
-# Install dependencies
-flutter pub get
+# Install dependencies for the app and local packages
+make install
 
 # Run the app
 flutter run
@@ -209,6 +209,11 @@ JFlutter includes a comprehensive testing suite with multiple layers of validati
 ```bash
 # Run the full automated test suite (contract, integration, widget, and unit tests)
 flutter test
+
+# Execute the standardized CI pipeline (format, analyze, test, platform builds)
+make ci
+# or run the shell script directly (auto-detects supported platform builds)
+./scripts/ci_pipeline.sh
 
 # Run targeted suites
 flutter test test/contract/                # Service contract coverage

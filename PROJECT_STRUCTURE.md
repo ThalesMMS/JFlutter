@@ -72,6 +72,9 @@ jflutter/
 ├── windows/                       # Windows desktop runner
 ├── linux/                         # Linux desktop runner
 ├── macos/                         # macOS desktop runner
+├── scripts/                       # Automation helpers and CI entrypoints
+│   ├── cleanup_duplication.dart   # Legacy script for pruning duplicated tests
+│   └── ci_pipeline.sh             # Unified CI entrypoint (format/analyze/test/build)
 ├── pubspec.yaml                   # Project dependencies and metadata
 ├── analysis_options.yaml          # Static analysis configuration
 ├── README.md                      # Project documentation

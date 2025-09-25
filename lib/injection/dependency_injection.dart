@@ -18,12 +18,17 @@ import '../presentation/providers/automaton/automaton_creation_controller.dart';
 import '../presentation/providers/automaton/automaton_simulation_controller.dart';
 import '../presentation/providers/automaton/automaton_conversion_controller.dart';
 import '../presentation/providers/automaton/automaton_layout_controller.dart';
+import 'app_configuration.dart';
+import 'app_configuration_model.dart';
 
 /// Global service locator instance
 final GetIt getIt = GetIt.instance;
 
 /// Sets up dependency injection for the application
 Future<void> setupDependencyInjection() async {
+  final appConfiguration = resolveAppConfiguration();
+  getIt.registerSingleton<AppConfiguration>(appConfiguration);
+
   // Data Sources
   getIt.registerLazySingleton<LocalStorageDataSource>(
     () => LocalStorageDataSource(),
@@ -35,7 +40,9 @@ Future<void> setupDependencyInjection() async {
 
   // Services
   getIt.registerLazySingleton<AutomatonService>(
-    () => AutomatonService(),
+    () => AutomatonService(
+      baseUrl: getIt<AppConfiguration>().apiBaseUrl,
+    ),
   );
   
   getIt.registerLazySingleton<SimulationService>(

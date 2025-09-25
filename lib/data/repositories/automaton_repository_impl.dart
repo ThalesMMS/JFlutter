@@ -11,10 +11,14 @@ class AutomatonRepositoryImpl {
   final AutomatonService _service;
   final AutomatonStorage _storage;
 
-  AutomatonRepositoryImpl({
-    required AutomatonService service,
-    required AutomatonStorage storage,
-  }) : _service = service, _storage = storage;
+  /// Creates an [AutomatonRepositoryImpl] using the provided [service]. When no
+  /// storage implementation is supplied, an in-memory cache is used so legacy
+  /// call sites keep working without having to wire the storage explicitly.
+  AutomatonRepositoryImpl(
+    AutomatonService service, {
+    AutomatonStorage? storage,
+  })  : _service = service,
+        _storage = storage ?? AutomatonStorageFactory.createInMemory();
 
   /// Get all automata
   Future<List<FiniteAutomaton>> getAllAutomata() async {

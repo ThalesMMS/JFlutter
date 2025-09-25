@@ -43,52 +43,52 @@
 - Paths shown below assume single project - adjust based on plan.md structure
 
 ## Phase 3.1: Setup
-- [ ] T001 Create project structure per implementation plan
-- [ ] T002 Initialize [language] project with [framework] dependencies
-- [ ] T003 [P] Configure linting and formatting tools
+- [ ] T001 Create Flutter project structure per implementation plan
+- [ ] T002 Initialize Flutter project with Riverpod, freezed, json_serializable dependencies
+- [ ] T003 [P] Configure linting (very_good_analysis) and formatting tools
+- [ ] T004 [P] Set up clean architecture folder structure (presentation/core/data)
 
 ## Phase 3.2: Tests First (TDD) ⚠️ MUST COMPLETE BEFORE 3.3
 **CRITICAL: These tests MUST be written and MUST FAIL before ANY implementation**
-- [ ] T004 [P] Contract test POST /api/users in tests/contract/test_users_post.py
-- [ ] T005 [P] Contract test GET /api/users/{id} in tests/contract/test_users_get.py
-- [ ] T006 [P] Integration test user registration in tests/integration/test_registration.py
-- [ ] T007 [P] Integration test auth flow in tests/integration/test_auth.py
+- [ ] T005 [P] Unit test automaton models in test/unit/models/test_automaton.dart
+- [ ] T006 [P] Unit test algorithm implementations in test/unit/algorithms/test_conversion.dart
+- [ ] T007 [P] Integration test automaton creation workflow in test/integration/test_automaton_creation.dart
+- [ ] T008 [P] Widget test main UI components in test/widget/test_automaton_canvas.dart
 
 ## Phase 3.3: Core Implementation (ONLY after tests are failing)
-- [ ] T008 [P] User model in src/models/user.py
-- [ ] T009 [P] UserService CRUD in src/services/user_service.py
-- [ ] T010 [P] CLI --create-user in src/cli/user_commands.py
-- [ ] T011 POST /api/users endpoint
-- [ ] T012 GET /api/users/{id} endpoint
-- [ ] T013 Input validation
-- [ ] T014 Error handling and logging
+- [ ] T009 [P] Automaton models with freezed in lib/core/models/automaton.dart
+- [ ] T010 [P] Algorithm services in lib/core/algorithms/
+- [ ] T011 [P] Riverpod providers for state management in lib/presentation/providers/
+- [ ] T012 [P] JSON serialization with json_serializable in lib/data/models/
+- [ ] T013 [P] Input validation and error handling
+- [ ] T014 [P] Mobile-optimized UI components in lib/presentation/widgets/
 
 ## Phase 3.4: Integration
-- [ ] T015 Connect UserService to DB
-- [ ] T016 Auth middleware
-- [ ] T017 Request/response logging
-- [ ] T018 CORS and security headers
+- [ ] T015 [P] File I/O operations (.jff import/export) in lib/data/repositories/
+- [ ] T016 [P] Canvas rendering and touch gesture handling
+- [ ] T017 [P] Algorithm visualization and step-by-step execution
+- [ ] T018 [P] Mobile responsiveness and accessibility features
 
 ## Phase 3.5: Polish
-- [ ] T019 [P] Unit tests for validation in tests/unit/test_validation.py
-- [ ] T020 Performance tests (<200ms)
-- [ ] T021 [P] Update docs/api.md
-- [ ] T022 Remove duplication
-- [ ] T023 Run manual-testing.md
+- [ ] T019 [P] Golden tests for UI components in test/widget/
+- [ ] T020 [P] Performance tests (60fps canvas, >10k simulation steps)
+- [ ] T021 [P] Update README.md and API documentation
+- [ ] T022 [P] Code cleanup and remove duplication
+- [ ] T023 [P] Run flutter test --coverage and analyze
 
 ## Dependencies
-- Tests (T004-T007) before implementation (T008-T014)
-- T008 blocks T009, T015
-- T016 blocks T018
+- Tests (T005-T008) before implementation (T009-T014)
+- T009 (models) blocks T010 (algorithms), T015 (file I/O)
+- T011 (providers) blocks T016 (canvas rendering)
 - Implementation before polish (T019-T023)
 
 ## Parallel Example
 ```
-# Launch T004-T007 together:
-Task: "Contract test POST /api/users in tests/contract/test_users_post.py"
-Task: "Contract test GET /api/users/{id} in tests/contract/test_users_get.py"
-Task: "Integration test registration in tests/integration/test_registration.py"
-Task: "Integration test auth in tests/integration/test_auth.py"
+# Launch T005-T008 together:
+Task: "Unit test automaton models in test/unit/models/test_automaton.dart"
+Task: "Unit test algorithm implementations in test/unit/algorithms/test_conversion.dart"
+Task: "Integration test automaton creation in test/integration/test_automaton_creation.dart"
+Task: "Widget test main UI components in test/widget/test_automaton_canvas.dart"
 ```
 
 ## Notes

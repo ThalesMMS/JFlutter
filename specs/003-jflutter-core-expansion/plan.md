@@ -1,8 +1,8 @@
 
-# Implementation Plan: [FEATURE]
+# Implementation Plan: JFlutter Core Expansion and Interoperability
 
-**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
-**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
+**Branch**: `003-jflutter-core-expansion` | **Date**: 2025-01-27 | **Spec**: `/specs/003-jflutter-core-expansion/spec.md`
+**Input**: Feature specification from `/specs/003-jflutter-core-expansion/spec.md`
 
 ## Execution Flow (/plan command scope)
 ```
@@ -31,54 +31,54 @@
 - Phase 3-4: Implementation execution (manual or via tools)
 
 ## Summary
-[Extract from feature spec: primary requirement + technical approach from research]
+Comprehensive expansion of JFlutter core functionality including complete finite automata language operations, robust pushdown automata simulation, advanced regex/CFG processing, single-tape Turing machine capabilities, unified modeling architecture with pure Dart packages, and seamless interoperability with JFLAP files. Technical approach focuses on clean architecture with progressive package extraction, immutable data models, comprehensive testing, and mobile-first educational UX.
 
 ## Technical Context
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
-**Project Type**: [single/web/mobile - determines source structure]  
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
-**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+**Language/Version**: Flutter 3.16+ / Dart 3.0+  
+**Primary Dependencies**: Riverpod (state management), freezed (immutability), json_serializable (serialization), very_good_analysis (linting), PetitParser (regex parsing)  
+**Storage**: Local file system (.jff import/export), JSON serialization, in-memory automaton models  
+**Testing**: flutter test (unit/integration/widget), golden tests, property-based testing, regression testing  
+**Target Platform**: Android, iOS, Web, Desktop (Flutter multi-platform)  
+**Project Type**: mobile (Flutter app with clean architecture)  
+**Performance Goals**: 60fps canvas rendering, >10k simulation steps responsive, <200ms algorithm execution  
+**Constraints**: Offline-capable, mobile-first UX, educational focus, no backend dependencies  
+**Scale/Scope**: 10-20 canonical examples, 48 functional requirements, 7 core packages, comprehensive automata coverage
 
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
 ### Educational Focus Compliance
-- [ ] Feature aligns with formal language theory curriculum
-- [ ] Mobile-first UX design approach
-- [ ] No backend dependencies required
-- [ ] Educational value clearly defined
+- [x] Feature aligns with formal language theory curriculum
+- [x] Mobile-first UX design approach
+- [x] No backend dependencies required
+- [x] Educational value clearly defined
 
 ### Technical Standards Compliance
-- [ ] Flutter 3.16+ / Dart 3.0+ compatibility
-- [ ] Clean architecture (Presentation/Core/Data) structure
-- [ ] Riverpod state management approach
-- [ ] Immutable models with freezed/sealed classes
-- [ ] JSON serialization for DTOs
+- [x] Flutter 3.16+ / Dart 3.0+ compatibility
+- [x] Clean architecture (Presentation/Core/Data) structure
+- [x] Riverpod state management approach
+- [x] Immutable models with freezed/sealed classes
+- [x] JSON serialization for DTOs
 
 ### Quality & Testing Compliance
-- [ ] Comprehensive test coverage planned (unit, integration, widget, golden)
-- [ ] Static analysis and linting configured
-- [ ] Performance budgets defined (>60fps, >10k steps responsive)
-- [ ] Deterministic algorithm testing approach
-- [ ] Immutable trace recording capability
+- [x] Comprehensive test coverage planned (unit, integration, widget, golden)
+- [x] Static analysis and linting configured
+- [x] Performance budgets defined (>60fps, >10k steps responsive)
+- [x] Deterministic algorithm testing approach
+- [x] Immutable trace recording capability
 
 ### Mobile & Accessibility Compliance
-- [ ] Touch gesture support (pinch, pan, tap)
-- [ ] Material 3 design principles
-- [ ] Collapsible panels for space efficiency
-- [ ] Overflow prevention for small screens
-- [ ] Basic accessibility (labels, contrast)
+- [x] Touch gesture support (pinch, pan, tap)
+- [x] Material 3 design principles
+- [x] Collapsible panels for space efficiency
+- [x] Overflow prevention for small screens
+- [x] Basic accessibility (labels, contrast)
 
 ### Security & File Handling Compliance
-- [ ] Sandboxed file operations
-- [ ] Input validation for external files
-- [ ] No dynamic code execution
-- [ ] Path traversal prevention
+- [x] Sandboxed file operations
+- [x] Input validation for external files
+- [x] No dynamic code execution
+- [x] Path traversal prevention
 
 ## Project Structure
 
@@ -130,7 +130,7 @@ ios/ or android/
 └── [platform-specific structure]
 ```
 
-**Structure Decision**: [DEFAULT to Option 1 unless Technical Context indicates web/mobile app]
+**Structure Decision**: Option 3 (Mobile + API) - Flutter mobile app with clean architecture packages
 
 ## Phase 0: Outline & Research
 1. **Extract unknowns from Technical Context** above:
@@ -192,17 +192,26 @@ ios/ or android/
 **Task Generation Strategy**:
 - Load `.specify/templates/tasks-template.md` as base
 - Generate tasks from Phase 1 design docs (contracts, data model, quickstart)
-- Each contract → contract test task [P]
-- Each entity → model creation task [P] 
-- Each user story → integration test task
+- Each contract endpoint → contract test task [P]
+- Each entity from data model → model creation task [P] 
+- Each user story from quickstart → integration test task
+- Package extraction tasks for core_fa, core_pda, core_tm, core_regex
+- Algorithm implementation tasks for language operations
+- UI component tasks for mobile-first design
 - Implementation tasks to make tests pass
 
 **Ordering Strategy**:
 - TDD order: Tests before implementation 
-- Dependency order: Models before services before UI
-- Mark [P] for parallel execution (independent files)
+- Dependency order: Models → Algorithms → Services → UI
+- Package order: core entities → core algorithms → conversions → serializers → viz → playground
+- Mark [P] for parallel execution (independent files/packages)
 
-**Estimated Output**: 25-30 numbered, ordered tasks in tasks.md
+**Estimated Output**: 35-40 numbered, ordered tasks in tasks.md covering:
+- 8 contract test tasks (one per API endpoint)
+- 15 entity model tasks (core entities + execution/trace entities)
+- 12 algorithm implementation tasks (language operations, conversions, property checking)
+- 8 package extraction tasks (core packages + utilities)
+- 5 integration test tasks (user scenarios from quickstart)
 
 **IMPORTANT**: This phase is executed by the /tasks command, NOT by /plan
 
@@ -226,17 +235,17 @@ ios/ or android/
 *This checklist is updated during execution flow*
 
 **Phase Status**:
-- [ ] Phase 0: Research complete (/plan command)
-- [ ] Phase 1: Design complete (/plan command)
-- [ ] Phase 2: Task planning complete (/plan command - describe approach only)
+- [x] Phase 0: Research complete (/plan command)
+- [x] Phase 1: Design complete (/plan command)
+- [x] Phase 2: Task planning complete (/plan command - describe approach only)
 - [ ] Phase 3: Tasks generated (/tasks command)
 - [ ] Phase 4: Implementation complete
 - [ ] Phase 5: Validation passed
 
 **Gate Status**:
-- [ ] Initial Constitution Check: PASS
-- [ ] Post-Design Constitution Check: PASS
-- [ ] All NEEDS CLARIFICATION resolved
+- [x] Initial Constitution Check: PASS
+- [x] Post-Design Constitution Check: PASS
+- [x] All NEEDS CLARIFICATION resolved
 - [ ] Complexity deviations documented
 
 ---

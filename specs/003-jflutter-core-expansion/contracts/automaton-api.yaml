@@ -1,0 +1,690 @@
+openapi: 3.0.3
+info:
+  title: JFlutter Automaton API
+  description: Core API contracts for finite automata, pushdown automata, Turing machines, and context-free grammars
+  version: 1.0.0
+  contact:
+    name: JFlutter Team
+    email: thalesmmsradio@gmail.com
+
+servers:
+  - url: /api/v1
+    description: JFlutter Core API
+
+paths:
+  /automata:
+    get:
+      summary: List all automata
+      description: Retrieve all automata in the system
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AutomatonSummary'
+    post:
+      summary: Create new automaton
+      description: Create a new automaton of specified type
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAutomatonRequest'
+      responses:
+        '201':
+          description: Automaton created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Automaton'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /automata/{automatonId}:
+    get:
+      summary: Get automaton by ID
+      description: Retrieve a specific automaton by its ID
+      parameters:
+        - name: automatonId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique automaton identifier
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Automaton'
+        '404':
+          description: Automaton not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Update automaton
+      description: Update an existing automaton
+      parameters:
+        - name: automatonId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAutomatonRequest'
+      responses:
+        '200':
+          description: Automaton updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Automaton'
+        '404':
+          description: Automaton not found
+        '400':
+          description: Invalid request
+    delete:
+      summary: Delete automaton
+      description: Delete an automaton by ID
+      parameters:
+        - name: automatonId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Automaton deleted successfully
+        '404':
+          description: Automaton not found
+
+  /automata/{automatonId}/simulate:
+    post:
+      summary: Simulate automaton
+      description: Run simulation on automaton with input string
+      parameters:
+        - name: automatonId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulationRequest'
+      responses:
+        '200':
+          description: Simulation completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulationResult'
+        '404':
+          description: Automaton not found
+        '400':
+          description: Invalid simulation request
+
+  /automata/{automatonId}/algorithms:
+    post:
+      summary: Run algorithm on automaton
+      description: Execute specified algorithm on automaton
+      parameters:
+        - name: automatonId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlgorithmRequest'
+      responses:
+        '200':
+          description: Algorithm executed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlgorithmResult'
+        '404':
+          description: Automaton not found
+        '400':
+          description: Invalid algorithm request
+
+  /automata/operations:
+    post:
+      summary: Perform language operation
+      description: Execute language operation on multiple automata
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LanguageOperationRequest'
+      responses:
+        '200':
+          description: Operation completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LanguageOperationResult'
+        '400':
+          description: Invalid operation request
+
+  /import/jff:
+    post:
+      summary: Import JFLAP file
+      description: Import automaton from JFLAP .jff file format
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: JFLAP .jff file
+      responses:
+        '200':
+          description: File imported successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportResult'
+        '400':
+          description: Invalid file format
+        '422':
+          description: File validation failed
+
+  /export/{automatonId}/jff:
+    get:
+      summary: Export to JFLAP format
+      description: Export automaton to JFLAP .jff file format
+      parameters:
+        - name: automatonId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Export successful
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Automaton not found
+
+  /export/{automatonId}/json:
+    get:
+      summary: Export to JSON format
+      description: Export automaton to JSON format
+      parameters:
+        - name: automatonId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Export successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Automaton'
+        '404':
+          description: Automaton not found
+
+components:
+  schemas:
+    Automaton:
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - states
+        - transitions
+        - alphabet
+        - metadata
+      properties:
+        id:
+          type: string
+          description: Unique automaton identifier
+        name:
+          type: string
+          description: User-defined name
+        type:
+          $ref: '#/components/schemas/AutomatonType'
+        states:
+          type: array
+          items:
+            $ref: '#/components/schemas/State'
+        transitions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transition'
+        initialState:
+          type: string
+          nullable: true
+          description: Initial state ID
+        acceptingStates:
+          type: array
+          items:
+            type: string
+          description: Accepting state IDs
+        alphabet:
+          $ref: '#/components/schemas/Alphabet'
+        metadata:
+          $ref: '#/components/schemas/AutomatonMetadata'
+
+    AutomatonSummary:
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - stateCount
+        - transitionCount
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/AutomatonType'
+        stateCount:
+          type: integer
+          minimum: 0
+        transitionCount:
+          type: integer
+          minimum: 0
+        createdAt:
+          type: string
+          format: date-time
+
+    AutomatonType:
+      type: string
+      enum:
+        - FA
+        - NFA
+        - DFA
+        - PDA
+        - TM
+        - CFG
+        - REGEX
+
+    State:
+      type: object
+      required:
+        - id
+        - name
+        - position
+      properties:
+        id:
+          type: string
+          description: Unique state identifier
+        name:
+          type: string
+          description: State name
+        position:
+          $ref: '#/components/schemas/Position'
+        isInitial:
+          type: boolean
+          default: false
+        isAccepting:
+          type: boolean
+          default: false
+
+    Transition:
+      type: object
+      required:
+        - id
+        - fromState
+        - toState
+        - symbol
+      properties:
+        id:
+          type: string
+          description: Unique transition identifier
+        fromState:
+          type: string
+          description: Source state ID
+        toState:
+          type: string
+          description: Target state ID
+        symbol:
+          type: string
+          description: Transition symbol
+        label:
+          type: string
+          description: Optional transition label
+
+    PDATransition:
+      allOf:
+        - $ref: '#/components/schemas/Transition'
+        - type: object
+          required:
+            - stackPop
+            - stackPush
+          properties:
+            stackPop:
+              type: string
+              description: Symbol to pop from stack
+            stackPush:
+              type: array
+              items:
+                type: string
+              description: Symbols to push onto stack
+
+    TMTransition:
+      allOf:
+        - $ref: '#/components/schemas/Transition'
+        - type: object
+          required:
+            - tapeRead
+            - tapeWrite
+            - moveDirection
+          properties:
+            tapeRead:
+              type: string
+              description: Symbol read from tape
+            tapeWrite:
+              type: string
+              description: Symbol to write to tape
+            moveDirection:
+              $ref: '#/components/schemas/MoveDirection'
+
+    MoveDirection:
+      type: string
+      enum:
+        - LEFT
+        - RIGHT
+        - STAY
+
+    Position:
+      type: object
+      required:
+        - x
+        - y
+      properties:
+        x:
+          type: number
+          description: X coordinate
+        y:
+          type: number
+          description: Y coordinate
+
+    Alphabet:
+      type: object
+      required:
+        - symbols
+      properties:
+        symbols:
+          type: array
+          items:
+            type: string
+          description: Alphabet symbols
+        isCaseSensitive:
+          type: boolean
+          default: false
+
+    AutomatonMetadata:
+      type: object
+      required:
+        - createdAt
+        - createdBy
+      properties:
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+          description: User who created the automaton
+        description:
+          type: string
+          description: Optional description
+        tags:
+          type: array
+          items:
+            type: string
+          description: Optional tags
+
+    CreateAutomatonRequest:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/AutomatonType'
+        description:
+          type: string
+
+    UpdateAutomatonRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        states:
+          type: array
+          items:
+            $ref: '#/components/schemas/State'
+        transitions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transition'
+
+    SimulationRequest:
+      type: object
+      required:
+        - inputString
+      properties:
+        inputString:
+          type: string
+          description: Input string to simulate
+        maxSteps:
+          type: integer
+          minimum: 1
+          maximum: 10000
+          default: 1000
+          description: Maximum simulation steps
+
+    SimulationResult:
+      type: object
+      required:
+        - traceId
+        - isAccepting
+        - executionTime
+      properties:
+        traceId:
+          type: string
+          description: Execution trace ID
+        isAccepting:
+          type: boolean
+          description: Whether input was accepted
+        executionTime:
+          type: integer
+          description: Execution time in milliseconds
+        stepsExecuted:
+          type: integer
+          description: Number of steps executed
+        errorMessage:
+          type: string
+          nullable: true
+          description: Error message if simulation failed
+
+    AlgorithmRequest:
+      type: object
+      required:
+        - algorithmType
+      properties:
+        algorithmType:
+          $ref: '#/components/schemas/AlgorithmType'
+        parameters:
+          type: object
+          description: Algorithm-specific parameters
+
+    AlgorithmType:
+      type: string
+      enum:
+        - NFA_TO_DFA
+        - MINIMIZE_DFA
+        - REGEX_TO_NFA
+        - FA_TO_REGEX
+        - CFG_TO_PDA
+        - PDA_TO_CFG
+        - CHECK_EQUIVALENCE
+        - CHECK_EMPTINESS
+        - CHECK_FINITENESS
+
+    AlgorithmResult:
+      type: object
+      required:
+        - resultId
+        - algorithmType
+        - result
+      properties:
+        resultId:
+          type: string
+        algorithmType:
+          $ref: '#/components/schemas/AlgorithmType'
+        result:
+          $ref: '#/components/schemas/AlgorithmResultType'
+        outputAutomaton:
+          type: string
+          nullable: true
+          description: Output automaton ID
+        executionTime:
+          type: integer
+          description: Execution time in milliseconds
+        proof:
+          type: string
+          nullable: true
+          description: Mathematical proof of correctness
+
+    AlgorithmResultType:
+      type: string
+      enum:
+        - SUCCESS
+        - FAILURE
+        - PARTIAL_SUCCESS
+
+    LanguageOperationRequest:
+      type: object
+      required:
+        - operation
+        - inputAutomata
+      properties:
+        operation:
+          $ref: '#/components/schemas/LanguageOperation'
+        inputAutomata:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          maxItems: 2
+          description: Input automaton IDs
+
+    LanguageOperation:
+      type: string
+      enum:
+        - UNION
+        - INTERSECTION
+        - COMPLEMENT
+        - DIFFERENCE
+        - CONCATENATION
+        - KLEENE_STAR
+        - REVERSE
+        - SHUFFLE
+
+    LanguageOperationResult:
+      type: object
+      required:
+        - resultId
+        - operation
+        - result
+      properties:
+        resultId:
+          type: string
+        operation:
+          $ref: '#/components/schemas/LanguageOperation'
+        result:
+          $ref: '#/components/schemas/AlgorithmResultType'
+        outputAutomaton:
+          type: string
+          description: Output automaton ID
+        executionTime:
+          type: integer
+          description: Execution time in milliseconds
+
+    ImportResult:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          $ref: '#/components/schemas/ImportStatus'
+        automatonId:
+          type: string
+          nullable: true
+          description: Imported automaton ID
+        warnings:
+          type: array
+          items:
+            type: string
+          description: Import warnings
+        errors:
+          type: array
+          items:
+            type: string
+          description: Import errors
+
+    ImportStatus:
+      type: string
+      enum:
+        - SUCCESS
+        - PARTIAL_SUCCESS
+        - FAILURE
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          description: Additional error details

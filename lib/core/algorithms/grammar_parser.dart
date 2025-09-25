@@ -4,7 +4,7 @@ import '../models/parse_table.dart';
 import '../result.dart';
 
 /// Parses strings using context-free grammars
-enum ParsingStrategyHint { auto, bruteForce, cyk, ll, lr }
+enum ParsingStrategyHint { auto, cyk, ll }
 
 typedef _ParsingStrategy = ParseResult? Function(
   Grammar grammar,
@@ -119,108 +119,27 @@ class GrammarParser {
 
   static List<_ParsingStrategy> _resolveStrategies(ParsingStrategyHint hint) {
     switch (hint) {
-      case ParsingStrategyHint.bruteForce:
-        return [_parseWithBruteForce];
       case ParsingStrategyHint.cyk:
         return [_parseWithCYK];
       case ParsingStrategyHint.ll:
         return [_parseWithLL];
-      case ParsingStrategyHint.lr:
-        return [_parseWithLR];
       case ParsingStrategyHint.auto:
       default:
         return [
-          _parseWithBruteForce,
           _parseWithCYK,
           _parseWithLL,
-          _parseWithLR,
         ];
     }
   }
 
   static String _strategyDisplayName(ParsingStrategyHint hint) {
     switch (hint) {
-      case ParsingStrategyHint.bruteForce:
-        return 'brute force';
       case ParsingStrategyHint.cyk:
         return 'CYK';
       case ParsingStrategyHint.ll:
         return 'LL';
-      case ParsingStrategyHint.lr:
-        return 'LR';
       case ParsingStrategyHint.auto:
         return 'auto';
-    }
-  }
-
-  /// Parses using brute force (exhaustive search)
-  static ParseResult? _parseWithBruteForce(
-    Grammar grammar,
-    String inputString,
-    Duration timeout,
-  ) {
-    final startTime = DateTime.now();
-    
-    // Check timeout
-    if (DateTime.now().difference(startTime) > timeout) {
-      return null;
-    }
-    
-    // Simple brute force: try all possible derivations
-    final derivations = <List<String>>[];
-    _findDerivations(grammar, [grammar.startSymbol!], inputString, derivations, timeout);
-    
-    if (derivations.isNotEmpty) {
-      return ParseResult.success(
-        inputString: inputString,
-        derivations: derivations,
-        executionTime: DateTime.now().difference(startTime),
-      );
-    }
-    
-    return null;
-  }
-
-  /// Recursively finds derivations
-  static void _findDerivations(
-    Grammar grammar,
-    List<String> currentDerivation,
-    String targetString,
-    List<List<String>> derivations,
-    Duration timeout,
-  ) {
-    final startTime = DateTime.now();
-    
-    // Check timeout
-    if (DateTime.now().difference(startTime) > timeout) {
-      return;
-    }
-    
-    // Check if current derivation matches target
-    final currentString = currentDerivation.join('');
-    if (currentString == targetString) {
-      derivations.add(List.from(currentDerivation));
-      return;
-    }
-    
-    // Check if current derivation is too long
-    if (currentString.length > targetString.length) {
-      return;
-    }
-    
-    // Try all possible productions
-    for (int i = 0; i < currentDerivation.length; i++) {
-      final symbol = currentDerivation[i];
-      if (grammar.nonTerminals.contains(symbol)) {
-        final productions = grammar.productions.where((p) => p.leftSide.isNotEmpty && p.leftSide.first == symbol).toList();
-        for (final production in productions) {
-          final newDerivation = List<String>.from(currentDerivation);
-          newDerivation.removeAt(i);
-          newDerivation.insertAll(i, production.rightSide);
-          
-          _findDerivations(grammar, newDerivation, targetString, derivations, timeout);
-        }
-      }
     }
   }
 
@@ -409,18 +328,21 @@ class GrammarParser {
       
       for (final terminal in firstSet) {
         if (grammar.terminals.contains(terminal)) {
-          table[leftSide]![terminal] = ParseAction(type: ParseActionType.reduce, stateNumber: 0, production: production);
+          table[leftSide.first]![terminal] =
+              ParseAction(type: ParseActionType.reduce, production: production);
         }
       }
     }
     
     return ParseTable(
-      actionTable: table.map((key, value) => MapEntry(key, value.map((k, v) => MapEntry(k, ParseAction(
-        type: v.type,
-        stateNumber: v.stateNumber,
-        production: v.production,
-      ))))),
-      gotoTable: {}, // Tabela goto não é usada em LL
+      actionTable: table.map((key, value) => MapEntry(
+          key,
+          value.map((k, v) => MapEntry(
+              k,
+              ParseAction(
+                type: v.type,
+                production: v.production,
+              ))))),
       grammar: grammar,
       type: ParseType.ll,
     );
@@ -447,175 +369,6 @@ class GrammarParser {
     }
     
     return first;
-  }
-
-  /// Parses using LR parsing
-  static ParseResult? _parseWithLR(
-    Grammar grammar,
-    String inputString,
-    Duration timeout,
-  ) {
-    final startTime = DateTime.now();
-    
-    // Check timeout
-    if (DateTime.now().difference(startTime) > timeout) {
-      return null;
-    }
-    
-    // Build LR parse table
-    final parseTable = _buildLRParseTable(grammar);
-    if (parseTable == null) {
-      return null; // Grammar is not LR(1)
-    }
-    
-    // Parse using LR table
-    final stack = <String>[];
-    final input = inputString.split('').toList();
-    final derivations = <List<String>>[];
-    
-    stack.add('0'); // Initial state
-    
-    while (true) {
-      final state = stack.last;
-      final symbol = input.isNotEmpty ? input[0] : '\$';
-      
-      final action = parseTable.getAction(state, symbol);
-      if (action == null) {
-        return null; // Parse error
-      }
-      
-      if (action.type == ParseActionType.shift) {
-        stack.add(symbol);
-        stack.add(action.stateNumber.toString());
-        input.removeAt(0);
-      } else if (action.type == ParseActionType.reduce) {
-        final production = action.production!;
-        final rightSideLength = production.rightSide.length;
-        
-        // Pop 2 * rightSideLength elements (state and symbol pairs)
-        for (int i = 0; i < 2 * rightSideLength; i++) {
-          stack.removeLast();
-        }
-        
-        final newState = stack.last;
-        stack.add(production.leftSide.first);
-        stack.add(parseTable.getGoto(newState, production.leftSide.first) ?? '');
-        
-        derivations.add([...production.leftSide, ...production.rightSide]);
-      } else if (action.type == ParseActionType.accept) {
-        return ParseResult.success(
-          inputString: inputString,
-          derivations: derivations,
-          executionTime: DateTime.now().difference(startTime),
-        );
-      }
-    }
-  }
-
-  /// Builds LR parse table
-  static ParseTable? _buildLRParseTable(Grammar grammar) {
-    // This is a simplified LR table building - in practice, this would be more complex
-    final table = <String, Map<String, ParseAction>>{};
-    
-    // Initialize table with states
-    table['0'] = <String, ParseAction>{};
-    
-    // Add basic actions (simplified)
-    for (final production in grammar.productions) {
-      if (production.leftSide.isNotEmpty && production.leftSide.first == grammar.startSymbol) {
-        table['0']!['\$'] = ParseAction(type: ParseActionType.accept, stateNumber: 0);
-      }
-    }
-    
-    return ParseTable(
-      actionTable: table.map((key, value) => MapEntry(key, value.map((k, v) => MapEntry(k, ParseAction(
-        type: v.type,
-        stateNumber: v.stateNumber,
-        production: v.production,
-      ))))),
-      gotoTable: {}, // Tabela goto simplificada para LR
-      grammar: grammar,
-      type: ParseType.lr,
-    );
-  }
-
-  /// Tests if a grammar can generate a specific string
-  static Result<bool> canGenerate(Grammar grammar, String inputString) {
-    final parseResult = parse(grammar, inputString);
-    if (!parseResult.isSuccess) {
-      return Failure(parseResult.error!);
-    }
-    
-    return Success(parseResult.data!.accepted);
-  }
-
-  /// Tests if a grammar cannot generate a specific string
-  static Result<bool> cannotGenerate(Grammar grammar, String inputString) {
-    final canGenerateResult = canGenerate(grammar, inputString);
-    if (!canGenerateResult.isSuccess) {
-      return Failure(canGenerateResult.error!);
-    }
-    
-    return Success(!canGenerateResult.data!);
-  }
-
-  /// Finds all strings of a given length that the grammar can generate
-  static Result<Set<String>> findGeneratedStrings(
-    Grammar grammar,
-    int maxLength, {
-    int maxResults = 100,
-  }) {
-    try {
-      final generatedStrings = <String>{};
-      final alphabet = grammar.terminals.toList();
-      
-      // Generate all possible strings up to maxLength
-      for (int length = 0; length <= maxLength && generatedStrings.length < maxResults; length++) {
-        _generateStrings(
-          grammar,
-          alphabet,
-          '',
-          length,
-          generatedStrings,
-          maxResults,
-        );
-      }
-      
-      return Success(generatedStrings);
-    } catch (e) {
-      return Failure('Error finding generated strings: $e');
-    }
-  }
-
-  /// Recursively generates strings and tests them
-  static void _generateStrings(
-    Grammar grammar,
-    List<String> alphabet,
-    String currentString,
-    int remainingLength,
-    Set<String> generatedStrings,
-    int maxResults,
-  ) {
-    if (generatedStrings.length >= maxResults) return;
-    
-    if (remainingLength == 0) {
-      final canGenerateResult = canGenerate(grammar, currentString);
-      if (canGenerateResult.isSuccess && canGenerateResult.data!) {
-        generatedStrings.add(currentString);
-      }
-      return;
-    }
-    
-    for (final symbol in alphabet) {
-      _generateStrings(
-        grammar,
-        alphabet,
-        currentString + symbol,
-        remainingLength - 1,
-        generatedStrings,
-        maxResults,
-      );
-    }
   }
 }
 

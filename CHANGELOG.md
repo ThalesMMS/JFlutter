@@ -40,7 +40,6 @@ This is the first major release of JFlutter, featuring a complete implementation
 - **FAToRegexConverter** - Convert finite automata to regular expressions
 - **GrammarParser** - Parse and analyze context-free grammars
 - **PumpingLemmaProver** - Prove pumping lemma for regular and context-free languages
-- **LSystemGenerator** - Generate Lindenmayer systems and fractal patterns
 - **PDASimulator** - Simulate pushdown automata with stack operations
 - **TMSimulator** - Simulate Turing machines with tape operations
 - **GrammarToPDAConverter** - Convert context-free grammars to pushdown automata
@@ -56,8 +55,8 @@ This is the first major release of JFlutter, featuring a complete implementation
 - **Production** - Grammar production rule
 - **SimulationResult** - Result of automaton simulation
 - **SimulationStep** - Individual step in simulation
-- **ParseTable** - LL/LR parsing table
-- **ParseAction** - Parsing action (shift, reduce, accept, error)
+- **ParseTable** - LL parsing table
+- **ParseAction** - Action in a parse table entry
 - **TouchInteraction** - Mobile touch interaction data
 - **LayoutSettings** - Canvas layout and positioning settings
 - **PumpingLemmaGame** - Interactive pumping lemma game state

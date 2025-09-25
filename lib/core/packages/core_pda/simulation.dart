@@ -18,6 +18,9 @@ class PDASimulationWitness implements Trace<SimulationStep> {
   final UnmodifiableSetView<PDAAcceptanceCriterion> criteria;
 
   @override
+  int get steps => configurations.length - 1;
+
+  @override
   SimulationStep get terminal => configurations.isNotEmpty
       ? configurations.last
       : throw StateError('Witness trace is empty');
@@ -70,8 +73,8 @@ class PDASimulationResult {
     List<PDADeterminismConflict>? determinismConflicts,
     this.branchesTruncated = false,
   })  : steps = UnmodifiableListView(steps),
-        acceptedBranches =
-            UnmodifiableListView(acceptedBranches ?? const <PDASimulationWitness>[]),
+        acceptedBranches = UnmodifiableListView(
+            acceptedBranches ?? const <PDASimulationWitness>[]),
         determinismConflicts = UnmodifiableListView(
           determinismConflicts ?? const <PDADeterminismConflict>[],
         );

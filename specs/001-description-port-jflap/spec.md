@@ -1,4 +1,4 @@
-# Feature Specification: Port JFLAP to Flutter as JFlutter
+# Feature Specification: Port JFLAP Desktop Capabilities to Mobile (JFlutter)
 
 **Feature Branch**: `001-description-port-jflap`  
 **Created**: 2024-12-19  
@@ -52,10 +52,14 @@ When creating this spec from a user prompt:
 
 ---
 
+## Summary *(updated this week)*
+
+**TL;DR**: JFlutter brings core JFLAP functionality to Flutter with mobile-optimized UI, multi-platform support, and partial parity with desktop features. Focus remains on automata, grammar conversions, TM tooling, and syllabus-aligned analysis. Advanced parsing (LR/SLR) and L-system tooling are intentionally out of scope per `Requisitos.md`.
+
 ## Status Overview *(updated this week)*
 
-- **Weekly Summary**: Core grammar/automaton conversions, simulators, and the multi-tab mobile UI are implemented and covered by integration tests. File operations now export PNG/SVG and parse JFLAP XML. Remaining gaps include LR-specific PDA conversion, context-free pumping lemma support, and advanced accessibility/performance polish.
-- **Outstanding Areas**: LR/SLR PDA conversion, context-free pumping lemma tooling, accessibility, input batch tooling, and L-system workflows remain unsatisfied by the current codebase.
+- **Weekly Summary**: Core grammar/automaton conversions, simulators, and the multi-tab mobile UI are implemented and covered by integration tests. File operations now export PNG/SVG and parse JFLAP XML. Remaining gaps include context-free pumping lemma support and advanced accessibility/performance polish.
+- **Outstanding Areas**: Context-free pumping lemma tooling, accessibility, and input batch tooling remain unsatisfied by the current codebase; scope explicitly excludes LR/SLR parsing and L-system workflows.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -84,7 +88,7 @@ As a computer science student or educator, I want to create, manipulate, and ana
 #### Grammar and Automaton Conversions
 - [x] **FR-001**: System MUST support CFG to PDA conversion using LL method with automatic production stacking _(Implemented via GrammarToPDAConverter standard/Greibach flows and covered by unit tests)_
 - [x] **FR-002**: System MUST support PDA to CFG conversion with transition-to-production transformation _(PDAtoCFGConverter exports productions from PDA transitions)_
-- [ ] **FR-003**: System MUST support CFG to PDA conversion using LR/SLR(1) method with bottom-up analysis _(Pending: no dedicated LR/SLR PDA pipeline yet)_
+- [ ] **FR-003**: System MUST support CFG to PDA conversion using standard push/pop construction aligned with syllabus _(Pending: conversion tooling missing UI polish)_
 - [x] **FR-004**: System MUST support right-linear grammar to FA conversion with automatic transition generation _(GrammarToFSAConverter builds deterministic FSAs from right-linear productions)_
 - [x] **FR-005**: System MUST support NFA to DFA conversion using subset construction algorithm _(NFAToDFAConverter applies epsilon-closure removal and subset construction)_
 - [x] **FR-006**: System MUST support DFA minimization using state partitioning algorithm _(DFAMinimizer runs Hopcroft-based minimization)_
@@ -95,9 +99,8 @@ As a computer science student or educator, I want to create, manipulate, and ana
 - [x] **FR-009**: System MUST support transformation to Chomsky Normal Form (CNF) with lambda removal _(CNF conversion and lambda cleanup are part of GrammarParser before CYK analysis)_
 - [x] **FR-010**: System MUST support pumping lemma for regular languages with interactive game interface _(PumpingLemmaGame and related widgets deliver interactive gameplay)_
 - [ ] **FR-011**: System MUST support pumping lemma for context-free languages with interactive game interface _(Pending: no uvxyz-style context-free game implementation yet)_
-- [ ] **FR-012**: System MUST support SLR(1) analysis with automatic parse table generation _(Pending: LL tables exist but SLR table generation is not yet implemented)_
+- [ ] **FR-012**: System MUST support CFG analysis within syllabus limits (CNF conversion, CYK, Pumping Lemma) _(Pending: CNF pipeline exists; CYK UI pending)_
 - [x] **FR-013**: System MUST support CYK parsing with dynamic programming table visualization _(CYK parser runs after CNF conversion and feeds the grammar simulation panel)_
-- [x] **FR-014**: System MUST support brute force parser for unrestricted grammars with step-by-step derivation _(GrammarParser provides brute-force derivation tracing)_
 
 #### Automaton Creation and Editing
 - [x] **FR-015**: System MUST support creation and editing of finite state automata (DFA/NFA) with touch-optimized interface _(AutomatonCanvas with gesture handler powers the FSA page on mobile/desktop)_
@@ -123,13 +126,6 @@ As a computer science student or educator, I want to create, manipulate, and ana
 - [ ] **FR-033**: System MUST support derivation tree visualization _(Pending tree rendering despite derivation logs)_
 - [x] **FR-034**: System MUST support non-deterministic automaton input analysis _(Editors highlight nondeterministic transitions and metrics panels warn about them)_
 
-#### L-Systems
-- [ ] **FR-035**: System MUST support L-system creation with axiom and production rule definition _(Pending L-system designer)_
-- [ ] **FR-036**: System MUST support multiple derivation steps with graphical visualization _(Pending rendering pipeline)_
-- [ ] **FR-037**: System MUST support turtle commands (forward, rotation, line width, color control) _(Pending turtle graphics integration)_
-- [ ] **FR-038**: System MUST support customizable parameters (angles, distance, line width, colors) _(Pending configuration UI)_
-- [ ] **FR-039**: System MUST support fractal generation and natural structure modeling _(Pending L-system engine)_
-
 #### Simulation and Analysis
 - [x] **FR-040**: System MUST simulate automata execution with step-by-step visualization _(AutomatonSimulator and simulation panels provide step tracking)_
 - [x] **FR-041**: System MUST validate automata properties (determinism, completeness, reachability) _(AutomatonAnalyzer and TM/PDA simulators compute reachability and determinism flags)_
@@ -142,7 +138,6 @@ As a computer science student or educator, I want to create, manipulate, and ana
 - [x] **FR-046**: System MUST support file operations (save, load, export) with mobile-optimized file management _(FileOperationsPanel wires to services for save/load/export flows)_
 - [x] **FR-047**: System MUST support JFLAP file format compatibility _(JFLAP XML parser and service conversions read/write .jff structures)_
 - [x] **FR-048**: System MUST support export of generated automata and grammars _(Services export automata to PNG/SVG and grammar artifacts)_
-- [ ] **FR-049**: System MUST support import/export of L-system configurations _(Pending because L-system feature set is not implemented)_
 
 #### Mobile-Specific Features
 - [x] **FR-050**: System MUST provide visual feedback for touch interactions (selection, dragging, resizing) _(AutomatonCanvas controller and painter manage selection highlights and gesture-driven updates)_
@@ -158,7 +153,7 @@ As a computer science student or educator, I want to create, manipulate, and ana
 - **Transition**: Connections between states with input symbols, stack operations (for PDA), or tape operations (for TM)
 - **Grammar**: Regular, context-free, or unrestricted grammar with productions and terminals/nonterminals
 - **Production**: Grammar rules with left-hand side and right-hand side symbols, supporting multiple symbols on left side for unrestricted grammars
-- **Parse Table**: Generated tables for LL/LR/SLR parsing with action and goto entries
+- **Parse Table**: Generated tables for LL parsing with action and goto entries
 - **Simulation Result**: Output of automaton execution showing acceptance/rejection and computation trace
 - **Building Block**: Reusable component for Turing machine construction with import/export capabilities
 - **Pumping Lemma Game**: Interactive interface for proving languages are not regular or context-free

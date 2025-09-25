@@ -37,4 +37,10 @@ class ImmutableTrace<C extends Configuration> implements Trace<C> {
   Trace<C> append(C configuration) {
     return ImmutableTrace<C>([..._configurations, configuration]);
   }
+
+  @override
+  int get steps => configurations.length - 1;
+
+  @override
+  bool get accepted => terminal.isAccepting;
 }

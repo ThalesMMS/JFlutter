@@ -1,6 +1,7 @@
-import 'package:petitparser/parser.dart';
+import 'package:petitparser/parser.dart' as petit;
+import 'package:petitparser/src/core/result.dart' as petit_result;
 
-import '../result.dart';
+import '../result.dart' as core_result;
 
 import 'grammar_ast.dart';
 
@@ -26,70 +27,83 @@ class GrammarDefinitionAnalysis {
 class GrammarDefinitionParser {
   GrammarDefinitionParser._();
 
-  static final Parser<List<GrammarProductionAst>> _productionParser =
+  static final petit.Parser<List<GrammarProductionAst>> _productionParser =
       _buildParser();
 
   /// Parses [source] and returns an analysis bundle with AST and errors.
-  static Result<GrammarDefinitionAnalysis> parse(String source) {
+  static core_result.Result<GrammarDefinitionAnalysis> parse(String source) {
     final trimmed = source.trim();
     if (trimmed.isEmpty) {
-      return ResultFactory.failure('Grammar definition cannot be empty.');
+      return core_result.ResultFactory.failure(
+        'Grammar definition cannot be empty.',
+      );
     }
 
     try {
       final parseResult = _productionParser.parse(trimmed);
-      return switch (parseResult) {
-        Success(value: final productions) => () {
-          final ast = GrammarAst(productions: productions);
-          final errors = ast.validate();
-          return ResultFactory.success(
-            GrammarDefinitionAnalysis(ast: ast, errors: errors),
-          );
-        }(),
-        Failure() => ResultFactory.failure('${parseResult.message} at position ${parseResult.position}'),
-      };
+      if (parseResult is petit_result.Success<List<GrammarProductionAst>>) {
+        final ast = GrammarAst(productions: parseResult.value);
+        final errors = ast.validate();
+        return core_result.ResultFactory.success(
+          GrammarDefinitionAnalysis(ast: ast, errors: errors),
+        );
+      }
+
+      final failure = parseResult as petit_result.Failure;
+      return core_result.ResultFactory.failure(
+        '${failure.message} at position ${failure.position}',
+      );
     } on FormatException catch (error) {
-      return ResultFactory.failure(error.message);
+      return core_result.ResultFactory.failure(error.message);
     }
   }
 
-  static Parser<List<GrammarProductionAst>> _buildParser() {
-    final commentBody = any().starLazy(newline()).flatten();
-    final comment = (string('//') | char('#'))
+  static petit.Parser<List<GrammarProductionAst>> _buildParser() {
+    final commentBody = petit.any().starLazy(petit.newline()).flatten();
+    final comment = (petit.string('//') | petit.char('#'))
         .seq(commentBody)
-        .seq(newline().optional())
+        .seq(petit.newline().optional())
         .flatten();
 
-    final ignored = (whitespace() | comment).star();
+    final globalIgnored = (petit.whitespace() | comment).star();
+    final inlineIgnored = petit.pattern(' \t\r\f').star();
 
-    Parser<T> trim<T>(Parser<T> parser) => parser.trim(ignored, ignored);
+    petit.Parser<T> tokenGlobal<T>(petit.Parser<T> parser) =>
+        parser.skip(before: globalIgnored, after: globalIgnored);
+    petit.Parser<T> tokenInline<T>(petit.Parser<T> parser) =>
+        parser.skip(before: inlineIgnored, after: inlineIgnored);
 
-    final nonTerminal = (pattern('A-Z') & pattern('A-Za-z0-9_').star())
+    final nonTerminal =
+        (petit.pattern('A-Z') & petit.pattern('A-Za-z0-9_').star())
+            .flatten()
+            .map((value) => NonTerminalSymbolAst(value));
+
+    final singleQuoted = petit
+        .pattern(r"^'\")
+        .starLazy(petit.char("'"))
         .flatten()
-        .map((value) => NonTerminalSymbolAst(value));
-
-    final singleQuoted = pattern(r"^'\\")
-        .starLazy(char("'"))
-        .flatten()
-        .skip(before: char("'"), after: char("'"))
+        .skip(before: petit.char("'"), after: petit.char("'"))
         .map((value) => value.replaceAll(r"\'", "'"));
 
-    final doubleQuoted = pattern(r'^"\\')
-        .starLazy(char('"'))
+    final doubleQuoted = petit
+        .pattern(r'^"\')
+        .starLazy(petit.char('"'))
         .flatten()
-        .skip(before: char('"'), after: char('"'))
+        .skip(before: petit.char('"'), after: petit.char('"'))
         .map((value) => value.replaceAll(r'\"', '"'));
 
-    final bareTerminal = pattern('a-z0-9').plusString();
+    final bareTerminal = petit.pattern('a-z0-9').plusString();
 
     final terminal = (singleQuoted | doubleQuoted | bareTerminal)
         .map((value) => TerminalSymbolAst(value));
 
     final epsilonLiteral =
-        (string('ε') | string('lambda') | string('eps')).map((_) => const _EpsilonToken());
+        (petit.string('ε') | petit.string('lambda') | petit.string('eps'))
+            .map((_) => const _EpsilonToken());
 
-    final symbol = trim(
-      epsilonLiteral.cast<Object>()
+    final symbol = tokenInline(
+      epsilonLiteral
+          .cast<Object>()
           .or(nonTerminal.cast<Object>())
           .or(terminal.cast<Object>()),
     );
@@ -108,7 +122,9 @@ class GrammarDefinitionParser {
 
       if (epsilon != null) {
         if (concrete.isNotEmpty || symbols.length > 1) {
-          throw const FormatException('Epsilon cannot appear with other symbols in a production alternative.');
+          throw const FormatException(
+            'Epsilon cannot appear with other symbols in a production alternative.',
+          );
         }
         return const GrammarEmptyExpressionAst();
       }
@@ -116,28 +132,37 @@ class GrammarDefinitionParser {
       return GrammarSequenceAst(concrete);
     });
 
-    final alternativeList = sequence
-        .starSeparated(trim(char('|')))
-        .map((alternatives) => alternatives.cast<GrammarExpressionAst>());
+    final alternativeList =
+        sequence.plusSeparated(tokenInline(petit.char('|'))).map(
+              (separated) =>
+                  List<GrammarExpressionAst>.unmodifiable(separated.elements),
+            );
 
-    final arrow = trim(string('->') | string('→') | string('::='));
+    final arrow = tokenInline(
+        petit.string('->') | petit.string('→') | petit.string('::='));
 
-    final production = trim(nonTerminal)
-        .seq(arrow)
-        .seq(alternativeList)
-        .map((value) {
+    final production =
+        tokenGlobal(nonTerminal).seq(arrow).seq(alternativeList).map((value) {
       final head = (value[0] as NonTerminalSymbolAst).lexeme;
       final alternatives = (value[2] as List<GrammarExpressionAst>);
       return GrammarProductionAst(head: head, alternatives: alternatives);
     });
 
-    final separator = trim((char(';') | newline()).plus());
+    final separator =
+        (petit.char(';') | petit.newline()).plus().skip(after: globalIgnored);
 
-    final productions = production
-        .starSeparated(separator.optional())
-        .map((list) => list.cast<GrammarProductionAst>());
+    final productions = production.plusSeparated(separator).map(
+          (separated) =>
+              List<GrammarProductionAst>.unmodifiable(separated.elements),
+        );
 
-    return productions.end();
+    final parser = globalIgnored
+        .optional()
+        .seq(productions)
+        .seq(globalIgnored.optional())
+        .map((value) => value[1] as List<GrammarProductionAst>);
+
+    return parser.end();
   }
 }
 

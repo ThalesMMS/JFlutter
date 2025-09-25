@@ -1,13 +1,8 @@
 <!-- 
 Sync Impact Report:
-Version change: 1.0.0 → 1.1.0
-Modified principles: None (initial creation)
-Added sections: Educational Focus, Mobile-First Design, Clean Architecture, Quality Standards, Performance & Security, Deliverables
-Removed sections: None (initial creation)
-Templates requiring updates: 
-✅ plan-template.md (updated Constitution Check section)
-✅ spec-template.md (updated for JFlutter scope)
-✅ tasks-template.md (updated for Flutter/Dart patterns)
+Version change: 1.2.0 → 1.2.1
+Modified principles: V. Scope & Interoperability (clarified "Out-of-Scope Features" section)
+Templates requiring updates: ✅ .specify/templates/plan-template.md
 Follow-up TODOs: None
 -->
 
@@ -29,6 +24,12 @@ MUST maintain comprehensive testing: unit, integration, widget, golden tests. Re
 
 ### V. Scope & Interoperability
 MUST implement core automata features: FA simulation/NFA→DFA, minimization, FA↔Regex, language operations (∪, ∩, ¬, \, ·, *, reverse, shuffle), properties (empty, finite, equivalence). PDA with multiple acceptance modes, CFG↔PDA conversions, Turing Machine simulation with immutable tape configurations. MUST maintain `.jff` compatibility (import/export), stable JSON schemas, versioned example library, SVG/PNG export capabilities.
+
+#### Out-of-Scope Features (NON-NEGOTIABLE)
+To maintain alignment with the core curriculum, the following are explicitly excluded:
+- **Advanced Parsing Techniques**: Any form of LR or SLR(1) parsing. This includes parsing table generation, shift/reduce conflict resolution, and any associated conversion algorithms.
+- **Unrestricted Grammar Parsing**: Brute-force parsers for Unrestricted Grammars (GI) are excluded. Any features, such as algorithm comparisons, that depend on such a parser are also out of scope.
+- **L-Systems**: The entire L-Systems module is out of scope, including any features related to turtle graphics or fractals.
 
 ## Technology Standards (NON-NEGOTIABLE)
 
@@ -81,4 +82,4 @@ All development MUST verify constitution compliance. Complexity deviations requi
 
 The constitution supersedes all other development practices. All PRs/reviews MUST verify compliance with these principles.
 
-**Version**: 1.1.0 | **Ratified**: 2025-01-27 | **Last Amended**: 2025-01-27
+**Version**: 1.2.1 | **Ratified**: 2025-01-27 | **Last Amended**: 2025-09-25

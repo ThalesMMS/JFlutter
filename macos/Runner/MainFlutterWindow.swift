@@ -11,5 +11,8 @@ class MainFlutterWindow: NSWindow {
     RegisterGeneratedPlugins(registry: flutterViewController)
 
     super.awakeFromNib()
+
+    title = "JFlutter Formal Language Toolkit"
+    titleVisibility = .visible
   }
 }

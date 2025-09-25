@@ -1,6 +1,8 @@
 # JFlutter Development Makefile
 
-.PHONY: help install analyze format test clean build generate
+.PHONY: help install analyze format test clean build generate ci format-check
+
+PACKAGE_DIRS := $(shell find packages -maxdepth 1 -mindepth 1 -type d 2>/dev/null)
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
@@ -8,36 +10,35 @@ help: ## Show this help message
 	@echo 'Targets:'
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-15s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-install: ## Install dependencies
-	flutter pub get
-	cd packages/core_fa && flutter pub get
-	cd packages/core_pda && flutter pub get
-	cd packages/core_tm && flutter pub get
-	cd packages/core_regex && flutter pub get
-	cd packages/conversions && flutter pub get
-	cd packages/serializers && flutter pub get
-	cd packages/viz && flutter pub get
-	cd packages/playground && flutter pub get
+install: ## Install dependencies for the root app and all local packages
+        flutter pub get
+        @for dir in $(PACKAGE_DIRS); do \
+          if [ -f $$dir/pubspec.yaml ]; then \
+            echo "==> flutter pub get ($$dir)"; \
+            (cd $$dir && flutter pub get); \
+          fi; \
+        done
 
 analyze: ## Run static analysis
 	flutter analyze
 
-format: ## Format code
-	flutter format .
+format: ## Format code (writes changes)
+        flutter format .
+
+format-check: ## Verify formatting without writing changes
+        flutter format --set-exit-if-changed .
 
 test: ## Run tests
 	flutter test
 
 clean: ## Clean build artifacts
-	flutter clean
-	cd packages/core_fa && flutter clean
-	cd packages/core_pda && flutter clean
-	cd packages/core_tm && flutter clean
-	cd packages/core_regex && flutter clean
-	cd packages/conversions && flutter clean
-	cd packages/serializers && flutter clean
-	cd packages/viz && flutter clean
-	cd packages/playground && flutter clean
+        flutter clean
+        @for dir in $(PACKAGE_DIRS); do \
+          if [ -f $$dir/pubspec.yaml ]; then \
+            echo "==> flutter clean ($$dir)"; \
+            (cd $$dir && flutter clean); \
+          fi; \
+        done
 
 build: ## Build the app
 	flutter build apk --release
@@ -45,4 +46,10 @@ build: ## Build the app
 generate: ## Generate code (freezed, json_serializable)
 	flutter packages pub run build_runner build --delete-conflicting-outputs
 
-check: analyze format test ## Run all checks (analyze, format, test)
+check: analyze format-check test ## Run all checks (analyze, format, test)
+
+ci: ## Run the full CI pipeline (install, format check, analyze, test)
+        $(MAKE) install
+        $(MAKE) format-check
+        $(MAKE) analyze
+        $(MAKE) test

@@ -4,9 +4,9 @@
 This document tracks the progress of the JFlutter automaton theory application development. It consolidates build status, the outcome of the latest maintenance PRs, and the next actionable items for the team.
 
 ## 🔍 Build & Test Validation
-- :warning: **Local Flutter tooling unavailable.** Attempts to run `flutter --version` and `dart --version` failed because the SDKs are not installed on the current environment. As a result, `flutter test` / `flutter build` could not be executed locally.
+- :warning: **Local Flutter tooling unavailable.** Attempts to run `flutter --version` and `dart --version` failed because the SDKs are not installed on the current environment. As a result, `flutter test` / `flutter build` could not be executed locally. Run `make ci` or `./scripts/ci_pipeline.sh` once Flutter is provisioned.
 - ✅ **Repository state is clean.** Latest merges are present locally (HEAD at `work` branch) and there are no uncommitted changes blocking automation.
-- 🔄 **Action required:** Re-run the pipeline or a local build once Flutter tooling is available to confirm the stability of the recent changes.
+- 🔄 **Action required:** Re-run the pipeline or a local build once Flutter tooling is available to confirm the stability of the recent changes. The new CI helper (`make ci`) bootstraps all local packages before linting/testing to avoid partial migrations.
 
 ## ✅ Completed Work (Current Week)
 ### Stability & Lifecycle

@@ -4,6 +4,8 @@
 
 JFlutter provides a comprehensive API for working with formal language theory concepts including finite automata, context-free grammars, and various algorithms. This documentation covers the core APIs, data models, and integration patterns.
 
+> **Nota importante**: durante a reescrita dos algoritmos, cada contrato descrito aqui é conferido contra os projetos que vivem em `References/` (principalmente as bases em Dart e o repositório Python `automata-main`). Essas referências balizam as alterações até que novos testes automatizados estejam disponíveis.
+
 ## Core Architecture
 
 ### Clean Architecture Layers

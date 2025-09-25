@@ -47,6 +47,7 @@ jflutter/
 ├── USER_GUIDE.md                  # User instructions
 ├── CHANGELOG.md                   # Change history
 ├── PROJECT_STRUCTURE.md           # This file
+├── References/                    # Implementações de referência (Dart + Python) usadas como base na migração
 └── LICENSE.txt                    # License information
 ```
 
@@ -321,6 +322,10 @@ Presentation → Core ← Data
 - **Dependency Injection** - Service registration
 - **Factory Pattern** - Object creation
 - **Observer Pattern** - State changes
+
+## Referências para a Migração
+
+O diretório `References/` reúne implementações em Dart e o projeto Python `automata-main`. Eles servem como base de conferência durante a reconstrução das estruturas e algoritmos do JFlutter. Sempre que um módulo é reescrito, seu comportamento é comparado com essas referências até que novos testes automatizados entrem em cena.
 
 ## Development Guidelines
 

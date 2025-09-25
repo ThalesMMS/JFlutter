@@ -2,6 +2,8 @@
 
 **A modern, mobile-first Flutter application for learning formal language theory and automata**
 
+> ℹ️ **Referências de implementação**: durante a migração em andamento utilizamos os projetos armazenados em `References/` como fonte de verdade para estruturas de dados e algoritmos. Os repositórios em Dart e o módulo Python `automata-main` servem para validar comportamento enquanto reconstruímos o núcleo do JFlutter.
+
 JFlutter is a complete port of the classic JFLAP educational tool, rebuilt from the ground up with Flutter for modern mobile devices. It provides an interactive, touch-optimized interface for creating, editing, and simulating finite automata, context-free grammars, and other formal language constructs.
 
 ## ✅ Current Status
@@ -186,6 +188,10 @@ export JFLUTTER_KEY_PASSWORD="$JFLUTTER_KEY_PASSWORD"
 ```bash
 flutter analyze
 ```
+
+## 📚 Referências para a Migração
+
+O diretório `References/` acompanha JFlutter e reúne implementações consolidadas que usamos como base de conferência: vários projetos em Dart e o `automata-main` em Python. Cada refatoração de estrutura ou algoritmo será comparada com essas referências até que os novos testes automatizados estejam disponíveis.
 
 ## 📊 Project Status
 

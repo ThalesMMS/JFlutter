@@ -12,8 +12,8 @@
 - [x] T005: Refactor `lib/core/algorithms/grammar_parser.dart` to remove the brute-force and LR parsing strategies.
 
 ## Phase 3.3: Verification
-- [ ] T006: Manually verify the removal of all features by following the steps in `specs/004-update-specs-considering/quickstart.md`.
-- [ ] T007: Run `flutter test --coverage` to ensure that the refactoring has not introduced any regressions and analyze the results.
+- [x] T006: Manually verify the removal of all features by following the steps in `specs/004-update-specs-considering/quickstart.md`.
+- [x] T007: Run `flutter test --coverage` to ensure that the refactoring has not introduced any regressions and analyze the results.
 
 ## Dependencies
 - Verification (T006-T007) must be performed after all documentation (T001-T003) and code refactoring (T004-T005) tasks are complete.

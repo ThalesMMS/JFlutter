@@ -180,16 +180,10 @@ export JFLUTTER_KEY_PASSWORD="$JFLUTTER_KEY_PASSWORD"
 
 ## 🧪 Testing
 
+> 🚧 The legacy test suites have been removed while we migrate the core algorithms from the reference implementations.
+> New unit and integration tests will be added alongside the upcoming refactors. For now, rely on static analysis:
+
 ```bash
-# Run all tests
-flutter test
-
-# Run specific test categories
-flutter test test/core/                    # Core algorithm tests
-flutter test test/integration/             # Integration tests
-flutter test test/contract/                # Contract tests
-
-# Static analysis
 flutter analyze
 ```
 

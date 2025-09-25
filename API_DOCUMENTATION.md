@@ -434,7 +434,7 @@ testWidgets('Complete FSA workflow', (tester) async {
 
 - Use `flutter analyze` for static analysis
 - Use Flutter DevTools for performance profiling
-- Use `flutter test` for automated testing
+- Automated test coverage is temporarily unavailable during the algorithm migration; run `flutter analyze` instead until the new suites land.
 - Use debug prints for algorithm step tracking
 
 ## Future Extensions

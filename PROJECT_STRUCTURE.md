@@ -32,12 +32,7 @@ jflutter/
 │   ├── injection/                 # Dependency injection
 │   ├── app.dart                   # App configuration
 │   └── main.dart                  # Application entry point
-├── test/                          # Test files
-│   ├── contract/                  # Contract tests
-│   ├── core/                      # Core algorithm tests
-│   ├── integration/               # Integration tests
-│   ├── unit/                      # Unit tests
-│   └── widget/                    # Widget tests
+├── test/                          # (Temporarily removed during algorithm migration)
 ├── specs/                         # Project specifications
 ├── android/                       # Android-specific files
 ├── ios/                           # iOS-specific files
@@ -227,62 +222,7 @@ injection/
 
 ## Test Structure (`test/`)
 
-Comprehensive testing across all layers:
-
-### Contract Tests (`test/contract/`)
-
-API contract validation:
-
-```
-contract/
-├── test_automaton_contract.dart   # Automaton service contracts
-├── test_conversion_contract.dart  # Conversion service contracts
-└── test_simulation_contract.dart  # Simulation service contracts
-```
-
-### Integration Tests (`test/integration/`)
-
-End-to-end workflow testing:
-
-```
-integration/
-├── test_file_operations.dart      # File I/O integration
-├── test_fsa_creation.dart         # FSA creation workflow
-├── test_grammar_parsing.dart      # Grammar parsing workflow
-├── test_mobile_ui.dart            # Mobile UI integration
-└── test_nfa_to_dfa.dart           # NFA to DFA conversion
-```
-
-### Core Tests (`test/core/`)
-
-Core algorithm testing:
-
-```
-core/
-├── nfa_from_regex_test.dart       # Regex to NFA tests
-├── nfa_to_dfa_test.dart           # NFA to DFA tests
-└── regex_test.dart                # Regex algorithm tests
-```
-
-### Unit Tests
-
-Individual component testing:
-
-```
-unit/
-├── algorithms/                    # Algorithm unit tests
-├── models/                        # Model unit tests
-└── services/                      # Service unit tests
-```
-
-### Widget Tests (`test/widget/`)
-
-UI component testing:
-
-```
-widget/
-└── [widget test files]            # Individual widget tests
-```
+The historic automated test suites have been removed while the core algorithms are rewritten. A new hierarchy of unit, integration, and property-based tests will be introduced alongside the migration. Until then the `test/` directory is intentionally empty.
 
 ## Platform-Specific Directories
 

@@ -1,281 +1,160 @@
-# Requisitos
-
-## Requisitos Funcionais:
+## Requisitos Funcionais
 
 ### Conversão entre Gramáticas e Autômatos
-1. **Conversão de Gramática Livre de Contexto para Autômato de Pilha (AP) - Método LL**
-   - Implementação do método LL para conversão de CFG para APN
-   - Empilhamento automático das produções da gramática
-   - Tratamento de variáveis e terminais na pilha
-   - Suporte a produções lambda (ε)
-   - Interface visual mostrando a correspondência entre produções e transições
-   - Verificação automática de completude da conversão
-   - Exportação do autômato de pilha gerado
-   - Teste de múltiplas cadeias para validação
-   - Comparação com análise por força bruta
-   - Suporte a gramáticas ambíguas e não-ambíguas
 
-2. **Conversão de Autômato de Pilha Não-Determinístico (APN) para Gramática Livre de Contexto**
-   - Transformação de transições de APN em produções gramaticais
-   - Geração de regras para movimentos que empilham/desempilham
-   - Tratamento de transições com manipulação de pilha (pop/push)
-   - Suporte a múltiplos estados e transições não-determinísticas
-   - Interface interativa para seleção de transições a converter
-   - Visualização em tempo real das produções geradas
-   - Exportação da gramática resultante
-   - Verificação automática de completude da conversão
-   - Identificação de produções inúteis
-   - Validação da equivalência entre o APN original e a gramática gerada
+1.  **CFG → AP (método LL)**
+    
+    *   **~** Trocar “método LL” por **construção padrão GLC→AP** (sem técnica de parsing específica).
+        
+    *   **✓** Empilhamento automático, tratamento de variáveis/terminais, ε‑produções, interface visual (produção↔transição), verificação de completude, exportação, teste de múltiplas cadeias, suporte a gramáticas ambíguas.
+        
+    *   **✂** “Comparação com análise por força bruta” (dependeria de parser que extrapola a ementa).
+        
+2.  **APN → CFG**
+    
+    *   **✓** Transformar transições do APN em produções; regras para push/pop; múltiplos estados e não‑determinismo; interface para seleção; visualização em tempo real; exportação; verificação de completude; identificação de produções inúteis; **validação por equivalência experimental**.
+        
+3.  **CFG → AP (método LR / SLR(1))**
+    
+    *   **✂** Fora da ementa (técnicas LR/SLR e resolução de conflitos não fazem parte aqui).
+        
+4.  **Gramática Linear à Direita → AF**
+    
+    *   **✓** Conversão automática produção↔transição; estados finais; interface visual; verificação de conclusão; exportação; múltiplos terminais/não‑terminais; visualização em tempo real; feedback; preenchimento automático.
+        
 
-3. **Conversão de Gramática Livre de Contexto para Autômato de Pilha (AP) - Método LR**
-   - Implementação do método SLR(1) para conversão de CFG para AP
-   - Suporte a análise ascendente (bottom-up) de gramáticas
-   - Geração automática de transições baseadas em reduções
-   - Tratamento de conflitos shift-reduce e reduce-reduce
-   - Visualização do processo de redução na pilha
-   - Suporte a múltiplas derivações possíveis
-   - Teste interativo com execução passo a passo
-   - Feedback visual sobre as operações de shift e reduce
-   - Exportação do autômato de pilha resultante
-   - Comparação com outros métodos de análise (LL, LR, etc.)
-
-4. **Conversão de Gramática Linear à Direita para Autômato Finito (AF)**
-   - Suporte a gramáticas lineares à direita com no máximo uma variável no lado direito
-   - Conversão automática de cada produção em transições do autômato
-   - Geração de estado final para produções sem variáveis no lado direito
-   - Interface visual mostrando a correspondência entre produções e transições
-   - Verificação automática de conclusão da conversão
-   - Exportação do autômato gerado
-   - Suporte a múltiplos símbolos terminais e não-terminais
-   - Visualização em tempo real das alterações
-   - Feedback sobre produções já convertidas
-   - Opção de preenchimento automático de transições
+* * *
 
 ### Análise de Gramáticas
-1. **Transformação para Forma Normal de Chomsky (CNF)**
-   - Remoção automática de produções lambda (ε)
-   - Eliminação de produções unitárias
-   - Identificação e remoção de produções inúteis
-   - Conversão para CNF com produções no formato A→BC ou A→a
-   - Visualização gráfica das dependências entre variáveis
-   - Interface interativa para acompanhamento de cada etapa
-   - Feedback visual sobre as transformações aplicadas
-   - Exportação da gramática resultante em CNF
-   - Suporte a gramáticas ambíguas e não-ambíguas
-   - Verificação automática de conformidade com CNF
 
-2. **Lema do Bombeamento para Linguagens Regulares**
-   - Implementação do lema para provar que linguagens não são regulares
-   - Interface de jogo interativa com dois modos:
-     - Usuário primeiro: tenta encontrar decomposição xyz válida
-     - Computador primeiro: tenta refutar decomposições propostas
-   - Restrições automáticas |xy| ≤ m e |y| ≥ 1
-   - Validação em tempo real de decomposições
-   - Feedback visual sobre erros nas tentativas
-   - Histórico de tentativas com detalhes completos
-   - Animações mostrando o processo de bombeamento
-   - Suporte a múltiplos exemplos de linguagens regulares e não-regulares
-   - Explicações detalhadas sobre estratégias vencedoras
+1.  **CNF**
+    
+    *   **✓** Remoção de ε, unitárias e inúteis; conversão para A→BC / A→a; visualização de dependências; interface passo a passo; feedback; exportação; suporte a ambíguas; verificação de conformidade.
+        
+2.  **Lema do Bombeamento — Regulares**
+    
+    *   **✓** Implementação com modos “usuário primeiro”/“computador primeiro”; |xy|≤m, |y|≥1; validação em tempo real; feedback; histórico; animações; múltiplos exemplos; explicações estratégicas.
+        
+3.  **Lema do Bombeamento — LLC**
+    
+    *   **✓** Implementação com modos; |vxy|≤m, |vy|≥1; casos de teste; painel; feedback; exemplos; adicionar/substituir casos; verificação de completude.
+        
+4.  **Análise SLR(1)**
+    
+    *   **✂** Fora da ementa (construção de tabelas LR e conflitos shift/reduce).
+        
+5.  **Parser CYK**
+    
+    *   **✓** Verificação de pertinência para GLC (via CNF); visualização da tabela; execução passo a passo; múltiplas execuções; melhor desempenho que busca ingênua; árvore e tabela detalhada; feedback; suporte a gramáticas complexas.
+        
+6.  **Parser por Força Bruta para Gramáticas Irrestritas (GI)**
+    
+    *   **✂** Fora da ementa como ferramenta geral de parsing para GI (inexequível em geral e não requerido).
+        
+    *   *(Obs.: GI permanece no escopo conceitual em MT/LREs — ver seção de MT.)*
+        
 
-3. **Lema do Bombeamento para Linguagens Livres de Contexto**
-   - Implementação do lema para provar que linguagens não são livres de contexto
-   - Interface de jogo interativa com dois modos:
-     - Usuário primeiro: tenta encontrar decomposição uvxyz válida
-     - Computador primeiro: tenta refutar decomposições
-   - Restrições automáticas |vxy| ≤ m e |vy| ≥ 1
-   - Suporte a múltiplos casos de teste
-   - Gerenciamento de casos com painel interativo
-   - Feedback detalhado sobre tentativas de bombeamento
-   - Exemplos de linguagens livres e não-livres de contexto
-   - Ferramentas para adicionar/substituir casos de teste
-   - Verificação de completude de casos
-
-4. **Análise SLR(1)**
-   - Construção de tabela de análise SLR(1)
-   - Geração automática de autômato finito determinístico (DFA) para análise
-   - Visualização de itens LR(0) e conjuntos de itens
-   - Cálculo automático de conjuntos FIRST e FOLLOW
-   - Interface interativa para construção passo a passo da tabela SLR(1)
-   - Suporte a ações de shift, reduce, accept e goto
-   - Visualização da pilha de análise durante o parsing
-   - Destaque de produções e transições durante a execução
-   - Feedback detalhado sobre conflitos na tabela de análise
-   - Exportação da tabela de análise gerada
-
-5. **Parser CYK (Cocke-Younger-Kasami)**
-   - Algoritmo eficiente para verificação de pertinência em gramáticas livres de contexto
-   - Conversão automática para Forma Normal de Chomsky (CNF)
-   - Visualização da tabela de análise CYK
-   - Interface interativa com controle de execução passo a passo
-   - Suporte a múltiplas execuções
-   - Desempenho significativamente superior ao parser de força bruta
-   - Visualização da árvore de derivação
-   - Tabela de derivação detalhada
-   - Feedback imediato sobre aceitação/rejeição da cadeia
-   - Suporte a gramáticas complexas com múltiplas produções
-
-6. **Parser por Força Bruta para Gramáticas Irrestritas (Brute Force Parser)**
-   - Suporte a derivação passo a passo
-   - Visualização em árvore não invertida
-   - Tabela de derivação detalhada
-   - Capacidade de processar produções com múltiplos símbolos no lado esquerdo
-   - Interface interativa para acompanhamento do processo de derivação
-   - Suporte a gramáticas irrestritas complexas (ex: anbncn)
-   - Visualização da aplicação de regras de produção
-   - Controle de execução (iniciar, pausar, avançar passo a passo)
-   - Feedback visual durante o processo de parsing
-   - Exportação dos resultados da análise
+* * *
 
 ### Interface e Usabilidade
-1. Zoom na área de edição
-2. Botão de desfazer ações
-3. Salvamento em vários formatos de imagem (SVG, PNG, etc.)
-4. Visualização de múltiplas janelas
-5. Personalização de cores e estilos
-6. Adição automática de estado de rejeição (trap state) em DFAs
-7. Leitura de cadeias de entrada a partir de arquivo
-8. Visualização em árvore para minimização de DFA
-9. Interface interativa para processo de minimização passo a passo
-10. Suporte a faixas de valores em transições (ex: [0-9])
-11. Modo Building Block para Máquinas de Turing
-12. Conversão entre diferentes tipos de autômatos (ex: NFA para DFA)
-13. Personalização de transições:
-    - Ajuste de curvatura das transições
-    - Seleção individual de transições
-    - Manipulação de múltiplos rótulos em uma única transição
-    - Visualização clara da transição selecionada
-    - Suporte a arrastar e soltar para ajuste de posição
-    - Destaque visual da transição atualmente selecionada
-    - Suporte a duplo clique para edição de rótulos
-13. Visualização de árvores de derivação
-14. Análise de entrada em autômatos não-determinísticos
+
+*   **✓** Zoom; desfazer; **exportar SVG** (PNG opcional depois); múltiplas janelas; personalização de cores/estilos; **trap state** em DFAs; ler cadeias de arquivo; árvore para minimização de DFA; interface interativa de minimização; faixas \[0–9\]; **building block** visual para MT (como **recurso de edição**, não conteúdo); conversões entre autômatos (NFA→DFA); personalização de transições (curvatura, seleção, rótulos múltiplos, destaque, arrastar/soltar, duplo clique); árvores de derivação; **análise de entrada em autômatos não‑determinísticos**; snackbar quando FS indisponível.
+    
+*   **✓** Tudo aqui é suporte didático; não extrapola conteúdo.
+    
+
+* * *
 
 ### Linguagens Regulares
-1. Criar Autômatos Finitos Determinísticos (DFA)
-2. Criar Autômatos Finitos Não-Determinísticos (NFA)
-3. Criar gramáticas regulares
-4. Criar expressões regulares
-5. Realizar conversões entre representações:
-   - NFA para DFA
-     - Algoritmo de construção de subconjuntos
-     - Visualização passo a passo da conversão
-     - Identificação automática de estados equivalentes
-     - Suporte a transições ε (épsilon)
-     - Geração automática de estados do DFA
-     - Identificação de estados finais no DFA resultante
-   - DFA para DFA Mínimo
-     - Algoritmo de minimização de estados
-     - Visualização do processo de partição de estados
-     - Identificação de estados equivalentes
-   - FA para Expressão Regular
-     - Algoritmo de eliminação de estados
-     - Suporte a múltiplos estados finais
-     - Colapso de múltiplas transições entre estados
-     - Exportação da expressão regular resultante
-   - Expressão Regular para FA
-   - NFA para Gramática Regular e vice-versa
-6. Experimentar com o Lema do Bombeamento para linguagens regulares
+
+*   **✓** Criar DFA/NFA/GR/ER.
+    
+*   **✓** Conversões: NFA→DFA (subconjuntos, ε‑fechos), DFA→DFA mínimo (partições), FA→ER (eliminação de estados), ER→FA, NFA↔Gramática Regular.
+    
+*   **✓** Jogo do Lema do Bombeamento (já coberto acima).
+    
+
+* * *
 
 ### Análise e Processamento
-1. Parser CYK (mais rápido que o método de força bruta)
-2. Parser controlado pelo usuário (escolha de regras de derivação)
-3. Identificação automática de tipos de gramáticas
-4. Jogos de Lema do Bombeamento para linguagens regulares e livres de contexto
-5. Múltiplas execuções para gramáticas
-6. Sistema de avaliação para múltiplos arquivos
+
+*   **✓** Parser CYK (redundante com seção anterior, mas útil no menu “Análise”).
+    
+*   **✓** Parser controlado pelo usuário (guiar derivações em GLC).
+    
+*   **✓** Identificação automática do **tipo de gramática** (heurísticas e checagens estruturais básicas).
+    
+*   **✓** Jogos de Lema (Reg/LLC).
+    
+*   **✓** Execuções múltiplas; **sistema de avaliação** para vários arquivos (didático/testes).
+    
+
+* * *
 
 ### Linguagens Livres de Contexto
-7. Criar Autômatos de Pilha (PDA)
-8. Criar Gramáticas Livres de Contexto (CFG)
-9. Experimentar com o Lema do Bombeamento para linguagens livres de contexto
-10. Realizar transformações:
-    - PDA para CFG
-    - CFG para PDA (analisador LL)
-    - CFG para PDA (analisador SLR)
-    - CFG para Forma Normal de Chomsky (CNF)
-    - Gerar tabela de análise LL
-    - Gerar tabela de análise SLR
-    - Análise por força bruta
+
+*   **✓** Criar **PDA** (simulação interativa) e **CFG**; Lema do Bombeamento (já listado); transformações **PDA↔CFG**, **CFG→CNF**, **tabela LL/SLR** **✂ não** — manter apenas as **transformações canônicas** e **CYK**; análise por busca ingênua **apenas para GLC pequenas** (sem GI).
+    
+
+* * *
 
 ### Linguagens Recursivamente Enumeráveis
-11. Criar Máquinas de Turing de 1 fita
-12. Criar Máquinas de Turing de múltiplas fitas
-13. Trabalhar com blocos de construção de Máquinas de Turing
-14. Criar gramáticas irrestritas
-15. Converter gramática irrestrita para analisador de força bruta
+
+1.  **Máquinas de Turing (1 fita)** — **✓**
+    
+2.  **Máquinas de Turing (múltiplas fitas)** — **✓** (variação prevista na ementa).
+    
+3.  **Building Blocks de MT** — **✓** como **recurso de edição/modularização** (não altera o conteúdo teórico).
+    
+4.  **Gramáticas Irrestritas (GI)** — **✓** criação/edição e **visualização de derivações finitas** para exemplos didáticos.
+    
+5.  **Converter GI para analisador de força bruta** — **✂** fora da ementa.
+    
+
+* * *
 
 ### Máquinas de Turing
-1. **Criação e Edição**
-   - Suporte a máquinas de Turing padrão
-   - Máquinas de Turing não-determinísticas
-   - Múltiplas fitas
-   - Fita infinita em ambas as direções
-   - Símbolos de fita personalizáveis
-   - Estados de aceitação e rejeição explícitos
-   - Visualização do estado atual e da fita durante a execução
-   - Controle de execução (passo a passo, execução contínua, pausa)
-   - Visualização da pilha de execução
-   - Suporte a Building Blocks (Blocos de Construção):
-     - Criação de blocos reutilizáveis
-     - Nomeação de blocos para referência
-     - Prevenção de blocos aninhados com o mesmo nome
-     - Importação/exportação de blocos individuais
-     - Suporte a blocos em máquinas de fita única
-     - Verificação de compatibilidade ao importar blocos
-     - Interface para edição de blocos
-     - Visualização hierárquica de máquinas com blocos do sistema
-   - Controle de parâmetros de desenho (ângulo, distância, etc.)
-   - Suporte a símbolos especiais para controle da tartaruga
-   - Animação das derivações passo a passo
-   - Exportação/importação de configurações de L-Systems
 
-### Sistemas-L (L-Systems)
-1. **Criação e Visualização de L-Systems**
-   - Definição de axiomas e regras de produção
-   - Suporte a múltiplos passos de derivação
-   - Visualização gráfica da evolução do sistema
-   - Controle de parâmetros de desenho (ângulo, distância, etc.)
-   - Suporte a símbolos especiais para controle da tartaruga
-   - Animação das derivações passo a passo
-   - Exportação/importação de configurações de L-Systems
+*   **✓** Criação/edição; MT não‑determinística; múltiplas fitas; fita infinita; símbolos personalizáveis; estados de aceitação/rejeição; visualização de fita/estado; execução (passo a passo/contínua/pausa); visualização da **configuração instantânea**.
+    
+*   **✓** Exportar/importar máquinas.
+    
+*   **✂** Tudo que é “L‑Systems/tartaruga/fractais” (não pertence a MT).
+    
+*   **✓** Animação de **derivações** (execução) está ok.
+    
 
-2. **Comandos da Tartaruga**
-   - Movimento para frente (com/sem desenho)
-   - Rotação nos eixos X, Y e Z
-   - Controle de largura da linha
-   - Salvamento/recuperação de estado
-   - Criação de polígonos preenchidos
-   - Controle de cores (linha e preenchimento)
-   - Suporte a ramificações
+* * *
 
-3. **Parâmetros Personalizáveis**
-   - Ângulos de rotação
-   - Distância do movimento
-   - Largura da linha
-   - Incremento de largura
-   - Variação de matiz (hue)
-   - Cores personalizáveis (RGB/HSB)
-   - Cores pré-definidas
+### Sistemas‑L (L‑Systems)
 
-4. **Exemplos e Aplicações**
-   - Geração de fractais
-   - Modelagem de plantas e estruturas naturais
-   - Padrões recursivos
-   - Visualização de processos iterativos
+*   **✂** Remover a seção inteira (fora da ementa).
+    
 
-## Requisitos Não Funcionais:
-1. Interface gráfica amigável e acessível
-2. Documentação abrangente
+* * *
 
-## Suporte Técnico e Recursos para Desenvolvedores
+## Requisitos Não Funcionais
 
-### Documentação Técnica
-1. **Guia do Desenvolvedor**
-   - Arquitetura do sistema
-   - Guia de estilo de código
+*   **✓** Interface amigável; documentação abrangente; guia do desenvolvedor; API/extensibilidade; repositório versionado.
+    
+*   **✓** Sem extrapolar conteúdo.
+    
 
-2. **API e Extensibilidade**
-   - Documentação de classes e métodos
+* * *
 
-3. **Controle de Versão**
-   - Repositório de código-fonte
+## Resumo do que saiu (✂)
+
+*   **LR/SLR(1)** em qualquer forma (tabelas, conflitos shift/reduce, conversão “via LR”).
+    
+*   **Parser “força bruta” para GI** (e comparações que dependam dele).
+    
+*   **Sistemas‑L / Tartaruga / Fractais**.
+    
+*   Quaisquer menções a **comparar com “força bruta”** quando essa ferramenta não existir no escopo.
+    
+
+## O que ficou (útil e dentro da ementa)
+
+*   **ER, AF (AFD/AFN/AFN‑λ), GR/GLC/GI, PDA (APD/APN), MT (det./não‑det., variações), CNF, CYK, Lemas do Bombeamento (Reg e LLC), propriedades de fechamento, Hierarquia de Chomsky, decidibilidade (LRec vs LRE).**
+    
+*   Ferramentas didáticas fortes: **conversões canônicas**, **simuladores interativos**, **visualizações (árvores, tabelas CYK, minimização)**, **jogos de bombeamento**, **exportação/importação**, **avaliação em lote**.

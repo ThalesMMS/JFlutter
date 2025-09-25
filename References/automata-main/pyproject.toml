@@ -1,0 +1,137 @@
+[project]
+name = "automata-lib"
+version = "9.1.2"
+description = "A Python library for simulating finite automata, pushdown automata, and Turing machines"
+readme = "README.md"
+requires-python = ">=3.9"
+keywords = [
+    "automata",
+    "finite",
+    "non-deterministic",
+    "pushdown",
+    "turing",
+    "machine",
+    "state",
+]
+license = "MIT"
+license-files = ["LICENSE.txt"]
+authors = [{ name = "Caleb Evans", email = "caleb@calebevans.me" }]
+maintainers = [
+    { name = "Caleb Evans", email = "caleb@calebevans.me" },
+    { name = "Eliot W. Robson", email = "eliot.robson24@gmail.com" },
+]
+dependencies = [
+    "networkx>=2.6.2",
+    "frozendict>=2.3.4",
+    "typing-extensions>=4.5.0",
+    "cached_method>=0.1.0",
+]
+
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+]
+
+# Per https://setuptools.pypa.io/en/latest/userguide/dependency_management.html#optional-dependencies
+[project.optional-dependencies]
+visual = ["coloraide>=1.8.2", "manim>=0.19.0", "pygraphviz>=1.10"]
+
+[tool.setuptools.package-data]
+"automata" = ["py.typed"]
+
+[project.urls]
+homepage = "https://github.com/caleb531/automata"
+documentation = "https://caleb531.github.io/automata/"
+repository = "https://github.com/caleb531/automata"
+changelog = "https://github.com/caleb531/automata/releases"
+
+[build-system]
+requires = ["setuptools>=77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["automata", "automata.*"]
+# Explicitly exclude other top-level items
+exclude = ["docs", "tests", "joss", "example_notebooks"]
+
+[dependency-groups]
+dev = [
+    "check-wheel-contents",
+    "coloraide>=1.8.2",
+    "coverage==7.4.1",
+    "mypy==1.8.0",
+    "mypy-extensions==1.0.0",
+    "nose2==0.14.1",
+    "pygraphviz>=1.10",
+    "ruff==0.11.2",
+    "types-frozendict==2.0.9",
+]
+
+docs = [
+    "mkdocs==1.6.1",
+    "mkdocs-material==9.5.50",
+    "mkdocs-macros-plugin==1.3.7",
+    "mkdocstrings==0.27.0",
+    "mkdocstrings-python==1.13.0",
+]
+
+[tool.uv]
+default-groups = ["dev"]
+
+[tool.mypy]
+exclude = ["build"]
+disallow_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = [
+    "setuptools.*",
+    "networkx.*",
+    "pygraphviz.*",
+    "cached_method.*",
+    "nose2.tools.*",
+    "manim.*",
+]
+ignore_missing_imports = true
+
+[tool.ruff]
+include = ["**/*.py"]
+
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    "W",
+    # Pyflakes
+    "F",
+    # isort
+    "I",
+    # Perflint
+    "PERF",
+]
+
+
+# Configuration for coverage.py (https://pypi.python.org/pypi/coverage)
+
+[tool.coverage.run]
+# Enable branch coverage
+branch = true
+
+[tool.coverage.report]
+# Regexes for lines to exclude from consideration
+exclude_lines = [
+    "pragma: no cover",
+    # Ignore non-runnable code
+    "if __name__ == .__main__.:",
+    "pass",
+]
+
+# Only check coverage for source files
+include = ["automata/*/*.py"]

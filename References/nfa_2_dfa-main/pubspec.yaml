@@ -1,0 +1,139 @@
+name: nfa_to_dfa_app
+description: "A professional tool for converting and analyzing NFA and DFA."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  flutter_localizations:
+    sdk: flutter
+
+  provider: ^6.1.2
+  url_launcher: ^6.2.2
+
+  # برای رسم دیاگرام‌های گراف (NFA/DFA)
+  graphview: ^1.2.0
+
+  # پکیج‌های احراز هویت بیومتریک
+  local_auth: ^2.1.6
+  local_auth_android: ^1.0.37
+  local_auth_darwin: ^1.0.4
+
+  # برای مجوزها
+  permission_handler: ^11.0.1
+
+  # برای انتخاب فایل از حافظه دستگاه (بارگذاری NFA از JSON)
+  file_picker: ^8.0.5
+
+  # برای دسترسی به مسیرهای استاندارد حافظه (ذخیره فایل‌ها)
+  path_provider: ^2.1.3
+
+  # برای ذخیره تنظیمات ساده کاربر (مثل تم برنامه)
+  shared_preferences: ^2.2.3
+
+  # برای درخواست‌های HTTP (API calls)
+  http: ^1.2.1
+
+  # برای هش کردن رمز عبور
+  crypto: ^3.0.3
+
+  # آیکون‌های استاندارد iOS
+  cupertino_icons: ^1.0.8
+
+  # === پکیج‌های جدید برای قابلیت‌های پیشرفته گراف ===
+
+  # برای اشتراک‌گذاری فایل‌ها و محتوا
+  share_plus: ^7.2.2
+
+  # برای کار با فایل‌های سیستم
+  cross_file: ^0.3.3+8
+
+  # برای انیمیشن‌های پیشرفته
+  animations: ^2.0.11
+
+  # برای نمایش toast و snackbar های پیشرفته
+  fluttertoast: ^8.2.4
+
+  # برای کار با رنگ‌ها و تم‌های پیشرفته
+  flex_color_scheme: ^7.3.1
+
+  # برای دیالوگ‌های زیبا و انیمیشن دار
+  awesome_dialog: ^3.2.1
+
+  # برای محاسبات ریاضی پیشرفته در layout
+  vector_math: ^2.1.4
+
+# === وابستگی‌های توسعه و تست ===
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # مجموعه قوانین پیشنهادی برای بهبود کیفیت کد
+  flutter_lints: ^4.0.0
+
+  # برای ساخت آیکون اپلیکیشن
+  flutter_launcher_icons: ^0.13.1
+
+  # برای تست integration
+  integration_test:
+    sdk: flutter
+
+  # برای mock کردن در تست‌ها
+  mockito: ^5.4.4
+
+  # برای تولید کد mock - نسخه سازگار
+  build_runner: ^2.4.7
+
+# === تنظیمات مخصوص فلاتر ===
+flutter:
+  uses-material-design: true
+
+  # معرفی پوشه‌هایی که حاوی فایل‌های جانبی هستند
+  assets:
+    - assets/examples/
+    - assets/images/
+    - assets/fonts/
+    - assets/icon/
+  # معرفی خانواده فونت وزیر و فایل‌های مربوط به هر وزن
+  fonts:
+    - family: Vazir
+      fonts:
+        - asset: assets/fonts/Vazir-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Vazir-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Vazir-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Vazir-Bold.ttf
+          weight: 700
+
+    # فونت اضافی برای نمایش نمادهای ریاضی
+    - family: RobotoMono
+      fonts:
+        - asset: assets/fonts/RobotoMono-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/RobotoMono-Bold.ttf
+          weight: 700
+
+# === تنظیمات ساخت آیکون برای پلتفرم‌ها ===
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+  adaptive_icon_background: "#ffffff"
+  adaptive_icon_foreground: "assets/icon/app_icon.png"
+
+  # تنظیمات اضافی برای iOS
+  ios_config:
+    generate: true
+    background_color: "#ffffff"
+
+  # تنظیمات اضافی برای Android
+  android_config:
+    generate: true
+    background_color: "#ffffff"

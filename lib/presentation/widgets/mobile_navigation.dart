@@ -61,32 +61,42 @@ class MobileNavigation extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final color = isSelected ? colorScheme.primary : colorScheme.onSurface.withOpacity(0.6);
     
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              item.icon,
-              color: color,
-              size: 18, // Smaller icons for better fit
+    return Semantics(
+      label: item.description,
+      button: true,
+      selected: isSelected,
+      child: Tooltip(
+        message: item.description,
+        waitDuration: const Duration(milliseconds: 500),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  item.icon,
+                  color: color,
+                  size: 18, // Smaller icons for better fit
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  item.label,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: color,
+                        fontWeight:
+                            isSelected ? FontWeight.w600 : FontWeight.normal,
+                        fontSize: 9, // Even smaller text
+                      ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
-            const SizedBox(height: 2),
-            Text(
-              item.label,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: color,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                fontSize: 9, // Even smaller text
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+          ),
         ),
       ),
     );

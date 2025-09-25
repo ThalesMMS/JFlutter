@@ -54,7 +54,7 @@ Estudantes usam o aplicativo JFlutter offline em um tablet durante aula de Teori
 
 ### Edge Cases
 - Como rejeitamos arquivos `.jff` ou JSON inválidos sem comprometer o sandbox e mantendo mensagens de diagnóstico acionáveis?
-- Como garantimos desempenho estável (≥60fps) ao simular máquinas de Turing multi-fita com mais de 10k passos?
+- Como garantimos desempenho estável (≥60fps) ao simular máquinas de Turing de fita única com mais de 10k passos?
 - Como expomos lemas do bombeamento em modo jogo sem permitir linguagem fora da ementa ou explorações não suportadas?
 
 ## Requirements *(mandatory)*
@@ -63,11 +63,11 @@ Estudantes usam o aplicativo JFlutter offline em um tablet durante aula de Teori
 - **FR-001**: Sistema MUST reforçar o núcleo de autômatos finitos (AFD/AFN/AFN-λ) com conversões NFA→DFA, minimização via Hopcroft, ER↔AF, GR↔AF, operações de linguagem {união, interseção, complemento, concatenação, estrela de Kleene, reverso} e diagnósticos de propriedades {linguagem vazia, finita, equivalência} com traces imutáveis.
 - **FR-002**: Sistema MUST entregar simuladores PDA (APD/APN) com aceitação configurável {final, pilha, ambos}, checagem explícita de determinismo e mensagens amigáveis para conflitos ou transições inválidas.
 - **FR-003**: Sistema MUST suportar pipeline Regex→AST→Thompson NFA baseado no PetitParser de `References/`, além de toolkit CFG com transformações para CNF (remoção de ε-produções, unitárias e símbolos inúteis), conversões canônicas CFG↔PDA e verificação de pertinência via CYK com árvore de derivação.
-- **FR-004**: Sistema MUST ampliar simuladores de máquinas de Turing (determinística, não determinística e multi-fita) garantindo estados e fitas imutáveis, suporte a time-travel e "building blocks" apenas como ferramenta de edição sem alterar semântica de execução.
-- **FR-005**: Sistema MUST consolidar modelos e algoritmos em pacotes Dart puros dentro de `packages/*`, expondo APIs estáveis que reutilizam tipos unificados (`Alphabet`, `State`, `Transition`, `Configuration<T>`, `Trace`).
-- **FR-006**: Sistema MUST garantir interoperabilidade completa com round-trip `.jff`/JSON, exportar SVG (PNG opcional) e fornecer biblioteca "Examples v1" versionada com exemplos canônicos alinhados às referências.
-- **FR-007**: Sistema MUST estabelecer suíte de testes determinísticos (unit, integration, widget, golden e regressões por exemplos), rodar `flutter analyze` sem erros e registrar qualquer divergência dos repositórios de `References/` com justificativa documentada.
-- **FR-008**: Sistema MUST manter o modo jogo dos lemas do bombeamento (regular e LLC) com feedback imediato e rastreamento de passos usando traces imutáveis compartilhados.
+- **FR-004**: Sistema MUST ampliar simuladores de máquinas de Turing (determinística e não determinística com uma única fita) garantindo estados e fitas imutáveis, suporte a time-travel e "building blocks" apenas como ferramenta de edição sem alterar semântica de execução.
+- **FR-005**: Sistema MUST consolidar modelos e algoritmos reutilizando os tipos unificados (`Alphabet`, `State`, `Transition`, `Configuration<T>`, `Trace`) dentro da estrutura existente em `lib/core/`, expondo APIs modulares sem migrar código para `packages/*`.
+- **FR-006**: Sistema MUST garantir interoperabilidade completa com round-trip `.jff`/JSON, exportar SVG (PNG opcional) e fornecer biblioteca "Examples v1" versionada com exemplos canônicos alinhados às referências, distribuída como ativo offline somente leitura atualizado apenas em novas releases do aplicativo.
+- **FR-007**: Sistema MUST estabelecer suíte de testes determinísticos (unit, integration, widget, golden e regressões por exemplos), rodar `flutter analyze` sem erros, executar derivação de ground truth diretamente no app usando portas Dart/Python embutidas durante as simulações e registrar qualquer divergência dos repositórios de `References/` com justificativa documentada.
+- **FR-008**: Sistema MUST manter o modo jogo dos lemas do bombeamento (regular e LLC) com feedback imediato e rastreamento de passos usando traces imutáveis compartilhados, adotando progressão linear baseada em conjuntos pré-definidos de desafios que escalam em dificuldade.
 
 ### Key Entities *(include when data involved)*
 - **Alphabet**: Conjunto tipado de símbolos imutáveis utilizado por autômatos, gramáticas e máquinas; cada alfabeto referencia origem (entrada, pilha, fita) e respeita validação contra exemplos canônicos.
@@ -81,11 +81,11 @@ Estudantes usam o aplicativo JFlutter offline em um tablet durante aula de Teori
 ## Constitution Check & Compliance Notes *(mandatory)*
 - **Scope**: Reforço cobre unicamente tópicos da ementa (AF, PDA, CFG, MT, lemas do bombeamento, CYK, hierarquia) e mantém fora de escopo LL/LR/SLR, parser GI, L-Systems ou serviços externos obrigatórios.
 - **References**: Reaproveita algoritmos de `References/automata-main/`, `References/dart-petitparser-examples-main/`, `References/jflap-legacy/` (se disponível) e documenta qualquer divergência nas notas técnicas.
-- **Architecture Fit**: Novos recursos residem nos pacotes `core_fa`, `core_pda`, `core_tm`, `core_regex`, `conversions`, `serializers`, `viz`, `playground`, com UI consumindo via `lib/presentation/` e Riverpod providers; mantém imutabilidade via `freezed`.
-- **Quality**: Planeja baterias de testes determinísticos, regressões baseadas em "Examples v1", goldens para componentes críticos do canvas, além de execução obrigatória de `flutter analyze`.
-- **Performance**: Mantém renderização do canvas em 60fps e suporta ≥10k passos com throttling/batched paints; valida desempenho de multi-fita e branching ND.
+- **Architecture Fit**: Novos recursos permanecem na estrutura atual (`lib/core`, `lib/data`, `lib/presentation`), mantendo clean architecture e imutabilidade via `freezed`, mas sem migração para `packages/*`; qualquer extração futura exigirá avaliação separada.
+- **Quality**: Planeja baterias de testes determinísticos, regressões baseadas em "Examples v1", goldens para componentes críticos do canvas, execução obrigatória de `flutter analyze`, além de rodar verificações de ground truth em dispositivo utilizando as portas embutidas das referências.
+- **Performance**: Mantém renderização do canvas em 60fps e suporta ≥10k passos com throttling/batched paints; valida desempenho de TMs single-tape e branching ND.
 - **Licensing**: Todo código novo sob Apache-2.0; reutilização de conteúdo JFLAP respeita licença não-comercial; exemplos canônicos citam origens.
-- **Interoperability**: Round-trip `.jff`/JSON/SVG exigido; DTOs `*.dto.dart` com `json_serializable` e testes de ida e volta; traces e configurações imutáveis compartilhados nas simulações.
+- **Interoperability**: Round-trip `.jff`/JSON/SVG exigido; DTOs `*.dto.dart` com `json_serializable` e testes de ida e volta; traces e configurações imutáveis compartilhados nas simulações; "Examples v1" empacotado offline e atualizado por releases.
 
 ---
 
@@ -120,3 +120,11 @@ Estudantes usam o aplicativo JFlutter offline em um tablet durante aula de Teori
 - [ ] Review checklist passed
 
 ---
+
+## Clarifications
+
+### Session 2025-09-25
+- Q: How should the “Examples v1” canonical library be delivered and kept up to date for users? → A: Bundle as read-only offline asset updated via releases
+- Q: How should the ground-truth verification against `References/` be executed durante desenvolvimento e QA? → A: Run reference derivations on-device during simulations
+- Q: Quantas fitas simultâneas as máquinas de Turing multi-fita devem suportar? → A: Somente 1 fita
+- Q: Para o modo jogo dos lemas do bombeamento, qual das seguintes abordagens de progressão devemos adotar? → A: Progressão linear com desafios pré-definidos

@@ -11,7 +11,7 @@
 2. Fill Technical Context (scan for NEEDS CLARIFICATION)
    → Confirm feature fits Constitution scope (see Constitution Check)
    → Capture reference algorithms/files from `References/`
-3. Populate the Constitution Check section using current constitution v1.0.0
+3. Populate the Constitution Check section using current constitution v2.0.0
 4. Evaluate Constitution Check section below
    → If violations exist: document in Complexity Tracking with mitigation
    → If non-negotiable guardrails breached: ERROR "Revise proposal to satisfy constitution"
@@ -48,7 +48,7 @@
 - Mobile-First Didactic Delivery: Feature preserves offline, hands-on learning flow? ✅/❌
 - Curricular Scope Fidelity: Remains within syllabus topics and forbidden list respected? ✅/❌
 - Reference-Led Algorithm Port: Mapped to sources in `References/` with deviation notes? ✅/❌
-- Clean Architecture & Immutability: Packages, Riverpod state, immutable models respected? ✅/❌
+- Layered Architecture & Immutability: `lib/core`, `lib/data`, `lib/presentation`, `lib/injection` boundaries upheld with immutable models/providers? ✅/❌
 - Quality/Performance/Licensing Assurance: Tests planned, `flutter analyze`, 60fps canvas, Apache-2.0 + JFLAP compliance? ✅/❌
 - Scope & Interoperability Standards: `.jff`/JSON/SVG requirements met, immutable traces preserved? ✅/❌
 - Architecture & Implementation Requirements: Correct layer placement, deterministic services, DTO strategy? ✅/❌
@@ -93,69 +93,56 @@ lib/
 ├── injection/
 │   └── dependency_injection.dart
 └── main.dart
-
-packages/
-├── core_fa/
-├── core_pda/
-├── core_tm/
-├── core_regex/
-├── conversions/
-├── serializers/
-├── viz/
-└── playground/
 ```
 
-**Structure Decision**: Default to Flutter mobile-first; introduce additional packages/modules only with documented justification and constitution sign-off.
+**Structure Decision**: Evoluir funcionalidades dentro da estrutura existente em `lib/`; qualquer mudança estrutural maior exige nova emenda constitucional.
 
 ## Phase 0: Outline & Research
-1. Confirm references in `References/` covering targeted algorithms/structures.
-2. Resolve NEEDS CLARIFICATION items from Technical Context.
-3. Capture performance considerations (60fps, >10k steps) and offline data constraints.
-4. Document license implications (Apache-2.0 vs JFLAP assets) for this feature.
+1. Confirm references em `References/` cobrindo algoritmos/estruturas-alvo.
+2. Resolver NEEDS CLARIFICATION do contexto técnico.
+3. Capturar requisitos de desempenho (60fps, >10k passos) e restrições offline.
+4. Documentar implicações de licença (Apache-2.0 vs JFLAP) e distribuição de ativos.
 
-**Output**: research.md with resolved unknowns, reference mappings, and constraint notes.
+**Output**: research.md com referências mapeadas, restrições e decisões iniciais.
 
 ## Phase 1: Design & Contracts
 *Prerequisites: research.md complete*
 
-1. Extract immutable domain models and states into `data-model.md` using shared types.
-2. Define serialization contracts (`contracts/`) matching `.jff`/JSON/SVG schema expectations.
-3. Draft Riverpod state flows and provider responsibilities (keep immutable, side-effect free).
-4. Outline manual validation steps in quickstart.md for offline, mobile-first verification.
-5. Update agent file via `.specify/scripts/bash/update-agent-context.sh cursor` if technology set changes.
+1. Extrair modelos/entidades imutáveis para `data-model.md` dentro dos tipos compartilhados.
+2. Definir contratos (`contracts/`) alinhados a `.jff`/JSON/SVG e testes de round-trip planejados.
+3. Planejar providers Riverpod e fluxos de trace em `quickstart.md` (roteiro manual offline).
+4. Executar `.specify/scripts/bash/update-agent-context.sh cursor` se o stack mudar.
 
-**Output**: data-model.md, /contracts/*, quickstart.md, planned test scaffolding.
+**Output**: data-model.md, /contracts/*, quickstart.md, testes planejados.
 
 ## Phase 2: Task Planning Approach
 *This section describes what the /tasks command will do - DO NOT execute during /plan*
 
 **Task Generation Strategy**:
-- Derive tasks from Phase 1 docs, ensuring tests precede implementations.
-- Include validation tasks for `flutter analyze`, widget/golden tests, and performance checks.
-- Map each algorithm task to its reference source.
+- Derivar tarefas de modelos/contratos/quickstart assegurando TDD e alinhamento às referências.
+- Incluir tarefas para testes determinísticos, goldens, regressões de exemplos, `flutter analyze`.
 
 **Ordering Strategy**:
-- Setup → Tests (unit/integration/widget/golden) → Core algorithms/services → UI/state → Performance polish.
-- Maintain immutable data flow and offline constraints throughout.
-- Mark tasks touching disjoint files as [P] for parallel execution.
+- Setup → Testes (unit/integration/widget/golden) → Núcleo (algoritmos, serviços, providers) → UI/visualizações → Interoperabilidade & desempenho → Documentação/licenças.
+- Marcar [P] somente quando arquivos não colidem.
 
-**Estimated Output**: 20-30 ordered tasks in tasks.md, covering tests, core logic, UI integration, and documentation.
+**Estimated Output**: 20-30 tarefas em tasks.md cobrindo todo o fluxo.
 
 **IMPORTANT**: This phase is executed by the /tasks command, NOT by /plan
 
 ## Phase 3+: Future Implementation
 *These phases are beyond the scope of the /plan command*
 
-**Phase 3**: Task execution (/tasks command creates tasks.md)  
-**Phase 4**: Implementation (follow constitution principles, ensure tests & `flutter analyze`)  
-**Phase 5**: Validation (run tests, quickstart.md, performance validation)
+**Phase 3**: /tasks gera tasks.md  
+**Phase 4**: Execução das tarefas seguindo constituição  
+**Phase 5**: Validação (testes, quickstart, performance)
 
 ## Complexity Tracking
 *Fill ONLY if Constitution Check has violations that must be justified*
 
 | Violation | Why Needed | Remediation Plan |
 |-----------|------------|------------------|
-| [e.g., temporary mutable cache] | [specific constraint] | [timeline to restore immutability] |
+| [ex.: uso temporário de mutabilidade] | [motivo] | [plano para retornar à conformidade] |
 
 ## Progress Tracking
 *Update during execution flow*
@@ -175,4 +162,4 @@ packages/
 - [ ] Complexity deviations documented (if any)
 
 ---
-*Based on Constitution v1.0.0 - See `/memory/constitution.md`*
+*Based on Constitution v2.0.0 - See `/memory/constitution.md`*

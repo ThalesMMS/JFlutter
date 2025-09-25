@@ -13,17 +13,17 @@
    → research.md: Reference alignment → correctness tasks
    → quickstart.md: Manual validation → QA tasks
 3. Generate tasks by category respecting constitution:
-   → Setup: packages, analyzers, reference verification harnesses
+   → Setup: dependencies, analyzers, reference validation plan
    → Tests: unit, integration, widget, golden, property-based (fail first)
-   → Core: algorithms, conversions, immutable models
-   → State/UI: Riverpod providers, Flutter widgets
+   → Core: algorithms, conversions, immutable models within `lib/core`
+   → State/UI: Riverpod providers, Flutter widgets in `lib/presentation`
    → Interoperability: .jff/JSON/SVG import-export, trace persistence
    → Performance & QA: 60fps canvas checks, >10k step throttling, offline validation
 4. Apply task rules:
    → Tests precede implementation (TDD)
    → Reference parity tasks before UI polish
-   → Each task cites target file path(s) under `lib/` or packages/
-   → If task uses shared types, mention specific package (`core_fa`, etc.)
+   → Each task cites target file path(s) under `lib/`
+   → Respect layered architecture boundaries (core/data/presentation/injection)
 5. Enforce constitution compliance gates:
    → If scope violation detected: ERROR "Task plan violates constitution"
 6. Number tasks sequentially (T001, T002...)
@@ -33,66 +33,52 @@
 
 ## Format: `[ID] [P?] Description`
 - **[P]**: Can run in parallel (different files, no shared state)
-- Always include precise file paths and package names
-- Note reference sources where applicable (e.g., `References/automata-main/...`)
+- Always include precise file paths and package references within `lib/`
 
 ## Phase 3.1: Setup
-- [ ] T001 Verify references in `References/` for targeted algorithms (document paths)
-- [ ] T002 Configure required packages (`freezed`, `json_serializable`, Riverpod) in `pubspec.yaml`
-- [ ] T003 [P] Ensure `flutter analyze` and formatting hooks ready (no regressions)
+- [ ] T001 Confirm cobertura de referências em `References/` e registrar plano de verificação em `/docs/references-alignment.md`
+- [ ] T002 Atualizar `pubspec.yaml` com dependências necessárias e garantir compatibilidade com ferramentas (`flutter analyze`, `freezed`, `json_serializable`)
+- [ ] T003 Configurar scripts e tooling (`build_runner`, lints) coerentes com a arquitetura em `lib/`
 
 ## Phase 3.2: Tests First (TDD) ⚠️ MUST COMPLETE BEFORE 3.3
-**CRITICAL: Write failing tests before implementation.**
-- [ ] T004 [P] Unit tests for new automata/grammar logic in `test/unit/...`
-- [ ] T005 [P] Integration tests covering simulations/traces in `test/integration/...`
-- [ ] T006 [P] Widget/golden tests for UI surfaces in `test/widget/...`
-- [ ] T007 [P] Property-based or regression tests referencing canonical examples when applicable
+- [ ] T004 [P] Testes unit/integration falhos cobrindo algoritmos e simuladores em `lib/core/`
+- [ ] T005 [P] Testes de interoperabilidade e round-trip `.jff`/JSON/SVG`
+- [ ] T006 [P] Testes widget/golden falhos para visualizações e traces
+- [ ] T007 [P] Testes para modos educacionais (pumping lemma, CYK, etc.)
 
 ## Phase 3.3: Core Implementation (ONLY after tests fail)
-- [ ] T008 [P] Implement immutable models in `packages/core_*/lib/...`
-- [ ] T009 [P] Implement algorithms/services in `lib/core/...` referencing `References/`
-- [ ] T010 Implement data layer DTOs with `json_serializable` in `lib/data/models/...`
-- [ ] T011 Implement Riverpod providers/state in `lib/presentation/providers/...`
-- [ ] T012 Implement UI widgets/pages in `lib/presentation/...`
-- [ ] T013 Maintain immutable trace logging and time-travel replay support
+- [ ] T008 [P] Implementar algoritmos/conversões em `lib/core/algorithms/`
+- [ ] T009 [P] Implementar modelos/entidades imutáveis em `lib/core/models/`
+- [ ] T010 Atualizar serviços e repositórios em `lib/data/` seguindo DTOs `json_serializable`
+- [ ] T011 Atualizar providers e estado Riverpod em `lib/presentation/providers/`
+- [ ] T012 Atualizar UI/canvas/visualizações em `lib/presentation/widgets/`
+- [ ] T013 Garantir trace/replay imutáveis compartilhados entre simuladores
 
 ## Phase 3.4: Interoperability & Performance
-- [ ] T014 Implement/validate `.jff`/JSON/SVG import-export and schema checks
-- [ ] T015 Validate offline storage sandbox and input validation diagnostics
-- [ ] T016 Ensure canvas performance ≥60fps with throttling/batched paints >10k steps
-- [ ] T017 Document deviations from reference implementations (if any) with rationale
+- [ ] T014 Validar import/export `.jff`/JSON e SVG conforme constituição
+- [ ] T015 Assegurar desempenho ≥60fps e ≥10k passos com throttling/batching
+- [ ] T016 Revisar mensagens de erro, validações e diagnósticos amigáveis
 
 ## Phase 3.5: QA & Documentation
-- [ ] T018 [P] Run `flutter analyze` and ensure zero warnings/errors
-- [ ] T019 [P] Execute manual scenarios from quickstart.md (offline)
-- [ ] T020 Update documentation (`README`, feature docs) to reflect new capability and references
-- [ ] T021 Confirm licensing notes (Apache-2.0 vs JFLAP assets) remain accurate
-- [ ] T022 [P] Ensure regression tests and property-based suites cover new behaviour
+- [ ] T017 [P] Rodar `flutter analyze`, testes completos e formatadores
+- [ ] T018 [P] Executar quickstart offline e documentar evidências
+- [ ] T019 [P] Atualizar `README`/docs com novos recursos e restrições
+- [ ] T020 Documentar desvios/referências em `/docs/reference-deviations.md`
 
 ## Dependencies
-- Phase 3.2 tasks block later phases
-- Core algorithms (T009) depend on immutable models (T008) and tests (T004-T007)
-- UI/state tasks depend on core/data implementation
-- Interoperability & performance tasks depend on completed core logic
+- Setup antes de testes; testes falhos antes de implementação
+- Core depende de modelos/testes; interoperabilidade/performance após núcleo
+- QA/Documentação após concluir as demais fases
 
 ## Parallel Execution Guidance
 ```
-# Example parallel run respecting immutability:
-Task: "Unit tests for DFA minimization in test/unit/core_fa/test_dfa_minimizer.dart"
-Task: "Widget tests for simulator UI in test/widget/presentation/simulator_test.dart"
-Task: "Import/export schema validation tests in test/integration/io/test_jff_conversion.dart"
+/spec_task run T004
+/spec_task run T005
+/spec_task run T006
 ```
-Ensure parallel tasks touch disjoint files and do not mutate shared state.
-
-## Validation Checklist
-- [ ] All syllabus features mapped to constitutional principles
-- [ ] Every algorithm task cites reference source
-- [ ] Tests precede implementation, fail initially
-- [ ] Performance and interoperability tasks present
-- [ ] Licensing/documentation tasks included
-- [ ] No task introduces forbidden scope or external dependencies
+Assegure que tarefas [P] não compartilham arquivos ou estados mutáveis.
 
 ## Notes
-- Encourage small commits following constitution guardrails
-- Track deviations in Complexity Tracking if constitution checks flagged them
-- Ensure final PR references constitution compliance in Summary
+- Desenvolvimento restrito à arquitetura existente (`lib/core`, `lib/data`, `lib/presentation`, `lib/injection`)
+- Registre qualquer desvio de referência imediatamente
+- Commits pequenos seguindo TDD e `flutter analyze`

@@ -1,10 +1,10 @@
 <!--
 Sync Impact Report
-Version change: 0.0.0 → 1.0.0
-Modified principles: None (initial publication)
-Added sections: Core Principles; Scope & Interoperability Standards; Architecture & Implementation Requirements; Governance
+Version change: 1.0.0 → 2.0.0
+Modified principles: Clean Architecture and Immutability → Layered Architecture and Immutability
+Added sections: None
 Removed sections: None
-Templates requiring updates: ✅ .specify/templates/plan-template.md; ✅ .specify/templates/spec-template.md; ✅ .specify/templates/tasks-template.md
+Templates requiring updates: ⚠ .specify/templates/plan-template.md; ⚠ .specify/templates/spec-template.md; ⚠ .specify/templates/tasks-template.md
 Follow-up TODOs: None
 -->
 # JFlutter Constitution
@@ -17,7 +17,7 @@ Follow-up TODOs: None
 - Rationale: Ensures the project fulfils its non-negotiable purpose as an accessible didactic environment for theoretical computer science.
 
 ### Curricular Scope Fidelity
-- MUST restrict features to the approved syllabus: ER/AF (AFD, AFN, AFN-λ) with ER↔AF, GR/GRJ↔AF, language operations {union, intersection, complement, concatenation, Kleene star, reverse}, DFA minimization, language properties {emptiness, finiteness, equivalence}, PDA (APD/APN) with canonical conversions and acceptance modes, CFG→CNF with CYK, pumping lemmas (regular and context-free), deterministic/nondeterministic/multi-tape TMs with immutable traces, grammar inference (GI↔LRE), and the hierarchy visualizations (ALL/GSC/LSC).
+- MUST restrict features to the approved syllabus: ER/AF (AFD, AFN, AFN-λ) with ER↔AF, GR/GRJ↔AF, language operations {union, intersection, complement, concatenation, Kleene star, reverse}, DFA minimization, language properties {emptiness, finiteness, equivalence}, PDA (APD/APN) with canonical conversions and acceptance modes, CFG→CNF with CYK, pumping lemmas (regular and context-free), deterministic/nondeterministic TMs with immutable traces, grammar inference (GI↔LRE), and the hierarchy visualizations (ALL/GSC/LSC).
 - MUST refuse out-of-scope additions (e.g., LL/LR/SLR parsing techniques, brute-force GI parsers, L-systems/turtle graphics, invasive telemetry, mandatory external services).
 - Rationale: Guards against scope creep and keeps development focused on the agreed academic curriculum.
 
@@ -26,10 +26,11 @@ Follow-up TODOs: None
 - MUST validate conversions and simulations against the reference implementations before marking features as complete.
 - Rationale: Maintains behavioural parity with vetted sources during the migration from legacy JFLAP.
 
-### Clean Architecture and Immutability
-- MUST implement clean architecture boundaries using pure Dart packages (`core_fa`, `core_pda`, `core_tm`, `core_regex`, `conversions`, `serializers`, `viz`, `playground`) and shared types (`Alphabet`, `State`, `Transition`, `Configuration<T>`, `Trace`).
+### Layered Architecture and Immutability
+- MUST maintain the current layered structure under `lib/` (`core`, `data`, `presentation`, `injection`) and evolve features within these modules unless a future constitution amendment approves broader restructuring.
 - MUST enforce immutability via `freezed`/sealed types, inject state with Riverpod providers, and expose functionality through testable, modular APIs.
-- Rationale: Preserves maintainability, testability, and clear separation of concerns across the Flutter application.
+- MUST keep shared types (`Alphabet`, `State`, `Transition`, `Configuration<T>`, `Trace`) authoritative within `lib/core/` and reuse them across layers to guarantee consistency.
+- Rationale: Preserves maintainability and testability while respecting the existing architecture that has proven stable for the project.
 
 ### Quality, Performance, and Licensing Assurance
 - MUST pair every behavioural change with targeted tests (unit, integration, widget, golden, or property-based as suitable) and run `flutter analyze` before review.
@@ -46,11 +47,11 @@ Follow-up TODOs: None
 
 ## Architecture & Implementation Requirements
 
-- New functionality MUST reside in the appropriate layer under `lib/` (`core`, `data`, `presentation`) and maintain separation of UI, state, and algorithms.
+- New functionality MUST reside in the appropriate layer under `lib/` (`core`, `data`, `presentation`, `injection`) and maintain separation of UI, state, and algorithms without migrating to external packages by default.
 - Services and repositories MUST remain deterministic and testable, avoiding hidden side effects or network requirements unless explicitly approved for offline caching.
 - DTOs MUST be generated with `json_serializable`, and cross-layer contracts MUST use shared immutable models.
-- Performance-sensitive canvases MUST employ batching/throttling strategies consistent with the reference implementations.
-- Any deviation from clean architecture patterns MUST include a documented justification and a plan to return to compliance.
+- Performance-sensitive canvases MUST employ throttling/batching strategies consistent with the reference implementations.
+- Any deviation from these layered boundaries MUST include a documented justification and a plan to return to compliance.
 
 ## Governance
 
@@ -59,4 +60,4 @@ Follow-up TODOs: None
 - Compliance reviews MUST occur at least once per release cycle, ensuring documentation, tests, and licensing remain aligned with this constitution.
 - Semantic versioning (MAJOR.MINOR.PATCH) governs constitution changes; MAJOR increments reflect removed or redefined principles, MINOR adds new principles or sections, PATCH captures clarifications.
 
-**Version**: 1.0.0 | **Ratified**: 2025-09-25 | **Last Amended**: 2025-09-25
+**Version**: 2.0.0 | **Ratified**: 2025-09-25 | **Last Amended**: 2025-09-25

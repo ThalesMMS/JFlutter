@@ -39,7 +39,7 @@ Before completing the spec, confirm:
 - Content fits approved syllabus (automata, grammars, TMs, pumping lemmas, hierarchy)
 - No forbidden items (LL/LR parsing, brute-force GI, L-systems, invasive telemetry, mandatory external services)
 - Interoperability needs (`.jff`, JSON, SVG, immutable traces) are considered
-- References to existing algorithms/data structures link back to `References/`
+- Architecture respects `lib/core`, `lib/data`, `lib/presentation`, `lib/injection` boundaries; no package migrations implied without future amendment
 
 ---
 
@@ -53,42 +53,38 @@ Before completing the spec, confirm:
 2. **Given** [initial state], **When** [user reviews simulation trace], **Then** [immutable trace remains consistent and explorable]
 
 ### Edge Cases
-- How do we handle malformed `.jff`/JSON inputs while preserving sandboxed storage?
-- What happens when the canvas reaches >10k simulation steps?
-- How does the feature behave offline or when device resources are constrained?
+- Como rejeitamos arquivos inválidos preservando sandbox e diagnósticos?
+- Como garantimos desempenho ≥60fps em simulações prolongadas (>10k passos)?
+- Como mantemos modo jogo/visualizações dentro do escopo curricular?
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
-- **FR-001**: System MUST [deliver specific syllabus-aligned capability]
-- **FR-002**: System MUST [respect offline, mobile-first interaction flow]
-- **FR-003**: Users MUST be able to [observe immutable traces or conversions]
-- **FR-004**: System MUST interoperate with [`.jff`, JSON schema, SVG export as applicable]
-- **FR-005**: System MUST validate inputs and surface actionable diagnostics
-- **FR-006**: System MUST reference [NAME OF REFERENCE] for algorithm correctness (cite file/path)
-- **FR-007**: System MUST document any deviation from reference implementation with rationale
+- **FR-001**: Sistema MUST [deliver syllabus-aligned capability]
+- **FR-002**: Sistema MUST [respeitar fluxo mobile/offline]
+- **FR-003**: Usuários MUST [observar traces imutáveis e diagnósticos]
+- **FR-004**: Sistema MUST interagir com `.jff`/JSON/SVG conforme constituição
+- **FR-005**: Sistema MUST reutilizar tipos compartilhados (`Alphabet`, `State`, `Transition`, `Configuration<T>`, `Trace`) dentro da arquitetura em `lib/`
+- **FR-006**: Sistema MUST validar contra referências (`References/`) e registrar desvios
 
-Mark ambiguities explicitly:
-- **FR-00X**: System MUST [NEEDS CLARIFICATION: question about automaton size limits, acceptance mode, etc.]
+Use [NEEDS CLARIFICATION: ...] para pontos ambíguos.
 
 ### Key Entities *(include when data involved)*
-- **Alphabet**: [Symbols used, link to shared type]
-- **State**: [Properties, immutability requirements]
-- **Transition**: [Source, destination, symbol stack]
-- **Configuration<Trace>**: [Snapshot semantics, replay expectations]
-
-Remove entities that do not apply.
+- **Alphabet**: ...
+- **State**: ...
+- **Transition**: ...
+- **Configuration<Trace>**: ...
 
 ---
 
 ## Constitution Check & Compliance Notes *(mandatory)*
-- **Scope**: [Explain how feature stays within curriculum]
-- **References**: [List relevant `References/` paths]
-- **Architecture Fit**: [Describe expected core/data/presentation impact]
-- **Quality**: [Planned tests (unit/integration/widget/golden), `flutter analyze`]
-- **Performance**: [Expectations for 60fps canvas, >10k steps]
-- **Licensing**: [Apache-2.0 compliance, JFLAP asset usage]
-- **Interoperability**: [`.jff`/JSON/SVG support, immutable traces]
+- **Scope**: ...
+- **References**: ...
+- **Architecture Fit**: Manter lógica em `lib/` (core/data/presentation/injection) com imutabilidade e Riverpod
+- **Quality**: Testes planejados (unit/integration/widget/golden/property), `flutter analyze`
+- **Performance**: ≥60fps, ≥10k passos, validações offline
+- **Licensing**: Apache-2.0 + JFLAP 7.1
+- **Interoperability**: `.jff`/JSON/SVG, traces imutáveis
 
 ---
 
@@ -104,7 +100,7 @@ Remove entities that do not apply.
 ### Requirement Completeness
 - [ ] No [NEEDS CLARIFICATION] markers remain
 - [ ] Requirements are testable and constitutionally compliant
-- [ ] Success criteria cover performance, interoperability, and trace immutability
+- [ ] Success criteria cover performance, interoperability, trace immutability
 - [ ] Scope is clearly bounded and references cited
 - [ ] Dependencies/assumptions on reference algorithms documented
 

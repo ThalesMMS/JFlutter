@@ -9,8 +9,7 @@ import 'package:test/test.dart';
 import 'test_helpers.dart';
 
 class _StubCreateAutomatonUseCase extends CreateAutomatonUseCase {
-  _StubCreateAutomatonUseCase(this._result)
-      : super(FakeAutomatonRepository());
+  _StubCreateAutomatonUseCase(this._result) : super(FakeAutomatonRepository());
 
   final AutomatonResult Function({
     required String name,
@@ -161,8 +160,13 @@ void main() {
 
     test('updateAutomaton replaces automaton and clears equivalence', () {
       final controller = AutomatonCreationController(
-        createAutomatonUseCase: _StubCreateAutomatonUseCase(({}) =>
-            throw UnimplementedError()),
+        createAutomatonUseCase: _StubCreateAutomatonUseCase(
+          (
+                  {required String name,
+                  required AutomatonType type,
+                  Set<String> alphabet = const {}}) =>
+              throw UnimplementedError(),
+        ),
         addStateUseCase: _StubAddStateUseCase.unused(),
       );
 
@@ -178,8 +182,13 @@ void main() {
 
     test('clear helpers reset fields', () {
       final controller = AutomatonCreationController(
-        createAutomatonUseCase: _StubCreateAutomatonUseCase(({}) =>
-            throw UnimplementedError()),
+        createAutomatonUseCase: _StubCreateAutomatonUseCase(
+          (
+                  {required String name,
+                  required AutomatonType type,
+                  Set<String> alphabet = const {}}) =>
+              throw UnimplementedError(),
+        ),
         addStateUseCase: _StubAddStateUseCase.unused(),
       );
 

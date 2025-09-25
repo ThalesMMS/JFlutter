@@ -1,5 +1,6 @@
 import 'package:petitparser/expression.dart';
 import 'package:petitparser/parser.dart';
+import 'package:petitparser/src/core/result.dart' as petit_result;
 
 import '../models/fsa.dart';
 import '../result.dart';
@@ -30,8 +31,9 @@ class RegexExpressionParser {
     final trimmed = pattern.trim();
     final result = _nodeParser.parse(trimmed);
     return switch (result) {
-      Success(value: final ast) => RegexAst(root: ast),
-      Failure() => throw FormatException('${result.message} at position ${result.position}'),
+      petit_result.Success(value: final ast) => RegexAst(root: ast),
+      petit_result.Failure() => throw FormatException(
+          '${result.message} at position ${result.position}'),
     };
   }
 
@@ -41,11 +43,14 @@ class RegexExpressionParser {
     const meta = r'\\()|*+?&{}.';
 
     builder.primitive(string('ε').trim().map((_) => const RegexEpsilonNode()));
-    builder.primitive(string('eps').trim().map((_) => const RegexEpsilonNode()));
-    builder.primitive(string('lambda').trim().map((_) => const RegexEpsilonNode()));
+    builder
+        .primitive(string('eps').trim().map((_) => const RegexEpsilonNode()));
+    builder.primitive(
+        string('lambda').trim().map((_) => const RegexEpsilonNode()));
     builder.primitive(string('∅').trim().map((_) => const RegexEmptySetNode()));
     builder.primitive(string('Ø').trim().map((_) => const RegexEmptySetNode()));
-    builder.primitive(string('emptyset').trim().map((_) => const RegexEmptySetNode()));
+    builder.primitive(
+        string('emptyset').trim().map((_) => const RegexEmptySetNode()));
     builder.primitive(char('.').trim().map((_) => const RegexDotNode()));
     builder.primitive(
       anyOf(meta).skip(before: char('\\')).trim().map(RegexLiteralNode.new),
@@ -55,13 +60,14 @@ class RegexExpressionParser {
     );
 
     builder.group().wrapper(
-      char('(').trim(),
-      char(')').trim(),
-      (_, value, __) => value,
-    );
+          char('(').trim(),
+          char(')').trim(),
+          (_, value, __) => value,
+        );
 
     final integer = digit().plusString().trim().map(int.parse);
-    final range = seq3(integer.optional(), char(',').trim().optional(), integer.optional())
+    final range = seq3(
+            integer.optional(), char(',').trim().optional(), integer.optional())
         .skip(before: char('{'), after: char('}'))
         .map((values) {
       final min = values.$1;
@@ -124,7 +130,9 @@ class RegexThompsonCompiler {
       }
       final context = ThompsonContext(
         wildcardAlphabet: wildcardAlphabet ??
-            (alphabet.isEmpty ? ThompsonContext.defaultWildcardAlphabet : alphabet),
+            (alphabet.isEmpty
+                ? ThompsonContext.defaultWildcardAlphabet
+                : alphabet),
       );
       final fragment = ast.buildFragment(context);
       final automaton = context.buildAutomaton(

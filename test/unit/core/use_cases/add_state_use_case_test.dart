@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:jflutter/lib/core/entities/automaton_entity.dart';
-import 'package:jflutter/lib/core/repositories/automaton_repository.dart';
-import 'package:jflutter/lib/core/result.dart';
-import 'package:jflutter/lib/core/use_cases/automaton_use_cases.dart';
+import 'package:jflutter/core/entities/automaton_entity.dart';
+import 'package:jflutter/core/repositories/automaton_repository.dart';
+import 'package:jflutter/core/result.dart';
+import 'package:jflutter/core/use_cases/automaton_use_cases.dart';
 
 class _RecordingAutomatonRepository implements AutomatonRepository {
   AutomatonEntity? lastSaved;
@@ -46,7 +46,9 @@ class _RecordingAutomatonRepository implements AutomatonRepository {
 
 void main() {
   group('AddStateUseCase', () {
-    test('updates previous states to non-initial when new initial state is added', () async {
+    test(
+        'updates previous states to non-initial when new initial state is added',
+        () async {
       final repository = _RecordingAutomatonRepository();
       final useCase = AddStateUseCase(repository);
       final automaton = AutomatonEntity(
@@ -91,7 +93,8 @@ void main() {
       expect(savedAutomaton, isNotNull);
       expect(savedAutomaton!.initialId, equals('q2'));
 
-      final initialStates = savedAutomaton.states.where((state) => state.isInitial).toList();
+      final initialStates =
+          savedAutomaton.states.where((state) => state.isInitial).toList();
       expect(initialStates.length, 1);
       expect(initialStates.single.id, equals('q2'));
 

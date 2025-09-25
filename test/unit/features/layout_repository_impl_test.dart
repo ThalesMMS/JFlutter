@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:jflutter/lib/core/entities/automaton_entity.dart';
-import 'package:jflutter/lib/features/layout/layout_repository_impl.dart';
+import 'package:jflutter/core/entities/automaton_entity.dart';
+import 'package:jflutter/features/layout/layout_repository_impl.dart';
 
 void main() {
   late LayoutRepositoryImpl repository;
@@ -78,7 +78,8 @@ void main() {
     );
   }
 
-  test('balanced layout arranges states in grid within canvas bounds', () async {
+  test('balanced layout arranges states in grid within canvas bounds',
+      () async {
     final automaton = buildAutomaton();
     final result = await repository.applyBalancedLayout(automaton);
 
@@ -136,8 +137,10 @@ void main() {
     final compactBounds = _boundsOf(compact.data!.states);
     final spreadBounds = _boundsOf(spread.data!.states);
 
-    expect(spreadBounds.width + 1e-6, greaterThanOrEqualTo(compactBounds.width));
-    expect(spreadBounds.height + 1e-6, greaterThanOrEqualTo(compactBounds.height));
+    expect(
+        spreadBounds.width + 1e-6, greaterThanOrEqualTo(compactBounds.width));
+    expect(
+        spreadBounds.height + 1e-6, greaterThanOrEqualTo(compactBounds.height));
     expect(_withinCanvas(spreadBounds), isTrue);
   });
 

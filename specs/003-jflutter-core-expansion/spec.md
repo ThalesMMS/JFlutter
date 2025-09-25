@@ -106,11 +106,9 @@ As a computer science student learning formal language theory, I want to use JFl
 #### O3 - Regular Expressions and Context-Free Grammars (Regex/CFG)
 - **FR-011**: System MUST implement Regex→AST→Thompson NFA pipeline with basic operators (union |, concatenation, Kleene star *, parentheses)
 - **FR-012**: System MUST provide comprehensive CFG toolkit with production rule management
-- **FR-013**: System MUST support bidirectional conversions between CFG and PDA (LL and SLR parsing)
+- **FR-013**: System MUST support bidirectional conversions between CFG and PDA
 - **FR-014**: System MUST implement CFG→CNF conversion with Chomsky Normal Form validation
-- **FR-015**: System MUST provide SLR(1) table generation and parser implementation
 - **FR-016**: System MUST support CYK algorithm for context-free language recognition
-- **FR-017**: System MUST include Brute Force Parser for unrestricted grammars
 - **FR-018**: System MUST implement Pumping Lemmas for both regular and context-free languages
 
 #### O4 - Advanced Turing Machines (TM+)
@@ -226,9 +224,9 @@ As a computer science student learning formal language theory, I want to use JFl
 ### O3 - Regex/CFG Acceptance Criteria
 - [ ] Regex→AST→NFA pipeline with basic operator support
 - [ ] CFG toolkit with production rule management
-- [ ] CFG↔PDA conversions (LL and SLR) validated
-- [ ] CNF conversion and SLR(1) parsing working
-- [ ] CYK and Brute Force parsers implemented
+- [ ] CFG↔PDA conversions validated
+- [ ] CNF conversion working
+- [ ] CYK parser implemented
 - [ ] Pumping Lemmas for regular and CFL languages
 
 ### O4 - TM+ Acceptance Criteria
@@ -322,19 +320,4 @@ As a computer science student learning formal language theory, I want to use JFl
 - **Determinism Checkers**: Built-in determinism validation for FA, PDA, and TM types
 
 ### Serialization Strategy
-- **DTO Pattern**: Separate `*.dto.dart` files with `json_serializable` for API boundaries
-- **Round-Trip Testing**: Comprehensive model→JSON→model validation for all formats
-- **Versioned Schemas**: Public JSON schemas with versioning for backward compatibility
-- **Format Validation**: Strict validation of imported files with helpful error messages
-
-### Visualization Architecture
-- **Decoupled Rendering**: Independent visualization engines in `viz` package
-- **Canvas Layers**: Separate interaction layers independent of core algorithm logic
-- **Mobile-First Rendering**: Touch-optimized rendering with gesture support
-- **Performance Optimization**: Efficient rendering for large automaton visualizations
-
-### Package Organization
-- **Core Packages**: `core_fa`, `core_pda`, `core_tm`, `core_regex` with pure Dart implementations
-- **Utility Packages**: `conversions`, `serializers` for algorithm and format handling
-- **Visualization Package**: `viz` for decoupled rendering and interaction
-- **Integration Package**: `playground` demonstrating package integration patterns
+- **DTO Pattern**: Separate `

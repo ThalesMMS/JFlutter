@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:jflutter/lib/core/entities/automaton_entity.dart';
-import 'package:jflutter/lib/core/result.dart';
-import 'package:jflutter/lib/data/repositories/automaton_repository_impl.dart';
-import 'package:jflutter/lib/data/services/automaton_service.dart';
+import 'package:jflutter/core/entities/automaton_entity.dart';
+import 'package:jflutter/core/result.dart';
+import 'package:jflutter/data/repositories/automaton_repository_impl.dart';
+import 'package:jflutter/data/services/automaton_service.dart';
 
 void main() {
   late AutomatonService service;

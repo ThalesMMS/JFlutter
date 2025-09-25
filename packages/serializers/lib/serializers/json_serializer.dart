@@ -94,26 +94,30 @@ class JSONSerializer {
       'type': 'finite_automaton',
       'id': fa.id,
       'name': fa.name,
-      'states': fa.states.map((s) => s.toJson()).toList(),
-      'transitions': fa.transitions.map((t) => t.toJson()).toList(),
-      'alphabet': fa.alphabet.symbols,
+      'states': fa.states.map((state) => state.toJson()).toList(),
+      'transitions':
+          fa.transitions.map((transition) => transition.toJson()).toList(),
+      'alphabet': fa.alphabet.symbols.toList(),
       'initialState': fa.initialState?.id,
-      'finalStates': fa.finalStates.map((s) => s.id).toList(),
+      'finalStates': fa.acceptingStates.map((state) => state.id).toList(),
       'metadata': fa.metadata.toJson(),
     };
   }
 
-  static Map<String, dynamic> _serializePushdownAutomaton(PushdownAutomaton pda) {
+  static Map<String, dynamic> _serializePushdownAutomaton(
+      PushdownAutomaton pda) {
     return {
       'type': 'pushdown_automaton',
       'id': pda.id,
       'name': pda.name,
-      'states': pda.states.map((s) => s.toJson()).toList(),
-      'transitions': pda.transitions.map((t) => t.toJson()).toList(),
-      'inputAlphabet': pda.inputAlphabet.symbols,
-      'stackAlphabet': pda.stackAlphabet.symbols,
+      'states': pda.states.map((state) => state.toJson()).toList(),
+      'transitions':
+          pda.transitions.map((transition) => transition.toJson()).toList(),
+      'inputAlphabet': pda.inputAlphabet.symbols.toList(),
+      'stackAlphabet': pda.stackAlphabet.symbols.toList(),
       'initialState': pda.initialState?.id,
-      'finalStates': pda.finalStates.map((s) => s.id).toList(),
+      'finalStates': pda.acceptingStates.map((state) => state.id).toList(),
+      'initialStackSymbol': pda.initialStackSymbol,
       'acceptanceMode': pda.acceptanceMode.name,
       'metadata': pda.metadata.toJson(),
     };
@@ -124,46 +128,54 @@ class JSONSerializer {
       'type': 'turing_machine',
       'id': tm.id,
       'name': tm.name,
-      'states': tm.states.map((s) => s.toJson()).toList(),
-      'transitions': tm.transitions.map((t) => t.toJson()).toList(),
-      'alphabet': tm.alphabet.symbols,
+      'states': tm.states.map((state) => state.toJson()).toList(),
+      'transitions':
+          tm.transitions.map((transition) => transition.toJson()).toList(),
+      'inputAlphabet': tm.inputAlphabet.symbols.toList(),
+      'tapeAlphabet': tm.tapeAlphabet.symbols.toList(),
       'initialState': tm.initialState?.id,
-      'finalStates': tm.finalStates.map((s) => s.id).toList(),
+      'finalStates': tm.acceptingStates.map((state) => state.id).toList(),
       'blankSymbol': tm.blankSymbol,
+      'tapeCount': tm.tapeCount,
       'metadata': tm.metadata.toJson(),
     };
   }
 
-  static Map<String, dynamic> _serializeContextFreeGrammar(ContextFreeGrammar cfg) {
+  static Map<String, dynamic> _serializeContextFreeGrammar(
+      ContextFreeGrammar cfg) {
     return {
       'type': 'context_free_grammar',
       'id': cfg.id,
       'name': cfg.name,
-      'variables': cfg.variables,
-      'terminals': cfg.terminals,
-      'productions': cfg.productions.map((p) => p.toJson()).toList(),
-      'startVariable': cfg.startVariable,
+      'variables': cfg.nonterminals.toList(),
+      'terminals': cfg.terminals.toList(),
+      'productions':
+          cfg.productions.map((production) => production.toJson()).toList(),
+      'startVariable': cfg.startSymbol,
       'metadata': cfg.metadata.toJson(),
     };
   }
 
-  static Map<String, dynamic> _serializeRegularExpression(RegularExpression regex) {
+  static Map<String, dynamic> _serializeRegularExpression(
+      RegularExpression regex) {
     return {
       'type': 'regular_expression',
       'id': regex.id,
       'name': regex.name,
       'pattern': regex.pattern,
-      'alphabet': regex.alphabet.symbols,
+      'alphabet': regex.alphabet.symbols.toList(),
       'metadata': regex.metadata.toJson(),
     };
   }
 
   /// Private deserialization methods
-  static FiniteAutomaton _deserializeFiniteAutomaton(Map<String, dynamic> json) {
+  static FiniteAutomaton _deserializeFiniteAutomaton(
+      Map<String, dynamic> json) {
     return FiniteAutomaton.fromJson(json);
   }
 
-  static PushdownAutomaton _deserializePushdownAutomaton(Map<String, dynamic> json) {
+  static PushdownAutomaton _deserializePushdownAutomaton(
+      Map<String, dynamic> json) {
     return PushdownAutomaton.fromJson(json);
   }
 
@@ -171,20 +183,23 @@ class JSONSerializer {
     return TuringMachine.fromJson(json);
   }
 
-  static ContextFreeGrammar _deserializeContextFreeGrammar(Map<String, dynamic> json) {
+  static ContextFreeGrammar _deserializeContextFreeGrammar(
+      Map<String, dynamic> json) {
     return ContextFreeGrammar.fromJson(json);
   }
 
-  static RegularExpression _deserializeRegularExpression(Map<String, dynamic> json) {
+  static RegularExpression _deserializeRegularExpression(
+      Map<String, dynamic> json) {
     return RegularExpression.fromJson(json);
   }
 
   /// Private validation helper
-  static bool _validateRule(Map<String, dynamic> json, String field, dynamic rule) {
+  static bool _validateRule(
+      Map<String, dynamic> json, String field, dynamic rule) {
     if (!json.containsKey(field)) return true; // Optional field
 
     final value = json[field];
-    
+
     if (rule is String) {
       // Type validation
       switch (rule) {

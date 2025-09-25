@@ -1,16 +1,13 @@
 import 'dart:math' as math;
 
-import 'package:jflutter/core/models/alphabet.dart';
-import 'package:jflutter/core/models/automaton_metadata.dart';
 import 'package:jflutter/core/models/state.dart';
 import 'package:jflutter/core/models/tm.dart';
 import 'package:jflutter/core/models/tm_analysis.dart';
 import 'package:jflutter/core/models/tm_transition.dart';
+import 'package:jflutter/core/models/tm_runtime.dart';
 import 'package:vector_math/vector_math_64.dart';
 
-/// Test utilities for Turing Machine testing
 class TmTestData {
-  /// Creates a simple TM for testing
   static TM createTm() {
     final q0 = State(
       id: 'q0',
@@ -57,7 +54,6 @@ class TmTestData {
     );
   }
 
-  /// Creates a test analysis for a TM
   static TMAnalysis createAnalysis(TM tm) {
     return TMAnalysis(
       tm: tm,

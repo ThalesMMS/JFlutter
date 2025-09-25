@@ -174,18 +174,6 @@ class AlgorithmOperations {
     }
   }
 
-  /// Converts a grammar to a PDA
-  static Result<PDA> convertGrammarToPda(
-    Grammar grammar, {
-    Duration timeout = const Duration(seconds: 10),
-  }) {
-    try {
-      return GrammarToPDAConverter.convertGrammarToPDA(grammar, timeout: timeout);
-    } catch (e) {
-      return ResultFactory.failure('Error converting grammar to PDA: $e');
-    }
-  }
-
   /// Creates a pumping lemma game
   static Result<models.PumpingLemmaGame> createPumpingLemmaGame(
     FSA automaton, {
@@ -322,79 +310,6 @@ class AlgorithmOperations {
       return GrammarParser.findGeneratedStrings(grammar, maxLength, maxResults: maxResults);
     } catch (e) {
       return ResultFactory.failure('Error finding generated strings: $e');
-    }
-  }
-
-
-  /// Analyzes a PDA
-  static Result<PDAAnalysis> analyzePda(
-    PDA pda, {
-    int maxInputLength = 10,
-    Duration timeout = const Duration(seconds: 10),
-  }) {
-    try {
-      return PDASimulator.analyzePDA(pda, maxInputLength: maxInputLength, timeout: timeout);
-    } catch (e) {
-      return ResultFactory.failure('Error analyzing PDA: $e');
-    }
-  }
-
-  /// Analyzes a Turing machine
-  static Result<TMAnalysis> analyzeTm(
-    TM tm, {
-    int maxInputLength = 10,
-    Duration timeout = const Duration(seconds: 10),
-  }) {
-    try {
-      return TMSimulator.analyzeTM(tm, maxInputLength: maxInputLength, timeout: timeout);
-    } catch (e) {
-      return ResultFactory.failure('Error analyzing Turing machine: $e');
-    }
-  }
-
-  /// Tests if a grammar can be converted to a PDA
-  static Result<bool> canConvertGrammarToPda(Grammar grammar) {
-    try {
-      final canConvert = GrammarToPDAConverter.canConvertToPDA(grammar);
-      return ResultFactory.success(canConvert);
-    } catch (e) {
-      return ResultFactory.failure('Error testing grammar to PDA conversion: $e');
-    }
-  }
-
-  /// Analyzes the conversion from grammar to PDA
-  static Result<GrammarToPDAAnalysis> analyzeGrammarToPdaConversion(
-    Grammar grammar, {
-    Duration timeout = const Duration(seconds: 10),
-  }) {
-    try {
-      return GrammarToPDAConverter.analyzeConversion(grammar);
-    } catch (e) {
-      return ResultFactory.failure('Error analyzing grammar to PDA conversion: $e');
-    }
-  }
-
-  /// Converts a grammar to a PDA using the standard construction
-  static Result<PDA> convertGrammarToPdaStandard(
-    Grammar grammar, {
-    Duration timeout = const Duration(seconds: 10),
-  }) {
-    try {
-      return GrammarToPDAConverter.convertGrammarToPDAStandard(grammar, timeout: timeout);
-    } catch (e) {
-      return ResultFactory.failure('Error converting grammar to PDA (standard): $e');
-    }
-  }
-
-  /// Converts a grammar to a PDA using the Greibach normal form construction
-  static Result<PDA> convertGrammarToPdaGreibach(
-    Grammar grammar, {
-    Duration timeout = const Duration(seconds: 10),
-  }) {
-    try {
-      return GrammarToPDAConverter.convertGrammarToPDAGreibach(grammar, timeout: timeout);
-    } catch (e) {
-      return ResultFactory.failure('Error converting grammar to PDA (Greibach): $e');
     }
   }
 }

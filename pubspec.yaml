@@ -58,6 +58,10 @@ dependencies:
   riverpod: ^2.5.1
   flutter_riverpod: ^2.5.1
   
+  # Immutability and code generation
+  freezed: ^2.4.7
+  json_annotation: ^4.8.1
+  
   # XML parsing for JFLAP file import
   xml: ^6.5.0
   
@@ -72,6 +76,24 @@ dependencies:
   # Collection utilities
   collection: ^1.18.0
   petitparser: ^7.0.0
+  
+  # Local packages
+  core_fa:
+    path: packages/core_fa
+  core_pda:
+    path: packages/core_pda
+  core_tm:
+    path: packages/core_tm
+  core_regex:
+    path: packages/core_regex
+  conversions:
+    path: packages/conversions
+  serializers:
+    path: packages/serializers
+  viz:
+    path: packages/viz
+  playground:
+    path: packages/playground
 
 dev_dependencies:
   flutter_test:
@@ -86,6 +108,14 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
+  
+  # Code generation
+  build_runner: ^2.4.7
+  json_serializable: ^6.7.1
+  freezed: ^2.4.7
+  
+  # Linting and code quality
+  very_good_analysis: ^6.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

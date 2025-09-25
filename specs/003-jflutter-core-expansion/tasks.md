@@ -43,31 +43,31 @@
 - **Main app**: lib/ with presentation/core/data layers
 
 ## Phase 3.1: Setup
-- [ ] T001 Create Flutter project structure with clean architecture and package organization
-- [ ] T002 Initialize Flutter project with Riverpod, freezed, json_serializable, very_good_analysis, PetitParser dependencies
-- [ ] T003 [P] Configure linting (very_good_analysis) and formatting tools with pre-commit hooks
-- [ ] T004 [P] Set up clean architecture folder structure (presentation/core/data) in lib/
-- [ ] T005 [P] Create packages directory structure for core_fa, core_pda, core_tm, core_regex, conversions, serializers, viz, playground
+- [x] T001 Create Flutter project structure with clean architecture and package organization
+- [x] T002 Initialize Flutter project with Riverpod, freezed, json_serializable, very_good_analysis, PetitParser dependencies
+- [x] T003 [P] Configure linting (very_good_analysis) and formatting tools with pre-commit hooks
+- [x] T004 [P] Set up clean architecture folder structure (presentation/core/data) in lib/
+- [x] T005 [P] Create packages directory structure for core_fa, core_pda, core_tm, core_regex, conversions, serializers, viz, playground
 
 ## Phase 3.2: Tests First (TDD) ⚠️ MUST COMPLETE BEFORE 3.3
 **CRITICAL: These tests MUST be written and MUST FAIL before ANY implementation**
-- [ ] T006 [P] Contract test GET /automata endpoint in test/contract/test_automata_get.dart
-- [ ] T007 [P] Contract test POST /automata endpoint in test/contract/test_automata_post.dart
-- [ ] T008 [P] Contract test GET /automata/{id} endpoint in test/contract/test_automata_get_by_id.dart
-- [ ] T009 [P] Contract test PUT /automata/{id} endpoint in test/contract/test_automata_put.dart
-- [ ] T010 [P] Contract test DELETE /automata/{id} endpoint in test/contract/test_automata_delete.dart
-- [ ] T011 [P] Contract test POST /automata/{id}/simulate endpoint in test/contract/test_automata_simulate.dart
-- [ ] T012 [P] Contract test POST /automata/{id}/algorithms endpoint in test/contract/test_automata_algorithms.dart
-- [ ] T013 [P] Contract test POST /automata/operations endpoint in test/contract/test_automata_operations.dart
-- [ ] T014 [P] Contract test POST /import/jff endpoint in test/contract/test_import_jff.dart
-- [ ] T015 [P] Contract test GET /export/{id}/jff endpoint in test/contract/test_export_jff.dart
-- [ ] T016 [P] Contract test GET /export/{id}/json endpoint in test/contract/test_export_json.dart
-- [ ] T017 [P] Integration test finite automata language operations in test/integration/test_fa_language_operations.dart
-- [ ] T018 [P] Integration test pushdown automata simulation in test/integration/test_pda_simulation.dart
-- [ ] T019 [P] Integration test regex processing pipeline in test/integration/test_regex_processing.dart
-- [ ] T020 [P] Integration test Turing machine simulation in test/integration/test_tm_simulation.dart
-- [ ] T021 [P] Integration test JFLAP file interoperability in test/integration/test_jflap_interop.dart
-- [ ] T022 [P] Widget test automaton canvas in test/widget/test_automaton_canvas.dart
+- [x] T006 [P] Contract test GET /automata endpoint in test/contract/test_automata_get.dart
+- [x] T007 [P] Contract test POST /automata endpoint in test/contract/test_automata_post.dart
+- [x] T008 [P] Contract test GET /automata/{id} endpoint in test/contract/test_automata_get_by_id.dart
+- [x] T009 [P] Contract test PUT /automata/{id} endpoint in test/contract/test_automata_put.dart
+- [x] T010 [P] Contract test DELETE /automata/{id} endpoint in test/contract/test_automata_delete.dart
+- [x] T011 [P] Contract test POST /automata/{id}/simulate endpoint in test/contract/test_automata_simulate.dart
+- [x] T012 [P] Contract test POST /automata/{id}/algorithms endpoint in test/contract/test_automata_algorithms.dart
+- [x] T013 [P] Contract test POST /automata/operations endpoint in test/contract/test_automata_operations.dart
+- [x] T014 [P] Contract test POST /import/jff endpoint in test/contract/test_import_jff.dart
+- [x] T015 [P] Contract test GET /export/{id}/jff endpoint in test/contract/test_export_jff.dart
+- [x] T016 [P] Contract test GET /export/{id}/json endpoint in test/contract/test_export_json.dart
+- [x] T017 [P] Integration test finite automata language operations in test/integration/test_fa_language_operations.dart
+- [x] T018 [P] Integration test pushdown automata simulation in test/integration/test_pda_simulation.dart
+- [x] T019 [P] Integration test regex processing pipeline in test/integration/test_regex_processing.dart
+- [x] T020 [P] Integration test Turing machine simulation in test/integration/test_tm_simulation.dart
+- [x] T021 [P] Integration test JFLAP file interoperability in test/integration/test_jflap_interop.dart
+- [x] T022 [P] Widget test automaton canvas in test/widget/test_automaton_canvas.dart
 
 ## Phase 3.3: Core Implementation (ONLY after tests are failing)
 - [ ] T023 [P] Core entity models with freezed in packages/core_fa/lib/models/ (State, Transition, Alphabet, AutomatonMetadata)

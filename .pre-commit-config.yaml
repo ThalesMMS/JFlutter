@@ -1,0 +1,26 @@
+repos:
+  - repo: local
+    hooks:
+      - id: flutter-analyze
+        name: Flutter Analyze
+        entry: flutter analyze
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [commit]
+
+      - id: flutter-format
+        name: Flutter Format
+        entry: flutter format --set-exit-if-changed
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [commit]
+
+      - id: flutter-test
+        name: Flutter Test
+        entry: flutter test
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [commit]

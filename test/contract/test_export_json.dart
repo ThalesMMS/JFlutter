@@ -1,0 +1,75 @@
+// Contract test for GET /export/{id}/json endpoint
+// This test MUST fail initially - it defines the expected API contract
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:jflutter_core/api/automaton_api.dart';
+import 'package:jflutter_core/models/automaton.dart';
+
+void main() {
+  group('GET /export/{id}/json Contract Tests', () {
+    late AutomatonApi api;
+    late String automatonId;
+
+    setUp(() async {
+      api = AutomatonApi();
+      final createResponse = await api.createAutomaton(
+        CreateAutomatonRequest(
+          name: 'Export Test FA',
+          type: AutomatonType.DFA,
+        ),
+      );
+      automatonId = createResponse.data.id;
+    });
+
+    test('should export automaton to JSON format', () async {
+      final response = await api.exportToJSON(automatonId);
+      
+      expect(response.statusCode, 200);
+      expect(response.data, isA<Automaton>());
+      expect(response.data.id, automatonId);
+    });
+
+    test('should return 404 for non-existent automaton', () async {
+      final response = await api.exportToJSON('non-existent-id');
+      
+      expect(response.statusCode, 404);
+    });
+
+    test('should export automaton with all required fields', () async {
+      final response = await api.exportToJSON(automatonId);
+      
+      expect(response.statusCode, 200);
+      final automaton = response.data;
+      expect(automaton.id, isNotEmpty);
+      expect(automaton.name, isNotEmpty);
+      expect(automaton.type, isA<AutomatonType>());
+      expect(automaton.states, isA<List<State>>());
+      expect(automaton.transitions, isA<List<Transition>>());
+      expect(automaton.alphabet, isA<Alphabet>());
+      expect(automaton.metadata, isA<AutomatonMetadata>());
+    });
+
+    test('should export different automaton types to JSON', () async {
+      final types = [
+        AutomatonType.DFA,
+        AutomatonType.NFA,
+        AutomatonType.PDA,
+        AutomatonType.TM,
+      ];
+
+      for (final type in types) {
+        final createResponse = await api.createAutomaton(
+          CreateAutomatonRequest(
+            name: 'Export Test $type',
+            type: type,
+          ),
+        );
+        
+        final response = await api.exportToJSON(createResponse.data.id);
+        
+        expect(response.statusCode, 200);
+        expect(response.data.type, type);
+      }
+    });
+  });
+}

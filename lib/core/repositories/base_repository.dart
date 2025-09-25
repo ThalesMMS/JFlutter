@@ -1,6 +1,7 @@
 // Base repository class to consolidate common patterns
 // Reduces duplication across repository implementations
 
+import 'package:jflutter/core/error_handler.dart';
 import 'package:jflutter/core/result.dart';
 
 /// Base repository class with common error handling and caching patterns
@@ -92,22 +93,28 @@ abstract class BaseRepository {
 
   /// Log operation start
   void logOperationStart(String operationName, [Map<String, dynamic>? parameters]) {
-    // TODO: Implement proper logging
-    print('Starting operation: $operationName');
-    if (parameters != null) {
-      print('Parameters: $parameters');
+    final buffer = StringBuffer('Starting operation: $operationName');
+    if (parameters != null && parameters.isNotEmpty) {
+      final formattedParameters = parameters.entries
+          .map((entry) => '${entry.key}=${entry.value}')
+          .join(', ');
+      buffer.write(' (parameters: $formattedParameters)');
     }
+
+    ErrorHandler.logInfo(buffer.toString());
   }
 
   /// Log operation completion
   void logOperationComplete(String operationName, Duration duration) {
-    // TODO: Implement proper logging
-    print('Completed operation: $operationName in ${duration.inMilliseconds}ms');
+    final durationMs = duration.inMilliseconds;
+    final durationSeconds = (durationMs / 1000).toStringAsFixed(2);
+    ErrorHandler.logInfo(
+      'Completed operation: $operationName in ${durationMs}ms (~${durationSeconds}s)',
+    );
   }
 
   /// Log operation error
   void logOperationError(String operationName, dynamic error) {
-    // TODO: Implement proper logging
-    print('Error in operation: $operationName - $error');
+    ErrorHandler.logError('Error in operation: $operationName', error);
   }
 }

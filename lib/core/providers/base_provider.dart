@@ -2,7 +2,31 @@
 // Reduces duplication across provider implementations
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:jflutter/core/error_handler.dart';
 import 'package:jflutter/core/result.dart';
+
+/// Exception thrown when a provider fails to initialize correctly.
+class ProviderCreationException implements Exception {
+  ProviderCreationException(this.message, {this.cause, this.stackTrace});
+
+  /// Description of what failed.
+  final String message;
+
+  /// Original error thrown during provider creation.
+  final Object? cause;
+
+  /// Stack trace captured from the failure.
+  final StackTrace? stackTrace;
+
+  @override
+  String toString() {
+    final buffer = StringBuffer('ProviderCreationException: $message');
+    if (cause != null) {
+      buffer.write(' (cause: $cause)');
+    }
+    return buffer.toString();
+  }
+}
 
 /// Base provider mixin with common state management patterns
 mixin BaseProviderMixin<T> on StateNotifier<AsyncValue<T>> {
@@ -33,7 +57,7 @@ mixin BaseProviderMixin<T> on StateNotifier<AsyncValue<T>> {
       setSuccess(result);
     } catch (e, stackTrace) {
       setError(e, stackTrace);
-      _logError(operationName ?? 'Operation', e);
+      _logError(operationName ?? 'Operation', e, stackTrace);
     }
   }
 
@@ -101,9 +125,9 @@ mixin BaseProviderMixin<T> on StateNotifier<AsyncValue<T>> {
     try {
       final result = await operation().timeout(timeout);
       setSuccess(result);
-    } catch (e) {
-      setError(e);
-      _logError(operationName ?? 'Operation', e);
+    } catch (e, stackTrace) {
+      setError(e, stackTrace);
+      _logError(operationName ?? 'Operation', e, stackTrace);
     }
   }
 
@@ -142,9 +166,8 @@ mixin BaseProviderMixin<T> on StateNotifier<AsyncValue<T>> {
   StackTrace? get stackTrace => state.stackTrace;
 
   /// Log error
-  void _logError(String operationName, dynamic error) {
-    // TODO: Implement proper logging
-    print('Error in $operationName: $error');
+  void _logError(String operationName, dynamic error, [StackTrace? stackTrace]) {
+    ErrorHandler.logError('Error in $operationName', error, stackTrace);
   }
 }
 
@@ -175,9 +198,8 @@ class ProviderUtils {
     return Provider<T>((ref) {
       try {
         return create();
-      } catch (e) {
-        // TODO: Implement proper error handling
-        throw Exception('Failed to create provider${name != null ? ' $name' : ''}: $e');
+      } catch (e, stackTrace) {
+        return _handleCreationError('provider', e, stackTrace, name);
       }
     });
   }
@@ -190,9 +212,8 @@ class ProviderUtils {
     return FutureProvider<T>((ref) async {
       try {
         return await create();
-      } catch (e) {
-        // TODO: Implement proper error handling
-        throw Exception('Failed to create async provider${name != null ? ' $name' : ''}: $e');
+      } catch (e, stackTrace) {
+        return _handleCreationError('async provider', e, stackTrace, name);
       }
     });
   }
@@ -205,10 +226,25 @@ class ProviderUtils {
     return StateNotifierProvider<T, AsyncValue<U>>((ref) {
       try {
         return create();
-      } catch (e) {
-        // TODO: Implement proper error handling
-        throw Exception('Failed to create state notifier provider${name != null ? ' $name' : ''}: $e');
+      } catch (e, stackTrace) {
+        return _handleCreationError('state notifier provider', e, stackTrace, name);
       }
     });
+  }
+
+  static Never _handleCreationError(
+    String providerType,
+    Object error,
+    StackTrace stackTrace,
+    String? name,
+  ) {
+    final resolvedName = name != null && name.trim().isNotEmpty ? ' $name' : '';
+    final message = 'Failed to create $providerType$resolvedName';
+    ErrorHandler.logError(message, error, stackTrace);
+    throw ProviderCreationException(
+      message,
+      cause: error,
+      stackTrace: stackTrace,
+    );
   }
 }

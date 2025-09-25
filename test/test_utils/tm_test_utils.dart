@@ -1,84 +1,57 @@
-import 'dart:math' as math;
-
-import 'package:vector_math/vector_math_64.dart';
-
-import 'package:jflutter/core/models/state.dart';
 import 'package:jflutter/core/models/tm.dart';
-import 'package:jflutter/core/models/tm_analysis.dart';
-import 'package:jflutter/core/models/tm_transition.dart';
+import 'package:jflutter/core/models/state.dart';
+import 'package:jflutter/core/models/transition.dart';
 
+/// Test utilities for Turing Machine testing
 class TmTestData {
+  /// Creates a simple TM for testing
   static TM createTm() {
-    final initial = State(
-      id: 'q0',
-      label: 'q0',
-      position: Vector2.zero(),
-      isInitial: true,
-    );
-    final accept = State(
-      id: 'q1',
-      label: 'q1',
-      position: Vector2(50, 0),
-      isAccepting: true,
-    );
+    final states = [
+      State(
+        id: 'q0',
+        label: 'q0',
+        isInitial: true,
+        isAccepting: false,
+      ),
+      State(
+        id: 'q1',
+        label: 'q1',
+        isInitial: false,
+        isAccepting: true,
+      ),
+    ];
 
-    final transition = TMTransition(
-      id: 't0',
-      fromState: initial,
-      toState: accept,
-      label: '1',
-      readSymbol: '1',
-      writeSymbol: '1',
-      direction: TapeDirection.right,
-    );
-
-    final now = DateTime(2024, 1, 1);
+    final transitions = [
+      Transition(
+        id: 't1',
+        fromState: 'q0',
+        toState: 'q1',
+        inputSymbol: 'a',
+        outputSymbol: 'b',
+        direction: TMDirection.right,
+      ),
+    ];
 
     return TM(
-      id: 'tm1',
+      id: 'test-tm',
       name: 'Test TM',
-      states: {initial, accept},
-      transitions: {transition},
-      alphabet: {'1'},
-      initialState: initial,
-      acceptingStates: {accept},
-      created: now,
-      modified: now,
-      bounds: const math.Rectangle(0, 0, 100, 100),
-      tapeAlphabet: {'B', '1'},
-      blankSymbol: 'B',
-      tapeCount: 1,
-      zoomLevel: 1,
-      panOffset: Vector2.zero(),
+      states: states,
+      transitions: transitions,
+      tapeAlphabet: {'a', 'b', 'blank'},
+      inputAlphabet: {'a'},
+      blankSymbol: 'blank',
     );
   }
 
-  static TMAnalysis createAnalysis(TM tm) {
-    final initial = tm.initialState!;
-    final accept = tm.acceptingStates.first;
-
-    return TMAnalysis(
-      stateAnalysis: const TMStateAnalysis(
-        totalStates: 2,
-        acceptingStates: 1,
-        nonAcceptingStates: 1,
-      ),
-      transitionAnalysis: const TMTransitionAnalysis(
-        totalTransitions: 1,
-        tmTransitions: 1,
-        fsaTransitions: 0,
-      ),
-      tapeAnalysis: const TapeAnalysis(
-        writeOperations: {'1'},
-        readOperations: {'1'},
-        moveDirections: {'right'},
-        tapeSymbols: {'B', '1'},
-      ),
-      reachabilityAnalysis: TMReachabilityAnalysis(
-        reachableStates: {initial, accept},
-        unreachableStates: {},
-      ),
-      executionTime: const Duration(milliseconds: 2),
-    );
+  /// Creates a test analysis for a TM
+  static Map<String, dynamic> createAnalysis(TM tm) {
+    return {
+      'isDeterministic': true,
+      'hasAcceptingStates': tm.states.any((s) => s.isAccepting),
+      'stateCount': tm.states.length,
+      'transitionCount': tm.transitions.length,
+      'tapeAlphabetSize': tm.tapeAlphabet.length,
+      'inputAlphabetSize': tm.inputAlphabet.length,
+    };
   }
 }

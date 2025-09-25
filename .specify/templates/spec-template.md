@@ -28,9 +28,11 @@
 ---
 
 ## ⚡ Quick Guidelines
-- ✅ Focus on WHAT users need and WHY
+- ✅ Focus on WHAT users need and WHY (educational value)
 - ❌ Avoid HOW to implement (no tech stack, APIs, code structure)
-- 👥 Written for business stakeholders, not developers
+- 👥 Written for educators and students, not developers
+- 📱 Mobile-first user experience requirements
+- 🎯 Educational alignment with formal language theory curriculum
 
 ### Section Requirements
 - **Mandatory sections**: Must be completed for every feature
@@ -40,15 +42,16 @@
 ### For AI Generation
 When creating this spec from a user prompt:
 1. **Mark all ambiguities**: Use [NEEDS CLARIFICATION: specific question] for any assumption you'd need to make
-2. **Don't guess**: If the prompt doesn't specify something (e.g., "login system" without auth method), mark it
+2. **Don't guess**: If the prompt doesn't specify something (e.g., "automaton editor" without touch gestures), mark it
 3. **Think like a tester**: Every vague requirement should fail the "testable and unambiguous" checklist item
-4. **Common underspecified areas**:
-   - User types and permissions
-   - Data retention/deletion policies  
-   - Performance targets and scale
-   - Error handling behaviors
-   - Integration requirements
-   - Security/compliance needs
+4. **Common underspecified areas for educational tools**:
+   - Educational level and learning objectives
+   - Mobile interaction patterns (gestures, screen sizes)
+   - Algorithm visualization requirements
+   - File format compatibility (.jff, JSON, etc.)
+   - Performance targets for simulations
+   - Accessibility requirements for students
+   - Export/import capabilities
 
 ---
 

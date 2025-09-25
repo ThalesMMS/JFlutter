@@ -47,7 +47,38 @@
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+### Educational Focus Compliance
+- [ ] Feature aligns with formal language theory curriculum
+- [ ] Mobile-first UX design approach
+- [ ] No backend dependencies required
+- [ ] Educational value clearly defined
+
+### Technical Standards Compliance
+- [ ] Flutter 3.16+ / Dart 3.0+ compatibility
+- [ ] Clean architecture (Presentation/Core/Data) structure
+- [ ] Riverpod state management approach
+- [ ] Immutable models with freezed/sealed classes
+- [ ] JSON serialization for DTOs
+
+### Quality & Testing Compliance
+- [ ] Comprehensive test coverage planned (unit, integration, widget, golden)
+- [ ] Static analysis and linting configured
+- [ ] Performance budgets defined (>60fps, >10k steps responsive)
+- [ ] Deterministic algorithm testing approach
+- [ ] Immutable trace recording capability
+
+### Mobile & Accessibility Compliance
+- [ ] Touch gesture support (pinch, pan, tap)
+- [ ] Material 3 design principles
+- [ ] Collapsible panels for space efficiency
+- [ ] Overflow prevention for small screens
+- [ ] Basic accessibility (labels, contrast)
+
+### Security & File Handling Compliance
+- [ ] Sandboxed file operations
+- [ ] Input validation for external files
+- [ ] No dynamic code execution
+- [ ] Path traversal prevention
 
 ## Project Structure
 
@@ -145,7 +176,7 @@ ios/ or android/
    - Quickstart test = story validation steps
 
 5. **Update agent file incrementally** (O(1) operation):
-   - Run `.specify/scripts/bash/update-agent-context.sh gemini`
+   - Run `.specify/scripts/bash/update-agent-context.sh cursor`
      **IMPORTANT**: Execute it exactly as specified above. Do not add or remove any arguments.
    - If exists: Add only NEW tech from current plan
    - Preserve manual additions between markers
@@ -209,4 +240,4 @@ ios/ or android/
 - [ ] Complexity deviations documented
 
 ---
-*Based on Constitution v2.0.0 - See `/memory/constitution.md`*
+*Based on Constitution v2.1.1 - See `/memory/constitution.md`*

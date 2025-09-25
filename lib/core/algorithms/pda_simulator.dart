@@ -213,7 +213,7 @@ class PDASimulator {
     final elapsed = DateTime.now().difference(startTime);
 
     if (acceptedBranches.isNotEmpty) {
-      final representativeSteps = acceptedBranches.first.steps.toList();
+      final representativeSteps = acceptedBranches.first.configurations;
       return PDASimulationResult.success(
         inputString: inputString,
         steps: representativeSteps,

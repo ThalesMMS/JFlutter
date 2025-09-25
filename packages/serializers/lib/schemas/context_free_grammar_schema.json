@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Context-Free Grammar Schema",
+  "description": "JSON schema for context-free grammars",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the grammar"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name for the grammar"
+    },
+    "variables": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of variables (non-terminals) in the grammar"
+    },
+    "terminals": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of terminals in the grammar"
+    },
+    "productions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Production"
+      },
+      "description": "List of production rules in the grammar"
+    },
+    "startVariable": {
+      "type": "string",
+      "description": "Start variable of the grammar"
+    },
+    "metadata": {
+      "$ref": "#/definitions/AutomatonMetadata",
+      "description": "Metadata about the grammar"
+    }
+  },
+  "required": ["id", "name", "variables", "terminals", "productions", "startVariable", "metadata"],
+  "definitions": {
+    "Production": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the production"
+        },
+        "leftSide": {
+          "type": "string",
+          "description": "Left side of the production (variable)"
+        },
+        "rightSide": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Right side of the production (sequence of symbols)"
+        }
+      },
+      "required": ["id", "leftSide", "rightSide"]
+    },
+    "AutomatonMetadata": {
+      "type": "object",
+      "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Creator of the automaton"
+        }
+      },
+      "required": ["createdAt", "createdBy"]
+    }
+  }
+}

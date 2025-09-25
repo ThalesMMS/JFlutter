@@ -1,0 +1,136 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Finite Automaton Schema",
+  "description": "JSON schema for finite automata (DFA, NFA)",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the automaton"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name for the automaton"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["DFA", "NFA"],
+      "description": "Type of finite automaton"
+    },
+    "states": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/State"
+      },
+      "description": "List of states in the automaton"
+    },
+    "transitions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Transition"
+      },
+      "description": "List of transitions in the automaton"
+    },
+    "alphabet": {
+      "$ref": "#/definitions/Alphabet",
+      "description": "Input alphabet for the automaton"
+    },
+    "metadata": {
+      "$ref": "#/definitions/AutomatonMetadata",
+      "description": "Metadata about the automaton"
+    }
+  },
+  "required": ["id", "name", "type", "states", "transitions", "alphabet", "metadata"],
+  "definitions": {
+    "State": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the state"
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name for the state"
+        },
+        "position": {
+          "$ref": "#/definitions/Position",
+          "description": "Position of the state in the canvas"
+        },
+        "isInitial": {
+          "type": "boolean",
+          "description": "Whether this state is the initial state"
+        },
+        "isAccepting": {
+          "type": "boolean",
+          "description": "Whether this state is an accepting state"
+        }
+      },
+      "required": ["id", "name", "position", "isInitial", "isAccepting"]
+    },
+    "Transition": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the transition"
+        },
+        "fromState": {
+          "type": "string",
+          "description": "ID of the source state"
+        },
+        "toState": {
+          "type": "string",
+          "description": "ID of the destination state"
+        },
+        "symbol": {
+          "type": "string",
+          "description": "Input symbol for the transition"
+        }
+      },
+      "required": ["id", "fromState", "toState", "symbol"]
+    },
+    "Position": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number",
+          "description": "X coordinate"
+        },
+        "y": {
+          "type": "number",
+          "description": "Y coordinate"
+        }
+      },
+      "required": ["x", "y"]
+    },
+    "Alphabet": {
+      "type": "object",
+      "properties": {
+        "symbols": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of symbols in the alphabet"
+        }
+      },
+      "required": ["symbols"]
+    },
+    "AutomatonMetadata": {
+      "type": "object",
+      "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Creator of the automaton"
+        }
+      },
+      "required": ["createdAt", "createdBy"]
+    }
+  }
+}

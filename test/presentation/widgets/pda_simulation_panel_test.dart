@@ -9,9 +9,10 @@ import 'package:jflutter/core/models/pda.dart';
 import 'package:jflutter/core/models/pda_transition.dart';
 import 'package:jflutter/core/models/simulation_result.dart';
 import 'package:jflutter/core/models/simulation_step.dart';
-import 'package:jflutter/core/models/state.dart';
+import 'package:jflutter/core/models/state.dart' as automaton_state;
 import 'package:jflutter/core/models/transition.dart';
 import 'package:jflutter/core/result.dart';
+import 'package:jflutter/core/packages/core_pda/simulation.dart';
 import 'package:jflutter/presentation/providers/pda_editor_provider.dart';
 import 'package:jflutter/presentation/widgets/pda_simulation_panel.dart';
 
@@ -86,14 +87,14 @@ Future<void> _tapSimulateButton(WidgetTester tester) async {
 }
 
 PDA _createAcceptingPda() {
-  final initialState = State(
+  final initialState = automaton_state.State(
     id: 'q0',
     label: 'q0',
     position: Vector2.zero(),
     isInitial: true,
   );
 
-  final acceptingState = State(
+  final acceptingState = automaton_state.State(
     id: 'q1',
     label: 'q1',
     position: Vector2(1, 0),

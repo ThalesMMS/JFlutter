@@ -1,0 +1,20 @@
+name: conversions
+description: Algorithm implementations for automata conversions and language operations
+version: 1.0.0
+publish_to: 'none'
+
+environment:
+  sdk: ^3.0.0
+
+dependencies:
+  core_fa:
+    path: ../core_fa
+  core_pda:
+    path: ../core_pda
+  core_tm:
+    path: ../core_tm
+  core_regex:
+    path: ../core_regex
+
+dev_dependencies:
+  very_good_analysis: ^6.0.0

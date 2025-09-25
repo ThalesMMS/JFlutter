@@ -1,318 +1,356 @@
 import 'dart:convert';
-import 'dart:math' as math;
-import 'package:vector_math/vector_math_64.dart';
-import '../../core/models/fsa.dart';
-import '../../core/models/state.dart';
-import '../../core/models/fsa_transition.dart';
-import '../../core/result.dart';
-import '../../core/models/automaton.dart' as core_models;
+import 'package:http/http.dart' as http;
+import 'package:core_fa/core_fa.dart';
+import 'package:core_pda/core_pda.dart';
+import 'package:core_tm/core_tm.dart';
+import 'package:core_regex/core_regex.dart';
+import 'package:conversions/conversions.dart';
+import 'package:serializers/serializers.dart';
 
-/// Service for automaton CRUD operations
+/// Service for automaton API operations
 class AutomatonService {
-  final List<FSA> _automata = [];
-  int _nextId = 1;
+  final String baseUrl;
+  final http.Client _client;
 
-  FSA _buildAutomatonFromRequest(
-    CreateAutomatonRequest request, {
-    required String id,
-    DateTime? created,
-    DateTime? modified,
-  }) {
-    if (request.name.isEmpty) {
-      throw ArgumentError('Automaton name cannot be empty');
-    }
+  AutomatonService({
+    required this.baseUrl,
+    http.Client? client,
+  }) : _client = client ?? http.Client();
 
-    final states = <State>[];
-    for (final stateData in request.states) {
-      final state = State(
-        id: stateData.id,
-        label: stateData.name,
-        position: Vector2(stateData.position.x, stateData.position.y),
-        isInitial: stateData.isInitial,
-        isAccepting: stateData.isAccepting,
-      );
-      states.add(state);
-    }
-
-    final stateById = {for (final state in states) state.id: state};
-
-    final transitions = <FSATransition>{};
-    var transitionIndex = 0;
-    for (final transitionData in request.transitions) {
-      final fromState = stateById[transitionData.fromStateId];
-      final toState = stateById[transitionData.toStateId];
-      if (fromState == null || toState == null) {
-        throw StateError(
-            'Transition references unknown state: ${transitionData.fromStateId} -> ${transitionData.toStateId}');
-      }
-
-      final symbol = transitionData.symbol;
-      final lowerSymbol = symbol.toLowerCase();
-      final isLambda = symbol == 'λ' ||
-          symbol == 'ε' ||
-          lowerSymbol == 'lambda' ||
-          lowerSymbol == '£' ||
-          lowerSymbol == '€';
-
-      transitions.add(FSATransition(
-        id: 't${id}_$transitionIndex',
-        fromState: fromState,
-        toState: toState,
-        label: symbol,
-        inputSymbols: isLambda ? <String>{} : {symbol},
-        lambdaSymbol: isLambda ? symbol : null,
-      ));
-      transitionIndex++;
-    }
-
-    State? initialState;
+  /// Get all automata
+  Future<List<FiniteAutomaton>> getAllAutomata() async {
     try {
-      initialState = states.firstWhere((s) => s.isInitial);
-    } catch (_) {
-      initialState = null;
-    }
-
-    final acceptingStates = states.where((s) => s.isAccepting).toSet();
-
-    final bounds = math.Rectangle(
-      request.bounds.left,
-      request.bounds.top,
-      request.bounds.right - request.bounds.left,
-      request.bounds.bottom - request.bounds.top,
-    );
-
-    return FSA(
-      id: id,
-      name: request.name,
-      description: request.description ?? '',
-      states: states.toSet(),
-      transitions: transitions,
-      alphabet: request.alphabet.toSet(),
-      initialState: initialState,
-      acceptingStates: acceptingStates,
-      created: created ?? DateTime.now(),
-      modified: modified ?? DateTime.now(),
-      bounds: bounds,
-    );
-  }
-
-  /// Creates a new automaton
-  Result<FSA> createAutomaton(CreateAutomatonRequest request) {
-    try {
-      final id = (_nextId++).toString();
-      final automaton = _buildAutomatonFromRequest(
-        request,
-        id: id,
-        created: DateTime.now(),
-        modified: DateTime.now(),
+      final response = await _client.get(
+        Uri.parse('$baseUrl/automata'),
+        headers: _getHeaders(),
       );
 
-      _automata.add(automaton);
-
-      return ResultFactory.success(automaton);
-    } catch (e) {
-      return ResultFactory.failure('Error creating automaton: $e');
-    }
-  }
-
-  /// Gets an automaton by ID
-  Result<FSA> getAutomaton(String id) {
-    try {
-      final automaton = _automata.firstWhere((a) => a.id == id);
-      return ResultFactory.success(automaton);
-    } catch (e) {
-      return ResultFactory.failure('Automaton not found: $id');
-    }
-  }
-
-  /// Updates an automaton
-  Result<FSA> updateAutomaton(String id, CreateAutomatonRequest request) {
-    try {
-      final index = _automata.indexWhere((a) => a.id == id);
-      if (index == -1) {
-        return ResultFactory.failure('Automaton not found: $id');
-      }
-
-      final existing = _automata[index];
-      final updatedAutomaton = _buildAutomatonFromRequest(
-        request,
-        id: id,
-        created: existing.created,
-        modified: DateTime.now(),
-      );
-
-      _automata[index] = updatedAutomaton;
-      return ResultFactory.success(updatedAutomaton);
-    } catch (e) {
-      return ResultFactory.failure('Error updating automaton: $e');
-    }
-  }
-
-  /// Saves an automaton using a specific ID (creates or updates)
-  Result<FSA> saveAutomaton(String id, CreateAutomatonRequest request) {
-    try {
-      final index = _automata.indexWhere((a) => a.id == id);
-      final created = index == -1 ? DateTime.now() : _automata[index].created;
-
-      final automaton = _buildAutomatonFromRequest(
-        request,
-        id: id,
-        created: created,
-        modified: DateTime.now(),
-      );
-
-      if (index == -1) {
-        _automata.add(automaton);
+      if (response.statusCode == 200) {
+        final List<dynamic> jsonList = jsonDecode(response.body);
+        return jsonList.map((json) => FiniteAutomaton.fromJson(json)).toList();
       } else {
-        _automata[index] = automaton;
+        throw AutomatonServiceException('Failed to get automata: ${response.statusCode}');
       }
-
-      return ResultFactory.success(automaton);
     } catch (e) {
-      return ResultFactory.failure('Error saving automaton: $e');
+      throw AutomatonServiceException('Error getting automata: $e');
     }
   }
 
-  /// Deletes an automaton
-  Result<void> deleteAutomaton(String id) {
+  /// Get automaton by ID
+  Future<FiniteAutomaton> getAutomatonById(String id) async {
     try {
-      final index = _automata.indexWhere((a) => a.id == id);
-      if (index == -1) {
-        return ResultFactory.failure('Automaton not found: $id');
-      }
+      final response = await _client.get(
+        Uri.parse('$baseUrl/automata/$id'),
+        headers: _getHeaders(),
+      );
 
-      _automata.removeAt(index);
-      return ResultFactory.success(null);
-    } catch (e) {
-          return ResultFactory.failure('Error deleting automaton: $e');
-    }
-  }
-
-  /// Lists all automata
-  Result<List<FSA>> listAutomata() {
-        return ResultFactory.success(List.from(_automata));
-  }
-
-  /// Clears all automata
-  Result<void> clearAutomata() {
-    _automata.clear();
-    _nextId = 1;
-    return ResultFactory.success(null);
-  }
-
-  /// Exports an automaton to JSON
-  Result<String> exportAutomaton(FSA automaton) {
-    try {
-      final jsonString = jsonEncode(automaton.toJson());
-      return ResultFactory.success(jsonString);
-    } catch (e) {
-      return ResultFactory.failure('Error exporting automaton: $e');
-    }
-  }
-
-  /// Imports an automaton from JSON
-  Result<FSA> importAutomaton(String jsonString) {
-    try {
-      final decoded = jsonDecode(jsonString);
-      if (decoded is! Map<String, dynamic>) {
-        return ResultFactory.failure('Invalid automaton JSON format');
-      }
-
-      final automaton = core_models.Automaton.fromJson(decoded);
-      if (automaton is! FSA) {
-        return ResultFactory.failure('Unsupported automaton type for import');
-      }
-
-      final index = _automata.indexWhere((a) => a.id == automaton.id);
-      if (index == -1) {
-        _automata.add(automaton);
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        return FiniteAutomaton.fromJson(json);
+      } else if (response.statusCode == 404) {
+        throw AutomatonNotFoundException('Automaton with id $id not found');
       } else {
-        _automata[index] = automaton;
+        throw AutomatonServiceException('Failed to get automaton: ${response.statusCode}');
       }
-
-      return ResultFactory.success(automaton);
     } catch (e) {
-      return ResultFactory.failure('Error importing automaton: $e');
+      if (e is AutomatonNotFoundException) rethrow;
+      throw AutomatonServiceException('Error getting automaton: $e');
     }
   }
 
-  /// Validates an automaton
-  Result<bool> validateAutomaton(FSA automaton) {
+  /// Create new automaton
+  Future<FiniteAutomaton> createAutomaton(FiniteAutomaton automaton) async {
     try {
-      final errors = automaton.validate();
-      if (errors.isEmpty) {
-        return ResultFactory.success(true);
+      final response = await _client.post(
+        Uri.parse('$baseUrl/automata'),
+        headers: _getHeaders(),
+        body: jsonEncode(automaton.toJson()),
+      );
+
+      if (response.statusCode == 201) {
+        final json = jsonDecode(response.body);
+        return FiniteAutomaton.fromJson(json);
+      } else {
+        throw AutomatonServiceException('Failed to create automaton: ${response.statusCode}');
       }
-      return ResultFactory.failure('Validation failed: ${errors.join(', ')}');
     } catch (e) {
-      return ResultFactory.failure('Error validating automaton: $e');
+      throw AutomatonServiceException('Error creating automaton: $e');
     }
+  }
+
+  /// Update automaton
+  Future<FiniteAutomaton> updateAutomaton(String id, FiniteAutomaton automaton) async {
+    try {
+      final response = await _client.put(
+        Uri.parse('$baseUrl/automata/$id'),
+        headers: _getHeaders(),
+        body: jsonEncode(automaton.toJson()),
+      );
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        return FiniteAutomaton.fromJson(json);
+      } else if (response.statusCode == 404) {
+        throw AutomatonNotFoundException('Automaton with id $id not found');
+      } else {
+        throw AutomatonServiceException('Failed to update automaton: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (e is AutomatonNotFoundException) rethrow;
+      throw AutomatonServiceException('Error updating automaton: $e');
+    }
+  }
+
+  /// Delete automaton
+  Future<void> deleteAutomaton(String id) async {
+    try {
+      final response = await _client.delete(
+        Uri.parse('$baseUrl/automata/$id'),
+        headers: _getHeaders(),
+      );
+
+      if (response.statusCode == 204) {
+        return;
+      } else if (response.statusCode == 404) {
+        throw AutomatonNotFoundException('Automaton with id $id not found');
+      } else {
+        throw AutomatonServiceException('Failed to delete automaton: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (e is AutomatonNotFoundException) rethrow;
+      throw AutomatonServiceException('Error deleting automaton: $e');
+    }
+  }
+
+  /// Simulate automaton
+  Future<SimulationResult> simulateAutomaton(String id, String input) async {
+    try {
+      final response = await _client.post(
+        Uri.parse('$baseUrl/automata/$id/simulate'),
+        headers: _getHeaders(),
+        body: jsonEncode({'input': input}),
+      );
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        return SimulationResult.fromJson(json);
+      } else if (response.statusCode == 404) {
+        throw AutomatonNotFoundException('Automaton with id $id not found');
+      } else {
+        throw AutomatonServiceException('Failed to simulate automaton: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (e is AutomatonNotFoundException) rethrow;
+      throw AutomatonServiceException('Error simulating automaton: $e');
+    }
+  }
+
+  /// Run algorithm on automaton
+  Future<AlgorithmResult> runAlgorithm(String id, String algorithm, Map<String, dynamic> parameters) async {
+    try {
+      final response = await _client.post(
+        Uri.parse('$baseUrl/automata/$id/algorithms'),
+        headers: _getHeaders(),
+        body: jsonEncode({
+          'algorithm': algorithm,
+          'parameters': parameters,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        return AlgorithmResult.fromJson(json);
+      } else if (response.statusCode == 404) {
+        throw AutomatonNotFoundException('Automaton with id $id not found');
+      } else {
+        throw AutomatonServiceException('Failed to run algorithm: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (e is AutomatonNotFoundException) rethrow;
+      throw AutomatonServiceException('Error running algorithm: $e');
+    }
+  }
+
+  /// Perform automaton operations
+  Future<FiniteAutomaton> performOperation(String operation, List<String> automatonIds, Map<String, dynamic> parameters) async {
+    try {
+      final response = await _client.post(
+        Uri.parse('$baseUrl/automata/operations'),
+        headers: _getHeaders(),
+        body: jsonEncode({
+          'operation': operation,
+          'automatonIds': automatonIds,
+          'parameters': parameters,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        return FiniteAutomaton.fromJson(json);
+      } else {
+        throw AutomatonServiceException('Failed to perform operation: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw AutomatonServiceException('Error performing operation: $e');
+    }
+  }
+
+  /// Import JFLAP file
+  Future<FiniteAutomaton> importJFLAP(String fileContent) async {
+    try {
+      final response = await _client.post(
+        Uri.parse('$baseUrl/import/jff'),
+        headers: _getHeaders(),
+        body: jsonEncode({'content': fileContent}),
+      );
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        return FiniteAutomaton.fromJson(json);
+      } else {
+        throw AutomatonServiceException('Failed to import JFLAP file: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw AutomatonServiceException('Error importing JFLAP file: $e');
+    }
+  }
+
+  /// Export automaton to JFLAP
+  Future<String> exportToJFLAP(String id) async {
+    try {
+      final response = await _client.get(
+        Uri.parse('$baseUrl/export/$id/jff'),
+        headers: _getHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        return response.body;
+      } else if (response.statusCode == 404) {
+        throw AutomatonNotFoundException('Automaton with id $id not found');
+      } else {
+        throw AutomatonServiceException('Failed to export to JFLAP: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (e is AutomatonNotFoundException) rethrow;
+      throw AutomatonServiceException('Error exporting to JFLAP: $e');
+    }
+  }
+
+  /// Export automaton to JSON
+  Future<Map<String, dynamic>> exportToJSON(String id) async {
+    try {
+      final response = await _client.get(
+        Uri.parse('$baseUrl/export/$id/json'),
+        headers: _getHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else if (response.statusCode == 404) {
+        throw AutomatonNotFoundException('Automaton with id $id not found');
+      } else {
+        throw AutomatonServiceException('Failed to export to JSON: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (e is AutomatonNotFoundException) rethrow;
+      throw AutomatonServiceException('Error exporting to JSON: $e');
+    }
+  }
+
+  /// Get headers for requests
+  Map<String, String> _getHeaders() {
+    return {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+  }
+
+  /// Dispose the service
+  void dispose() {
+    _client.close();
   }
 }
 
-/// Request for creating an automaton
-class CreateAutomatonRequest {
-  final String name;
-  final String? description;
-  final List<StateData> states;
-  final List<TransitionData> transitions;
-  final List<String> alphabet;
-  final Rect bounds;
+/// Simulation result
+class SimulationResult {
+  final bool isAccepted;
+  final List<String> finalStates;
+  final int steps;
+  final List<SimulationStep> trace;
 
-  const CreateAutomatonRequest({
-    required this.name,
-    this.description,
-    required this.states,
-    required this.transitions,
-    required this.alphabet,
-    required this.bounds,
+  const SimulationResult({
+    required this.isAccepted,
+    required this.finalStates,
+    required this.steps,
+    required this.trace,
   });
+
+  factory SimulationResult.fromJson(Map<String, dynamic> json) {
+    return SimulationResult(
+      isAccepted: json['isAccepted'] ?? false,
+      finalStates: List<String>.from(json['finalStates'] ?? []),
+      steps: json['steps'] ?? 0,
+      trace: (json['trace'] as List<dynamic>?)
+          ?.map((step) => SimulationStep.fromJson(step))
+          .toList() ?? [],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'isAccepted': isAccepted,
+      'finalStates': finalStates,
+      'steps': steps,
+      'trace': trace.map((step) => step.toJson()).toList(),
+    };
+  }
 }
 
-/// Data for a state
-class StateData {
-  final String id;
-  final String name;
-  final Point position;
-  final bool isInitial;
-  final bool isAccepting;
+/// Simulation step
+class SimulationStep {
+  final String state;
+  final String? inputSymbol;
+  final String? outputSymbol;
+  final Map<String, dynamic> metadata;
 
-  const StateData({
-    required this.id,
-    required this.name,
-    required this.position,
-    required this.isInitial,
-    required this.isAccepting,
+  const SimulationStep({
+    required this.state,
+    this.inputSymbol,
+    this.outputSymbol,
+    this.metadata = const {},
   });
+
+  factory SimulationStep.fromJson(Map<String, dynamic> json) {
+    return SimulationStep(
+      state: json['state'] ?? '',
+      inputSymbol: json['inputSymbol'],
+      outputSymbol: json['outputSymbol'],
+      metadata: Map<String, dynamic>.from(json['metadata'] ?? {}),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'state': state,
+      'inputSymbol': inputSymbol,
+      'outputSymbol': outputSymbol,
+      'metadata': metadata,
+    };
+  }
 }
 
-/// Data for a transition
-class TransitionData {
-  final String fromStateId;
-  final String toStateId;
-  final String symbol;
-
-  const TransitionData({
-    required this.fromStateId,
-    required this.toStateId,
-    required this.symbol,
-  });
+/// Service exceptions
+class AutomatonServiceException implements Exception {
+  final String message;
+  AutomatonServiceException(this.message);
+  
+  @override
+  String toString() => 'AutomatonServiceException: $message';
 }
 
-/// Simple Point class
-class Point {
-  final double x;
-  final double y;
-
-  const Point(this.x, this.y);
-}
-
-/// Simple Rect class
-class Rect {
-  final double left;
-  final double top;
-  final double right;
-  final double bottom;
-
-  const Rect(this.left, this.top, this.right, this.bottom);
+class AutomatonNotFoundException extends AutomatonServiceException {
+  AutomatonNotFoundException(String message) : super(message);
+  
+  @override
+  String toString() => 'AutomatonNotFoundException: $message';
 }

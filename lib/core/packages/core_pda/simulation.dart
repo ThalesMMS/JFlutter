@@ -3,6 +3,7 @@ import 'dart:collection';
 import '../core_base/trace.dart';
 import '../../models/pda.dart';
 import '../../models/simulation_step.dart';
+import 'acceptance_criterion.dart';
 
 /// Witness branch collected during PDA simulation.
 class PDASimulationWitness implements Trace<SimulationStep> {

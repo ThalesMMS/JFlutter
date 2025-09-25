@@ -1,0 +1,155 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Turing Machine Schema",
+  "description": "JSON schema for Turing machines",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the machine"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name for the machine"
+    },
+    "states": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/State"
+      },
+      "description": "List of states in the machine"
+    },
+    "transitions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/TMTransition"
+      },
+      "description": "List of transitions in the machine"
+    },
+    "alphabet": {
+      "$ref": "#/definitions/Alphabet",
+      "description": "Tape alphabet for the machine"
+    },
+    "initialState": {
+      "type": "string",
+      "description": "ID of the initial state"
+    },
+    "finalStates": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of final state IDs"
+    },
+    "blankSymbol": {
+      "type": "string",
+      "description": "Blank symbol for the tape"
+    },
+    "metadata": {
+      "$ref": "#/definitions/AutomatonMetadata",
+      "description": "Metadata about the machine"
+    }
+  },
+  "required": ["id", "name", "states", "transitions", "alphabet", "initialState", "finalStates", "blankSymbol", "metadata"],
+  "definitions": {
+    "State": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the state"
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name for the state"
+        },
+        "position": {
+          "$ref": "#/definitions/Position",
+          "description": "Position of the state in the canvas"
+        },
+        "isInitial": {
+          "type": "boolean",
+          "description": "Whether this state is the initial state"
+        },
+        "isAccepting": {
+          "type": "boolean",
+          "description": "Whether this state is an accepting state"
+        }
+      },
+      "required": ["id", "name", "position", "isInitial", "isAccepting"]
+    },
+    "TMTransition": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the transition"
+        },
+        "fromState": {
+          "type": "string",
+          "description": "ID of the source state"
+        },
+        "toState": {
+          "type": "string",
+          "description": "ID of the destination state"
+        },
+        "inputSymbol": {
+          "type": "string",
+          "description": "Symbol to read from tape"
+        },
+        "writeSymbol": {
+          "type": "string",
+          "description": "Symbol to write to tape"
+        },
+        "moveDirection": {
+          "type": "string",
+          "enum": ["left", "right", "stay"],
+          "description": "Direction to move the tape head"
+        }
+      },
+      "required": ["id", "fromState", "toState", "inputSymbol", "writeSymbol", "moveDirection"]
+    },
+    "Position": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number",
+          "description": "X coordinate"
+        },
+        "y": {
+          "type": "number",
+          "description": "Y coordinate"
+        }
+      },
+      "required": ["x", "y"]
+    },
+    "Alphabet": {
+      "type": "object",
+      "properties": {
+        "symbols": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of symbols in the alphabet"
+        }
+      },
+      "required": ["symbols"]
+    },
+    "AutomatonMetadata": {
+      "type": "object",
+      "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Creator of the automaton"
+        }
+      },
+      "required": ["createdAt", "createdBy"]
+    }
+  }
+}

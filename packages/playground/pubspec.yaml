@@ -1,0 +1,30 @@
+name: playground
+description: Integration playground and examples for all packages
+version: 1.0.0
+publish_to: 'none'
+
+environment:
+  sdk: ^3.0.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  core_fa:
+    path: ../core_fa
+  core_pda:
+    path: ../core_pda
+  core_tm:
+    path: ../core_tm
+  core_regex:
+    path: ../core_regex
+  conversions:
+    path: ../conversions
+  serializers:
+    path: ../serializers
+  viz:
+    path: ../viz
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  very_good_analysis: ^6.0.0

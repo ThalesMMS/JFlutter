@@ -38,16 +38,16 @@ class GrammarDefinitionParser {
 
     try {
       final parseResult = _productionParser.parse(trimmed);
-      if (!parseResult.isSuccess) {
-        final message = parseResult.message ?? 'Invalid grammar syntax';
-        return ResultFactory.failure('$message at position ${parseResult.position}');
-      }
-
-      final ast = GrammarAst(productions: parseResult.value);
-      final errors = ast.validate();
-      return ResultFactory.success(
-        GrammarDefinitionAnalysis(ast: ast, errors: errors),
-      );
+      return switch (parseResult) {
+        Success(value: final productions) => () {
+          final ast = GrammarAst(productions: productions);
+          final errors = ast.validate();
+          return ResultFactory.success(
+            GrammarDefinitionAnalysis(ast: ast, errors: errors),
+          );
+        }(),
+        Failure() => ResultFactory.failure('${parseResult.message} at position ${parseResult.position}'),
+      };
     } on FormatException catch (error) {
       return ResultFactory.failure(error.message);
     }
@@ -117,7 +117,7 @@ class GrammarDefinitionParser {
     });
 
     final alternativeList = sequence
-        .separatedBy(trim(char('|')), includeSeparators: false)
+        .starSeparated(trim(char('|')))
         .map((alternatives) => alternatives.cast<GrammarExpressionAst>());
 
     final arrow = trim(string('->') | string('→') | string('::='));
@@ -134,7 +134,7 @@ class GrammarDefinitionParser {
     final separator = trim((char(';') | newline()).plus());
 
     final productions = production
-        .separatedBy(separator.optional(), includeSeparators: false)
+        .starSeparated(separator.optional())
         .map((list) => list.cast<GrammarProductionAst>());
 
     return productions.end();

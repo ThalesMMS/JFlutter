@@ -29,12 +29,10 @@ class RegexExpressionParser {
   static RegexAst parseAst(String pattern) {
     final trimmed = pattern.trim();
     final result = _nodeParser.parse(trimmed);
-    if (result.isSuccess) {
-      return RegexAst(root: result.value);
-    }
-
-    final message = result.message ?? 'Invalid regular expression';
-    throw FormatException('$message at position ${result.position}');
+    return switch (result) {
+      Success(value: final ast) => RegexAst(root: ast),
+      Failure() => throw FormatException('${result.message} at position ${result.position}'),
+    };
   }
 
   static Parser<RegexAstNode> _buildParser() {
@@ -42,20 +40,19 @@ class RegexExpressionParser {
 
     const meta = r'\\()|*+?&{}.';
 
-    builder.group()
-      ..primitive(string('ε').trim().map((_) => const RegexEpsilonNode()))
-      ..primitive(string('eps').trim().map((_) => const RegexEpsilonNode()))
-      ..primitive(string('lambda').trim().map((_) => const RegexEpsilonNode()))
-      ..primitive(string('∅').trim().map((_) => const RegexEmptySetNode()))
-      ..primitive(string('Ø').trim().map((_) => const RegexEmptySetNode()))
-      ..primitive(string('emptyset').trim().map((_) => const RegexEmptySetNode()))
-      ..primitive(char('.').trim().map((_) => const RegexDotNode()))
-      ..primitive(
-        anyOf(meta).skip(before: char('\\')).trim().map(RegexLiteralNode.new),
-      )
-      ..primitive(
-        noneOf(meta).trim().map(RegexLiteralNode.new),
-      );
+    builder.primitive(string('ε').trim().map((_) => const RegexEpsilonNode()));
+    builder.primitive(string('eps').trim().map((_) => const RegexEpsilonNode()));
+    builder.primitive(string('lambda').trim().map((_) => const RegexEpsilonNode()));
+    builder.primitive(string('∅').trim().map((_) => const RegexEmptySetNode()));
+    builder.primitive(string('Ø').trim().map((_) => const RegexEmptySetNode()));
+    builder.primitive(string('emptyset').trim().map((_) => const RegexEmptySetNode()));
+    builder.primitive(char('.').trim().map((_) => const RegexDotNode()));
+    builder.primitive(
+      anyOf(meta).skip(before: char('\\')).trim().map(RegexLiteralNode.new),
+    );
+    builder.primitive(
+      noneOf(meta).trim().map(RegexLiteralNode.new),
+    );
 
     builder.group().wrapper(
       char('(').trim(),
@@ -93,7 +90,7 @@ class RegexExpressionParser {
 
     builder.group()
       ..left(
-        epsilon<RegexAstNode>(),
+        epsilon(),
         (left, _, right) => RegexConcatenationNode(left, right),
       )
       ..optional(const RegexEpsilonNode());
@@ -108,7 +105,7 @@ class RegexExpressionParser {
         (left, _, right) => RegexIntersectionNode(left, right),
       );
 
-    return resolve(builder.build()).trim().end();
+    return builder.build().trim().end();
   }
 }
 

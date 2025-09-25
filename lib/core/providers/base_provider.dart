@@ -73,23 +73,30 @@ mixin BaseProviderMixin<T> on StateNotifier<AsyncValue<T>> {
     int attempts = 0;
     Exception? lastException;
 
+    StackTrace? lastStackTrace;
+
     while (attempts < maxRetries) {
       try {
         final result = await operation();
         setSuccess(result);
         return;
-      } catch (e) {
+      } catch (e, stackTrace) {
         lastException = e is Exception ? e : Exception(e.toString());
+        lastStackTrace = stackTrace;
         attempts++;
-        
+
+        final resolvedName = operationName ?? 'Operation';
+        final attemptMessage =
+            '$resolvedName failed on attempt $attempts/$maxRetries: $e';
         if (attempts < maxRetries) {
+          _logWarning('$attemptMessage\nStackTrace: $stackTrace');
           await Future.delayed(delay);
         }
       }
     }
 
-    setError(lastException!);
-    _logError(operationName ?? 'Operation', lastException);
+    setError(lastException!, lastStackTrace);
+    _logError(operationName ?? 'Operation', lastException, lastStackTrace);
   }
 
   /// Execute operation with fallback
@@ -103,13 +110,16 @@ mixin BaseProviderMixin<T> on StateNotifier<AsyncValue<T>> {
     try {
       final result = await primaryOperation();
       setSuccess(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      final resolvedName = operationName ?? 'Operation';
+      _logWarning('$resolvedName primary operation failed: $e\nStackTrace: $stackTrace');
+
       try {
         final fallbackResult = await fallbackOperation();
         setSuccess(fallbackResult);
-      } catch (fallbackError) {
-        setError(fallbackError);
-        _logError(operationName ?? 'Operation', fallbackError);
+      } catch (fallbackError, fallbackStackTrace) {
+        setError(fallbackError, fallbackStackTrace);
+        _logError(resolvedName, fallbackError, fallbackStackTrace);
       }
     }
   }
@@ -164,6 +174,11 @@ mixin BaseProviderMixin<T> on StateNotifier<AsyncValue<T>> {
 
   /// Get current stack trace
   StackTrace? get stackTrace => state.stackTrace;
+
+  /// Log warning
+  void _logWarning(String message) {
+    ErrorHandler.logWarning(message);
+  }
 
   /// Log error
   void _logError(String operationName, dynamic error, [StackTrace? stackTrace]) {

@@ -14,10 +14,11 @@ abstract class BaseRepository {
     try {
       final result = await operation();
       return Success(result);
-    } catch (e) {
-      final errorMessage = operationName != null 
+    } catch (e, stackTrace) {
+      final errorMessage = operationName != null
           ? 'Error in $operationName: $e'
           : 'Operation failed: $e';
+      ErrorHandler.logError(errorMessage, e, stackTrace);
       return Failure(errorMessage);
     }
   }
@@ -31,24 +32,31 @@ abstract class BaseRepository {
   }) async {
     int attempts = 0;
     Exception? lastException;
+    StackTrace? lastStackTrace;
 
     while (attempts < maxRetries) {
       try {
         final result = await operation();
         return Success(result);
-      } catch (e) {
+      } catch (e, stackTrace) {
         lastException = e is Exception ? e : Exception(e.toString());
+        lastStackTrace = stackTrace;
         attempts++;
-        
+
+        final resolvedName = operationName ?? 'Operation';
+        final attemptMessage =
+            '$resolvedName failed on attempt $attempts/$maxRetries: $e';
         if (attempts < maxRetries) {
+          ErrorHandler.logWarning('$attemptMessage\nStackTrace: $stackTrace');
           await Future.delayed(delay);
         }
       }
     }
 
-    final errorMessage = operationName != null 
+    final errorMessage = operationName != null
         ? 'Error in $operationName after $maxRetries attempts: $lastException'
         : 'Operation failed after $maxRetries attempts: $lastException';
+    ErrorHandler.logError(errorMessage, lastException, lastStackTrace);
     return Failure(errorMessage);
   }
 
@@ -61,14 +69,24 @@ abstract class BaseRepository {
     try {
       final result = await primaryOperation();
       return Success(result);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      final resolvedName = operationName ?? 'Operation';
+      ErrorHandler.logWarning(
+        '$resolvedName primary operation failed: $e\nStackTrace: $stackTrace',
+      );
+
       try {
         final fallbackResult = await fallbackOperation();
         return Success(fallbackResult);
-      } catch (fallbackError) {
-        final errorMessage = operationName != null 
+      } catch (fallbackError, fallbackStackTrace) {
+        final errorMessage = operationName != null
             ? 'Error in $operationName (primary and fallback failed): $e, $fallbackError'
             : 'Operation failed (primary and fallback failed): $e, $fallbackError';
+        ErrorHandler.logError(
+          errorMessage,
+          fallbackError,
+          fallbackStackTrace,
+        );
         return Failure(errorMessage);
       }
     }
@@ -83,10 +101,11 @@ abstract class BaseRepository {
     try {
       final result = await operation().timeout(timeout);
       return Success(result);
-    } catch (e) {
-      final errorMessage = operationName != null 
+    } catch (e, stackTrace) {
+      final errorMessage = operationName != null
           ? 'Error in $operationName (timeout after ${timeout.inSeconds}s): $e'
           : 'Operation failed (timeout after ${timeout.inSeconds}s): $e';
+      ErrorHandler.logError(errorMessage, e, stackTrace);
       return Failure(errorMessage);
     }
   }

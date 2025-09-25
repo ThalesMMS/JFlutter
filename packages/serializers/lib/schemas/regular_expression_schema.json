@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Regular Expression Schema",
+  "description": "JSON schema for regular expressions",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the regular expression"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name for the regular expression"
+    },
+    "pattern": {
+      "type": "string",
+      "description": "Regular expression pattern"
+    },
+    "alphabet": {
+      "$ref": "#/definitions/Alphabet",
+      "description": "Alphabet for the regular expression"
+    },
+    "metadata": {
+      "$ref": "#/definitions/AutomatonMetadata",
+      "description": "Metadata about the regular expression"
+    }
+  },
+  "required": ["id", "name", "pattern", "alphabet", "metadata"],
+  "definitions": {
+    "Alphabet": {
+      "type": "object",
+      "properties": {
+        "symbols": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of symbols in the alphabet"
+        }
+      },
+      "required": ["symbols"]
+    },
+    "AutomatonMetadata": {
+      "type": "object",
+      "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Creator of the automaton"
+        }
+      },
+      "required": ["createdAt", "createdBy"]
+    }
+  }
+}

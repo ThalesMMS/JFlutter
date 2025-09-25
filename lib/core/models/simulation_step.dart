@@ -2,7 +2,7 @@ import '../packages/core_base/automaton_state.dart';
 import '../packages/core_base/configuration.dart';
 
 /// Single step in an automaton simulation
-class SimulationStep implements Configuration<AutomatonState> {
+class SimulationStep implements Configuration {
   /// Current state in this step
   final String currentState;
   

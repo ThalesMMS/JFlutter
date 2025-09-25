@@ -21,15 +21,28 @@ class SimulationPanel extends StatefulWidget {
 
 class _SimulationPanelState extends State<SimulationPanel> {
   final TextEditingController _inputController = TextEditingController();
+  final FocusNode _inputFocusNode = FocusNode();
   bool _isSimulating = false;
   bool _isStepByStep = false;
   int _currentStepIndex = 0;
   List<SimulationStep> _simulationSteps = [];
   bool _isPlaying = false;
+  bool _showInputError = false;
+  bool _hasInput = false;
+
+  bool get _canSimulate => !_isSimulating && _hasInput;
+
+  @override
+  void initState() {
+    super.initState();
+    _inputController.addListener(_onInputChanged);
+  }
 
   @override
   void dispose() {
+    _inputController.removeListener(_onInputChanged);
     _inputController.dispose();
+    _inputFocusNode.dispose();
     super.dispose();
   }
 
@@ -46,26 +59,56 @@ class _SimulationPanelState extends State<SimulationPanel> {
     }
   }
 
-  void _simulate() {
-    final inputString = _inputController.text.trim();
-    if (inputString.isNotEmpty) {
+  void _onInputChanged() {
+    final hasText = _inputController.text.trim().isNotEmpty;
+    if (hasText != _hasInput || (_showInputError && hasText)) {
       setState(() {
-        _isSimulating = true;
-        _currentStepIndex = 0;
-        _simulationSteps.clear();
-      });
-
-      widget.onSimulate(inputString);
-
-      // Safety timeout in case no result is produced
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted && _isSimulating) {
-          setState(() {
-            _isSimulating = false;
-          });
+        _hasInput = hasText;
+        if (hasText) {
+          _showInputError = false;
         }
       });
     }
+  }
+
+  void _simulate() {
+    final inputString = _inputController.text.trim();
+    if (inputString.isEmpty) {
+      _showInputErrorFeedback();
+      return;
+    }
+
+    setState(() {
+      _isSimulating = true;
+      _currentStepIndex = 0;
+      _simulationSteps.clear();
+    });
+
+    widget.onSimulate(inputString);
+
+    // Safety timeout in case no result is produced
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted && _isSimulating) {
+        setState(() {
+          _isSimulating = false;
+        });
+      }
+    });
+  }
+
+  void _showInputErrorFeedback() {
+    setState(() {
+      _showInputError = true;
+      _hasInput = false;
+    });
+    FocusScope.of(context).requestFocus(_inputFocusNode);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text('Please enter an input string before simulating.'),
+        ),
+      );
   }
 
   void _loadSimulationSteps() {
@@ -156,11 +199,15 @@ class _SimulationPanelState extends State<SimulationPanel> {
               // Input field
               TextField(
                 controller: _inputController,
-                decoration: const InputDecoration(
+                focusNode: _inputFocusNode,
+                decoration: InputDecoration(
                   labelText: 'Input String',
                   hintText: 'Enter string to test',
                   border: OutlineInputBorder(),
                   isDense: true,
+                  errorText: _showInputError
+                      ? 'Please enter an input string to simulate.'
+                      : null,
                 ),
                 onSubmitted: (_) => _simulate(),
               ),
@@ -171,7 +218,7 @@ class _SimulationPanelState extends State<SimulationPanel> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: _isSimulating ? null : _simulate,
+                  onPressed: _canSimulate ? _simulate : null,
                   icon: _isSimulating
                       ? const SizedBox(
                           width: 16,

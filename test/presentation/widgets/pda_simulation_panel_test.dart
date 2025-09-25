@@ -45,6 +45,7 @@ class _StubSimulator {
     String input, {
     bool stepByStep = false,
     Duration timeout = const Duration(seconds: 5),
+    int maxAcceptedPaths = 5,
   }) {
     final steps = <SimulationStep>[
       SimulationStep.initial(
@@ -65,6 +66,7 @@ class _StubSimulator {
         inputString: input,
         steps: steps,
         executionTime: const Duration(milliseconds: 3),
+        acceptanceMode: pda.acceptanceMode,
       ),
     );
   }

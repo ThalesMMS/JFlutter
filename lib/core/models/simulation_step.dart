@@ -1,5 +1,8 @@
+import '../packages/core_base/automaton_state.dart';
+import '../packages/core_base/configuration.dart';
+
 /// Single step in an automaton simulation
-class SimulationStep {
+class SimulationStep implements Configuration<AutomatonState> {
   /// Current state in this step
   final String currentState;
   
@@ -75,6 +78,29 @@ class SimulationStep {
       consumedInput: consumedInput ?? this.consumedInput,
     );
   }
+
+  @override
+  AutomatonState get state => SimpleState(
+        id: currentState,
+        label: currentState,
+        metadata: {
+          if (nextState != null) 'nextState': nextState,
+          if (inputSymbol != null) 'inputSymbol': inputSymbol,
+        },
+      );
+
+  @override
+  Map<String, Object?> get metadata => {
+        'remainingInput': remainingInput,
+        'stackContents': stackContents,
+        'tapeContents': tapeContents,
+        'usedTransition': usedTransition,
+        'description': description,
+        'consumedInput': consumedInput,
+      };
+
+  @override
+  bool get isAccepting => isAccepted ?? false;
 
   /// Converts the simulation step to a JSON representation
   Map<String, dynamic> toJson() {

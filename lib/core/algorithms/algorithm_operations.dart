@@ -7,6 +7,7 @@ import '../models/pumping_attempt.dart';
 import '../models/simulation_result.dart';
 import '../models/tm_analysis.dart';
 import '../result.dart';
+import '../packages/core_pda/simulation.dart';
 import 'nfa_to_dfa_converter.dart';
 import 'dfa_minimizer.dart';
 import 'regex_to_nfa_converter.dart';
@@ -144,9 +145,16 @@ class AlgorithmOperations {
     String inputString, {
     bool stepByStep = false,
     Duration timeout = const Duration(seconds: 5),
+    int maxAcceptedPaths = 5,
   }) {
     try {
-      return PDASimulator.simulate(pda, inputString, stepByStep: stepByStep, timeout: timeout);
+      return PDASimulator.simulate(
+        pda,
+        inputString,
+        stepByStep: stepByStep,
+        timeout: timeout,
+        maxAcceptedPaths: maxAcceptedPaths,
+      );
     } catch (e) {
       return ResultFactory.failure('Error simulating PDA: $e');
     }

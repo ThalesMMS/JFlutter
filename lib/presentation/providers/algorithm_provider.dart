@@ -17,6 +17,13 @@ class AlgorithmProvider extends StateNotifier<AlgorithmState> {
   final DifferenceDfaUseCase _differenceDfaUseCase;
   final PrefixClosureUseCase _prefixClosureUseCase;
   final SuffixClosureUseCase _suffixClosureUseCase;
+  final ConcatenateFsaUseCase _concatenateFsaUseCase;
+  final KleeneStarFsaUseCase _kleeneStarFsaUseCase;
+  final ReverseFsaUseCase _reverseFsaUseCase;
+  final ShuffleFsaUseCase _shuffleFsaUseCase;
+  final IsLanguageEmptyUseCase _isLanguageEmptyUseCase;
+  final IsLanguageFiniteUseCase _isLanguageFiniteUseCase;
+  final GenerateWordsUseCase _generateWordsUseCase;
   final RegexToNfaUseCase _regexToNfaUseCase;
   final DfaToRegexUseCase _dfaToRegexUseCase;
   final FsaToGrammarUseCase _fsaToGrammarUseCase;
@@ -35,6 +42,13 @@ class AlgorithmProvider extends StateNotifier<AlgorithmState> {
     required DifferenceDfaUseCase differenceDfaUseCase,
     required PrefixClosureUseCase prefixClosureUseCase,
     required SuffixClosureUseCase suffixClosureUseCase,
+    required ConcatenateFsaUseCase concatenateFsaUseCase,
+    required KleeneStarFsaUseCase kleeneStarFsaUseCase,
+    required ReverseFsaUseCase reverseFsaUseCase,
+    required ShuffleFsaUseCase shuffleFsaUseCase,
+    required IsLanguageEmptyUseCase isLanguageEmptyUseCase,
+    required IsLanguageFiniteUseCase isLanguageFiniteUseCase,
+    required GenerateWordsUseCase generateWordsUseCase,
     required RegexToNfaUseCase regexToNfaUseCase,
     required DfaToRegexUseCase dfaToRegexUseCase,
     required FsaToGrammarUseCase fsaToGrammarUseCase,
@@ -51,6 +65,13 @@ class AlgorithmProvider extends StateNotifier<AlgorithmState> {
        _differenceDfaUseCase = differenceDfaUseCase,
        _prefixClosureUseCase = prefixClosureUseCase,
        _suffixClosureUseCase = suffixClosureUseCase,
+       _concatenateFsaUseCase = concatenateFsaUseCase,
+       _kleeneStarFsaUseCase = kleeneStarFsaUseCase,
+       _reverseFsaUseCase = reverseFsaUseCase,
+       _shuffleFsaUseCase = shuffleFsaUseCase,
+       _isLanguageEmptyUseCase = isLanguageEmptyUseCase,
+       _isLanguageFiniteUseCase = isLanguageFiniteUseCase,
+       _generateWordsUseCase = generateWordsUseCase,
        _regexToNfaUseCase = regexToNfaUseCase,
        _dfaToRegexUseCase = dfaToRegexUseCase,
        _fsaToGrammarUseCase = fsaToGrammarUseCase,
@@ -195,9 +216,85 @@ class AlgorithmProvider extends StateNotifier<AlgorithmState> {
   /// Differences two DFAs
   Future<void> differenceDfa(AutomatonEntity dfa1, AutomatonEntity dfa2) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     final result = await _differenceDfaUseCase.execute(dfa1, dfa2);
-    
+
+    if (result.isSuccess) {
+      state = state.copyWith(
+        isLoading: false,
+        result: result.data,
+      );
+    } else {
+      state = state.copyWith(
+        isLoading: false,
+        error: result.error,
+      );
+    }
+  }
+
+  /// Concatenates two FSAs
+  Future<void> concatenateFsa(AutomatonEntity first, AutomatonEntity second) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    final result = await _concatenateFsaUseCase.execute(first, second);
+
+    if (result.isSuccess) {
+      state = state.copyWith(
+        isLoading: false,
+        result: result.data,
+      );
+    } else {
+      state = state.copyWith(
+        isLoading: false,
+        error: result.error,
+      );
+    }
+  }
+
+  /// Applies Kleene star to an FSA
+  Future<void> kleeneStarFsa(AutomatonEntity automaton) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    final result = await _kleeneStarFsaUseCase.execute(automaton);
+
+    if (result.isSuccess) {
+      state = state.copyWith(
+        isLoading: false,
+        result: result.data,
+      );
+    } else {
+      state = state.copyWith(
+        isLoading: false,
+        error: result.error,
+      );
+    }
+  }
+
+  /// Reverses an FSA language
+  Future<void> reverseFsa(AutomatonEntity automaton) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    final result = await _reverseFsaUseCase.execute(automaton);
+
+    if (result.isSuccess) {
+      state = state.copyWith(
+        isLoading: false,
+        result: result.data,
+      );
+    } else {
+      state = state.copyWith(
+        isLoading: false,
+        error: result.error,
+      );
+    }
+  }
+
+  /// Computes the shuffle product between two FSAs
+  Future<void> shuffleFsa(AutomatonEntity a, AutomatonEntity b) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    final result = await _shuffleFsaUseCase.execute(a, b);
+
     if (result.isSuccess) {
       state = state.copyWith(
         isLoading: false,
@@ -214,7 +311,7 @@ class AlgorithmProvider extends StateNotifier<AlgorithmState> {
   /// Prefix closure of DFA
   Future<void> prefixClosureDfa(AutomatonEntity dfa) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     final result = await _prefixClosureUseCase.execute(dfa);
     
     if (result.isSuccess) {
@@ -236,6 +333,71 @@ class AlgorithmProvider extends StateNotifier<AlgorithmState> {
     
     final result = await _suffixClosureUseCase.execute(dfa);
     
+    if (result.isSuccess) {
+      state = state.copyWith(
+        isLoading: false,
+        result: result.data,
+      );
+    } else {
+      state = state.copyWith(
+        isLoading: false,
+        error: result.error,
+      );
+    }
+  }
+
+  /// Checks if the language accepted by the automaton is empty
+  Future<void> checkLanguageEmptiness(AutomatonEntity automaton) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    final result = await _isLanguageEmptyUseCase.execute(automaton);
+
+    if (result.isSuccess) {
+      state = state.copyWith(
+        isLoading: false,
+        result: result.data,
+      );
+    } else {
+      state = state.copyWith(
+        isLoading: false,
+        error: result.error,
+      );
+    }
+  }
+
+  /// Checks if the language accepted by the automaton is finite
+  Future<void> checkLanguageFiniteness(AutomatonEntity automaton) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    final result = await _isLanguageFiniteUseCase.execute(automaton);
+
+    if (result.isSuccess) {
+      state = state.copyWith(
+        isLoading: false,
+        result: result.data,
+      );
+    } else {
+      state = state.copyWith(
+        isLoading: false,
+        error: result.error,
+      );
+    }
+  }
+
+  /// Generates example words from the language
+  Future<void> generateWords(
+    AutomatonEntity automaton, {
+    int maxLength = 6,
+    int maxWords = 32,
+  }) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    final result = await _generateWordsUseCase.execute(
+      automaton,
+      maxLength: maxLength,
+      maxWords: maxWords,
+    );
+
     if (result.isSuccess) {
       state = state.copyWith(
         isLoading: false,

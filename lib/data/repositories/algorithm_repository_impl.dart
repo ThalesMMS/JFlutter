@@ -12,6 +12,8 @@ import '../../core/models/fsa.dart';
 import '../../core/algorithms.dart' as algorithms;
 import '../../core/dfa_algorithms.dart' as dfa_alg;
 import '../../core/regex.dart' as regex_alg;
+import '../../core/grammar.dart' as grammar_core;
+import '../../core/algorithms/fsa_language_operations.dart';
 import '../../core/models/simulation_result.dart';
 import '../../core/models/simulation_step.dart';
 import '../../core/algorithms/equivalence_checker.dart';
@@ -181,6 +183,128 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
   }
 
   @override
+  Future<Result<AutomatonEntity>> concatenateFsa(
+    AutomatonEntity firstEntity,
+    AutomatonEntity secondEntity,
+  ) async {
+    try {
+      final first = _entityToAutomaton(firstEntity) as FSA;
+      final second = _entityToAutomaton(secondEntity) as FSA;
+      final result = FSALanguageOperations.concatenate(first, second);
+      if (result.isSuccess) {
+        final entity =
+            _automatonToEntity(result.data!, model_automaton.AutomatonType.fsa);
+        return Success(entity);
+      }
+      return Failure(result.error!);
+    } catch (e) {
+      return Failure('Erro na concatenação de FSAs: $e');
+    }
+  }
+
+  @override
+  Future<Result<AutomatonEntity>> kleeneStarFsa(AutomatonEntity automatonEntity) async {
+    try {
+      final automaton = _entityToAutomaton(automatonEntity) as FSA;
+      final result = FSALanguageOperations.kleeneStar(automaton);
+      if (result.isSuccess) {
+        final entity =
+            _automatonToEntity(result.data!, model_automaton.AutomatonType.fsa);
+        return Success(entity);
+      }
+      return Failure(result.error!);
+    } catch (e) {
+      return Failure('Erro na estrela de Kleene: $e');
+    }
+  }
+
+  @override
+  Future<Result<AutomatonEntity>> reverseFsa(AutomatonEntity automatonEntity) async {
+    try {
+      final automaton = _entityToAutomaton(automatonEntity) as FSA;
+      final result = FSALanguageOperations.reverse(automaton);
+      if (result.isSuccess) {
+        final entity =
+            _automatonToEntity(result.data!, model_automaton.AutomatonType.fsa);
+        return Success(entity);
+      }
+      return Failure(result.error!);
+    } catch (e) {
+      return Failure('Erro na reversão do FSA: $e');
+    }
+  }
+
+  @override
+  Future<Result<AutomatonEntity>> shuffleFsa(
+    AutomatonEntity aEntity,
+    AutomatonEntity bEntity,
+  ) async {
+    try {
+      final a = _entityToAutomaton(aEntity) as FSA;
+      final b = _entityToAutomaton(bEntity) as FSA;
+      final result = FSALanguageOperations.shuffleProduct(a, b);
+      if (result.isSuccess) {
+        final entity =
+            _automatonToEntity(result.data!, model_automaton.AutomatonType.fsa);
+        return Success(entity);
+      }
+      return Failure(result.error!);
+    } catch (e) {
+      return Failure('Erro no shuffle de FSAs: $e');
+    }
+  }
+
+  @override
+  Future<BoolResult> isLanguageEmpty(AutomatonEntity automatonEntity) async {
+    try {
+      final automaton = _entityToAutomaton(automatonEntity) as FSA;
+      final result = FSALanguageOperations.isLanguageEmpty(automaton);
+      if (result.isSuccess) {
+        return Success(result.data!);
+      }
+      return Failure(result.error!);
+    } catch (e) {
+      return Failure('Erro ao verificar linguagem vazia: $e');
+    }
+  }
+
+  @override
+  Future<BoolResult> isLanguageFinite(AutomatonEntity automatonEntity) async {
+    try {
+      final automaton = _entityToAutomaton(automatonEntity) as FSA;
+      final result = FSALanguageOperations.isLanguageFinite(automaton);
+      if (result.isSuccess) {
+        return Success(result.data!);
+      }
+      return Failure(result.error!);
+    } catch (e) {
+      return Failure('Erro ao verificar finitude da linguagem: $e');
+    }
+  }
+
+  @override
+  Future<Result<Set<String>>> generateWords(
+    AutomatonEntity automatonEntity, {
+    int maxLength = 6,
+    int maxWords = 32,
+  }) async {
+    try {
+      final automaton = _entityToAutomaton(automatonEntity) as FSA;
+      final result = FSALanguageOperations.generateWords(
+        automaton,
+        maxLength: maxLength,
+        maxWords: maxWords,
+      );
+      if (result.isSuccess) {
+        return Success(result.data!);
+      }
+      return Failure(result.error!);
+    } catch (e) {
+      return Failure('Erro ao gerar palavras: $e');
+    }
+  }
+
+  @override
   Future<Result<AutomatonEntity>> regexToNfa(String regex) async {
     try {
       final result = regex_alg.RegexToNFAConverter.convert(regex);
@@ -271,6 +395,16 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
     } catch (e) {
       return Failure('Erro na simulação passo-a-passo: $e');
     }
+  }
+
+  @override
+  Future<Result<RegexAst>> parseRegex(String pattern) async {
+    return regex_alg.RegexExpressionParser.parse(pattern);
+  }
+
+  @override
+  Future<Result<GrammarDefinitionAnalysis>> parseGrammarDefinition(String source) async {
+    return grammar_core.GrammarDefinitionParser.parse(source);
   }
 
   // Helper methods for conversion between entities and core automaton objects

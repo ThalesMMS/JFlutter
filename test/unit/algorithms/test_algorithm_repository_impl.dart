@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/entities/automaton_entity.dart';
+import 'package:jflutter/core/entities/state_entity.dart';
 import 'package:jflutter/core/models/simulation_result.dart';
 import 'package:jflutter/data/repositories/algorithm_repository_impl.dart';
 
@@ -113,6 +114,39 @@ AutomatonEntity _createExactAbDfa() {
   );
 }
 
+AutomatonEntity _createSingleSymbolDfa(String id, String symbol) {
+  return AutomatonEntity(
+    id: id,
+    name: 'Accepts only $symbol',
+    alphabet: {symbol},
+    states: const [
+      StateEntity(id: 's0', name: 's0', x: 0, y: 0, isInitial: true, isFinal: false),
+      StateEntity(id: 's1', name: 's1', x: 100, y: 0, isInitial: false, isFinal: true),
+    ],
+    transitions: {
+      's0|$symbol': ['s1'],
+    },
+    initialId: 's0',
+    nextId: 2,
+    type: AutomatonType.dfa,
+  );
+}
+
+AutomatonEntity _createEmptyLanguageDfa() {
+  return AutomatonEntity(
+    id: 'empty_language',
+    name: 'Rejects all',
+    alphabet: {'a'},
+    states: const [
+      StateEntity(id: 'z0', name: 'z0', x: 0, y: 0, isInitial: true, isFinal: false),
+    ],
+    transitions: const {},
+    initialId: 'z0',
+    nextId: 1,
+    type: AutomatonType.dfa,
+  );
+}
+
 Future<bool> _accepts(
   AlgorithmRepositoryImpl repository,
   AutomatonEntity automaton,
@@ -214,6 +248,84 @@ void main() {
 
       expect(await _accepts(repository, difference, '00'), isTrue);
       expect(await _accepts(repository, difference, '1'), isFalse);
+    });
+
+    test('concatenateFsa chains languages sequentially', () async {
+      final result = await repository.concatenateFsa(
+        _createExactAbDfa(),
+        _createSingleSymbolDfa('exact1', '1'),
+      );
+      expect(result.isSuccess, isTrue, reason: result.error);
+      final concatenated = result.data!;
+
+      expect(await _accepts(repository, concatenated, 'ab1'), isTrue);
+      expect(await _accepts(repository, concatenated, 'ab'), isFalse);
+    });
+
+    test('kleeneStarFsa accepts repetitions and empty word', () async {
+      final result = await repository.kleeneStarFsa(
+        _createSingleSymbolDfa('exact_a', 'a'),
+      );
+      expect(result.isSuccess, isTrue, reason: result.error);
+      final starred = result.data!;
+
+      expect(await _accepts(repository, starred, ''), isTrue);
+      expect(await _accepts(repository, starred, 'a'), isTrue);
+      expect(await _accepts(repository, starred, 'aa'), isTrue);
+      expect(await _accepts(repository, starred, 'b'), isFalse);
+    });
+
+    test('reverseFsa inverts accepted words', () async {
+      final result = await repository.reverseFsa(_createExactAbDfa());
+      expect(result.isSuccess, isTrue, reason: result.error);
+      final reversed = result.data!;
+
+      expect(await _accepts(repository, reversed, 'ba'), isTrue);
+      expect(await _accepts(repository, reversed, 'ab'), isFalse);
+    });
+
+    test('shuffleFsa interleaves both languages', () async {
+      final result = await repository.shuffleFsa(
+        _createSingleSymbolDfa('only_a', 'a'),
+        _createSingleSymbolDfa('only_b', 'b'),
+      );
+      expect(result.isSuccess, isTrue, reason: result.error);
+      final shuffle = result.data!;
+
+      expect(await _accepts(repository, shuffle, 'ab'), isTrue);
+      expect(await _accepts(repository, shuffle, 'ba'), isTrue);
+      expect(await _accepts(repository, shuffle, 'aa'), isFalse);
+    });
+
+    test('isLanguageEmpty detects lack of accepting paths', () async {
+      final result = await repository.isLanguageEmpty(_createEmptyLanguageDfa());
+      expect(result.isSuccess, isTrue, reason: result.error);
+      expect(result.data, isTrue);
+    });
+
+    test('isLanguageFinite distinguishes infinite languages', () async {
+      final finite = await repository.isLanguageFinite(_createExactAbDfa());
+      expect(finite.isSuccess, isTrue, reason: finite.error);
+      expect(finite.data, isTrue);
+
+      final infinite = await repository.isLanguageFinite(_createEvenZeroDfa());
+      expect(infinite.isSuccess, isTrue, reason: infinite.error);
+      expect(infinite.data, isFalse);
+    });
+
+    test('generateWords samples accepted words respecting limits', () async {
+      final result = await repository.generateWords(
+        _createEvenZeroDfa(),
+        maxLength: 2,
+        maxWords: 5,
+      );
+      expect(result.isSuccess, isTrue, reason: result.error);
+      final words = result.data!;
+
+      expect(words.contains(''), isTrue);
+      expect(words.contains('11'), isTrue);
+      expect(words.contains('00'), isTrue);
+      expect(words.length, lessThanOrEqualTo(5));
     });
 
     test('prefixClosureDfa marks prefixes leading to acceptance', () async {

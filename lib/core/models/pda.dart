@@ -5,13 +5,33 @@ import 'transition.dart';
 import 'pda_transition.dart';
 import 'automaton.dart';
 
+/// Available acceptance modes for a PDA simulation.
+enum PDAAcceptanceMode {
+  /// Accept when the automaton consumes the input and lands on an accepting state.
+  finalState,
+
+  /// Accept when the automaton consumes the input and fully empties its stack.
+  emptyStack,
+
+  /// Accept when either reaching an accepting state or emptying the stack after
+  /// consuming the input.
+  either,
+
+  /// Accept only when both reaching an accepting state and emptying the stack
+  /// after consuming the input.
+  both,
+}
+
 /// Pushdown Automaton (PDA) implementation
 class PDA extends Automaton {
   /// Stack alphabet symbols
   final Set<String> stackAlphabet;
-  
+
   /// Initial stack symbol
   final String initialStackSymbol;
+
+  /// Acceptance mode for the PDA.
+  final PDAAcceptanceMode acceptanceMode;
 
   PDA({
     required super.id,
@@ -28,6 +48,7 @@ class PDA extends Automaton {
     super.panOffset,
     required this.stackAlphabet,
     this.initialStackSymbol = 'Z',
+    this.acceptanceMode = PDAAcceptanceMode.finalState,
   }) : super(type: AutomatonType.pda);
 
   /// Creates a copy of this PDA with updated properties
@@ -48,6 +69,7 @@ class PDA extends Automaton {
     Vector2? panOffset,
     Set<String>? stackAlphabet,
     String? initialStackSymbol,
+    PDAAcceptanceMode? acceptanceMode,
   }) {
     return PDA(
       id: id ?? this.id,
@@ -64,6 +86,7 @@ class PDA extends Automaton {
       panOffset: panOffset ?? this.panOffset,
       stackAlphabet: stackAlphabet ?? this.stackAlphabet,
       initialStackSymbol: initialStackSymbol ?? this.initialStackSymbol,
+      acceptanceMode: acceptanceMode ?? this.acceptanceMode,
     );
   }
 
@@ -94,11 +117,17 @@ class PDA extends Automaton {
       },
       'stackAlphabet': stackAlphabet.toList(),
       'initialStackSymbol': initialStackSymbol,
+      'acceptanceMode': acceptanceMode.name,
     };
   }
 
   /// Creates a PDA from a JSON representation
   factory PDA.fromJson(Map<String, dynamic> json) {
+    final acceptanceModeString = json['acceptanceMode'] as String?;
+    final acceptanceMode = PDAAcceptanceMode.values.firstWhere(
+      (mode) => mode.name == acceptanceModeString,
+      orElse: () => PDAAcceptanceMode.finalState,
+    );
     return PDA(
       id: json['id'] as String,
       name: json['name'] as String,
@@ -130,6 +159,7 @@ class PDA extends Automaton {
       ),
       stackAlphabet: Set<String>.from(json['stackAlphabet'] as List),
       initialStackSymbol: json['initialStackSymbol'] as String? ?? 'Z',
+      acceptanceMode: acceptanceMode,
     );
   }
 

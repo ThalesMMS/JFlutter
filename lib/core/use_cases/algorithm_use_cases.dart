@@ -3,6 +3,8 @@ import '../result.dart';
 import '../repositories/automaton_repository.dart';
 import '../models/simulation_result.dart';
 import '../models/simulation_step.dart';
+import '../regex/ast.dart';
+import '../grammar/grammar_definition_parser.dart';
 
 /// Use case for NFA to DFA conversion
 class NfaToDfaUseCase {
@@ -114,6 +116,91 @@ class SuffixClosureUseCase {
   }
 }
 
+/// Use case for FSA concatenation
+class ConcatenateFsaUseCase {
+  final AlgorithmRepository _repository;
+
+  ConcatenateFsaUseCase(this._repository);
+
+  Future<AutomatonResult> execute(AutomatonEntity first, AutomatonEntity second) async {
+    return await _repository.concatenateFsa(first, second);
+  }
+}
+
+/// Use case for Kleene star
+class KleeneStarFsaUseCase {
+  final AlgorithmRepository _repository;
+
+  KleeneStarFsaUseCase(this._repository);
+
+  Future<AutomatonResult> execute(AutomatonEntity automaton) async {
+    return await _repository.kleeneStarFsa(automaton);
+  }
+}
+
+/// Use case for reversing an FSA
+class ReverseFsaUseCase {
+  final AlgorithmRepository _repository;
+
+  ReverseFsaUseCase(this._repository);
+
+  Future<AutomatonResult> execute(AutomatonEntity automaton) async {
+    return await _repository.reverseFsa(automaton);
+  }
+}
+
+/// Use case for shuffle product
+class ShuffleFsaUseCase {
+  final AlgorithmRepository _repository;
+
+  ShuffleFsaUseCase(this._repository);
+
+  Future<AutomatonResult> execute(AutomatonEntity a, AutomatonEntity b) async {
+    return await _repository.shuffleFsa(a, b);
+  }
+}
+
+/// Use case for checking language emptiness
+class IsLanguageEmptyUseCase {
+  final AlgorithmRepository _repository;
+
+  IsLanguageEmptyUseCase(this._repository);
+
+  Future<BoolResult> execute(AutomatonEntity automaton) async {
+    return await _repository.isLanguageEmpty(automaton);
+  }
+}
+
+/// Use case for checking language finiteness
+class IsLanguageFiniteUseCase {
+  final AlgorithmRepository _repository;
+
+  IsLanguageFiniteUseCase(this._repository);
+
+  Future<BoolResult> execute(AutomatonEntity automaton) async {
+    return await _repository.isLanguageFinite(automaton);
+  }
+}
+
+/// Use case for generating sample words
+class GenerateWordsUseCase {
+  final AlgorithmRepository _repository;
+
+  GenerateWordsUseCase(this._repository);
+
+  Future<Result<Set<String>>> execute(
+    AutomatonEntity automaton, {
+    int maxLength = 6,
+    int maxWords = 32,
+  }) async {
+    return await _repository.generateWords(
+      automaton,
+      maxLength: maxLength,
+      maxWords: maxWords,
+    );
+  }
+}
+
 /// Use case for regex to NFA conversion
 class RegexToNfaUseCase {
   final AlgorithmRepository _repository;
@@ -122,6 +209,28 @@ class RegexToNfaUseCase {
 
   Future<AutomatonResult> execute(String regex) async {
     return await _repository.regexToNfa(regex);
+  }
+}
+
+/// Use case for parsing a regex into its AST.
+class ParseRegexUseCase {
+  final AlgorithmRepository _repository;
+
+  ParseRegexUseCase(this._repository);
+
+  Future<Result<RegexAst>> execute(String pattern) async {
+    return await _repository.parseRegex(pattern);
+  }
+}
+
+/// Use case for parsing textual grammar definitions.
+class ParseGrammarDefinitionUseCase {
+  final AlgorithmRepository _repository;
+
+  ParseGrammarDefinitionUseCase(this._repository);
+
+  Future<Result<GrammarDefinitionAnalysis>> execute(String source) async {
+    return await _repository.parseGrammarDefinition(source);
   }
 }
 

@@ -4,9 +4,9 @@ import '../models/pda.dart';
 import '../models/state.dart';
 import '../models/pda_transition.dart';
 import '../models/fsa_transition.dart';
-import '../models/simulation_result.dart';
 import '../models/simulation_step.dart';
 import '../models/transition.dart';
+import '../packages/core_pda/simulation.dart';
 import '../result.dart';
 
 /// Simulates Pushdown Automata (PDA) with input strings
@@ -17,6 +17,7 @@ class PDASimulator {
     String inputString, {
     bool stepByStep = false,
     Duration timeout = const Duration(seconds: 5),
+    int maxAcceptedPaths = 5,
   }) {
     try {
       final stopwatch = Stopwatch()..start();
@@ -38,7 +39,13 @@ class PDASimulator {
       }
 
       // Simulate the PDA
-      final result = _simulatePDA(pda, inputString, stepByStep, timeout);
+      final result = _simulatePDA(
+        pda,
+        inputString,
+        stepByStep,
+        timeout,
+        maxAcceptedPaths,
+      );
       stopwatch.stop();
       
       // Update execution time
@@ -87,6 +94,7 @@ class PDASimulator {
     String inputString,
     bool stepByStep,
     Duration timeout,
+    int maxAcceptedPaths,
   ) {
     final startTime = DateTime.now();
     final initialState = pda.initialState!;
@@ -110,16 +118,28 @@ class PDASimulator {
     final queue = Queue<_PDAConfiguration>()..add(initialConfiguration);
     final visited = <String>{};
     _PDAConfiguration? lastExplored;
+    final acceptedBranches = <PDASimulationWitness>[];
+    bool truncatedBranches = false;
+    final determinismConflicts = _detectDeterministicConflicts(pda);
+    final bool deterministic = determinismConflicts.isEmpty;
 
     while (queue.isNotEmpty) {
-      if (DateTime.now().difference(startTime) > timeout) {
-        final timeoutSteps = List<SimulationStep>.from(
-          (lastExplored ?? initialConfiguration).steps,
+      final elapsed = DateTime.now().difference(startTime);
+      if (elapsed > timeout) {
+        final timedConfiguration = lastExplored ?? initialConfiguration;
+        final timeoutSteps = _buildTerminalSteps(
+          timedConfiguration,
+          description: 'Simulation timed out before exploring all configurations',
+          accepted: false,
         );
         return PDASimulationResult.timeout(
           inputString: inputString,
           steps: timeoutSteps,
-          executionTime: DateTime.now().difference(startTime),
+          executionTime: elapsed,
+          acceptanceMode: pda.acceptanceMode,
+          acceptedBranches: acceptedBranches,
+          determinismConflicts: determinismConflicts,
+          branchesTruncated: truncatedBranches,
         );
       }
 
@@ -136,24 +156,32 @@ class PDASimulator {
         continue;
       }
 
-      if (configuration.remainingInput.isEmpty &&
-          pda.acceptingStates.contains(configuration.state)) {
-        final successSteps = List<SimulationStep>.from(configuration.steps)
-          ..add(
-            SimulationStep.finalStep(
-              finalState: configuration.state.id,
-              remainingInput: configuration.remainingInput,
-              stackContents: _formatStack(configuration.stack),
-              tapeContents: '',
-              stepNumber: configuration.stepCount + 1,
-            ),
-          );
-
-        return PDASimulationResult.success(
-          inputString: inputString,
-          steps: successSteps,
-          executionTime: DateTime.now().difference(startTime),
+      final satisfiedCriteria =
+          _satisfiedAcceptanceCriteria(pda, configuration);
+      if (_isAcceptingConfiguration(pda, satisfiedCriteria)) {
+        final branchSteps = _buildAcceptanceSteps(
+          configuration,
+          satisfiedCriteria,
         );
+
+        acceptedBranches.add(
+          PDASimulationWitness(
+            steps: branchSteps,
+            criteria: satisfiedCriteria,
+          ),
+        );
+
+        if (deterministic) {
+          break;
+        }
+
+        if (acceptedBranches.length >= maxAcceptedPaths) {
+          truncatedBranches = queue.isNotEmpty;
+          break;
+        }
+
+        // No need to expand successors for an accepting configuration.
+        continue;
       }
 
       if (configuration.stepCount >= 1000) {
@@ -182,23 +210,37 @@ class PDASimulator {
       }
     }
 
-    final failureConfiguration = lastExplored ?? initialConfiguration;
-    final failureSteps = List<SimulationStep>.from(failureConfiguration.steps)
-      ..add(
-        SimulationStep.finalStep(
-          finalState: failureConfiguration.state.id,
-          remainingInput: failureConfiguration.remainingInput,
-          stackContents: _formatStack(failureConfiguration.stack),
-          tapeContents: '',
-          stepNumber: failureConfiguration.stepCount + 1,
-        ),
+    final elapsed = DateTime.now().difference(startTime);
+
+    if (acceptedBranches.isNotEmpty) {
+      final representativeSteps = acceptedBranches.first.steps.toList();
+      return PDASimulationResult.success(
+        inputString: inputString,
+        steps: representativeSteps,
+        executionTime: elapsed,
+        acceptanceMode: pda.acceptanceMode,
+        acceptedBranches: acceptedBranches,
+        determinismConflicts: determinismConflicts,
+        branchesTruncated: truncatedBranches,
       );
+    }
+
+    final failureConfiguration = lastExplored ?? initialConfiguration;
+    final failureSteps = _buildTerminalSteps(
+      failureConfiguration,
+      description: 'Input not accepted - no accepting configuration found',
+      accepted: false,
+    );
 
     return PDASimulationResult.failure(
       inputString: inputString,
       steps: failureSteps,
       errorMessage: 'Input not accepted - no accepting configuration found',
-      executionTime: DateTime.now().difference(startTime),
+      executionTime: elapsed,
+      acceptanceMode: pda.acceptanceMode,
+      acceptedBranches: acceptedBranches,
+      determinismConflicts: determinismConflicts,
+      branchesTruncated: truncatedBranches,
     );
   }
 
@@ -269,19 +311,19 @@ class PDASimulator {
 
     final consumedInput = consumesInput ? transition.inputSymbol : '';
 
-    final nextSteps = stepByStep
-        ? (List<SimulationStep>.from(configuration.steps)
-          ..add(
-            SimulationStep.pda(
-              currentState: transition.toState.id,
-              remainingInput: nextRemainingInput,
-              stackContents: _formatStack(nextStack),
-              usedTransition: transition.id,
-              stepNumber: configuration.stepCount + 1,
-              consumedInput: consumedInput,
-            ),
-          ))
-        : configuration.steps;
+    final nextSteps = List<SimulationStep>.from(configuration.steps);
+    if (stepByStep) {
+      nextSteps.add(
+        SimulationStep.pda(
+          currentState: transition.toState.id,
+          remainingInput: nextRemainingInput,
+          stackContents: _formatStack(nextStack),
+          usedTransition: transition.id,
+          stepNumber: configuration.stepCount + 1,
+          consumedInput: consumedInput,
+        ),
+      );
+    }
 
     return _PDAConfiguration(
       state: transition.toState,
@@ -290,6 +332,172 @@ class PDASimulator {
       steps: nextSteps,
       stepCount: configuration.stepCount + 1,
     );
+  }
+
+  static Set<PDAAcceptanceCriterion> _satisfiedAcceptanceCriteria(
+    PDA pda,
+    _PDAConfiguration configuration,
+  ) {
+    final satisfied = <PDAAcceptanceCriterion>{};
+    final consumedAllInput = configuration.remainingInput.isEmpty;
+
+    if (consumedAllInput && pda.acceptingStates.contains(configuration.state)) {
+      satisfied.add(PDAAcceptanceCriterion.finalState);
+    }
+
+    if (consumedAllInput && configuration.stack.isEmpty) {
+      satisfied.add(PDAAcceptanceCriterion.emptyStack);
+    }
+
+    return satisfied;
+  }
+
+  static bool _isAcceptingConfiguration(
+    PDA pda,
+    Set<PDAAcceptanceCriterion> satisfiedCriteria,
+  ) {
+    if (satisfiedCriteria.isEmpty) {
+      return false;
+    }
+
+    switch (pda.acceptanceMode) {
+      case PDAAcceptanceMode.finalState:
+        return satisfiedCriteria.contains(PDAAcceptanceCriterion.finalState);
+      case PDAAcceptanceMode.emptyStack:
+        return satisfiedCriteria.contains(PDAAcceptanceCriterion.emptyStack);
+      case PDAAcceptanceMode.either:
+        return satisfiedCriteria.isNotEmpty;
+      case PDAAcceptanceMode.both:
+        return satisfiedCriteria.contains(PDAAcceptanceCriterion.finalState) &&
+            satisfiedCriteria.contains(PDAAcceptanceCriterion.emptyStack);
+    }
+  }
+
+  static List<SimulationStep> _buildAcceptanceSteps(
+    _PDAConfiguration configuration,
+    Set<PDAAcceptanceCriterion> criteria,
+  ) {
+    final description = _acceptanceDescription(criteria);
+    return _buildTerminalSteps(
+      configuration,
+      description: description,
+      accepted: true,
+    );
+  }
+
+  static List<SimulationStep> _buildTerminalSteps(
+    _PDAConfiguration configuration, {
+    required String description,
+    required bool accepted,
+  }) {
+    final steps = List<SimulationStep>.from(configuration.steps);
+    final terminalStep = SimulationStep.finalStep(
+      finalState: configuration.state.id,
+      remainingInput: configuration.remainingInput,
+      stackContents: _formatStack(configuration.stack),
+      tapeContents: '',
+      stepNumber: configuration.stepCount + 1,
+    ).copyWith(
+      description: description,
+      isAccepted: accepted,
+    );
+
+    steps.add(terminalStep);
+    return steps;
+  }
+
+  static String _acceptanceDescription(Set<PDAAcceptanceCriterion> criteria) {
+    final acceptsFinalState = criteria.contains(PDAAcceptanceCriterion.finalState);
+    final acceptsEmptyStack = criteria.contains(PDAAcceptanceCriterion.emptyStack);
+
+    if (acceptsFinalState && acceptsEmptyStack) {
+      return 'Accepted: reached accepting state with empty stack';
+    }
+    if (acceptsFinalState) {
+      return 'Accepted: reached accepting state';
+    }
+    if (acceptsEmptyStack) {
+      return 'Accepted: stack emptied';
+    }
+    return 'Accepted';
+  }
+
+  static List<PDADeterminismConflict> _detectDeterministicConflicts(PDA pda) {
+    final conflicts = <PDADeterminismConflict>[];
+    final groupedByKey = <String, List<PDATransition>>{};
+    final lambdaByStack = <String, List<PDATransition>>{};
+
+    for (final transition in pda.pdaTransitions) {
+      final inputKey =
+          transition.isLambdaInput || transition.inputSymbol.isEmpty ? 'λ' : transition.inputSymbol;
+      final popKey =
+          transition.isLambdaPop || transition.popSymbol.isEmpty ? 'λ' : transition.popSymbol;
+      final groupKey = '${transition.fromState.id}::$inputKey::$popKey';
+      groupedByKey.putIfAbsent(groupKey, () => <PDATransition>[]).add(transition);
+
+      if (inputKey == 'λ') {
+        final stackKey = '${transition.fromState.id}::$popKey';
+        lambdaByStack.putIfAbsent(stackKey, () => <PDATransition>[]).add(transition);
+      }
+    }
+
+    groupedByKey.forEach((key, transitions) {
+      if (transitions.length <= 1) {
+        return;
+      }
+
+      final parts = key.split('::');
+      conflicts.add(
+        PDADeterminismConflict(
+          stateId: parts[0],
+          inputSymbol: parts[1],
+          stackSymbol: parts[2],
+          transitionIds: transitions.map((transition) => transition.id).toList(),
+        ),
+      );
+    });
+
+    final processedLambdaKeys = <String>{};
+    lambdaByStack.forEach((key, lambdaTransitions) {
+      final parts = key.split('::');
+      final stateId = parts[0];
+      final stackSymbol = parts[1];
+
+      final competingTransitions = pda.pdaTransitions.where((transition) {
+        final popKey =
+            transition.isLambdaPop || transition.popSymbol.isEmpty ? 'λ' : transition.popSymbol;
+        if ('${transition.fromState.id}::$popKey' != key) {
+          return false;
+        }
+        return !(transition.isLambdaInput || transition.inputSymbol.isEmpty);
+      }).toList();
+
+      if (competingTransitions.isEmpty) {
+        return;
+      }
+
+      final conflictKey = '$stateId::λ::$stackSymbol';
+      if (processedLambdaKeys.contains(conflictKey)) {
+        return;
+      }
+      processedLambdaKeys.add(conflictKey);
+
+      final transitionIds = <String>[
+        ...lambdaTransitions.map((transition) => transition.id),
+        ...competingTransitions.map((transition) => transition.id),
+      ];
+
+      conflicts.add(
+        PDADeterminismConflict(
+          stateId: stateId,
+          inputSymbol: 'λ',
+          stackSymbol: stackSymbol,
+          transitionIds: transitionIds,
+        ),
+      );
+    });
+
+    return conflicts;
   }
 
   static List<String> _extractPushSymbols(PDATransition transition) {
@@ -305,7 +513,7 @@ class PDASimulator {
     return trimmed.split(RegExp(r'\s+'));
   }
 
-  static String _formatStack(List<String> stack) {
+  static String _formatStack(Iterable<String> stack) {
     if (stack.isEmpty) {
       return 'ε';
     }
@@ -315,7 +523,7 @@ class PDASimulator {
   static String _configurationKey(
     String stateId,
     String remainingInput,
-    List<String> stack,
+    Iterable<String> stack,
   ) {
     final buffer = StringBuffer(stateId)
       ..write('::')
@@ -874,110 +1082,28 @@ class PDASimulator {
   }
 }
 
+enum PDAAcceptanceCriterion {
+  finalState,
+  emptyStack,
+}
+
 class _PDAConfiguration {
   final State state;
   final String remainingInput;
-  final List<String> stack;
-  final List<SimulationStep> steps;
+  final UnmodifiableListView<String> stack;
+  final UnmodifiableListView<SimulationStep> steps;
   final int stepCount;
 
-  const _PDAConfiguration({
+  _PDAConfiguration({
     required this.state,
     required this.remainingInput,
-    required this.stack,
-    required this.steps,
+    required List<String> stack,
+    required List<SimulationStep> steps,
     required this.stepCount,
-  });
+  })  : stack = UnmodifiableListView(stack),
+        steps = UnmodifiableListView(steps);
 }
 
-/// Result of simulating a PDA
-class PDASimulationResult {
-  final String inputString;
-  final bool accepted;
-  final List<SimulationStep> steps;
-  final String? errorMessage;
-  final Duration executionTime;
-
-  const PDASimulationResult._({
-    required this.inputString,
-    required this.accepted,
-    required this.steps,
-    this.errorMessage,
-    required this.executionTime,
-  });
-
-  factory PDASimulationResult.success({
-    required String inputString,
-    required List<SimulationStep> steps,
-    required Duration executionTime,
-  }) {
-    return PDASimulationResult._(
-      inputString: inputString,
-      accepted: true,
-      steps: steps,
-      executionTime: executionTime,
-    );
-  }
-
-  factory PDASimulationResult.failure({
-    required String inputString,
-    required List<SimulationStep> steps,
-    required String errorMessage,
-    required Duration executionTime,
-  }) {
-    return PDASimulationResult._(
-      inputString: inputString,
-      accepted: false,
-      steps: steps,
-      errorMessage: errorMessage,
-      executionTime: executionTime,
-    );
-  }
-
-  factory PDASimulationResult.timeout({
-    required String inputString,
-    required List<SimulationStep> steps,
-    required Duration executionTime,
-  }) {
-    return PDASimulationResult._(
-      inputString: inputString,
-      accepted: false,
-      steps: steps,
-      errorMessage: 'Simulation timed out',
-      executionTime: executionTime,
-    );
-  }
-
-  factory PDASimulationResult.infiniteLoop({
-    required String inputString,
-    required List<SimulationStep> steps,
-    required Duration executionTime,
-  }) {
-    return PDASimulationResult._(
-      inputString: inputString,
-      accepted: false,
-      steps: steps,
-      errorMessage: 'Infinite loop detected',
-      executionTime: executionTime,
-    );
-  }
-
-  PDASimulationResult copyWith({
-    String? inputString,
-    bool? accepted,
-    List<SimulationStep>? steps,
-    String? errorMessage,
-    Duration? executionTime,
-  }) {
-    return PDASimulationResult._(
-      inputString: inputString ?? this.inputString,
-      accepted: accepted ?? this.accepted,
-      steps: steps ?? this.steps,
-      errorMessage: errorMessage ?? this.errorMessage,
-      executionTime: executionTime ?? this.executionTime,
-    );
-  }
-}
 
 /// Analysis result of a PDA
 class PDAAnalysis {

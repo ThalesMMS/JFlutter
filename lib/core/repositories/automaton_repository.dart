@@ -2,6 +2,8 @@ import '../entities/automaton_entity.dart';
 import '../result.dart';
 import '../models/simulation_result.dart';
 import '../models/simulation_step.dart';
+import '../regex/ast.dart';
+import '../grammar/grammar_definition_parser.dart';
 
 /// Repository interface for automaton operations
 /// This defines the contract that all automaton repositories must implement
@@ -59,7 +61,32 @@ abstract class AlgorithmRepository {
   
   /// Creates suffix closure of a DFA
   Future<AutomatonResult> suffixClosureDfa(AutomatonEntity dfa);
-  
+
+  /// Concatenates two FSAs (potentially NFAs)
+  Future<AutomatonResult> concatenateFsa(AutomatonEntity first, AutomatonEntity second);
+
+  /// Computes the Kleene star of an FSA
+  Future<AutomatonResult> kleeneStarFsa(AutomatonEntity automaton);
+
+  /// Reverses the language of an FSA
+  Future<AutomatonResult> reverseFsa(AutomatonEntity automaton);
+
+  /// Computes the shuffle product of two FSAs
+  Future<AutomatonResult> shuffleFsa(AutomatonEntity a, AutomatonEntity b);
+
+  /// Checks whether the automaton language is empty
+  Future<BoolResult> isLanguageEmpty(AutomatonEntity automaton);
+
+  /// Checks whether the automaton language is finite
+  Future<BoolResult> isLanguageFinite(AutomatonEntity automaton);
+
+  /// Generates accepted words up to limits
+  Future<Result<Set<String>>> generateWords(
+    AutomatonEntity automaton, {
+    int maxLength,
+    int maxWords,
+  });
+
   /// Converts regex to NFA
   Future<AutomatonResult> regexToNfa(String regex);
   
@@ -77,9 +104,15 @@ abstract class AlgorithmRepository {
   
   /// Runs step-by-step simulation
   Future<Result<List<SimulationStep>>> createStepByStepSimulation(
-    AutomatonEntity automaton, 
+    AutomatonEntity automaton,
     String word
   );
+
+  /// Parses a regular expression into its reusable AST.
+  Future<Result<RegexAst>> parseRegex(String pattern);
+
+  /// Parses a grammar definition text into an AST with validation diagnostics.
+  Future<Result<GrammarDefinitionAnalysis>> parseGrammarDefinition(String source);
 }
 
 /// Repository interface for examples

@@ -1,13 +1,12 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:jflutter/core/models/tm.dart';
-import 'package:jflutter/core/models/state.dart';
-import 'package:jflutter/core/models/transition.dart';
+import 'dart:math' as math;
+
 import 'package:jflutter/core/models/alphabet.dart';
 import 'package:jflutter/core/models/automaton_metadata.dart';
+import 'package:jflutter/core/models/state.dart';
+import 'package:jflutter/core/models/tm.dart';
 import 'package:jflutter/core/models/tm_analysis.dart';
-
+import 'package:jflutter/core/models/tm_transition.dart';
 import 'package:vector_math/vector_math_64.dart';
-import 'dart:math' as math;
 
 /// Test utilities for Turing Machine testing
 class TmTestData {
@@ -31,9 +30,14 @@ class TmTestData {
       fromState: q0,
       toState: q1,
       label: 'a,b,R',
-      readSymbol: 'a',
-      writeSymbol: 'b',
-      direction: TMDirection.right,
+      actions: const [
+        TMTapeAction(
+          tape: 0,
+          readSymbol: 'a',
+          writeSymbol: 'b',
+          direction: TapeDirection.right,
+        ),
+      ],
     );
 
     return TM(
@@ -49,7 +53,7 @@ class TmTestData {
         modifiedAt: DateTime.now(),
         createdBy: 'test',
       ),
-      bounds: const math.Rectangle(0, 0, 200, 100),
+      bounds: const math.Rectangle<double>(0, 0, 200, 100),
     );
   }
 

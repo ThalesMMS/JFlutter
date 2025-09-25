@@ -15,10 +15,7 @@ import 'package:jflutter/core/result.dart';
 import 'package:jflutter/core/packages/core_pda/simulation.dart';
 import 'package:jflutter/presentation/providers/pda_editor_provider.dart';
 import 'package:jflutter/presentation/widgets/pda_simulation_panel.dart';
-
-class _FakePDAEditorNotifier extends StateNotifier<PDAEditorState> {
-  _FakePDAEditorNotifier({PDA? pda}) : super(PDAEditorState(pda: pda));
-}
+import 'package:jflutter/presentation/providers/pda_simulation_provider.dart';
 
 ProviderScope _buildPanelWithFakeEditor({
   PDA? pda,
@@ -26,9 +23,13 @@ ProviderScope _buildPanelWithFakeEditor({
 }) {
   return ProviderScope(
     overrides: [
-      pdaEditorProvider.overrideWith(
-        (ref) => _FakePDAEditorNotifier(pda: pda),
-      ),
+      pdaEditorProvider.overrideWith((ref) {
+        final notifier = PDAEditorNotifier();
+        if (pda != null) {
+          notifier.setPda(pda);
+        }
+        return notifier;
+      }),
       if (overrideSimulator != null)
         pdaSimulatorRunnerProvider.overrideWithValue(overrideSimulator),
     ],

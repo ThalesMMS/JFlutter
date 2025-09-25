@@ -9,13 +9,19 @@ import 'package:serializers/serializers.dart';
 
 /// Service for automaton API operations
 class AutomatonService {
+  /// Default API endpoint used when a caller does not provide an explicit
+  /// backend URL. This keeps legacy tests working while allowing the value to
+  /// be overridden through dependency injection.
+  static const String _defaultBaseUrl = 'https://api.jflutter.dev';
+
   final String baseUrl;
   final http.Client _client;
 
   AutomatonService({
-    required this.baseUrl,
+    String? baseUrl,
     http.Client? client,
-  }) : _client = client ?? http.Client();
+  })  : baseUrl = baseUrl ?? _defaultBaseUrl,
+        _client = client ?? http.Client();
 
   /// Get all automata
   Future<List<FiniteAutomaton>> getAllAutomata() async {

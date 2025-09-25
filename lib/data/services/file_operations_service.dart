@@ -184,7 +184,7 @@ class FileOperationsService {
         for (final state in automaton.states) {
           builder.element('state', nest: () {
             builder.attribute('id', state.id);
-            builder.attribute('name', state.label);
+            builder.attribute('name', _escapeXml(state.label));
             if (state.isInitial) {
               builder.element('initial');
             }
@@ -202,7 +202,7 @@ class FileOperationsService {
             builder.element('transition', nest: () {
               builder.element('from', nest: transition.fromState.id);
               builder.element('to', nest: transition.toState.id);
-              builder.element('read', nest: transition.symbol);
+              builder.element('read', nest: _escapeXml(transition.symbol));
             });
           }
         }
@@ -276,12 +276,12 @@ class FileOperationsService {
       builder.attribute('type', 'grammar');
       builder.element('grammar', nest: () {
         builder.attribute('type', grammar.type.name);
-        builder.element('start', nest: grammar.startSymbol ?? '');
-        
+        builder.element('start', nest: _escapeXml(grammar.startSymbol ?? ''));
+
         for (final production in grammar.productions) {
           builder.element('production', nest: () {
-            builder.element('left', nest: production.leftSide.join(' '));
-            builder.element('right', nest: production.rightSide.join(' '));
+            builder.element('left', nest: _escapeXml(production.leftSide.join(' ')));
+            builder.element('right', nest: _escapeXml(production.rightSide.join(' ')));
           });
         }
       });

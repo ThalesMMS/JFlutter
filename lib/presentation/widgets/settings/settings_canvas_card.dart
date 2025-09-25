@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'settings_toggle_tile.dart';
+
 class SettingsCanvasCard extends StatelessWidget {
   const SettingsCanvasCard({
     super.key,
@@ -34,7 +36,7 @@ class SettingsCanvasCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _SwitchSetting(
+            SettingsToggleTile(
               title: 'Show Grid',
               subtitle: 'Display grid lines on canvas',
               value: showGrid,
@@ -42,7 +44,7 @@ class SettingsCanvasCard extends StatelessWidget {
               switchKey: const ValueKey('settings_show_grid_switch'),
             ),
             const SizedBox(height: 16),
-            _SwitchSetting(
+            SettingsToggleTile(
               title: 'Show Coordinates',
               subtitle: 'Display coordinate information',
               value: showCoordinates,
@@ -82,51 +84,6 @@ class SettingsCanvasCard extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _SwitchSetting extends StatelessWidget {
-  const _SwitchSetting({
-    required this.title,
-    required this.subtitle,
-    required this.value,
-    required this.onChanged,
-    this.switchKey,
-  });
-
-  final String title;
-  final String subtitle;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-  final Key? switchKey;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-          ),
-        ),
-        Switch(
-          key: switchKey,
-          value: value,
-          onChanged: onChanged,
-        ),
-      ],
     );
   }
 }

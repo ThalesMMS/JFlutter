@@ -1,5 +1,6 @@
 import '../../core/models/fsa.dart';
 import '../../core/models/grammar.dart';
+import '../../core/models/pda.dart';
 import '../../core/result.dart';
 import '../../core/algorithms/nfa_to_dfa_converter.dart';
 import '../../core/algorithms/dfa_minimizer.dart';
@@ -91,7 +92,7 @@ class ConversionService {
   }
 
   /// Converts a grammar to a PDA
-  Result<dynamic> convertGrammarToPda(ConversionRequest request) {
+  Result<PDA> convertGrammarToPda(ConversionRequest request) {
     try {
       // Validate request
       if (request.grammar == null) {
@@ -111,7 +112,7 @@ class ConversionService {
   }
 
   /// Converts a grammar to a PDA using standard construction
-  Result<dynamic> convertGrammarToPdaStandard(ConversionRequest request) {
+  Result<PDA> convertGrammarToPdaStandard(ConversionRequest request) {
     try {
       // Validate request
       if (request.grammar == null) {
@@ -131,7 +132,7 @@ class ConversionService {
   }
 
   /// Converts a grammar to a PDA using Greibach normal form
-  Result<dynamic> convertGrammarToPdaGreibach(ConversionRequest request) {
+  Result<PDA> convertGrammarToPdaGreibach(ConversionRequest request) {
     try {
       // Validate request
       if (request.grammar == null) {

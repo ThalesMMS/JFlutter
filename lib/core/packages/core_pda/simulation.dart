@@ -117,6 +117,8 @@ class PDASimulationResult {
     required String errorMessage,
     required PDAAcceptanceMode acceptanceMode,
     List<PDADeterminismConflict>? determinismConflicts,
+    List<PDASimulationWitness>? acceptedBranches,
+    bool branchesTruncated = false,
   }) {
     return PDASimulationResult._(
       inputString: inputString,
@@ -126,6 +128,8 @@ class PDASimulationResult {
       errorMessage: errorMessage,
       acceptanceMode: acceptanceMode,
       determinismConflicts: determinismConflicts,
+      acceptedBranches: acceptedBranches,
+      branchesTruncated: branchesTruncated,
     );
   }
 

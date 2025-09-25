@@ -88,7 +88,7 @@ class FSALanguageOperations {
     try {
       if (automaton.initialState == null) {
         return ResultFactory.failure(
-          'O autômato precisa de estado inicial para aplicar estrela de Kleene.',
+          'Automaton must have an initial state to apply Kleene star.',
         );
       }
 
@@ -152,7 +152,7 @@ class FSALanguageOperations {
 
       return ResultFactory.success(starred);
     } catch (error) {
-      return ResultFactory.failure('Erro ao aplicar estrela de Kleene: $error');
+      return ResultFactory.failure('Error applying Kleene star: $error');
     }
   }
 
@@ -162,7 +162,7 @@ class FSALanguageOperations {
     try {
       if (automaton.initialState == null) {
         return ResultFactory.failure(
-          'O autômato precisa de estado inicial para a reversão.',
+          'Automaton must have an initial state to reverse.',
         );
       }
 
@@ -237,7 +237,7 @@ class FSALanguageOperations {
 
       return ResultFactory.success(reversed);
     } catch (error) {
-      return ResultFactory.failure('Erro ao reverter o FSA: $error');
+      return ResultFactory.failure('Error reversing FSA: $error');
     }
   }
 
@@ -247,7 +247,7 @@ class FSALanguageOperations {
     try {
       if (a.initialState == null || b.initialState == null) {
         return ResultFactory.failure(
-          'Ambos os autômatos precisam ter estado inicial definido.',
+          'Both automata must have an initial state defined.',
         );
       }
 
@@ -358,7 +358,7 @@ class FSALanguageOperations {
 
       return ResultFactory.success(shuffle);
     } catch (error) {
-      return ResultFactory.failure('Erro ao calcular o shuffle: $error');
+      return ResultFactory.failure('Error computing shuffle product: $error');
     }
   }
 

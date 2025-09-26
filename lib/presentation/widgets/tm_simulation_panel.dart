@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/algorithms/tm_simulator.dart';
 import '../../core/models/simulation_step.dart';
 import '../providers/tm_editor_provider.dart';
+import 'trace_viewers/tm_trace_viewer.dart';
 
 /// Panel for Turing Machine simulation and string testing
 class TMSimulationPanel extends ConsumerStatefulWidget {
@@ -255,55 +256,16 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
                   ),
             ),
             const SizedBox(height: 8),
-            Expanded(
-              child: ListView.builder(
-                itemCount: _simulationSteps.length,
-                itemBuilder: (context, index) {
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 4),
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Row(
-                      children: [
-                        Text(
-                          '${index + 1}.',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            _simulationSteps[index],
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  fontFamily: 'monospace',
-                                ),
-                          ),
-                        ),
-                        if (index < _tapeHistory.length &&
-                            _tapeHistory[index].isNotEmpty)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primaryContainer,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              'Tape: ${_tapeHistory[index]}',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  );
-                },
+            if (_hasSimulationResult)
+              TMTraceViewer(
+                result: TMSimulationResult._(
+                  inputString: '',
+                  accepted: _isAccepted ?? false,
+                  steps: _buildSyntheticSteps(),
+                  errorMessage: _isAccepted == null ? (_simulationResult ?? 'Simulation error') : null,
+                  executionTime: const Duration(milliseconds: 0),
+                ),
               ),
-            ),
           ],
         ],
       ),

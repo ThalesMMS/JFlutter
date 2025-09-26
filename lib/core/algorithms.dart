@@ -9,6 +9,8 @@ export 'algorithms/regex_to_nfa_converter.dart';
 export 'algorithms/grammar_to_pda_converter.dart';
 export 'algorithms/grammar_to_fsa_converter.dart';
 export 'algorithms/grammar_parser.dart';
+export 'algorithms/cfg/cfg_toolkit.dart';
+export 'algorithms/cfg/cyk_parser.dart';
 export 'algorithms/pda_simulator.dart';
 export 'algorithms/pumping_lemma_game.dart';
 export 'algorithms/pumping_lemma_prover.dart';

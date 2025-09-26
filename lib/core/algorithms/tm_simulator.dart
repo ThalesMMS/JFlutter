@@ -9,6 +9,99 @@ import '../result.dart';
 
 /// Simulates Turing Machines (TM) with input strings
 class TMSimulator {
+  /// Deterministic simulation (DTM) stepwise semantics similar às referências
+  static Result<TMSimulationResult> simulateDTM(
+    TM tm,
+    String inputString, {
+    bool stepByStep = false,
+    Duration timeout = const Duration(seconds: 5),
+  }) {
+    return simulate(tm, inputString, stepByStep: stepByStep, timeout: timeout);
+  }
+
+  /// Non-deterministic simulation (NTM) via BFS sobre configurações, aceita se qualquer ramo aceita
+  static Result<TMSimulationResult> simulateNTM(
+    TM tm,
+    String inputString, {
+    bool stepByStep = false,
+    Duration timeout = const Duration(seconds: 5),
+    int maxConfigurations = 100000,
+  }) {
+    try {
+      final validationResult = _validateInput(tm, inputString);
+      if (!validationResult.isSuccess) return Failure(validationResult.error!);
+      if (tm.initialState == null) return Failure('Turing machine must have an initial state');
+
+      final startTime = DateTime.now();
+      int explored = 0;
+
+      // Configuração: (state, tapeList, head, steps)
+      final initialTape = inputString.split('').toList();
+      final initial = (tm.initialState!, initialTape, 0, <SimulationStep>[SimulationStep.initial(initialState: tm.initialState!.id, inputString: inputString)]);
+      final queue = <(State, List<String>, int, List<SimulationStep>)>[initial];
+
+      while (queue.isNotEmpty) {
+        if (DateTime.now().difference(startTime) > timeout) {
+          return Success(TMSimulationResult.timeout(inputString: inputString, steps: const [], executionTime: DateTime.now().difference(startTime)));
+        }
+        if (explored++ > maxConfigurations) {
+          return Success(TMSimulationResult.infiniteLoop(inputString: inputString, steps: const [], executionTime: DateTime.now().difference(startTime)));
+        }
+
+        final (state, tape, head, steps) = queue.removeAt(0);
+        if (tm.acceptingStates.contains(state)) {
+          final finalSteps = List<SimulationStep>.from(steps)
+            ..add(SimulationStep.finalStep(finalState: state.id, remainingInput: '', stackContents: '', tapeContents: tape.join(''), stepNumber: (steps.isNotEmpty ? steps.last.stepNumber : 0) + 1));
+          return Success(TMSimulationResult.success(inputString: inputString, steps: finalSteps, executionTime: DateTime.now().difference(startTime)));
+        }
+
+        final read = head < tape.length ? tape[head] : tm.blankSymbol;
+        // Expand all possible transitions from state on read symbol
+        final transitions = tm.getTransitionsFromStateOnSymbol(state, read);
+        for (final tr in transitions) {
+          final newTape = List<String>.from(tape);
+          if (head < newTape.length) {
+            newTape[head] = tr.writeSymbol;
+          } else {
+            newTape.add(tr.writeSymbol);
+          }
+          int newHead = head;
+          switch (tr.moveDirection) {
+            case TapeDirection.left:
+              newHead -= 1;
+              if (newHead < 0) {
+                newHead = 0;
+                newTape.insert(0, tm.blankSymbol);
+              }
+              break;
+            case TapeDirection.right:
+              newHead += 1;
+              if (newHead >= newTape.length) newTape.add(tm.blankSymbol);
+              break;
+            case TapeDirection.stay:
+              break;
+          }
+          final nextStep = stepByStep
+              ? SimulationStep.tm(
+                  currentState: state.id,
+                  remainingInput: '',
+                  tapeContents: newTape.join(''),
+                  usedTransition: read,
+                  stepNumber: (steps.isNotEmpty ? steps.last.stepNumber : 0) + 1,
+                  headPosition: newHead,
+                  consumedInput: read,
+                )
+              : null;
+          final nextSteps = nextStep == null ? steps : [...steps, nextStep];
+          queue.add((tr.toState, newTape, newHead, nextSteps));
+        }
+      }
+
+      return Success(TMSimulationResult.failure(inputString: inputString, steps: const [], errorMessage: 'Rejected: no accepting configuration found', executionTime: DateTime.now().difference(startTime)));
+    } catch (e) {
+      return Failure('Error simulating NTM: $e');
+    }
+  }
   /// Simulates a TM with an input string
   static Result<TMSimulationResult> simulate(
     TM tm,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../presentation/providers/pumping_lemma_progress_provider.dart';
+import '../../providers/pumping_lemma_progress_provider.dart';
 
 /// Interactive Pumping Lemma Game widget
 class PumpingLemmaGame extends ConsumerStatefulWidget {
@@ -566,3 +566,5 @@ class PumpingLemmaChallenge {
     required this.examples,
   });
 }
+
+

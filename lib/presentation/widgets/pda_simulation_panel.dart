@@ -5,6 +5,7 @@ import '../../core/algorithms/pda_simulator.dart';
 import '../../core/models/simulation_step.dart';
 import '../../core/result.dart';
 import '../providers/pda_editor_provider.dart';
+import 'trace_viewers/pda_trace_viewer.dart';
 
 /// Panel for PDA simulation and string testing
 class PDASimulationPanel extends ConsumerStatefulWidget {
@@ -270,44 +271,7 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
               ),
             ),
             const SizedBox(height: 8),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: result.steps.length,
-              itemBuilder: (context, index) {
-                final step = result.steps[index];
-                final remainingInput =
-                    step.remainingInput.isEmpty ? 'λ' : step.remainingInput;
-                final stack = step.stackContents.isEmpty ? 'λ' : step.stackContents;
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 4),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        '${index + 1}.',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'State ${step.currentState} | Remaining: $remainingInput | Stack: $stack${step.usedTransition != null ? ' | Transition: ${step.usedTransition}' : ''}',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontFamily: 'monospace',
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
+            PDATraceViewer(result: result),
           ],
         ],
       ),

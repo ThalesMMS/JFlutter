@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../widgets/pumping_lemma_game.dart';
-import '../widgets/pumping_lemma_help.dart';
-import '../widgets/pumping_lemma_progress.dart';
+import '../widgets/pumping_lemma_game/pumping_lemma_game.dart';
+import '../widgets/pumping_lemma_game/pumping_lemma_help.dart';
+import '../widgets/pumping_lemma_game/pumping_lemma_progress.dart';
 
 /// Page for the Pumping Lemma Game
 class PumpingLemmaPage extends ConsumerStatefulWidget {

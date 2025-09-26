@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../providers/pumping_lemma_progress_provider.dart';
+import '../../presentation/providers/pumping_lemma_progress_provider.dart';
 
 /// Progress tracking panel for the Pumping Lemma Game.
 class PumpingLemmaProgress extends ConsumerWidget {

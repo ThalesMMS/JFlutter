@@ -26,7 +26,7 @@
 - [X] T004 [P] Criar testes unitários falhos para conversões e operações de AF (`test/unit/core/automata/fa_algorithms_test.dart`) cobrindo NFA→DFA, Hopcroft, operações de linguagem e diagnósticos de propriedades
 - [X] T005 [P] Criar testes unitários falhos para simulador PDA (`test/unit/core/pda/pda_simulator_test.dart`) com aceitação {final, pilha, ambos} e verificação de determinismo
 - [X] T006 [P] Criar testes unitários falhos para pipeline Regex→AST→Thompson NFA (`test/unit/core/regex/regex_pipeline_test.dart`) validando equivalência com referências
-- [X] T007 [P] Criar testes unitários falhos para toolkit CFG/CYK (`test/unit/core/cfg/cfg_toolkit_test.dart`) cobrindo CNF (ε/unitária/inútil) e árvores CYK
+- [X] T007 [P] Criar testes unitários falhos para toolkit CFG/CYK (`test/unit/core/cfg/cfg_toolkit_test.dart`) cobrindo CNF (ε/uni$$tária/inútil) e árvores CYK
 - [X] T008 [P] Criar testes unitários falhos para TM single-tape com traces imutáveis (`test/unit/core/tm/tm_simulator_test.dart`) incluindo time-travel e building blocks de edição
 - [X] T009 [P] Criar testes de regressão falhos para biblioteca "Examples v1" e round-trip `.jff`/JSON/SVG (`test/integration/io/examples_roundtrip_test.dart`)
 - [X] T010 [P] Criar testes widget/golden falhos para visualizações (canvas FA/PDA/MT, árvores CYK, jogo do bombeamento) em `test/widget/presentation/visualizations_test.dart`
@@ -41,12 +41,12 @@
 - [X] T015.2 Refatorar T013 (simulador FA/traces) para alinhar semântica com `DFA.read_input_stepwise`: mensagens/erros consistentes, escolha explícita NFA vs DFA, cobertura de rejeição por ausência de transição
 - [X] T015.3 Refatorar T014 (PDA simulador) para suportar NPDA: branching/ε-movimentos sobre pilha, modos de aceitação {final, pilha vazia, ambos} e limites de busca; manter DPDA como caso especial
 - [X] T015.4 Refatorar T015 (Regex pipeline) consolidando com `algorithms/regex_to_nfa_converter.dart` (evitar duplicidade), generalizar '.' para alfabeto do contexto e ampliar escapes/gramática conforme referências
-- [ ] T016 Implementar toolkit CFG (normalização CNF, remoções, verificações) e conversões CFG↔PDA em `lib/core/algorithms/cfg/cfg_toolkit.dart` — Obs.: antes de implementar, estudar as implementações em `References/`
-- [ ] T017 Implementar verificador CYK com geração de árvore de derivação em `lib/core/algorithms/cfg/cyk_parser.dart` — Obs.: antes de implementar, estudar as implementações em `References/`
-- [ ] T018 Implementar simulador de TM determinística/não determinística single-tape com time-travel e building blocks em `lib/core/algorithms/tm/tm_simulator.dart` — Obs.: antes de implementar, estudar as implementações em `References/`
-- [ ] T019 Atualizar módulo visual de traces e folding (FA/PDA/TM) em `lib/presentation/widgets/trace_viewers/` — Obs.: antes de implementar, estudar as implementações em `References/`
+- [X] T016 Implementar toolkit CFG (normalização CNF, remoções, verificações) e conversões CFG↔PDA em `lib/core/algorithms/cfg/cfg_toolkit.dart` — Obs.: antes de implementar, estudar as implementações em `References/`
+- [X] T017 Implementar verificador CYK com geração de árvore de derivação em `lib/core/algorithms/cfg/cyk_parser.dart` — Obs.: antes de implementar, estudar as implementações em `References/`
+- [X] T018 Implementar simulador de TM determinística/não determinística single-tape com time-travel e building blocks em `lib/core/algorithms/tm/tm_simulator.dart` — Obs.: antes de implementar, estudar as implementações em `References/`
+- [X] T019 Atualizar módulo visual de traces e folding (FA/PDA/TM) em `lib/presentation/widgets/trace_viewers/` — Obs.: antes de implementar, estudar as implementações em `References/`
 - [ ] T020 Implementar modo jogo dos lemas do bombeamento com progressão linear em `lib/presentation/widgets/pumping_lemma_game/` — Obs.: antes de implementar, estudar as implementações em `References/`
-- [ ] T021 Implementar biblioteca offline "Examples v1" (carregamento via assets) em `lib/data/data_sources/examples_asset_data_source.dart` e serviço em `lib/data/services/examples_service.dart` — Obs.: antes de implementar, estudar as implementações em `References/`
+- [ ] T021 Implementar biblioteca offline "Examples v1" (carregamento via assets) em `lib/data/data_sources/examples_asset_data_source.dart` e serviço em `lib/data/services/examples_service.dart` — Obs.: antes de implementar, ler as implementações atuais do JFlutter para garantir que os exemplos sejam compatíveis.
 
 
 ## Phase 3.4: Interoperability & Performance

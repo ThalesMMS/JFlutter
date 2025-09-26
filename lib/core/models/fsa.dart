@@ -189,6 +189,92 @@ class FSA extends Automaton {
     return epsilonTransitions.isNotEmpty;
   }
 
+  /// Checks if the language recognized by this FSA is finite.
+  ///
+  /// For DFAs, the language is infinite iff there exists a cycle reachable
+  /// from the initial state that can also reach an accepting state.
+  /// For NFAs, the same condition suffices as an over-approximation.
+  bool get isFiniteLanguage {
+    if (initialState == null) return true;
+
+    // Build graph adjacency for symbol transitions only (ignore epsilon).
+    final adjacency = <State, Set<State>>{};
+    for (final s in states) {
+      adjacency[s] = <State>{};
+    }
+    for (final t in fsaTransitions) {
+      if (t.isEpsilonTransition) continue;
+      adjacency[t.fromState]!.add(t.toState);
+    }
+
+    // Compute states reachable from initial.
+    final reachable = <State>{};
+    final queue = <State>[];
+    if (initialState != null) {
+      reachable.add(initialState!);
+      queue.add(initialState!);
+    }
+    while (queue.isNotEmpty) {
+      final u = queue.removeAt(0);
+      for (final v in adjacency[u]!) {
+        if (reachable.add(v)) queue.add(v);
+      }
+    }
+
+    if (reachable.isEmpty) return true;
+
+    // Compute states that can reach some accepting state (reverse graph).
+    final reverse = <State, Set<State>>{};
+    for (final s in states) {
+      reverse[s] = <State>{};
+    }
+    for (final t in fsaTransitions) {
+      if (t.isEpsilonTransition) continue;
+      reverse[t.toState]!.add(t.fromState);
+    }
+    final coReach = <State>{...acceptingStates};
+    final stack = <State>[...acceptingStates];
+    while (stack.isNotEmpty) {
+      final u = stack.removeLast();
+      for (final p in reverse[u]!) {
+        if (coReach.add(p)) stack.add(p);
+      }
+    }
+
+    // Restrict to states both reachable and co-reachable.
+    final core = states.where((s) => reachable.contains(s) && coReach.contains(s)).toSet();
+    if (core.isEmpty) return true;
+
+    // Detect cycle in core subgraph via DFS with recursion stack.
+    final color = <State, int>{}; // 0=unvisited, 1=visiting, 2=done
+    bool hasCycle = false;
+
+    bool dfs(State u) {
+      color[u] = 1;
+      for (final v in adjacency[u]!.where(core.contains)) {
+        final c = color[v] ?? 0;
+        if (c == 0) {
+          if (dfs(v)) return true;
+        } else if (c == 1) {
+          return true; // back-edge found
+        }
+      }
+      color[u] = 2;
+      return false;
+    }
+
+    for (final s in core) {
+      if ((color[s] ?? 0) == 0) {
+        if (dfs(s)) {
+          hasCycle = true;
+          break;
+        }
+      }
+    }
+
+    return !hasCycle;
+  }
+
   /// Gets all transitions from a state that accept a specific symbol
   Set<FSATransition> getTransitionsFromStateOnSymbol(State state, String symbol) {
     return fsaTransitions

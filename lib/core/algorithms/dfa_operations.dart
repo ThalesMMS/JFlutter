@@ -12,9 +12,51 @@ import 'nfa_to_dfa_converter.dart';
 
 /// Algorithms for high-level DFA and FSA manipulations used by the repository.
 class DFAOperations {
+  /// Validates that the provided automaton is a proper DFA for operations
+  /// that assume determinism and no epsilon transitions.
+  static Result<void> _validateDfa(FSA dfa, {String context = 'DFA'}) {
+    if (dfa.initialState == null) {
+      return ResultFactory.failure('$context deve possuir estado inicial definido.');
+    }
+    if (!dfa.isDeterministic) {
+      return ResultFactory.failure('$context deve ser determinístico (sem transições não determinísticas).');
+    }
+    if (dfa.hasEpsilonTransitions) {
+      return ResultFactory.failure('$context não pode conter transições ε (epsilon).');
+    }
+    // Validate transitions symbols are part of alphabet
+    for (final t in dfa.fsaTransitions) {
+      if (t.isEpsilonTransition) continue;
+      for (final s in t.inputSymbols) {
+        if (!dfa.alphabet.contains(s)) {
+          return ResultFactory.failure('$context possui transição com símbolo fora do alfabeto: "$s".');
+        }
+      }
+    }
+    return ResultFactory.success(null);
+  }
+
+  static Result<void> _validateBinaryOperands(FSA a, FSA b, String opLabel) {
+    final va = _validateDfa(a, context: 'Operando A');
+    if (va.isFailure) return va;
+    final vb = _validateDfa(b, context: 'Operando B');
+    if (vb.isFailure) return vb;
+    // Alphabets may differ; we normalize via completion on the union, but we still
+    // validate that no operand has empty alphabet while having labeled transitions.
+    if (a.alphabet.isEmpty && a.fsaTransitions.any((t) => !t.isEpsilonTransition)) {
+      return ResultFactory.failure('Operando A possui transições rotuladas, mas alfabeto está vazio.');
+    }
+    if (b.alphabet.isEmpty && b.fsaTransitions.any((t) => !t.isEpsilonTransition)) {
+      return ResultFactory.failure('Operando B possui transições rotuladas, mas alfabeto está vazio.');
+    }
+    return ResultFactory.success(null);
+  }
+
   /// Computes the complement of a DFA by completing it and toggling final states.
   static Result<FSA> complement(FSA dfa) {
     try {
+      final valid = _validateDfa(dfa, context: 'DFA para complemento');
+      if (valid.isFailure) return ResultFactory.failure(valid.error!);
       final completed = _completeWithAlphabet(dfa, dfa.alphabet);
       final updated = _rebuildWithStateUpdate(
         completed,
@@ -28,6 +70,8 @@ class DFAOperations {
 
   /// Computes the union of two DFAs using the standard product construction.
   static Result<FSA> union(FSA a, FSA b) {
+    final valid = _validateBinaryOperands(a, b, 'união');
+    if (valid.isFailure) return ResultFactory.failure(valid.error!);
     return _productConstruction(
       a,
       b,
@@ -38,6 +82,8 @@ class DFAOperations {
 
   /// Computes the intersection of two DFAs.
   static Result<FSA> intersection(FSA a, FSA b) {
+    final valid = _validateBinaryOperands(a, b, 'interseção');
+    if (valid.isFailure) return ResultFactory.failure(valid.error!);
     return _productConstruction(
       a,
       b,
@@ -48,6 +94,8 @@ class DFAOperations {
 
   /// Computes the language difference a \ b for two DFAs.
   static Result<FSA> difference(FSA a, FSA b) {
+    final valid = _validateBinaryOperands(a, b, 'diferença');
+    if (valid.isFailure) return ResultFactory.failure(valid.error!);
     return _productConstruction(
       a,
       b,
@@ -60,6 +108,8 @@ class DFAOperations {
   /// reach an accepting state as accepting.
   static Result<FSA> prefixClosure(FSA dfa) {
     try {
+      final valid = _validateDfa(dfa, context: 'DFA para fecho por prefixos');
+      if (valid.isFailure) return ResultFactory.failure(valid.error!);
       final completed = _completeWithAlphabet(dfa, dfa.alphabet);
       final reachable = _statesThatReachAccepting(completed);
       final updated = _rebuildWithStateUpdate(
@@ -79,6 +129,8 @@ class DFAOperations {
   /// resulting NFA.
   static Result<FSA> suffixClosure(FSA dfa) {
     try {
+      final valid = _validateDfa(dfa, context: 'DFA para fecho por sufixos');
+      if (valid.isFailure) return ResultFactory.failure(valid.error!);
       if (dfa.initialState == null) {
         return ResultFactory.failure('Automato não possui estado inicial definido.');
       }

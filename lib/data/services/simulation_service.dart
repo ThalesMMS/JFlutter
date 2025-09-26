@@ -5,6 +5,26 @@ import '../../core/algorithms/automaton_simulator.dart';
 
 /// Service for automaton simulation operations
 class SimulationService {
+  /// Simulates a DFA explicitly
+  Result<SimulationResult> simulateDFA(SimulationRequest request) {
+    try {
+      if (request.automaton == null) {
+        return ResultFactory.failure('Automaton is required');
+      }
+      if (request.inputString == null) {
+        return ResultFactory.failure('Input string is required');
+      }
+      return AutomatonSimulator.simulateDFA(
+        request.automaton!,
+        request.inputString!,
+        stepByStep: request.stepByStep ?? false,
+        timeout: request.timeout ?? const Duration(seconds: 5),
+      );
+    } catch (e) {
+      return ResultFactory.failure('Error simulating DFA: $e');
+    }
+  }
+
   /// Simulates an automaton with an input string
   Result<SimulationResult> simulate(SimulationRequest request) {
     try {
@@ -17,7 +37,7 @@ class SimulationService {
         return ResultFactory.failure('Input string is required');
       }
 
-      // Use the automaton simulator
+      // Use the automaton simulator (default DFA route)
       final result = AutomatonSimulator.simulate(
         request.automaton!,
         request.inputString!,

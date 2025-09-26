@@ -16,13 +16,13 @@ class PDASimulatorFacade {
     bool stepByStep = false,
     Duration timeout = const Duration(seconds: 5),
   }) {
-    // For now, delegate to PDASimulator (final-state acceptance semantics).
-    // Future: add empty-stack and both modes by extending PDASimulator.
-    return PDASimulator.simulate(
+    // Route to NPDA engine which supports modes and ε/branching.
+    return PDASimulator.simulateNPDA(
       pda,
       input,
       stepByStep: stepByStep,
       timeout: timeout,
+      mode: mode,
     );
   }
 }

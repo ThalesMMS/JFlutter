@@ -8,7 +8,7 @@ import '../result.dart';
 /// Converts Regular Expressions to Non-deterministic Finite Automata (NFA)
 class RegexToNFAConverter {
   /// Converts a regular expression to an equivalent NFA
-  static Result<FSA> convert(String regex) {
+  static Result<FSA> convert(String regex, {Set<String>? contextAlphabet}) {
     try {
       // Validate input
       final validationResult = _validateRegex(regex);
@@ -23,7 +23,7 @@ class RegexToNFAConverter {
       }
 
       // Convert to NFA using Thompson's construction
-      final nfa = _thompsonConstruction(parsedRegex);
+      final nfa = _thompsonConstruction(parsedRegex, contextAlphabet: contextAlphabet);
       
       return ResultFactory.success(nfa);
     } catch (e) {
@@ -104,6 +104,44 @@ class RegexToNFAConverter {
           break;
         case '.':
           tokens.add(RegexToken(type: TokenType.dot, value: char));
+          break;
+        case '[':
+          // Character class until ']'
+          int j = i + 1;
+          final buf = StringBuffer();
+          while (j < regex.length && regex[j] != ']') {
+            // handle escaped chars inside class
+            if (regex[j] == '\\' && j + 1 < regex.length && regex[j + 1] != ']') {
+              buf.write(regex[j + 1]);
+              j += 2;
+              continue;
+            }
+            buf.write(regex[j]);
+            j++;
+          }
+          if (j >= regex.length || regex[j] != ']') {
+            // Unclosed class → treat '[' literal
+            tokens.add(RegexToken(type: TokenType.symbol, value: char));
+          } else {
+            tokens.add(RegexToken(type: TokenType.charClass, value: buf.toString()));
+            i = j; // will be incremented by i++ at end
+          }
+          break;
+        case '\\':
+          if (i + 1 < regex.length) {
+            final next = regex[i + 1];
+            // common shortcuts
+            if ('dDsSwW'.contains(next)) {
+              tokens.add(RegexToken(type: TokenType.charShortcut, value: next));
+              i++;
+              break;
+            }
+            // escaped metachar -> literal
+            tokens.add(RegexToken(type: TokenType.symbol, value: next));
+            i++;
+          } else {
+            tokens.add(RegexToken(type: TokenType.symbol, value: char));
+          }
           break;
         default:
           tokens.add(RegexToken(type: TokenType.symbol, value: char));
@@ -191,6 +229,10 @@ class RegexToNFAConverter {
         return SymbolNode(symbol: token.value);
       case TokenType.dot:
         return DotNode();
+      case TokenType.charClass:
+        return SetNode(symbols: _parseCharClass(token.value));
+      case TokenType.charShortcut:
+        return ShortcutNode(code: token.value);
       case TokenType.leftParen:
         final node = _parseExpression(tokens);
         if (tokens.isEmpty || tokens.removeAt(0).type != TokenType.rightParen) {
@@ -203,28 +245,32 @@ class RegexToNFAConverter {
   }
 
   /// Converts regex node to NFA using Thompson's construction
-  static FSA _thompsonConstruction(RegexNode node) {
-    final nfa = _buildNFA(node);
+  static FSA _thompsonConstruction(RegexNode node, {Set<String>? contextAlphabet}) {
+    final nfa = _buildNFA(node, contextAlphabet: contextAlphabet);
     return nfa;
   }
 
   /// Builds NFA from regex node
-  static FSA _buildNFA(RegexNode node) {
+  static FSA _buildNFA(RegexNode node, {Set<String>? contextAlphabet}) {
     switch (node.runtimeType) {
       case SymbolNode:
         return _buildSymbolNFA((node as SymbolNode).symbol);
       case DotNode:
-        return _buildDotNFA();
+        return _buildDotNFA(contextAlphabet: contextAlphabet);
       case UnionNode:
-        return _buildUnionNFA((node as UnionNode).left, (node as UnionNode).right);
+        return _buildUnionNFA((node as UnionNode).left, (node as UnionNode).right, contextAlphabet: contextAlphabet);
       case ConcatenationNode:
-        return _buildConcatenationNFA((node as ConcatenationNode).left, (node as ConcatenationNode).right);
+        return _buildConcatenationNFA((node as ConcatenationNode).left, (node as ConcatenationNode).right, contextAlphabet: contextAlphabet);
       case KleeneStarNode:
-        return _buildKleeneStarNFA((node as KleeneStarNode).child);
+        return _buildKleeneStarNFA((node as KleeneStarNode).child, contextAlphabet: contextAlphabet);
       case PlusNode:
-        return _buildPlusNFA((node as PlusNode).child);
+        return _buildPlusNFA((node as PlusNode).child, contextAlphabet: contextAlphabet);
       case QuestionNode:
-        return _buildQuestionNFA((node as QuestionNode).child);
+        return _buildQuestionNFA((node as QuestionNode).child, contextAlphabet: contextAlphabet);
+      case SetNode:
+        return _buildSetNFA((node as SetNode).symbols);
+      case ShortcutNode:
+        return _buildSetNFA(_expandShortcut((node as ShortcutNode).code, contextAlphabet));
       default:
         throw ArgumentError('Unknown regex node type: ${node.runtimeType}');
     }
@@ -270,7 +316,7 @@ class RegexToNFAConverter {
   }
 
   /// Builds NFA for dot (any symbol)
-  static FSA _buildDotNFA() {
+  static FSA _buildDotNFA({Set<String>? contextAlphabet}) {
     final now = DateTime.now();
     final q0 = State(
       id: 'q0',
@@ -292,7 +338,9 @@ class RegexToNFAConverter {
       fromState: q0,
       toState: q1,
       label: '.',
-      inputSymbols: {'a', 'b', 'c'}, // Simplified for demo
+      inputSymbols: contextAlphabet != null && contextAlphabet.isNotEmpty
+          ? contextAlphabet
+          : {'a', 'b', 'c'},
     );
     
     return FSA(
@@ -300,7 +348,9 @@ class RegexToNFAConverter {
       name: 'Dot (Any Symbol)',
       states: {q0, q1},
       transitions: {transition},
-      alphabet: {'a', 'b', 'c'},
+      alphabet: contextAlphabet != null && contextAlphabet.isNotEmpty
+          ? contextAlphabet
+          : {'a', 'b', 'c'},
       initialState: q0,
       acceptingStates: {q1},
       created: now,
@@ -310,9 +360,9 @@ class RegexToNFAConverter {
   }
 
   /// Builds NFA for union (|)
-  static FSA _buildUnionNFA(RegexNode left, RegexNode right) {
-    final leftNFA = _buildNFA(left);
-    final rightNFA = _buildNFA(right);
+  static FSA _buildUnionNFA(RegexNode left, RegexNode right, {Set<String>? contextAlphabet}) {
+    final leftNFA = _buildNFA(left, contextAlphabet: contextAlphabet);
+    final rightNFA = _buildNFA(right, contextAlphabet: contextAlphabet);
     
     // Create new initial and final states
     final now = DateTime.now();
@@ -383,16 +433,16 @@ class RegexToNFAConverter {
   }
 
   /// Builds NFA for concatenation
-  static FSA _buildConcatenationNFA(RegexNode left, RegexNode right) {
-    final leftNFA = _buildNFA(left);
-    final rightNFA = _buildNFA(right);
+  static FSA _buildConcatenationNFA(RegexNode left, RegexNode right, {Set<String>? contextAlphabet}) {
+    final leftNFA = _buildNFA(left, contextAlphabet: contextAlphabet);
+    final rightNFA = _buildNFA(right, contextAlphabet: contextAlphabet);
 
     return _concatenateAutomata(leftNFA, rightNFA);
   }
 
   /// Builds NFA for Kleene star (*)
-  static FSA _buildKleeneStarNFA(RegexNode child) {
-    final childNFA = _buildNFA(child);
+  static FSA _buildKleeneStarNFA(RegexNode child, {Set<String>? contextAlphabet}) {
+    final childNFA = _buildNFA(child, contextAlphabet: contextAlphabet);
     
     // Create new initial and final states
     final now = DateTime.now();
@@ -453,10 +503,10 @@ class RegexToNFAConverter {
   }
 
   /// Builds NFA for plus (+)
-  static FSA _buildPlusNFA(RegexNode child) {
+  static FSA _buildPlusNFA(RegexNode child, {Set<String>? contextAlphabet}) {
     // Plus is equivalent to concatenation of child and Kleene star of child
-    final childNFA = _buildNFA(child);
-    final kleeneNFA = _buildKleeneStarNFA(child);
+    final childNFA = _buildNFA(child, contextAlphabet: contextAlphabet);
+    final kleeneNFA = _buildKleeneStarNFA(child, contextAlphabet: contextAlphabet);
 
     return _concatenateAutomata(childNFA, kleeneNFA);
   }
@@ -527,9 +577,9 @@ class RegexToNFAConverter {
   }
 
   /// Builds NFA for question (?)
-  static FSA _buildQuestionNFA(RegexNode child) {
+  static FSA _buildQuestionNFA(RegexNode child, {Set<String>? contextAlphabet}) {
     // Question is equivalent to union of child and epsilon
-    final childNFA = _buildNFA(child);
+    final childNFA = _buildNFA(child, contextAlphabet: contextAlphabet);
     
     // Create new initial and final states
     final now = DateTime.now();
@@ -588,6 +638,85 @@ class RegexToNFAConverter {
               bounds: math.Rectangle(0, 0, 800, 600),
     );
   }
+
+  /// Builds NFA for a set of symbols (character class)
+  static FSA _buildSetNFA(Set<String> symbols) {
+    final now = DateTime.now();
+    final q0 = State(
+      id: 'q0',
+      label: 'q0',
+      position: Vector2(100, 100),
+      isInitial: true,
+      isAccepting: false,
+    );
+    final q1 = State(
+      id: 'q1',
+      label: 'q1',
+      position: Vector2(200, 100),
+      isInitial: false,
+      isAccepting: true,
+    );
+    final t = FSATransition(
+      id: 't',
+      fromState: q0,
+      toState: q1,
+      label: '[…]',
+      inputSymbols: symbols,
+    );
+    return FSA(
+      id: 'set_${now.millisecondsSinceEpoch}',
+      name: 'Class',
+      states: {q0, q1},
+      transitions: {t},
+      alphabet: symbols,
+      initialState: q0,
+      acceptingStates: {q1},
+      created: now,
+      modified: now,
+      bounds: math.Rectangle(0, 0, 800, 600),
+    );
+  }
+
+  static Set<String> _parseCharClass(String content) {
+    final symbols = <String>{};
+    int i = 0;
+    while (i < content.length) {
+      final c = content[i];
+      if (i + 2 < content.length && content[i + 1] == '-') {
+        final start = content[i].codeUnitAt(0);
+        final end = content[i + 2].codeUnitAt(0);
+        for (int u = start; u <= end; u++) {
+          symbols.add(String.fromCharCode(u));
+        }
+        i += 3;
+        continue;
+      }
+      symbols.add(c);
+      i++;
+    }
+    return symbols;
+  }
+
+  static Set<String> _expandShortcut(String code, Set<String>? contextAlphabet) {
+    switch (code) {
+      case 'd':
+      case 'D':
+        return {'0','1','2','3','4','5','6','7','8','9'};
+      case 'w':
+      case 'W':
+        return {
+          '_',
+          ...List.generate(26, (i) => String.fromCharCode('a'.codeUnitAt(0) + i)),
+          ...List.generate(26, (i) => String.fromCharCode('A'.codeUnitAt(0) + i)),
+          ...List.generate(10, (i) => String.fromCharCode('0'.codeUnitAt(0) + i)),
+        }.toSet();
+      case 's':
+      case 'S':
+        return {' '};
+      default:
+        return contextAlphabet ?? {};
+    }
+  }
 }
 
 /// Abstract base class for regex nodes
@@ -604,6 +733,18 @@ class SymbolNode extends RegexNode {
 /// Dot node (any symbol)
 class DotNode extends RegexNode {
   const DotNode();
+}
+
+/// Set/character class node ([...])
+class SetNode extends RegexNode {
+  final Set<String> symbols;
+  const SetNode({required this.symbols});
+}
+
+/// Shortcut class node (\d, \w, \s)
+class ShortcutNode extends RegexNode {
+  final String code;
+  const ShortcutNode({required this.code});
 }
 
 /// Union node (|)
@@ -648,6 +789,8 @@ enum TokenType {
   plus,
   question,
   dot,
+  charClass,
+  charShortcut,
 }
 
 /// Token for regex parsing

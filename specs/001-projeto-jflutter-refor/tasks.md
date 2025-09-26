@@ -39,7 +39,7 @@
 - [X] T015 Implementar pipeline Regex→AST→Thompson NFA usando petitparser (`lib/core/regex/regex_pipeline.dart`) com pontos de extensão para diagnósticos
 - [X] T015.1 Refatorar T012 (FA façade/ops/diagnósticos) alinhando referências: validar alfabetos nas operações, garantir complemento em DFA completo, revisar `isEmpty/isFinite` conforme abordagem de reachability+longest path e documentar contratos
 - [X] T015.2 Refatorar T013 (simulador FA/traces) para alinhar semântica com `DFA.read_input_stepwise`: mensagens/erros consistentes, escolha explícita NFA vs DFA, cobertura de rejeição por ausência de transição
-- [ ] T015.3 Refatorar T014 (PDA simulador) para suportar NPDA: branching/ε-movimentos sobre pilha, modos de aceitação {final, pilha vazia, ambos} e limites de busca; manter DPDA como caso especial
+- [X] T015.3 Refatorar T014 (PDA simulador) para suportar NPDA: branching/ε-movimentos sobre pilha, modos de aceitação {final, pilha vazia, ambos} e limites de busca; manter DPDA como caso especial
 - [ ] T015.4 Refatorar T015 (Regex pipeline) consolidando com `algorithms/regex_to_nfa_converter.dart` (evitar duplicidade), generalizar '.' para alfabeto do contexto e ampliar escapes/gramática conforme referências
 - [ ] T016 Implementar toolkit CFG (normalização CNF, remoções, verificações) e conversões CFG↔PDA em `lib/core/algorithms/cfg/cfg_toolkit.dart` — Obs.: antes de implementar, estudar as implementações em `References/`
 - [ ] T017 Implementar verificador CYK com geração de árvore de derivação em `lib/core/algorithms/cfg/cyk_parser.dart` — Obs.: antes de implementar, estudar as implementações em `References/`

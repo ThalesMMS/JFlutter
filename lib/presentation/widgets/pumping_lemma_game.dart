@@ -206,7 +206,7 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -254,7 +254,7 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -302,11 +302,14 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.1) : null,
+          color: isSelected ? color.withValues(alpha: 0.1) : null,
           border: Border.all(
             color: isSelected
                 ? color
-                : Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                : Theme.of(context)
+                    .colorScheme
+                    .outline
+                    .withValues(alpha: 0.3),
             width: isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(8),
@@ -317,7 +320,10 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
               icon,
               color: isSelected
                   ? color
-                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  : Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.6),
               size: 24,
             ),
             const SizedBox(width: 12),
@@ -337,7 +343,10 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
             else
               Icon(
                 Icons.radio_button_unchecked,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.6),
               ),
           ],
         ),
@@ -369,8 +378,8 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
       constraints: const BoxConstraints(minHeight: 200),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withValues(alpha: 0.1),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(

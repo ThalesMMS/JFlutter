@@ -17,7 +17,8 @@ class PDASimulationPanel extends ConsumerStatefulWidget {
 
 class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
   final TextEditingController _inputController = TextEditingController();
-  final TextEditingController _initialStackController = TextEditingController(text: 'Z');
+  final TextEditingController _initialStackController =
+      TextEditingController(text: 'Z');
 
   bool _isSimulating = false;
   PDASimulationResult? _simulationResult;
@@ -63,8 +64,8 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
         Text(
           'PDA Simulation',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+                fontWeight: FontWeight.bold,
+              ),
         ),
       ],
     );
@@ -83,8 +84,8 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
           Text(
             'Simulation Input',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+                  fontWeight: FontWeight.w600,
+                ),
           ),
           const SizedBox(height: 12),
           TextField(
@@ -119,8 +120,9 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
           Text(
             'Examples: aabb (for balanced parentheses), abab (for palindromes)',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-            ),
+                  color:
+                      Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                ),
           ),
         ],
       ),
@@ -151,8 +153,8 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
         Text(
           'Simulation Results',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+                fontWeight: FontWeight.w600,
+              ),
         ),
         const SizedBox(height: 8),
         Container(
@@ -188,15 +190,15 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
           Text(
             'No simulation results yet',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+                  color: Theme.of(context).colorScheme.outline,
+                ),
           ),
           const SizedBox(height: 8),
           Text(
             'Enter an input string and click Simulate to see results',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+                  color: Theme.of(context).colorScheme.outline,
+                ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -235,13 +237,12 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
               Text(
                 message,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
+                      color: color,
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
             ],
           ),
-
           if (hasResult)
             Padding(
               padding: const EdgeInsets.only(top: 4.0),
@@ -250,7 +251,6 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
-
           if (errorText != null && errorText.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 8.0),
@@ -261,14 +261,13 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
                     ),
               ),
             ),
-
           if (hasResult && result!.steps.isNotEmpty) ...[
             const SizedBox(height: 16),
             Text(
               'Simulation Steps:',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
             const SizedBox(height: 8),
             PDATraceViewer(result: result),

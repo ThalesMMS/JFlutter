@@ -25,14 +25,18 @@ class CFGToolkit {
       final reduced = (reduce(g).data)!;
 
       // 2) Ensure start symbol does not appear on right side by introducing S0 → S
-      final needsAugment = reduced.productions.any((p) => p.rightSide.contains(reduced.startSymbol));
-      final start = needsAugment ? '${reduced.startSymbol}0' : reduced.startSymbol;
+      final needsAugment = reduced.productions
+          .any((p) => p.rightSide.contains(reduced.startSymbol));
+      final start =
+          needsAugment ? '${reduced.startSymbol}0' : reduced.startSymbol;
       final nonterminals = {
         ...reduced.nonterminals,
         if (needsAugment) start,
       };
       final productions = <Production>{
-        if (needsAugment) Production.unit(id: 'aug', leftSide: start, rightSide: reduced.startSymbol),
+        if (needsAugment)
+          Production.unit(
+              id: 'aug', leftSide: start, rightSide: reduced.startSymbol),
         ...reduced.productions,
       };
       var current = reduced.copyWith(
@@ -68,7 +72,8 @@ class CFGToolkit {
         // both must be nonterminals
         final b = p.rightSide[0];
         final c = p.rightSide[1];
-        if (!g.nonterminals.contains(b) || !g.nonterminals.contains(c)) return false;
+        if (!g.nonterminals.contains(b) || !g.nonterminals.contains(c))
+          return false;
       } else {
         return false;
       }
@@ -98,7 +103,8 @@ class CFGToolkit {
         if (newRhs.isEmpty) {
           // Only keep S→ε
           if (p.leftSide.first == g.startSymbol) {
-            newProductions.add(Production.lambda(id: '${p.id}_eps', leftSide: p.leftSide.first));
+            newProductions.add(Production.lambda(
+                id: '${p.id}_eps', leftSide: p.leftSide.first));
           }
         } else {
           newProductions.add(Production(
@@ -120,15 +126,21 @@ class CFGToolkit {
       final toAdd = <Production>{};
       final toRemove = <Production>{};
       for (final p in prods) {
-        if (p.rightSide.length == 1 && g.nonterminals.contains(p.rightSide.first) && !p.isLambda) {
+        if (p.rightSide.length == 1 &&
+            g.nonterminals.contains(p.rightSide.first) &&
+            !p.isLambda) {
           // unit A→B; replace by A→α for all B→α
           final a = p.leftSide.first;
           final b = p.rightSide.first;
           for (final q in prods.where((q) => q.leftSide.first == b)) {
             if (q.isLambda) {
-              toAdd.add(Production.lambda(id: '${p.id}_${q.id}_lift', leftSide: a));
+              toAdd.add(
+                  Production.lambda(id: '${p.id}_${q.id}_lift', leftSide: a));
             } else {
-              toAdd.add(Production(id: '${p.id}_${q.id}_lift', leftSide: [a], rightSide: q.rightSide));
+              toAdd.add(Production(
+                  id: '${p.id}_${q.id}_lift',
+                  leftSide: [a],
+                  rightSide: q.rightSide));
             }
           }
           toRemove.add(p);
@@ -145,7 +157,8 @@ class CFGToolkit {
 
   static Grammar _removeUselessSymbols(Grammar g) {
     final useful = g.usefulNonterminals;
-    final newProds = g.productions.where((p) => useful.contains(p.leftSide.first)).toSet();
+    final newProds =
+        g.productions.where((p) => useful.contains(p.leftSide.first)).toSet();
     final newNon = g.nonterminals.intersection(useful);
     return g.copyWith(nonterminals: newNon, productions: newProds);
   }
@@ -163,12 +176,23 @@ class CFGToolkit {
       final rhs = List<String>.from(p.rightSide);
       while (rhs.length > 2) {
         final n = 'N${fresh++}';
-        prods.add(Production(id: '${p.id}_b_${fresh}', leftSide: [left], rightSide: [rhs.removeAt(0), n]));
+        prods.add(Production(
+            id: '${p.id}_b_${fresh}',
+            leftSide: [left],
+            rightSide: [rhs.removeAt(0), n]));
         left = n;
       }
-      prods.add(Production(id: '${p.id}_b_end', leftSide: [left], rightSide: rhs));
+      prods.add(
+          Production(id: '${p.id}_b_end', leftSide: [left], rightSide: rhs));
     }
-    final nonterminals = {...g.nonterminals, ...prods.map((p) => p.rightSide).expand((e) => e).where((s) => s.startsWith('N')).toSet()};
+    final nonterminals = {
+      ...g.nonterminals,
+      ...prods
+          .map((p) => p.rightSide)
+          .expand((e) => e)
+          .where((s) => s.startsWith('N'))
+          .toSet()
+    };
     return g.copyWith(nonterminals: nonterminals, productions: prods);
   }
 
@@ -187,17 +211,17 @@ class CFGToolkit {
             rhs.add(sym);
           }
         }
-        prods.add(Production(id: '${p.id}_tb', leftSide: p.leftSide, rightSide: rhs));
+        prods.add(
+            Production(id: '${p.id}_tb', leftSide: p.leftSide, rightSide: rhs));
       } else {
         prods.add(p);
       }
     }
     final extraNon = mapping.values.toSet();
-    final extraProds = mapping.entries
-        .map((e) => Production.terminal(id: 'm_${e.key}', leftSide: e.value, terminal: e.key));
+    final extraProds = mapping.entries.map((e) => Production.terminal(
+        id: 'm_${e.key}', leftSide: e.value, terminal: e.key));
     prods.addAll(extraProds);
-    return g.copyWith(nonterminals: {...g.nonterminals, ...extraNon}, productions: prods);
+    return g.copyWith(
+        nonterminals: {...g.nonterminals, ...extraNon}, productions: prods);
   }
 }
-
-

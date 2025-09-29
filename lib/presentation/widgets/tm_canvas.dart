@@ -11,6 +11,7 @@ import '../../core/models/tm_transition.dart';
 import '../../core/models/transition.dart';
 import '../providers/tm_editor_provider.dart';
 import 'touch_gesture_handler.dart';
+import '../../core/algorithms/common/throttling.dart';
 
 /// Interactive canvas for drawing and editing Turing Machines
 class TMCanvas extends ConsumerStatefulWidget {
@@ -34,6 +35,7 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
   bool _isAddingState = false;
   bool _isAddingTransition = false;
   automaton_state.State? _transitionStart;
+  final FrameThrottler _moveThrottler = FrameThrottler();
 
   @override
   void initState() {
@@ -103,8 +105,8 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
           Text(
             'TM Canvas',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           const SizedBox(height: 8),
           Wrap(
@@ -144,8 +146,7 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
               padding: const EdgeInsets.only(top: 8.0),
               child: Chip(
                 avatar: const Icon(Icons.report, color: Colors.white, size: 18),
-                backgroundColor:
-                    Theme.of(context).colorScheme.errorContainer,
+                backgroundColor: Theme.of(context).colorScheme.errorContainer,
                 label: Text(
                   '${editorState.nondeterministicTransitionIds.length} nondeterministic',
                   style: TextStyle(
@@ -168,9 +169,8 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
   }) {
     final colorScheme = Theme.of(context).colorScheme;
     final color = isSelected ? colorScheme.primary : colorScheme.onSurface;
-    final backgroundColor = isSelected 
-        ? colorScheme.primaryContainer 
-        : colorScheme.surface;
+    final backgroundColor =
+        isSelected ? colorScheme.primaryContainer : colorScheme.surface;
 
     return ElevatedButton.icon(
       onPressed: onPressed,
@@ -191,14 +191,17 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
   }
 
   void _moveState(automaton_state.State state) {
-    setState(() {
-      final index = _states.indexWhere((s) => s.id == state.id);
-      if (index != -1) {
-        _states[index] = state;
-        _syncTransitionsForState(state);
-      }
+    _moveThrottler.schedule(() {
+      if (!mounted) return;
+      setState(() {
+        final index = _states.indexWhere((s) => s.id == state.id);
+        if (index != -1) {
+          _states[index] = state;
+          _syncTransitionsForState(state);
+        }
+      });
+      _notifyEditor();
     });
-    _notifyEditor();
   }
 
   void _addState(Offset position) {
@@ -260,8 +263,8 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
   void _deleteState(automaton_state.State state) {
     setState(() {
       _states.remove(state);
-      _transitions.removeWhere((t) => 
-          t.fromState == state || t.toState == state);
+      _transitions
+          .removeWhere((t) => t.fromState == state || t.toState == state);
       if (_selectedState == state) {
         _selectedState = null;
       }
@@ -305,8 +308,9 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
       if (transition.fromState.id == state.id ||
           transition.toState.id == state.id) {
         _transitions[i] = transition.copyWith(
-          fromState:
-              transition.fromState.id == state.id ? state : transition.fromState,
+          fromState: transition.fromState.id == state.id
+              ? state
+              : transition.fromState,
           toState:
               transition.toState.id == state.id ? state : transition.toState,
         );
@@ -439,16 +443,16 @@ class _TMCanvasPainter extends CustomPainter {
 
   void _drawState(Canvas canvas, automaton_state.State state) {
     final paint = Paint()
-      ..color = state == selectedState 
+      ..color = state == selectedState
           ? Colors.blue.withOpacity(0.3)
           : Colors.grey.withOpacity(0.2)
       ..style = PaintingStyle.fill;
 
     final strokePaint = Paint()
-      ..color = state.isInitial 
-          ? Colors.green 
-          : state.isAccepting 
-              ? Colors.red 
+      ..color = state.isInitial
+          ? Colors.green
+          : state.isAccepting
+              ? Colors.red
               : Colors.black
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
@@ -493,8 +497,10 @@ class _TMCanvasPainter extends CustomPainter {
   }
 
   void _drawTransition(Canvas canvas, TMTransition transition) {
-    final fromPos = Offset(transition.fromState.position.x, transition.fromState.position.y);
-    final toPos = Offset(transition.toState.position.x, transition.toState.position.y);
+    final fromPos = Offset(
+        transition.fromState.position.x, transition.fromState.position.y);
+    final toPos =
+        Offset(transition.toState.position.x, transition.toState.position.y);
 
     final isNondeterministic =
         nondeterministicTransitionIds.contains(transition.id);
@@ -520,10 +526,11 @@ class _TMCanvasPainter extends CustomPainter {
       TapeDirection.right => 'R',
       TapeDirection.stay => 'S',
     };
-    
+
     final textPainter = TextPainter(
       text: TextSpan(
-        text: '${transition.readSymbol}/${transition.writeSymbol},$directionSymbol',
+        text:
+            '${transition.readSymbol}/${transition.writeSymbol},$directionSymbol',
         style: TextStyle(
           color: isNondeterministic ? Colors.red : Colors.black,
           fontSize: 12,

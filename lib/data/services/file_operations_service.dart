@@ -7,18 +7,23 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'package:xml/xml.dart';
+import '../../core/entities/automaton_entity.dart';
+import '../../core/entities/grammar_entity.dart';
+import '../../core/entities/turing_machine_entity.dart';
+import '../../core/models/automaton_type.dart';
 import '../../core/models/fsa.dart';
 import '../../core/models/grammar.dart';
 import '../../core/models/production.dart';
 import '../../core/models/state.dart' as automaton_state;
 import '../../core/models/fsa_transition.dart';
 import '../../core/result.dart';
+import '../widgets/export/svg_exporter.dart';
 
 /// Service for file operations including JFLAP format support
 class FileOperationsService {
-  
   /// Saves automaton to JFLAP XML format (.jff)
-  Future<StringResult> saveAutomatonToJFLAP(FSA automaton, String filePath) async {
+  Future<StringResult> saveAutomatonToJFLAP(
+      FSA automaton, String filePath) async {
     try {
       final xml = _buildJFLAPXML(automaton);
       final file = File(filePath);
@@ -43,7 +48,8 @@ class FileOperationsService {
   }
 
   /// Saves grammar to JFLAP XML format (.cfg)
-  Future<StringResult> saveGrammarToJFLAP(Grammar grammar, String filePath) async {
+  Future<StringResult> saveGrammarToJFLAP(
+      Grammar grammar, String filePath) async {
     try {
       final xml = _buildGrammarXML(grammar);
       final file = File(filePath);
@@ -68,11 +74,13 @@ class FileOperationsService {
   }
 
   /// Exports automaton to PNG image
-  Future<StringResult> exportAutomatonToPNG(FSA automaton, String filePath) async {
+  Future<StringResult> exportAutomatonToPNG(
+      FSA automaton, String filePath) async {
     try {
       const size = Size(_kCanvasWidth, _kCanvasHeight);
       final recorder = ui.PictureRecorder();
-      final canvas = Canvas(recorder, Rect.fromLTWH(0, 0, size.width, size.height));
+      final canvas =
+          Canvas(recorder, Rect.fromLTWH(0, 0, size.width, size.height));
 
       // Fill background
       canvas.drawRect(
@@ -85,7 +93,8 @@ class FileOperationsService {
       painter.paint(canvas, size);
 
       final picture = recorder.endRecording();
-      final image = await picture.toImage(size.width.toInt(), size.height.toInt());
+      final image =
+          await picture.toImage(size.width.toInt(), size.height.toInt());
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) {
         return const Failure('Failed to encode PNG data');
@@ -100,8 +109,51 @@ class FileOperationsService {
     }
   }
 
-  /// Exports automaton to SVG format
-  Future<StringResult> exportAutomatonToSVG(FSA automaton, String filePath) async {
+  /// Exports automaton to SVG format (enhanced version)
+  Future<StringResult> exportAutomatonToSVG(
+      AutomatonEntity automaton, String filePath,
+      {SvgExportOptions? options}) async {
+    try {
+      final svg = SvgExporter.exportAutomatonToSvg(automaton, options: options);
+      final file = File(filePath);
+      await file.writeAsString(svg);
+      return Success(filePath);
+    } catch (e) {
+      return Failure('Failed to export automaton to SVG: $e');
+    }
+  }
+
+  /// Exports grammar to SVG format (as state diagram)
+  Future<StringResult> exportGrammarToSVG(
+      GrammarEntity grammar, String filePath,
+      {SvgExportOptions? options}) async {
+    try {
+      final svg = SvgExporter.exportGrammarToSvg(grammar, options: options);
+      final file = File(filePath);
+      await file.writeAsString(svg);
+      return Success(filePath);
+    } catch (e) {
+      return Failure('Failed to export grammar to SVG: $e');
+    }
+  }
+
+  /// Exports Turing machine to SVG format
+  Future<StringResult> exportTuringMachineToSVG(
+      TuringMachineEntity tm, String filePath,
+      {SvgExportOptions? options}) async {
+    try {
+      final svg = SvgExporter.exportTuringMachineToSvg(tm, options: options);
+      final file = File(filePath);
+      await file.writeAsString(svg);
+      return Success(filePath);
+    } catch (e) {
+      return Failure('Failed to export Turing machine to SVG: $e');
+    }
+  }
+
+  /// Exports automaton to SVG format (legacy FSA support)
+  Future<StringResult> exportLegacyAutomatonToSVG(
+      FSA automaton, String filePath) async {
     try {
       final svg = _buildSVG(automaton);
       final file = File(filePath);
@@ -123,16 +175,17 @@ class FileOperationsService {
   }
 
   /// Creates a new file with unique name
-  Future<StringResult> createUniqueFile(String baseName, String extension) async {
+  Future<StringResult> createUniqueFile(
+      String baseName, String extension) async {
     try {
       final dirResult = await getDocumentsDirectory();
       if (!dirResult.isSuccess) return Failure(dirResult.error!);
-      
+
       final directory = Directory(dirResult.data!);
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final fileName = '${baseName}_$timestamp.$extension';
       final filePath = '${directory.path}/$fileName';
-      
+
       return Success(filePath);
     } catch (e) {
       return Failure('Failed to create unique file: $e');
@@ -144,14 +197,14 @@ class FileOperationsService {
     try {
       final dirResult = await getDocumentsDirectory();
       if (!dirResult.isSuccess) return Failure(dirResult.error!);
-      
+
       final directory = Directory(dirResult.data!);
       final files = directory
           .listSync()
           .where((file) => file.path.endsWith('.$extension'))
           .map((file) => file.path)
           .toList();
-      
+
       return Success(files);
     } catch (e) {
       return Failure('Failed to list files: $e');
@@ -194,7 +247,7 @@ class FileOperationsService {
             builder.element('y', nest: state.position.y.toString());
           });
         }
-        
+
         // Add transitions
         for (final transition in automaton.transitions) {
           if (transition is FSATransition) {
@@ -207,7 +260,7 @@ class FileOperationsService {
         }
       });
     });
-    
+
     return builder.buildDocument().toXmlString(pretty: true);
   }
 
@@ -216,7 +269,7 @@ class FileOperationsService {
     final automatonElement = document.findAllElements('automaton').first;
     final states = <automaton_state.State>[];
     final transitions = <FSATransition>[];
-    
+
     // Parse states
     for (final stateElement in automatonElement.findAllElements('state')) {
       final id = stateElement.getAttribute('id')!;
@@ -225,7 +278,7 @@ class FileOperationsService {
       final y = double.parse(stateElement.findElements('y').first.text);
       final isInitial = stateElement.findElements('initial').isNotEmpty;
       final isAccepting = stateElement.findElements('final').isNotEmpty;
-      
+
       states.add(automaton_state.State(
         id: id,
         label: name,
@@ -234,16 +287,17 @@ class FileOperationsService {
         isAccepting: isAccepting,
       ));
     }
-    
+
     // Parse transitions
-    for (final transitionElement in automatonElement.findAllElements('transition')) {
+    for (final transitionElement
+        in automatonElement.findAllElements('transition')) {
       final fromId = transitionElement.findElements('from').first.text;
       final toId = transitionElement.findElements('to').first.text;
       final symbol = transitionElement.findElements('read').first.text;
-      
+
       final fromState = states.firstWhere((s) => s.id == fromId);
       final toState = states.firstWhere((s) => s.id == toId);
-      
+
       transitions.add(FSATransition(
         id: 't${transitions.length}',
         fromState: fromState,
@@ -252,14 +306,15 @@ class FileOperationsService {
         inputSymbols: {symbol},
       ));
     }
-    
+
     return FSA(
       id: 'imported_${DateTime.now().millisecondsSinceEpoch}',
       name: 'Imported Automaton',
       states: states.toSet(),
       transitions: transitions.toSet(),
       alphabet: transitions.map((t) => t.symbol).toSet(),
-      initialState: states.firstWhere((s) => s.isInitial, orElse: () => states.first),
+      initialState:
+          states.firstWhere((s) => s.isInitial, orElse: () => states.first),
       acceptingStates: states.where((s) => s.isAccepting).toSet(),
       bounds: const math.Rectangle(0, 0, 400, 300),
       created: DateTime.now(),
@@ -276,7 +331,7 @@ class FileOperationsService {
       builder.element('grammar', nest: () {
         builder.attribute('type', grammar.type.name);
         builder.element('start', nest: grammar.startSymbol ?? '');
-        
+
         for (final production in grammar.productions) {
           builder.element('production', nest: () {
             builder.element('left', nest: production.leftSide.join(' '));
@@ -285,7 +340,7 @@ class FileOperationsService {
         }
       });
     });
-    
+
     return builder.buildDocument().toXmlString(pretty: true);
   }
 
@@ -294,11 +349,14 @@ class FileOperationsService {
     final grammarElement = document.findAllElements('grammar').first;
     final startSymbol = grammarElement.findElements('start').first.text;
     final productions = <Production>{};
-    
-    for (final productionElement in grammarElement.findAllElements('production')) {
-      final leftSide = productionElement.findElements('left').first.text.split(' ');
-      final rightSide = productionElement.findElements('right').first.text.split(' ');
-      
+
+    for (final productionElement
+        in grammarElement.findAllElements('production')) {
+      final leftSide =
+          productionElement.findElements('left').first.text.split(' ');
+      final rightSide =
+          productionElement.findElements('right').first.text.split(' ');
+
       productions.add(Production(
         id: 'p${productions.length}',
         leftSide: leftSide,
@@ -306,11 +364,14 @@ class FileOperationsService {
         order: productions.length,
       ));
     }
-    
+
     return Grammar(
       id: 'imported_grammar_${DateTime.now().millisecondsSinceEpoch}',
       name: 'Imported Grammar',
-      terminals: productions.expand((p) => p.rightSide).where((s) => s.isNotEmpty).toSet(),
+      terminals: productions
+          .expand((p) => p.rightSide)
+          .where((s) => s.isNotEmpty)
+          .toSet(),
       nonterminals: productions.expand((p) => p.leftSide).toSet(),
       startSymbol: startSymbol,
       productions: productions,
@@ -325,7 +386,8 @@ class FileOperationsService {
     final drawingData = _prepareDrawingData(automaton);
     final buffer = StringBuffer();
     buffer.writeln('<?xml version="1.0" encoding="UTF-8"?>');
-    buffer.writeln('<svg xmlns="http://www.w3.org/2000/svg" width="${_kCanvasWidth}" height="${_kCanvasHeight}">');
+    buffer.writeln(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="${_kCanvasWidth}" height="${_kCanvasHeight}">');
 
     // Draw transitions first (so they appear behind states)
     for (final transition in drawingData.transitions) {
@@ -362,7 +424,9 @@ class FileOperationsService {
   _AutomatonDrawingData _prepareDrawingData(FSA automaton) {
     final states = automaton.states.toList()
       ..sort((a, b) => a.id.compareTo(b.id));
-    final transitions = automaton.transitions.whereType<FSATransition>().toList()
+    final transitions = automaton.transitions
+        .whereType<FSATransition>()
+        .toList()
       ..sort((a, b) => a.id.compareTo(b.id));
 
     final drawableStates = states
@@ -370,9 +434,11 @@ class FileOperationsService {
           (state) => _DrawableState(
             center: Offset(state.position.x, state.position.y),
             label: state.label,
-            fillColor: state.isAccepting ? _kAcceptingFillColor : _kDefaultFillColor,
+            fillColor:
+                state.isAccepting ? _kAcceptingFillColor : _kDefaultFillColor,
             strokeColor: state.isInitial ? _kInitialStrokeColor : _kStrokeColor,
-            strokeWidth: state.isInitial ? _kInitialStrokeWidth : _kDefaultStrokeWidth,
+            strokeWidth:
+                state.isInitial ? _kInitialStrokeWidth : _kDefaultStrokeWidth,
           ),
         )
         .toList();
@@ -380,8 +446,10 @@ class FileOperationsService {
     final drawableTransitions = transitions
         .map(
           (transition) => _DrawableTransition(
-            from: Offset(transition.fromState.position.x, transition.fromState.position.y),
-            to: Offset(transition.toState.position.x, transition.toState.position.y),
+            from: Offset(transition.fromState.position.x,
+                transition.fromState.position.y),
+            to: Offset(
+                transition.toState.position.x, transition.toState.position.y),
             label: transition.symbol,
           ),
         )
@@ -477,8 +545,7 @@ class _AutomatonPainter extends CustomPainter {
           ),
           textAlign: TextAlign.center,
           textDirection: TextDirection.ltr,
-        )
-          ..layout();
+        )..layout();
 
         final midPoint = Offset(
           (transition.from.dx + transition.to.dx) / 2,
@@ -517,8 +584,7 @@ class _AutomatonPainter extends CustomPainter {
         ),
         textAlign: TextAlign.center,
         textDirection: TextDirection.ltr,
-      )
-        ..layout();
+      )..layout();
 
       final textOffset = Offset(
         state.center.dx - (textPainter.width / 2),
@@ -532,4 +598,3 @@ class _AutomatonPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _AutomatonPainter oldDelegate) => false;
 }
-

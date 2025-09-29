@@ -155,8 +155,7 @@ void main() {
   });
   group('browser', () {
     test('Internet Explorer', () {
-      const input =
-          '{"recordset": null, "type": "change", '
+      const input = '{"recordset": null, "type": "change", '
           '"fromElement": null, "toElement": null, "altLeft": false, '
           '"keyCode": 0, "repeat": false, "reason": 0, "behaviorCookie": 0, '
           '"contentOverflow": false, "behaviorPart": 0, "dataTransfer": null, '
@@ -170,8 +169,7 @@ void main() {
       expect(parseJson(input), isNotNull);
     });
     test('FireFox', () {
-      const input =
-          '{"type": "change", "eventPhase": 2, "bubbles": true, '
+      const input = '{"type": "change", "eventPhase": 2, "bubbles": true, '
           '"cancelable": true, "timeStamp": 0, "CAPTURING_PHASE": 1, '
           '"AT_TARGET": 2, "BUBBLING_PHASE": 3, "isTrusted": true, '
           '"MOUSEDOWN": 1, "MOUSEUP": 2, "MOUSEOVER": 4, "MOUSEOUT": 8, '
@@ -187,8 +185,7 @@ void main() {
       expect(parseJson(input), isNotNull);
     });
     test('WebKit', () {
-      const input =
-          '{"returnValue": true, "timeStamp": 1226697417289, '
+      const input = '{"returnValue": true, "timeStamp": 1226697417289, '
           '"eventPhase": 2, "type": "change", "cancelable": false, '
           '"bubbles": true, "cancelBubble": false, "MOUSEOUT": 8, '
           '"FOCUS": 4096, "CHANGE": 32768, "MOUSEMOVE": 16, "AT_TARGET": 2, '

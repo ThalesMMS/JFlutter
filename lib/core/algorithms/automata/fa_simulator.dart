@@ -14,7 +14,8 @@ class FASimulator {
   }) {
     // Choose NFA simulation when epsilon transitions are present or
     // non-deterministic transitions exist; otherwise use DFA path.
-    final isNfa = automaton.hasEpsilonTransitions || automaton.isNondeterministic;
+    final isNfa =
+        automaton.hasEpsilonTransitions || automaton.isNondeterministic;
     return isNfa
         ? AutomatonSimulator.simulateNFA(
             automaton,
@@ -37,5 +38,3 @@ class FASimulator {
     return ResultFactory.success(result.data!.accepted);
   }
 }
-
-

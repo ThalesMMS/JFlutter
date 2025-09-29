@@ -168,9 +168,7 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
           children: [
             Icon(
               icon,
-              color: _isAnalyzing
-                  ? colorScheme.outline
-                  : colorScheme.primary,
+              color: _isAnalyzing ? colorScheme.outline : colorScheme.primary,
               size: 24,
             ),
             const SizedBox(width: 12),
@@ -229,7 +227,8 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
           ),
           const SizedBox(height: 8),
           Expanded(
-            child: hasData ? _buildResults(context) : _buildEmptyResults(context),
+            child:
+                hasData ? _buildResults(context) : _buildEmptyResults(context),
           ),
         ],
       ),

@@ -60,11 +60,12 @@ TypeMatcher<MessageNode> isMessageNode(
   String selector,
   SelectorType selectorType, {
   List<Matcher> arguments = const [],
-}) => isA<MessageNode>()
-    .having((node) => node.receiver, 'receiver', receiver)
-    .having((node) => node.selector, 'selector', selector)
-    .having((node) => node.selectorType, 'selectorType', selectorType)
-    .having((node) => node.arguments, 'arguments', arguments);
+}) =>
+    isA<MessageNode>()
+        .having((node) => node.receiver, 'receiver', receiver)
+        .having((node) => node.selector, 'selector', selector)
+        .having((node) => node.selectorType, 'selectorType', selectorType)
+        .having((node) => node.arguments, 'arguments', arguments);
 
 TypeMatcher<CascadeNode> isCascadeNode(List<Matcher> messages) =>
     isA<CascadeNode>().having((node) => node.messages, 'messages', messages);
@@ -84,13 +85,14 @@ TypeMatcher<ArrayNode> isArrayNode({List<Matcher> statements = const []}) =>
 TypeMatcher<SequenceNode> isSequenceNode({
   List<String> temporaries = const [],
   List<Matcher> statements = const [],
-}) => isA<SequenceNode>()
-    .having(
-      (node) => node.temporaries,
-      'temporaries',
-      temporaries.map(isVariableNode),
-    )
-    .having((node) => node.statements, 'statements', statements);
+}) =>
+    isA<SequenceNode>()
+        .having(
+          (node) => node.temporaries,
+          'temporaries',
+          temporaries.map(isVariableNode),
+        )
+        .having((node) => node.statements, 'statements', statements);
 
 TypeMatcher<ReturnNode> isReturnNode(Matcher value) =>
     isA<ReturnNode>().having((node) => node.value, 'value', value);
@@ -99,26 +101,28 @@ TypeMatcher<BlockNode> isBlockNode({
   List<String> arguments = const [],
   List<String> temporaries = const [],
   List<Matcher> statements = const [],
-}) => isA<BlockNode>()
-    .having(
-      (node) => node.arguments,
-      'arguments',
-      arguments.map(isVariableNode),
-    )
-    .having(
-      (node) => node.body,
-      'body',
-      isSequenceNode(temporaries: temporaries, statements: statements),
-    );
+}) =>
+    isA<BlockNode>()
+        .having(
+          (node) => node.arguments,
+          'arguments',
+          arguments.map(isVariableNode),
+        )
+        .having(
+          (node) => node.body,
+          'body',
+          isSequenceNode(temporaries: temporaries, statements: statements),
+        );
 
 TypeMatcher<PragmaNode> isPragmaNode(
   String selector,
   SelectorType selectorType, {
   List<Matcher> arguments = const [],
-}) => isA<PragmaNode>()
-    .having((node) => node.selector, 'selector', selector)
-    .having((node) => node.selectorType, 'selectorType', selectorType)
-    .having((node) => node.arguments, 'arguments', arguments);
+}) =>
+    isA<PragmaNode>()
+        .having((node) => node.selector, 'selector', selector)
+        .having((node) => node.selectorType, 'selectorType', selectorType)
+        .having((node) => node.arguments, 'arguments', arguments);
 
 TypeMatcher<MethodNode> isMethodNode(
   String selector,
@@ -127,20 +131,21 @@ TypeMatcher<MethodNode> isMethodNode(
   List<Matcher> pragmas = const [],
   List<String> temporaries = const [],
   List<Matcher> statements = const [],
-}) => isA<MethodNode>()
-    .having((node) => node.selector, 'selector', selector)
-    .having((node) => node.selectorType, 'selectorType', selectorType)
-    .having(
-      (node) => node.arguments,
-      'arguments',
-      arguments.map(isVariableNode),
-    )
-    .having((node) => node.pragmas, 'pragmas', pragmas)
-    .having(
-      (node) => node.body,
-      'body',
-      isSequenceNode(temporaries: temporaries, statements: statements),
-    );
+}) =>
+    isA<MethodNode>()
+        .having((node) => node.selector, 'selector', selector)
+        .having((node) => node.selectorType, 'selectorType', selectorType)
+        .having(
+          (node) => node.arguments,
+          'arguments',
+          arguments.map(isVariableNode),
+        )
+        .having((node) => node.pragmas, 'pragmas', pragmas)
+        .having(
+          (node) => node.body,
+          'body',
+          isSequenceNode(temporaries: temporaries, statements: statements),
+        );
 
 void main() {
   group('grammar', () {

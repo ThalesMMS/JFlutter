@@ -26,7 +26,8 @@ class TransitionCurve {
     double curvatureStrength = 45,
     double labelOffset = 16,
   }) {
-    final from = Offset(current.fromState.position.x, current.fromState.position.y);
+    final from =
+        Offset(current.fromState.position.x, current.fromState.position.y);
     final to = Offset(current.toState.position.x, current.toState.position.y);
     final direction = to - from;
     final distance = direction.distance;
@@ -59,7 +60,8 @@ class TransitionCurve {
     if (orderedTotal > 1) {
       offsetFactor = orderedIndex - (orderedTotal - 1) / 2;
     } else if (unorderedTotal > 1) {
-      offsetFactor = current.fromState.id.compareTo(current.toState.id) < 0 ? 0.5 : -0.5;
+      offsetFactor =
+          current.fromState.id.compareTo(current.toState.id) < 0 ? 0.5 : -0.5;
     }
 
     final normal = Offset(-unit.dy, unit.dx);
@@ -105,7 +107,8 @@ class TransitionCurve {
     Offset control,
     Offset end,
     double t,
-  ) => _quadraticPoint(start, control, end, t);
+  ) =>
+      _quadraticPoint(start, control, end, t);
 
   static Offset _quadraticDerivative(
     Offset start,
@@ -122,5 +125,6 @@ class TransitionCurve {
     Offset control,
     Offset end,
     double t,
-  ) => _quadraticDerivative(start, control, end, t);
+  ) =>
+      _quadraticDerivative(start, control, end, t);
 }

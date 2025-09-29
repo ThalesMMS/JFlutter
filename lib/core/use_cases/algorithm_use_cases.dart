@@ -131,7 +131,8 @@ class DfaToRegexUseCase {
 
   DfaToRegexUseCase(this._repository);
 
-  Future<StringResult> execute(AutomatonEntity dfa, {bool allowLambda = false}) async {
+  Future<StringResult> execute(AutomatonEntity dfa,
+      {bool allowLambda = false}) async {
     return await _repository.dfaToRegex(dfa, allowLambda: allowLambda);
   }
 }
@@ -164,7 +165,8 @@ class SimulateWordUseCase {
 
   SimulateWordUseCase(this._repository);
 
-  Future<Result<SimulationResult>> execute(AutomatonEntity automaton, String word) async {
+  Future<Result<SimulationResult>> execute(
+      AutomatonEntity automaton, String word) async {
     return await _repository.simulateWord(automaton, word);
   }
 }
@@ -175,7 +177,8 @@ class CreateStepByStepSimulationUseCase {
 
   CreateStepByStepSimulationUseCase(this._repository);
 
-  Future<Result<List<SimulationStep>>> execute(AutomatonEntity automaton, String word) async {
+  Future<Result<List<SimulationStep>>> execute(
+      AutomatonEntity automaton, String word) async {
     return await _repository.createStepByStepSimulation(automaton, word);
   }
 }

@@ -5,9 +5,7 @@ library;
 
 import 'package:petitparser/petitparser.dart';
 
-final query = _param
-    .plusSeparated('&'.toParser())
-    .map(
+final query = _param.plusSeparated('&'.toParser()).map(
       (list) => list.elements.where((each) => each[0] != '' || each[1] != null),
     );
 

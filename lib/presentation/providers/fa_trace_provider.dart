@@ -95,5 +95,3 @@ final faTraceProvider =
     StateNotifierProvider<FATraceNotifier, FATraceState>((ref) {
   return FATraceNotifier();
 });
-
-

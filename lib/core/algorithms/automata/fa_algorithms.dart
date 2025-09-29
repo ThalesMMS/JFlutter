@@ -23,7 +23,8 @@ class FAAlgorithms {
 
   /// Language operations on DFAs
   static Result<FSA> union(FSA a, FSA b) => DFAOperations.union(a, b);
-  static Result<FSA> intersection(FSA a, FSA b) => DFAOperations.intersection(a, b);
+  static Result<FSA> intersection(FSA a, FSA b) =>
+      DFAOperations.intersection(a, b);
   static Result<FSA> difference(FSA a, FSA b) => DFAOperations.difference(a, b);
   static Result<FSA> complement(FSA dfa) => DFAOperations.complement(dfa);
   static Result<FSA> prefixClosure(FSA dfa) => DFAOperations.prefixClosure(dfa);
@@ -59,7 +60,8 @@ class FAAlgorithms {
     final target = <String>{
       for (final s in dfa.acceptingStates.where(reachable.contains)) s.id,
     };
-    if (target.isEmpty) return true; // no accepting reachable → empty language → finite
+    if (target.isEmpty)
+      return true; // no accepting reachable → empty language → finite
     final canReachAccepting = <String>{...target};
     final queue = List<String>.from(target);
     while (queue.isNotEmpty) {
@@ -105,7 +107,6 @@ class FAAlgorithms {
     return !hasCycle;
   }
 
-  static bool areEquivalent(FSA a, FSA b) => EquivalenceChecker.areEquivalent(a, b);
+  static bool areEquivalent(FSA a, FSA b) =>
+      EquivalenceChecker.areEquivalent(a, b);
 }
-
-

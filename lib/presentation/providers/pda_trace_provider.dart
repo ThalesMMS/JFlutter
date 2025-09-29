@@ -80,5 +80,3 @@ final pdaTraceProvider =
     StateNotifierProvider<PDATraceNotifier, PDATraceState>((ref) {
   return PDATraceNotifier();
 });
-
-

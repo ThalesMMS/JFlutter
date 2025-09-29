@@ -75,10 +75,10 @@ void update() {
 
   // Process the DOM stream
   eventStream.toXmlNodes().flatten().toList().then(
-    (elements) => updateDom(XmlDocument(elements)..normalize()),
-    onError: (error) =>
-        appendLine(saxOutput, error.toString(), classes: ['error']),
-  );
+        (elements) => updateDom(XmlDocument(elements)..normalize()),
+        onError: (error) =>
+            appendLine(saxOutput, error.toString(), classes: ['error']),
+      );
 }
 
 void updateDom(XmlDocument document) {
@@ -99,11 +99,9 @@ void updateDom(XmlDocument document) {
 }
 
 void selectDom(MouseEvent event) {
-  for (
-    var node = event.target as Node?;
-    node != null && node != domOutput;
-    node = node.parentNode
-  ) {
+  for (var node = event.target as Node?;
+      node != null && node != domOutput;
+      node = node.parentNode) {
     if (node.isA<HTMLElement>()) {
       final element = node as HTMLElement;
       final path = element.getAttribute('title');
@@ -166,9 +164,9 @@ class HighlightWriter extends XmlWriter {
 
   @override
   void visit(XmlHasVisitor node) => htmlBuffer.nest({
-    'class': matches.contains(node) ? 'selection' : null,
-    'title': node is XmlNode ? node.xpathGenerate() : null,
-  }, () => super.visit(node));
+        'class': matches.contains(node) ? 'selection' : null,
+        'title': node is XmlNode ? node.xpathGenerate() : null,
+      }, () => super.visit(node));
 }
 
 void main() {

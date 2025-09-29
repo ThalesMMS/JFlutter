@@ -6,10 +6,10 @@ import 'transition.dart';
 class FSATransition extends Transition {
   /// Set of input symbols that trigger this transition
   final Set<String> inputSymbols;
-  
+
   /// Lambda symbol for epsilon transitions (null if not an epsilon transition)
   final String? lambdaSymbol;
-  
+
   /// Primary symbol for this transition (first symbol from inputSymbols or lambdaSymbol)
   String get symbol {
     if (lambdaSymbol != null) return lambdaSymbol!;
@@ -119,25 +119,27 @@ class FSATransition extends Transition {
   @override
   List<String> validate() {
     final errors = super.validate();
-    
+
     if (inputSymbols.isEmpty && lambdaSymbol == null) {
-      errors.add('FSA transition must have input symbols or be an epsilon transition');
+      errors.add(
+          'FSA transition must have input symbols or be an epsilon transition');
     }
-    
+
     if (lambdaSymbol != null && inputSymbols.isNotEmpty) {
-      errors.add('FSA transition cannot have both input symbols and lambda symbol');
+      errors.add(
+          'FSA transition cannot have both input symbols and lambda symbol');
     }
-    
+
     if (lambdaSymbol != null && lambdaSymbol!.isEmpty) {
       errors.add('Lambda symbol cannot be empty');
     }
-    
+
     for (final symbol in inputSymbols) {
       if (symbol.isEmpty) {
         errors.add('Input symbol cannot be empty');
       }
     }
-    
+
     return errors;
   }
 

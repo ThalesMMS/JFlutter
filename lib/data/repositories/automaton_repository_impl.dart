@@ -54,9 +54,7 @@ class AutomatonRepositoryImpl implements AutomatonRepository {
         return Failure(result.error!);
       }
 
-      final automatons = result.data!
-          .map(_convertFsaToEntity)
-          .toList();
+      final automatons = result.data!.map(_convertFsaToEntity).toList();
 
       return Success(automatons);
     } catch (e) {
@@ -185,7 +183,9 @@ class AutomatonRepositoryImpl implements AutomatonRepository {
 
       for (final symbol in symbols) {
         final key = '${transition.fromState.id}|$symbol';
-        transitions.putIfAbsent(key, () => <String>[]).add(transition.toState.id);
+        transitions
+            .putIfAbsent(key, () => <String>[])
+            .add(transition.toState.id);
       }
     }
 
@@ -235,7 +235,8 @@ class AutomatonRepositoryImpl implements AutomatonRepository {
       }
 
       final symbol = parts[1];
-      final isLambda = symbol == 'λ' || symbol == 'ε' || symbol.toLowerCase() == 'lambda';
+      final isLambda =
+          symbol == 'λ' || symbol == 'ε' || symbol.toLowerCase() == 'lambda';
 
       for (final destination in destinations) {
         final toState = stateById[destination];

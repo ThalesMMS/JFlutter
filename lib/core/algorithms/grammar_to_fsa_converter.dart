@@ -47,9 +47,8 @@ class GrammarToFSAConverter {
     final requiresFinalState = _needsFinalState(grammar);
     State? finalState;
     if (requiresFinalState) {
-      final finalPosition = statePositions.isEmpty
-          ? Vector2.zero()
-          : statePositions.last;
+      final finalPosition =
+          statePositions.isEmpty ? Vector2.zero() : statePositions.last;
       finalState = State(
         id: '${grammar.id}_ACCEPT',
         label: 'F',
@@ -127,9 +126,8 @@ class GrammarToFSAConverter {
     }
 
     final acceptingStates = states.where((s) => s.isAccepting).toSet();
-    final alphabet = grammar.terminals
-        .where((symbol) => !_isLambdaSymbol(symbol))
-        .toSet();
+    final alphabet =
+        grammar.terminals.where((symbol) => !_isLambdaSymbol(symbol)).toSet();
 
     final now = DateTime.now();
     final automaton = FSA(
@@ -200,7 +198,8 @@ class GrammarToFSAConverter {
       }
       if (production.rightSide.length == 1) {
         final symbol = production.rightSide.first;
-        return !_isLambdaSymbol(symbol) && !grammar.nonterminals.contains(symbol);
+        return !_isLambdaSymbol(symbol) &&
+            !grammar.nonterminals.contains(symbol);
       }
       return false;
     });

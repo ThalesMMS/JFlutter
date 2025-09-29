@@ -664,14 +664,14 @@ class DartGrammarDefinition extends GrammarDefinition {
       ref1(token, '(') & ref0(expression) & ref1(token, ')');
 
   Parser literal() => ref1(
-    token,
-    ref0(nullToken) |
-        ref0(trueToken) |
-        ref0(falseToken) |
-        ref0(hexNumberLexicalToken) |
-        ref0(numberLexicalToken) |
-        ref0(stringLexicalToken),
-  );
+        token,
+        ref0(nullToken) |
+            ref0(trueToken) |
+            ref0(falseToken) |
+            ref0(hexNumberLexicalToken) |
+            ref0(numberLexicalToken) |
+            ref0(stringLexicalToken),
+      );
 
   Parser compoundLiteral() => ref0(listLiteral) | ref0(mapLiteral);
 

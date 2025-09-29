@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:petitparser/petitparser.dart';
+import 'package:petitparser/petitparser.dart' as pp;
 import 'package:vector_math/vector_math_64.dart';
 
 import '../models/fsa.dart';
@@ -8,7 +8,15 @@ import '../models/fsa_transition.dart';
 import '../models/state.dart';
 import '../result.dart';
 import '../algorithms/regex_to_nfa_converter.dart'
-    show RegexNode, SymbolNode, DotNode, UnionNode, ConcatenationNode, KleeneStarNode, PlusNode, QuestionNode;
+    show
+        RegexNode,
+        SymbolNode,
+        DotNode,
+        UnionNode,
+        ConcatenationNode,
+        KleeneStarNode,
+        PlusNode,
+        QuestionNode;
 
 /// Parses a regex to an AST (RegexNode) using petitparser and builds an NFA
 /// via Thompson's construction.
@@ -17,7 +25,7 @@ class RegexPipeline {
   static Result<FSA> run(String pattern) {
     try {
       final astResult = parse(pattern);
-      if (!astResult.isSuccess) return ResultFactory.failure(astResult.error!);
+      if (!astResult.isSuccess()) return ResultFactory.failure(astResult.error!);
       final fsa = _buildFromAst(astResult.data!);
       return ResultFactory.success(fsa);
     } catch (e) {
@@ -36,39 +44,36 @@ class RegexPipeline {
       if (result.isSuccess) {
         return ResultFactory.success(result.value as RegexNode);
       }
-      return ResultFactory.failure('Invalid regular expression at ${result.position}');
+      return ResultFactory.failure(
+          'Invalid regular expression at ${result.position}');
     } catch (e) {
       return ResultFactory.failure('Regex parse error: $e');
     }
   }
 
   /// Builds the petitparser for regex with precedence and implicit concatenation.
-  static Parser _buildParser() {
+  static pp.Parser _buildParser() {
     // Tokens
-    final lparen = char('(');
-    final rparen = char(')');
-    final union = char('|');
-    final star = char('*');
-    final plus = char('+');
-    final question = char('?');
-    final dot = char('.');
+    final lparen = pp.char('(');
+    final rparen = pp.char(')');
+    final union = pp.char('|');
+    final star = pp.char('*');
+    final plus = pp.char('+');
+    final question = pp.char('?');
+    final dot = pp.char('.');
 
     // Escaped character: \\ or \( etc.
-    final escape = (char('\\') & any()).map((values) => values[1] as String);
+    final escape = (pp.char('\\') & pp.any()).map((values) => values[1] as String);
 
     // Literal symbol: any char except metacharacters
-    final literal =
-        (escape | pattern("[^()|*+?.]"))
-            .map((value) => SymbolNode(symbol: value as String));
+    final literal = (escape | pp.pattern("[^()|*+?.]"))
+        .map((value) => SymbolNode(symbol: value as String));
 
     // Primary: group | dot | literal
-    late Parser<RegexNode> primary;
-    final primaryRef = undefined();
-    primary = (lparen & primaryRef & rparen)
-            .map((v) => v[1] as RegexNode)
-        |
-        dot.map((_) => const DotNode())
-        |
+    late pp.Parser<RegexNode> primary;
+    final primaryRef = pp.undefined<RegexNode>();
+    primary = (lparen & primaryRef & rparen).map((v) => v[1] as RegexNode) |
+        dot.map((_) => const DotNode()) |
         literal.cast<RegexNode>();
 
     // Unary: primary followed by postfix operators (*, +, ?), multiple allowed
@@ -123,9 +128,11 @@ class RegexPipeline {
       case DotNode:
         return _buildDot();
       case UnionNode:
-        return _buildUnion(_buildFromAst((node as UnionNode).left), _buildFromAst(node.right));
+        return _buildUnion(
+            _buildFromAst((node as UnionNode).left), _buildFromAst(node.right));
       case ConcatenationNode:
-        return _concatenate(_buildFromAst((node as ConcatenationNode).left), _buildFromAst(node.right));
+        return _concatenate(_buildFromAst((node as ConcatenationNode).left),
+            _buildFromAst(node.right));
       case KleeneStarNode:
         return _kleene(_buildFromAst((node as KleeneStarNode).child));
       case PlusNode:
@@ -141,7 +148,8 @@ class RegexPipeline {
 
   static FSA _epsilon() {
     final now = DateTime.now();
-    final q0 = State(id: 'q0', label: 'q0', position: Vector2(100, 100), isInitial: true);
+    final q0 = State(
+        id: 'q0', label: 'q0', position: Vector2(100, 100), isInitial: true);
     // Accept empty string, single state accepting
     return FSA(
       id: 'eps_${now.millisecondsSinceEpoch}',
@@ -159,9 +167,12 @@ class RegexPipeline {
 
   static FSA _buildSymbol(String symbol) {
     final now = DateTime.now();
-    final q0 = State(id: 'q0', label: 'q0', position: Vector2(100, 100), isInitial: true);
-    final q1 = State(id: 'q1', label: 'q1', position: Vector2(200, 100), isAccepting: true);
-    final t = FSATransition.deterministic(id: 't', fromState: q0, toState: q1, symbol: symbol);
+    final q0 = State(
+        id: 'q0', label: 'q0', position: Vector2(100, 100), isInitial: true);
+    final q1 = State(
+        id: 'q1', label: 'q1', position: Vector2(200, 100), isAccepting: true);
+    final t = FSATransition.deterministic(
+        id: 't', fromState: q0, toState: q1, symbol: symbol);
     return FSA(
       id: 'sym_${symbol}_${now.millisecondsSinceEpoch}',
       name: 'Symbol $symbol',
@@ -179,9 +190,16 @@ class RegexPipeline {
   static FSA _buildDot() {
     // For now, treat dot as accepting any of a small demo alphabet; can be extended.
     final now = DateTime.now();
-    final q0 = State(id: 'q0', label: 'q0', position: Vector2(100, 100), isInitial: true);
-    final q1 = State(id: 'q1', label: 'q1', position: Vector2(200, 100), isAccepting: true);
-    final t = FSATransition(id: 't', fromState: q0, toState: q1, label: '.', inputSymbols: {'a', 'b', 'c'});
+    final q0 = State(
+        id: 'q0', label: 'q0', position: Vector2(100, 100), isInitial: true);
+    final q1 = State(
+        id: 'q1', label: 'q1', position: Vector2(200, 100), isAccepting: true);
+    final t = FSATransition(
+        id: 't',
+        fromState: q0,
+        toState: q1,
+        label: '.',
+        inputSymbols: {'a', 'b', 'c'});
     return FSA(
       id: 'dot_${now.millisecondsSinceEpoch}',
       name: 'Dot',
@@ -198,16 +216,20 @@ class RegexPipeline {
 
   static FSA _union(FSA a, FSA b) {
     final now = DateTime.now();
-    final s = State(id: 's', label: 's', position: Vector2(50, 100), isInitial: true);
-    final f = State(id: 'f', label: 'f', position: Vector2(350, 100), isAccepting: true);
+    final s =
+        State(id: 's', label: 's', position: Vector2(50, 100), isInitial: true);
+    final f = State(
+        id: 'f', label: 'f', position: Vector2(350, 100), isAccepting: true);
     final states = <State>{s, f, ...a.states, ...b.states};
     final transitions = <FSATransition>{
       ...a.fsaTransitions,
       ...b.fsaTransitions,
       FSATransition.epsilon(id: 'e1', fromState: s, toState: a.initialState!),
       FSATransition.epsilon(id: 'e2', fromState: s, toState: b.initialState!),
-      ...a.acceptingStates.map((q) => FSATransition.epsilon(id: 'ea_${q.id}', fromState: q, toState: f)),
-      ...b.acceptingStates.map((q) => FSATransition.epsilon(id: 'eb_${q.id}', fromState: q, toState: f)),
+      ...a.acceptingStates.map((q) =>
+          FSATransition.epsilon(id: 'ea_${q.id}', fromState: q, toState: f)),
+      ...b.acceptingStates.map((q) =>
+          FSATransition.epsilon(id: 'eb_${q.id}', fromState: q, toState: f)),
     };
     return FSA(
       id: 'union_${now.millisecondsSinceEpoch}',
@@ -226,10 +248,14 @@ class RegexPipeline {
   static FSA _buildUnion(FSA left, FSA right) => _union(left, right);
 
   static FSA _concatenate(FSA a, FSA b) {
-    final transitions = <FSATransition>{...a.fsaTransitions, ...b.fsaTransitions};
+    final transitions = <FSATransition>{
+      ...a.fsaTransitions,
+      ...b.fsaTransitions
+    };
     int i = 0;
     for (final q in a.acceptingStates) {
-      transitions.add(FSATransition.epsilon(id: 'ec_$i', fromState: q, toState: b.initialState!));
+      transitions.add(FSATransition.epsilon(
+          id: 'ec_$i', fromState: q, toState: b.initialState!));
       i++;
     }
     return FSA(
@@ -248,13 +274,21 @@ class RegexPipeline {
 
   static FSA _kleene(FSA a) {
     final now = DateTime.now();
-    final s = State(id: 's', label: 's', position: Vector2(50, 100), isInitial: true, isAccepting: true);
-    final f = State(id: 'f', label: 'f', position: Vector2(350, 100), isAccepting: true);
+    final s = State(
+        id: 's',
+        label: 's',
+        position: Vector2(50, 100),
+        isInitial: true,
+        isAccepting: true);
+    final f = State(
+        id: 'f', label: 'f', position: Vector2(350, 100), isAccepting: true);
     final transitions = <FSATransition>{
       ...a.fsaTransitions,
       FSATransition.epsilon(id: 'ek1', fromState: s, toState: a.initialState!),
-      ...a.acceptingStates.map((q) => FSATransition.epsilon(id: 'ek2_${q.id}', fromState: q, toState: f)),
-      ...a.acceptingStates.map((q) => FSATransition.epsilon(id: 'ek3_${q.id}', fromState: q, toState: a.initialState!)),
+      ...a.acceptingStates.map((q) =>
+          FSATransition.epsilon(id: 'ek2_${q.id}', fromState: q, toState: f)),
+      ...a.acceptingStates.map((q) => FSATransition.epsilon(
+          id: 'ek3_${q.id}', fromState: q, toState: a.initialState!)),
     };
     return FSA(
       id: 'kleene_${now.millisecondsSinceEpoch}',
@@ -274,12 +308,13 @@ class RegexPipeline {
     math.Rectangle leftBounds,
     math.Rectangle rightBounds,
   ) {
-    final left = math.min(leftBounds.left.toDouble(), rightBounds.left.toDouble());
+    final left =
+        math.min(leftBounds.left.toDouble(), rightBounds.left.toDouble());
     final top = math.min(leftBounds.top.toDouble(), rightBounds.top.toDouble());
-    final right = math.max(leftBounds.right.toDouble(), rightBounds.right.toDouble());
-    final bottom = math.max(leftBounds.bottom.toDouble(), rightBounds.bottom.toDouble());
+    final right =
+        math.max(leftBounds.right.toDouble(), rightBounds.right.toDouble());
+    final bottom =
+        math.max(leftBounds.bottom.toDouble(), rightBounds.bottom.toDouble());
     return math.Rectangle<double>(left, top, right - left, bottom - top);
   }
 }
-
-

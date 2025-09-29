@@ -45,7 +45,7 @@ class PumpingLemmaGame {
     final newAttempts = List<PumpingAttempt>.from(attempts)..add(attempt);
     final newScore = score + (attempt.isCorrect ? 10 : 0);
     final newIsCompleted = attempt.isCorrect || newAttempts.length >= 5;
-    
+
     return PumpingLemmaGame(
       automaton: automaton,
       pumpingLength: pumpingLength,
@@ -84,10 +84,12 @@ class PumpingLemmaGame {
   PumpingAttempt? get lastAttempt => attempts.isNotEmpty ? attempts.last : null;
 
   /// Gets the correct attempts
-  List<PumpingAttempt> get correctAttempts => attempts.where((a) => a.isCorrect).toList();
+  List<PumpingAttempt> get correctAttempts =>
+      attempts.where((a) => a.isCorrect).toList();
 
   /// Gets the incorrect attempts
-  List<PumpingAttempt> get incorrectAttempts => attempts.where((a) => !a.isCorrect).toList();
+  List<PumpingAttempt> get incorrectAttempts =>
+      attempts.where((a) => !a.isCorrect).toList();
 
   /// Creates a copy with updated properties
   PumpingLemmaGame copyWith({
@@ -113,7 +115,7 @@ class PumpingLemmaGame {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    
+
     return other is PumpingLemmaGame &&
         other.automaton == automaton &&
         other.pumpingLength == pumpingLength &&
@@ -162,6 +164,7 @@ extension GameStatusExtension on GameStatus {
         return 'Failed';
     }
   }
-  
-  bool get isFinished => this == GameStatus.completed || this == GameStatus.failed;
+
+  bool get isFinished =>
+      this == GameStatus.completed || this == GameStatus.failed;
 }

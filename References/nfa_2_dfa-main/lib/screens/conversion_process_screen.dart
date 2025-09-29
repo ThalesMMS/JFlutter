@@ -10,7 +10,8 @@ class ConversionProcessScreen extends StatefulWidget {
   const ConversionProcessScreen({super.key});
 
   @override
-  State<ConversionProcessScreen> createState() => _ConversionProcessScreenState();
+  State<ConversionProcessScreen> createState() =>
+      _ConversionProcessScreenState();
 }
 
 class _ConversionProcessScreenState extends State<ConversionProcessScreen>
@@ -48,7 +49,8 @@ class _ConversionProcessScreenState extends State<ConversionProcessScreen>
   }
 
   void _setupConversionListener() {
-    final conversionProvider = Provider.of<ConversionProvider>(context, listen: false);
+    final conversionProvider =
+        Provider.of<ConversionProvider>(context, listen: false);
 
     if (conversionProvider.isConverting) {
       _progressController.forward();
@@ -82,7 +84,8 @@ class _ConversionProcessScreenState extends State<ConversionProcessScreen>
   void _addLogItem() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_listKey.currentState != null) {
-        final provider = Provider.of<ConversionProvider>(context, listen: false);
+        final provider =
+            Provider.of<ConversionProvider>(context, listen: false);
         _listKey.currentState!.insertItem(
           provider.conversionLog.length - 1,
           duration: const Duration(milliseconds: 400),
@@ -146,7 +149,8 @@ class _ConversionProcessScreenState extends State<ConversionProcessScreen>
     );
   }
 
-  PreferredSizeWidget _buildAppBar(BuildContext context, ConversionProvider provider) {
+  PreferredSizeWidget _buildAppBar(
+      BuildContext context, ConversionProvider provider) {
     return AppBar(
       elevation: 0,
       title: AnimatedSwitcher(
@@ -177,7 +181,8 @@ class _ConversionProcessScreenState extends State<ConversionProcessScreen>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('لغو تبدیل'),
-        content: const Text('آیا مطمئن هستید که می‌خواهید عملیات تبدیل را لغو کنید؟'),
+        content: const Text(
+            'آیا مطمئن هستید که می‌خواهید عملیات تبدیل را لغو کنید؟'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -224,8 +229,8 @@ class _ConversionProcessScreenState extends State<ConversionProcessScreen>
                     provider.currentStepMessage,
                     key: ValueKey(provider.currentStepMessage),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
+                          fontWeight: FontWeight.w500,
+                        ),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -235,11 +240,13 @@ class _ConversionProcessScreenState extends State<ConversionProcessScreen>
             ),
           ),
         ),
-        Divider(height: 1, color: Theme.of(context).dividerColor.withOpacity(0.3)),
+        Divider(
+            height: 1, color: Theme.of(context).dividerColor.withOpacity(0.3)),
         Expanded(
           child: Container(
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.1),
+              color:
+                  Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.1),
             ),
             child: _buildEnhancedLogList(provider),
           ),
@@ -260,8 +267,8 @@ class _ConversionProcessScreenState extends State<ConversionProcessScreen>
             boxShadow: [
               BoxShadow(
                 color: Theme.of(context).colorScheme.primary.withOpacity(
-                  0.2 + (_pulseController.value * 0.1),
-                ),
+                      0.2 + (_pulseController.value * 0.1),
+                    ),
                 blurRadius: 20 + (_pulseController.value * 10),
                 spreadRadius: _pulseController.value * 5,
               ),
@@ -278,7 +285,8 @@ class _ConversionProcessScreenState extends State<ConversionProcessScreen>
                   CircularProgressIndicator(
                     value: value,
                     strokeWidth: 6,
-                    backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+                    backgroundColor:
+                        Theme.of(context).colorScheme.surfaceVariant,
                     valueColor: AlwaysStoppedAnimation<Color>(
                       Theme.of(context).colorScheme.primary,
                     ),
@@ -289,10 +297,13 @@ class _ConversionProcessScreenState extends State<ConversionProcessScreen>
                       children: [
                         Text(
                           '${(value * 100).toInt()}%',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
                         ),
                         const SizedBox(height: 4),
                         Container(
@@ -300,9 +311,12 @@ class _ConversionProcessScreenState extends State<ConversionProcessScreen>
                           height: 6,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Theme.of(context).colorScheme.primary.withOpacity(
-                              0.5 + (_pulseController.value * 0.5),
-                            ),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withOpacity(
+                                  0.5 + (_pulseController.value * 0.5),
+                                ),
                           ),
                         ),
                       ],
@@ -337,8 +351,8 @@ class _ConversionProcessScreenState extends State<ConversionProcessScreen>
             color: isCompleted
                 ? Theme.of(context).colorScheme.primary
                 : isActive
-                ? Theme.of(context).colorScheme.primary.withOpacity(0.5)
-                : Theme.of(context).colorScheme.surfaceVariant,
+                    ? Theme.of(context).colorScheme.primary.withOpacity(0.5)
+                    : Theme.of(context).colorScheme.surfaceVariant,
           ),
         );
       }),
@@ -389,8 +403,8 @@ class _ConversionProcessScreenState extends State<ConversionProcessScreen>
           color: isError
               ? Theme.of(context).colorScheme.error.withOpacity(0.3)
               : isCompleted
-              ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
-              : Theme.of(context).dividerColor.withOpacity(0.2),
+                  ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
+                  : Theme.of(context).dividerColor.withOpacity(0.2),
           width: 1,
         ),
         boxShadow: [
@@ -435,17 +449,17 @@ class _ConversionProcessScreenState extends State<ConversionProcessScreen>
                   Text(
                     step.message,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
+                          fontWeight: FontWeight.w500,
+                        ),
                   ),
                   if (isError || isCompleted) ...[
                     const SizedBox(height: 4),
                     Text(
                       isError ? 'خطا رخ داده است' : 'تکمیل شد',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: _getColorForStep(step.type),
-                        fontWeight: FontWeight.w500,
-                      ),
+                            color: _getColorForStep(step.type),
+                            fontWeight: FontWeight.w500,
+                          ),
                     ),
                   ],
                 ],
@@ -548,7 +562,8 @@ class _ConversionProcessScreenState extends State<ConversionProcessScreen>
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: color.withOpacity(0.1),
-                      border: Border.all(color: color.withOpacity(0.3), width: 2),
+                      border:
+                          Border.all(color: color.withOpacity(0.3), width: 2),
                       boxShadow: [
                         BoxShadow(
                           color: color.withOpacity(0.2),
@@ -558,7 +573,9 @@ class _ConversionProcessScreenState extends State<ConversionProcessScreen>
                       ],
                     ),
                     child: Icon(
-                      isSuccess ? Icons.check_circle_outline : Icons.error_outline,
+                      isSuccess
+                          ? Icons.check_circle_outline
+                          : Icons.error_outline,
                       size: 72,
                       color: color,
                     ),
@@ -584,14 +601,17 @@ class _ConversionProcessScreenState extends State<ConversionProcessScreen>
                     child: Text(
                       isSuccess
                           ? 'NFA با موفقیت به DFA تبدیل شد. حالا می‌توانید نتیجه را بررسی کنید.'
-                          : result.errorMessage ?? 'یک خطای ناشناخته رخ داده است.',
+                          : result.errorMessage ??
+                              'یک خطای ناشناخته رخ داده است.',
                       style: theme.textTheme.titleMedium?.copyWith(
                         color: theme.textTheme.bodyMedium?.color,
                       ),
                       textAlign: TextAlign.center,
                     ),
                   ),
-                  if (result.isSuccess && result.nfa != null && result.dfa != null) ...[
+                  if (result.isSuccess &&
+                      result.nfa != null &&
+                      result.dfa != null) ...[
                     const SizedBox(height: 32),
                     _buildEnhancedResultStats(context, result),
                   ],
@@ -664,7 +684,8 @@ class _ConversionProcessScreenState extends State<ConversionProcessScreen>
     );
   }
 
-  Widget _buildEnhancedResultStats(BuildContext context, ConversionResult result) {
+  Widget _buildEnhancedResultStats(
+      BuildContext context, ConversionResult result) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -724,16 +745,16 @@ class _ConversionProcessScreenState extends State<ConversionProcessScreen>
         Text(
           value,
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.primary,
-          ),
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
         ),
         const SizedBox(height: 4),
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontWeight: FontWeight.w500,
-          ),
+                fontWeight: FontWeight.w500,
+              ),
           textAlign: TextAlign.center,
         ),
       ],

@@ -86,9 +86,9 @@ class StateSet {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is StateSet && 
-           states.length == other.states.length &&
-           states.every((s) => other.states.contains(s));
+    return other is StateSet &&
+        states.length == other.states.length &&
+        states.every((s) => other.states.contains(s));
   }
 
   @override

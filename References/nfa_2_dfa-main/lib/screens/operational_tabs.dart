@@ -16,7 +16,8 @@ class TransitionsTab extends StatefulWidget {
   State<TransitionsTab> createState() => _TransitionsTabState();
 }
 
-class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStateMixin {
+class _TransitionsTabState extends State<TransitionsTab>
+    with TickerProviderStateMixin {
   String? _fromState;
   String? _symbol;
   String? _toState;
@@ -56,20 +57,17 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
   Future<void> _addTransition() async {
     if (_fromState == null || _symbol == null || _toState == null) {
       UIHelpers.showSnackBar(
-          context,
-          'لطفا تمام فیلدها را برای انتقال انتخاب کنید.',
-          isError: true
-      );
+          context, 'لطفا تمام فیلدها را برای انتقال انتخاب کنید.',
+          isError: true);
       return;
     }
 
     final nfaProvider = Provider.of<NFAProvider>(context, listen: false);
-    if (nfaProvider.currentNFA.transitions[_fromState!]?[_symbol!]?.contains(_toState!) == true) {
-      UIHelpers.showSnackBar(
-          context,
-          'این انتقال قبلاً وجود دارد.',
-          isError: true
-      );
+    if (nfaProvider.currentNFA.transitions[_fromState!]?[_symbol!]
+            ?.contains(_toState!) ==
+        true) {
+      UIHelpers.showSnackBar(context, 'این انتقال قبلاً وجود دارد.',
+          isError: true);
       return;
     }
 
@@ -129,29 +127,32 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
               ),
               const Divider(height: 1),
               Expanded(
-                child: transitions.isEmpty || transitions.values.every((map) => map.isEmpty)
+                child: transitions.isEmpty ||
+                        transitions.values.every((map) => map.isEmpty)
                     ? _buildEmptyTransitions()
                     : _buildTransitionsList(transitions, nfa),
               ),
             ],
           ),
-          floatingActionButton: transitions.isNotEmpty && transitions.values.any((map) => map.isNotEmpty)
+          floatingActionButton: transitions.isNotEmpty &&
+                  transitions.values.any((map) => map.isNotEmpty)
               ? ScaleTransition(
-            scale: _fabController,
-            child: FloatingActionButton.extended(
-              onPressed: () => _showBulkOperations(context, nfa),
-              icon: const Icon(Icons.settings),
-              label: const Text('عملیات گروهی'),
-              backgroundColor: Theme.of(context).colorScheme.secondary,
-            ),
-          )
+                  scale: _fabController,
+                  child: FloatingActionButton.extended(
+                    onPressed: () => _showBulkOperations(context, nfa),
+                    icon: const Icon(Icons.settings),
+                    label: const Text('عملیات گروهی'),
+                    backgroundColor: Theme.of(context).colorScheme.secondary,
+                  ),
+                )
               : null,
         );
       },
     );
   }
 
-  Widget _buildTransitionForm(List<String> states, List<String> alphabetWithEpsilon) {
+  Widget _buildTransitionForm(
+      List<String> states, List<String> alphabetWithEpsilon) {
     final canAdd = states.isNotEmpty && alphabetWithEpsilon.length > 1;
 
     return Container(
@@ -184,20 +185,28 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
                       children: [
                         Text(
                           'افزودن انتقال جدید',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                         Text(
                           'انتقال بین State ها را تعریف کنید',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                          ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withOpacity(0.6),
+                                  ),
                         ),
                       ],
                     ),
                   ),
-                  if (canAdd && (_fromState != null || _symbol != null || _toState != null))
+                  if (canAdd &&
+                      (_fromState != null ||
+                          _symbol != null ||
+                          _toState != null))
                     IconButton(
                       onPressed: _clearForm,
                       icon: const Icon(Icons.clear),
@@ -213,12 +222,16 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
                     gradient: LinearGradient(
                       colors: [
                         Theme.of(context).colorScheme.errorContainer,
-                        Theme.of(context).colorScheme.errorContainer.withOpacity(0.7),
+                        Theme.of(context)
+                            .colorScheme
+                            .errorContainer
+                            .withOpacity(0.7),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.error.withOpacity(0.3),
+                      color:
+                          Theme.of(context).colorScheme.error.withOpacity(0.3),
                     ),
                   ),
                   child: Row(
@@ -235,7 +248,9 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
                             Text(
                               'نیاز به تعریف اولیه',
                               style: TextStyle(
-                                color: Theme.of(context).colorScheme.onErrorContainer,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onErrorContainer,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -243,7 +258,9 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
                             Text(
                               'ابتدا State ها و نمادهای الفبا را در تب‌های مربوطه تعریف کنید.',
                               style: TextStyle(
-                                color: Theme.of(context).colorScheme.onErrorContainer,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onErrorContainer,
                                 fontSize: 12,
                               ),
                             ),
@@ -261,7 +278,7 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
                         'از State',
                         states,
                         _fromState,
-                            (val) => setState(() => _fromState = val),
+                        (val) => setState(() => _fromState = val),
                         Icons.radio_button_checked,
                       ),
                     ),
@@ -271,7 +288,7 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
                         'با نماد',
                         alphabetWithEpsilon,
                         _symbol,
-                            (val) => setState(() => _symbol = val),
+                        (val) => setState(() => _symbol = val),
                         Icons.text_fields,
                       ),
                     ),
@@ -281,7 +298,7 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
                         'به State',
                         states,
                         _toState,
-                            (val) => setState(() => _toState = val),
+                        (val) => setState(() => _toState = val),
                         Icons.flag,
                       ),
                     ),
@@ -293,7 +310,9 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
                     Expanded(
                       flex: 3,
                       child: ElevatedButton.icon(
-                        onPressed: (_fromState != null && _symbol != null && _toState != null)
+                        onPressed: (_fromState != null &&
+                                _symbol != null &&
+                                _toState != null)
                             ? _addTransition
                             : null,
                         icon: const Icon(Icons.add),
@@ -309,9 +328,10 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
                     const SizedBox(width: 12),
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: states.isNotEmpty && alphabetWithEpsilon.length > 1
-                            ? () => _showQuickAdd(context)
-                            : null,
+                        onPressed:
+                            states.isNotEmpty && alphabetWithEpsilon.length > 1
+                                ? () => _showQuickAdd(context)
+                                : null,
                         icon: const Icon(Icons.flash_on),
                         label: const Text('سریع'),
                         style: OutlinedButton.styleFrom(
@@ -333,12 +353,12 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
   }
 
   Widget _buildAnimatedDropdown(
-      String label,
-      List<String> items,
-      String? value,
-      ValueChanged<String?> onChanged,
-      IconData icon,
-      ) {
+    String label,
+    List<String> items,
+    String? value,
+    ValueChanged<String?> onChanged,
+    IconData icon,
+  ) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       child: DropdownButtonFormField<String>(
@@ -362,13 +382,15 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
           filled: true,
           fillColor: Theme.of(context).colorScheme.surface,
         ),
-        items: items.map((item) => DropdownMenuItem(
-          value: item,
-          child: Text(
-            item,
-            style: const TextStyle(fontWeight: FontWeight.w500),
-          ),
-        )).toList(),
+        items: items
+            .map((item) => DropdownMenuItem(
+                  value: item,
+                  child: Text(
+                    item,
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                ))
+            .toList(),
         onChanged: onChanged,
         isExpanded: true,
         style: Theme.of(context).textTheme.bodyMedium,
@@ -385,7 +407,10 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+              color: Theme.of(context)
+                  .colorScheme
+                  .primaryContainer
+                  .withOpacity(0.3),
             ),
             child: Icon(
               Icons.trending_flat,
@@ -397,23 +422,26 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
           Text(
             'هیچ انتقالی تعریف نشده',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
-            ),
+                  fontWeight: FontWeight.bold,
+                  color:
+                      Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                ),
           ),
           const SizedBox(height: 12),
           Text(
             'انتقال‌های بین State ها را در فرم بالا تعریف کنید',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-            ),
+                  color:
+                      Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                ),
           ),
           const SizedBox(height: 32),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+              color:
+                  Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -427,8 +455,8 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
                 Text(
                   'مثال: q0 با نماد \'a\' به q1',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontStyle: FontStyle.italic,
-                  ),
+                        fontStyle: FontStyle.italic,
+                      ),
                 ),
               ],
             ),
@@ -438,7 +466,8 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
     );
   }
 
-  Widget _buildTransitionsList(Map<String, Map<String, Set<String>>> transitions, NFAProvider nfa) {
+  Widget _buildTransitionsList(
+      Map<String, Map<String, Set<String>>> transitions, NFAProvider nfa) {
     return AnimatedBuilder(
       animation: _listController,
       builder: (context, child) {
@@ -447,7 +476,8 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
           children: [
             Card(
               elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -462,9 +492,10 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
                       children: [
                         Text(
                           'خلاصه انتقال‌ها',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                         Text(
                           '${_getTotalTransitions(transitions)} انتقال از ${transitions.keys.where((k) => transitions[k]!.isNotEmpty).length} State',
@@ -477,21 +508,26 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
               ),
             ),
             const SizedBox(height: 16),
-            ...transitions.entries.where((entry) => entry.value.isNotEmpty).map((entry) {
+            ...transitions.entries
+                .where((entry) => entry.value.isNotEmpty)
+                .map((entry) {
               final fromState = entry.key;
               final symbolTransitions = entry.value;
 
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
                 elevation: 3,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
                 child: Theme(
-                  data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                  data: Theme.of(context)
+                      .copyWith(dividerColor: Colors.transparent),
                   child: ExpansionTile(
                     leading: Hero(
                       tag: 'state_$fromState',
                       child: CircleAvatar(
-                        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                        backgroundColor:
+                            Theme.of(context).colorScheme.primaryContainer,
                         child: Text(
                           fromState.length > 2
                               ? fromState.substring(0, 2).toUpperCase()
@@ -499,7 +535,9 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
-                            color: Theme.of(context).colorScheme.onPrimaryContainer,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onPrimaryContainer,
                           ),
                         ),
                       ),
@@ -508,13 +546,15 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
                       'از $fromState',
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    subtitle: Text('${_countTransitions(symbolTransitions)} انتقال'),
+                    subtitle:
+                        Text('${_countTransitions(symbolTransitions)} انتقال'),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
                           icon: const Icon(Icons.edit_outlined),
-                          onPressed: () => _editStateTransitions(fromState, symbolTransitions),
+                          onPressed: () => _editStateTransitions(
+                              fromState, symbolTransitions),
                           tooltip: 'ویرایش انتقال‌ها',
                         ),
                         const Icon(
@@ -529,29 +569,45 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
                       return Column(
                         children: toStates.map((toState) {
                           return Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 2),
                             decoration: BoxDecoration(
                               color: Theme.of(context).colorScheme.surface,
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .outline
+                                    .withOpacity(0.2),
                               ),
                             ),
                             child: ListTile(
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 4),
                               leading: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     colors: symbol == 'ε'
                                         ? [
-                                      Theme.of(context).colorScheme.secondaryContainer,
-                                      Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.7),
-                                    ]
+                                            Theme.of(context)
+                                                .colorScheme
+                                                .secondaryContainer,
+                                            Theme.of(context)
+                                                .colorScheme
+                                                .secondaryContainer
+                                                .withOpacity(0.7),
+                                          ]
                                         : [
-                                      Theme.of(context).colorScheme.tertiaryContainer,
-                                      Theme.of(context).colorScheme.tertiaryContainer.withOpacity(0.7),
-                                    ],
+                                            Theme.of(context)
+                                                .colorScheme
+                                                .tertiaryContainer,
+                                            Theme.of(context)
+                                                .colorScheme
+                                                .tertiaryContainer
+                                                .withOpacity(0.7),
+                                          ],
                                   ),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -561,8 +617,12 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
                                     color: symbol == 'ε'
-                                        ? Theme.of(context).colorScheme.onSecondaryContainer
-                                        : Theme.of(context).colorScheme.onTertiaryContainer,
+                                        ? Theme.of(context)
+                                            .colorScheme
+                                            .onSecondaryContainer
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .onTertiaryContainer,
                                   ),
                                 ),
                               ),
@@ -574,7 +634,9 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
                                       text: fromState,
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        color: Theme.of(context).colorScheme.primary,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
                                       ),
                                     ),
                                     const TextSpan(text: ' → '),
@@ -582,7 +644,9 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
                                       text: toState,
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        color: Theme.of(context).colorScheme.secondary,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .secondary,
                                       ),
                                     ),
                                   ],
@@ -591,7 +655,8 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
                               trailing: IconButton(
                                 icon: const Icon(Icons.delete_outline),
                                 color: Theme.of(context).colorScheme.error,
-                                onPressed: () => _confirmDeleteTransition(fromState, symbol, toState, nfa),
+                                onPressed: () => _confirmDeleteTransition(
+                                    fromState, symbol, toState, nfa),
                                 tooltip: 'حذف انتقال',
                               ),
                             ),
@@ -610,14 +675,17 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
   }
 
   int _countTransitions(Map<String, Set<String>> symbolTransitions) {
-    return symbolTransitions.values.fold(0, (sum, states) => sum + states.length);
+    return symbolTransitions.values
+        .fold(0, (sum, states) => sum + states.length);
   }
 
   int _getTotalTransitions(Map<String, Map<String, Set<String>>> transitions) {
-    return transitions.values.fold(0, (sum, symbolTransitions) => sum + _countTransitions(symbolTransitions));
+    return transitions.values.fold(0,
+        (sum, symbolTransitions) => sum + _countTransitions(symbolTransitions));
   }
 
-  Future<void> _confirmDeleteTransition(String from, String symbol, String to, NFAProvider nfa) async {
+  Future<void> _confirmDeleteTransition(
+      String from, String symbol, String to, NFAProvider nfa) async {
     final shouldDelete = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -691,8 +759,8 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
             Text(
               'عملیات گروهی',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 16),
             ListTile(
@@ -721,7 +789,8 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('حذف همه انتقال‌ها'),
-        content: const Text('آیا مطمئن هستید که می‌خواهید همه انتقال‌ها را حذف کنید؟'),
+        content: const Text(
+            'آیا مطمئن هستید که می‌خواهید همه انتقال‌ها را حذف کنید؟'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -747,8 +816,10 @@ class _TransitionsTabState extends State<TransitionsTab> with TickerProviderStat
     );
   }
 
-  void _editStateTransitions(String fromState, Map<String, Set<String>> symbolTransitions) {
-    TransitionHelpers.showEditStateTransitions(context, fromState, symbolTransitions);
+  void _editStateTransitions(
+      String fromState, Map<String, Set<String>> symbolTransitions) {
+    TransitionHelpers.showEditStateTransitions(
+        context, fromState, symbolTransitions);
   }
 }
 
@@ -760,7 +831,8 @@ class ValidationTab extends StatefulWidget {
   State<ValidationTab> createState() => _ValidationTabState();
 }
 
-class _ValidationTabState extends State<ValidationTab> with TickerProviderStateMixin {
+class _ValidationTabState extends State<ValidationTab>
+    with TickerProviderStateMixin {
   late final AnimationController _headerController;
   late final AnimationController _contentController;
 
@@ -924,17 +996,17 @@ class _ValidationTabState extends State<ValidationTab> with TickerProviderStateM
             Text(
               'شروع کنید!',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.blue.shade700,
-              ),
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue.shade700,
+                  ),
             ),
             const SizedBox(height: 16),
             Text(
               'برای ایجاد NFA خود این مراحل را طی کنید:',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Colors.grey.shade600,
-              ),
+                    color: Colors.grey.shade600,
+                  ),
             ),
             const SizedBox(height: 32),
             ...steps.asMap().entries.map((entry) {
@@ -964,7 +1036,8 @@ class _ValidationTabState extends State<ValidationTab> with TickerProviderStateM
     );
   }
 
-  Widget _buildStepCard(String number, String title, IconData icon, Color color) {
+  Widget _buildStepCard(
+      String number, String title, IconData icon, Color color) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
@@ -1020,8 +1093,8 @@ class _ValidationTabState extends State<ValidationTab> with TickerProviderStateM
             child: Text(
               title,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
           ),
         ],
@@ -1029,7 +1102,8 @@ class _ValidationTabState extends State<ValidationTab> with TickerProviderStateM
     );
   }
 
-  Widget _buildStatusHeader(BuildContext context, ValidationResult validationResult) {
+  Widget _buildStatusHeader(
+      BuildContext context, ValidationResult validationResult) {
     final isValid = validationResult.isValid;
     final color = isValid
         ? Theme.of(context).colorScheme.primary
@@ -1092,10 +1166,11 @@ class _ValidationTabState extends State<ValidationTab> with TickerProviderStateM
                   children: [
                     Text(
                       isValid ? 'NFA آماده است!' : 'نیاز به بررسی دارد',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: color,
-                      ),
+                      style:
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: color,
+                              ),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -1103,8 +1178,11 @@ class _ValidationTabState extends State<ValidationTab> with TickerProviderStateM
                           ? 'اتوماتای شما کامل است و می‌توانید به DFA تبدیل کنید'
                           : 'لطفاً ابتدا مشکلات زیر را برطرف کنید',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
-                      ),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(0.8),
+                          ),
                     ),
                   ],
                 ),
@@ -1133,7 +1211,8 @@ class _ValidationTabState extends State<ValidationTab> with TickerProviderStateM
                   Container(
                     width: 1,
                     height: 40,
-                    color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                    color:
+                        Theme.of(context).colorScheme.outline.withOpacity(0.3),
                   ),
                   _buildStatusCounter(
                     context,
@@ -1151,7 +1230,8 @@ class _ValidationTabState extends State<ValidationTab> with TickerProviderStateM
     );
   }
 
-  Widget _buildStatusCounter(BuildContext context, String label, int count, IconData icon, Color color) {
+  Widget _buildStatusCounter(BuildContext context, String label, int count,
+      IconData icon, Color color) {
     return Column(
       children: [
         Icon(icon, color: color, size: 24),
@@ -1159,26 +1239,47 @@ class _ValidationTabState extends State<ValidationTab> with TickerProviderStateM
         Text(
           count.toString(),
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
         ),
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: color,
-          ),
+                color: color,
+              ),
         ),
       ],
     );
   }
 
-  Widget _buildQuickStats(BuildContext context, NFAProvider nfa, ValidationResult validationResult) {
+  Widget _buildQuickStats(BuildContext context, NFAProvider nfa,
+      ValidationResult validationResult) {
     final stats = [
-      ('State ها', nfa.currentNFA.states.length, Icons.radio_button_checked, Colors.blue),
-      ('الفبا', nfa.currentNFA.alphabet.length, Icons.text_fields, Colors.green),
-      ('انتقال‌ها', _getTotalTransitionsCount(nfa.currentNFA.transitions), Icons.trending_flat, Colors.orange),
-      ('State پایانی', nfa.currentNFA.finalStates.length, Icons.flag, Colors.purple),
+      (
+        'State ها',
+        nfa.currentNFA.states.length,
+        Icons.radio_button_checked,
+        Colors.blue
+      ),
+      (
+        'الفبا',
+        nfa.currentNFA.alphabet.length,
+        Icons.text_fields,
+        Colors.green
+      ),
+      (
+        'انتقال‌ها',
+        _getTotalTransitionsCount(nfa.currentNFA.transitions),
+        Icons.trending_flat,
+        Colors.orange
+      ),
+      (
+        'State پایانی',
+        nfa.currentNFA.finalStates.length,
+        Icons.flag,
+        Colors.purple
+      ),
     ];
 
     return Container(
@@ -1201,8 +1302,8 @@ class _ValidationTabState extends State<ValidationTab> with TickerProviderStateM
                   Text(
                     'خلاصه آماری',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                 ],
               ),
@@ -1214,13 +1315,17 @@ class _ValidationTabState extends State<ValidationTab> with TickerProviderStateM
                     child: Row(
                       children: [
                         Expanded(
-                          child: _buildStatItem(context, stat.$1, stat.$2, stat.$3, stat.$4),
+                          child: _buildStatItem(
+                              context, stat.$1, stat.$2, stat.$3, stat.$4),
                         ),
                         if (!isLast)
                           Container(
                             width: 1,
                             height: 50,
-                            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .outline
+                                .withOpacity(0.2),
                             margin: const EdgeInsets.symmetric(horizontal: 8),
                           ),
                       ],
@@ -1235,7 +1340,8 @@ class _ValidationTabState extends State<ValidationTab> with TickerProviderStateM
     );
   }
 
-  Widget _buildStatItem(BuildContext context, String label, int value, IconData icon, Color color) {
+  Widget _buildStatItem(BuildContext context, String label, int value,
+      IconData icon, Color color) {
     return Column(
       children: [
         Container(
@@ -1250,9 +1356,9 @@ class _ValidationTabState extends State<ValidationTab> with TickerProviderStateM
         Text(
           value.toString(),
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
         ),
         Text(
           label,
@@ -1263,19 +1369,22 @@ class _ValidationTabState extends State<ValidationTab> with TickerProviderStateM
     );
   }
 
-  int _getTotalTransitionsCount(Map<String, Map<String, Set<String>>> transitions) {
+  int _getTotalTransitionsCount(
+      Map<String, Map<String, Set<String>>> transitions) {
     return transitions.values.fold(0, (sum, symbolTransitions) {
-      return sum + symbolTransitions.values.fold(0, (innerSum, states) => innerSum + states.length);
+      return sum +
+          symbolTransitions.values
+              .fold(0, (innerSum, states) => innerSum + states.length);
     });
   }
 
   Widget _buildValidationSection(
-      BuildContext context,
-      String title,
-      List<String> items,
-      Color color,
-      IconData icon,
-      ) {
+    BuildContext context,
+    String title,
+    List<String> items,
+    Color color,
+    IconData icon,
+  ) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Card(
@@ -1301,16 +1410,20 @@ class _ValidationTabState extends State<ValidationTab> with TickerProviderStateM
                     child: Text(
                       title,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: color,
-                        fontWeight: FontWeight.bold,
-                      ),
+                            color: color,
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [color.withOpacity(0.2), color.withOpacity(0.3)],
+                        colors: [
+                          color.withOpacity(0.2),
+                          color.withOpacity(0.3)
+                        ],
                       ),
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -1349,7 +1462,10 @@ class _ValidationTabState extends State<ValidationTab> with TickerProviderStateM
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [color.withOpacity(0.2), color.withOpacity(0.3)],
+                              colors: [
+                                color.withOpacity(0.2),
+                                color.withOpacity(0.3)
+                              ],
                             ),
                             shape: BoxShape.circle,
                           ),
@@ -1366,9 +1482,10 @@ class _ValidationTabState extends State<ValidationTab> with TickerProviderStateM
                         Expanded(
                           child: Text(
                             item,
-                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              fontWeight: FontWeight.w500,
-                            ),
+                            style:
+                                Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                      fontWeight: FontWeight.w500,
+                                    ),
                           ),
                         ),
                         Icon(icon, color: color.withOpacity(0.7), size: 20),
@@ -1416,8 +1533,14 @@ class _ValidationTabState extends State<ValidationTab> with TickerProviderStateM
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                          Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                          Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.2),
+                          Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.3),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(8),
@@ -1431,9 +1554,9 @@ class _ValidationTabState extends State<ValidationTab> with TickerProviderStateM
                   Text(
                     'تبریک! NFA شما آماده است',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                   ),
                 ],
               ),
@@ -1444,42 +1567,54 @@ class _ValidationTabState extends State<ValidationTab> with TickerProviderStateM
                 'هر State می‌تواند با یک نماد به چندین State منتقل شود',
                 'NFA شما می‌تواند به DFA تبدیل شود',
               ].map((tip) => Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface.withOpacity(0.7),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Theme.of(context).colorScheme.primary,
-                            Theme.of(context).colorScheme.primary.withOpacity(0.7),
-                          ],
-                        ),
-                        shape: BoxShape.circle,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surface
+                          .withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withOpacity(0.2),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        tip,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Theme.of(context).colorScheme.primary,
+                                Theme.of(context)
+                                    .colorScheme
+                                    .primary
+                                    .withOpacity(0.7),
+                              ],
+                            ),
+                            shape: BoxShape.circle,
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            tip,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              )),
+                  )),
             ],
           ),
         ),
@@ -1488,7 +1623,8 @@ class _ValidationTabState extends State<ValidationTab> with TickerProviderStateM
   }
 
   Widget _buildDetailedAnalysis(BuildContext context, NFAProvider nfa) {
-    final hasEpsilonTransitions = _hasEpsilonTransitions(nfa.currentNFA.transitions);
+    final hasEpsilonTransitions =
+        _hasEpsilonTransitions(nfa.currentNFA.transitions);
     final isNonDeterministic = _isNonDeterministic(nfa.currentNFA.transitions);
     final unreachableStates = _findUnreachableStates(nfa.currentNFA);
 
@@ -1512,8 +1648,8 @@ class _ValidationTabState extends State<ValidationTab> with TickerProviderStateM
                   Text(
                     'تحلیل تفصیلی',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                 ],
               ),
@@ -1535,7 +1671,9 @@ class _ValidationTabState extends State<ValidationTab> with TickerProviderStateM
               _buildAnalysisItem(
                 context,
                 'State های غیرقابل دسترس',
-                unreachableStates.isEmpty ? 'ندارد' : '${unreachableStates.length} عدد',
+                unreachableStates.isEmpty
+                    ? 'ندارد'
+                    : '${unreachableStates.length} عدد',
                 unreachableStates.isEmpty,
                 unreachableStates.isEmpty ? Icons.check_circle : Icons.warning,
               ),
@@ -1546,7 +1684,8 @@ class _ValidationTabState extends State<ValidationTab> with TickerProviderStateM
     );
   }
 
-  Widget _buildAnalysisItem(BuildContext context, String label, String value, bool isGood, IconData icon) {
+  Widget _buildAnalysisItem(BuildContext context, String label, String value,
+      bool isGood, IconData icon) {
     final color = isGood ? Colors.green : Colors.orange;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -1564,8 +1703,8 @@ class _ValidationTabState extends State<ValidationTab> with TickerProviderStateM
             child: Text(
               label,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
+                    fontWeight: FontWeight.w500,
+                  ),
             ),
           ),
           Container(
@@ -1609,8 +1748,8 @@ class _ValidationTabState extends State<ValidationTab> with TickerProviderStateM
                   Text(
                     'عملیات بعدی',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                 ],
               ),
@@ -1653,13 +1792,14 @@ class _ValidationTabState extends State<ValidationTab> with TickerProviderStateM
     );
   }
 
-  bool _hasEpsilonTransitions(Map<String, Map<String, Set<String>>> transitions) {
+  bool _hasEpsilonTransitions(
+      Map<String, Map<String, Set<String>>> transitions) {
     return transitions.values.any((symbolMap) => symbolMap.containsKey('ε'));
   }
 
   bool _isNonDeterministic(Map<String, Map<String, Set<String>>> transitions) {
-    return transitions.values.any((symbolMap) =>
-        symbolMap.values.any((states) => states.length > 1));
+    return transitions.values.any(
+        (symbolMap) => symbolMap.values.any((states) => states.length > 1));
   }
 
   Set<String> _findUnreachableStates(NFA nfa) {
@@ -1685,13 +1825,13 @@ class _ValidationTabState extends State<ValidationTab> with TickerProviderStateM
 
   void _convertToDFA(BuildContext context, NFAProvider nfa) {
     // [MODIFIED]
-    final conversionProvider = Provider.of<ConversionProvider>(context, listen: false);
+    final conversionProvider =
+        Provider.of<ConversionProvider>(context, listen: false);
     conversionProvider.startConversion(nfa.currentNFA);
     Navigator.pushNamed(context, AppRoutes.conversion);
   }
 
   void _testStrings(BuildContext context, NFAProvider nfa) {
-
     final textController = TextEditingController();
     showDialog(
       context: context,

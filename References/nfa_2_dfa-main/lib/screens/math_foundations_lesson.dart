@@ -32,8 +32,10 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
       id: 0,
       title: 'مقدمات و تعاریف',
       subtitle: 'آشنایی با مفاهیم پایه ریاضی',
-      description: 'در این بخش با مفاهیم اولیه مجموعه‌ها، تعاریف کلیدی و اصول بنیادی آشنا می‌شویم',
-      detailedDescription: 'مجموعه یکی از مفاهیم بنیادی ریاضی است که پایه بسیاری از شاخه‌های ریاضی محسوب می‌شود.',
+      description:
+          'در این بخش با مفاهیم اولیه مجموعه‌ها، تعاریف کلیدی و اصول بنیادی آشنا می‌شویم',
+      detailedDescription:
+          'مجموعه یکی از مفاهیم بنیادی ریاضی است که پایه بسیاری از شاخه‌های ریاضی محسوب می‌شود.',
       icon: Icons.foundation,
       emoji: '📚',
       primaryColor: const Color(0xFF667eea),
@@ -46,22 +48,31 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
       id: 1,
       title: 'خصوصیات مجموعه‌ها',
       subtitle: 'چهار خاصیت اساسی مجموعه‌ها',
-      description: 'بررسی عمیق خصوصیات منحصر بفرد، مرتب، متناهی و تعریف شده در مجموعه‌ها',
-      detailedDescription: 'هر مجموعه دارای خصوصیات منحصر بفردی است که آن را از سایر مجموعه‌ها متمایز می‌کند.',
+      description:
+          'بررسی عمیق خصوصیات منحصر بفرد، مرتب، متناهی و تعریف شده در مجموعه‌ها',
+      detailedDescription:
+          'هر مجموعه دارای خصوصیات منحصر بفردی است که آن را از سایر مجموعه‌ها متمایز می‌کند.',
       icon: Icons.category,
       emoji: '🔧',
       primaryColor: const Color(0xFF4facfe),
       secondaryColor: const Color(0xFF00f2fe),
       estimatedTime: 12,
       difficulty: 'متوسط',
-      keyPoints: ['منحصر بفرد بودن', 'مرتب بودن', 'متناهی بودن', 'تعریف شده بودن'],
+      keyPoints: [
+        'منحصر بفرد بودن',
+        'مرتب بودن',
+        'متناهی بودن',
+        'تعریف شده بودن'
+      ],
     ),
     EnhancedLessonSection(
       id: 2,
       title: 'زیرمجموعه و زیرمجموعه محض',
       subtitle: 'روابط سلسله مراتبی بین مجموعه‌ها',
-      description: 'درک عمیق روابط بین مجموعه‌ها و نحوه تشخیص زیرمجموعه‌ها و زیرمجموعه‌های محض',
-      detailedDescription: 'زیرمجموعه‌ها نقش کلیدی در ساختار و تحلیل مجموعه‌ها ایفا می‌کنند.',
+      description:
+          'درک عمیق روابط بین مجموعه‌ها و نحوه تشخیص زیرمجموعه‌ها و زیرمجموعه‌های محض',
+      detailedDescription:
+          'زیرمجموعه‌ها نقش کلیدی در ساختار و تحلیل مجموعه‌ها ایفا می‌کنند.',
       icon: Icons.account_tree,
       emoji: '🌳',
       primaryColor: const Color(0xFF43e97b),
@@ -74,8 +85,10 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
       id: 3,
       title: 'مجموعه توانی',
       subtitle: 'قدرت و توان مجموعه‌ها',
-      description: 'محاسبه دقیق مجموعه‌های توانی و کاربرد آنها در حل مسائل پیچیده ریاضی',
-      detailedDescription: 'مجموعه توانی ابزاری قدرتمند برای تحلیل و بررسی تمام زیرمجموعه‌های ممکن است.',
+      description:
+          'محاسبه دقیق مجموعه‌های توانی و کاربرد آنها در حل مسائل پیچیده ریاضی',
+      detailedDescription:
+          'مجموعه توانی ابزاری قدرتمند برای تحلیل و بررسی تمام زیرمجموعه‌های ممکن است.',
       icon: Icons.power,
       emoji: '⚡',
       primaryColor: const Color(0xFFfa709a),
@@ -89,7 +102,8 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
       title: 'توابع',
       subtitle: 'نگاشت و ارتباط بین مجموعه‌ها',
       description: 'بررسی جامع انواع توابع، نحوه تعریف نگاشت‌ها و خصوصیات آنها',
-      detailedDescription: 'توابع پل ارتباطی بین مجموعه‌ها هستند و نقش حیاتی در ریاضیات دارند.',
+      detailedDescription:
+          'توابع پل ارتباطی بین مجموعه‌ها هستند و نقش حیاتی در ریاضیات دارند.',
       icon: Icons.functions,
       emoji: '📊',
       primaryColor: const Color(0xFF9f55ff),
@@ -103,21 +117,28 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
       title: 'مجموعه متناهی و نامتناهی',
       subtitle: 'طبقه‌بندی مجموعه‌ها بر اساس اندازه',
       description: 'تشخیص دقیق، تحلیل و کار با مجموعه‌های متناهی و نامتناهی',
-      detailedDescription: 'درک مفهوم بی‌نهایت و متناهی در مجموعه‌ها، یکی از مباحث عمیق ریاضی است.',
+      detailedDescription:
+          'درک مفهوم بی‌نهایت و متناهی در مجموعه‌ها، یکی از مباحث عمیق ریاضی است.',
       icon: Icons.all_inclusive,
       emoji: '♾️',
       primaryColor: const Color(0xFFff9a9e),
       secondaryColor: const Color(0xFFfecfef),
       estimatedTime: 14,
       difficulty: 'متوسط',
-      keyPoints: ['مجموعه‌های متناهی', 'مجموعه‌های نامتناهی', 'مقایسه اندازه‌ها'],
+      keyPoints: [
+        'مجموعه‌های متناهی',
+        'مجموعه‌های نامتناهی',
+        'مقایسه اندازه‌ها'
+      ],
     ),
     EnhancedLessonSection(
       id: 6,
       title: 'زبان، گرامر و ماشین',
       subtitle: 'کاربرد مجموعه‌ها در علوم کامپیوتر',
-      description: 'اتصال مفاهیم مجموعه‌ها به علوم کامپیوتر، نظریه محاسبات و زبان‌های برنامه‌نویسی',
-      detailedDescription: 'مجموعه‌ها پایه نظری بسیاری از مفاهیم علوم کامپیوتر و نظریه محاسبات هستند.',
+      description:
+          'اتصال مفاهیم مجموعه‌ها به علوم کامپیوتر، نظریه محاسبات و زبان‌های برنامه‌نویسی',
+      detailedDescription:
+          'مجموعه‌ها پایه نظری بسیاری از مفاهیم علوم کامپیوتر و نظریه محاسبات هستند.',
       icon: Icons.computer,
       emoji: '💻',
       primaryColor: const Color(0xFFa8edea),
@@ -189,11 +210,13 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
         _isMenuOpen = false;
       });
 
-      _pageController.animateToPage(
+      _pageController
+          .animateToPage(
         index,
         duration: const Duration(milliseconds: 700),
         curve: Curves.easeInOutCubic,
-      ).then((_) {
+      )
+          .then((_) {
         if (mounted) _contentController.forward();
       });
 
@@ -264,7 +287,8 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
     );
   }
 
-  Widget _buildSectionContent(int index, bool isDark, MediaQueryData mediaQuery) {
+  Widget _buildSectionContent(
+      int index, bool isDark, MediaQueryData mediaQuery) {
     final section = _sections[index];
     final sectionContentData = MathContentData.lessonSections.length > index
         ? MathContentData.lessonSections[index]
@@ -289,19 +313,28 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
                         _buildEnhancedHeader(section, mediaQuery),
                         const SizedBox(height: 40),
                         if (sectionContentData != null)
-                          ...sectionContentData.content.theory.asMap().entries.map((entry) {
+                          ...sectionContentData.content.theory
+                              .asMap()
+                              .entries
+                              .map((entry) {
                             return AnimatedFadeIn(
-                              delay: Duration(milliseconds: 200 + (entry.key * 150)),
+                              delay: Duration(
+                                  milliseconds: 200 + (entry.key * 150)),
                               child: ContentCard(
                                 content: entry.value,
                                 color: section.primaryColor,
                               ),
                             );
                           }).toList(),
-                        if (sectionContentData != null && sectionContentData.content.examples.isNotEmpty)
-                          ...sectionContentData.content.examples.asMap().entries.map((entry) {
+                        if (sectionContentData != null &&
+                            sectionContentData.content.examples.isNotEmpty)
+                          ...sectionContentData.content.examples
+                              .asMap()
+                              .entries
+                              .map((entry) {
                             return AnimatedFadeIn(
-                              delay: Duration(milliseconds: 300 + entry.key * 200),
+                              delay:
+                                  Duration(milliseconds: 300 + entry.key * 200),
                               child: ExampleCard(
                                 example: entry.value,
                                 color: Colors.amber,
@@ -309,7 +342,8 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
                             );
                           }).toList(),
                         const SizedBox(height: 32),
-                        if (sectionContentData != null && sectionContentData.content.questions.isNotEmpty)
+                        if (sectionContentData != null &&
+                            sectionContentData.content.questions.isNotEmpty)
                           AnimatedFadeIn(
                             delay: const Duration(milliseconds: 800),
                             child: QuizView(
@@ -345,7 +379,8 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
               stops: const [0.0, 0.6, 1.0],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              transform: GradientRotation(_transitionController.value * math.pi / 4),
+              transform:
+                  GradientRotation(_transitionController.value * math.pi / 4),
             ),
           ),
           child: Container(
@@ -372,7 +407,8 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
     );
   }
 
-  Widget _buildEnhancedHeader(EnhancedLessonSection section, MediaQueryData mediaQuery) {
+  Widget _buildEnhancedHeader(
+      EnhancedLessonSection section, MediaQueryData mediaQuery) {
     return Transform.translate(
       offset: Offset(0, 50 * (1 - _contentController.value)),
       child: Opacity(
@@ -402,7 +438,10 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [section.primaryColor, section.secondaryColor],
+                          colors: [
+                            section.primaryColor,
+                            section.secondaryColor
+                          ],
                         ),
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
@@ -425,7 +464,8 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 6),
                           decoration: BoxDecoration(
                             color: section.primaryColor.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(20),
@@ -505,7 +545,8 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
                 runSpacing: 8,
                 children: section.keyPoints.map((point) {
                   return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: section.primaryColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(16),
@@ -628,7 +669,8 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.white.withOpacity(0.3)),
+                            border: Border.all(
+                                color: Colors.white.withOpacity(0.3)),
                           ),
                           child: const Icon(
                             Icons.arrow_back_ios_rounded,
@@ -672,11 +714,13 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
                     child: BackdropFilter(
                       filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.white.withOpacity(0.3)),
+                          border:
+                              Border.all(color: Colors.white.withOpacity(0.3)),
                         ),
                         child: Text(
                           '${_currentSection + 1} / ${_sections.length}',
@@ -805,8 +849,12 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        _sections[_currentSection].primaryColor.withOpacity(0.1),
-                        _sections[_currentSection].secondaryColor.withOpacity(0.1),
+                        _sections[_currentSection]
+                            .primaryColor
+                            .withOpacity(0.1),
+                        _sections[_currentSection]
+                            .secondaryColor
+                            .withOpacity(0.1),
                       ],
                     ),
                     borderRadius: const BorderRadius.only(
@@ -859,11 +907,12 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
                               decoration: BoxDecoration(
                                 gradient: isSelected
                                     ? LinearGradient(
-                                  colors: [
-                                    section.primaryColor.withOpacity(0.2),
-                                    section.secondaryColor.withOpacity(0.2),
-                                  ],
-                                )
+                                        colors: [
+                                          section.primaryColor.withOpacity(0.2),
+                                          section.secondaryColor
+                                              .withOpacity(0.2),
+                                        ],
+                                      )
                                     : null,
                                 color: !isSelected && !isCompleted
                                     ? Colors.grey.withOpacity(0.1)
@@ -871,9 +920,10 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
                                 borderRadius: BorderRadius.circular(20),
                                 border: isSelected
                                     ? Border.all(
-                                  color: section.primaryColor.withOpacity(0.5),
-                                  width: 2,
-                                )
+                                        color: section.primaryColor
+                                            .withOpacity(0.5),
+                                        width: 2,
+                                      )
                                     : null,
                               ),
                               child: Row(
@@ -884,8 +934,11 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
                                     decoration: BoxDecoration(
                                       gradient: isSelected || isCompleted
                                           ? LinearGradient(
-                                        colors: [section.primaryColor, section.secondaryColor],
-                                      )
+                                              colors: [
+                                                section.primaryColor,
+                                                section.secondaryColor
+                                              ],
+                                            )
                                           : null,
                                       color: !isSelected && !isCompleted
                                           ? Colors.grey.withOpacity(0.3)
@@ -895,26 +948,28 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
                                     child: Center(
                                       child: isCompleted
                                           ? const Icon(
-                                        Icons.check,
-                                        color: Colors.white,
-                                        size: 24,
-                                      )
+                                              Icons.check,
+                                              color: Colors.white,
+                                              size: 24,
+                                            )
                                           : isSelected
-                                          ? const Icon(
-                                        Icons.play_arrow,
-                                        color: Colors.white,
-                                        size: 24,
-                                      )
-                                          : Text(
-                                        section.emoji,
-                                        style: const TextStyle(fontSize: 20),
-                                      ),
+                                              ? const Icon(
+                                                  Icons.play_arrow,
+                                                  color: Colors.white,
+                                                  size: 24,
+                                                )
+                                              : Text(
+                                                  section.emoji,
+                                                  style: const TextStyle(
+                                                      fontSize: 20),
+                                                ),
                                     ),
                                   ),
                                   const SizedBox(width: 16),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Row(
                                           children: [
@@ -923,21 +978,27 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
                                                 section.title,
                                                 style: TextStyle(
                                                   fontSize: 16,
-                                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                                  fontWeight: isSelected
+                                                      ? FontWeight.bold
+                                                      : FontWeight.w600,
                                                   color: isSelected
                                                       ? section.primaryColor
                                                       : isDark
-                                                      ? Colors.white
-                                                      : Colors.black87,
+                                                          ? Colors.white
+                                                          : Colors.black87,
                                                 ),
                                               ),
                                             ),
                                             if (isSelected)
                                               Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 4),
                                                 decoration: BoxDecoration(
                                                   color: section.primaryColor,
-                                                  borderRadius: BorderRadius.circular(12),
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
                                                 ),
                                                 child: const Text(
                                                   'فعال',
@@ -1005,8 +1066,7 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
               ],
             ),
           ),
-        )
-    );
+        ));
   }
 }
 

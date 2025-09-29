@@ -49,7 +49,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     required List<String> alphabet,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     try {
       // Create a simple automaton with one state
       final result = _automatonService.createAutomaton(
@@ -413,14 +413,16 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
 
   /// Converts FSA to AutomatonEntity
   AutomatonEntity _convertFsaToEntity(FSA fsa) {
-    final states = fsa.states.map((s) => StateEntity(
-      id: s.id,
-      name: s.label,
-      x: s.position.x,
-      y: s.position.y,
-      isInitial: s.isInitial,
-      isFinal: s.isAccepting,
-    )).toList();
+    final states = fsa.states
+        .map((s) => StateEntity(
+              id: s.id,
+              name: s.label,
+              x: s.position.x,
+              y: s.position.y,
+              isInitial: s.isInitial,
+              isFinal: s.isAccepting,
+            ))
+        .toList();
 
     // Build transitions map from FSA transitions
     final transitions = <String, List<String>>{};
@@ -450,13 +452,15 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
 
   /// Converts AutomatonEntity to FSA
   FSA _convertEntityToFsa(AutomatonEntity entity) {
-    final states = entity.states.map((s) => State(
-      id: s.id,
-      label: s.name,
-      position: Vector2(s.x, s.y),
-      isInitial: s.isInitial,
-      isAccepting: s.isFinal,
-    )).toSet();
+    final states = entity.states
+        .map((s) => State(
+              id: s.id,
+              label: s.name,
+              position: Vector2(s.x, s.y),
+              isInitial: s.isInitial,
+              isAccepting: s.isFinal,
+            ))
+        .toSet();
 
     final initialState = states.where((s) => s.isInitial).firstOrNull;
     final acceptingStates = states.where((s) => s.isAccepting).toSet();
@@ -464,14 +468,14 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     // Build FSA transitions from transitions map
     final transitions = <FSATransition>{};
     int transitionId = 1;
-    
+
     for (final entry in entity.transitions.entries) {
       final parts = entry.key.split('|');
       if (parts.length == 2) {
         final fromStateId = parts[0];
         final symbol = parts[1];
         final fromState = states.firstWhere((s) => s.id == fromStateId);
-        
+
         for (final toStateId in entry.value) {
           final toState = states.firstWhere((s) => s.id == toStateId);
           transitions.add(FSATransition(

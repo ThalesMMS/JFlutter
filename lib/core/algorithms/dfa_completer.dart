@@ -1,4 +1,3 @@
-
 import 'package:vector_math/vector_math_64.dart';
 import '../models/fsa.dart';
 import '../models/state.dart';
@@ -14,7 +13,8 @@ class DFACompleter {
 
     for (final state in states) {
       for (final symbol in alphabet) {
-        final hasTransition = transitions.any((t) => t.fromState == state && t.inputSymbols.contains(symbol));
+        final hasTransition = transitions.any(
+            (t) => t.fromState == state && t.inputSymbols.contains(symbol));
         if (!hasTransition) {
           trapState ??= State(
             id: 'q_trap',

@@ -36,7 +36,7 @@ class MobileNavigation extends StatelessWidget {
               final index = entry.key;
               final item = entry.value;
               final isSelected = currentIndex == index;
-              
+
               return Expanded(
                 child: _buildNavigationItem(
                   context,
@@ -59,8 +59,10 @@ class MobileNavigation extends StatelessWidget {
     VoidCallback onTap,
   ) {
     final colorScheme = Theme.of(context).colorScheme;
-    final color = isSelected ? colorScheme.primary : colorScheme.onSurface.withOpacity(0.6);
-    
+    final color = isSelected
+        ? colorScheme.primary
+        : colorScheme.onSurface.withOpacity(0.6);
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -78,10 +80,11 @@ class MobileNavigation extends StatelessWidget {
             Text(
               item.label,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: color,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                fontSize: 9, // Even smaller text
-              ),
+                    color: color,
+                    fontWeight:
+                        isSelected ? FontWeight.w600 : FontWeight.normal,
+                    fontSize: 9, // Even smaller text
+                  ),
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

@@ -40,31 +40,32 @@ class AlgorithmProvider extends StateNotifier<AlgorithmState> {
     required FsaToGrammarUseCase fsaToGrammarUseCase,
     required CheckEquivalenceUseCase checkEquivalenceUseCase,
     required SimulateWordUseCase simulateWordUseCase,
-    required CreateStepByStepSimulationUseCase createStepByStepSimulationUseCase,
-  }) : _nfaToDfaUseCase = nfaToDfaUseCase,
-       _removeLambdaTransitionsUseCase = removeLambdaTransitionsUseCase,
-       _minimizeDfaUseCase = minimizeDfaUseCase,
-       _completeDfaUseCase = completeDfaUseCase,
-       _complementDfaUseCase = complementDfaUseCase,
-       _unionDfaUseCase = unionDfaUseCase,
-       _intersectionDfaUseCase = intersectionDfaUseCase,
-       _differenceDfaUseCase = differenceDfaUseCase,
-       _prefixClosureUseCase = prefixClosureUseCase,
-       _suffixClosureUseCase = suffixClosureUseCase,
-       _regexToNfaUseCase = regexToNfaUseCase,
-       _dfaToRegexUseCase = dfaToRegexUseCase,
-       _fsaToGrammarUseCase = fsaToGrammarUseCase,
-       _checkEquivalenceUseCase = checkEquivalenceUseCase,
-       _simulateWordUseCase = simulateWordUseCase,
-       _createStepByStepSimulationUseCase = createStepByStepSimulationUseCase,
-       super(AlgorithmState.initial());
+    required CreateStepByStepSimulationUseCase
+        createStepByStepSimulationUseCase,
+  })  : _nfaToDfaUseCase = nfaToDfaUseCase,
+        _removeLambdaTransitionsUseCase = removeLambdaTransitionsUseCase,
+        _minimizeDfaUseCase = minimizeDfaUseCase,
+        _completeDfaUseCase = completeDfaUseCase,
+        _complementDfaUseCase = complementDfaUseCase,
+        _unionDfaUseCase = unionDfaUseCase,
+        _intersectionDfaUseCase = intersectionDfaUseCase,
+        _differenceDfaUseCase = differenceDfaUseCase,
+        _prefixClosureUseCase = prefixClosureUseCase,
+        _suffixClosureUseCase = suffixClosureUseCase,
+        _regexToNfaUseCase = regexToNfaUseCase,
+        _dfaToRegexUseCase = dfaToRegexUseCase,
+        _fsaToGrammarUseCase = fsaToGrammarUseCase,
+        _checkEquivalenceUseCase = checkEquivalenceUseCase,
+        _simulateWordUseCase = simulateWordUseCase,
+        _createStepByStepSimulationUseCase = createStepByStepSimulationUseCase,
+        super(AlgorithmState.initial());
 
   /// Converts NFA to DFA
   Future<void> convertNfaToDfa(AutomatonEntity nfa) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     final result = await _nfaToDfaUseCase.execute(nfa);
-    
+
     if (result.isSuccess) {
       state = state.copyWith(
         isLoading: false,
@@ -81,9 +82,9 @@ class AlgorithmProvider extends StateNotifier<AlgorithmState> {
   /// Removes lambda transitions from NFA
   Future<void> removeLambdaTransitions(AutomatonEntity nfa) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     final result = await _removeLambdaTransitionsUseCase.execute(nfa);
-    
+
     if (result.isSuccess) {
       state = state.copyWith(
         isLoading: false,
@@ -100,9 +101,9 @@ class AlgorithmProvider extends StateNotifier<AlgorithmState> {
   /// Minimizes DFA
   Future<void> minimizeDfa(AutomatonEntity dfa) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     final result = await _minimizeDfaUseCase.execute(dfa);
-    
+
     if (result.isSuccess) {
       state = state.copyWith(
         isLoading: false,
@@ -119,9 +120,9 @@ class AlgorithmProvider extends StateNotifier<AlgorithmState> {
   /// Completes DFA
   Future<void> completeDfa(AutomatonEntity dfa) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     final result = await _completeDfaUseCase.execute(dfa);
-    
+
     if (result.isSuccess) {
       state = state.copyWith(
         isLoading: false,
@@ -138,9 +139,9 @@ class AlgorithmProvider extends StateNotifier<AlgorithmState> {
   /// Complements DFA
   Future<void> complementDfa(AutomatonEntity dfa) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     final result = await _complementDfaUseCase.execute(dfa);
-    
+
     if (result.isSuccess) {
       state = state.copyWith(
         isLoading: false,
@@ -157,9 +158,9 @@ class AlgorithmProvider extends StateNotifier<AlgorithmState> {
   /// Unions two DFAs
   Future<void> unionDfa(AutomatonEntity dfa1, AutomatonEntity dfa2) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     final result = await _unionDfaUseCase.execute(dfa1, dfa2);
-    
+
     if (result.isSuccess) {
       state = state.copyWith(
         isLoading: false,
@@ -174,11 +175,12 @@ class AlgorithmProvider extends StateNotifier<AlgorithmState> {
   }
 
   /// Intersects two DFAs
-  Future<void> intersectionDfa(AutomatonEntity dfa1, AutomatonEntity dfa2) async {
+  Future<void> intersectionDfa(
+      AutomatonEntity dfa1, AutomatonEntity dfa2) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     final result = await _intersectionDfaUseCase.execute(dfa1, dfa2);
-    
+
     if (result.isSuccess) {
       state = state.copyWith(
         isLoading: false,
@@ -195,9 +197,9 @@ class AlgorithmProvider extends StateNotifier<AlgorithmState> {
   /// Differences two DFAs
   Future<void> differenceDfa(AutomatonEntity dfa1, AutomatonEntity dfa2) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     final result = await _differenceDfaUseCase.execute(dfa1, dfa2);
-    
+
     if (result.isSuccess) {
       state = state.copyWith(
         isLoading: false,
@@ -214,9 +216,9 @@ class AlgorithmProvider extends StateNotifier<AlgorithmState> {
   /// Prefix closure of DFA
   Future<void> prefixClosureDfa(AutomatonEntity dfa) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     final result = await _prefixClosureUseCase.execute(dfa);
-    
+
     if (result.isSuccess) {
       state = state.copyWith(
         isLoading: false,
@@ -233,9 +235,9 @@ class AlgorithmProvider extends StateNotifier<AlgorithmState> {
   /// Suffix closure of DFA
   Future<void> suffixClosureDfa(AutomatonEntity dfa) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     final result = await _suffixClosureUseCase.execute(dfa);
-    
+
     if (result.isSuccess) {
       state = state.copyWith(
         isLoading: false,
@@ -252,9 +254,9 @@ class AlgorithmProvider extends StateNotifier<AlgorithmState> {
   /// Converts regex to NFA
   Future<void> convertRegexToNfa(String regex) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     final result = await _regexToNfaUseCase.execute(regex);
-    
+
     if (result.isSuccess) {
       state = state.copyWith(
         isLoading: false,
@@ -271,9 +273,9 @@ class AlgorithmProvider extends StateNotifier<AlgorithmState> {
   /// Converts DFA to regex
   Future<void> convertDfaToRegex(AutomatonEntity dfa) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     final result = await _dfaToRegexUseCase.execute(dfa);
-    
+
     if (result.isSuccess) {
       state = state.copyWith(
         isLoading: false,
@@ -307,11 +309,13 @@ class AlgorithmProvider extends StateNotifier<AlgorithmState> {
   }
 
   /// Checks equivalence of two automata
-  Future<void> checkEquivalence(AutomatonEntity automaton1, AutomatonEntity automaton2) async {
+  Future<void> checkEquivalence(
+      AutomatonEntity automaton1, AutomatonEntity automaton2) async {
     state = state.copyWith(isLoading: true, error: null);
-    
-    final result = await _checkEquivalenceUseCase.execute(automaton1, automaton2);
-    
+
+    final result =
+        await _checkEquivalenceUseCase.execute(automaton1, automaton2);
+
     if (result.isSuccess) {
       state = state.copyWith(
         isLoading: false,
@@ -328,9 +332,9 @@ class AlgorithmProvider extends StateNotifier<AlgorithmState> {
   /// Simulates word on automaton
   Future<void> simulateWord(AutomatonEntity automaton, String word) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     final result = await _simulateWordUseCase.execute(automaton, word);
-    
+
     if (result.isSuccess) {
       state = state.copyWith(
         isLoading: false,
@@ -345,11 +349,13 @@ class AlgorithmProvider extends StateNotifier<AlgorithmState> {
   }
 
   /// Creates step-by-step simulation
-  Future<void> createStepByStepSimulation(AutomatonEntity automaton, String word) async {
+  Future<void> createStepByStepSimulation(
+      AutomatonEntity automaton, String word) async {
     state = state.copyWith(isLoading: true, error: null);
-    
-    final result = await _createStepByStepSimulationUseCase.execute(automaton, word);
-    
+
+    final result =
+        await _createStepByStepSimulationUseCase.execute(automaton, word);
+
     if (result.isSuccess) {
       state = state.copyWith(
         isLoading: false,

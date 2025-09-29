@@ -175,72 +175,71 @@ class IntroductionContent extends SectionContentBase {
 
   @override
   List<ContentBlock> get theory => [
-    ContentBlock(
-      title: 'تعریف مجموعه',
-      content:
-      'مجموعه یکی از مفاهیم بنیادی ریاضیات است. مجموعه را می‌توان به عنوان جمع‌آوری اشیاء مشخص تعریف کرد که این اشیاء را اعضای مجموعه می‌نامند.',
-      type: ContentType.definition,
-    ),
-    ContentBlock(
-      title: 'نحوه نمایش مجموعه‌ها',
-      content:
-      'مجموعه‌ها را می‌توان به سه روش نمایش داد:\n• روش فهرست‌سازی\n• روش بیان خاصیت\n• نمودار ون',
-      type: ContentType.explanation,
-    ),
-    ContentBlock(
-      title: 'مجموعه خالی',
-      content:
-      'مجموعه‌ای که هیچ عضوی نداشته باشد، مجموعه خالی نامیده می‌شود و با ∅ یا {} نمایش داده می‌شود.',
-      type: ContentType.definition,
-      formula: '∅ = {}',
-    ),
-    ContentBlock(
-      title: 'عضویت و عدم عضویت',
-      content:
-      'برای نشان دادن اینکه عنصر a عضو مجموعه A است از نماد ∈ استفاده می‌کنیم. برای عدم عضویت از نماد ∉ استفاده می‌شود.',
-      type: ContentType.explanation,
-      formula: 'a ∈ A یا a ∉ A',
-    ),
-  ];
+        ContentBlock(
+          title: 'تعریف مجموعه',
+          content:
+              'مجموعه یکی از مفاهیم بنیادی ریاضیات است. مجموعه را می‌توان به عنوان جمع‌آوری اشیاء مشخص تعریف کرد که این اشیاء را اعضای مجموعه می‌نامند.',
+          type: ContentType.definition,
+        ),
+        ContentBlock(
+          title: 'نحوه نمایش مجموعه‌ها',
+          content:
+              'مجموعه‌ها را می‌توان به سه روش نمایش داد:\n• روش فهرست‌سازی\n• روش بیان خاصیت\n• نمودار ون',
+          type: ContentType.explanation,
+        ),
+        ContentBlock(
+          title: 'مجموعه خالی',
+          content:
+              'مجموعه‌ای که هیچ عضوی نداشته باشد، مجموعه خالی نامیده می‌شود و با ∅ یا {} نمایش داده می‌شود.',
+          type: ContentType.definition,
+          formula: '∅ = {}',
+        ),
+        ContentBlock(
+          title: 'عضویت و عدم عضویت',
+          content:
+              'برای نشان دادن اینکه عنصر a عضو مجموعه A است از نماد ∈ استفاده می‌کنیم. برای عدم عضویت از نماد ∉ استفاده می‌شود.',
+          type: ContentType.explanation,
+          formula: 'a ∈ A یا a ∉ A',
+        ),
+      ];
 
   @override
   List<ExampleItem> get examples => [
-    ExampleItem(
-      title: 'نمایش مجموعه با روش فهرست‌سازی',
-      problem:
-      'مجموعه اعداد زوج کمتر از 10 را با روش فهرست‌سازی نمایش دهید.',
-      solution: 'A = {0, 2, 4, 6, 8}',
-      steps: [
-        'اعداد زوج کمتر از 10 را شناسایی کنیم',
-        'آنها را در داخل {} قرار دهیم',
-        'ترتیب آنها اهمیت ندارد'
-      ],
-      difficulty: DifficultyLevel.easy,
-    ),
-    ExampleItem(
-      title: 'نمایش مجموعه با روش خاصیت',
-      problem:
-      'مجموعه اعداد طبیعی بزرگتر از 5 را با روش خاصیت نمایش دهید.',
-      solution: 'B = {x ∈ ℕ | x > 5}',
-      steps: [
-        'متغیر x را انتخاب کنیم',
-        'مجموعه مرجع (اعداد طبیعی) را مشخص کنیم',
-        'شرط (بزرگتر از 5) را بنویسیم'
-      ],
-      difficulty: DifficultyLevel.medium,
-    ),
-    ExampleItem(
-      title: 'تشخیص عضویت',
-      problem: 'A = {1, 3, 5, 7} باشد. آیا 4 ∈ A؟',
-      solution: 'خیر، 4 ∉ A',
-      steps: [
-        'اعضای مجموعه A را بررسی کنیم',
-        '4 در فهرست اعضا وجود ندارد',
-        'پس 4 ∉ A'
-      ],
-      difficulty: DifficultyLevel.easy,
-    ),
-  ];
+        ExampleItem(
+          title: 'نمایش مجموعه با روش فهرست‌سازی',
+          problem:
+              'مجموعه اعداد زوج کمتر از 10 را با روش فهرست‌سازی نمایش دهید.',
+          solution: 'A = {0, 2, 4, 6, 8}',
+          steps: [
+            'اعداد زوج کمتر از 10 را شناسایی کنیم',
+            'آنها را در داخل {} قرار دهیم',
+            'ترتیب آنها اهمیت ندارد'
+          ],
+          difficulty: DifficultyLevel.easy,
+        ),
+        ExampleItem(
+          title: 'نمایش مجموعه با روش خاصیت',
+          problem: 'مجموعه اعداد طبیعی بزرگتر از 5 را با روش خاصیت نمایش دهید.',
+          solution: 'B = {x ∈ ℕ | x > 5}',
+          steps: [
+            'متغیر x را انتخاب کنیم',
+            'مجموعه مرجع (اعداد طبیعی) را مشخص کنیم',
+            'شرط (بزرگتر از 5) را بنویسیم'
+          ],
+          difficulty: DifficultyLevel.medium,
+        ),
+        ExampleItem(
+          title: 'تشخیص عضویت',
+          problem: 'A = {1, 3, 5, 7} باشد. آیا 4 ∈ A؟',
+          solution: 'خیر، 4 ∉ A',
+          steps: [
+            'اعضای مجموعه A را بررسی کنیم',
+            '4 در فهرست اعضا وجود ندارد',
+            'پس 4 ∉ A'
+          ],
+          difficulty: DifficultyLevel.easy,
+        ),
+      ];
 
   @override
   List<QuizQuestion> get questions {
@@ -250,7 +249,7 @@ class IntroductionContent extends SectionContentBase {
         options: ['روش فهرست‌سازی', 'روش خاصیت', 'نمودار ون', 'هیچ‌کدام'],
         correctAnswer: 0,
         explanation:
-        'چون تعداد اعضا محدود و مشخص است، روش فهرست‌سازی بهترین انتخاب است.',
+            'چون تعداد اعضا محدود و مشخص است، روش فهرست‌سازی بهترین انتخاب است.',
         difficulty: DifficultyLevel.easy,
         type: QuestionType.multipleChoice,
       ),
@@ -280,20 +279,20 @@ class IntroductionContent extends SectionContentBase {
 
   @override
   List<String> get keyPoints => [
-    'مجموعه مجموعه‌ای از اشیاء مشخص است',
-    'سه روش نمایش: فهرست‌سازی، خاصیت، نمودار ون',
-    'مجموعه خالی با ∅ نمایش داده می‌شود',
-    'a ∈ A یعنی a عضو A است',
-    'ترتیب و تکرار اعضا در مجموعه اهمیت ندارد'
-  ];
+        'مجموعه مجموعه‌ای از اشیاء مشخص است',
+        'سه روش نمایش: فهرست‌سازی، خاصیت، نمودار ون',
+        'مجموعه خالی با ∅ نمایش داده می‌شود',
+        'a ∈ A یعنی a عضو A است',
+        'ترتیب و تکرار اعضا در مجموعه اهمیت ندارد'
+      ];
 
   @override
   Map<String, String> get definitions => {
-    'مجموعه': 'جمع‌آوری از اشیاء مشخص که اعضا نامیده می‌شوند',
-    'عضو': 'هر شیء که جزء یک مجموعه باشد',
-    'مجموعه خالی': 'مجموعه‌ای که هیچ عضوی ندارد',
-    'عضویت': 'رابطه‌ای که نشان می‌دهد عنصری جزء مجموعه است',
-  };
+        'مجموعه': 'جمع‌آوری از اشیاء مشخص که اعضا نامیده می‌شوند',
+        'عضو': 'هر شیء که جزء یک مجموعه باشد',
+        'مجموعه خالی': 'مجموعه‌ای که هیچ عضوی ندارد',
+        'عضویت': 'رابطه‌ای که نشان می‌دهد عنصری جزء مجموعه است',
+      };
 }
 
 // محتوای بخش دوم: خصوصیات مجموعه‌ها
@@ -301,69 +300,69 @@ class SetPropertiesContent extends SectionContentBase {
   SetPropertiesContent({required super.sectionId});
   @override
   List<ContentBlock> get theory => [
-    ContentBlock(
-      title: 'خاصیت اول: اصل دوگانگی',
-      content:
-      'برای هر عنصر x و مجموعه A، یا x ∈ A یا x ∉ A. هیچ حالت سومی وجود ندارد.',
-      type: ContentType.theorem,
-      formula: 'x ∈ A ∨ x ∉ A',
-    ),
-    ContentBlock(
-      title: 'خاصیت دوم: عدم اهمیت ترتیب',
-      content:
-      'ترتیب اعضا در یک مجموعه اهمیت ندارد. {1, 2, 3} و {3, 1, 2} یکسان هستند.',
-      type: ContentType.explanation,
-      formula: '{a, b, c} = {c, a, b} = {b, c, a}',
-    ),
-    ContentBlock(
-      title: 'خاصیت سوم: یکتایی اعضا',
-      content: 'تکرار اعضا در مجموعه معنی ندارد. هر عضو یا هست یا نیست.',
-      type: ContentType.explanation,
-      formula: '{a, a, b} = {a, b}',
-    ),
-    ContentBlock(
-      title: 'خاصیت چهارم: تعین‌بودگی',
-      content:
-      'برای هر مجموعه باید کاملاً مشخص باشد که کدام عناصر عضو آن هستند و کدام نیستند.',
-      type: ContentType.explanation,
-    ),
-  ];
+        ContentBlock(
+          title: 'خاصیت اول: اصل دوگانگی',
+          content:
+              'برای هر عنصر x و مجموعه A، یا x ∈ A یا x ∉ A. هیچ حالت سومی وجود ندارد.',
+          type: ContentType.theorem,
+          formula: 'x ∈ A ∨ x ∉ A',
+        ),
+        ContentBlock(
+          title: 'خاصیت دوم: عدم اهمیت ترتیب',
+          content:
+              'ترتیب اعضا در یک مجموعه اهمیت ندارد. {1, 2, 3} و {3, 1, 2} یکسان هستند.',
+          type: ContentType.explanation,
+          formula: '{a, b, c} = {c, a, b} = {b, c, a}',
+        ),
+        ContentBlock(
+          title: 'خاصیت سوم: یکتایی اعضا',
+          content: 'تکرار اعضا در مجموعه معنی ندارد. هر عضو یا هست یا نیست.',
+          type: ContentType.explanation,
+          formula: '{a, a, b} = {a, b}',
+        ),
+        ContentBlock(
+          title: 'خاصیت چهارم: تعین‌بودگی',
+          content:
+              'برای هر مجموعه باید کاملاً مشخص باشد که کدام عناصر عضو آن هستند و کدام نیستند.',
+          type: ContentType.explanation,
+        ),
+      ];
   @override
   List<ExampleItem> get examples => [
-    ExampleItem(
-      title: 'اصل دوگانگی',
-      problem: 'A = {1, 3, 5} باشد. عدد 2 چه وضعیتی نسبت به A دارد؟',
-      solution: '2 ∉ A (عضو نیست)',
-      steps: [
-        'اعضای A را بررسی می‌کنیم: 1, 3, 5',
-        '2 در این فهرست نیست',
-        'پس 2 ∉ A'
-      ],
-      difficulty: DifficultyLevel.easy,
-    ),
-    ExampleItem(
-      title: 'عدم اهمیت ترتیب',
-      problem: 'آیا {a, b, c} = {c, a, b}؟',
-      solution: 'بله، این دو مجموعه برابرند',
-      steps: [
-        'هر دو مجموعه شامل عناصر a, b, c هستند',
-        'ترتیب اعضا در تعریف مجموعه اهمیت ندارد',
-        'پس دو مجموعه برابرند'
-      ],
-      difficulty: DifficultyLevel.easy,
-    ),
-    ExampleItem(
-      title: 'یکتایی اعضا',
-      problem: '{1, 2, 2, 3, 1} را ساده کنید.',
-      solution: '{1, 2, 3}',
-      steps: [
-        'عناصر تکراری را حذف می‌کنیم',
-        '1 و 2 تکرار شده‌اند',
-        'مجموعه نهایی: {1, 2, 3}'
-      ],
-      difficulty: DifficultyLevel.easy,
-    ),
-  ];
+        ExampleItem(
+          title: 'اصل دوگانگی',
+          problem: 'A = {1, 3, 5} باشد. عدد 2 چه وضعیتی نسبت به A دارد؟',
+          solution: '2 ∉ A (عضو نیست)',
+          steps: [
+            'اعضای A را بررسی می‌کنیم: 1, 3, 5',
+            '2 در این فهرست نیست',
+            'پس 2 ∉ A'
+          ],
+          difficulty: DifficultyLevel.easy,
+        ),
+        ExampleItem(
+          title: 'عدم اهمیت ترتیب',
+          problem: 'آیا {a, b, c} = {c, a, b}؟',
+          solution: 'بله، این دو مجموعه برابرند',
+          steps: [
+            'هر دو مجموعه شامل عناصر a, b, c هستند',
+            'ترتیب اعضا در تعریف مجموعه اهمیت ندارد',
+            'پس دو مجموعه برابرند'
+          ],
+          difficulty: DifficultyLevel.easy,
+        ),
+        ExampleItem(
+          title: 'یکتایی اعضا',
+          problem: '{1, 2, 2, 3, 1} را ساده کنید.',
+          solution: '{1, 2, 3}',
+          steps: [
+            'عناصر تکراری را حذف می‌کنیم',
+            '1 و 2 تکرار شده‌اند',
+            'مجموعه نهایی: {1, 2, 3}'
+          ],
+          difficulty: DifficultyLevel.easy,
+        ),
+      ];
   @override
   List<QuizQuestion> get questions {
     final originalQuestions = [
@@ -398,17 +397,17 @@ class SetPropertiesContent extends SectionContentBase {
 
   @override
   List<String> get keyPoints => [
-    'اصل دوگانگی: هر عنصر یا عضو است یا نیست',
-    'ترتیب اعضا در مجموعه اهمیت ندارد',
-    'تکرار اعضا معنی ندارد',
-    'مجموعه‌ها باید کاملاً تعین باشند'
-  ];
+        'اصل دوگانگی: هر عنصر یا عضو است یا نیست',
+        'ترتیب اعضا در مجموعه اهمیت ندارد',
+        'تکرار اعضا معنی ندارد',
+        'مجموعه‌ها باید کاملاً تعین باشند'
+      ];
   @override
   Map<String, String> get definitions => {
-    'اصل دوگانگی': 'هر عنصر نسبت به مجموعه یا عضو است یا غیرعضو',
-    'یکتایی': 'هر عضو در مجموعه حداکثر یک بار در نظر گرفته می‌شود',
-    'تعین‌بودگی': 'برای هر عنصر مشخص است که آیا عضو مجموعه است یا خیر',
-  };
+        'اصل دوگانگی': 'هر عنصر نسبت به مجموعه یا عضو است یا غیرعضو',
+        'یکتایی': 'هر عضو در مجموعه حداکثر یک بار در نظر گرفته می‌شود',
+        'تعین‌بودگی': 'برای هر عنصر مشخص است که آیا عضو مجموعه است یا خیر',
+      };
 }
 
 // محتوای بخش سوم: زیرمجموعه
@@ -416,74 +415,76 @@ class SubsetContent extends SectionContentBase {
   SubsetContent({required super.sectionId});
   @override
   List<ContentBlock> get theory => [
-    ContentBlock(
-      title: 'تعریف زیرمجموعه',
-      content: 'مجموعه A زیرمجموعه B است اگر هر عضو A عضو B نیز باشد.',
-      type: ContentType.definition,
-      formula: 'A ⊆ B ⟺ ∀x(x ∈ A → x ∈ B)',
-    ),
-    ContentBlock(
-      title: 'تعریف زیرمجموعه محض',
-      content: 'مجموعه A زیرمجموعه محض B است اگر A ⊆ B و A ≠ B باشد.',
-      type: ContentType.definition,
-      formula: 'A ⊂ B ⟺ (A ⊆ B) ∧ (A ≠ B)',
-    ),
-    ContentBlock(
-      title: 'خصوصیات زیرمجموعه',
-      content:
-      '• هر مجموعه زیرمجموعه خودش است\n• مجموعه خالی زیرمجموعه هر مجموعه‌ای است\n• رابطه زیرمجموعه متعدی است',
-      type: ContentType.theorem,
-    ),
-    ContentBlock(
-      title: 'تساوی مجموعه‌ها',
-      content:
-      'دو مجموعه برابرند اگر و تنها اگر هر کدام زیرمجموعه دیگری باشند.',
-      type: ContentType.theorem,
-      formula: 'A = B ⟺ (A ⊆ B) ∧ (B ⊆ A)',
-    ),
-  ];
+        ContentBlock(
+          title: 'تعریف زیرمجموعه',
+          content: 'مجموعه A زیرمجموعه B است اگر هر عضو A عضو B نیز باشد.',
+          type: ContentType.definition,
+          formula: 'A ⊆ B ⟺ ∀x(x ∈ A → x ∈ B)',
+        ),
+        ContentBlock(
+          title: 'تعریف زیرمجموعه محض',
+          content: 'مجموعه A زیرمجموعه محض B است اگر A ⊆ B و A ≠ B باشد.',
+          type: ContentType.definition,
+          formula: 'A ⊂ B ⟺ (A ⊆ B) ∧ (A ≠ B)',
+        ),
+        ContentBlock(
+          title: 'خصوصیات زیرمجموعه',
+          content:
+              '• هر مجموعه زیرمجموعه خودش است\n• مجموعه خالی زیرمجموعه هر مجموعه‌ای است\n• رابطه زیرمجموعه متعدی است',
+          type: ContentType.theorem,
+        ),
+        ContentBlock(
+          title: 'تساوی مجموعه‌ها',
+          content:
+              'دو مجموعه برابرند اگر و تنها اگر هر کدام زیرمجموعه دیگری باشند.',
+          type: ContentType.theorem,
+          formula: 'A = B ⟺ (A ⊆ B) ∧ (B ⊆ A)',
+        ),
+      ];
   @override
   List<ExampleItem> get examples => [
-    ExampleItem(
-      title: 'تشخیص زیرمجموعه',
-      problem: 'A = {1, 2} و B = {1, 2, 3, 4} باشند. آیا A ⊆ B؟',
-      solution: 'بله، A ⊆ B',
-      steps: [
-        'هر عضو A را بررسی می‌کنیم',
-        '1 ∈ A و 1 ∈ B ✓',
-        '2 ∈ A و 2 ∈ B ✓',
-        'پس A ⊆ B'
-      ],
-      difficulty: DifficultyLevel.easy,
-    ),
-    ExampleItem(
-      title: 'زیرمجموعه محض',
-      problem: 'A = {a, b} و B = {a, b, c} باشند. نوع رابطه بین A و B چیست؟',
-      solution: 'A ⊂ B (زیرمجموعه محض)',
-      steps: [
-        'A ⊆ B را بررسی می‌کنیم: درست',
-        'A = B را بررسی می‌کنیم: نادرست (c ∈ B اما c ∉ A)',
-        'پس A ⊂ B'
-      ],
-      difficulty: DifficultyLevel.medium,
-    ),
-    ExampleItem(
-      title: 'مجموعه خالی',
-      problem: 'آیا ∅ ⊆ {1, 2, 3}؟',
-      solution: 'بله، مجموعه خالی زیرمجموعه هر مجموعه‌ای است',
-      steps: [
-        'مجموعه خالی هیچ عضوی ندارد',
-        'شرط زیرمجموعه: هر عضو A باید عضو B باشد',
-        'چون ∅ عضوی ندارد، شرط به طور خودکار برقرار است'
-      ],
-      difficulty: DifficultyLevel.hard,
-    ),
-  ];
+        ExampleItem(
+          title: 'تشخیص زیرمجموعه',
+          problem: 'A = {1, 2} و B = {1, 2, 3, 4} باشند. آیا A ⊆ B؟',
+          solution: 'بله، A ⊆ B',
+          steps: [
+            'هر عضو A را بررسی می‌کنیم',
+            '1 ∈ A و 1 ∈ B ✓',
+            '2 ∈ A و 2 ∈ B ✓',
+            'پس A ⊆ B'
+          ],
+          difficulty: DifficultyLevel.easy,
+        ),
+        ExampleItem(
+          title: 'زیرمجموعه محض',
+          problem:
+              'A = {a, b} و B = {a, b, c} باشند. نوع رابطه بین A و B چیست؟',
+          solution: 'A ⊂ B (زیرمجموعه محض)',
+          steps: [
+            'A ⊆ B را بررسی می‌کنیم: درست',
+            'A = B را بررسی می‌کنیم: نادرست (c ∈ B اما c ∉ A)',
+            'پس A ⊂ B'
+          ],
+          difficulty: DifficultyLevel.medium,
+        ),
+        ExampleItem(
+          title: 'مجموعه خالی',
+          problem: 'آیا ∅ ⊆ {1, 2, 3}؟',
+          solution: 'بله، مجموعه خالی زیرمجموعه هر مجموعه‌ای است',
+          steps: [
+            'مجموعه خالی هیچ عضوی ندارد',
+            'شرط زیرمجموعه: هر عضو A باید عضو B باشد',
+            'چون ∅ عضوی ندارد، شرط به طور خودکار برقرار است'
+          ],
+          difficulty: DifficultyLevel.hard,
+        ),
+      ];
   @override
   List<QuizQuestion> get questions {
     final originalQuestions = [
       QuizQuestion(
-        question: 'اگر A = {1, 3} و B = {1, 2, 3, 4} باشد، کدام گزینه درست است؟',
+        question:
+            'اگر A = {1, 3} و B = {1, 2, 3, 4} باشد، کدام گزینه درست است؟',
         options: ['A = B', 'A ⊂ B', 'B ⊂ A', 'A و B مجزا هستند'],
         correctAnswer: 1,
         explanation: 'A زیرمجموعه محض B است چون A ⊆ B اما A ≠ B',
@@ -516,18 +517,18 @@ class SubsetContent extends SectionContentBase {
 
   @override
   List<String> get keyPoints => [
-    'A ⊆ B: هر عضو A عضو B نیز است',
-    'A ⊂ B: A زیرمجموعه محض B است',
-    'مجموعه خالی زیرمجموعه همه مجموعه‌هاست',
-    'هر مجموعه زیرمجموعه خودش است',
-    'A = B وقتی A ⊆ B و B ⊆ A'
-  ];
+        'A ⊆ B: هر عضو A عضو B نیز است',
+        'A ⊂ B: A زیرمجموعه محض B است',
+        'مجموعه خالی زیرمجموعه همه مجموعه‌هاست',
+        'هر مجموعه زیرمجموعه خودش است',
+        'A = B وقتی A ⊆ B و B ⊆ A'
+      ];
   @override
   Map<String, String> get definitions => {
-    'زیرمجموعه': 'مجموعه A زیرمجموعه B است اگر هر عضو A عضو B باشد',
-    'زیرمجموعه محض': 'A زیرمجموعه محض B است اگر A ⊆ B و A ≠ B',
-    'تساوی مجموعه‌ها': 'دو مجموعه برابرند اگر دارای اعضای یکسانی باشند',
-  };
+        'زیرمجموعه': 'مجموعه A زیرمجموعه B است اگر هر عضو A عضو B باشد',
+        'زیرمجموعه محض': 'A زیرمجموعه محض B است اگر A ⊆ B و A ≠ B',
+        'تساوی مجموعه‌ها': 'دو مجموعه برابرند اگر دارای اعضای یکسانی باشند',
+      };
 }
 
 // محتوای بخش چهارم: مجموعه توانی
@@ -535,71 +536,67 @@ class PowerSetContent extends SectionContentBase {
   PowerSetContent({required super.sectionId});
   @override
   List<ContentBlock> get theory => [
-    ContentBlock(
-      title: 'تعریف مجموعه توانی',
-      content: 'مجموعه توانی مجموعه A، مجموعه‌ای از تمام زیرمجموعه‌های A است.',
-      type: ContentType.definition,
-      formula: 'P(A) = {S | S ⊆ A}',
-    ),
-    ContentBlock(
-      title: 'اندازه مجموعه توانی',
-      content:
-      'اگر مجموعه A دارای n عضو باشد، آنگاه P(A) دارای 2ⁿ عضو است.',
-      type: ContentType.theorem,
-      formula: '|A| = n ⟹ |P(A)| = 2ⁿ',
-    ),
-    ContentBlock(
-      title: 'خصوصیات مجموعه توانی',
-      content:
-      '• ∅ همیشه عضو P(A) است\n• A همیشه عضو P(A) است\n• اگر A ⊆ B آنگاه P(A) ⊆ P(B)',
-      type: ContentType.theorem,
-    ),
-    ContentBlock(
-      title: 'محاسبه سریع',
-      content:
-      'برای پیدا کردن تمام زیرمجموعه‌ها می‌توان از نمایش دودویی استفاده کرد.',
-      type: ContentType.note,
-    ),
-  ];
+        ContentBlock(
+          title: 'تعریف مجموعه توانی',
+          content:
+              'مجموعه توانی مجموعه A، مجموعه‌ای از تمام زیرمجموعه‌های A است.',
+          type: ContentType.definition,
+          formula: 'P(A) = {S | S ⊆ A}',
+        ),
+        ContentBlock(
+          title: 'اندازه مجموعه توانی',
+          content:
+              'اگر مجموعه A دارای n عضو باشد، آنگاه P(A) دارای 2ⁿ عضو است.',
+          type: ContentType.theorem,
+          formula: '|A| = n ⟹ |P(A)| = 2ⁿ',
+        ),
+        ContentBlock(
+          title: 'خصوصیات مجموعه توانی',
+          content:
+              '• ∅ همیشه عضو P(A) است\n• A همیشه عضو P(A) است\n• اگر A ⊆ B آنگاه P(A) ⊆ P(B)',
+          type: ContentType.theorem,
+        ),
+        ContentBlock(
+          title: 'محاسبه سریع',
+          content:
+              'برای پیدا کردن تمام زیرمجموعه‌ها می‌توان از نمایش دودویی استفاده کرد.',
+          type: ContentType.note,
+        ),
+      ];
   @override
   List<ExampleItem> get examples => [
-    ExampleItem(
-      title: 'محاسبه P(A) برای مجموعه کوچک',
-      problem: 'اگر A = {1, 2} باشد، P(A) را بیابید.',
-      solution: 'P(A) = {∅, {1}, {2}, {1,2}}',
-      steps: [
-        'تمام زیرمجموعه‌های A را می‌یابیم',
-        'زیرمجموعه خالی: ∅',
-        'زیرمجموعه‌های تک‌عضوی: {1}, {2}',
-        'خود A: {1,2}'
-      ],
-      difficulty: DifficultyLevel.easy,
-    ),
-    ExampleItem(
-      title: 'اندازه مجموعه توانی',
-      problem: 'اگر |A| = 3 باشد، |P(A)| چقدر است؟',
-      solution: '|P(A)| = 2³ = 8',
-      steps: [
-        'از فرمول |P(A)| = 2ⁿ استفاده می‌کنیم',
-        'n = 3',
-        '2³ = 8'
-      ],
-      difficulty: DifficultyLevel.medium,
-    ),
-    ExampleItem(
-      title: 'مجموعه توانی مجموعه سه‌عضوی',
-      problem: 'A = {a, b, c} باشد. P(A) را بنویسید.',
-      solution:
-      'P(A) = {∅, {a}, {b}, {c}, {a,b}, {a,c}, {b,c}, {a,b,c}}',
-      steps: [
-        'زیرمجموعه خالی: ∅',
-        'زیرمجموعه‌های یک‌عضوی: {a}, {b}, {c}',
-        'زیرمجموعه‌های دوعضوی: {a,b}, {a,c}, {b,c}',
-        'خود A: {a,b,c}'
-      ],
-      difficulty: DifficultyLevel.medium,
-    ),
-  ];
+        ExampleItem(
+          title: 'محاسبه P(A) برای مجموعه کوچک',
+          problem: 'اگر A = {1, 2} باشد، P(A) را بیابید.',
+          solution: 'P(A) = {∅, {1}, {2}, {1,2}}',
+          steps: [
+            'تمام زیرمجموعه‌های A را می‌یابیم',
+            'زیرمجموعه خالی: ∅',
+            'زیرمجموعه‌های تک‌عضوی: {1}, {2}',
+            'خود A: {1,2}'
+          ],
+          difficulty: DifficultyLevel.easy,
+        ),
+        ExampleItem(
+          title: 'اندازه مجموعه توانی',
+          problem: 'اگر |A| = 3 باشد، |P(A)| چقدر است؟',
+          solution: '|P(A)| = 2³ = 8',
+          steps: ['از فرمول |P(A)| = 2ⁿ استفاده می‌کنیم', 'n = 3', '2³ = 8'],
+          difficulty: DifficultyLevel.medium,
+        ),
+        ExampleItem(
+          title: 'مجموعه توانی مجموعه سه‌عضوی',
+          problem: 'A = {a, b, c} باشد. P(A) را بنویسید.',
+          solution: 'P(A) = {∅, {a}, {b}, {c}, {a,b}, {a,c}, {b,c}, {a,b,c}}',
+          steps: [
+            'زیرمجموعه خالی: ∅',
+            'زیرمجموعه‌های یک‌عضوی: {a}, {b}, {c}',
+            'زیرمجموعه‌های دوعضوی: {a,b}, {a,c}, {b,c}',
+            'خود A: {a,b,c}'
+          ],
+          difficulty: DifficultyLevel.medium,
+        ),
+      ];
   @override
   List<QuizQuestion> get questions {
     final originalQuestions = [
@@ -616,7 +613,7 @@ class PowerSetContent extends SectionContentBase {
         options: ['درست', 'نادرست'],
         correctAnswer: 0,
         explanation:
-        'مجموعه خالی زیرمجموعه هر مجموعه‌ای است، پس همیشه در مجموعه توانی قرار دارد.',
+            'مجموعه خالی زیرمجموعه هر مجموعه‌ای است، پس همیشه در مجموعه توانی قرار دارد.',
         difficulty: DifficultyLevel.easy,
         type: QuestionType.trueFalse,
       ),
@@ -638,17 +635,17 @@ class PowerSetContent extends SectionContentBase {
 
   @override
   List<String> get keyPoints => [
-    'P(A) = مجموعه تمام زیرمجموعه‌های A',
-    '|P(A)| = 2^|A|',
-    '∅ و A همیشه عضو P(A) هستند',
-    'برای محاسبه می‌توان از روش دودویی استفاده کرد'
-  ];
+        'P(A) = مجموعه تمام زیرمجموعه‌های A',
+        '|P(A)| = 2^|A|',
+        '∅ و A همیشه عضو P(A) هستند',
+        'برای محاسبه می‌توان از روش دودویی استفاده کرد'
+      ];
   @override
   Map<String, String> get definitions => {
-    'مجموعه توانی': 'مجموعه تمام زیرمجموعه‌های یک مجموعه',
-    'اندازه مجموعه توانی':
-    'تعداد اعضای مجموعه توانی برابر 2 به توان تعداد اعضای مجموعه اصلی',
-  };
+        'مجموعه توانی': 'مجموعه تمام زیرمجموعه‌های یک مجموعه',
+        'اندازه مجموعه توانی':
+            'تعداد اعضای مجموعه توانی برابر 2 به توان تعداد اعضای مجموعه اصلی',
+      };
 }
 
 // محتوای بخش پنجم: توابع
@@ -656,71 +653,71 @@ class FunctionContent extends SectionContentBase {
   FunctionContent({required super.sectionId});
   @override
   List<ContentBlock> get theory => [
-    ContentBlock(
-      title: 'تعریف تابع',
-      content:
-      'تابع f از مجموعه A به مجموعه B قاعده‌ای است که به هر عضو A دقیقاً یک عضو از B نسبت می‌دهد.',
-      type: ContentType.definition,
-      formula: 'f: A → B',
-    ),
-    ContentBlock(
-      title: 'اجزای تابع',
-      content:
-      '• دامنه (Domain): مجموعه A\n• مدامنه (Codomain): مجموعه B\n• برد (Range/Image): تصاویر واقعی در B',
-      type: ContentType.explanation,
-    ),
-    ContentBlock(
-      title: 'انواع توابع',
-      content:
-      '• تابع یکی (Injective): f(x₁) = f(x₂) ⟹ x₁ = x₂\n• تابع پوشا (Surjective): ∀y ∈ B, ∃x ∈ A: f(x) = y\n• تابع دوسویه (Bijective): هم یکی و هم پوشا',
-      type: ContentType.theorem,
-    ),
-    ContentBlock(
-      title: 'تابع مرکب',
-      content:
-      'اگر f: A → B و g: B → C باشند، آنگاه g∘f: A → C تابع مرکب است.',
-      type: ContentType.definition,
-      formula: '(g∘f)(x) = g(f(x))',
-    ),
-  ];
+        ContentBlock(
+          title: 'تعریف تابع',
+          content:
+              'تابع f از مجموعه A به مجموعه B قاعده‌ای است که به هر عضو A دقیقاً یک عضو از B نسبت می‌دهد.',
+          type: ContentType.definition,
+          formula: 'f: A → B',
+        ),
+        ContentBlock(
+          title: 'اجزای تابع',
+          content:
+              '• دامنه (Domain): مجموعه A\n• مدامنه (Codomain): مجموعه B\n• برد (Range/Image): تصاویر واقعی در B',
+          type: ContentType.explanation,
+        ),
+        ContentBlock(
+          title: 'انواع توابع',
+          content:
+              '• تابع یکی (Injective): f(x₁) = f(x₂) ⟹ x₁ = x₂\n• تابع پوشا (Surjective): ∀y ∈ B, ∃x ∈ A: f(x) = y\n• تابع دوسویه (Bijective): هم یکی و هم پوشا',
+          type: ContentType.theorem,
+        ),
+        ContentBlock(
+          title: 'تابع مرکب',
+          content:
+              'اگر f: A → B و g: B → C باشند، آنگاه g∘f: A → C تابع مرکب است.',
+          type: ContentType.definition,
+          formula: '(g∘f)(x) = g(f(x))',
+        ),
+      ];
   @override
   List<ExampleItem> get examples => [
-    ExampleItem(
-      title: 'تابع ساده',
-      problem:
-      'f: {1,2,3} → {a,b,c} با f(1)=a, f(2)=b, f(3)=c تعریف شده است. نوع این تابع چیست؟',
-      solution: 'تابع دوسویه (یکی و پوشا)',
-      steps: [
-        'بررسی یکی بودن: هر دو عنصر متفاوت تصویر متفاوت دارند ✓',
-        'بررسی پوشا بودن: هر عنصر مدامنه تصویر دارد ✓',
-        'پس تابع دوسویه است'
-      ],
-      difficulty: DifficultyLevel.medium,
-    ),
-    ExampleItem(
-      title: 'تابع غیریکی',
-      problem:
-      'f: {1,2,3,4} → {a,b} با f(1)=f(2)=a و f(3)=f(4)=b تعریف شده است. چرا این تابع یکی نیست؟',
-      solution: 'چون f(1) = f(2) = a اما 1 ≠ 2',
-      steps: [
-        'دو عنصر متفاوت 1 و 2 را در نظر می‌گیریم',
-        'f(1) = a و f(2) = a',
-        'پس f(1) = f(2) اما 1 ≠ 2، که نقض یکی است'
-      ],
-      difficulty: DifficultyLevel.medium,
-    ),
-    ExampleItem(
-      title: 'ترکیب توابع',
-      problem: 'f(x) = 2x و g(x) = x + 1 باشند. (g∘f)(3) را محاسبه کنید.',
-      solution: '(g∘f)(3) = 7',
-      steps: [
-        'ابتدا f(3) را محاسبه می‌کنیم: f(3) = 2×3 = 6',
-        'سپس g(6) را محاسبه می‌کنیم: g(6) = 6 + 1 = 7',
-        'پس (g∘f)(3) = 7'
-      ],
-      difficulty: DifficultyLevel.hard,
-    ),
-  ];
+        ExampleItem(
+          title: 'تابع ساده',
+          problem:
+              'f: {1,2,3} → {a,b,c} با f(1)=a, f(2)=b, f(3)=c تعریف شده است. نوع این تابع چیست؟',
+          solution: 'تابع دوسویه (یکی و پوشا)',
+          steps: [
+            'بررسی یکی بودن: هر دو عنصر متفاوت تصویر متفاوت دارند ✓',
+            'بررسی پوشا بودن: هر عنصر مدامنه تصویر دارد ✓',
+            'پس تابع دوسویه است'
+          ],
+          difficulty: DifficultyLevel.medium,
+        ),
+        ExampleItem(
+          title: 'تابع غیریکی',
+          problem:
+              'f: {1,2,3,4} → {a,b} با f(1)=f(2)=a و f(3)=f(4)=b تعریف شده است. چرا این تابع یکی نیست؟',
+          solution: 'چون f(1) = f(2) = a اما 1 ≠ 2',
+          steps: [
+            'دو عنصر متفاوت 1 و 2 را در نظر می‌گیریم',
+            'f(1) = a و f(2) = a',
+            'پس f(1) = f(2) اما 1 ≠ 2، که نقض یکی است'
+          ],
+          difficulty: DifficultyLevel.medium,
+        ),
+        ExampleItem(
+          title: 'ترکیب توابع',
+          problem: 'f(x) = 2x و g(x) = x + 1 باشند. (g∘f)(3) را محاسبه کنید.',
+          solution: '(g∘f)(3) = 7',
+          steps: [
+            'ابتدا f(3) را محاسبه می‌کنیم: f(3) = 2×3 = 6',
+            'سپس g(6) را محاسبه می‌کنیم: g(6) = 6 + 1 = 7',
+            'پس (g∘f)(3) = 7'
+          ],
+          difficulty: DifficultyLevel.hard,
+        ),
+      ];
   @override
   List<QuizQuestion> get questions {
     final originalQuestions = [
@@ -734,13 +731,13 @@ class FunctionContent extends SectionContentBase {
         ],
         correctAnswer: 0,
         explanation:
-        'تعریف اساسی تابع این است که هر عنصر دامنه دقیقاً یک تصویر داشته باشد.',
+            'تعریف اساسی تابع این است که هر عنصر دامنه دقیقاً یک تصویر داشته باشد.',
         difficulty: DifficultyLevel.medium,
         type: QuestionType.multipleChoice,
       ),
       QuizQuestion(
         question:
-        'تابع یکی تابعی است که عناصر متفاوت دامنه تصاویر متفاوت داشته باشند.',
+            'تابع یکی تابعی است که عناصر متفاوت دامنه تصاویر متفاوت داشته باشند.',
         options: ['درست', 'نادرست'],
         correctAnswer: 0,
         explanation: 'این دقیقاً تعریف تابع یکی (injective) است.',
@@ -748,11 +745,12 @@ class FunctionContent extends SectionContentBase {
         type: QuestionType.trueFalse,
       ),
       QuizQuestion(
-        question: 'اگر f: A → B یکی و |A| = |B| باشد، آنگاه f چه نوع تابعی است؟',
+        question:
+            'اگر f: A → B یکی و |A| = |B| باشد، آنگاه f چه نوع تابعی است؟',
         options: ['فقط یکی', 'فقط پوشا', 'دوسویه', 'نمی‌توان تشخیص داد'],
         correctAnswer: 2,
         explanation:
-        'وقتی تابع یکی است و |A| = |B|، حتماً پوشا نیز هست، پس دوسویه است.',
+            'وقتی تابع یکی است و |A| = |B|، حتماً پوشا نیز هست، پس دوسویه است.',
         difficulty: DifficultyLevel.hard,
         type: QuestionType.multipleChoice,
       ),
@@ -766,20 +764,21 @@ class FunctionContent extends SectionContentBase {
 
   @override
   List<String> get keyPoints => [
-    'تابع: f: A → B هر عنصر A دقیقاً یک تصویر در B دارد',
-    'دامنه: مجموعه ورودی‌ها',
-    'مدامنه: مجموعه هدف',
-    'برد: تصاویر واقعی',
-    'یکی: تصاویر متفاوت برای ورودی‌های متفاوت',
-    'پوشا: هر عنصر مدامنه حداقل یک اصل دارد'
-  ];
+        'تابع: f: A → B هر عنصر A دقیقاً یک تصویر در B دارد',
+        'دامنه: مجموعه ورودی‌ها',
+        'مدامنه: مجموعه هدف',
+        'برد: تصاویر واقعی',
+        'یکی: تصاویر متفاوت برای ورودی‌های متفاوت',
+        'پوشا: هر عنصر مدامنه حداقل یک اصل دارد'
+      ];
   @override
   Map<String, String> get definitions => {
-    'تابع': 'قاعده‌ای که به هر عنصر دامنه دقیقاً یک عنصر مدامنه نسبت می‌دهد',
-    'تابع یکی': 'تابعی که عناصر متفاوت دامنه تصاویر متفاوت دارند',
-    'تابع پوشا': 'تابعی که هر عنصر مدامنه حداقل یک اصل دارد',
-    'تابع دوسویه': 'تابعی که هم یکی و هم پوشا است',
-  };
+        'تابع':
+            'قاعده‌ای که به هر عنصر دامنه دقیقاً یک عنصر مدامنه نسبت می‌دهد',
+        'تابع یکی': 'تابعی که عناصر متفاوت دامنه تصاویر متفاوت دارند',
+        'تابع پوشا': 'تابعی که هر عنصر مدامنه حداقل یک اصل دارد',
+        'تابع دوسویه': 'تابعی که هم یکی و هم پوشا است',
+      };
 }
 
 // محتوای بخش ششم: مجموعه‌های متناهی و نامتناهی
@@ -787,73 +786,79 @@ class FiniteInfiniteContent extends SectionContentBase {
   FiniteInfiniteContent({required super.sectionId});
   @override
   List<ContentBlock> get theory => [
-    ContentBlock(
-      title: 'تعریف مجموعه متناهی',
-      content:
-      'مجموعه‌ای که تعداد اعضایش قابل شمارش و محدود باشد، متناهی نامیده می‌شود.',
-      type: ContentType.definition,
-      formula: '|A| = n ∈ ℕ',
-    ),
-    ContentBlock(
-      title: 'تعریف مجموعه نامتناهی',
-      content: 'مجموعه‌ای که تعداد اعضایش نامحدود باشد، نامتناهی نامیده می‌شود.',
-      type: ContentType.definition,
-    ),
-    ContentBlock(
-      title: 'انواع نامتناهی',
-      content:
-      '• قابل شمارش (Countably Infinite): مانند ℕ\n• غیرقابل شمارش (Uncountably Infinite): مانند ℝ',
-      type: ContentType.explanation,
-    ),
-    ContentBlock(
-      title: 'خصوصیات مهم',
-      content:
-      '• زیرمجموعه مجموعه متناهی، متناهی است\n• اتحاد متناهی از مجموعه‌های متناهی، متناهی است\n• حاصل‌ضرب دکارتی دو مجموعه متناهی، متناهی است',
-      type: ContentType.theorem,
-    ),
-  ];
+        ContentBlock(
+          title: 'تعریف مجموعه متناهی',
+          content:
+              'مجموعه‌ای که تعداد اعضایش قابل شمارش و محدود باشد، متناهی نامیده می‌شود.',
+          type: ContentType.definition,
+          formula: '|A| = n ∈ ℕ',
+        ),
+        ContentBlock(
+          title: 'تعریف مجموعه نامتناهی',
+          content:
+              'مجموعه‌ای که تعداد اعضایش نامحدود باشد، نامتناهی نامیده می‌شود.',
+          type: ContentType.definition,
+        ),
+        ContentBlock(
+          title: 'انواع نامتناهی',
+          content:
+              '• قابل شمارش (Countably Infinite): مانند ℕ\n• غیرقابل شمارش (Uncountably Infinite): مانند ℝ',
+          type: ContentType.explanation,
+        ),
+        ContentBlock(
+          title: 'خصوصیات مهم',
+          content:
+              '• زیرمجموعه مجموعه متناهی، متناهی است\n• اتحاد متناهی از مجموعه‌های متناهی، متناهی است\n• حاصل‌ضرب دکارتی دو مجموعه متناهی، متناهی است',
+          type: ContentType.theorem,
+        ),
+      ];
   @override
   List<ExampleItem> get examples => [
-    ExampleItem(
-      title: 'مجموعه متناهی',
-      problem: 'کدام مجموعه‌ها متناهی هستند؟',
-      solution: '{1,2,3}, مجموعه دانشجویان دانشگاه, حروف الفبا',
-      steps: [
-        'مجموعه‌هایی که می‌توان اعضایشان را شمرد',
-        'تعداد مشخص و محدود دارند',
-        'مثال‌ها: {1,2,3} دارای 3 عضو'
-      ],
-      difficulty: DifficultyLevel.easy,
-    ),
-    ExampleItem(
-      title: 'مجموعه نامتناهی قابل شمارش',
-      problem: 'اعداد طبیعی ℕ = {1,2,3,...} چه نوع مجموعه‌ای است؟',
-      solution: 'نامتناهی قابل شمارش',
-      steps: [
-        'تعداد اعضا نامحدود است',
-        'اما می‌توان آنها را با اعداد طبیعی شماره‌گذاری کرد',
-        'پس قابل شمارش است'
-      ],
-      difficulty: DifficultyLevel.medium,
-    ),
-    ExampleItem(
-      title: 'مجموعه نامتناهی غیرقابل شمارش',
-      problem: 'اعداد حقیقی ℝ چه نوع مجموعه‌ای است؟',
-      solution: 'نامتناهی غیرقابل شمارش',
-      steps: [
-        'تعداد اعضا نامحدود است',
-        'نمی‌توان آنها را با اعداد طبیعی شماره‌گذاری کرد',
-        'پس غیرقابل شمارش است'
-      ],
-      difficulty: DifficultyLevel.hard,
-    ),
-  ];
+        ExampleItem(
+          title: 'مجموعه متناهی',
+          problem: 'کدام مجموعه‌ها متناهی هستند؟',
+          solution: '{1,2,3}, مجموعه دانشجویان دانشگاه, حروف الفبا',
+          steps: [
+            'مجموعه‌هایی که می‌توان اعضایشان را شمرد',
+            'تعداد مشخص و محدود دارند',
+            'مثال‌ها: {1,2,3} دارای 3 عضو'
+          ],
+          difficulty: DifficultyLevel.easy,
+        ),
+        ExampleItem(
+          title: 'مجموعه نامتناهی قابل شمارش',
+          problem: 'اعداد طبیعی ℕ = {1,2,3,...} چه نوع مجموعه‌ای است؟',
+          solution: 'نامتناهی قابل شمارش',
+          steps: [
+            'تعداد اعضا نامحدود است',
+            'اما می‌توان آنها را با اعداد طبیعی شماره‌گذاری کرد',
+            'پس قابل شمارش است'
+          ],
+          difficulty: DifficultyLevel.medium,
+        ),
+        ExampleItem(
+          title: 'مجموعه نامتناهی غیرقابل شمارش',
+          problem: 'اعداد حقیقی ℝ چه نوع مجموعه‌ای است؟',
+          solution: 'نامتناهی غیرقابل شمارش',
+          steps: [
+            'تعداد اعضا نامحدود است',
+            'نمی‌توان آنها را با اعداد طبیعی شماره‌گذاری کرد',
+            'پس غیرقابل شمارش است'
+          ],
+          difficulty: DifficultyLevel.hard,
+        ),
+      ];
   @override
   List<QuizQuestion> get questions {
     final originalQuestions = [
       QuizQuestion(
         question: 'کدام مجموعه متناهی است؟',
-        options: ['اعداد طبیعی', 'اعداد حقیقی', 'حروف الفبای فارسی', 'اعداد گویا'],
+        options: [
+          'اعداد طبیعی',
+          'اعداد حقیقی',
+          'حروف الفبای فارسی',
+          'اعداد گویا'
+        ],
         correctAnswer: 2,
         explanation: 'حروف الفبای فارسی تعداد محدودی دارند، پس متناهی هستند.',
         difficulty: DifficultyLevel.easy,
@@ -890,19 +895,19 @@ class FiniteInfiniteContent extends SectionContentBase {
 
   @override
   List<String> get keyPoints => [
-    'متناهی: تعداد اعضا محدود و قابل شمارش',
-    'نامتناهی: تعداد اعضا نامحدود',
-    'قابل شمارش: قابل شماره‌گذاری با اعداد طبیعی',
-    'غیرقابل شمارش: غیرقابل شماره‌گذاری',
-    'زیرمجموعه مجموعه متناهی متناهی است'
-  ];
+        'متناهی: تعداد اعضا محدود و قابل شمارش',
+        'نامتناهی: تعداد اعضا نامحدود',
+        'قابل شمارش: قابل شماره‌گذاری با اعداد طبیعی',
+        'غیرقابل شمارش: غیرقابل شماره‌گذاری',
+        'زیرمجموعه مجموعه متناهی متناهی است'
+      ];
   @override
   Map<String, String> get definitions => {
-    'مجموعه متناهی': 'مجموعه‌ای با تعداد اعضای محدود و قابل شمارش',
-    'مجموعه نامتناهی': 'مجموعه‌ای با تعداد اعضای نامحدود',
-    'قابل شمارش': 'قابل برقراری تناظر یکی با اعداد طبیعی',
-    'غیرقابل شمارش': 'غیرقابل برقراری تناظر یکی با اعداد طبیعی',
-  };
+        'مجموعه متناهی': 'مجموعه‌ای با تعداد اعضای محدود و قابل شمارش',
+        'مجموعه نامتناهی': 'مجموعه‌ای با تعداد اعضای نامحدود',
+        'قابل شمارش': 'قابل برقراری تناظر یکی با اعداد طبیعی',
+        'غیرقابل شمارش': 'غیرقابل برقراری تناظر یکی با اعداد طبیعی',
+      };
 }
 
 // محتوای بخش هفتم: زبان، گرامر و ماشین
@@ -910,83 +915,83 @@ class LanguageGrammarContent extends SectionContentBase {
   LanguageGrammarContent({required super.sectionId});
   @override
   List<ContentBlock> get theory => [
-    ContentBlock(
-      title: 'تعریف الفبا',
-      content:
-      'الفبا مجموعه متناهی و غیرخالی از نمادهاست که با Σ نمایش داده می‌شود.',
-      type: ContentType.definition,
-      formula: 'Σ = {a₁, a₂, ..., aₙ}',
-    ),
-    ContentBlock(
-      title: 'تعریف رشته',
-      content:
-      'رشته دنباله متناهی از نمادهای یک الفباست. رشته خالی با ε نمایش داده می‌شود.',
-      type: ContentType.definition,
-    ),
-    ContentBlock(
-      title: 'تعریف زبان',
-      content: 'زبان زیرمجموعه‌ای از تمام رشته‌های ممکن روی یک الفباست.',
-      type: ContentType.definition,
-      formula: 'L ⊆ Σ*',
-    ),
-    ContentBlock(
-      title: 'تعریف گرامر',
-      content:
-      'گرامر چهارتایی مرتب G = (V, T, P, S) است که:\n• V: متغیرها\n• T: نمادهای پایانی\n• P: قوانین تولید\n• S: نماد شروع',
-      type: ContentType.definition,
-    ),
-    ContentBlock(
-      title: 'انواع گرامر (طبقه‌بندی چامسکی)',
-      content:
-      '• نوع 0: گرامر عمومی\n• نوع 1: گرامر وابسته به متن\n• نوع 2: گرامر مستقل از متن\n• نوع 3: گرامر منظم',
-      type: ContentType.theorem,
-    ),
-    ContentBlock(
-      title: 'ماشین‌های محاسباتی',
-      content:
-      '• ماشین تورینگ: برای زبان‌های نوع 0\n• اتوماتای خطی محدود: برای زبان‌های نوع 1\n• اتوماتای پشته‌ای: برای زبان‌های نوع 2\n• اتوماتای متناهی: برای زبان‌های نوع 3',
-      type: ContentType.explanation,
-    ),
-  ];
+        ContentBlock(
+          title: 'تعریف الفبا',
+          content:
+              'الفبا مجموعه متناهی و غیرخالی از نمادهاست که با Σ نمایش داده می‌شود.',
+          type: ContentType.definition,
+          formula: 'Σ = {a₁, a₂, ..., aₙ}',
+        ),
+        ContentBlock(
+          title: 'تعریف رشته',
+          content:
+              'رشته دنباله متناهی از نمادهای یک الفباست. رشته خالی با ε نمایش داده می‌شود.',
+          type: ContentType.definition,
+        ),
+        ContentBlock(
+          title: 'تعریف زبان',
+          content: 'زبان زیرمجموعه‌ای از تمام رشته‌های ممکن روی یک الفباست.',
+          type: ContentType.definition,
+          formula: 'L ⊆ Σ*',
+        ),
+        ContentBlock(
+          title: 'تعریف گرامر',
+          content:
+              'گرامر چهارتایی مرتب G = (V, T, P, S) است که:\n• V: متغیرها\n• T: نمادهای پایانی\n• P: قوانین تولید\n• S: نماد شروع',
+          type: ContentType.definition,
+        ),
+        ContentBlock(
+          title: 'انواع گرامر (طبقه‌بندی چامسکی)',
+          content:
+              '• نوع 0: گرامر عمومی\n• نوع 1: گرامر وابسته به متن\n• نوع 2: گرامر مستقل از متن\n• نوع 3: گرامر منظم',
+          type: ContentType.theorem,
+        ),
+        ContentBlock(
+          title: 'ماشین‌های محاسباتی',
+          content:
+              '• ماشین تورینگ: برای زبان‌های نوع 0\n• اتوماتای خطی محدود: برای زبان‌های نوع 1\n• اتوماتای پشته‌ای: برای زبان‌های نوع 2\n• اتوماتای متناهی: برای زبان‌های نوع 3',
+          type: ContentType.explanation,
+        ),
+      ];
   @override
   List<ExampleItem> get examples => [
-    ExampleItem(
-      title: 'الفبا و رشته',
-      problem: 'Σ = {0, 1} باشد. چند رشته طول 3 وجود دارد؟',
-      solution: '8 رشته: 000, 001, 010, 011, 100, 101, 110, 111',
-      steps: [
-        'برای هر موقعیت 2 انتخاب داریم (0 یا 1)',
-        'برای 3 موقعیت: 2³ = 8 رشته',
-        'همه حالات ممکن را فهرست می‌کنیم'
-      ],
-      difficulty: DifficultyLevel.medium,
-    ),
-    ExampleItem(
-      title: 'زبان ساده',
-      problem: 'L = {0ⁿ1ⁿ | n ≥ 1} روی Σ = {0, 1} چه زبانی است؟',
-      solution:
-      'زبان رشته‌هایی که تعداد مساوی 0 و 1 دارند و ابتدا 0ها سپس 1ها می‌آیند',
-      steps: [
-        'n = 1: رشته 01',
-        'n = 2: رشته 0011',
-        'n = 3: رشته 000111',
-        'الگو: تعداد برابر 0 و 1'
-      ],
-      difficulty: DifficultyLevel.hard,
-    ),
-    ExampleItem(
-      title: 'گرامر ساده',
-      problem: 'گرامری برای تولید زبان {aⁿbⁿ | n ≥ 1} بنویسید.',
-      solution: 'S → aSb | ab',
-      steps: [
-        'نماد شروع: S',
-        'قانون بازگشتی: S → aSb',
-        'قانون پایانی: S → ab',
-        'این گرامر رشته‌های aⁿbⁿ تولید می‌کند'
-      ],
-      difficulty: DifficultyLevel.hard,
-    ),
-  ];
+        ExampleItem(
+          title: 'الفبا و رشته',
+          problem: 'Σ = {0, 1} باشد. چند رشته طول 3 وجود دارد؟',
+          solution: '8 رشته: 000, 001, 010, 011, 100, 101, 110, 111',
+          steps: [
+            'برای هر موقعیت 2 انتخاب داریم (0 یا 1)',
+            'برای 3 موقعیت: 2³ = 8 رشته',
+            'همه حالات ممکن را فهرست می‌کنیم'
+          ],
+          difficulty: DifficultyLevel.medium,
+        ),
+        ExampleItem(
+          title: 'زبان ساده',
+          problem: 'L = {0ⁿ1ⁿ | n ≥ 1} روی Σ = {0, 1} چه زبانی است؟',
+          solution:
+              'زبان رشته‌هایی که تعداد مساوی 0 و 1 دارند و ابتدا 0ها سپس 1ها می‌آیند',
+          steps: [
+            'n = 1: رشته 01',
+            'n = 2: رشته 0011',
+            'n = 3: رشته 000111',
+            'الگو: تعداد برابر 0 و 1'
+          ],
+          difficulty: DifficultyLevel.hard,
+        ),
+        ExampleItem(
+          title: 'گرامر ساده',
+          problem: 'گرامری برای تولید زبان {aⁿbⁿ | n ≥ 1} بنویسید.',
+          solution: 'S → aSb | ab',
+          steps: [
+            'نماد شروع: S',
+            'قانون بازگشتی: S → aSb',
+            'قانون پایانی: S → ab',
+            'این گرامر رشته‌های aⁿbⁿ تولید می‌کند'
+          ],
+          difficulty: DifficultyLevel.hard,
+        ),
+      ];
   @override
   List<QuizQuestion> get questions {
     final originalQuestions = [
@@ -1003,7 +1008,7 @@ class LanguageGrammarContent extends SectionContentBase {
         options: ['درست', 'نادرست'],
         correctAnswer: 1,
         explanation:
-        'رشته خالی فقط اگر صراحتاً در تعریف زبان گنجانده شده باشد، عضو آن زبان است.',
+            'رشته خالی فقط اگر صراحتاً در تعریف زبان گنجانده شده باشد، عضو آن زبان است.',
         difficulty: DifficultyLevel.medium,
         type: QuestionType.trueFalse,
       ),
@@ -1030,21 +1035,21 @@ class LanguageGrammarContent extends SectionContentBase {
 
   @override
   List<String> get keyPoints => [
-    'الفبا: مجموعه متناهی از نمادها',
-    'رشته: دنباله متناهی از نمادهای الفبا',
-    'زبان: مجموعه‌ای از رشته‌ها',
-    'گرامر: چهارتایی (V, T, P, S)',
-    'طبقه‌بندی چامسکی: 4 نوع گرامر',
-    'هر نوع گرامر با ماشین خاصی متناظر است'
-  ];
+        'الفبا: مجموعه متناهی از نمادها',
+        'رشته: دنباله متناهی از نمادهای الفبا',
+        'زبان: مجموعه‌ای از رشته‌ها',
+        'گرامر: چهارتایی (V, T, P, S)',
+        'طبقه‌بندی چامسکی: 4 نوع گرامر',
+        'هر نوع گرامر با ماشین خاصی متناظر است'
+      ];
   @override
   Map<String, String> get definitions => {
-    'الفبا': 'مجموعه متناهی و غیرخالی از نمادها',
-    'رشته': 'دنباله متناهی از نمادهای یک الفبا',
-    'زبان': 'مجموعه‌ای از رشته‌ها روی یک الفبا',
-    'گرامر': 'سیستم قوانین برای تولید رشته‌های یک زبان',
-    'ماشین محاسباتی': 'مدل ریاضی برای پردازش رشته‌ها',
-  };
+        'الفبا': 'مجموعه متناهی و غیرخالی از نمادها',
+        'رشته': 'دنباله متناهی از نمادهای یک الفبا',
+        'زبان': 'مجموعه‌ای از رشته‌ها روی یک الفبا',
+        'گرامر': 'سیستم قوانین برای تولید رشته‌های یک زبان',
+        'ماشین محاسباتی': 'مدل ریاضی برای پردازش رشته‌ها',
+      };
 }
 
 // کلاس‌های کمکی برای مدیریت پیشرفت و آمار
@@ -1113,7 +1118,7 @@ class ProgressTracker {
         'score': getSectionScore(sectionId),
         'timeSpent': _timeSpent[sectionId] ?? 0,
         'difficulty':
-        MathContentData.lessonSections[sectionId]?.difficulty.label,
+            MathContentData.lessonSections[sectionId]?.difficulty.label,
       };
     }
 
@@ -1145,7 +1150,7 @@ class LearningSettings {
     showHints = json['showHints'] ?? true;
     autoAdvance = json['autoAdvance'] ?? false;
     preferredDifficulty = DifficultyLevel.values.firstWhere(
-          (d) => d.value == json['preferredDifficulty'],
+      (d) => d.value == json['preferredDifficulty'],
       orElse: () => DifficultyLevel.medium,
     );
     enableSound = json['enableSound'] ?? true;
@@ -1171,7 +1176,7 @@ class AchievementSystem {
       description: 'در یک بخش نمره کامل گرفتید',
       icon: '⭐',
       condition: (ProgressTracker tracker) =>
-      tracker._correctAnswers.values.any((answers) => answers.isNotEmpty) &&
+          tracker._correctAnswers.values.any((answers) => answers.isNotEmpty) &&
           MathContentData.lessonSections.entries
               .any((entry) => tracker.getSectionScore(entry.key) == 1.0),
     ),
@@ -1195,7 +1200,8 @@ class AchievementSystem {
       title: 'استاد',
       description: 'تمام بخش‌ها را با موفقیت تکمیل کردید',
       icon: '🎓',
-      condition: (ProgressTracker tracker) => tracker.getOverallProgress() == 1.0,
+      condition: (ProgressTracker tracker) =>
+          tracker.getOverallProgress() == 1.0,
     ),
     Achievement(
       id: 'hard_mode',
@@ -1210,7 +1216,8 @@ class AchievementSystem {
             final hardQuestions = content.questions
                 .asMap()
                 .entries
-                .where((entry) => entry.value.difficulty == DifficultyLevel.hard)
+                .where(
+                    (entry) => entry.value.difficulty == DifficultyLevel.hard)
                 .map((entry) => entry.key);
             final correctAnswers = tracker._correctAnswers[sectionId] ?? [];
             if (hardQuestions.any((qId) => correctAnswers.contains(qId))) {
@@ -1235,7 +1242,8 @@ class AchievementSystem {
     final newUnlocked = getUnlockedAchievements(newTracker);
 
     return newUnlocked
-        .where((achievement) => !oldUnlocked.any((old) => old.id == achievement.id))
+        .where((achievement) =>
+            !oldUnlocked.any((old) => old.id == achievement.id))
         .toList();
   }
 }
@@ -1258,8 +1266,8 @@ class Achievement {
 
 // کلاس برای مدیریت تمرین‌های تدریجی
 class PracticeManager {
-  static List<QuizQuestion> getAdaptiveQuestions(int sectionId,
-      ProgressTracker tracker,
+  static List<QuizQuestion> getAdaptiveQuestions(
+      int sectionId, ProgressTracker tracker,
       {int count = 5}) {
     final content = MathContentData.lessonSections[sectionId]?.content;
     if (content == null) return [];
@@ -1347,9 +1355,9 @@ class UserNotes {
 
   Map<String, dynamic> toJson() {
     return _notes.map((sectionId, notes) => MapEntry(
-      sectionId.toString(),
-      notes.map((note) => note.toJson()).toList(),
-    ));
+          sectionId.toString(),
+          notes.map((note) => note.toJson()).toList(),
+        ));
   }
 
   void fromJson(Map<String, dynamic> json) {
@@ -1524,8 +1532,8 @@ class StudyScheduler {
     final now = DateTime.now();
     return _sessions.values
         .where((session) =>
-    session.date.isAfter(now) &&
-        session.status == SessionStatus.planned)
+            session.date.isAfter(now) &&
+            session.status == SessionStatus.planned)
         .toList()
       ..sort((a, b) => a.date.compareTo(b.date));
   }
@@ -1543,16 +1551,16 @@ class StudyScheduler {
 
     return _sessions.values
         .where((session) =>
-    session.date.isAfter(weekStart) &&
-        session.status == SessionStatus.completed)
+            session.date.isAfter(weekStart) &&
+            session.status == SessionStatus.completed)
         .fold(0, (sum, session) => sum + (session.actualDuration ?? 0));
   }
 
   Map<String, dynamic> toJson() {
     return _sessions.map((date, session) => MapEntry(
-      date.toIso8601String(),
-      session.toJson(),
-    ));
+          date.toIso8601String(),
+          session.toJson(),
+        ));
   }
 
   void fromJson(Map<String, dynamic> json) {
@@ -1560,7 +1568,7 @@ class StudyScheduler {
     json.forEach((dateStr, sessionJson) {
       final date = DateTime.parse(dateStr);
       final session =
-      StudySession.fromJson(sessionJson as Map<String, dynamic>);
+          StudySession.fromJson(sessionJson as Map<String, dynamic>);
       _sessions[date] = session;
     });
   }
@@ -1636,8 +1644,8 @@ class MathLearningManager {
     if (score < 0.5 && preferredDifficulty != DifficultyLevel.easy) {
       return content.theory
           .where((block) =>
-      block.type == ContentType.definition ||
-          block.type == ContentType.explanation)
+              block.type == ContentType.definition ||
+              block.type == ContentType.explanation)
           .toList();
     }
 
@@ -1649,7 +1657,8 @@ class MathLearningManager {
     final completedSections = progressTracker._completedSections;
 
     // پیدا کردن اولین بخش تکمیل نشده
-    for (var sectionId in MathContentData.lessonSections.keys.toList()..sort()) {
+    for (var sectionId in MathContentData.lessonSections.keys.toList()
+      ..sort()) {
       if (!(completedSections[sectionId] ?? false)) {
         return sectionId;
       }
@@ -1698,7 +1707,7 @@ class MathLearningManager {
     }
 
     final averageScore =
-    sectionsWithQuestions > 0 ? totalScore / sectionsWithQuestions : 0.0;
+        sectionsWithQuestions > 0 ? totalScore / sectionsWithQuestions : 0.0;
 
     stats['averageScore'] = averageScore;
     stats['estimatedRemainingTime'] = getEstimatedRemainingTime();

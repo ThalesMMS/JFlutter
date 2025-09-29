@@ -104,7 +104,7 @@ class FSA extends Automaton {
           .toSet(),
       created: DateTime.parse(json['created'] as String),
       modified: DateTime.parse(json['modified'] as String),
-          bounds: math.Rectangle(
+      bounds: math.Rectangle(
         (json['bounds'] as Map<String, dynamic>)['x'] as double,
         (json['bounds'] as Map<String, dynamic>)['y'] as double,
         (json['bounds'] as Map<String, dynamic>)['width'] as double,
@@ -122,7 +122,7 @@ class FSA extends Automaton {
   @override
   List<String> validate() {
     final errors = super.validate();
-    
+
     // Validate FSA-specific properties
     for (final transition in transitions) {
       if (transition is! FSATransition) {
@@ -130,27 +130,29 @@ class FSA extends Automaton {
       } else {
         final fsaTransition = transition as FSATransition;
         final transitionErrors = fsaTransition.validate();
-        errors.addAll(transitionErrors.map((e) => 'Transition ${fsaTransition.id}: $e'));
+        errors.addAll(
+            transitionErrors.map((e) => 'Transition ${fsaTransition.id}: $e'));
       }
     }
-    
+
     // Check for deterministic transitions
     for (final state in states) {
       final outgoingTransitions = getTransitionsFrom(state);
       final inputSymbols = <String>{};
-      
+
       for (final transition in outgoingTransitions) {
         if (transition is FSATransition) {
           for (final symbol in transition.inputSymbols) {
             if (inputSymbols.contains(symbol)) {
-              errors.add('Non-deterministic transition from state ${state.id} on symbol $symbol');
+              errors.add(
+                  'Non-deterministic transition from state ${state.id} on symbol $symbol');
             }
             inputSymbols.add(symbol);
           }
         }
       }
     }
-    
+
     return errors;
   }
 
@@ -242,7 +244,9 @@ class FSA extends Automaton {
     }
 
     // Restrict to states both reachable and co-reachable.
-    final core = states.where((s) => reachable.contains(s) && coReach.contains(s)).toSet();
+    final core = states
+        .where((s) => reachable.contains(s) && coReach.contains(s))
+        .toSet();
     if (core.isEmpty) return true;
 
     // Detect cycle in core subgraph via DFS with recursion stack.
@@ -276,7 +280,8 @@ class FSA extends Automaton {
   }
 
   /// Gets all transitions from a state that accept a specific symbol
-  Set<FSATransition> getTransitionsFromStateOnSymbol(State state, String symbol) {
+  Set<FSATransition> getTransitionsFromStateOnSymbol(
+      State state, String symbol) {
     return fsaTransitions
         .where((t) => t.fromState == state && t.acceptsSymbol(symbol))
         .toSet();
@@ -293,11 +298,11 @@ class FSA extends Automaton {
   Set<State> getEpsilonClosure(State state) {
     final closure = <State>{state};
     final queue = <State>[state];
-    
+
     while (queue.isNotEmpty) {
       final current = queue.removeAt(0);
       final epsilonTransitions = getEpsilonTransitionsFromState(current);
-      
+
       for (final transition in epsilonTransitions) {
         if (!closure.contains(transition.toState)) {
           closure.add(transition.toState);
@@ -305,18 +310,18 @@ class FSA extends Automaton {
         }
       }
     }
-    
+
     return closure;
   }
 
   /// Gets the epsilon closure of a set of states
   Set<State> getEpsilonClosureOfSet(Set<State> states) {
     final closure = <State>{};
-    
+
     for (final state in states) {
       closure.addAll(getEpsilonClosure(state));
     }
-    
+
     return closure;
   }
 
@@ -324,22 +329,23 @@ class FSA extends Automaton {
   Set<State> getStatesReachableOnSymbol(State state, String symbol) {
     final reachable = <State>{};
     final transitions = getTransitionsFromStateOnSymbol(state, symbol);
-    
+
     for (final transition in transitions) {
       reachable.add(transition.toState);
     }
-    
+
     return reachable;
   }
 
   /// Gets all states reachable from a set of states on a specific symbol
-  Set<State> getStatesReachableOnSymbolFromSet(Set<State> states, String symbol) {
+  Set<State> getStatesReachableOnSymbolFromSet(
+      Set<State> states, String symbol) {
     final reachable = <State>{};
-    
+
     for (final state in states) {
       reachable.addAll(getStatesReachableOnSymbol(state, symbol));
     }
-    
+
     return reachable;
   }
 
@@ -347,7 +353,7 @@ class FSA extends Automaton {
   factory FSA.empty({
     required String id,
     required String name,
-        math.Rectangle? bounds,
+    math.Rectangle? bounds,
   }) {
     final now = DateTime.now();
     return FSA(
@@ -359,7 +365,7 @@ class FSA extends Automaton {
       acceptingStates: {},
       created: now,
       modified: now,
-          bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
+      bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
     );
   }
 
@@ -372,7 +378,7 @@ class FSA extends Automaton {
     required Vector2 position,
     bool isInitial = false,
     bool isAccepting = false,
-        math.Rectangle? bounds,
+    math.Rectangle? bounds,
   }) {
     final now = DateTime.now();
     final state = State(
@@ -382,7 +388,7 @@ class FSA extends Automaton {
       isInitial: isInitial,
       isAccepting: isAccepting,
     );
-    
+
     return FSA(
       id: id,
       name: name,
@@ -393,10 +399,9 @@ class FSA extends Automaton {
       acceptingStates: isAccepting ? {state} : {},
       created: now,
       modified: now,
-          bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
+      bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
     );
   }
-
 
   /// Creates a simple FSA with two states and one transition
   factory FSA.twoState({
@@ -408,7 +413,7 @@ class FSA extends Automaton {
     required Vector2 fromPosition,
     required Vector2 toPosition,
     bool toStateAccepting = true,
-        math.Rectangle? bounds,
+    math.Rectangle? bounds,
   }) {
     final now = DateTime.now();
     final fromState = State(
@@ -425,14 +430,14 @@ class FSA extends Automaton {
       isInitial: false,
       isAccepting: toStateAccepting,
     );
-    
+
     final transition = FSATransition.deterministic(
       id: 't1',
       fromState: fromState,
       toState: toState,
       symbol: symbol,
     );
-    
+
     return FSA(
       id: id,
       name: name,
@@ -443,7 +448,7 @@ class FSA extends Automaton {
       acceptingStates: toStateAccepting ? {toState} : {},
       created: now,
       modified: now,
-          bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
+      bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
     );
   }
 }

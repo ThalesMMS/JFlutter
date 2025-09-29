@@ -179,11 +179,11 @@ class _TransitionTableState extends State<TransitionTable>
   }
 
   Widget _buildLegendItem(
-      ThemeData theme,
-      IconData icon,
-      String label,
-      Color color,
-      ) {
+    ThemeData theme,
+    IconData icon,
+    String label,
+    Color color,
+  ) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -198,11 +198,11 @@ class _TransitionTableState extends State<TransitionTable>
   }
 
   Widget _buildScrollableTable(
-      ThemeData theme,
-      List<String> states,
-      List<String> alphabet,
-      Map<String, Map<String, String>> tableData,
-      ) {
+    ThemeData theme,
+    List<String> states,
+    List<String> alphabet,
+    Map<String, Map<String, String>> tableData,
+  ) {
     return Card(
       elevation: 4,
       margin: const EdgeInsets.all(16.0),
@@ -220,7 +220,8 @@ class _TransitionTableState extends State<TransitionTable>
             scrollDirection: Axis.horizontal,
             child: SingleChildScrollView(
               controller: _verticalController,
-              child: _buildAdvancedDataTable(theme, states, alphabet, tableData),
+              child:
+                  _buildAdvancedDataTable(theme, states, alphabet, tableData),
             ),
           ),
         ),
@@ -229,11 +230,11 @@ class _TransitionTableState extends State<TransitionTable>
   }
 
   Widget _buildAdvancedDataTable(
-      ThemeData theme,
-      List<String> states,
-      List<String> alphabet,
-      Map<String, Map<String, String>> tableData,
-      ) {
+    ThemeData theme,
+    List<String> states,
+    List<String> alphabet,
+    Map<String, Map<String, String>> tableData,
+  ) {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(
@@ -255,7 +256,8 @@ class _TransitionTableState extends State<TransitionTable>
     );
   }
 
-  List<DataColumn> _buildAdvancedColumns(List<String> alphabet, ThemeData theme) {
+  List<DataColumn> _buildAdvancedColumns(
+      List<String> alphabet, ThemeData theme) {
     return [
       DataColumn(
         label: Container(
@@ -291,35 +293,35 @@ class _TransitionTableState extends State<TransitionTable>
         ),
       ),
       ...alphabet.map((symbol) => DataColumn(
-        label: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.secondaryContainer.withOpacity(0.3),
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: theme.colorScheme.secondary.withOpacity(0.2),
+            label: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.secondaryContainer.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: theme.colorScheme.secondary.withOpacity(0.2),
+                ),
+              ),
+              child: Text(
+                symbol,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSecondaryContainer,
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
-          ),
-          child: Text(
-            symbol,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.onSecondaryContainer,
-              fontSize: 14,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ),
-      )),
+          )),
     ];
   }
 
   List<DataRow> _buildAdvancedRows(
-      List<String> states,
-      List<String> alphabet,
-      Map<String, Map<String, String>> tableData,
-      ThemeData theme,
-      ) {
+    List<String> states,
+    List<String> alphabet,
+    Map<String, Map<String, String>> tableData,
+    ThemeData theme,
+  ) {
     return states.asMap().entries.map((entry) {
       final index = entry.key;
       final stateName = entry.value;
@@ -355,11 +357,11 @@ class _TransitionTableState extends State<TransitionTable>
   }
 
   Widget _buildAdvancedStateCell(
-      String name,
-      bool isStart,
-      bool isFinal,
-      ThemeData theme,
-      ) {
+    String name,
+    bool isStart,
+    bool isFinal,
+    ThemeData theme,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
@@ -383,8 +385,10 @@ class _TransitionTableState extends State<TransitionTable>
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isStart || isFinal
-              ? (isStart ? theme.colorScheme.secondary : theme.colorScheme.tertiary)
-              .withOpacity(0.3)
+              ? (isStart
+                      ? theme.colorScheme.secondary
+                      : theme.colorScheme.tertiary)
+                  .withOpacity(0.3)
               : Colors.transparent,
         ),
       ),
@@ -437,7 +441,8 @@ class _TransitionTableState extends State<TransitionTable>
     );
   }
 
-  Widget _buildTransitionCell(String destination, String cellKey, ThemeData theme) {
+  Widget _buildTransitionCell(
+      String destination, String cellKey, ThemeData theme) {
     final isHighlighted = _highlightedCells.contains(cellKey);
     final isHovered = _hoveredCell == cellKey;
     final isEmpty = destination == '∅';
@@ -452,8 +457,8 @@ class _TransitionTableState extends State<TransitionTable>
           color: isHighlighted
               ? theme.colorScheme.primary.withOpacity(0.2)
               : isHovered
-              ? theme.colorScheme.primary.withOpacity(0.1)
-              : Colors.transparent,
+                  ? theme.colorScheme.primary.withOpacity(0.1)
+                  : Colors.transparent,
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
             color: isHighlighted

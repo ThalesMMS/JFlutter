@@ -4,25 +4,25 @@ import 'package:vector_math/vector_math_64.dart';
 class State {
   /// Unique identifier for the state within the automaton
   final String id;
-  
+
   /// Display label for the state (can be empty)
   final String label;
-  
+
   /// Name of the state (alias for label)
   final String name;
-  
+
   /// Position of the state on the canvas (mobile-optimized)
   final Vector2 position;
-  
+
   /// Whether this state is the initial state
   final bool isInitial;
-  
+
   /// Whether this state is an accepting/final state
   final bool isAccepting;
-  
+
   /// Type of the state (normal, trap, etc.)
   final StateType type;
-  
+
   /// Additional properties for different automaton types
   final Map<String, dynamic> properties;
 
@@ -125,15 +125,15 @@ class State {
   /// Validates the state properties
   List<String> validate() {
     final errors = <String>[];
-    
+
     if (id.isEmpty) {
       errors.add('State ID cannot be empty');
     }
-    
+
     if (position.x < 0 || position.y < 0) {
       errors.add('State position must be non-negative');
     }
-    
+
     return errors;
   }
 
@@ -160,16 +160,16 @@ class State {
 enum StateType {
   /// Normal state
   normal,
-  
+
   /// Trap state (non-accepting sink)
   trap,
-  
+
   /// Accepting state
   accepting,
-  
+
   /// Initial state
   initial,
-  
+
   /// Dead state (unreachable)
   dead,
 }

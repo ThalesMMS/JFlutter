@@ -140,19 +140,15 @@ class _SettingsPageState extends State<SettingsPage> {
             _buildSectionHeader('Symbols'),
             _buildSymbolSettings(),
             const SizedBox(height: 24),
-
             _buildSectionHeader('Theme'),
             _buildThemeSettings(),
             const SizedBox(height: 24),
-
             _buildSectionHeader('Canvas'),
             _buildCanvasSettings(),
             const SizedBox(height: 24),
-
             _buildSectionHeader('General'),
             _buildGeneralSettings(),
             const SizedBox(height: 24),
-
             _buildSectionHeader('Actions'),
             _buildActionButtons(),
           ],
@@ -233,7 +229,8 @@ class _SettingsPageState extends State<SettingsPage> {
               const ['System', 'Light', 'Dark'],
               (value) {
                 setState(() {
-                  _settings = _settings.copyWith(themeMode: value.toLowerCase());
+                  _settings =
+                      _settings.copyWith(themeMode: value.toLowerCase());
                 });
               },
               chipKeyBuilder: (option) => ValueKey(
@@ -415,12 +412,13 @@ class _SettingsPageState extends State<SettingsPage> {
         Wrap(
           spacing: 8,
           children: options.map((option) {
-            final isSelected = option.toLowerCase().contains(currentValue.toLowerCase()) ||
-                (currentValue == 'λ' && option.contains('Lambda')) ||
-                (currentValue == 'ε' && option.contains('Epsilon')) ||
-                (currentValue == 'system' && option == 'System') ||
-                (currentValue == 'light' && option == 'Light') ||
-                (currentValue == 'dark' && option == 'Dark');
+            final isSelected =
+                option.toLowerCase().contains(currentValue.toLowerCase()) ||
+                    (currentValue == 'λ' && option.contains('Lambda')) ||
+                    (currentValue == 'ε' && option.contains('Epsilon')) ||
+                    (currentValue == 'system' && option == 'System') ||
+                    (currentValue == 'light' && option == 'Light') ||
+                    (currentValue == 'dark' && option == 'Dark');
 
             return FilterChip(
               key: chipKeyBuilder?.call(option),
@@ -518,4 +516,3 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 }
-

@@ -92,7 +92,8 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final currentIndex = ref.watch(homeNavigationProvider);
-    final isMobile = screenSize.width < 1024; // Better breakpoint for modern devices
+    final isMobile =
+        screenSize.width < 1024; // Better breakpoint for modern devices
 
     // Handle navigation changes
     if (_lastNavigationIndex != currentIndex) {
@@ -118,8 +119,11 @@ class _HomePageState extends ConsumerState<HomePage> {
               Text(
                 _getCurrentPageDescription(currentIndex),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                ),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.7),
+                    ),
               ),
           ],
         ),

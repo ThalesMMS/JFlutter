@@ -10,8 +10,7 @@ final output = document.querySelector('#output') as HTMLElement;
 void update() {
   final result = uri.parse(input.value);
   if (result is Success) {
-    output.innerHTML =
-        '''
+    output.innerHTML = '''
     <table>
       <tr>
         <th>Scheme</th>
@@ -57,15 +56,14 @@ void update() {
       </tr>
     </table>
     '''
-            .toJS;
+        .toJS;
   } else {
-    output.innerHTML =
-        '''
+    output.innerHTML = '''
     <span class="error">
       Error at ${result.position}: ${result.message}
     </span>
     '''
-            .toJS;
+        .toJS;
   }
 }
 

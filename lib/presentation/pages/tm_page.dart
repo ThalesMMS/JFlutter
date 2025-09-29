@@ -299,9 +299,12 @@ class _TMPageState extends ConsumerState<TMPage> {
           _buildInfoRow('Transitions', '$_transitionCount', theme),
           _buildInfoRow('Tape Symbols', _formatSet(_tapeSymbols), theme),
           _buildInfoRow('Move Directions', _formatSet(_moveDirections), theme),
-          _buildInfoRow('Initial State', _hasInitialState ? 'Yes' : 'No', theme),
-          _buildInfoRow('Accepting State', _hasAcceptingState ? 'Yes' : 'No', theme),
-          _buildInfoRow('Simulation Ready', _isMachineReady ? 'Yes' : 'No', theme),
+          _buildInfoRow(
+              'Initial State', _hasInitialState ? 'Yes' : 'No', theme),
+          _buildInfoRow(
+              'Accepting State', _hasAcceptingState ? 'Yes' : 'No', theme),
+          _buildInfoRow(
+              'Simulation Ready', _isMachineReady ? 'Yes' : 'No', theme),
           _buildInfoRow(
             'Nondeterministic Transitions',
             _nondeterministicTransitionIds.isEmpty

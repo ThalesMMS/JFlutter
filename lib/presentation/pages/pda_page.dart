@@ -209,8 +209,8 @@ class _PDAPageState extends ConsumerState<PDAPage> {
                             child: Text(
                               title,
                               style: theme.textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                           IconButton(

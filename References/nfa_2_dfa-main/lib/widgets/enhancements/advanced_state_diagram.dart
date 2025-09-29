@@ -200,12 +200,16 @@ class _AdvancedStateDiagramState extends State<AdvancedStateDiagram>
     if (event is! KeyDownEvent) return false;
 
     final isCtrlPressed = event.logicalKey == LogicalKeyboardKey.control ||
-        HardwareKeyboard.instance.logicalKeysPressed.contains(LogicalKeyboardKey.controlLeft) ||
-        HardwareKeyboard.instance.logicalKeysPressed.contains(LogicalKeyboardKey.controlRight);
+        HardwareKeyboard.instance.logicalKeysPressed
+            .contains(LogicalKeyboardKey.controlLeft) ||
+        HardwareKeyboard.instance.logicalKeysPressed
+            .contains(LogicalKeyboardKey.controlRight);
 
     final isCmdPressed = event.logicalKey == LogicalKeyboardKey.meta ||
-        HardwareKeyboard.instance.logicalKeysPressed.contains(LogicalKeyboardKey.metaLeft) ||
-        HardwareKeyboard.instance.logicalKeysPressed.contains(LogicalKeyboardKey.metaRight);
+        HardwareKeyboard.instance.logicalKeysPressed
+            .contains(LogicalKeyboardKey.metaLeft) ||
+        HardwareKeyboard.instance.logicalKeysPressed
+            .contains(LogicalKeyboardKey.metaRight);
 
     final isModifierPressed = isCtrlPressed || isCmdPressed;
 
@@ -255,7 +259,9 @@ class _AdvancedStateDiagramState extends State<AdvancedStateDiagram>
   Widget build(BuildContext context) {
     return Focus(
       focusNode: _focusNode,
-      onKeyEvent: (node, event) => _handleKeyEvent(event) ? KeyEventResult.handled : KeyEventResult.ignored,
+      onKeyEvent: (node, event) => _handleKeyEvent(event)
+          ? KeyEventResult.handled
+          : KeyEventResult.ignored,
       child: Column(
         children: [
           if (widget.enableSearch) _buildSearchBar(),
@@ -296,16 +302,17 @@ class _AdvancedStateDiagramState extends State<AdvancedStateDiagram>
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    _searchController.clear();
-                  },
-                )
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                        },
+                      )
                     : null,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
             ),
           ),
@@ -355,7 +362,8 @@ class _AdvancedStateDiagramState extends State<AdvancedStateDiagram>
         onPanStart: _onPanStart,
         onPanUpdate: _onPanUpdate,
         onPanEnd: _onPanEnd,
-        onSecondaryTapDown: widget.enableContextMenu ? _onSecondaryTapDown : null,
+        onSecondaryTapDown:
+            widget.enableContextMenu ? _onSecondaryTapDown : null,
         child: CustomPaint(
           painter: StateDiagramPainter(
             data: widget.data,
@@ -387,7 +395,8 @@ class _AdvancedStateDiagramState extends State<AdvancedStateDiagram>
       final position = _nodePositions[node.id] ?? Offset.zero;
       final isSelected = _selectedNodes.contains(node.id);
       final isHovered = _hoveredElements.contains(node.id);
-      final isFiltered = _searchQuery.isNotEmpty && !_filteredNodes.contains(node.id);
+      final isFiltered =
+          _searchQuery.isNotEmpty && !_filteredNodes.contains(node.id);
 
       return Positioned(
         left: position.dx - 35,
@@ -395,9 +404,15 @@ class _AdvancedStateDiagramState extends State<AdvancedStateDiagram>
         child: GestureDetector(
           onTap: () => _onNodeTap(node.id),
           onTapDown: (_) => _onNodeTapDown(node.id),
-          onPanStart: widget.enableDragDrop ? (details) => _onNodeDragStart(node.id, details) : null,
-          onPanUpdate: widget.enableDragDrop ? (details) => _onNodeDragUpdate(node.id, details) : null,
-          onPanEnd: widget.enableDragDrop ? (details) => _onNodeDragEnd(node.id, details) : null,
+          onPanStart: widget.enableDragDrop
+              ? (details) => _onNodeDragStart(node.id, details)
+              : null,
+          onPanUpdate: widget.enableDragDrop
+              ? (details) => _onNodeDragUpdate(node.id, details)
+              : null,
+          onPanEnd: widget.enableDragDrop
+              ? (details) => _onNodeDragEnd(node.id, details)
+              : null,
           child: MouseRegion(
             onEnter: (_) => _onNodeHover(node.id, true),
             onExit: (_) => _onNodeHover(node.id, false),
@@ -439,8 +454,8 @@ class _AdvancedStateDiagramState extends State<AdvancedStateDiagram>
               Text(
                 'Statistics',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
               const SizedBox(height: 8),
               _buildStatItem('Total States', _statistics!.totalNodes),
@@ -548,7 +563,9 @@ class _AdvancedStateDiagramState extends State<AdvancedStateDiagram>
   }
 
   void _onNodeTap(String nodeId) {
-    if (widget.enableMultiSelection && HardwareKeyboard.instance.logicalKeysPressed.contains(LogicalKeyboardKey.controlLeft)) {
+    if (widget.enableMultiSelection &&
+        HardwareKeyboard.instance.logicalKeysPressed
+            .contains(LogicalKeyboardKey.controlLeft)) {
       _toggleNodeSelection(nodeId);
     } else {
       _selectNode(nodeId);
@@ -708,7 +725,8 @@ class _AdvancedStateDiagramState extends State<AdvancedStateDiagram>
     final matrix = _transformationController.value;
     final scale = matrix.getMaxScaleOnAxis();
     if (scale < widget.maxZoom) {
-      _transformationController.value = matrix * Matrix4.identity()..scale(1.2);
+      _transformationController.value = matrix * Matrix4.identity()
+        ..scale(1.2);
     }
   }
 
@@ -716,7 +734,8 @@ class _AdvancedStateDiagramState extends State<AdvancedStateDiagram>
     final matrix = _transformationController.value;
     final scale = matrix.getMaxScaleOnAxis();
     if (scale > widget.minZoom) {
-      _transformationController.value = matrix * Matrix4.identity()..scale(0.8);
+      _transformationController.value = matrix * Matrix4.identity()
+        ..scale(0.8);
     }
   }
 
@@ -781,21 +800,25 @@ class _AdvancedStateDiagramState extends State<AdvancedStateDiagram>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildContextMenuItem('Add State', Icons.add_circle_outline, _addState),
-            _buildContextMenuItem('Delete Selected', Icons.delete_outline, _deleteSelected),
+            _buildContextMenuItem(
+                'Add State', Icons.add_circle_outline, _addState),
+            _buildContextMenuItem(
+                'Delete Selected', Icons.delete_outline, _deleteSelected),
             const Divider(height: 1),
             _buildContextMenuItem('Copy', Icons.copy, _copySelected),
             _buildContextMenuItem('Paste', Icons.paste, _pasteSelected),
             const Divider(height: 1),
             _buildContextMenuItem('Select All', Icons.select_all, _selectAll),
-            _buildContextMenuItem('Clear Selection', Icons.clear, _clearSelection),
+            _buildContextMenuItem(
+                'Clear Selection', Icons.clear, _clearSelection),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildContextMenuItem(String title, IconData icon, VoidCallback onTap) {
+  Widget _buildContextMenuItem(
+      String title, IconData icon, VoidCallback onTap) {
     return InkWell(
       onTap: () {
         _hideContextMenu();
@@ -999,15 +1022,19 @@ class StateDiagramPainter extends CustomPainter {
     }
   }
 
-  void _drawSelfLoop(Canvas canvas, Offset nodePos, Paint paint, String? label) {
+  void _drawSelfLoop(
+      Canvas canvas, Offset nodePos, Paint paint, String? label) {
     const radius = 30.0;
     final center = nodePos + const Offset(0, -radius - 35);
-    final rect = Rect.fromCenter(center: center, width: radius * 2, height: radius * 2);
+    final rect =
+        Rect.fromCenter(center: center, width: radius * 2, height: radius * 2);
 
     canvas.drawArc(rect, -math.pi / 4, math.pi * 1.5, false, paint);
 
     // Arrow head
-    final arrowPos = center + Offset(radius * math.cos(-math.pi / 4), radius * math.sin(-math.pi / 4));
+    final arrowPos = center +
+        Offset(
+            radius * math.cos(-math.pi / 4), radius * math.sin(-math.pi / 4));
     _drawArrowHead(canvas, arrowPos, -math.pi / 4, paint);
 
     // Label
@@ -1016,7 +1043,8 @@ class StateDiagramPainter extends CustomPainter {
     }
   }
 
-  void _drawRegularEdge(Canvas canvas, Offset from, Offset to, Paint paint, String? label) {
+  void _drawRegularEdge(
+      Canvas canvas, Offset from, Offset to, Paint paint, String? label) {
     const nodeRadius = 35.0;
 
     // Calculate edge points (from node border to node border)
@@ -1034,8 +1062,10 @@ class StateDiagramPainter extends CustomPainter {
     final path = Path();
     path.moveTo(startPoint.dx, startPoint.dy);
     path.quadraticBezierTo(
-      controlPoint.dx, controlPoint.dy,
-      endPoint.dx, endPoint.dy,
+      controlPoint.dx,
+      controlPoint.dy,
+      endPoint.dx,
+      endPoint.dy,
     );
 
     canvas.drawPath(path, paint);
@@ -1052,19 +1082,22 @@ class StateDiagramPainter extends CustomPainter {
     }
   }
 
-  void _drawArrowHead(Canvas canvas, Offset tip, double direction, Paint paint) {
+  void _drawArrowHead(
+      Canvas canvas, Offset tip, double direction, Paint paint) {
     const arrowLength = 12.0;
     const arrowAngle = math.pi / 6;
 
-    final p1 = tip + Offset(
-      arrowLength * math.cos(direction + math.pi - arrowAngle),
-      arrowLength * math.sin(direction + math.pi - arrowAngle),
-    );
+    final p1 = tip +
+        Offset(
+          arrowLength * math.cos(direction + math.pi - arrowAngle),
+          arrowLength * math.sin(direction + math.pi - arrowAngle),
+        );
 
-    final p2 = tip + Offset(
-      arrowLength * math.cos(direction + math.pi + arrowAngle),
-      arrowLength * math.sin(direction + math.pi + arrowAngle),
-    );
+    final p2 = tip +
+        Offset(
+          arrowLength * math.cos(direction + math.pi + arrowAngle),
+          arrowLength * math.sin(direction + math.pi + arrowAngle),
+        );
 
     final arrowPath = Path();
     arrowPath.moveTo(tip.dx, tip.dy);
@@ -1134,19 +1167,24 @@ class StateDiagramPainter extends CustomPainter {
     const dashSpace = 5.0;
 
     // Top edge
-    _drawDashedLine(canvas, rect.topLeft, rect.topRight, paint, dashWidth, dashSpace);
+    _drawDashedLine(
+        canvas, rect.topLeft, rect.topRight, paint, dashWidth, dashSpace);
 
     // Right edge
-    _drawDashedLine(canvas, rect.topRight, rect.bottomRight, paint, dashWidth, dashSpace);
+    _drawDashedLine(
+        canvas, rect.topRight, rect.bottomRight, paint, dashWidth, dashSpace);
 
     // Bottom edge
-    _drawDashedLine(canvas, rect.bottomRight, rect.bottomLeft, paint, dashWidth, dashSpace);
+    _drawDashedLine(
+        canvas, rect.bottomRight, rect.bottomLeft, paint, dashWidth, dashSpace);
 
     // Left edge
-    _drawDashedLine(canvas, rect.bottomLeft, rect.topLeft, paint, dashWidth, dashSpace);
+    _drawDashedLine(
+        canvas, rect.bottomLeft, rect.topLeft, paint, dashWidth, dashSpace);
   }
 
-  void _drawDashedLine(Canvas canvas, Offset start, Offset end, Paint paint, double dashWidth, double dashSpace) {
+  void _drawDashedLine(Canvas canvas, Offset start, Offset end, Paint paint,
+      double dashWidth, double dashSpace) {
     final direction = end - start;
     final totalDistance = direction.distance;
     final unitVector = direction / totalDistance;
@@ -1159,7 +1197,8 @@ class StateDiagramPainter extends CustomPainter {
 
       if (isDash) {
         final dashStart = start + unitVector * currentDistance;
-        final dashEnd = start + unitVector * math.min(nextDistance, totalDistance);
+        final dashEnd =
+            start + unitVector * math.min(nextDistance, totalDistance);
         canvas.drawLine(dashStart, dashEnd, paint);
       }
 
@@ -1174,7 +1213,8 @@ class StateDiagramPainter extends CustomPainter {
       if (position == null) continue;
 
       final paint = Paint()
-        ..color = (theme?.colorScheme.stateHighlighted ?? Colors.yellow).withOpacity(0.3)
+        ..color = (theme?.colorScheme.stateHighlighted ?? Colors.yellow)
+            .withOpacity(0.3)
         ..style = PaintingStyle.fill;
 
       canvas.drawCircle(position, 45, paint);
@@ -1250,7 +1290,8 @@ class MiniMapPainter extends CustomPainter {
       final fromPos = nodePositions[edge.fromId];
       final toPos = nodePositions[edge.toId];
 
-      if (fromPos == null || toPos == null || edge.fromId == edge.toId) continue;
+      if (fromPos == null || toPos == null || edge.fromId == edge.toId)
+        continue;
 
       canvas.drawLine(fromPos, toPos, edgePaint);
     }
@@ -1304,7 +1345,9 @@ class DiagramController extends ChangeNotifier {
   void removeNode(String nodeId) {
     _data = StateDiagramData(
       nodes: _data.nodes.where((n) => n.id != nodeId).toList(),
-      edges: _data.edges.where((e) => e.fromId != nodeId && e.toId != nodeId).toList(),
+      edges: _data.edges
+          .where((e) => e.fromId != nodeId && e.toId != nodeId)
+          .toList(),
     );
     notifyListeners();
   }
@@ -1545,7 +1588,8 @@ class _DiagramExampleState extends State<DiagramExample> {
         const StateEdge(id: 'e1', fromId: 'start', toId: 'state1', label: 'a'),
         const StateEdge(id: 'e2', fromId: 'state1', toId: 'state2', label: 'b'),
         const StateEdge(id: 'e3', fromId: 'state2', toId: 'end', label: 'c'),
-        const StateEdge(id: 'e4', fromId: 'state1', toId: 'state1', label: 'loop'),
+        const StateEdge(
+            id: 'e4', fromId: 'state1', toId: 'state1', label: 'loop'),
       ],
     );
     controller.updateData(data);

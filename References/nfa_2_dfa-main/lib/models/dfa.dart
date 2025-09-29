@@ -149,7 +149,8 @@ class DFA {
       if (json['alphabet'] != null) {
         final alphabetData = json['alphabet'];
         if (alphabetData is List) {
-          dfa._alphabet = Set<String>.from(alphabetData.map((e) => e.toString()));
+          dfa._alphabet =
+              Set<String>.from(alphabetData.map((e) => e.toString()));
         }
       }
 
@@ -160,12 +161,14 @@ class DFA {
 
         for (final stateId in statesData.keys) {
           final stateInfo = statesData[stateId] as Map<String, dynamic>;
-          final stateNames = Set<String>.from(stateInfo['stateNames'] ?? [stateId]);
+          final stateNames =
+              Set<String>.from(stateInfo['stateNames'] ?? [stateId]);
           final isFinal = stateInfo['isFinal'] as bool? ?? false;
 
           // ساخت StateModel ها
-          final stateModels = stateNames.map((name) =>
-              StateModel(name: name, isFinal: isFinal)).toSet();
+          final stateModels = stateNames
+              .map((name) => StateModel(name: name, isFinal: isFinal))
+              .toSet();
           final stateSet = StateSet(stateModels);
 
           dfa._states.add(stateSet);
@@ -199,7 +202,8 @@ class DFA {
         for (final fromStateId in transitionsData.keys) {
           final fromState = stateMap[fromStateId];
           if (fromState != null) {
-            final stateTransitions = transitionsData[fromStateId] as Map<String, dynamic>;
+            final stateTransitions =
+                transitionsData[fromStateId] as Map<String, dynamic>;
             dfa._transitions[fromState] = <String, StateSet>{};
 
             for (final symbol in stateTransitions.keys) {
@@ -250,10 +254,12 @@ class DFA {
       'version': '1.0',
       'states': statesData,
       'alphabet': _alphabet.toList()..sort(),
-      'startState': _startState != null ? {
-        'displayName': getStateName(_startState!),
-        'stateNames': _startState!.stateNames,
-      } : null,
+      'startState': _startState != null
+          ? {
+              'displayName': getStateName(_startState!),
+              'stateNames': _startState!.stateNames,
+            }
+          : null,
       'finalStates': _finalStates.map(getStateName).toList()..sort(),
       'transitions': transitionsData,
       'metadata': {
@@ -503,7 +509,8 @@ class DFA {
     // بررسی اساسی
     if (_states.isEmpty) {
       errors.add('DFA باید حداقل یک state داشته باشد');
-      return ValidationResult(isValid: false, errors: errors, warnings: warnings);
+      return ValidationResult(
+          isValid: false, errors: errors, warnings: warnings);
     }
 
     // بررسی start state
@@ -531,7 +538,8 @@ class DFA {
     // بررسی final states
     for (final finalState in _finalStates) {
       if (!_states.contains(finalState)) {
-        errors.add('Final state "${getStateName(finalState)}" در مجموعه states موجود نیست');
+        errors.add(
+            'Final state "${getStateName(finalState)}" در مجموعه states موجود نیست');
       }
     }
 
@@ -541,7 +549,8 @@ class DFA {
 
       for (final symbol in _alphabet) {
         if (!stateTransitions.containsKey(symbol)) {
-          errors.add('Transition از state "${getStateName(state)}" با نماد "$symbol" موجود نیست');
+          errors.add(
+              'Transition از state "${getStateName(state)}" با نماد "$symbol" موجود نیست');
         }
       }
 
@@ -553,7 +562,8 @@ class DFA {
 
         final toState = stateTransitions[symbol]!;
         if (!_states.contains(toState)) {
-          errors.add('مقصد transition "${getStateName(toState)}" در مجموعه states موجود نیست');
+          errors.add(
+              'مقصد transition "${getStateName(toState)}" در مجموعه states موجود نیست');
         }
       }
     }
@@ -562,13 +572,15 @@ class DFA {
     final reachableStates = _findReachableStates();
     final unreachableStates = _states.difference(reachableStates);
     for (final unreachable in unreachableStates) {
-      warnings.add('State "${getStateName(unreachable)}" از start state قابل دسترسی نیست');
+      warnings.add(
+          'State "${getStateName(unreachable)}" از start state قابل دسترسی نیست');
     }
 
     // بررسی dead states (states که هیچ final state ای قابل دسترسی نیست)
     final deadStates = _findDeadStates();
     for (final dead in deadStates) {
-      warnings.add('State "${getStateName(dead)}" dead state است (هیچ final state ای از آن قابل دسترسی نیست)');
+      warnings.add(
+          'State "${getStateName(dead)}" dead state است (هیچ final state ای از آن قابل دسترسی نیست)');
     }
 
     // بررسی نام‌های تکراری
@@ -660,9 +672,8 @@ class DFA {
       final stateTransitions = _transitions[state] ?? <String, StateSet>{};
       for (final symbol in sortedAlphabet) {
         final destination = stateTransitions[symbol];
-        table[stateName]![symbol] = destination != null
-            ? getStateName(destination)
-            : '∅';
+        table[stateName]![symbol] =
+            destination != null ? getStateName(destination) : '∅';
       }
     }
 
@@ -705,7 +716,8 @@ class DFA {
           accepted: false,
           path: path,
           finalState: getStateName(currentState),
-          errorMessage: 'Transition از "${getStateName(currentState)}" با نماد "$symbol" موجود نیست',
+          errorMessage:
+              'Transition از "${getStateName(currentState)}" با نماد "$symbol" موجود نیست',
         );
       }
 
@@ -718,7 +730,9 @@ class DFA {
       accepted: accepted,
       path: path,
       finalState: getStateName(currentState),
-      errorMessage: accepted ? null : 'State نهایی "${getStateName(currentState)}" final state نیست',
+      errorMessage: accepted
+          ? null
+          : 'State نهایی "${getStateName(currentState)}" final state نیست',
     );
   }
 
@@ -736,7 +750,8 @@ class DFA {
       if (currentString.length > maxLength) return;
 
       // اگر قبلاً این رشته را بررسی کرده‌ایم
-      if (visited.containsKey(currentString) && visited[currentString] == currentState) {
+      if (visited.containsKey(currentString) &&
+          visited[currentString] == currentState) {
         return;
       }
       visited[currentString] = currentState;
@@ -760,12 +775,12 @@ class DFA {
       dfs(_startState!, '');
     }
 
-    result.sort((a, b) => a.length != b.length ? a.length.compareTo(b.length) : a.compareTo(b));
+    result.sort((a, b) =>
+        a.length != b.length ? a.length.compareTo(b.length) : a.compareTo(b));
     return result;
   }
 
   bool isMinimal() {
-
     final reachable = _findReachableStates();
     final dead = _findDeadStates();
 
@@ -780,7 +795,8 @@ class DFA {
     final n = stateList.length;
 
     // جدول distinguishable pairs
-    final distinguishable = List.generate(n, (i) => List.generate(n, (j) => false));
+    final distinguishable =
+        List.generate(n, (i) => List.generate(n, (j) => false));
 
     // مرحله 1: مشخص کردن final و non-final states
     for (int i = 0; i < n; i++) {
@@ -825,7 +841,9 @@ class DFA {
               final index1 = stateList.indexOf(next1);
               final index2 = stateList.indexOf(next2);
 
-              if (index1 != -1 && index2 != -1 && distinguishable[index1][index2]) {
+              if (index1 != -1 &&
+                  index2 != -1 &&
+                  distinguishable[index1][index2]) {
                 distinguishable[i][j] = true;
                 distinguishable[j][i] = true;
                 changed = true;
@@ -872,8 +890,11 @@ class DFA {
       final representativeState = stateList[representativeIndex];
 
       // ساخت نام ترکیبی برای گروه
-      final groupNames = group.map((index) => getStateName(stateList[index])).toList()..sort();
-      final groupName = groupNames.length == 1 ? groupNames.first : '{${groupNames.join(',')}}';
+      final groupNames =
+          group.map((index) => getStateName(stateList[index])).toList()..sort();
+      final groupName = groupNames.length == 1
+          ? groupNames.first
+          : '{${groupNames.join(',')}}';
 
       // ساخت StateSet جدید
       final allStateModels = <StateModel>{};
@@ -952,7 +973,8 @@ class DFA {
 
     // افزودن transitions مفقود
     for (final state in completeDFA._states) {
-      final stateTransitions = completeDFA._transitions[state] ?? <String, StateSet>{};
+      final stateTransitions =
+          completeDFA._transitions[state] ?? <String, StateSet>{};
       for (final symbol in completeDFA._alphabet) {
         if (!stateTransitions.containsKey(symbol)) {
           completeDFA.addTransition(state, symbol, deadState);
@@ -1017,7 +1039,8 @@ class DFA {
         unionDFA.addState(combinedStateSet, customName: combinedName);
 
         // اگر یکی از states final باشد، combined state هم final است
-        if (dfa1._finalStates.contains(state1) || dfa2._finalStates.contains(state2)) {
+        if (dfa1._finalStates.contains(state1) ||
+            dfa2._finalStates.contains(state2)) {
           unionDFA.setFinalState(combinedStateSet, true);
         }
 
@@ -1035,8 +1058,10 @@ class DFA {
       final name1 = nameParts[0];
       final name2 = nameParts[1];
 
-      final state1 = dfa1._states.firstWhere((s) => dfa1.getStateName(s) == name1);
-      final state2 = dfa2._states.firstWhere((s) => dfa2.getStateName(s) == name2);
+      final state1 =
+          dfa1._states.firstWhere((s) => dfa1.getStateName(s) == name1);
+      final state2 =
+          dfa2._states.firstWhere((s) => dfa2.getStateName(s) == name2);
 
       for (final symbol in unionAlphabet) {
         final next1 = dfa1.getTransition(state1, symbol);
@@ -1081,7 +1106,8 @@ class DFA {
         combinedStates[combinedName] = combinedStateSet;
         intersectionDFA.addState(combinedStateSet, customName: combinedName);
 
-        if (dfa1._finalStates.contains(state1) && dfa2._finalStates.contains(state2)) {
+        if (dfa1._finalStates.contains(state1) &&
+            dfa2._finalStates.contains(state2)) {
           intersectionDFA.setFinalState(combinedStateSet, true);
         }
 
@@ -1097,8 +1123,10 @@ class DFA {
       final name1 = nameParts[0];
       final name2 = nameParts[1];
 
-      final state1 = dfa1._states.firstWhere((s) => dfa1.getStateName(s) == name1);
-      final state2 = dfa2._states.firstWhere((s) => dfa2.getStateName(s) == name2);
+      final state1 =
+          dfa1._states.firstWhere((s) => dfa1.getStateName(s) == name1);
+      final state2 =
+          dfa2._states.firstWhere((s) => dfa2.getStateName(s) == name2);
 
       for (final symbol in intersectionAlphabet) {
         final next1 = dfa1.getTransition(state1, symbol);
@@ -1110,7 +1138,8 @@ class DFA {
           final nextCombinedName = '($nextName1,$nextName2)';
           final nextCombinedState = combinedStates[nextCombinedName]!;
 
-          intersectionDFA.addTransition(combinedState, symbol, nextCombinedState);
+          intersectionDFA.addTransition(
+              combinedState, symbol, nextCombinedState);
         }
       }
     }
@@ -1120,7 +1149,6 @@ class DFA {
 
   /// بررسی تساوی دو DFA
   static bool areEquivalent(DFA dfa1, DFA dfa2) {
-
     final diff1 = intersection(dfa1, dfa2.complement());
     final diff2 = intersection(dfa1.complement(), dfa2);
 
@@ -1195,8 +1223,10 @@ class DFA {
     buffer.writeln('States: ${_states.length}');
     buffer.writeln('Alphabet: $_alphabet (${_alphabet.length} symbols)');
     buffer.writeln('Transitions: $transitionCount');
-    buffer.writeln('Start State: ${_startState != null ? getStateName(_startState!) : 'None'}');
-    buffer.writeln('Final States: ${_finalStates.map(getStateName).toList()} (${_finalStates.length})');
+    buffer.writeln(
+        'Start State: ${_startState != null ? getStateName(_startState!) : 'None'}');
+    buffer.writeln(
+        'Final States: ${_finalStates.map(getStateName).toList()} (${_finalStates.length})');
     buffer.writeln();
 
     // خصوصیات
@@ -1241,7 +1271,8 @@ class DFA {
       buffer.writeln();
 
       for (final stateName in sortedStates) {
-        final isStart = _startState != null && getStateName(_startState!) == stateName;
+        final isStart =
+            _startState != null && getStateName(_startState!) == stateName;
         final isFinal = _finalStates.any((s) => getStateName(s) == stateName);
 
         String stateDisplay = stateName;
@@ -1319,7 +1350,9 @@ class DFA {
       stateCount: stateCount,
       alphabetSize: alphabet.length,
       transitionCount: transitionCount,
-      density: stateCount > 0 && alphabet.isNotEmpty ? transitionCount / (stateCount * alphabet.length) : 0.0,
+      density: stateCount > 0 && alphabet.isNotEmpty
+          ? transitionCount / (stateCount * alphabet.length)
+          : 0.0,
       finalStateRatio: stateCount > 0 ? finalStates.length / stateCount : 0.0,
     );
   }

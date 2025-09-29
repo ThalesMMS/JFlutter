@@ -120,8 +120,7 @@ class PumpingLemmaProgressState {
 /// Manages the progress state for the Pumping Lemma game.
 class PumpingLemmaProgressNotifier
     extends StateNotifier<PumpingLemmaProgressState> {
-  PumpingLemmaProgressNotifier()
-      : super(const PumpingLemmaProgressState());
+  PumpingLemmaProgressNotifier() : super(const PumpingLemmaProgressState());
 
   /// Starts a fresh session with the provided total number of challenges.
   void startNewGame({required int totalChallenges}) {
@@ -200,7 +199,7 @@ class PumpingLemmaProgressNotifier
 }
 
 /// Provider exposing the Pumping Lemma game progress state.
-final pumpingLemmaProgressProvider =
-    StateNotifierProvider<PumpingLemmaProgressNotifier, PumpingLemmaProgressState>(
+final pumpingLemmaProgressProvider = StateNotifierProvider<
+    PumpingLemmaProgressNotifier, PumpingLemmaProgressState>(
   (ref) => PumpingLemmaProgressNotifier(),
 );

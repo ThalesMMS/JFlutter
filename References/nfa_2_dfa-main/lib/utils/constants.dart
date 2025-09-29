@@ -6,7 +6,8 @@ class AppConstants {
   // اطلاعات اپلیکیشن
   static const String appName = 'NFA to DFA Converter';
   static const String appVersion = '2.0.0';
-  static const String appDescription = 'تبدیل‌کننده NFA به DFA با رابط کاربری پیشرفته و تم‌های خیره‌کننده';
+  static const String appDescription =
+      'تبدیل‌کننده NFA به DFA با رابط کاربری پیشرفته و تم‌های خیره‌کننده';
 
   // تنظیمات فونت
   static const String defaultFontFamily = 'Vazir';
@@ -88,8 +89,10 @@ class AppConstants {
     'invalidInput': 'ورودی نامعتبر است',
     'stateExists': 'یک state با این نام وجود دارد',
     'invalidStateName': 'نام state فقط می‌تواند شامل حروف، اعداد و _ باشد',
-    'stateTooLong': 'نام state نمی‌تواند بیش از $maxStateNameLength کاراکتر باشد',
-    'stateTooShort': 'نام state نمی‌تواند کمتر از $minStateNameLength کاراکتر باشد',
+    'stateTooLong':
+        'نام state نمی‌تواند بیش از $maxStateNameLength کاراکتر باشد',
+    'stateTooShort':
+        'نام state نمی‌تواند کمتر از $minStateNameLength کاراکتر باشد',
     'tooManyStates': 'تعداد حالت‌ها نمی‌تواند بیش از $maxStatesCount باشد',
     'networkError': 'خطا در اتصال به شبکه',
     'unknownError': 'خطای ناشناخته رخ داده است',
@@ -433,7 +436,8 @@ class AppAnimations {
   static const Duration snackBarDuration = Duration(seconds: 3);
   static const Duration neonPulseDuration = Duration(milliseconds: 1500);
   static const Duration glowCycleDuration = Duration(milliseconds: 2000);
-  static const Duration particleAnimationDuration = Duration(milliseconds: 3000);
+  static const Duration particleAnimationDuration =
+      Duration(milliseconds: 3000);
   static const Duration backgroundShiftDuration = Duration(seconds: 10);
 
   // تاخیرها برای انیمیشن‌های متوالی

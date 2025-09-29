@@ -16,13 +16,16 @@ class PDAtoCFGConverter {
     }
 
     if (pda.acceptingStates.isEmpty) {
-      return Failure('PDA must have at least one accepting state for conversion.');
+      return Failure(
+          'PDA must have at least one accepting state for conversion.');
     }
 
     final buffer = StringBuffer();
     buffer.writeln('Generated CFG from PDA');
-    buffer.writeln('Non-terminals of the form [p,A,q] indicate moving from state p');
-    buffer.writeln('with stack symbol A on top to state q after consuming a string.');
+    buffer.writeln(
+        'Non-terminals of the form [p,A,q] indicate moving from state p');
+    buffer.writeln(
+        'with stack symbol A on top to state q after consuming a string.');
     buffer.writeln('');
 
     // Start productions

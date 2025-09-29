@@ -13,10 +13,9 @@ class BibTeXDefinition extends GrammarDefinition<List<BibTeXEntry>> {
 
   // Entries
   Parser<List<BibTeXEntry>> entries() => ref0(
-    entry,
-  ).starSeparated(whitespace().star()).map((list) => list.elements);
-  Parser<BibTeXEntry> entry() =>
-      seq6(
+        entry,
+      ).starSeparated(whitespace().star()).map((list) => list.elements);
+  Parser<BibTeXEntry> entry() => seq6(
         type.trim(),
         char('{').trim(),
         citeKey.trim(),
@@ -33,45 +32,44 @@ class BibTeXDefinition extends GrammarDefinition<List<BibTeXEntry>> {
       .starSeparated(char(',').trim())
       .map((list) => Map.fromEntries(list.elements));
   Parser<MapEntry<String, String>> field() => seq3(
-    fieldName.trim(),
-    char('=').trim(),
-    ref0(fieldValue),
-  ).map3((name, _, value) => MapEntry(name, value));
+        fieldName.trim(),
+        char('=').trim(),
+        ref0(fieldValue),
+      ).map3((name, _, value) => MapEntry(name, value));
   Parser<String> fieldValue() => [
-    ref0(fieldValueInQuotes),
-    ref0(fieldValueInBraces),
-    rawString,
-  ].toChoiceParser();
+        ref0(fieldValueInQuotes),
+        ref0(fieldValueInBraces),
+        rawString,
+      ].toChoiceParser();
 
   // Quoted strings
   Parser<String> fieldValueInQuotes() => seq3(
-    char('"'),
-    ref0(fieldStringWithinQuotes),
-    char('"'),
-  ).flatten(message: "quoted string expected");
+        char('"'),
+        ref0(fieldStringWithinQuotes),
+        char('"'),
+      ).flatten(message: "quoted string expected");
   Parser<List> fieldStringWithinQuotes() =>
       [ref0(fieldCharWithinQuotes), escapeChar].toChoiceParser().star();
   Parser<String> fieldCharWithinQuotes() => pattern(r'^\"');
 
   // Braced strings
   Parser<String> fieldValueInBraces() => seq3(
-    char('{'),
-    ref0(fieldStringWithinBraces),
-    char('}'),
-  ).flatten(message: "braced string expected");
+        char('{'),
+        ref0(fieldStringWithinBraces),
+        char('}'),
+      ).flatten(message: "braced string expected");
 
   Parser<List> fieldStringWithinBraces() => [
-    ref0(fieldCharWithinBraces),
-    escapeChar,
-    seq3(char('{'), ref0(fieldStringWithinBraces), char('}')),
-  ].toChoiceParser().star();
+        ref0(fieldCharWithinBraces),
+        escapeChar,
+        seq3(char('{'), ref0(fieldStringWithinBraces), char('}')),
+      ].toChoiceParser().star();
 
   Parser<String> fieldCharWithinBraces() => pattern(r'^\{}');
 
   // Basic strings
-  final type = letter()
-      .plusString(message: "type expected")
-      .skip(before: char('@'));
+  final type =
+      letter().plusString(message: "type expected").skip(before: char('@'));
   final citeKey = pattern(
     'a-zA-Z0-9_:-',
   ).plusString(message: "citation key expected");

@@ -26,13 +26,17 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
     const defaults = SettingsModel();
 
     return SettingsModel(
-      emptyStringSymbol: await _storage.readString(_emptyStringSymbolKey) ?? defaults.emptyStringSymbol,
-      epsilonSymbol: await _storage.readString(_epsilonSymbolKey) ?? defaults.epsilonSymbol,
+      emptyStringSymbol: await _storage.readString(_emptyStringSymbolKey) ??
+          defaults.emptyStringSymbol,
+      epsilonSymbol: await _storage.readString(_epsilonSymbolKey) ??
+          defaults.epsilonSymbol,
       themeMode: await _storage.readString(_themeModeKey) ?? defaults.themeMode,
       showGrid: await _storage.readBool(_showGridKey) ?? defaults.showGrid,
-      showCoordinates: await _storage.readBool(_showCoordinatesKey) ?? defaults.showCoordinates,
+      showCoordinates: await _storage.readBool(_showCoordinatesKey) ??
+          defaults.showCoordinates,
       autoSave: await _storage.readBool(_autoSaveKey) ?? defaults.autoSave,
-      showTooltips: await _storage.readBool(_showTooltipsKey) ?? defaults.showTooltips,
+      showTooltips:
+          await _storage.readBool(_showTooltipsKey) ?? defaults.showTooltips,
       gridSize: await _storage.readDouble(_gridSizeKey) ?? defaults.gridSize,
       nodeSize: await _storage.readDouble(_nodeSizeKey) ?? defaults.nodeSize,
       fontSize: await _storage.readDouble(_fontSizeKey) ?? defaults.fontSize,

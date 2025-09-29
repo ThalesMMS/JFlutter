@@ -5,13 +5,13 @@ import 'production.dart';
 class ParseTable {
   /// Action table for parsing decisions
   final Map<String, Map<String, ParseAction>> actionTable;
-  
+
   /// Goto table for non-terminal transitions
   final Map<String, Map<String, String>> gotoTable;
-  
+
   /// Grammar this parse table is for
   final Grammar grammar;
-  
+
   /// Type of parsing (LL or LR)
   final ParseType type;
 
@@ -41,9 +41,10 @@ class ParseTable {
   Map<String, dynamic> toJson() {
     return {
       'actionTable': actionTable.map((state, terminals) => MapEntry(
-        state,
-        terminals.map((terminal, action) => MapEntry(terminal, action.toJson())),
-      )),
+            state,
+            terminals
+                .map((terminal, action) => MapEntry(terminal, action.toJson())),
+          )),
       'gotoTable': gotoTable,
       'grammar': grammar.toJson(),
       'type': type.name,
@@ -53,18 +54,21 @@ class ParseTable {
   /// Creates a parse table from a JSON representation
   factory ParseTable.fromJson(Map<String, dynamic> json) {
     return ParseTable(
-      actionTable: (json['actionTable'] as Map<String, dynamic>).map((state, terminals) => MapEntry(
-        state,
-        (terminals as Map<String, dynamic>).map((terminal, action) => MapEntry(
-          terminal,
-          ParseAction.fromJson(action as Map<String, dynamic>),
-        )),
-      )),
+      actionTable: (json['actionTable'] as Map<String, dynamic>)
+          .map((state, terminals) => MapEntry(
+                state,
+                (terminals as Map<String, dynamic>)
+                    .map((terminal, action) => MapEntry(
+                          terminal,
+                          ParseAction.fromJson(action as Map<String, dynamic>),
+                        )),
+              )),
       gotoTable: Map<String, Map<String, String>>.from(
-        (json['gotoTable'] as Map<String, dynamic>).map((state, nonterminals) => MapEntry(
-          state,
-          Map<String, String>.from(nonterminals as Map<String, dynamic>),
-        )),
+        (json['gotoTable'] as Map<String, dynamic>).map((state, nonterminals) =>
+            MapEntry(
+              state,
+              Map<String, String>.from(nonterminals as Map<String, dynamic>),
+            )),
       ),
       grammar: Grammar.fromJson(json['grammar'] as Map<String, dynamic>),
       type: ParseType.values.firstWhere(
@@ -136,7 +140,7 @@ class ParseTable {
         if (action.type == ParseActionType.error) {
           continue;
         }
-        
+
         // Check for shift-reduce conflicts
         if (action.type == ParseActionType.shift) {
           // Look for reduce actions in the same cell
@@ -150,19 +154,19 @@ class ParseTable {
   /// Gets all conflicts in the parse table
   List<ParseConflict> get conflicts {
     final conflicts = <ParseConflict>[];
-    
+
     for (final state in actionTable.keys) {
       for (final terminal in actionTable[state]!.keys) {
         final action = actionTable[state]![terminal]!;
         if (action.type == ParseActionType.error) {
           continue;
         }
-        
+
         // Check for conflicts (simplified)
         // In a real implementation, this would be more complex
       }
     }
-    
+
     return conflicts;
   }
 
@@ -174,14 +178,14 @@ class ParseTable {
   /// Gets the parse table as a formatted string
   String get formattedTable {
     final buffer = StringBuffer();
-    
+
     buffer.writeln('Parse Table ($type):');
     buffer.writeln('Grammar: ${grammar.name}');
     buffer.writeln('States: $stateCount');
     buffer.writeln('Terminals: $terminalCount');
     buffer.writeln('Non-terminals: $nonterminalCount');
     buffer.writeln();
-    
+
     // Action table
     buffer.writeln('Action Table:');
     for (final state in states) {
@@ -193,9 +197,9 @@ class ParseTable {
         }
       }
     }
-    
+
     buffer.writeln();
-    
+
     // Goto table
     buffer.writeln('Goto Table:');
     for (final state in states) {
@@ -207,7 +211,7 @@ class ParseTable {
         }
       }
     }
-    
+
     return buffer.toString();
   }
 
@@ -229,13 +233,13 @@ class ParseTable {
 enum ParseType {
   /// LL parsing
   ll,
-  
+
   /// LR parsing
   lr,
-  
+
   /// SLR parsing
   slr,
-  
+
   /// LALR parsing
   lalr,
 }
@@ -275,13 +279,13 @@ extension ParseTypeExtension on ParseType {
 class ParseAction {
   /// Type of the action
   final ParseActionType type;
-  
+
   /// State number for shift actions
   final int? stateNumber;
-  
+
   /// Production for reduce actions
   final Production? production;
-  
+
   /// Error message for error actions
   final String? errorMessage;
 
@@ -388,13 +392,13 @@ class ParseAction {
 enum ParseActionType {
   /// Shift action
   shift,
-  
+
   /// Reduce action
   reduce,
-  
+
   /// Accept action
   accept,
-  
+
   /// Error action
   error,
 }
@@ -434,13 +438,13 @@ extension ParseActionTypeExtension on ParseActionType {
 class ParseConflict {
   /// State where the conflict occurs
   final String state;
-  
+
   /// Terminal where the conflict occurs
   final String terminal;
-  
+
   /// Type of conflict
   final ConflictType type;
-  
+
   /// Actions involved in the conflict
   final List<ParseAction> actions;
 
@@ -461,10 +465,10 @@ class ParseConflict {
 enum ConflictType {
   /// Shift-reduce conflict
   shiftReduce,
-  
+
   /// Reduce-reduce conflict
   reduceReduce,
-  
+
   /// Shift-shift conflict
   shiftShift,
 }

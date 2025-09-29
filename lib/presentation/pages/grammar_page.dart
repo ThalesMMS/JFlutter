@@ -41,7 +41,8 @@ class _GrammarPageState extends ConsumerState<GrammarPage> {
                     icon: Icons.edit,
                     label: 'Editor',
                     isActive: _showControls,
-                    onPressed: () => setState(() => _showControls = !_showControls),
+                    onPressed: () =>
+                        setState(() => _showControls = !_showControls),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -50,7 +51,8 @@ class _GrammarPageState extends ConsumerState<GrammarPage> {
                     icon: Icons.play_arrow,
                     label: 'Parse',
                     isActive: _showSimulation,
-                    onPressed: () => setState(() => _showSimulation = !_showSimulation),
+                    onPressed: () =>
+                        setState(() => _showSimulation = !_showSimulation),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -59,7 +61,8 @@ class _GrammarPageState extends ConsumerState<GrammarPage> {
                     icon: Icons.auto_awesome,
                     label: 'Algorithms',
                     isActive: _showAlgorithms,
-                    onPressed: () => setState(() => _showAlgorithms = !_showAlgorithms),
+                    onPressed: () =>
+                        setState(() => _showAlgorithms = !_showAlgorithms),
                   ),
                 ),
               ],
@@ -93,9 +96,10 @@ class _GrammarPageState extends ConsumerState<GrammarPage> {
                       children: [
                         Text(
                           'Context-Free Grammar Editor',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                         const SizedBox(height: 8),
                         Text(
@@ -158,11 +162,11 @@ class _GrammarPageState extends ConsumerState<GrammarPage> {
       icon: Icon(icon, size: 16),
       label: Text(label, style: const TextStyle(fontSize: 11)),
       style: ElevatedButton.styleFrom(
-        backgroundColor: isActive 
-            ? Theme.of(context).colorScheme.primary 
+        backgroundColor: isActive
+            ? Theme.of(context).colorScheme.primary
             : Theme.of(context).colorScheme.surface,
-        foregroundColor: isActive 
-            ? Theme.of(context).colorScheme.onPrimary 
+        foregroundColor: isActive
+            ? Theme.of(context).colorScheme.onPrimary
             : Theme.of(context).colorScheme.onSurface,
         padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
         minimumSize: Size.zero,

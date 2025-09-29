@@ -24,7 +24,7 @@ Future<void> setupDependencyInjection() async {
   getIt.registerLazySingleton<LocalStorageDataSource>(
     () => LocalStorageDataSource(),
   );
-  
+
   getIt.registerLazySingleton<ExamplesDataSource>(
     () => ExamplesDataSource(),
   );
@@ -33,11 +33,11 @@ Future<void> setupDependencyInjection() async {
   getIt.registerLazySingleton<AutomatonService>(
     () => AutomatonService(),
   );
-  
+
   getIt.registerLazySingleton<SimulationService>(
     () => SimulationService(),
   );
-  
+
   getIt.registerLazySingleton<ConversionService>(
     () => ConversionService(),
   );
@@ -46,11 +46,11 @@ Future<void> setupDependencyInjection() async {
   getIt.registerLazySingleton<AutomatonRepository>(
     () => AutomatonRepositoryImpl(getIt<AutomatonService>()),
   );
-  
+
   getIt.registerLazySingleton<ExamplesRepository>(
     () => ExamplesRepositoryImpl(getIt<ExamplesDataSource>()),
   );
-  
+
   getIt.registerLazySingleton<AlgorithmRepository>(
     () => AlgorithmRepositoryImpl(),
   );
@@ -63,43 +63,43 @@ Future<void> setupDependencyInjection() async {
   getIt.registerLazySingleton<CreateAutomatonUseCase>(
     () => CreateAutomatonUseCase(getIt<AutomatonRepository>()),
   );
-  
+
   getIt.registerLazySingleton<LoadAutomatonUseCase>(
     () => LoadAutomatonUseCase(getIt<AutomatonRepository>()),
   );
-  
+
   getIt.registerLazySingleton<SaveAutomatonUseCase>(
     () => SaveAutomatonUseCase(getIt<AutomatonRepository>()),
   );
-  
+
   getIt.registerLazySingleton<DeleteAutomatonUseCase>(
     () => DeleteAutomatonUseCase(getIt<AutomatonRepository>()),
   );
-  
+
   getIt.registerLazySingleton<ExportAutomatonUseCase>(
     () => ExportAutomatonUseCase(getIt<AutomatonRepository>()),
   );
-  
+
   getIt.registerLazySingleton<ImportAutomatonUseCase>(
     () => ImportAutomatonUseCase(getIt<AutomatonRepository>()),
   );
-  
+
   getIt.registerLazySingleton<ValidateAutomatonUseCase>(
     () => ValidateAutomatonUseCase(getIt<AutomatonRepository>()),
   );
-  
+
   getIt.registerLazySingleton<AddStateUseCase>(
     () => AddStateUseCase(getIt<AutomatonRepository>()),
   );
-  
+
   getIt.registerLazySingleton<RemoveStateUseCase>(
     () => RemoveStateUseCase(getIt<AutomatonRepository>()),
   );
-  
+
   getIt.registerLazySingleton<AddTransitionUseCase>(
     () => AddTransitionUseCase(getIt<AutomatonRepository>()),
   );
-  
+
   getIt.registerLazySingleton<RemoveTransitionUseCase>(
     () => RemoveTransitionUseCase(getIt<AutomatonRepository>()),
   );
@@ -108,63 +108,63 @@ Future<void> setupDependencyInjection() async {
   getIt.registerLazySingleton<NfaToDfaUseCase>(
     () => NfaToDfaUseCase(getIt<AlgorithmRepository>()),
   );
-  
+
   getIt.registerLazySingleton<RemoveLambdaTransitionsUseCase>(
     () => RemoveLambdaTransitionsUseCase(getIt<AlgorithmRepository>()),
   );
-  
+
   getIt.registerLazySingleton<MinimizeDfaUseCase>(
     () => MinimizeDfaUseCase(getIt<AlgorithmRepository>()),
   );
-  
+
   getIt.registerLazySingleton<CompleteDfaUseCase>(
     () => CompleteDfaUseCase(getIt<AlgorithmRepository>()),
   );
-  
+
   getIt.registerLazySingleton<ComplementDfaUseCase>(
     () => ComplementDfaUseCase(getIt<AlgorithmRepository>()),
   );
-  
+
   getIt.registerLazySingleton<UnionDfaUseCase>(
     () => UnionDfaUseCase(getIt<AlgorithmRepository>()),
   );
-  
+
   getIt.registerLazySingleton<IntersectionDfaUseCase>(
     () => IntersectionDfaUseCase(getIt<AlgorithmRepository>()),
   );
-  
+
   getIt.registerLazySingleton<DifferenceDfaUseCase>(
     () => DifferenceDfaUseCase(getIt<AlgorithmRepository>()),
   );
-  
+
   getIt.registerLazySingleton<PrefixClosureUseCase>(
     () => PrefixClosureUseCase(getIt<AlgorithmRepository>()),
   );
-  
+
   getIt.registerLazySingleton<SuffixClosureUseCase>(
     () => SuffixClosureUseCase(getIt<AlgorithmRepository>()),
   );
-  
+
   getIt.registerLazySingleton<RegexToNfaUseCase>(
     () => RegexToNfaUseCase(getIt<AlgorithmRepository>()),
   );
-  
+
   getIt.registerLazySingleton<DfaToRegexUseCase>(
     () => DfaToRegexUseCase(getIt<AlgorithmRepository>()),
   );
-  
+
   getIt.registerLazySingleton<FsaToGrammarUseCase>(
     () => FsaToGrammarUseCase(getIt<AlgorithmRepository>()),
   );
-  
+
   getIt.registerLazySingleton<CheckEquivalenceUseCase>(
     () => CheckEquivalenceUseCase(getIt<AlgorithmRepository>()),
   );
-  
+
   getIt.registerLazySingleton<SimulateWordUseCase>(
     () => SimulateWordUseCase(getIt<AlgorithmRepository>()),
   );
-  
+
   getIt.registerLazySingleton<CreateStepByStepSimulationUseCase>(
     () => CreateStepByStepSimulationUseCase(getIt<AlgorithmRepository>()),
   );
@@ -178,7 +178,7 @@ Future<void> setupDependencyInjection() async {
       layoutRepository: getIt<LayoutRepository>(),
     ),
   );
-  
+
   getIt.registerFactory<AlgorithmProvider>(
     () => AlgorithmProvider(
       nfaToDfaUseCase: getIt<NfaToDfaUseCase>(),
@@ -196,10 +196,11 @@ Future<void> setupDependencyInjection() async {
       fsaToGrammarUseCase: getIt<FsaToGrammarUseCase>(),
       checkEquivalenceUseCase: getIt<CheckEquivalenceUseCase>(),
       simulateWordUseCase: getIt<SimulateWordUseCase>(),
-      createStepByStepSimulationUseCase: getIt<CreateStepByStepSimulationUseCase>(),
+      createStepByStepSimulationUseCase:
+          getIt<CreateStepByStepSimulationUseCase>(),
     ),
   );
-  
+
   getIt.registerFactory<GrammarProvider>(
     () => GrammarProvider(
       conversionService: getIt<ConversionService>(),

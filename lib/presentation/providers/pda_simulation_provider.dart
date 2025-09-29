@@ -85,5 +85,3 @@ final pdaSimulationProvider =
     StateNotifierProvider<PDASimulationNotifier, PDASimulationState>((ref) {
   return PDASimulationNotifier();
 });
-
-

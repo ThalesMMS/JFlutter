@@ -6,16 +6,16 @@ import 'transition.dart';
 class TMTransition extends Transition {
   /// Symbol to read from the tape
   final String readSymbol;
-  
+
   /// Symbol to write to the tape
   final String writeSymbol;
-  
+
   /// Direction to move the tape head
   final TapeDirection direction;
-  
+
   /// Tape number (always 0 for single-tape TM)
   final int tapeNumber;
-  
+
   /// Head position (alias for direction)
   TapeDirection get headPosition => direction;
 
@@ -138,19 +138,19 @@ class TMTransition extends Transition {
   @override
   List<String> validate() {
     final errors = super.validate();
-    
+
     if (readSymbol.isEmpty) {
       errors.add('TM transition must have read symbol');
     }
-    
+
     if (writeSymbol.isEmpty) {
       errors.add('TM transition must have write symbol');
     }
-    
+
     if (tapeNumber < 0) {
       errors.add('TM transition tape number must be non-negative');
     }
-    
+
     return errors;
   }
 
@@ -190,7 +190,7 @@ class TMTransition extends Transition {
       fromState: fromState,
       toState: toState,
       label: label ?? '$symbol→$symbol,$direction',
-          controlPoint: controlPoint ?? Vector2.zero(),
+      controlPoint: controlPoint ?? Vector2.zero(),
       type: TransitionType.deterministic,
       readSymbol: symbol,
       writeSymbol: symbol,
@@ -216,7 +216,7 @@ class TMTransition extends Transition {
       fromState: fromState,
       toState: toState,
       label: label ?? '$readSymbol→$writeSymbol,$direction',
-          controlPoint: controlPoint ?? Vector2.zero(),
+      controlPoint: controlPoint ?? Vector2.zero(),
       type: TransitionType.deterministic,
       readSymbol: readSymbol,
       writeSymbol: writeSymbol,
@@ -241,7 +241,7 @@ class TMTransition extends Transition {
       fromState: fromState,
       toState: toState,
       label: label ?? '$symbol→$symbol,$direction',
-          controlPoint: controlPoint ?? Vector2.zero(),
+      controlPoint: controlPoint ?? Vector2.zero(),
       type: TransitionType.deterministic,
       readSymbol: symbol,
       writeSymbol: symbol,
@@ -255,10 +255,10 @@ class TMTransition extends Transition {
 enum TapeDirection {
   /// Move tape head left
   left,
-  
+
   /// Move tape head right
   right,
-  
+
   /// Keep tape head in place
   stay,
 }

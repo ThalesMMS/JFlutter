@@ -136,7 +136,9 @@ class _InputScreenState extends State<InputScreen>
                 value: 'minimap',
                 child: Row(
                   children: [
-                    Icon(_showDiagramMinimap ? Icons.check_box : Icons.check_box_outline_blank),
+                    Icon(_showDiagramMinimap
+                        ? Icons.check_box
+                        : Icons.check_box_outline_blank),
                     const SizedBox(width: 8),
                     const Text('نمایش Minimap'),
                   ],
@@ -146,7 +148,9 @@ class _InputScreenState extends State<InputScreen>
                 value: 'animations',
                 child: Row(
                   children: [
-                    Icon(_enableDiagramAnimations ? Icons.check_box : Icons.check_box_outline_blank),
+                    Icon(_enableDiagramAnimations
+                        ? Icons.check_box
+                        : Icons.check_box_outline_blank),
                     const SizedBox(width: 8),
                     const Text('انیمیشن‌ها'),
                   ],
@@ -156,7 +160,9 @@ class _InputScreenState extends State<InputScreen>
                 value: 'analytics',
                 child: Row(
                   children: [
-                    Icon(_showDiagramAnalytics ? Icons.check_box : Icons.check_box_outline_blank),
+                    Icon(_showDiagramAnalytics
+                        ? Icons.check_box
+                        : Icons.check_box_outline_blank),
                     const SizedBox(width: 8),
                     const Text('پنل تجزیه و تحلیل'),
                   ],
@@ -200,7 +206,7 @@ class _InputScreenState extends State<InputScreen>
         controller: _tabController,
         labelColor: Theme.of(context).colorScheme.primary,
         unselectedLabelColor:
-        Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+            Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
         indicatorColor: Theme.of(context).colorScheme.primary,
         isScrollable: true,
         tabs: [
@@ -267,9 +273,7 @@ class _InputScreenState extends State<InputScreen>
               ],
             ),
           ),
-
           const SizedBox(width: 16),
-
           if (_selectedState != null) ...[
             Expanded(
               flex: 2,
@@ -313,7 +317,6 @@ class _InputScreenState extends State<InputScreen>
             ),
             const SizedBox(width: 8),
           ],
-
           if (_selectedStates.isNotEmpty)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -371,7 +374,8 @@ class _InputScreenState extends State<InputScreen>
 
           // تنظیمات انیمیشن
           animationSettings: AnimationSettings(
-            entranceAnimationDuration: Duration(milliseconds: _enableDiagramAnimations ? 1200 : 0),
+            entranceAnimationDuration:
+                Duration(milliseconds: _enableDiagramAnimations ? 1200 : 0),
             enablePathAnimation: _enableDiagramAnimations,
             enableRippleEffects: _enableDiagramAnimations,
           ),
@@ -429,15 +433,15 @@ class _InputScreenState extends State<InputScreen>
           Text(
             'دیاگرام خالی',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+                  color: Theme.of(context).colorScheme.outline,
+                ),
           ),
           const SizedBox(height: 8),
           Text(
             'ابتدا حالت‌ها و انتقالات را تعریف کنید',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+                  color: Theme.of(context).colorScheme.outline,
+                ),
           ),
           const SizedBox(height: 24),
           OutlinedButton.icon(
@@ -554,9 +558,9 @@ class _InputScreenState extends State<InputScreen>
           Text(
             'کلیک کنید تا حالت انتخاب شود',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontStyle: FontStyle.italic,
-              color: Theme.of(context).colorScheme.outline,
-            ),
+                  fontStyle: FontStyle.italic,
+                  color: Theme.of(context).colorScheme.outline,
+                ),
           ),
         ],
       ),
@@ -595,9 +599,10 @@ class _InputScreenState extends State<InputScreen>
         final hasTransitions = nfa.currentNFA.transitions.isNotEmpty;
         final isValid = nfa.currentNFA.validate().isValid;
 
-        final progress =
-            [hasStates, hasAlphabet, hasTransitions, isValid].where((x) => x).length /
-                4.0;
+        final progress = [hasStates, hasAlphabet, hasTransitions, isValid]
+                .where((x) => x)
+                .length /
+            4.0;
 
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -612,7 +617,12 @@ class _InputScreenState extends State<InputScreen>
                   ),
                   const Spacer(),
                   Text(
-                    '${[hasStates, hasAlphabet, hasTransitions, isValid].where((x) => x).length}/4 مرحله',
+                    '${[
+                      hasStates,
+                      hasAlphabet,
+                      hasTransitions,
+                      isValid
+                    ].where((x) => x).length}/4 مرحله',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
@@ -667,15 +677,15 @@ class _InputScreenState extends State<InputScreen>
                 : Theme.of(context).colorScheme.onSurfaceVariant,
             icon: _isValidating
                 ? SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation(
-                  Theme.of(context).colorScheme.onPrimary,
-                ),
-              ),
-            )
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation(
+                        Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
+                  )
                 : const Icon(Icons.play_arrow_rounded),
             label: Text(_isValidating ? 'در حال بررسی...' : 'تبدیل به DFA'),
             heroTag: "convertFAB",
@@ -741,8 +751,10 @@ class _InputScreenState extends State<InputScreen>
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('• نوع: ${isStart ? "شروع" : (isFinal ? "پایان" : "عادی")}'),
-                    Text('• تعداد انتقالات: ${_getStateTransitionCount(nfa.currentNFA, state)}'),
+                    Text(
+                        '• نوع: ${isStart ? "شروع" : (isFinal ? "پایان" : "عادی")}'),
+                    Text(
+                        '• تعداد انتقالات: ${_getStateTransitionCount(nfa.currentNFA, state)}'),
                   ],
                 );
               },
@@ -831,7 +843,7 @@ class _InputScreenState extends State<InputScreen>
       HapticFeedback.lightImpact();
 
       final conversionProvider =
-      Provider.of<ConversionProvider>(context, listen: false);
+          Provider.of<ConversionProvider>(context, listen: false);
       conversionProvider.startConversion(nfaProvider.currentNFA);
 
       await Navigator.pushNamed(context, AppRoutes.conversion);
@@ -871,16 +883,16 @@ class _InputScreenState extends State<InputScreen>
             const Text('لطفاً ابتدا خطاهای زیر را برطرف کنید:'),
             const SizedBox(height: 12),
             ...result.errors.take(3).map((error) => Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('• ',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                  Expanded(child: Text(error)),
-                ],
-              ),
-            )),
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('• ',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      Expanded(child: Text(error)),
+                    ],
+                  ),
+                )),
             if (result.errors.length > 3)
               Text(
                 '... و ${result.errors.length - 3} خطای دیگر',

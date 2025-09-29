@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import '../models/fsa.dart';
 import '../models/state.dart';
 import '../models/fsa_transition.dart';
 import '../models/simulation_result.dart';
 import '../models/simulation_step.dart';
 import '../result.dart';
+import 'common/throttling.dart';
 
 /// Simulates Finite Automata (FA) with input strings
 class AutomatonSimulator {
@@ -16,7 +19,7 @@ class AutomatonSimulator {
   }) {
     try {
       final stopwatch = Stopwatch()..start();
-      
+
       // Validate input (generic checks)
       final validationResult = _validateInput(automaton, inputString);
       if (!validationResult.isSuccess) {
@@ -25,7 +28,8 @@ class AutomatonSimulator {
 
       // Validate DFA constraints
       if (automaton.isNondeterministic || automaton.hasEpsilonTransitions) {
-        return Failure('DFA required: automaton must be deterministic and epsilon-free');
+        return Failure(
+            'DFA required: automaton must be deterministic and epsilon-free');
       }
 
       // Handle empty automaton
@@ -41,10 +45,10 @@ class AutomatonSimulator {
       // Simulate as DFA
       final result = _simulateDFA(automaton, inputString, stepByStep, timeout);
       stopwatch.stop();
-      
+
       // Update execution time
       final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
-      
+
       return Success(finalResult);
     } catch (e) {
       return Failure('Error simulating DFA: $e');
@@ -58,7 +62,8 @@ class AutomatonSimulator {
     bool stepByStep = false,
     Duration timeout = const Duration(seconds: 5),
   }) {
-    return simulateDFA(automaton, inputString, stepByStep: stepByStep, timeout: timeout);
+    return simulateDFA(automaton, inputString,
+        stepByStep: stepByStep, timeout: timeout);
   }
 
   /// Validates the input automaton and string
@@ -66,21 +71,21 @@ class AutomatonSimulator {
     if (automaton.states.isEmpty) {
       return Failure('Automaton must have at least one state');
     }
-    
+
     if (automaton.initialState == null) {
-        return Failure('Automaton must have an initial state');
+      return Failure('Automaton must have an initial state');
     }
-    
+
     if (!automaton.states.contains(automaton.initialState)) {
       return Failure('Initial state must be in the states set');
     }
-    
+
     for (final acceptingState in automaton.acceptingStates) {
       if (!automaton.states.contains(acceptingState)) {
         return Failure('Accepting state must be in the states set');
       }
     }
-    
+
     // Validate input string symbols
     for (int i = 0; i < inputString.length; i++) {
       final symbol = inputString[i];
@@ -88,7 +93,7 @@ class AutomatonSimulator {
         return Failure('Input string contains invalid symbol: $symbol');
       }
     }
-    
+
     return Success(null);
   }
 
@@ -101,22 +106,22 @@ class AutomatonSimulator {
   ) {
     final steps = <SimulationStep>[];
     final startTime = DateTime.now();
-    
+
     // Initialize simulation with a single current state
     var currentState = automaton.initialState!;
     var remainingInput = inputString;
     int stepNumber = 0;
-    
+
     // Add initial step
     steps.add(SimulationStep.initial(
       initialState: automaton.initialState!.id,
       inputString: inputString,
     ));
-    
+
     // Process each input symbol
     while (remainingInput.isNotEmpty) {
       stepNumber++;
-      
+
       // Check timeout
       if (DateTime.now().difference(startTime) > timeout) {
         return SimulationResult.timeout(
@@ -125,25 +130,27 @@ class AutomatonSimulator {
           executionTime: DateTime.now().difference(startTime),
         );
       }
-      
+
       final symbol = remainingInput[0];
       remainingInput = remainingInput.substring(1);
-      
+
       // Find next state deterministically
-      final transitions = automaton.getTransitionsFromStateOnSymbol(currentState, symbol)
+      final transitions = automaton
+          .getTransitionsFromStateOnSymbol(currentState, symbol)
           .whereType<FSATransition>()
           .toList();
       if (transitions.isEmpty) {
         return SimulationResult.failure(
           inputString: inputString,
           steps: steps,
-          errorMessage: 'No transition from state ${currentState.id} on symbol $symbol',
+          errorMessage:
+              'No transition from state ${currentState.id} on symbol $symbol',
           executionTime: DateTime.now().difference(startTime),
         );
       }
       final transition = transitions.first;
       final nextState = transition.toState;
-      
+
       // Check for infinite loop (simplified)
       if (steps.length > 1000) {
         return SimulationResult.infiniteLoop(
@@ -152,7 +159,7 @@ class AutomatonSimulator {
           executionTime: DateTime.now().difference(startTime),
         );
       }
-      
+
       // Add step
       if (stepByStep) {
         steps.add(SimulationStep.fsa(
@@ -161,17 +168,15 @@ class AutomatonSimulator {
           usedTransition: 'δ(${currentState.id}, $symbol) = ${nextState.id}',
           stepNumber: stepNumber,
           consumedInput: symbol,
-          inputSymbol: symbol,
-          nextState: nextState.id,
         ));
       }
-      
+
       currentState = nextState;
     }
-    
+
     // Check if any current state is accepting
     final isAccepted = automaton.acceptingStates.contains(currentState);
-    
+
     // Add final step
     steps.add(SimulationStep.finalStep(
       finalState: currentState.id,
@@ -180,7 +185,7 @@ class AutomatonSimulator {
       tapeContents: '',
       stepNumber: stepNumber + 1,
     ));
-    
+
     if (isAccepted) {
       return SimulationResult.success(
         inputString: inputString,
@@ -206,7 +211,7 @@ class AutomatonSimulator {
   }) {
     try {
       final stopwatch = Stopwatch()..start();
-      
+
       // Validate input
       final validationResult = _validateInput(nfa, inputString);
       if (!validationResult.isSuccess) {
@@ -226,10 +231,10 @@ class AutomatonSimulator {
       // Simulate the NFA
       final result = _simulateNFA(nfa, inputString, stepByStep, timeout);
       stopwatch.stop();
-      
+
       // Update execution time
       final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
-      
+
       return Success(finalResult);
     } catch (e) {
       return Failure('Error simulating NFA: $e');
@@ -245,26 +250,26 @@ class AutomatonSimulator {
   ) {
     final steps = <SimulationStep>[];
     final startTime = DateTime.now();
-    
+
     // Initialize simulation with epsilon closure of initial state
     var currentStates = nfa.getEpsilonClosure(nfa.initialState!);
     var remainingInput = inputString;
     int stepNumber = 0;
-    
+
     // Add initial step
-    final initialStateId = currentStates.length == 1 
-        ? currentStates.first.id 
+    final initialStateId = currentStates.length == 1
+        ? currentStates.first.id
         : '{${currentStates.map((s) => s.id).join(',')}}';
-    
+
     steps.add(SimulationStep.initial(
       initialState: initialStateId,
       inputString: inputString,
     ));
-    
+
     // Process each input symbol
     while (remainingInput.isNotEmpty) {
       stepNumber++;
-      
+
       // Check timeout
       if (DateTime.now().difference(startTime) > timeout) {
         return SimulationResult.timeout(
@@ -273,10 +278,10 @@ class AutomatonSimulator {
           executionTime: DateTime.now().difference(startTime),
         );
       }
-      
+
       final symbol = remainingInput[0];
       remainingInput = remainingInput.substring(1);
-      
+
       // Find next states
       var nextStates = <State>{};
       for (final state in currentStates) {
@@ -285,10 +290,10 @@ class AutomatonSimulator {
           nextStates.add(transition.toState);
         }
       }
-      
+
       // Apply epsilon closure to next states
       nextStates = nfa.getEpsilonClosureOfSet(nextStates);
-      
+
       // Check for infinite loop (simplified)
       if (steps.length > 1000) {
         return SimulationResult.infiniteLoop(
@@ -297,13 +302,13 @@ class AutomatonSimulator {
           executionTime: DateTime.now().difference(startTime),
         );
       }
-      
+
       // Add step
       if (stepByStep) {
-        final currentStateId = currentStates.length == 1 
-            ? currentStates.first.id 
+        final currentStateId = currentStates.length == 1
+            ? currentStates.first.id
             : '{${currentStates.map((s) => s.id).join(',')}}';
-        
+
         steps.add(SimulationStep.fsa(
           currentState: currentStateId,
           remainingInput: remainingInput,
@@ -312,9 +317,9 @@ class AutomatonSimulator {
           consumedInput: symbol,
         ));
       }
-      
+
       currentStates = nextStates;
-      
+
       // If no next states, reject
       if (currentStates.isEmpty) {
         return SimulationResult.failure(
@@ -325,23 +330,24 @@ class AutomatonSimulator {
         );
       }
     }
-    
+
     // Check if any current state is accepting
-    final isAccepted = currentStates.intersection(nfa.acceptingStates).isNotEmpty;
-    
+    final isAccepted =
+        currentStates.intersection(nfa.acceptingStates).isNotEmpty;
+
     // Add final step
-    final finalStateId = currentStates.length == 1 
-        ? currentStates.first.id 
+    final finalStateId = currentStates.length == 1
+        ? currentStates.first.id
         : '{${currentStates.map((s) => s.id).join(',')}}';
-    
-        steps.add(SimulationStep.finalStep(
+
+    steps.add(SimulationStep.finalStep(
       finalState: finalStateId,
       remainingInput: remainingInput,
       stackContents: '',
       tapeContents: '',
       stepNumber: stepNumber + 1,
     ));
-    
+
     if (isAccepted) {
       return SimulationResult.success(
         inputString: inputString,
@@ -364,7 +370,7 @@ class AutomatonSimulator {
     if (!simulationResult.isSuccess) {
       return Failure(simulationResult.error!);
     }
-    
+
     return Success(simulationResult.data!.accepted);
   }
 
@@ -374,7 +380,7 @@ class AutomatonSimulator {
     if (!acceptsResult.isSuccess) {
       return Failure(acceptsResult.error!);
     }
-    
+
     return Success(!acceptsResult.data!);
   }
 
@@ -387,9 +393,11 @@ class AutomatonSimulator {
     try {
       final acceptedStrings = <String>{};
       final alphabet = automaton.alphabet.toList();
-      
+
       // Generate all possible strings up to maxLength
-      for (int length = 0; length <= maxLength && acceptedStrings.length < maxResults; length++) {
+      for (int length = 0;
+          length <= maxLength && acceptedStrings.length < maxResults;
+          length++) {
         _generateStrings(
           automaton,
           alphabet,
@@ -399,7 +407,7 @@ class AutomatonSimulator {
           maxResults,
         );
       }
-      
+
       return Success(acceptedStrings);
     } catch (e) {
       return Failure('Error finding accepted strings: $e');
@@ -416,7 +424,7 @@ class AutomatonSimulator {
     int maxResults,
   ) {
     if (acceptedStrings.length >= maxResults) return;
-    
+
     if (remainingLength == 0) {
       final acceptsResult = accepts(automaton, currentString);
       if (acceptsResult.isSuccess && acceptsResult.data!) {
@@ -424,7 +432,7 @@ class AutomatonSimulator {
       }
       return;
     }
-    
+
     for (final symbol in alphabet) {
       _generateStrings(
         automaton,
@@ -446,9 +454,11 @@ class AutomatonSimulator {
     try {
       final rejectedStrings = <String>{};
       final alphabet = automaton.alphabet.toList();
-      
+
       // Generate all possible strings up to maxLength
-      for (int length = 0; length <= maxLength && rejectedStrings.length < maxResults; length++) {
+      for (int length = 0;
+          length <= maxLength && rejectedStrings.length < maxResults;
+          length++) {
         _generateRejectedStrings(
           automaton,
           alphabet,
@@ -458,7 +468,7 @@ class AutomatonSimulator {
           maxResults,
         );
       }
-      
+
       return Success(rejectedStrings);
     } catch (e) {
       return Failure('Error finding rejected strings: $e');
@@ -475,7 +485,7 @@ class AutomatonSimulator {
     int maxResults,
   ) {
     if (rejectedStrings.length >= maxResults) return;
-    
+
     if (remainingLength == 0) {
       final acceptsResult = accepts(automaton, currentString);
       if (acceptsResult.isSuccess && !acceptsResult.data!) {
@@ -483,7 +493,7 @@ class AutomatonSimulator {
       }
       return;
     }
-    
+
     for (final symbol in alphabet) {
       _generateRejectedStrings(
         automaton,

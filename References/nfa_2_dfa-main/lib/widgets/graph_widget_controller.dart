@@ -3,14 +3,13 @@ import '/screens/graph_painter.dart';
 import 'dart:async';
 
 class GraphWidgetController extends ChangeNotifier {
-
   GraphLayoutType _layoutType = GraphLayoutType.circular;
   GraphTheme _theme = GraphTheme.light;
   AnimationType _animationType = AnimationType.none;
   double _nodeSize = 30.0;
   double _zoomLevel = 1.0;
   Offset _panOffset = Offset.zero;
-  
+
   // Visual properties
   bool _showTransitionLabels = true;
   bool _showStateInfo = true;
@@ -20,7 +19,7 @@ class GraphWidgetController extends ChangeNotifier {
   bool _enablePhysics = false;
   bool _showStatistics = false;
   double _edgeBundling = 0.0;
-  
+
   // Interaction properties
   String? _selectedState;
   String? _hoveredState;
@@ -30,14 +29,15 @@ class GraphWidgetController extends ChangeNotifier {
   Map<String, Color> _customStateColors = {};
   Map<String, double> _stateWeights = {};
   Color _highlightColor = Colors.orange;
-  
+
   // Animation controller
-  final GraphAnimationController _animationController = GraphAnimationController();
+  final GraphAnimationController _animationController =
+      GraphAnimationController();
   Timer? _animationTimer;
-  
+
   // Export data
   Map<String, dynamic>? _lastExportData;
-  
+
   // Getters
   GraphLayoutType get layoutType => _layoutType;
   GraphTheme get theme => _theme;
@@ -208,7 +208,8 @@ class GraphWidgetController extends ChangeNotifier {
     if (_highlightedTransitions != transitions) {
       _highlightedTransitions = Set.from(transitions);
       for (final transition in transitions) {
-        _animationController.startTransitionAnimation(transition, _animationType);
+        _animationController.startTransitionAnimation(
+            transition, _animationType);
       }
       notifyListeners();
     }
@@ -423,7 +424,7 @@ class GraphWidgetController extends ChangeNotifier {
       ),
       'stateWeights': _stateWeights,
     };
-    
+
     _lastExportData = config;
     return config;
   }
@@ -434,20 +435,20 @@ class GraphWidgetController extends ChangeNotifier {
         (e) => e.name == config['layoutType'],
         orElse: () => GraphLayoutType.circular,
       );
-      
+
       _theme = GraphTheme.values.firstWhere(
         (e) => e.name == config['theme'],
         orElse: () => GraphTheme.light,
       );
-      
+
       _animationType = AnimationType.values.firstWhere(
         (e) => e.name == config['animationType'],
         orElse: () => AnimationType.none,
       );
-      
+
       _nodeSize = (config['nodeSize'] as num?)?.toDouble() ?? 30.0;
       _zoomLevel = (config['zoomLevel'] as num?)?.toDouble() ?? 1.0;
-      
+
       final panData = config['panOffset'] as Map<String, dynamic>?;
       if (panData != null) {
         _panOffset = Offset(
@@ -455,7 +456,7 @@ class GraphWidgetController extends ChangeNotifier {
           (panData['dy'] as num?)?.toDouble() ?? 0.0,
         );
       }
-      
+
       _showTransitionLabels = config['showTransitionLabels'] as bool? ?? true;
       _showStateInfo = config['showStateInfo'] as bool? ?? true;
       _showGrid = config['showGrid'] as bool? ?? false;
@@ -464,12 +465,12 @@ class GraphWidgetController extends ChangeNotifier {
       _enablePhysics = config['enablePhysics'] as bool? ?? false;
       _showStatistics = config['showStatistics'] as bool? ?? false;
       _edgeBundling = (config['edgeBundling'] as num?)?.toDouble() ?? 0.0;
-      
+
       final colorValue = config['highlightColor'] as int?;
       if (colorValue != null) {
         _highlightColor = Color(colorValue);
       }
-      
+
       final positions = config['manualPositions'] as Map<String, dynamic>?;
       if (positions != null) {
         _manualPositions = positions.map((key, value) {
@@ -483,21 +484,21 @@ class GraphWidgetController extends ChangeNotifier {
           );
         });
       }
-      
+
       final colors = config['customStateColors'] as Map<String, dynamic>?;
       if (colors != null) {
         _customStateColors = colors.map((key, value) {
           return MapEntry(key, Color(value as int));
         });
       }
-      
+
       final weights = config['stateWeights'] as Map<String, dynamic>?;
       if (weights != null) {
         _stateWeights = weights.map((key, value) {
           return MapEntry(key, (value as num).toDouble());
         });
       }
-      
+
       _setupAnimationTimer();
       notifyListeners();
     } catch (e) {
@@ -526,8 +527,9 @@ class GraphWidgetController extends ChangeNotifier {
   // Search and filter methods
   List<String> searchStates(String query, List<String> allStates) {
     if (query.isEmpty) return allStates;
-    return allStates.where((state) =>
-        state.toLowerCase().contains(query.toLowerCase())).toList();
+    return allStates
+        .where((state) => state.toLowerCase().contains(query.toLowerCase()))
+        .toList();
   }
 
   void highlightSearchResults(String query, List<String> allStates) {
@@ -538,11 +540,11 @@ class GraphWidgetController extends ChangeNotifier {
   // Validation methods
   bool validateConfiguration() {
     return _nodeSize >= 10.0 &&
-           _nodeSize <= 100.0 &&
-           _zoomLevel >= 0.1 &&
-           _zoomLevel <= 5.0 &&
-           _edgeBundling >= 0.0 &&
-           _edgeBundling <= 1.0;
+        _nodeSize <= 100.0 &&
+        _zoomLevel >= 0.1 &&
+        _zoomLevel <= 5.0 &&
+        _edgeBundling >= 0.0 &&
+        _edgeBundling <= 1.0;
   }
 
   // Cleanup
@@ -664,8 +666,8 @@ class _AdvancedGraphWidgetState extends State<AdvancedGraphWidget>
       },
       onScaleUpdate: (details) {
         if (details.scale != 1.0) {
-          _controller.zoomLevel = (_controller.zoomLevel * details.scale)
-              .clamp(0.1, 5.0);
+          _controller.zoomLevel =
+              (_controller.zoomLevel * details.scale).clamp(0.1, 5.0);
         }
         if (details.focalPointDelta != Offset.zero) {
           _controller.pan(details.focalPointDelta);

@@ -96,7 +96,8 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
       transitions: transitionSet.map<Transition>((t) => t).toSet(),
       alphabet: alphabet,
       initialState: initialState,
-      acceptingStates: acceptingStates.isEmpty ? {states.last} : acceptingStates,
+      acceptingStates:
+          acceptingStates.isEmpty ? {states.last} : acceptingStates,
       created: now,
       modified: now,
       bounds: const math.Rectangle(0, 0, 800, 600),
@@ -135,7 +136,8 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
 
   void _updateStateWithPda(PDA pda) {
     final transitions = pda.pdaTransitions;
-    final nondeterministicTransitionIds = _findNondeterministicTransitions(transitions);
+    final nondeterministicTransitionIds =
+        _findNondeterministicTransitions(transitions);
     final lambdaTransitionIds = transitions
         .where((t) => t.isLambdaInput || t.isLambdaPop || t.isLambdaPush)
         .map((t) => t.id)

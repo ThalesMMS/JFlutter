@@ -4,13 +4,13 @@ import 'result.dart';
 
 /// Centralized error handling for the application
 class ErrorHandler {
-  static final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey = 
+  static final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey =
       GlobalKey<ScaffoldMessengerState>();
-  
+
   /// Global key for showing snackbars
-  static GlobalKey<ScaffoldMessengerState> get scaffoldMessengerKey => 
+  static GlobalKey<ScaffoldMessengerState> get scaffoldMessengerKey =>
       _scaffoldMessengerKey;
-  
+
   /// Shows an error message to the user
   static void showError(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -28,7 +28,7 @@ class ErrorHandler {
       ),
     );
   }
-  
+
   /// Shows a success message to the user
   static void showSuccess(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -46,7 +46,7 @@ class ErrorHandler {
       ),
     );
   }
-  
+
   /// Shows an info message to the user
   static void showInfo(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -64,7 +64,7 @@ class ErrorHandler {
       ),
     );
   }
-  
+
   /// Shows a warning message to the user
   static void showWarning(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -82,7 +82,7 @@ class ErrorHandler {
       ),
     );
   }
-  
+
   /// Handles a Result and shows appropriate message
   static void handleResult<T>(
     BuildContext context,
@@ -95,13 +95,12 @@ class ErrorHandler {
         showSuccess(context, successMessage);
       }
     } else {
-      final errorMessage = errorPrefix != null 
-          ? '$errorPrefix: ${result.error}'
-          : result.error!;
+      final errorMessage =
+          errorPrefix != null ? '$errorPrefix: ${result.error}' : result.error!;
       showError(context, errorMessage);
     }
   }
-  
+
   /// Shows a confirmation dialog
   static Future<bool> showConfirmation(
     BuildContext context, {
@@ -129,7 +128,7 @@ class ErrorHandler {
     );
     return result ?? false;
   }
-  
+
   /// Shows an error dialog
   static Future<void> showErrorDialog(
     BuildContext context, {
@@ -151,9 +150,10 @@ class ErrorHandler {
       ),
     );
   }
-  
+
   /// Logs an error (for debugging purposes)
-  static void logError(String message, [Object? error, StackTrace? stackTrace]) {
+  static void logError(String message,
+      [Object? error, StackTrace? stackTrace]) {
     if (kDebugMode) {
       print('ERROR: $message');
       if (error != null) {
@@ -164,14 +164,14 @@ class ErrorHandler {
       }
     }
   }
-  
+
   /// Logs a warning (for debugging purposes)
   static void logWarning(String message) {
     if (kDebugMode) {
       print('WARNING: $message');
     }
   }
-  
+
   /// Logs info (for debugging purposes)
   static void logInfo(String message) {
     if (kDebugMode) {
@@ -196,9 +196,8 @@ extension ResultHandlerExtension<T> on Result<T> {
       }
       onSuccess?.call(data!);
     } else {
-      final errorMessage = errorPrefix != null 
-          ? '$errorPrefix: $error'
-          : error!;
+      final errorMessage =
+          errorPrefix != null ? '$errorPrefix: $error' : error!;
       ErrorHandler.showError(context, errorMessage);
       onFailure?.call(error!);
     }

@@ -2,31 +2,31 @@
 class SimulationStep {
   /// Current state in this step
   final String currentState;
-  
+
   /// Remaining input string
   final String remainingInput;
-  
+
   /// Stack contents (for PDA)
   final String stackContents;
-  
+
   /// Tape contents (for TM)
   final String tapeContents;
-  
+
   /// Transition used in this step (if any)
   final String? usedTransition;
 
   /// Step number in the simulation
   final int stepNumber;
-  
+
   /// Description of what happens in this step
   final String? description;
-  
+
   /// Whether this step results in acceptance
   final bool? isAccepted;
-  
+
   /// Input symbol processed in this step
   final String? inputSymbol;
-  
+
   /// Next state after this step
   final String? nextState;
 
@@ -177,10 +177,12 @@ class SimulationStep {
   String? get stackTop => stackContents.isNotEmpty ? stackContents[0] : null;
 
   /// Gets the current tape symbol (for TM)
-  String? get currentTapeSymbol => tapeContents.isNotEmpty ? tapeContents[0] : null;
+  String? get currentTapeSymbol =>
+      tapeContents.isNotEmpty ? tapeContents[0] : null;
 
   /// Gets the next input symbol
-  String? get nextInputSymbol => remainingInput.isNotEmpty ? remainingInput[0] : null;
+  String? get nextInputSymbol =>
+      remainingInput.isNotEmpty ? remainingInput[0] : null;
 
   /// Gets the stack operation performed (for PDA)
   String get stackOperation {
@@ -198,23 +200,23 @@ class SimulationStep {
   String get summary {
     final buffer = StringBuffer();
     buffer.write('Step $stepNumber: State $currentState');
-    
+
     if (remainingInput.isNotEmpty) {
       buffer.write(', Input: $remainingInput');
     }
-    
+
     if (stackContents.isNotEmpty) {
       buffer.write(', Stack: $stackContents');
     }
-    
+
     if (tapeContents.isNotEmpty) {
       buffer.write(', Tape: $tapeContents');
     }
-    
+
     if (usedTransition != null) {
       buffer.write(', Transition: $usedTransition');
     }
-    
+
     return buffer.toString();
   }
 

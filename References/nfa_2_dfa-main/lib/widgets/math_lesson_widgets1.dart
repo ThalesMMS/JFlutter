@@ -53,8 +53,8 @@ class _MathLessonWidgetState extends State<MathLessonWidget>
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0)
-        .animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
     _fadeController.forward();
   }
 
@@ -849,9 +849,9 @@ class _DialogueMessageWidgetState extends State<DialogueMessageWidget>
 
     _fadeAnimation =
         Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
-          parent: _animationController,
-          curve: Curves.easeIn,
-        ));
+      parent: _animationController,
+      curve: Curves.easeIn,
+    ));
 
     _animationController.forward();
   }
@@ -895,13 +895,13 @@ class _DialogueMessageWidgetState extends State<DialogueMessageWidget>
       height: 48,
       decoration: BoxDecoration(
         color:
-        widget.isTeacher ? AppColors.teacherBlue : AppColors.studentGreen,
+            widget.isTeacher ? AppColors.teacherBlue : AppColors.studentGreen,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
             color: (widget.isTeacher
-                ? AppColors.teacherBlue
-                : AppColors.studentGreen)
+                    ? AppColors.teacherBlue
+                    : AppColors.studentGreen)
                 .withOpacity(0.3),
             blurRadius: 6,
             offset: const Offset(0, 2),
@@ -920,7 +920,7 @@ class _DialogueMessageWidgetState extends State<DialogueMessageWidget>
   Widget _buildMessageBubble() {
     return Column(
       crossAxisAlignment:
-      widget.isTeacher ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+          widget.isTeacher ? CrossAxisAlignment.start : CrossAxisAlignment.end,
       children: [
         // نام گوینده
         Padding(
@@ -1103,17 +1103,17 @@ class _InteractiveQuizWidgetState extends State<InteractiveQuizWidget>
       vsync: this,
     );
 
-    _shakeAnimation = Tween<double>(begin: 0.0, end: 10.0).animate(
-        CurvedAnimation(
-          parent: _shakeController,
-          curve: Curves.elasticIn,
-        ));
+    _shakeAnimation =
+        Tween<double>(begin: 0.0, end: 10.0).animate(CurvedAnimation(
+      parent: _shakeController,
+      curve: Curves.elasticIn,
+    ));
 
     _celebrateAnimation =
         Tween<double>(begin: 1.0, end: 1.2).animate(CurvedAnimation(
-          parent: _celebrateController,
-          curve: Curves.elasticOut,
-        ));
+      parent: _celebrateController,
+      curve: Curves.elasticOut,
+    ));
   }
 
   @override
@@ -1166,7 +1166,7 @@ class _InteractiveQuizWidgetState extends State<InteractiveQuizWidget>
   Widget _buildDifficultyIndicator(int difficulty) {
     final List<Widget> stars = List.generate(
       3,
-          (index) => Icon(
+      (index) => Icon(
         index < difficulty ? Icons.star : Icons.star_border,
         color: AppColors.warningOrange,
         size: 18,
@@ -1252,7 +1252,7 @@ class _InteractiveQuizWidgetState extends State<InteractiveQuizWidget>
               if (_showResult)
                 Container(
                   padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: _isCorrect
                         ? AppColors.successGreen
@@ -1285,7 +1285,7 @@ class _InteractiveQuizWidgetState extends State<InteractiveQuizWidget>
                 _buildDifficultyIndicator(widget.questionData.difficulty),
                 Container(
                   padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: AppColors.secondaryYellow.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
@@ -1401,23 +1401,23 @@ class _InteractiveQuizWidgetState extends State<InteractiveQuizWidget>
                             width: 24,
                             height: 24,
                             decoration: BoxDecoration(
-                              color: isSelected ||
-                                  (_showResult && isCorrectOption)
-                                  ? borderColor
-                                  : Colors.transparent,
+                              color:
+                                  isSelected || (_showResult && isCorrectOption)
+                                      ? borderColor
+                                      : Colors.transparent,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: borderColor, width: 2),
                             ),
                             child:
-                            isSelected || (_showResult && isCorrectOption)
-                                ? Icon(
-                              _showResult && isCorrectOption
-                                  ? Icons.check
-                                  : Icons.circle,
-                              color: Colors.white,
-                              size: 12,
-                            )
-                                : null,
+                                isSelected || (_showResult && isCorrectOption)
+                                    ? Icon(
+                                        _showResult && isCorrectOption
+                                            ? Icons.check
+                                            : Icons.circle,
+                                        color: Colors.white,
+                                        size: 12,
+                                      )
+                                    : null,
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -1427,7 +1427,7 @@ class _InteractiveQuizWidgetState extends State<InteractiveQuizWidget>
                                 fontSize: 14,
                                 color: textColor,
                                 fontWeight: isSelected ||
-                                    (_showResult && isCorrectOption)
+                                        (_showResult && isCorrectOption)
                                     ? FontWeight.w600
                                     : FontWeight.normal,
                               ),
@@ -1485,8 +1485,7 @@ class _InteractiveQuizWidgetState extends State<InteractiveQuizWidget>
                     },
                     icon: const Icon(Icons.help_outline),
                     style: IconButton.styleFrom(
-                      backgroundColor:
-                      AppColors.warningOrange.withOpacity(0.1),
+                      backgroundColor: AppColors.warningOrange.withOpacity(0.1),
                       foregroundColor: AppColors.warningOrange,
                     ),
                     tooltip: 'راهنمایی',
@@ -1506,7 +1505,7 @@ class _InteractiveQuizWidgetState extends State<InteractiveQuizWidget>
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color:
-                  _isCorrect ? AppColors.successGreen : AppColors.errorRed,
+                      _isCorrect ? AppColors.successGreen : AppColors.errorRed,
                 ),
               ),
               child: Column(
@@ -1628,7 +1627,6 @@ class _InteractiveQuizWidgetState extends State<InteractiveQuizWidget>
     );
   }
 }
-
 
 // 📊 ویجت نمایش پیشرفت
 class ProgressIndicatorWidget extends StatefulWidget {

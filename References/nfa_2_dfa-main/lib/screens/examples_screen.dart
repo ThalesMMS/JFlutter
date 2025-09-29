@@ -46,8 +46,14 @@ class _ExamplesScreenState extends State<ExamplesScreen>
         'startState': 'q0',
         'finalStates': ['q1'],
         'transitions': {
-          'q0': {'a': ['q1'], 'b': ['q2']},
-          'q1': {'a': ['q1'], 'b': ['q1']},
+          'q0': {
+            'a': ['q1'],
+            'b': ['q2']
+          },
+          'q1': {
+            'a': ['q1'],
+            'b': ['q1']
+          },
           'q2': {},
         }
       }
@@ -68,8 +74,13 @@ class _ExamplesScreenState extends State<ExamplesScreen>
         'startState': 'q0',
         'finalStates': ['q1'],
         'transitions': {
-          'q0': {'a': ['q0'], 'b': ['q0', 'q1']},
-          'q1': {'a': ['q0']},
+          'q0': {
+            'a': ['q0'],
+            'b': ['q0', 'q1']
+          },
+          'q1': {
+            'a': ['q0']
+          },
         }
       }
     },
@@ -91,15 +102,24 @@ class _ExamplesScreenState extends State<ExamplesScreen>
         'startState': 'q0',
         'finalStates': ['q2'],
         'transitions': {
-          'q0': {'a': ['q0', 'q1'], 'b': ['q0']},
-          'q1': {'b': ['q2']},
-          'q2': {'a': ['q2'], 'b': ['q2']},
+          'q0': {
+            'a': ['q0', 'q1'],
+            'b': ['q0']
+          },
+          'q1': {
+            'b': ['q2']
+          },
+          'q2': {
+            'a': ['q2'],
+            'b': ['q2']
+          },
         }
       }
     },
     {
       'title': 'تعداد زوج صفر',
-      'description': 'اتوماتا برای شمارش زوج/فرد تعداد ارقام صفر در رشته باینری',
+      'description':
+          'اتوماتا برای شمارش زوج/فرد تعداد ارقام صفر در رشته باینری',
       'category': 'متوسط',
       'difficulty': 2,
       'complexity': 'متوسط',
@@ -113,8 +133,14 @@ class _ExamplesScreenState extends State<ExamplesScreen>
         'startState': 'q0',
         'finalStates': ['q0'],
         'transitions': {
-          'q0': {'0': ['q1'], '1': ['q0']},
-          'q1': {'0': ['q0'], '1': ['q1']},
+          'q0': {
+            '0': ['q1'],
+            '1': ['q0']
+          },
+          'q1': {
+            '0': ['q0'],
+            '1': ['q1']
+          },
         }
       }
     },
@@ -136,16 +162,24 @@ class _ExamplesScreenState extends State<ExamplesScreen>
         'startState': 'q0',
         'finalStates': ['q3'],
         'transitions': {
-          'q0': {'a': ['q0', 'q1'], 'b': ['q0']},
-          'q1': {'b': ['q2']},
-          'q2': {'b': ['q3']},
+          'q0': {
+            'a': ['q0', 'q1'],
+            'b': ['q0']
+          },
+          'q1': {
+            'b': ['q2']
+          },
+          'q2': {
+            'b': ['q3']
+          },
           'q3': {},
         }
       }
     },
     {
       'title': 'تشخیص پالیندروم',
-      'description': 'اتوماتای غیرقطعی برای تشخیص پالیندروم‌های فرد در حروف {a,b}',
+      'description':
+          'اتوماتای غیرقطعی برای تشخیص پالیندروم‌های فرد در حروف {a,b}',
       'category': 'پیشرفته',
       'difficulty': 4,
       'complexity': 'بسیار پیچیده',
@@ -159,10 +193,20 @@ class _ExamplesScreenState extends State<ExamplesScreen>
         'startState': 'q0',
         'finalStates': ['q0', 'q2', 'q4'],
         'transitions': {
-          'q0': {'a': ['q1', 'q0'], 'b': ['q3', 'q0'], 'ε': ['q2']},
-          'q1': {'a': ['q0'], 'ε': ['q2']},
+          'q0': {
+            'a': ['q1', 'q0'],
+            'b': ['q3', 'q0'],
+            'ε': ['q2']
+          },
+          'q1': {
+            'a': ['q0'],
+            'ε': ['q2']
+          },
           'q2': {},
-          'q3': {'b': ['q0'], 'ε': ['q4']},
+          'q3': {
+            'b': ['q0'],
+            'ε': ['q4']
+          },
           'q4': {},
         }
       }
@@ -171,7 +215,8 @@ class _ExamplesScreenState extends State<ExamplesScreen>
     // مثال‌های کلاسیک
     {
       'title': 'ماشین وندینگ',
-      'description': 'شبیه‌سازی ماشین فروش با سکه‌های 5 و 10 تومانی (محصول 15 تومان)',
+      'description':
+          'شبیه‌سازی ماشین فروش با سکه‌های 5 و 10 تومانی (محصول 15 تومان)',
       'category': 'کلاسیک',
       'difficulty': 3,
       'complexity': 'کاربردی',
@@ -185,9 +230,18 @@ class _ExamplesScreenState extends State<ExamplesScreen>
         'startState': 'q0',
         'finalStates': ['q15'],
         'transitions': {
-          'q0': {'5T': ['q5'], '10T': ['q10']},
-          'q5': {'5T': ['q10'], '10T': ['q15']},
-          'q10': {'5T': ['q15'], '10T': ['q15']},
+          'q0': {
+            '5T': ['q5'],
+            '10T': ['q10']
+          },
+          'q5': {
+            '5T': ['q10'],
+            '10T': ['q15']
+          },
+          'q10': {
+            '5T': ['q15'],
+            '10T': ['q15']
+          },
           'q15': {},
         }
       }
@@ -208,9 +262,18 @@ class _ExamplesScreenState extends State<ExamplesScreen>
         'startState': 'q0',
         'finalStates': ['q0'],
         'transitions': {
-          'q0': {'a': ['q1'], 'b': ['q1']},
-          'q1': {'a': ['q2'], 'b': ['q2']},
-          'q2': {'a': ['q0'], 'b': ['q0']},
+          'q0': {
+            'a': ['q1'],
+            'b': ['q1']
+          },
+          'q1': {
+            'a': ['q2'],
+            'b': ['q2']
+          },
+          'q2': {
+            'a': ['q0'],
+            'b': ['q0']
+          },
         }
       }
     },
@@ -244,21 +307,27 @@ class _ExamplesScreenState extends State<ExamplesScreen>
     return _examples.where((example) {
       final matchesCategory = _selectedCategory == 'همه' ||
           example['category'] == _selectedCategory;
-      final matchesSearch = example['title'].toLowerCase()
-          .contains(_searchQuery.toLowerCase()) ||
-          example['description'].toLowerCase()
-              .contains(_searchQuery.toLowerCase());
+      final matchesSearch =
+          example['title'].toLowerCase().contains(_searchQuery.toLowerCase()) ||
+              example['description']
+                  .toLowerCase()
+                  .contains(_searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     }).toList();
   }
 
   Color _getDifficultyColor(int difficulty) {
     switch (difficulty) {
-      case 1: return Colors.green;
-      case 2: return Colors.orange;
-      case 3: return Colors.red;
-      case 4: return Colors.purple;
-      default: return Colors.grey;
+      case 1:
+        return Colors.green;
+      case 2:
+        return Colors.orange;
+      case 3:
+        return Colors.red;
+      case 4:
+        return Colors.purple;
+      default:
+        return Colors.grey;
     }
   }
 
@@ -400,7 +469,8 @@ class _ExamplesScreenState extends State<ExamplesScreen>
                                   Text(
                                     example['complexity'],
                                     style: TextStyle(
-                                      color: _getDifficultyColor(example['difficulty']),
+                                      color: _getDifficultyColor(
+                                          example['difficulty']),
                                       fontWeight: FontWeight.w500,
                                       fontSize: 12,
                                     ),
@@ -428,9 +498,7 @@ class _ExamplesScreenState extends State<ExamplesScreen>
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6
-                          ),
+                              horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
                             color: Colors.grey[100],
                             borderRadius: BorderRadius.circular(20),
@@ -456,9 +524,7 @@ class _ExamplesScreenState extends State<ExamplesScreen>
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6
-                          ),
+                              horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
                             color: (example['color'] as Color).withOpacity(0.1),
                             borderRadius: BorderRadius.circular(20),
@@ -593,38 +659,38 @@ class _ExamplesScreenState extends State<ExamplesScreen>
           Expanded(
             child: filteredExamples.isEmpty
                 ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.search_off,
-                    size: 64,
-                    color: Colors.grey[400],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'هیچ مثالی یافت نشد',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey[600],
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.search_off,
+                          size: 64,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'هیچ مثالی یافت نشد',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'لطفاً جستجو یا دسته‌بندی را تغییر دهید',
+                          style: TextStyle(
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'لطفاً جستجو یا دسته‌بندی را تغییر دهید',
-                    style: TextStyle(
-                      color: Colors.grey[500],
-                    ),
-                  ),
-                ],
-              ),
-            )
+                  )
                 : ListView.builder(
-              itemCount: filteredExamples.length,
-              itemBuilder: (context, index) {
-                return _buildExampleCard(filteredExamples[index], index);
-              },
-            ),
+                    itemCount: filteredExamples.length,
+                    itemBuilder: (context, index) {
+                      return _buildExampleCard(filteredExamples[index], index);
+                    },
+                  ),
           ),
         ],
       ),

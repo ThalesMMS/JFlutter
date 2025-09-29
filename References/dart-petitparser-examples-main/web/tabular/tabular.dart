@@ -8,12 +8,10 @@ final input = document.querySelector('#input') as HTMLTextAreaElement;
 final output = document.querySelector('#output') as HTMLDivElement;
 
 const examples = {
-  'CSV':
-      'Los Angeles,34°03′N,118°15′W\n'
+  'CSV': 'Los Angeles,34°03′N,118°15′W\n'
       'New York City,40°42′46″N,74°00′21″W\n'
       'Paris,48°51′24″N,2°21′03″E',
-  'TSV':
-      'Sepal length	Sepal width	Petal length	Petal width	Species\n'
+  'TSV': 'Sepal length	Sepal width	Petal length	Petal width	Species\n'
       '5.1	3.5	1.4	0.2	I. setosa\n'
       '4.9	3.0	1.4	0.2	I. setosa\n'
       '4.7	3.2	1.3	0.2	I. setosa\n'

@@ -35,8 +35,8 @@ mixin HasSelector implements Node {
   SelectorType get selectorType => arguments.isEmpty
       ? SelectorType.unary
       : selectorToken.first.value.endsWith(':')
-      ? SelectorType.keyword
-      : SelectorType.binary;
+          ? SelectorType.keyword
+          : SelectorType.binary;
 }
 
 class MethodNode extends Node with HasSelector {
@@ -133,7 +133,7 @@ abstract class LiteralNode<T> extends ValueNode {
 
 class LiteralArrayNode<T> extends LiteralNode<List<T>> {
   LiteralArrayNode(this.values)
-    : super(values.map((value) => value.value).toList());
+      : super(values.map((value) => value.value).toList());
 
   final List<LiteralNode<T>> values;
 

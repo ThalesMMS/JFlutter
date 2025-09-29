@@ -53,7 +53,8 @@ class SimulationResult {
       inputString: inputString,
       accepted: false,
       steps: steps,
-      errorMessage: 'Simulation timed out after ${executionTime.inSeconds} seconds',
+      errorMessage:
+          'Simulation timed out after ${executionTime.inSeconds} seconds',
       executionTime: executionTime,
     );
   }
@@ -126,7 +127,8 @@ class SimulationResult {
 
   @override
   int get hashCode {
-    return Object.hash(inputString, accepted, steps, errorMessage, executionTime);
+    return Object.hash(
+        inputString, accepted, steps, errorMessage, executionTime);
   }
 
   @override
@@ -156,10 +158,13 @@ class SimulationResult {
   bool get isFailed => !accepted || errorMessage.isNotEmpty;
 
   /// Checks if the simulation timed out
-  bool get isTimeout => errorMessage.contains('timeout') || errorMessage.contains('Timeout');
+  bool get isTimeout =>
+      errorMessage.contains('timeout') || errorMessage.contains('Timeout');
 
   /// Checks if the simulation had an infinite loop
-  bool get isInfiniteLoop => errorMessage.contains('infinite loop') || errorMessage.contains('Infinite loop');
+  bool get isInfiniteLoop =>
+      errorMessage.contains('infinite loop') ||
+      errorMessage.contains('Infinite loop');
 
   /// Gets the execution time in milliseconds
   int get executionTimeMs => executionTime.inMilliseconds;
@@ -197,15 +202,16 @@ class SimulationResult {
   List<String> get inputSequence {
     final sequence = <String>[];
     String remaining = inputString;
-    
+
     for (final step in steps) {
       if (step.remainingInput.length < remaining.length) {
-        final consumed = remaining.substring(0, remaining.length - step.remainingInput.length);
+        final consumed = remaining.substring(
+            0, remaining.length - step.remainingInput.length);
         sequence.addAll(consumed.split(''));
         remaining = step.remainingInput;
       }
     }
-    
+
     return sequence;
   }
 

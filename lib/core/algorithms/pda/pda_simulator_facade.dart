@@ -2,10 +2,10 @@ import '../../models/pda.dart';
 import '../../result.dart';
 import '../../models/simulation_step.dart';
 import '../../models/simulation_result.dart';
-import '../pda_simulator.dart';
+import '../pda_simulator.dart' as pda;
 
 /// Acceptance mode for PDA: by final state, empty stack, or both.
-enum PDAAcceptanceMode { finalState, emptyStack, both }
+typedef PDAAcceptanceMode = pda.PDAAcceptanceMode;
 
 /// High-level PDA simulator facade supporting different acceptance modes.
 class PDASimulatorFacade {
@@ -17,7 +17,7 @@ class PDASimulatorFacade {
     Duration timeout = const Duration(seconds: 5),
   }) {
     // Route to NPDA engine which supports modes and ε/branching.
-    return PDASimulator.simulateNPDA(
+    return pda.PDASimulator.simulateNPDA(
       pda,
       input,
       stepByStep: stepByStep,
@@ -26,5 +26,3 @@ class PDASimulatorFacade {
     );
   }
 }
-
-

@@ -6,7 +6,6 @@ import '../models/state_model.dart';
 import '../services/nfa_to_dfa_converter.dart';
 
 class ConversionProvider with ChangeNotifier {
-
   late final EnhancedNFAToDFAConverter _converter;
 
   bool _isConverting = false;
@@ -25,7 +24,6 @@ class ConversionProvider with ChangeNotifier {
   bool get isNewLogAdded => _isNewLogAdded;
 
   ConversionProvider() {
-
     _converter = EnhancedNFAToDFAConverter(
       config: ConversionProfileManager.getProfile('متعادل'),
       onProgress: (message, progress) {
@@ -43,19 +41,20 @@ class ConversionProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-
       final (dfa, report) = await _converter.convertWithEnhancedReport(nfa);
 
       _conversionResult = ConversionResult.success(
         nfa: nfa,
         dfa: dfa,
-        steps: report.conversionSteps.map((s) => DetailedStep.fromString(s)).toList(),
+        steps: report.conversionSteps
+            .map((s) => DetailedStep.fromString(s))
+            .toList(),
         warnings: report.warnings,
         processingTime: report.conversionTime,
       );
 
-      _currentStepMessage = 'تبدیل با موفقیت در ${report.conversionTime.inMilliseconds}ms انجام شد.';
-
+      _currentStepMessage =
+          'تبدیل با موفقیت در ${report.conversionTime.inMilliseconds}ms انجام شد.';
     } catch (e) {
       _conversionResult = ConversionResult.error(e.toString());
       _currentStepMessage = e.toString();
@@ -85,7 +84,6 @@ class ConversionProvider with ChangeNotifier {
   }
 }
 
-
 class ConversionResult {
   final bool isSuccess;
   final String? errorMessage;
@@ -101,7 +99,8 @@ class ConversionResult {
     this.steps = const [],
     this.warnings = const [],
     this.processingTime,
-  }) : isSuccess = true, errorMessage = null;
+  })  : isSuccess = true,
+        errorMessage = null;
 
   ConversionResult.error(this.errorMessage)
       : isSuccess = false,
@@ -126,7 +125,6 @@ class DetailedStep {
   });
 
   factory DetailedStep.fromString(String stepString) {
-
     return DetailedStep(
       stepNumber: 0,
       stateName: stepString,

@@ -16,20 +16,24 @@ class DFAOperations {
   /// that assume determinism and no epsilon transitions.
   static Result<void> _validateDfa(FSA dfa, {String context = 'DFA'}) {
     if (dfa.initialState == null) {
-      return ResultFactory.failure('$context deve possuir estado inicial definido.');
+      return ResultFactory.failure(
+          '$context deve possuir estado inicial definido.');
     }
     if (!dfa.isDeterministic) {
-      return ResultFactory.failure('$context deve ser determinístico (sem transições não determinísticas).');
+      return ResultFactory.failure(
+          '$context deve ser determinístico (sem transições não determinísticas).');
     }
     if (dfa.hasEpsilonTransitions) {
-      return ResultFactory.failure('$context não pode conter transições ε (epsilon).');
+      return ResultFactory.failure(
+          '$context não pode conter transições ε (epsilon).');
     }
     // Validate transitions symbols are part of alphabet
     for (final t in dfa.fsaTransitions) {
       if (t.isEpsilonTransition) continue;
       for (final s in t.inputSymbols) {
         if (!dfa.alphabet.contains(s)) {
-          return ResultFactory.failure('$context possui transição com símbolo fora do alfabeto: "$s".');
+          return ResultFactory.failure(
+              '$context possui transição com símbolo fora do alfabeto: "$s".');
         }
       }
     }
@@ -43,11 +47,15 @@ class DFAOperations {
     if (vb.isFailure) return vb;
     // Alphabets may differ; we normalize via completion on the union, but we still
     // validate that no operand has empty alphabet while having labeled transitions.
-    if (a.alphabet.isEmpty && a.fsaTransitions.any((t) => !t.isEpsilonTransition)) {
-      return ResultFactory.failure('Operando A possui transições rotuladas, mas alfabeto está vazio.');
+    if (a.alphabet.isEmpty &&
+        a.fsaTransitions.any((t) => !t.isEpsilonTransition)) {
+      return ResultFactory.failure(
+          'Operando A possui transições rotuladas, mas alfabeto está vazio.');
     }
-    if (b.alphabet.isEmpty && b.fsaTransitions.any((t) => !t.isEpsilonTransition)) {
-      return ResultFactory.failure('Operando B possui transições rotuladas, mas alfabeto está vazio.');
+    if (b.alphabet.isEmpty &&
+        b.fsaTransitions.any((t) => !t.isEpsilonTransition)) {
+      return ResultFactory.failure(
+          'Operando B possui transições rotuladas, mas alfabeto está vazio.');
     }
     return ResultFactory.success(null);
   }
@@ -60,7 +68,8 @@ class DFAOperations {
       final completed = _completeWithAlphabet(dfa, dfa.alphabet);
       final updated = _rebuildWithStateUpdate(
         completed,
-        acceptingPredicate: (state) => !completed.acceptingStates.contains(state),
+        acceptingPredicate: (state) =>
+            !completed.acceptingStates.contains(state),
       );
       return ResultFactory.success(updated);
     } catch (e) {
@@ -132,7 +141,8 @@ class DFAOperations {
       final valid = _validateDfa(dfa, context: 'DFA para fecho por sufixos');
       if (valid.isFailure) return ResultFactory.failure(valid.error!);
       if (dfa.initialState == null) {
-        return ResultFactory.failure('Automato não possui estado inicial definido.');
+        return ResultFactory.failure(
+            'Automato não possui estado inicial definido.');
       }
 
       final completed = _completeWithAlphabet(dfa, dfa.alphabet);
@@ -150,7 +160,8 @@ class DFAOperations {
         label: 'start',
         position: completed.initialState!.position + Vector2(40, -40),
         isInitial: true,
-        isAccepting: reachable.any((state) => completed.acceptingStates.contains(state)),
+        isAccepting:
+            reachable.any((state) => completed.acceptingStates.contains(state)),
       );
 
       final transitions = <FSATransition>{
@@ -214,7 +225,8 @@ class DFAOperations {
   ) {
     try {
       if (a.initialState == null || b.initialState == null) {
-        return ResultFactory.failure('Ambos DFAs precisam ter estado inicial definido.');
+        return ResultFactory.failure(
+            'Ambos DFAs precisam ter estado inicial definido.');
       }
 
       final combinedAlphabet = {...a.alphabet, ...b.alphabet};
@@ -259,7 +271,8 @@ class DFAOperations {
             .whereType<FSATransition>()
             .toList();
         if (transitionsForSymbol.isEmpty) {
-          throw StateError('Deterministic automaton expected transition for $symbol');
+          throw StateError(
+              'Deterministic automaton expected transition for $symbol');
         }
         return transitionsForSymbol.first.toState;
       }
@@ -392,7 +405,8 @@ class DFAOperations {
 
     while (queue.isNotEmpty) {
       final state = queue.removeFirst();
-      for (final transition in dfa.getTransitionsFrom(state).whereType<FSATransition>()) {
+      for (final transition
+          in dfa.getTransitionsFrom(state).whereType<FSATransition>()) {
         if (visited.add(transition.toState)) {
           queue.add(transition.toState);
         }
@@ -433,7 +447,9 @@ class FSAOperations {
         return updated;
       });
 
-      final alphabet = automaton.alphabet.where((symbol) => !_isLambdaSymbol(symbol)).toSet();
+      final alphabet = automaton.alphabet
+          .where((symbol) => !_isLambdaSymbol(symbol))
+          .toSet();
       final newTransitions = <FSATransition>{};
 
       for (final state in automaton.states) {
@@ -503,7 +519,8 @@ class FSAOperations {
       final state = queue.removeFirst();
       final epsilonTransitions = automaton.fsaTransitions.where(
         (transition) =>
-            transition.isEpsilonTransition && transition.fromState.id == state.id,
+            transition.isEpsilonTransition &&
+            transition.fromState.id == state.id,
       );
 
       for (final transition in epsilonTransitions) {

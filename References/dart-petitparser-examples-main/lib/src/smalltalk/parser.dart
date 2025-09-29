@@ -8,22 +8,20 @@ import 'grammar.dart';
 class SmalltalkParserDefinition extends SmalltalkGrammarDefinition {
   @override
   Parser array() => super.array().map(
-    (input) => buildArray(input[1])..surroundWith(input[0], input[2]),
-  );
+        (input) => buildArray(input[1])..surroundWith(input[0], input[2]),
+      );
 
   @override
   Parser arrayLiteral() => super.arrayLiteral().map(
-    (input) =>
-        LiteralArrayNode(input[1].cast<LiteralNode>().toList())
+        (input) => LiteralArrayNode(input[1].cast<LiteralNode>().toList())
           ..surroundWith(input[0], input[2]),
-  );
+      );
 
   @override
   Parser arrayLiteralArray() => super.arrayLiteralArray().map(
-    (input) =>
-        LiteralArrayNode(input[1].cast<LiteralNode>().toList())
+        (input) => LiteralArrayNode(input[1].cast<LiteralNode>().toList())
           ..surroundWith(input[0], input[2]),
-  );
+      );
 
   @override
   Parser binaryExpression() =>
@@ -42,27 +40,27 @@ class SmalltalkParserDefinition extends SmalltalkGrammarDefinition {
 
   @override
   Parser byteLiteral() => super.byteLiteral().map(
-    (input) =>
-        LiteralArrayNode<num>(input[1].cast<LiteralNode<num>>().toList())
-          ..surroundWith(input[0], input[2]),
-  );
+        (input) =>
+            LiteralArrayNode<num>(input[1].cast<LiteralNode<num>>().toList())
+              ..surroundWith(input[0], input[2]),
+      );
 
   @override
   Parser byteLiteralArray() => super.byteLiteralArray().map(
-    (input) =>
-        LiteralArrayNode<num>(input[1].cast<LiteralNode<num>>().toList())
-          ..surroundWith(input[0], input[2]),
-  );
+        (input) =>
+            LiteralArrayNode<num>(input[1].cast<LiteralNode<num>>().toList())
+              ..surroundWith(input[0], input[2]),
+      );
 
   @override
   Parser characterLiteral() => super.characterLiteral().map(
-    (input) => LiteralValueNode<String>(input, input.value.substring(1)),
-  );
+        (input) => LiteralValueNode<String>(input, input.value.substring(1)),
+      );
 
   @override
   Parser cascadeExpression() => super.cascadeExpression().map(
-    (input) => buildCascade(input[0], input[1]),
-  );
+        (input) => buildCascade(input[0], input[1]),
+      );
 
   @override
   Parser expression() =>
@@ -78,8 +76,8 @@ class SmalltalkParserDefinition extends SmalltalkGrammarDefinition {
 
   @override
   Parser keywordExpression() => super.keywordExpression().map(
-    (input) => buildMessage(input[0], [input[1]]),
-  );
+        (input) => buildMessage(input[0], [input[1]]),
+      );
 
   @override
   Parser method() => super.method().map((input) => buildMethod(input));
@@ -90,8 +88,8 @@ class SmalltalkParserDefinition extends SmalltalkGrammarDefinition {
 
   @override
   Parser numberLiteral() => super.numberLiteral().map(
-    (input) => LiteralValueNode<num>(input, buildNumber(input.value)),
-  );
+        (input) => LiteralValueNode<num>(input, buildNumber(input.value)),
+      );
 
   @override
   Parser parens() =>
@@ -99,31 +97,31 @@ class SmalltalkParserDefinition extends SmalltalkGrammarDefinition {
 
   @override
   Parser pragma() => super.pragma().map(
-    (input) => buildPragma(input[1])..surroundWith(input[0], input[2]),
-  );
+        (input) => buildPragma(input[1])..surroundWith(input[0], input[2]),
+      );
 
   @override
   Parser sequence() => super.sequence().map(
-    (input) => buildSequence(input[0], [input[1], input[2]]),
-  );
+        (input) => buildSequence(input[0], [input[1], input[2]]),
+      );
 
   @override
   Parser stringLiteral() => super.stringLiteral().map(
-    (input) => LiteralValueNode<String>(input, buildString(input.value)),
-  );
+        (input) => LiteralValueNode<String>(input, buildString(input.value)),
+      );
 
   @override
   Parser symbolLiteral() => super.symbolLiteral().map(
-    (input) => LiteralValueNode<String>(
-      Token.join<dynamic>([...input[0], input[1]]),
-      buildString(input[1].value),
-    ),
-  );
+        (input) => LiteralValueNode<String>(
+          Token.join<dynamic>([...input[0], input[1]]),
+          buildString(input[1].value),
+        ),
+      );
 
   @override
   Parser symbolLiteralArray() => super.symbolLiteralArray().map(
-    (input) => LiteralValueNode<String>(input, buildString(input.value)),
-  );
+        (input) => LiteralValueNode<String>(input, buildString(input.value)),
+      );
 
   @override
   Parser unaryExpression() =>
@@ -147,10 +145,10 @@ ArrayNode buildArray(List statements) {
 }
 
 ValueNode buildAssignment(ValueNode node, List parts) => parts.reversed.fold(
-  node,
-  (result, variableAndToken) =>
-      AssignmentNode(variableAndToken[0], variableAndToken[1], result),
-);
+      node,
+      (result, variableAndToken) =>
+          AssignmentNode(variableAndToken[0], variableAndToken[1], result),
+    );
 
 ValueNode buildBlock(List arguments, SequenceNode body) {
   final result = BlockNode(body);
@@ -174,8 +172,8 @@ ValueNode buildCascade(ValueNode value, List parts) {
 }
 
 ValueNode buildMessage(ValueNode receiver, List parts) => parts
-    .where((selectorAndArguments) => selectorAndArguments.isNotEmpty)
-    .fold(receiver, (receiver, selectorAndArguments) {
+        .where((selectorAndArguments) => selectorAndArguments.isNotEmpty)
+        .fold(receiver, (receiver, selectorAndArguments) {
       final message = MessageNode(receiver);
       addTo<Token>(message.selectorToken, selectorAndArguments);
       addTo<ValueNode>(message.arguments, selectorAndArguments);
@@ -225,11 +223,11 @@ num buildNumber(String input) {
   return values.length == 1
       ? num.parse(values[0])
       : values.length == 2
-      ? int.parse(values[1], radix: int.parse(values[0]))
-      : throw ArgumentError.value(input, 'number', 'Unable to parse');
+          ? int.parse(values[1], radix: int.parse(values[0]))
+          : throw ArgumentError.value(input, 'number', 'Unable to parse');
 }
 
 String buildString(String input) =>
     input.isNotEmpty && input.startsWith("'") && input.startsWith("'")
-    ? input.substring(1, input.length - 1).replaceAll("''", "'")
-    : input;
+        ? input.substring(1, input.length - 1).replaceAll("''", "'")
+        : input;

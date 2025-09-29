@@ -61,8 +61,9 @@ class GrammarAnalyzer {
 
       if (alpha.isEmpty) {
         for (final alt in alternatives) {
-          newProductions.add(_productionFrom(nonTerminal, alt,
-              productionCounter++, grammarId: grammar.id));
+          newProductions.add(_productionFrom(
+              nonTerminal, alt, productionCounter++,
+              grammarId: grammar.id));
         }
         continue;
       }
@@ -70,25 +71,28 @@ class GrammarAnalyzer {
       changed = true;
       final prime = _generatePrimeSymbol(nonTerminal, newNonTerminals);
       newNonTerminals.add(prime);
-      notes.add('Introduced non-terminal $prime to remove left recursion from $nonTerminal.');
+      notes.add(
+          'Introduced non-terminal $prime to remove left recursion from $nonTerminal.');
 
       if (beta.isEmpty) {
         beta.add(<String>[]);
-        notes.add('Added implicit ε-production for $nonTerminal to preserve language.');
+        notes.add(
+            'Added implicit ε-production for $nonTerminal to preserve language.');
       }
 
       for (final betaAlt in beta) {
         final updated = [...betaAlt, prime];
-        newProductions.add(_productionFrom(nonTerminal, updated,
-            productionCounter++, grammarId: grammar.id));
+        newProductions.add(_productionFrom(
+            nonTerminal, updated, productionCounter++,
+            grammarId: grammar.id));
         derivations.add(
             '$nonTerminal → ${_formatSymbols(betaAlt)}$prime (from β production)');
       }
 
       for (final alphaAlt in alpha) {
         final updated = [...alphaAlt, prime];
-        newProductions.add(_productionFrom(prime, updated,
-            productionCounter++, grammarId: grammar.id));
+        newProductions.add(_productionFrom(prime, updated, productionCounter++,
+            grammarId: grammar.id));
         derivations.add(
             '$prime → ${_formatSymbols(alphaAlt)}$prime (from α production)');
       }
@@ -166,8 +170,9 @@ class GrammarAnalyzer {
         ];
 
         grouped[newSymbol] = toFactor
-            .map((alt) =>
-                alt.length == prefix.length ? <String>[] : alt.sublist(prefix.length))
+            .map((alt) => alt.length == prefix.length
+                ? <String>[]
+                : alt.sublist(prefix.length))
             .toList();
 
         derivations.add(
@@ -186,8 +191,8 @@ class GrammarAnalyzer {
 
     for (final entry in grouped.entries) {
       for (final alt in entry.value) {
-        newProductions.add(_productionFrom(entry.key, alt,
-            productionCounter++, grammarId: grammar.id));
+        newProductions.add(_productionFrom(entry.key, alt, productionCounter++,
+            grammarId: grammar.id));
       }
       if (entry.value.isEmpty) {
         newProductions.add(Production(
@@ -215,7 +220,8 @@ class GrammarAnalyzer {
     );
   }
 
-  static Result<GrammarAnalysisReport<Map<String, Set<String>>>> computeFirstSets(
+  static Result<GrammarAnalysisReport<Map<String, Set<String>>>>
+      computeFirstSets(
     Grammar grammar,
   ) {
     if (grammar.productions.isEmpty) {
@@ -244,8 +250,8 @@ class GrammarAnalyzer {
           if (right.isEmpty) {
             if (first[left]!.add('ε')) {
               changed = true;
-              derivations.add(
-                  "FIRST($left) gains ε due to production $left → ε");
+              derivations
+                  .add("FIRST($left) gains ε due to production $left → ε");
             }
             continue;
           }
@@ -297,7 +303,8 @@ class GrammarAnalyzer {
       }
     } while (changed);
 
-    notes.add('Computed FIRST sets for ${grammar.nonterminals.length} non-terminals.');
+    notes.add(
+        'Computed FIRST sets for ${grammar.nonterminals.length} non-terminals.');
 
     final resultMap = {
       for (final entry in first.entries)
@@ -313,7 +320,8 @@ class GrammarAnalyzer {
     );
   }
 
-  static Result<GrammarAnalysisReport<Map<String, Set<String>>>> computeFollowSets(
+  static Result<GrammarAnalysisReport<Map<String, Set<String>>>>
+      computeFollowSets(
     Grammar grammar,
   ) {
     final firstResult = computeFirstSets(grammar);
@@ -327,7 +335,8 @@ class GrammarAnalyzer {
     final derivations = List<String>.from(firstResult.data!.derivations);
 
     follow[grammar.startSymbol]!.add('\$');
-    derivations.add('FOLLOW(${grammar.startSymbol}) includes \$ (start symbol).');
+    derivations
+        .add('FOLLOW(${grammar.startSymbol}) includes \$ (start symbol).');
 
     final productions = _groupProductions(grammar);
 
@@ -369,7 +378,8 @@ class GrammarAnalyzer {
       }
     } while (changed);
 
-    notes.add('Computed FOLLOW sets for ${grammar.nonterminals.length} non-terminals.');
+    notes.add(
+        'Computed FOLLOW sets for ${grammar.nonterminals.length} non-terminals.');
 
     return ResultFactory.success(
       GrammarAnalysisReport<Map<String, Set<String>>>(
@@ -407,7 +417,8 @@ class GrammarAnalyzer {
         final firstSet = _firstOfSequence(right, first);
         final targets = firstSet.where((symbol) => symbol != 'ε');
         for (final terminal in targets) {
-          final cell = table[left]!.putIfAbsent(terminal, () => <List<String>>[]);
+          final cell =
+              table[left]!.putIfAbsent(terminal, () => <List<String>>[]);
           cell.add(right);
           derivations.add(
               'Placed $left → ${_formatSymbols(right)} in table[$left, $terminal].');
@@ -422,7 +433,8 @@ class GrammarAnalyzer {
 
         if (firstSet.contains('ε')) {
           for (final terminal in follow[left]!) {
-            final cell = table[left]!.putIfAbsent(terminal, () => <List<String>>[]);
+            final cell =
+                table[left]!.putIfAbsent(terminal, () => <List<String>>[]);
             cell.add(const []);
             derivations.add(
                 'Placed $left → ε in table[$left, $terminal] using FOLLOW set.');
@@ -602,7 +614,8 @@ _FactoringResult? _findCommonPrefix(List<List<String>> alternatives) {
     for (var j = i + 1; j < alternatives.length; j++) {
       final second = alternatives[j];
       final prefix = <String>[];
-      final length = first.length < second.length ? first.length : second.length;
+      final length =
+          first.length < second.length ? first.length : second.length;
       for (var k = 0; k < length; k++) {
         if (first[k] == second[k]) {
           prefix.add(first[k]);
@@ -648,4 +661,3 @@ class ListEquality {
     return true;
   }
 }
-

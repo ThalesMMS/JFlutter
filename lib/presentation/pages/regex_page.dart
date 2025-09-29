@@ -22,7 +22,8 @@ class RegexPage extends ConsumerStatefulWidget {
 class _RegexPageState extends ConsumerState<RegexPage> {
   final TextEditingController _regexController = TextEditingController();
   final TextEditingController _testStringController = TextEditingController();
-  final TextEditingController _comparisonRegexController = TextEditingController();
+  final TextEditingController _comparisonRegexController =
+      TextEditingController();
   String _currentRegex = '';
   String _testString = '';
   bool _isValid = false;
@@ -43,12 +44,12 @@ class _RegexPageState extends ConsumerState<RegexPage> {
     setState(() {
       _currentRegex = _regexController.text;
       _errorMessage = '';
-      
+
       if (_currentRegex.isEmpty) {
         _isValid = false;
         return;
       }
-      
+
       try {
         // Basic regex validation - check for balanced parentheses and valid characters
         if (_isValidRegex(_currentRegex)) {
@@ -71,30 +72,30 @@ class _RegexPageState extends ConsumerState<RegexPage> {
     int parenCount = 0;
     bool inBracket = false;
     bool escapeNext = false;
-    
+
     for (int i = 0; i < regex.length; i++) {
       final char = regex[i];
-      
+
       if (escapeNext) {
         escapeNext = false;
         continue;
       }
-      
+
       if (char == '\\') {
         escapeNext = true;
         continue;
       }
-      
+
       if (char == '[' && !escapeNext) {
         inBracket = true;
         continue;
       }
-      
+
       if (char == ']' && !escapeNext) {
         inBracket = false;
         continue;
       }
-      
+
       if (!inBracket) {
         if (char == '(') {
           parenCount++;
@@ -104,7 +105,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
         }
       }
     }
-    
+
     return parenCount == 0 && !inBracket;
   }
 
@@ -206,8 +207,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
     if (!nfaToDfaResult.isSuccess || nfaToDfaResult.data == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content:
-              Text(nfaToDfaResult.error ?? 'Failed to convert NFA to DFA'),
+          content: Text(nfaToDfaResult.error ?? 'Failed to convert NFA to DFA'),
           backgroundColor: Colors.red,
         ),
       );
@@ -219,8 +219,8 @@ class _RegexPageState extends ConsumerState<RegexPage> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content:
-            Text('Converted regex to DFA. Opening the DFA in the FSA workspace.'),
+        content: Text(
+            'Converted regex to DFA. Opening the DFA in the FSA workspace.'),
       ),
     );
 
@@ -245,8 +245,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
     if (primary.isEmpty || secondary.isEmpty) {
       setState(() {
         _equivalenceResult = false;
-        _equivalenceMessage =
-            'Enter both regular expressions to compare.';
+        _equivalenceMessage = 'Enter both regular expressions to compare.';
       });
       return;
     }
@@ -266,8 +265,8 @@ class _RegexPageState extends ConsumerState<RegexPage> {
       if (!secondConversion.isSuccess || secondConversion.data == null) {
         setState(() {
           _equivalenceResult = false;
-          _equivalenceMessage = secondConversion.error ??
-              'Unable to convert second regex to NFA';
+          _equivalenceMessage =
+              secondConversion.error ?? 'Unable to convert second regex to NFA';
         });
         return;
       }
@@ -286,8 +285,8 @@ class _RegexPageState extends ConsumerState<RegexPage> {
       if (!secondDfaResult.isSuccess || secondDfaResult.data == null) {
         setState(() {
           _equivalenceResult = false;
-          _equivalenceMessage = secondDfaResult.error ??
-              'Unable to convert second regex to DFA';
+          _equivalenceMessage =
+              secondDfaResult.error ?? 'Unable to convert second regex to DFA';
         });
         return;
       }
@@ -316,7 +315,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final isMobile = screenSize.width < 768;
-    
+
     if (isMobile) {
       return _buildMobileLayout();
     } else {
@@ -334,11 +333,11 @@ class _RegexPageState extends ConsumerState<RegexPage> {
             Text(
               'Regular Expression',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 16),
-            
+
             // Regex input
             Text(
               'Regular Expression:',
@@ -358,7 +357,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
               ),
               onChanged: (value) => _validateRegex(),
             ),
-            
+
             // Validation status
             const SizedBox(height: 8),
             Row(
@@ -371,7 +370,11 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    _isValid ? 'Valid regex' : (_errorMessage.isNotEmpty ? _errorMessage : 'Invalid regex'),
+                    _isValid
+                        ? 'Valid regex'
+                        : (_errorMessage.isNotEmpty
+                            ? _errorMessage
+                            : 'Invalid regex'),
                     style: TextStyle(
                       color: _isValid ? Colors.green : Colors.red,
                       fontSize: 14,
@@ -380,9 +383,9 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Test string input
             Text(
               'Test String:',
@@ -402,7 +405,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
               ),
               onChanged: (value) => _testStringMatch(),
             ),
-            
+
             // Match result
             const SizedBox(height: 8),
             if (_testString.isNotEmpty)
@@ -424,9 +427,9 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                   ),
                 ],
               ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Conversion buttons
             Text(
               'Convert to Automaton:',
@@ -452,7 +455,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 24),
 
             // Compare regular expressions
@@ -520,8 +523,8 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                     Text(
                       'Regex Help',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                     const SizedBox(height: 8),
                     const Text(
@@ -557,7 +560,8 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                 color: Theme.of(context).colorScheme.surface,
                 border: Border(
                   right: BorderSide(
-                    color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                    color:
+                        Theme.of(context).colorScheme.outline.withOpacity(0.2),
                   ),
                 ),
               ),
@@ -567,12 +571,13 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                   children: [
                     Text(
                       'Regular Expression',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style:
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Regex input
                     Text(
                       'Regular Expression:',
@@ -592,7 +597,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                       ),
                       onChanged: (value) => _validateRegex(),
                     ),
-                    
+
                     // Validation status
                     const SizedBox(height: 8),
                     Row(
@@ -604,7 +609,11 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          _isValid ? 'Valid regex' : (_errorMessage.isNotEmpty ? _errorMessage : 'Invalid regex'),
+                          _isValid
+                              ? 'Valid regex'
+                              : (_errorMessage.isNotEmpty
+                                  ? _errorMessage
+                                  : 'Invalid regex'),
                           style: TextStyle(
                             color: _isValid ? Colors.green : Colors.red,
                             fontSize: 14,
@@ -612,9 +621,9 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     // Test string input
                     Text(
                       'Test String:',
@@ -634,7 +643,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                       ),
                       onChanged: (value) => _testStringMatch(),
                     ),
-                    
+
                     // Match result
                     const SizedBox(height: 8),
                     if (_testString.isNotEmpty)
@@ -656,9 +665,9 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                           ),
                         ],
                       ),
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     // Conversion buttons
                     Text(
                       'Convert to Automaton:',
@@ -684,7 +693,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 24),
 
                     // Compare regular expressions
@@ -752,9 +761,12 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                           children: [
                             Text(
                               'Regex Help',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                             ),
                             const SizedBox(height: 8),
                             const Text(
@@ -776,7 +788,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
               ),
             ),
           ),
-          
+
           // Right panel - Algorithm operations
           Expanded(
             flex: 1,
@@ -788,11 +800,11 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                   Text(
                     'Algorithms',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Algorithm panel
                   Expanded(
                     child: AlgorithmPanel(
@@ -807,9 +819,9 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                       onFaToRegex: null,
                     ),
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Simulation panel
                   Expanded(
                     child: SimulationPanel(

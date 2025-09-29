@@ -9,6 +9,9 @@ import '../models/simulation_step.dart';
 import '../models/transition.dart';
 import '../result.dart';
 
+/// Acceptance modes for NPDA simulation
+enum PDAAcceptanceMode { finalState, emptyStack, both }
+
 /// Simulates Pushdown Automata (PDA) with input strings
 class PDASimulator {
   /// Simulates a DPDA (deterministic) with an input string.
@@ -21,7 +24,7 @@ class PDASimulator {
   }) {
     try {
       final stopwatch = Stopwatch()..start();
-      
+
       // Validate input
       final validationResult = _validateInput(pda, inputString);
       if (!validationResult.isSuccess) {
@@ -41,10 +44,10 @@ class PDASimulator {
       // Simulate as DPDA
       final result = _simulateDPDA(pda, inputString, stepByStep, timeout);
       stopwatch.stop();
-      
+
       // Update execution time
       final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
-      
+
       return Success(finalResult);
     } catch (e) {
       return Failure('Error simulating PDA: $e');
@@ -56,21 +59,21 @@ class PDASimulator {
     if (pda.states.isEmpty) {
       return Failure('PDA must have at least one state');
     }
-    
+
     if (pda.initialState == null) {
       return Failure('PDA must have an initial state');
     }
-    
+
     if (!pda.states.contains(pda.initialState)) {
       return Failure('Initial state must be in the states set');
     }
-    
+
     for (final acceptingState in pda.acceptingStates) {
       if (!pda.states.contains(acceptingState)) {
         return Failure('Accepting state must be in the states set');
       }
     }
-    
+
     // Validate input string symbols
     for (int i = 0; i < inputString.length; i++) {
       final symbol = inputString[i];
@@ -78,7 +81,7 @@ class PDASimulator {
         return Failure('Input string contains invalid symbol: $symbol');
       }
     }
-    
+
     return Success(null);
   }
 
@@ -91,23 +94,23 @@ class PDASimulator {
   ) {
     final steps = <SimulationStep>[];
     final startTime = DateTime.now();
-    
+
     // Initialize simulation
     var currentState = pda.initialState!;
     var remainingInput = inputString;
     var stack = <String>[pda.initialStackSymbol];
     int stepNumber = 0;
-    
+
     // Add initial step
     steps.add(SimulationStep.initial(
       initialState: currentState.id,
       inputString: inputString,
     ));
-    
+
     // Process each input symbol
     while (remainingInput.isNotEmpty) {
       stepNumber++;
-      
+
       // Check timeout
       if (DateTime.now().difference(startTime) > timeout) {
         return PDASimulationResult.timeout(
@@ -116,26 +119,27 @@ class PDASimulator {
           executionTime: DateTime.now().difference(startTime),
         );
       }
-      
+
       final symbol = remainingInput[0];
       remainingInput = remainingInput.substring(1);
-      
+
       // Find transition
       final transition = pda.getPDATransitionFromStateOnSymbolAndStackTop(
         currentState.id,
         symbol,
         stack.isNotEmpty ? stack.last : '',
       );
-      
+
       if (transition == null) {
         return PDASimulationResult.failure(
           inputString: inputString,
           steps: steps,
-          errorMessage: 'No transition found for symbol $symbol and stack top ${stack.isNotEmpty ? stack.last : "empty"} in state ${currentState.id}',
+          errorMessage:
+              'No transition found for symbol $symbol and stack top ${stack.isNotEmpty ? stack.last : "empty"} in state ${currentState.id}',
           executionTime: DateTime.now().difference(startTime),
         );
       }
-      
+
       // Update stack
       if (transition.stackPop.isNotEmpty) {
         if (stack.isNotEmpty && stack.last == transition.stackPop) {
@@ -149,11 +153,11 @@ class PDASimulator {
           );
         }
       }
-      
+
       if (transition.stackPush.isNotEmpty) {
         stack.add(transition.stackPush);
       }
-      
+
       // Add step
       if (stepByStep) {
         steps.add(SimulationStep.pda(
@@ -165,10 +169,10 @@ class PDASimulator {
           consumedInput: symbol,
         ));
       }
-      
+
       // Move to next state
       currentState = transition.toState;
-      
+
       // Check for infinite loop (simplified)
       if (steps.length > 1000) {
         return PDASimulationResult.infiniteLoop(
@@ -178,19 +182,19 @@ class PDASimulator {
         );
       }
     }
-    
+
     // Add final step
-        steps.add(SimulationStep.finalStep(
+    steps.add(SimulationStep.finalStep(
       finalState: currentState.id,
       remainingInput: remainingInput,
       stackContents: stack.join(''),
       tapeContents: '',
       stepNumber: stepNumber + 1,
     ));
-    
+
     // Check if final state is accepting
     final isAccepted = pda.acceptingStates.contains(currentState);
-    
+
     if (isAccepted) {
       return PDASimulationResult.success(
         inputString: inputString,
@@ -269,18 +273,14 @@ class PDASimulator {
       inputString,
       <String>[pda.initialStackSymbol],
       <SimulationStep>[
-        SimulationStep.initial(initialState: pda.initialState!.id, inputString: inputString),
+        SimulationStep.initial(
+            initialState: pda.initialState!.id, inputString: inputString),
       ],
       0,
     );
 
-    final queue = Queue<(
-      State,
-      String,
-      List<String>,
-      List<SimulationStep>,
-      int
-    )>();
+    final queue =
+        Queue<(State, String, List<String>, List<SimulationStep>, int)>();
     queue.add(initialConfig);
 
     while (queue.isNotEmpty) {
@@ -303,7 +303,8 @@ class PDASimulator {
 
       // Acceptance checks
       final isFinalOk = pda.acceptingStates.contains(state);
-      final isEmptyStackOk = stack.isEmpty || (stack.length == 1 && stack.last.isEmpty);
+      final isEmptyStackOk =
+          stack.isEmpty || (stack.length == 1 && stack.last.isEmpty);
       final inputConsumed = remaining.isEmpty;
 
       bool accepted = false;
@@ -341,39 +342,47 @@ class PDASimulator {
 
       // Generate ε-moves first (no input consumption)
       for (final t in pda.getEpsilonTransitionsFromState(state)) {
-        final canPop = t.isLambdaPop || (stack.isNotEmpty && stack.last == t.popSymbol);
+        final canPop =
+            t.isLambdaPop || (stack.isNotEmpty && stack.last == t.popSymbol);
         if (!canPop) continue;
         final newStack = List<String>.from(stack);
         if (!t.isLambdaPop && newStack.isNotEmpty) newStack.removeLast();
-        if (!t.isLambdaPush && t.pushSymbol.isNotEmpty) newStack.add(t.pushSymbol);
+        if (!t.isLambdaPush && t.pushSymbol.isNotEmpty)
+          newStack.add(t.pushSymbol);
         final step = SimulationStep.pda(
           currentState: state.id,
           remainingInput: remaining,
           stackContents: newStack.join(''),
-          usedTransition: 'ε,${t.isLambdaPop ? 'ε' : t.popSymbol}→${t.isLambdaPush ? 'ε' : t.pushSymbol}',
+          usedTransition:
+              'ε,${t.isLambdaPop ? 'ε' : t.popSymbol}→${t.isLambdaPush ? 'ε' : t.pushSymbol}',
           stepNumber: (steps.isNotEmpty ? steps.last.stepNumber : 0) + 1,
           consumedInput: '',
         );
-        queue.add((t.toState, remaining, newStack, [...steps, step], depth + 1));
+        queue
+            .add((t.toState, remaining, newStack, [...steps, step], depth + 1));
       }
 
       // Generate input-consuming moves if input remains
       if (remaining.isNotEmpty) {
         final a = remaining[0];
-        for (final t in pda.getTransitionsFromStateOnInputAndStack(state, a, stack.isNotEmpty ? stack.last : '')) {
+        for (final t in pda.getTransitionsFromStateOnInputAndStack(
+            state, a, stack.isNotEmpty ? stack.last : '')) {
           final newStack = List<String>.from(stack);
           if (!t.isLambdaPop && newStack.isNotEmpty) newStack.removeLast();
-          if (!t.isLambdaPush && t.pushSymbol.isNotEmpty) newStack.add(t.pushSymbol);
+          if (!t.isLambdaPush && t.pushSymbol.isNotEmpty)
+            newStack.add(t.pushSymbol);
           final newRemaining = remaining.substring(1);
           final step = SimulationStep.pda(
             currentState: state.id,
             remainingInput: newRemaining,
             stackContents: newStack.join(''),
-            usedTransition: '$a,${t.isLambdaPop ? 'ε' : t.popSymbol}→${t.isLambdaPush ? 'ε' : t.pushSymbol}',
+            usedTransition:
+                '$a,${t.isLambdaPop ? 'ε' : t.popSymbol}→${t.isLambdaPush ? 'ε' : t.pushSymbol}',
             stepNumber: (steps.isNotEmpty ? steps.last.stepNumber : 0) + 1,
             consumedInput: a,
           );
-          queue.add((t.toState, newRemaining, newStack, [...steps, step], depth + 1));
+          queue.add(
+              (t.toState, newRemaining, newStack, [...steps, step], depth + 1));
         }
       }
     }
@@ -420,7 +429,8 @@ class PDASimulator {
 
     final usefulStateIds = usefulStates.map((s) => s.id).toSet();
 
-    final filteredStates = pda.states.where((s) => usefulStateIds.contains(s.id)).toSet();
+    final filteredStates =
+        pda.states.where((s) => usefulStateIds.contains(s.id)).toSet();
     final prunedStates = pda.states.difference(filteredStates);
 
     final filteredTransitions = pda.pdaTransitions
@@ -440,7 +450,9 @@ class PDASimulator {
         .map((transition) => transition.id)
         .toSet();
 
-    final canonicalStateMap = {for (final state in filteredStates) state.id: state};
+    final canonicalStateMap = {
+      for (final state in filteredStates) state.id: state
+    };
 
     final mergeTargets = <String, String>{};
     final signatureOwners = <String, String>{};
@@ -448,7 +460,8 @@ class PDASimulator {
       ..sort((a, b) => a.id.compareTo(b.id));
 
     for (final state in sortedStates) {
-      final signature = _stateSignature(state, filteredTransitions, mergeTargets, canonicalStateMap);
+      final signature = _stateSignature(
+          state, filteredTransitions, mergeTargets, canonicalStateMap);
       final owner = signatureOwners[signature];
       if (owner != null && owner != state.id) {
         mergeTargets[state.id] = owner;
@@ -474,7 +487,8 @@ class PDASimulator {
     groupedMerges.forEach((targetId, mergedStates) {
       final representative = canonicalStateMap[targetId];
       if (representative != null) {
-        mergeGroups.add(PDAMergeGroup(representative: representative, mergedStates: mergedStates));
+        mergeGroups.add(PDAMergeGroup(
+            representative: representative, mergedStates: mergedStates));
       }
     });
 
@@ -491,8 +505,10 @@ class PDASimulator {
     final duplicateTransitionIds = <String>{};
 
     for (final transition in filteredTransitions) {
-      final canonicalFromId = mergeTargets[transition.fromState.id] ?? transition.fromState.id;
-      final canonicalToId = mergeTargets[transition.toState.id] ?? transition.toState.id;
+      final canonicalFromId =
+          mergeTargets[transition.fromState.id] ?? transition.fromState.id;
+      final canonicalToId =
+          mergeTargets[transition.toState.id] ?? transition.toState.id;
 
       final canonicalFrom = canonicalStates[canonicalFromId];
       final canonicalTo = canonicalStates[canonicalToId];
@@ -519,7 +535,8 @@ class PDASimulator {
       ..addAll(duplicateTransitionIds);
 
     final finalStates = canonicalStates.values.toSet();
-    final finalAcceptingStates = finalStates.where((state) => state.isAccepting).toSet();
+    final finalAcceptingStates =
+        finalStates.where((state) => state.isAccepting).toSet();
     if (finalAcceptingStates.isEmpty) {
       return Failure(
         'Minimization removed all accepting states. Ensure at least one accepting state is reachable before retrying.',
@@ -554,7 +571,8 @@ class PDASimulator {
 
     final minimizedPda = pda.copyWith(
       states: finalStates,
-      transitions: finalTransitions.map<Transition>((transition) => transition).toSet(),
+      transitions:
+          finalTransitions.map<Transition>((transition) => transition).toSet(),
       alphabet: recomputedAlphabet.isEmpty ? pda.alphabet : recomputedAlphabet,
       initialState: finalInitialState,
       acceptingStates: finalAcceptingStates,
@@ -586,7 +604,7 @@ class PDASimulator {
     if (!simulationResult.isSuccess) {
       return Failure(simulationResult.error!);
     }
-    
+
     return Success(simulationResult.data!.accepted);
   }
 
@@ -596,7 +614,7 @@ class PDASimulator {
     if (!acceptsResult.isSuccess) {
       return Failure(acceptsResult.error!);
     }
-    
+
     return Success(!acceptsResult.data!);
   }
 
@@ -609,9 +627,11 @@ class PDASimulator {
     try {
       final acceptedStrings = <String>{};
       final alphabet = pda.alphabet.toList();
-      
+
       // Generate all possible strings up to maxLength
-      for (int length = 0; length <= maxLength && acceptedStrings.length < maxResults; length++) {
+      for (int length = 0;
+          length <= maxLength && acceptedStrings.length < maxResults;
+          length++) {
         _generateStrings(
           pda,
           alphabet,
@@ -621,7 +641,7 @@ class PDASimulator {
           maxResults,
         );
       }
-      
+
       return Success(acceptedStrings);
     } catch (e) {
       return Failure('Error finding accepted strings: $e');
@@ -638,7 +658,7 @@ class PDASimulator {
     int maxResults,
   ) {
     if (acceptedStrings.length >= maxResults) return;
-    
+
     if (remainingLength == 0) {
       final acceptsResult = accepts(pda, currentString);
       if (acceptsResult.isSuccess && acceptsResult.data!) {
@@ -646,7 +666,7 @@ class PDASimulator {
       }
       return;
     }
-    
+
     for (final symbol in alphabet) {
       _generateStrings(
         pda,
@@ -668,9 +688,11 @@ class PDASimulator {
     try {
       final rejectedStrings = <String>{};
       final alphabet = pda.alphabet.toList();
-      
+
       // Generate all possible strings up to maxLength
-      for (int length = 0; length <= maxLength && rejectedStrings.length < maxResults; length++) {
+      for (int length = 0;
+          length <= maxLength && rejectedStrings.length < maxResults;
+          length++) {
         _generateRejectedStrings(
           pda,
           alphabet,
@@ -680,7 +702,7 @@ class PDASimulator {
           maxResults,
         );
       }
-      
+
       return Success(rejectedStrings);
     } catch (e) {
       return Failure('Error finding rejected strings: $e');
@@ -697,7 +719,7 @@ class PDASimulator {
     int maxResults,
   ) {
     if (rejectedStrings.length >= maxResults) return;
-    
+
     if (remainingLength == 0) {
       final acceptsResult = accepts(pda, currentString);
       if (acceptsResult.isSuccess && !acceptsResult.data!) {
@@ -705,7 +727,7 @@ class PDASimulator {
       }
       return;
     }
-    
+
     for (final symbol in alphabet) {
       _generateRejectedStrings(
         pda,
@@ -726,7 +748,7 @@ class PDASimulator {
   }) {
     try {
       final stopwatch = Stopwatch()..start();
-      
+
       // Validate input
       final validationResult = _validateInput(pda, '');
       if (!validationResult.isSuccess) {
@@ -746,10 +768,10 @@ class PDASimulator {
       // Analyze the PDA
       final result = _analyzePDA(pda, maxInputLength, timeout);
       stopwatch.stop();
-      
+
       // Update execution time
       final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
-      
+
       return Success(finalResult);
     } catch (e) {
       return Failure('Error analyzing PDA: $e');
@@ -763,19 +785,19 @@ class PDASimulator {
     Duration timeout,
   ) {
     final startTime = DateTime.now();
-    
+
     // Analyze states
     final stateAnalysis = _analyzeStates(pda);
-    
+
     // Analyze transitions
     final transitionAnalysis = _analyzeTransitions(pda);
-    
+
     // Analyze stack operations
     final stackAnalysis = _analyzeStackOperations(pda);
-    
+
     // Analyze reachability
     final reachabilityAnalysis = _analyzeReachability(pda);
-    
+
     return PDAAnalysis(
       stateAnalysis: stateAnalysis,
       transitionAnalysis: transitionAnalysis,
@@ -790,7 +812,7 @@ class PDASimulator {
     final totalStates = pda.states.length;
     final acceptingStates = pda.acceptingStates.length;
     final nonAcceptingStates = totalStates - acceptingStates;
-    
+
     return PDAStateAnalysis(
       totalStates: totalStates,
       acceptingStates: acceptingStates,
@@ -803,7 +825,7 @@ class PDASimulator {
     final totalTransitions = pda.transitions.length;
     final pdaTransitions = pda.transitions.whereType<PDATransition>().length;
     final fsaTransitions = pda.transitions.whereType<FSATransition>().length;
-    
+
     return PDATransitionAnalysis(
       totalTransitions: totalTransitions,
       pdaTransitions: pdaTransitions,
@@ -816,7 +838,7 @@ class PDASimulator {
     final pushOperations = <String>{};
     final popOperations = <String>{};
     final stackSymbols = <String>{};
-    
+
     for (final transition in pda.transitions) {
       if (transition is PDATransition) {
         if (transition.stackPush.isNotEmpty) {
@@ -829,7 +851,7 @@ class PDASimulator {
         stackSymbols.addAll(popOperations);
       }
     }
-    
+
     return StackAnalysis(
       pushOperations: pushOperations,
       popOperations: popOperations,
@@ -841,19 +863,19 @@ class PDASimulator {
   static PDAReachabilityAnalysis _analyzeReachability(PDA pda) {
     final reachableStates = <State>{};
     final unreachableStates = <State>{};
-    
+
     // Find reachable states from initial state
     if (pda.initialState != null) {
       _findReachableStates(pda, pda.initialState!, reachableStates);
     }
-    
+
     // Find unreachable states
     for (final state in pda.states) {
       if (!reachableStates.contains(state)) {
         unreachableStates.add(state);
       }
     }
-    
+
     return PDAReachabilityAnalysis(
       reachableStates: reachableStates,
       unreachableStates: unreachableStates,
@@ -914,7 +936,8 @@ class PDASimulator {
     final outgoing = transitions
         .where((transition) => transition.fromState.id == state.id)
         .map((transition) {
-      final canonicalToId = mergeTargets[transition.toState.id] ?? transition.toState.id;
+      final canonicalToId =
+          mergeTargets[transition.toState.id] ?? transition.toState.id;
       final canonicalTo = canonicalStateMap[canonicalToId];
       final toId = canonicalTo?.id ?? canonicalToId;
       final input = transition.isLambdaInput ? 'λ' : transition.inputSymbol;
@@ -1129,7 +1152,8 @@ class PDASimplificationSummary {
     required this.warnings,
   });
 
-  bool get hasMerges => mergeGroups.any((group) => group.mergedStates.isNotEmpty);
+  bool get hasMerges =>
+      mergeGroups.any((group) => group.mergedStates.isNotEmpty);
 }
 
 /// Represents a group of states merged into a representative state.

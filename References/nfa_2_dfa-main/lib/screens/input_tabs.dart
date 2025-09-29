@@ -79,9 +79,9 @@ class _StatesTabState extends State<StatesTab> with TickerProviderStateMixin {
       HapticFeedback.mediumImpact();
       UIHelpers.showSnackBar(
           context,
-          AppConstants.errorMessages['stateExists'] ?? 'این State قبلاً وجود دارد!',
-          isError: true
-      );
+          AppConstants.errorMessages['stateExists'] ??
+              'این State قبلاً وجود دارد!',
+          isError: true);
     } else {
       HapticFeedback.lightImpact();
       nfaProvider.addState(name);
@@ -119,7 +119,8 @@ class _StatesTabState extends State<StatesTab> with TickerProviderStateMixin {
             Expanded(
               child: states.isEmpty
                   ? _buildEnhancedEmptyState()
-                  : _buildAdvancedStatesList(states, startState, finalStates, nfa),
+                  : _buildAdvancedStatesList(
+                      states, startState, finalStates, nfa),
             ),
 
             _buildMorphingAddStateForm(),
@@ -129,7 +130,8 @@ class _StatesTabState extends State<StatesTab> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildEnhancedStatsCard(List<String> states, String? startState, Set<String> finalStates) {
+  Widget _buildEnhancedStatsCard(
+      List<String> states, String? startState, Set<String> finalStates) {
     return AnimatedBuilder(
       animation: _statsController,
       builder: (context, child) {
@@ -161,13 +163,19 @@ class _StatesTabState extends State<StatesTab> with TickerProviderStateMixin {
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
-                              color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withOpacity(0.2),
                               blurRadius: 20,
                               offset: const Offset(0, 8),
                               spreadRadius: 2,
                             ),
                             BoxShadow(
-                              color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .secondary
+                                  .withOpacity(0.1),
                               blurRadius: 40,
                               offset: const Offset(0, 16),
                             ),
@@ -176,11 +184,17 @@ class _StatesTabState extends State<StatesTab> with TickerProviderStateMixin {
                         child: IntrinsicHeight(
                           child: Row(
                             children: [
-                              _buildAnimatedStatItem('کل States', '${states.length}', Icons.account_tree, 0),
+                              _buildAnimatedStatItem('کل States',
+                                  '${states.length}', Icons.account_tree, 0),
                               _buildGlowingDivider(),
-                              _buildAnimatedStatItem('شروع', startState ?? 'تعریف نشده', Icons.play_arrow, 1),
+                              _buildAnimatedStatItem(
+                                  'شروع',
+                                  startState ?? 'تعریف نشده',
+                                  Icons.play_arrow,
+                                  1),
                               _buildGlowingDivider(),
-                              _buildAnimatedStatItem('پایانی', '${finalStates.length}', Icons.flag, 2),
+                              _buildAnimatedStatItem('پایانی',
+                                  '${finalStates.length}', Icons.flag, 2),
                             ],
                           ),
                         ),
@@ -233,7 +247,10 @@ class _StatesTabState extends State<StatesTab> with TickerProviderStateMixin {
               end: Alignment.bottomCenter,
               colors: [
                 Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                Theme.of(context).colorScheme.primary.withOpacity(0.5 + _pulseController.value * 0.3),
+                Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withOpacity(0.5 + _pulseController.value * 0.3),
                 Theme.of(context).colorScheme.primary.withOpacity(0.1),
               ],
             ),
@@ -251,7 +268,8 @@ class _StatesTabState extends State<StatesTab> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildAnimatedStatItem(String label, String value, IconData icon, int index) {
+  Widget _buildAnimatedStatItem(
+      String label, String value, IconData icon, int index) {
     return Expanded(
       child: AnimatedBuilder(
         animation: _statsController,
@@ -283,14 +301,21 @@ class _StatesTabState extends State<StatesTab> with TickerProviderStateMixin {
                           shape: BoxShape.circle,
                           gradient: RadialGradient(
                             colors: [
-                              Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                              Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                              Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withOpacity(0.2),
+                              Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withOpacity(0.1),
                             ],
                           ),
                         ),
                         child: Icon(
                           icon,
-                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                          color:
+                              Theme.of(context).colorScheme.onPrimaryContainer,
                           size: 32,
                         ),
                       ),
@@ -301,17 +326,20 @@ class _StatesTabState extends State<StatesTab> with TickerProviderStateMixin {
                 Text(
                   label,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(0.8),
-                    fontWeight: FontWeight.w600,
-                  ),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onPrimaryContainer
+                            .withOpacity(0.8),
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   value,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
-                  ),
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      ),
                 ),
               ],
             ),
@@ -345,7 +373,10 @@ class _StatesTabState extends State<StatesTab> with TickerProviderStateMixin {
                   child: Icon(
                     Icons.account_tree_outlined,
                     size: 80,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.4),
                   ),
                 ),
               ),
@@ -353,16 +384,22 @@ class _StatesTabState extends State<StatesTab> with TickerProviderStateMixin {
               Text(
                 'هنوز هیچ State‌ای تعریف نشده',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                  fontWeight: FontWeight.w600,
-                ),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.7),
+                      fontWeight: FontWeight.w600,
+                    ),
               ),
               const SizedBox(height: 16),
               Text(
                 'اولین State خود را اضافه کنید',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                ),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.5),
+                    ),
               ),
             ],
           ),
@@ -371,7 +408,8 @@ class _StatesTabState extends State<StatesTab> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildAdvancedStatesList(List<String> states, String? startState, Set<String> finalStates, NFAProvider nfa) {
+  Widget _buildAdvancedStatesList(List<String> states, String? startState,
+      Set<String> finalStates, NFAProvider nfa) {
     return AnimatedBuilder(
       animation: _listController,
       builder: (context, child) {
@@ -413,7 +451,8 @@ class _StatesTabState extends State<StatesTab> with TickerProviderStateMixin {
                 scale: scaleAnimation,
                 child: Container(
                   margin: const EdgeInsets.only(bottom: 16),
-                  child: _buildMorphingStateCard(state, isStart, isFinal, index, nfa),
+                  child: _buildMorphingStateCard(
+                      state, isStart, isFinal, index, nfa),
                 ),
               ),
             );
@@ -423,7 +462,8 @@ class _StatesTabState extends State<StatesTab> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildMorphingStateCard(String state, bool isStart, bool isFinal, int index, NFAProvider nfa) {
+  Widget _buildMorphingStateCard(
+      String state, bool isStart, bool isFinal, int index, NFAProvider nfa) {
     return AnimatedBuilder(
       animation: _pulseController,
       builder: (context, child) {
@@ -445,47 +485,56 @@ class _StatesTabState extends State<StatesTab> with TickerProviderStateMixin {
                   end: Alignment.bottomRight,
                   colors: isStart
                       ? [
-                    Theme.of(context).colorScheme.primaryContainer,
-                    Theme.of(context).colorScheme.primaryContainer.withOpacity(0.7),
-                  ]
+                          Theme.of(context).colorScheme.primaryContainer,
+                          Theme.of(context)
+                              .colorScheme
+                              .primaryContainer
+                              .withOpacity(0.7),
+                        ]
                       : isFinal
-                      ? [
-                    Theme.of(context).colorScheme.secondaryContainer,
-                    Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.7),
-                  ]
-                      : [
-                    Theme.of(context).colorScheme.surface,
-                    Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
-                  ],
+                          ? [
+                              Theme.of(context).colorScheme.secondaryContainer,
+                              Theme.of(context)
+                                  .colorScheme
+                                  .secondaryContainer
+                                  .withOpacity(0.7),
+                            ]
+                          : [
+                              Theme.of(context).colorScheme.surface,
+                              Theme.of(context)
+                                  .colorScheme
+                                  .surfaceVariant
+                                  .withOpacity(0.5),
+                            ],
                 ),
                 border: isFinal
                     ? Border.all(
-                    color: Theme.of(context).colorScheme.secondary,
-                    width: 2
-                )
+                        color: Theme.of(context).colorScheme.secondary,
+                        width: 2)
                     : null,
                 boxShadow: [
                   if (isStart)
                     BoxShadow(
-                      color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.3),
                       blurRadius: 15,
                       offset: const Offset(0, 5),
                     ),
                 ],
               ),
               child: ListTile(
-                contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12
-                ),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 leading: _buildPulsatingAvatar(index, isStart, isFinal),
                 title: Row(
                   children: [
                     Text(
                       state,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                     if (isStart) ...[
                       const SizedBox(width: 12),
@@ -505,7 +554,8 @@ class _StatesTabState extends State<StatesTab> with TickerProviderStateMixin {
                     ],
                   ],
                 ),
-                trailing: _buildEnhancedStateActions(state, nfa, isStart, isFinal),
+                trailing:
+                    _buildEnhancedStateActions(state, nfa, isStart, isFinal),
               ),
             ),
           ),
@@ -518,7 +568,8 @@ class _StatesTabState extends State<StatesTab> with TickerProviderStateMixin {
     return AnimatedBuilder(
       animation: _pulseController,
       builder: (context, child) {
-        final pulseValue = isStart ? (1 + (_pulseController.value * 0.15)) : 1.0;
+        final pulseValue =
+            isStart ? (1 + (_pulseController.value * 0.15)) : 1.0;
         return Transform.scale(
           scale: pulseValue,
           child: Container(
@@ -529,23 +580,30 @@ class _StatesTabState extends State<StatesTab> with TickerProviderStateMixin {
               gradient: LinearGradient(
                 colors: isStart
                     ? [
-                  Theme.of(context).colorScheme.primary,
-                  Theme.of(context).colorScheme.primary.withOpacity(0.7),
-                ]
+                        Theme.of(context).colorScheme.primary,
+                        Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                      ]
                     : isFinal
-                    ? [
-                  Theme.of(context).colorScheme.secondary,
-                  Theme.of(context).colorScheme.secondary.withOpacity(0.7),
-                ]
-                    : [
-                  Theme.of(context).colorScheme.surfaceVariant,
-                  Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.7),
-                ],
+                        ? [
+                            Theme.of(context).colorScheme.secondary,
+                            Theme.of(context)
+                                .colorScheme
+                                .secondary
+                                .withOpacity(0.7),
+                          ]
+                        : [
+                            Theme.of(context).colorScheme.surfaceVariant,
+                            Theme.of(context)
+                                .colorScheme
+                                .surfaceVariant
+                                .withOpacity(0.7),
+                          ],
               ),
               boxShadow: [
                 if (isStart)
                   BoxShadow(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.5),
                     blurRadius: 10,
                     spreadRadius: 2,
                   ),
@@ -558,8 +616,8 @@ class _StatesTabState extends State<StatesTab> with TickerProviderStateMixin {
                   color: isStart
                       ? Theme.of(context).colorScheme.onPrimary
                       : isFinal
-                      ? Theme.of(context).colorScheme.onSecondary
-                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                          ? Theme.of(context).colorScheme.onSecondary
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
                 ),
@@ -571,7 +629,8 @@ class _StatesTabState extends State<StatesTab> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildGlowingChip(String label, Color backgroundColor, Color textColor) {
+  Widget _buildGlowingChip(
+      String label, Color backgroundColor, Color textColor) {
     return AnimatedBuilder(
       animation: _pulseController,
       builder: (context, child) {
@@ -601,7 +660,8 @@ class _StatesTabState extends State<StatesTab> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildEnhancedStateActions(String state, NFAProvider nfa, bool isStart, bool isFinal) {
+  Widget _buildEnhancedStateActions(
+      String state, NFAProvider nfa, bool isStart, bool isFinal) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -741,8 +801,14 @@ class _StatesTabState extends State<StatesTab> with TickerProviderStateMixin {
                       borderRadius: BorderRadius.circular(20),
                       gradient: LinearGradient(
                         colors: [
-                          Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
-                          Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.1),
+                          Theme.of(context)
+                              .colorScheme
+                              .surfaceVariant
+                              .withOpacity(0.3),
+                          Theme.of(context)
+                              .colorScheme
+                              .surfaceVariant
+                              .withOpacity(0.1),
                         ],
                       ),
                     ),
@@ -784,12 +850,18 @@ class _StatesTabState extends State<StatesTab> with TickerProviderStateMixin {
                           gradient: LinearGradient(
                             colors: [
                               Theme.of(context).colorScheme.primary,
-                              Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                              Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withOpacity(0.8),
                             ],
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withOpacity(0.4),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -807,14 +879,15 @@ class _StatesTabState extends State<StatesTab> with TickerProviderStateMixin {
                           ),
                           child: _isAdding
                               ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                              : const Icon(Icons.add, size: 28, color: Colors.white),
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(Icons.add,
+                                  size: 28, color: Colors.white),
                         ),
                       ),
                     );
@@ -837,7 +910,8 @@ class AlphabetTab extends StatefulWidget {
   State<AlphabetTab> createState() => _AlphabetTabState();
 }
 
-class _AlphabetTabState extends State<AlphabetTab> with TickerProviderStateMixin {
+class _AlphabetTabState extends State<AlphabetTab>
+    with TickerProviderStateMixin {
   final _controller = TextEditingController();
   late final AnimationController _gridController;
   late final AnimationController _quickAddController;
@@ -887,21 +961,15 @@ class _AlphabetTabState extends State<AlphabetTab> with TickerProviderStateMixin
     if (symbolToAdd.isEmpty) return;
 
     if (symbolToAdd.length > 1) {
-      UIHelpers.showSnackBar(
-          context,
-          'نماد باید فقط یک کاراکتر باشد.',
-          isError: true
-      );
+      UIHelpers.showSnackBar(context, 'نماد باید فقط یک کاراکتر باشد.',
+          isError: true);
       return;
     }
 
     final nfaProvider = Provider.of<NFAProvider>(context, listen: false);
     if (nfaProvider.currentNFA.alphabet.contains(symbolToAdd)) {
-      UIHelpers.showSnackBar(
-          context,
-          'این نماد قبلاً وجود دارد!',
-          isError: true
-      );
+      UIHelpers.showSnackBar(context, 'این نماد قبلاً وجود دارد!',
+          isError: true);
       return;
     }
 
@@ -947,7 +1015,8 @@ class _AlphabetTabState extends State<AlphabetTab> with TickerProviderStateMixin
   }
 
   Widget _buildWaveQuickAddSection(List<String> alphabet, NFAProvider nfa) {
-    final availableSymbols = _quickSymbols.where((s) => !alphabet.contains(s)).toList();
+    final availableSymbols =
+        _quickSymbols.where((s) => !alphabet.contains(s)).toList();
 
     if (availableSymbols.isEmpty) return const SizedBox.shrink();
 
@@ -971,8 +1040,14 @@ class _AlphabetTabState extends State<AlphabetTab> with TickerProviderStateMixin
                 end: Alignment.bottomRight,
                 colors: [
                   Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.4),
-                  Theme.of(context).colorScheme.primaryContainer.withOpacity(0.2),
-                  Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.3),
+                  Theme.of(context)
+                      .colorScheme
+                      .primaryContainer
+                      .withOpacity(0.2),
+                  Theme.of(context)
+                      .colorScheme
+                      .secondaryContainer
+                      .withOpacity(0.3),
                 ],
               ),
               borderRadius: BorderRadius.circular(24),
@@ -1003,7 +1078,10 @@ class _AlphabetTabState extends State<AlphabetTab> with TickerProviderStateMixin
                               gradient: RadialGradient(
                                 colors: [
                                   Theme.of(context).colorScheme.primary,
-                                  Theme.of(context).colorScheme.primary.withOpacity(0.6),
+                                  Theme.of(context)
+                                      .colorScheme
+                                      .primary
+                                      .withOpacity(0.6),
                                 ],
                               ),
                               shape: BoxShape.circle,
@@ -1021,8 +1099,8 @@ class _AlphabetTabState extends State<AlphabetTab> with TickerProviderStateMixin
                     Text(
                       'نمادهای پرکاربرد:',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                   ],
                 ),
@@ -1036,7 +1114,9 @@ class _AlphabetTabState extends State<AlphabetTab> with TickerProviderStateMixin
                       children: availableSymbols.asMap().entries.map((entry) {
                         final index = entry.key;
                         final symbol = entry.value;
-                        final waveOffset = (_waveController.value * 2 * math.pi) + (index * 0.5);
+                        final waveOffset =
+                            (_waveController.value * 2 * math.pi) +
+                                (index * 0.5);
                         return Transform.translate(
                           offset: Offset(0, 5 * math.sin(waveOffset)),
                           child: _buildEnhancedQuickAddChip(symbol, index),
@@ -1057,13 +1137,17 @@ class _AlphabetTabState extends State<AlphabetTab> with TickerProviderStateMixin
     return AnimatedBuilder(
       animation: _particleController,
       builder: (context, child) {
-        final glowIntensity = (0.5 + 0.5 * math.sin(_particleController.value * 2 * math.pi + index));
+        final glowIntensity = (0.5 +
+            0.5 * math.sin(_particleController.value * 2 * math.pi + index));
         return Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(25),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.3 * glowIntensity),
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withOpacity(0.3 * glowIntensity),
                 blurRadius: 10,
                 spreadRadius: 2,
               ),
@@ -1077,7 +1161,8 @@ class _AlphabetTabState extends State<AlphabetTab> with TickerProviderStateMixin
               borderRadius: BorderRadius.circular(25),
               onTap: () => _addSymbol(symbol),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -1127,7 +1212,10 @@ class _AlphabetTabState extends State<AlphabetTab> with TickerProviderStateMixin
                     colors: [
                       Theme.of(context).colorScheme.secondaryContainer,
                       Theme.of(context).colorScheme.tertiaryContainer,
-                      Theme.of(context).colorScheme.primaryContainer.withOpacity(0.7),
+                      Theme.of(context)
+                          .colorScheme
+                          .primaryContainer
+                          .withOpacity(0.7),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -1135,7 +1223,10 @@ class _AlphabetTabState extends State<AlphabetTab> with TickerProviderStateMixin
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.2),
                       blurRadius: 15,
                       offset: const Offset(0, 5),
                     ),
@@ -1149,7 +1240,10 @@ class _AlphabetTabState extends State<AlphabetTab> with TickerProviderStateMixin
                         gradient: RadialGradient(
                           colors: [
                             Theme.of(context).colorScheme.primary,
-                            Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                            Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withOpacity(0.7),
                           ],
                         ),
                         shape: BoxShape.circle,
@@ -1167,24 +1261,38 @@ class _AlphabetTabState extends State<AlphabetTab> with TickerProviderStateMixin
                         children: [
                           Text(
                             'الفبا شامل ${alphabet.length} نماد',
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.onSecondaryContainer,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSecondaryContainer,
+                                ),
                           ),
                           const SizedBox(height: 8),
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surface.withOpacity(0.7),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .surface
+                                  .withOpacity(0.7),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
                               alphabet.join(' • '),
-                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
-                                fontWeight: FontWeight.w500,
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyLarge
+                                  ?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withOpacity(0.8),
+                                    fontWeight: FontWeight.w500,
+                                  ),
                             ),
                           ),
                         ],
@@ -1207,7 +1315,8 @@ class _AlphabetTabState extends State<AlphabetTab> with TickerProviderStateMixin
       return AnimatedBuilder(
         animation: _particleController,
         builder: (context, child) {
-          final offset = (_particleController.value * 2 * math.pi) + (index * 0.8);
+          final offset =
+              (_particleController.value * 2 * math.pi) + (index * 0.8);
           return Positioned(
             left: 30 + (index * 25) + (15 * math.cos(offset)),
             top: 15 + (20 * math.sin(offset)),
@@ -1219,7 +1328,8 @@ class _AlphabetTabState extends State<AlphabetTab> with TickerProviderStateMixin
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.2),
                     blurRadius: 4,
                   ),
                 ],
@@ -1256,7 +1366,10 @@ class _AlphabetTabState extends State<AlphabetTab> with TickerProviderStateMixin
                   child: Icon(
                     Icons.text_fields,
                     size: 100,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.4),
                   ),
                 ),
               ),
@@ -1264,16 +1377,22 @@ class _AlphabetTabState extends State<AlphabetTab> with TickerProviderStateMixin
               Text(
                 'الفبا خالی است',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                  fontWeight: FontWeight.bold,
-                ),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.7),
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
               const SizedBox(height: 16),
               Text(
                 'نمادهای ورودی خود را اضافه کنید',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                ),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.5),
+                    ),
               ),
             ],
           ),
@@ -1333,7 +1452,8 @@ class _AlphabetTabState extends State<AlphabetTab> with TickerProviderStateMixin
     return AnimatedBuilder(
       animation: _particleController,
       builder: (context, child) {
-        final floatOffset = 5 * math.sin(_particleController.value * 2 * math.pi + index * 0.3);
+        final floatOffset =
+            5 * math.sin(_particleController.value * 2 * math.pi + index * 0.3);
         return Transform.translate(
           offset: Offset(0, floatOffset),
           child: Container(
@@ -1347,7 +1467,8 @@ class _AlphabetTabState extends State<AlphabetTab> with TickerProviderStateMixin
                   spreadRadius: 2,
                 ),
                 BoxShadow(
-                  color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                  color:
+                      Theme.of(context).colorScheme.secondary.withOpacity(0.1),
                   blurRadius: 40,
                   offset: const Offset(0, 20),
                 ),
@@ -1364,12 +1485,19 @@ class _AlphabetTabState extends State<AlphabetTab> with TickerProviderStateMixin
                     end: Alignment.bottomRight,
                     colors: [
                       Theme.of(context).colorScheme.secondaryContainer,
-                      Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.8),
-                      Theme.of(context).colorScheme.tertiaryContainer.withOpacity(0.6),
+                      Theme.of(context)
+                          .colorScheme
+                          .secondaryContainer
+                          .withOpacity(0.8),
+                      Theme.of(context)
+                          .colorScheme
+                          .tertiaryContainer
+                          .withOpacity(0.6),
                     ],
                   ),
                   border: Border.all(
-                    color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                    color:
+                        Theme.of(context).colorScheme.outline.withOpacity(0.2),
                     width: 1,
                   ),
                 ),
@@ -1390,38 +1518,62 @@ class _AlphabetTabState extends State<AlphabetTab> with TickerProviderStateMixin
                                   shape: BoxShape.circle,
                                   gradient: RadialGradient(
                                     colors: [
-                                      Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                                      Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                      Theme.of(context)
+                                          .colorScheme
+                                          .primary
+                                          .withOpacity(0.2),
+                                      Theme.of(context)
+                                          .colorScheme
+                                          .primary
+                                          .withOpacity(0.1),
                                     ],
                                   ),
                                 ),
                                 child: Text(
                                   symbol,
-                                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: Theme.of(context).colorScheme.onSecondaryContainer,
-                                    fontSize: 32,
-                                  ),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineLarge
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSecondaryContainer,
+                                        fontSize: 32,
+                                      ),
                                 ),
                               ),
                               const SizedBox(height: 12),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 4),
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     colors: [
-                                      Theme.of(context).colorScheme.secondary.withOpacity(0.3),
-                                      Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                                      Theme.of(context)
+                                          .colorScheme
+                                          .secondary
+                                          .withOpacity(0.3),
+                                      Theme.of(context)
+                                          .colorScheme
+                                          .secondary
+                                          .withOpacity(0.1),
                                     ],
                                   ),
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: Text(
                                   '#${index + 1}',
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Theme.of(context).colorScheme.onSecondaryContainer.withOpacity(0.8),
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSecondaryContainer
+                                            .withOpacity(0.8),
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                 ),
                               ),
                             ],
@@ -1434,8 +1586,14 @@ class _AlphabetTabState extends State<AlphabetTab> with TickerProviderStateMixin
                             decoration: BoxDecoration(
                               gradient: RadialGradient(
                                 colors: [
-                                  Theme.of(context).colorScheme.error.withOpacity(0.2),
-                                  Theme.of(context).colorScheme.error.withOpacity(0.1),
+                                  Theme.of(context)
+                                      .colorScheme
+                                      .error
+                                      .withOpacity(0.2),
+                                  Theme.of(context)
+                                      .colorScheme
+                                      .error
+                                      .withOpacity(0.1),
                                 ],
                               ),
                               shape: BoxShape.circle,
@@ -1443,8 +1601,10 @@ class _AlphabetTabState extends State<AlphabetTab> with TickerProviderStateMixin
                             child: IconButton(
                               icon: const Icon(Icons.close, size: 20),
                               color: Theme.of(context).colorScheme.error,
-                              onPressed: () => _confirmDeleteSymbol(symbol, nfa),
-                              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                              onPressed: () =>
+                                  _confirmDeleteSymbol(symbol, nfa),
+                              constraints: const BoxConstraints(
+                                  minWidth: 36, minHeight: 36),
                               tooltip: 'حذف نماد',
                             ),
                           ),
@@ -1549,13 +1709,22 @@ class _AlphabetTabState extends State<AlphabetTab> with TickerProviderStateMixin
                     borderRadius: BorderRadius.circular(25),
                     gradient: LinearGradient(
                       colors: [
-                        Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
-                        Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.2),
+                        Theme.of(context)
+                            .colorScheme
+                            .surfaceVariant
+                            .withOpacity(0.5),
+                        Theme.of(context)
+                            .colorScheme
+                            .surfaceVariant
+                            .withOpacity(0.2),
                       ],
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withOpacity(0.1),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -1587,8 +1756,8 @@ class _AlphabetTabState extends State<AlphabetTab> with TickerProviderStateMixin
                     onSubmitted: (_) => _addSymbol(),
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                 ),
               ),
@@ -1604,7 +1773,10 @@ class _AlphabetTabState extends State<AlphabetTab> with TickerProviderStateMixin
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.4),
                       blurRadius: 15,
                       offset: const Offset(0, 6),
                     ),

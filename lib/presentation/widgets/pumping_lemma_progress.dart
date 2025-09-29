@@ -106,9 +106,8 @@ class PumpingLemmaProgress extends ConsumerWidget {
     BuildContext context,
     PumpingLemmaProgressState progress,
   ) {
-    final accuracy = progress.attempts > 0
-        ? progress.score / progress.attempts
-        : 0.0;
+    final accuracy =
+        progress.attempts > 0 ? progress.score / progress.attempts : 0.0;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -299,7 +298,8 @@ class PumpingLemmaProgress extends ConsumerWidget {
     int index,
   ) {
     final color = entry.isCorrect == true ? Colors.green : Colors.red;
-    final title = entry.challengeTitle ?? 'Challenge ${entry.challengeId ?? index + 1}';
+    final title =
+        entry.challengeTitle ?? 'Challenge ${entry.challengeId ?? index + 1}';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -376,7 +376,8 @@ class PumpingLemmaProgress extends ConsumerWidget {
     PumpingLemmaHistoryEntry entry,
   ) {
     final color = Colors.amber.shade700;
-    final title = entry.challengeTitle ?? 'Challenge ${entry.challengeId ?? '-'}';
+    final title =
+        entry.challengeTitle ?? 'Challenge ${entry.challengeId ?? '-'}';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),

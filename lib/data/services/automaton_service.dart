@@ -47,7 +47,8 @@ class AutomatonService {
       }
 
       final symbol = transitionData.symbol;
-      final isLambda = symbol == 'λ' || symbol == 'ε' || symbol.toLowerCase() == 'lambda';
+      final isLambda =
+          symbol == 'λ' || symbol == 'ε' || symbol.toLowerCase() == 'lambda';
 
       transitions.add(FSATransition(
         id: 't${id}_$transitionIndex',
@@ -179,13 +180,13 @@ class AutomatonService {
       _automata.removeAt(index);
       return ResultFactory.success(null);
     } catch (e) {
-          return ResultFactory.failure('Error deleting automaton: $e');
+      return ResultFactory.failure('Error deleting automaton: $e');
     }
   }
 
   /// Lists all automata
   Result<List<FSA>> listAutomata() {
-        return ResultFactory.success(List.from(_automata));
+    return ResultFactory.success(List.from(_automata));
   }
 
   /// Clears all automata

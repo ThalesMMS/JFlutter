@@ -7,7 +7,8 @@ import 'dart:collection';
 import 'dart:ui' as ui;
 
 class PerformanceOptimizer {
-  static final PerformanceOptimizer _instance = PerformanceOptimizer._internal();
+  static final PerformanceOptimizer _instance =
+      PerformanceOptimizer._internal();
   factory PerformanceOptimizer() => _instance;
   PerformanceOptimizer._internal();
 
@@ -29,7 +30,7 @@ class PerformanceOptimizer {
   void configureForDevice() {
     final bool isLowEndDevice = _isLowEndDevice();
     final bool isMobile = _isMobile();
-    
+
     _lodManager.configure(
       maxNodes: isLowEndDevice ? 50 : 200,
       simplificationLevel: isLowEndDevice ? 0.7 : 0.3,
@@ -61,8 +62,8 @@ class PerformanceOptimizer {
   }
 
   bool _isMobile() {
-    return defaultTargetPlatform == TargetPlatform.android || 
-           defaultTargetPlatform == TargetPlatform.iOS;
+    return defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS;
   }
 
   void dispose() {
@@ -87,7 +88,7 @@ class PerformanceMonitor {
   double _averageFPS = 60.0;
 
   final StreamController<PerformanceReport> _reportController =
-  StreamController<PerformanceReport>.broadcast();
+      StreamController<PerformanceReport>.broadcast();
 
   Stream<PerformanceReport> get reports => _reportController.stream;
 
@@ -108,7 +109,8 @@ class PerformanceMonitor {
   void _onFrame(Duration timestamp) {
     _frameCount++;
 
-    final double frameTime = _frameStopwatch.elapsedMilliseconds.toDouble(); // تبدیل int به double
+    final double frameTime =
+        _frameStopwatch.elapsedMilliseconds.toDouble(); // تبدیل int به double
     _frameStopwatch.reset();
 
     if (frameTime > 16.67) {
@@ -143,10 +145,10 @@ class PerformanceMonitor {
 
     // محاسبه FPS میانگین - اصلاح خطای تبدیل نوع
     if (_frameCount > 0 && _frameMetrics.isNotEmpty) {
-      final double totalFrameTime = _frameMetrics
-          .map((f) => f.frameTime)
-          .reduce((a, b) => a + b);
-      final double averageFrameTime = totalFrameTime / _frameMetrics.length.toDouble(); // تبدیل int به double
+      final double totalFrameTime =
+          _frameMetrics.map((f) => f.frameTime).reduce((a, b) => a + b);
+      final double averageFrameTime = totalFrameTime /
+          _frameMetrics.length.toDouble(); // تبدیل int به double
       _averageFPS = 1000.0 / averageFrameTime;
     }
   }
@@ -163,7 +165,8 @@ class PerformanceMonitor {
     final report = PerformanceReport(
       averageFPS: _averageFPS,
       droppedFrames: _droppedFrames,
-      memoryUsage: _memoryMetrics.isNotEmpty ? _memoryMetrics.last.heapUsage : 0.0,
+      memoryUsage:
+          _memoryMetrics.isNotEmpty ? _memoryMetrics.last.heapUsage : 0.0,
       recommendations: _generateRecommendations(),
       severity: _calculateSeverity(),
     );
@@ -226,12 +229,13 @@ class CacheManager {
   final Map<String, CachedNode> _nodeCache = {};
   final Map<String, CachedTexture> _textureCache = {};
   final Map<String, CachedPath> _pathCache = {};
-  final LRUCache<String, ui.Image> _imageCache = LRUCache<String, ui.Image>(100);
-  
+  final LRUCache<String, ui.Image> _imageCache =
+      LRUCache<String, ui.Image>(100);
+
   int _maxCacheSize = 200;
   int _maxTextureSize = 2048;
   bool _enablePreloading = true;
-  
+
   Timer? _cleanupTimer;
 
   CacheManager() {
@@ -303,18 +307,18 @@ class CacheManager {
   Future<ui.Image> _resizeImage(ui.Image original, int maxSize) async {
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
-    
+
     final scale = math.min(
       maxSize / original.width,
       maxSize / original.height,
     );
-    
+
     final newWidth = (original.width * scale).round();
     final newHeight = (original.height * scale).round();
-    
+
     canvas.scale(scale);
     canvas.drawImage(original, Offset.zero, Paint());
-    
+
     final picture = recorder.endRecording();
     return await picture.toImage(newWidth, newHeight);
   }
@@ -371,16 +375,16 @@ class CacheManager {
     final cutoff = now.subtract(const Duration(minutes: 10));
 
     // پاکسازی نودهای قدیمی
-    _nodeCache.removeWhere((key, cached) => 
+    _nodeCache.removeWhere((key, cached) =>
         cached.lastAccessed.isBefore(cutoff) && cached.accessCount < 3);
 
     // پاکسازی textures
-    _textureCache.removeWhere((key, cached) => 
-        cached.lastAccessed.isBefore(cutoff));
+    _textureCache
+        .removeWhere((key, cached) => cached.lastAccessed.isBefore(cutoff));
 
     // پاکسازی paths
-    _pathCache.removeWhere((key, cached) => 
-        cached.lastAccessed.isBefore(cutoff));
+    _pathCache
+        .removeWhere((key, cached) => cached.lastAccessed.isBefore(cutoff));
 
     // پاکسازی images
     _imageCache.clear();
@@ -410,15 +414,16 @@ class CacheManager {
 
   double _calculateHitRate() {
     // محاسبه نرخ hit cache
-    final totalAccess = _nodeCache.values.fold(0, (sum, node) => sum + node.accessCount);
+    final totalAccess =
+        _nodeCache.values.fold(0, (sum, node) => sum + node.accessCount);
     return totalAccess > 0 ? _nodeCache.length / totalAccess : 0.0;
   }
 
   double _calculateMemoryUsage() {
     // تخمین استفاده از حافظه (MB)
-    return (_nodeCache.length * 0.1) + 
-           (_textureCache.length * 0.5) + 
-           (_pathCache.length * 0.05);
+    return (_nodeCache.length * 0.1) +
+        (_textureCache.length * 0.5) +
+        (_pathCache.length * 0.05);
   }
 
   void dispose() {
@@ -432,7 +437,7 @@ class LODManager {
   int _maxNodes = 200;
   double _simplificationLevel = 0.3;
   bool _enableAdaptiveLOD = true;
-  
+
   final Map<int, LODLevel> _lodLevels = {};
 
   LODManager() {
@@ -447,13 +452,13 @@ class LODManager {
     _maxNodes = maxNodes ?? _maxNodes;
     _simplificationLevel = simplificationLevel ?? _simplificationLevel;
     _enableAdaptiveLOD = enableAdaptiveLOD ?? _enableAdaptiveLOD;
-    
+
     _initializeLODLevels();
   }
 
   void _initializeLODLevels() {
     _lodLevels.clear();
-    
+
     // سطح ۰: جزئیات کامل
     _lodLevels[0] = LODLevel(
       level: 0,
@@ -501,14 +506,18 @@ class LODManager {
 
     // بر اساس تعداد نودها
     int lodByCount = 0;
-    if (totalNodes > _maxNodes * 2) lodByCount = 3;
-    else if (totalNodes > _maxNodes * 1.5) lodByCount = 2;
+    if (totalNodes > _maxNodes * 2)
+      lodByCount = 3;
+    else if (totalNodes > _maxNodes * 1.5)
+      lodByCount = 2;
     else if (totalNodes > _maxNodes) lodByCount = 1;
 
     // بر اساس عملکرد
     int lodByPerformance = 0;
-    if (currentFPS < 15) lodByPerformance = 3;
-    else if (currentFPS < 30) lodByPerformance = 2;
+    if (currentFPS < 15)
+      lodByPerformance = 3;
+    else if (currentFPS < 30)
+      lodByPerformance = 2;
     else if (currentFPS < 45) lodByPerformance = 1;
 
     // بر اساس zoom
@@ -523,9 +532,10 @@ class LODManager {
   }
 
   /// فیلتر کردن نودها بر اساس اهمیت
-  List<String> filterNodesByImportance(List<String> allNodes, int targetCount, 
-      {Set<String>? importantNodes, Set<String>? finalStates, String? startState}) {
-    
+  List<String> filterNodesByImportance(List<String> allNodes, int targetCount,
+      {Set<String>? importantNodes,
+      Set<String>? finalStates,
+      String? startState}) {
     if (allNodes.length <= targetCount) return allNodes;
 
     final filtered = <String>[];
@@ -534,11 +544,11 @@ class LODManager {
     // اولویت‌بندی نودها
     for (final node in allNodes) {
       int priority = 0;
-      
+
       if (node == startState) priority += 100;
       if (finalStates?.contains(node) == true) priority += 50;
       if (importantNodes?.contains(node) == true) priority += 25;
-      
+
       priorities[node] = priority;
     }
 
@@ -625,7 +635,7 @@ class RenderOptimizer {
   bool _enableBatching = true;
   int _maxFPS = 60;
   bool _enableVSync = true;
-  
+
   final List<RenderBatch> _renderBatches = [];
   int _currentBatchId = 0;
 
@@ -642,9 +652,10 @@ class RenderOptimizer {
   }
 
   /// بهینه‌سازی فرایند رندر
-  RenderInstructions optimizeRender(List<RenderCommand> commands, Rect viewport) {
+  RenderInstructions optimizeRender(
+      List<RenderCommand> commands, Rect viewport) {
     final optimized = <RenderCommand>[];
-    
+
     // مرحله ۱: Culling
     if (_enableCulling) {
       for (final command in commands) {
@@ -661,7 +672,9 @@ class RenderOptimizer {
     if (_enableBatching) {
       batches = _batchCommands(optimized);
     } else {
-      batches = optimized.map((cmd) => RenderBatch(id: _currentBatchId++, commands: [cmd])).toList();
+      batches = optimized
+          .map((cmd) => RenderBatch(id: _currentBatchId++, commands: [cmd]))
+          .toList();
     }
 
     // مرحله ۳: اولویت‌بندی
@@ -712,24 +725,32 @@ class RenderOptimizer {
 
   int _getTypePriority(String type) {
     switch (type) {
-      case 'background': return 0;
-      case 'grid': return 1;
-      case 'edge': return 2;
-      case 'node': return 3;
-      case 'label': return 4;
-      case 'overlay': return 5;
-      default: return 3;
+      case 'background':
+        return 0;
+      case 'grid':
+        return 1;
+      case 'edge':
+        return 2;
+      case 'node':
+        return 3;
+      case 'label':
+        return 4;
+      case 'overlay':
+        return 5;
+      default:
+        return 3;
     }
   }
 
   double _estimateRenderTime(List<RenderBatch> batches) {
     // تخمین زمان رندر بر اساس تعداد و پیچیدگی commands
     double totalTime = 0.0;
-    
+
     for (final batch in batches) {
-      totalTime += batch.commands.length * 0.1; // ۰.۱ میلی‌ثانیه به ازای هر command
+      totalTime +=
+          batch.commands.length * 0.1; // ۰.۱ میلی‌ثانیه به ازای هر command
     }
-    
+
     return totalTime;
   }
 
@@ -763,7 +784,7 @@ class MemoryOptimizer {
   double _gcThreshold = 0.8;
   bool _autoCleanup = true;
   bool _aggressiveMode = false;
-  
+
   Timer? _cleanupTimer;
   final List<WeakReference<Object>> _managedObjects = [];
 
@@ -821,10 +842,11 @@ class MemoryOptimizer {
   MemoryEstimation estimateMemoryUsage(int nodeCount, int edgeCount) {
     final nodeMemory = nodeCount * 0.5; // KB per node
     final edgeMemory = edgeCount * 0.2; // KB per edge
-    final cacheMemory = (nodeCount * 0.1) + (edgeCount * 0.05); // Cache overhead
-    
+    final cacheMemory =
+        (nodeCount * 0.1) + (edgeCount * 0.05); // Cache overhead
+
     final totalMemory = nodeMemory + edgeMemory + cacheMemory;
-    
+
     return MemoryEstimation(
       nodeMemory: nodeMemory,
       edgeMemory: edgeMemory,
@@ -876,7 +898,7 @@ class LRUCache<K, V> {
   }
 
   int get length => _cache.length;
-  
+
   void clear() => _cache.clear();
 }
 
@@ -1129,7 +1151,7 @@ class _FrameObserver with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    
+
     switch (state) {
       case AppLifecycleState.paused:
       case AppLifecycleState.inactive:
@@ -1170,10 +1192,10 @@ class _PerformanceManagerState extends State<PerformanceManager> {
   @override
   void initState() {
     super.initState();
-    
+
     if (widget.enableMonitoring) {
       PerformanceOptimizer().configureForDevice();
-      
+
       _reportSubscription = PerformanceOptimizer()
           .monitor
           .reports
@@ -1266,7 +1288,8 @@ class AdvancedOptimizer {
   final PerformanceOptimizer _base = PerformanceOptimizer();
 
   /// تحلیل الگوهای استفاده
-  UsagePattern analyzeUsagePattern(List<String> accessedNodes, Duration timeWindow) {
+  UsagePattern analyzeUsagePattern(
+      List<String> accessedNodes, Duration timeWindow) {
     final frequentNodes = <String, int>{};
 
     // تحلیل فرکانس دسترسی
@@ -1292,10 +1315,10 @@ class AdvancedOptimizer {
   Future<void> performPredictiveOptimization(UsagePattern pattern) async {
     // Preload نودهای پر استفاده
     await _base.cache.preloadNodes(pattern.hotNodes.toList());
-    
+
     // تنظیم LOD بر اساس الگوی استفاده
     final lodLevel = pattern.totalAccesses > 1000 ? 2 : 1;
-    
+
     // بهینه‌سازی حافظه
     if (pattern.accessFrequency.length > 100) {
       _base.memoryOptimizer.performCleanup();
@@ -1308,13 +1331,16 @@ class AdvancedOptimizer {
 
     // تحلیل زمان رندر
     final double avgRenderTime = metrics.isNotEmpty
-        ? metrics.map((m) => m.renderTime).reduce((a, b) => a + b) / metrics.length.toDouble() // تبدیل int به double
+        ? metrics.map((m) => m.renderTime).reduce((a, b) => a + b) /
+            metrics.length.toDouble() // تبدیل int به double
         : 0.0;
 
     if (avgRenderTime > 16.67) {
       bottlenecks.add(PerformanceBottleneck(
         type: BottleneckType.rendering,
-        severity: avgRenderTime > 33.33 ? PerformanceSeverity.critical : PerformanceSeverity.warning,
+        severity: avgRenderTime > 33.33
+            ? PerformanceSeverity.critical
+            : PerformanceSeverity.warning,
         description: 'رندرینگ کند (${avgRenderTime.toStringAsFixed(2)}ms)',
         suggestedFix: 'فعال‌سازی culling و batching',
       ));
@@ -1322,13 +1348,16 @@ class AdvancedOptimizer {
 
     // تحلیل تعداد نودهای رندر شده
     final double avgRenderedNodes = metrics.isNotEmpty
-        ? metrics.map((m) => m.renderedNodes).reduce((a, b) => a + b) / metrics.length.toDouble() // تبدیل int به double
+        ? metrics.map((m) => m.renderedNodes).reduce((a, b) => a + b) /
+            metrics.length.toDouble() // تبدیل int به double
         : 0.0;
 
     if (avgRenderedNodes > 200) {
       bottlenecks.add(PerformanceBottleneck(
         type: BottleneckType.tooManyNodes,
-        severity: avgRenderedNodes > 500 ? PerformanceSeverity.critical : PerformanceSeverity.warning,
+        severity: avgRenderedNodes > 500
+            ? PerformanceSeverity.critical
+            : PerformanceSeverity.warning,
         description: 'تعداد زیاد نودهای رندر شده (${avgRenderedNodes.round()})',
         suggestedFix: 'استفاده از Virtual Scrolling و LOD',
       ));

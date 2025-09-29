@@ -9,10 +9,10 @@ import 'automaton.dart';
 class TM extends Automaton {
   /// Tape alphabet symbols
   final Set<String> tapeAlphabet;
-  
+
   /// Blank symbol
   final String blankSymbol;
-  
+
   /// Number of tapes (always 1 for single-tape TM)
   final int tapeCount;
 
@@ -47,7 +47,7 @@ class TM extends Automaton {
     AutomatonType? type,
     DateTime? created,
     DateTime? modified,
-        math.Rectangle? bounds,
+    math.Rectangle? bounds,
     double? zoomLevel,
     Vector2? panOffset,
     Set<String>? tapeAlphabet,
@@ -124,7 +124,7 @@ class TM extends Automaton {
           .toSet(),
       created: DateTime.parse(json['created'] as String),
       modified: DateTime.parse(json['modified'] as String),
-          bounds: math.Rectangle(
+      bounds: math.Rectangle(
         (json['bounds'] as Map<String, dynamic>)['x'] as double,
         (json['bounds'] as Map<String, dynamic>)['y'] as double,
         (json['bounds'] as Map<String, dynamic>)['width'] as double,
@@ -145,48 +145,52 @@ class TM extends Automaton {
   @override
   List<String> validate() {
     final errors = super.validate();
-    
+
     // Validate TM-specific properties
     if (tapeAlphabet.isEmpty) {
       errors.add('TM must have a non-empty tape alphabet');
     }
-    
+
     if (blankSymbol.isEmpty) {
       errors.add('TM must have a blank symbol');
     }
-    
+
     if (!tapeAlphabet.contains(blankSymbol)) {
       errors.add('Blank symbol must be in the tape alphabet');
     }
-    
+
     if (tapeCount < 1) {
       errors.add('TM must have at least one tape');
     }
-    
+
     for (final transition in transitions) {
       if (transition is! TMTransition) {
         errors.add('TM can only contain TM transitions');
       } else {
         final tmTransition = transition as TMTransition;
         final transitionErrors = tmTransition.validate();
-        errors.addAll(transitionErrors.map((e) => 'Transition ${tmTransition.id}: $e'));
-        
+        errors.addAll(
+            transitionErrors.map((e) => 'Transition ${tmTransition.id}: $e'));
+
         // Validate tape symbols
         if (!tapeAlphabet.contains(tmTransition.readSymbol)) {
-          errors.add('Transition ${tmTransition.id} references invalid read symbol');
+          errors.add(
+              'Transition ${tmTransition.id} references invalid read symbol');
         }
-        
+
         if (!tapeAlphabet.contains(tmTransition.writeSymbol)) {
-          errors.add('Transition ${tmTransition.id} references invalid write symbol');
+          errors.add(
+              'Transition ${tmTransition.id} references invalid write symbol');
         }
-        
+
         // Validate tape number
         if (tmTransition.tapeNumber >= tapeCount) {
-          errors.add('Transition ${tmTransition.id} references invalid tape number');
+          errors.add(
+              'Transition ${tmTransition.id} references invalid tape number');
         }
       }
     }
-    
+
     return errors;
   }
 
@@ -201,7 +205,8 @@ class TM extends Automaton {
   }
 
   /// Gets all transitions from a state that can read a specific symbol
-  Set<TMTransition> getTransitionsFromStateOnSymbol(State state, String symbol) {
+  Set<TMTransition> getTransitionsFromStateOnSymbol(
+      State state, String symbol) {
     return tmTransitions
         .where((t) => t.fromState == state && t.canRead(symbol))
         .toSet();
@@ -214,7 +219,7 @@ class TM extends Automaton {
     int tapeNumber,
   ) {
     return tmTransitions
-        .where((t) => 
+        .where((t) =>
             t.fromState == state &&
             t.canRead(symbol) &&
             t.tapeNumber == tapeNumber)
@@ -241,19 +246,19 @@ class TM extends Automaton {
     for (final state in states) {
       final outgoingTransitions = getTransitionsFrom(state);
       final tapeSymbols = <String, int>{};
-      
+
       for (final transition in outgoingTransitions) {
         if (transition is TMTransition) {
           final key = '${transition.readSymbol}_${transition.tapeNumber}';
           tapeSymbols[key] = (tapeSymbols[key] ?? 0) + 1;
         }
       }
-      
+
       if (tapeSymbols.values.any((count) => count > 1)) {
         return false;
       }
     }
-    
+
     return true;
   }
 
@@ -279,7 +284,7 @@ class TM extends Automaton {
     Set<String>? tapeAlphabet,
     String? blankSymbol,
     int? tapeCount,
-        math.Rectangle? bounds,
+    math.Rectangle? bounds,
   }) {
     final now = DateTime.now();
     return TM(
@@ -291,7 +296,7 @@ class TM extends Automaton {
       acceptingStates: {},
       created: now,
       modified: now,
-          bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
+      bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
       tapeAlphabet: tapeAlphabet ?? {'0', '1', 'B'},
       blankSymbol: blankSymbol ?? 'B',
       tapeCount: tapeCount ?? 1,
@@ -310,7 +315,7 @@ class TM extends Automaton {
     Set<String>? tapeAlphabet,
     String? blankSymbol,
     int? tapeCount,
-        math.Rectangle? bounds,
+    math.Rectangle? bounds,
   }) {
     final now = DateTime.now();
     final state = State(
@@ -320,7 +325,7 @@ class TM extends Automaton {
       isInitial: isInitial,
       isAccepting: isAccepting,
     );
-    
+
     return TM(
       id: id,
       name: name,
@@ -331,7 +336,7 @@ class TM extends Automaton {
       acceptingStates: isAccepting ? {state} : {},
       created: now,
       modified: now,
-          bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
+      bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
       tapeAlphabet: tapeAlphabet ?? {'0', '1', 'B'},
       blankSymbol: blankSymbol ?? 'B',
       tapeCount: tapeCount ?? 1,
@@ -342,7 +347,7 @@ class TM extends Automaton {
   factory TM.acceptAll({
     required String id,
     required String name,
-        math.Rectangle? bounds,
+    math.Rectangle? bounds,
   }) {
     final now = DateTime.now();
     final q0 = State(
@@ -352,7 +357,7 @@ class TM extends Automaton {
       isInitial: true,
       isAccepting: true,
     );
-    
+
     return TM(
       id: id,
       name: name,
@@ -363,7 +368,7 @@ class TM extends Automaton {
       acceptingStates: {q0},
       created: now,
       modified: now,
-          bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
+      bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
       tapeAlphabet: {'0', '1', 'B'},
       blankSymbol: 'B',
       tapeCount: 1,
@@ -374,7 +379,7 @@ class TM extends Automaton {
   factory TM.rejectAll({
     required String id,
     required String name,
-        math.Rectangle? bounds,
+    math.Rectangle? bounds,
   }) {
     final now = DateTime.now();
     final q0 = State(
@@ -384,7 +389,7 @@ class TM extends Automaton {
       isInitial: true,
       isAccepting: false,
     );
-    
+
     return TM(
       id: id,
       name: name,
@@ -395,7 +400,7 @@ class TM extends Automaton {
       acceptingStates: {},
       created: now,
       modified: now,
-          bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
+      bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
       tapeAlphabet: {'0', '1', 'B'},
       blankSymbol: 'B',
       tapeCount: 1,
@@ -406,7 +411,7 @@ class TM extends Automaton {
   factory TM.copyMachine({
     required String id,
     required String name,
-        math.Rectangle? bounds,
+    math.Rectangle? bounds,
   }) {
     final now = DateTime.now();
     final q0 = State(
@@ -423,7 +428,7 @@ class TM extends Automaton {
       isInitial: false,
       isAccepting: true,
     );
-    
+
     final t1 = TMTransition.readWrite(
       id: 't1',
       fromState: q0,
@@ -431,7 +436,7 @@ class TM extends Automaton {
       symbol: '0',
       direction: TapeDirection.right,
     );
-    
+
     final t2 = TMTransition.readWrite(
       id: 't2',
       fromState: q0,
@@ -439,7 +444,7 @@ class TM extends Automaton {
       symbol: '1',
       direction: TapeDirection.right,
     );
-    
+
     final t3 = TMTransition.readWrite(
       id: 't3',
       fromState: q0,
@@ -447,7 +452,7 @@ class TM extends Automaton {
       symbol: 'B',
       direction: TapeDirection.stay,
     );
-    
+
     return TM(
       id: id,
       name: name,
@@ -458,13 +463,13 @@ class TM extends Automaton {
       acceptingStates: {q1},
       created: now,
       modified: now,
-          bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
+      bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
       tapeAlphabet: {'0', '1', 'B'},
       blankSymbol: 'B',
       tapeCount: 1,
     );
   }
-  
+
   /// Gets TM transition from state on symbol
   TMTransition? getTMTransitionFromStateOnSymbol(
     String stateId,

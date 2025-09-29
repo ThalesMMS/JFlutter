@@ -146,7 +146,6 @@ class EnhancedStateDiagram extends StatefulWidget {
 
 class _EnhancedStateDiagramState extends State<EnhancedStateDiagram>
     with TickerProviderStateMixin {
-
   // Controllers for each enhancement
   late PerformanceOptimizer _performanceOptimizer;
   late DiagramThemeManager _themeManager;
@@ -531,9 +530,10 @@ class _EnhancedStateDiagramState extends State<EnhancedStateDiagram>
                         flex: 3,
                         child: Text(
                           entry.value.toString(),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                       ),
                     ],
@@ -701,7 +701,8 @@ class _EnhancedStateDiagramState extends State<EnhancedStateDiagram>
     _analytics['selected_states_count'] = _diagramState.selectedStates.length;
     _analytics['current_layout'] = _diagramState.currentLayout.toString();
     _analytics['last_interaction'] = _lastInteractionTime?.toIso8601String();
-    _analytics['total_interactions'] = (_analytics['total_interactions'] ?? 0) + 1;
+    _analytics['total_interactions'] =
+        (_analytics['total_interactions'] ?? 0) + 1;
 
     widget.onAnalyticsUpdate?.call(Map.from(_analytics));
   }
@@ -852,7 +853,8 @@ class EnhancedDiagramConfig {
       showTooltips: showTooltips ?? this.showTooltips,
       enableDebugMode: enableDebugMode ?? this.enableDebugMode,
       debounceTime: debounceTime ?? this.debounceTime,
-      maxStatesForOptimization: maxStatesForOptimization ?? this.maxStatesForOptimization,
+      maxStatesForOptimization:
+          maxStatesForOptimization ?? this.maxStatesForOptimization,
     );
   }
 }
@@ -1105,8 +1107,7 @@ class LayoutAlgorithmManager {
     return widget;
   }
 
-  void dispose() {
-  }
+  void dispose() {}
 }
 
 /// Advanced interaction manager
@@ -1133,6 +1134,5 @@ class AdvancedInteractionManager {
     return widget;
   }
 
-  void dispose() {
-  }
+  void dispose() {}
 }

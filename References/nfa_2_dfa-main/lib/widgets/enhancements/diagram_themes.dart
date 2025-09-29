@@ -7,11 +7,13 @@ import 'dart:math' as math;
 /// مدیریت کننده تمام تم‌های دیاگرام حالت
 class DiagramThemeManager {
   static DiagramThemeManager? _instance;
-  static DiagramThemeManager get instance => _instance ??= DiagramThemeManager._();
+  static DiagramThemeManager get instance =>
+      _instance ??= DiagramThemeManager._();
   DiagramThemeManager._();
 
   DiagramTheme _currentTheme = DiagramThemes.defaultLight;
-  final ValueNotifier<DiagramTheme> _themeNotifier = ValueNotifier(DiagramThemes.defaultLight);
+  final ValueNotifier<DiagramTheme> _themeNotifier =
+      ValueNotifier(DiagramThemes.defaultLight);
 
   /// تم فعلی
   DiagramTheme get currentTheme => _currentTheme;
@@ -33,8 +35,9 @@ class DiagramThemeManager {
   Future<void> loadSavedTheme() async {
     final savedThemeName = await _loadThemePreference();
     if (savedThemeName != null) {
-      final theme = DiagramThemes.getAllThemes()
-          .firstWhere((t) => t.name == savedThemeName, orElse: () => DiagramThemes.defaultLight);
+      final theme = DiagramThemes.getAllThemes().firstWhere(
+          (t) => t.name == savedThemeName,
+          orElse: () => DiagramThemes.defaultLight);
       setTheme(theme, animate: false);
     }
   }
@@ -175,7 +178,9 @@ class DiagramTheme {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is DiagramTheme && runtimeType == other.runtimeType && name == other.name;
+      other is DiagramTheme &&
+          runtimeType == other.runtimeType &&
+          name == other.name;
 
   @override
   int get hashCode => name.hashCode;
@@ -585,8 +590,8 @@ class _ThemeSelectorState extends State<ThemeSelector>
           Text(
             'Select Theme',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           const Spacer(),
           if (widget.allowCustomThemes)
@@ -655,9 +660,8 @@ class _ThemeSelectorState extends State<ThemeSelector>
           color: theme.backgroundColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected
-                ? theme.primaryColor
-                : Colors.grey.withOpacity(0.3),
+            color:
+                isSelected ? theme.primaryColor : Colors.grey.withOpacity(0.3),
             width: isSelected ? 3 : 1,
           ),
           boxShadow: [

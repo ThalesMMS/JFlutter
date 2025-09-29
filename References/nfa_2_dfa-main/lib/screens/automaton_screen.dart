@@ -201,12 +201,12 @@ class _CreateAutomatonScreenState extends State<CreateAutomatonScreen>
         'states': _states,
         'alphabet': _alphabet.toList(),
         'transitions': _transitions.map((from, transMap) => MapEntry(
-          from,
-          transMap.map((symbol, toStates) => MapEntry(
-            symbol,
-            _isNFA ? toStates.toList() : toStates.first,
-          )),
-        )),
+              from,
+              transMap.map((symbol, toStates) => MapEntry(
+                    symbol,
+                    _isNFA ? toStates.toList() : toStates.first,
+                  )),
+            )),
         'startState': _initialState,
         'finalStates': _finalStates.toList(),
       };
@@ -215,7 +215,8 @@ class _CreateAutomatonScreenState extends State<CreateAutomatonScreen>
 
       final nfaProvider = Provider.of<NFAProvider>(context, listen: false);
 
-      await nfaProvider.saveNewProject(_nameController.text.trim(), automatonJson);
+      await nfaProvider.saveNewProject(
+          _nameController.text.trim(), automatonJson);
 
       _showSuccessSnackBar('اتوماتا با موفقیت ایجاد شد');
 
@@ -330,8 +331,8 @@ class _CreateAutomatonScreenState extends State<CreateAutomatonScreen>
                         color: isCompleted
                             ? Colors.green
                             : isActive
-                            ? Theme.of(context).primaryColor
-                            : Colors.grey.shade300,
+                                ? Theme.of(context).primaryColor
+                                : Colors.grey.shade300,
                       ),
                       child: Icon(
                         isCompleted ? Icons.check : step.icon,
@@ -343,7 +344,8 @@ class _CreateAutomatonScreenState extends State<CreateAutomatonScreen>
                       Expanded(
                         child: Container(
                           height: 2,
-                          color: isCompleted ? Colors.green : Colors.grey.shade300,
+                          color:
+                              isCompleted ? Colors.green : Colors.grey.shade300,
                         ),
                       ),
                   ],
@@ -355,8 +357,8 @@ class _CreateAutomatonScreenState extends State<CreateAutomatonScreen>
           Text(
             _steps[_currentStep].title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           Text(
             _steps[_currentStep].description,
@@ -500,11 +502,13 @@ class _CreateAutomatonScreenState extends State<CreateAutomatonScreen>
                     runSpacing: 8,
                     children: _states
                         .map((state) => Chip(
-                      label: Text(state),
-                      avatar: _initialState == state ? const Icon(Icons.start, size: 16) : null,
-                      onDeleted: () => _removeState(state),
-                      deleteIcon: const Icon(Icons.close, size: 16),
-                    ))
+                              label: Text(state),
+                              avatar: _initialState == state
+                                  ? const Icon(Icons.start, size: 16)
+                                  : null,
+                              onDeleted: () => _removeState(state),
+                              deleteIcon: const Icon(Icons.close, size: 16),
+                            ))
                         .toList(),
                   ),
                   const SizedBox(height: 16),
@@ -518,9 +522,9 @@ class _CreateAutomatonScreenState extends State<CreateAutomatonScreen>
                     isExpanded: true,
                     items: _states
                         .map((state) => DropdownMenuItem(
-                      value: state,
-                      child: Text(state),
-                    ))
+                              value: state,
+                              child: Text(state),
+                            ))
                         .toList(),
                     onChanged: (value) => setState(() => _initialState = value),
                   ),
@@ -625,11 +629,12 @@ class _CreateAutomatonScreenState extends State<CreateAutomatonScreen>
                     runSpacing: 8,
                     children: _alphabet
                         .map((symbol) => Chip(
-                      label: Text(symbol),
-                      backgroundColor: symbol == 'ε' ? Colors.orange.shade100 : null,
-                      onDeleted: () => _removeSymbol(symbol),
-                      deleteIcon: const Icon(Icons.close, size: 16),
-                    ))
+                              label: Text(symbol),
+                              backgroundColor:
+                                  symbol == 'ε' ? Colors.orange.shade100 : null,
+                              onDeleted: () => _removeSymbol(symbol),
+                              deleteIcon: const Icon(Icons.close, size: 16),
+                            ))
                         .toList(),
                   ),
                 ],
@@ -651,23 +656,25 @@ class _CreateAutomatonScreenState extends State<CreateAutomatonScreen>
         const SizedBox(height: 16),
         ..._states
             .map((fromState) => Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'از حالت: $fromState',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'از حالت: $fromState',
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                        ),
+                        const SizedBox(height: 12),
+                        ..._alphabet.map(
+                            (symbol) => _buildTransitionRow(fromState, symbol)),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                ..._alphabet.map((symbol) => _buildTransitionRow(fromState, symbol)),
-              ],
-            ),
-          ),
-        ))
+                ))
             .toList(),
       ],
     );
@@ -688,17 +695,17 @@ class _CreateAutomatonScreenState extends State<CreateAutomatonScreen>
             child: Wrap(
               spacing: 4,
               children: [
-                ...currentTransitions
-                    .map((toState) => Chip(
-                  label: Text(toState),
-                  onDeleted: () => _removeTransition(fromState, symbol, toState),
-                  deleteIcon: const Icon(Icons.close, size: 16),
-                ))
-                ,
+                ...currentTransitions.map((toState) => Chip(
+                      label: Text(toState),
+                      onDeleted: () =>
+                          _removeTransition(fromState, symbol, toState),
+                      deleteIcon: const Icon(Icons.close, size: 16),
+                    )),
                 if (_isNFA || currentTransitions.isEmpty)
                   ActionChip(
                     label: const Icon(Icons.add, size: 16),
-                    onPressed: () => _showAddTransitionDialog(fromState, symbol),
+                    onPressed: () =>
+                        _showAddTransitionDialog(fromState, symbol),
                   ),
               ],
             ),
@@ -729,18 +736,18 @@ class _CreateAutomatonScreenState extends State<CreateAutomatonScreen>
                 ),
                 const SizedBox(height: 16),
                 ..._states.map((state) => CheckboxListTile(
-                  title: Text(state),
-                  value: _finalStates.contains(state),
-                  onChanged: (value) {
-                    setState(() {
-                      if (value == true) {
-                        _finalStates.add(state);
-                      } else {
-                        _finalStates.remove(state);
-                      }
-                    });
-                  },
-                )),
+                      title: Text(state),
+                      value: _finalStates.contains(state),
+                      onChanged: (value) {
+                        setState(() {
+                          if (value == true) {
+                            _finalStates.add(state);
+                          } else {
+                            _finalStates.remove(state);
+                          }
+                        });
+                      },
+                    )),
               ],
             ),
           ),
@@ -810,15 +817,17 @@ class _CreateAutomatonScreenState extends State<CreateAutomatonScreen>
               onPressed: _isCreating
                   ? null
                   : _currentStep < _steps.length - 1
-                  ? _nextStep
-                  : _createAutomaton,
+                      ? _nextStep
+                      : _createAutomaton,
               child: _isCreating
                   ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-                  : Text(_currentStep < _steps.length - 1 ? 'بعدی' : 'ایجاد اتوماتا'),
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(_currentStep < _steps.length - 1
+                      ? 'بعدی'
+                      : 'ایجاد اتوماتا'),
             ),
           ),
         ],
@@ -835,12 +844,12 @@ class _CreateAutomatonScreenState extends State<CreateAutomatonScreen>
           mainAxisSize: MainAxisSize.min,
           children: _states
               .map((toState) => ListTile(
-            title: Text(toState),
-            onTap: () {
-              _addTransition(fromState, symbol, toState);
-              Navigator.pop(context);
-            },
-          ))
+                    title: Text(toState),
+                    onTap: () {
+                      _addTransition(fromState, symbol, toState);
+                      Navigator.pop(context);
+                    },
+                  ))
               .toList(),
         ),
         actions: [
@@ -863,7 +872,8 @@ class _CreateAutomatonScreenState extends State<CreateAutomatonScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('مراحل ایجاد اتوماتا:', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('مراحل ایجاد اتوماتا:',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 8),
               Text('1. اطلاعات پایه: نام و نوع اتوماتا'),
               Text('2. حالت‌ها: تعریف حالت‌های اتوماتا'),
@@ -871,9 +881,12 @@ class _CreateAutomatonScreenState extends State<CreateAutomatonScreen>
               Text('4. انتقال‌ها: تنظیم قوانین انتقال'),
               Text('5. حالت‌های پذیرش: انتخاب حالت‌های پایانی'),
               SizedBox(height: 16),
-              Text('تعاریف نظری:', style: TextStyle(fontWeight: FontWeight.bold)),
-              Text('• DFA: اتوماتای متناهی قطعی - هر حالت و نماد دقیقاً یک انتقال'),
-              Text('• NFA: اتوماتای متناهی غیرقطعی - امکان چندین انتقال یا ε-انتقال'),
+              Text('تعاریف نظری:',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                  '• DFA: اتوماتای متناهی قطعی - هر حالت و نماد دقیقاً یک انتقال'),
+              Text(
+                  '• NFA: اتوماتای متناهی غیرقطعی - امکان چندین انتقال یا ε-انتقال'),
               SizedBox(height: 16),
               Text('نکات مهم:', style: TextStyle(fontWeight: FontWeight.bold)),
               Text('• نام حالت‌ها باید منحصر به فرد باشد'),

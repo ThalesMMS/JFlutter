@@ -68,7 +68,7 @@ class _TouchGestureHandlerState<T extends Transition>
   // Double tap handling
   DateTime? _lastTapTime;
   Offset? _lastTapPosition;
-  
+
   // Context menu
   bool _showContextMenu = false;
   Offset? _contextMenuPosition;
@@ -196,7 +196,8 @@ class _TouchGestureHandlerState<T extends Transition>
     if (_isDragging && _draggedState != null && details.pointerCount == 1) {
       // Handle single finger drag
       final deltaLocal = details.localFocalPoint - _dragStartPosition!;
-      final deltaCanvas = Offset(deltaLocal.dx / _scale, deltaLocal.dy / _scale);
+      final deltaCanvas =
+          Offset(deltaLocal.dx / _scale, deltaLocal.dy / _scale);
       final startCanvas = _dragStartCanvasPosition!;
       final newPosition = startCanvas + deltaCanvas;
       widget.onStateMoved(_draggedState!.copyWith(
@@ -266,7 +267,8 @@ class _TouchGestureHandlerState<T extends Transition>
       labelOffset: 16,
     );
 
-    return _distanceToQuadratic(point, curve.start, curve.control, curve.end) <= 18;
+    return _distanceToQuadratic(point, curve.start, curve.control, curve.end) <=
+        18;
   }
 
   bool _isPointOnSelfLoop(Offset point, T transition) {
@@ -275,7 +277,9 @@ class _TouchGestureHandlerState<T extends Transition>
       transition.fromState.position.y,
     );
     final loops = widget.transitions
-        .where((t) => t.fromState.id == transition.fromState.id && t.fromState == t.toState)
+        .where((t) =>
+            t.fromState.id == transition.fromState.id &&
+            t.fromState == t.toState)
         .toList();
     final index = loops.indexOf(transition);
     final radius = widget.selfLoopBaseRadius + index * widget.selfLoopSpacing;
@@ -286,7 +290,8 @@ class _TouchGestureHandlerState<T extends Transition>
       return false;
     }
 
-    final angle = math.atan2(point.dy - loopCenter.dy, point.dx - loopCenter.dx);
+    final angle =
+        math.atan2(point.dy - loopCenter.dy, point.dx - loopCenter.dx);
     final normalized = _normalizeAngle(angle);
     final start = _normalizeAngle(1.1 * math.pi);
     final end = start + 1.6 * math.pi;
@@ -354,7 +359,7 @@ class _TouchGestureHandlerState<T extends Transition>
             child: widget.child,
           ),
         ),
-        
+
         // Context menu
         if (_showContextMenu && _contextMenuPosition != null)
           Positioned(
@@ -423,13 +428,15 @@ class _TouchGestureHandlerState<T extends Transition>
                 },
               ),
             ],
-            if (_contextMenuState == null && _contextMenuTransition == null) ...[
+            if (_contextMenuState == null &&
+                _contextMenuTransition == null) ...[
               _buildContextMenuItem(
                 context,
                 icon: Icons.add_circle,
                 label: 'Add State',
                 onTap: () {
-                  final canvasPoint = _toCanvasCoordinates(_contextMenuPosition!);
+                  final canvasPoint =
+                      _toCanvasCoordinates(_contextMenuPosition!);
                   widget.onStateAdded(canvasPoint);
                   _closeContextMenu();
                 },

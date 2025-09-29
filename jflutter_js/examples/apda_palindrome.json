@@ -1,0 +1,36 @@
+{
+  "id": "example_apda_palindrome",
+  "name": "APD - Palíndromo",
+  "type": "pda",
+  "alphabet": ["a", "b"],
+  "stackAlphabet": ["a", "b", "Z"],
+  "states": [
+    {
+      "id": "q0",
+      "name": "q0",
+      "x": 100.0,
+      "y": 200.0,
+      "isInitial": true,
+      "isFinal": false
+    },
+    {
+      "id": "q1",
+      "name": "q1",
+      "x": 300.0,
+      "y": 200.0,
+      "isInitial": false,
+      "isFinal": true
+    }
+  ],
+  "transitions": {
+    "q0|a|Z": ["q0|aZ"],
+    "q0|b|Z": ["q0|bZ"],
+    "q0|a|a": ["q0|aa"],
+    "q0|b|b": ["q0|bb"],
+    "q0||Z": ["q1|Z"]
+  },
+  "initialId": "q0",
+  "initialStack": ["Z"],
+  "finalStates": ["q1"],
+  "description": "Autômato de pilha que reconhece palíndromos usando pilha para verificar simetria"
+}

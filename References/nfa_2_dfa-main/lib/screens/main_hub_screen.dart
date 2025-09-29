@@ -109,7 +109,7 @@ class _MainHubScreenState extends State<MainHubScreen>
 
     _iconControllers = List.generate(
       _navigationItems.length,
-          (index) => AnimationController(
+      (index) => AnimationController(
         duration: const Duration(milliseconds: 300),
         vsync: this,
       ),
@@ -117,7 +117,7 @@ class _MainHubScreenState extends State<MainHubScreen>
 
     _particleControllers = List.generate(
       _navigationItems.length,
-          (index) => AnimationController(
+      (index) => AnimationController(
         duration: const Duration(milliseconds: 800),
         vsync: this,
       ),
@@ -177,15 +177,15 @@ class _MainHubScreenState extends State<MainHubScreen>
           gradient: LinearGradient(
             colors: isDark
                 ? [
-              const Color(0xFF0F0C29),
-              const Color(0xFF24243e),
-              const Color(0xFF302B63),
-            ]
+                    const Color(0xFF0F0C29),
+                    const Color(0xFF24243e),
+                    const Color(0xFF302B63),
+                  ]
                 : [
-              const Color(0xFF667eea),
-              const Color(0xFF764ba2),
-              const Color(0xFFf093fb),
-            ],
+                    const Color(0xFF667eea),
+                    const Color(0xFF764ba2),
+                    const Color(0xFFf093fb),
+                  ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -234,13 +234,13 @@ class _MainHubScreenState extends State<MainHubScreen>
               gradient: LinearGradient(
                 colors: isDark
                     ? [
-                  const Color(0xFF1A1A2E).withOpacity(0.95),
-                  const Color(0xFF16213E).withOpacity(0.95),
-                ]
+                        const Color(0xFF1A1A2E).withOpacity(0.95),
+                        const Color(0xFF16213E).withOpacity(0.95),
+                      ]
                     : [
-                  const Color(0xFFF8F9FA).withOpacity(0.95),
-                  const Color(0xFFE9ECEF).withOpacity(0.95),
-                ],
+                        const Color(0xFFF8F9FA).withOpacity(0.95),
+                        const Color(0xFFE9ECEF).withOpacity(0.95),
+                      ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
@@ -295,7 +295,7 @@ class _MainHubScreenState extends State<MainHubScreen>
                                 color: isSelected
                                     ? item.gradient.colors.first
                                     : theme.colorScheme.onSurface
-                                    .withOpacity(0.6),
+                                        .withOpacity(0.6),
                               ),
                             ),
                           ),
@@ -380,17 +380,17 @@ class _MainHubScreenState extends State<MainHubScreen>
                 gradient: isSelected ? item.gradient : null,
                 color: !isSelected
                     ? (isDark
-                    ? const Color(0xFF2D3748)
-                    : const Color(0xFFF1F3F4))
+                        ? const Color(0xFF2D3748)
+                        : const Color(0xFFF1F3F4))
                     : null,
                 boxShadow: isSelected
                     ? [
-                  BoxShadow(
-                    color: item.gradient.colors.first.withOpacity(0.4),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ]
+                        BoxShadow(
+                          color: item.gradient.colors.first.withOpacity(0.4),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ]
                     : null,
               ),
               child: AnimatedSwitcher(
@@ -405,8 +405,8 @@ class _MainHubScreenState extends State<MainHubScreen>
                   color: isSelected
                       ? Colors.white
                       : (isDark
-                      ? const Color(0xFFA0AEC0)
-                      : const Color(0xFF4A5568)),
+                          ? const Color(0xFFA0AEC0)
+                          : const Color(0xFF4A5568)),
                 ),
               ),
             ),

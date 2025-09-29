@@ -5,7 +5,6 @@ import '../models/nfa.dart';
 import '../models/dfa.dart';
 import '../models/state_model.dart';
 
-
 class UnionResult {
   final DFA resultDfa;
   final AutomatonMetrics metrics;
@@ -82,7 +81,6 @@ class ComplementResult {
   });
 }
 
-
 class PerformanceMonitor {
   static final Map<String, List<Duration>> _operationTimes = {};
 
@@ -94,7 +92,8 @@ class PerformanceMonitor {
     final times = _operationTimes[operation] ?? [];
     if (times.isEmpty) return Duration.zero;
 
-    final totalMs = times.fold<int>(0, (sum, time) => sum + time.inMilliseconds);
+    final totalMs =
+        times.fold<int>(0, (sum, time) => sum + time.inMilliseconds);
     return Duration(milliseconds: totalMs ~/ times.length);
   }
 
@@ -109,7 +108,6 @@ class AutomatonCache {
   static const int maxCacheSize = 100;
 
   static String _generateNfaHash(NFA nfa) {
-
     return '${nfa.states.length}_${nfa.alphabet.length}_${nfa.startState}_${nfa.finalStates.length}';
   }
 
@@ -143,10 +141,8 @@ class AutomatonCache {
   }
 }
 
-
 /// کلاس پیشرفته برای عملیات اتوماتا با قابلیت‌های بهینه‌سازی و مانیتورینگ
 class EnhancedAutomatonOperations {
-
   // --- تنظیمات بهینه‌سازی ---
   static bool enableCaching = true;
   static bool enableParallelProcessing = true;
@@ -190,7 +186,8 @@ class EnhancedAutomatonOperations {
       dfaStates[startStateKey] = startStateDFA;
 
       // الگوریتم اصلی با بهینه‌سازی
-      while (stateQueue.isNotEmpty && stopwatch.elapsedMilliseconds < maxProcessingTime) {
+      while (stateQueue.isNotEmpty &&
+          stopwatch.elapsedMilliseconds < maxProcessingTime) {
         final currentNfaStates = stateQueue.removeFirst();
         final currentStateKey = _generateStateKey(currentNfaStates);
         final currentDfaState = dfaStates[currentStateKey]!;
@@ -205,7 +202,8 @@ class EnhancedAutomatonOperations {
           final nextStates = _computeNextStates(nfa, currentNfaStates, symbol);
 
           if (nextStates.isNotEmpty) {
-            final nextStatesClosure = _getEpsilonClosureOptimized(nfa, nextStates);
+            final nextStatesClosure =
+                _getEpsilonClosureOptimized(nfa, nextStates);
             final nextStateKey = _generateStateKey(nextStatesClosure);
 
             if (!visitedStates.containsKey(nextStateKey)) {
@@ -217,7 +215,8 @@ class EnhancedAutomatonOperations {
               dfaStates[nextStateKey] = nextDfaState;
             }
 
-            dfa.addTransition(currentDfaState, symbol, dfaStates[nextStateKey]!);
+            dfa.addTransition(
+                currentDfaState, symbol, dfaStates[nextStateKey]!);
           }
         }
       }
@@ -233,7 +232,6 @@ class EnhancedAutomatonOperations {
       PerformanceMonitor.recordOperation('nfa_to_dfa', stopwatch.elapsed);
 
       return completeDfa;
-
     } catch (e) {
       stopwatch.stop();
 
@@ -278,7 +276,8 @@ class EnhancedAutomatonOperations {
   }
 
   /// محاسبه حالت‌های بعدی برای یک نماد
-  Set<String> _computeNextStates(NFA nfa, Set<String> currentStates, String symbol) {
+  Set<String> _computeNextStates(
+      NFA nfa, Set<String> currentStates, String symbol) {
     final nextStates = <String>{};
     for (final state in currentStates) {
       nextStates.addAll(nfa.getTransitions(state, symbol));
@@ -292,7 +291,6 @@ class EnhancedAutomatonOperations {
     if (state is String) return state;
     return state.toString();
   }
-
 
   /// عملیات اجتماع با بهینه‌سازی کامل
   Future<UnionResult> unionWithOptimization(NFA nfa1, NFA nfa2) async {
@@ -332,7 +330,6 @@ class EnhancedAutomatonOperations {
         statesReduced: statesReduced,
         wasOptimized: wasOptimized,
       );
-
     } catch (e) {
       stopwatch.stop();
       // در صورت خطا، DFA خالی برگردان
@@ -346,7 +343,8 @@ class EnhancedAutomatonOperations {
   }
 
   /// عملیات اشتراک با پردازش پیشرفته
-  Future<IntersectionResult> intersectionWithParallelProcessing(NFA nfa1, NFA nfa2) async {
+  Future<IntersectionResult> intersectionWithParallelProcessing(
+      NFA nfa1, NFA nfa2) async {
     final stopwatch = Stopwatch()..start();
 
     try {
@@ -373,7 +371,6 @@ class EnhancedAutomatonOperations {
         originalStatesCount: originalStatesCount,
         isEmpty: isEmpty,
       );
-
     } catch (e) {
       stopwatch.stop();
       final emptyDfa = DFA.empty();
@@ -387,7 +384,8 @@ class EnhancedAutomatonOperations {
   }
 
   /// عملیات الحاق با بهینه‌سازی مسیر
-  Future<ConcatenationResult> concatenateWithOptimization(NFA nfa1, NFA nfa2) async {
+  Future<ConcatenationResult> concatenateWithOptimization(
+      NFA nfa1, NFA nfa2) async {
     final stopwatch = Stopwatch()..start();
 
     try {
@@ -395,7 +393,8 @@ class EnhancedAutomatonOperations {
       bool hasOptimizedPath = false;
 
       // شمارش epsilon transition های اولیه
-      final initialEpsilonCount = _countEpsilonTransitions(nfa1) + _countEpsilonTransitions(nfa2);
+      final initialEpsilonCount =
+          _countEpsilonTransitions(nfa1) + _countEpsilonTransitions(nfa2);
 
       final result = nfa1.concatenation(nfa2);
 
@@ -423,7 +422,6 @@ class EnhancedAutomatonOperations {
         resultNfa: NFA.empty(),
         processingTime: stopwatch.elapsed,
       );
-
     } catch (e) {
       stopwatch.stop();
       return ConcatenationResult(
@@ -461,7 +459,6 @@ class EnhancedAutomatonOperations {
         resultNfa: NFA.empty(),
         processingTime: stopwatch.elapsed,
       );
-
     } catch (e) {
       stopwatch.stop();
       return KleeneStarResult(
@@ -482,7 +479,8 @@ class EnhancedAutomatonOperations {
       final complementDfa = dfa.complement();
       final complementMetrics = complementDfa.getMetrics();
 
-      final trapStatesAdded = complementMetrics.stateCount - originalMetrics.stateCount;
+      final trapStatesAdded =
+          complementMetrics.stateCount - originalMetrics.stateCount;
 
       stopwatch.stop();
       PerformanceMonitor.recordOperation('complement', stopwatch.elapsed);
@@ -494,7 +492,6 @@ class EnhancedAutomatonOperations {
         processingTime: stopwatch.elapsed,
         trapStatesAdded: max(0, trapStatesAdded),
       );
-
     } catch (e) {
       stopwatch.stop();
       final emptyDfa = DFA.empty();
@@ -509,7 +506,6 @@ class EnhancedAutomatonOperations {
     }
   }
 
-
   /// شمارش epsilon transition ها
   int _countEpsilonTransitions(NFA nfa) {
     int count = 0;
@@ -522,7 +518,6 @@ class EnhancedAutomatonOperations {
 
   /// بررسی وجود مسیر مستقیم بین دو NFA
   bool _hasDirectPath(NFA nfa1, NFA nfa2) {
-
     return nfa1.finalStates.contains(nfa2.startState);
   }
 
@@ -580,7 +575,8 @@ class EnhancedAutomatonOperations {
     int? maxTime,
   }) {
     if (caching != null) enableCaching = caching;
-    if (parallelProcessing != null) enableParallelProcessing = parallelProcessing;
+    if (parallelProcessing != null)
+      enableParallelProcessing = parallelProcessing;
     if (minimization != null) enableMinimization = minimization;
     if (maxTime != null) maxProcessingTime = maxTime;
   }
@@ -589,12 +585,17 @@ class EnhancedAutomatonOperations {
   static Map<String, dynamic> getPerformanceReport() {
     return {
       'average_times': {
-        'nfa_to_dfa': PerformanceMonitor.getAverageTime('nfa_to_dfa').inMilliseconds,
+        'nfa_to_dfa':
+            PerformanceMonitor.getAverageTime('nfa_to_dfa').inMilliseconds,
         'union': PerformanceMonitor.getAverageTime('union').inMilliseconds,
-        'intersection': PerformanceMonitor.getAverageTime('intersection').inMilliseconds,
-        'concatenation': PerformanceMonitor.getAverageTime('concatenation').inMilliseconds,
-        'kleene_star': PerformanceMonitor.getAverageTime('kleene_star').inMilliseconds,
-        'complement': PerformanceMonitor.getAverageTime('complement').inMilliseconds,
+        'intersection':
+            PerformanceMonitor.getAverageTime('intersection').inMilliseconds,
+        'concatenation':
+            PerformanceMonitor.getAverageTime('concatenation').inMilliseconds,
+        'kleene_star':
+            PerformanceMonitor.getAverageTime('kleene_star').inMilliseconds,
+        'complement':
+            PerformanceMonitor.getAverageTime('complement').inMilliseconds,
       },
       'cache_size': AutomatonCache._dfaCache.length,
       'epsilon_cache_size': AutomatonCache._epsilonClosureCache.length,

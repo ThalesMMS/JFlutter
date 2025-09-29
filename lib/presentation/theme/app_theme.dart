@@ -7,7 +7,7 @@ class AppTheme {
   static const Color errorColor = Color(0xFFB00020);
   static const Color surfaceColor = Color(0xFFFAFAFA);
   static const Color backgroundColor = Color(0xFFFFFFFF);
-  
+
   /// Light theme
   static ThemeData get lightTheme {
     return ThemeData(
@@ -47,7 +47,8 @@ class AppTheme {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         type: BottomNavigationBarType.fixed,
@@ -55,7 +56,7 @@ class AppTheme {
       ),
     );
   }
-  
+
   /// Dark theme
   static ThemeData get darkTheme {
     return ThemeData(
@@ -95,7 +96,8 @@ class AppTheme {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         type: BottomNavigationBarType.fixed,

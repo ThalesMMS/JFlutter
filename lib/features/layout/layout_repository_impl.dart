@@ -1,4 +1,3 @@
-
 import 'dart:collection';
 import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';
@@ -62,13 +61,11 @@ class LayoutRepositoryImpl implements LayoutRepository {
           ? remaining
           : (remaining < columns ? remaining : columns);
 
-      final horizontalSpacing = itemsInRow > 1
-          ? area.width / (itemsInRow - 1)
-          : 0;
+      final horizontalSpacing =
+          itemsInRow > 1 ? area.width / (itemsInRow - 1) : 0;
       final effectiveWidth = horizontalSpacing * (itemsInRow - 1);
-      final startX = itemsInRow > 1
-          ? area.center.x - effectiveWidth / 2
-          : area.center.x;
+      final startX =
+          itemsInRow > 1 ? area.center.x - effectiveWidth / 2 : area.center.x;
 
       for (int col = 0; col < itemsInRow; col++) {
         if (index >= states.length) break;
@@ -96,8 +93,8 @@ class LayoutRepositoryImpl implements LayoutRepository {
     final maxRadiusX = area.width / 2;
     final maxRadiusY = area.height / 2;
     final maxRadius = math.min(maxRadiusX, maxRadiusY);
-    final spacing = maxRadius /
-        math.max(1, math.sqrt(states.length.toDouble()));
+    final spacing =
+        maxRadius / math.max(1, math.sqrt(states.length.toDouble()));
 
     final newStates = <StateEntity>[];
     for (int i = 0; i < states.length; i++) {
@@ -116,7 +113,8 @@ class LayoutRepositoryImpl implements LayoutRepository {
   }
 
   @override
-  Future<AutomatonResult> applyHierarchicalLayout(AutomatonEntity automaton) async {
+  Future<AutomatonResult> applyHierarchicalLayout(
+      AutomatonEntity automaton) async {
     final states = automaton.states;
     if (states.isEmpty) {
       return Success(automaton);
@@ -133,7 +131,8 @@ class LayoutRepositoryImpl implements LayoutRepository {
     final layers = <List<StateEntity>>[];
     final queue = Queue<(String, int)>();
 
-    if (automaton.initialId != null && stateById.containsKey(automaton.initialId)) {
+    if (automaton.initialId != null &&
+        stateById.containsKey(automaton.initialId)) {
       queue.add((automaton.initialId!, 0));
     }
 
@@ -174,7 +173,8 @@ class LayoutRepositoryImpl implements LayoutRepository {
     final newStates = <StateEntity>[];
     final left = area.center.x - area.width / 2;
     final top = area.center.y - area.height / 2;
-    final verticalSpacing = layers.length > 1 ? area.height / (layers.length - 1) : 0;
+    final verticalSpacing =
+        layers.length > 1 ? area.height / (layers.length - 1) : 0;
 
     for (int i = 0; i < layers.length; i++) {
       final layerStates = layers[i];
@@ -182,9 +182,7 @@ class LayoutRepositoryImpl implements LayoutRepository {
       final y = layers.length == 1 ? area.center.y : top + i * verticalSpacing;
       final count = layerStates.length;
       final horizontalSpacing = count > 1 ? area.width / (count - 1) : 0;
-      final startX = count > 1
-          ? left
-          : area.center.x;
+      final startX = count > 1 ? left : area.center.x;
 
       for (int j = 0; j < layerStates.length; j++) {
         final state = layerStates[j];
@@ -223,7 +221,8 @@ class LayoutRepositoryImpl implements LayoutRepository {
     int processed = 0;
     for (int ring = 0; ring < rings && processed < states.length; ring++) {
       final remaining = states.length - processed;
-      final ringSize = ring == rings - 1 ? remaining : math.min(perRing, remaining);
+      final ringSize =
+          ring == rings - 1 ? remaining : math.min(perRing, remaining);
       final ringFactor = rings == 1 ? 1.0 : (ring + 1) / rings;
       final radiusX = maxRadiusX * ringFactor;
       final radiusY = maxRadiusY * ringFactor;
@@ -339,11 +338,13 @@ _LayoutArea _computeLayoutArea(
     columns = 1;
   }
 
-  return _LayoutArea(center: center, width: width, height: height, columns: columns);
+  return _LayoutArea(
+      center: center, width: width, height: height, columns: columns);
 }
 
 double _scaledDimension(double original, double scale, double canvasDimension) {
-  final available = math.max(1.0, canvasDimension - 2 * LayoutRepositoryImpl._canvasPadding);
+  final available =
+      math.max(1.0, canvasDimension - 2 * LayoutRepositoryImpl._canvasPadding);
   final minSize = math.min(LayoutRepositoryImpl._minLayoutSize, available);
   final base = math.max(original.abs(), LayoutRepositoryImpl._minLayoutSize);
   final scaled = base * scale;
@@ -355,9 +356,13 @@ Vector2 _adjustCenter(Vector2 desired, double width, double height) {
   final halfWidth = width / 2;
   final halfHeight = height / 2;
   final minX = LayoutRepositoryImpl._canvasPadding + halfWidth;
-  final maxX = LayoutRepositoryImpl._canvasSize.x - LayoutRepositoryImpl._canvasPadding - halfWidth;
+  final maxX = LayoutRepositoryImpl._canvasSize.x -
+      LayoutRepositoryImpl._canvasPadding -
+      halfWidth;
   final minY = LayoutRepositoryImpl._canvasPadding + halfHeight;
-  final maxY = LayoutRepositoryImpl._canvasSize.y - LayoutRepositoryImpl._canvasPadding - halfHeight;
+  final maxY = LayoutRepositoryImpl._canvasSize.y -
+      LayoutRepositoryImpl._canvasPadding -
+      halfHeight;
 
   final x = desired.x.clamp(minX, maxX);
   final y = desired.y.clamp(minY, maxY);

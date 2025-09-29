@@ -210,7 +210,8 @@ class GrammarProvider extends StateNotifier<GrammarState> {
 
   Future<Result<FSA>> convertToAutomaton() async {
     if (state.productions.isEmpty) {
-      return ResultFactory.failure('Add at least one production before converting.');
+      return ResultFactory.failure(
+          'Add at least one production before converting.');
     }
 
     final grammar = buildGrammar();

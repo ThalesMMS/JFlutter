@@ -7,10 +7,11 @@ Matcher isBibTextEntry({
   dynamic type = anything,
   dynamic key = anything,
   dynamic fields = anything,
-}) => const TypeMatcher<BibTeXEntry>()
-    .having((entry) => entry.type, 'type', type)
-    .having((entry) => entry.key, 'key', key)
-    .having((entry) => entry.fields, 'fields', fields);
+}) =>
+    const TypeMatcher<BibTeXEntry>()
+        .having((entry) => entry.type, 'type', type)
+        .having((entry) => entry.key, 'key', key)
+        .having((entry) => entry.fields, 'fields', fields);
 
 void main() {
   final parser = BibTeXDefinition().build();
@@ -18,8 +19,7 @@ void main() {
     expect(linter(parser, excludedTypes: {}), isEmpty);
   });
   group('basic', () {
-    const input =
-        '@inproceedings{Reng10c,\n'
+    const input = '@inproceedings{Reng10c,\n'
         '\tTitle = "Practical Dynamic Grammars for Dynamic Languages",\n'
         '\tAuthor = {Lukas Renggli and St\\\'ephane Ducasse and Tudor G\\^irba and Oscar Nierstrasz},\n'
         '\tMonth = jun,\n'
@@ -34,13 +34,11 @@ void main() {
           key: 'Reng10c',
           fields: {
             'Title': '"Practical Dynamic Grammars for Dynamic Languages"',
-            'Author':
-                '{Lukas Renggli and St\\\'ephane Ducasse and '
+            'Author': '{Lukas Renggli and St\\\'ephane Ducasse and '
                 'Tudor G\\^irba and Oscar Nierstrasz}',
             'Month': 'jun',
             'Year': '2010',
-            'Url':
-                '{http://scg.unibe.ch/archive/papers/'
+            'Url': '{http://scg.unibe.ch/archive/papers/'
                 'Reng10cDynamicGrammars.pdf}',
           },
         ),

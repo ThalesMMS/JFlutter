@@ -64,7 +64,8 @@ class AdvancedCustomActionCard extends StatefulWidget {
   });
 
   @override
-  State<AdvancedCustomActionCard> createState() => _AdvancedCustomActionCardState();
+  State<AdvancedCustomActionCard> createState() =>
+      _AdvancedCustomActionCardState();
 }
 
 class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
@@ -72,7 +73,7 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
   late final AnimationController _primaryController;
   late final AnimationController _pulseController;
   late final AnimationController _parallaxController;
-  
+
   late final Animation<double> _scaleAnimation;
   late final Animation<double> _rotateAnimation;
   late final Animation<double> _flipAnimation;
@@ -89,7 +90,7 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
   void initState() {
     super.initState();
     _initializeAnimations();
-    
+
     if (widget.enablePulse) {
       _pulseController.repeat(reverse: true);
     }
@@ -204,7 +205,7 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
 
   void _onHover(bool isHovering) {
     if (!widget.isEnabled) return;
-    
+
     setState(() {
       _isHovering = isHovering;
       if (_isHovering) {
@@ -217,18 +218,18 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
 
   void _onPanUpdate(DragUpdateDetails details) {
     if (!widget.enableParallax || !widget.isEnabled) return;
-    
+
     setState(() {
       _localPosition = details.localPosition;
       final size = _getCardSize();
       final center = Offset(size.width / 2, size.height / 2);
       final offset = (_localPosition - center) / 100;
-      
+
       _parallaxAnimation = Tween<Offset>(
         begin: Offset.zero,
         end: offset,
       ).animate(_parallaxController);
-      
+
       _parallaxController.forward();
     });
   }
@@ -288,14 +289,14 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
 
   List<BoxShadow> _buildShadows() {
     if (widget.customShadows != null) return widget.customShadows!;
-    
+
     final colors = (widget.gradient as LinearGradient).colors;
     final primaryColor = colors.first;
-    
-    double intensity = widget.animationType == CardAnimationType.glow 
-        ? _glowAnimation.value 
+
+    double intensity = widget.animationType == CardAnimationType.glow
+        ? _glowAnimation.value
         : (_isHovering ? 0.5 : 0.3);
-    
+
     if (widget.enablePulse) {
       intensity *= _pulseAnimation.value;
     }
@@ -320,11 +321,13 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
   @override
   Widget build(BuildContext context) {
     final cardSize = _getCardSize();
-    
+
     Widget card = MouseRegion(
       onEnter: (_) => _onHover(true),
       onExit: (_) => _onHover(false),
-      cursor: widget.isEnabled ? SystemMouseCursors.click : SystemMouseCursors.forbidden,
+      cursor: widget.isEnabled
+          ? SystemMouseCursors.click
+          : SystemMouseCursors.forbidden,
       child: GestureDetector(
         onPanUpdate: _onPanUpdate,
         onPanEnd: _onPanEnd,
@@ -353,7 +356,7 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
                 // Background Pattern
                 if (widget.backgroundPattern != null)
                   Positioned.fill(child: widget.backgroundPattern!),
-                
+
                 // Main Content
                 Material(
                   color: Colors.transparent,
@@ -372,7 +375,7 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
                         : _buildCardContent(),
                   ),
                 ),
-                
+
                 // Overlay
                 if (widget.overlayColor != null)
                   Positioned.fill(
@@ -383,7 +386,7 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
                       ),
                     ),
                   ),
-                
+
                 // Ripple Effect
                 if (widget.enableRipple)
                   Positioned.fill(
@@ -397,7 +400,7 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
                       ),
                     ),
                   ),
-                
+
                 // Badge
                 if (widget.badge != null)
                   Positioned(
@@ -405,7 +408,7 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
                     right: 8,
                     child: widget.badge!,
                   ),
-                
+
                 // Disabled Overlay
                 if (!widget.isEnabled)
                   Positioned.fill(
@@ -462,7 +465,7 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
             ),
           ),
           SizedBox(height: _getSpacing()),
-          
+
           // Title
           Text(
             widget.title,
@@ -483,13 +486,13 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
             overflow: TextOverflow.ellipsis,
           ),
           SizedBox(height: _getSpacing() / 2),
-          
+
           // Subtitle
           Text(
             widget.subtitle,
             style: TextStyle(
-              color: widget.isEnabled 
-                  ? Colors.white.withOpacity(0.9) 
+              color: widget.isEnabled
+                  ? Colors.white.withOpacity(0.9)
                   : Colors.white.withOpacity(0.6),
               fontSize: _getSubtitleSize(),
               shadows: const [

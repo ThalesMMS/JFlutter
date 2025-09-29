@@ -4,22 +4,22 @@
 class AutomatonStateAnalysis {
   /// Total number of states in the automaton
   final int stateCount;
-  
+
   /// Number of initial states
   final int initialStateCount;
-  
+
   /// Number of accepting/final states
   final int acceptingStateCount;
-  
+
   /// Number of unreachable states
   final int unreachableStateCount;
-  
+
   /// Number of dead states
   final int deadStateCount;
-  
+
   /// Whether the automaton has an initial state
   final bool hasInitialState;
-  
+
   /// Whether the automaton has accepting states
   final bool hasAcceptingStates;
 
@@ -64,19 +64,19 @@ class AutomatonStateAnalysis {
 class AutomatonTransitionAnalysis {
   /// Total number of transitions in the automaton
   final int transitionCount;
-  
+
   /// Number of deterministic transitions
   final int deterministicTransitionCount;
-  
+
   /// Number of non-deterministic transitions
   final int nondeterministicTransitionCount;
-  
+
   /// Number of epsilon/lambda transitions
   final int epsilonTransitionCount;
-  
+
   /// Whether the automaton is deterministic
   final bool isDeterministic;
-  
+
   /// Whether the automaton has epsilon transitions
   final bool hasEpsilonTransitions;
 
@@ -119,16 +119,16 @@ class AutomatonTransitionAnalysis {
 class AutomatonReachabilityAnalysis {
   /// Number of reachable states from the initial state
   final int reachableStates;
-  
+
   /// Number of unreachable states
   final int unreachableStates;
-  
+
   /// Whether all states are reachable
   final bool allStatesReachable;
-  
+
   /// Whether the automaton is empty (no accepting states reachable)
   final bool isEmpty;
-  
+
   /// Whether the automaton is universal (all reachable states are accepting)
   final bool isUniversal;
 
@@ -150,8 +150,9 @@ class AutomatonReachabilityAnalysis {
     final unreachableStates = totalStates - reachableStates;
     final allStatesReachable = unreachableStates == 0;
     final isEmpty = reachableAcceptingStates == 0;
-    final isUniversal = reachableStates > 0 && reachableStates == reachableAcceptingStates;
-    
+    final isUniversal =
+        reachableStates > 0 && reachableStates == reachableAcceptingStates;
+
     return AutomatonReachabilityAnalysis(
       reachableStates: reachableStates,
       unreachableStates: unreachableStates,
@@ -173,16 +174,16 @@ class AutomatonReachabilityAnalysis {
 class AutomatonAnalysis {
   /// State analysis
   final AutomatonStateAnalysis stateAnalysis;
-  
+
   /// Transition analysis
   final AutomatonTransitionAnalysis transitionAnalysis;
-  
+
   /// Reachability analysis
   final AutomatonReachabilityAnalysis reachabilityAnalysis;
-  
+
   /// Overall validity of the automaton
   final bool isValid;
-  
+
   /// List of validation errors
   final List<String> errors;
 
@@ -202,7 +203,7 @@ class AutomatonAnalysis {
     List<String> errors = const [],
   }) {
     final isValid = errors.isEmpty;
-    
+
     return AutomatonAnalysis(
       stateAnalysis: stateAnalysis,
       transitionAnalysis: transitionAnalysis,

@@ -102,7 +102,8 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
       transitions: transitionSet.map<Transition>((t) => t).toSet(),
       alphabet: alphabet,
       initialState: initialState,
-      acceptingStates: acceptingStates.isEmpty ? {states.last} : acceptingStates,
+      acceptingStates:
+          acceptingStates.isEmpty ? {states.last} : acceptingStates,
       created: now,
       modified: now,
       bounds: const math.Rectangle(0, 0, 800, 600),
@@ -149,7 +150,6 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
 }
 
 /// Provider exposing the current TM editor state.
-final tmEditorProvider =
-    StateNotifierProvider<TMEditorNotifier, TMEditorState>(
+final tmEditorProvider = StateNotifierProvider<TMEditorNotifier, TMEditorState>(
   (ref) => TMEditorNotifier(),
 );

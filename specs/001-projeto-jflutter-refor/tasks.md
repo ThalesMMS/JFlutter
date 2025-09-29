@@ -17,10 +17,14 @@
 - **[P]**: Can run in parallel (different files, no shared state)
 - Always include precise file paths and cite reference sources when relevant
 
-## Phase 3.1: Setup
+## Phase 3.1: Setup & Design
 - [X] T001 Map algoritmos/estruturas para referências oficiais (`References/automata-main`, `References/dart-petitparser-examples-main`, etc.) e registrar plano de validação em `/docs/references-alignment.md`
 - [X] T002 Atualizar `pubspec.yaml` com dependências necessárias (petitparser, freezed, json_serializable, golden_toolkit) e garantir versões compatíveis com Flutter 3.16+
 - [X] T003 Configurar `build_runner`/`freezed`/`json_serializable` e scripts auxiliares em `tool/` para geração de código consistente
+- [X] T003.1 Criar `research.md` com levantamento detalhado de referências em `References/` e análise de gaps vs. estado atual
+- [X] T003.2 Criar `data-model.md` modelando entidades imutáveis para FA, PDA, CFG, TM, Regex AST, ExampleArtifact com Freezed
+- [X] T003.3 Criar pasta `contracts/` com contratos de serialização para .jff/JSON/SVG e formato Examples v1
+- [X] T003.4 Criar `quickstart.md` com roteiro offline completo (import, simular, converter, validar exemplos)
 
 ## Phase 3.2: Tests First (TDD) ⚠️ MUST COMPLETE BEFORE 3.3
 - [X] T004 [P] Criar testes unitários falhos para conversões e operações de AF (`test/unit/core/automata/fa_algorithms_test.dart`) cobrindo NFA→DFA, Hopcroft, operações de linguagem e diagnósticos de propriedades
@@ -45,14 +49,14 @@
 - [X] T017 Implementar verificador CYK com geração de árvore de derivação em `lib/core/algorithms/cfg/cyk_parser.dart` — Obs.: antes de implementar, estudar as implementações em `References/`
 - [X] T018 Implementar simulador de TM determinística/não determinística single-tape com time-travel e building blocks em `lib/core/algorithms/tm/tm_simulator.dart` — Obs.: antes de implementar, estudar as implementações em `References/`
 - [X] T019 Atualizar módulo visual de traces e folding (FA/PDA/TM) em `lib/presentation/widgets/trace_viewers/` — Obs.: antes de implementar, estudar as implementações em `References/`
-- [ ] T020 Implementar modo jogo dos lemas do bombeamento com progressão linear em `lib/presentation/widgets/pumping_lemma_game/` — Obs.: antes de implementar, estudar as implementações em `References/`
-- [ ] T021 Implementar biblioteca offline "Examples v1" (carregamento via assets) em `lib/data/data_sources/examples_asset_data_source.dart` e serviço em `lib/data/services/examples_service.dart` — Obs.: antes de implementar, ler as implementações atuais do JFlutter para garantir que os exemplos sejam compatíveis.
+- [X] T020 Implementar modo jogo dos lemas do bombeamento com progressão linear em `lib/presentation/widgets/pumping_lemma_game/` — Obs.: antes de implementar, estudar as implementações em `References/`
+- [X] T021 Implementar biblioteca offline "Examples v1" (carregamento via assets) em `lib/data/data_sources/examples_asset_data_source.dart` e serviço em `lib/data/services/examples_service.dart` — Obs.: antes de implementar, ler as implementações atuais do JFlutter para garantir que os exemplos sejam compatíveis.
 
 
 ## Phase 3.4: Interoperability & Performance
-- [ ] T023 Implementar DTOs `*.dto.dart` e serializadores `.jff`/JSON em `lib/data/models/` com testes de ida e volta — Obs.: antes de implementar, estudar as implementações em `References/`
-- [ ] T024 Implementar exportação SVG das visualizações em `lib/presentation/widgets/export/svg_exporter.dart` — Obs.: antes de implementar, estudar as implementações em `References/`
-- [ ] T025 Otimizar canvas e simuladores para ≥60fps e ≥10k passos (throttling/batching) em `lib/presentation/widgets/canvas/` e `lib/core/algorithms/common/throttling.dart` — Obs.: antes de implementar, estudar as implementações em `References/`
+- [X] T023 Implementar DTOs `*.dto.dart` e serializadores `.jff`/JSON em `lib/data/models/` com testes de ida e volta — Obs.: antes de implementar, estudar as implementações em `References/`
+- [X] T024 Implementar exportação SVG das visualizações em `lib/presentation/widgets/export/svg_exporter.dart` — Obs.: antes de implementar, estudar as implementações em `References/`
+- [ ] T025 Otimizar canvas e simuladores para ≥60fps e ≥10k passos (throttling/batching) em `lib/presentation/widgets/canvas/` e `lib/core/algorithms/common/throttling.dart`
 - [ ] T026 Garantir mensagens de erro claras e saneamento de input (FA/PDA/CFG/TM) em `lib/core/validators/` — Obs.: antes de implementar, estudar as implementações em `References/`
 
 ## Phase 3.5: QA & Documentation

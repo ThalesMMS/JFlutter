@@ -2,16 +2,16 @@
 class Production {
   /// Unique identifier for the production within the grammar
   final String id;
-  
+
   /// Left-hand side symbols (support multiple symbols for unrestricted grammars)
   final List<String> leftSide;
-  
+
   /// Right-hand side symbols
   final List<String> rightSide;
-  
+
   /// Whether this is a lambda production
   final bool isLambda;
-  
+
   /// Display order in UI
   final int order;
 
@@ -86,35 +86,35 @@ class Production {
   /// Validates the production properties
   List<String> validate() {
     final errors = <String>[];
-    
+
     if (id.isEmpty) {
       errors.add('Production ID cannot be empty');
     }
-    
+
     if (leftSide.isEmpty) {
       errors.add('Production left side cannot be empty');
     }
-    
+
     if (isLambda && rightSide.isNotEmpty) {
       errors.add('Lambda production must have empty right side');
     }
-    
+
     if (!isLambda && rightSide.isEmpty) {
       errors.add('Non-lambda production must have non-empty right side');
     }
-    
+
     for (final symbol in leftSide) {
       if (symbol.isEmpty) {
         errors.add('Production left side cannot contain empty symbols');
       }
     }
-    
+
     for (final symbol in rightSide) {
       if (symbol.isEmpty) {
         errors.add('Production right side cannot contain empty symbols');
       }
     }
-    
+
     return errors;
   }
 
@@ -328,10 +328,14 @@ class Production {
     if (parts.length != 2) {
       throw ArgumentError('Invalid production format: $representation');
     }
-    
-    final leftSide = parts[0].trim().split(RegExp(r'\s+')).where((s) => s.isNotEmpty).toList();
+
+    final leftSide = parts[0]
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((s) => s.isNotEmpty)
+        .toList();
     final rightSideStr = parts[1].trim();
-    
+
     if (rightSideStr == 'ε' || rightSideStr.isEmpty) {
       return Production.lambda(
         id: id,
@@ -339,9 +343,10 @@ class Production {
         order: order,
       );
     }
-    
-    final rightSide = rightSideStr.split(RegExp(r'\s+')).where((s) => s.isNotEmpty).toList();
-    
+
+    final rightSide =
+        rightSideStr.split(RegExp(r'\s+')).where((s) => s.isNotEmpty).toList();
+
     return Production(
       id: id,
       leftSide: leftSide,

@@ -14,8 +14,10 @@ class FATraceViewer extends StatelessWidget {
       result: result,
       title: 'FA Trace (${result.steps.length} steps)',
       buildStepLine: (SimulationStep step, int index) {
-        final remaining = step.remainingInput.isEmpty ? 'ε' : step.remainingInput;
-        final transition = step.usedTransition != null ? ' | read ${step.usedTransition}' : '';
+        final remaining =
+            step.remainingInput.isEmpty ? 'ε' : step.remainingInput;
+        final transition =
+            step.usedTransition != null ? ' | read ${step.usedTransition}' : '';
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
@@ -24,12 +26,19 @@ class FATraceViewer extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Text('${index + 1}.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)),
+              Text('${index + 1}.',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'q=${step.currentState} | remaining=$remaining$transition',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(fontFamily: 'monospace'),
                 ),
               ),
             ],
@@ -39,5 +48,3 @@ class FATraceViewer extends StatelessWidget {
     );
   }
 }
-
-

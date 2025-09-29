@@ -10,40 +10,40 @@ import 'tm.dart';
 abstract class Automaton {
   /// Unique identifier for the automaton
   final String id;
-  
+
   /// User-defined name for the automaton
   final String name;
-  
+
   /// Set of all states in the automaton
   final Set<State> states;
-  
+
   /// Set of all transitions in the automaton
   final Set<Transition> transitions;
-  
+
   /// Input alphabet symbols
   final Set<String> alphabet;
-  
+
   /// Initial state (can be null)
   final State? initialState;
-  
+
   /// Set of accepting/final states
   final Set<State> acceptingStates;
-  
+
   /// Type of the automaton
   final AutomatonType type;
-  
+
   /// Creation timestamp
   final DateTime created;
-  
+
   /// Last modification timestamp
   final DateTime modified;
-  
+
   /// Bounding rectangle for mobile display
   final math.Rectangle bounds;
-  
+
   /// Current zoom level (0.5 to 3.0)
   final double zoomLevel;
-  
+
   /// Pan offset for mobile navigation
   final Vector2 panOffset;
 
@@ -86,7 +86,7 @@ abstract class Automaton {
   /// Creates an automaton from a JSON representation
   static Automaton fromJson(Map<String, dynamic> json) {
     final type = json['type'] as String;
-    
+
     switch (type) {
       case 'FSA':
         return FSA.fromJson(json);
@@ -121,29 +121,30 @@ abstract class Automaton {
   /// Validates the automaton properties
   List<String> validate() {
     final errors = <String>[];
-    
+
     if (id.isEmpty) {
       errors.add('Automaton ID cannot be empty');
     }
-    
+
     if (name.isEmpty) {
       errors.add('Automaton name cannot be empty');
     }
-    
+
     if (states.isEmpty) {
       errors.add('Automaton must have at least one state');
     }
-    
+
     if (initialState != null && !states.contains(initialState)) {
       errors.add('Initial state must be in the states set');
     }
-    
+
     for (final acceptingState in acceptingStates) {
       if (!states.contains(acceptingState)) {
-        errors.add('Accepting state ${acceptingState.id} must be in the states set');
+        errors.add(
+            'Accepting state ${acceptingState.id} must be in the states set');
       }
     }
-    
+
     for (final transition in transitions) {
       if (!states.contains(transition.fromState)) {
         errors.add('Transition ${transition.id} references invalid fromState');
@@ -152,11 +153,11 @@ abstract class Automaton {
         errors.add('Transition ${transition.id} references invalid toState');
       }
     }
-    
+
     if (zoomLevel < 0.5 || zoomLevel > 3.0) {
       errors.add('Zoom level must be between 0.5 and 3.0');
     }
-    
+
     return errors;
   }
 
@@ -200,18 +201,20 @@ abstract class Automaton {
 
   /// Gets all transitions between two states
   Set<Transition> getTransitionsBetween(State from, State to) {
-    return transitions.where((t) => t.fromState == from && t.toState == to).toSet();
+    return transitions
+        .where((t) => t.fromState == from && t.toState == to)
+        .toSet();
   }
 
   /// Gets all states reachable from a given state
   Set<State> getReachableStates(State startState) {
     final reachable = <State>{startState};
     final queue = <State>[startState];
-    
+
     while (queue.isNotEmpty) {
       final current = queue.removeAt(0);
       final outgoingTransitions = getTransitionsFrom(current);
-      
+
       for (final transition in outgoingTransitions) {
         if (!reachable.contains(transition.toState)) {
           reachable.add(transition.toState);
@@ -219,7 +222,7 @@ abstract class Automaton {
         }
       }
     }
-    
+
     return reachable;
   }
 
@@ -227,11 +230,11 @@ abstract class Automaton {
   Set<State> getStatesReaching(State targetState) {
     final reaching = <State>{targetState};
     final queue = <State>[targetState];
-    
+
     while (queue.isNotEmpty) {
       final current = queue.removeAt(0);
       final incomingTransitions = getTransitionsTo(current);
-      
+
       for (final transition in incomingTransitions) {
         if (!reaching.contains(transition.fromState)) {
           reaching.add(transition.fromState);
@@ -239,7 +242,7 @@ abstract class Automaton {
         }
       }
     }
-    
+
     return reaching;
   }
 
@@ -259,49 +262,50 @@ abstract class Automaton {
   /// Gets all dead states (states that cannot reach any accepting state)
   Set<State> get deadStates {
     final dead = <State>{};
-    
+
     for (final state in states) {
       final reachable = getReachableStates(state);
-      final canReachAccepting = reachable.intersection(acceptingStates).isNotEmpty;
+      final canReachAccepting =
+          reachable.intersection(acceptingStates).isNotEmpty;
       if (!canReachAccepting) {
         dead.add(state);
       }
     }
-    
+
     return dead;
   }
 
   /// Calculates the center point of all states
   Vector2 get centerPoint {
     if (states.isEmpty) return Vector2.zero();
-    
+
     double sumX = 0;
     double sumY = 0;
-    
+
     for (final state in states) {
       sumX += state.position.x;
       sumY += state.position.y;
     }
-    
+
     return Vector2(sumX / states.length, sumY / states.length);
   }
 
   /// Calculates the bounding box of all states
   math.Rectangle get statesBoundingBox {
     if (states.isEmpty) return const math.Rectangle(0, 0, 0, 0);
-    
+
     double minX = double.infinity;
     double minY = double.infinity;
     double maxX = double.negativeInfinity;
     double maxY = double.negativeInfinity;
-    
+
     for (final state in states) {
       minX = minX < state.position.x ? minX : state.position.x;
       minY = minY < state.position.y ? minY : state.position.y;
       maxX = maxX > state.position.x ? maxX : state.position.x;
       maxY = maxY > state.position.y ? maxY : state.position.y;
     }
-    
+
     return math.Rectangle(minX, minY, maxX - minX, maxY - minY);
   }
 
@@ -325,10 +329,10 @@ abstract class Automaton {
 enum AutomatonType {
   /// Finite State Automaton
   fsa,
-  
+
   /// Pushdown Automaton
   pda,
-  
+
   /// Turing Machine
   tm,
 }

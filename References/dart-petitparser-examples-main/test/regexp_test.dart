@@ -126,8 +126,7 @@ void main() {
           expect(
             pattern.tryMatch(expectData.input),
             expectData.match,
-            reason:
-                '"${testData.pattern}" '
+            reason: '"${testData.pattern}" '
                 '${expectData.match ? 'matches' : 'does not match'} '
                 '"${expectData.input}"',
           );

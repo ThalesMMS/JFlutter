@@ -27,8 +27,7 @@ class TMAnalysis {
       stateAnalysis: stateAnalysis ?? this.stateAnalysis,
       transitionAnalysis: transitionAnalysis ?? this.transitionAnalysis,
       tapeAnalysis: tapeAnalysis ?? this.tapeAnalysis,
-      reachabilityAnalysis:
-          reachabilityAnalysis ?? this.reachabilityAnalysis,
+      reachabilityAnalysis: reachabilityAnalysis ?? this.reachabilityAnalysis,
       executionTime: executionTime ?? this.executionTime,
     );
   }

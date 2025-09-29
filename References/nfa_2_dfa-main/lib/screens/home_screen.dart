@@ -16,8 +16,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen>
-    with TickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late AnimationController _mainAnimationController;
   late AnimationController _floatingAnimationController;
   late AnimationController _particlesController;
@@ -95,7 +94,6 @@ class _HomeScreenState extends State<HomeScreen>
     return Scaffold(
       body: Stack(
         children: [
-
           _buildAnimatedBackground(context, isDark, size),
 
           // Main content
@@ -122,9 +120,11 @@ class _HomeScreenState extends State<HomeScreen>
                               children: [
                                 _buildHeroSection(context, isDark),
                                 const SizedBox(height: 40),
-                                _buildGlassmorphicActions(context, nfaProvider, isDark),
+                                _buildGlassmorphicActions(
+                                    context, nfaProvider, isDark),
                                 const SizedBox(height: 40),
-                                _buildAdvancedRecentProjects(context, nfaProvider, isDark),
+                                _buildAdvancedRecentProjects(
+                                    context, nfaProvider, isDark),
                                 const SizedBox(height: 32),
                                 _buildFloatingHelpSection(context, isDark),
                                 const SizedBox(height: 100), // Bottom padding
@@ -146,7 +146,8 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Widget _buildAnimatedBackground(BuildContext context, bool isDark, Size size) {
+  Widget _buildAnimatedBackground(
+      BuildContext context, bool isDark, Size size) {
     return Positioned.fill(
       child: Container(
         decoration: BoxDecoration(
@@ -155,15 +156,15 @@ class _HomeScreenState extends State<HomeScreen>
             end: Alignment.bottomRight,
             colors: isDark
                 ? [
-              const Color(0xFF1A1A2E),
-              const Color(0xFF16213E),
-              const Color(0xFF0F3460),
-            ]
+                    const Color(0xFF1A1A2E),
+                    const Color(0xFF16213E),
+                    const Color(0xFF0F3460),
+                  ]
                 : [
-              const Color(0xFFE3F2FD),
-              const Color(0xFFF3E5F5),
-              const Color(0xFFFFF3E0),
-            ],
+                    const Color(0xFFE3F2FD),
+                    const Color(0xFFF3E5F5),
+                    const Color(0xFFFFF3E0),
+                  ],
             stops: const [0.0, 0.5, 1.0],
           ),
         ),
@@ -183,7 +184,8 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Widget _buildModernAppBar(BuildContext context, ThemeData theme, bool isDark) {
+  Widget _buildModernAppBar(
+      BuildContext context, ThemeData theme, bool isDark) {
     return SliverAppBar(
       expandedHeight: 140,
       floating: true,
@@ -247,7 +249,8 @@ class _HomeScreenState extends State<HomeScreen>
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
+                        color: (isDark ? Colors.white : Colors.black)
+                            .withOpacity(0.1),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: theme.colorScheme.primary.withOpacity(0.3),
@@ -298,7 +301,8 @@ class _HomeScreenState extends State<HomeScreen>
       animation: _floatingAnimationController,
       builder: (context, child) {
         return Transform.translate(
-          offset: Offset(0, math.sin(_floatingAnimationController.value * math.pi) * 5),
+          offset: Offset(
+              0, math.sin(_floatingAnimationController.value * math.pi) * 5),
           child: Container(
             width: double.infinity,
             padding: const EdgeInsets.all(32),
@@ -308,13 +312,13 @@ class _HomeScreenState extends State<HomeScreen>
                 end: Alignment.bottomRight,
                 colors: isDark
                     ? [
-                  const Color(0xFF2D1B69).withOpacity(0.3),
-                  const Color(0xFF11998E).withOpacity(0.2),
-                ]
+                        const Color(0xFF2D1B69).withOpacity(0.3),
+                        const Color(0xFF11998E).withOpacity(0.2),
+                      ]
                     : [
-                  const Color(0xFF667EEA).withOpacity(0.2),
-                  const Color(0xFF764BA2).withOpacity(0.1),
-                ],
+                        const Color(0xFF667EEA).withOpacity(0.2),
+                        const Color(0xFF764BA2).withOpacity(0.1),
+                      ],
               ),
               borderRadius: BorderRadius.circular(28),
               border: Border.all(
@@ -383,7 +387,8 @@ class _HomeScreenState extends State<HomeScreen>
                           Text(
                             'آماده ساخت و تحلیل NFA جادویی هستید؟ ✨',
                             style: theme.textTheme.bodyLarge?.copyWith(
-                              color: theme.colorScheme.onSurface.withOpacity(0.8),
+                              color:
+                                  theme.colorScheme.onSurface.withOpacity(0.8),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -394,7 +399,8 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
                 const SizedBox(height: 24),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
@@ -429,7 +435,8 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Widget _buildGlassmorphicActions(BuildContext context, NFAProvider nfaProvider, bool isDark) {
+  Widget _buildGlassmorphicActions(
+      BuildContext context, NFAProvider nfaProvider, bool isDark) {
     final theme = Theme.of(context);
 
     return Column(
@@ -479,9 +486,9 @@ class _HomeScreenState extends State<HomeScreen>
               title: 'NFA جدید',
               subtitle: 'ایجاد اتوماتا جادویی',
               colors: [
-                const Color(0xFFFF0844),  // Hot Pink
-                const Color(0xFFFFB199),  // Coral
-                const Color(0xFFFF8A80),  // Light Pink
+                const Color(0xFFFF0844), // Hot Pink
+                const Color(0xFFFFB199), // Coral
+                const Color(0xFFFF8A80), // Light Pink
               ],
               onTap: () {
                 nfaProvider.createNewNFA();
@@ -495,9 +502,9 @@ class _HomeScreenState extends State<HomeScreen>
               title: 'باز کردن فایل',
               subtitle: 'بارگذاری سریع',
               colors: [
-                const Color(0xFF00C9FF),  // Electric Blue
-                const Color(0xFF92FE9D),  // Mint Green
-                const Color(0xFF50E3C2),  // Turquoise
+                const Color(0xFF00C9FF), // Electric Blue
+                const Color(0xFF92FE9D), // Mint Green
+                const Color(0xFF50E3C2), // Turquoise
               ],
               onTap: () async {
                 final success = await nfaProvider.loadNFAFromFile();
@@ -521,9 +528,9 @@ class _HomeScreenState extends State<HomeScreen>
               title: 'عملیات پیشرفته',
               subtitle: 'اجتماع و اشتراک',
               colors: [
-                const Color(0xFFFC466B),  // Vibrant Pink
-                const Color(0xFF3F5EFB),  // Electric Purple
-                const Color(0xFF8B5CF6),  // Purple
+                const Color(0xFFFC466B), // Vibrant Pink
+                const Color(0xFF3F5EFB), // Electric Purple
+                const Color(0xFF8B5CF6), // Purple
               ],
               onTap: () {
                 Navigator.pushNamed(context, '/operations');
@@ -536,9 +543,9 @@ class _HomeScreenState extends State<HomeScreen>
               title: 'مثال‌ها',
               subtitle: 'نمونه‌های الهام‌بخش',
               colors: [
-                const Color(0xFFFD746C),  // Coral Red
-                const Color(0xFFFF9068),  // Orange
-                const Color(0xFFFFF056),  // Bright Yellow
+                const Color(0xFFFD746C), // Coral Red
+                const Color(0xFFFF9068), // Orange
+                const Color(0xFFFFF056), // Bright Yellow
               ],
               onTap: () {
                 Navigator.pushNamed(context, '/examples');
@@ -581,9 +588,7 @@ class _HomeScreenState extends State<HomeScreen>
                     colors: colors.length >= 3
                         ? colors
                         : [colors.first, colors.last],
-                    stops: colors.length >= 3
-                        ? [0.0, 0.5, 1.0]
-                        : [0.0, 1.0],
+                    stops: colors.length >= 3 ? [0.0, 0.5, 1.0] : [0.0, 1.0],
                   ),
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
@@ -671,7 +676,8 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Widget _buildAdvancedRecentProjects(BuildContext context, NFAProvider nfaProvider, bool isDark) {
+  Widget _buildAdvancedRecentProjects(
+      BuildContext context, NFAProvider nfaProvider, bool isDark) {
     final recentProjects = nfaProvider.recentProjects;
     final theme = Theme.of(context);
 
@@ -712,7 +718,8 @@ class _HomeScreenState extends State<HomeScreen>
             ),
             if (recentProjects.isNotEmpty)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -739,7 +746,8 @@ class _HomeScreenState extends State<HomeScreen>
         if (recentProjects.isEmpty)
           _buildEmptyState(context, theme, isDark)
         else
-          _buildProjectsList(context, recentProjects, nfaProvider, theme, isDark),
+          _buildProjectsList(
+              context, recentProjects, nfaProvider, theme, isDark),
       ],
     );
   }
@@ -812,7 +820,8 @@ class _HomeScreenState extends State<HomeScreen>
               offset: Offset(50 * (1 - value), 0),
               child: Opacity(
                 opacity: value,
-                child: _buildAdvancedProjectCard(context, projects[index], nfaProvider, theme, isDark),
+                child: _buildAdvancedProjectCard(
+                    context, projects[index], nfaProvider, theme, isDark),
               ),
             );
           },
@@ -890,7 +899,8 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                       const SizedBox(height: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           color: theme.colorScheme.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
@@ -923,7 +933,8 @@ class _HomeScreenState extends State<HomeScreen>
                       final confirmed = await UIHelpers.showConfirmationDialog(
                         context: context,
                         title: 'حذف پروژه',
-                        content: 'آیا از حذف پروژه "${project.name}" مطمئن هستید؟',
+                        content:
+                            'آیا از حذف پروژه "${project.name}" مطمئن هستید؟',
                         isDangerous: true,
                         confirmText: 'حذف',
                       );
@@ -975,7 +986,8 @@ class _HomeScreenState extends State<HomeScreen>
       animation: _floatingAnimationController,
       builder: (context, child) {
         return Transform.translate(
-          offset: Offset(0, math.sin(_floatingAnimationController.value * math.pi * 2) * 3),
+          offset: Offset(0,
+              math.sin(_floatingAnimationController.value * math.pi * 2) * 3),
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
@@ -984,13 +996,13 @@ class _HomeScreenState extends State<HomeScreen>
                 end: Alignment.bottomRight,
                 colors: isDark
                     ? [
-                  const Color(0xFF1A1A2E).withOpacity(0.3),
-                  const Color(0xFF16213E).withOpacity(0.2),
-                ]
+                        const Color(0xFF1A1A2E).withOpacity(0.3),
+                        const Color(0xFF16213E).withOpacity(0.2),
+                      ]
                     : [
-                  Colors.white.withOpacity(0.3),
-                  Colors.white.withOpacity(0.1),
-                ],
+                        Colors.white.withOpacity(0.3),
+                        Colors.white.withOpacity(0.1),
+                      ],
               ),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
@@ -1018,7 +1030,8 @@ class _HomeScreenState extends State<HomeScreen>
                       // [MODIFIED] Navigate to HelpScreen
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const HelpScreen()),
+                        MaterialPageRoute(
+                            builder: (context) => const HelpScreen()),
                       );
                     },
                   ),
@@ -1047,12 +1060,13 @@ class _HomeScreenState extends State<HomeScreen>
                     title: 'درباره ما',
                     subtitle: 'اطلاعات برنامه',
                     colors: [Colors.green, Colors.teal],
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const AboutScreen()),
-                        );
-                      },
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const AboutScreen()),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -1120,7 +1134,8 @@ class _HomeScreenState extends State<HomeScreen>
               Text(
                 subtitle,
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  color:
+                      Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
@@ -1133,7 +1148,8 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Widget _buildFloatingActionButton(BuildContext context, NFAProvider nfaProvider, bool isDark) {
+  Widget _buildFloatingActionButton(
+      BuildContext context, NFAProvider nfaProvider, bool isDark) {
     return Positioned(
       bottom: 30,
       right: 30,
@@ -1141,7 +1157,9 @@ class _HomeScreenState extends State<HomeScreen>
         animation: _floatingAnimationController,
         builder: (context, child) {
           return Transform.scale(
-            scale: 1.0 + (math.sin(_floatingAnimationController.value * math.pi * 2) * 0.05),
+            scale: 1.0 +
+                (math.sin(_floatingAnimationController.value * math.pi * 2) *
+                    0.05),
             child: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -1211,15 +1229,18 @@ class ParticlesPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = (isDark ? Colors.white : const Color(0xFF667EEA)).withOpacity(0.1)
+      ..color =
+          (isDark ? Colors.white : const Color(0xFF667EEA)).withOpacity(0.1)
       ..strokeWidth = 2
       ..style = PaintingStyle.fill;
 
     // Draw floating particles
     for (int i = 0; i < 15; i++) {
-      final x = (size.width * 0.1) + (i * size.width * 0.06) +
+      final x = (size.width * 0.1) +
+          (i * size.width * 0.06) +
           (math.sin(animation.value * 2 * math.pi + i) * 20);
-      final y = (size.height * 0.1) + (i * size.height * 0.05) +
+      final y = (size.height * 0.1) +
+          (i * size.height * 0.05) +
           (math.cos(animation.value * 2 * math.pi + i) * 30);
 
       final radius = 3 + (math.sin(animation.value * 4 * math.pi + i) * 2);
@@ -1234,9 +1255,11 @@ class ParticlesPainter extends CustomPainter {
 
     for (int i = 0; i < 10; i++) {
       final startX = size.width * 0.1 + (i * size.width * 0.08);
-      final startY = size.height * 0.2 + (math.sin(animation.value * math.pi + i) * 50);
+      final startY =
+          size.height * 0.2 + (math.sin(animation.value * math.pi + i) * 50);
       final endX = size.width * 0.9 - (i * size.width * 0.08);
-      final endY = size.height * 0.8 + (math.cos(animation.value * math.pi + i) * 50);
+      final endY =
+          size.height * 0.8 + (math.cos(animation.value * math.pi + i) * 50);
 
       canvas.drawLine(Offset(startX, startY), Offset(endX, endY), paint);
     }

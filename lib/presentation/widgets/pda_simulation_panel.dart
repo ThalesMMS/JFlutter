@@ -75,7 +75,7 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -120,8 +120,10 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
           Text(
             'Examples: aabb (for balanced parentheses), abab (for palindromes)',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.7),
                 ),
           ),
         ],
@@ -172,10 +174,13 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          color: Theme.of(context)
+              .colorScheme
+              .outline
+              .withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -219,8 +224,8 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withValues(alpha: 0.1),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -243,11 +248,11 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
               ),
             ],
           ),
-          if (hasResult)
+          if (result case final simulationResult?)
             Padding(
               padding: const EdgeInsets.only(top: 4.0),
               child: Text(
-                'Time: ${result!.executionTime.inMilliseconds} ms',
+                'Time: ${simulationResult.executionTime.inMilliseconds} ms',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
@@ -261,7 +266,8 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
                     ),
               ),
             ),
-          if (hasResult && result!.steps.isNotEmpty) ...[
+          if (result case final simulationResult?
+              when simulationResult.steps.isNotEmpty) ...[
             const SizedBox(height: 16),
             Text(
               'Simulation Steps:',
@@ -270,7 +276,7 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
                   ),
             ),
             const SizedBox(height: 8),
-            PDATraceViewer(result: result),
+            PDATraceViewer(result: simulationResult),
           ],
         ],
       ),

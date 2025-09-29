@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';
 import '../models/fsa.dart';
 import '../models/state.dart';

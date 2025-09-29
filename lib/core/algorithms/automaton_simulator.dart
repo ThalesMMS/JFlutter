@@ -1,12 +1,9 @@
-import 'dart:async';
-
 import '../models/fsa.dart';
 import '../models/state.dart';
 import '../models/fsa_transition.dart';
 import '../models/simulation_result.dart';
 import '../models/simulation_step.dart';
 import '../result.dart';
-import 'common/throttling.dart';
 
 /// Simulates Finite Automata (FA) with input strings
 class AutomatonSimulator {

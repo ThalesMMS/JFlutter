@@ -4,7 +4,6 @@ import '../models/pda.dart';
 import '../models/state.dart';
 import '../models/pda_transition.dart';
 import '../models/fsa_transition.dart';
-import '../models/simulation_result.dart';
 import '../models/simulation_step.dart';
 import '../models/transition.dart';
 import '../result.dart';

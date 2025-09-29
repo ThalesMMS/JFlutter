@@ -1,9 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/use_cases/algorithm_use_cases.dart';
 import '../../core/entities/automaton_entity.dart';
-import '../../core/entities/grammar_entity.dart';
-import '../../core/models/grammar.dart';
-import '../../core/result.dart';
 
 /// Provider for algorithm operations
 class AlgorithmProvider extends StateNotifier<AlgorithmState> {

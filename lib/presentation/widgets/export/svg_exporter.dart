@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/material.dart' hide Colors;
 import 'package:vector_math/vector_math_64.dart';
@@ -133,26 +132,6 @@ class SvgExporter {
     }
   }
 
-  static void _addTuringMachineContent(
-    StringBuffer buffer,
-    dynamic tm,
-    double width,
-    double height,
-    SvgExportOptions options,
-  ) {
-    // Placeholder for Turing machine content
-    // Draw basic tape representation
-    _addTuringTape(buffer, tm, width, height);
-
-    // Draw state information
-    _addTuringStateInfo(buffer, tm, width, height);
-
-    // Add title if requested
-    if (options.includeTitle) {
-      _addTitle(buffer, 'Turing Machine Visualization', width, height);
-    }
-  }
-
   static Map<String, Vector2> _calculateStatePositions(
     List<StateEntity> states,
     double width,
@@ -269,70 +248,12 @@ class SvgExporter {
     buffer.writeln('      marker-end="url(#arrowhead)"/>');
   }
 
-  static void _addTuringTape(
-      StringBuffer buffer, dynamic tm, double width, double height) {
-    const tapeHeight = 60.0;
-    const cellWidth = 40.0;
-    const cellHeight = 40.0;
-
-    final tapeY = height - tapeHeight - 20;
-    final tapeWidth =
-        math.min(width - 40, cellWidth * 20); // Max 20 cells visible
-    final tapeX = (width - tapeWidth) / 2;
-
-    // Draw tape background
-    buffer.writeln(
-        '  <rect x="$tapeX" y="$tapeY" width="$tapeWidth" height="$tapeHeight"');
-    buffer.writeln('    fill="#f5f5f5" stroke="#ccc" stroke-width="1"/>');
-
-    // Draw tape cells (simplified representation)
-    final numCells = (tapeWidth / cellWidth).floor();
-    for (var i = 0; i < numCells; i++) {
-      final cellX = tapeX + i * cellWidth;
-
-      // Cell background
-      buffer.writeln(
-          '    <rect x="$cellX" y="$tapeY" width="$cellWidth" height="$cellHeight"');
-      buffer.writeln('      fill="#fff" stroke="#ddd" stroke-width="1"/>');
-
-      // Cell content (placeholder)
-      buffer.writeln(
-          '    <text x="${cellX + cellWidth / 2}" y="${tapeY + cellHeight / 2 + 5}"');
-      buffer.writeln('      class="tape" text-anchor="middle">□</text>');
-    }
-
-    // Draw tape head indicator
-    final headX = tapeX + tapeWidth / 2;
-    buffer.writeln(
-        '    <polygon points="${headX - 10},${tapeY - 5} ${headX + 10},${tapeY - 5} ${headX},${tapeY + 5}"');
-    buffer.writeln('      fill="#ff4444" stroke="#cc0000" stroke-width="2"/>');
-  }
-
-  static void _addTuringStateInfo(
-      StringBuffer buffer, dynamic tm, double width, double height) {
-    final infoY = 20;
-    final infoX = 20;
-
-    buffer.writeln('  <g class="state-info">');
-    buffer.writeln(
-        '    <text x="$infoX" y="$infoY" font-size="16" font-weight="bold">');
-    buffer.writeln('      Turing Machine');
-    buffer.writeln('    </text>');
-    buffer.writeln('    <text x="$infoX" y="${infoY + 25}" font-size="12">');
-    buffer.writeln('      Current State: q0');
-    buffer.writeln('    </text>');
-    buffer.writeln('    <text x="$infoX" y="${infoY + 45}" font-size="12">');
-    buffer.writeln('      Blank Symbol: _');
-    buffer.writeln('    </text>');
-    buffer.writeln('  </g>');
-  }
-
   static void _addTitle(
       StringBuffer buffer, String title, double width, double height) {
     buffer.writeln('  <g class="title">');
     buffer.writeln(
         '    <text x="${width / 2}" y="30" font-size="18" font-weight="bold"');
-    buffer.writeln('      text-anchor="middle">${title}</text>');
+    buffer.writeln('      text-anchor="middle">$title</text>');
     buffer.writeln('  </g>');
   }
 

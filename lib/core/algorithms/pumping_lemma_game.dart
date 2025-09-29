@@ -1,6 +1,5 @@
 import '../models/fsa.dart';
 import '../models/state.dart';
-import '../models/fsa_transition.dart';
 import '../models/pumping_lemma_game.dart' as models;
 import '../models/pumping_attempt.dart';
 import '../result.dart';
@@ -72,8 +71,6 @@ class PumpingLemmaGame {
     int maxPumpingLength,
     Duration timeout,
   ) {
-    final startTime = DateTime.now();
-
     // Find the pumping length
     final pumpingLength =
         _findPumpingLength(automaton, maxPumpingLength, timeout);

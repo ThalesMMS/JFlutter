@@ -156,7 +156,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
                     color: Theme.of(context)
                         .colorScheme
                         .onSurface
-                        .withOpacity(0.7),
+                        .withValues(alpha: 0.7),
                   ),
             ),
           ),
@@ -191,12 +191,13 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
         decoration: BoxDecoration(
           border: Border.all(
             color: _isAnalyzing
-                ? colorScheme.outline.withOpacity(0.3)
-                : colorScheme.primary.withOpacity(0.3),
+                ? colorScheme.outline.withValues(alpha: 0.3)
+                : colorScheme.primary.withValues(alpha: 0.3),
           ),
           borderRadius: BorderRadius.circular(8),
-          color:
-              _isAnalyzing ? colorScheme.surfaceVariant.withOpacity(0.5) : null,
+          color: _isAnalyzing
+              ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
+              : null,
         ),
         child: Row(
           children: [
@@ -223,7 +224,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
                   Text(
                     description,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurface.withOpacity(0.7),
+                          color: colorScheme.onSurface.withValues(alpha: 0.7),
                         ),
                   ),
                 ],
@@ -238,7 +239,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
             else
               Icon(
                 Icons.arrow_forward_ios,
-                color: colorScheme.primary.withOpacity(0.5),
+                color: colorScheme.primary.withValues(alpha: 0.5),
                 size: 16,
               ),
           ],
@@ -306,10 +307,11 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          color:
+              Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -345,9 +347,13 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+        color: Theme.of(context)
+            .colorScheme
+            .primaryContainer
+            .withValues(alpha: 0.3),
         border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+          color:
+              Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
         ),
         borderRadius: BorderRadius.circular(8),
       ),

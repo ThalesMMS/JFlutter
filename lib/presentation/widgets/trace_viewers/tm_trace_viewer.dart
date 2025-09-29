@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/algorithms/tm_simulator.dart';
+import '../../../core/models/simulation_result.dart';
 import '../../../core/models/simulation_step.dart';
 import 'base_trace_viewer.dart';
 
@@ -47,42 +48,42 @@ class TMTraceViewer extends StatelessWidget {
     );
   }
 
-  _TMAdapter _asSimulationResult() {
-    return _TMAdapter(
+  SimulationResult _asSimulationResult() {
+    final errorMessage = result.errorMessage ?? '';
+
+    if (result.accepted) {
+      return SimulationResult.success(
+        inputString: result.inputString,
+        steps: result.steps,
+        executionTime: result.executionTime,
+      );
+    }
+
+    final normalizedMessage = errorMessage.toLowerCase();
+    if (normalizedMessage.contains('timeout')) {
+      return SimulationResult.timeout(
+        inputString: result.inputString,
+        steps: result.steps,
+        executionTime: result.executionTime,
+      );
+    }
+
+    if (normalizedMessage.contains('infinite')) {
+      return SimulationResult.infiniteLoop(
+        inputString: result.inputString,
+        steps: result.steps,
+        executionTime: result.executionTime,
+      );
+    }
+
+    final failureMessage =
+        errorMessage.isNotEmpty ? errorMessage : 'Simulation rejected';
+
+    return SimulationResult.failure(
       inputString: result.inputString,
-      accepted: result.accepted,
       steps: result.steps,
-      errorMessage: result.errorMessage ?? '',
+      errorMessage: failureMessage,
       executionTime: result.executionTime,
     );
   }
-}
-
-class _TMAdapter implements SimulationLike {
-  @override
-  final String inputString;
-  @override
-  final bool accepted;
-  @override
-  final List<SimulationStep> steps;
-  @override
-  final String errorMessage;
-  @override
-  final Duration executionTime;
-
-  _TMAdapter({
-    required this.inputString,
-    required this.accepted,
-    required this.steps,
-    required this.errorMessage,
-    required this.executionTime,
-  });
-}
-
-abstract class SimulationLike {
-  String get inputString;
-  bool get accepted;
-  List<SimulationStep> get steps;
-  String get errorMessage;
-  Duration get executionTime;
 }

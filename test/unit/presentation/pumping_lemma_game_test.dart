@@ -1,9 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../../../lib/presentation/providers/pumping_lemma_progress_provider.dart';
-import '../../../lib/presentation/widgets/pumping_lemma_game/pumping_lemma_game.dart';
+import 'package:jflutter/presentation/providers/pumping_lemma_progress_provider.dart';
+import 'package:jflutter/presentation/widgets/pumping_lemma_game/pumping_lemma_game.dart';
 
 void main() {
   group('Pumping lemma game mode', () {

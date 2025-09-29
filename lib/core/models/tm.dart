@@ -167,7 +167,7 @@ class TM extends Automaton {
       if (transition is! TMTransition) {
         errors.add('TM can only contain TM transitions');
       } else {
-        final tmTransition = transition as TMTransition;
+        final TMTransition tmTransition = transition;
         final transitionErrors = tmTransition.validate();
         errors.addAll(
             transitionErrors.map((e) => 'Transition ${tmTransition.id}: $e'));

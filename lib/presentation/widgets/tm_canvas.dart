@@ -58,7 +58,7 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
                 ),
               ),
               child: ClipRRect(
@@ -326,55 +326,61 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
     final result = await showDialog<TMTransition>(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Edit Transition'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildTextField(readController, 'Read Symbol'),
-              const SizedBox(height: 12),
-              _buildTextField(writeController, 'Write Symbol'),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<TapeDirection>(
-                value: direction,
-                items: TapeDirection.values
-                    .map(
-                      (dir) => DropdownMenuItem(
-                        value: dir,
-                        child: Text(dir.name.toUpperCase()),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    direction = value;
-                  }
-                },
-                decoration: const InputDecoration(
-                  labelText: 'Direction',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.of(context).pop(
-                  transition.copyWith(
-                    readSymbol: readController.text.trim(),
-                    writeSymbol: writeController.text.trim(),
-                    direction: direction,
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Edit Transition'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildTextField(readController, 'Read Symbol'),
+                  const SizedBox(height: 12),
+                  _buildTextField(writeController, 'Write Symbol'),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<TapeDirection>(
+                    initialValue: direction,
+                    items: TapeDirection.values
+                        .map(
+                          (dir) => DropdownMenuItem(
+                            value: dir,
+                            child: Text(dir.name.toUpperCase()),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setDialogState(() {
+                          direction = value;
+                        });
+                      }
+                    },
+                    decoration: const InputDecoration(
+                      labelText: 'Direction',
+                      border: OutlineInputBorder(),
+                    ),
                   ),
-                );
-              },
-              child: const Text('Save'),
-            ),
-          ],
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(
+                      transition.copyWith(
+                        readSymbol: readController.text.trim(),
+                        writeSymbol: writeController.text.trim(),
+                        direction: direction,
+                      ),
+                    );
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -444,8 +450,8 @@ class _TMCanvasPainter extends CustomPainter {
   void _drawState(Canvas canvas, automaton_state.State state) {
     final paint = Paint()
       ..color = state == selectedState
-          ? Colors.blue.withOpacity(0.3)
-          : Colors.grey.withOpacity(0.2)
+          ? Colors.blue.withValues(alpha: 0.3)
+          : Colors.grey.withValues(alpha: 0.2)
       ..style = PaintingStyle.fill;
 
     final strokePaint = Paint()

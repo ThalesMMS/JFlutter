@@ -60,13 +60,14 @@ class ExamplesDataSource {
 
       return Success(example);
     } on foundation.FlutterError catch (e) {
-      final message = e.message ?? e.toString();
-      if (message.contains('Unable to load asset')) {
+      final message = e.message;
+      final resolvedMessage = message.isEmpty ? e.toString() : message;
+      if (resolvedMessage.contains('Unable to load asset')) {
         return Failure(
           'Example asset not found for $name. Expected at jflutter_js/examples/$fileName',
         );
       }
-      return Failure('Error loading example $name: $e');
+      return Failure('Error loading example $name: $resolvedMessage');
     }
   }
 

@@ -155,7 +155,7 @@ class PDA extends Automaton {
       if (transition is! PDATransition) {
         errors.add('PDA can only contain PDA transitions');
       } else {
-        final pdaTransition = transition as PDATransition;
+        final PDATransition pdaTransition = transition;
         final transitionErrors = pdaTransition.validate();
         errors.addAll(
             transitionErrors.map((e) => 'Transition ${pdaTransition.id}: $e'));

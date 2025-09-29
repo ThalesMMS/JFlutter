@@ -290,7 +290,7 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
             ),
             const SizedBox(width: 16),
             if (_streakCount > 0) ...[
-              Icon(
+              const Icon(
                 Icons.local_fire_department,
                 color: Colors.orange,
                 size: 20,

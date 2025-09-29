@@ -128,7 +128,7 @@ class FSA extends Automaton {
       if (transition is! FSATransition) {
         errors.add('FSA can only contain FSA transitions');
       } else {
-        final fsaTransition = transition as FSATransition;
+        final FSATransition fsaTransition = transition;
         final transitionErrors = fsaTransition.validate();
         errors.addAll(
             transitionErrors.map((e) => 'Transition ${fsaTransition.id}: $e'));

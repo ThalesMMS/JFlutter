@@ -354,8 +354,10 @@ class _TouchGestureHandlerState<T extends Transition>
           onScaleEnd: _handleScaleEnd,
           child: Transform(
             transform: Matrix4.identity()
-              ..translate(_panOffset.dx, _panOffset.dy)
-              ..scale(_scale),
+              ..translateByVector3(
+                Vector3(_panOffset.dx, _panOffset.dy, 0),
+              )
+              ..scaleByVector3(Vector3.all(_scale)),
             child: widget.child,
           ),
         ),
@@ -382,7 +384,10 @@ class _TouchGestureHandlerState<T extends Transition>
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            color: Theme.of(context)
+                .colorScheme
+                .outline
+                .withValues(alpha: 0.2),
           ),
         ),
         child: Column(

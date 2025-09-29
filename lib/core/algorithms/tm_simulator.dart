@@ -1,5 +1,4 @@
 import '../models/fsa_transition.dart';
-import '../models/simulation_result.dart';
 import '../models/simulation_step.dart';
 import '../models/state.dart';
 import '../models/tm.dart';

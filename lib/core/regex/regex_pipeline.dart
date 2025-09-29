@@ -25,7 +25,7 @@ class RegexPipeline {
   static Result<FSA> run(String pattern) {
     try {
       final astResult = parse(pattern);
-      if (!astResult.isSuccess()) return ResultFactory.failure(astResult.error!);
+      if (!astResult.isSuccess) return ResultFactory.failure(astResult.error!);
       final fsa = _buildFromAst(astResult.data!);
       return ResultFactory.success(fsa);
     } catch (e) {
@@ -40,19 +40,19 @@ class RegexPipeline {
     }
     try {
       final parser = _buildParser();
-      final result = parser.end().parse(pattern);
-      if (result.isSuccess) {
-        return ResultFactory.success(result.value as RegexNode);
+      final pp.Result parseResult = parser.end().parse(pattern);
+      if (parseResult.isSuccess) {
+        return ResultFactory.success(parseResult.value as RegexNode);
       }
       return ResultFactory.failure(
-          'Invalid regular expression at ${result.position}');
+          'Invalid regular expression at ${parseResult.position}');
     } catch (e) {
       return ResultFactory.failure('Regex parse error: $e');
     }
   }
 
   /// Builds the petitparser for regex with precedence and implicit concatenation.
-  static pp.Parser _buildParser() {
+  static pp.Parser<RegexNode> _buildParser() {
     // Tokens
     final lparen = pp.char('(');
     final rparen = pp.char(')');
@@ -60,24 +60,26 @@ class RegexPipeline {
     final star = pp.char('*');
     final plus = pp.char('+');
     final question = pp.char('?');
-    final dot = pp.char('.');
 
     // Escaped character: \\ or \( etc.
     final escape = (pp.char('\\') & pp.any()).map((values) => values[1] as String);
 
     // Literal symbol: any char except metacharacters
-    final literal = (escape | pp.pattern("[^()|*+?.]"))
-        .map((value) => SymbolNode(symbol: value as String));
+    final pp.Parser<RegexNode> literal = (escape | pp.pattern("[^()|*+?.]"))
+        .map<RegexNode>((value) => SymbolNode(symbol: value as String));
 
     // Primary: group | dot | literal
     late pp.Parser<RegexNode> primary;
     final primaryRef = pp.undefined<RegexNode>();
-    primary = (lparen & primaryRef & rparen).map((v) => v[1] as RegexNode) |
-        dot.map((_) => const DotNode()) |
-        literal.cast<RegexNode>();
+    final pp.Parser<RegexNode> dotParser =
+        pp.char('.').map<RegexNode>((_) => const DotNode());
+    primary = (lparen & primaryRef & rparen).map<RegexNode>((v) => v[1] as RegexNode) |
+        dotParser |
+        literal;
 
     // Unary: primary followed by postfix operators (*, +, ?), multiple allowed
-    final unary = (primary & (star | plus | question).star()).map((values) {
+    final pp.Parser<RegexNode> unary =
+        (primary & (star | plus | question).star()).map<RegexNode>((values) {
       RegexNode node = values[0] as RegexNode;
       final ops = values[1] as List<String>;
       for (final op in ops) {
@@ -97,16 +99,18 @@ class RegexPipeline {
     });
 
     // Concatenation: one or more unary, folded left-associative
-    final concat = unary.plus().map((list) {
-      RegexNode node = list.first as RegexNode;
-      for (final next in (list as List).skip(1)) {
-        node = ConcatenationNode(left: node, right: next as RegexNode);
+    final pp.Parser<RegexNode> concat = unary.plus().map<RegexNode>((list) {
+      final nodes = List<RegexNode>.from(list);
+      RegexNode node = nodes.first;
+      for (final next in nodes.skip(1)) {
+        node = ConcatenationNode(left: node, right: next);
       }
       return node;
     });
 
     // Union: concatenation separated by |
-    final expression = (concat & (union & concat).star()).map((values) {
+    final pp.Parser<RegexNode> expression =
+        (concat & (union & concat).star()).map<RegexNode>((values) {
       RegexNode node = values[0] as RegexNode;
       final rest = values[1] as List;
       for (final pair in rest) {

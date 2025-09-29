@@ -76,7 +76,7 @@ class _GrammarSimulationPanelState
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -90,7 +90,7 @@ class _GrammarSimulationPanelState
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
-            value: _selectedAlgorithm,
+            initialValue: _selectedAlgorithm,
             decoration: const InputDecoration(
               border: OutlineInputBorder(),
               isDense: true,
@@ -102,8 +102,11 @@ class _GrammarSimulationPanelState
               DropdownMenuItem(value: 'LR', child: Text('LR Parser')),
             ],
             onChanged: (value) {
+              if (value == null) {
+                return;
+              }
               setState(() {
-                _selectedAlgorithm = value!;
+                _selectedAlgorithm = value;
               });
             },
           ),
@@ -116,7 +119,7 @@ class _GrammarSimulationPanelState
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -142,8 +145,10 @@ class _GrammarSimulationPanelState
           Text(
             'Examples: aabb, abab, aabbb (for S → aSb | ab)',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.7),
                 ),
           ),
         ],
@@ -195,10 +200,11 @@ class _GrammarSimulationPanelState
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          color:
+              Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -236,8 +242,8 @@ class _GrammarSimulationPanelState
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withValues(alpha: 0.1),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(

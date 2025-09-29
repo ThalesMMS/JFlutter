@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/pumping_lemma_game/pumping_lemma_game.dart';
-import '../widgets/pumping_lemma_game/pumping_lemma_help.dart';
-import '../widgets/pumping_lemma_game/pumping_lemma_progress.dart';
+import '../widgets/pumping_lemma_help.dart';
+import '../widgets/pumping_lemma_progress.dart';
 
 /// Page for the Pumping Lemma Game
 class PumpingLemmaPage extends ConsumerStatefulWidget {
@@ -108,7 +108,7 @@ class _PumpingLemmaPageState extends ConsumerState<PumpingLemmaPage> {
             margin: const EdgeInsets.all(8),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceVariant,
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Column(

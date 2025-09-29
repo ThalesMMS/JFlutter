@@ -126,10 +126,10 @@ class PumpingLemmaProgressNotifier
   void startNewGame({required int totalChallenges}) {
     state = PumpingLemmaProgressState(
       totalChallenges: totalChallenges,
-      completedChallengeIds: <int>{},
+      completedChallengeIds: const <int>{},
       score: 0,
       attempts: 0,
-      history: <PumpingLemmaHistoryEntry>[],
+      history: const <PumpingLemmaHistoryEntry>[],
     );
   }
 
@@ -190,10 +190,10 @@ class PumpingLemmaProgressNotifier
     final totalChallenges = state.totalChallenges;
     state = PumpingLemmaProgressState(
       totalChallenges: totalChallenges,
-      completedChallengeIds: <int>{},
+      completedChallengeIds: const <int>{},
       score: 0,
       attempts: 0,
-      history: <PumpingLemmaHistoryEntry>[],
+      history: const <PumpingLemmaHistoryEntry>[],
     );
   }
 }

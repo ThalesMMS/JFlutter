@@ -560,8 +560,10 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                 color: Theme.of(context).colorScheme.surface,
                 border: Border(
                   right: BorderSide(
-                    color:
-                        Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .outline
+                        .withValues(alpha: 0.2),
                   ),
                 ),
               ),

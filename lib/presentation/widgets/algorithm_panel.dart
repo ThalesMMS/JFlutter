@@ -256,14 +256,17 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           border: Border.all(
-            color: isCurrentAlgorithm ? color : color.withOpacity(0.3),
+            color: isCurrentAlgorithm
+                ? color
+                : color.withValues(alpha: 0.3),
             width: isCurrentAlgorithm ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(8),
           color: isCurrentAlgorithm
-              ? color.withOpacity(0.1)
+              ? color.withValues(alpha: 0.1)
               : isDisabled
-                  ? colorScheme.surfaceVariant.withOpacity(0.5)
+                  ? colorScheme.surfaceContainerHighest
+                      .withValues(alpha: 0.5)
                   : null,
         ),
         child: Row(
@@ -280,8 +283,9 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
             else
               Icon(
                 icon,
-                color:
-                    isDisabled ? colorScheme.outline.withOpacity(0.5) : color,
+                color: isDisabled
+                    ? colorScheme.outline.withValues(alpha: 0.5)
+                    : color,
                 size: 24,
               ),
             const SizedBox(width: 12),
@@ -293,7 +297,7 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                     title,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           color: isDisabled
-                              ? colorScheme.outline.withOpacity(0.5)
+                              ? colorScheme.outline.withValues(alpha: 0.5)
                               : color,
                           fontWeight: FontWeight.w600,
                         ),
@@ -305,8 +309,8 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                         : description,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: isDisabled
-                              ? colorScheme.outline.withOpacity(0.5)
-                              : colorScheme.onSurface.withOpacity(0.7),
+                              ? colorScheme.outline.withValues(alpha: 0.5)
+                              : colorScheme.onSurface.withValues(alpha: 0.7),
                         ),
                   ),
                 ],
@@ -324,8 +328,8 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
               Icon(
                 Icons.arrow_forward_ios,
                 color: isDisabled
-                    ? colorScheme.outline.withOpacity(0.5)
-                    : color.withOpacity(0.5),
+                    ? colorScheme.outline.withValues(alpha: 0.5)
+                    : color.withValues(alpha: 0.5),
                 size: 16,
               ),
           ],
@@ -338,7 +342,7 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -363,8 +367,10 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
           const SizedBox(height: 12),
           LinearProgressIndicator(
             value: _executionProgress,
-            backgroundColor:
-                Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            backgroundColor: Theme.of(context)
+                .colorScheme
+                .outline
+                .withValues(alpha: 0.2),
             valueColor: AlwaysStoppedAnimation<Color>(
               Theme.of(context).colorScheme.primary,
             ),
@@ -383,7 +389,7 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -396,7 +402,7 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                 ),
           ),
           const SizedBox(height: 12),
-          Container(
+          SizedBox(
             height: 200,
             child: ListView.builder(
               itemCount: _algorithmSteps.length,
@@ -413,7 +419,7 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                         ? Theme.of(context)
                             .colorScheme
                             .primaryContainer
-                            .withOpacity(0.3)
+                            .withValues(alpha: 0.3)
                         : isCompleted
                             ? Theme.of(context).colorScheme.surface
                             : null,
@@ -423,7 +429,7 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                           : Theme.of(context)
                               .colorScheme
                               .outline
-                              .withOpacity(0.2),
+                              .withValues(alpha: 0.2),
                     ),
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -438,7 +444,7 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                                 : Theme.of(context)
                                     .colorScheme
                                     .outline
-                                    .withOpacity(0.3),
+                                    .withValues(alpha: 0.3),
                         child: isCompleted
                             ? const Icon(Icons.check,
                                 size: 16, color: Colors.white)
@@ -604,9 +610,9 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: accent.withOpacity(0.12),
+        color: accent.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: accent.withOpacity(0.4)),
+        border: Border.all(color: accent.withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

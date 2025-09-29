@@ -1,6 +1,5 @@
 import '../models/fsa.dart';
 import '../models/state.dart';
-import '../models/fsa_transition.dart';
 import '../result.dart';
 
 /// Proves or disproves the pumping lemma for regular languages
@@ -465,8 +464,6 @@ class PumpingLemmaProver {
     int maxPumpingLength,
     Duration timeout,
   ) {
-    final startTime = DateTime.now();
-
     // Find the pumping length
     final pumpingLength =
         _findPumpingLength(automaton, maxPumpingLength, timeout);

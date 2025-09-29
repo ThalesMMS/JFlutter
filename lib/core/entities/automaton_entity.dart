@@ -1,5 +1,3 @@
-import '../result.dart';
-
 /// Core domain entity representing an automaton
 /// This is the central business entity that all other layers depend on
 class AutomatonEntity {

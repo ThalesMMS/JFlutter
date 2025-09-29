@@ -1,5 +1,4 @@
 import '../../models/grammar.dart';
-import '../../models/production.dart';
 import '../../result.dart';
 
 /// CYK parser for CFGs in CNF. Builds parse table and derivation tree.
@@ -57,9 +56,9 @@ class CYKParser {
             final rightWidth = len - split - 1;
             for (final B in table[i][leftWidth]) {
               for (final C in table[i + split][rightWidth]) {
-                final As = binary[(B, C)];
-                if (As == null) continue;
-                for (final A in As) {
+                final candidates = binary[(B, C)];
+                if (candidates == null) continue;
+                for (final A in candidates) {
                   if (table[i][j].add(A)) {
                     back[i][j][A] = CYKBackptr.internal(
                       left: (i, leftWidth, B),
@@ -89,8 +88,9 @@ class CYKParser {
       List<List<Map<String, CYKBackptr>>> back, int i, int j, String A) {
     final bp = back[i][j][A];
     if (bp == null) return CYKDerivation.node(A, []);
-    if (bp.isLeaf)
+    if (bp.isLeaf) {
       return CYKDerivation.node(A, [CYKDerivation.leaf(bp.leafSymbol!)]);
+    }
     final (li, lj, B) = bp.left!;
     final (ri, rj, C) = bp.right!;
     return CYKDerivation.node(A, [

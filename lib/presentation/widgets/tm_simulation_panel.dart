@@ -73,7 +73,7 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -99,7 +99,7 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
             'Examples: 101 (binary), 1100 (palindrome), 111 (counting)',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                      Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
           ),
         ],
@@ -151,10 +151,10 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -192,7 +192,7 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: colorScheme.errorContainer,
-          border: Border.all(color: colorScheme.error.withOpacity(0.4)),
+          border: Border.all(color: colorScheme.error.withValues(alpha: 0.4)),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -221,8 +221,8 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withValues(alpha: 0.1),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(

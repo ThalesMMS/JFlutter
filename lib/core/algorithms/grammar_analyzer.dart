@@ -637,7 +637,7 @@ _FactoringResult? _findCommonPrefix(List<List<String>> alternatives) {
         continue;
       }
 
-      if (best == null || prefix.length > best!.prefix.length) {
+      if (best == null || prefix.length > best.prefix.length) {
         best = _FactoringResult(prefix: prefix, alternatives: group);
       }
     }

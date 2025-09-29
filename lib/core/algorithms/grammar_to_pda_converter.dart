@@ -1,10 +1,8 @@
 import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';
 import '../models/grammar.dart';
-import '../models/production.dart';
 import '../models/pda.dart';
 import '../models/state.dart';
-import '../models/transition.dart';
 import '../models/pda_transition.dart';
 import '../result.dart';
 

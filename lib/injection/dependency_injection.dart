@@ -3,7 +3,7 @@ import '../core/repositories/automaton_repository.dart';
 import '../core/use_cases/automaton_use_cases.dart';
 import '../core/use_cases/algorithm_use_cases.dart';
 import '../data/data_sources/local_storage_data_source.dart';
-import '../data/data_sources/examples_data_source.dart';
+import '../data/data_sources/examples_asset_data_source.dart';
 import '../data/repositories/automaton_repository_impl.dart';
 import '../data/repositories/examples_repository_impl.dart';
 import '../data/repositories/algorithm_repository_impl.dart';
@@ -25,8 +25,8 @@ Future<void> setupDependencyInjection() async {
     () => LocalStorageDataSource(),
   );
 
-  getIt.registerLazySingleton<ExamplesDataSource>(
-    () => ExamplesDataSource(),
+  getIt.registerLazySingleton<ExamplesAssetDataSource>(
+    () => ExamplesAssetDataSource(),
   );
 
   // Services
@@ -48,7 +48,7 @@ Future<void> setupDependencyInjection() async {
   );
 
   getIt.registerLazySingleton<ExamplesRepository>(
-    () => ExamplesRepositoryImpl(getIt<ExamplesDataSource>()),
+    () => ExamplesRepositoryImpl(getIt<ExamplesAssetDataSource>()),
   );
 
   getIt.registerLazySingleton<AlgorithmRepository>(

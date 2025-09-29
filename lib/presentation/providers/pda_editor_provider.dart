@@ -96,8 +96,9 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
       transitions: transitionSet.map<Transition>((t) => t).toSet(),
       alphabet: alphabet,
       initialState: initialState,
-      acceptingStates:
-          acceptingStates.isEmpty ? {states.last} : acceptingStates,
+      acceptingStates: {
+        if (acceptingStates.isEmpty) states.last else ...acceptingStates,
+      },
       created: now,
       modified: now,
       bounds: const math.Rectangle(0, 0, 800, 600),

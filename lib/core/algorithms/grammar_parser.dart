@@ -35,7 +35,7 @@ class GrammarParser {
       }
 
       // Handle grammar with no start symbol
-      if (grammar.startSymbol == null) {
+      if (grammar.startSymbol.isEmpty) {
         return Failure('Grammar must have a start symbol');
       }
 
@@ -65,7 +65,7 @@ class GrammarParser {
       return Failure('Grammar must have at least one production');
     }
 
-    if (grammar.startSymbol == null) {
+    if (grammar.startSymbol.isEmpty) {
       return Failure('Grammar must have a start symbol');
     }
 
@@ -129,7 +129,6 @@ class GrammarParser {
       case ParsingStrategyHint.lr:
         return [_parseWithLR];
       case ParsingStrategyHint.auto:
-      default:
         return [
           _parseWithBruteForce,
           _parseWithCYK,
@@ -170,7 +169,7 @@ class GrammarParser {
     // Simple brute force: try all possible derivations
     final derivations = <List<String>>[];
     _findDerivations(
-        grammar, [grammar.startSymbol!], inputString, derivations, timeout);
+        grammar, [grammar.startSymbol], inputString, derivations, timeout);
 
     if (derivations.isNotEmpty) {
       return ParseResult.success(
@@ -355,7 +354,7 @@ class GrammarParser {
     }
 
     // Parse using LL table
-    final stack = <String>[grammar.startSymbol!];
+    final stack = <String>[grammar.startSymbol];
     final input = inputString.split('').toList();
     final derivations = <List<String>>[];
 
@@ -408,15 +407,23 @@ class GrammarParser {
     }
 
     for (final production in grammar.productions) {
-      final leftSide = production.leftSide;
+      if (production.leftSide.isEmpty) {
+        continue;
+      }
+
+      final leftSymbol = production.leftSide.first;
       final rightSide = production.rightSide;
+      final actions = table[leftSymbol];
+      if (actions == null) {
+        continue;
+      }
 
       // Calculate FIRST set (simplified)
       final firstSet = _calculateFirst(grammar, rightSide);
 
       for (final terminal in firstSet) {
         if (grammar.terminals.contains(terminal)) {
-          table[leftSide]![terminal] = ParseAction(
+          actions[terminal] = ParseAction(
               type: ParseActionType.reduce,
               stateNumber: 0,
               production: production);

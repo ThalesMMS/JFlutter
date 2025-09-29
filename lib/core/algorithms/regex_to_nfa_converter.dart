@@ -260,34 +260,29 @@ class RegexToNFAConverter {
 
   /// Builds NFA from regex node
   static FSA _buildNFA(RegexNode node, {Set<String>? contextAlphabet}) {
-    switch (node.runtimeType) {
-      case SymbolNode:
-        return _buildSymbolNFA((node as SymbolNode).symbol);
-      case DotNode:
+    switch (node) {
+      case SymbolNode(:final symbol):
+        return _buildSymbolNFA(symbol);
+      case DotNode():
         return _buildDotNFA(contextAlphabet: contextAlphabet);
-      case UnionNode:
-        return _buildUnionNFA(
-            (node as UnionNode).left, (node as UnionNode).right,
+      case UnionNode(:final left, :final right):
+        return _buildUnionNFA(left, right, contextAlphabet: contextAlphabet);
+      case ConcatenationNode(:final left, :final right):
+        return _buildConcatenationNFA(left, right,
             contextAlphabet: contextAlphabet);
-      case ConcatenationNode:
-        return _buildConcatenationNFA(
-            (node as ConcatenationNode).left, (node as ConcatenationNode).right,
+      case KleeneStarNode(:final child):
+        return _buildKleeneStarNFA(child,
             contextAlphabet: contextAlphabet);
-      case KleeneStarNode:
-        return _buildKleeneStarNFA((node as KleeneStarNode).child,
+      case PlusNode(:final child):
+        return _buildPlusNFA(child, contextAlphabet: contextAlphabet);
+      case QuestionNode(:final child):
+        return _buildQuestionNFA(child,
             contextAlphabet: contextAlphabet);
-      case PlusNode:
-        return _buildPlusNFA((node as PlusNode).child,
-            contextAlphabet: contextAlphabet);
-      case QuestionNode:
-        return _buildQuestionNFA((node as QuestionNode).child,
-            contextAlphabet: contextAlphabet);
-      case SetNode:
-        return _buildSetNFA((node as SetNode).symbols);
-      case ShortcutNode:
-        return _buildSetNFA(
-            _expandShortcut((node as ShortcutNode).code, contextAlphabet));
-      default:
+      case SetNode(:final symbols):
+        return _buildSetNFA(symbols);
+      case ShortcutNode(:final code):
+        return _buildSetNFA(_expandShortcut(code, contextAlphabet));
+      case _:
         throw ArgumentError('Unknown regex node type: ${node.runtimeType}');
     }
   }

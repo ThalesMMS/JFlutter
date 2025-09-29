@@ -164,7 +164,7 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -253,7 +253,7 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -411,16 +411,17 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
               ),
         ),
         const SizedBox(height: 8),
-        productions.isEmpty
-            ? _buildEmptyState(context)
-            : Column(
-                mainAxisSize: MainAxisSize.min,
-                children: productions.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final production = entry.value;
-                  return _buildProductionItem(context, production, index);
-                }).toList(),
-              ),
+        if (productions.isEmpty)
+          _buildEmptyState(context)
+        else
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: productions.asMap().entries.map((entry) {
+              final index = entry.key;
+              final production = entry.value;
+              return _buildProductionItem(context, production, index);
+            }).toList(),
+          ),
       ],
     );
   }
@@ -467,7 +468,10 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
         border: Border.all(
           color: isSelected
               ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.outline.withOpacity(0.2),
+              : Theme.of(context)
+                  .colorScheme
+                  .outline
+                  .withValues(alpha: 0.2),
         ),
         borderRadius: BorderRadius.circular(8),
       ),

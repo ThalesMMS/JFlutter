@@ -56,7 +56,10 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .outline
+                      .withValues(alpha: 0.2),
                 ),
               ),
               child: ClipRRect(
@@ -73,6 +76,9 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
                   onStateDeleted: _deleteState,
                   onTransitionDeleted: _deleteTransition,
                   onTransitionEdited: _editTransition,
+                  stateRadius: 25,
+                  selfLoopBaseRadius: 36,
+                  selfLoopSpacing: 10,
                   child: CustomPaint(
                     key: widget.canvasKey,
                     painter: _PDACanvasPainter(
@@ -85,9 +91,6 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
                     ),
                     size: Size.infinite,
                   ),
-                  stateRadius: 25,
-                  selfLoopBaseRadius: 36,
-                  selfLoopSpacing: 10,
                 ),
               ),
             ),
@@ -653,8 +656,8 @@ class _PDACanvasPainter extends CustomPainter {
   void _drawState(Canvas canvas, automaton_state.State state) {
     final paint = Paint()
       ..color = state == selectedState
-          ? Colors.blue.withOpacity(0.3)
-          : Colors.grey.withOpacity(0.2)
+          ? Colors.blue.withValues(alpha: 0.3)
+          : Colors.grey.withValues(alpha: 0.2)
       ..style = PaintingStyle.fill;
 
     final strokePaint = Paint()
@@ -836,7 +839,7 @@ class _PDACanvasPainter extends CustomPainter {
 
   void _drawLabel(Canvas canvas, Offset position, String text, Color color) {
     final labelBackground = Paint()
-      ..color = color.withOpacity(0.1)
+      ..color = color.withValues(alpha: 0.1)
       ..style = PaintingStyle.fill;
 
     final textPainter = TextPainter(

@@ -16,6 +16,7 @@ import '../../core/models/grammar.dart';
 import '../../core/models/simulation_result.dart' as sim_result;
 import '../../core/entities/automaton_entity.dart';
 import '../../data/services/automaton_service.dart';
+import '../../core/repositories/automaton_repository.dart';
 import '../../features/layout/layout_repository_impl.dart';
 
 /// Provider for automaton state management

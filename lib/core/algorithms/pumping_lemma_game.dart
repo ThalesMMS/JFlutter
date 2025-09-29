@@ -392,8 +392,6 @@ class PumpingLemmaGame {
     models.PumpingLemmaGame game,
     Duration timeout,
   ) {
-    final startTime = DateTime.now();
-
     // Try to find a valid decomposition
     final string = game.challengeString;
     final pumpingLength = game.pumpingLength;

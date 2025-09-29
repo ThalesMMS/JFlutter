@@ -173,8 +173,6 @@ Future<void> setupDependencyInjection() async {
   getIt.registerFactory<AutomatonProvider>(
     () => AutomatonProvider(
       automatonService: getIt<AutomatonService>(),
-      simulationService: getIt<SimulationService>(),
-      conversionService: getIt<ConversionService>(),
       layoutRepository: getIt<LayoutRepository>(),
     ),
   );

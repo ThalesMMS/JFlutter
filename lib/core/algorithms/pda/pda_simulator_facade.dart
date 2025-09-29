@@ -6,8 +6,6 @@ import '../pda_simulator.dart' as pda;
 typedef PDAAcceptanceMode = pda.PDAAcceptanceMode;
 typedef PDASimulationResult = pda.PDASimulationResult;
 
-typedef PDASimulationResult = pda.PDASimulationResult;
-
 /// High-level PDA simulator facade supporting different acceptance modes.
 class PDASimulatorFacade {
   static Result<PDASimulationResult> run(

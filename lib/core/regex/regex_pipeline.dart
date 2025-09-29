@@ -25,8 +25,8 @@ class RegexPipeline {
   static Result<FSA> run(String pattern) {
     try {
       final astResult = parse(pattern);
-      if (!astResult.isSuccess) return ResultFactory.failure(astResult.error!);
-      final fsa = _buildFromAst(astResult.data!);
+      if (astResult is Failure) return ResultFactory.failure(astResult.error);
+      final fsa = _buildFromAst((astResult as Success<RegexNode>).data);
       return ResultFactory.success(fsa);
     } catch (e) {
       return ResultFactory.failure('Regex pipeline error: $e');
@@ -65,7 +65,7 @@ class RegexPipeline {
     final escape = (pp.char('\\') & pp.any()).map((values) => values[1] as String);
 
     // Literal symbol: any char except metacharacters
-    final pp.Parser<RegexNode> literal = (escape | pp.pattern("[^()|*+?.]"))
+    final pp.Parser<RegexNode> literal = (escape | pp.pattern('[^()|*+?.]'))
         .map<RegexNode>((value) => SymbolNode(symbol: value as String));
 
     // Primary: group | dot | literal
@@ -73,9 +73,8 @@ class RegexPipeline {
     final primaryRef = pp.undefined<RegexNode>();
     final pp.Parser<RegexNode> dotParser =
         pp.char('.').map<RegexNode>((_) => const DotNode());
-    primary = (lparen & primaryRef & rparen).map<RegexNode>((v) => v[1] as RegexNode) |
-        dotParser |
-        literal;
+    final pp.Parser<RegexNode> groupParser = (lparen & primaryRef & rparen).map<RegexNode>((v) => v[1] as RegexNode);
+    primary = groupParser.or(dotParser).or(literal);
 
     // Unary: primary followed by postfix operators (*, +, ?), multiple allowed
     final pp.Parser<RegexNode> unary =

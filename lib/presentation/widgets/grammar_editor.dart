@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/models/grammar.dart';
 import '../../core/models/production.dart';
 import '../providers/grammar_provider.dart';
 

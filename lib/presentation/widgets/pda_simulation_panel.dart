@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/algorithms/pda_simulator.dart';
-import '../../core/models/simulation_step.dart';
 import '../../core/result.dart';
 import '../providers/pda_editor_provider.dart';
 import 'trace_viewers/pda_trace_viewer.dart';

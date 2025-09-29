@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/pda.dart';
-import '../../core/algorithms/pda/pda_simulator_facade.dart';
-import '../../core/algorithms/pda_simulator.dart';
+import '../../core/algorithms/pda/pda_simulator_facade.dart' as pda;
+
+typedef PDASimulationResult = pda.PDASimulationResult;
+typedef PDAAcceptanceMode = pda.PDAAcceptanceMode;
 
 class PDASimulationState {
   final PDA? pda;
@@ -58,7 +60,7 @@ class PDASimulationNotifier extends StateNotifier<PDASimulationState> {
     if (state.pda == null) return;
     state = state.copyWith(isRunning: true, lastInput: input);
 
-    final result = PDASimulatorFacade.run(
+    final result = pda.PDASimulatorFacade.run(
       state.pda!,
       input,
       mode: state.mode,

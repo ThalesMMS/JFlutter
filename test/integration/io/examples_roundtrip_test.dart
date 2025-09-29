@@ -1,13 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'dart:convert';
 
-import '../../../lib/core/repositories/automaton_repository.dart';
-import '../../../lib/data/data_sources/examples_asset_data_source.dart';
-import '../../../lib/data/services/examples_service.dart';
-import '../../../lib/data/services/serialization_service.dart';
-import '../../../lib/presentation/widgets/export/svg_exporter.dart';
-import '../../../lib/core/entities/automaton_entity.dart';
-import '../../../lib/core/entities/grammar_entity.dart';
+import 'package:jflutter/core/entities/automaton_entity.dart';
+import 'package:jflutter/core/entities/grammar_entity.dart';
+import 'package:jflutter/core/repositories/automaton_repository.dart';
+import 'package:jflutter/data/data_sources/examples_asset_data_source.dart';
+import 'package:jflutter/data/services/examples_service.dart';
+import 'package:jflutter/data/services/serialization_service.dart';
+import 'package:jflutter/presentation/widgets/export/svg_exporter.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -393,37 +393,16 @@ void main() {
     });
 
     group('SVG Export Tests', () {
-      late SvgExporter svgExporter;
-
-      setUp(() {
-        svgExporter = SvgExporter();
-      });
 
       test('Automaton SVG export produces valid SVG structure', () {
-        final testData = {
-          'id': 'test_automaton',
-          'name': 'Test Automaton',
-          'type': 'dfa',
-          'alphabet': ['a', 'b'],
-          'states': [
-            {'id': 'q0', 'name': 'q0', 'isInitial': true, 'isFinal': false},
-            {'id': 'q1', 'name': 'q1', 'isInitial': false, 'isFinal': true},
-          ],
-          'transitions': {
-            'q0': ['q1'],
-          },
-          'initialId': 'q0',
-          'nextId': 2,
-        };
-
         final svg = SvgExporter.exportAutomatonToSvg(
           // Mock automaton entity for testing
           AutomatonEntity(
             id: 'test',
             name: 'Test',
-            alphabet: {'a'},
+            alphabet: const {'a'},
             states: [
-              StateEntity(
+              const StateEntity(
                 id: 'q0',
                 name: 'q0',
                 x: 0.0,
@@ -431,7 +410,7 @@ void main() {
                 isInitial: true,
                 isFinal: false,
               ),
-              StateEntity(
+              const StateEntity(
                 id: 'q1',
                 name: 'q1',
                 x: 0.0,
@@ -484,27 +463,15 @@ void main() {
       });
 
       test('Grammar SVG export produces valid structure', () {
-        final testGrammar = {
-          'id': 'test_grammar',
-          'name': 'Test Grammar',
-          'terminals': {'a', 'b'},
-          'variables': {'S', 'A'},
-          'initialSymbol': 'S',
-          'productions': {
-            'S': ['aA', 'b'],
-            'A': ['a', ''],
-          },
-        };
-
         final svg = SvgExporter.exportGrammarToSvg(
           // Mock grammar entity for testing
-          GrammarEntity(
+          const GrammarEntity(
             id: 'test',
             name: 'Test Grammar',
-            terminals: {'a'},
-            nonTerminals: {'S'},
+            terminals: const {'a'},
+            nonTerminals: const {'S'},
             startSymbol: 'S',
-            productions: [],
+            productions: const [],
           ),
         );
 
@@ -525,24 +492,14 @@ void main() {
           scale: 1.5,
         );
 
-        final testData = {
-          'id': 'test_automaton',
-          'name': 'Test with Options',
-          'type': 'dfa',
-          'states': [
-            {'id': 'q0', 'name': 'q0', 'isInitial': true, 'isFinal': false},
-          ],
-          'transitions': {},
-        };
-
         final svg = SvgExporter.exportAutomatonToSvg(
           // Mock automaton entity for testing
-          AutomatonEntity(
+          const AutomatonEntity(
             id: 'test',
-            name: 'Test',
-            alphabet: {'a'},
-            states: [],
-            transitions: {},
+            name: 'Test with Options',
+            alphabet: const {'a'},
+            states: const <StateEntity>[],
+            transitions: const <String, List<String>>{},
             initialId: 'q0',
             nextId: 0,
             type: AutomatonType.dfa,
@@ -559,24 +516,14 @@ void main() {
         const smallSize = Size(400, 300);
         const largeSize = Size(1200, 900);
 
-        final testData = {
-          'id': 'test_automaton',
-          'name': 'Size Test',
-          'type': 'dfa',
-          'states': [
-            {'id': 'q0', 'name': 'q0', 'isInitial': true, 'isFinal': false},
-          ],
-          'transitions': {},
-        };
-
         final smallSvg = SvgExporter.exportAutomatonToSvg(
           // Mock automaton entity for testing
-          AutomatonEntity(
+          const AutomatonEntity(
             id: 'test',
             name: 'Test',
-            alphabet: {'a'},
-            states: [],
-            transitions: {},
+            alphabet: const {'a'},
+            states: const <StateEntity>[],
+            transitions: const <String, List<String>>{},
             initialId: 'q0',
             nextId: 0,
             type: AutomatonType.dfa,
@@ -587,12 +534,12 @@ void main() {
 
         final largeSvg = SvgExporter.exportAutomatonToSvg(
           // Mock automaton entity for testing
-          AutomatonEntity(
+          const AutomatonEntity(
             id: 'test',
             name: 'Test',
-            alphabet: {'a'},
-            states: [],
-            transitions: {},
+            alphabet: const {'a'},
+            states: const <StateEntity>[],
+            transitions: const <String, List<String>>{},
             initialId: 'q0',
             nextId: 0,
             type: AutomatonType.dfa,
@@ -611,29 +558,14 @@ void main() {
       });
 
       test('SVG export handles complex automata correctly', () {
-        final complexData = {
-          'id': 'complex_automaton',
-          'name': 'Complex Automaton',
-          'type': 'nfa',
-          'states': [
-            {'id': 'q0', 'name': 'q0', 'isInitial': true, 'isFinal': false},
-            {'id': 'q1', 'name': 'q1', 'isInitial': false, 'isFinal': true},
-            {'id': 'q2', 'name': 'q2', 'isInitial': false, 'isFinal': true},
-          ],
-          'transitions': {
-            'q0': ['q1', 'q2'],
-            'q1': ['q2'],
-          },
-        };
-
         final svg = SvgExporter.exportAutomatonToSvg(
           // Mock automaton entity for testing
           AutomatonEntity(
             id: 'test',
             name: 'Test',
-            alphabet: {'a'},
-            states: [],
-            transitions: {},
+            alphabet: const {'a'},
+            states: const <StateEntity>[],
+            transitions: const <String, List<String>>{},
             initialId: 'q0',
             nextId: 0,
             type: AutomatonType.nfa,
@@ -655,12 +587,12 @@ void main() {
         // Test with zero size (should handle gracefully)
         final zeroSizeSvg = SvgExporter.exportAutomatonToSvg(
           // Mock automaton entity for testing
-          AutomatonEntity(
+          const AutomatonEntity(
             id: 'test',
             name: 'Test',
-            alphabet: {'a'},
-            states: [],
-            transitions: {},
+            alphabet: const {'a'},
+            states: const <StateEntity>[],
+            transitions: const <String, List<String>>{},
             initialId: 'q0',
             nextId: 0,
             type: AutomatonType.dfa,
@@ -676,12 +608,12 @@ void main() {
         // Test with very large size
         final largeSizeSvg = SvgExporter.exportAutomatonToSvg(
           // Mock automaton entity for testing
-          AutomatonEntity(
+          const AutomatonEntity(
             id: 'test',
             name: 'Test',
-            alphabet: {'a'},
-            states: [],
-            transitions: {},
+            alphabet: const {'a'},
+            states: const <StateEntity>[],
+            transitions: const <String, List<String>>{},
             initialId: 'q0',
             nextId: 0,
             type: AutomatonType.dfa,
@@ -694,24 +626,14 @@ void main() {
       });
 
       test('SVG export includes proper styling and markers', () {
-        final testData = {
-          'id': 'styled_automaton',
-          'name': 'Styled Test',
-          'type': 'dfa',
-          'states': [
-            {'id': 'q0', 'name': 'q0', 'isInitial': true, 'isFinal': false},
-          ],
-          'transitions': {},
-        };
-
         final svg = SvgExporter.exportAutomatonToSvg(
           // Mock automaton entity for testing
-          AutomatonEntity(
+          const AutomatonEntity(
             id: 'test',
             name: 'Test',
-            alphabet: {'a'},
-            states: [],
-            transitions: {},
+            alphabet: const {'a'},
+            states: const <StateEntity>[],
+            transitions: const <String, List<String>>{},
             initialId: 'q0',
             nextId: 0,
             type: AutomatonType.dfa,

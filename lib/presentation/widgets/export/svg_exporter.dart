@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/material.dart' hide Colors;
 import 'package:vector_math/vector_math_64.dart';
@@ -124,6 +123,8 @@ class SvgExporter {
     }
   }
 
+// <<<<<<< codex/clean-up-svg_exporter.dart
+// =======
   static void _addTuringMachineContent(
     StringBuffer buffer,
     TuringMachineEntity tm,
@@ -144,6 +145,7 @@ class SvgExporter {
     }
   }
 
+// >>>>>>> 001-projeto-jflutter-refor
   static Map<String, Vector2> _calculateStatePositions(
     List<StateEntity> states,
     double width,
@@ -260,6 +262,8 @@ class SvgExporter {
     buffer.writeln('      marker-end="url(#arrowhead)"/>');
   }
 
+// <<<<<<< codex/clean-up-svg_exporter.dart
+// =======
   static void _addTuringTape(
       StringBuffer buffer, TuringMachineEntity tm, double width, double height) {
     const tapeHeight = 60.0;
@@ -321,12 +325,13 @@ class SvgExporter {
     buffer.writeln('  </g>');
   }
 
+// >>>>>>> 001-projeto-jflutter-refor
   static void _addTitle(
       StringBuffer buffer, String title, double width, double height) {
     buffer.writeln('  <g class="title">');
     buffer.writeln(
         '    <text x="${width / 2}" y="30" font-size="18" font-weight="bold"');
-    buffer.writeln('      text-anchor="middle">${title}</text>');
+    buffer.writeln('      text-anchor="middle">$title</text>');
     buffer.writeln('  </g>');
   }
 

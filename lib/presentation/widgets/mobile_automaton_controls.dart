@@ -92,7 +92,7 @@ class _MobileAutomatonControlsState extends State<MobileAutomatonControls>
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -124,7 +124,7 @@ class _MobileAutomatonControlsState extends State<MobileAutomatonControls>
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -240,12 +240,13 @@ class _MobileAutomatonControlsState extends State<MobileAutomatonControls>
           height: 48,
           decoration: BoxDecoration(
             color: isActive
-                ? effectiveColor.withOpacity(0.2)
-                : effectiveColor.withOpacity(0.1),
+                ? effectiveColor.withValues(alpha: 0.2)
+                : effectiveColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color:
-                  isActive ? effectiveColor : effectiveColor.withOpacity(0.3),
+              color: isActive
+                  ? effectiveColor
+                  : effectiveColor.withValues(alpha: 0.3),
               width: isActive ? 2 : 1,
             ),
           ),
@@ -253,8 +254,9 @@ class _MobileAutomatonControlsState extends State<MobileAutomatonControls>
             onPressed: onPressed,
             icon: Icon(
               icon,
-              color:
-                  isActive ? effectiveColor : effectiveColor.withOpacity(0.7),
+              color: isActive
+                  ? effectiveColor
+                  : effectiveColor.withValues(alpha: 0.7),
               size: 24,
             ),
           ),
@@ -265,7 +267,10 @@ class _MobileAutomatonControlsState extends State<MobileAutomatonControls>
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: isActive
                     ? effectiveColor
-                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                    : Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.7),
                 fontWeight: isActive ? FontWeight.w600 : null,
               ),
           textAlign: TextAlign.center,
@@ -278,7 +283,7 @@ class _MobileAutomatonControlsState extends State<MobileAutomatonControls>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

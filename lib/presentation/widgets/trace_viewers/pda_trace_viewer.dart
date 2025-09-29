@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/algorithms/pda_simulator.dart';
+import '../../../core/models/simulation_result.dart';
 import '../../../core/models/simulation_step.dart';
 import 'base_trace_viewer.dart';
 
@@ -49,44 +50,21 @@ class PDATraceViewer extends StatelessWidget {
     );
   }
 
-  // Convert PDASimulationResult to core SimulationResult-like container for BaseTraceViewer.
-  _PDAAdapter _asSimulationResult() {
-    return _PDAAdapter(
+  // Convert PDASimulationResult to the core SimulationResult used by BaseTraceViewer.
+  SimulationResult _asSimulationResult() {
+    if (result.accepted) {
+      return SimulationResult.success(
+        inputString: result.inputString,
+        steps: result.steps,
+        executionTime: result.executionTime,
+      );
+    }
+
+    return SimulationResult.failure(
       inputString: result.inputString,
-      accepted: result.accepted,
       steps: result.steps,
       errorMessage: result.errorMessage ?? '',
       executionTime: result.executionTime,
     );
   }
-}
-
-class _PDAAdapter implements SimulationLike {
-  @override
-  final String inputString;
-  @override
-  final bool accepted;
-  @override
-  final List<SimulationStep> steps;
-  @override
-  final String errorMessage;
-  @override
-  final Duration executionTime;
-
-  _PDAAdapter({
-    required this.inputString,
-    required this.accepted,
-    required this.steps,
-    required this.errorMessage,
-    required this.executionTime,
-  });
-}
-
-// Minimal interface expected by BaseTraceViewer; we use duck typing by field names.
-abstract class SimulationLike {
-  String get inputString;
-  bool get accepted;
-  List<SimulationStep> get steps;
-  String get errorMessage;
-  Duration get executionTime;
 }

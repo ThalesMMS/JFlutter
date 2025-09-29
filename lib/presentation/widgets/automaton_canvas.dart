@@ -5,7 +5,6 @@ import '../../core/models/fsa.dart';
 import '../../core/models/state.dart' as automaton_state;
 import '../../core/models/fsa_transition.dart';
 import 'touch_gesture_handler.dart';
-import 'mobile_automaton_controls.dart';
 import 'transition_geometry.dart';
 import '../../core/algorithms/common/throttling.dart';
 
@@ -67,30 +66,10 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
     }
   }
 
-  void _onCanvasTap(TapDownDetails details) {
-    final position = details.localPosition;
-
-    if (_isAddingState) {
-      _addState(position);
-    } else if (_isAddingTransition) {
-      _handleTransitionTap(position);
-    } else {
-      _selectStateAt(position);
-    }
-  }
-
-  void _enableStateAdding() {
-    setState(() {
-      _isAddingState = true;
-      _isAddingTransition = false;
-      _selectedState = null;
-    });
-  }
-
   void _addStateAtCenter() {
     // Add state at a reasonable position in the canvas
     // Use a fixed center position that works for most screen sizes
-    final canvasCenter = const Offset(200, 150);
+    const canvasCenter = Offset(200, 150);
 
     // Check if there's already a state at this position and offset if needed
     Offset position = canvasCenter;
@@ -342,8 +321,8 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[50],
-        border: Border.all(color: Colors.grey[300]!),
+        color: Colors.grey.shade50,
+        border: Border.all(color: Colors.grey.shade300),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Stack(
@@ -370,12 +349,10 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
               _addState(position);
             },
             onTransitionAdded: (transition) {
-              if (transition is FSATransition) {
-                setState(() {
-                  _transitions.add(transition);
-                });
-                _notifyAutomatonChanged();
-              }
+              setState(() {
+                _transitions.add(transition);
+              });
+              _notifyAutomatonChanged();
             },
             onStateEdited: (state) {
               _editState(state);
@@ -441,20 +418,20 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
                   Icon(
                     Icons.account_tree,
                     size: 64,
-                    color: Colors.grey[400],
+                    color: Colors.grey.shade400,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'Empty Canvas',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Colors.grey[600],
+                          color: Colors.grey.shade600,
                         ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Tap "Add State" to create your first state',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[500],
+                          color: Colors.grey.shade500,
                         ),
                   ),
                 ],
@@ -473,7 +450,7 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -579,7 +556,7 @@ class AutomatonPainter extends CustomPainter {
     if (isNondeterministic) {
       final highlightPaint = Paint()
         ..style = PaintingStyle.fill
-        ..color = Colors.deepOrange.withOpacity(0.15);
+        ..color = Colors.deepOrange.withValues(alpha: 0.15);
       canvas.drawCircle(stateCenter, radius, highlightPaint);
     }
 
@@ -794,7 +771,7 @@ class AutomatonPainter extends CustomPainter {
     final previewPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2
-      ..color = Colors.black.withOpacity(0.4);
+      ..color = Colors.black.withValues(alpha: 0.4);
 
     final startCenter = Offset(start.position.x, start.position.y);
     final pointer = transitionPreviewPosition!;

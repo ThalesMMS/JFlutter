@@ -13,32 +13,20 @@ import '../../core/models/fsa.dart';
 import '../../core/models/fsa_transition.dart';
 import '../../core/models/state.dart';
 import '../../core/models/grammar.dart';
-import '../../core/models/pda.dart';
 import '../../core/models/simulation_result.dart' as sim_result;
-import '../../core/models/tm.dart';
-import '../../core/repositories/automaton_repository.dart';
-import '../../core/result.dart';
 import '../../core/entities/automaton_entity.dart';
 import '../../data/services/automaton_service.dart';
-import '../../data/services/conversion_service.dart';
-import '../../data/services/simulation_service.dart';
 import '../../features/layout/layout_repository_impl.dart';
 
 /// Provider for automaton state management
 class AutomatonProvider extends StateNotifier<AutomatonState> {
   final AutomatonService _automatonService;
-  final SimulationService _simulationService;
-  final ConversionService _conversionService;
   final LayoutRepository _layoutRepository;
 
   AutomatonProvider({
     required AutomatonService automatonService,
-    required SimulationService simulationService,
-    required ConversionService conversionService,
     required LayoutRepository layoutRepository,
   })  : _automatonService = automatonService,
-        _simulationService = simulationService,
-        _conversionService = conversionService,
         _layoutRepository = layoutRepository,
         super(const AutomatonState());
 
@@ -56,7 +44,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
         CreateAutomatonRequest(
           name: name,
           description: description,
-          states: [
+          states: const [
             StateData(
               id: 'q0',
               name: 'q0',
@@ -65,9 +53,9 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
               isAccepting: false,
             ),
           ],
-          transitions: [],
+          transitions: const [],
           alphabet: alphabet,
-          bounds: Rect(0, 0, 400, 300),
+          bounds: const Rect(0, 0, 400, 300),
         ),
       );
 
@@ -569,8 +557,6 @@ final automatonProvider =
 
   return AutomatonProvider(
     automatonService: automatonService,
-    simulationService: SimulationService(),
-    conversionService: ConversionService(),
     layoutRepository: LayoutRepositoryImpl(),
   );
 });

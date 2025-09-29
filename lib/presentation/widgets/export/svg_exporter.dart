@@ -5,6 +5,7 @@ import 'package:vector_math/vector_math_64.dart';
 
 import '../../../core/entities/automaton_entity.dart';
 import '../../../core/entities/grammar_entity.dart';
+import '../../../core/entities/turing_machine_entity.dart';
 
 /// Enhanced SVG exporter for automata visualizations
 class SvgExporter {
@@ -58,24 +59,14 @@ class SvgExporter {
 
   /// Exports Turing machine visualization (placeholder - not yet implemented)
   static String exportTuringMachineToSvg(
-    dynamic tm, {
+    TuringMachineEntity tm, {
     double width = _defaultWidth,
     double height = _defaultHeight,
     SvgExportOptions? options,
   }) {
-    // Placeholder for Turing machine export
-    // This would require TuringMachineEntity to be properly defined
+    final automaton = _turingMachineToAutomaton(tm);
     return exportAutomatonToSvg(
-      AutomatonEntity(
-        id: 'tm_placeholder',
-        name: 'Turing Machine (Visualization)',
-        alphabet: {'0', '1'},
-        states: [],
-        transitions: {},
-        initialId: 'q0',
-        nextId: 0,
-        type: AutomatonType.dfa,
-      ),
+      automaton,
       width: width,
       height: height,
       options: options,
@@ -135,7 +126,7 @@ class SvgExporter {
 
   static void _addTuringMachineContent(
     StringBuffer buffer,
-    dynamic tm,
+    TuringMachineEntity tm,
     double width,
     double height,
     SvgExportOptions options,
@@ -270,7 +261,7 @@ class SvgExporter {
   }
 
   static void _addTuringTape(
-      StringBuffer buffer, dynamic tm, double width, double height) {
+      StringBuffer buffer, TuringMachineEntity tm, double width, double height) {
     const tapeHeight = 60.0;
     const cellWidth = 40.0;
     const cellHeight = 40.0;
@@ -285,6 +276,8 @@ class SvgExporter {
         '  <rect x="$tapeX" y="$tapeY" width="$tapeWidth" height="$tapeHeight"');
     buffer.writeln('    fill="#f5f5f5" stroke="#ccc" stroke-width="1"/>');
 
+    final blankSymbol = tm.blankSymbol.isEmpty ? '□' : tm.blankSymbol;
+
     // Draw tape cells (simplified representation)
     final numCells = (tapeWidth / cellWidth).floor();
     for (var i = 0; i < numCells; i++) {
@@ -298,7 +291,8 @@ class SvgExporter {
       // Cell content (placeholder)
       buffer.writeln(
           '    <text x="${cellX + cellWidth / 2}" y="${tapeY + cellHeight / 2 + 5}"');
-      buffer.writeln('      class="tape" text-anchor="middle">□</text>');
+      buffer.writeln(
+          '      class="tape" text-anchor="middle">$blankSymbol</text>');
     }
 
     // Draw tape head indicator
@@ -309,20 +303,20 @@ class SvgExporter {
   }
 
   static void _addTuringStateInfo(
-      StringBuffer buffer, dynamic tm, double width, double height) {
+      StringBuffer buffer, TuringMachineEntity tm, double width, double height) {
     final infoY = 20;
     final infoX = 20;
 
     buffer.writeln('  <g class="state-info">');
     buffer.writeln(
         '    <text x="$infoX" y="$infoY" font-size="16" font-weight="bold">');
-    buffer.writeln('      Turing Machine');
+    buffer.writeln('      ${tm.name}');
     buffer.writeln('    </text>');
     buffer.writeln('    <text x="$infoX" y="${infoY + 25}" font-size="12">');
-    buffer.writeln('      Current State: q0');
+    buffer.writeln('      Initial State: ${tm.initialStateId}');
     buffer.writeln('    </text>');
     buffer.writeln('    <text x="$infoX" y="${infoY + 45}" font-size="12">');
-    buffer.writeln('      Blank Symbol: _');
+    buffer.writeln('      Blank Symbol: ${tm.blankSymbol.isEmpty ? '□' : tm.blankSymbol}');
     buffer.writeln('    </text>');
     buffer.writeln('  </g>');
   }
@@ -334,6 +328,38 @@ class SvgExporter {
         '    <text x="${width / 2}" y="30" font-size="18" font-weight="bold"');
     buffer.writeln('      text-anchor="middle">${title}</text>');
     buffer.writeln('  </g>');
+  }
+
+  static AutomatonEntity _turingMachineToAutomaton(TuringMachineEntity tm) {
+    final states = tm.states
+        .map(
+          (state) => StateEntity(
+            id: state.id,
+            name: state.name,
+            x: 0.0,
+            y: 0.0,
+            isInitial: state.isInitial,
+            isFinal: state.isAccepting,
+          ),
+        )
+        .toList();
+
+    final transitions = <String, List<String>>{};
+    for (final transition in tm.transitions) {
+      transitions.putIfAbsent(transition.fromStateId, () => <String>[]);
+      transitions[transition.fromStateId]!.add(transition.toStateId);
+    }
+
+    return AutomatonEntity(
+      id: 'tm_${tm.id}',
+      name: '${tm.name} (Visualization)',
+      alphabet: tm.inputAlphabet,
+      states: states,
+      transitions: transitions,
+      initialId: tm.initialStateId,
+      nextId: tm.nextStateIndex,
+      type: AutomatonType.dfa,
+    );
   }
 
   /// Converts grammar to automaton for visualization (simplified)

@@ -10,14 +10,13 @@ import 'package:xml/xml.dart';
 import '../../core/entities/automaton_entity.dart';
 import '../../core/entities/grammar_entity.dart';
 import '../../core/entities/turing_machine_entity.dart';
-import '../../core/models/automaton_type.dart';
 import '../../core/models/fsa.dart';
 import '../../core/models/grammar.dart';
 import '../../core/models/production.dart';
 import '../../core/models/state.dart' as automaton_state;
 import '../../core/models/fsa_transition.dart';
 import '../../core/result.dart';
-import '../widgets/export/svg_exporter.dart';
+import '../../presentation/widgets/export/svg_exporter.dart';
 
 /// Service for file operations including JFLAP format support
 class FileOperationsService {
@@ -330,7 +329,7 @@ class FileOperationsService {
       builder.attribute('type', 'grammar');
       builder.element('grammar', nest: () {
         builder.attribute('type', grammar.type.name);
-        builder.element('start', nest: grammar.startSymbol ?? '');
+        builder.element('start', nest: grammar.startSymbol);
 
         for (final production in grammar.productions) {
           builder.element('production', nest: () {

@@ -53,7 +53,10 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            color: Theme.of(context)
+                .colorScheme
+                .outline
+                .withValues(alpha: 0.2),
           ),
         ),
       ),
@@ -94,7 +97,7 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
                       : Theme.of(context)
                           .colorScheme
                           .onSurface
-                          .withOpacity(0.6),
+                          .withValues(alpha: 0.6),
                   fontWeight: isSelected ? FontWeight.w600 : null,
                 ),
           ),
@@ -253,7 +256,7 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -285,7 +288,7 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -352,8 +355,8 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withValues(alpha: 0.1),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(

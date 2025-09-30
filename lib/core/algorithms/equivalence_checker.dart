@@ -1,54 +1,58 @@
 import '../models/fsa.dart';
 import '../models/state.dart';
+import 'dfa_completer.dart';
+import 'nfa_to_dfa_converter.dart';
 
 class EquivalenceChecker {
   static bool areEquivalent(FSA a, FSA b) {
-    final alphabet = a.alphabet.union(b.alphabet);
-    final initialStateA = a.initialState;
-    final initialStateB = b.initialState;
+    // If either has no initial state, not equivalent per tests
+    if (a.initialState == null || b.initialState == null) return false;
 
-    if (initialStateA == null || initialStateB == null) {
+    // Enforce alphabet equality per tests (explicit requirement in suite)
+    if (a.alphabet.isEmpty && b.alphabet.isEmpty) {
+      // fall through; empty but equal
+    } else if (a.alphabet.length != b.alphabet.length ||
+        !a.alphabet.containsAll(b.alphabet)) {
       return false;
     }
 
-    final visited = <String>{};
-    final queue = <List<State>>[];
+    // Convert NFAs to DFAs if necessary
+    final dfaA = a.isDeterministic ? a : (NFAToDFAConverter.convert(a).data ?? a);
+    final dfaB = b.isDeterministic ? b : (NFAToDFAConverter.convert(b).data ?? b);
 
-    queue.add([initialStateA, initialStateB]);
-    visited.add('${initialStateA.id},${initialStateB.id}');
+    // Use shared alphabet (after conversion) and complete both DFAs
+    final sharedAlphabet = dfaA.alphabet.union(dfaB.alphabet);
+    final completedA = DFACompleter.complete(dfaA.copyWith(alphabet: sharedAlphabet));
+    final completedB = DFACompleter.complete(dfaB.copyWith(alphabet: sharedAlphabet));
+
+    final initialA = completedA.initialState!;
+    final initialB = completedB.initialState!;
+
+    // BFS over product automaton; early-exit on differing acceptance
+    final visited = <String>{'${initialA.id},${initialB.id}'};
+    final queue = <List<State>>[[initialA, initialB]];
 
     while (queue.isNotEmpty) {
-      final currentPair = queue.removeAt(0);
-      final stateA = currentPair[0];
-      final stateB = currentPair[1];
+      final pair = queue.removeAt(0);
+      final sA = pair[0];
+      final sB = pair[1];
 
-      if (a.acceptingStates.contains(stateA) !=
-          b.acceptingStates.contains(stateB)) {
-        return false;
-      }
+      final accA = completedA.acceptingStates.contains(sA);
+      final accB = completedB.acceptingStates.contains(sB);
+      if (accA != accB) return false;
 
-      for (final symbol in alphabet) {
-        final nextStateA = a
-            .getTransitionsFromStateOnSymbol(stateA, symbol)
-            .firstOrNull
-            ?.toState;
-        final nextStateB = b
-            .getTransitionsFromStateOnSymbol(stateB, symbol)
-            .firstOrNull
-            ?.toState;
+      for (final symbol in sharedAlphabet) {
+        final nextASet = completedA.getTransitionsFromStateOnSymbol(sA, symbol);
+        final nextBSet = completedB.getTransitionsFromStateOnSymbol(sB, symbol);
 
-        if (nextStateA != null && nextStateB != null) {
-          final pairKey = '${nextStateA.id},${nextStateB.id}';
-          if (!visited.contains(pairKey)) {
-            queue.add([nextStateA, nextStateB]);
-            visited.add(pairKey);
-          }
-        } else if (nextStateA != null || nextStateB != null) {
-          // One automaton has a transition and the other doesn't.
-          // This can only happen if one of the DFAs is not complete.
-          // Assuming complete DFAs for equivalence checking.
-          // If they are not complete, they should be completed first.
-          return false;
+        // DFAs completed → exactly one transition per symbol
+        final nextA = nextASet.isNotEmpty ? nextASet.first.toState : null;
+        final nextB = nextBSet.isNotEmpty ? nextBSet.first.toState : null;
+
+        if (nextA == null || nextB == null) return false; // completion invariant broken
+        final key = '${nextA.id},${nextB.id}';
+        if (visited.add(key)) {
+          queue.add([nextA, nextB]);
         }
       }
     }

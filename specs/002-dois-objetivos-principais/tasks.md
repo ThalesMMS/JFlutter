@@ -63,18 +63,24 @@
 - [x] T021 [P] Revisar/ajustar algoritmos TM em `lib/core/algorithms/tm_simulator.dart` conforme desvios identificados
 - [x] T022 [P] Revisar/ajustar algoritmos REGEX em `lib/core/algorithms/regex_to_nfa_converter.dart` e `fa_to_regex_converter.dart` conforme desvios identificados
 - [x] T023 [P] Revisar/ajustar algoritmos PDA em `lib/core/algorithms/pda_simulator.dart` conforme desvios identificados
-- [ ] T024 [P] Revisar/ajustar algoritmos Pumping Lemma em `lib/core/algorithms/pumping_lemma_prover.dart` conforme desvios identificados
-- [ ] T025 [P] Revisar/ajustar algoritmos CYK em `lib/core/algorithms/cfg/cyk_parser.dart` conforme desvios identificados
-- [ ] T026 [P] Revisar/ajustar algoritmos NFA→DFA em `lib/core/algorithms/nfa_to_dfa_converter.dart` conforme desvios identificados
-- [ ] T027 [P] Revisar/ajustar algoritmos DFA Minimization em `lib/core/algorithms/dfa_minimizer.dart` conforme desvios identificados
-- [ ] T028 [P] Revisar/ajustar algoritmos Equivalence em `lib/core/algorithms/equivalence_checker.dart` conforme desvios identificados
-- [ ] T029 [P] Revisar/ajustar algoritmos Grammar→PDA em `lib/core/algorithms/grammar_to_pda_converter.dart` conforme desvios identificados
+- [x] T024 [P] Revisar/ajustar algoritmos Pumping Lemma em `lib/core/algorithms/pumping_lemma_prover.dart` conforme desvios identificados
+- [x] T025 [P] Revisar/ajustar algoritmos CYK em `lib/core/algorithms/cfg/cyk_parser.dart` conforme desvios identificados
+- [x] T026 [P] Revisar/ajustar algoritmos NFA→DFA em `lib/core/algorithms/nfa_to_dfa_converter.dart` conforme desvios identificados
+- [x] T027 [P] Revisar/ajustar algoritmos DFA Minimization em `lib/core/algorithms/dfa_minimizer.dart` conforme desvios identificados
+- [x] T028 [P] Revisar/ajustar algoritmos Equivalence em `lib/core/algorithms/equivalence_checker.dart` conforme desvios identificados
+- [x] T029 [P] Revisar/ajustar algoritmos Grammar→PDA em `lib/core/algorithms/grammar_to_pda_converter.dart` conforme desvios identificados
 - [ ] T030 [P] Revisar/ajustar algoritmos Grammar→FSA em `lib/core/algorithms/grammar_to_fsa_converter.dart` conforme desvios identificados
 - [ ] T031 [P] Garantir/ajustar modelos imutáveis em `lib/core/models/` e tipos compartilhados
 - [ ] T032 Atualizar serviços/repos em `lib/data/` (DTOs `json_serializable`) para import/export
 - [ ] T033 Ajustar providers Riverpod em `lib/presentation/providers/` para simulação e relatório
 - [ ] T034 Ajustar UI/canvas em `lib/presentation/widgets/` para performance/traços
 - [ ] T035 Garantir persistência e navegação de `Trace` (imutável) entre simuladores
+
+## Phase 3.3.1: Extended Features (Missing Implementations)
+- [ ] T042 [P] Implementar regex parsing pipeline (AST + Thompson NFA builder) em `lib/core/algorithms/regex/` com testes em `test/unit/core/regex/regex_pipeline_test.dart`
+- [ ] T043 [P] Implementar CFG toolkit cleanups (ε-removal, unit-production elimination, useless symbols) em `lib/core/algorithms/cfg/` com testes em `test/unit/core/cfg/cfg_toolkit_test.dart`
+- [ ] T044 [P] Implementar CYK derivation tree construction/output em `lib/core/algorithms/cfg/cyk_parser.dart` com testes em `test/unit/core/cfg/cyk_parser_test.dart`
+- [ ] T045 [P] Implementar PDA/TM specific unit scenarios em `test/unit/core/pda/pda_simulator_test.dart` e `test/unit/core/tm/tm_simulator_test.dart` (algoritmos existem; testes eram stubs)
 
 ## Phase 3.4: Interoperability & Performance
 - [ ] T036 Validar import/export `.jff`/JSON e SVG conforme constituição e contratos
@@ -120,6 +126,12 @@
 /spec_task run T028  # Equivalence algorithms
 /spec_task run T029  # Grammar→PDA algorithms
 /spec_task run T030  # Grammar→FSA algorithms
+
+# Extended Features (podem rodar em paralelo)
+/spec_task run T042  # Regex pipeline (AST + Thompson)
+/spec_task run T043  # CFG toolkit cleanups
+/spec_task run T044  # CYK derivation trees
+/spec_task run T045  # PDA/TM core scenarios
 ```
 Assegure que tarefas [P] não compartilham arquivos ou estados mutáveis.
 

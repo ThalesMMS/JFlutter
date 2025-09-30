@@ -242,27 +242,30 @@ class PumpingLemmaProver {
 
   /// Checks if a string is accepted by the automaton
   static bool _isStringAccepted(FSA automaton, String string) {
-    var currentStates = {automaton.initialState!};
+    // NFA semantics with epsilon-closures:
+    // 1) Start with epsilon-closure of the initial state
+    // 2) For each symbol, move via that symbol from all current states
+    // 3) Then take epsilon-closure of the resulting set
+
+    if (automaton.initialState == null) return false;
+
+    var currentStates = automaton.getEpsilonClosure(automaton.initialState!);
 
     for (int i = 0; i < string.length; i++) {
       final symbol = string[i];
-      final nextStates = <State>{};
 
-      for (final state in currentStates) {
-        final transitions = automaton.getTransitionsFromStateOnSymbol(
-          state,
-          symbol,
-        );
-        for (final transition in transitions) {
-          nextStates.add(transition.toState);
-        }
-      }
+      // Move on symbol from the entire current set
+      final moved = automaton.getStatesReachableOnSymbolFromSet(
+        currentStates,
+        symbol,
+      );
 
-      currentStates = nextStates;
-
-      if (currentStates.isEmpty) {
+      if (moved.isEmpty) {
         return false;
       }
+
+      // Include epsilon-closure after consuming the symbol
+      currentStates = automaton.getEpsilonClosureOfSet(moved);
     }
 
     return currentStates.intersection(automaton.acceptingStates).isNotEmpty;

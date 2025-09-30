@@ -5,6 +5,7 @@ import 'package:jflutter/core/models/fsa_transition.dart';
 import 'package:jflutter/core/algorithms/equivalence_checker.dart';
 import 'package:jflutter/core/algorithms/automaton_simulator.dart';
 import 'package:vector_math/vector_math_64.dart';
+import 'dart:math' as math;
 
 /// Equivalence Checker Validation Tests against References/automata-main
 /// 
@@ -190,7 +191,7 @@ FSA _createDFA1() {
     acceptingStates: {states.firstWhere((s) => s.id == 'q1')},
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: const Rect.fromLTRB(0, 0, 200, 100),
+    bounds: const math.Rectangle(0, 0, 200, 100),
     zoomLevel: 1.0,
     panOffset: Vector2.zero(),
   );
@@ -239,7 +240,7 @@ FSA _createDFA2() {
     acceptingStates: {states.firstWhere((s) => s.id == 'p1')},
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: const Rect.fromLTRB(0, 0, 200, 100),
+    bounds: const math.Rectangle(0, 0, 200, 100),
     zoomLevel: 1.0,
     panOffset: Vector2.zero(),
   );
@@ -288,7 +289,7 @@ FSA _createNFA1() {
     acceptingStates: {states.firstWhere((s) => s.id == 's1')},
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: const Rect.fromLTRB(0, 0, 200, 100),
+    bounds: const math.Rectangle(0, 0, 200, 100),
     zoomLevel: 1.0,
     panOffset: Vector2.zero(),
   );
@@ -337,7 +338,7 @@ FSA _createNFA2() {
     acceptingStates: {states.firstWhere((s) => s.id == 't1')},
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: const Rect.fromLTRB(0, 0, 200, 100),
+    bounds: const math.Rectangle(0, 0, 200, 100),
     zoomLevel: 1.0,
     panOffset: Vector2.zero(),
   );
@@ -386,7 +387,7 @@ FSA _createNonEquivalentDFA() {
     acceptingStates: {states.firstWhere((s) => s.id == 'r1')},
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: const Rect.fromLTRB(0, 0, 200, 100),
+    bounds: const math.Rectangle(0, 0, 200, 100),
     zoomLevel: 1.0,
     panOffset: Vector2.zero(),
   );
@@ -403,7 +404,7 @@ FSA _createEmptyDFA() {
     acceptingStates: {},
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: const Rect.fromLTRB(0, 0, 0, 0),
+    bounds: const math.Rectangle(0, 0, 0, 0),
     zoomLevel: 1.0,
     panOffset: Vector2.zero(),
   );
@@ -424,7 +425,7 @@ FSA _createDFAWithAlphabet(Set<String> alphabet) {
     acceptingStates: {},
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: const Rect.fromLTRB(0, 0, 100, 100),
+    bounds: const math.Rectangle(0, 0, 100, 100),
     zoomLevel: 1.0,
     panOffset: Vector2.zero(),
   );
@@ -445,7 +446,7 @@ FSA _createNoInitialDFA() {
     acceptingStates: {},
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: const Rect.fromLTRB(0, 0, 100, 100),
+    bounds: const math.Rectangle(0, 0, 100, 100),
     zoomLevel: 1.0,
     panOffset: Vector2.zero(),
   );

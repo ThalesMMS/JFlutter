@@ -69,22 +69,21 @@
 - [x] T027 [P] Revisar/ajustar algoritmos DFA Minimization em `lib/core/algorithms/dfa_minimizer.dart` conforme desvios identificados
 - [x] T028 [P] Revisar/ajustar algoritmos Equivalence em `lib/core/algorithms/equivalence_checker.dart` conforme desvios identificados
 - [x] T029 [P] Revisar/ajustar algoritmos Grammar→PDA em `lib/core/algorithms/grammar_to_pda_converter.dart` conforme desvios identificados
-- [ ] T030 [P] Revisar/ajustar algoritmos Grammar→FSA em `lib/core/algorithms/grammar_to_fsa_converter.dart` conforme desvios identificados
-- [ ] T031 [P] Garantir/ajustar modelos imutáveis em `lib/core/models/` e tipos compartilhados
-- [ ] T032 Atualizar serviços/repos em `lib/data/` (DTOs `json_serializable`) para import/export
-- [ ] T033 Ajustar providers Riverpod em `lib/presentation/providers/` para simulação e relatório
+- [x] T030 [P] Revisar/ajustar algoritmos Grammar→FSA em `lib/core/algorithms/grammar_to_fsa_converter.dart` conforme desvios identificados
+- [x] T031 [P] Garantir/ajustar modelos imutáveis em `lib/core/models/` e tipos compartilhados
+- [x] T032 Atualizar serviços/repos em `lib/data/` (DTOs `json_serializable`) para import/export
+- [x] T033 Ajustar providers Riverpod em `lib/presentation/providers/` para simulação e relatório
 - [ ] T034 Ajustar UI/canvas em `lib/presentation/widgets/` para performance/traços
 - [ ] T035 Garantir persistência e navegação de `Trace` (imutável) entre simuladores
 
 ## Phase 3.3.1: Extended Features (Missing Implementations)
-- [ ] T042 [P] Implementar regex parsing pipeline (AST + Thompson NFA builder) em `lib/core/algorithms/regex/` com testes em `test/unit/core/regex/regex_pipeline_test.dart`
-- [ ] T043 [P] Implementar CFG toolkit cleanups (ε-removal, unit-production elimination, useless symbols) em `lib/core/algorithms/cfg/` com testes em `test/unit/core/cfg/cfg_toolkit_test.dart`
-- [ ] T044 [P] Implementar CYK derivation tree construction/output em `lib/core/algorithms/cfg/cyk_parser.dart` com testes em `test/unit/core/cfg/cyk_parser_test.dart`
-- [ ] T045 [P] Implementar PDA/TM specific unit scenarios em `test/unit/core/pda/pda_simulator_test.dart` e `test/unit/core/tm/tm_simulator_test.dart` (algoritmos existem; testes eram stubs)
+- [x] T042 [P] Implementar regex parsing pipeline (AST + Thompson NFA builder) em `lib/core/algorithms/regex/` com testes em `test/unit/core/regex/regex_pipeline_test.dart`
+- [x] T043 [P] Implementar CFG toolkit cleanups (ε-removal, unit-production elimination, useless symbols) em `lib/core/algorithms/cfg/` com testes em `test/unit/core/cfg/cfg_toolkit_test.dart`
+- [x] T044 [P] Implementar CYK derivation tree construction/output em `lib/core/algorithms/cfg/cyk_parser.dart` com testes em `test/unit/core/cfg/cyk_parser_test.dart`
+- [x] T045 [P] Implementar PDA/TM specific unit scenarios em `test/unit/core/pda/pda_simulator_test.dart` e `test/unit/core/tm/tm_simulator_test.dart` (algoritmos existem; testes eram stubs)
 
 ## Phase 3.4: Interoperability & Performance
 - [ ] T036 Validar import/export `.jff`/JSON e SVG conforme constituição e contratos
-- [ ] T037 Implementar throttling/batching para ≥10k passos e confirmar ≥60fps; p95 < 20ms; sem GC > 50ms; memória < 400MB
 - [ ] T038 Refinar mensagens de erro e diagnósticos; normalizar diferenças não semânticas (ordem de transições)
 
 ## Phase 3.5: QA & Documentation

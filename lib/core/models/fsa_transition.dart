@@ -4,7 +4,7 @@ import 'transition.dart';
 
 /// Transition for Finite State Automata (FSA)
 class FSATransition extends Transition {
-  /// Set of input symbols that trigger this transition
+  /// Set of input symbols that trigger this transition (unmodifiable)
   final Set<String> inputSymbols;
 
   /// Lambda symbol for epsilon transitions (null if not an epsilon transition)
@@ -26,8 +26,9 @@ class FSATransition extends Transition {
     Set<String>? inputSymbols,
     this.lambdaSymbol,
     String? symbol,
-  })  : inputSymbols = inputSymbols ??
-            (symbol != null ? <String>{symbol} : const <String>{}),
+  })  : inputSymbols = Set<String>.unmodifiable(
+            (inputSymbols ?? (symbol != null ? <String>{symbol} : const <String>{})).toSet(),
+          ),
         super(
           id: id,
           fromState: fromState,
@@ -69,7 +70,9 @@ class FSATransition extends Transition {
       label: label ?? this.label,
       controlPoint: controlPoint ?? this.controlPoint,
       type: type ?? this.type,
-      inputSymbols: inputSymbols ?? this.inputSymbols,
+      inputSymbols: inputSymbols != null
+          ? Set<String>.unmodifiable(inputSymbols)
+          : this.inputSymbols,
       lambdaSymbol: lambdaSymbol ?? this.lambdaSymbol,
     );
   }

@@ -35,7 +35,7 @@ abstract class Transition {
     required this.label,
     Vector2? controlPoint,
     this.type = TransitionType.deterministic,
-  }) : controlPoint = controlPoint ?? Vector2.zero();
+  }) : controlPoint = (controlPoint ?? Vector2.zero()).clone();
 
   /// Creates a copy of this transition with updated properties
   Transition copyWith({

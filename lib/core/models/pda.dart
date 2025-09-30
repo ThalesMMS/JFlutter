@@ -7,7 +7,7 @@ import 'automaton.dart';
 
 /// Pushdown Automaton (PDA) implementation
 class PDA extends Automaton {
-  /// Stack alphabet symbols
+  /// Stack alphabet symbols (unmodifiable)
   final Set<String> stackAlphabet;
 
   /// Initial stack symbol
@@ -26,9 +26,10 @@ class PDA extends Automaton {
     required super.bounds,
     super.zoomLevel,
     super.panOffset,
-    required this.stackAlphabet,
+    required Set<String> stackAlphabet,
     this.initialStackSymbol = 'Z',
-  }) : super(type: AutomatonType.pda);
+  })  : stackAlphabet = Set<String>.unmodifiable(stackAlphabet),
+        super(type: AutomatonType.pda);
 
   /// Creates a copy of this PDA with updated properties
   @override
@@ -62,7 +63,9 @@ class PDA extends Automaton {
       bounds: bounds ?? this.bounds,
       zoomLevel: zoomLevel ?? this.zoomLevel,
       panOffset: panOffset ?? this.panOffset,
-      stackAlphabet: stackAlphabet ?? this.stackAlphabet,
+      stackAlphabet: stackAlphabet != null
+          ? Set<String>.unmodifiable(stackAlphabet)
+          : this.stackAlphabet,
       initialStackSymbol: initialStackSymbol ?? this.initialStackSymbol,
     );
   }

@@ -65,7 +65,7 @@ class RegexToNFAConverter {
     }
 
     // Check for invalid characters (allow epsilon literal ε)
-    final validChars = RegExp(r'[a-zA-Z0-9\(\)\|\*\+\?\.|ε]');
+    final validChars = RegExp(r'[a-zA-Z0-9\(\)\[\]\|\*\+\?\.|ε]');
     for (int i = 0; i < regex.length; i++) {
       if (!validChars.hasMatch(regex[i])) {
         return ResultFactory.failure(
@@ -767,31 +767,37 @@ class RegexToNFAConverter {
   static FSA _buildSetNFA(Set<String> symbols) {
     final now = DateTime.now();
     final q0 = State(
-      id: 'q0',
+      id: _newStateId('q'),
       label: 'q0',
       position: Vector2(100, 100),
       isInitial: true,
       isAccepting: false,
     );
     final q1 = State(
-      id: 'q1',
+      id: _newStateId('q'),
       label: 'q1',
       position: Vector2(200, 100),
       isInitial: false,
       isAccepting: true,
     );
-    final t = FSATransition(
-      id: 't',
-      fromState: q0,
-      toState: q1,
-      label: '[…]',
-      inputSymbols: symbols,
-    );
+
+    final transitions = <FSATransition>{};
+    for (final s in symbols) {
+      transitions.add(
+        FSATransition.deterministic(
+          id: _newTransId('t'),
+          fromState: q0,
+          toState: q1,
+          symbol: s,
+        ),
+      );
+    }
+
     return FSA(
       id: 'set_${now.millisecondsSinceEpoch}',
       name: 'Class',
       states: {q0, q1},
-      transitions: {t},
+      transitions: transitions,
       alphabet: symbols,
       initialState: q0,
       acceptingStates: {q1},

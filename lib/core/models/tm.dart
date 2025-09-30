@@ -7,7 +7,7 @@ import 'automaton.dart';
 
 /// Turing Machine (TM) implementation
 class TM extends Automaton {
-  /// Tape alphabet symbols
+  /// Tape alphabet symbols (unmodifiable)
   final Set<String> tapeAlphabet;
 
   /// Blank symbol
@@ -29,10 +29,11 @@ class TM extends Automaton {
     required super.bounds,
     super.zoomLevel,
     super.panOffset,
-    required this.tapeAlphabet,
+    required Set<String> tapeAlphabet,
     this.blankSymbol = 'B',
     this.tapeCount = 1, // Always 1 for single-tape TM
-  }) : super(type: AutomatonType.tm);
+  })  : tapeAlphabet = Set<String>.unmodifiable(tapeAlphabet),
+        super(type: AutomatonType.tm);
 
   /// Creates a copy of this TM with updated properties
   @override
@@ -67,7 +68,9 @@ class TM extends Automaton {
       bounds: bounds ?? this.bounds,
       zoomLevel: zoomLevel ?? this.zoomLevel,
       panOffset: panOffset ?? this.panOffset,
-      tapeAlphabet: tapeAlphabet ?? this.tapeAlphabet,
+      tapeAlphabet: tapeAlphabet != null
+          ? Set<String>.unmodifiable(tapeAlphabet)
+          : this.tapeAlphabet,
       blankSymbol: blankSymbol ?? this.blankSymbol,
       tapeCount: tapeCount ?? this.tapeCount,
     );

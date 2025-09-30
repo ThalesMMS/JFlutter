@@ -103,6 +103,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       );
 
       if (result.isSuccess) {
+        _addSimulationToHistory(result.data!);
         state = state.copyWith(simulationResult: result.data, isLoading: false);
       } else {
         state = state.copyWith(isLoading: false, error: result.error);
@@ -366,7 +367,41 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
 
   /// Clears any error messages
   void clearError() {
-    state = state.copyWith(error: null);
+    state = state.clearError();
+  }
+
+  /// Clear all state and reset to initial
+  void clearAll() {
+    state = state.clear();
+  }
+
+  /// Clear simulation results
+  void clearSimulation() {
+    state = state.clearSimulation();
+  }
+
+  /// Clear algorithm results
+  void clearAlgorithmResults() {
+    state = state.clearAlgorithmResults();
+  }
+
+
+  /// Add simulation result to history
+  void _addSimulationToHistory(sim_result.SimulationResult result) {
+    final newHistory = [...state.simulationHistory, result];
+    state = state.copyWith(simulationHistory: newHistory);
+  }
+
+  /// Get automaton from history
+  FSA? getAutomatonFromHistory(int index) {
+    if (index < 0 || index >= state.automatonHistory.length) return null;
+    return state.automatonHistory[index];
+  }
+
+  /// Get simulation result from history
+  sim_result.SimulationResult? getSimulationFromHistory(int index) {
+    if (index < 0 || index >= state.simulationHistory.length) return null;
+    return state.simulationHistory[index];
   }
 
   /// Converts FSA to AutomatonEntity
@@ -478,6 +513,8 @@ class AutomatonState {
   final String? equivalenceDetails;
   final bool isLoading;
   final String? error;
+  final List<FSA> automatonHistory; // persistent history of automatons
+  final List<sim_result.SimulationResult> simulationHistory; // persistent simulation history
 
   const AutomatonState({
     this.currentAutomaton,
@@ -488,6 +525,8 @@ class AutomatonState {
     this.equivalenceDetails,
     this.isLoading = false,
     this.error,
+    this.automatonHistory = const [],
+    this.simulationHistory = const [],
   });
 
   static const _unset = Object();
@@ -501,6 +540,8 @@ class AutomatonState {
     Object? equivalenceDetails = _unset,
     bool? isLoading,
     Object? error = _unset,
+    List<FSA>? automatonHistory,
+    List<sim_result.SimulationResult>? simulationHistory,
   }) {
     return AutomatonState(
       currentAutomaton: currentAutomaton == _unset
@@ -523,6 +564,36 @@ class AutomatonState {
           : equivalenceDetails as String?,
       isLoading: isLoading ?? this.isLoading,
       error: error == _unset ? this.error : error as String?,
+      automatonHistory: automatonHistory ?? this.automatonHistory,
+      simulationHistory: simulationHistory ?? this.simulationHistory,
+    );
+  }
+
+  /// Clear all state and reset to initial
+  AutomatonState clear() {
+    return const AutomatonState();
+  }
+
+  /// Clear only error state
+  AutomatonState clearError() {
+    return copyWith(error: null);
+  }
+
+  /// Clear simulation results
+  AutomatonState clearSimulation() {
+    return copyWith(
+      simulationResult: null,
+      simulationHistory: [],
+    );
+  }
+
+  /// Clear algorithm results
+  AutomatonState clearAlgorithmResults() {
+    return copyWith(
+      regexResult: null,
+      grammarResult: null,
+      equivalenceResult: null,
+      equivalenceDetails: null,
     );
   }
 }

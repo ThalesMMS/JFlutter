@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/pda.dart';
 import '../../core/algorithms/pda/pda_simulator_facade.dart';
-import '../../core/algorithms/pda_simulator.dart';
 
 /// Immutable state holding the latest PDA simulation result and flags.
 class PDATraceState {

@@ -235,7 +235,7 @@ class RegexToNFAConverter {
       case TokenType.symbol:
         return SymbolNode(symbol: token.value);
       case TokenType.dot:
-        return DotNode();
+        return const DotNode();
       case TokenType.charClass:
         return SetNode(symbols: _parseCharClass(token.value));
       case TokenType.charShortcut:
@@ -322,7 +322,7 @@ class RegexToNFAConverter {
       acceptingStates: {q1},
       created: now,
       modified: now,
-      bounds: math.Rectangle(0, 0, 800, 600),
+      bounds: const math.Rectangle(0, 0, 800, 600),
     );
   }
 
@@ -366,7 +366,7 @@ class RegexToNFAConverter {
       acceptingStates: {q1},
       created: now,
       modified: now,
-      bounds: math.Rectangle(0, 0, 800, 600),
+      bounds: const math.Rectangle(0, 0, 800, 600),
     );
   }
 
@@ -440,7 +440,7 @@ class RegexToNFAConverter {
       acceptingStates: {newFinal},
       created: now,
       modified: now,
-      bounds: math.Rectangle(0, 0, 800, 600),
+      bounds: const math.Rectangle(0, 0, 800, 600),
     );
   }
 
@@ -512,7 +512,7 @@ class RegexToNFAConverter {
       acceptingStates: {newFinal},
       created: now,
       modified: now,
-      bounds: math.Rectangle(0, 0, 800, 600),
+      bounds: const math.Rectangle(0, 0, 800, 600),
     );
   }
 
@@ -653,7 +653,7 @@ class RegexToNFAConverter {
       acceptingStates: {newFinal},
       created: now,
       modified: now,
-      bounds: math.Rectangle(0, 0, 800, 600),
+      bounds: const math.Rectangle(0, 0, 800, 600),
     );
   }
 
@@ -691,7 +691,7 @@ class RegexToNFAConverter {
       acceptingStates: {q1},
       created: now,
       modified: now,
-      bounds: math.Rectangle(0, 0, 800, 600),
+      bounds: const math.Rectangle(0, 0, 800, 600),
     );
   }
 

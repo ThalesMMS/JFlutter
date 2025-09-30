@@ -1,4 +1,5 @@
 /// Analysis classes for automaton properties and characteristics
+library;
 
 /// Analysis of state-related properties
 class AutomatonStateAnalysis {

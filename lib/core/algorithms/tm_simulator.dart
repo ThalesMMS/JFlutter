@@ -29,8 +29,9 @@ class TMSimulator {
     try {
       final validationResult = _validateInput(tm, inputString);
       if (!validationResult.isSuccess) return Failure(validationResult.error!);
-      if (tm.initialState == null)
-        return Failure('Turing machine must have an initial state');
+      if (tm.initialState == null) {
+        return const Failure('Turing machine must have an initial state');
+      }
 
       final startTime = DateTime.now();
       int explored = 0;
@@ -149,12 +150,12 @@ class TMSimulator {
 
       // Handle empty TM
       if (tm.states.isEmpty) {
-        return Failure('Cannot simulate empty Turing machine');
+        return const Failure('Cannot simulate empty Turing machine');
       }
 
       // Handle TM with no initial state
       if (tm.initialState == null) {
-        return Failure('Turing machine must have an initial state');
+        return const Failure('Turing machine must have an initial state');
       }
 
       // Simulate the TM
@@ -173,20 +174,20 @@ class TMSimulator {
   /// Validates the input TM and string
   static Result<void> _validateInput(TM tm, String inputString) {
     if (tm.states.isEmpty) {
-      return Failure('Turing machine must have at least one state');
+      return const Failure('Turing machine must have at least one state');
     }
 
     if (tm.initialState == null) {
-      return Failure('Turing machine must have an initial state');
+      return const Failure('Turing machine must have an initial state');
     }
 
     if (!tm.states.contains(tm.initialState)) {
-      return Failure('Initial state must be in the states set');
+      return const Failure('Initial state must be in the states set');
     }
 
     for (final acceptingState in tm.acceptingStates) {
       if (!tm.states.contains(acceptingState)) {
-        return Failure('Accepting state must be in the states set');
+        return const Failure('Accepting state must be in the states set');
       }
     }
 
@@ -198,7 +199,7 @@ class TMSimulator {
       }
     }
 
-    return Success(null);
+    return const Success(null);
   }
 
   /// Simulates the TM with the input string
@@ -213,7 +214,7 @@ class TMSimulator {
 
     // Initialize simulation
     var currentState = tm.initialState!;
-    var tape = inputString.split('').toList();
+    final tape = inputString.split('').toList();
     var headPosition = 0;
     int stepNumber = 0;
 
@@ -493,12 +494,12 @@ class TMSimulator {
 
       // Handle empty TM
       if (tm.states.isEmpty) {
-        return Failure('Cannot analyze empty Turing machine');
+        return const Failure('Cannot analyze empty Turing machine');
       }
 
       // Handle TM with no initial state
       if (tm.initialState == null) {
-        return Failure('Turing machine must have an initial state');
+        return const Failure('Turing machine must have an initial state');
       }
 
       // Analyze the TM

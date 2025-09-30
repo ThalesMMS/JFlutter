@@ -384,7 +384,7 @@ class FileOperationsService {
     final buffer = StringBuffer();
     buffer.writeln('<?xml version="1.0" encoding="UTF-8"?>');
     buffer.writeln(
-        '<svg xmlns="http://www.w3.org/2000/svg" width="${_kCanvasWidth}" height="${_kCanvasHeight}">');
+        '<svg xmlns="http://www.w3.org/2000/svg" width="$_kCanvasWidth" height="$_kCanvasHeight">');
 
     // Draw transitions first (so they appear behind states)
     for (final transition in drawingData.transitions) {

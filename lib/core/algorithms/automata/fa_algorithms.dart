@@ -60,8 +60,9 @@ class FAAlgorithms {
     final target = <String>{
       for (final s in dfa.acceptingStates.where(reachable.contains)) s.id,
     };
-    if (target.isEmpty)
+    if (target.isEmpty) {
       return true; // no accepting reachable → empty language → finite
+    }
     final canReachAccepting = <String>{...target};
     final queue = List<String>.from(target);
     while (queue.isNotEmpty) {

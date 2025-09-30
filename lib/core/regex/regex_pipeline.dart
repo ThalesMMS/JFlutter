@@ -80,7 +80,7 @@ class RegexPipeline {
         pp.char('.').map<RegexNode>((_) => const DotNode());
     final pp.Parser<RegexNode> groupParser = (lparen & primaryRef & rparen).map<RegexNode>((v) => v[1] as RegexNode);
     final pp.Parser<RegexNode> primary =
-        pp.choice<RegexNode>([groupParser, dotParser, literal]);
+        (groupParser | dotParser | literal).cast<RegexNode>();
 
     // Unary: primary followed by postfix operators (*, +, ?), multiple allowed
     final pp.Parser<RegexNode> unary =

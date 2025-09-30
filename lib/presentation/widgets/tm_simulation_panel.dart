@@ -22,7 +22,7 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
   bool? _isAccepted;
   String? _simulationResult;
   List<String> _simulationSteps = [];
-  List<String> _tapeHistory = [];
+  List<String> _tapeHistory = <String>[];
 
   @override
   void dispose() {

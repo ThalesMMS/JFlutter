@@ -14,11 +14,11 @@ class InputValidators {
   static List<ValidationIssue> validateFSA(FSA fsa) {
     final issues = <ValidationIssue>[];
     if (fsa.states.isEmpty) {
-      issues.add(ValidationIssue('FSA_EMPTY', 'Automaton has no states'));
+      issues.add(const ValidationIssue('FSA_EMPTY', 'Automaton has no states'));
     }
     if (fsa.initialState == null) {
       issues.add(
-          ValidationIssue('FSA_NO_INITIAL', 'Automaton has no initial state'));
+          const ValidationIssue('FSA_NO_INITIAL', 'Automaton has no initial state'));
     }
     for (final t in fsa.transitions) {
       if (!fsa.states.contains(t.fromState)) {
@@ -36,14 +36,14 @@ class InputValidators {
   static List<ValidationIssue> validatePDA(PDA pda) {
     final issues = <ValidationIssue>[];
     if (pda.states.isEmpty) {
-      issues.add(ValidationIssue('PDA_EMPTY', 'PDA has no states'));
+      issues.add(const ValidationIssue('PDA_EMPTY', 'PDA has no states'));
     }
     if (pda.initialState == null) {
-      issues.add(ValidationIssue('PDA_NO_INITIAL', 'PDA has no initial state'));
+      issues.add(const ValidationIssue('PDA_NO_INITIAL', 'PDA has no initial state'));
     }
     if (pda.acceptingStates.isEmpty) {
       issues.add(
-          ValidationIssue('PDA_NO_ACCEPTING', 'PDA has no accepting states'));
+          const ValidationIssue('PDA_NO_ACCEPTING', 'PDA has no accepting states'));
     }
     return issues;
   }
@@ -51,10 +51,10 @@ class InputValidators {
   static List<ValidationIssue> validateGrammar(Grammar grammar) {
     final issues = <ValidationIssue>[];
     if (grammar.productions.isEmpty) {
-      issues.add(ValidationIssue('CFG_EMPTY', 'Grammar has no productions'));
+      issues.add(const ValidationIssue('CFG_EMPTY', 'Grammar has no productions'));
     }
     if (!grammar.nonTerminals.contains(grammar.startSymbol)) {
-      issues.add(ValidationIssue(
+      issues.add(const ValidationIssue(
           'CFG_BAD_START', 'Start symbol must be a non-terminal'));
     }
     return issues;
@@ -63,14 +63,14 @@ class InputValidators {
   static List<ValidationIssue> validateTM(TM tm) {
     final issues = <ValidationIssue>[];
     if (tm.states.isEmpty) {
-      issues.add(ValidationIssue('TM_EMPTY', 'TM has no states'));
+      issues.add(const ValidationIssue('TM_EMPTY', 'TM has no states'));
     }
     if (tm.initialState == null) {
-      issues.add(ValidationIssue('TM_NO_INITIAL', 'TM has no initial state'));
+      issues.add(const ValidationIssue('TM_NO_INITIAL', 'TM has no initial state'));
     }
     if (!tm.tapeAlphabet.contains(tm.blankSymbol)) {
       issues.add(
-          ValidationIssue('TM_BLANK', 'Blank symbol is not in tape alphabet'));
+          const ValidationIssue('TM_BLANK', 'Blank symbol is not in tape alphabet'));
     }
     return issues;
   }

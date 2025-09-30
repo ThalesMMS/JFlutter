@@ -25,18 +25,18 @@ class AutomatonSimulator {
 
       // Validate DFA constraints
       if (automaton.isNondeterministic || automaton.hasEpsilonTransitions) {
-        return Failure(
+        return const Failure(
             'DFA required: automaton must be deterministic and epsilon-free');
       }
 
       // Handle empty automaton
       if (automaton.states.isEmpty) {
-        return Failure('Cannot simulate empty automaton');
+        return const Failure('Cannot simulate empty automaton');
       }
 
       // Handle automaton with no initial state
       if (automaton.initialState == null) {
-        return Failure('Automaton must have an initial state');
+        return const Failure('Automaton must have an initial state');
       }
 
       // Simulate as DFA
@@ -66,20 +66,20 @@ class AutomatonSimulator {
   /// Validates the input automaton and string
   static Result<void> _validateInput(FSA automaton, String inputString) {
     if (automaton.states.isEmpty) {
-      return Failure('Automaton must have at least one state');
+      return const Failure('Automaton must have at least one state');
     }
 
     if (automaton.initialState == null) {
-      return Failure('Automaton must have an initial state');
+      return const Failure('Automaton must have an initial state');
     }
 
     if (!automaton.states.contains(automaton.initialState)) {
-      return Failure('Initial state must be in the states set');
+      return const Failure('Initial state must be in the states set');
     }
 
     for (final acceptingState in automaton.acceptingStates) {
       if (!automaton.states.contains(acceptingState)) {
-        return Failure('Accepting state must be in the states set');
+        return const Failure('Accepting state must be in the states set');
       }
     }
 
@@ -91,7 +91,7 @@ class AutomatonSimulator {
       }
     }
 
-    return Success(null);
+    return const Success(null);
   }
 
   /// Simulates a DFA step-by-step
@@ -217,12 +217,12 @@ class AutomatonSimulator {
 
       // Handle empty automaton
       if (nfa.states.isEmpty) {
-        return Failure('Cannot simulate empty automaton');
+        return const Failure('Cannot simulate empty automaton');
       }
 
       // Handle automaton with no initial state
       if (nfa.initialState == null) {
-        return Failure('Automaton must have an initial state');
+        return const Failure('Automaton must have an initial state');
       }
 
       // Simulate the NFA

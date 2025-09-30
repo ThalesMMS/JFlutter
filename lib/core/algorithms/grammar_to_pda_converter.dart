@@ -152,7 +152,7 @@ class GrammarToPDAConverter {
       acceptingStates: {q2},
       created: now,
       modified: now,
-      bounds: math.Rectangle(0, 0, 800, 600),
+      bounds: const math.Rectangle(0, 0, 800, 600),
       stackAlphabet: {
         ...grammar.terminals,
         ...grammar.nonTerminals,

@@ -85,7 +85,7 @@ class SvgExporter {
     buffer.writeln('  <mask id="accepting-state-mask">');
     buffer.writeln('    <rect width="100%" height="100%" fill="white"/>');
     buffer.writeln(
-        '    <circle cx="0" cy="0" r="${_stateRadius}" fill="transparent"');
+        '    <circle cx="0" cy="0" r="$_stateRadius" fill="transparent"');
     buffer.writeln('      stroke="black" stroke-width="3"/>');
     buffer.writeln('  </mask>');
 
@@ -361,14 +361,14 @@ class SvgColorScheme {
   });
 
   factory SvgColorScheme.dark() {
-    return SvgColorScheme(
-      stateFill: const Color(0xFF2D2D2D),
-      stateStroke: const Color(0xFFFFFFFF),
-      acceptingStateFill: const Color(0xFF2D2D2D),
-      acceptingStateStroke: const Color(0xFFFFFFFF),
-      transitionStroke: const Color(0xFFFFFFFF),
-      textColor: const Color(0xFFFFFFFF),
-      backgroundColor: const Color(0xFF1A1A1A),
+    return const SvgColorScheme(
+      stateFill: Color(0xFF2D2D2D),
+      stateStroke: Color(0xFFFFFFFF),
+      acceptingStateFill: Color(0xFF2D2D2D),
+      acceptingStateStroke: Color(0xFFFFFFFF),
+      transitionStroke: Color(0xFFFFFFFF),
+      textColor: Color(0xFFFFFFFF),
+      backgroundColor: Color(0xFF1A1A1A),
     );
   }
 }

@@ -128,11 +128,11 @@ class AddStateUseCase {
       if (isInitial) {
         newInitialId = newState.id;
         // Remove initial flag from other states
-        updatedStates.forEach((state) {
+        for (var state in updatedStates) {
           if (state.id != newState.id && state.isInitial) {
             state = state.copyWith(isInitial: false);
           }
-        });
+        }
       }
 
       final updatedAutomaton = automaton.copyWith(

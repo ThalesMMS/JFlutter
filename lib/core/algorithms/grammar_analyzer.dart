@@ -196,7 +196,7 @@ class GrammarAnalyzer {
       }
       if (entry.value.isEmpty) {
         newProductions.add(Production(
-          id: '${grammar.id}_fact_${productionCounter}',
+          id: '${grammar.id}_fact_$productionCounter',
           leftSide: [entry.key],
           rightSide: const [],
           isLambda: true,
@@ -251,7 +251,7 @@ class GrammarAnalyzer {
             if (first[left]!.add('ε')) {
               changed = true;
               derivations
-                  .add("FIRST($left) gains ε due to production $left → ε");
+                  .add('FIRST($left) gains ε due to production $left → ε');
             }
             continue;
           }
@@ -262,7 +262,7 @@ class GrammarAnalyzer {
               if (first[left]!.add('ε')) {
                 changed = true;
                 derivations.add(
-                    "FIRST($left) gains ε because production $left → ${_formatSymbols(right)} contains ε");
+                    'FIRST($left) gains ε because production $left → ${_formatSymbols(right)} contains ε');
               }
               break;
             }
@@ -271,7 +271,7 @@ class GrammarAnalyzer {
               if (first[left]!.add(symbol)) {
                 changed = true;
                 derivations.add(
-                    "FIRST($left) gains terminal $symbol from production $left → ${_formatSymbols(right)}");
+                    'FIRST($left) gains terminal $symbol from production $left → ${_formatSymbols(right)}');
               }
               break;
             }
@@ -284,7 +284,7 @@ class GrammarAnalyzer {
             if (targetFirst.length > previousLength) {
               changed = true;
               derivations.add(
-                  "FIRST($left) absorbs FIRST($symbol) − {ε} via production $left → ${_formatSymbols(right)}");
+                  'FIRST($left) absorbs FIRST($symbol) − {ε} via production $left → ${_formatSymbols(right)}');
             }
 
             if (!source.contains('ε')) {
@@ -295,7 +295,7 @@ class GrammarAnalyzer {
               if (first[left]!.add('ε')) {
                 changed = true;
                 derivations.add(
-                    "FIRST($left) gains ε because all symbols in $left → ${_formatSymbols(right)} can derive ε");
+                    'FIRST($left) gains ε because all symbols in $left → ${_formatSymbols(right)} can derive ε');
               }
             }
           }
@@ -370,7 +370,7 @@ class GrammarAnalyzer {
               if (targetFollow.length > previousFollowLength) {
                 changed = true;
                 derivations.add(
-                    "FOLLOW($symbol) absorbs FOLLOW($left) because suffix can derive ε in $left → ${_formatSymbols(right)}");
+                    'FOLLOW($symbol) absorbs FOLLOW($left) because suffix can derive ε in $left → ${_formatSymbols(right)}');
               }
             }
           }
@@ -530,9 +530,9 @@ class GrammarAnalyzer {
   }
 
   static String _generatePrimeSymbol(String base, Set<String> existing) {
-    var candidate = "${base}'";
+    var candidate = "$base'";
     while (existing.contains(candidate)) {
-      candidate = "${candidate}'";
+      candidate = "$candidate'";
     }
     return candidate;
   }
@@ -630,7 +630,7 @@ _FactoringResult? _findCommonPrefix(List<List<String>> alternatives) {
       final group = alternatives
           .where((alt) =>
               alt.length >= prefix.length &&
-              ListEquality().equals(alt.sublist(0, prefix.length), prefix))
+              const ListEquality().equals(alt.sublist(0, prefix.length), prefix))
           .toList();
 
       if (group.length < 2) {

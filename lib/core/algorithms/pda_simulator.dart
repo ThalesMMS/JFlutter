@@ -32,12 +32,12 @@ class PDASimulator {
 
       // Handle empty PDA
       if (pda.states.isEmpty) {
-        return Failure('Cannot simulate empty PDA');
+        return const Failure('Cannot simulate empty PDA');
       }
 
       // Handle PDA with no initial state
       if (pda.initialState == null) {
-        return Failure('PDA must have an initial state');
+        return const Failure('PDA must have an initial state');
       }
 
       // Simulate as DPDA
@@ -56,20 +56,20 @@ class PDASimulator {
   /// Validates the input PDA and string
   static Result<void> _validateInput(PDA pda, String inputString) {
     if (pda.states.isEmpty) {
-      return Failure('PDA must have at least one state');
+      return const Failure('PDA must have at least one state');
     }
 
     if (pda.initialState == null) {
-      return Failure('PDA must have an initial state');
+      return const Failure('PDA must have an initial state');
     }
 
     if (!pda.states.contains(pda.initialState)) {
-      return Failure('Initial state must be in the states set');
+      return const Failure('Initial state must be in the states set');
     }
 
     for (final acceptingState in pda.acceptingStates) {
       if (!pda.states.contains(acceptingState)) {
-        return Failure('Accepting state must be in the states set');
+        return const Failure('Accepting state must be in the states set');
       }
     }
 
@@ -81,7 +81,7 @@ class PDASimulator {
       }
     }
 
-    return Success(null);
+    return const Success(null);
   }
 
   /// Simulates a DPDA with the input string
@@ -97,7 +97,7 @@ class PDASimulator {
     // Initialize simulation
     var currentState = pda.initialState!;
     var remainingInput = inputString;
-    var stack = <String>[pda.initialStackSymbol];
+    final stack = <String>[pda.initialStackSymbol];
     int stepNumber = 0;
 
     // Add initial step
@@ -234,7 +234,7 @@ class PDASimulator {
         return Failure(validationResult.error!);
       }
       if (pda.initialState == null) {
-        return Failure('PDA must have an initial state');
+        return const Failure('PDA must have an initial state');
       }
 
       final result = _simulateSearch(
@@ -345,9 +345,12 @@ class PDASimulator {
             t.isLambdaPop || (stack.isNotEmpty && stack.last == t.popSymbol);
         if (!canPop) continue;
         final newStack = List<String>.from(stack);
-        if (!t.isLambdaPop && newStack.isNotEmpty) newStack.removeLast();
-        if (!t.isLambdaPush && t.pushSymbol.isNotEmpty)
+        if (!t.isLambdaPop && newStack.isNotEmpty) {
+          newStack.removeLast();
+        }
+        if (!t.isLambdaPush && t.pushSymbol.isNotEmpty) {
           newStack.add(t.pushSymbol);
+        }
         final step = SimulationStep.pda(
           currentState: state.id,
           remainingInput: remaining,
@@ -367,9 +370,12 @@ class PDASimulator {
         for (final t in pda.getTransitionsFromStateOnInputAndStack(
             state, a, stack.isNotEmpty ? stack.last : '')) {
           final newStack = List<String>.from(stack);
-          if (!t.isLambdaPop && newStack.isNotEmpty) newStack.removeLast();
-          if (!t.isLambdaPush && t.pushSymbol.isNotEmpty)
+          if (!t.isLambdaPop && newStack.isNotEmpty) {
+            newStack.removeLast();
+          }
+          if (!t.isLambdaPush && t.pushSymbol.isNotEmpty) {
             newStack.add(t.pushSymbol);
+          }
           final newRemaining = remaining.substring(1);
           final step = SimulationStep.pda(
             currentState: state.id,
@@ -398,16 +404,16 @@ class PDASimulator {
   /// and merging obviously equivalent configurations.
   static Result<PDASimplificationSummary> simplify(PDA pda) {
     if (pda.states.isEmpty) {
-      return Failure('Cannot minimize an empty PDA.');
+      return const Failure('Cannot minimize an empty PDA.');
     }
 
     final initialState = pda.initialState;
     if (initialState == null) {
-      return Failure('PDA must define an initial state before minimization.');
+      return const Failure('PDA must define an initial state before minimization.');
     }
 
     if (pda.acceptingStates.isEmpty) {
-      return Failure('PDA must define at least one accepting state.');
+      return const Failure('PDA must define at least one accepting state.');
     }
 
     final reachableStates = <State>{};
@@ -417,7 +423,7 @@ class PDASimulator {
 
     final usefulStates = reachableStates.intersection(productiveStates);
     if (usefulStates.isEmpty) {
-      return Failure(
+      return const Failure(
         'Initial state cannot reach any accepting configuration. '
         'Add transitions that lead to an accepting state before minimization.',
       );
@@ -537,7 +543,7 @@ class PDASimulator {
     final finalAcceptingStates =
         finalStates.where((state) => state.isAccepting).toSet();
     if (finalAcceptingStates.isEmpty) {
-      return Failure(
+      return const Failure(
         'Minimization removed all accepting states. Ensure at least one accepting state is reachable before retrying.',
       );
     }
@@ -545,7 +551,7 @@ class PDASimulator {
     final canonicalInitialId = mergeTargets[initialState.id] ?? initialState.id;
     final finalInitialState = canonicalStates[canonicalInitialId];
     if (finalInitialState == null) {
-      return Failure('Initial state became invalid after simplification.');
+      return const Failure('Initial state became invalid after simplification.');
     }
 
     final recomputedAlphabet = <String>{};
@@ -756,12 +762,12 @@ class PDASimulator {
 
       // Handle empty PDA
       if (pda.states.isEmpty) {
-        return Failure('Cannot analyze empty PDA');
+        return const Failure('Cannot analyze empty PDA');
       }
 
       // Handle PDA with no initial state
       if (pda.initialState == null) {
-        return Failure('PDA must have an initial state');
+        return const Failure('PDA must have an initial state');
       }
 
       // Analyze the PDA

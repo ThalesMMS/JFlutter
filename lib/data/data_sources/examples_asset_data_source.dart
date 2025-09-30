@@ -322,8 +322,7 @@ class ExamplesAssetDataSource {
       );
     }
 
-    final productions = Map<String, dynamic>.from(
-        productionsRaw as Map<dynamic, dynamic>);
+    final productions = Map<String, dynamic>.from(productionsRaw);
     if (productions.isEmpty) {
       return Failure(
         'Example "$exampleName" must include at least one production rule.',
@@ -346,7 +345,7 @@ class ExamplesAssetDataSource {
       }
     }
 
-    return Success<AutomatonModel?>(null);
+    return const Success<AutomatonModel?>(null);
   }
 
   Result<AutomatonModel?> _validatePdaExample(
@@ -396,7 +395,7 @@ class ExamplesAssetDataSource {
       );
     }
 
-    return Success<AutomatonModel?>(null);
+    return const Success<AutomatonModel?>(null);
   }
 
   Result<AutomatonModel?> _validateTmExample(
@@ -446,7 +445,7 @@ class ExamplesAssetDataSource {
       );
     }
 
-    return Success<AutomatonModel?>(null);
+    return const Success<AutomatonModel?>(null);
   }
 
   Result<List<StateModel>> _parseStates(
@@ -498,8 +497,7 @@ class ExamplesAssetDataSource {
     }
 
     final transitions = <String, List<String>>{};
-    final rawMap =
-        Map<dynamic, dynamic>.from(transitionsRaw as Map<dynamic, dynamic>);
+    final rawMap = Map<dynamic, dynamic>.from(transitionsRaw);
     for (final entry in rawMap.entries) {
       final key = entry.key;
       if (key is! String) {
@@ -528,7 +526,7 @@ class ExamplesAssetDataSource {
     bool allowEmpty = true,
   }) {
     if (raw == null) {
-      return Success(<String>[]);
+      return const Success(<String>[]);
     }
 
     if (raw is! List) {

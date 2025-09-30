@@ -101,7 +101,7 @@ class _HelpPageState extends ConsumerState<HelpPage> {
   Widget _buildMobileLayout() {
     return Column(
       children: [
-        Container(
+        SizedBox(
           height: 60,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
@@ -140,7 +140,7 @@ class _HelpPageState extends ConsumerState<HelpPage> {
   Widget _buildDesktopLayout() {
     return Row(
       children: [
-        Container(
+        SizedBox(
           width: 250,
           child: ListView.builder(
             itemCount: _helpSections.length,

@@ -15,12 +15,12 @@ void main() {
     });
 
     test('computes sums safely for partially empty maps', () {
-      final stats = ExamplesLibraryStats(
+      const stats = ExamplesLibraryStats(
         totalExamples: 5,
         examplesByCategory: {ExampleCategory.dfa: 5},
-        examplesByDifficulty: const {},
-        examplesByComplexity: const {ComplexityLevel.low: 3},
-        mostCommonTags: const ['dfa', 'automaton'],
+        examplesByDifficulty: {},
+        examplesByComplexity: {ComplexityLevel.low: 3},
+        mostCommonTags: ['dfa', 'automaton'],
       );
 
       final description = stats.toString();

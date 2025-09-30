@@ -23,7 +23,7 @@ class BaseTraceViewer extends StatefulWidget {
 class _BaseTraceViewerState extends State<BaseTraceViewer> {
   static const int defaultFoldSize = 50;
   bool _folded = true;
-  int _foldSize = defaultFoldSize;
+  final int _foldSize = defaultFoldSize;
 
   @override
   Widget build(BuildContext context) {

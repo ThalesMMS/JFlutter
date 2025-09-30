@@ -21,12 +21,12 @@ class PumpingLemmaProver {
 
       // Handle empty automaton
       if (automaton.states.isEmpty) {
-        return Failure('Cannot prove pumping lemma for empty automaton');
+        return const Failure('Cannot prove pumping lemma for empty automaton');
       }
 
       // Handle automaton with no initial state
       if (automaton.initialState == null) {
-        return Failure('Automaton must have an initial state');
+        return const Failure('Automaton must have an initial state');
       }
 
       // Prove the pumping lemma
@@ -45,24 +45,24 @@ class PumpingLemmaProver {
   /// Validates the input automaton
   static Result<void> _validateInput(FSA automaton) {
     if (automaton.states.isEmpty) {
-      return Failure('Automaton must have at least one state');
+      return const Failure('Automaton must have at least one state');
     }
 
     if (automaton.initialState == null) {
-      return Failure('Automaton must have an initial state');
+      return const Failure('Automaton must have an initial state');
     }
 
     if (!automaton.states.contains(automaton.initialState)) {
-      return Failure('Initial state must be in the states set');
+      return const Failure('Initial state must be in the states set');
     }
 
     for (final acceptingState in automaton.acceptingStates) {
       if (!automaton.states.contains(acceptingState)) {
-        return Failure('Accepting state must be in the states set');
+        return const Failure('Accepting state must be in the states set');
       }
     }
 
-    return Success(null);
+    return const Success(null);
   }
 
   /// Proves the pumping lemma for the automaton
@@ -268,12 +268,12 @@ class PumpingLemmaProver {
 
       // Handle empty automaton
       if (automaton.states.isEmpty) {
-        return Failure('Cannot disprove pumping lemma for empty automaton');
+        return const Failure('Cannot disprove pumping lemma for empty automaton');
       }
 
       // Handle automaton with no initial state
       if (automaton.initialState == null) {
-        return Failure('Automaton must have an initial state');
+        return const Failure('Automaton must have an initial state');
       }
 
       // Disprove the pumping lemma
@@ -440,12 +440,12 @@ class PumpingLemmaProver {
 
       // Handle empty automaton
       if (automaton.states.isEmpty) {
-        return Failure('Cannot test regularity for empty automaton');
+        return const Failure('Cannot test regularity for empty automaton');
       }
 
       // Handle automaton with no initial state
       if (automaton.initialState == null) {
-        return Failure('Automaton must have an initial state');
+        return const Failure('Automaton must have an initial state');
       }
 
       // Test regularity

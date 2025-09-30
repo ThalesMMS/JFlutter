@@ -1,3 +1,5 @@
+import 'package:shared_preferences/shared_preferences.dart' show SharedPreferences;
+
 import '../../core/models/settings_model.dart';
 import '../../core/repositories/settings_repository.dart';
 import '../storage/settings_storage.dart';

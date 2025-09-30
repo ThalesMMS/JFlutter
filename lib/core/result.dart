@@ -39,7 +39,7 @@ sealed class Result<T> {
   /// Executes a function if the result is a success
   Result<T> onSuccess(void Function(T) callback) {
     if (isSuccess) {
-      callback(data!);
+      callback(data as T);
     }
     return this;
   }
@@ -55,6 +55,7 @@ sealed class Result<T> {
 
 /// Success result containing data
 class Success<T> extends Result<T> {
+  @override
   final T data;
 
   const Success(this.data);

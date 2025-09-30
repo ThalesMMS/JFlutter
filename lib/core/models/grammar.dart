@@ -365,14 +365,14 @@ class Grammar {
     required String name,
   }) {
     final now = DateTime.now();
-    final production1 = Production(
+    const production1 = Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['a', 'A'],
       isLambda: false,
       order: 1,
     );
-    final production2 = Production(
+    const production2 = Production(
       id: 'p2',
       leftSide: ['A'],
       rightSide: ['b'],
@@ -399,14 +399,14 @@ class Grammar {
     required String name,
   }) {
     final now = DateTime.now();
-    final production1 = Production(
+    const production1 = Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['a', 'S', 'b'],
       isLambda: false,
       order: 1,
     );
-    final production2 = Production(
+    const production2 = Production(
       id: 'p2',
       leftSide: ['S'],
       rightSide: [],

@@ -34,7 +34,6 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
   automaton_state.State? _selectedState;
   bool _isAddingState = false;
   bool _isAddingTransition = false;
-  automaton_state.State? _transitionStart;
   final FrameThrottler _moveThrottler = FrameThrottler();
 
   @override
@@ -75,6 +74,7 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
                   onStateDeleted: _deleteState,
                   onTransitionDeleted: _deleteTransition,
                   onTransitionEdited: _editTransition,
+                  stateRadius: 30,
                   child: CustomPaint(
                     key: widget.canvasKey,
                     painter: _TMCanvasPainter(
@@ -86,7 +86,6 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
                     ),
                     size: Size.infinite,
                   ),
-                  stateRadius: 30,
                 ),
               ),
             ),

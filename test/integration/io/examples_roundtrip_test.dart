@@ -121,7 +121,7 @@ void main() {
 
       test('Example metadata is properly structured', () {
         // Test that metadata structure is correct without loading actual assets
-        final example = ExampleEntity(
+        const example = ExampleEntity(
           name: 'Test Example',
           description: 'Test description',
           category: 'DFA',
@@ -185,7 +185,7 @@ void main() {
 
     group('Data Structure Tests', () {
       test('ExampleEntity has all required fields', () {
-        final example = ExampleEntity(
+        const example = ExampleEntity(
           name: 'Test Example',
           description: 'Test description',
           category: 'DFA',
@@ -466,12 +466,12 @@ void main() {
       test('Automaton SVG export produces valid SVG structure', () {
         final svg = SvgExporter.exportAutomatonToSvg(
           // Mock automaton entity for testing
-          AutomatonEntity(
+          const AutomatonEntity(
             id: 'test',
             name: 'Test',
-            alphabet: const {'a'},
+            alphabet: {'a'},
             states: [
-              const StateEntity(
+              StateEntity(
                 id: 'q0',
                 name: 'q0',
                 x: 0.0,
@@ -479,7 +479,7 @@ void main() {
                 isInitial: true,
                 isFinal: false,
               ),
-              const StateEntity(
+              StateEntity(
                 id: 'q1',
                 name: 'q1',
                 x: 0.0,
@@ -537,10 +537,10 @@ void main() {
           const GrammarEntity(
             id: 'test',
             name: 'Test Grammar',
-            terminals: const {'a'},
-            nonTerminals: const {'S'},
+            terminals: {'a'},
+            nonTerminals: {'S'},
             startSymbol: 'S',
-            productions: const [],
+            productions: [],
           ),
         );
 
@@ -566,9 +566,9 @@ void main() {
           const AutomatonEntity(
             id: 'test',
             name: 'Test with Options',
-            alphabet: const {'a'},
-            states: const <StateEntity>[],
-            transitions: const <String, List<String>>{},
+            alphabet: {'a'},
+            states: <StateEntity>[],
+            transitions: <String, List<String>>{},
             initialId: 'q0',
             nextId: 0,
             type: AutomatonType.dfa,
@@ -590,9 +590,9 @@ void main() {
           const AutomatonEntity(
             id: 'test',
             name: 'Test',
-            alphabet: const {'a'},
-            states: const <StateEntity>[],
-            transitions: const <String, List<String>>{},
+            alphabet: {'a'},
+            states: <StateEntity>[],
+            transitions: <String, List<String>>{},
             initialId: 'q0',
             nextId: 0,
             type: AutomatonType.dfa,
@@ -606,9 +606,9 @@ void main() {
           const AutomatonEntity(
             id: 'test',
             name: 'Test',
-            alphabet: const {'a'},
-            states: const <StateEntity>[],
-            transitions: const <String, List<String>>{},
+            alphabet: {'a'},
+            states: <StateEntity>[],
+            transitions: <String, List<String>>{},
             initialId: 'q0',
             nextId: 0,
             type: AutomatonType.dfa,
@@ -629,12 +629,12 @@ void main() {
       test('SVG export handles complex automata correctly', () {
         final svg = SvgExporter.exportAutomatonToSvg(
           // Mock automaton entity for testing
-          AutomatonEntity(
+          const AutomatonEntity(
             id: 'test',
             name: 'Test',
-            alphabet: const {'a'},
-            states: const <StateEntity>[],
-            transitions: const <String, List<String>>{},
+            alphabet: {'a'},
+            states: <StateEntity>[],
+            transitions: <String, List<String>>{},
             initialId: 'q0',
             nextId: 0,
             type: AutomatonType.nfa,
@@ -659,9 +659,9 @@ void main() {
           const AutomatonEntity(
             id: 'test',
             name: 'Test',
-            alphabet: const {'a'},
-            states: const <StateEntity>[],
-            transitions: const <String, List<String>>{},
+            alphabet: {'a'},
+            states: <StateEntity>[],
+            transitions: <String, List<String>>{},
             initialId: 'q0',
             nextId: 0,
             type: AutomatonType.dfa,
@@ -680,9 +680,9 @@ void main() {
           const AutomatonEntity(
             id: 'test',
             name: 'Test',
-            alphabet: const {'a'},
-            states: const <StateEntity>[],
-            transitions: const <String, List<String>>{},
+            alphabet: {'a'},
+            states: <StateEntity>[],
+            transitions: <String, List<String>>{},
             initialId: 'q0',
             nextId: 0,
             type: AutomatonType.dfa,
@@ -700,9 +700,9 @@ void main() {
           const AutomatonEntity(
             id: 'test',
             name: 'Test',
-            alphabet: const {'a'},
-            states: const <StateEntity>[],
-            transitions: const <String, List<String>>{},
+            alphabet: {'a'},
+            states: <StateEntity>[],
+            transitions: <String, List<String>>{},
             initialId: 'q0',
             nextId: 0,
             type: AutomatonType.dfa,

@@ -237,7 +237,7 @@ class DFAOperations {
       final visited = <String, State>{};
       final transitions = <FSATransition>{};
 
-      State _createState(State first, State second, {required bool isInitial}) {
+      State createState(State first, State second, {required bool isInitial}) {
         final isAccepting = acceptancePredicate(
           completedA.acceptingStates.contains(first),
           completedB.acceptingStates.contains(second),
@@ -253,19 +253,19 @@ class DFAOperations {
         return state;
       }
 
-      State _getOrCreate(State first, State second, {required bool isInitial}) {
+      State getOrCreate(State first, State second, {required bool isInitial}) {
         final key = '${first.id}|${second.id}';
         final existing = visited[key];
         if (existing != null) {
           return existing;
         }
-        final created = _createState(first, second, isInitial: isInitial);
+        final created = createState(first, second, isInitial: isInitial);
         visited[key] = created;
         queue.add((first, second));
         return created;
       }
 
-      State _nextState(FSA dfa, State state, String symbol) {
+      State nextState(FSA dfa, State state, String symbol) {
         final transitionsForSymbol = dfa
             .getTransitionsFromStateOnSymbol(state, symbol)
             .whereType<FSATransition>()
@@ -277,7 +277,7 @@ class DFAOperations {
         return transitionsForSymbol.first.toState;
       }
 
-      final initialState = _getOrCreate(
+      final initialState = getOrCreate(
         completedA.initialState!,
         completedB.initialState!,
         isInitial: true,
@@ -289,9 +289,9 @@ class DFAOperations {
         final currentState = visited[currentKey]!;
 
         for (final symbol in combinedAlphabet) {
-          final nextA = _nextState(completedA, stateA, symbol);
-          final nextB = _nextState(completedB, stateB, symbol);
-          final targetState = _getOrCreate(nextA, nextB, isInitial: false);
+          final nextA = nextState(completedA, stateA, symbol);
+          final nextB = nextState(completedB, stateB, symbol);
+          final targetState = getOrCreate(nextA, nextB, isInitial: false);
           transitions.add(FSATransition.deterministic(
             id: 't_${currentState.id}_${symbol}_${targetState.id}',
             fromState: currentState,

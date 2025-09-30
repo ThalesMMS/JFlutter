@@ -256,7 +256,7 @@ class ExamplesLibraryStats {
   });
 
   factory ExamplesLibraryStats.empty() {
-    return ExamplesLibraryStats(
+    return const ExamplesLibraryStats(
       totalExamples: 0,
       examplesByCategory: <ExampleCategory, int>{},
       examplesByDifficulty: <DifficultyLevel, int>{},

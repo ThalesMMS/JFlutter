@@ -13,7 +13,7 @@ void main() {
       dataSource = ExamplesAssetDataSource();
     });
 
-    ExampleMetadata _metadataFor({
+    ExampleMetadata metadataFor({
       required ExampleCategory category,
       required String fileName,
     }) {
@@ -28,8 +28,8 @@ void main() {
       );
     }
 
-    Map<String, dynamic> _loadExample(String fileName) {
-      final file = File('jflutter_js/examples/' + fileName);
+    Map<String, dynamic> loadExample(String fileName) {
+      final file = File('jflutter_js/examples/$fileName');
       final jsonString = file.readAsStringSync();
       final decoded = jsonDecode(jsonString);
       expect(decoded, isA<Map<String, dynamic>>(),
@@ -38,9 +38,9 @@ void main() {
     }
 
     test('Returns failure when DFA example is missing states', () {
-      final json = _loadExample('afd_ends_with_a.json');
+      final json = loadExample('afd_ends_with_a.json');
       final metadata =
-          _metadataFor(category: ExampleCategory.dfa, fileName: 'afd_ends_with_a.json');
+          metadataFor(category: ExampleCategory.dfa, fileName: 'afd_ends_with_a.json');
 
       json.remove('states');
 
@@ -55,8 +55,8 @@ void main() {
     });
 
     test('Validates CFG example without producing an automaton model', () {
-      final json = _loadExample('glc_balanced_parentheses.json');
-      final metadata = _metadataFor(
+      final json = loadExample('glc_balanced_parentheses.json');
+      final metadata = metadataFor(
         category: ExampleCategory.cfg,
         fileName: 'glc_balanced_parentheses.json',
       );
@@ -72,8 +72,8 @@ void main() {
     });
 
     test('Validates PDA example structure', () {
-      final json = _loadExample('apda_palindrome.json');
-      final metadata = _metadataFor(
+      final json = loadExample('apda_palindrome.json');
+      final metadata = metadataFor(
         category: ExampleCategory.pda,
         fileName: 'apda_palindrome.json',
       );
@@ -89,8 +89,8 @@ void main() {
     });
 
     test('Validates TM example structure', () {
-      final json = _loadExample('tm_binary_to_unary.json');
-      final metadata = _metadataFor(
+      final json = loadExample('tm_binary_to_unary.json');
+      final metadata = metadataFor(
         category: ExampleCategory.tm,
         fileName: 'tm_binary_to_unary.json',
       );

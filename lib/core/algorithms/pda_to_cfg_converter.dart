@@ -8,15 +8,15 @@ class PDAtoCFGConverter {
   /// Converts the provided [pda] into a CFG description.
   static Result<String> convert(PDA pda) {
     if (pda.states.isEmpty) {
-      return Failure('Cannot convert an empty PDA to a grammar.');
+      return const Failure('Cannot convert an empty PDA to a grammar.');
     }
 
     if (pda.initialState == null) {
-      return Failure('PDA must define an initial state before conversion.');
+      return const Failure('PDA must define an initial state before conversion.');
     }
 
     if (pda.acceptingStates.isEmpty) {
-      return Failure(
+      return const Failure(
           'PDA must have at least one accepting state for conversion.');
     }
 
@@ -44,7 +44,7 @@ class PDAtoCFGConverter {
     }
 
     if (buffer.isEmpty) {
-      return Failure('No productions could be generated for this PDA.');
+      return const Failure('No productions could be generated for this PDA.');
     }
 
     return Success(buffer.toString());
@@ -71,12 +71,12 @@ class PDAtoCFGConverter {
     if (push == 'λ') {
       // When nothing new is pushed onto the stack we can stay in the target state
       buffer.writeln(
-        '  [${from}, $pop, ${to}] → $input',
+        '  [$from, $pop, $to] → $input',
       );
     } else {
       for (final target in pda.states) {
         buffer.writeln(
-          '  [${from}, $pop, ${target.label}] → $input [${to}, $push, ${target.label}]',
+          '  [$from, $pop, ${target.label}] → $input [$to, $push, ${target.label}]',
         );
       }
     }

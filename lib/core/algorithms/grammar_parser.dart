@@ -31,12 +31,12 @@ class GrammarParser {
 
       // Handle empty grammar
       if (grammar.productions.isEmpty) {
-        return Failure('Cannot parse with empty grammar');
+        return const Failure('Cannot parse with empty grammar');
       }
 
       // Handle grammar with no start symbol
       if (grammar.startSymbol.isEmpty) {
-        return Failure('Grammar must have a start symbol');
+        return const Failure('Grammar must have a start symbol');
       }
 
       // Parse the string
@@ -62,15 +62,15 @@ class GrammarParser {
   /// Validates the input grammar and string
   static Result<void> _validateInput(Grammar grammar, String inputString) {
     if (grammar.productions.isEmpty) {
-      return Failure('Grammar must have at least one production');
+      return const Failure('Grammar must have at least one production');
     }
 
     if (grammar.startSymbol.isEmpty) {
-      return Failure('Grammar must have a start symbol');
+      return const Failure('Grammar must have a start symbol');
     }
 
     if (!grammar.nonTerminals.contains(grammar.startSymbol)) {
-      return Failure('Start symbol must be a non-terminal');
+      return const Failure('Start symbol must be a non-terminal');
     }
 
     // Validate input string symbols
@@ -81,7 +81,7 @@ class GrammarParser {
       }
     }
 
-    return Success(null);
+    return const Success(null);
   }
 
   /// Parses the string using the grammar
@@ -302,7 +302,7 @@ class GrammarParser {
         // Break down longer productions (simplified)
         var currentLeft = production.leftSide;
         for (int i = 0; i < production.rightSide.length - 1; i++) {
-          final newNonTerminal = '${currentLeft}_${i}';
+          final newNonTerminal = '${currentLeft}_$i';
           if (i == production.rightSide.length - 2) {
             productions.add(Production(
               id: 'p_cnf_${productions.length}',
@@ -548,7 +548,7 @@ class GrammarParser {
       if (production.leftSide.isNotEmpty &&
           production.leftSide.first == grammar.startSymbol) {
         table['0']!['\$'] =
-            ParseAction(type: ParseActionType.accept, stateNumber: 0);
+            const ParseAction(type: ParseActionType.accept, stateNumber: 0);
       }
     }
 

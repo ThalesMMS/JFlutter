@@ -170,14 +170,14 @@ class _HomePageState extends ConsumerState<HomePage> {
       case 0: // FSA
         return FloatingActionButton(
           onPressed: () => _createNewAutomaton(context),
-          child: const Icon(Icons.add),
           tooltip: 'Create New Automaton',
+          child: const Icon(Icons.add),
         );
       case 1: // Grammar
         return FloatingActionButton(
           onPressed: () => _createNewGrammar(context),
-          child: const Icon(Icons.add),
           tooltip: 'Create New Grammar',
+          child: const Icon(Icons.add),
         );
       default:
         return null;

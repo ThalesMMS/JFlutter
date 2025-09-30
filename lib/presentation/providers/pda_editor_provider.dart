@@ -117,8 +117,8 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
     for (final transition in transitions) {
       final key = [
         transition.fromState.id,
-        transition.isLambdaInput ? 'λ' : transition.inputSymbol,
-        transition.isLambdaPop ? 'λ' : transition.popSymbol,
+        if (transition.isLambdaInput) 'λ' else transition.inputSymbol,
+        if (transition.isLambdaPop) 'λ' else transition.popSymbol,
       ].join('|');
 
       grouped.putIfAbsent(key, () => []).add(transition);

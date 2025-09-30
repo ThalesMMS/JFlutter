@@ -32,7 +32,6 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
   automaton_state.State? _selectedState;
   bool _isAddingState = false;
   bool _isAddingTransition = false;
-  automaton_state.State? _transitionStart;
   final FrameThrottler _moveThrottler = FrameThrottler();
 
   @override
@@ -818,7 +817,7 @@ class _PDACanvasPainter extends CustomPainter {
     final path = Path()..addArc(rect, startAngle, sweepAngle);
     canvas.drawPath(path, paint);
 
-    final endAngle = startAngle + sweepAngle;
+    const endAngle = startAngle + sweepAngle;
     final arrowPoint = Offset(
       rect.center.dx + rect.width / 2 * math.cos(endAngle),
       rect.center.dy + rect.height / 2 * math.sin(endAngle),

@@ -72,8 +72,9 @@ class CFGToolkit {
         // both must be nonterminals
         final b = p.rightSide[0];
         final c = p.rightSide[1];
-        if (!g.nonterminals.contains(b) || !g.nonterminals.contains(c))
+        if (!g.nonterminals.contains(b) || !g.nonterminals.contains(c)) {
           return false;
+        }
       } else {
         return false;
       }
@@ -108,7 +109,7 @@ class CFGToolkit {
           }
         } else {
           newProductions.add(Production(
-            id: '${p.id}_nl_${mask}',
+            id: '${p.id}_nl_$mask',
             leftSide: p.leftSide,
             rightSide: newRhs,
           ));
@@ -119,7 +120,7 @@ class CFGToolkit {
   }
 
   static Grammar _removeUnitProductions(Grammar g) {
-    var prods = Set<Production>.from(g.productions);
+    final prods = Set<Production>.from(g.productions);
     bool changed = true;
     while (changed) {
       changed = false;
@@ -177,7 +178,7 @@ class CFGToolkit {
       while (rhs.length > 2) {
         final n = 'N${fresh++}';
         prods.add(Production(
-            id: '${p.id}_b_${fresh}',
+            id: '${p.id}_b_$fresh',
             leftSide: [left],
             rightSide: [rhs.removeAt(0), n]));
         left = n;

@@ -155,7 +155,7 @@ class NFAToDFAConverter {
 
     // Process each state set
     int stateCounter = 1;
-    int maxStates = 1000; // Performance safeguard
+    const int maxStates = 1000; // Performance safeguard
     while (queue.isNotEmpty && stateCounter < maxStates) {
       final currentStateKey = queue.removeAt(0);
       if (processed.contains(currentStateKey)) continue;

@@ -488,7 +488,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       acceptingStates: acceptingStates,
       created: DateTime.now(),
       modified: DateTime.now(),
-      bounds: Rectangle(0, 0, 800, 600),
+      bounds: const Rectangle(0, 0, 800, 600),
     );
   }
 }

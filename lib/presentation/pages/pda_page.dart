@@ -106,7 +106,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
       margin: const EdgeInsets.all(8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -332,7 +332,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
     return Chip(
       key: key,
       label: Text('$label: $value'),
-      backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
     );
   }
 }

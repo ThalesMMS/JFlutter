@@ -194,7 +194,7 @@ extension ResultHandlerExtension<T> on Result<T> {
       if (successMessage != null) {
         ErrorHandler.showSuccess(context, successMessage);
       }
-      onSuccess?.call(data!);
+      onSuccess?.call(data as T);
     } else {
       final errorMessage =
           errorPrefix != null ? '$errorPrefix: $error' : error!;

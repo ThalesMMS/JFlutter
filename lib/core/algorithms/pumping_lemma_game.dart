@@ -24,12 +24,12 @@ class PumpingLemmaGame {
 
       // Handle empty automaton
       if (automaton.states.isEmpty) {
-        return Failure('Cannot create game with empty automaton');
+        return const Failure('Cannot create game with empty automaton');
       }
 
       // Handle automaton with no initial state
       if (automaton.initialState == null) {
-        return Failure('Automaton must have an initial state');
+        return const Failure('Automaton must have an initial state');
       }
 
       // Create the game
@@ -45,24 +45,24 @@ class PumpingLemmaGame {
   /// Validates the input automaton
   static Result<void> _validateInput(FSA automaton) {
     if (automaton.states.isEmpty) {
-      return Failure('Automaton must have at least one state');
+      return const Failure('Automaton must have at least one state');
     }
 
     if (automaton.initialState == null) {
-      return Failure('Automaton must have an initial state');
+      return const Failure('Automaton must have an initial state');
     }
 
     if (!automaton.states.contains(automaton.initialState)) {
-      return Failure('Initial state must be in the states set');
+      return const Failure('Initial state must be in the states set');
     }
 
     for (final acceptingState in automaton.acceptingStates) {
       if (!automaton.states.contains(acceptingState)) {
-        return Failure('Accepting state must be in the states set');
+        return const Failure('Accepting state must be in the states set');
       }
     }
 
-    return Success(null);
+    return const Success(null);
   }
 
   /// Creates the game
@@ -252,18 +252,18 @@ class PumpingLemmaGame {
     PumpingAttempt attempt,
   ) {
     if (attempt.x == null || attempt.y == null || attempt.z == null) {
-      return Failure('Attempt must have x, y, and z components');
+      return const Failure('Attempt must have x, y, and z components');
     }
 
     if (attempt.y!.isEmpty) {
-      return Failure('y component cannot be empty');
+      return const Failure('y component cannot be empty');
     }
 
     if (attempt.x!.length + attempt.y!.length > game.pumpingLength) {
-      return Failure('|xy| must be <= pumping length');
+      return const Failure('|xy| must be <= pumping length');
     }
 
-    return Success(null);
+    return const Success(null);
   }
 
   /// Validates the attempt

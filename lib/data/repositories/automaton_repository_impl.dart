@@ -70,7 +70,7 @@ class AutomatonRepositoryImpl implements AutomatonRepository {
         return Failure(result.error!);
       }
 
-      return Success(true);
+      return const Success(true);
     } catch (e) {
       return Failure('Failed to delete automaton: $e');
     }

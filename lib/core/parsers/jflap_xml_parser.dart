@@ -12,13 +12,13 @@ class JFLAPXMLParser {
 
       // Verificar se é um arquivo JFLAP válido
       if (root.name.local != 'structure') {
-        return Failure('Arquivo não é um formato JFLAP válido');
+        return const Failure('Arquivo não é um formato JFLAP válido');
       }
 
       // Obter o tipo do autômato
       final typeElement = root.findElements('type').firstOrNull;
       if (typeElement == null) {
-        return Failure('Tipo de autômato não especificado');
+        return const Failure('Tipo de autômato não especificado');
       }
 
       final type = typeElement.innerText.trim();

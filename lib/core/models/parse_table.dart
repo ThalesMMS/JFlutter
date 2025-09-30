@@ -374,7 +374,7 @@ class ParseAction {
 
   /// Creates an accept action
   factory ParseAction.accept() {
-    return ParseAction(
+    return const ParseAction(
       type: ParseActionType.accept,
     );
   }

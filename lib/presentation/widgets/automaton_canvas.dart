@@ -141,47 +141,6 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
     );
   }
 
-  void _selectStateAt(Offset position) {
-    automaton_state.State? foundState;
-    for (final state in _states.reversed) {
-      if (_isPointInState(position, state)) {
-        foundState = state;
-        break;
-      }
-    }
-
-    setState(() {
-      _selectedState = foundState;
-    });
-  }
-
-  void _handleTransitionTap(Offset position) {
-    if (_transitionStart == null) {
-      // Start transition
-      for (final state in _states.reversed) {
-        if (_isPointInState(position, state)) {
-          setState(() {
-            _transitionStart = state;
-            _transitionPreviewPosition = position;
-          });
-          break;
-        }
-      }
-    } else {
-      // End transition
-      for (final state in _states.reversed) {
-        if (_isPointInState(position, state) && state != _transitionStart) {
-          _addTransition(_transitionStart!, state);
-          break;
-        }
-      }
-      setState(() {
-        _transitionStart = null;
-        _isAddingTransition = false;
-        _transitionPreviewPosition = null;
-      });
-    }
-  }
 
   void _updateTransitionPreview(Offset? position) {
     if (_transitionStart == null) {
@@ -203,30 +162,6 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
     });
   }
 
-  Future<void> _addTransition(
-    automaton_state.State from,
-    automaton_state.State to,
-  ) async {
-    final symbolInput = await _showSymbolDialog();
-    if (symbolInput == null) {
-      return;
-    }
-
-    final transition = FSATransition(
-      id: 't${_transitions.length + 1}',
-      fromState: from,
-      toState: to,
-      label: symbolInput.label,
-      inputSymbols: symbolInput.inputSymbols,
-      lambdaSymbol: symbolInput.lambdaSymbol,
-    );
-
-    setState(() {
-      _transitions.add(transition);
-    });
-
-    _notifyAutomatonChanged();
-  }
 
   Future<_TransitionSymbolInput?> _showSymbolDialog(
       {FSATransition? transition}) async {
@@ -301,11 +236,6 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
     _notifyAutomatonChanged();
   }
 
-  bool _isPointInState(Offset point, automaton_state.State state) {
-    final distance =
-        (point - Offset(state.position.x, state.position.y)).distance;
-    return distance <= 30; // State radius
-  }
 
   void _notifyAutomatonChanged() {
     if (widget.automaton != null) {
@@ -536,13 +466,12 @@ class AutomatonPainter extends CustomPainter {
 
     // Draw states
     for (final state in states) {
-      _drawState(canvas, state as automaton_state.State, paint);
+      _drawState(canvas, state, paint);
     }
 
     // Draw transition preview if in progress
     if (transitionStart != null) {
-      _drawTransitionPreview(
-          canvas, transitionStart! as automaton_state.State, paint);
+      _drawTransitionPreview(canvas, transitionStart!, paint);
     }
   }
 
@@ -1022,7 +951,7 @@ class _TransitionSymbolInput {
         (parts.first == 'ε' ||
             parts.first.toLowerCase() == 'epsilon' ||
             parts.first.toLowerCase() == 'lambda')) {
-      return _TransitionSymbolInput(
+      return const _TransitionSymbolInput(
         inputSymbols: {},
         lambdaSymbol: 'ε',
         label: 'ε',

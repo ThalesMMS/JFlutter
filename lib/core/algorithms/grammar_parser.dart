@@ -3,6 +3,7 @@ import '../models/production.dart';
 import '../models/parse_table.dart';
 import '../result.dart';
 import 'grammar_parser_simple_recursive.dart';
+import 'grammar_parser_earley.dart';
 
 /// Parses strings using context-free grammars
 enum ParsingStrategyHint { auto, bruteForce, cyk, ll, lr }
@@ -22,9 +23,26 @@ class GrammarParser {
     Duration timeout = const Duration(seconds: 5),
     ParsingStrategyHint strategyHint = ParsingStrategyHint.auto,
   }) {
-    // Use simple recursive descent parser
+    // First, decide acceptance robustly with Earley
+    final earley = EarleyRecognizer(grammar);
+    final accepted = earley.recognizes(inputString, timeout: timeout);
+    if (!accepted) {
+      return Failure('String "$inputString" cannot be derived from grammar');
+    }
+
+    // If accepted, optionally build a derivation using the simple parser (best-effort)
     final parser = SimpleRecursiveDescentParser(grammar);
-    return parser.parse(inputString, timeout: timeout);
+    final rd = parser.parse(inputString, timeout: timeout);
+    if (rd.isSuccess) {
+      return rd;
+    }
+
+    // Fallback: accepted without a derivation trace
+    return Success(ParseResult.success(
+      inputString: inputString,
+      derivations: const <List<String>>[],
+      executionTime: const Duration(),
+    ));
   }
 
   /// Validates the input grammar and string

@@ -95,11 +95,10 @@ class SimpleRecursiveDescentParser {
         // Handle epsilon productions
         if (production.rightSide.isEmpty || production.isLambda) {
           if (inputString.isEmpty) {
-            return [nonTerminal];
+            return [nonTerminal]; // ok: ε "consumes" nothing at the right point
+          } else {
+            continue; // there's input to consume, try another production
           }
-          // For epsilon productions, we need to check if the remaining input can be parsed
-          // This is a special case for productions like S -> ε
-          continue;
         }
         
         // Handle terminal productions
@@ -138,13 +137,24 @@ class SimpleRecursiveDescentParser {
               final middleSymbol = production.rightSide[1];
               final lastSymbol = production.rightSide[2];
               
-              if (inputString.startsWith(firstSymbol) && inputString.endsWith(lastSymbol)) {
-                final innerString = inputString.substring(1, inputString.length - 1);
-                final innerResult = _parseNonTerminal(middleSymbol, innerString, startTime, timeout, depth + 1);
+              // Protection for minimum length
+              if (inputString.length >= firstSymbol.length + lastSymbol.length &&
+                  inputString.startsWith(firstSymbol) &&
+                  inputString.endsWith(lastSymbol)) {
+                final innerString = inputString.substring(
+                  firstSymbol.length,
+                  inputString.length - lastSymbol.length,
+                );
+                final innerResult = _parseNonTerminal(
+                  middleSymbol, innerString, startTime, timeout, depth + 1,
+                );
                 if (innerResult != null) {
                   return [nonTerminal, firstSymbol, ...innerResult, lastSymbol];
                 }
               }
+              
+              // If failed, just try the next production
+              continue;
             }
           }
         }

@@ -28,11 +28,11 @@ sealed class Result<T> {
   /// Maps the result to another type, handling both success and failure
   Result<R> mapOrElse<R>(
     R Function(T) onSuccess,
-    R Function(String) onFailure,
+    String Function(String) onFailure,
   ) {
     return switch (this) {
       Success<T>(data: final data) => Success(onSuccess(data)),
-      Failure<T>(message: final message) => Success(onFailure(message)),
+      Failure<T>(message: final message) => Failure(onFailure(message)),
     };
   }
 

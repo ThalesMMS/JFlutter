@@ -80,6 +80,7 @@ class SimpleRecursiveDescentParser {
     }
     
     
+    
     // If input is empty, check if non-terminal can derive empty string
     if (inputString.isEmpty) {
       if (_canDeriveEmptyString(nonTerminal)) {

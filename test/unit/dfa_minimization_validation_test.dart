@@ -3,6 +3,7 @@ import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/state.dart';
 import 'package:jflutter/core/models/fsa_transition.dart';
 import 'package:jflutter/core/algorithms/dfa_minimizer.dart';
+import 'dart:math' as math;
 import 'package:jflutter/core/algorithms/automaton_simulator.dart';
 import 'package:jflutter/core/result.dart';
 import 'package:vector_math/vector_math_64.dart';
@@ -457,7 +458,7 @@ FSA _createBasicDFA() {
     acceptingStates: {states.firstWhere((s) => s.id == 'q2')},
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: const Rect.fromLTRB(0, 0, 300, 100),
+    bounds: const math.Rectangle(0, 0, 300, 100),
     zoomLevel: 1.0,
     panOffset: Vector2.zero(),
   );
@@ -558,7 +559,7 @@ FSA _createComplexDFA() {
     acceptingStates: {states.firstWhere((s) => s.id == 'q5')},
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: const Rect.fromLTRB(0, 0, 600, 100),
+    bounds: const math.Rectangle(0, 0, 600, 100),
     zoomLevel: 1.0,
     panOffset: Vector2.zero(),
   );
@@ -607,7 +608,7 @@ FSA _createMinimalDFA() {
     acceptingStates: {states.firstWhere((s) => s.id == 'q1')},
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: const Rect.fromLTRB(0, 0, 200, 100),
+    bounds: const math.Rectangle(0, 0, 200, 100),
     zoomLevel: 1.0,
     panOffset: Vector2.zero(),
   );
@@ -656,7 +657,7 @@ FSA _createNoFinalStatesDFA() {
     acceptingStates: {},
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: const Rect.fromLTRB(0, 0, 200, 100),
+    bounds: const math.Rectangle(0, 0, 200, 100),
     zoomLevel: 1.0,
     panOffset: Vector2.zero(),
   );
@@ -783,7 +784,7 @@ FSA _createRedundantStatesDFA() {
     acceptingStates: {states.firstWhere((s) => s.id == 'q7')},
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: const Rect.fromLTRB(0, 0, 800, 100),
+    bounds: const math.Rectangle(0, 0, 800, 100),
     zoomLevel: 1.0,
     panOffset: Vector2.zero(),
   );
@@ -800,7 +801,7 @@ FSA _createEmptyDFA() {
     acceptingStates: {},
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: const Rect.fromLTRB(0, 0, 0, 0),
+    bounds: const math.Rectangle(0, 0, 0, 0),
     zoomLevel: 1.0,
     panOffset: Vector2.zero(),
   );
@@ -822,7 +823,7 @@ FSA _createNoInitialDFA() {
     acceptingStates: {states.firstWhere((s) => s.id == 'q1')},
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: const Rect.fromLTRB(0, 0, 200, 100),
+    bounds: const math.Rectangle(0, 0, 200, 100),
     zoomLevel: 1.0,
     panOffset: Vector2.zero(),
   );

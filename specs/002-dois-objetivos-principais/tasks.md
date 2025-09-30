@@ -57,9 +57,9 @@
 - [x] T017 [P] Escrever testes de UX de erro (import inválido → banner inline com retry)
 
 ## Phase 3.3: Core Implementation (ONLY after tests fail)
-- [ ] T018 [P] Revisar/ajustar algoritmos DFA em `lib/core/algorithms/dfa_operations.dart` conforme desvios identificados
+- [x] T018 [P] Revisar/ajustar algoritmos DFA em `lib/core/algorithms/dfa_operations.dart` conforme desvios identificados
 - [ ] T019 [P] Revisar/ajustar algoritmos NFA em `lib/core/algorithms/automaton_simulator.dart` conforme desvios identificados
-- [ ] T020 [P] Revisar/ajustar algoritmos GLC em `lib/core/algorithms/grammar_parser.dart` conforme desvios identificados
+- [x] T020 [P] Revisar/ajustar algoritmos GLC em `lib/core/algorithms/grammar_parser.dart` conforme desvios identificados
 - [ ] T021 [P] Revisar/ajustar algoritmos TM em `lib/core/algorithms/tm_simulator.dart` conforme desvios identificados
 - [ ] T022 [P] Revisar/ajustar algoritmos REGEX em `lib/core/algorithms/regex_to_nfa_converter.dart` e `fa_to_regex_converter.dart` conforme desvios identificados
 - [ ] T023 [P] Revisar/ajustar algoritmos PDA em `lib/core/algorithms/pda_simulator.dart` conforme desvios identificados

@@ -65,6 +65,15 @@ class AutomatonSimulator {
     bool stepByStep = false,
     Duration timeout = const Duration(seconds: 5),
   }) async {
+    // Route to NFA simulator when nondeterminism or epsilon transitions exist
+    if (automaton.isNondeterministic || automaton.hasEpsilonTransitions) {
+      return await simulateNFA(
+        automaton,
+        inputString,
+        stepByStep: stepByStep,
+        timeout: timeout,
+      );
+    }
     return await simulateDFA(
       automaton,
       inputString,
@@ -74,7 +83,11 @@ class AutomatonSimulator {
   }
 
   /// Validates the input automaton and string
-  static Result<void> _validateInput(FSA automaton, String inputString) {
+  static Result<void> _validateInput(
+    FSA automaton,
+    String inputString, {
+    bool strictAlphabet = true,
+  }) {
     if (automaton.states.isEmpty) {
       return const Failure('Automaton must have at least one state');
     }
@@ -94,10 +107,12 @@ class AutomatonSimulator {
     }
 
     // Validate input string symbols
-    for (int i = 0; i < inputString.length; i++) {
-      final symbol = inputString[i];
-      if (!automaton.alphabet.contains(symbol)) {
-        return Failure('Input string contains invalid symbol: $symbol');
+    if (strictAlphabet) {
+      for (int i = 0; i < inputString.length; i++) {
+        final symbol = inputString[i];
+        if (!automaton.alphabet.contains(symbol)) {
+          return Failure('Input string contains invalid symbol: $symbol');
+        }
       }
     }
 
@@ -232,7 +247,12 @@ class AutomatonSimulator {
       final stopwatch = Stopwatch()..start();
 
       // Validate input
-      final validationResult = _validateInput(nfa, inputString);
+      // For NFAs, don't fail early on symbols outside the alphabet; reject via simulation.
+      final validationResult = _validateInput(
+        nfa,
+        inputString,
+        strictAlphabet: false,
+      );
       if (!validationResult.isSuccess) {
         return Failure(validationResult.error!);
       }
@@ -303,13 +323,11 @@ class AutomatonSimulator {
       final symbol = remainingInput[0];
       remainingInput = remainingInput.substring(1);
 
-      // Find next states
+      // Find next states by symbol, exploring all transitions
       var nextStates = <State>{};
       for (final state in currentStates) {
         final transitions = nfa.getTransitionsFromStateOnSymbol(state, symbol);
-        for (final transition in transitions) {
-          nextStates.add(transition.toState);
-        }
+        nextStates.addAll(transitions.map((t) => t.toState));
       }
 
       // Apply epsilon closure to next states
@@ -343,7 +361,7 @@ class AutomatonSimulator {
 
       currentStates = nextStates;
 
-      // If no next states, reject
+      // If no next states, early reject
       if (currentStates.isEmpty) {
         return SimulationResult.failure(
           inputString: inputString,

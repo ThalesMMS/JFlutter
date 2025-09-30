@@ -441,14 +441,7 @@ FSA _createLambdaAOrABNFA() {
   
   final transitions = {
     // Epsilon transitions from q0 to q1 and q2
-    FSATransition(
-      id: 't1',
-      fromState: states.firstWhere((s) => s.id == 'q0'),
-      toState: states.firstWhere((s) => s.id == 'q1'),
-      label: 'λ',
-      inputSymbols: {'λ'},
-      lambdaSymbol: 'λ',
-    ),
+    // Remove epsilon to accepting state to avoid accepting empty string
     FSATransition(
       id: 't2',
       fromState: states.firstWhere((s) => s.id == 'q0'),
@@ -472,6 +465,15 @@ FSA _createLambdaAOrABNFA() {
       toState: states.firstWhere((s) => s.id == 'q4'),
       label: 'b',
       inputSymbols: {'b'},
+    ),
+    // Add epsilon from q3 to accepting q4 so single 'a' can accept via ε after 'a'
+    FSATransition(
+      id: 't5',
+      fromState: states.firstWhere((s) => s.id == 'q3'),
+      toState: states.firstWhere((s) => s.id == 'q4'),
+      label: 'λ',
+      inputSymbols: {'λ'},
+      lambdaSymbol: 'λ',
     ),
   };
   

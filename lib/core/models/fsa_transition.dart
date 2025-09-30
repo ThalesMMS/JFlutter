@@ -17,16 +17,38 @@ class FSATransition extends Transition {
   }
 
   FSATransition({
-    required super.id,
-    required super.fromState,
-    required super.toState,
-    required super.label,
-    super.controlPoint,
-    super.type,
-    required this.inputSymbols,
+    required String id,
+    required State fromState,
+    required State toState,
+    String? label,
+    Vector2? controlPoint,
+    TransitionType? type,
+    Set<String>? inputSymbols,
     this.lambdaSymbol,
     String? symbol,
-  });
+  })  : inputSymbols = inputSymbols ??
+            (symbol != null ? <String>{symbol} : const <String>{}),
+        super(
+          id: id,
+          fromState: fromState,
+          toState: toState,
+          label: label ??
+              (lambdaSymbol != null
+                  ? (label ?? 'ε')
+                  : (symbol ??
+                      ((inputSymbols != null && inputSymbols.isNotEmpty)
+                          ? inputSymbols.join(',')
+                          : ''))),
+          controlPoint: controlPoint,
+          type: type ??
+              (() {
+                if (lambdaSymbol != null) return TransitionType.epsilon;
+                final count = (inputSymbols ?? (symbol != null ? {symbol} : {})).length;
+                return count <= 1
+                    ? TransitionType.deterministic
+                    : TransitionType.nondeterministic;
+              }()),
+        );
 
   /// Creates a copy of this FSA transition with updated properties
   @override

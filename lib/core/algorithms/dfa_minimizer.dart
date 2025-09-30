@@ -9,7 +9,10 @@ class DFAMinimizer {
   /// Returns true if the provided symbol should be treated as epsilon.
   static bool _isEpsilonSymbol(String s) {
     final normalized = s.trim().toLowerCase();
-    return normalized.isEmpty || normalized == 'ε' || normalized == 'λ' || normalized == 'lambda';
+    return normalized.isEmpty ||
+        normalized == 'ε' ||
+        normalized == 'λ' ||
+        normalized == 'lambda';
   }
 
   /// Minimizes a DFA to an equivalent minimal DFA
@@ -228,11 +231,13 @@ class DFAMinimizer {
         final toState = stateMap[originalTransition.toState]!;
 
         // Check if an equivalent transition already exists (by endpoints and symbol set contents)
-        final exists = newTransitions.any((t) =>
-            t.fromState == fromState &&
-            t.toState == toState &&
-            t.inputSymbols.length == originalTransition.inputSymbols.length &&
-            t.inputSymbols.containsAll(originalTransition.inputSymbols));
+        final exists = newTransitions.any(
+          (t) =>
+              t.fromState == fromState &&
+              t.toState == toState &&
+              t.inputSymbols.length == originalTransition.inputSymbols.length &&
+              t.inputSymbols.containsAll(originalTransition.inputSymbols),
+        );
 
         if (!exists) {
           final newTransition = FSATransition(

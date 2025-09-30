@@ -118,8 +118,7 @@ ${conversionSteps.length > 10 ? '  ... و ${conversionSteps.length - 10} مرح�
       'performanceMetrics': performanceMetrics,
       'memoryUsage': memoryUsage,
       'timingBreakdown': timingBreakdown.map(
-        (k, v) => 
-          MapEntry(k, v.inMilliseconds),
+        (k, v) => MapEntry(k, v.inMilliseconds),
       ),
       'warnings': warnings,
       'recommendations': recommendations,

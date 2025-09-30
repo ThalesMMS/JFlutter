@@ -61,11 +61,11 @@ abstract class Automaton {
     required this.bounds,
     this.zoomLevel = 1.0,
     Vector2? panOffset,
-  })  : states = Set<State>.unmodifiable(states),
-        transitions = Set<Transition>.unmodifiable(transitions),
-        alphabet = Set<String>.unmodifiable(alphabet),
-        acceptingStates = Set<State>.unmodifiable(acceptingStates),
-        panOffset = (panOffset ?? Vector2.zero()).clone();
+  }) : states = Set<State>.unmodifiable(states),
+       transitions = Set<Transition>.unmodifiable(transitions),
+       alphabet = Set<String>.unmodifiable(alphabet),
+       acceptingStates = Set<State>.unmodifiable(acceptingStates),
+       panOffset = (panOffset ?? Vector2.zero()).clone();
 
   /// Creates a copy of this automaton with updated properties
   Automaton copyWith({

@@ -32,8 +32,8 @@ class TM extends Automaton {
     required Set<String> tapeAlphabet,
     this.blankSymbol = 'B',
     this.tapeCount = 1, // Always 1 for single-tape TM
-  })  : tapeAlphabet = Set<String>.unmodifiable(tapeAlphabet),
-        super(type: AutomatonType.tm);
+  }) : tapeAlphabet = Set<String>.unmodifiable(tapeAlphabet),
+       super(type: AutomatonType.tm);
 
   /// Creates a copy of this TM with updated properties
   @override
@@ -106,10 +106,8 @@ class TM extends Automaton {
 
   /// Creates a TM from a JSON representation
   factory TM.fromJson(Map<String, dynamic> json) {
-    final boundsData =
-        (json['bounds'] as Map?)?.cast<String, dynamic>();
-    final panOffsetData =
-        (json['panOffset'] as Map?)?.cast<String, dynamic>();
+    final boundsData = (json['bounds'] as Map?)?.cast<String, dynamic>();
+    final panOffsetData = (json['panOffset'] as Map?)?.cast<String, dynamic>();
 
     return TM(
       id: json['id'] as String,

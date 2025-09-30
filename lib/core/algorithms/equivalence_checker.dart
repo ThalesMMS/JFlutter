@@ -17,20 +17,30 @@ class EquivalenceChecker {
     }
 
     // Convert NFAs to DFAs if necessary
-    final dfaA = a.isDeterministic ? a : (NFAToDFAConverter.convert(a).data ?? a);
-    final dfaB = b.isDeterministic ? b : (NFAToDFAConverter.convert(b).data ?? b);
+    final dfaA = a.isDeterministic
+        ? a
+        : (NFAToDFAConverter.convert(a).data ?? a);
+    final dfaB = b.isDeterministic
+        ? b
+        : (NFAToDFAConverter.convert(b).data ?? b);
 
     // Use shared alphabet (after conversion) and complete both DFAs
     final sharedAlphabet = dfaA.alphabet.union(dfaB.alphabet);
-    final completedA = DFACompleter.complete(dfaA.copyWith(alphabet: sharedAlphabet));
-    final completedB = DFACompleter.complete(dfaB.copyWith(alphabet: sharedAlphabet));
+    final completedA = DFACompleter.complete(
+      dfaA.copyWith(alphabet: sharedAlphabet),
+    );
+    final completedB = DFACompleter.complete(
+      dfaB.copyWith(alphabet: sharedAlphabet),
+    );
 
     final initialA = completedA.initialState!;
     final initialB = completedB.initialState!;
 
     // BFS over product automaton; early-exit on differing acceptance
     final visited = <String>{'${initialA.id},${initialB.id}'};
-    final queue = <List<State>>[[initialA, initialB]];
+    final queue = <List<State>>[
+      [initialA, initialB],
+    ];
 
     while (queue.isNotEmpty) {
       final pair = queue.removeAt(0);
@@ -49,7 +59,8 @@ class EquivalenceChecker {
         final nextA = nextASet.isNotEmpty ? nextASet.first.toState : null;
         final nextB = nextBSet.isNotEmpty ? nextBSet.first.toState : null;
 
-        if (nextA == null || nextB == null) return false; // completion invariant broken
+        if (nextA == null || nextB == null)
+          return false; // completion invariant broken
         final key = '${nextA.id},${nextB.id}';
         if (visited.add(key)) {
           queue.add([nextA, nextB]);

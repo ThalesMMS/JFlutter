@@ -26,30 +26,35 @@ class FSATransition extends Transition {
     Set<String>? inputSymbols,
     this.lambdaSymbol,
     String? symbol,
-  })  : inputSymbols = Set<String>.unmodifiable(
-            (inputSymbols ?? (symbol != null ? <String>{symbol} : const <String>{})).toSet(),
-          ),
-        super(
-          id: id,
-          fromState: fromState,
-          toState: toState,
-          label: label ??
-              (lambdaSymbol != null
-                  ? (label ?? 'ε')
-                  : (symbol ??
-                      ((inputSymbols != null && inputSymbols.isNotEmpty)
-                          ? inputSymbols.join(',')
-                          : ''))),
-          controlPoint: controlPoint,
-          type: type ??
-              (() {
-                if (lambdaSymbol != null) return TransitionType.epsilon;
-                final count = (inputSymbols ?? (symbol != null ? {symbol} : {})).length;
-                return count <= 1
-                    ? TransitionType.deterministic
-                    : TransitionType.nondeterministic;
-              }()),
-        );
+  }) : inputSymbols = Set<String>.unmodifiable(
+         (inputSymbols ??
+                 (symbol != null ? <String>{symbol} : const <String>{}))
+             .toSet(),
+       ),
+       super(
+         id: id,
+         fromState: fromState,
+         toState: toState,
+         label:
+             label ??
+             (lambdaSymbol != null
+                 ? (label ?? 'ε')
+                 : (symbol ??
+                       ((inputSymbols != null && inputSymbols.isNotEmpty)
+                           ? inputSymbols.join(',')
+                           : ''))),
+         controlPoint: controlPoint,
+         type:
+             type ??
+             (() {
+               if (lambdaSymbol != null) return TransitionType.epsilon;
+               final count =
+                   (inputSymbols ?? (symbol != null ? {symbol} : {})).length;
+               return count <= 1
+                   ? TransitionType.deterministic
+                   : TransitionType.nondeterministic;
+             }()),
+       );
 
   /// Creates a copy of this FSA transition with updated properties
   @override
@@ -95,8 +100,8 @@ class FSATransition extends Transition {
 
   /// Creates an FSA transition from a JSON representation
   factory FSATransition.fromJson(Map<String, dynamic> json) {
-    final controlPointData =
-        (json['controlPoint'] as Map?)?.cast<String, dynamic>();
+    final controlPointData = (json['controlPoint'] as Map?)
+        ?.cast<String, dynamic>();
     final controlPointX = (controlPointData?['x'] as num?)?.toDouble() ?? 0.0;
     final controlPointY = (controlPointData?['y'] as num?)?.toDouble() ?? 0.0;
 

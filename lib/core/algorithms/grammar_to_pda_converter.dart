@@ -148,7 +148,7 @@ class GrammarToPDAConverter {
       if (production.leftSide.isNotEmpty) {
         final leftSide = production.leftSide.first; // A
         final rightSide = production.rightSide; // α
-        
+
         // Create transition: (q1, ε, A) → (q1, α^R)
         // Handle both non-empty and empty right sides
         String pushString;
@@ -160,7 +160,7 @@ class GrammarToPDAConverter {
           // The standard CFG-to-PDA construction pushes α^R, but we need to push α
           pushString = rightSide.join('');
         }
-        
+
         transitions.add(
           PDATransition(
             id: 't${transitionId++}',

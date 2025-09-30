@@ -8,10 +8,10 @@ import 'package:vector_math/vector_math_64.dart';
 import 'dart:math' as math;
 
 /// Equivalence Checker Validation Tests against References/automata-main
-/// 
+///
 /// This test suite validates equivalence checking implementation against
 /// reference implementations to ensure behavioral equivalence.
-/// 
+///
 /// Test cases cover:
 /// 1. DFA≡DFA equivalence testing
 /// 2. NFA≡NFA equivalence testing
@@ -30,14 +30,14 @@ void main() {
       // Test Case 1: Equivalent DFAs
       dfa1 = _createDFA1();
       dfa2 = _createDFA2();
-      
+
       // Test Case 2: Equivalent NFAs
       nfa1 = _createNFA1();
       nfa2 = _createNFA2();
-      
+
       // Test Case 3: Equivalent DFA (same as dfa1)
       equivalentDFA = _createDFA1();
-      
+
       // Test Case 4: Non-equivalent DFA
       nonEquivalentDFA = _createNonEquivalentDFA();
     });
@@ -45,55 +45,80 @@ void main() {
     group('DFA Equivalence Tests', () {
       test('Equivalent DFAs should be recognized as equivalent', () {
         final isEquivalent = EquivalenceChecker.areEquivalent(dfa1, dfa2);
-        
-        expect(isEquivalent, true, 
-          reason: 'Equivalent DFAs should be recognized as equivalent');
+
+        expect(
+          isEquivalent,
+          true,
+          reason: 'Equivalent DFAs should be recognized as equivalent',
+        );
       });
 
       test('Same DFA should be equivalent to itself', () {
         final isEquivalent = EquivalenceChecker.areEquivalent(dfa1, dfa1);
-        
-        expect(isEquivalent, true, 
-          reason: 'Same DFA should be equivalent to itself');
+
+        expect(
+          isEquivalent,
+          true,
+          reason: 'Same DFA should be equivalent to itself',
+        );
       });
 
       test('Non-equivalent DFAs should be recognized as non-equivalent', () {
-        final isEquivalent = EquivalenceChecker.areEquivalent(dfa1, nonEquivalentDFA);
-        
-        expect(isEquivalent, false, 
-          reason: 'Non-equivalent DFAs should be recognized as non-equivalent');
+        final isEquivalent = EquivalenceChecker.areEquivalent(
+          dfa1,
+          nonEquivalentDFA,
+        );
+
+        expect(
+          isEquivalent,
+          false,
+          reason: 'Non-equivalent DFAs should be recognized as non-equivalent',
+        );
       });
     });
 
     group('NFA Equivalence Tests', () {
       test('Equivalent NFAs should be recognized as equivalent', () {
         final isEquivalent = EquivalenceChecker.areEquivalent(nfa1, nfa2);
-        
-        expect(isEquivalent, true, 
-          reason: 'Equivalent NFAs should be recognized as equivalent');
+
+        expect(
+          isEquivalent,
+          true,
+          reason: 'Equivalent NFAs should be recognized as equivalent',
+        );
       });
 
       test('Same NFA should be equivalent to itself', () {
         final isEquivalent = EquivalenceChecker.areEquivalent(nfa1, nfa1);
-        
-        expect(isEquivalent, true, 
-          reason: 'Same NFA should be equivalent to itself');
+
+        expect(
+          isEquivalent,
+          true,
+          reason: 'Same NFA should be equivalent to itself',
+        );
       });
     });
 
     group('Cross-Type Equivalence Tests', () {
       test('DFA and NFA with same language should be equivalent', () {
         final isEquivalent = EquivalenceChecker.areEquivalent(dfa1, nfa1);
-        
-        expect(isEquivalent, true, 
-          reason: 'DFA and NFA with same language should be equivalent');
+
+        expect(
+          isEquivalent,
+          true,
+          reason: 'DFA and NFA with same language should be equivalent',
+        );
       });
 
       test('DFA and NFA with different languages should not be equivalent', () {
         final isEquivalent = EquivalenceChecker.areEquivalent(dfa1, nfa2);
-        
-        expect(isEquivalent, false, 
-          reason: 'DFA and NFA with different languages should not be equivalent');
+
+        expect(
+          isEquivalent,
+          false,
+          reason:
+              'DFA and NFA with different languages should not be equivalent',
+        );
       });
     });
 
@@ -101,46 +126,67 @@ void main() {
       test('Empty automata should not be equivalent', () {
         final emptyDFA1 = _createEmptyDFA();
         final emptyDFA2 = _createEmptyDFA();
-        
-        final isEquivalent = EquivalenceChecker.areEquivalent(emptyDFA1, emptyDFA2);
-        
-        expect(isEquivalent, false, 
-          reason: 'Empty automata should not be equivalent');
+
+        final isEquivalent = EquivalenceChecker.areEquivalent(
+          emptyDFA1,
+          emptyDFA2,
+        );
+
+        expect(
+          isEquivalent,
+          false,
+          reason: 'Empty automata should not be equivalent',
+        );
       });
 
       test('Automata with different alphabets should not be equivalent', () {
         final dfaA = _createDFAWithAlphabet({'a', 'b'});
         final dfaB = _createDFAWithAlphabet({'0', '1'});
-        
+
         final isEquivalent = EquivalenceChecker.areEquivalent(dfaA, dfaB);
-        
-        expect(isEquivalent, false, 
-          reason: 'Automata with different alphabets should not be equivalent');
+
+        expect(
+          isEquivalent,
+          false,
+          reason: 'Automata with different alphabets should not be equivalent',
+        );
       });
 
       test('Automata with no initial state should not be equivalent', () {
         final noInitialDFA1 = _createNoInitialDFA();
         final noInitialDFA2 = _createNoInitialDFA();
-        
-        final isEquivalent = EquivalenceChecker.areEquivalent(noInitialDFA1, noInitialDFA2);
-        
-        expect(isEquivalent, false, 
-          reason: 'Automata with no initial state should not be equivalent');
+
+        final isEquivalent = EquivalenceChecker.areEquivalent(
+          noInitialDFA1,
+          noInitialDFA2,
+        );
+
+        expect(
+          isEquivalent,
+          false,
+          reason: 'Automata with no initial state should not be equivalent',
+        );
       });
     });
 
     group('Performance Tests', () {
       test('Equivalence checking should complete within reasonable time', () {
         final stopwatch = Stopwatch()..start();
-        
+
         final isEquivalent = EquivalenceChecker.areEquivalent(dfa1, dfa2);
-        
+
         stopwatch.stop();
-        
-        expect(isEquivalent, true, 
-          reason: 'Equivalent DFAs should be recognized as equivalent');
-        expect(stopwatch.elapsedMilliseconds, lessThan(1000), 
-          reason: 'Equivalence checking should complete within 1 second');
+
+        expect(
+          isEquivalent,
+          true,
+          reason: 'Equivalent DFAs should be recognized as equivalent',
+        );
+        expect(
+          stopwatch.elapsedMilliseconds,
+          lessThan(1000),
+          reason: 'Equivalence checking should complete within 1 second',
+        );
       });
     });
   });
@@ -150,8 +196,20 @@ void main() {
 
 FSA _createDFA1() {
   final states = {
-    State(id: 'q0', label: 'q0', position: Vector2(0, 0), isInitial: true, isAccepting: false),
-    State(id: 'q1', label: 'q1', position: Vector2(100, 0), isInitial: false, isAccepting: true),
+    State(
+      id: 'q0',
+      label: 'q0',
+      position: Vector2(0, 0),
+      isInitial: true,
+      isAccepting: false,
+    ),
+    State(
+      id: 'q1',
+      label: 'q1',
+      position: Vector2(100, 0),
+      isInitial: false,
+      isAccepting: true,
+    ),
   };
 
   final transitions = {
@@ -199,8 +257,20 @@ FSA _createDFA1() {
 
 FSA _createDFA2() {
   final states = {
-    State(id: 'p0', label: 'p0', position: Vector2(0, 0), isInitial: true, isAccepting: false),
-    State(id: 'p1', label: 'p1', position: Vector2(100, 0), isInitial: false, isAccepting: true),
+    State(
+      id: 'p0',
+      label: 'p0',
+      position: Vector2(0, 0),
+      isInitial: true,
+      isAccepting: false,
+    ),
+    State(
+      id: 'p1',
+      label: 'p1',
+      position: Vector2(100, 0),
+      isInitial: false,
+      isAccepting: true,
+    ),
   };
 
   final transitions = {
@@ -248,8 +318,20 @@ FSA _createDFA2() {
 
 FSA _createNFA1() {
   final states = {
-    State(id: 's0', label: 's0', position: Vector2(0, 0), isInitial: true, isAccepting: false),
-    State(id: 's1', label: 's1', position: Vector2(100, 0), isInitial: false, isAccepting: true),
+    State(
+      id: 's0',
+      label: 's0',
+      position: Vector2(0, 0),
+      isInitial: true,
+      isAccepting: false,
+    ),
+    State(
+      id: 's1',
+      label: 's1',
+      position: Vector2(100, 0),
+      isInitial: false,
+      isAccepting: true,
+    ),
   };
 
   final transitions = {
@@ -297,8 +379,20 @@ FSA _createNFA1() {
 
 FSA _createNFA2() {
   final states = {
-    State(id: 't0', label: 't0', position: Vector2(0, 0), isInitial: true, isAccepting: false),
-    State(id: 't1', label: 't1', position: Vector2(100, 0), isInitial: false, isAccepting: true),
+    State(
+      id: 't0',
+      label: 't0',
+      position: Vector2(0, 0),
+      isInitial: true,
+      isAccepting: false,
+    ),
+    State(
+      id: 't1',
+      label: 't1',
+      position: Vector2(100, 0),
+      isInitial: false,
+      isAccepting: true,
+    ),
   };
 
   final transitions = {
@@ -346,8 +440,20 @@ FSA _createNFA2() {
 
 FSA _createNonEquivalentDFA() {
   final states = {
-    State(id: 'r0', label: 'r0', position: Vector2(0, 0), isInitial: true, isAccepting: false),
-    State(id: 'r1', label: 'r1', position: Vector2(100, 0), isInitial: false, isAccepting: true),
+    State(
+      id: 'r0',
+      label: 'r0',
+      position: Vector2(0, 0),
+      isInitial: true,
+      isAccepting: false,
+    ),
+    State(
+      id: 'r1',
+      label: 'r1',
+      position: Vector2(100, 0),
+      isInitial: false,
+      isAccepting: true,
+    ),
   };
 
   final transitions = {
@@ -412,7 +518,13 @@ FSA _createEmptyDFA() {
 
 FSA _createDFAWithAlphabet(Set<String> alphabet) {
   final states = {
-    State(id: 'q0', label: 'q0', position: Vector2(0, 0), isInitial: true, isAccepting: false),
+    State(
+      id: 'q0',
+      label: 'q0',
+      position: Vector2(0, 0),
+      isInitial: true,
+      isAccepting: false,
+    ),
   };
 
   return FSA(
@@ -433,7 +545,13 @@ FSA _createDFAWithAlphabet(Set<String> alphabet) {
 
 FSA _createNoInitialDFA() {
   final states = {
-    State(id: 'q0', label: 'q0', position: Vector2(0, 0), isInitial: false, isAccepting: false),
+    State(
+      id: 'q0',
+      label: 'q0',
+      position: Vector2(0, 0),
+      isInitial: false,
+      isAccepting: false,
+    ),
   };
 
   return FSA(

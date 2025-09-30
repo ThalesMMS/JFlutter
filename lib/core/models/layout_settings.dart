@@ -75,8 +75,8 @@ class LayoutSettings {
   /// Creates layout settings from a JSON representation
   factory LayoutSettings.fromJson(Map<String, dynamic> json) {
     const defaultScheme = ColorScheme.light();
-    final colorSchemeData =
-        (json['colorScheme'] as Map?)?.cast<String, dynamic>();
+    final colorSchemeData = (json['colorScheme'] as Map?)
+        ?.cast<String, dynamic>();
 
     return LayoutSettings(
       nodeRadius: (json['nodeRadius'] as num?)?.toDouble() ?? 20.0,
@@ -273,11 +273,7 @@ class LayoutSettings {
   }
 }
 
-Color _colorFromJson(
-  Map<String, dynamic>? data,
-  String key,
-  Color fallback,
-) {
+Color _colorFromJson(Map<String, dynamic>? data, String key, Color fallback) {
   final value = data?[key];
   if (value is int) {
     return Color(value);

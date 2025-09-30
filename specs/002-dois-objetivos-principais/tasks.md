@@ -90,6 +90,7 @@
 - [ ] T039 [P] Rodar `flutter analyze`, testes e formatadores
 - [ ] T040 [P] Executar quickstart offline e anexar evidências
 - [ ] T041 [P] Atualizar `README`/docs; registrar desvios em `docs/reference-deviations.md`
+- [ ] T046 Documentar no README.md todas as referências e inspirações usadas (JFLAP, automata-main, etc.). Se possível, detalhar a fonte de cada referência e falar o que especificamente foi usado.
 
 ## Dependencies
 - Setup antes de testes; testes falhos antes de implementação

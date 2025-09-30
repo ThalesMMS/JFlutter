@@ -8,8 +8,18 @@ import 'dart:math' as math;
 
 TM _dtmAppendOne() {
   // Language: unary strings of 1s; machine appends one more 1 and accepts.
-  final q0 = State(id: 'q0', label: 'q0', position: Vector2(0, 0), isInitial: true);
-  final qA = State(id: 'qA', label: 'qA', position: Vector2(100, 0), isAccepting: true);
+  final q0 = State(
+    id: 'q0',
+    label: 'q0',
+    position: Vector2(0, 0),
+    isInitial: true,
+  );
+  final qA = State(
+    id: 'qA',
+    label: 'qA',
+    position: Vector2(100, 0),
+    isAccepting: true,
+  );
   final Set<State> states = {q0, qA};
   final alphabet = {'1'};
   final tapeAlphabet = {'1', 'B'};

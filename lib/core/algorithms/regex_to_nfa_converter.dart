@@ -8,8 +8,11 @@ import '../result.dart';
 /// Converts Regular Expressions to Non-deterministic Finite Automata (NFA)
 class RegexToNFAConverter {
   static int _idSeq = 0;
-  static String _newStateId(String prefix) => '${prefix}_${DateTime.now().microsecondsSinceEpoch}_${_idSeq++}';
-  static String _newTransId(String prefix) => '${prefix}_${DateTime.now().microsecondsSinceEpoch}_${_idSeq++}';
+  static String _newStateId(String prefix) =>
+      '${prefix}_${DateTime.now().microsecondsSinceEpoch}_${_idSeq++}';
+  static String _newTransId(String prefix) =>
+      '${prefix}_${DateTime.now().microsecondsSinceEpoch}_${_idSeq++}';
+
   /// Converts a regular expression to an equivalent NFA
   static Result<FSA> convert(String regex, {Set<String>? contextAlphabet}) {
     try {

@@ -5,10 +5,10 @@ import 'package:jflutter/core/algorithms/grammar_parser.dart';
 import 'package:jflutter/core/result.dart';
 
 /// CYK (Cocke-Younger-Kasami) Validation Tests against References/automata-main
-/// 
+///
 /// This test suite validates CYK algorithm implementation against theoretical expectations
 /// and reference implementations to ensure behavioral equivalence.
-/// 
+///
 /// Test cases cover:
 /// 1. CNF parsing (Chomsky Normal Form parsing)
 /// 2. Derivation testing (valid and invalid derivations)
@@ -26,16 +26,16 @@ void main() {
     setUp(() {
       // Test Case 1: Balanced Parentheses Grammar
       balancedParenthesesGrammar = _createBalancedParenthesesGrammar();
-      
+
       // Test Case 2: Palindrome Grammar
       palindromeGrammar = _createPalindromeGrammar();
-      
+
       // Test Case 3: Simple Grammar
       simpleGrammar = _createSimpleGrammar();
-      
+
       // Test Case 4: Complex Grammar
       complexGrammar = _createComplexGrammar();
-      
+
       // Test Case 5: CNF Grammar
       cnfGrammar = _createCNFGrammar();
     });
@@ -43,10 +43,10 @@ void main() {
     group('CNF Parsing Tests', () {
       test('CNF Grammar should parse valid strings', () async {
         final testCases = [
-          'a',       // Single terminal
-          'b',       // Single terminal
-          'ab',      // Two terminals
-          'ba',      // Two terminals
+          'a', // Single terminal
+          'b', // Single terminal
+          'ab', // Two terminals
+          'ba', // Two terminals
         ];
 
         for (final testString in testCases) {
@@ -55,23 +55,30 @@ void main() {
             testString,
             strategyHint: ParsingStrategyHint.cyk,
           );
-          
-          expect(result.isSuccess, true, 
-            reason: 'CYK parsing should succeed for "$testString"');
-          
+
+          expect(
+            result.isSuccess,
+            true,
+            reason: 'CYK parsing should succeed for "$testString"',
+          );
+
           if (result.isSuccess) {
-            expect(result.data!.accepted, true,
-              reason: 'String "$testString" should be accepted by CYK algorithm');
+            expect(
+              result.data!.accepted,
+              true,
+              reason:
+                  'String "$testString" should be accepted by CYK algorithm',
+            );
           }
         }
       });
 
       test('CNF Grammar should reject invalid strings', () async {
         final testCases = [
-          '',        // Empty string
-          'c',       // Invalid terminal
-          'abc',     // Too many terminals
-          'aab',     // Invalid pattern
+          '', // Empty string
+          'c', // Invalid terminal
+          'abc', // Too many terminals
+          'aab', // Invalid pattern
         ];
 
         for (final testString in testCases) {
@@ -80,13 +87,20 @@ void main() {
             testString,
             strategyHint: ParsingStrategyHint.cyk,
           );
-          
-          expect(result.isSuccess, true, 
-            reason: 'CYK parsing should succeed for "$testString"');
-          
+
+          expect(
+            result.isSuccess,
+            true,
+            reason: 'CYK parsing should succeed for "$testString"',
+          );
+
           if (result.isSuccess) {
-            expect(result.data!.accepted, false,
-              reason: 'String "$testString" should be rejected by CYK algorithm');
+            expect(
+              result.data!.accepted,
+              false,
+              reason:
+                  'String "$testString" should be rejected by CYK algorithm',
+            );
           }
         }
       });
@@ -97,77 +111,100 @@ void main() {
           '',
           strategyHint: ParsingStrategyHint.cyk,
         );
-        
+
         expect(result.isSuccess, true);
         if (result.isSuccess) {
-          expect(result.data!.accepted, false,
-            reason: 'Empty string should be rejected by CYK algorithm');
+          expect(
+            result.data!.accepted,
+            false,
+            reason: 'Empty string should be rejected by CYK algorithm',
+          );
         }
       });
     });
 
     group('Derivation Tests', () {
-      test('Balanced Parentheses Grammar should accept valid derivations', () async {
-        final testCases = [
-          '',        // Empty string
-          '()',      // Simple balanced
-          '(())',    // Nested balanced
-          '()()',    // Multiple balanced
-          '((()))',  // Deeply nested
-        ];
+      test(
+        'Balanced Parentheses Grammar should accept valid derivations',
+        () async {
+          final testCases = [
+            '', // Empty string
+            '()', // Simple balanced
+            '(())', // Nested balanced
+            '()()', // Multiple balanced
+            '((()))', // Deeply nested
+          ];
 
-        for (final testString in testCases) {
-          final result = GrammarParser.parse(
-            balancedParenthesesGrammar,
-            testString,
-            strategyHint: ParsingStrategyHint.cyk,
-          );
-          
-          expect(result.isSuccess, true, 
-            reason: 'CYK parsing should succeed for "$testString"');
-          
-          if (result.isSuccess) {
-            expect(result.data!.accepted, true,
-              reason: 'String "$testString" should be accepted by balanced parentheses grammar');
+          for (final testString in testCases) {
+            final result = GrammarParser.parse(
+              balancedParenthesesGrammar,
+              testString,
+              strategyHint: ParsingStrategyHint.cyk,
+            );
+
+            expect(
+              result.isSuccess,
+              true,
+              reason: 'CYK parsing should succeed for "$testString"',
+            );
+
+            if (result.isSuccess) {
+              expect(
+                result.data!.accepted,
+                true,
+                reason:
+                    'String "$testString" should be accepted by balanced parentheses grammar',
+              );
+            }
           }
-        }
-      });
+        },
+      );
 
-      test('Balanced Parentheses Grammar should reject invalid derivations', () async {
-        final testCases = [
-          '(',       // Unmatched opening
-          ')',       // Unmatched closing
-          '())',     // Extra closing
-          '(()',     // Extra opening
-          ')(',      // Wrong order
-        ];
+      test(
+        'Balanced Parentheses Grammar should reject invalid derivations',
+        () async {
+          final testCases = [
+            '(', // Unmatched opening
+            ')', // Unmatched closing
+            '())', // Extra closing
+            '(()', // Extra opening
+            ')(', // Wrong order
+          ];
 
-        for (final testString in testCases) {
-          final result = GrammarParser.parse(
-            balancedParenthesesGrammar,
-            testString,
-            strategyHint: ParsingStrategyHint.cyk,
-          );
-          
-          expect(result.isSuccess, true, 
-            reason: 'CYK parsing should succeed for "$testString"');
-          
-          if (result.isSuccess) {
-            expect(result.data!.accepted, false,
-              reason: 'String "$testString" should be rejected by balanced parentheses grammar');
+          for (final testString in testCases) {
+            final result = GrammarParser.parse(
+              balancedParenthesesGrammar,
+              testString,
+              strategyHint: ParsingStrategyHint.cyk,
+            );
+
+            expect(
+              result.isSuccess,
+              true,
+              reason: 'CYK parsing should succeed for "$testString"',
+            );
+
+            if (result.isSuccess) {
+              expect(
+                result.data!.accepted,
+                false,
+                reason:
+                    'String "$testString" should be rejected by balanced parentheses grammar',
+              );
+            }
           }
-        }
-      });
+        },
+      );
 
       test('Palindrome Grammar should accept palindromes', () async {
         final testCases = [
-          '',        // Empty string
-          'a',       // Single character
-          'b',       // Single character
-          'aa',      // Even length palindrome
-          'bb',      // Even length palindrome
-          'aba',     // Odd length palindrome
-          'bab',     // Odd length palindrome
+          '', // Empty string
+          'a', // Single character
+          'b', // Single character
+          'aa', // Even length palindrome
+          'bb', // Even length palindrome
+          'aba', // Odd length palindrome
+          'bab', // Odd length palindrome
         ];
 
         for (final testString in testCases) {
@@ -176,23 +213,30 @@ void main() {
             testString,
             strategyHint: ParsingStrategyHint.cyk,
           );
-          
-          expect(result.isSuccess, true, 
-            reason: 'CYK parsing should succeed for "$testString"');
-          
+
+          expect(
+            result.isSuccess,
+            true,
+            reason: 'CYK parsing should succeed for "$testString"',
+          );
+
           if (result.isSuccess) {
-            expect(result.data!.accepted, true,
-              reason: 'String "$testString" should be accepted by palindrome grammar');
+            expect(
+              result.data!.accepted,
+              true,
+              reason:
+                  'String "$testString" should be accepted by palindrome grammar',
+            );
           }
         }
       });
 
       test('Palindrome Grammar should reject non-palindromes', () async {
         final testCases = [
-          'ab',      // Not a palindrome
-          'ba',      // Not a palindrome
-          'aab',     // Not a palindrome
-          'bba',     // Not a palindrome
+          'ab', // Not a palindrome
+          'ba', // Not a palindrome
+          'aab', // Not a palindrome
+          'bba', // Not a palindrome
         ];
 
         for (final testString in testCases) {
@@ -201,13 +245,20 @@ void main() {
             testString,
             strategyHint: ParsingStrategyHint.cyk,
           );
-          
-          expect(result.isSuccess, true, 
-            reason: 'CYK parsing should succeed for "$testString"');
-          
+
+          expect(
+            result.isSuccess,
+            true,
+            reason: 'CYK parsing should succeed for "$testString"',
+          );
+
           if (result.isSuccess) {
-            expect(result.data!.accepted, false,
-              reason: 'String "$testString" should be rejected by palindrome grammar');
+            expect(
+              result.data!.accepted,
+              false,
+              reason:
+                  'String "$testString" should be rejected by palindrome grammar',
+            );
           }
         }
       });
@@ -216,57 +267,66 @@ void main() {
     group('CYK Algorithm Correctness Tests', () {
       test('CYK should produce same results as other parsers', () async {
         final testString = '()';
-        
+
         final cykResult = GrammarParser.parse(
           balancedParenthesesGrammar,
           testString,
           strategyHint: ParsingStrategyHint.cyk,
         );
-        
+
         final autoResult = GrammarParser.parse(
           balancedParenthesesGrammar,
           testString,
           strategyHint: ParsingStrategyHint.auto,
         );
-        
+
         expect(cykResult.isSuccess, true);
         expect(autoResult.isSuccess, true);
-        
+
         if (cykResult.isSuccess && autoResult.isSuccess) {
-          expect(cykResult.data!.accepted, autoResult.data!.accepted,
-            reason: 'CYK should produce same results as other parsers');
+          expect(
+            cykResult.data!.accepted,
+            autoResult.data!.accepted,
+            reason: 'CYK should produce same results as other parsers',
+          );
         }
       });
 
       test('CYK should handle complex nested structures', () async {
         final testString = '((()))';
-        
+
         final result = GrammarParser.parse(
           balancedParenthesesGrammar,
           testString,
           strategyHint: ParsingStrategyHint.cyk,
         );
-        
+
         expect(result.isSuccess, true);
         if (result.isSuccess) {
-          expect(result.data!.accepted, true,
-            reason: 'CYK should handle complex nested structures');
+          expect(
+            result.data!.accepted,
+            true,
+            reason: 'CYK should handle complex nested structures',
+          );
         }
       });
 
       test('CYK should handle long strings efficiently', () async {
         final testString = '()' * 10; // 20 characters
-        
+
         final result = GrammarParser.parse(
           balancedParenthesesGrammar,
           testString,
           strategyHint: ParsingStrategyHint.cyk,
         );
-        
+
         expect(result.isSuccess, true);
         if (result.isSuccess) {
-          expect(result.data!.accepted, true,
-            reason: 'CYK should handle long strings efficiently');
+          expect(
+            result.data!.accepted,
+            true,
+            reason: 'CYK should handle long strings efficiently',
+          );
         }
       });
     });
@@ -275,34 +335,40 @@ void main() {
       test('Grammar should convert to CNF correctly', () async {
         // Test that the grammar can be converted to CNF and still work
         final testString = 'ab';
-        
+
         final result = GrammarParser.parse(
           cnfGrammar,
           testString,
           strategyHint: ParsingStrategyHint.cyk,
         );
-        
+
         expect(result.isSuccess, true);
         if (result.isSuccess) {
-          expect(result.data!.accepted, true,
-            reason: 'CNF grammar should work with CYK algorithm');
+          expect(
+            result.data!.accepted,
+            true,
+            reason: 'CNF grammar should work with CYK algorithm',
+          );
         }
       });
 
       test('Non-CNF Grammar should be converted automatically', () async {
         // Test that non-CNF grammar gets converted and works
         final testString = '()';
-        
+
         final result = GrammarParser.parse(
           balancedParenthesesGrammar,
           testString,
           strategyHint: ParsingStrategyHint.cyk,
         );
-        
+
         expect(result.isSuccess, true);
         if (result.isSuccess) {
-          expect(result.data!.accepted, true,
-            reason: 'Non-CNF grammar should be converted and work with CYK');
+          expect(
+            result.data!.accepted,
+            true,
+            reason: 'Non-CNF grammar should be converted and work with CYK',
+          );
         }
       });
     });
@@ -310,45 +376,54 @@ void main() {
     group('Performance Tests', () {
       test('CYK should handle complex computations efficiently', () async {
         final testString = '((()))()((()))';
-        
+
         final result = GrammarParser.parse(
           balancedParenthesesGrammar,
           testString,
           strategyHint: ParsingStrategyHint.cyk,
         );
-        
+
         expect(result.isSuccess, true);
         if (result.isSuccess) {
-          expect(result.data!.accepted, true,
-            reason: 'CYK should complete complex computations');
-          
+          expect(
+            result.data!.accepted,
+            true,
+            reason: 'CYK should complete complex computations',
+          );
+
           // Check execution time is reasonable
-          expect(result.data!.executionTime.inSeconds, lessThan(5),
-            reason: 'CYK should complete within reasonable time');
+          expect(
+            result.data!.executionTime.inSeconds,
+            lessThan(5),
+            reason: 'CYK should complete within reasonable time',
+          );
         }
       });
 
       test('CYK should handle multiple parsing strategies', () async {
         final testString = 'ab';
-        
+
         final cykResult = GrammarParser.parse(
           cnfGrammar,
           testString,
           strategyHint: ParsingStrategyHint.cyk,
         );
-        
+
         final autoResult = GrammarParser.parse(
           cnfGrammar,
           testString,
           strategyHint: ParsingStrategyHint.auto,
         );
-        
+
         expect(cykResult.isSuccess, true);
         expect(autoResult.isSuccess, true);
-        
+
         if (cykResult.isSuccess && autoResult.isSuccess) {
-          expect(cykResult.data!.accepted, autoResult.data!.accepted,
-            reason: 'CYK should be consistent with other parsing strategies');
+          expect(
+            cykResult.data!.accepted,
+            autoResult.data!.accepted,
+            reason: 'CYK should be consistent with other parsing strategies',
+          );
         }
       });
     });
@@ -356,46 +431,55 @@ void main() {
     group('Edge Cases Tests', () {
       test('CYK should handle empty grammar gracefully', () async {
         final emptyGrammar = _createEmptyGrammar();
-        
+
         final result = GrammarParser.parse(
           emptyGrammar,
           'a',
           strategyHint: ParsingStrategyHint.cyk,
         );
-        
-        expect(result.isSuccess, false, 
-          reason: 'Empty grammar should fail gracefully');
+
+        expect(
+          result.isSuccess,
+          false,
+          reason: 'Empty grammar should fail gracefully',
+        );
       });
 
       test('CYK should handle single production grammar', () async {
         final singleProductionGrammar = _createSingleProductionGrammar();
-        
+
         final result = GrammarParser.parse(
           singleProductionGrammar,
           'a',
           strategyHint: ParsingStrategyHint.cyk,
         );
-        
+
         expect(result.isSuccess, true);
         if (result.isSuccess) {
-          expect(result.data!.accepted, true,
-            reason: 'Single production grammar should work with CYK');
+          expect(
+            result.data!.accepted,
+            true,
+            reason: 'Single production grammar should work with CYK',
+          );
         }
       });
 
       test('CYK should handle grammar with lambda productions', () async {
         final lambdaGrammar = _createLambdaGrammar();
-        
+
         final result = GrammarParser.parse(
           lambdaGrammar,
           '',
           strategyHint: ParsingStrategyHint.cyk,
         );
-        
+
         expect(result.isSuccess, true);
         if (result.isSuccess) {
-          expect(result.data!.accepted, true,
-            reason: 'Lambda grammar should accept empty string');
+          expect(
+            result.data!.accepted,
+            true,
+            reason: 'Lambda grammar should accept empty string',
+          );
         }
       });
     });
@@ -404,39 +488,49 @@ void main() {
       test('CYK should satisfy time complexity O(n³)', () async {
         // Test with strings of different lengths to verify time complexity
         final testStrings = ['()', '()()', '()()()', '()()()()'];
-        
+
         for (final testString in testStrings) {
           final result = GrammarParser.parse(
             balancedParenthesesGrammar,
             testString,
             strategyHint: ParsingStrategyHint.cyk,
           );
-          
-          expect(result.isSuccess, true, 
-            reason: 'CYK should handle string of length ${testString.length}');
-          
+
+          expect(
+            result.isSuccess,
+            true,
+            reason: 'CYK should handle string of length ${testString.length}',
+          );
+
           if (result.isSuccess) {
-            expect(result.data!.executionTime.inSeconds, lessThan(1),
-              reason: 'CYK should complete within reasonable time for length ${testString.length}');
+            expect(
+              result.data!.executionTime.inSeconds,
+              lessThan(1),
+              reason:
+                  'CYK should complete within reasonable time for length ${testString.length}',
+            );
           }
         }
       });
 
       test('CYK should handle all possible substrings correctly', () async {
         final testString = 'ab';
-        
+
         // Test all possible substrings
         final substrings = ['', 'a', 'b', 'ab'];
-        
+
         for (final substring in substrings) {
           final result = GrammarParser.parse(
             cnfGrammar,
             substring,
             strategyHint: ParsingStrategyHint.cyk,
           );
-          
-          expect(result.isSuccess, true, 
-            reason: 'CYK should handle substring "$substring"');
+
+          expect(
+            result.isSuccess,
+            true,
+            reason: 'CYK should handle substring "$substring"',
+          );
         }
       });
     });

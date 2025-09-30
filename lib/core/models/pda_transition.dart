@@ -100,8 +100,8 @@ class PDATransition extends Transition {
 
   /// Creates a PDA transition from a JSON representation
   factory PDATransition.fromJson(Map<String, dynamic> json) {
-    final controlPointData =
-        (json['controlPoint'] as Map?)?.cast<String, dynamic>();
+    final controlPointData = (json['controlPoint'] as Map?)
+        ?.cast<String, dynamic>();
     final controlPointX = (controlPointData?['x'] as num?)?.toDouble() ?? 0.0;
     final controlPointY = (controlPointData?['y'] as num?)?.toDouble() ?? 0.0;
 

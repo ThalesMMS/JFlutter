@@ -64,12 +64,18 @@ class NFAToDFAConverter {
     // Treat typical epsilon markers uniformly, regardless of encoding.
     bool isEpsilonSymbol(String s) {
       final normalized = s.trim().toLowerCase();
-      return normalized.isEmpty || normalized == 'ε' || normalized == 'λ' || normalized == 'lambda';
+      return normalized.isEmpty ||
+          normalized == 'ε' ||
+          normalized == 'λ' ||
+          normalized == 'lambda';
     }
 
-    if (!nfa.hasEpsilonTransitions && !nfa.fsaTransitions.any((t) =>
-        (t.lambdaSymbol != null && isEpsilonSymbol(t.lambdaSymbol!)) ||
-        (t.inputSymbols.any(isEpsilonSymbol)))) {
+    if (!nfa.hasEpsilonTransitions &&
+        !nfa.fsaTransitions.any(
+          (t) =>
+              (t.lambdaSymbol != null && isEpsilonSymbol(t.lambdaSymbol!)) ||
+              (t.inputSymbols.any(isEpsilonSymbol)),
+        )) {
       return nfa;
     }
 
@@ -81,7 +87,11 @@ class NFAToDFAConverter {
     // lambdaSymbol or inputSymbols containing an epsilon-like marker)
     final epsilonClosures = <State, Set<State>>{};
     for (final state in nfa.states) {
-      epsilonClosures[state] = _epsilonClosureFlexible(nfa, state, isEpsilonSymbol);
+      epsilonClosures[state] = _epsilonClosureFlexible(
+        nfa,
+        state,
+        isEpsilonSymbol,
+      );
     }
 
     // Add new transitions for epsilon closure
@@ -96,16 +106,16 @@ class NFAToDFAConverter {
       }
 
       // For each symbol in the alphabet (excluding epsilon-like markers)
-      final workingAlphabet = nfa.alphabet.where((s) => !isEpsilonSymbol(s)).toSet();
+      final workingAlphabet = nfa.alphabet
+          .where((s) => !isEpsilonSymbol(s))
+          .toSet();
       for (final symbol in workingAlphabet) {
         final reachableStates = <State>{};
 
         // Find all states reachable from the closure on this symbol
         for (final closureState in closure) {
-          final transitions = nfa.getTransitionsFromStateOnSymbol(
-                closureState,
-                symbol,
-              )
+          final transitions = nfa
+              .getTransitionsFromStateOnSymbol(closureState, symbol)
               .where((t) => !t.isEpsilonTransition)
               .toList();
           for (final transition in transitions) {
@@ -150,7 +160,10 @@ class NFAToDFAConverter {
   static FSA _buildDFAWithEpsilon(FSA nfa) {
     bool isEpsilonSymbol(String s) {
       final normalized = s.trim().toLowerCase();
-      return normalized.isEmpty || normalized == 'ε' || normalized == 'λ' || normalized == 'lambda';
+      return normalized.isEmpty ||
+          normalized == 'ε' ||
+          normalized == 'λ' ||
+          normalized == 'lambda';
     }
 
     final dfaStates = <String, State>{};
@@ -161,7 +174,11 @@ class NFAToDFAConverter {
     final stateSetMap = <String, Set<State>>{};
 
     // Start with the epsilon-closure of the initial state
-    final initialStateSet = _epsilonClosureFlexible(nfa, nfa.initialState!, isEpsilonSymbol);
+    final initialStateSet = _epsilonClosureFlexible(
+      nfa,
+      nfa.initialState!,
+      isEpsilonSymbol,
+    );
     final initialStateKey = _getStateSetKey(initialStateSet);
     final initialState = _createDFAState(initialStateSet, 0);
     dfaStates[initialStateKey] = initialState;
@@ -186,17 +203,16 @@ class NFAToDFAConverter {
       }
 
       // For each symbol in the alphabet (excluding epsilon-like markers)
-      final workingAlphabet = nfa.alphabet.where((s) => !isEpsilonSymbol(s)).toSet();
+      final workingAlphabet = nfa.alphabet
+          .where((s) => !isEpsilonSymbol(s))
+          .toSet();
       for (final symbol in workingAlphabet) {
         final nextStateSet = <State>{};
 
         // Move on symbol, then take epsilon-closure
         for (final state in currentStateSet) {
           final transitions = nfa
-              .getTransitionsFromStateOnSymbol(
-                state,
-                symbol,
-              )
+              .getTransitionsFromStateOnSymbol(state, symbol)
               .toList();
           for (final transition in transitions) {
             nextStateSet.addAll(
@@ -354,7 +370,8 @@ Set<State> _epsilonClosureFlexible(
     final state = queue.removeAt(0);
     for (final t in automaton.fsaTransitions) {
       final isFrom = t.fromState.id == state.id;
-      final isEps = t.isEpsilonTransition || t.inputSymbols.any(isEpsilonSymbol);
+      final isEps =
+          t.isEpsilonTransition || t.inputSymbols.any(isEpsilonSymbol);
       if (isFrom && isEps) {
         if (closure.add(t.toState)) {
           queue.add(t.toState);

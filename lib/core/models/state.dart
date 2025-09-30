@@ -92,8 +92,7 @@ class State {
 
   /// Creates a state from a JSON representation
   factory State.fromJson(Map<String, dynamic> json) {
-    final positionData =
-        (json['position'] as Map?)?.cast<String, dynamic>();
+    final positionData = (json['position'] as Map?)?.cast<String, dynamic>();
     final positionX = (positionData?['x'] as num?)?.toDouble() ?? 0.0;
     final positionY = (positionData?['y'] as num?)?.toDouble() ?? 0.0;
 

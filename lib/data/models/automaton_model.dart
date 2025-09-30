@@ -21,13 +21,11 @@ class AutomatonModel {
     this.initialId,
     required this.nextId,
     required this.type,
-  })  : alphabet = List<String>.unmodifiable(alphabet),
-        states = List<StateModel>.unmodifiable(states),
-        transitions = Map<String, List<String>>.unmodifiable(
-          transitions.map(
-            (k, v) => MapEntry(k, List<String>.unmodifiable(v)),
-          ),
-        );
+  }) : alphabet = List<String>.unmodifiable(alphabet),
+       states = List<StateModel>.unmodifiable(states),
+       transitions = Map<String, List<String>>.unmodifiable(
+         transitions.map((k, v) => MapEntry(k, List<String>.unmodifiable(v))),
+       );
 
   /// Converts from domain entity to data model
   factory AutomatonModel.fromEntity(AutomatonEntity entity) {

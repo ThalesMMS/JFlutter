@@ -5,7 +5,7 @@ import 'package:jflutter/core/models/production.dart';
 import 'package:jflutter/core/result.dart';
 
 /// CYK Parser Validation Tests
-/// 
+///
 /// This test suite validates CYK parser algorithms for:
 /// 1. Parse table construction
 /// 2. Derivation tree construction
@@ -22,13 +22,13 @@ void main() {
     setUp(() {
       // Test Case 1: Simple CNF grammar
       simpleCNFGrammar = _createSimpleCNFGrammar();
-      
+
       // Test Case 2: Complex CNF grammar
       complexCNFGrammar = _createComplexCNFGrammar();
-      
+
       // Test Case 3: Grammar with lambda productions
       lambdaGrammar = _createLambdaGrammar();
-      
+
       // Test Case 4: Grammar with unit productions
       unitGrammar = _createUnitGrammar();
     });
@@ -36,50 +36,75 @@ void main() {
     group('Parse Table Construction Tests', () {
       test('Should build parse table for valid strings', () {
         final result = CYKParser.parse(simpleCNFGrammar, 'ab');
-        
-        expect(result.isSuccess, true, 
-          reason: 'CYK parsing should succeed for "ab"');
-        
+
+        expect(
+          result.isSuccess,
+          true,
+          reason: 'CYK parsing should succeed for "ab"',
+        );
+
         if (result.isSuccess) {
           final cykResult = result.data!;
-          
+
           // Check that parse table is constructed
-          expect(cykResult.table.isNotEmpty, true,
-            reason: 'Parse table should not be empty');
-          expect(cykResult.table.length, 2,
-            reason: 'Parse table should have correct dimensions');
+          expect(
+            cykResult.table.isNotEmpty,
+            true,
+            reason: 'Parse table should not be empty',
+          );
+          expect(
+            cykResult.table.length,
+            2,
+            reason: 'Parse table should have correct dimensions',
+          );
         }
       });
 
       test('Should handle single character strings', () {
         final result = CYKParser.parse(simpleCNFGrammar, 'a');
-        
-        expect(result.isSuccess, true, 
-          reason: 'CYK parsing should succeed for "a"');
-        
+
+        expect(
+          result.isSuccess,
+          true,
+          reason: 'CYK parsing should succeed for "a"',
+        );
+
         if (result.isSuccess) {
           final cykResult = result.data!;
-          
+
           // Check that parse table is constructed
-          expect(cykResult.table.isNotEmpty, true,
-            reason: 'Parse table should not be empty');
-          expect(cykResult.table.length, 1,
-            reason: 'Parse table should have correct dimensions for single character');
+          expect(
+            cykResult.table.isNotEmpty,
+            true,
+            reason: 'Parse table should not be empty',
+          );
+          expect(
+            cykResult.table.length,
+            1,
+            reason:
+                'Parse table should have correct dimensions for single character',
+          );
         }
       });
 
       test('Should handle empty string', () {
         final result = CYKParser.parse(lambdaGrammar, '');
-        
-        expect(result.isSuccess, true, 
-          reason: 'CYK parsing should succeed for empty string');
-        
+
+        expect(
+          result.isSuccess,
+          true,
+          reason: 'CYK parsing should succeed for empty string',
+        );
+
         if (result.isSuccess) {
           final cykResult = result.data!;
-          
+
           // Empty string should be accepted if start symbol is nullable
-          expect(cykResult.accepted, true,
-            reason: 'Empty string should be accepted by lambda grammar');
+          expect(
+            cykResult.accepted,
+            true,
+            reason: 'Empty string should be accepted by lambda grammar',
+          );
         }
       });
     });
@@ -87,21 +112,30 @@ void main() {
     group('Derivation Tree Construction Tests', () {
       test('Should produce derivation tree for accepted strings', () {
         final result = CYKParser.parse(simpleCNFGrammar, 'ab');
-        
-        expect(result.isSuccess, true, 
-          reason: 'CYK parsing should succeed for "ab"');
-        
+
+        expect(
+          result.isSuccess,
+          true,
+          reason: 'CYK parsing should succeed for "ab"',
+        );
+
         if (result.isSuccess) {
           final cykResult = result.data!;
-          
+
           // If string is accepted, should have derivation tree
           if (cykResult.accepted) {
-            expect(cykResult.derivation, isNotNull,
-              reason: 'Accepted string should have derivation tree');
-            
+            expect(
+              cykResult.derivation,
+              isNotNull,
+              reason: 'Accepted string should have derivation tree',
+            );
+
             if (cykResult.derivation != null) {
-              expect(cykResult.derivation!.label, simpleCNFGrammar.startSymbol,
-                reason: 'Derivation tree root should be start symbol');
+              expect(
+                cykResult.derivation!.label,
+                simpleCNFGrammar.startSymbol,
+                reason: 'Derivation tree root should be start symbol',
+              );
             }
           }
         }
@@ -109,40 +143,55 @@ void main() {
 
       test('Should produce correct derivation tree structure', () {
         final result = CYKParser.parse(simpleCNFGrammar, 'ab');
-        
-        expect(result.isSuccess, true, 
-          reason: 'CYK parsing should succeed for "ab"');
-        
+
+        expect(
+          result.isSuccess,
+          true,
+          reason: 'CYK parsing should succeed for "ab"',
+        );
+
         if (result.isSuccess) {
           final cykResult = result.data!;
-          
+
           if (cykResult.accepted && cykResult.derivation != null) {
             final tree = cykResult.derivation!;
-            
+
             // Check tree structure
-            expect(tree.label, isA<String>(),
-              reason: 'Tree node should have label');
-            expect(tree.children, isA<List<CYKDerivation>>(),
-              reason: 'Tree node should have children list');
+            expect(
+              tree.label,
+              isA<String>(),
+              reason: 'Tree node should have label',
+            );
+            expect(
+              tree.children,
+              isA<List<CYKDerivation>>(),
+              reason: 'Tree node should have children list',
+            );
           }
         }
       });
 
       test('Should handle complex derivation trees', () {
         final result = CYKParser.parse(complexCNFGrammar, 'abc');
-        
-        expect(result.isSuccess, true, 
-          reason: 'CYK parsing should succeed for "abc"');
-        
+
+        expect(
+          result.isSuccess,
+          true,
+          reason: 'CYK parsing should succeed for "abc"',
+        );
+
         if (result.isSuccess) {
           final cykResult = result.data!;
-          
+
           if (cykResult.accepted && cykResult.derivation != null) {
             final tree = cykResult.derivation!;
-            
+
             // Check that tree has proper structure
-            expect(tree.label, complexCNFGrammar.startSymbol,
-              reason: 'Root should be start symbol');
+            expect(
+              tree.label,
+              complexCNFGrammar.startSymbol,
+              reason: 'Root should be start symbol',
+            );
           }
         }
       });
@@ -158,14 +207,20 @@ void main() {
 
         for (final (input, grammar) in testCases) {
           final result = CYKParser.parse(grammar, input);
-          
-          expect(result.isSuccess, true, 
-            reason: 'CYK parsing should succeed for "$input"');
-          
+
+          expect(
+            result.isSuccess,
+            true,
+            reason: 'CYK parsing should succeed for "$input"',
+          );
+
           if (result.isSuccess) {
             final cykResult = result.data!;
-            expect(cykResult.accepted, true,
-              reason: 'String "$input" should be accepted');
+            expect(
+              cykResult.accepted,
+              true,
+              reason: 'String "$input" should be accepted',
+            );
           }
         }
       });
@@ -179,14 +234,20 @@ void main() {
 
         for (final (input, grammar) in testCases) {
           final result = CYKParser.parse(grammar, input);
-          
-          expect(result.isSuccess, true, 
-            reason: 'CYK parsing should succeed for "$input"');
-          
+
+          expect(
+            result.isSuccess,
+            true,
+            reason: 'CYK parsing should succeed for "$input"',
+          );
+
           if (result.isSuccess) {
             final cykResult = result.data!;
-            expect(cykResult.accepted, false,
-              reason: 'String "$input" should be rejected');
+            expect(
+              cykResult.accepted,
+              false,
+              reason: 'String "$input" should be rejected',
+            );
           }
         }
       });
@@ -194,14 +255,20 @@ void main() {
       test('Should handle empty string correctly', () {
         // Test with grammar that accepts empty string
         final result = CYKParser.parse(lambdaGrammar, '');
-        
-        expect(result.isSuccess, true, 
-          reason: 'CYK parsing should succeed for empty string');
-        
+
+        expect(
+          result.isSuccess,
+          true,
+          reason: 'CYK parsing should succeed for empty string',
+        );
+
         if (result.isSuccess) {
           final cykResult = result.data!;
-          expect(cykResult.accepted, true,
-            reason: 'Empty string should be accepted by lambda grammar');
+          expect(
+            cykResult.accepted,
+            true,
+            reason: 'Empty string should be accepted by lambda grammar',
+          );
         }
       });
     });
@@ -209,31 +276,43 @@ void main() {
     group('CNF Conversion Integration Tests', () {
       test('Should handle non-CNF grammars', () {
         final result = CYKParser.parse(unitGrammar, 'a');
-        
-        expect(result.isSuccess, true, 
-          reason: 'CYK parsing should succeed for non-CNF grammar');
-        
+
+        expect(
+          result.isSuccess,
+          true,
+          reason: 'CYK parsing should succeed for non-CNF grammar',
+        );
+
         if (result.isSuccess) {
           final cykResult = result.data!;
-          
+
           // Should still work after CNF conversion
-          expect(cykResult.accepted, true,
-            reason: 'Non-CNF grammar should work after conversion');
+          expect(
+            cykResult.accepted,
+            true,
+            reason: 'Non-CNF grammar should work after conversion',
+          );
         }
       });
 
       test('Should handle complex non-CNF grammars', () {
         final result = CYKParser.parse(complexCNFGrammar, 'abc');
-        
-        expect(result.isSuccess, true, 
-          reason: 'CYK parsing should succeed for complex grammar');
-        
+
+        expect(
+          result.isSuccess,
+          true,
+          reason: 'CYK parsing should succeed for complex grammar',
+        );
+
         if (result.isSuccess) {
           final cykResult = result.data!;
-          
+
           // Should work with complex grammar
-          expect(cykResult.accepted, true,
-            reason: 'Complex grammar should work');
+          expect(
+            cykResult.accepted,
+            true,
+            reason: 'Complex grammar should work',
+          );
         }
       });
     });
@@ -241,41 +320,59 @@ void main() {
     group('Edge Cases Tests', () {
       test('Should handle very short strings', () {
         final result = CYKParser.parse(simpleCNFGrammar, 'a');
-        
-        expect(result.isSuccess, true, 
-          reason: 'CYK parsing should succeed for single character');
-        
+
+        expect(
+          result.isSuccess,
+          true,
+          reason: 'CYK parsing should succeed for single character',
+        );
+
         if (result.isSuccess) {
           final cykResult = result.data!;
-          expect(cykResult.accepted, true,
-            reason: 'Single character should be accepted');
+          expect(
+            cykResult.accepted,
+            true,
+            reason: 'Single character should be accepted',
+          );
         }
       });
 
       test('Should handle strings with repeated characters', () {
         final result = CYKParser.parse(simpleCNFGrammar, 'aa');
-        
-        expect(result.isSuccess, true, 
-          reason: 'CYK parsing should succeed for repeated characters');
-        
+
+        expect(
+          result.isSuccess,
+          true,
+          reason: 'CYK parsing should succeed for repeated characters',
+        );
+
         if (result.isSuccess) {
           final cykResult = result.data!;
           // This might be rejected depending on grammar
-          expect(cykResult.accepted, isA<bool>(),
-            reason: 'Should return boolean result for repeated characters');
+          expect(
+            cykResult.accepted,
+            isA<bool>(),
+            reason: 'Should return boolean result for repeated characters',
+          );
         }
       });
 
       test('Should handle invalid input gracefully', () {
         final result = CYKParser.parse(simpleCNFGrammar, 'xyz');
-        
-        expect(result.isSuccess, true, 
-          reason: 'CYK parsing should succeed even for invalid input');
-        
+
+        expect(
+          result.isSuccess,
+          true,
+          reason: 'CYK parsing should succeed even for invalid input',
+        );
+
         if (result.isSuccess) {
           final cykResult = result.data!;
-          expect(cykResult.accepted, false,
-            reason: 'Invalid input should be rejected');
+          expect(
+            cykResult.accepted,
+            false,
+            reason: 'Invalid input should be rejected',
+          );
         }
       });
     });
@@ -284,14 +381,20 @@ void main() {
       test('Should handle moderate length strings', () {
         final longString = 'ab' * 10; // 20 characters
         final result = CYKParser.parse(simpleCNFGrammar, longString);
-        
-        expect(result.isSuccess, true, 
-          reason: 'CYK parsing should succeed for moderate length strings');
-        
+
+        expect(
+          result.isSuccess,
+          true,
+          reason: 'CYK parsing should succeed for moderate length strings',
+        );
+
         if (result.isSuccess) {
           final cykResult = result.data!;
-          expect(cykResult.accepted, isA<bool>(),
-            reason: 'Should return boolean result for moderate length strings');
+          expect(
+            cykResult.accepted,
+            isA<bool>(),
+            reason: 'Should return boolean result for moderate length strings',
+          );
         }
       });
     });

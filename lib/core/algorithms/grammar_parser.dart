@@ -45,11 +45,14 @@ class GrammarParser {
       if (onlyDyckTerminals) {
         final dyckAccepted = _fastDyck1Recognize(inputString, open, close);
         if (!dyckAccepted) {
-          return Success(ParseResult.failure(
-            inputString: inputString,
-            errorMessage: 'String "$inputString" cannot be derived from grammar',
-            executionTime: const Duration(),
-          ));
+          return Success(
+            ParseResult.failure(
+              inputString: inputString,
+              errorMessage:
+                  'String "$inputString" cannot be derived from grammar',
+              executionTime: const Duration(),
+            ),
+          );
         }
         // Accepted via fast path; optionally attempt to build derivation later
         final parser = SimpleRecursiveDescentParser(grammar);
@@ -57,11 +60,13 @@ class GrammarParser {
         if (rd.isSuccess) {
           return rd;
         }
-        return Success(ParseResult.success(
-          inputString: inputString,
-          derivations: const <List<String>>[],
-          executionTime: const Duration(),
-        ));
+        return Success(
+          ParseResult.success(
+            inputString: inputString,
+            derivations: const <List<String>>[],
+            executionTime: const Duration(),
+          ),
+        );
       }
     }
 
@@ -71,11 +76,13 @@ class GrammarParser {
     if (!accepted) {
       // Return a successful result object with accepted=false so callers can
       // assert on acceptance without treating it as an exceptional failure
-      return Success(ParseResult.failure(
-        inputString: inputString,
-        errorMessage: 'String "$inputString" cannot be derived from grammar',
-        executionTime: const Duration(),
-      ));
+      return Success(
+        ParseResult.failure(
+          inputString: inputString,
+          errorMessage: 'String "$inputString" cannot be derived from grammar',
+          executionTime: const Duration(),
+        ),
+      );
     }
 
     // If accepted, optionally build a derivation using the simple parser (best-effort)
@@ -86,11 +93,13 @@ class GrammarParser {
     }
 
     // Fallback: accepted without a derivation trace
-    return Success(ParseResult.success(
-      inputString: inputString,
-      derivations: const <List<String>>[],
-      executionTime: const Duration(),
-    ));
+    return Success(
+      ParseResult.success(
+        inputString: inputString,
+        derivations: const <List<String>>[],
+        executionTime: const Duration(),
+      ),
+    );
   }
 
   /// Validates the input grammar and string
@@ -219,7 +228,9 @@ class GrammarParser {
         final a = p.rightSide[0];
         final mid = p.rightSide[1];
         final b = p.rightSide[2];
-        if (mid == s && grammar.terminals.contains(a) && grammar.terminals.contains(b)) {
+        if (mid == s &&
+            grammar.terminals.contains(a) &&
+            grammar.terminals.contains(b)) {
           open = a;
           close = b;
           // keep scanning to confirm other rules too
@@ -263,8 +274,14 @@ class GrammarParser {
     final startTime = DateTime.now();
 
     // Use a simple recursive descent approach
-    final result = _parseWithRecursiveDescent(grammar, grammar.startSymbol, inputString, startTime, timeout);
-    
+    final result = _parseWithRecursiveDescent(
+      grammar,
+      grammar.startSymbol,
+      inputString,
+      startTime,
+      timeout,
+    );
+
     if (result != null) {
       return ParseResult.success(
         inputString: inputString,
@@ -299,7 +316,8 @@ class GrammarParser {
 
     // Try all productions for this non-terminal
     for (final production in grammar.productions) {
-      if (production.leftSide.isNotEmpty && production.leftSide.first == nonTerminal) {
+      if (production.leftSide.isNotEmpty &&
+          production.leftSide.first == nonTerminal) {
         // Handle epsilon productions
         if (production.rightSide.isEmpty || production.isLambda) {
           if (targetString.isEmpty) {
@@ -309,7 +327,8 @@ class GrammarParser {
         }
 
         // Handle terminal productions
-        if (production.rightSide.length == 1 && grammar.terminals.contains(production.rightSide.first)) {
+        if (production.rightSide.length == 1 &&
+            grammar.terminals.contains(production.rightSide.first)) {
           if (targetString == production.rightSide.first) {
             return [nonTerminal, production.rightSide.first];
           }
@@ -317,8 +336,15 @@ class GrammarParser {
         }
 
         // Handle non-terminal productions
-        if (production.rightSide.length == 1 && grammar.nonTerminals.contains(production.rightSide.first)) {
-          final result = _parseWithRecursiveDescent(grammar, production.rightSide.first, targetString, startTime, timeout);
+        if (production.rightSide.length == 1 &&
+            grammar.nonTerminals.contains(production.rightSide.first)) {
+          final result = _parseWithRecursiveDescent(
+            grammar,
+            production.rightSide.first,
+            targetString,
+            startTime,
+            timeout,
+          );
           if (result != null) {
             return [nonTerminal, ...result];
           }
@@ -330,11 +356,23 @@ class GrammarParser {
           for (int split = 0; split <= targetString.length; split++) {
             final leftPart = targetString.substring(0, split);
             final rightPart = targetString.substring(split);
-            
+
             if (production.rightSide.length == 2) {
-              final leftResult = _parseWithRecursiveDescent(grammar, production.rightSide[0], leftPart, startTime, timeout);
-              final rightResult = _parseWithRecursiveDescent(grammar, production.rightSide[1], rightPart, startTime, timeout);
-              
+              final leftResult = _parseWithRecursiveDescent(
+                grammar,
+                production.rightSide[0],
+                leftPart,
+                startTime,
+                timeout,
+              );
+              final rightResult = _parseWithRecursiveDescent(
+                grammar,
+                production.rightSide[1],
+                rightPart,
+                startTime,
+                timeout,
+              );
+
               if (leftResult != null && rightResult != null) {
                 return [nonTerminal, ...leftResult, ...rightResult];
               }
@@ -420,22 +458,31 @@ class GrammarParser {
   /// Checks if a grammar can derive the empty string
   static bool _canDeriveEmptyString(Grammar grammar) {
     // Check if start symbol can derive empty string
-    return _canDeriveEmptyStringFromSymbol(grammar, grammar.startSymbol, <String>{});
+    return _canDeriveEmptyStringFromSymbol(
+      grammar,
+      grammar.startSymbol,
+      <String>{},
+    );
   }
 
   /// Recursively checks if a symbol can derive empty string
-  static bool _canDeriveEmptyStringFromSymbol(Grammar grammar, String symbol, Set<String> visited) {
+  static bool _canDeriveEmptyStringFromSymbol(
+    Grammar grammar,
+    String symbol,
+    Set<String> visited,
+  ) {
     if (visited.contains(symbol)) {
       return false; // Avoid infinite recursion
     }
     visited.add(symbol);
 
     for (final production in grammar.productions) {
-      if (production.leftSide.isNotEmpty && production.leftSide.first == symbol) {
+      if (production.leftSide.isNotEmpty &&
+          production.leftSide.first == symbol) {
         if (production.rightSide.isEmpty || production.isLambda) {
           return true; // Direct epsilon production
         }
-        
+
         // Check if all symbols in right side can derive empty string
         bool allCanDeriveEmpty = true;
         for (final rightSymbol in production.rightSide) {
@@ -443,7 +490,11 @@ class GrammarParser {
             allCanDeriveEmpty = false;
             break;
           }
-          if (!_canDeriveEmptyStringFromSymbol(grammar, rightSymbol, Set.from(visited))) {
+          if (!_canDeriveEmptyStringFromSymbol(
+            grammar,
+            rightSymbol,
+            Set.from(visited),
+          )) {
             allCanDeriveEmpty = false;
             break;
           }
@@ -453,7 +504,7 @@ class GrammarParser {
         }
       }
     }
-    
+
     return false;
   }
 

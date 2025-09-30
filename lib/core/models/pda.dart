@@ -28,8 +28,8 @@ class PDA extends Automaton {
     super.panOffset,
     required Set<String> stackAlphabet,
     this.initialStackSymbol = 'Z',
-  })  : stackAlphabet = Set<String>.unmodifiable(stackAlphabet),
-        super(type: AutomatonType.pda);
+  }) : stackAlphabet = Set<String>.unmodifiable(stackAlphabet),
+       super(type: AutomatonType.pda);
 
   /// Creates a copy of this PDA with updated properties
   @override
@@ -99,10 +99,8 @@ class PDA extends Automaton {
 
   /// Creates a PDA from a JSON representation
   factory PDA.fromJson(Map<String, dynamic> json) {
-    final boundsData =
-        (json['bounds'] as Map?)?.cast<String, dynamic>();
-    final panOffsetData =
-        (json['panOffset'] as Map?)?.cast<String, dynamic>();
+    final boundsData = (json['bounds'] as Map?)?.cast<String, dynamic>();
+    final panOffsetData = (json['panOffset'] as Map?)?.cast<String, dynamic>();
 
     return PDA(
       id: json['id'] as String,

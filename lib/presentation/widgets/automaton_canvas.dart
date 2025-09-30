@@ -4,6 +4,8 @@ import 'package:vector_math/vector_math_64.dart' hide Colors;
 import '../../core/models/fsa.dart';
 import '../../core/models/state.dart' as automaton_state;
 import '../../core/models/fsa_transition.dart';
+import '../../core/models/simulation_result.dart';
+import '../../core/models/simulation_step.dart';
 import 'touch_gesture_handler.dart';
 import 'transition_geometry.dart';
 import '../../core/algorithms/common/throttling.dart';
@@ -13,12 +15,18 @@ class AutomatonCanvas extends StatefulWidget {
   final FSA? automaton;
   final GlobalKey canvasKey;
   final ValueChanged<FSA> onAutomatonChanged;
+  final SimulationResult? simulationResult;
+  final int? currentStepIndex;
+  final bool showTrace;
 
   const AutomatonCanvas({
     super.key,
     required this.automaton,
     required this.canvasKey,
     required this.onAutomatonChanged,
+    this.simulationResult,
+    this.currentStepIndex,
+    this.showTrace = false,
   });
 
   @override
@@ -332,6 +340,9 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
                     selectedState: _selectedState,
                     transitionStart: _transitionStart,
                     transitionPreviewPosition: _transitionPreviewPosition,
+                    simulationResult: widget.simulationResult,
+                    currentStepIndex: widget.currentStepIndex,
+                    showTrace: widget.showTrace,
                   ),
                   size: Size.infinite,
                 ),
@@ -424,16 +435,22 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
   }
 }
 
-/// Custom painter for drawing automata
+/// Custom painter for drawing automata with trace visualization support
 class AutomatonPainter extends CustomPainter {
   final List<automaton_state.State> states;
   final List<FSATransition> transitions;
   final automaton_state.State? selectedState;
   final automaton_state.State? transitionStart;
   final Offset? transitionPreviewPosition;
+  final SimulationResult? simulationResult;
+  final int? currentStepIndex;
+  final bool showTrace;
   final Set<String> _nondeterministicTransitionIds;
   final Set<String> _epsilonTransitionIds;
   final Set<String> _nondeterministicStateIds;
+  final Set<String> _visitedStates;
+  final Set<String> _usedTransitions;
+  final List<String> _tracePath;
 
   AutomatonPainter({
     required this.states,
@@ -441,12 +458,18 @@ class AutomatonPainter extends CustomPainter {
     this.selectedState,
     this.transitionStart,
     this.transitionPreviewPosition,
+    this.simulationResult,
+    this.currentStepIndex,
+    this.showTrace = false,
   }) : _nondeterministicTransitionIds = <String>{},
        _epsilonTransitionIds = transitions
            .where((t) => t.isEpsilonTransition)
            .map((t) => t.id)
            .toSet(),
-       _nondeterministicStateIds = <String>{} {
+       _nondeterministicStateIds = <String>{},
+       _visitedStates = <String>{},
+       _usedTransitions = <String>{},
+       _tracePath = <String>[] {
     _nondeterministicTransitionIds.addAll(
       _identifyNondeterministicTransitions(transitions),
     );
@@ -456,6 +479,33 @@ class AutomatonPainter extends CustomPainter {
         _nondeterministicTransitionIds,
       ),
     );
+
+    // Extract trace information for visualization
+    if (showTrace && simulationResult != null && currentStepIndex != null) {
+      _extractTraceInfo();
+    }
+  }
+
+  /// Extract trace information for visualization
+  void _extractTraceInfo() {
+    if (simulationResult == null || currentStepIndex == null) return;
+
+    final steps = simulationResult!.steps;
+    final stepCount = currentStepIndex! + 1;
+
+    // Get visited states up to current step
+    _visitedStates.clear();
+    _usedTransitions.clear();
+    _tracePath.clear();
+
+    for (int i = 0; i < stepCount && i < steps.length; i++) {
+      final step = steps[i];
+      _visitedStates.add(step.currentState);
+      _tracePath.add(step.currentState);
+      if (step.usedTransition != null) {
+        _usedTransitions.add(step.usedTransition!);
+      }
+    }
   }
 
   @override
@@ -464,14 +514,25 @@ class AutomatonPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
 
-    // Draw transitions
-    for (final transition in transitions) {
-      _drawTransition(canvas, transition, paint);
-    }
+    // Performance optimization: Only draw visible elements with viewport culling
+    final visibleRect = Rect.fromLTWH(0, 0, size.width, size.height);
+    final lod = _getLevelOfDetail();
 
-    // Draw states
-    for (final state in states) {
-      _drawState(canvas, state, paint);
+    // Pre-calculate visible elements to avoid repeated checks
+    final visibleTransitions = transitions
+        .where((t) => _isTransitionVisible(t, visibleRect))
+        .toList();
+    final visibleStates = states
+        .where((s) => _isStateVisible(s, visibleRect))
+        .toList();
+
+    // Batch draw operations for better performance
+    _batchDrawTransitions(canvas, visibleTransitions, paint, lod);
+    _batchDrawStates(canvas, visibleStates, paint, lod);
+
+    // Draw trace path if showing trace (only if visible)
+    if (showTrace && _tracePath.isNotEmpty) {
+      _drawTracePath(canvas, paint);
     }
 
     // Draw transition preview if in progress
@@ -480,65 +541,143 @@ class AutomatonPainter extends CustomPainter {
     }
   }
 
-  void _drawState(Canvas canvas, automaton_state.State state, Paint paint) {
+  /// Check if a state is visible within the current viewport
+  bool _isStateVisible(automaton_state.State state, Rect visibleRect) {
+    const stateRadius = 30.0;
+    final stateRect = Rect.fromCircle(
+      center: Offset(state.position.x, state.position.y),
+      radius: stateRadius,
+    );
+    return visibleRect.overlaps(stateRect);
+  }
+
+  /// Check if a transition is visible within the current viewport
+  bool _isTransitionVisible(FSATransition transition, Rect visibleRect) {
+    final fromCenter = Offset(
+      transition.fromState.position.x,
+      transition.fromState.position.y,
+    );
+    final toCenter = Offset(
+      transition.toState.position.x,
+      transition.toState.position.y,
+    );
+
+    // For self-loops, check if the state is visible
+    if (transition.fromState.id == transition.toState.id) {
+      return _isStateVisible(transition.fromState, visibleRect);
+    }
+
+    // For regular transitions, check if the line intersects the visible area
+    final lineRect = Rect.fromPoints(fromCenter, toCenter);
+    return visibleRect.overlaps(lineRect);
+  }
+
+  void _drawState(
+    Canvas canvas,
+    automaton_state.State state,
+    Paint paint, [
+    int lod = 3,
+  ]) {
     final center = state.position;
     const radius = 30.0;
     final isSelected = state == selectedState;
     final isNondeterministic = _nondeterministicStateIds.contains(state.id);
+    final isVisited = showTrace && _visitedStates.contains(state.id);
+    final isCurrent =
+        showTrace &&
+        simulationResult != null &&
+        currentStepIndex != null &&
+        currentStepIndex! < simulationResult!.steps.length &&
+        simulationResult!.steps[currentStepIndex!].currentState == state.id;
     final stateCenter = Offset(center.x, center.y);
 
+    // Performance optimization: Reuse paint objects and batch similar operations
+    final fillPaint = Paint()..style = PaintingStyle.fill;
+    final strokePaint = Paint()..style = PaintingStyle.stroke;
+
+    // Draw background highlights (batch similar fills)
     if (isNondeterministic) {
-      final highlightPaint = Paint()
-        ..style = PaintingStyle.fill
-        ..color = Colors.deepOrange.withValues(alpha: 0.15);
-      canvas.drawCircle(stateCenter, radius, highlightPaint);
+      fillPaint.color = Colors.deepOrange.withValues(alpha: 0.15);
+      canvas.drawCircle(stateCenter, radius, fillPaint);
     }
 
-    final borderPaint = Paint()
-      ..style = PaintingStyle.stroke
+    if (isVisited) {
+      fillPaint.color = Colors.green.withValues(alpha: 0.2);
+      canvas.drawCircle(stateCenter, radius, fillPaint);
+    }
+
+    if (isCurrent) {
+      fillPaint.color = Colors.blue.withValues(alpha: 0.3);
+      canvas.drawCircle(stateCenter, radius, fillPaint);
+    }
+
+    // Draw border
+    strokePaint
       ..strokeWidth = isSelected ? 3 : 2
-      ..color = isSelected
+      ..color = isCurrent
+          ? Colors.blue
+          : isVisited
+          ? Colors.green
+          : isSelected
           ? Colors.blue
           : isNondeterministic
           ? Colors.deepOrange
           : Colors.black;
-    canvas.drawCircle(stateCenter, radius, borderPaint);
+    canvas.drawCircle(stateCenter, radius, strokePaint);
 
+    // Draw accepting state inner circle
     if (state.isAccepting) {
-      final acceptPaint = Paint()
-        ..style = PaintingStyle.stroke
+      strokePaint
         ..strokeWidth = 2
-        ..color = borderPaint.color;
-      canvas.drawCircle(stateCenter, radius - 6, acceptPaint);
+        ..color = strokePaint.color;
+      canvas.drawCircle(stateCenter, radius - 6, strokePaint);
     }
 
+    // Draw initial arrow
     if (state.isInitial) {
-      _drawInitialArrow(canvas, stateCenter, borderPaint);
+      _drawInitialArrow(canvas, stateCenter, strokePaint);
     }
 
+    // Only draw labels if LOD allows it and text rendering is enabled
+    if (_shouldRenderLabels(lod)) {
+      _drawStateLabel(canvas, stateCenter, state.name, lod);
+    }
+  }
+
+  /// Optimized state label drawing with cached text metrics
+  void _drawStateLabel(Canvas canvas, Offset center, String name, int lod) {
+    final fontSize = lod >= 3 ? 16.0 : (lod >= 2 ? 14.0 : 12.0);
     final textPainter = TextPainter(
       text: TextSpan(
-        text: state.name,
-        style: const TextStyle(
+        text: name,
+        style: TextStyle(
           color: Colors.black,
-          fontSize: 16,
+          fontSize: fontSize,
           fontWeight: FontWeight.bold,
         ),
       ),
       textDirection: TextDirection.ltr,
     );
     textPainter.layout();
-    textPainter.paint(
-      canvas,
-      Offset(
-        center.x - textPainter.width / 2,
-        center.y - textPainter.height / 2,
-      ),
+
+    // Center the text
+    final textOffset = Offset(
+      center.dx - textPainter.width / 2,
+      center.dy - textPainter.height / 2,
     );
+    textPainter.paint(canvas, textOffset);
   }
 
-  void _drawTransition(Canvas canvas, FSATransition transition, Paint paint) {
-    final transitionColor = _epsilonTransitionIds.contains(transition.id)
+  void _drawTransition(
+    Canvas canvas,
+    FSATransition transition,
+    Paint paint, [
+    int lod = 3,
+  ]) {
+    final isUsed = showTrace && _usedTransitions.contains(transition.id);
+    final transitionColor = isUsed
+        ? Colors.green
+        : _epsilonTransitionIds.contains(transition.id)
         ? Colors.purple
         : _nondeterministicTransitionIds.contains(transition.id)
         ? Colors.deepOrange
@@ -587,12 +726,15 @@ class AutomatonPainter extends CustomPainter {
       canvas.drawLine(curve.end, arrow1, strokePaint);
       canvas.drawLine(curve.end, arrow2, strokePaint);
 
-      _drawTransitionLabel(
-        canvas,
-        transition,
-        curve.labelPosition,
-        transitionColor,
-      );
+      // Only draw transition labels if LOD allows it
+      if (_shouldRenderLabels(lod)) {
+        _drawTransitionLabel(
+          canvas,
+          transition,
+          curve.labelPosition,
+          transitionColor,
+        );
+      }
     }
   }
 
@@ -636,6 +778,97 @@ class AutomatonPainter extends CustomPainter {
     );
 
     _drawTransitionLabel(canvas, transition, labelPosition, paint.color);
+  }
+
+  /// Draw the trace path as a highlighted line connecting visited states
+  void _drawTracePath(Canvas canvas, Paint paint) {
+    if (_tracePath.length < 2) return;
+
+    final tracePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4
+      ..color = Colors.green.withValues(alpha: 0.7);
+
+    // Performance optimization: Create a path for the entire trace
+    final tracePath = Path();
+    bool isFirst = true;
+
+    // Draw path connecting visited states with smooth curves
+    for (int i = 0; i < _tracePath.length - 1; i++) {
+      final fromStateId = _tracePath[i];
+      final toStateId = _tracePath[i + 1];
+
+      final fromState = states.firstWhere((s) => s.id == fromStateId);
+      final toState = states.firstWhere((s) => s.id == toStateId);
+
+      final fromCenter = Offset(fromState.position.x, fromState.position.y);
+      final toCenter = Offset(toState.position.x, toState.position.y);
+
+      if (isFirst) {
+        tracePath.moveTo(fromCenter.dx, fromCenter.dy);
+        isFirst = false;
+      }
+
+      // Add a smooth curve to the next state
+      final controlPoint = Offset(
+        (fromCenter.dx + toCenter.dx) / 2,
+        (fromCenter.dy + toCenter.dy) / 2 - 20,
+      );
+      tracePath.quadraticBezierTo(
+        controlPoint.dx,
+        controlPoint.dy,
+        toCenter.dx,
+        toCenter.dy,
+      );
+    }
+
+    // Draw the entire trace path at once for better performance
+    canvas.drawPath(tracePath, tracePaint);
+
+    // Draw trace step indicators
+    _drawTraceStepIndicators(canvas);
+  }
+
+  /// Draw step indicators along the trace path
+  void _drawTraceStepIndicators(Canvas canvas) {
+    if (currentStepIndex == null || currentStepIndex! < 0) return;
+
+    final stepPaint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = Colors.blue.withValues(alpha: 0.8);
+
+    final textPaint = Paint()..color = Colors.white;
+
+    // Draw current step indicator
+    if (currentStepIndex! < _tracePath.length) {
+      final currentStateId = _tracePath[currentStepIndex!];
+      final currentState = states.firstWhere((s) => s.id == currentStateId);
+      final center = Offset(currentState.position.x, currentState.position.y);
+
+      // Draw a pulsing circle for current step
+      canvas.drawCircle(center, 35, stepPaint);
+
+      // Draw step number
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: '${currentStepIndex! + 1}',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout();
+      textPainter.paint(
+        canvas,
+        Offset(
+          center.dx - textPainter.width / 2,
+          center.dy - textPainter.height / 2,
+        ),
+      );
+    }
   }
 
   void _drawTransitionLabel(
@@ -768,12 +1001,112 @@ class AutomatonPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return oldDelegate is AutomatonPainter &&
-        (oldDelegate.states != states ||
-            oldDelegate.transitions != transitions ||
-            oldDelegate.selectedState != selectedState ||
-            oldDelegate.transitionStart != transitionStart ||
-            oldDelegate.transitionPreviewPosition != transitionPreviewPosition);
+    if (oldDelegate is! AutomatonPainter) return true;
+
+    // Performance optimization: Only repaint if significant changes
+    return oldDelegate.states != states ||
+        oldDelegate.transitions != transitions ||
+        oldDelegate.selectedState != selectedState ||
+        oldDelegate.transitionStart != transitionStart ||
+        oldDelegate.transitionPreviewPosition != transitionPreviewPosition ||
+        oldDelegate.simulationResult != simulationResult ||
+        oldDelegate.currentStepIndex != currentStepIndex ||
+        oldDelegate.showTrace != showTrace;
+  }
+
+  /// Get the level of detail based on the number of elements
+  int _getLevelOfDetail() {
+    final totalElements = states.length + transitions.length;
+    if (totalElements <= 50) return 3; // High detail
+    if (totalElements <= 200) return 2; // Medium detail
+    if (totalElements <= 500) return 1; // Low detail
+    return 0; // Minimal detail
+  }
+
+  /// Check if we should render detailed elements based on LOD
+  bool _shouldRenderDetailed(int lod) {
+    return lod >= 2;
+  }
+
+  /// Check if we should render labels based on LOD
+  bool _shouldRenderLabels(int lod) {
+    return lod >= 1;
+  }
+
+  /// Batch draw transitions for better performance
+  void _batchDrawTransitions(
+    Canvas canvas,
+    List<FSATransition> visibleTransitions,
+    Paint paint,
+    int lod,
+  ) {
+    // Group transitions by type for efficient drawing
+    final regularTransitions = <FSATransition>[];
+    final selfLoops = <FSATransition>[];
+    final traceTransitions = <FSATransition>[];
+
+    for (final transition in visibleTransitions) {
+      if (showTrace && _usedTransitions.contains(transition.id)) {
+        traceTransitions.add(transition);
+      } else if (transition.fromState.id == transition.toState.id) {
+        selfLoops.add(transition);
+      } else {
+        regularTransitions.add(transition);
+      }
+    }
+
+    // Draw in order of complexity (regular first, then self-loops, then traces)
+    for (final transition in regularTransitions) {
+      _drawTransition(canvas, transition, paint, lod);
+    }
+    for (final transition in selfLoops) {
+      _drawTransition(canvas, transition, paint, lod);
+    }
+    for (final transition in traceTransitions) {
+      _drawTransition(canvas, transition, paint, lod);
+    }
+  }
+
+  /// Batch draw states for better performance
+  void _batchDrawStates(
+    Canvas canvas,
+    List<automaton_state.State> visibleStates,
+    Paint paint,
+    int lod,
+  ) {
+    // Group states by visual complexity
+    final regularStates = <automaton_state.State>[];
+    final traceStates = <automaton_state.State>[];
+    final specialStates = <automaton_state.State>[];
+
+    for (final state in visibleStates) {
+      final isVisited = showTrace && _visitedStates.contains(state.id);
+      final isCurrent =
+          showTrace &&
+          simulationResult != null &&
+          currentStepIndex != null &&
+          currentStepIndex! < simulationResult!.steps.length &&
+          simulationResult!.steps[currentStepIndex!].currentState == state.id;
+
+      if (isCurrent) {
+        specialStates.add(state);
+      } else if (isVisited) {
+        traceStates.add(state);
+      } else {
+        regularStates.add(state);
+      }
+    }
+
+    // Draw in order of visual importance (regular first, then traces, then current)
+    for (final state in regularStates) {
+      _drawState(canvas, state, paint, lod);
+    }
+    for (final state in traceStates) {
+      _drawState(canvas, state, paint, lod);
+    }
+    for (final state in specialStates) {
+      _drawState(canvas, state, paint, lod);
+    }
   }
 
   static Set<String> _identifyNondeterministicTransitions(

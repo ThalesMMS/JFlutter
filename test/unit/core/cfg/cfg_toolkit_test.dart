@@ -5,7 +5,7 @@ import 'package:jflutter/core/models/production.dart';
 import 'package:jflutter/core/result.dart';
 
 /// CFG Toolkit Validation Tests
-/// 
+///
 /// This test suite validates CFG toolkit algorithms for:
 /// 1. ε-removal (lambda production elimination)
 /// 2. Unit production elimination
@@ -23,16 +23,16 @@ void main() {
     setUp(() {
       // Test Case 1: Simple grammar with terminals and nonterminals
       simpleGrammar = _createSimpleGrammar();
-      
+
       // Test Case 2: Complex grammar with multiple productions
       complexGrammar = _createComplexGrammar();
-      
+
       // Test Case 3: Grammar with unit productions
       unitGrammar = _createUnitGrammar();
-      
+
       // Test Case 4: Grammar with lambda productions
       lambdaGrammar = _createLambdaGrammar();
-      
+
       // Test Case 5: Grammar with useless symbols
       uselessGrammar = _createUselessGrammar();
     });
@@ -40,21 +40,28 @@ void main() {
     group('ε-removal Tests', () {
       test('Should remove lambda productions except start symbol', () {
         final result = CFGToolkit.reduce(lambdaGrammar);
-        
-        expect(result.isSuccess, true, 
-          reason: 'Lambda removal should succeed');
-        
+
+        expect(result.isSuccess, true, reason: 'Lambda removal should succeed');
+
         if (result.isSuccess) {
           final reduced = result.data!;
-          
+
           // Check that lambda productions are removed (except possibly start)
-          final lambdaProds = reduced.productions.where((p) => p.isLambda).toList();
-          expect(lambdaProds.length <= 1, true,
-            reason: 'Should have at most one lambda production (start symbol)');
-          
+          final lambdaProds = reduced.productions
+              .where((p) => p.isLambda)
+              .toList();
+          expect(
+            lambdaProds.length <= 1,
+            true,
+            reason: 'Should have at most one lambda production (start symbol)',
+          );
+
           if (lambdaProds.isNotEmpty) {
-            expect(lambdaProds.first.leftSide.first, reduced.startSymbol,
-              reason: 'Only start symbol should have lambda production');
+            expect(
+              lambdaProds.first.leftSide.first,
+              reduced.startSymbol,
+              reason: 'Only start symbol should have lambda production',
+            );
           }
         }
       });
@@ -62,13 +69,16 @@ void main() {
       test('Should preserve language after lambda removal', () {
         final originalResult = CFGToolkit.reduce(lambdaGrammar);
         expect(originalResult.isSuccess, true);
-        
+
         if (originalResult.isSuccess) {
           final reduced = originalResult.data!;
-          
+
           // The reduced grammar should have fewer or equal productions
-          expect(reduced.productions.length <= lambdaGrammar.productions.length, true,
-            reason: 'Reduced grammar should not have more productions');
+          expect(
+            reduced.productions.length <= lambdaGrammar.productions.length,
+            true,
+            reason: 'Reduced grammar should not have more productions',
+          );
         }
       });
     });
@@ -76,37 +86,52 @@ void main() {
     group('Unit Production Elimination Tests', () {
       test('Should eliminate unit productions', () {
         final result = CFGToolkit.reduce(unitGrammar);
-        
-        expect(result.isSuccess, true, 
-          reason: 'Unit production elimination should succeed');
-        
+
+        expect(
+          result.isSuccess,
+          true,
+          reason: 'Unit production elimination should succeed',
+        );
+
         if (result.isSuccess) {
           final reduced = result.data!;
-          
+
           // Check that no unit productions remain
-          final unitProds = reduced.productions.where((p) => 
-            p.rightSide.length == 1 && 
-            reduced.nonterminals.contains(p.rightSide.first) &&
-            !p.isLambda
-          ).toList();
-          
-          expect(unitProds.isEmpty, true,
-            reason: 'Should eliminate all unit productions');
+          final unitProds = reduced.productions
+              .where(
+                (p) =>
+                    p.rightSide.length == 1 &&
+                    reduced.nonterminals.contains(p.rightSide.first) &&
+                    !p.isLambda,
+              )
+              .toList();
+
+          expect(
+            unitProds.isEmpty,
+            true,
+            reason: 'Should eliminate all unit productions',
+          );
         }
       });
 
       test('Should preserve language after unit elimination', () {
         final result = CFGToolkit.reduce(unitGrammar);
         expect(result.isSuccess, true);
-        
+
         if (result.isSuccess) {
           final reduced = result.data!;
-          
+
           // The grammar should still be valid
-          expect(reduced.nonterminals.isNotEmpty, true,
-            reason: 'Should have nonterminals after unit elimination');
-          expect(reduced.productions.isNotEmpty, true,
-            reason: 'Should have productions after unit elimination');
+          expect(
+            reduced.nonterminals.isNotEmpty,
+            true,
+            reason: 'Should have nonterminals after unit elimination',
+          );
+          expect(
+            reduced.productions.isNotEmpty,
+            true,
+            reason: 'Should have productions after unit elimination',
+          );
         }
       });
     });
@@ -114,30 +139,39 @@ void main() {
     group('Useless Symbol Removal Tests', () {
       test('Should remove useless symbols', () {
         final result = CFGToolkit.reduce(uselessGrammar);
-        
-        expect(result.isSuccess, true, 
-          reason: 'Useless symbol removal should succeed');
-        
+
+        expect(
+          result.isSuccess,
+          true,
+          reason: 'Useless symbol removal should succeed',
+        );
+
         if (result.isSuccess) {
           final reduced = result.data!;
-          
+
           // All remaining nonterminals should be useful
           final useful = reduced.usefulNonterminals;
-          expect(reduced.nonterminals.difference(useful).isEmpty, true,
-            reason: 'Should remove all useless nonterminals');
+          expect(
+            reduced.nonterminals.difference(useful).isEmpty,
+            true,
+            reason: 'Should remove all useless nonterminals',
+          );
         }
       });
 
       test('Should preserve useful symbols only', () {
         final result = CFGToolkit.reduce(uselessGrammar);
         expect(result.isSuccess, true);
-        
+
         if (result.isSuccess) {
           final reduced = result.data!;
-          
+
           // Start symbol should always be useful
-          expect(reduced.nonterminals.contains(reduced.startSymbol), true,
-            reason: 'Start symbol should be preserved');
+          expect(
+            reduced.nonterminals.contains(reduced.startSymbol),
+            true,
+            reason: 'Start symbol should be preserved',
+          );
         }
       });
     });
@@ -145,58 +179,83 @@ void main() {
     group('CNF Conversion Tests', () {
       test('Should convert grammar to CNF', () {
         final result = CFGToolkit.toCNF(complexGrammar);
-        
-        expect(result.isSuccess, true, 
-          reason: 'CNF conversion should succeed');
-        
+
+        expect(result.isSuccess, true, reason: 'CNF conversion should succeed');
+
         if (result.isSuccess) {
           final cnf = result.data!;
-          
+
           // Check that result is in CNF
-          expect(CFGToolkit.isCNF(cnf), true,
-            reason: 'Converted grammar should be in CNF');
+          expect(
+            CFGToolkit.isCNF(cnf),
+            true,
+            reason: 'Converted grammar should be in CNF',
+          );
         }
       });
 
       test('Should preserve language after CNF conversion', () {
         final result = CFGToolkit.toCNF(simpleGrammar);
         expect(result.isSuccess, true);
-        
+
         if (result.isSuccess) {
           final cnf = result.data!;
-          
+
           // CNF grammar should be valid
-          expect(cnf.nonterminals.isNotEmpty, true,
-            reason: 'CNF should have nonterminals');
-          expect(cnf.productions.isNotEmpty, true,
-            reason: 'CNF should have productions');
-          expect(cnf.terminals.isNotEmpty, true,
-            reason: 'CNF should have terminals');
+          expect(
+            cnf.nonterminals.isNotEmpty,
+            true,
+            reason: 'CNF should have nonterminals',
+          );
+          expect(
+            cnf.productions.isNotEmpty,
+            true,
+            reason: 'CNF should have productions',
+          );
+          expect(
+            cnf.terminals.isNotEmpty,
+            true,
+            reason: 'CNF should have terminals',
+          );
         }
       });
 
       test('Should handle complex grammar CNF conversion', () {
         final result = CFGToolkit.toCNF(complexGrammar);
         expect(result.isSuccess, true);
-        
+
         if (result.isSuccess) {
           final cnf = result.data!;
-          
+
           // All productions should be in CNF form
           for (final p in cnf.productions) {
             if (p.isLambda) {
-              expect(p.leftSide.first, cnf.startSymbol,
-                reason: 'Only start symbol should have lambda production');
+              expect(
+                p.leftSide.first,
+                cnf.startSymbol,
+                reason: 'Only start symbol should have lambda production',
+              );
             } else if (p.rightSide.length == 1) {
-              expect(cnf.terminals.contains(p.rightSide.first), true,
-                reason: 'Single RHS should be terminal');
+              expect(
+                cnf.terminals.contains(p.rightSide.first),
+                true,
+                reason: 'Single RHS should be terminal',
+              );
             } else if (p.rightSide.length == 2) {
-              expect(cnf.nonterminals.contains(p.rightSide[0]), true,
-                reason: 'Binary RHS first symbol should be nonterminal');
-              expect(cnf.nonterminals.contains(p.rightSide[1]), true,
-                reason: 'Binary RHS second symbol should be nonterminal');
+              expect(
+                cnf.nonterminals.contains(p.rightSide[0]),
+                true,
+                reason: 'Binary RHS first symbol should be nonterminal',
+              );
+              expect(
+                cnf.nonterminals.contains(p.rightSide[1]),
+                true,
+                reason: 'Binary RHS second symbol should be nonterminal',
+              );
             } else {
-              fail('CNF should not have productions with more than 2 RHS symbols');
+              fail(
+                'CNF should not have productions with more than 2 RHS symbols',
+              );
             }
           }
         }
@@ -207,34 +266,52 @@ void main() {
       test('Should correctly identify CNF grammars', () {
         // Create a simple CNF grammar
         final cnfGrammar = _createCNFGrammar();
-        
-        expect(CFGToolkit.isCNF(cnfGrammar), true,
-          reason: 'Should identify valid CNF grammar');
+
+        expect(
+          CFGToolkit.isCNF(cnfGrammar),
+          true,
+          reason: 'Should identify valid CNF grammar',
+        );
       });
 
       test('Should reject non-CNF grammars', () {
-        expect(CFGToolkit.isCNF(complexGrammar), false,
-          reason: 'Should reject non-CNF grammar');
-        expect(CFGToolkit.isCNF(unitGrammar), false,
-          reason: 'Should reject grammar with unit productions');
+        expect(
+          CFGToolkit.isCNF(complexGrammar),
+          false,
+          reason: 'Should reject non-CNF grammar',
+        );
+        expect(
+          CFGToolkit.isCNF(unitGrammar),
+          false,
+          reason: 'Should reject grammar with unit productions',
+        );
       });
     });
 
     group('Complete Reduction Tests', () {
       test('Should perform complete grammar reduction', () {
         final result = CFGToolkit.reduce(complexGrammar);
-        
-        expect(result.isSuccess, true, 
-          reason: 'Complete reduction should succeed');
-        
+
+        expect(
+          result.isSuccess,
+          true,
+          reason: 'Complete reduction should succeed',
+        );
+
         if (result.isSuccess) {
           final reduced = result.data!;
-          
+
           // Check that grammar is reduced
-          expect(reduced.nonterminals.isNotEmpty, true,
-            reason: 'Reduced grammar should have nonterminals');
-          expect(reduced.productions.isNotEmpty, true,
-            reason: 'Reduced grammar should have productions');
+          expect(
+            reduced.nonterminals.isNotEmpty,
+            true,
+            reason: 'Reduced grammar should have nonterminals',
+          );
+          expect(
+            reduced.productions.isNotEmpty,
+            true,
+            reason: 'Reduced grammar should have productions',
+          );
         }
       });
 
@@ -242,9 +319,8 @@ void main() {
         // Test with minimal grammar
         final minimal = _createMinimalGrammar();
         final result = CFGToolkit.reduce(minimal);
-        
-        expect(result.isSuccess, true,
-          reason: 'Should handle minimal grammar');
+
+        expect(result.isSuccess, true, reason: 'Should handle minimal grammar');
       });
     });
   });

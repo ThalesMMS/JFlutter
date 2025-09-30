@@ -329,11 +329,14 @@ class PDASimulator {
 
       // Generate ε-moves first (no input consumption). Consider either
       // explicit lambda flags or empty strings in the transition fields.
-      for (final t in pda.pdaTransitions.where((t) =>
-          t.fromState == state && (t.isLambdaInput || t.inputSymbol.isEmpty))) {
+      for (final t in pda.pdaTransitions.where(
+        (t) =>
+            t.fromState == state && (t.isLambdaInput || t.inputSymbol.isEmpty),
+      )) {
         final lambdaPop = t.isLambdaPop || t.popSymbol.isEmpty;
         final lambdaPush = t.isLambdaPush || t.pushSymbol.isEmpty;
-        final canPop = lambdaPop || (stack.isNotEmpty && stack.last == t.popSymbol);
+        final canPop =
+            lambdaPop || (stack.isNotEmpty && stack.last == t.popSymbol);
         if (!canPop) continue;
 
         final newStack = List<String>.from(stack);
@@ -367,11 +370,13 @@ class PDASimulator {
       // Generate input-consuming moves if input remains
       if (remaining.isNotEmpty) {
         final a = remaining[0];
-        for (final t in pda.pdaTransitions.where((t) =>
-            t.fromState == state && !t.isLambdaInput && t.inputSymbol == a)) {
+        for (final t in pda.pdaTransitions.where(
+          (t) => t.fromState == state && !t.isLambdaInput && t.inputSymbol == a,
+        )) {
           final lambdaPop = t.isLambdaPop || t.popSymbol.isEmpty;
           final lambdaPush = t.isLambdaPush || t.pushSymbol.isEmpty;
-          final canPop = lambdaPop || (stack.isNotEmpty && stack.last == t.popSymbol);
+          final canPop =
+              lambdaPop || (stack.isNotEmpty && stack.last == t.popSymbol);
           if (!canPop) continue;
 
           final newStack = List<String>.from(stack);

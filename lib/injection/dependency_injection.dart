@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../core/repositories/automaton_repository.dart';
 import '../core/use_cases/automaton_use_cases.dart';
 import '../core/use_cases/algorithm_use_cases.dart';
@@ -11,15 +12,20 @@ import '../features/layout/layout_repository_impl.dart';
 import '../data/services/automaton_service.dart';
 import '../data/services/simulation_service.dart';
 import '../data/services/conversion_service.dart';
+import '../data/services/trace_persistence_service.dart';
 import '../presentation/providers/automaton_provider.dart';
 import '../presentation/providers/algorithm_provider.dart';
 import '../presentation/providers/grammar_provider.dart';
+import '../presentation/providers/unified_trace_provider.dart';
 
 /// Global service locator instance
 final GetIt getIt = GetIt.instance;
 
 /// Sets up dependency injection for the application
 Future<void> setupDependencyInjection() async {
+  // Initialize SharedPreferences for trace persistence
+  final prefs = await SharedPreferences.getInstance();
+
   // Data Sources
   getIt.registerLazySingleton<LocalStorageDataSource>(
     () => LocalStorageDataSource(),
@@ -35,6 +41,10 @@ Future<void> setupDependencyInjection() async {
   getIt.registerLazySingleton<SimulationService>(() => SimulationService());
 
   getIt.registerLazySingleton<ConversionService>(() => ConversionService());
+
+  getIt.registerLazySingleton<TracePersistenceService>(
+    () => TracePersistenceService(prefs),
+  );
 
   // Repositories
   getIt.registerLazySingleton<AutomatonRepository>(
@@ -193,6 +203,10 @@ Future<void> setupDependencyInjection() async {
 
   getIt.registerFactory<GrammarProvider>(
     () => GrammarProvider(conversionService: getIt<ConversionService>()),
+  );
+
+  getIt.registerFactory<UnifiedTraceNotifier>(
+    () => UnifiedTraceNotifier(getIt<TracePersistenceService>()),
   );
 }
 

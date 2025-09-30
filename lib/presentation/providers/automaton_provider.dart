@@ -385,7 +385,6 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     state = state.clearAlgorithmResults();
   }
 
-
   /// Add simulation result to history
   void _addSimulationToHistory(sim_result.SimulationResult result) {
     final newHistory = [...state.simulationHistory, result];
@@ -514,7 +513,8 @@ class AutomatonState {
   final bool isLoading;
   final String? error;
   final List<FSA> automatonHistory; // persistent history of automatons
-  final List<sim_result.SimulationResult> simulationHistory; // persistent simulation history
+  final List<sim_result.SimulationResult>
+  simulationHistory; // persistent simulation history
 
   const AutomatonState({
     this.currentAutomaton,
@@ -581,10 +581,7 @@ class AutomatonState {
 
   /// Clear simulation results
   AutomatonState clearSimulation() {
-    return copyWith(
-      simulationResult: null,
-      simulationHistory: [],
-    );
+    return copyWith(simulationResult: null, simulationHistory: []);
   }
 
   /// Clear algorithm results

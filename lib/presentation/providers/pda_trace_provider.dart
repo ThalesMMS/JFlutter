@@ -86,7 +86,8 @@ class PDATraceState {
   }
 
   /// Check if we can navigate to the next step
-  bool get canNavigateNext => result != null && currentStepIndex < result!.steps.length - 1;
+  bool get canNavigateNext =>
+      result != null && currentStepIndex < result!.steps.length - 1;
 
   /// Check if we can navigate to the previous step
   bool get canNavigatePrevious => currentStepIndex > 0;
@@ -107,7 +108,7 @@ class PDATraceNotifier extends StateNotifier<PDATraceState> {
   Future<void> simulate(String input) async {
     if (state.pda == null) return;
     state = state.copyWith(
-      isRunning: true, 
+      isRunning: true,
       lastInput: input,
       errorMessage: null,
       currentStepIndex: 0,
@@ -123,7 +124,7 @@ class PDATraceNotifier extends StateNotifier<PDATraceState> {
       // Add to trace history and update state
       final newTraceHistory = [...state.traceHistory, result.data!];
       state = state.copyWith(
-        result: result.data, 
+        result: result.data,
         isRunning: false,
         traceHistory: newTraceHistory,
         currentStepIndex: 0,

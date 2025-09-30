@@ -6,10 +6,10 @@ import 'package:jflutter/core/result.dart';
 import 'dart:math' as math;
 
 /// GLC (Context-Free Grammar) Validation Tests against References/automata-main
-/// 
+///
 /// This test suite validates CFG algorithms against the Python reference implementation
 /// from References/automata-main/tests/test_cfg.py to ensure behavioral equivalence.
-/// 
+///
 /// Test cases cover:
 /// 1. Valid derivation (strings that can be derived from the grammar)
 /// 2. Invalid derivation (strings that cannot be derived)
@@ -27,16 +27,16 @@ void main() {
     setUp(() {
       // Test Case 1: Balanced Parentheses (from jflutter_js/examples)
       balancedParenthesesGrammar = _createBalancedParenthesesGrammar();
-      
+
       // Test Case 2: Palindrome Grammar (from jflutter_js/examples)
       palindromeGrammar = _createPalindromeGrammar();
-      
+
       // Test Case 3: Left Recursive Grammar
       leftRecursiveGrammar = _createLeftRecursiveGrammar();
-      
+
       // Test Case 4: Ambiguous Grammar
       ambiguousGrammar = _createAmbiguousGrammar();
-      
+
       // Test Case 5: CNF Grammar
       cnfGrammar = _createCNFGrammar();
     });
@@ -44,12 +44,12 @@ void main() {
     group('Valid Derivation Tests', () {
       test('Balanced Parentheses - should accept valid strings', () async {
         final testCases = [
-          '',        // Empty string
-          '()',      // Simple balanced
-          '(())',    // Nested balanced
-          '()()',    // Multiple balanced
-          '((()))',  // Deeply nested
-          '()()()',  // Multiple simple
+          '', // Empty string
+          '()', // Simple balanced
+          '(())', // Nested balanced
+          '()()', // Multiple balanced
+          '((()))', // Deeply nested
+          '()()()', // Multiple simple
         ];
 
         for (final testString in testCases) {
@@ -57,66 +57,80 @@ void main() {
             balancedParenthesesGrammar,
             testString,
           );
-          
-          expect(result.isSuccess, true, 
-            reason: 'Parsing should succeed for "$testString"');
-          
+
+          expect(
+            result.isSuccess,
+            true,
+            reason: 'Parsing should succeed for "$testString"',
+          );
+
           if (result.isSuccess) {
-            expect(result.data!.accepted, true,
-              reason: 'String "$testString" should be accepted by balanced parentheses grammar');
+            expect(
+              result.data!.accepted,
+              true,
+              reason:
+                  'String "$testString" should be accepted by balanced parentheses grammar',
+            );
           }
         }
       });
 
       test('Palindrome Grammar - should accept palindromes', () async {
         final testCases = [
-          '',        // Empty string
-          'a',       // Single character
-          'b',       // Single character
-          'aa',      // Even length palindrome
-          'bb',      // Even length palindrome
-          'aba',     // Odd length palindrome
-          'bab',     // Odd length palindrome
-          'abba',    // Even length palindrome
-          'baab',    // Even length palindrome
+          '', // Empty string
+          'a', // Single character
+          'b', // Single character
+          'aa', // Even length palindrome
+          'bb', // Even length palindrome
+          'aba', // Odd length palindrome
+          'bab', // Odd length palindrome
+          'abba', // Even length palindrome
+          'baab', // Even length palindrome
         ];
 
         for (final testString in testCases) {
-          final result = GrammarParser.parse(
-            palindromeGrammar,
-            testString,
+          final result = GrammarParser.parse(palindromeGrammar, testString);
+
+          expect(
+            result.isSuccess,
+            true,
+            reason: 'Parsing should succeed for "$testString"',
           );
-          
-          expect(result.isSuccess, true, 
-            reason: 'Parsing should succeed for "$testString"');
-          
+
           if (result.isSuccess) {
-            expect(result.data!.accepted, true,
-              reason: 'String "$testString" should be accepted by palindrome grammar');
+            expect(
+              result.data!.accepted,
+              true,
+              reason:
+                  'String "$testString" should be accepted by palindrome grammar',
+            );
           }
         }
       });
 
       test('CNF Grammar - should accept valid strings', () async {
         final testCases = [
-          'a',       // Single terminal
-          'b',       // Single terminal
-          'ab',      // Two terminals
-          'ba',      // Two terminals
+          'a', // Single terminal
+          'b', // Single terminal
+          'ab', // Two terminals
+          'ba', // Two terminals
         ];
 
         for (final testString in testCases) {
-          final result = GrammarParser.parse(
-            cnfGrammar,
-            testString,
+          final result = GrammarParser.parse(cnfGrammar, testString);
+
+          expect(
+            result.isSuccess,
+            true,
+            reason: 'Parsing should succeed for "$testString"',
           );
-          
-          expect(result.isSuccess, true, 
-            reason: 'Parsing should succeed for "$testString"');
-          
+
           if (result.isSuccess) {
-            expect(result.data!.accepted, true,
-              reason: 'String "$testString" should be accepted by CNF grammar');
+            expect(
+              result.data!.accepted,
+              true,
+              reason: 'String "$testString" should be accepted by CNF grammar',
+            );
           }
         }
       });
@@ -125,13 +139,13 @@ void main() {
     group('Invalid Derivation Tests', () {
       test('Balanced Parentheses - should reject invalid strings', () async {
         final testCases = [
-          '(',       // Unmatched opening
-          ')',       // Unmatched closing
-          '())',     // Extra closing
-          '(()',     // Extra opening
-          ')(',      // Wrong order
-          '((())',   // Unmatched opening
-          '()))',    // Extra closing
+          '(', // Unmatched opening
+          ')', // Unmatched closing
+          '())', // Extra closing
+          '(()', // Extra opening
+          ')(', // Wrong order
+          '((())', // Unmatched opening
+          '()))', // Extra closing
         ];
 
         for (final testString in testCases) {
@@ -139,58 +153,70 @@ void main() {
             balancedParenthesesGrammar,
             testString,
           );
-          
-          expect(result.isSuccess, true, 
-            reason: 'Parsing should succeed for "$testString"');
-          
+
+          expect(
+            result.isSuccess,
+            true,
+            reason: 'Parsing should succeed for "$testString"',
+          );
+
           if (result.isSuccess) {
-            expect(result.data!.accepted, false,
-              reason: 'String "$testString" should be rejected by balanced parentheses grammar');
+            expect(
+              result.data!.accepted,
+              false,
+              reason:
+                  'String "$testString" should be rejected by balanced parentheses grammar',
+            );
           }
         }
       });
 
       test('Palindrome Grammar - should reject non-palindromes', () async {
         final testCases = [
-          'ab',      // Not a palindrome
-          'ba',      // Not a palindrome
-          'aab',     // Not a palindrome
-          'bba',     // Not a palindrome
-          'abab',    // Not a palindrome
-          'baba',    // Not a palindrome
+          'ab', // Not a palindrome
+          'ba', // Not a palindrome
+          'aab', // Not a palindrome
+          'bba', // Not a palindrome
+          'abab', // Not a palindrome
+          'baba', // Not a palindrome
         ];
 
         for (final testString in testCases) {
-          final result = GrammarParser.parse(
-            palindromeGrammar,
-            testString,
+          final result = GrammarParser.parse(palindromeGrammar, testString);
+
+          expect(
+            result.isSuccess,
+            true,
+            reason: 'Parsing should succeed for "$testString"',
           );
-          
-          expect(result.isSuccess, true, 
-            reason: 'Parsing should succeed for "$testString"');
-          
+
           if (result.isSuccess) {
-            expect(result.data!.accepted, false,
-              reason: 'String "$testString" should be rejected by palindrome grammar');
+            expect(
+              result.data!.accepted,
+              false,
+              reason:
+                  'String "$testString" should be rejected by palindrome grammar',
+            );
           }
         }
       });
 
       test('Grammar should reject symbols not in alphabet', () async {
         final testCases = [
-          'c',       // Symbol not in alphabet
-          'ac',      // Mix of valid and invalid
-          'cb',      // Mix of invalid and valid
+          'c', // Symbol not in alphabet
+          'ac', // Mix of valid and invalid
+          'cb', // Mix of invalid and valid
         ];
 
         for (final testString in testCases) {
-          final result = GrammarParser.parse(
-            palindromeGrammar,
-            testString,
+          final result = GrammarParser.parse(palindromeGrammar, testString);
+
+          expect(
+            result.isSuccess,
+            false,
+            reason:
+                'Parsing should fail for "$testString" (contains invalid symbols)',
           );
-          
-          expect(result.isSuccess, false,
-            reason: 'Parsing should fail for "$testString" (contains invalid symbols)');
         }
       });
     });
@@ -198,10 +224,10 @@ void main() {
     group('CNF/CYK Tests', () {
       test('CYK algorithm should work with CNF grammar', () async {
         final testCases = [
-          'a',       // Single terminal
-          'b',       // Single terminal
-          'ab',      // Two terminals
-          'ba',      // Two terminals
+          'a', // Single terminal
+          'b', // Single terminal
+          'ab', // Two terminals
+          'ba', // Two terminals
         ];
 
         for (final testString in testCases) {
@@ -210,13 +236,20 @@ void main() {
             testString,
             strategyHint: ParsingStrategyHint.cyk,
           );
-          
-          expect(result.isSuccess, true, 
-            reason: 'CYK parsing should succeed for "$testString"');
-          
+
+          expect(
+            result.isSuccess,
+            true,
+            reason: 'CYK parsing should succeed for "$testString"',
+          );
+
           if (result.isSuccess) {
-            expect(result.data!.accepted, true,
-              reason: 'String "$testString" should be accepted by CYK algorithm');
+            expect(
+              result.data!.accepted,
+              true,
+              reason:
+                  'String "$testString" should be accepted by CYK algorithm',
+            );
           }
         }
       });
@@ -227,13 +260,16 @@ void main() {
           balancedParenthesesGrammar,
           '()',
         );
-        
+
         // Note: In a real implementation, we would convert to CNF and test
         // For now, we just verify the original grammar works
         expect(originalResult.isSuccess, true);
         if (originalResult.isSuccess) {
-          expect(originalResult.data!.accepted, true,
-            reason: 'Original grammar should accept "()"');
+          expect(
+            originalResult.data!.accepted,
+            true,
+            reason: 'Original grammar should accept "()"',
+          );
         }
       });
     });
@@ -241,38 +277,42 @@ void main() {
     group('Left Recursion Tests', () {
       test('Left recursive grammar should be detected', () async {
         // Test that left recursion is properly handled
-        final result = GrammarParser.parse(
-          leftRecursiveGrammar,
-          'a',
-        );
-        
+        final result = GrammarParser.parse(leftRecursiveGrammar, 'a');
+
         // The grammar should still work, but we should be able to detect left recursion
         expect(result.isSuccess, true);
         if (result.isSuccess) {
-          expect(result.data!.accepted, true,
-            reason: 'Left recursive grammar should still accept valid strings');
+          expect(
+            result.data!.accepted,
+            true,
+            reason: 'Left recursive grammar should still accept valid strings',
+          );
         }
       });
 
       test('Left recursive grammar should handle complex derivations', () async {
         final testCases = [
-          'a',       // Simple case
-          'aa',      // Multiple a's
-          'aaa',     // Multiple a's
+          'a', // Simple case
+          'aa', // Multiple a's
+          'aaa', // Multiple a's
         ];
 
         for (final testString in testCases) {
-          final result = GrammarParser.parse(
-            leftRecursiveGrammar,
-            testString,
+          final result = GrammarParser.parse(leftRecursiveGrammar, testString);
+
+          expect(
+            result.isSuccess,
+            true,
+            reason: 'Parsing should succeed for "$testString"',
           );
-          
-          expect(result.isSuccess, true, 
-            reason: 'Parsing should succeed for "$testString"');
-          
+
           if (result.isSuccess) {
-            expect(result.data!.accepted, true,
-              reason: 'String "$testString" should be accepted by left recursive grammar');
+            expect(
+              result.data!.accepted,
+              true,
+              reason:
+                  'String "$testString" should be accepted by left recursive grammar',
+            );
           }
         }
       });
@@ -281,37 +321,41 @@ void main() {
     group('Ambiguity Tests', () {
       test('Ambiguous grammar should handle multiple derivations', () async {
         // Test that ambiguous grammar can handle strings with multiple derivations
-        final result = GrammarParser.parse(
-          ambiguousGrammar,
-          'a',
-        );
-        
+        final result = GrammarParser.parse(ambiguousGrammar, 'a');
+
         expect(result.isSuccess, true);
         if (result.isSuccess) {
-          expect(result.data!.accepted, true,
-            reason: 'Ambiguous grammar should accept valid strings');
+          expect(
+            result.data!.accepted,
+            true,
+            reason: 'Ambiguous grammar should accept valid strings',
+          );
         }
       });
 
       test('Ambiguous grammar should handle complex cases', () async {
         final testCases = [
-          'a',       // Simple case
-          'aa',      // Multiple a's
-          'aaa',     // Multiple a's
+          'a', // Simple case
+          'aa', // Multiple a's
+          'aaa', // Multiple a's
         ];
 
         for (final testString in testCases) {
-          final result = GrammarParser.parse(
-            ambiguousGrammar,
-            testString,
+          final result = GrammarParser.parse(ambiguousGrammar, testString);
+
+          expect(
+            result.isSuccess,
+            true,
+            reason: 'Parsing should succeed for "$testString"',
           );
-          
-          expect(result.isSuccess, true, 
-            reason: 'Parsing should succeed for "$testString"');
-          
+
           if (result.isSuccess) {
-            expect(result.data!.accepted, true,
-              reason: 'String "$testString" should be accepted by ambiguous grammar');
+            expect(
+              result.data!.accepted,
+              true,
+              reason:
+                  'String "$testString" should be accepted by ambiguous grammar',
+            );
           }
         }
       });
@@ -321,36 +365,48 @@ void main() {
       test('Grammar should handle long strings efficiently', () async {
         // Test with very long strings to ensure performance
         final longString = '()' * 1000; // 2000 characters
-        
+
         final result = GrammarParser.parse(
           balancedParenthesesGrammar,
           longString,
         );
-        
-        expect(result.isSuccess, true,
-          reason: 'Should handle long strings without issues');
-        
+
+        expect(
+          result.isSuccess,
+          true,
+          reason: 'Should handle long strings without issues',
+        );
+
         if (result.isSuccess) {
-          expect(result.data!.accepted, true,
-            reason: 'Long balanced parentheses string should be accepted');
+          expect(
+            result.data!.accepted,
+            true,
+            reason: 'Long balanced parentheses string should be accepted',
+          );
         }
       });
 
       test('Grammar should handle complex nested structures', () async {
         // Test with deeply nested structures
         final nestedString = '(' * 100 + ')' * 100; // 200 characters
-        
+
         final result = GrammarParser.parse(
           balancedParenthesesGrammar,
           nestedString,
         );
-        
-        expect(result.isSuccess, true,
-          reason: 'Should handle complex nested structures');
-        
+
+        expect(
+          result.isSuccess,
+          true,
+          reason: 'Should handle complex nested structures',
+        );
+
         if (result.isSuccess) {
-          expect(result.data!.accepted, true,
-            reason: 'Deeply nested parentheses should be accepted');
+          expect(
+            result.data!.accepted,
+            true,
+            reason: 'Deeply nested parentheses should be accepted',
+          );
         }
       });
     });
@@ -362,21 +418,25 @@ void main() {
           balancedParenthesesGrammar,
           'c', // Invalid symbol
         );
-        
-        expect(result.isSuccess, false,
-          reason: 'Should reject strings with invalid symbols');
+
+        expect(
+          result.isSuccess,
+          false,
+          reason: 'Should reject strings with invalid symbols',
+        );
       });
 
       test('Grammar should handle empty strings correctly', () async {
-        final result = GrammarParser.parse(
-          balancedParenthesesGrammar,
-          '',
-        );
-        
+        final result = GrammarParser.parse(balancedParenthesesGrammar, '');
+
         expect(result.isSuccess, true);
         if (result.isSuccess) {
-          expect(result.data!.accepted, true,
-            reason: 'Empty string should be accepted by balanced parentheses grammar');
+          expect(
+            result.data!.accepted,
+            true,
+            reason:
+                'Empty string should be accepted by balanced parentheses grammar',
+          );
         }
       });
     });

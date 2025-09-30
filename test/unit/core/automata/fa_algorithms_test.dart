@@ -252,10 +252,7 @@ void main() {
 
       final result = fa.FAAlgorithms.nfaToDfa(nfa);
       expect(result.isFailure, isTrue);
-      expect(
-        result.error,
-        contains('Exceeded maximum number of DFA states'),
-      );
+      expect(result.error, contains('Exceeded maximum number of DFA states'));
     });
   });
 }

@@ -292,7 +292,10 @@ class AutomatonSimulator {
 
     bool isEpsilonSymbol(String s) {
       final normalized = s.trim().toLowerCase();
-      return normalized.isEmpty || normalized == 'ε' || normalized == 'λ' || normalized == 'lambda';
+      return normalized.isEmpty ||
+          normalized == 'ε' ||
+          normalized == 'λ' ||
+          normalized == 'lambda';
     }
 
     Set<State> epsilonClosureFlexibleOf(State start) {
@@ -302,7 +305,8 @@ class AutomatonSimulator {
         final state = queue.removeAt(0);
         for (final t in nfa.fsaTransitions) {
           final isFrom = t.fromState == state;
-          final isEps = t.isEpsilonTransition || t.inputSymbols.any(isEpsilonSymbol);
+          final isEps =
+              t.isEpsilonTransition || t.inputSymbols.any(isEpsilonSymbol);
           if (isFrom && isEps) {
             if (closure.add(t.toState)) {
               queue.add(t.toState);

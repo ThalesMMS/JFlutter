@@ -7,28 +7,32 @@ import 'grammar_parser.dart';
 class SimpleCFGParser {
   final Grammar grammar;
   final Map<String, Parser> _parsers = {};
-  
+
   SimpleCFGParser(this.grammar) {
     _buildParsers();
   }
-  
+
   void _buildParsers() {
     // Initialize all non-terminals with undefined parsers
     for (final nonTerminal in grammar.nonTerminals) {
       _parsers[nonTerminal] = undefined();
     }
-    
+
     // Build parsers for each non-terminal
     for (final nonTerminal in grammar.nonTerminals) {
       final productions = grammar.productions
-          .where((p) => p.leftSide.isNotEmpty && p.leftSide.first == nonTerminal)
+          .where(
+            (p) => p.leftSide.isNotEmpty && p.leftSide.first == nonTerminal,
+          )
           .toList();
-      
+
       if (productions.isEmpty) {
-        _parsers[nonTerminal] = failure(message: 'No productions for $nonTerminal');
+        _parsers[nonTerminal] = failure(
+          message: 'No productions for $nonTerminal',
+        );
         continue;
       }
-      
+
       Parser? parser;
       for (final production in productions) {
         final productionParser = _buildProductionParser(production);
@@ -40,43 +44,46 @@ class SimpleCFGParser {
           }
         }
       }
-      
-      _parsers[nonTerminal] = parser ?? failure(message: 'No valid productions for $nonTerminal');
+
+      _parsers[nonTerminal] =
+          parser ?? failure(message: 'No valid productions for $nonTerminal');
     }
   }
-  
+
   Parser? _buildProductionParser(Production production) {
     // Handle epsilon productions
     if (production.rightSide.isEmpty || production.isLambda) {
       return epsilon().map((_) => [production.leftSide.first]);
     }
-    
+
     // Handle single symbol productions
     if (production.rightSide.length == 1) {
       final symbol = production.rightSide.first;
-      
+
       if (grammar.terminals.contains(symbol)) {
         // Terminal symbol
         return string(symbol).map((_) => [production.leftSide.first, symbol]);
       } else if (grammar.nonTerminals.contains(symbol)) {
         // Non-terminal symbol
-        return _parsers[symbol]?.map((result) => [production.leftSide.first, ...result]);
+        return _parsers[symbol]?.map(
+          (result) => [production.leftSide.first, ...result],
+        );
       }
     }
-    
+
     // Handle multi-symbol productions
     if (production.rightSide.length > 1) {
       Parser? sequenceParser;
-      
+
       for (final symbol in production.rightSide) {
         Parser? symbolParser;
-        
+
         if (grammar.terminals.contains(symbol)) {
           symbolParser = string(symbol).map((_) => [symbol]);
         } else if (grammar.nonTerminals.contains(symbol)) {
           symbolParser = _parsers[symbol];
         }
-        
+
         if (symbolParser != null) {
           if (sequenceParser == null) {
             sequenceParser = symbolParser;
@@ -87,11 +94,11 @@ class SimpleCFGParser {
           return failure(message: 'Invalid symbol: $symbol');
         }
       }
-      
+
       if (sequenceParser == null) {
         return failure(message: 'No valid sequence parser');
       }
-      
+
       return sequenceParser.map((result) {
         final List<String> derivation = [production.leftSide.first];
         for (final item in result) {
@@ -104,12 +111,13 @@ class SimpleCFGParser {
         return derivation;
       });
     }
-    
+
     return failure(message: 'Invalid production: ${production.rightSide}');
   }
-  
+
   Parser getParser() {
-    return _parsers[grammar.startSymbol]?.end() ?? failure(message: 'No parser for start symbol');
+    return _parsers[grammar.startSymbol]?.end() ??
+        failure(message: 'No parser for start symbol');
   }
 }
 
@@ -136,13 +144,15 @@ class GrammarParserPetit {
       print('Non-terminals: ${grammar.nonTerminals}');
       print('Terminals: ${grammar.terminals}');
       print('Productions: ${grammar.productions.length}');
-      
+
       final parser = _buildParser(grammar);
       if (parser == null) {
         print('Failed to build parser from grammar');
-        return const jflutter_result.Failure('Failed to build parser from grammar');
+        return const jflutter_result.Failure(
+          'Failed to build parser from grammar',
+        );
       }
-      
+
       print('Parser built successfully');
 
       // Parse the string
@@ -150,15 +160,19 @@ class GrammarParserPetit {
       stopwatch.stop();
 
       if (result is Success) {
-        return jflutter_result.Success(ParseResult.success(
-          inputString: inputString,
-          derivations: [result.value],
-          executionTime: stopwatch.elapsed,
-        ));
+        return jflutter_result.Success(
+          ParseResult.success(
+            inputString: inputString,
+            derivations: [result.value],
+            executionTime: stopwatch.elapsed,
+          ),
+        );
       } else {
         // Debug output
         print('PetitParser failed to parse "$inputString": ${result.message}');
-        return jflutter_result.Failure('String "$inputString" cannot be derived from grammar');
+        return jflutter_result.Failure(
+          'String "$inputString" cannot be derived from grammar',
+        );
       }
     } catch (e) {
       return jflutter_result.Failure('Error parsing string: $e');
@@ -166,9 +180,14 @@ class GrammarParserPetit {
   }
 
   /// Validates the input grammar and string
-  static jflutter_result.Result<void> _validateInput(Grammar grammar, String inputString) {
+  static jflutter_result.Result<void> _validateInput(
+    Grammar grammar,
+    String inputString,
+  ) {
     if (grammar.productions.isEmpty) {
-      return const jflutter_result.Failure('Grammar must have at least one production');
+      return const jflutter_result.Failure(
+        'Grammar must have at least one production',
+      );
     }
 
     if (grammar.startSymbol.isEmpty) {
@@ -176,14 +195,18 @@ class GrammarParserPetit {
     }
 
     if (!grammar.nonTerminals.contains(grammar.startSymbol)) {
-      return const jflutter_result.Failure('Start symbol must be a non-terminal');
+      return const jflutter_result.Failure(
+        'Start symbol must be a non-terminal',
+      );
     }
 
     // Validate input string symbols
     for (int i = 0; i < inputString.length; i++) {
       final symbol = inputString[i];
       if (!grammar.terminals.contains(symbol)) {
-        return jflutter_result.Failure('Input string contains invalid symbol: $symbol');
+        return jflutter_result.Failure(
+          'Input string contains invalid symbol: $symbol',
+        );
       }
     }
 
@@ -195,7 +218,7 @@ class GrammarParserPetit {
     try {
       // Create a simple CFG parser
       final cfgParser = SimpleCFGParser(grammar);
-      
+
       // Get the parser
       return cfgParser.getParser();
     } catch (e) {
@@ -203,6 +226,4 @@ class GrammarParserPetit {
       return null;
     }
   }
-
 }
-

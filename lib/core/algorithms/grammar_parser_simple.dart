@@ -82,7 +82,9 @@ class SimpleGrammarParser {
       if (_canDeriveEmptyString(grammar, grammar.startSymbol)) {
         return ParseResult.success(
           inputString: inputString,
-          derivations: [[grammar.startSymbol]],
+          derivations: [
+            [grammar.startSymbol],
+          ],
           executionTime: DateTime.now().difference(startTime),
         );
       }
@@ -90,8 +92,14 @@ class SimpleGrammarParser {
     }
 
     // Try to parse the string
-    final result = _parseNonTerminal(grammar, grammar.startSymbol, inputString, startTime, timeout);
-    
+    final result = _parseNonTerminal(
+      grammar,
+      grammar.startSymbol,
+      inputString,
+      startTime,
+      timeout,
+    );
+
     if (result != null) {
       return ParseResult.success(
         inputString: inputString,
@@ -126,7 +134,8 @@ class SimpleGrammarParser {
 
     // Try all productions for this non-terminal
     for (final production in grammar.productions) {
-      if (production.leftSide.isNotEmpty && production.leftSide.first == nonTerminal) {
+      if (production.leftSide.isNotEmpty &&
+          production.leftSide.first == nonTerminal) {
         // Handle epsilon productions
         if (production.rightSide.isEmpty || production.isLambda) {
           if (inputString.isEmpty) {
@@ -136,7 +145,8 @@ class SimpleGrammarParser {
         }
 
         // Handle terminal productions
-        if (production.rightSide.length == 1 && grammar.terminals.contains(production.rightSide.first)) {
+        if (production.rightSide.length == 1 &&
+            grammar.terminals.contains(production.rightSide.first)) {
           if (inputString == production.rightSide.first) {
             return [nonTerminal, production.rightSide.first];
           }
@@ -144,8 +154,15 @@ class SimpleGrammarParser {
         }
 
         // Handle non-terminal productions
-        if (production.rightSide.length == 1 && grammar.nonTerminals.contains(production.rightSide.first)) {
-          final result = _parseNonTerminal(grammar, production.rightSide.first, inputString, startTime, timeout);
+        if (production.rightSide.length == 1 &&
+            grammar.nonTerminals.contains(production.rightSide.first)) {
+          final result = _parseNonTerminal(
+            grammar,
+            production.rightSide.first,
+            inputString,
+            startTime,
+            timeout,
+          );
           if (result != null) {
             return [nonTerminal, ...result];
           }
@@ -157,11 +174,23 @@ class SimpleGrammarParser {
           for (int split = 0; split <= inputString.length; split++) {
             final leftPart = inputString.substring(0, split);
             final rightPart = inputString.substring(split);
-            
+
             if (production.rightSide.length == 2) {
-              final leftResult = _parseNonTerminal(grammar, production.rightSide[0], leftPart, startTime, timeout);
-              final rightResult = _parseNonTerminal(grammar, production.rightSide[1], rightPart, startTime, timeout);
-              
+              final leftResult = _parseNonTerminal(
+                grammar,
+                production.rightSide[0],
+                leftPart,
+                startTime,
+                timeout,
+              );
+              final rightResult = _parseNonTerminal(
+                grammar,
+                production.rightSide[1],
+                rightPart,
+                startTime,
+                timeout,
+              );
+
               if (leftResult != null && rightResult != null) {
                 return [nonTerminal, ...leftResult, ...rightResult];
               }
@@ -180,18 +209,23 @@ class SimpleGrammarParser {
   }
 
   /// Recursively checks if a symbol can derive empty string
-  static bool _canDeriveEmptyStringFromSymbol(Grammar grammar, String symbol, Set<String> visited) {
+  static bool _canDeriveEmptyStringFromSymbol(
+    Grammar grammar,
+    String symbol,
+    Set<String> visited,
+  ) {
     if (visited.contains(symbol)) {
       return false; // Avoid infinite recursion
     }
     visited.add(symbol);
 
     for (final production in grammar.productions) {
-      if (production.leftSide.isNotEmpty && production.leftSide.first == symbol) {
+      if (production.leftSide.isNotEmpty &&
+          production.leftSide.first == symbol) {
         if (production.rightSide.isEmpty || production.isLambda) {
           return true; // Direct epsilon production
         }
-        
+
         // Check if all symbols in right side can derive empty string
         bool allCanDeriveEmpty = true;
         for (final rightSymbol in production.rightSide) {
@@ -199,7 +233,11 @@ class SimpleGrammarParser {
             allCanDeriveEmpty = false;
             break;
           }
-          if (!_canDeriveEmptyStringFromSymbol(grammar, rightSymbol, Set.from(visited))) {
+          if (!_canDeriveEmptyStringFromSymbol(
+            grammar,
+            rightSymbol,
+            Set.from(visited),
+          )) {
             allCanDeriveEmpty = false;
             break;
           }
@@ -209,7 +247,7 @@ class SimpleGrammarParser {
         }
       }
     }
-    
+
     return false;
   }
 }

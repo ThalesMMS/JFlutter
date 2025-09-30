@@ -80,8 +80,8 @@ class TMTransition extends Transition {
 
   /// Creates a TM transition from a JSON representation
   factory TMTransition.fromJson(Map<String, dynamic> json) {
-    final controlPointData =
-        (json['controlPoint'] as Map?)?.cast<String, dynamic>();
+    final controlPointData = (json['controlPoint'] as Map?)
+        ?.cast<String, dynamic>();
     final controlPointX = (controlPointData?['x'] as num?)?.toDouble() ?? 0.0;
     final controlPointY = (controlPointData?['y'] as num?)?.toDouble() ?? 0.0;
 

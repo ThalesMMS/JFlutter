@@ -18,13 +18,11 @@ class AutomatonDto {
     required Map<String, List<String>> transitions,
     this.initialId,
     required this.nextId,
-  })  : alphabet = List<String>.unmodifiable(alphabet),
-        states = List<StateDto>.unmodifiable(states),
-        transitions = Map<String, List<String>>.unmodifiable(
-          transitions.map(
-            (k, v) => MapEntry(k, List<String>.unmodifiable(v)),
-          ),
-        );
+  }) : alphabet = List<String>.unmodifiable(alphabet),
+       states = List<StateDto>.unmodifiable(states),
+       transitions = Map<String, List<String>>.unmodifiable(
+         transitions.map((k, v) => MapEntry(k, List<String>.unmodifiable(v))),
+       );
 
   factory AutomatonDto.fromJson(Map<String, dynamic> json) {
     return AutomatonDto(

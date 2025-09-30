@@ -7,8 +7,18 @@ import 'package:vector_math/vector_math_64.dart';
 import 'dart:math' as math;
 
 PDA _pdaAcceptsAByFinal() {
-  final q0 = State(id: 'q0', label: 'q0', position: Vector2(0, 0), isInitial: true);
-  final q1 = State(id: 'q1', label: 'q1', position: Vector2(100, 0), isAccepting: true);
+  final q0 = State(
+    id: 'q0',
+    label: 'q0',
+    position: Vector2(0, 0),
+    isInitial: true,
+  );
+  final q1 = State(
+    id: 'q1',
+    label: 'q1',
+    position: Vector2(100, 0),
+    isAccepting: true,
+  );
   final Set<State> states = {q0, q1};
   final alphabet = {'a'};
   final stackAlphabet = {'Z', 'A'};
@@ -51,7 +61,12 @@ PDA _pdaAcceptsAByFinal() {
 }
 
 PDA _pdaAcceptsEmptyByEmptyStack() {
-  final q0 = State(id: 'q0', label: 'q0', position: Vector2(0, 0), isInitial: true);
+  final q0 = State(
+    id: 'q0',
+    label: 'q0',
+    position: Vector2(0, 0),
+    isInitial: true,
+  );
   final Set<State> states = {q0};
   final alphabet = <String>{};
   final stackAlphabet = {'Z'};
@@ -93,8 +108,18 @@ PDA _pdaAcceptsEmptyByEmptyStack() {
 }
 
 PDA _pdaAcceptsABoth() {
-  final q0 = State(id: 'q0', label: 'q0', position: Vector2(0, 0), isInitial: true);
-  final qf = State(id: 'qf', label: 'qf', position: Vector2(100, 0), isAccepting: true);
+  final q0 = State(
+    id: 'q0',
+    label: 'q0',
+    position: Vector2(0, 0),
+    isInitial: true,
+  );
+  final qf = State(
+    id: 'qf',
+    label: 'qf',
+    position: Vector2(100, 0),
+    isAccepting: true,
+  );
   final Set<State> states = {q0, qf};
   final alphabet = {'a'};
   final stackAlphabet = {'Z'};

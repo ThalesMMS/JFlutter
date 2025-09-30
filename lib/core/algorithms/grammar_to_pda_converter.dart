@@ -8,6 +8,15 @@ import '../result.dart';
 
 /// Converts context-free grammars to pushdown automata
 class GrammarToPDAConverter {
+  /// Compatibility entrypoint expected by tests: converts a grammar to a PDA
+  /// by delegating to [convertGrammarToPDA].
+  static Result<PDA> convert(
+    Grammar grammar, {
+    Duration timeout = const Duration(seconds: 10),
+  }) {
+    return convertGrammarToPDA(grammar, timeout: timeout);
+  }
+
   /// Checks if a grammar can be converted to PDA
   static bool canConvertToPDA(Grammar grammar) {
     try {

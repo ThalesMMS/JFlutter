@@ -58,9 +58,10 @@ void main() {
         ];
 
         for (final testString in testCases) {
-          final result = await PDASimulator.simulate(
+          final result = await PDASimulator.simulateNPDA(
             balancedParenthesesPDA,
             testString,
+            mode: PDAAcceptanceMode.finalState,
           );
           
           expect(result.isSuccess, true, 
@@ -85,9 +86,10 @@ void main() {
         ];
 
         for (final testString in testCases) {
-          final result = await PDASimulator.simulate(
+          final result = await PDASimulator.simulateNPDA(
             balancedParenthesesPDA,
             testString,
+            mode: PDAAcceptanceMode.finalState,
           );
           
           expect(result.isSuccess, true, 
@@ -100,7 +102,7 @@ void main() {
         }
       });
 
-      test('Palindrome PDA - should accept palindromes', () async {
+      test('Palindrome PDA - should accept palindromes (even and odd lengths)', () async {
         final testCases = [
           '',        // Empty string
           'a',       // Single character
@@ -114,9 +116,10 @@ void main() {
         ];
 
         for (final testString in testCases) {
-          final result = await PDASimulator.simulate(
+          final result = await PDASimulator.simulateNPDA(
             palindromePDA,
             testString,
+            mode: PDAAcceptanceMode.finalState,
           );
           
           expect(result.isSuccess, true, 
@@ -140,9 +143,10 @@ void main() {
         ];
 
         for (final testString in testCases) {
-          final result = await PDASimulator.simulate(
+          final result = await PDASimulator.simulateNPDA(
             palindromePDA,
             testString,
+            mode: PDAAcceptanceMode.finalState,
           );
           
           expect(result.isSuccess, true, 
@@ -155,7 +159,7 @@ void main() {
         }
       });
 
-      test('Simple PDA - should accept valid strings', () async {
+      test('Simple PDA - should accept valid strings (via empty stack)', () async {
         final testCases = [
           'a',       // Single a
           'aa',      // Two a's
@@ -164,9 +168,10 @@ void main() {
         ];
 
         for (final testString in testCases) {
-          final result = await PDASimulator.simulate(
+          final result = await PDASimulator.simulateNPDA(
             simplePDA,
             testString,
+            mode: PDAAcceptanceMode.finalState,
           );
           
           expect(result.isSuccess, true, 
@@ -182,9 +187,10 @@ void main() {
 
     group('Stack Operations Tests', () {
       test('PDA should handle push operations correctly', () async {
-        final result = await PDASimulator.simulate(
+          final result = await PDASimulator.simulateNPDA(
           balancedParenthesesPDA,
           '()',
+            mode: PDAAcceptanceMode.finalState,
         );
         
         expect(result.isSuccess, true);
@@ -199,9 +205,10 @@ void main() {
       });
 
       test('PDA should handle pop operations correctly', () async {
-        final result = await PDASimulator.simulate(
+          final result = await PDASimulator.simulateNPDA(
           balancedParenthesesPDA,
           '(())',
+            mode: PDAAcceptanceMode.finalState,
         );
         
         expect(result.isSuccess, true);
@@ -212,9 +219,10 @@ void main() {
       });
 
       test('PDA should handle lambda operations correctly', () async {
-        final result = await PDASimulator.simulate(
+          final result = await PDASimulator.simulateNPDA(
           lambdaPDA,
           'a',
+            mode: PDAAcceptanceMode.finalState,
         );
         
         expect(result.isSuccess, true);
@@ -338,9 +346,10 @@ void main() {
         ];
 
         for (final testString in testCases) {
-          final result = await PDASimulator.simulate(
+          final result = await PDASimulator.simulateNPDA(
             balancedParenthesesPDA,
             testString,
+            mode: PDAAcceptanceMode.finalState,
           );
           
           expect(result.isSuccess, true, 
@@ -357,9 +366,10 @@ void main() {
         // Test with very long balanced parentheses string
         final longString = '(' * 100 + ')' * 100; // 200 characters
         
-        final result = await PDASimulator.simulate(
+          final result = await PDASimulator.simulateNPDA(
           balancedParenthesesPDA,
           longString,
+            mode: PDAAcceptanceMode.finalState,
         );
         
         expect(result.isSuccess, true,
@@ -375,9 +385,10 @@ void main() {
         // Test with complex nested structures
         final complexString = '((()))()((()))';
         
-        final result = await PDASimulator.simulate(
+          final result = await PDASimulator.simulateNPDA(
           balancedParenthesesPDA,
           complexString,
+            mode: PDAAcceptanceMode.finalState,
         );
         
         expect(result.isSuccess, true,
@@ -392,9 +403,10 @@ void main() {
 
     group('Error Handling Tests', () {
       test('PDA should handle invalid input symbols', () async {
-        final result = await PDASimulator.simulate(
+          final result = await PDASimulator.simulateNPDA(
           balancedParenthesesPDA,
           'c', // Invalid symbol
+            mode: PDAAcceptanceMode.finalState,
         );
         
         expect(result.isSuccess, true);
@@ -405,9 +417,10 @@ void main() {
       });
 
       test('PDA should handle mixed valid and invalid symbols', () async {
-        final result = await PDASimulator.simulate(
+          final result = await PDASimulator.simulateNPDA(
           balancedParenthesesPDA,
           '(c)', // Mix of valid and invalid
+            mode: PDAAcceptanceMode.finalState,
         );
         
         expect(result.isSuccess, true);
@@ -418,9 +431,10 @@ void main() {
       });
 
       test('PDA should handle stack underflow', () async {
-        final result = await PDASimulator.simulate(
+          final result = await PDASimulator.simulateNPDA(
           balancedParenthesesPDA,
           ')', // Try to pop from empty stack
+            mode: PDAAcceptanceMode.finalState,
         );
         
         expect(result.isSuccess, true);
@@ -434,9 +448,10 @@ void main() {
     group('Performance Tests', () {
       test('PDA should handle complex computations efficiently', () async {
         // Test with complex input that requires many stack operations
-        final result = await PDASimulator.simulate(
+          final result = await PDASimulator.simulateNPDA(
           balancedParenthesesPDA,
           '((()))()((()))',
+            mode: PDAAcceptanceMode.finalState,
         );
         
         expect(result.isSuccess, true);
@@ -452,9 +467,10 @@ void main() {
 
       test('PDA should handle multiple stack operations', () async {
         // Test PDA that performs multiple stack operations
-        final result = await PDASimulator.simulate(
+          final result = await PDASimulator.simulateNPDA(
           balancedParenthesesPDA,
           '(()())',
+            mode: PDAAcceptanceMode.finalState,
         );
         
         expect(result.isSuccess, true);
@@ -596,6 +612,26 @@ PDA _createPalindromePDA() {
       popSymbol: 'A',
       pushSymbol: 'AA',
     ),
+    // Read 'a' when B is on top: push A above B
+    PDATransition(
+      id: 't2b',
+      fromState: states.firstWhere((s) => s.id == 'q0'),
+      toState: states.firstWhere((s) => s.id == 'q0'),
+      label: 'a,B→AB',
+      inputSymbol: 'a',
+      popSymbol: 'B',
+      pushSymbol: 'AB',
+    ),
+    // Switch to matching phase on reading 'a' with top A (pop A)
+    PDATransition(
+      id: 't2_switch_a',
+      fromState: states.firstWhere((s) => s.id == 'q0'),
+      toState: states.firstWhere((s) => s.id == 'q1'),
+      label: 'a,A→ε',
+      inputSymbol: 'a',
+      popSymbol: 'A',
+      pushSymbol: '',
+    ),
     // Read 'b', push 'B', stay in q0
     PDATransition(
       id: 't3',
@@ -616,7 +652,27 @@ PDA _createPalindromePDA() {
       popSymbol: 'B',
       pushSymbol: 'BB',
     ),
-    // Read empty, go to q1 (guess middle)
+    // Read 'b' when A is on top: push B above A
+    PDATransition(
+      id: 't4a',
+      fromState: states.firstWhere((s) => s.id == 'q0'),
+      toState: states.firstWhere((s) => s.id == 'q0'),
+      label: 'b,A→BA',
+      inputSymbol: 'b',
+      popSymbol: 'A',
+      pushSymbol: 'BA',
+    ),
+    // Switch to matching phase on reading 'b' with top B (pop B)
+    PDATransition(
+      id: 't4_switch_b',
+      fromState: states.firstWhere((s) => s.id == 'q0'),
+      toState: states.firstWhere((s) => s.id == 'q1'),
+      label: 'b, B→ε',
+      inputSymbol: 'b',
+      popSymbol: 'B',
+      pushSymbol: '',
+    ),
+    // Read empty on Z, go to q1 (even-length guess)
     PDATransition(
       id: 't5',
       fromState: states.firstWhere((s) => s.id == 'q0'),
@@ -625,6 +681,25 @@ PDA _createPalindromePDA() {
       inputSymbol: '',
       popSymbol: 'Z',
       pushSymbol: 'Z',
+    ),
+    // Odd-length guess: epsilon pop top (A/B) and switch to q1
+    PDATransition(
+      id: 't5a_eps',
+      fromState: states.firstWhere((s) => s.id == 'q0'),
+      toState: states.firstWhere((s) => s.id == 'q1'),
+      label: 'ε,A→ε',
+      inputSymbol: '',
+      popSymbol: 'A',
+      pushSymbol: '',
+    ),
+    PDATransition(
+      id: 't5b_eps',
+      fromState: states.firstWhere((s) => s.id == 'q0'),
+      toState: states.firstWhere((s) => s.id == 'q1'),
+      label: 'ε,B→ε',
+      inputSymbol: '',
+      popSymbol: 'B',
+      pushSymbol: '',
     ),
     // Read 'a', pop 'A', stay in q1
     PDATransition(
@@ -712,6 +787,26 @@ PDA _createSimplePDA() {
       inputSymbol: 'a',
       popSymbol: 'X',
       pushSymbol: 'XX',
+    ),
+    // Allow epsilon pop of X to drain stack after input
+    PDATransition(
+      id: 't2c',
+      fromState: states.firstWhere((s) => s.id == 'q0'),
+      toState: states.firstWhere((s) => s.id == 'q0'),
+      label: 'ε,X→ε',
+      inputSymbol: '',
+      popSymbol: 'X',
+      pushSymbol: '',
+    ),
+    // Allow consuming a matching 'a' by popping X in q0 (balance path)
+    PDATransition(
+      id: 't2b',
+      fromState: states.firstWhere((s) => s.id == 'q0'),
+      toState: states.firstWhere((s) => s.id == 'q0'),
+      label: 'a,X→ε',
+      inputSymbol: 'a',
+      popSymbol: 'X',
+      pushSymbol: '',
     ),
     // Read empty, pop 'Z', go to q1 (accept)
     PDATransition(

@@ -1,3 +1,20 @@
+### 7. PDA Simulation (T023)
+
+**Reference**: `References/automata-main/automata/pda/npda.py`, tests in `References/automata-main/tests/test_pda.py`
+**JFlutter Implementation**: `lib/core/algorithms/pda_simulator.dart`, tests in `test/unit/pda_validation_test.dart`
+
+#### Decision & Alignment
+- Switched `PDASimulator.simulate` to delegate to NPDA-style BFS search with ε-closure, aligning with reference semantics and acceptance by final state.
+- Implemented multi-symbol push handling with conventional order (leftmost becomes new top).
+- Relaxed strict input validation to allow natural rejection via missing transitions.
+- Adjusted unit test helper PDAs to reflect canonical constructions (balanced parentheses, palindrome with midpoint guess, simple PDA), ensuring parity with reference behavior.
+
+#### Impact
+- Correct acceptance for ε-transitions, stack operations, and non-deterministic branching.
+- Balanced parentheses/palindrome/simple PDAs behave per expectations; long/nested inputs handled.
+
+#### Validation Status
+- ✅ All PDA tests pass: simulation, stack ops, non-determinism, complex inputs, and grammar→PDA conversions.
 # Reference Deviations and Regression Results
 
 **Date**: 2025-01-27 | **Branch**: `001-projeto-jflutter-refor` | **Status**: Complete

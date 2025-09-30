@@ -23,11 +23,59 @@ class GrammarParser {
     Duration timeout = const Duration(seconds: 5),
     ParsingStrategyHint strategyHint = ParsingStrategyHint.auto,
   }) {
+    // Validate input (symbols and basic invariants)
+    final validation = _validateInput(grammar, inputString);
+    if (!validation.isSuccess) {
+      return Failure(validation.error!);
+    }
+
     // First, decide acceptance robustly with Earley
+    // Fast path: detect Dyck-1 grammar (balanced single-type brackets) and
+    // recognize in linear time to handle very long inputs efficiently.
+    final dyckDelims = _detectDyck1Delimiters(grammar);
+    if (dyckDelims != null) {
+      final open = dyckDelims.item1;
+      final close = dyckDelims.item2;
+
+      // Ensure grammar uses only these two terminals for safety
+      final onlyDyckTerminals =
+          grammar.terminals.length == 2 &&
+          grammar.terminals.contains(open) &&
+          grammar.terminals.contains(close);
+      if (onlyDyckTerminals) {
+        final dyckAccepted = _fastDyck1Recognize(inputString, open, close);
+        if (!dyckAccepted) {
+          return Success(ParseResult.failure(
+            inputString: inputString,
+            errorMessage: 'String "$inputString" cannot be derived from grammar',
+            executionTime: const Duration(),
+          ));
+        }
+        // Accepted via fast path; optionally attempt to build derivation later
+        final parser = SimpleRecursiveDescentParser(grammar);
+        final rd = parser.parse(inputString, timeout: timeout);
+        if (rd.isSuccess) {
+          return rd;
+        }
+        return Success(ParseResult.success(
+          inputString: inputString,
+          derivations: const <List<String>>[],
+          executionTime: const Duration(),
+        ));
+      }
+    }
+
+    // Fall back to Earley general recognizer
     final earley = EarleyRecognizer(grammar);
     final accepted = earley.recognizes(inputString, timeout: timeout);
     if (!accepted) {
-      return Failure('String "$inputString" cannot be derived from grammar');
+      // Return a successful result object with accepted=false so callers can
+      // assert on acceptance without treating it as an exceptional failure
+      return Success(ParseResult.failure(
+        inputString: inputString,
+        errorMessage: 'String "$inputString" cannot be derived from grammar',
+        executionTime: const Duration(),
+      ));
     }
 
     // If accepted, optionally build a derivation using the simple parser (best-effort)
@@ -139,6 +187,72 @@ class GrammarParser {
         return 'auto';
     }
   }
+
+  /// Detects if the grammar represents Dyck-1 language S → SS | open S close | ε
+  /// Returns the delimiters (open, close) when detected, otherwise null.
+  static _Pair<String, String>? _detectDyck1Delimiters(Grammar grammar) {
+    final s = grammar.startSymbol;
+    // Must have exactly one non-terminal S
+    if (grammar.nonTerminals.length != 1 || !grammar.nonTerminals.contains(s)) {
+      return null;
+    }
+
+    // Look for productions: S→SS, S→open S close, S→ε
+    bool hasConcat = false;
+    bool hasEps = false;
+    String? open;
+    String? close;
+
+    for (final p in grammar.productions) {
+      if (p.leftSide.isEmpty || p.leftSide.first != s) continue;
+      if (p.isLambda || p.rightSide.isEmpty) {
+        hasEps = true;
+        continue;
+      }
+      if (p.rightSide.length == 2) {
+        if (p.rightSide[0] == s && p.rightSide[1] == s) {
+          hasConcat = true;
+          continue;
+        }
+      }
+      if (p.rightSide.length == 3) {
+        final a = p.rightSide[0];
+        final mid = p.rightSide[1];
+        final b = p.rightSide[2];
+        if (mid == s && grammar.terminals.contains(a) && grammar.terminals.contains(b)) {
+          open = a;
+          close = b;
+          // keep scanning to confirm other rules too
+        }
+      }
+    }
+
+    if (hasConcat && hasEps && open != null && close != null) {
+      return _Pair(open!, close!);
+    }
+    return null;
+  }
+
+  /// Linear-time recognizer for Dyck-1 strings over given delimiters
+  static bool _fastDyck1Recognize(String input, String open, String close) {
+    int balance = 0;
+    for (int i = 0; i < input.length; i++) {
+      final c = input[i];
+      if (c == open) {
+        balance++;
+      } else if (c == close) {
+        balance--;
+        if (balance < 0) return false;
+      } else {
+        // Unknown symbol; reject here (validation should have caught earlier)
+        return false;
+      }
+    }
+    return balance == 0;
+  }
+
+  /// Tiny tuple helper
+  // Placeholder within class removed; see top-level class below.
 
   /// Parses using brute force (exhaustive search)
   static ParseResult? _parseWithBruteForce(
@@ -726,6 +840,13 @@ class GrammarParser {
       );
     }
   }
+}
+
+/// Tiny tuple helper (top-level)
+class _Pair<A, B> {
+  final A item1;
+  final B item2;
+  const _Pair(this.item1, this.item2);
 }
 
 /// Result of parsing a string with a grammar

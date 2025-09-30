@@ -55,15 +55,17 @@ class TouchInteraction {
 
   /// Creates a touch interaction from a JSON representation
   factory TouchInteraction.fromJson(Map<String, dynamic> json) {
+    final positionData =
+        (json['position'] as Map?)?.cast<String, dynamic>();
+    final positionX = (positionData?['x'] as num?)?.toDouble() ?? 0.0;
+    final positionY = (positionData?['y'] as num?)?.toDouble() ?? 0.0;
+
     return TouchInteraction(
       type: InteractionType.values.firstWhere(
         (e) => e.name == json['type'],
         orElse: () => InteractionType.tap,
       ),
-      position: Vector2(
-        (json['position'] as Map<String, dynamic>)['x'] as double,
-        (json['position'] as Map<String, dynamic>)['y'] as double,
-      ),
+      position: Vector2(positionX, positionY),
       selectedStates: Set<String>.from(json['selectedStates'] as List),
       selectedTransitions: Set<String>.from(
         json['selectedTransitions'] as List,

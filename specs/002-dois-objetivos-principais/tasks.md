@@ -58,10 +58,10 @@
 
 ## Phase 3.3: Core Implementation (ONLY after tests fail)
 - [x] T018 [P] Revisar/ajustar algoritmos DFA em `lib/core/algorithms/dfa_operations.dart` conforme desvios identificados
-- [ ] T019 [P] Revisar/ajustar algoritmos NFA em `lib/core/algorithms/automaton_simulator.dart` conforme desvios identificados
+- [x] T019 [P] Revisar/ajustar algoritmos NFA em `lib/core/algorithms/automaton_simulator.dart` conforme desvios identificados
 - [x] T020 [P] Revisar/ajustar algoritmos GLC em `lib/core/algorithms/grammar_parser.dart` conforme desvios identificados
-- [ ] T021 [P] Revisar/ajustar algoritmos TM em `lib/core/algorithms/tm_simulator.dart` conforme desvios identificados
-- [ ] T022 [P] Revisar/ajustar algoritmos REGEX em `lib/core/algorithms/regex_to_nfa_converter.dart` e `fa_to_regex_converter.dart` conforme desvios identificados
+- [x] T021 [P] Revisar/ajustar algoritmos TM em `lib/core/algorithms/tm_simulator.dart` conforme desvios identificados
+- [x] T022 [P] Revisar/ajustar algoritmos REGEX em `lib/core/algorithms/regex_to_nfa_converter.dart` e `fa_to_regex_converter.dart` conforme desvios identificados
 - [ ] T023 [P] Revisar/ajustar algoritmos PDA em `lib/core/algorithms/pda_simulator.dart` conforme desvios identificados
 - [ ] T024 [P] Revisar/ajustar algoritmos Pumping Lemma em `lib/core/algorithms/pumping_lemma_prover.dart` conforme desvios identificados
 - [ ] T025 [P] Revisar/ajustar algoritmos CYK em `lib/core/algorithms/cfg/cyk_parser.dart` conforme desvios identificados

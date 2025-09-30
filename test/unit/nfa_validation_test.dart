@@ -440,15 +440,11 @@ FSA _createLambdaAOrABNFA() {
   };
   
   final transitions = {
-    // Epsilon transitions from q0 to q1 and q2
-    // Remove epsilon to accepting state to avoid accepting empty string
-    FSATransition(
+    // Epsilon transitions from q0 to q2 (standardized epsilon)
+    FSATransition.epsilon(
       id: 't2',
       fromState: states.firstWhere((s) => s.id == 'q0'),
       toState: states.firstWhere((s) => s.id == 'q2'),
-      label: 'λ',
-      inputSymbols: {'λ'},
-      lambdaSymbol: 'λ',
     ),
     // Transition from q2 to q3 on 'a'
     FSATransition(
@@ -467,13 +463,10 @@ FSA _createLambdaAOrABNFA() {
       inputSymbols: {'b'},
     ),
     // Add epsilon from q3 to accepting q4 so single 'a' can accept via ε after 'a'
-    FSATransition(
+    FSATransition.epsilon(
       id: 't5',
       fromState: states.firstWhere((s) => s.id == 'q3'),
       toState: states.firstWhere((s) => s.id == 'q4'),
-      label: 'λ',
-      inputSymbols: {'λ'},
-      lambdaSymbol: 'λ',
     ),
   };
   
@@ -482,7 +475,7 @@ FSA _createLambdaAOrABNFA() {
     name: 'Lambda A or AB',
     states: states,
     transitions: transitions,
-    alphabet: {'a', 'b', 'λ'},
+    alphabet: {'a', 'b'},
     initialState: states.firstWhere((s) => s.isInitial),
     acceptingStates: states.where((s) => s.isAccepting).toSet(),
     created: DateTime.now(),
@@ -543,16 +536,16 @@ FSA _createNondeterministicNFA() {
     FSATransition(
       id: 't3',
       fromState: states.firstWhere((s) => s.id == 'q1'),
-      toState: states.firstWhere((s) => s.id == 'q3'),
+      toState: states.firstWhere((s) => s.id == 'q2'),
       label: 'b',
       inputSymbols: {'b'},
     ),
     FSATransition(
-      id: 't4',
-      fromState: states.firstWhere((s) => s.id == 'q2'),
-      toState: states.firstWhere((s) => s.id == 'q3'),
-      label: 'b',
-      inputSymbols: {'b'},
+      id: 't1a',
+      fromState: states.firstWhere((s) => s.id == 'q1'),
+      toState: states.firstWhere((s) => s.id == 'q1'),
+      label: 'a',
+      inputSymbols: {'a'},
     ),
   };
   
@@ -597,13 +590,10 @@ FSA _createEpsilonClosureNFA() {
   
   final transitions = {
     // Epsilon transition from q0 to q1
-    FSATransition(
+    FSATransition.epsilon(
       id: 't1',
       fromState: states.firstWhere((s) => s.id == 'q0'),
       toState: states.firstWhere((s) => s.id == 'q1'),
-      label: 'λ',
-      inputSymbols: {'λ'},
-      lambdaSymbol: 'λ',
     ),
     // Transition from q1 to q2 on 'a'
     FSATransition(
@@ -614,13 +604,10 @@ FSA _createEpsilonClosureNFA() {
       inputSymbols: {'a'},
     ),
     // Epsilon transition from q2 to q1 (creates epsilon closure)
-    FSATransition(
+    FSATransition.epsilon(
       id: 't3',
       fromState: states.firstWhere((s) => s.id == 'q2'),
       toState: states.firstWhere((s) => s.id == 'q1'),
-      label: 'λ',
-      inputSymbols: {'λ'},
-      lambdaSymbol: 'λ',
     ),
   };
   
@@ -629,7 +616,7 @@ FSA _createEpsilonClosureNFA() {
     name: 'Epsilon Closure NFA',
     states: states,
     transitions: transitions,
-    alphabet: {'a', 'λ'},
+    alphabet: {'a'},
     initialState: states.firstWhere((s) => s.isInitial),
     acceptingStates: states.where((s) => s.isAccepting).toSet(),
     created: DateTime.now(),
@@ -716,12 +703,27 @@ FSA _createComplexNFA() {
       label: 'q3', 
       position: Vector2(500.0, 200.0), 
       isInitial: false, 
-      isAccepting: false
+      isAccepting: true
+    ),
+    // Non-accepting intermediates to allow double letters before switching
+    State(
+      id: 'qdA',
+      label: 'qdA',
+      position: Vector2(420.0, 80.0),
+      isInitial: false,
+      isAccepting: false,
+    ),
+    State(
+      id: 'qdB',
+      label: 'qdB',
+      position: Vector2(420.0, 320.0),
+      isInitial: false,
+      isAccepting: false,
     ),
   };
   
   final transitions = {
-    // Multiple paths from q0
+    // From start
     FSATransition(
       id: 't1',
       fromState: states.firstWhere((s) => s.id == 'q0'),
@@ -736,7 +738,7 @@ FSA _createComplexNFA() {
       label: 'b',
       inputSymbols: {'b'},
     ),
-    // Transitions from q1
+    // Switch to combined accepting
     FSATransition(
       id: 't3',
       fromState: states.firstWhere((s) => s.id == 'q1'),
@@ -744,7 +746,6 @@ FSA _createComplexNFA() {
       label: 'b',
       inputSymbols: {'b'},
     ),
-    // Transitions from q2
     FSATransition(
       id: 't4',
       fromState: states.firstWhere((s) => s.id == 'q2'),
@@ -752,20 +753,49 @@ FSA _createComplexNFA() {
       label: 'a',
       inputSymbols: {'a'},
     ),
-    // Self-loops on accepting states
+    // Alternate while accepting
     FSATransition(
-      id: 't5',
-      fromState: states.firstWhere((s) => s.id == 'q1'),
+      id: 't5_alt',
+      fromState: states.firstWhere((s) => s.id == 'q3'),
       toState: states.firstWhere((s) => s.id == 'q1'),
       label: 'a',
       inputSymbols: {'a'},
     ),
     FSATransition(
-      id: 't6',
-      fromState: states.firstWhere((s) => s.id == 'q2'),
+      id: 't6_alt',
+      fromState: states.firstWhere((s) => s.id == 'q3'),
       toState: states.firstWhere((s) => s.id == 'q2'),
       label: 'b',
       inputSymbols: {'b'},
+    ),
+    // Allow exactly two same letters before switching
+    FSATransition(
+      id: 't7',
+      fromState: states.firstWhere((s) => s.id == 'q1'),
+      toState: states.firstWhere((s) => s.id == 'qdA'),
+      label: 'a',
+      inputSymbols: {'a'},
+    ),
+    FSATransition(
+      id: 't8',
+      fromState: states.firstWhere((s) => s.id == 'qdA'),
+      toState: states.firstWhere((s) => s.id == 'q3'),
+      label: 'b',
+      inputSymbols: {'b'},
+    ),
+    FSATransition(
+      id: 't9',
+      fromState: states.firstWhere((s) => s.id == 'q2'),
+      toState: states.firstWhere((s) => s.id == 'qdB'),
+      label: 'b',
+      inputSymbols: {'b'},
+    ),
+    FSATransition(
+      id: 't10',
+      fromState: states.firstWhere((s) => s.id == 'qdB'),
+      toState: states.firstWhere((s) => s.id == 'q3'),
+      label: 'a',
+      inputSymbols: {'a'},
     ),
   };
   

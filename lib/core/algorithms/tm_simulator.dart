@@ -152,7 +152,7 @@ class TMSimulator {
   static Result<TMSimulationResult> simulate(
     TM tm,
     String inputString, {
-    bool stepByStep = false,
+    bool stepByStep = true,
     Duration timeout = const Duration(seconds: 5),
   }) {
     try {

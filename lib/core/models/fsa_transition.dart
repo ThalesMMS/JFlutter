@@ -70,15 +70,17 @@ class FSATransition extends Transition {
 
   /// Creates an FSA transition from a JSON representation
   factory FSATransition.fromJson(Map<String, dynamic> json) {
+    final controlPointData =
+        (json['controlPoint'] as Map?)?.cast<String, dynamic>();
+    final controlPointX = (controlPointData?['x'] as num?)?.toDouble() ?? 0.0;
+    final controlPointY = (controlPointData?['y'] as num?)?.toDouble() ?? 0.0;
+
     return FSATransition(
       id: json['id'] as String,
       fromState: State.fromJson(json['fromState'] as Map<String, dynamic>),
       toState: State.fromJson(json['toState'] as Map<String, dynamic>),
       label: json['label'] as String,
-      controlPoint: Vector2(
-        (json['controlPoint'] as Map<String, dynamic>)['x'] as double,
-        (json['controlPoint'] as Map<String, dynamic>)['y'] as double,
-      ),
+      controlPoint: Vector2(controlPointX, controlPointY),
       type: TransitionType.values.firstWhere(
         (e) => e.name == json['type'],
         orElse: () => TransitionType.deterministic,

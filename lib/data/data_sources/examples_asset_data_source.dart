@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../models/automaton_model.dart';
 import '../../core/result.dart';
@@ -105,7 +106,10 @@ class ExamplesAssetDataSource {
 
       for (final entry in _exampleMetadata.entries) {
         final result = await _loadExampleWithMetadata(entry.key, entry.value);
-        result.onSuccess((example) => examples.add(example));
+        if (result.isFailure) {
+          return Failure(result.error!);
+        }
+        examples.add(result.data!);
       }
 
       // Sort examples by category and difficulty for better organization
@@ -130,7 +134,10 @@ class ExamplesAssetDataSource {
       for (final entry in _exampleMetadata.entries) {
         if (entry.value.category == category) {
           final result = await _loadExampleWithMetadata(entry.key, entry.value);
-          result.onSuccess((example) => examples.add(example));
+          if (result.isFailure) {
+            return Failure(result.error!);
+          }
+          examples.add(result.data!);
         }
       }
 
@@ -160,11 +167,19 @@ class ExamplesAssetDataSource {
 
     try {
       final jsonString = await rootBundle.loadString(assetPath);
-      final json = jsonDecode(jsonString) as Map<String, dynamic>;
+      final json = jsonDecode(jsonString);
+      if (json is! Map<String, dynamic>) {
+        return Failure('Example $name has invalid JSON structure. Expected an object.');
+      }
 
-      // Convert JSON format to automaton model
-      final automatonModel = _convertJsonToAutomatonModel(json, name);
-      final automaton = automatonModel.toEntity();
+      final conversionResult =
+          _convertExampleJson(json, metadata, exampleName: name);
+      if (conversionResult.isFailure) {
+        return Failure(conversionResult.error!);
+      }
+
+      final automatonModel = conversionResult.data;
+      final automaton = automatonModel?.toEntity();
 
       final example = ExampleEntity(
         name: name,
@@ -178,6 +193,14 @@ class ExamplesAssetDataSource {
       );
 
       return Success(example);
+    } on FlutterError catch (e) {
+      final message = e.message;
+      if (message.contains('Unable to load asset')) {
+        return Failure(
+          'Example asset not found for $name. Expected at $assetPath',
+        );
+      }
+      return Failure('Error loading example $name: $message');
     } on PlatformException catch (e) {
       final message = e.message ?? e.toString();
       if (message.contains('Unable to load asset')) {
@@ -186,44 +209,351 @@ class ExamplesAssetDataSource {
         );
       }
       return Failure('Error loading example $name: $e');
+    } on FormatException catch (e) {
+      return Failure('Invalid JSON for example $name: ${e.message}');
+    } on TypeError catch (e) {
+      return Failure('Example $name has invalid data: ${e.toString()}');
     }
   }
 
   /// Converts JSON format to AutomatonModel
-  AutomatonModel _convertJsonToAutomatonModel(
-      Map<String, dynamic> json, String exampleName) {
-    final states = (json['states'] as List)
-        .map((s) => StateModel.fromJson(s as Map<String, dynamic>))
-        .toList();
+  Result<AutomatonModel?> _convertExampleJson(
+    Map<String, dynamic> json,
+    ExampleMetadata metadata, {
+    required String exampleName,
+  }) {
+    switch (metadata.category) {
+      case ExampleCategory.dfa:
+      case ExampleCategory.nfa:
+        return _convertFiniteAutomaton(json, metadata, exampleName);
+      case ExampleCategory.cfg:
+        return _validateCfgExample(json, exampleName);
+      case ExampleCategory.pda:
+        return _validatePdaExample(json, exampleName);
+      case ExampleCategory.tm:
+        return _validateTmExample(json, exampleName);
+    }
+  }
 
-    final transitions = <String, List<String>>{};
-    if (json['transitions'] != null) {
-      final transData = json['transitions'] as Map<String, dynamic>;
-      for (final entry in transData.entries) {
-        final key = entry.key;
-        final value = entry.value;
-
-        if (value is List) {
-          transitions[key] = List<String>.from(value);
-        } else {
-          transitions[key] = [value.toString()];
-        }
-      }
+  Result<AutomatonModel?> _convertFiniteAutomaton(
+    Map<String, dynamic> json,
+    ExampleMetadata metadata,
+    String exampleName,
+  ) {
+    final statesResult =
+        _parseStates(json['states'], exampleName, metadata.category);
+    if (statesResult.isFailure) {
+      return Failure(statesResult.error!);
     }
 
-    final type = json['type'] as String? ?? 'dfa';
+    final transitionsResult =
+        _parseTransitions(json['transitions'], exampleName, metadata.category);
+    if (transitionsResult.isFailure) {
+      return Failure(transitionsResult.error!);
+    }
 
-    return AutomatonModel(
+    final alphabetResult =
+        _parseStringList(json['alphabet'], 'alphabet', exampleName,
+            allowEmpty: true);
+    if (alphabetResult.isFailure) {
+      return Failure(alphabetResult.error!);
+    }
+
+    final states = statesResult.data!;
+    final transitions = transitionsResult.data!;
+    final alphabet = alphabetResult.data!;
+
+    final nextIdRaw = json['nextId'];
+    final nextId = nextIdRaw is int
+        ? nextIdRaw
+        : nextIdRaw is String
+            ? int.tryParse(nextIdRaw) ?? states.length
+            : states.length;
+
+    final type = (json['type'] as String?) ?? metadata.category.name;
+
+    return Success(AutomatonModel(
       id: json['id'] as String? ??
           'example_${exampleName.toLowerCase().replaceAll(' ', '_')}',
       name: json['name'] as String? ?? exampleName,
-      alphabet: List<String>.from(json['alphabet'] ?? []),
+      alphabet: alphabet,
       states: states,
       transitions: transitions,
       initialId: json['initialId'] as String?,
-      nextId: json['nextId'] as int? ?? states.length,
+      nextId: nextId,
       type: type,
+    ));
+  }
+
+  Result<AutomatonModel?> _validateCfgExample(
+    Map<String, dynamic> json,
+    String exampleName,
+  ) {
+    final variablesResult =
+        _parseStringList(json['variables'], 'variables', exampleName);
+    if (variablesResult.isFailure) {
+      return Failure(variablesResult.error!);
+    }
+
+    final alphabetResult =
+        _parseStringList(json['alphabet'], 'alphabet', exampleName,
+            allowEmpty: true);
+    if (alphabetResult.isFailure) {
+      return Failure(alphabetResult.error!);
+    }
+
+    final initialSymbol = json['initialSymbol'];
+    if (initialSymbol is! String || initialSymbol.isEmpty) {
+      return Failure(
+        'Example "$exampleName" must define an "initialSymbol" for CFG data.',
+      );
+    }
+
+    if (!variablesResult.data!.contains(initialSymbol)) {
+      return Failure(
+        'Example "$exampleName" references unknown initial symbol "$initialSymbol".',
+      );
+    }
+
+    final productionsRaw = json['productions'];
+    if (productionsRaw is! Map) {
+      return Failure(
+        'Example "$exampleName" must define "productions" as an object.',
+      );
+    }
+
+    final productions = Map<String, dynamic>.from(
+        productionsRaw as Map<dynamic, dynamic>);
+    if (productions.isEmpty) {
+      return Failure(
+        'Example "$exampleName" must include at least one production rule.',
+      );
+    }
+
+    for (final entry in productions.entries) {
+      final alternatives = entry.value;
+      if (alternatives is! List) {
+        return Failure(
+          'Production for non-terminal "${entry.key}" in example "$exampleName" must be a list of strings.',
+        );
+      }
+
+      final invalid = alternatives.any((option) => option is! String);
+      if (invalid) {
+        return Failure(
+          'Example "$exampleName" contains invalid production values for non-terminal "${entry.key}".',
+        );
+      }
+    }
+
+    return Success<AutomatonModel?>(null);
+  }
+
+  Result<AutomatonModel?> _validatePdaExample(
+    Map<String, dynamic> json,
+    String exampleName,
+  ) {
+    final statesResult =
+        _parseStates(json['states'], exampleName, ExampleCategory.pda);
+    if (statesResult.isFailure) {
+      return Failure(statesResult.error!);
+    }
+
+    final transitionsResult =
+        _parseTransitions(json['transitions'], exampleName, ExampleCategory.pda);
+    if (transitionsResult.isFailure) {
+      return Failure(transitionsResult.error!);
+    }
+
+    final stackAlphabetResult = _parseStringList(
+      json['stackAlphabet'],
+      'stackAlphabet',
+      exampleName,
+      allowEmpty: false,
     );
+    if (stackAlphabetResult.isFailure) {
+      return Failure(stackAlphabetResult.error!);
+    }
+
+    final initialStack = json['initialStack'];
+    if (initialStack is! List || initialStack.isEmpty) {
+      return Failure(
+        'Example "$exampleName" must define "initialStack" as a non-empty list.',
+      );
+    }
+
+    final initialId = json['initialId'];
+    if (initialId is! String || initialId.isEmpty) {
+      return Failure(
+        'Example "$exampleName" must define an "initialId" for PDA data.',
+      );
+    }
+
+    final finalStates = json['finalStates'];
+    if (finalStates is! List) {
+      return Failure(
+        'Example "$exampleName" must define "finalStates" as a list.',
+      );
+    }
+
+    return Success<AutomatonModel?>(null);
+  }
+
+  Result<AutomatonModel?> _validateTmExample(
+    Map<String, dynamic> json,
+    String exampleName,
+  ) {
+    final statesResult =
+        _parseStates(json['states'], exampleName, ExampleCategory.tm);
+    if (statesResult.isFailure) {
+      return Failure(statesResult.error!);
+    }
+
+    final transitionsResult =
+        _parseTransitions(json['transitions'], exampleName, ExampleCategory.tm);
+    if (transitionsResult.isFailure) {
+      return Failure(transitionsResult.error!);
+    }
+
+    final alphabetResult =
+        _parseStringList(json['alphabet'], 'alphabet', exampleName,
+            allowEmpty: false);
+    if (alphabetResult.isFailure) {
+      return Failure(alphabetResult.error!);
+    }
+
+    final tapeAlphabetResult = _parseStringList(
+      json['tapeAlphabet'],
+      'tapeAlphabet',
+      exampleName,
+      allowEmpty: false,
+    );
+    if (tapeAlphabetResult.isFailure) {
+      return Failure(tapeAlphabetResult.error!);
+    }
+
+    final initialId = json['initialId'];
+    if (initialId is! String || initialId.isEmpty) {
+      return Failure(
+        'Example "$exampleName" must define an "initialId" for TM data.',
+      );
+    }
+
+    final finalStates = json['finalStates'];
+    if (finalStates is! List) {
+      return Failure(
+        'Example "$exampleName" must define "finalStates" as a list.',
+      );
+    }
+
+    return Success<AutomatonModel?>(null);
+  }
+
+  Result<List<StateModel>> _parseStates(
+    dynamic statesRaw,
+    String exampleName,
+    ExampleCategory category,
+  ) {
+    if (statesRaw == null) {
+      return Failure(
+        'Example "$exampleName" is missing the "states" section required for ${category.displayName} examples.',
+      );
+    }
+
+    if (statesRaw is! List) {
+      return Failure(
+        'Example "$exampleName" has invalid "states" data; expected a list of objects.',
+      );
+    }
+
+    final states = <StateModel>[];
+    for (var i = 0; i < statesRaw.length; i++) {
+      final state = statesRaw[i];
+      if (state is! Map) {
+        return Failure(
+          'Example "$exampleName" has an invalid state entry at index $i; expected an object.',
+        );
+      }
+      states.add(StateModel.fromJson(Map<String, dynamic>.from(state))); 
+    }
+
+    return Success(states);
+  }
+
+  Result<Map<String, List<String>>> _parseTransitions(
+    dynamic transitionsRaw,
+    String exampleName,
+    ExampleCategory category,
+  ) {
+    if (transitionsRaw == null) {
+      return Failure(
+        'Example "$exampleName" is missing the "transitions" section required for ${category.displayName} examples.',
+      );
+    }
+
+    if (transitionsRaw is! Map) {
+      return Failure(
+        'Example "$exampleName" has invalid "transitions" data; expected an object.',
+      );
+    }
+
+    final transitions = <String, List<String>>{};
+    final rawMap =
+        Map<dynamic, dynamic>.from(transitionsRaw as Map<dynamic, dynamic>);
+    for (final entry in rawMap.entries) {
+      final key = entry.key;
+      if (key is! String) {
+        return Failure(
+          'Example "$exampleName" has a transition with a non-string key.',
+        );
+      }
+
+      final value = entry.value;
+      if (value is List) {
+        transitions[key] = value.map((item) => item.toString()).toList();
+      } else if (value == null) {
+        transitions[key] = <String>[];
+      } else {
+        transitions[key] = [value.toString()];
+      }
+    }
+
+    return Success(transitions);
+  }
+
+  Result<List<String>> _parseStringList(
+    dynamic raw,
+    String fieldName,
+    String exampleName, {
+    bool allowEmpty = true,
+  }) {
+    if (raw == null) {
+      return Success(<String>[]);
+    }
+
+    if (raw is! List) {
+      return Failure(
+        'Example "$exampleName" must define "$fieldName" as a list of strings.',
+      );
+    }
+
+    final list = raw.map((item) => item.toString()).toList();
+    if (!allowEmpty && list.isEmpty) {
+      return Failure(
+        'Example "$exampleName" must define "$fieldName" with at least one entry.',
+      );
+    }
+
+    return Success(list);
+  }
+
+  @visibleForTesting
+  Result<AutomatonModel?> convertJsonForTesting(
+    Map<String, dynamic> json,
+    ExampleMetadata metadata,
+    String exampleName,
+  ) {
+    return _convertExampleJson(json, metadata, exampleName: exampleName);
   }
 
   /// Gets all available categories

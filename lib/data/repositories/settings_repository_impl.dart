@@ -1,4 +1,5 @@
-import 'package:shared_preferences/shared_preferences.dart' show SharedPreferences;
+import 'package:shared_preferences/shared_preferences.dart'
+    show SharedPreferences;
 
 import '../../core/models/settings_model.dart';
 import '../../core/repositories/settings_repository.dart';
@@ -6,9 +7,8 @@ import '../storage/settings_storage.dart';
 
 /// Settings repository backed by [SharedPreferences].
 class SharedPreferencesSettingsRepository implements SettingsRepository {
-  const SharedPreferencesSettingsRepository({
-    SettingsStorage? storage,
-  }) : _storage = storage ?? const SharedPreferencesSettingsStorage();
+  const SharedPreferencesSettingsRepository({SettingsStorage? storage})
+    : _storage = storage ?? const SharedPreferencesSettingsStorage();
 
   static const String _emptyStringSymbolKey = 'settings_empty_string_symbol';
   static const String _epsilonSymbolKey = 'settings_epsilon_symbol';
@@ -28,13 +28,16 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
     const defaults = SettingsModel();
 
     return SettingsModel(
-      emptyStringSymbol: await _storage.readString(_emptyStringSymbolKey) ??
+      emptyStringSymbol:
+          await _storage.readString(_emptyStringSymbolKey) ??
           defaults.emptyStringSymbol,
-      epsilonSymbol: await _storage.readString(_epsilonSymbolKey) ??
+      epsilonSymbol:
+          await _storage.readString(_epsilonSymbolKey) ??
           defaults.epsilonSymbol,
       themeMode: await _storage.readString(_themeModeKey) ?? defaults.themeMode,
       showGrid: await _storage.readBool(_showGridKey) ?? defaults.showGrid,
-      showCoordinates: await _storage.readBool(_showCoordinatesKey) ??
+      showCoordinates:
+          await _storage.readBool(_showCoordinatesKey) ??
           defaults.showCoordinates,
       autoSave: await _storage.readBool(_autoSaveKey) ?? defaults.autoSave,
       showTooltips:

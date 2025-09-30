@@ -6,7 +6,7 @@ import '../../core/algorithms/automaton_simulator.dart';
 /// Service for automaton simulation operations
 class SimulationService {
   /// Simulates a DFA explicitly
-  Result<SimulationResult> simulateDFA(SimulationRequest request) {
+  Future<Result<SimulationResult>> simulateDFA(SimulationRequest request) async {
     try {
       if (request.automaton == null) {
         return ResultFactory.failure('Automaton is required');
@@ -14,7 +14,7 @@ class SimulationService {
       if (request.inputString == null) {
         return ResultFactory.failure('Input string is required');
       }
-      return AutomatonSimulator.simulateDFA(
+      return await AutomatonSimulator.simulateDFA(
         request.automaton!,
         request.inputString!,
         stepByStep: request.stepByStep ?? false,
@@ -26,7 +26,7 @@ class SimulationService {
   }
 
   /// Simulates an automaton with an input string
-  Result<SimulationResult> simulate(SimulationRequest request) {
+  Future<Result<SimulationResult>> simulate(SimulationRequest request) async {
     try {
       // Validate request
       if (request.automaton == null) {
@@ -38,7 +38,7 @@ class SimulationService {
       }
 
       // Use the automaton simulator (default DFA route)
-      final result = AutomatonSimulator.simulate(
+      final result = await AutomatonSimulator.simulate(
         request.automaton!,
         request.inputString!,
         stepByStep: request.stepByStep ?? false,
@@ -52,7 +52,7 @@ class SimulationService {
   }
 
   /// Simulates an NFA with epsilon transitions
-  Result<SimulationResult> simulateNFA(SimulationRequest request) {
+  Future<Result<SimulationResult>> simulateNFA(SimulationRequest request) async {
     try {
       // Validate request
       if (request.automaton == null) {
@@ -64,7 +64,7 @@ class SimulationService {
       }
 
       // Use the NFA simulator
-      final result = AutomatonSimulator.simulateNFA(
+      final result = await AutomatonSimulator.simulateNFA(
         request.automaton!,
         request.inputString!,
         stepByStep: request.stepByStep ?? false,
@@ -78,7 +78,7 @@ class SimulationService {
   }
 
   /// Tests if an automaton accepts a string
-  Result<bool> accepts(SimulationRequest request) {
+  Future<Result<bool>> accepts(SimulationRequest request) async {
     try {
       // Validate request
       if (request.automaton == null) {
@@ -90,7 +90,7 @@ class SimulationService {
       }
 
       // Use the automaton simulator
-      final result = AutomatonSimulator.accepts(
+      final result = await AutomatonSimulator.accepts(
         request.automaton!,
         request.inputString!,
       );
@@ -102,7 +102,7 @@ class SimulationService {
   }
 
   /// Tests if an automaton rejects a string
-  Result<bool> rejects(SimulationRequest request) {
+  Future<Result<bool>> rejects(SimulationRequest request) async {
     try {
       // Validate request
       if (request.automaton == null) {
@@ -114,7 +114,7 @@ class SimulationService {
       }
 
       // Use the automaton simulator
-      final result = AutomatonSimulator.rejects(
+      final result = await AutomatonSimulator.rejects(
         request.automaton!,
         request.inputString!,
       );
@@ -126,7 +126,7 @@ class SimulationService {
   }
 
   /// Finds accepted strings
-  Result<Set<String>> findAcceptedStrings(SimulationRequest request) {
+  Future<Result<Set<String>>> findAcceptedStrings(SimulationRequest request) async {
     try {
       // Validate request
       if (request.automaton == null) {
@@ -134,7 +134,7 @@ class SimulationService {
       }
 
       // Use the automaton simulator
-      final result = AutomatonSimulator.findAcceptedStrings(
+      final result = await AutomatonSimulator.findAcceptedStrings(
         request.automaton!,
         request.maxLength ?? 10,
         maxResults: request.maxResults ?? 100,
@@ -147,7 +147,7 @@ class SimulationService {
   }
 
   /// Finds rejected strings
-  Result<Set<String>> findRejectedStrings(SimulationRequest request) {
+  Future<Result<Set<String>>> findRejectedStrings(SimulationRequest request) async {
     try {
       // Validate request
       if (request.automaton == null) {
@@ -155,7 +155,7 @@ class SimulationService {
       }
 
       // Use the automaton simulator
-      final result = AutomatonSimulator.findRejectedStrings(
+      final result = await AutomatonSimulator.findRejectedStrings(
         request.automaton!,
         request.maxLength ?? 10,
         maxResults: request.maxResults ?? 100,

@@ -35,7 +35,7 @@ class _MainHubScreenState extends State<MainHubScreen>
           Color(0xFF667eea),
           Color(0xFF764ba2),
           Color(0xFFa8edea),
-          Color(0xFFfed6e3)
+          Color(0xFFfed6e3),
         ],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
@@ -54,7 +54,7 @@ class _MainHubScreenState extends State<MainHubScreen>
           Color(0xFF4facfe),
           Color(0xFF00f2fe),
           Color(0xFF43e97b),
-          Color(0xFF38f9d7)
+          Color(0xFF38f9d7),
         ],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
@@ -146,9 +146,9 @@ class _MainHubScreenState extends State<MainHubScreen>
 
       // شروع انیمیشن‌ها
       _rippleController.forward().then((_) => _rippleController.reset());
-      _particleControllers[index]
-          .forward()
-          .then((_) => _particleControllers[index].reset());
+      _particleControllers[index].forward().then(
+        (_) => _particleControllers[index].reset(),
+      );
       _iconControllers[_selectedIndex].reverse();
       _morphController.forward().then((_) => _morphController.reset());
 
@@ -294,8 +294,9 @@ class _MainHubScreenState extends State<MainHubScreen>
                                     : FontWeight.w400,
                                 color: isSelected
                                     ? item.gradient.colors.first
-                                    : theme.colorScheme.onSurface
-                                        .withOpacity(0.6),
+                                    : theme.colorScheme.onSurface.withOpacity(
+                                        0.6,
+                                      ),
                               ),
                             ),
                           ),
@@ -332,7 +333,10 @@ class _MainHubScreenState extends State<MainHubScreen>
   }
 
   List<Widget> _buildParticleEffects(
-      NavigationItem item, int index, bool isSelected) {
+    NavigationItem item,
+    int index,
+    bool isSelected,
+  ) {
     if (!isSelected) return [];
 
     return List.generate(6, (particleIndex) {
@@ -361,7 +365,11 @@ class _MainHubScreenState extends State<MainHubScreen>
   }
 
   Widget _buildMainIcon(
-      NavigationItem item, int index, bool isSelected, bool isDark) {
+    NavigationItem item,
+    int index,
+    bool isSelected,
+    bool isDark,
+  ) {
     return AnimatedBuilder(
       animation: Listenable.merge([_iconControllers[index], _morphController]),
       builder: (context, child) {
@@ -380,8 +388,8 @@ class _MainHubScreenState extends State<MainHubScreen>
                 gradient: isSelected ? item.gradient : null,
                 color: !isSelected
                     ? (isDark
-                        ? const Color(0xFF2D3748)
-                        : const Color(0xFFF1F3F4))
+                          ? const Color(0xFF2D3748)
+                          : const Color(0xFFF1F3F4))
                     : null,
                 boxShadow: isSelected
                     ? [
@@ -400,13 +408,14 @@ class _MainHubScreenState extends State<MainHubScreen>
                       ? item.morphIcon
                       : (isSelected ? item.activeIcon : item.icon),
                   key: ValueKey(
-                      '${item.label}_${isSelected}_${morphProgress > 0.5}'),
+                    '${item.label}_${isSelected}_${morphProgress > 0.5}',
+                  ),
                   size: 24,
                   color: isSelected
                       ? Colors.white
                       : (isDark
-                          ? const Color(0xFFA0AEC0)
-                          : const Color(0xFF4A5568)),
+                            ? const Color(0xFFA0AEC0)
+                            : const Color(0xFF4A5568)),
                 ),
               ),
             ),
@@ -426,10 +435,7 @@ class _MainHubScreenState extends State<MainHubScreen>
           color: Colors.red,
           shape: BoxShape.circle,
         ),
-        constraints: const BoxConstraints(
-          minWidth: 20,
-          minHeight: 20,
-        ),
+        constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
         child: Text(
           count.toString(),
           style: const TextStyle(

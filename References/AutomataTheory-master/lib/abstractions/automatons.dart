@@ -6,11 +6,9 @@ sealed class Automaton<StateType extends State> {
   final Set<String> _alphabet;
   late final StateType initialState;
 
-  Automaton({
-    required Set<StateType> states,
-    required Set<String> alphabet,
-  })  : _alphabet = alphabet,
-        _states = states {
+  Automaton({required Set<StateType> states, required Set<String> alphabet})
+    : _alphabet = alphabet,
+      _states = states {
     try {
       initialState = _states.singleWhere((state) => state.isInitial);
     } catch (_) {
@@ -41,8 +39,9 @@ sealed class Automaton<StateType extends State> {
       final stateA = _states.elementAt(idxA);
       final transitions = switch (this) {
         DeterministicAutomaton() => stateA.transitions.values,
-        NonDeterministicAutomaton() =>
-          stateA.transitions.values.expand((values) => values),
+        NonDeterministicAutomaton() => stateA.transitions.values.expand(
+          (values) => values,
+        ),
       };
 
       for (var idxB = 0; idxB < _states.length; idxB++) {

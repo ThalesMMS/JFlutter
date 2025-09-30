@@ -86,10 +86,7 @@ class PDATransition extends Transition {
       'fromState': fromState.id,
       'toState': toState.id,
       'label': label,
-      'controlPoint': {
-        'x': controlPoint.x,
-        'y': controlPoint.y,
-      },
+      'controlPoint': {'x': controlPoint.x, 'y': controlPoint.y},
       'type': type.name,
       'transitionType': 'pda',
       'inputSymbol': inputSymbol,
@@ -175,8 +172,9 @@ class PDATransition extends Transition {
     }
 
     if (isLambdaInput && inputSymbol.isNotEmpty) {
-      errors
-          .add('PDA transition cannot have both input symbol and lambda input');
+      errors.add(
+        'PDA transition cannot have both input symbol and lambda input',
+      );
     }
 
     if (isLambdaPop && popSymbol.isNotEmpty) {

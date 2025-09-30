@@ -50,8 +50,8 @@ class SmalltalkGrammarDefinition extends GrammarDefinition {
   Parser exponentLetter() => pattern('edq');
 
   Parser scaledDecimal() => ref0(
-        scaledMantissa,
-      ).seq(char('s')).seq(ref0(fractionalDigits).optional());
+    scaledMantissa,
+  ).seq(char('s')).seq(ref0(fractionalDigits).optional());
   Parser scaledMantissa() => ref0(decimalInteger).or(ref0(mantissa));
   Parser fractionalDigits() => ref0(decimalInteger);
 
@@ -89,8 +89,8 @@ class SmalltalkGrammarDefinition extends GrammarDefinition {
   Parser blockArguments() =>
       ref0(blockArgumentsWith).or(ref0(blockArgumentsWithout));
   Parser blockArgumentsWith() => ref0(
-        blockArgument,
-      ).plus().seq(ref1(token, '|').or(ref1(token, ']').and()));
+    blockArgument,
+  ).plus().seq(ref1(token, '|').or(ref1(token, ']').and()));
   Parser blockArgumentsWithout() => epsilonWith([]);
   Parser blockBody() => ref0(blockArguments).seq(ref0(sequence));
   Parser byteLiteral() =>
@@ -158,8 +158,8 @@ class SmalltalkGrammarDefinition extends GrammarDefinition {
       ref0(keywordPragma).or(ref0(unaryPragma)).or(ref0(binaryPragma));
   Parser pragmas() => ref0(pragma).star();
   Parser primary() => ref0(
-        literal,
-      ).or(ref0(variable)).or(ref0(block)).or(ref0(parens)).or(ref0(array));
+    literal,
+  ).or(ref0(variable)).or(ref0(block)).or(ref0(parens)).or(ref0(array));
   Parser sequence() =>
       ref0(temporaries).seq(ref0(periodToken).star()).seq(ref0(statements));
   Parser startMethod() => ref0(method).end();
@@ -178,9 +178,9 @@ class SmalltalkGrammarDefinition extends GrammarDefinition {
       ref1(token, '#').plus().seq(ref2(token, ref0(symbol), 'symbol'));
   Parser symbolLiteralArray() => ref2(token, ref0(symbol), 'symbol');
   Parser temporaries() => ref1(
-        token,
-        '|',
-      ).seq(ref0(variable).star()).seq(ref1(token, '|')).optionalWith([]);
+    token,
+    '|',
+  ).seq(ref0(variable).star()).seq(ref1(token, '|')).optionalWith([]);
   Parser trueLiteral() => ref0(trueToken);
   Parser trueToken() => ref2(token, 'true'.toParser() & word().not(), 'true');
   Parser unary() => ref0(identifier).seq(char(':').not());
@@ -193,14 +193,14 @@ class SmalltalkGrammarDefinition extends GrammarDefinition {
 }
 
 dynamic buildUnary(dynamic input) => [
-      [input],
-      [],
-    ];
+  [input],
+  [],
+];
 dynamic buildBinary(dynamic input) => [
-      [input[0]],
-      [input[1]],
-    ];
+  [input[0]],
+  [input[1]],
+];
 dynamic buildKeyword(dynamic input) => [
-      input.map((each) => each[0]).toList(),
-      input.map((each) => each[1]).toList(),
-    ];
+  input.map((each) => each[0]).toList(),
+  input.map((each) => each[1]).toList(),
+];

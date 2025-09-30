@@ -28,10 +28,8 @@ class EpsilonNFA extends EpsilonNonDeterministicAutomaton {
         .map(
           (nextState) => epsilonClosure(nextState)
               .map(
-                (closureState) => extendedTransition(
-                  closureState,
-                  input.substring(1),
-                ),
+                (closureState) =>
+                    extendedTransition(closureState, input.substring(1)),
               )
               .expand(identity),
         )
@@ -43,9 +41,6 @@ class EpsilonNFA extends EpsilonNonDeterministicAutomaton {
   Set<NonDeterministicState> epsilonClosure(NonDeterministicState state) {
     final possibleNextStates = state.executeTransition(epsilon);
     if (possibleNextStates.isEmpty) return {state};
-    return {
-      state,
-      ...possibleNextStates.map(epsilonClosure).expand(identity),
-    };
+    return {state, ...possibleNextStates.map(epsilonClosure).expand(identity)};
   }
 }

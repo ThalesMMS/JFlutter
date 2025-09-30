@@ -184,10 +184,7 @@ class LayoutSettings {
 
   /// Gets the position for a given grid cell
   Vector2 getPositionFromGridCell(Vector2 cell) {
-    return Vector2(
-      cell.x * gridSize,
-      cell.y * gridSize,
-    );
+    return Vector2(cell.x * gridSize, cell.y * gridSize);
   }
 
   /// Creates default layout settings

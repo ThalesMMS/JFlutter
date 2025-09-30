@@ -19,8 +19,11 @@ class FileOperationResult<T> {
     this.metadata,
   });
 
-  factory FileOperationResult.success(T data,
-      {String? message, Map<String, dynamic>? metadata}) {
+  factory FileOperationResult.success(
+    T data, {
+    String? message,
+    Map<String, dynamic>? metadata,
+  }) {
     return FileOperationResult(
       success: true,
       message: message ?? 'عملیات با موفقیت انجام شد',
@@ -29,8 +32,11 @@ class FileOperationResult<T> {
     );
   }
 
-  factory FileOperationResult.failure(String message,
-      {FileOperationError? error, Map<String, dynamic>? metadata}) {
+  factory FileOperationResult.failure(
+    String message, {
+    FileOperationError? error,
+    Map<String, dynamic>? metadata,
+  }) {
     return FileOperationResult(
       success: false,
       message: message,
@@ -98,16 +104,16 @@ class NFAFileInfo {
   }
 
   Map<String, dynamic> toJson() => {
-        'name': name,
-        'path': path,
-        'size': size,
-        'lastModified': lastModified.toIso8601String(),
-        'version': version,
-        'description': description,
-        'stateCount': stateCount,
-        'transitionCount': transitionCount,
-        'checksum': checksum,
-      };
+    'name': name,
+    'path': path,
+    'size': size,
+    'lastModified': lastModified.toIso8601String(),
+    'version': version,
+    'description': description,
+    'stateCount': stateCount,
+    'transitionCount': transitionCount,
+    'checksum': checksum,
+  };
 }
 
 /// سرویس پیشرفته مدیریت فایل‌های NFA
@@ -204,7 +210,7 @@ class FileService {
         'alphabet',
         'startState',
         'finalStates',
-        'transitions'
+        'transitions',
       ];
       for (final field in requiredFields) {
         if (!jsonMap.containsKey(field)) {
@@ -386,14 +392,16 @@ class FileService {
 
       for (final platformFile in result.files) {
         if (platformFile.path != null) {
-          final loadResult =
-              await loadNfaFromFile(filePath: platformFile.path!);
+          final loadResult = await loadNfaFromFile(
+            filePath: platformFile.path!,
+          );
           if (loadResult.success && loadResult.data != null) {
             nfaList.add(loadResult.data!);
             loadedFiles.add(p.basename(platformFile.path!));
           } else {
             errors.add(
-                '${p.basename(platformFile.path!)}: ${loadResult.message}');
+              '${p.basename(platformFile.path!)}: ${loadResult.message}',
+            );
           }
         }
       }
@@ -548,10 +556,7 @@ class FileService {
       return FileOperationResult.success(
         filePath,
         message: 'NFA به فرمت $format صادر شد',
-        metadata: {
-          'format': format.toString(),
-          'file_size': content.length,
-        },
+        metadata: {'format': format.toString(), 'file_size': content.length},
       );
     } catch (e) {
       return FileOperationResult.failure(
@@ -563,7 +568,8 @@ class FileService {
 
   /// بازیابی فایل‌های پشتیبان
   Future<FileOperationResult<List<File>>> findBackupFiles(
-      String originalFilePath) async {
+    String originalFilePath,
+  ) async {
     try {
       final originalFile = File(originalFilePath);
       final directory = originalFile.parent;
@@ -578,7 +584,8 @@ class FileService {
       }
 
       backupFiles.sort(
-          (a, b) => b.statSync().modified.compareTo(a.statSync().modified));
+        (a, b) => b.statSync().modified.compareTo(a.statSync().modified),
+      );
 
       return FileOperationResult.success(
         backupFiles,
@@ -598,8 +605,10 @@ class FileService {
       final backupPath = '${originalFile.path}.$timestamp.$_backupExtension';
       await originalFile.copy(backupPath);
 
-      return FileOperationResult.success(backupPath,
-          message: 'پشتیبان ایجاد شد');
+      return FileOperationResult.success(
+        backupPath,
+        message: 'پشتیبان ایجاد شد',
+      );
     } catch (e) {
       return FileOperationResult.failure(
         'خطا در ایجاد پشتیبان: ${e.toString()}',
@@ -658,7 +667,8 @@ class FileService {
     // حالات پایانی
     if (nfa.finalStates.isNotEmpty) {
       buffer.writeln(
-          '  node [shape=doublecircle]; ${nfa.finalStates.join(' ')};');
+        '  node [shape=doublecircle]; ${nfa.finalStates.join(' ')};',
+      );
       buffer.writeln('  node [shape=circle];');
     }
 
@@ -716,7 +726,8 @@ class FileService {
       for (final symbol in nfa.transitions[fromState]!.keys) {
         for (final toState in nfa.transitions[fromState]![symbol]!) {
           buffer.writeln(
-              '    <transition from="$fromState" symbol="$symbol" to="$toState"/>');
+            '    <transition from="$fromState" symbol="$symbol" to="$toState"/>',
+          );
         }
       }
     }

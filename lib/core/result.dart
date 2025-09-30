@@ -114,14 +114,14 @@ extension ResultListExtension<T> on List<Result<T>> {
   bool get anyFailure => any((result) => result.isFailure);
 
   /// Collects all successful data
-  List<T> get successfulData => where((result) => result.isSuccess)
-      .map((result) => result.data!)
-      .toList();
+  List<T> get successfulData => where(
+    (result) => result.isSuccess,
+  ).map((result) => result.data!).toList();
 
   /// Collects all error messages
-  List<String> get errorMessages => where((result) => result.isFailure)
-      .map((result) => result.error!)
-      .toList();
+  List<String> get errorMessages => where(
+    (result) => result.isFailure,
+  ).map((result) => result.error!).toList();
 
   /// Returns the first failure, or success if all are successful
   Result<List<T>> collect() {

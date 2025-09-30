@@ -139,10 +139,7 @@ class AppTheme {
       accent: const Color(0xFFFD79A8),
       background: const Color(0xFF1E1E2E),
       surface: const Color(0xFF2A2A3E),
-      gradient: [
-        const Color(0xFF667eea),
-        const Color(0xFF764ba2),
-      ],
+      gradient: [const Color(0xFF667eea), const Color(0xFF764ba2)],
       neonGlow: const Color(0xFF6C5CE7),
     ),
   };
@@ -154,8 +151,9 @@ class AppTheme {
 
   /// تم روشن اپلیکیشن با طراحی مدرن و هماهنگ
   static ThemeData lightTheme({String? customTheme}) {
-    final themeColors =
-        customTheme != null ? getThemeColors(customTheme) : null;
+    final themeColors = customTheme != null
+        ? getThemeColors(customTheme)
+        : null;
     final colorScheme = themeColors != null
         ? ColorScheme.fromSeed(
             seedColor: themeColors.primary,
@@ -175,8 +173,9 @@ class AppTheme {
 
   /// تم تاریک اپلیکیشن با طراحی مدرن و سازگار با چشم
   static ThemeData darkTheme({String? customTheme}) {
-    final themeColors =
-        customTheme != null ? getThemeColors(customTheme) : null;
+    final themeColors = customTheme != null
+        ? getThemeColors(customTheme)
+        : null;
     final colorScheme = themeColors != null
         ? ColorScheme.fromSeed(
             seedColor: themeColors.primary,
@@ -218,8 +217,9 @@ class AppTheme {
             ? themeColors.surface.withOpacity(0.8)
             : Colors.transparent,
         foregroundColor: colorScheme.onSurface,
-        systemOverlayStyle:
-            isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+        systemOverlayStyle: isDark
+            ? SystemUiOverlayStyle.light
+            : SystemUiOverlayStyle.dark,
         titleTextStyle: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w600,
@@ -247,8 +247,9 @@ class AppTheme {
         shadowColor: isCustomTheme
             ? themeColors.neonGlow.withOpacity(0.2)
             : colorScheme.shadow.withOpacity(isDark ? 0.3 : 0.1),
-        surfaceTintColor:
-            isCustomTheme ? Colors.transparent : colorScheme.surfaceTint,
+        surfaceTintColor: isCustomTheme
+            ? Colors.transparent
+            : colorScheme.surfaceTint,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
           side: isCustomTheme
@@ -266,80 +267,88 @@ class AppTheme {
 
       // تم دکمه‌های برجسته با افکت نئون
       elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          elevation: isCustomTheme ? 0 : 2,
-          backgroundColor: isCustomTheme ? themeColors.primary : null,
-          foregroundColor: isCustomTheme ? Colors.black : null,
-          shadowColor: isCustomTheme
-              ? themeColors.neonGlow.withOpacity(0.5)
-              : colorScheme.shadow.withOpacity(0.2),
-          shape: RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.circular(AppConstants.defaultBorderRadius),
-            side: isCustomTheme
-                ? BorderSide(
-                    color: themeColors.neonGlow.withOpacity(0.8),
-                    width: 2,
-                  )
-                : BorderSide.none,
-          ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppConstants.defaultPadding * 1.5,
-            vertical: AppConstants.defaultPadding,
-          ),
-          minimumSize: const Size(120, AppConstants.defaultInputHeight),
-          textStyle: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.5,
-            shadows: isCustomTheme
-                ? [
-                    Shadow(
-                      color: themeColors.neonGlow.withOpacity(0.7),
-                      blurRadius: 8,
-                      offset: const Offset(0, 0),
-                    ),
-                  ]
-                : null,
-          ),
-        ).copyWith(
-          overlayColor: isCustomTheme
-              ? MaterialStateProperty.all(themeColors.neonGlow.withOpacity(0.2))
-              : null,
-        ),
+        style:
+            ElevatedButton.styleFrom(
+              elevation: isCustomTheme ? 0 : 2,
+              backgroundColor: isCustomTheme ? themeColors.primary : null,
+              foregroundColor: isCustomTheme ? Colors.black : null,
+              shadowColor: isCustomTheme
+                  ? themeColors.neonGlow.withOpacity(0.5)
+                  : colorScheme.shadow.withOpacity(0.2),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(
+                  AppConstants.defaultBorderRadius,
+                ),
+                side: isCustomTheme
+                    ? BorderSide(
+                        color: themeColors.neonGlow.withOpacity(0.8),
+                        width: 2,
+                      )
+                    : BorderSide.none,
+              ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppConstants.defaultPadding * 1.5,
+                vertical: AppConstants.defaultPadding,
+              ),
+              minimumSize: const Size(120, AppConstants.defaultInputHeight),
+              textStyle: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+                shadows: isCustomTheme
+                    ? [
+                        Shadow(
+                          color: themeColors.neonGlow.withOpacity(0.7),
+                          blurRadius: 8,
+                          offset: const Offset(0, 0),
+                        ),
+                      ]
+                    : null,
+              ),
+            ).copyWith(
+              overlayColor: isCustomTheme
+                  ? MaterialStateProperty.all(
+                      themeColors.neonGlow.withOpacity(0.2),
+                    )
+                  : null,
+            ),
       ),
 
       // تم دکمه‌های متنی با افکت درخشش
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: isCustomTheme ? themeColors.primary : null,
-          shape: RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.circular(AppConstants.defaultBorderRadius),
-          ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppConstants.defaultPadding,
-            vertical: AppConstants.defaultPadding / 2,
-          ),
-          textStyle: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            letterSpacing: 0.3,
-            shadows: isCustomTheme
-                ? [
-                    Shadow(
-                      color: themeColors.primary.withOpacity(0.5),
-                      blurRadius: 4,
-                      offset: const Offset(0, 0),
-                    ),
-                  ]
-                : null,
-          ),
-        ).copyWith(
-          overlayColor: isCustomTheme
-              ? MaterialStateProperty.all(themeColors.primary.withOpacity(0.1))
-              : null,
-        ),
+        style:
+            TextButton.styleFrom(
+              foregroundColor: isCustomTheme ? themeColors.primary : null,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(
+                  AppConstants.defaultBorderRadius,
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppConstants.defaultPadding,
+                vertical: AppConstants.defaultPadding / 2,
+              ),
+              textStyle: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.3,
+                shadows: isCustomTheme
+                    ? [
+                        Shadow(
+                          color: themeColors.primary.withOpacity(0.5),
+                          blurRadius: 4,
+                          offset: const Offset(0, 0),
+                        ),
+                      ]
+                    : null,
+              ),
+            ).copyWith(
+              overlayColor: isCustomTheme
+                  ? MaterialStateProperty.all(
+                      themeColors.primary.withOpacity(0.1),
+                    )
+                  : null,
+            ),
       ),
 
       // تم فیلدهای ورودی با افکت گلو
@@ -395,16 +404,18 @@ class AppTheme {
       // تم فهرست‌ها و ListTile ها
       listTileTheme: ListTileThemeData(
         shape: RoundedRectangleBorder(
-          borderRadius:
-              BorderRadius.circular(AppConstants.defaultBorderRadius / 2),
+          borderRadius: BorderRadius.circular(
+            AppConstants.defaultBorderRadius / 2,
+          ),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppConstants.defaultPadding,
           vertical: AppConstants.defaultPadding / 4,
         ),
         tileColor: isCustomTheme ? themeColors.surface.withOpacity(0.1) : null,
-        selectedTileColor:
-            isCustomTheme ? themeColors.primary.withOpacity(0.2) : null,
+        selectedTileColor: isCustomTheme
+            ? themeColors.primary.withOpacity(0.2)
+            : null,
         textColor: isCustomTheme ? Colors.white : null,
         iconColor: isCustomTheme ? themeColors.primary : null,
       ),
@@ -412,14 +423,16 @@ class AppTheme {
       // تم دیالوگ‌ها با افکت شیشه‌ای
       dialogTheme: DialogThemeData(
         elevation: isCustomTheme ? 0 : 8,
-        backgroundColor:
-            isCustomTheme ? themeColors.surface.withOpacity(0.9) : null,
+        backgroundColor: isCustomTheme
+            ? themeColors.surface.withOpacity(0.9)
+            : null,
         shadowColor: isCustomTheme
             ? themeColors.neonGlow.withOpacity(0.3)
             : colorScheme.shadow.withOpacity(isDark ? 0.4 : 0.2),
         shape: RoundedRectangleBorder(
-          borderRadius:
-              BorderRadius.circular(AppConstants.defaultBorderRadius * 2),
+          borderRadius: BorderRadius.circular(
+            AppConstants.defaultBorderRadius * 2,
+          ),
           side: isCustomTheme
               ? BorderSide(
                   color: themeColors.primary.withOpacity(0.3),
@@ -474,8 +487,9 @@ class AppTheme {
       // تم NavigationBar با افکت‌های ویژه
       navigationBarTheme: NavigationBarThemeData(
         elevation: isCustomTheme ? 0 : (isDark ? 12 : 8),
-        backgroundColor:
-            isCustomTheme ? themeColors.surface.withOpacity(0.8) : null,
+        backgroundColor: isCustomTheme
+            ? themeColors.surface.withOpacity(0.8)
+            : null,
         height: 64,
         labelTextStyle: MaterialStateProperty.resolveWith((states) {
           final isSelected = states.contains(MaterialState.selected);
@@ -484,11 +498,11 @@ class AppTheme {
             fontWeight: FontWeight.w500,
             color: isCustomTheme
                 ? (isSelected
-                    ? themeColors.primary
-                    : Colors.white.withOpacity(0.7))
+                      ? themeColors.primary
+                      : Colors.white.withOpacity(0.7))
                 : (isSelected
-                    ? colorScheme.primary
-                    : colorScheme.onSurfaceVariant),
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant),
             shadows: isCustomTheme && isSelected
                 ? [
                     Shadow(
@@ -505,11 +519,11 @@ class AppTheme {
           return IconThemeData(
             color: isCustomTheme
                 ? (isSelected
-                    ? themeColors.primary
-                    : Colors.white.withOpacity(0.7))
+                      ? themeColors.primary
+                      : Colors.white.withOpacity(0.7))
                 : (isSelected
-                    ? colorScheme.primary
-                    : colorScheme.onSurfaceVariant),
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant),
             size: isSelected ? 26 : 22,
             shadows: isCustomTheme && isSelected
                 ? [
@@ -541,10 +555,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: isCustomTheme
-              ? BorderSide(
-                  color: themeColors.neonGlow,
-                  width: 2,
-                )
+              ? BorderSide(color: themeColors.neonGlow, width: 2)
               : BorderSide.none,
         ),
       ),
@@ -557,10 +568,7 @@ class AppTheme {
         indicator: isCustomTheme
             ? BoxDecoration(
                 border: Border(
-                  bottom: BorderSide(
-                    color: themeColors.neonGlow,
-                    width: 3,
-                  ),
+                  bottom: BorderSide(color: themeColors.neonGlow, width: 3),
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -608,23 +616,23 @@ class AppTheme {
       // تم Slider با افکت‌های نئون
       sliderTheme: SliderThemeData(
         activeTrackColor: isCustomTheme ? themeColors.primary : null,
-        inactiveTrackColor:
-            isCustomTheme ? themeColors.primary.withOpacity(0.3) : null,
+        inactiveTrackColor: isCustomTheme
+            ? themeColors.primary.withOpacity(0.3)
+            : null,
         thumbColor: isCustomTheme ? themeColors.neonGlow : null,
-        overlayColor:
-            isCustomTheme ? themeColors.neonGlow.withOpacity(0.2) : null,
+        overlayColor: isCustomTheme
+            ? themeColors.neonGlow.withOpacity(0.2)
+            : null,
         valueIndicatorColor: isCustomTheme ? themeColors.surface : null,
         valueIndicatorTextStyle: isCustomTheme
-            ? const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              )
+            ? const TextStyle(color: Colors.white, fontWeight: FontWeight.w500)
             : null,
       ),
 
       // سایر تنظیمات
-      scaffoldBackgroundColor:
-          isCustomTheme ? themeColors.background : colorScheme.background,
+      scaffoldBackgroundColor: isCustomTheme
+          ? themeColors.background
+          : colorScheme.background,
       visualDensity: VisualDensity.adaptivePlatformDensity,
       splashFactory: InkRipple.splashFactory,
 
@@ -665,78 +673,66 @@ class AppTheme {
 
   /// دریافت TextTheme سفارشی
   static TextTheme get textTheme => const TextTheme(
-        displayLarge: TextStyle(
-          fontSize: 32,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.5,
-        ),
-        displayMedium: TextStyle(
-          fontSize: 28,
-          fontWeight: FontWeight.w600,
-          letterSpacing: -0.25,
-        ),
-        displaySmall: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.w600,
-        ),
-        headlineLarge: TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.w600,
-        ),
-        headlineMedium: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w500,
-        ),
-        headlineSmall: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w500,
-        ),
-        titleLarge: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.15,
-        ),
-        titleMedium: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          letterSpacing: 0.1,
-        ),
-        titleSmall: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          letterSpacing: 0.1,
-        ),
-        bodyLarge: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w400,
-          letterSpacing: 0.15,
-        ),
-        bodyMedium: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w400,
-          letterSpacing: 0.25,
-        ),
-        bodySmall: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w400,
-          letterSpacing: 0.4,
-        ),
-        labelLarge: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          letterSpacing: 0.1,
-        ),
-        labelMedium: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          letterSpacing: 0.5,
-        ),
-        labelSmall: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w500,
-          letterSpacing: 0.5,
-        ),
-      );
+    displayLarge: TextStyle(
+      fontSize: 32,
+      fontWeight: FontWeight.w700,
+      letterSpacing: -0.5,
+    ),
+    displayMedium: TextStyle(
+      fontSize: 28,
+      fontWeight: FontWeight.w600,
+      letterSpacing: -0.25,
+    ),
+    displaySmall: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+    headlineLarge: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+    headlineMedium: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+    headlineSmall: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+    titleLarge: TextStyle(
+      fontSize: 16,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 0.15,
+    ),
+    titleMedium: TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.w500,
+      letterSpacing: 0.1,
+    ),
+    titleSmall: TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w500,
+      letterSpacing: 0.1,
+    ),
+    bodyLarge: TextStyle(
+      fontSize: 16,
+      fontWeight: FontWeight.w400,
+      letterSpacing: 0.15,
+    ),
+    bodyMedium: TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.w400,
+      letterSpacing: 0.25,
+    ),
+    bodySmall: TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+      letterSpacing: 0.4,
+    ),
+    labelLarge: TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.w500,
+      letterSpacing: 0.1,
+    ),
+    labelMedium: TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w500,
+      letterSpacing: 0.5,
+    ),
+    labelSmall: TextStyle(
+      fontSize: 10,
+      fontWeight: FontWeight.w500,
+      letterSpacing: 0.5,
+    ),
+  );
 
   /// متدهای کمکی برای ایجاد افکت‌های ویژوال
   static BoxDecoration getGlassmorphismDecoration({
@@ -748,10 +744,7 @@ class AppTheme {
     return BoxDecoration(
       color: surfaceColor.withOpacity(opacity),
       borderRadius: BorderRadius.circular(borderRadius),
-      border: Border.all(
-        color: borderColor.withOpacity(0.3),
-        width: 1,
-      ),
+      border: Border.all(color: borderColor.withOpacity(0.3), width: 1),
       boxShadow: [
         BoxShadow(
           color: borderColor.withOpacity(0.1),
@@ -769,10 +762,7 @@ class AppTheme {
   }) {
     return BoxDecoration(
       borderRadius: BorderRadius.circular(borderRadius),
-      border: Border.all(
-        color: glowColor,
-        width: 2,
-      ),
+      border: Border.all(color: glowColor, width: 2),
       boxShadow: [
         BoxShadow(
           color: glowColor.withOpacity(0.5 * intensity),

@@ -67,7 +67,7 @@ class SharedPreferencesSettingsStorage implements SettingsStorage {
 /// In-memory implementation of [SettingsStorage] used in tests.
 class InMemorySettingsStorage implements SettingsStorage {
   InMemorySettingsStorage([Map<String, Object?>? initialValues])
-      : _values = Map<String, Object?>.from(initialValues ?? const {});
+    : _values = Map<String, Object?>.from(initialValues ?? const {});
 
   final Map<String, Object?> _values;
 

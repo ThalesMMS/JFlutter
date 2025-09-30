@@ -44,39 +44,52 @@ class TMSimulator {
         0,
         <SimulationStep>[
           SimulationStep.initial(
-              initialState: tm.initialState!.id, inputString: inputString)
-        ]
+            initialState: tm.initialState!.id,
+            inputString: inputString,
+          ),
+        ],
       );
       final queue = <(State, List<String>, int, List<SimulationStep>)>[initial];
 
       while (queue.isNotEmpty) {
         if (DateTime.now().difference(startTime) > timeout) {
-          return Success(TMSimulationResult.timeout(
+          return Success(
+            TMSimulationResult.timeout(
               inputString: inputString,
               steps: const [],
-              executionTime: DateTime.now().difference(startTime)));
+              executionTime: DateTime.now().difference(startTime),
+            ),
+          );
         }
         if (explored++ > maxConfigurations) {
-          return Success(TMSimulationResult.infiniteLoop(
+          return Success(
+            TMSimulationResult.infiniteLoop(
               inputString: inputString,
               steps: const [],
-              executionTime: DateTime.now().difference(startTime)));
+              executionTime: DateTime.now().difference(startTime),
+            ),
+          );
         }
 
         final (state, tape, head, steps) = queue.removeAt(0);
         if (tm.acceptingStates.contains(state)) {
           final finalSteps = List<SimulationStep>.from(steps)
-            ..add(SimulationStep.finalStep(
+            ..add(
+              SimulationStep.finalStep(
                 finalState: state.id,
                 remainingInput: '',
                 stackContents: '',
                 tapeContents: tape.join(''),
-                stepNumber:
-                    (steps.isNotEmpty ? steps.last.stepNumber : 0) + 1));
-          return Success(TMSimulationResult.success(
+                stepNumber: (steps.isNotEmpty ? steps.last.stepNumber : 0) + 1,
+              ),
+            );
+          return Success(
+            TMSimulationResult.success(
               inputString: inputString,
               steps: finalSteps,
-              executionTime: DateTime.now().difference(startTime)));
+              executionTime: DateTime.now().difference(startTime),
+            ),
+          );
         }
 
         final read = head < tape.length ? tape[head] : tm.blankSymbol;
@@ -122,11 +135,14 @@ class TMSimulator {
         }
       }
 
-      return Success(TMSimulationResult.failure(
+      return Success(
+        TMSimulationResult.failure(
           inputString: inputString,
           steps: const [],
           errorMessage: 'Rejected: no accepting configuration found',
-          executionTime: DateTime.now().difference(startTime)));
+          executionTime: DateTime.now().difference(startTime),
+        ),
+      );
     } catch (e) {
       return Failure('Error simulating NTM: $e');
     }
@@ -219,10 +235,12 @@ class TMSimulator {
     int stepNumber = 0;
 
     // Add initial step
-    steps.add(SimulationStep.initial(
-      initialState: currentState.id,
-      inputString: inputString,
-    ));
+    steps.add(
+      SimulationStep.initial(
+        initialState: currentState.id,
+        inputString: inputString,
+      ),
+    );
 
     // Process until halting
     while (true) {
@@ -247,12 +265,15 @@ class TMSimulator {
       }
 
       // Get current tape symbol
-      final currentSymbol =
-          headPosition < tape.length ? tape[headPosition] : tm.blankSymbol;
+      final currentSymbol = headPosition < tape.length
+          ? tape[headPosition]
+          : tm.blankSymbol;
 
       // Find transition
-      final transition =
-          tm.getTMTransitionFromStateOnSymbol(currentState.id, currentSymbol);
+      final transition = tm.getTMTransitionFromStateOnSymbol(
+        currentState.id,
+        currentSymbol,
+      );
       if (transition == null) {
         // No transition found, halt
         break;
@@ -287,15 +308,17 @@ class TMSimulator {
 
       // Add step
       if (stepByStep) {
-        steps.add(SimulationStep.tm(
-          currentState: currentState.id,
-          remainingInput: '',
-          tapeContents: tape.join(''),
-          usedTransition: currentSymbol,
-          stepNumber: stepNumber,
-          headPosition: headPosition,
-          consumedInput: currentSymbol,
-        ));
+        steps.add(
+          SimulationStep.tm(
+            currentState: currentState.id,
+            remainingInput: '',
+            tapeContents: tape.join(''),
+            usedTransition: currentSymbol,
+            stepNumber: stepNumber,
+            headPosition: headPosition,
+            consumedInput: currentSymbol,
+          ),
+        );
       }
 
       // Move to next state
@@ -308,13 +331,15 @@ class TMSimulator {
     }
 
     // Add final step
-    steps.add(SimulationStep.finalStep(
-      finalState: currentState.id,
-      remainingInput: '',
-      stackContents: '',
-      tapeContents: tape.join(''),
-      stepNumber: stepNumber + 1,
-    ));
+    steps.add(
+      SimulationStep.finalStep(
+        finalState: currentState.id,
+        remainingInput: '',
+        stackContents: '',
+        tapeContents: tape.join(''),
+        stepNumber: stepNumber + 1,
+      ),
+    );
 
     // Check if final state is accepting
     final isAccepted = tm.acceptingStates.contains(currentState);
@@ -366,17 +391,12 @@ class TMSimulator {
       final alphabet = tm.alphabet.toList();
 
       // Generate all possible strings up to maxLength
-      for (int length = 0;
-          length <= maxLength && acceptedStrings.length < maxResults;
-          length++) {
-        _generateStrings(
-          tm,
-          alphabet,
-          '',
-          length,
-          acceptedStrings,
-          maxResults,
-        );
+      for (
+        int length = 0;
+        length <= maxLength && acceptedStrings.length < maxResults;
+        length++
+      ) {
+        _generateStrings(tm, alphabet, '', length, acceptedStrings, maxResults);
       }
 
       return Success(acceptedStrings);
@@ -427,9 +447,11 @@ class TMSimulator {
       final alphabet = tm.alphabet.toList();
 
       // Generate all possible strings up to maxLength
-      for (int length = 0;
-          length <= maxLength && rejectedStrings.length < maxResults;
-          length++) {
+      for (
+        int length = 0;
+        length <= maxLength && rejectedStrings.length < maxResults;
+        length++
+      ) {
         _generateRejectedStrings(
           tm,
           alphabet,
@@ -516,11 +538,7 @@ class TMSimulator {
   }
 
   /// Analyzes the TM
-  static TMAnalysis _analyzeTM(
-    TM tm,
-    int maxInputLength,
-    Duration timeout,
-  ) {
+  static TMAnalysis _analyzeTM(TM tm, int maxInputLength, Duration timeout) {
     final startTime = DateTime.now();
 
     // Analyze states

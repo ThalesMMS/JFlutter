@@ -45,8 +45,8 @@ class FATraceNotifier extends StateNotifier<FATraceState> {
   final SimulationService _simulationService;
 
   FATraceNotifier({SimulationService? simulationService})
-      : _simulationService = simulationService ?? SimulationService(),
-        super(const FATraceState());
+    : _simulationService = simulationService ?? SimulationService(),
+      super(const FATraceState());
 
   void setAutomaton(FSA automaton) {
     state = state.copyWith(automaton: automaton);
@@ -71,8 +71,8 @@ class FATraceNotifier extends StateNotifier<FATraceState> {
     );
 
     final result = state.forceNfaMode
-        ? _simulationService.simulateNFA(request)
-        : _simulationService.simulateDFA(request);
+        ? await _simulationService.simulateNFA(request)
+        : await _simulationService.simulateDFA(request);
 
     if (result.isSuccess) {
       state = state.copyWith(result: result.data, isRunning: false);
@@ -91,7 +91,8 @@ class FATraceNotifier extends StateNotifier<FATraceState> {
 }
 
 /// Provider exposing FA trace state.
-final faTraceProvider =
-    StateNotifierProvider<FATraceNotifier, FATraceState>((ref) {
+final faTraceProvider = StateNotifierProvider<FATraceNotifier, FATraceState>((
+  ref,
+) {
   return FATraceNotifier();
 });

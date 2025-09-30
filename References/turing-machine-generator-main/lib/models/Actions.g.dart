@@ -16,10 +16,7 @@ class ActionsAdapter extends TypeAdapter<Actions> {
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return Actions(
-      type: fields[1] as ActionType,
-      symbol: fields[0] as String,
-    );
+    return Actions(type: fields[1] as ActionType, symbol: fields[0] as String);
   }
 
   @override
@@ -102,14 +99,14 @@ class ActionTypeAdapter extends TypeAdapter<ActionType> {
 // **************************************************************************
 
 Actions _$ActionsFromJson(Map<String, dynamic> json) => Actions(
-      type: $enumDecode(_$ActionTypeEnumMap, json['type']),
-      symbol: json['symbol'] as String? ?? "",
-    );
+  type: $enumDecode(_$ActionTypeEnumMap, json['type']),
+  symbol: json['symbol'] as String? ?? "",
+);
 
 Map<String, dynamic> _$ActionsToJson(Actions instance) => <String, dynamic>{
-      'symbol': instance.symbol,
-      'type': _$ActionTypeEnumMap[instance.type]!,
-    };
+  'symbol': instance.symbol,
+  'type': _$ActionTypeEnumMap[instance.type]!,
+};
 
 const _$ActionTypeEnumMap = {
   ActionType.P: 'P',

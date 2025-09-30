@@ -97,24 +97,19 @@ class JflapStructureDto {
   final String type;
   final JflapAutomatonDto automaton;
 
-  const JflapStructureDto({
-    required this.type,
-    required this.automaton,
-  });
+  const JflapStructureDto({required this.type, required this.automaton});
 
   factory JflapStructureDto.fromJson(Map<String, dynamic> json) {
     return JflapStructureDto(
       type: json['type'] as String,
-      automaton:
-          JflapAutomatonDto.fromJson(json['automaton'] as Map<String, dynamic>),
+      automaton: JflapAutomatonDto.fromJson(
+        json['automaton'] as Map<String, dynamic>,
+      ),
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'type': type,
-      'automaton': automaton.toJson(),
-    };
+    return {'type': type, 'automaton': automaton.toJson()};
   }
 }
 
@@ -123,10 +118,7 @@ class JflapAutomatonDto {
   final List<JflapStateDto> states;
   final List<JflapTransitionDto> transitions;
 
-  const JflapAutomatonDto({
-    required this.states,
-    required this.transitions,
-  });
+  const JflapAutomatonDto({required this.states, required this.transitions});
 
   factory JflapAutomatonDto.fromJson(Map<String, dynamic> json) {
     return JflapAutomatonDto(
@@ -209,10 +201,6 @@ class JflapTransitionDto {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'from': from,
-      'to': to,
-      'read': read,
-    };
+    return {'from': from, 'to': to, 'read': read};
   }
 }

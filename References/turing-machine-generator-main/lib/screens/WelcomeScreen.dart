@@ -17,28 +17,31 @@ class WelcomeScreen extends StatelessWidget {
       platform = Targets.ANDROID;
     }
     return SafeArea(
-        child: Scaffold(
-      // appBar: AppBar(
-      //   title: Text("Welcome!"),
-      // ),
-      body: Center(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              "Turing Machines",
-              style: TextStyle(fontSize: 38, fontWeight: FontWeight.bold),
-            ),
-            const Gap(100),
-            ElevatedButton(
+      child: Scaffold(
+        // appBar: AppBar(
+        //   title: Text("Welcome!"),
+        // ),
+        body: Center(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                "Turing Machines",
+                style: TextStyle(fontSize: 38, fontWeight: FontWeight.bold),
+              ),
+              const Gap(100),
+              ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
                 onPressed: () {
                   TuringMachine machine = StandardMachines.emptyMachine();
-                  Navigator.of(context)
-                      .push(MaterialPageRoute(builder: (context) {
-                    return TableScreen(machine: machine);
-                  }));
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) {
+                        return TableScreen(machine: machine);
+                      },
+                    ),
+                  );
                 },
                 child: const Padding(
                   padding: EdgeInsets.all(17.0),
@@ -50,16 +53,20 @@ class WelcomeScreen extends StatelessWidget {
                       color: Colors.black,
                     ),
                   ),
-                )),
-            Gap((platform == Targets.ANDROID) ? 20 : 35),
-            ElevatedButton(
+                ),
+              ),
+              Gap((platform == Targets.ANDROID) ? 20 : 35),
+              ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
                 onPressed: () {
                   TuringMachine machine = StandardMachines.defaultMachine();
-                  Navigator.of(context)
-                      .push(MaterialPageRoute(builder: (context) {
-                    return TableScreen(machine: machine);
-                  }));
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) {
+                        return TableScreen(machine: machine);
+                      },
+                    ),
+                  );
                 },
                 child: const Padding(
                   padding: EdgeInsets.all(17.0),
@@ -71,15 +78,19 @@ class WelcomeScreen extends StatelessWidget {
                       color: Colors.black,
                     ),
                   ),
-                )),
-            Gap((platform == Targets.ANDROID) ? 20 : 35),
-            ElevatedButton(
+                ),
+              ),
+              Gap((platform == Targets.ANDROID) ? 20 : 35),
+              ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
                 onPressed: () {
-                  Navigator.of(context)
-                      .push(MaterialPageRoute(builder: (context) {
-                    return LoadMachineScreen();
-                  }));
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) {
+                        return LoadMachineScreen();
+                      },
+                    ),
+                  );
                 },
                 child: const Padding(
                   padding: EdgeInsets.all(17.0),
@@ -91,11 +102,13 @@ class WelcomeScreen extends StatelessWidget {
                       color: Colors.black,
                     ),
                   ),
-                )),
-            Gap((platform == Targets.ANDROID) ? 20 : 35),
-          ],
+                ),
+              ),
+              Gap((platform == Targets.ANDROID) ? 20 : 35),
+            ],
+          ),
         ),
       ),
-    ));
+    );
   }
 }

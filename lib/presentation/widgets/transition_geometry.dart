@@ -26,8 +26,10 @@ class TransitionCurve {
     double curvatureStrength = 45,
     double labelOffset = 16,
   }) {
-    final from =
-        Offset(current.fromState.position.x, current.fromState.position.y);
+    final from = Offset(
+      current.fromState.position.x,
+      current.fromState.position.y,
+    );
     final to = Offset(current.toState.position.x, current.toState.position.y);
     final direction = to - from;
     final distance = direction.distance;
@@ -39,29 +41,34 @@ class TransitionCurve {
     final end = to - unit * stateRadius;
 
     final orderedGroup = transitions
-        .where((t) =>
-            t.fromState.id == current.fromState.id &&
-            t.toState.id == current.toState.id &&
-            t.fromState != t.toState)
+        .where(
+          (t) =>
+              t.fromState.id == current.fromState.id &&
+              t.toState.id == current.toState.id &&
+              t.fromState != t.toState,
+        )
         .toList();
     final orderedIndex = orderedGroup.indexOf(current);
     final orderedTotal = orderedGroup.length;
 
     final unorderedTotal = transitions
-        .where((t) =>
-            t.fromState != t.toState &&
-            ((t.fromState.id == current.fromState.id &&
-                    t.toState.id == current.toState.id) ||
-                (t.fromState.id == current.toState.id &&
-                    t.toState.id == current.fromState.id)))
+        .where(
+          (t) =>
+              t.fromState != t.toState &&
+              ((t.fromState.id == current.fromState.id &&
+                      t.toState.id == current.toState.id) ||
+                  (t.fromState.id == current.toState.id &&
+                      t.toState.id == current.fromState.id)),
+        )
         .length;
 
     double offsetFactor = 0.0;
     if (orderedTotal > 1) {
       offsetFactor = orderedIndex - (orderedTotal - 1) / 2;
     } else if (unorderedTotal > 1) {
-      offsetFactor =
-          current.fromState.id.compareTo(current.toState.id) < 0 ? 0.5 : -0.5;
+      offsetFactor = current.fromState.id.compareTo(current.toState.id) < 0
+          ? 0.5
+          : -0.5;
     }
 
     final normal = Offset(-unit.dy, unit.dx);
@@ -73,8 +80,8 @@ class TransitionCurve {
     final labelDirection = offsetFactor == 0
         ? 1.0
         : offsetFactor > 0
-            ? 1.0
-            : -1.0;
+        ? 1.0
+        : -1.0;
     final labelPosition = labelPoint + normal * labelOffset * labelDirection;
 
     final derivative = _quadraticDerivative(start, control, end, 1.0);
@@ -102,12 +109,7 @@ class TransitionCurve {
   }
 
   /// Returns a point along the quadratic curve at parameter [t].
-  static Offset pointAt(
-    Offset start,
-    Offset control,
-    Offset end,
-    double t,
-  ) =>
+  static Offset pointAt(Offset start, Offset control, Offset end, double t) =>
       _quadraticPoint(start, control, end, t);
 
   static Offset _quadraticDerivative(
@@ -125,6 +127,5 @@ class TransitionCurve {
     Offset control,
     Offset end,
     double t,
-  ) =>
-      _quadraticDerivative(start, control, end, t);
+  ) => _quadraticDerivative(start, control, end, t);
 }

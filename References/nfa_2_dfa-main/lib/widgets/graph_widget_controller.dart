@@ -209,7 +209,9 @@ class GraphWidgetController extends ChangeNotifier {
       _highlightedTransitions = Set.from(transitions);
       for (final transition in transitions) {
         _animationController.startTransitionAnimation(
-            transition, _animationType);
+          transition,
+          _animationType,
+        );
       }
       notifyListeners();
     }
@@ -608,13 +610,9 @@ class _AdvancedGraphWidgetState extends State<AdvancedGraphWidget>
       duration: const Duration(milliseconds: 200),
       vsync: this,
     );
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.05,
-    ).animate(CurvedAnimation(
-      parent: _scaleController,
-      curve: Curves.easeInOut,
-    ));
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
+      CurvedAnimation(parent: _scaleController, curve: Curves.easeInOut),
+    );
   }
 
   @override
@@ -666,8 +664,10 @@ class _AdvancedGraphWidgetState extends State<AdvancedGraphWidget>
       },
       onScaleUpdate: (details) {
         if (details.scale != 1.0) {
-          _controller.zoomLevel =
-              (_controller.zoomLevel * details.scale).clamp(0.1, 5.0);
+          _controller.zoomLevel = (_controller.zoomLevel * details.scale).clamp(
+            0.1,
+            5.0,
+          );
         }
         if (details.focalPointDelta != Offset.zero) {
           _controller.pan(details.focalPointDelta);

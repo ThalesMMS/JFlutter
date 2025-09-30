@@ -79,10 +79,8 @@ class AutomatonModel {
           .toList(),
       transitions: Map<String, List<String>>.from(
         (json['transitions'] as Map).map(
-          (key, value) => MapEntry(
-            key as String,
-            List<String>.from(value as List),
-          ),
+          (key, value) =>
+              MapEntry(key as String, List<String>.from(value as List)),
         ),
       ),
       initialId: json['initialId'] as String?,

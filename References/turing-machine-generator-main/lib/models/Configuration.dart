@@ -13,7 +13,9 @@ class Configuration {
   factory Configuration.fromString(String input) {
     List<String> components = input.split(",").map((e) => e.trim()).toList();
     return Configuration(
-        m_config: components[0], symbol: parseSymbolInput(components[1]));
+      m_config: components[0],
+      symbol: parseSymbolInput(components[1]),
+    );
   }
   @HiveField(0)
   final String m_config;

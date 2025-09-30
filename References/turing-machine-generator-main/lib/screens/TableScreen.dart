@@ -101,16 +101,18 @@ class _TableScreenState extends State<TableScreen> {
           title: const Text("TableScreen"),
           actions: [
             IconButton(
-                onPressed: () {
-                  _showInfoSheet();
-                },
-                icon: const Icon(Icons.info_outlined)),
+              onPressed: () {
+                _showInfoSheet();
+              },
+              icon: const Icon(Icons.info_outlined),
+            ),
             const Gap(5),
             IconButton(
-                onPressed: () {
-                  _showInputSheet(context);
-                },
-                icon: const Icon(Icons.save_as_outlined)),
+              onPressed: () {
+                _showInputSheet(context);
+              },
+              icon: const Icon(Icons.save_as_outlined),
+            ),
             const Gap(5),
             IconButton(
               onPressed: () {
@@ -120,18 +122,19 @@ class _TableScreenState extends State<TableScreen> {
             ),
             const Gap(5),
             IconButton(
-                onPressed: () {
-                  setState(() {
-                    _input.clear();
-                    initialConfigValue = "NONE";
-                    deleteValue = "NONE";
-                    for (TextEditingController contr in _controllers) {
-                      contr.clear();
-                    }
-                    widget.machine.reset();
-                  });
-                },
-                icon: const Icon(Icons.restart_alt_rounded))
+              onPressed: () {
+                setState(() {
+                  _input.clear();
+                  initialConfigValue = "NONE";
+                  deleteValue = "NONE";
+                  for (TextEditingController contr in _controllers) {
+                    contr.clear();
+                  }
+                  widget.machine.reset();
+                });
+              },
+              icon: const Icon(Icons.restart_alt_rounded),
+            ),
           ],
         ),
         body: Center(
@@ -151,8 +154,9 @@ class _TableScreenState extends State<TableScreen> {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 4.0),
                         child: DataTable(
-                          columnSpacing:
-                              (platform == Targets.ANDROID) ? 18 : 56,
+                          columnSpacing: (platform == Targets.ANDROID)
+                              ? 18
+                              : 56,
                           decoration: const BoxDecoration(
                             color: Colors.blue, // Set the background color here
                           ),
@@ -206,15 +210,14 @@ class _TableScreenState extends State<TableScreen> {
                 buildStringInput(platform),
                 const Gap(70),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                  ),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
                   onPressed: () {
                     if (initialConfigValue == "NONE") {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content:
-                              Text('Initial M-Configuration cannot be empty'),
+                          content: Text(
+                            'Initial M-Configuration cannot be empty',
+                          ),
                           backgroundColor: Colors.red,
                         ),
                       );
@@ -222,10 +225,13 @@ class _TableScreenState extends State<TableScreen> {
                     }
                     // widget.machine.initial_config = initialConfigValue;
                     // widget.machine.current_config = initialConfigValue;
-                    Navigator.of(context)
-                        .push(MaterialPageRoute(builder: (context) {
-                      return TapeScreen(machine: widget.machine);
-                    }));
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return TapeScreen(machine: widget.machine);
+                        },
+                      ),
+                    );
                   },
                   child: const Padding(
                     padding: EdgeInsets.all(15.0),
@@ -261,19 +267,13 @@ class _TableScreenState extends State<TableScreen> {
         const Gap(13.0),
         DropdownButton(
           value: initialConfigValue,
-          items: availableConfigs.map((config) {
-            return DropdownMenuItem(
-              value: config,
-              child: Text(config),
-            );
-          }).toList()
-            ..insert(
-              0,
-              const DropdownMenuItem(
-                value: "NONE",
-                child: Text("NONE"),
+          items:
+              availableConfigs.map((config) {
+                return DropdownMenuItem(value: config, child: Text(config));
+              }).toList()..insert(
+                0,
+                const DropdownMenuItem(value: "NONE", child: Text("NONE")),
               ),
-            ),
           onChanged: (widget.machine.machine.isEmpty)
               ? null
               : (Object? value) {
@@ -293,25 +293,20 @@ class _TableScreenState extends State<TableScreen> {
 
   //Creates the drop down and associated button required to delete a configuration.
   Widget deleteDropDown() {
-    List<String> availableConfigs =
-        widget.machine.machine.keys.map((config) => config.toString()).toList();
+    List<String> availableConfigs = widget.machine.machine.keys
+        .map((config) => config.toString())
+        .toList();
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         DropdownButton(
-          items: availableConfigs.map((config) {
-            return DropdownMenuItem(
-              value: config,
-              child: Text(config),
-            );
-          }).toList()
-            ..insert(
-              0,
-              const DropdownMenuItem(
-                value: "NONE",
-                child: Text("NONE"),
+          items:
+              availableConfigs.map((config) {
+                return DropdownMenuItem(value: config, child: Text(config));
+              }).toList()..insert(
+                0,
+                const DropdownMenuItem(value: "NONE", child: Text("NONE")),
               ),
-            ),
           value: deleteValue,
           onChanged: (widget.machine.machine.isEmpty)
               ? null
@@ -326,30 +321,29 @@ class _TableScreenState extends State<TableScreen> {
         ),
         const Gap(12.0),
         ElevatedButton(
-            onPressed: (widget.machine.machine.isEmpty)
-                ? null
-                : () {
-                    if (deleteValue == "NONE") {
-                      return;
+          onPressed: (widget.machine.machine.isEmpty)
+              ? null
+              : () {
+                  if (deleteValue == "NONE") {
+                    return;
+                  }
+                  Configuration toBeDeleted = Configuration.fromString(
+                    deleteValue,
+                  );
+                  setState(() {
+                    if (toBeDeleted.m_config == initialConfigValue) {
+                      initialConfigValue = "NONE";
                     }
-                    Configuration toBeDeleted =
-                        Configuration.fromString(deleteValue);
-                    setState(() {
-                      if (toBeDeleted.m_config == initialConfigValue) {
-                        initialConfigValue = "NONE";
-                      }
-                      deleteValue = "NONE";
-                      widget.machine.machine.remove(toBeDeleted);
-                    });
+                    deleteValue = "NONE";
+                    widget.machine.machine.remove(toBeDeleted);
+                  });
 
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('$toBeDeleted deleted')),
-                    );
-                  },
-            child: const Text(
-              "Delete",
-              style: TextStyle(color: Colors.red),
-            ))
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('$toBeDeleted deleted')),
+                  );
+                },
+          child: const Text("Delete", style: TextStyle(color: Colors.red)),
+        ),
       ],
     );
   }
@@ -362,7 +356,8 @@ class _TableScreenState extends State<TableScreen> {
       dataCells.add(DataCell(Text(config.m_config)));
       dataCells.add(DataCell(Text(parseSymbolOutput(config.symbol))));
       dataCells.add(
-          DataCell(Text(actions.Actions.printableListFrom(behaviour.actions))));
+        DataCell(Text(actions.Actions.printableListFrom(behaviour.actions))),
+      );
       dataCells.add(DataCell(Text(behaviour.f_config)));
       dataRows.add(DataRow(cells: dataCells));
     });
@@ -409,12 +404,15 @@ class _TableScreenState extends State<TableScreen> {
                   onPressed: () {
                     if ((_formKey.currentState!.validate())) {
                       Configuration config = Configuration(
-                          m_config: _controllers[0].text,
-                          symbol: parseSymbolInput(_controllers[1].text));
+                        m_config: _controllers[0].text,
+                        symbol: parseSymbolInput(_controllers[1].text),
+                      );
                       Behaviour behaviour = Behaviour(
-                          actions: actions.Actions.parseActions(
-                              _controllers[2].text),
-                          f_config: _controllers[3].text);
+                        actions: actions.Actions.parseActions(
+                          _controllers[2].text,
+                        ),
+                        f_config: _controllers[3].text,
+                      );
 
                       setState(() {
                         for (TextEditingController contr in _controllers) {
@@ -476,12 +474,15 @@ class _TableScreenState extends State<TableScreen> {
                   onPressed: () {
                     if ((_formKey.currentState!.validate())) {
                       Configuration config = Configuration(
-                          m_config: _controllers[0].text,
-                          symbol: parseSymbolInput(_controllers[1].text));
+                        m_config: _controllers[0].text,
+                        symbol: parseSymbolInput(_controllers[1].text),
+                      );
                       Behaviour behaviour = Behaviour(
-                          actions: actions.Actions.parseActions(
-                              _controllers[2].text),
-                          f_config: _controllers[3].text);
+                        actions: actions.Actions.parseActions(
+                          _controllers[2].text,
+                        ),
+                        f_config: _controllers[3].text,
+                      );
 
                       setState(() {
                         for (TextEditingController contr in _controllers) {
@@ -511,13 +512,13 @@ class _TableScreenState extends State<TableScreen> {
   }
 
   //custom widgets
-  Widget _fieldInput(
-      {required String label,
-      required String hint,
-      required int index,
-      required Targets platform
-      // required Function(String?) validator,
-      }) {
+  Widget _fieldInput({
+    required String label,
+    required String hint,
+    required int index,
+    required Targets platform,
+    // required Function(String?) validator,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
       child: SizedBox(
@@ -533,15 +534,18 @@ class _TableScreenState extends State<TableScreen> {
             hintText: hint,
             alignLabelWithHint: true,
             labelStyle: const TextStyle(
-                fontSize: 15,
-                color: Colors.black38,
-                decoration: TextDecoration.none,
-                fontWeight: FontWeight.w400),
+              fontSize: 15,
+              color: Colors.black38,
+              decoration: TextDecoration.none,
+              fontWeight: FontWeight.w400,
+            ),
             floatingLabelStyle: const TextStyle(color: Color(0xff23a590)),
             hintStyle: const TextStyle(color: Colors.black38, fontSize: 14),
             enabledBorder: OutlineInputBorder(
               borderSide: const BorderSide(
-                  width: 3, color: Colors.black12), //<-- SEE HERE
+                width: 3,
+                color: Colors.black12,
+              ), //<-- SEE HERE
               borderRadius: BorderRadius.circular(50.0),
             ),
             errorBorder: OutlineInputBorder(
@@ -553,8 +557,9 @@ class _TableScreenState extends State<TableScreen> {
               borderRadius: BorderRadius.circular(50.0),
             ),
             focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(width: 3, color: Colors.blue.shade400),
-                borderRadius: BorderRadius.circular(50.0)),
+              borderSide: BorderSide(width: 3, color: Colors.blue.shade400),
+              borderRadius: BorderRadius.circular(50.0),
+            ),
           ),
         ),
       ),
@@ -570,18 +575,14 @@ class _TableScreenState extends State<TableScreen> {
             children: [
               const Text("Initialize Tape with String(Optional): "),
               const Gap(10),
-              SizedBox(
-                width: 250,
-                child: TextField(
-                  controller: _input,
-                ),
-              ),
+              SizedBox(width: 250, child: TextField(controller: _input)),
               const Gap(10.0),
               ElevatedButton(
-                  onPressed: () {
-                    printOntoTape();
-                  },
-                  child: const Text("Print onto Tape")),
+                onPressed: () {
+                  printOntoTape();
+                },
+                child: const Text("Print onto Tape"),
+              ),
             ],
           )
         : Column(
@@ -590,18 +591,14 @@ class _TableScreenState extends State<TableScreen> {
             children: [
               const Text("Tape String(Optional): "),
               const Gap(8.0),
-              SizedBox(
-                width: 140,
-                child: TextField(
-                  controller: _input,
-                ),
-              ),
+              SizedBox(width: 140, child: TextField(controller: _input)),
               const Gap(9.5),
               ElevatedButton(
-                  onPressed: () {
-                    printOntoTape();
-                  },
-                  child: Text("Print onto Tape")),
+                onPressed: () {
+                  printOntoTape();
+                },
+                child: Text("Print onto Tape"),
+              ),
             ],
           );
   }
@@ -612,178 +609,192 @@ class _TableScreenState extends State<TableScreen> {
   }
 
   //Bottom modal sheet function here
-  void _showInputSheet(
-    BuildContext context,
-  ) {
+  void _showInputSheet(BuildContext context) {
     showModalBottomSheet(
-        useSafeArea: true,
-        isScrollControlled: true,
-        context: context,
-        isDismissible: false,
-        enableDrag: false,
-        builder: (context) {
-          return Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom,
+      useSafeArea: true,
+      isScrollControlled: true,
+      context: context,
+      isDismissible: false,
+      enableDrag: false,
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Container(
+            height: 200,
+            padding: const EdgeInsets.only(
+              bottom: 8.0,
+              top: 15,
+              left: 15,
+              right: 15,
             ),
-            child: Container(
-              height: 200,
-              padding: const EdgeInsets.only(
-                  bottom: 8.0, top: 15, left: 15, right: 15),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const Text("Turing Machine name: "),
-                    const Gap(15),
-                    TextField(
-                      controller: _saveName,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Text("Turing Machine name: "),
+                  const Gap(15),
+                  TextField(controller: _saveName),
+                  const Gap(15),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 5.0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text("Cancel"),
+                        ),
+                        const Gap(7.0),
+                        ElevatedButton(
+                          onPressed: () {
+                            //saving code here
+                            // widget.machine.tape =
+                            //     widget.machine.tape.cloneTape();
+                            _machinesBox.put(
+                              _saveName.text,
+                              TuringMachineModel.fromMachine(
+                                machine: widget.machine,
+                              ),
+                            );
+                            //Notification for save
+                            Navigator.pop(context);
+                          },
+                          child: const Text("Save"),
+                        ),
+                      ],
                     ),
-                    const Gap(15),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 5.0),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          ElevatedButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
-                            child: const Text("Cancel"),
-                          ),
-                          const Gap(7.0),
-                          ElevatedButton(
-                            onPressed: () {
-                              //saving code here
-                              // widget.machine.tape =
-                              //     widget.machine.tape.cloneTape();
-                              _machinesBox.put(
-                                  _saveName.text,
-                                  TuringMachineModel.fromMachine(
-                                      machine: widget.machine));
-                              //Notification for save
-                              Navigator.pop(context);
-                            },
-                            child: const Text("Save"),
-                          )
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-          );
-        });
+          ),
+        );
+      },
+    );
   }
 
   void _showJsonSheet() {
     TextEditingController controller = TextEditingController(
-        text: jsonEncode(
-            TuringMachineModel.fromMachine(machine: widget.machine).toJson()));
+      text: jsonEncode(
+        TuringMachineModel.fromMachine(machine: widget.machine).toJson(),
+      ),
+    );
 
     showModalBottomSheet(
-        useSafeArea: true,
-        isScrollControlled: true,
-        context: context,
-        isDismissible: true,
-        enableDrag: false,
-        builder: (context) {
-          return Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom,
+      useSafeArea: true,
+      isScrollControlled: true,
+      context: context,
+      isDismissible: true,
+      enableDrag: false,
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Container(
+            height: 250,
+            padding: const EdgeInsets.only(
+              bottom: 8.0,
+              top: 15,
+              left: 15,
+              right: 15,
             ),
-            child: Container(
-              height: 250,
-              padding: const EdgeInsets.only(
-                  bottom: 8.0, top: 15, left: 15, right: 15),
-              child: Center(
-                child: Column(
-                  children: [
-                    const Text(
-                      "Machine Export String to Copy: ",
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const Gap(20),
-                    TextField(
-                      readOnly: true,
-                      controller: controller,
-                      maxLines: 5,
-                    ),
-                  ],
-                ),
+            child: Center(
+              child: Column(
+                children: [
+                  const Text(
+                    "Machine Export String to Copy: ",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const Gap(20),
+                  TextField(
+                    readOnly: true,
+                    controller: controller,
+                    maxLines: 5,
+                  ),
+                ],
               ),
             ),
-          );
-        });
+          ),
+        );
+      },
+    );
   }
 
   void _showInfoSheet() {
-    TextEditingController controller =
-        TextEditingController(text: widget.machine.description);
+    TextEditingController controller = TextEditingController(
+      text: widget.machine.description,
+    );
 
     showModalBottomSheet(
-        useSafeArea: true,
-        isScrollControlled: true,
-        context: context,
-        isDismissible: true,
-        enableDrag: false,
-        builder: (context) {
-          return Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom,
+      useSafeArea: true,
+      isScrollControlled: true,
+      context: context,
+      isDismissible: true,
+      enableDrag: false,
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Container(
+            height: 320,
+            padding: const EdgeInsets.only(
+              bottom: 8.0,
+              top: 15,
+              left: 15,
+              right: 15,
             ),
-            child: Container(
-              height: 320,
-              padding: const EdgeInsets.only(
-                  bottom: 8.0, top: 15, left: 15, right: 15),
-              child: Center(
-                child: Column(
-                  children: [
-                    const Text(
-                      "Description ",
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            child: Center(
+              child: Column(
+                children: [
+                  const Text(
+                    "Description ",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const Gap(20),
+                  TextField(
+                    maxLength: 500,
+                    controller: controller,
+                    maxLines: 5,
+                  ),
+                  const Gap(5),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 5.0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text("Cancel"),
+                        ),
+                        const Gap(7.0),
+                        ElevatedButton(
+                          onPressed: () {
+                            //saving code here
+                            widget.machine.description = controller.text;
+                            Navigator.pop(context);
+                          },
+                          child: const Text("Okay"),
+                        ),
+                      ],
                     ),
-                    const Gap(20),
-                    TextField(
-                      maxLength: 500,
-                      controller: controller,
-                      maxLines: 5,
-                    ),
-                    const Gap(5),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 5.0),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          ElevatedButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
-                            child: const Text("Cancel"),
-                          ),
-                          const Gap(7.0),
-                          ElevatedButton(
-                            onPressed: () {
-                              //saving code here
-                              widget.machine.description = controller.text;
-                              Navigator.pop(context);
-                            },
-                            child: const Text("Okay"),
-                          )
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-          );
-        });
+          ),
+        );
+      },
+    );
   }
 }

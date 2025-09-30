@@ -121,26 +121,30 @@ class GrammarToPDAConverter {
     final transitions = <PDATransition>[];
 
     // Transition from q0 to q1: push start symbol
-    transitions.add(PDATransition(
-      id: 't1',
-      fromState: q0,
-      toState: q1,
-      label: 'ε,ε/${grammar.startSymbol}',
-      inputSymbol: '',
-      popSymbol: '',
-      pushSymbol: grammar.startSymbol,
-    ));
+    transitions.add(
+      PDATransition(
+        id: 't1',
+        fromState: q0,
+        toState: q1,
+        label: 'ε,ε/${grammar.startSymbol}',
+        inputSymbol: '',
+        popSymbol: '',
+        pushSymbol: grammar.startSymbol,
+      ),
+    );
 
     // Transition from q1 to q2: pop start symbol
-    transitions.add(PDATransition(
-      id: 't2',
-      fromState: q1,
-      toState: q2,
-      label: 'ε,${grammar.startSymbol}/ε',
-      inputSymbol: '',
-      popSymbol: grammar.startSymbol,
-      pushSymbol: '',
-    ));
+    transitions.add(
+      PDATransition(
+        id: 't2',
+        fromState: q1,
+        toState: q2,
+        label: 'ε,${grammar.startSymbol}/ε',
+        inputSymbol: '',
+        popSymbol: grammar.startSymbol,
+        pushSymbol: '',
+      ),
+    );
 
     return PDA(
       id: 'pda_${DateTime.now().millisecondsSinceEpoch}',
@@ -214,7 +218,8 @@ class GrammarToPDAConverter {
       return ResultFactory.success(result);
     } catch (e) {
       return ResultFactory.failure(
-          'Error converting grammar to PDA (standard): $e');
+        'Error converting grammar to PDA (standard): $e',
+      );
     }
   }
 
@@ -253,7 +258,8 @@ class GrammarToPDAConverter {
       return ResultFactory.success(result);
     } catch (e) {
       return ResultFactory.failure(
-          'Error converting grammar to PDA (Greibach): $e');
+        'Error converting grammar to PDA (Greibach): $e',
+      );
     }
   }
 
@@ -282,7 +288,8 @@ class GrammarToPDAConverter {
       return ResultFactory.success(true);
     } catch (e) {
       return ResultFactory.failure(
-          'Error checking if grammar can be converted to PDA: $e');
+        'Error checking if grammar can be converted to PDA: $e',
+      );
     }
   }
 
@@ -303,7 +310,8 @@ class GrammarToPDAConverter {
       // Handle empty grammar
       if (grammar.productions.isEmpty) {
         return ResultFactory.failure(
-            'Cannot analyze conversion of empty grammar');
+          'Cannot analyze conversion of empty grammar',
+        );
       }
 
       // Check if grammar has start symbol
@@ -335,7 +343,8 @@ class GrammarToPDAConverter {
       return ResultFactory.success(finalResult);
     } catch (e) {
       return ResultFactory.failure(
-          'Error analyzing grammar to PDA conversion: $e');
+        'Error analyzing grammar to PDA conversion: $e',
+      );
     }
   }
 }

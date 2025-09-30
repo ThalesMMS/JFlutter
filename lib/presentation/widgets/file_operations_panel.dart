@@ -109,9 +109,9 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+      style: Theme.of(
+        context,
+      ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
     );
   }
 
@@ -206,7 +206,8 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
           _showSuccessMessage('Automaton exported successfully');
         } else {
           _showErrorMessage(
-              'Failed to export automaton: ${exportResult.error}');
+            'Failed to export automaton: ${exportResult.error}',
+          );
         }
       }
     } catch (e) {
@@ -278,19 +279,13 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
 
   void _showSuccessMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.green,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.green),
     );
   }
 
   void _showErrorMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
   }
 }

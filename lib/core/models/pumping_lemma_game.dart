@@ -146,11 +146,7 @@ class PumpingLemmaGame {
 }
 
 /// Status of a pumping lemma game
-enum GameStatus {
-  inProgress,
-  completed,
-  failed,
-}
+enum GameStatus { inProgress, completed, failed }
 
 /// Extension on GameStatus for better usability
 extension GameStatusExtension on GameStatus {

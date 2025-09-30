@@ -50,10 +50,7 @@ class JflapGrammarDto {
   final String type;
   final JflapGrammarStructureDto structure;
 
-  const JflapGrammarDto({
-    required this.type,
-    required this.structure,
-  });
+  const JflapGrammarDto({required this.type, required this.structure});
 
   factory JflapGrammarDto.fromJson(Map<String, dynamic> json) {
     return JflapGrammarDto(
@@ -65,10 +62,7 @@ class JflapGrammarDto {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'type': type,
-      'structure': structure.toJson(),
-    };
+    return {'type': type, 'structure': structure.toJson()};
   }
 }
 
@@ -92,9 +86,7 @@ class JflapGrammarStructureDto {
       variables: List<String>.from(json['variables'] as List),
       startVariable: json['startVariable'] as String,
       productions: (json['productions'] as List)
-          .map(
-            (p) => JflapProductionDto.fromJson(p as Map<String, dynamic>),
-          )
+          .map((p) => JflapProductionDto.fromJson(p as Map<String, dynamic>))
           .toList(),
     );
   }
@@ -114,10 +106,7 @@ class JflapProductionDto {
   final String left;
   final String right;
 
-  const JflapProductionDto({
-    required this.left,
-    required this.right,
-  });
+  const JflapProductionDto({required this.left, required this.right});
 
   factory JflapProductionDto.fromJson(Map<String, dynamic> json) {
     return JflapProductionDto(
@@ -127,9 +116,6 @@ class JflapProductionDto {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'left': left,
-      'right': right,
-    };
+    return {'left': left, 'right': right};
   }
 }

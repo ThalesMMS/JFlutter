@@ -9,7 +9,7 @@ class FrameThrottler {
   VoidCallback? _pending;
 
   FrameThrottler({Duration? frameBudget})
-      : frameBudget = frameBudget ?? const Duration(milliseconds: 16);
+    : frameBudget = frameBudget ?? const Duration(milliseconds: 16);
 
   /// Schedule [callback] to run on the next frame. If multiple calls happen within
   /// the same frame, only the last callback is executed.
@@ -77,16 +77,21 @@ Future<void> processInBatches<T>({
     if (processed % itemsPerBatch == 0) {
       // Yield to next frame
       final completer = Completer<void>();
-      SchedulerBinding.instance
-          .addPostFrameCallback((_) => completer.complete());
+      SchedulerBinding.instance.addPostFrameCallback(
+        (_) => completer.complete(),
+      );
       await completer.future;
     }
   }
 }
 
 /// Utility to compute how many iterations can run within a time budget.
-int iterationsForBudget(Duration elapsed, Duration budget,
-    {int minPerBatch = 1, int maxPerBatch = 10000}) {
+int iterationsForBudget(
+  Duration elapsed,
+  Duration budget, {
+  int minPerBatch = 1,
+  int maxPerBatch = 10000,
+}) {
   final remaining = budget.inMicroseconds - elapsed.inMicroseconds;
   if (remaining <= 0) return minPerBatch;
   // Heuristic: assume ~150ns per light op ⇒ ~6666 ops/ms; clamp conservatively

@@ -57,7 +57,9 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withValues(alpha: 0.2),
                 ),
               ),
               child: ClipRRect(
@@ -103,9 +105,9 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
         children: [
           Text(
             'TM Canvas',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Wrap(
@@ -168,8 +170,9 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
   }) {
     final colorScheme = Theme.of(context).colorScheme;
     final color = isSelected ? colorScheme.primary : colorScheme.onSurface;
-    final backgroundColor =
-        isSelected ? colorScheme.primaryContainer : colorScheme.surface;
+    final backgroundColor = isSelected
+        ? colorScheme.primaryContainer
+        : colorScheme.surface;
 
     return ElevatedButton.icon(
       onPressed: onPressed,
@@ -262,8 +265,9 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
   void _deleteState(automaton_state.State state) {
     setState(() {
       _states.remove(state);
-      _transitions
-          .removeWhere((t) => t.fromState == state || t.toState == state);
+      _transitions.removeWhere(
+        (t) => t.fromState == state || t.toState == state,
+      );
       if (_selectedState == state) {
         _selectedState = null;
       }
@@ -290,15 +294,17 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
   }
 
   void _notifyEditor() {
-    final notifier = ref.read(tmEditorProvider.notifier);
-    final tm = notifier.updateFromCanvas(
-      states: List<automaton_state.State>.unmodifiable(_states),
-      transitions: List<TMTransition>.unmodifiable(_transitions),
-    );
+    _moveThrottler.schedule(() {
+      final notifier = ref.read(tmEditorProvider.notifier);
+      final tm = notifier.updateFromCanvas(
+        states: List<automaton_state.State>.unmodifiable(_states),
+        transitions: List<TMTransition>.unmodifiable(_transitions),
+      );
 
-    if (tm != null) {
-      widget.onTMModified(tm);
-    }
+      if (tm != null) {
+        widget.onTMModified(tm);
+      }
+    });
   }
 
   void _syncTransitionsForState(automaton_state.State state) {
@@ -310,8 +316,9 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
           fromState: transition.fromState.id == state.id
               ? state
               : transition.fromState,
-          toState:
-              transition.toState.id == state.id ? state : transition.toState,
+          toState: transition.toState.id == state.id
+              ? state
+              : transition.toState,
         );
       }
     }
@@ -457,8 +464,8 @@ class _TMCanvasPainter extends CustomPainter {
       ..color = state.isInitial
           ? Colors.green
           : state.isAccepting
-              ? Colors.red
-              : Colors.black
+          ? Colors.red
+          : Colors.black
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
 
@@ -503,12 +510,17 @@ class _TMCanvasPainter extends CustomPainter {
 
   void _drawTransition(Canvas canvas, TMTransition transition) {
     final fromPos = Offset(
-        transition.fromState.position.x, transition.fromState.position.y);
-    final toPos =
-        Offset(transition.toState.position.x, transition.toState.position.y);
+      transition.fromState.position.x,
+      transition.fromState.position.y,
+    );
+    final toPos = Offset(
+      transition.toState.position.x,
+      transition.toState.position.y,
+    );
 
-    final isNondeterministic =
-        nondeterministicTransitionIds.contains(transition.id);
+    final isNondeterministic = nondeterministicTransitionIds.contains(
+      transition.id,
+    );
     final paint = Paint()
       ..color = isNondeterministic ? Colors.red : Colors.black
       ..style = PaintingStyle.stroke
@@ -600,10 +612,7 @@ class _StateEditDialog extends StatefulWidget {
   final automaton_state.State state;
   final ValueChanged<automaton_state.State> onStateUpdated;
 
-  const _StateEditDialog({
-    required this.state,
-    required this.onStateUpdated,
-  });
+  const _StateEditDialog({required this.state, required this.onStateUpdated});
 
   @override
   State<_StateEditDialog> createState() => _StateEditDialogState();
@@ -660,10 +669,7 @@ class _StateEditDialogState extends State<_StateEditDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
         ),
-        ElevatedButton(
-          onPressed: _saveState,
-          child: const Text('Save'),
-        ),
+        ElevatedButton(onPressed: _saveState, child: const Text('Save')),
       ],
     );
   }

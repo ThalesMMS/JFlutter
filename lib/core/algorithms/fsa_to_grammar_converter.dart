@@ -22,20 +22,21 @@ class FSAToGrammarConverter {
       final fromNonTerminal = stateToNonTerminal[transition.fromState.id]!;
       final toNonTerminal = stateToNonTerminal[transition.toState.id]!;
       for (final symbol in transition.inputSymbols) {
-        productions.add(Production(
-          id: 'p${productionCounter++}',
-          leftSide: [fromNonTerminal],
-          rightSide: [symbol, toNonTerminal],
-        ));
+        productions.add(
+          Production(
+            id: 'p${productionCounter++}',
+            leftSide: [fromNonTerminal],
+            rightSide: [symbol, toNonTerminal],
+          ),
+        );
       }
     }
 
     for (final acceptingState in fsa.acceptingStates) {
       final nonTerminal = stateToNonTerminal[acceptingState.id]!;
-      productions.add(Production.lambda(
-        id: 'p${productionCounter++}',
-        leftSide: nonTerminal,
-      ));
+      productions.add(
+        Production.lambda(id: 'p${productionCounter++}', leftSide: nonTerminal),
+      );
     }
 
     return Grammar(

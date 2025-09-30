@@ -102,10 +102,7 @@ class GraphUtils {
 
     if (t < 0 || t > 1) return null;
 
-    return Offset(
-      lineStart.dx + t * dx,
-      lineStart.dy + t * dy,
-    );
+    return Offset(lineStart.dx + t * dx, lineStart.dy + t * dy);
   }
 
   /// تولید رنگ تصادفی
@@ -147,10 +144,7 @@ class GraphUtils {
 
   /// انیمیشن نرم بین دو نقطه
   static Offset lerpOffset(Offset start, Offset end, double t) {
-    return Offset(
-      lerp(start.dx, end.dx, t),
-      lerp(start.dy, end.dy, t),
-    );
+    return Offset(lerp(start.dx, end.dx, t), lerp(start.dy, end.dy, t));
   }
 
   /// تابع easing برای انیمیشن‌های نرم
@@ -164,16 +158,11 @@ class GraphUtils {
     final distance = GraphUtils.distance(start, end);
     final controlOffset = distance * 0.3;
 
-    final perpendicular = Offset(
-          -(end.dy - start.dy),
-          end.dx - start.dx,
-        ).normalize() *
+    final perpendicular =
+        Offset(-(end.dy - start.dy), end.dx - start.dx).normalize() *
         controlOffset;
 
-    return [
-      start + perpendicular,
-      end + perpendicular,
-    ];
+    return [start + perpendicular, end + perpendicular];
   }
 }
 
@@ -190,10 +179,7 @@ extension OffsetExtensions on Offset {
   Offset rotate(double angle) {
     final cos = math.cos(angle);
     final sin = math.sin(angle);
-    return Offset(
-      dx * cos - dy * sin,
-      dx * sin + dy * cos,
-    );
+    return Offset(dx * cos - dy * sin, dx * sin + dy * cos);
   }
 
   /// محاسبه طول بردار
@@ -250,12 +236,10 @@ class AnimationHelper {
     double begin = 0.0,
     double end = 1.0,
   }) {
-    return Tween<double>(begin: begin, end: end).animate(
-      CurvedAnimation(
-        parent: controller,
-        curve: Curves.elasticOut,
-      ),
-    );
+    return Tween<double>(
+      begin: begin,
+      end: end,
+    ).animate(CurvedAnimation(parent: controller, curve: Curves.elasticOut));
   }
 
   /// ایجاد انیمیشن fade
@@ -264,12 +248,10 @@ class AnimationHelper {
     double begin = 0.0,
     double end = 1.0,
   }) {
-    return Tween<double>(begin: begin, end: end).animate(
-      CurvedAnimation(
-        parent: controller,
-        curve: Curves.easeInOut,
-      ),
-    );
+    return Tween<double>(
+      begin: begin,
+      end: end,
+    ).animate(CurvedAnimation(parent: controller, curve: Curves.easeInOut));
   }
 
   /// ایجاد انیمیشن اسلاید
@@ -278,12 +260,10 @@ class AnimationHelper {
     Offset begin = const Offset(0, 1),
     Offset end = Offset.zero,
   }) {
-    return Tween<Offset>(begin: begin, end: end).animate(
-      CurvedAnimation(
-        parent: controller,
-        curve: Curves.easeOutCubic,
-      ),
-    );
+    return Tween<Offset>(
+      begin: begin,
+      end: end,
+    ).animate(CurvedAnimation(parent: controller, curve: Curves.easeOutCubic));
   }
 
   /// ایجاد انیمیشن چرخش
@@ -292,12 +272,10 @@ class AnimationHelper {
     double begin = 0.0,
     double end = 1.0,
   }) {
-    return Tween<double>(begin: begin, end: end).animate(
-      CurvedAnimation(
-        parent: controller,
-        curve: Curves.linear,
-      ),
-    );
+    return Tween<double>(
+      begin: begin,
+      end: end,
+    ).animate(CurvedAnimation(parent: controller, curve: Curves.linear));
   }
 }
 
@@ -398,10 +376,7 @@ class AutomatonUtils {
   }
 
   /// بررسی پذیرش رشته
-  static bool isAccepted(
-    dynamic automaton,
-    List<String> currentStates,
-  ) {
+  static bool isAccepted(dynamic automaton, List<String> currentStates) {
     final finalStates = getFinalStates(automaton);
     return currentStates.any((state) => finalStates.contains(state));
   }

@@ -25,7 +25,7 @@ class _ExamplesScreenState extends State<ExamplesScreen>
     'مبتدی',
     'متوسط',
     'پیشرفته',
-    'کلاسیک'
+    'کلاسیک',
   ];
 
   static final List<Map<String, dynamic>> _examples = [
@@ -48,15 +48,15 @@ class _ExamplesScreenState extends State<ExamplesScreen>
         'transitions': {
           'q0': {
             'a': ['q1'],
-            'b': ['q2']
+            'b': ['q2'],
           },
           'q1': {
             'a': ['q1'],
-            'b': ['q1']
+            'b': ['q1'],
           },
           'q2': {},
-        }
-      }
+        },
+      },
     },
     {
       'title': 'پایان با حرف b',
@@ -76,13 +76,13 @@ class _ExamplesScreenState extends State<ExamplesScreen>
         'transitions': {
           'q0': {
             'a': ['q0'],
-            'b': ['q0', 'q1']
+            'b': ['q0', 'q1'],
           },
           'q1': {
-            'a': ['q0']
+            'a': ['q0'],
           },
-        }
-      }
+        },
+      },
     },
 
     // مثال‌های متوسط
@@ -104,17 +104,17 @@ class _ExamplesScreenState extends State<ExamplesScreen>
         'transitions': {
           'q0': {
             'a': ['q0', 'q1'],
-            'b': ['q0']
+            'b': ['q0'],
           },
           'q1': {
-            'b': ['q2']
+            'b': ['q2'],
           },
           'q2': {
             'a': ['q2'],
-            'b': ['q2']
+            'b': ['q2'],
           },
-        }
-      }
+        },
+      },
     },
     {
       'title': 'تعداد زوج صفر',
@@ -135,14 +135,14 @@ class _ExamplesScreenState extends State<ExamplesScreen>
         'transitions': {
           'q0': {
             '0': ['q1'],
-            '1': ['q0']
+            '1': ['q0'],
           },
           'q1': {
             '0': ['q0'],
-            '1': ['q1']
+            '1': ['q1'],
           },
-        }
-      }
+        },
+      },
     },
 
     // مثال‌های پیشرفته
@@ -164,17 +164,17 @@ class _ExamplesScreenState extends State<ExamplesScreen>
         'transitions': {
           'q0': {
             'a': ['q0', 'q1'],
-            'b': ['q0']
+            'b': ['q0'],
           },
           'q1': {
-            'b': ['q2']
+            'b': ['q2'],
           },
           'q2': {
-            'b': ['q3']
+            'b': ['q3'],
           },
           'q3': {},
-        }
-      }
+        },
+      },
     },
     {
       'title': 'تشخیص پالیندروم',
@@ -196,20 +196,20 @@ class _ExamplesScreenState extends State<ExamplesScreen>
           'q0': {
             'a': ['q1', 'q0'],
             'b': ['q3', 'q0'],
-            'ε': ['q2']
+            'ε': ['q2'],
           },
           'q1': {
             'a': ['q0'],
-            'ε': ['q2']
+            'ε': ['q2'],
           },
           'q2': {},
           'q3': {
             'b': ['q0'],
-            'ε': ['q4']
+            'ε': ['q4'],
           },
           'q4': {},
-        }
-      }
+        },
+      },
     },
 
     // مثال‌های کلاسیک
@@ -232,19 +232,19 @@ class _ExamplesScreenState extends State<ExamplesScreen>
         'transitions': {
           'q0': {
             '5T': ['q5'],
-            '10T': ['q10']
+            '10T': ['q10'],
           },
           'q5': {
             '5T': ['q10'],
-            '10T': ['q15']
+            '10T': ['q15'],
           },
           'q10': {
             '5T': ['q15'],
-            '10T': ['q15']
+            '10T': ['q15'],
           },
           'q15': {},
-        }
-      }
+        },
+      },
     },
     {
       'title': 'کلمات با طول مضرب 3',
@@ -264,18 +264,18 @@ class _ExamplesScreenState extends State<ExamplesScreen>
         'transitions': {
           'q0': {
             'a': ['q1'],
-            'b': ['q1']
+            'b': ['q1'],
           },
           'q1': {
             'a': ['q2'],
-            'b': ['q2']
+            'b': ['q2'],
           },
           'q2': {
             'a': ['q0'],
-            'b': ['q0']
+            'b': ['q0'],
           },
-        }
-      }
+        },
+      },
     },
   ];
 
@@ -286,13 +286,9 @@ class _ExamplesScreenState extends State<ExamplesScreen>
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
     _animationController.forward();
   }
 
@@ -305,13 +301,14 @@ class _ExamplesScreenState extends State<ExamplesScreen>
 
   List<Map<String, dynamic>> get _filteredExamples {
     return _examples.where((example) {
-      final matchesCategory = _selectedCategory == 'همه' ||
+      final matchesCategory =
+          _selectedCategory == 'همه' ||
           example['category'] == _selectedCategory;
       final matchesSearch =
           example['title'].toLowerCase().contains(_searchQuery.toLowerCase()) ||
-              example['description']
-                  .toLowerCase()
-                  .contains(_searchQuery.toLowerCase());
+          example['description'].toLowerCase().contains(
+            _searchQuery.toLowerCase(),
+          );
       return matchesCategory && matchesSearch;
     }).toList();
   }
@@ -411,13 +408,16 @@ class _ExamplesScreenState extends State<ExamplesScreen>
     return FadeTransition(
       opacity: _fadeAnimation,
       child: SlideTransition(
-        position: Tween<Offset>(
-          begin: Offset(0, 0.3 + (index * 0.1)),
-          end: Offset.zero,
-        ).animate(CurvedAnimation(
-          parent: _animationController,
-          curve: Interval((index * 0.1).clamp(0.0, 1.0), 1.0),
-        )),
+        position:
+            Tween<Offset>(
+              begin: Offset(0, 0.3 + (index * 0.1)),
+              end: Offset.zero,
+            ).animate(
+              CurvedAnimation(
+                parent: _animationController,
+                curve: Interval((index * 0.1).clamp(0.0, 1.0), 1.0),
+              ),
+            ),
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Card(
@@ -470,7 +470,8 @@ class _ExamplesScreenState extends State<ExamplesScreen>
                                     example['complexity'],
                                     style: TextStyle(
                                       color: _getDifficultyColor(
-                                          example['difficulty']),
+                                        example['difficulty'],
+                                      ),
                                       fontWeight: FontWeight.w500,
                                       fontSize: 12,
                                     ),
@@ -498,7 +499,9 @@ class _ExamplesScreenState extends State<ExamplesScreen>
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.grey[100],
                             borderRadius: BorderRadius.circular(20),
@@ -524,7 +527,9 @@ class _ExamplesScreenState extends State<ExamplesScreen>
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
                             color: (example['color'] as Color).withOpacity(0.1),
                             borderRadius: BorderRadius.circular(20),
@@ -569,9 +574,7 @@ class _ExamplesScreenState extends State<ExamplesScreen>
               const SizedBox(width: 8),
               Text(
                 'بارگذاری مثال',
-                style: TextStyle(
-                  color: example['color'] as Color,
-                ),
+                style: TextStyle(color: example['color'] as Color),
               ),
             ],
           ),
@@ -588,10 +591,7 @@ class _ExamplesScreenState extends State<ExamplesScreen>
                 textDirection: TextDirection.rtl,
               ),
               const SizedBox(height: 8),
-              Text(
-                example['description'],
-                textDirection: TextDirection.rtl,
-              ),
+              Text(example['description'], textDirection: TextDirection.rtl),
               const SizedBox(height: 16),
               Row(
                 children: [
@@ -678,9 +678,7 @@ class _ExamplesScreenState extends State<ExamplesScreen>
                         const SizedBox(height: 8),
                         Text(
                           'لطفاً جستجو یا دسته‌بندی را تغییر دهید',
-                          style: TextStyle(
-                            color: Colors.grey[500],
-                          ),
+                          style: TextStyle(color: Colors.grey[500]),
                         ),
                       ],
                     ),

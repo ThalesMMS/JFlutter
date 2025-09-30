@@ -54,10 +54,7 @@ class ParseAction {
   }
 
   /// Creates an accept action
-  factory ParseAction.accept({
-    required int state,
-    required String symbol,
-  }) {
+  factory ParseAction.accept({required int state, required String symbol}) {
     return ParseAction(
       type: ParseActionType.accept,
       state: state,
@@ -66,10 +63,7 @@ class ParseAction {
   }
 
   /// Creates an error action
-  factory ParseAction.error({
-    required int state,
-    required String symbol,
-  }) {
+  factory ParseAction.error({required int state, required String symbol}) {
     return ParseAction(
       type: ParseActionType.error,
       state: state,

@@ -48,13 +48,13 @@ class BehaviourAdapter extends TypeAdapter<Behaviour> {
 // **************************************************************************
 
 Behaviour _$BehaviourFromJson(Map<String, dynamic> json) => Behaviour(
-      actions: (json['actions'] as List<dynamic>)
-          .map((e) => Actions.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      f_config: json['f_config'] as String,
-    );
+  actions: (json['actions'] as List<dynamic>)
+      .map((e) => Actions.fromJson(e as Map<String, dynamic>))
+      .toList(),
+  f_config: json['f_config'] as String,
+);
 
 Map<String, dynamic> _$BehaviourToJson(Behaviour instance) => <String, dynamic>{
-      'actions': instance.actions,
-      'f_config': instance.f_config,
-    };
+  'actions': instance.actions,
+  'f_config': instance.f_config,
+};

@@ -62,10 +62,7 @@ class State {
     return {
       'id': id,
       'label': label,
-      'position': {
-        'x': position.x,
-        'y': position.y,
-      },
+      'position': {'x': position.x, 'y': position.y},
       'isInitial': isInitial,
       'isAccepting': isAccepting,
       'type': type.name,
@@ -106,14 +103,7 @@ class State {
 
   @override
   int get hashCode {
-    return Object.hash(
-      id,
-      label,
-      position,
-      isInitial,
-      isAccepting,
-      type,
-    );
+    return Object.hash(id, label, position, isInitial, isAccepting, type);
   }
 
   @override

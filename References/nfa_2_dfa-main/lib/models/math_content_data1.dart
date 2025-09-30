@@ -1169,12 +1169,7 @@ class MathContentData {
       id: "q2",
       context: "استاد حسینی سؤال بعدی را می‌پرسد:",
       question: "اگر A = {1, 2, 3} باشد، کدام گزینه زیرمجموعه A است؟",
-      options: [
-        "{1, 2}",
-        "{1, 4}",
-        "{1, 2, 3, 4}",
-        "هیچ کدام",
-      ],
+      options: ["{1, 2}", "{1, 4}", "{1, 2, 3, 4}", "هیچ کدام"],
       correctAnswer: 0,
       explanation:
           "نوید: چون همه عناصر {1, 2} داخل A هستند، پس {1, 2} ⊆ A است.",
@@ -1186,12 +1181,7 @@ class MathContentData {
       id: "q3",
       context: "استاد حسینی می‌پرسد:",
       question: "اگر A = {x, y} باشد، مجموعه توانی P(A) چند عنصر دارد؟",
-      options: [
-        "2 عنصر",
-        "3 عنصر",
-        "4 عنصر",
-        "5 عنصر",
-      ],
+      options: ["2 عنصر", "3 عنصر", "4 عنصر", "5 عنصر"],
       correctAnswer: 2,
       explanation:
           "نوید حساب می‌کند: P(A) = { ∅, {x}, {y}, {x,y} } پس 4 عنصر دارد!",
@@ -1204,12 +1194,7 @@ class MathContentData {
       id: "q4",
       context: "نوید کنجکاو می‌پرسد:",
       question: "اگر A = {1, 2, 3} و B = {2, 3, 4} باشد، A ∪ B کدام است؟",
-      options: [
-        "{1, 2, 3, 4}",
-        "{2, 3}",
-        "{1, 4}",
-        "{1, 2, 2, 3, 3, 4}",
-      ],
+      options: ["{1, 2, 3, 4}", "{2, 3}", "{1, 4}", "{1, 2, 2, 3, 3, 4}"],
       correctAnswer: 0,
       explanation:
           "استاد توضیح می‌دهد: اجتماع شامل همه عناصری است که در A یا B یا هر دو باشند.",
@@ -1222,12 +1207,7 @@ class MathContentData {
       context: "استاد حسینی سؤال نهایی را می‌پرسد:",
       question:
           "تابع f: {1,2,3} → {a,b,c} با f(1)=a, f(2)=b, f(3)=c چه نوع تابعی است؟",
-      options: [
-        "فقط یک به یک",
-        "فقط پوشا",
-        "دوسویه",
-        "هیچ کدام",
-      ],
+      options: ["فقط یک به یک", "فقط پوشا", "دوسویه", "هیچ کدام"],
       correctAnswer: 2,
       explanation:
           "نوید: هم یک به یک است (هر خروجی یک ورودی) هم پوشا (همه عناصر برد تصویر دارند).",
@@ -1240,12 +1220,7 @@ class MathContentData {
       context: "استاد حسینی مسئله‌ای از دنیای واقعی می‌پرسد:",
       question:
           "در کلاس 25 نفره، 15 نفر انگلیسی، 12 نفر آلمانی بلدند و 3 نفر هیچ کدام. چند نفر هر دو زبان بلدند؟",
-      options: [
-        "3 نفر",
-        "5 نفر",
-        "7 نفر",
-        "8 نفر",
-      ],
+      options: ["3 نفر", "5 نفر", "7 نفر", "8 نفر"],
       correctAnswer: 1,
       explanation:
           "نوید با فرمول حل می‌کند: |E∪G| = 25-3 = 22، پس |E∩G| = 15+12-22 = 5",
@@ -1258,12 +1233,7 @@ class MathContentData {
       id: "q7",
       context: "نوید در مورد گرامر می‌پرسد:",
       question: "کدام گرامر زبان {ab, aabb, aaabbb, ...} را تولید می‌کند؟",
-      options: [
-        "S → ab | aSb",
-        "S → aS | b",
-        "S → Sa | b",
-        "S → ab | abS",
-      ],
+      options: ["S → ab | aSb", "S → aS | b", "S → Sa | b", "S → ab | abS"],
       correctAnswer: 0,
       explanation:
           "استاد: قانون S → aSb باعث می‌شود تعداد a ها و b ها برابر باشند.",
@@ -1380,7 +1350,7 @@ enum MessageType {
   summary,
   warning,
   tip,
-  challenge
+  challenge,
 }
 
 enum DifficultyLevel { beginner, intermediate, advanced, expert }
@@ -1721,12 +1691,15 @@ class LearningAnalytics {
     double quizAverage = progress.averageQuizScore;
     double timeBonus = progress.totalTimeSpent < 2700 ? 0.1 : 0;
 
-    return (completion * 0.4 + quizAverage * 0.5 + timeBonus * 0.1)
-        .clamp(0.0, 1.0);
+    return (completion * 0.4 + quizAverage * 0.5 + timeBonus * 0.1).clamp(
+      0.0,
+      1.0,
+    );
   }
 
   static Map<String, TopicAnalysis> _analyzeTopicPerformance(
-      ProgressData progress) {
+    ProgressData progress,
+  ) {
     return {
       'مجموعه‌ها': TopicAnalysis(
         masteryLevel: progress.topicMastery['مجموعه‌ها'] ?? 0,
@@ -1774,8 +1747,9 @@ class LearningAnalytics {
     }
 
     if (progress.weaknessAreas.isNotEmpty) {
-      recommendations
-          .add("تمرین بیشتر روی: ${progress.weaknessAreas.join(', ')}");
+      recommendations.add(
+        "تمرین بیشتر روی: ${progress.weaknessAreas.join(', ')}",
+      );
     }
 
     return recommendations;
@@ -1791,13 +1765,13 @@ class LearningAnalytics {
       return [
         "آماده برای درس بعدی: روابط و گراف‌ها",
         "حل مسائل پیشرفته‌تر مجموعه‌ها",
-        "مطالعه کاربردهای عملی در برنامه‌نویسی"
+        "مطالعه کاربردهای عملی در برنامه‌نویسی",
       ];
     } else {
       return [
         "مرور دوباره مفاهیم این درس",
         "حل تمرین‌های اضافی",
-        "مشورت با استاد برای موارد مبهم"
+        "مشورت با استاد برای موارد مبهم",
       ];
     }
   }
@@ -1851,16 +1825,13 @@ class TopicAnalysis {
   });
 }
 
-enum LearningPattern {
-  quickLearner,
-  thoroughLearner,
-  persistent,
-  needsSupport,
-}
+enum LearningPattern { quickLearner, thoroughLearner, persistent, needsSupport }
 
 class SmartPracticeSystem {
   static List<QuizQuestion> generatePersonalizedQuiz(
-      ProgressData progress, int questionCount) {
+    ProgressData progress,
+    int questionCount,
+  ) {
     List<QuizQuestion> allQuestions = MathContentData.quizQuestions;
     List<QuizQuestion> selectedQuestions = [];
 
@@ -1874,7 +1845,9 @@ class SmartPracticeSystem {
   }
 
   static int _calculateQuestionPriority(
-      QuizQuestion question, ProgressData progress) {
+    QuizQuestion question,
+    ProgressData progress,
+  ) {
     int priority = 0;
 
     for (String topic in question.topics) {
@@ -1936,7 +1909,8 @@ class SmartPracticeSystem {
   }
 
   static PracticeAssessment assessPracticePerformance(
-      List<PracticeAttempt> attempts) {
+    List<PracticeAttempt> attempts,
+  ) {
     int totalAttempts = attempts.length;
     int correctAttempts = attempts.where((a) => a.isCorrect).length;
     double accuracy = totalAttempts > 0 ? correctAttempts / totalAttempts : 0.0;
@@ -1956,8 +1930,10 @@ class SmartPracticeSystem {
       totalAttempts: totalAttempts,
       improvement: _calculateImprovement(attempts),
       errorPatterns: errorPatterns,
-      recommendations:
-          _generatePracticeRecommendations(accuracy, errorPatterns),
+      recommendations: _generatePracticeRecommendations(
+        accuracy,
+        errorPatterns,
+      ),
     );
   }
 
@@ -1977,7 +1953,9 @@ class SmartPracticeSystem {
   }
 
   static List<String> _generatePracticeRecommendations(
-      double accuracy, Map<String, int> errorPatterns) {
+    double accuracy,
+    Map<String, int> errorPatterns,
+  ) {
     List<String> recommendations = [];
 
     if (accuracy < 0.6) {
@@ -1988,8 +1966,9 @@ class SmartPracticeSystem {
       recommendations.add('تمرین سرعت حل مسائل');
     }
 
-    String mostCommonError =
-        errorPatterns.entries.reduce((a, b) => a.value > b.value ? a : b).key;
+    String mostCommonError = errorPatterns.entries
+        .reduce((a, b) => a.value > b.value ? a : b)
+        .key;
 
     Map<String, String> errorAdvice = {
       'calculation': 'دقت بیشتر در محاسبات',
@@ -2008,7 +1987,9 @@ class SmartPracticeSystem {
 
 class AdaptiveFeedbackSystem {
   static FeedbackResponse generateFeedback(
-      QuizAttempt attempt, ProgressData progress) {
+    QuizAttempt attempt,
+    ProgressData progress,
+  ) {
     FeedbackType feedbackType = _determineFeedbackType(attempt, progress);
     String message = _generateFeedbackMessage(attempt, feedbackType);
     List<String> suggestions = _generateSuggestions(attempt, progress);
@@ -2025,7 +2006,9 @@ class AdaptiveFeedbackSystem {
   }
 
   static FeedbackType _determineFeedbackType(
-      QuizAttempt attempt, ProgressData progress) {
+    QuizAttempt attempt,
+    ProgressData progress,
+  ) {
     if (attempt.isCorrect) {
       if (attempt.timeSpent < 30) return FeedbackType.excellentSpeed;
       if (progress.averageQuizScore > 85) return FeedbackType.consistent;
@@ -2039,7 +2022,9 @@ class AdaptiveFeedbackSystem {
   }
 
   static String _generateFeedbackMessage(
-      QuizAttempt attempt, FeedbackType type) {
+    QuizAttempt attempt,
+    FeedbackType type,
+  ) {
     Map<FeedbackType, List<String>> messages = {
       FeedbackType.correct: [
         'آفرین! جواب درست بود! �',
@@ -2068,7 +2053,9 @@ class AdaptiveFeedbackSystem {
   }
 
   static List<String> _generateSuggestions(
-      QuizAttempt attempt, ProgressData progress) {
+    QuizAttempt attempt,
+    ProgressData progress,
+  ) {
     List<String> suggestions = [];
 
     if (!attempt.isCorrect) {
@@ -2107,7 +2094,9 @@ class AdaptiveFeedbackSystem {
   }
 
   static String _generateEncouragement(
-      QuizAttempt attempt, ProgressData progress) {
+    QuizAttempt attempt,
+    ProgressData progress,
+  ) {
     if (attempt.isCorrect) {
       if (progress.averageQuizScore > 90) {
         return 'داری عالی پیش میری! ادامه بده! 🌟';
@@ -2154,7 +2143,9 @@ class AdaptiveFeedbackSystem {
 
 class SmartSummarizationSystem {
   static LessonSummary generatePersonalizedSummary(
-      ProgressData progress, List<String> completedSections) {
+    ProgressData progress,
+    List<String> completedSections,
+  ) {
     Map<String, SectionSummary> sectionSummaries = {};
     List<String> keyTakeaways = [];
     List<String> areasForReview = [];
@@ -2186,7 +2177,9 @@ class SmartSummarizationSystem {
   }
 
   static SectionSummary _summarizeSection(
-      String sectionId, ProgressData progress) {
+    String sectionId,
+    ProgressData progress,
+  ) {
     Map<String, SectionData> sectionData = {
       'sets_intro': SectionData(
         title: 'مقدمات مجموعه‌ها',
@@ -2226,12 +2219,14 @@ class SmartSummarizationSystem {
       ),
     };
 
-    SectionData section = sectionData[sectionId] ??
+    SectionData section =
+        sectionData[sectionId] ??
         SectionData(
-            title: 'نامشخص',
-            keyConcepts: [],
-            difficulty: 1,
-            importanceLevel: 1);
+          title: 'نامشخص',
+          keyConcepts: [],
+          difficulty: 1,
+          importanceLevel: 1,
+        );
 
     double masteryLevel = _calculateSectionMastery(sectionId, progress);
 
@@ -2248,7 +2243,9 @@ class SmartSummarizationSystem {
   }
 
   static double _calculateSectionMastery(
-      String sectionId, ProgressData progress) {
+    String sectionId,
+    ProgressData progress,
+  ) {
     bool completed = progress.sectionsCompleted[sectionId] ?? false;
     if (!completed) return 0.0;
 
@@ -2256,7 +2253,9 @@ class SmartSummarizationSystem {
   }
 
   static String _generateSectionSummaryText(
-      SectionData section, double masteryLevel) {
+    SectionData section,
+    double masteryLevel,
+  ) {
     if (masteryLevel > 85) {
       return 'عالی! این بخش رو کامل تسلط داری. 🌟';
     } else if (masteryLevel > 70) {
@@ -2269,7 +2268,9 @@ class SmartSummarizationSystem {
   }
 
   static List<String> _extractKeyTakeaways(
-      ProgressData progress, Map<String, SectionSummary> sections) {
+    ProgressData progress,
+    Map<String, SectionSummary> sections,
+  ) {
     List<String> takeaways = [];
 
     sections.values.where((s) => s.masteryLevel > 80).forEach((section) {
@@ -2340,11 +2341,13 @@ class VisualizationSystem {
     List<DataPoint> points = [];
 
     progress.sectionsCompleted.forEach((section, completed) {
-      points.add(DataPoint(
-        label: _getSectionDisplayName(section),
-        value: completed ? 100.0 : 0.0,
-        color: completed ? '#4CAF50' : '#E0E0E0',
-      ));
+      points.add(
+        DataPoint(
+          label: _getSectionDisplayName(section),
+          value: completed ? 100.0 : 0.0,
+          color: completed ? '#4CAF50' : '#E0E0E0',
+        ),
+      );
     });
 
     return ChartData(
@@ -2380,33 +2383,39 @@ class VisualizationSystem {
   static List<TimelineEvent> _generateTimeline(ProgressData progress) {
     List<TimelineEvent> events = [];
 
-    events.add(TimelineEvent(
-      time: progress.startTime,
-      title: 'شروع درس',
-      description: 'آغاز یادگیری مفاهیم جدید',
-      type: TimelineEventType.start,
-    ));
+    events.add(
+      TimelineEvent(
+        time: progress.startTime,
+        title: 'شروع درس',
+        description: 'آغاز یادگیری مفاهیم جدید',
+        type: TimelineEventType.start,
+      ),
+    );
 
     int sectionIndex = 0;
     progress.sectionsCompleted.forEach((section, completed) {
       if (completed) {
-        events.add(TimelineEvent(
-          time: progress.startTime.add(Duration(minutes: sectionIndex * 15)),
-          title: 'تکمیل ${_getSectionDisplayName(section)}',
-          description: 'موفقیت در فراگیری این بخش',
-          type: TimelineEventType.achievement,
-        ));
+        events.add(
+          TimelineEvent(
+            time: progress.startTime.add(Duration(minutes: sectionIndex * 15)),
+            title: 'تکمیل ${_getSectionDisplayName(section)}',
+            description: 'موفقیت در فراگیری این بخش',
+            type: TimelineEventType.achievement,
+          ),
+        );
       }
       sectionIndex++;
     });
 
     if (progress.endTime != null) {
-      events.add(TimelineEvent(
-        time: progress.endTime!,
-        title: 'اتمام درس',
-        description: 'تکمیل موفقیت‌آمیز درس',
-        type: TimelineEventType.completion,
-      ));
+      events.add(
+        TimelineEvent(
+          time: progress.endTime!,
+          title: 'اتمام درس',
+          description: 'تکمیل موفقیت‌آمیز درس',
+          type: TimelineEventType.completion,
+        ),
+      );
     }
 
     return events;
@@ -2502,11 +2511,7 @@ class DataPoint {
   final double value;
   final String? color;
 
-  DataPoint({
-    required this.label,
-    required this.value,
-    this.color,
-  });
+  DataPoint({required this.label, required this.value, this.color});
 }
 
 class RadarChartData {

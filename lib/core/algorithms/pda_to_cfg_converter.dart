@@ -12,20 +12,25 @@ class PDAtoCFGConverter {
     }
 
     if (pda.initialState == null) {
-      return const Failure('PDA must define an initial state before conversion.');
+      return const Failure(
+        'PDA must define an initial state before conversion.',
+      );
     }
 
     if (pda.acceptingStates.isEmpty) {
       return const Failure(
-          'PDA must have at least one accepting state for conversion.');
+        'PDA must have at least one accepting state for conversion.',
+      );
     }
 
     final buffer = StringBuffer();
     buffer.writeln('Generated CFG from PDA');
     buffer.writeln(
-        'Non-terminals of the form [p,A,q] indicate moving from state p');
+      'Non-terminals of the form [p,A,q] indicate moving from state p',
+    );
     buffer.writeln(
-        'with stack symbol A on top to state q after consuming a string.');
+      'with stack symbol A on top to state q after consuming a string.',
+    );
     buffer.writeln('');
 
     // Start productions
@@ -70,9 +75,7 @@ class PDAtoCFGConverter {
 
     if (push == 'λ') {
       // When nothing new is pushed onto the stack we can stay in the target state
-      buffer.writeln(
-        '  [$from, $pop, $to] → $input',
-      );
+      buffer.writeln('  [$from, $pop, $to] → $input');
     } else {
       for (final target in pda.states) {
         buffer.writeln(

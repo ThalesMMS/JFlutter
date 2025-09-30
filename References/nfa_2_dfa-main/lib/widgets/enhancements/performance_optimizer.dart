@@ -109,19 +109,21 @@ class PerformanceMonitor {
   void _onFrame(Duration timestamp) {
     _frameCount++;
 
-    final double frameTime =
-        _frameStopwatch.elapsedMilliseconds.toDouble(); // تبدیل int به double
+    final double frameTime = _frameStopwatch.elapsedMilliseconds
+        .toDouble(); // تبدیل int به double
     _frameStopwatch.reset();
 
     if (frameTime > 16.67) {
       _droppedFrames++;
     }
 
-    _frameMetrics.add(FrameMetrics(
-      timestamp: timestamp,
-      frameTime: frameTime,
-      isDropped: frameTime > 16.67,
-    ));
+    _frameMetrics.add(
+      FrameMetrics(
+        timestamp: timestamp,
+        frameTime: frameTime,
+        isDropped: frameTime > 16.67,
+      ),
+    );
 
     // حفظ حداکثر ۱۰۰ فریم در تاریخچه
     if (_frameMetrics.length > 100) {
@@ -132,12 +134,14 @@ class PerformanceMonitor {
   void _collectMetrics() {
     // جمع‌آوری معیارهای حافظه
     final memoryUsage = _getMemoryUsage();
-    _memoryMetrics.add(MemoryMetrics(
-      timestamp: DateTime.now(),
-      heapUsage: memoryUsage.heapUsage,
-      totalMemory: memoryUsage.totalMemory,
-      gcCount: memoryUsage.gcCount,
-    ));
+    _memoryMetrics.add(
+      MemoryMetrics(
+        timestamp: DateTime.now(),
+        heapUsage: memoryUsage.heapUsage,
+        totalMemory: memoryUsage.totalMemory,
+        gcCount: memoryUsage.gcCount,
+      ),
+    );
 
     if (_memoryMetrics.length > 60) {
       _memoryMetrics.removeFirst();
@@ -145,9 +149,11 @@ class PerformanceMonitor {
 
     // محاسبه FPS میانگین - اصلاح خطای تبدیل نوع
     if (_frameCount > 0 && _frameMetrics.isNotEmpty) {
-      final double totalFrameTime =
-          _frameMetrics.map((f) => f.frameTime).reduce((a, b) => a + b);
-      final double averageFrameTime = totalFrameTime /
+      final double totalFrameTime = _frameMetrics
+          .map((f) => f.frameTime)
+          .reduce((a, b) => a + b);
+      final double averageFrameTime =
+          totalFrameTime /
           _frameMetrics.length.toDouble(); // تبدیل int به double
       _averageFPS = 1000.0 / averageFrameTime;
     }
@@ -165,8 +171,9 @@ class PerformanceMonitor {
     final report = PerformanceReport(
       averageFPS: _averageFPS,
       droppedFrames: _droppedFrames,
-      memoryUsage:
-          _memoryMetrics.isNotEmpty ? _memoryMetrics.last.heapUsage : 0.0,
+      memoryUsage: _memoryMetrics.isNotEmpty
+          ? _memoryMetrics.last.heapUsage
+          : 0.0,
       recommendations: _generateRecommendations(),
       severity: _calculateSeverity(),
     );
@@ -229,8 +236,9 @@ class CacheManager {
   final Map<String, CachedNode> _nodeCache = {};
   final Map<String, CachedTexture> _textureCache = {};
   final Map<String, CachedPath> _pathCache = {};
-  final LRUCache<String, ui.Image> _imageCache =
-      LRUCache<String, ui.Image>(100);
+  final LRUCache<String, ui.Image> _imageCache = LRUCache<String, ui.Image>(
+    100,
+  );
 
   int _maxCacheSize = 200;
   int _maxTextureSize = 2048;
@@ -308,10 +316,7 @@ class CacheManager {
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
 
-    final scale = math.min(
-      maxSize / original.width,
-      maxSize / original.height,
-    );
+    final scale = math.min(maxSize / original.width, maxSize / original.height);
 
     final newWidth = (original.width * scale).round();
     final newHeight = (original.height * scale).round();
@@ -375,16 +380,20 @@ class CacheManager {
     final cutoff = now.subtract(const Duration(minutes: 10));
 
     // پاکسازی نودهای قدیمی
-    _nodeCache.removeWhere((key, cached) =>
-        cached.lastAccessed.isBefore(cutoff) && cached.accessCount < 3);
+    _nodeCache.removeWhere(
+      (key, cached) =>
+          cached.lastAccessed.isBefore(cutoff) && cached.accessCount < 3,
+    );
 
     // پاکسازی textures
-    _textureCache
-        .removeWhere((key, cached) => cached.lastAccessed.isBefore(cutoff));
+    _textureCache.removeWhere(
+      (key, cached) => cached.lastAccessed.isBefore(cutoff),
+    );
 
     // پاکسازی paths
-    _pathCache
-        .removeWhere((key, cached) => cached.lastAccessed.isBefore(cutoff));
+    _pathCache.removeWhere(
+      (key, cached) => cached.lastAccessed.isBefore(cutoff),
+    );
 
     // پاکسازی images
     _imageCache.clear();
@@ -414,8 +423,10 @@ class CacheManager {
 
   double _calculateHitRate() {
     // محاسبه نرخ hit cache
-    final totalAccess =
-        _nodeCache.values.fold(0, (sum, node) => sum + node.accessCount);
+    final totalAccess = _nodeCache.values.fold(
+      0,
+      (sum, node) => sum + node.accessCount,
+    );
     return totalAccess > 0 ? _nodeCache.length / totalAccess : 0.0;
   }
 
@@ -510,7 +521,8 @@ class LODManager {
       lodByCount = 3;
     else if (totalNodes > _maxNodes * 1.5)
       lodByCount = 2;
-    else if (totalNodes > _maxNodes) lodByCount = 1;
+    else if (totalNodes > _maxNodes)
+      lodByCount = 1;
 
     // بر اساس عملکرد
     int lodByPerformance = 0;
@@ -518,7 +530,8 @@ class LODManager {
       lodByPerformance = 3;
     else if (currentFPS < 30)
       lodByPerformance = 2;
-    else if (currentFPS < 45) lodByPerformance = 1;
+    else if (currentFPS < 45)
+      lodByPerformance = 1;
 
     // بر اساس zoom
     int lodByZoom = isZoomedOut ? 2 : 0;
@@ -532,10 +545,13 @@ class LODManager {
   }
 
   /// فیلتر کردن نودها بر اساس اهمیت
-  List<String> filterNodesByImportance(List<String> allNodes, int targetCount,
-      {Set<String>? importantNodes,
-      Set<String>? finalStates,
-      String? startState}) {
+  List<String> filterNodesByImportance(
+    List<String> allNodes,
+    int targetCount, {
+    Set<String>? importantNodes,
+    Set<String>? finalStates,
+    String? startState,
+  }) {
     if (allNodes.length <= targetCount) return allNodes;
 
     final filtered = <String>[];
@@ -653,7 +669,9 @@ class RenderOptimizer {
 
   /// بهینه‌سازی فرایند رندر
   RenderInstructions optimizeRender(
-      List<RenderCommand> commands, Rect viewport) {
+    List<RenderCommand> commands,
+    Rect viewport,
+  ) {
     final optimized = <RenderCommand>[];
 
     // مرحله ۱: Culling
@@ -712,12 +730,14 @@ class RenderOptimizer {
 
     // ایجاد batch برای هر گروه
     for (final entry in groupedCommands.entries) {
-      batches.add(RenderBatch(
-        id: _currentBatchId++,
-        commands: entry.value,
-        type: entry.key,
-        priority: _getTypePriority(entry.key),
-      ));
+      batches.add(
+        RenderBatch(
+          id: _currentBatchId++,
+          commands: entry.value,
+          type: entry.key,
+          priority: _getTypePriority(entry.key),
+        ),
+      );
     }
 
     return batches;
@@ -1196,10 +1216,9 @@ class _PerformanceManagerState extends State<PerformanceManager> {
     if (widget.enableMonitoring) {
       PerformanceOptimizer().configureForDevice();
 
-      _reportSubscription = PerformanceOptimizer()
-          .monitor
-          .reports
-          .listen(_handlePerformanceReport);
+      _reportSubscription = PerformanceOptimizer().monitor.reports.listen(
+        _handlePerformanceReport,
+      );
     }
   }
 
@@ -1250,18 +1269,12 @@ class _PerformanceManagerState extends State<PerformanceManager> {
             ),
             Text(
               'Memory: ${_lastReport!.memoryUsage.toStringAsFixed(1)} MB',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-              ),
+              style: const TextStyle(color: Colors.white, fontSize: 12),
             ),
             if (_lastReport!.droppedFrames > 0)
               Text(
                 'Dropped: ${_lastReport!.droppedFrames}',
-                style: const TextStyle(
-                  color: Colors.red,
-                  fontSize: 12,
-                ),
+                style: const TextStyle(color: Colors.red, fontSize: 12),
               ),
           ],
         ),
@@ -1289,7 +1302,9 @@ class AdvancedOptimizer {
 
   /// تحلیل الگوهای استفاده
   UsagePattern analyzeUsagePattern(
-      List<String> accessedNodes, Duration timeWindow) {
+    List<String> accessedNodes,
+    Duration timeWindow,
+  ) {
     final frequentNodes = <String, int>{};
 
     // تحلیل فرکانس دسترسی
@@ -1332,35 +1347,42 @@ class AdvancedOptimizer {
     // تحلیل زمان رندر
     final double avgRenderTime = metrics.isNotEmpty
         ? metrics.map((m) => m.renderTime).reduce((a, b) => a + b) /
-            metrics.length.toDouble() // تبدیل int به double
+              metrics.length
+                  .toDouble() // تبدیل int به double
         : 0.0;
 
     if (avgRenderTime > 16.67) {
-      bottlenecks.add(PerformanceBottleneck(
-        type: BottleneckType.rendering,
-        severity: avgRenderTime > 33.33
-            ? PerformanceSeverity.critical
-            : PerformanceSeverity.warning,
-        description: 'رندرینگ کند (${avgRenderTime.toStringAsFixed(2)}ms)',
-        suggestedFix: 'فعال‌سازی culling و batching',
-      ));
+      bottlenecks.add(
+        PerformanceBottleneck(
+          type: BottleneckType.rendering,
+          severity: avgRenderTime > 33.33
+              ? PerformanceSeverity.critical
+              : PerformanceSeverity.warning,
+          description: 'رندرینگ کند (${avgRenderTime.toStringAsFixed(2)}ms)',
+          suggestedFix: 'فعال‌سازی culling و batching',
+        ),
+      );
     }
 
     // تحلیل تعداد نودهای رندر شده
     final double avgRenderedNodes = metrics.isNotEmpty
         ? metrics.map((m) => m.renderedNodes).reduce((a, b) => a + b) /
-            metrics.length.toDouble() // تبدیل int به double
+              metrics.length
+                  .toDouble() // تبدیل int به double
         : 0.0;
 
     if (avgRenderedNodes > 200) {
-      bottlenecks.add(PerformanceBottleneck(
-        type: BottleneckType.tooManyNodes,
-        severity: avgRenderedNodes > 500
-            ? PerformanceSeverity.critical
-            : PerformanceSeverity.warning,
-        description: 'تعداد زیاد نودهای رندر شده (${avgRenderedNodes.round()})',
-        suggestedFix: 'استفاده از Virtual Scrolling و LOD',
-      ));
+      bottlenecks.add(
+        PerformanceBottleneck(
+          type: BottleneckType.tooManyNodes,
+          severity: avgRenderedNodes > 500
+              ? PerformanceSeverity.critical
+              : PerformanceSeverity.warning,
+          description:
+              'تعداد زیاد نودهای رندر شده (${avgRenderedNodes.round()})',
+          suggestedFix: 'استفاده از Virtual Scrolling و LOD',
+        ),
+      );
     }
 
     return bottlenecks;

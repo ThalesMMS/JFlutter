@@ -72,12 +72,18 @@ class PumpingLemmaGame {
     Duration timeout,
   ) {
     // Find the pumping length
-    final pumpingLength =
-        _findPumpingLength(automaton, maxPumpingLength, timeout);
+    final pumpingLength = _findPumpingLength(
+      automaton,
+      maxPumpingLength,
+      timeout,
+    );
 
     // Generate a challenge string
-    final challengeString =
-        _generateChallengeString(automaton, pumpingLength, timeout);
+    final challengeString = _generateChallengeString(
+      automaton,
+      pumpingLength,
+      timeout,
+    );
 
     // Create the game
     return models.PumpingLemmaGame(
@@ -101,8 +107,9 @@ class PumpingLemmaGame {
 
     // The pumping length is at most the number of states
     final numStates = automaton.states.length;
-    final pumpingLength =
-        numStates < maxPumpingLength ? numStates : maxPumpingLength;
+    final pumpingLength = numStates < maxPumpingLength
+        ? numStates
+        : maxPumpingLength;
 
     // Check timeout
     if (DateTime.now().difference(startTime) > timeout) {
@@ -149,7 +156,10 @@ class PumpingLemmaGame {
 
   /// Checks if a string can be pumped
   static bool _canStringBePumped(
-      FSA automaton, String string, int pumpingLength) {
+    FSA automaton,
+    String string,
+    int pumpingLength,
+  ) {
     // Check if string is accepted by automaton
     if (!_isStringAccepted(automaton, string)) {
       return false;
@@ -201,8 +211,10 @@ class PumpingLemmaGame {
       final nextStates = <State>{};
 
       for (final state in currentStates) {
-        final transitions =
-            automaton.getTransitionsFromStateOnSymbol(state, symbol);
+        final transitions = automaton.getTransitionsFromStateOnSymbol(
+          state,
+          symbol,
+        );
         for (final transition in transitions) {
           nextStates.add(transition.toState);
         }
@@ -388,10 +400,7 @@ class PumpingLemmaGame {
   }
 
   /// Generates a hint
-  static String _generateHint(
-    models.PumpingLemmaGame game,
-    Duration timeout,
-  ) {
+  static String _generateHint(models.PumpingLemmaGame game, Duration timeout) {
     // Try to find a valid decomposition
     final string = game.challengeString;
     final pumpingLength = game.pumpingLength;

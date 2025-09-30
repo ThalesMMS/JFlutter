@@ -128,7 +128,12 @@ class SimulationResult {
   @override
   int get hashCode {
     return Object.hash(
-        inputString, accepted, steps, errorMessage, executionTime);
+      inputString,
+      accepted,
+      steps,
+      errorMessage,
+      executionTime,
+    );
   }
 
   @override
@@ -206,7 +211,9 @@ class SimulationResult {
     for (final step in steps) {
       if (step.remainingInput.length < remaining.length) {
         final consumed = remaining.substring(
-            0, remaining.length - step.remainingInput.length);
+          0,
+          remaining.length - step.remainingInput.length,
+        );
         sequence.addAll(consumed.split(''));
         remaining = step.remainingInput;
       }

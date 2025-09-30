@@ -210,12 +210,16 @@ void main() {
         expect(DifficultyLevel.easy.description, contains('iniciantes'));
 
         expect(DifficultyLevel.medium.displayName, equals('Médio'));
-        expect(DifficultyLevel.medium.description,
-            contains('conhecimento prévio'));
+        expect(
+          DifficultyLevel.medium.description,
+          contains('conhecimento prévio'),
+        );
 
         expect(DifficultyLevel.hard.displayName, equals('Difícil'));
         expect(
-            DifficultyLevel.hard.description, contains('estudantes avançados'));
+          DifficultyLevel.hard.description,
+          contains('estudantes avançados'),
+        );
       });
 
       test('ComplexityLevel has correct properties', () {
@@ -231,8 +235,10 @@ void main() {
 
       test('ExampleCategory has correct properties', () {
         expect(ExampleCategory.dfa.displayName, equals('DFA'));
-        expect(ExampleCategory.dfa.fullName,
-            equals('Deterministic Finite Automaton'));
+        expect(
+          ExampleCategory.dfa.fullName,
+          equals('Deterministic Finite Automaton'),
+        );
 
         expect(ExampleCategory.cfg.displayName, equals('CFG'));
         expect(ExampleCategory.cfg.fullName, equals('Context-Free Grammar'));
@@ -309,8 +315,9 @@ void main() {
   </automaton>
 </structure>''';
 
-        final result =
-            serializationService.deserializeAutomatonFromJflap(testXml);
+        final result = serializationService.deserializeAutomatonFromJflap(
+          testXml,
+        );
 
         expect(result.isSuccess, isTrue);
         final data = result.data!;
@@ -332,7 +339,7 @@ void main() {
               'x': 0.0,
               'y': 0.0,
               'isInitial': true,
-              'isFinal': false
+              'isFinal': false,
             },
             {
               'id': 'q1',
@@ -340,18 +347,19 @@ void main() {
               'x': 100.0,
               'y': 100.0,
               'isInitial': false,
-              'isFinal': true
+              'isFinal': true,
             },
           ],
           'transitions': {
-            'q0': ['q1']
+            'q0': ['q1'],
           },
           'initialId': 'q0',
           'nextId': 2,
         };
 
-        final jsonString =
-            serializationService.serializeAutomatonToJson(testData);
+        final jsonString = serializationService.serializeAutomatonToJson(
+          testData,
+        );
 
         expect(jsonString, isNotEmpty);
 
@@ -377,8 +385,9 @@ void main() {
           "nextId": 2
         }''';
 
-        final result =
-            serializationService.deserializeAutomatonFromJson(testJson);
+        final result = serializationService.deserializeAutomatonFromJson(
+          testJson,
+        );
 
         expect(result.isSuccess, isTrue);
         final data = result.data!;
@@ -401,32 +410,43 @@ void main() {
 
         // Test JFLAP round-trip
         final jflapResult = serializationService.roundTripTest(
-            originalData, SerializationFormat.jflap);
+          originalData,
+          SerializationFormat.jflap,
+        );
         expect(jflapResult.isSuccess, isTrue);
 
         final jflapRoundTripped = jflapResult.data!;
         expect(
-            serializationService.validateRoundTrip(
-                originalData, jflapRoundTripped),
-            isTrue);
+          serializationService.validateRoundTrip(
+            originalData,
+            jflapRoundTripped,
+          ),
+          isTrue,
+        );
 
         // Test JSON round-trip
         final jsonResult = serializationService.roundTripTest(
-            originalData, SerializationFormat.json);
+          originalData,
+          SerializationFormat.json,
+        );
         expect(jsonResult.isSuccess, isTrue);
 
         final jsonRoundTripped = jsonResult.data!;
         expect(
-            serializationService.validateRoundTrip(
-                originalData, jsonRoundTripped),
-            isTrue);
+          serializationService.validateRoundTrip(
+            originalData,
+            jsonRoundTripped,
+          ),
+          isTrue,
+        );
       });
 
       test('Handles malformed XML gracefully', () {
         const malformedXml = '<invalid>xml</invalid>';
 
-        final result =
-            serializationService.deserializeAutomatonFromJflap(malformedXml);
+        final result = serializationService.deserializeAutomatonFromJflap(
+          malformedXml,
+        );
         expect(result.isFailure, isTrue);
         expect(result.error, contains('Failed to deserialize'));
       });
@@ -434,8 +454,9 @@ void main() {
       test('Handles malformed JSON gracefully', () {
         const malformedJson = '{"invalid": json}';
 
-        final result =
-            serializationService.deserializeAutomatonFromJson(malformedJson);
+        final result = serializationService.deserializeAutomatonFromJson(
+          malformedJson,
+        );
         expect(result.isFailure, isTrue);
         expect(result.error, contains('Failed to deserialize'));
       });
@@ -462,7 +483,6 @@ void main() {
     });
 
     group('SVG Export Tests', () {
-
       test('Automaton SVG export produces valid SVG structure', () {
         final svg = SvgExporter.exportAutomatonToSvg(
           // Mock automaton entity for testing
@@ -486,10 +506,10 @@ void main() {
                 y: 0.0,
                 isInitial: false,
                 isFinal: true,
-              )
+              ),
             ],
             transitions: {
-              'q0': ['q1']
+              'q0': ['q1'],
             },
             initialId: 'q0',
             nextId: 2,

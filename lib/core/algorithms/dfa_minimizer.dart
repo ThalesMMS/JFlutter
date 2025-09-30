@@ -54,7 +54,8 @@ class DFAMinimizer {
     for (final acceptingState in dfa.acceptingStates) {
       if (!dfa.states.contains(acceptingState)) {
         return ResultFactory.failure(
-            'Accepting state must be in the states set');
+          'Accepting state must be in the states set',
+        );
       }
     }
 
@@ -77,14 +78,17 @@ class DFAMinimizer {
 
     // Remove transitions involving unreachable states
     final newTransitions = dfa.transitions
-        .where((transition) =>
-            reachableStates.contains(transition.fromState) &&
-            reachableStates.contains(transition.toState))
+        .where(
+          (transition) =>
+              reachableStates.contains(transition.fromState) &&
+              reachableStates.contains(transition.toState),
+        )
         .toSet();
 
     // Remove unreachable states from accepting states
-    final newAcceptingStates =
-        dfa.acceptingStates.intersection(reachableStates);
+    final newAcceptingStates = dfa.acceptingStates.intersection(
+      reachableStates,
+    );
 
     return FSA(
       id: '${dfa.id}_no_unreachable',
@@ -209,10 +213,12 @@ class DFAMinimizer {
 
         // Check if transition already exists
         final existingTransition = newTransitions
-            .where((t) =>
-                t.fromState == fromState &&
-                t.toState == toState &&
-                t.inputSymbols == originalTransition.inputSymbols)
+            .where(
+              (t) =>
+                  t.fromState == fromState &&
+                  t.toState == toState &&
+                  t.inputSymbols == originalTransition.inputSymbols,
+            )
             .firstOrNull;
 
         if (existingTransition == null) {
@@ -248,8 +254,9 @@ class DFAMinimizer {
   static State _createMinimizedState(Set<State> equivalenceClass, int counter) {
     final stateIds = equivalenceClass.map((s) => s.id).toList()..sort();
     final stateId = 'q${counter}_min';
-    final stateLabel =
-        stateIds.length == 1 ? stateIds.first : '{${stateIds.join(',')}}';
+    final stateLabel = stateIds.length == 1
+        ? stateIds.first
+        : '{${stateIds.join(',')}}';
 
     // Calculate position as center of the states
     double sumX = 0;
@@ -258,8 +265,10 @@ class DFAMinimizer {
       sumX += state.position.x;
       sumY += state.position.y;
     }
-    final position =
-        Vector2(sumX / equivalenceClass.length, sumY / equivalenceClass.length);
+    final position = Vector2(
+      sumX / equivalenceClass.length,
+      sumY / equivalenceClass.length,
+    );
 
     return State(
       id: stateId,
@@ -276,12 +285,14 @@ class DFAMinimizer {
       final steps = <MinimizationStep>[];
 
       // Step 1: Validate input
-      steps.add(MinimizationStep(
-        stepNumber: 1,
-        description: 'Validating input DFA',
-        dfa: dfa,
-        partition: null,
-      ));
+      steps.add(
+        MinimizationStep(
+          stepNumber: 1,
+          description: 'Validating input DFA',
+          dfa: dfa,
+          partition: null,
+        ),
+      );
 
       final validationResult = _validateInput(dfa);
       if (!validationResult.isSuccess) {
@@ -289,20 +300,24 @@ class DFAMinimizer {
       }
 
       // Step 2: Remove unreachable states
-      steps.add(MinimizationStep(
-        stepNumber: 2,
-        description: 'Removing unreachable states',
-        dfa: dfa,
-        partition: null,
-      ));
+      steps.add(
+        MinimizationStep(
+          stepNumber: 2,
+          description: 'Removing unreachable states',
+          dfa: dfa,
+          partition: null,
+        ),
+      );
 
       final dfaWithoutUnreachable = _removeUnreachableStates(dfa);
-      steps.add(MinimizationStep(
-        stepNumber: 3,
-        description: 'Unreachable states removed',
-        dfa: dfaWithoutUnreachable,
-        partition: null,
-      ));
+      steps.add(
+        MinimizationStep(
+          stepNumber: 3,
+          description: 'Unreachable states removed',
+          dfa: dfaWithoutUnreachable,
+          partition: null,
+        ),
+      );
 
       // Step 3: Initialize partition
       final initialPartition = <Set<State>>[
@@ -311,28 +326,34 @@ class DFAMinimizer {
       ];
       initialPartition.removeWhere((set) => set.isEmpty);
 
-      steps.add(MinimizationStep(
-        stepNumber: 4,
-        description: 'Initial partition created',
-        dfa: dfaWithoutUnreachable,
-        partition: initialPartition,
-      ));
+      steps.add(
+        MinimizationStep(
+          stepNumber: 4,
+          description: 'Initial partition created',
+          dfa: dfaWithoutUnreachable,
+          partition: initialPartition,
+        ),
+      );
 
       // Step 4: Minimize using Hopcroft algorithm
-      steps.add(MinimizationStep(
-        stepNumber: 5,
-        description: 'Applying Hopcroft minimization algorithm',
-        dfa: dfaWithoutUnreachable,
-        partition: initialPartition,
-      ));
+      steps.add(
+        MinimizationStep(
+          stepNumber: 5,
+          description: 'Applying Hopcroft minimization algorithm',
+          dfa: dfaWithoutUnreachable,
+          partition: initialPartition,
+        ),
+      );
 
       final minimizedDFA = _minimizeWithHopcroft(dfaWithoutUnreachable);
-      steps.add(MinimizationStep(
-        stepNumber: 6,
-        description: 'DFA minimization completed',
-        dfa: minimizedDFA,
-        partition: null,
-      ));
+      steps.add(
+        MinimizationStep(
+          stepNumber: 6,
+          description: 'DFA minimization completed',
+          dfa: minimizedDFA,
+          partition: null,
+        ),
+      );
 
       final result = DFAMinimizationResult(
         originalDFA: dfa,

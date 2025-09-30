@@ -28,17 +28,17 @@ class SettingsProvider with ChangeNotifier {
 
   // لیست تم‌های موجود
   List<String> get availableThemes => [
-        'cyberpunk',
-        'aurora',
-        'galaxy',
-        'sunset',
-        'ocean',
-        'forest',
-        'volcano',
-        'arctic',
-        'rainbow',
-        'minimal_glass'
-      ];
+    'cyberpunk',
+    'aurora',
+    'galaxy',
+    'sunset',
+    'ocean',
+    'forest',
+    'volcano',
+    'arctic',
+    'rainbow',
+    'minimal_glass',
+  ];
 
   Future<void> loadSettings() async {
     _isLoading = true;

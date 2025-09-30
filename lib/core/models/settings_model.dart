@@ -89,15 +89,15 @@ class SettingsModel {
 
   @override
   int get hashCode => Object.hash(
-        emptyStringSymbol,
-        epsilonSymbol,
-        themeMode,
-        showGrid,
-        showCoordinates,
-        autoSave,
-        showTooltips,
-        gridSize,
-        nodeSize,
-        fontSize,
-      );
+    emptyStringSymbol,
+    epsilonSymbol,
+    themeMode,
+    showGrid,
+    showCoordinates,
+    autoSave,
+    showTooltips,
+    gridSize,
+    nodeSize,
+    fontSize,
+  );
 }

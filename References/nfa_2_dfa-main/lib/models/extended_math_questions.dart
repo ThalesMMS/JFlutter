@@ -22,7 +22,7 @@ class EnhancedQuizQuestions {
           '{-3, -2, -1, 0, 1, 2, 3}',
           '{-3, -2, -1, 1, 2, 3}',
           '{-2, -1, 0, 1, 2}',
-          '{0, ±1, ±2, ±3}'
+          '{0, ±1, ±2, ±3}',
         ],
         correctAnswer: 0,
         explanation:
@@ -54,7 +54,7 @@ class EnhancedQuizQuestions {
           '{{a}, {a, b}}',
           '{{a}, {b}, {a, b}}',
           '{{a}, ∅, {a, b}}',
-          'P({a, b})'
+          'P({a, b})',
         ],
         correctAnswer: 0,
         explanation: 'زیرمجموعه‌هایی که شامل a هستند: {a} و {a, b}',
@@ -73,7 +73,7 @@ class EnhancedQuizQuestions {
           'مجموعه اعداد بزرگ',
           'مجموعه دانشجویان باهوش کلاس',
           'مجموعه شهرهای زیبای ایران',
-          'همه موارد فوق'
+          'همه موارد فوق',
         ],
         correctAnswer: 3,
         explanation:
@@ -96,7 +96,7 @@ class EnhancedQuizQuestions {
           '{a, a, b, b, c} = {a, b, c}',
           '{1, 2, 3} ≠ {3, 2, 1}',
           '{x, y} = {y, x}',
-          'هیچکدام'
+          'هیچکدام',
         ],
         correctAnswer: 0,
         explanation:
@@ -111,7 +111,7 @@ class EnhancedQuizQuestions {
           'x ∈ A ∨ x ∉ A',
           'x ∈ A ∧ x ∉ A',
           'x ∈ A ↔ x ∉ A',
-          'x ∈ A → x ∉ A'
+          'x ∈ A → x ∉ A',
         ],
         correctAnswer: 0,
         explanation:
@@ -126,7 +126,7 @@ class EnhancedQuizQuestions {
           '{1, 2, 3} = {3, 1, 2}',
           '{a, b, a} ≠ {b, a}',
           '{x, y, z} ⊂ {z, y, x}',
-          'هیچکدام'
+          'هیچکدام',
         ],
         correctAnswer: 0,
         explanation:
@@ -174,7 +174,7 @@ class EnhancedQuizQuestions {
           'A ⊆ B و A ≠ B',
           'A ⊆ B و B ⊄ A',
           'هر عضو A عضو B است و حداقل یک عضو B عضو A نیست',
-          'همه موارد فوق'
+          'همه موارد فوق',
         ],
         correctAnswer: 3,
         explanation: 'هر سه شرط معادل تعریف زیرمجموعه محض هستند.',
@@ -230,7 +230,7 @@ class EnhancedQuizQuestions {
           'P(A ∪ B) = P(A) ∪ P(B)',
           'P(A ∩ B) = P(A) ∩ P(B)',
           'P(A) ∪ P(B) ⊆ P(A ∪ B)',
-          'P(A ∪ B) ⊆ P(A) ∪ P(B)'
+          'P(A ∪ B) ⊆ P(A) ∪ P(B)',
         ],
         correctAnswer: 2,
         explanation:
@@ -244,7 +244,7 @@ class EnhancedQuizQuestions {
           'P(A) ⊆ P(B)',
           'P(B) ⊆ P(A)',
           'P(A) = P(B)',
-          'P(A) ∩ P(B) = ∅'
+          'P(A) ∩ P(B) = ∅',
         ],
         correctAnswer: 0,
         explanation:
@@ -275,7 +275,7 @@ class EnhancedQuizQuestions {
           'یکی و پوشا',
           'یکی اما نه پوشا',
           'پوشا اما نه یکی',
-          'نه یکی نه پوشا'
+          'نه یکی نه پوشا',
         ],
         correctAnswer: 2,
         explanation:
@@ -290,7 +290,7 @@ class EnhancedQuizQuestions {
           'حتماً یکی است',
           'حتماً پوشا است',
           'هم یکی هم پوشا است',
-          'ممکن است یکی نباشد'
+          'ممکن است یکی نباشد',
         ],
         correctAnswer: 0,
         explanation: 'اگر g یکی باشد، g∘f نیز یکی است (صرف‌نظر از خاصیت f)',
@@ -303,7 +303,7 @@ class EnhancedQuizQuestions {
           'f پوشا باشد',
           'f یکی باشد',
           'f دوسویه باشد',
-          'دامنه و مدامنه f برابر باشند'
+          'دامنه و مدامنه f برابر باشند',
         ],
         correctAnswer: 2,
         explanation:
@@ -333,7 +333,7 @@ class EnhancedQuizQuestions {
           'اعداد صحیح',
           'اعداد گویا',
           'اعداد حقیقی مثبت',
-          'گزینه‌های 1 و 2'
+          'گزینه‌های 1 و 2',
         ],
         correctAnswer: 3,
         explanation:
@@ -348,7 +348,7 @@ class EnhancedQuizQuestions {
           'متناهی است',
           'نامتناهی قابل شمارش است',
           'نامتناهی غیرقابل شمارش است',
-          'بستگی به B دارد'
+          'بستگی به B دارد',
         ],
         correctAnswer: 1,
         explanation:
@@ -362,7 +362,7 @@ class EnhancedQuizQuestions {
           '|A| = |P(A)| همیشه',
           '|A| < |P(A)| همیشه',
           '|A| > |P(A)| گاهی',
-          '|A| ≤ |P(A)| همیشه'
+          '|A| ≤ |P(A)| همیشه',
         ],
         correctAnswer: 1,
         explanation:
@@ -377,7 +377,7 @@ class EnhancedQuizQuestions {
           'متناهی',
           'نامتناهی قابل شمارش',
           'نامتناهی غیرقابل شمارش',
-          'نامعین'
+          'نامعین',
         ],
         correctAnswer: 1,
         explanation:
@@ -391,7 +391,7 @@ class EnhancedQuizQuestions {
           'مجموعه تمام دنباله‌های متناهی از 0 و 1',
           'مجموعه تمام دنباله‌های نامتناهی از 0 و 1',
           'مجموعه تمام زیرمجموعه‌های متناهی ℕ',
-          'مجموعه اعداد گویا بین 0 و 1'
+          'مجموعه اعداد گویا بین 0 و 1',
         ],
         correctAnswer: 1,
         explanation:
@@ -422,7 +422,7 @@ class EnhancedQuizQuestions {
           '{aⁿbⁿ | n ≥ 1}',
           '{aⁿbᵐ | n, m ≥ 1}',
           '{a²ⁿb²ⁿ | n ≥ 1}',
-          '{(ab)ⁿ | n ≥ 1}'
+          '{(ab)ⁿ | n ≥ 1}',
         ],
         correctAnswer: 0,
         explanation:
@@ -436,7 +436,7 @@ class EnhancedQuizQuestions {
           'زبان‌های نوع 3 ⊂ زبان‌های نوع 2 ⊂ زبان‌های نوع 1 ⊂ زبان‌های نوع 0',
           'زبان‌های نوع 0 ⊂ زبان‌های نوع 1 ⊂ زبان‌های نوع 2 ⊂ زبان‌های نوع 3',
           'همه شمول‌ها محض هستند',
-          'زبان‌های نوع 2 و نوع 1 یکسان هستند'
+          'زبان‌های نوع 2 و نوع 1 یکسان هستند',
         ],
         correctAnswer: 0,
         explanation:
@@ -451,7 +451,7 @@ class EnhancedQuizQuestions {
           'زبان منظم',
           'زبان مستقل از متن',
           'زبان وابسته به متن',
-          'زبان غیر بازشناختنی'
+          'زبان غیر بازشناختنی',
         ],
         correctAnswer: 1,
         explanation:
@@ -466,7 +466,7 @@ class EnhancedQuizQuestions {
           'منظم است',
           'مستقل از متن اما نه منظم',
           'وابسته به متن است',
-          'غیر بازشناختنی است'
+          'غیر بازشناختنی است',
         ],
         correctAnswer: 1,
         explanation:
@@ -480,7 +480,7 @@ class EnhancedQuizQuestions {
           'برای هر حالت و هر نماد ورودی، دقیقاً یک انتقال وجود دارد',
           'حداقل یک حالت پذیرنده وجود دارد',
           'ε-انتقال مجاز است',
-          'چندین حالت شروع می‌تواند داشته باشد'
+          'چندین حالت شروع می‌تواند داشته باشد',
         ],
         correctAnswer: 0,
         explanation:
@@ -494,7 +494,7 @@ class EnhancedQuizQuestions {
           '{aⁿbⁿcⁿ | n ≥ 0}',
           '{(ab)*}',
           '{a*b*}',
-          '{w | w شامل تعداد زوج a است}'
+          '{w | w شامل تعداد زوج a است}',
         ],
         correctAnswer: 0,
         explanation:
@@ -518,7 +518,7 @@ class EnhancedQuizQuestions {
           'L^R (معکوس L) منظم است',
           'L̄ (متمم L) منظم است',
           'L* (بسته ستاره‌ای L) منظم است',
-          'همه موارد فوق'
+          'همه موارد فوق',
         ],
         correctAnswer: 3,
         explanation:
@@ -532,7 +532,7 @@ class EnhancedQuizQuestions {
           'فقط خواندنی است',
           'طول آن متناهی است',
           'دو طرفه نامتناهی است',
-          'نمی‌تواند خالی باشد'
+          'نمی‌تواند خالی باشد',
         ],
         correctAnswer: 2,
         explanation:
@@ -553,7 +553,7 @@ class EnhancedQuizQuestions {
           'درست است',
           'نادرست است',
           'فقط وقتی A ∩ B = ∅ درست است',
-          'فقط وقتی A = B درست است'
+          'فقط وقتی A = B درست است',
         ],
         correctAnswer: 2,
         explanation:
@@ -568,7 +568,7 @@ class EnhancedQuizQuestions {
           'یکی است',
           'پوشا است',
           'نه یکی نه پوشا',
-          'یکی نیست اما پوشا است'
+          'یکی نیست اما پوشا است',
         ],
         correctAnswer: 3,
         explanation:
@@ -582,7 +582,7 @@ class EnhancedQuizQuestions {
           'اتوماتای متناهی = عبارات منظم = گرامر نوع 3',
           'اتوماتای پشته‌ای = گرامر مستقل از متن = گرامر نوع 2',
           'ماشین تورینگ = گرامر عمومی = گرامر نوع 0',
-          'همه موارد فوق'
+          'همه موارد فوق',
         ],
         correctAnswer: 3,
         explanation:
@@ -597,7 +597,7 @@ class EnhancedQuizQuestions {
           'حذف قوانین ε و قوانین واحد، سپس تبدیل به A → BC یا A → a',
           'فقط حذف قوانین ε',
           'فقط تبدیل به دوتایی',
-          'افزودن نمادهای کمکی'
+          'افزودن نمادهای کمکی',
         ],
         correctAnswer: 0,
         explanation:
@@ -612,7 +612,7 @@ class EnhancedQuizQuestions {
           'همیشه تصمیم‌پذیر است',
           'غیرتصمیم‌پذیر است',
           'فقط برای گرامرهای LL(1) تصمیم‌پذیر است',
-          'پیچیدگی نمایی دارد اما تصمیم‌پذیر است'
+          'پیچیدگی نمایی دارد اما تصمیم‌پذیر است',
         ],
         correctAnswer: 1,
         explanation:
@@ -659,20 +659,19 @@ class EnhancedQuizQuestions {
   }) {
     final allQuestions = getComprehensiveQuestions(sectionId);
 
-    final easyQuestions = allQuestions
-        .where((q) => q.difficulty == DifficultyLevel.easy)
-        .toList()
-      ..shuffle();
+    final easyQuestions =
+        allQuestions.where((q) => q.difficulty == DifficultyLevel.easy).toList()
+          ..shuffle();
 
-    final mediumQuestions = allQuestions
-        .where((q) => q.difficulty == DifficultyLevel.medium)
-        .toList()
-      ..shuffle();
+    final mediumQuestions =
+        allQuestions
+            .where((q) => q.difficulty == DifficultyLevel.medium)
+            .toList()
+          ..shuffle();
 
-    final hardQuestions = allQuestions
-        .where((q) => q.difficulty == DifficultyLevel.hard)
-        .toList()
-      ..shuffle();
+    final hardQuestions =
+        allQuestions.where((q) => q.difficulty == DifficultyLevel.hard).toList()
+          ..shuffle();
 
     final quiz = <QuizQuestion>[];
     quiz.addAll(easyQuestions.take(easyCount));

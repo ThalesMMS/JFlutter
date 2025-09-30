@@ -85,5 +85,5 @@ class PDASimulationNotifier extends StateNotifier<PDASimulationState> {
 
 final pdaSimulationProvider =
     StateNotifierProvider<PDASimulationNotifier, PDASimulationState>((ref) {
-  return PDASimulationNotifier();
-});
+      return PDASimulationNotifier();
+    });

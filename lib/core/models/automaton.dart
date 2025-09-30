@@ -141,7 +141,8 @@ abstract class Automaton {
     for (final acceptingState in acceptingStates) {
       if (!states.contains(acceptingState)) {
         errors.add(
-            'Accepting state ${acceptingState.id} must be in the states set');
+          'Accepting state ${acceptingState.id} must be in the states set',
+        );
       }
     }
 
@@ -265,8 +266,9 @@ abstract class Automaton {
 
     for (final state in states) {
       final reachable = getReachableStates(state);
-      final canReachAccepting =
-          reachable.intersection(acceptingStates).isNotEmpty;
+      final canReachAccepting = reachable
+          .intersection(acceptingStates)
+          .isNotEmpty;
       if (!canReachAccepting) {
         dead.add(state);
       }

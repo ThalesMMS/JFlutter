@@ -30,7 +30,11 @@ enum GraphTheme {
   nature('طبیعی', Colors.green, Color(0xFFF0F8F0), Colors.green);
 
   const GraphTheme(
-      this.name, this.primaryColor, this.backgroundColor, this.textColor);
+    this.name,
+    this.primaryColor,
+    this.backgroundColor,
+    this.textColor,
+  );
   final String name;
   final Color primaryColor;
   final Color backgroundColor;
@@ -75,8 +79,10 @@ class GraphAnimationController {
     }
 
     for (final key in _transitionAnimations.keys.toList()) {
-      _transitionAnimations[key] =
-          (_transitionAnimations[key]! + 0.1).clamp(0.0, 1.0);
+      _transitionAnimations[key] = (_transitionAnimations[key]! + 0.1).clamp(
+        0.0,
+        1.0,
+      );
       if (_transitionAnimations[key]! >= 1.0) {
         _transitionAnimations.remove(key);
       }
@@ -208,8 +214,9 @@ class AdvancedAutomatonPainter extends CustomPainter {
     );
 
     final paint = Paint()
-      ..shader =
-          gradient.createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+      ..shader = gradient.createShader(
+        Rect.fromLTWH(0, 0, size.width, size.height),
+      );
 
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
   }
@@ -266,10 +273,14 @@ class AdvancedAutomatonPainter extends CustomPainter {
   }
 
   void _calculateLayeredLayout(
-      List<String> states, Map<String, Offset> positions, Size size) {
+    List<String> states,
+    Map<String, Offset> positions,
+    Size size,
+  ) {
     final layers = _calculateStateLayers();
-    final maxLayer =
-        layers.values.isNotEmpty ? layers.values.reduce(math.max) : 0;
+    final maxLayer = layers.values.isNotEmpty
+        ? layers.values.reduce(math.max)
+        : 0;
 
     final layerNodes = <int, List<String>>{};
     for (final state in states) {
@@ -293,15 +304,17 @@ class AdvancedAutomatonPainter extends CustomPainter {
   }
 
   void _calculateRadialLayout(
-      List<String> states,
-      Map<String, Offset> positions,
-      double centerX,
-      double centerY,
-      Size size) {
+    List<String> states,
+    Map<String, Offset> positions,
+    double centerX,
+    double centerY,
+    Size size,
+  ) {
     final startState = _getStartState();
     final distances = _calculateDistancesFromStart(startState);
-    final maxDistance =
-        distances.values.isNotEmpty ? distances.values.reduce(math.max) : 1;
+    final maxDistance = distances.values.isNotEmpty
+        ? distances.values.reduce(math.max)
+        : 1;
 
     final rings = <int, List<String>>{};
     for (final state in states) {
@@ -326,7 +339,10 @@ class AdvancedAutomatonPainter extends CustomPainter {
   }
 
   void _calculateOrganicLayout(
-      List<String> states, Map<String, Offset> positions, Size size) {
+    List<String> states,
+    Map<String, Offset> positions,
+    Size size,
+  ) {
     final random = math.Random(42);
     final connections = _getConnections();
 
@@ -335,10 +351,12 @@ class AdvancedAutomatonPainter extends CustomPainter {
     final numClusters = math.max(1, states.length ~/ 5);
 
     for (int i = 0; i < numClusters; i++) {
-      clusterCenters.add(Offset(
-        size.width * (0.2 + 0.6 * random.nextDouble()),
-        size.height * (0.2 + 0.6 * random.nextDouble()),
-      ));
+      clusterCenters.add(
+        Offset(
+          size.width * (0.2 + 0.6 * random.nextDouble()),
+          size.height * (0.2 + 0.6 * random.nextDouble()),
+        ),
+      );
     }
 
     for (int i = 0; i < states.length; i++) {
@@ -374,7 +392,8 @@ class AdvancedAutomatonPainter extends CustomPainter {
           final distance = (pos1 - pos2).distance;
 
           if (distance > 0) {
-            final repulsion = (3000 / (distance * distance)) *
+            final repulsion =
+                (3000 / (distance * distance)) *
                 (1 + 0.5 * math.sin(iteration * 0.1));
             final direction = (pos1 - pos2) / distance;
 
@@ -418,7 +437,10 @@ class AdvancedAutomatonPainter extends CustomPainter {
   }
 
   void _applyPhysicsSimulation(
-      List<String> states, Map<String, Offset> positions, Size size) {
+    List<String> states,
+    Map<String, Offset> positions,
+    Size size,
+  ) {
     final velocities = <String, Offset>{};
     final masses = <String, double>{};
 
@@ -558,13 +580,17 @@ class AdvancedAutomatonPainter extends CustomPainter {
       final animationValue = animationController.getStateAnimation(state);
 
       // Draw state with advanced styling and animations
-      _drawAdvancedState(canvas, position, state,
-          isStart: isStart,
-          isFinal: isFinal,
-          isSelected: isSelected,
-          isHovered: isHovered,
-          isHighlighted: isHighlighted,
-          animationValue: animationValue);
+      _drawAdvancedState(
+        canvas,
+        position,
+        state,
+        isStart: isStart,
+        isFinal: isFinal,
+        isSelected: isSelected,
+        isHovered: isHovered,
+        isHighlighted: isHighlighted,
+        animationValue: animationValue,
+      );
     }
   }
 
@@ -580,7 +606,8 @@ class AdvancedAutomatonPainter extends CustomPainter {
     double animationValue = 1.0,
   }) {
     // Apply animation transformations
-    final animatedNodeSize = nodeSize *
+    final animatedNodeSize =
+        nodeSize *
         (animationType == AnimationType.scale
             ? (0.5 + 0.5 * animationValue)
             : 1.0);
@@ -656,8 +683,9 @@ class AdvancedAutomatonPainter extends CustomPainter {
     // Draw glow effect for highlighted states
     if (isHighlighted || isSelected) {
       final glowPaint = Paint()
-        ..color = (isSelected ? Colors.orange : highlightColor)
-            .withOpacity(0.3 * opacity)
+        ..color = (isSelected ? Colors.orange : highlightColor).withOpacity(
+          0.3 * opacity,
+        )
         ..style = PaintingStyle.fill;
       canvas.drawCircle(Offset.zero, finalNodeSize + 8, glowPaint);
     }
@@ -668,7 +696,8 @@ class AdvancedAutomatonPainter extends CustomPainter {
         colors: [fillColor, fillColor.withOpacity(0.7)],
       );
       paint.shader = gradient.createShader(
-          Rect.fromCircle(center: Offset.zero, radius: finalNodeSize));
+        Rect.fromCircle(center: Offset.zero, radius: finalNodeSize),
+      );
     } else {
       paint.color = fillColor;
     }
@@ -721,17 +750,18 @@ class AdvancedAutomatonPainter extends CustomPainter {
 
     textPainter.layout();
     textPainter.paint(
-        canvas,
-        Offset(
-          -textPainter.width / 2,
-          -textPainter.height / 2,
-        ));
+      canvas,
+      Offset(-textPainter.width / 2, -textPainter.height / 2),
+    );
 
     canvas.restore();
   }
 
   void _drawAdvancedTransitions(
-      Canvas canvas, Map<String, Offset> positions, Size size) {
+    Canvas canvas,
+    Map<String, Offset> positions,
+    Size size,
+  ) {
     final paint = Paint()
       ..color = theme.textColor.withOpacity(0.7)
       ..strokeWidth = 2.0
@@ -772,13 +802,25 @@ class AdvancedAutomatonPainter extends CustomPainter {
         _drawAdvancedSelfLoop(canvas, paint, fromPos, label, animationValue);
       } else {
         _drawAdvancedArrow(
-            canvas, paint, fromPos, toPos, label, animationValue);
+          canvas,
+          paint,
+          fromPos,
+          toPos,
+          label,
+          animationValue,
+        );
       }
     });
   }
 
-  void _drawAdvancedArrow(Canvas canvas, Paint paint, Offset from, Offset to,
-      String label, double animationValue) {
+  void _drawAdvancedArrow(
+    Canvas canvas,
+    Paint paint,
+    Offset from,
+    Offset to,
+    String label,
+    double animationValue,
+  ) {
     final direction = (to - from).normalize();
     final startPoint = from + direction * (nodeSize + 2);
     final endPoint = to - direction * (nodeSize + 2);
@@ -795,13 +837,24 @@ class AdvancedAutomatonPainter extends CustomPainter {
     if (animationValue < 1.0) {
       // Animate path drawing
       final animatedEnd = Offset.lerp(startPoint, endPoint, animationValue)!;
-      final animatedControl =
-          Offset.lerp(startPoint, controlPoint, animationValue)!;
-      path.quadraticBezierTo(animatedControl.dx, animatedControl.dy,
-          animatedEnd.dx, animatedEnd.dy);
+      final animatedControl = Offset.lerp(
+        startPoint,
+        controlPoint,
+        animationValue,
+      )!;
+      path.quadraticBezierTo(
+        animatedControl.dx,
+        animatedControl.dy,
+        animatedEnd.dx,
+        animatedEnd.dy,
+      );
     } else {
       path.quadraticBezierTo(
-          controlPoint.dx, controlPoint.dy, endPoint.dx, endPoint.dy);
+        controlPoint.dx,
+        controlPoint.dy,
+        endPoint.dx,
+        endPoint.dy,
+      );
     }
 
     // Draw path with enhanced effects
@@ -817,11 +870,10 @@ class AdvancedAutomatonPainter extends CustomPainter {
 
     // Main path with gradient
     final gradientPaint = Paint()
-      ..shader = ui.Gradient.linear(
-        startPoint,
-        endPoint,
-        [paint.color.withOpacity(0.3), paint.color],
-      )
+      ..shader = ui.Gradient.linear(startPoint, endPoint, [
+        paint.color.withOpacity(0.3),
+        paint.color,
+      ])
       ..strokeWidth = paint.strokeWidth
       ..style = PaintingStyle.stroke;
 
@@ -841,8 +893,13 @@ class AdvancedAutomatonPainter extends CustomPainter {
     }
   }
 
-  void _drawAdvancedSelfLoop(Canvas canvas, Paint paint, Offset center,
-      String label, double animationValue) {
+  void _drawAdvancedSelfLoop(
+    Canvas canvas,
+    Paint paint,
+    Offset center,
+    String label,
+    double animationValue,
+  ) {
     final loopRadius = nodeSize * 0.8;
     final loopCenter = Offset(center.dx, center.dy - nodeSize - loopRadius);
 
@@ -861,14 +918,11 @@ class AdvancedAutomatonPainter extends CustomPainter {
     }
 
     final gradientPaint = Paint()
-      ..shader = ui.Gradient.sweep(
-        loopCenter,
-        [
-          paint.color.withOpacity(0.3),
-          paint.color,
-          paint.color.withOpacity(0.3)
-        ],
-      )
+      ..shader = ui.Gradient.sweep(loopCenter, [
+        paint.color.withOpacity(0.3),
+        paint.color,
+        paint.color.withOpacity(0.3),
+      ])
       ..strokeWidth = paint.strokeWidth
       ..style = PaintingStyle.stroke;
 
@@ -881,23 +935,30 @@ class AdvancedAutomatonPainter extends CustomPainter {
         loopCenter.dx + loopRadius * math.cos(arrowAngle),
         loopCenter.dy + loopRadius * math.sin(arrowAngle),
       );
-      final arrowDirection =
-          Offset(-math.sin(arrowAngle), math.cos(arrowAngle));
+      final arrowDirection = Offset(
+        -math.sin(arrowAngle),
+        math.cos(arrowAngle),
+      );
       _drawArrowhead(canvas, paint, arrowPos, arrowDirection);
     }
 
     // Draw label
     if (showTransitionLabels && label.isNotEmpty && animationValue > 0.5) {
       _drawTransitionLabel(
-          canvas,
-          Offset(center.dx, center.dy - nodeSize - loopRadius * 2 - 10),
-          label,
-          animationValue);
+        canvas,
+        Offset(center.dx, center.dy - nodeSize - loopRadius * 2 - 10),
+        label,
+        animationValue,
+      );
     }
   }
 
   void _drawArrowhead(
-      Canvas canvas, Paint paint, Offset position, Offset direction) {
+    Canvas canvas,
+    Paint paint,
+    Offset position,
+    Offset direction,
+  ) {
     const arrowSize = 12.0;
     final arrowPath = Path();
     final angle = math.atan2(direction.dy, direction.dx);
@@ -928,8 +989,12 @@ class AdvancedAutomatonPainter extends CustomPainter {
     canvas.drawPath(arrowPath, arrowPaint);
   }
 
-  void _drawTransitionLabel(Canvas canvas, Offset position, String label,
-      [double opacity = 1.0]) {
+  void _drawTransitionLabel(
+    Canvas canvas,
+    Offset position,
+    String label, [
+    double opacity = 1.0,
+  ]) {
     final textStyle = TextStyle(
       color: Colors.red.shade700.withOpacity(opacity),
       fontSize: 11,
@@ -989,11 +1054,12 @@ class AdvancedAutomatonPainter extends CustomPainter {
 
     // Draw text
     textPainter.paint(
-        canvas,
-        Offset(
-          position.dx - textPainter.width / 2,
-          position.dy - textPainter.height / 2,
-        ));
+      canvas,
+      Offset(
+        position.dx - textPainter.width / 2,
+        position.dy - textPainter.height / 2,
+      ),
+    );
   }
 
   void _drawStateInformation(Canvas canvas, Map<String, Offset> positions) {
@@ -1024,11 +1090,12 @@ class AdvancedAutomatonPainter extends CustomPainter {
 
         textPainter.layout();
         textPainter.paint(
-            canvas,
-            Offset(
-              position.dx - textPainter.width / 2,
-              position.dy + nodeSize + 5,
-            ));
+          canvas,
+          Offset(
+            position.dx - textPainter.width / 2,
+            position.dy + nodeSize + 5,
+          ),
+        );
       }
     }
   }
@@ -1058,8 +1125,12 @@ class AdvancedAutomatonPainter extends CustomPainter {
     textPainter.layout();
 
     // Draw background
-    final backgroundRect =
-        Rect.fromLTWH(10, 10, textPainter.width + 20, textPainter.height + 10);
+    final backgroundRect = Rect.fromLTWH(
+      10,
+      10,
+      textPainter.width + 20,
+      textPainter.height + 10,
+    );
     final backgroundPaint = Paint()
       ..color = theme.backgroundColor.withOpacity(0.9)
       ..style = PaintingStyle.fill;
@@ -1149,16 +1220,23 @@ class AdvancedAutomatonPainter extends CustomPainter {
 
   Offset _calculateControlPoint(Offset start, Offset end) {
     final midPoint = (start + end) / 2;
-    final perpendicular =
-        Offset(-(end.dy - start.dy), end.dx - start.dx).normalize();
+    final perpendicular = Offset(
+      -(end.dy - start.dy),
+      end.dx - start.dx,
+    ).normalize();
     return midPoint + perpendicular * 30;
   }
 
   Offset _calculateBundledControlPoint(
-      Offset start, Offset end, double bundling) {
+    Offset start,
+    Offset end,
+    double bundling,
+  ) {
     final midPoint = (start + end) / 2;
-    final perpendicular =
-        Offset(-(end.dy - start.dy), end.dx - start.dx).normalize();
+    final perpendicular = Offset(
+      -(end.dy - start.dy),
+      end.dx - start.dx,
+    ).normalize();
     final bundlingOffset = perpendicular * (30 + bundling * 20);
     return midPoint + bundlingOffset;
   }
@@ -1167,16 +1245,18 @@ class AdvancedAutomatonPainter extends CustomPainter {
     final states = _getStates();
     final transitions = _getTransitions();
     final maxPossibleEdges = states.length * (states.length - 1);
-    final density =
-        maxPossibleEdges > 0 ? transitions.length / maxPossibleEdges : 0.0;
+    final density = maxPossibleEdges > 0
+        ? transitions.length / maxPossibleEdges
+        : 0.0;
 
     final degrees = <String, int>{};
     for (final state in states) {
       degrees[state] = _getInDegree(state) + _getOutDegree(state);
     }
 
-    final maxDegree =
-        degrees.values.isNotEmpty ? degrees.values.reduce(math.max) : 0;
+    final maxDegree = degrees.values.isNotEmpty
+        ? degrees.values.reduce(math.max)
+        : 0;
 
     return {
       'states': states.length,
@@ -1196,11 +1276,12 @@ class AdvancedAutomatonPainter extends CustomPainter {
 
   // Keep existing helper methods
   void _calculateCircularLayout(
-      List<String> states,
-      Map<String, Offset> positions,
-      double centerX,
-      double centerY,
-      Size size) {
+    List<String> states,
+    Map<String, Offset> positions,
+    double centerX,
+    double centerY,
+    Size size,
+  ) {
     final radius = math.min(centerX, centerY) * 0.6;
 
     for (int i = 0; i < states.length; i++) {
@@ -1214,7 +1295,10 @@ class AdvancedAutomatonPainter extends CustomPainter {
   }
 
   void _calculateGridLayout(
-      List<String> states, Map<String, Offset> positions, Size size) {
+    List<String> states,
+    Map<String, Offset> positions,
+    Size size,
+  ) {
     final cols = math.sqrt(states.length).ceil();
     final rows = (states.length / cols).ceil();
     final cellWidth = size.width / (cols + 1);
@@ -1232,7 +1316,10 @@ class AdvancedAutomatonPainter extends CustomPainter {
   }
 
   void _calculateHierarchicalLayout(
-      List<String> states, Map<String, Offset> positions, Size size) {
+    List<String> states,
+    Map<String, Offset> positions,
+    Size size,
+  ) {
     final startState = _getStartState();
     final levels = <String, int>{};
     final queue = <String>[startState];
@@ -1276,7 +1363,10 @@ class AdvancedAutomatonPainter extends CustomPainter {
   }
 
   void _calculateForceLayout(
-      List<String> states, Map<String, Offset> positions, Size size) {
+    List<String> states,
+    Map<String, Offset> positions,
+    Size size,
+  ) {
     final forces = <String, Offset>{};
     final connections = _getConnections();
     final random = math.Random();

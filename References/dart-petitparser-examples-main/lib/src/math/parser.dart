@@ -30,17 +30,17 @@ final parser = () {
       ).map2((name, args) => _createBinding(name, args)),
     );
   builder.group().wrapper(
-        char('(').trim(),
-        char(')').trim(),
-        (left, value, right) => value,
-      );
+    char('(').trim(),
+    char(')').trim(),
+    (left, value, right) => value,
+  );
   builder.group()
     ..prefix(char('+').trim(), (op, a) => a)
     ..prefix(char('-').trim(), (op, a) => Application('-', [a], (x) => -x));
   builder.group().right(
-        char('^').trim(),
-        (a, op, b) => Application('^', [a, b], math.pow),
-      );
+    char('^').trim(),
+    (a, op, b) => Application('^', [a, b], math.pow),
+  );
   builder.group()
     ..left(
       char('*').trim(),

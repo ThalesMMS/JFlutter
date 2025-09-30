@@ -11,9 +11,9 @@ class Viewport {
     required this.maxX,
     required this.minY,
     required this.maxY,
-  })  : context = canvas.context2D,
-        width = canvas.offsetWidth,
-        height = canvas.offsetHeight;
+  }) : context = canvas.context2D,
+       width = canvas.offsetWidth,
+       height = canvas.offsetHeight;
 
   final HTMLCanvasElement canvas;
   final CanvasRenderingContext2D context;

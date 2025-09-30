@@ -1,7 +1,2 @@
 //No iOS Support
-enum Targets {
-  DESKTOP,
-  WEB,
-  ANDROID,
-  UNDEFINED,
-}
+enum Targets { DESKTOP, WEB, ANDROID, UNDEFINED }

@@ -32,11 +32,9 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     }
 
     if (!mounted) return;
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => const RegexPage(),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const RegexPage()));
   }
 
   Future<void> _handleFsaToGrammar() async {
@@ -52,11 +50,9 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     }
 
     if (!mounted) return;
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => const GrammarPage(),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const GrammarPage()));
   }
 
   Future<void> _handleCompareEquivalence(FSA other) async {
@@ -64,9 +60,9 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     if (!mounted) return;
     final message = ref.read(automatonProvider).equivalenceDetails;
     if (message != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     }
   }
 
@@ -154,10 +150,12 @@ class _FSAPageState extends ConsumerState<FSAPage> {
                         .convertRegexToNfa(regex),
                     onFaToRegex: _handleFaToRegex,
                     onCompareEquivalence: _handleCompareEquivalence,
-                    equivalenceResult:
-                        ref.read(automatonProvider).equivalenceResult,
-                    equivalenceDetails:
-                        ref.read(automatonProvider).equivalenceDetails,
+                    equivalenceResult: ref
+                        .read(automatonProvider)
+                        .equivalenceResult,
+                    equivalenceDetails: ref
+                        .read(automatonProvider)
+                        .equivalenceDetails,
                   ),
                 ),
               );
@@ -188,8 +186,9 @@ class _FSAPageState extends ConsumerState<FSAPage> {
                     onSimulate: (inputString) => ref
                         .read(automatonProvider.notifier)
                         .simulateAutomaton(inputString),
-                    simulationResult:
-                        ref.read(automatonProvider).simulationResult,
+                    simulationResult: ref
+                        .read(automatonProvider)
+                        .simulationResult,
                     regexResult: ref.read(automatonProvider).regexResult,
                   ),
                 ),

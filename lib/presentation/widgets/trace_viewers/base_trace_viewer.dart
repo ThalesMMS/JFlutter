@@ -30,23 +30,27 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
     final steps = widget.result.steps;
     final isAccepted = widget.result.accepted;
     final color = isAccepted ? Colors.green : Colors.red;
-    final visibleCount =
-        _folded ? steps.length.clamp(0, _foldSize) : steps.length;
+    final visibleCount = _folded
+        ? steps.length.clamp(0, _foldSize)
+        : steps.length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(isAccepted ? Icons.check_circle : Icons.cancel,
-                color: color, size: 18),
+            Icon(
+              isAccepted ? Icons.check_circle : Icons.cancel,
+              color: color,
+              size: 18,
+            ),
             const SizedBox(width: 6),
             Text(
               widget.title,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: color,
-                  ),
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
             ),
             const Spacer(),
             if (steps.length > defaultFoldSize)
@@ -91,11 +95,10 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
             child: Text(
               '+${steps.length - visibleCount} more steps hidden',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.6),
-                  ),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
             ),
           ),
       ],

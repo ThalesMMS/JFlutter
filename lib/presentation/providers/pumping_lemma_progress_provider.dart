@@ -199,7 +199,8 @@ class PumpingLemmaProgressNotifier
 }
 
 /// Provider exposing the Pumping Lemma game progress state.
-final pumpingLemmaProgressProvider = StateNotifierProvider<
-    PumpingLemmaProgressNotifier, PumpingLemmaProgressState>(
-  (ref) => PumpingLemmaProgressNotifier(),
-);
+final pumpingLemmaProgressProvider =
+    StateNotifierProvider<
+      PumpingLemmaProgressNotifier,
+      PumpingLemmaProgressState
+    >((ref) => PumpingLemmaProgressNotifier());

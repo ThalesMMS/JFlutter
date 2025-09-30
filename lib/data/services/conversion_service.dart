@@ -20,7 +20,8 @@ class ConversionService {
 
       if (request.conversionType != ConversionType.nfaToDfa) {
         return ResultFactory.failure(
-            'Invalid conversion type for NFA to DFA conversion');
+          'Invalid conversion type for NFA to DFA conversion',
+        );
       }
 
       // Use the NFA to DFA converter
@@ -41,7 +42,8 @@ class ConversionService {
 
       if (request.conversionType != ConversionType.dfaMinimization) {
         return ResultFactory.failure(
-            'Invalid conversion type for DFA minimization');
+          'Invalid conversion type for DFA minimization',
+        );
       }
 
       // Use the DFA minimizer
@@ -62,7 +64,8 @@ class ConversionService {
 
       if (request.conversionType != ConversionType.regexToNfa) {
         return ResultFactory.failure(
-            'Invalid conversion type for regex to NFA conversion');
+          'Invalid conversion type for regex to NFA conversion',
+        );
       }
 
       // Use the regex to NFA converter
@@ -83,7 +86,8 @@ class ConversionService {
 
       if (request.conversionType != ConversionType.faToRegex) {
         return ResultFactory.failure(
-            'Invalid conversion type for FA to regex conversion');
+          'Invalid conversion type for FA to regex conversion',
+        );
       }
 
       // Use the FA to regex converter
@@ -104,12 +108,14 @@ class ConversionService {
 
       if (request.conversionType != ConversionType.grammarToPda) {
         return ResultFactory.failure(
-            'Invalid conversion type for grammar to PDA conversion');
+          'Invalid conversion type for grammar to PDA conversion',
+        );
       }
 
       // Use the grammar to PDA converter
-      final result =
-          GrammarToPDAConverter.convertGrammarToPDA(request.grammar!);
+      final result = GrammarToPDAConverter.convertGrammarToPDA(
+        request.grammar!,
+      );
       return result;
     } catch (e) {
       return ResultFactory.failure('Error converting grammar to PDA: $e');
@@ -126,16 +132,19 @@ class ConversionService {
 
       if (request.conversionType != ConversionType.grammarToPdaStandard) {
         return ResultFactory.failure(
-            'Invalid conversion type for grammar to PDA (standard) conversion');
+          'Invalid conversion type for grammar to PDA (standard) conversion',
+        );
       }
 
       // Use the grammar to PDA converter
-      final result =
-          GrammarToPDAConverter.convertGrammarToPDAStandard(request.grammar!);
+      final result = GrammarToPDAConverter.convertGrammarToPDAStandard(
+        request.grammar!,
+      );
       return result;
     } catch (e) {
       return ResultFactory.failure(
-          'Error converting grammar to PDA (standard): $e');
+        'Error converting grammar to PDA (standard): $e',
+      );
     }
   }
 
@@ -149,16 +158,19 @@ class ConversionService {
 
       if (request.conversionType != ConversionType.grammarToPdaGreibach) {
         return ResultFactory.failure(
-            'Invalid conversion type for grammar to PDA (Greibach) conversion');
+          'Invalid conversion type for grammar to PDA (Greibach) conversion',
+        );
       }
 
       // Use the grammar to PDA converter
-      final result =
-          GrammarToPDAConverter.convertGrammarToPDAGreibach(request.grammar!);
+      final result = GrammarToPDAConverter.convertGrammarToPDAGreibach(
+        request.grammar!,
+      );
       return result;
     } catch (e) {
       return ResultFactory.failure(
-          'Error converting grammar to PDA (Greibach): $e');
+        'Error converting grammar to PDA (Greibach): $e',
+      );
     }
   }
 

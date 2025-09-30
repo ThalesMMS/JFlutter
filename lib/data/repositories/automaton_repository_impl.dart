@@ -122,13 +122,15 @@ class AutomatonRepositoryImpl implements AutomatonRepository {
 
   CreateAutomatonRequest _convertEntityToRequest(AutomatonEntity automaton) {
     final states = automaton.states
-        .map((state) => StateData(
-              id: state.id,
-              name: state.name,
-              position: Point(state.x, state.y),
-              isInitial: state.isInitial || automaton.initialId == state.id,
-              isAccepting: state.isFinal,
-            ))
+        .map(
+          (state) => StateData(
+            id: state.id,
+            name: state.name,
+            position: Point(state.x, state.y),
+            isInitial: state.isInitial || automaton.initialId == state.id,
+            isAccepting: state.isFinal,
+          ),
+        )
         .toList();
 
     final transitions = <TransitionData>[];
@@ -140,11 +142,13 @@ class AutomatonRepositoryImpl implements AutomatonRepository {
       final fromStateId = parts[0];
       final symbol = parts[1];
       for (final toStateId in destinations) {
-        transitions.add(TransitionData(
-          fromStateId: fromStateId,
-          toStateId: toStateId,
-          symbol: symbol,
-        ));
+        transitions.add(
+          TransitionData(
+            fromStateId: fromStateId,
+            toStateId: toStateId,
+            symbol: symbol,
+          ),
+        );
       }
     });
 
@@ -162,14 +166,16 @@ class AutomatonRepositoryImpl implements AutomatonRepository {
 
   AutomatonEntity _convertFsaToEntity(FSA automaton) {
     final states = automaton.states
-        .map((state) => StateEntity(
-              id: state.id,
-              name: state.label,
-              x: state.position.x,
-              y: state.position.y,
-              isInitial: state.isInitial,
-              isFinal: state.isAccepting,
-            ))
+        .map(
+          (state) => StateEntity(
+            id: state.id,
+            name: state.label,
+            x: state.position.x,
+            y: state.position.y,
+            isInitial: state.isInitial,
+            isFinal: state.isAccepting,
+          ),
+        )
         .toList();
 
     final transitions = <String, List<String>>{};
@@ -192,8 +198,8 @@ class AutomatonRepositoryImpl implements AutomatonRepository {
     final type = automaton.hasEpsilonTransitions
         ? AutomatonType.nfaLambda
         : automaton.isDeterministic
-            ? AutomatonType.dfa
-            : AutomatonType.nfa;
+        ? AutomatonType.dfa
+        : AutomatonType.nfa;
 
     return AutomatonEntity(
       id: automaton.id,
@@ -209,13 +215,15 @@ class AutomatonRepositoryImpl implements AutomatonRepository {
 
   FSA _convertEntityToFsa(AutomatonEntity automaton) {
     final states = automaton.states
-        .map((state) => State(
-              id: state.id,
-              label: state.name,
-              position: Vector2(state.x, state.y),
-              isInitial: state.isInitial || automaton.initialId == state.id,
-              isAccepting: state.isFinal,
-            ))
+        .map(
+          (state) => State(
+            id: state.id,
+            label: state.name,
+            position: Vector2(state.x, state.y),
+            isInitial: state.isInitial || automaton.initialId == state.id,
+            isAccepting: state.isFinal,
+          ),
+        )
         .toSet();
 
     final stateById = {for (final state in states) state.id: state};
@@ -244,14 +252,16 @@ class AutomatonRepositoryImpl implements AutomatonRepository {
           throw StateError('Unknown to state $destination');
         }
 
-        transitions.add(FSATransition(
-          id: 't${automaton.id}_$transitionIndex',
-          fromState: fromState,
-          toState: toState,
-          label: symbol,
-          inputSymbols: isLambda ? <String>{} : {symbol},
-          lambdaSymbol: isLambda ? symbol : null,
-        ));
+        transitions.add(
+          FSATransition(
+            id: 't${automaton.id}_$transitionIndex',
+            fromState: fromState,
+            toState: toState,
+            label: symbol,
+            inputSymbols: isLambda ? <String>{} : {symbol},
+            lambdaSymbol: isLambda ? symbol : null,
+          ),
+        );
         transitionIndex++;
       }
     });
@@ -309,11 +319,6 @@ class AutomatonRepositoryImpl implements AutomatonRepository {
 
     const padding = 50.0;
 
-    return Rect(
-      minX - padding,
-      minY - padding,
-      maxX + padding,
-      maxY + padding,
-    );
+    return Rect(minX - padding, minY - padding, maxX + padding, maxY + padding);
   }
 }

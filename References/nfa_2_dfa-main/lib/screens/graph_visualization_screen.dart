@@ -180,7 +180,9 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
     );
     _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
-          parent: _entryAnimationController, curve: Curves.elasticOut),
+        parent: _entryAnimationController,
+        curve: Curves.elasticOut,
+      ),
     );
 
     _simulationAnimationController = AnimationController(
@@ -189,18 +191,25 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
     );
     _simulationProgress = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
-          parent: _simulationAnimationController, curve: Curves.easeInOut),
+        parent: _simulationAnimationController,
+        curve: Curves.easeInOut,
+      ),
     );
 
     _highlightAnimationController = AnimationController(
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-    _highlightColor = ColorTween(
-      begin: Colors.orange.shade300,
-      end: Colors.orange.shade600,
-    ).animate(CurvedAnimation(
-        parent: _highlightAnimationController, curve: Curves.easeInOut));
+    _highlightColor =
+        ColorTween(
+          begin: Colors.orange.shade300,
+          end: Colors.orange.shade600,
+        ).animate(
+          CurvedAnimation(
+            parent: _highlightAnimationController,
+            curve: Curves.easeInOut,
+          ),
+        );
 
     _graphAnimationController = GraphAnimationController();
 
@@ -378,8 +387,9 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
           ),
         ],
       ),
-      child:
-          _selectedState != null ? _buildStateDetails() : _buildAutomatonInfo(),
+      child: _selectedState != null
+          ? _buildStateDetails()
+          : _buildAutomatonInfo(),
     );
   }
 
@@ -390,7 +400,10 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
         _buildInfoChip('حالات', '${_getStates().length}', Icons.bubble_chart),
         _buildInfoChip('الفبا', '${_getAlphabet().length}', Icons.translate),
         _buildInfoChip(
-            'نوع', widget.automaton is NFA ? 'NFA' : 'DFA', Icons.device_hub),
+          'نوع',
+          widget.automaton is NFA ? 'NFA' : 'DFA',
+          Icons.device_hub,
+        ),
       ],
     );
   }
@@ -414,7 +427,9 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
         'حالت انتخاب شده: $_selectedState\n${_getStateInfo(_selectedState!)}',
         textAlign: TextAlign.center,
         style: TextStyle(
-            fontWeight: FontWeight.bold, color: _currentTheme.textColor),
+          fontWeight: FontWeight.bold,
+          color: _currentTheme.textColor,
+        ),
       ),
     );
   }
@@ -425,8 +440,10 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
       decoration: BoxDecoration(
         color: _currentTheme.primaryColor.withOpacity(0.1),
         border: Border(
-            bottom:
-                BorderSide(color: _currentTheme.primaryColor.withOpacity(0.3))),
+          bottom: BorderSide(
+            color: _currentTheme.primaryColor.withOpacity(0.3),
+          ),
+        ),
       ),
       child: Column(
         children: [
@@ -436,7 +453,9 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
                 child: Text(
                   'ورودی: $_simulationInput',
                   style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               Text(
@@ -496,8 +515,10 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
         onScaleStart: (details) {},
         onScaleUpdate: (details) {
           setState(() {
-            _scaleFactor =
-                math.max(0.5, math.min(3.0, _scaleFactor * details.scale));
+            _scaleFactor = math.max(
+              0.5,
+              math.min(3.0, _scaleFactor * details.scale),
+            );
           });
         },
         onPanStart: (details) {
@@ -513,8 +534,8 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
             setState(() {
               _manualPositions[_draggedState!] =
                   (_manualPositions[_draggedState!] ??
-                          _getEffectivePositions()[_draggedState!]!) +
-                      details.delta / _scaleFactor;
+                      _getEffectivePositions()[_draggedState!]!) +
+                  details.delta / _scaleFactor;
             });
           } else {
             setState(() {
@@ -690,18 +711,21 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
     final alphabet = _getAlphabet().toSet();
     for (int i = 0; i < _simulationInput.length; i++) {
       if (!alphabet.contains(_simulationInput[i])) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('نماد "${_simulationInput[i]}" در الفبا موجود نیست'),
-          backgroundColor: Colors.red,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('نماد "${_simulationInput[i]}" در الفبا موجود نیست'),
+            backgroundColor: Colors.red,
+          ),
+        );
         return;
       }
     }
 
     Set<String> initialStates = {_getStartState()};
     if (widget.automaton is NFA) {
-      initialStates =
-          _getEpsilonClosureForSet({_getStartState()}, widget.automaton as NFA);
+      initialStates = _getEpsilonClosureForSet({
+        _getStartState(),
+      }, widget.automaton as NFA);
     }
 
     setState(() {
@@ -787,8 +811,9 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
 
   void _checkAcceptance() {
     final finalStates = _getFinalStates();
-    _simulationAccepted =
-        _currentStates.any((state) => finalStates.contains(state));
+    _simulationAccepted = _currentStates.any(
+      (state) => finalStates.contains(state),
+    );
   }
 
   void _stopSimulation() {
@@ -1067,8 +1092,9 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
 
   Future<void> _exportGraph() async {
     try {
-      final boundary = _repaintBoundaryKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
+      final boundary =
+          _repaintBoundaryKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
       if (boundary != null) {
         final image = await boundary.toImage(pixelRatio: 2.0);
         final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
@@ -1086,17 +1112,18 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطا در ذخیره تصویر: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('خطا در ذخیره تصویر: $e')));
       }
     }
   }
 
   Future<void> _shareGraph() async {
     try {
-      final boundary = _repaintBoundaryKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
+      final boundary =
+          _repaintBoundaryKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
       if (boundary != null) {
         final image = await boundary.toImage(pixelRatio: 2.0);
         final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
@@ -1105,15 +1132,16 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
           final file = File('${directory.path}/automaton_graph.png');
           await file.writeAsBytes(byteData.buffer.asUint8List());
 
-          await Share.shareXFiles([XFile(file.path)],
-              text: 'نمایش گرافیکی اتوماتا');
+          await Share.shareXFiles([
+            XFile(file.path),
+          ], text: 'نمایش گرافیکی اتوماتا');
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطا در اشتراک‌گذاری: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('خطا در اشتراک‌گذاری: $e')));
       }
     }
   }
@@ -1187,8 +1215,14 @@ class SimpleAutomatonPainter extends CustomPainter {
     }
   }
 
-  void _drawArrow(Canvas canvas, Offset start, Offset end, String symbol,
-      Paint paint, Paint arrowPaint) {
+  void _drawArrow(
+    Canvas canvas,
+    Offset start,
+    Offset end,
+    String symbol,
+    Paint paint,
+    Paint arrowPaint,
+  ) {
     // Calculate edge points on circle circumference
     final direction = (end - start).normalize();
     final adjustedStart = start + direction * (nodeSize * scaleFactor);
@@ -1201,13 +1235,15 @@ class SimpleAutomatonPainter extends CustomPainter {
     final arrowSize = 8.0 * scaleFactor;
     final arrowAngle = math.pi / 6;
 
-    final arrowPoint1 = adjustedEnd +
+    final arrowPoint1 =
+        adjustedEnd +
         Offset(
           -arrowSize * math.cos(direction.direction - arrowAngle),
           -arrowSize * math.sin(direction.direction - arrowAngle),
         );
 
-    final arrowPoint2 = adjustedEnd +
+    final arrowPoint2 =
+        adjustedEnd +
         Offset(
           -arrowSize * math.cos(direction.direction + arrowAngle),
           -arrowSize * math.sin(direction.direction + arrowAngle),
@@ -1247,7 +1283,10 @@ class SimpleAutomatonPainter extends CustomPainter {
 
     // Draw label
     _drawTransitionLabel(
-        canvas, loopCenter + Offset(0, -loopRadius - 10), symbol);
+      canvas,
+      loopCenter + Offset(0, -loopRadius - 10),
+      symbol,
+    );
   }
 
   void _drawTransitionLabel(Canvas canvas, Offset position, String symbol) {
@@ -1317,11 +1356,7 @@ class SimpleAutomatonPainter extends CustomPainter {
     }
 
     // Draw main circle
-    canvas.drawCircle(
-      center,
-      radius,
-      Paint()..color = nodeColor,
-    );
+    canvas.drawCircle(center, radius, Paint()..color = nodeColor);
 
     // Draw border
     canvas.drawCircle(

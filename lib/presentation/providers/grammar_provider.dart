@@ -64,8 +64,8 @@ const _noErrorUpdate = Object();
 /// Provider notifier responsible for updating grammar state and running conversions.
 class GrammarProvider extends StateNotifier<GrammarState> {
   GrammarProvider({ConversionService? conversionService})
-      : _conversionService = conversionService ?? ConversionService(),
-        super(GrammarState.initial());
+    : _conversionService = conversionService ?? ConversionService(),
+      super(GrammarState.initial());
 
   final ConversionService _conversionService;
 
@@ -120,10 +120,7 @@ class GrammarProvider extends StateNotifier<GrammarState> {
     final productions = [...state.productions];
     productions[index] = updated;
 
-    state = state.copyWith(
-      productions: productions,
-      error: null,
-    );
+    state = state.copyWith(productions: productions, error: null);
   }
 
   void deleteProduction(String id) {
@@ -211,7 +208,8 @@ class GrammarProvider extends StateNotifier<GrammarState> {
   Future<Result<FSA>> convertToAutomaton() async {
     if (state.productions.isEmpty) {
       return ResultFactory.failure(
-          'Add at least one production before converting.');
+        'Add at least one production before converting.',
+      );
     }
 
     final grammar = buildGrammar();
@@ -224,10 +222,7 @@ class GrammarProvider extends StateNotifier<GrammarState> {
     if (result.isSuccess) {
       state = state.copyWith(isConverting: false, error: null);
     } else {
-      state = state.copyWith(
-        isConverting: false,
-        error: result.error,
-      );
+      state = state.copyWith(isConverting: false, error: result.error);
     }
 
     return result;
@@ -243,7 +238,8 @@ class GrammarProvider extends StateNotifier<GrammarState> {
 }
 
 /// Global grammar provider instance.
-final grammarProvider =
-    StateNotifierProvider<GrammarProvider, GrammarState>((ref) {
+final grammarProvider = StateNotifierProvider<GrammarProvider, GrammarState>((
+  ref,
+) {
   return getIt<GrammarProvider>();
 });

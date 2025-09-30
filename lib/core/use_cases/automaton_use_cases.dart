@@ -159,16 +159,18 @@ class RemoveStateUseCase {
     required String stateId,
   }) async {
     try {
-      final updatedStates =
-          automaton.states.where((state) => state.id != stateId).toList();
+      final updatedStates = automaton.states
+          .where((state) => state.id != stateId)
+          .toList();
 
       // Remove transitions involving this state
       final updatedTransitions = <String, List<String>>{};
       for (final entry in automaton.transitions.entries) {
         final parts = entry.key.split('|');
         if (parts.length == 2 && parts[0] != stateId) {
-          final filteredDestinations =
-              entry.value.where((dest) => dest != stateId).toList();
+          final filteredDestinations = entry.value
+              .where((dest) => dest != stateId)
+              .toList();
           if (filteredDestinations.isNotEmpty) {
             updatedTransitions[entry.key] = filteredDestinations;
           }
@@ -208,8 +210,9 @@ class AddTransitionUseCase {
   }) async {
     try {
       final transitionKey = '$fromStateId|$symbol';
-      final updatedTransitions =
-          Map<String, List<String>>.from(automaton.transitions);
+      final updatedTransitions = Map<String, List<String>>.from(
+        automaton.transitions,
+      );
 
       if (updatedTransitions.containsKey(transitionKey)) {
         if (!updatedTransitions[transitionKey]!.contains(toStateId)) {
@@ -249,8 +252,9 @@ class RemoveTransitionUseCase {
   }) async {
     try {
       final transitionKey = '$fromStateId|$symbol';
-      final updatedTransitions =
-          Map<String, List<String>>.from(automaton.transitions);
+      final updatedTransitions = Map<String, List<String>>.from(
+        automaton.transitions,
+      );
 
       if (updatedTransitions.containsKey(transitionKey)) {
         if (toStateId != null) {

@@ -77,14 +77,7 @@ abstract class Transition {
 
   @override
   int get hashCode {
-    return Object.hash(
-      id,
-      fromState,
-      toState,
-      label,
-      controlPoint,
-      type,
-    );
+    return Object.hash(id, fromState, toState, label, controlPoint, type);
   }
 
   @override

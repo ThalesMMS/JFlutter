@@ -8,12 +8,12 @@ import '../result.dart';
 /// Simulates Finite Automata (FA) with input strings
 class AutomatonSimulator {
   /// Simulates a DFA with an input string (deterministic, no epsilon)
-  static Result<SimulationResult> simulateDFA(
+  static Future<Result<SimulationResult>> simulateDFA(
     FSA automaton,
     String inputString, {
     bool stepByStep = false,
     Duration timeout = const Duration(seconds: 5),
-  }) {
+  }) async {
     try {
       final stopwatch = Stopwatch()..start();
 
@@ -26,7 +26,8 @@ class AutomatonSimulator {
       // Validate DFA constraints
       if (automaton.isNondeterministic || automaton.hasEpsilonTransitions) {
         return const Failure(
-            'DFA required: automaton must be deterministic and epsilon-free');
+          'DFA required: automaton must be deterministic and epsilon-free',
+        );
       }
 
       // Handle empty automaton
@@ -40,7 +41,12 @@ class AutomatonSimulator {
       }
 
       // Simulate as DFA
-      final result = _simulateDFA(automaton, inputString, stepByStep, timeout);
+      final result = await _simulateDFA(
+        automaton,
+        inputString,
+        stepByStep,
+        timeout,
+      );
       stopwatch.stop();
 
       // Update execution time
@@ -53,14 +59,18 @@ class AutomatonSimulator {
   }
 
   /// Backwards-compatible generic simulate: routes to DFA simulation.
-  static Result<SimulationResult> simulate(
+  static Future<Result<SimulationResult>> simulate(
     FSA automaton,
     String inputString, {
     bool stepByStep = false,
     Duration timeout = const Duration(seconds: 5),
-  }) {
-    return simulateDFA(automaton, inputString,
-        stepByStep: stepByStep, timeout: timeout);
+  }) async {
+    return await simulateDFA(
+      automaton,
+      inputString,
+      stepByStep: stepByStep,
+      timeout: timeout,
+    );
   }
 
   /// Validates the input automaton and string
@@ -95,29 +105,34 @@ class AutomatonSimulator {
   }
 
   /// Simulates a DFA step-by-step
-  static SimulationResult _simulateDFA(
+  static Future<SimulationResult> _simulateDFA(
     FSA automaton,
     String inputString,
     bool stepByStep,
     Duration timeout,
-  ) {
+  ) async {
     final steps = <SimulationStep>[];
     final startTime = DateTime.now();
 
     // Initialize simulation with a single current state
     var currentState = automaton.initialState!;
-    var remainingInput = inputString;
     int stepNumber = 0;
 
     // Add initial step
-    steps.add(SimulationStep.initial(
-      initialState: automaton.initialState!.id,
-      inputString: inputString,
-    ));
+    steps.add(
+      SimulationStep.initial(
+        initialState: automaton.initialState!.id,
+        inputString: inputString,
+      ),
+    );
 
-    // Process each input symbol
-    while (remainingInput.isNotEmpty) {
+    // Process each input symbol with batching for large inputs
+    final inputSymbols = inputString.split('');
+    var processedCount = 0;
+
+    for (final symbol in inputSymbols) {
       stepNumber++;
+      processedCount++;
 
       // Check timeout
       if (DateTime.now().difference(startTime) > timeout) {
@@ -127,9 +142,6 @@ class AutomatonSimulator {
           executionTime: DateTime.now().difference(startTime),
         );
       }
-
-      final symbol = remainingInput[0];
-      remainingInput = remainingInput.substring(1);
 
       // Find next state deterministically
       final transitions = automaton
@@ -149,7 +161,7 @@ class AutomatonSimulator {
       final nextState = transition.toState;
 
       // Check for infinite loop (simplified)
-      if (steps.length > 1000) {
+      if (steps.length > 10000) {
         return SimulationResult.infiniteLoop(
           inputString: inputString,
           steps: steps,
@@ -159,29 +171,39 @@ class AutomatonSimulator {
 
       // Add step
       if (stepByStep) {
-        steps.add(SimulationStep.fsa(
-          currentState: currentState.id,
-          remainingInput: remainingInput,
-          usedTransition: 'δ(${currentState.id}, $symbol) = ${nextState.id}',
-          stepNumber: stepNumber,
-          consumedInput: symbol,
-        ));
+        steps.add(
+          SimulationStep.fsa(
+            currentState: currentState.id,
+            remainingInput: inputSymbols.skip(processedCount).join(''),
+            usedTransition: 'δ(${currentState.id}, $symbol) = ${nextState.id}',
+            stepNumber: stepNumber,
+            consumedInput: symbol,
+          ),
+        );
       }
 
       currentState = nextState;
+
+      // Batch processing for large simulations (>1000 steps)
+      if (processedCount > 1000 && processedCount % 500 == 0) {
+        // Yield to prevent UI blocking
+        await Future.delayed(Duration.zero);
+      }
     }
 
     // Check if any current state is accepting
     final isAccepted = automaton.acceptingStates.contains(currentState);
 
     // Add final step
-    steps.add(SimulationStep.finalStep(
-      finalState: currentState.id,
-      remainingInput: remainingInput,
-      stackContents: '',
-      tapeContents: '',
-      stepNumber: stepNumber + 1,
-    ));
+    steps.add(
+      SimulationStep.finalStep(
+        finalState: currentState.id,
+        remainingInput: '',
+        stackContents: '',
+        tapeContents: '',
+        stepNumber: stepNumber + 1,
+      ),
+    );
 
     if (isAccepted) {
       return SimulationResult.success(
@@ -200,12 +222,12 @@ class AutomatonSimulator {
   }
 
   /// Simulates an NFA with epsilon transitions
-  static Result<SimulationResult> simulateNFA(
+  static Future<Result<SimulationResult>> simulateNFA(
     FSA nfa,
     String inputString, {
     bool stepByStep = false,
     Duration timeout = const Duration(seconds: 5),
-  }) {
+  }) async {
     try {
       final stopwatch = Stopwatch()..start();
 
@@ -226,7 +248,7 @@ class AutomatonSimulator {
       }
 
       // Simulate the NFA
-      final result = _simulateNFA(nfa, inputString, stepByStep, timeout);
+      final result = await _simulateNFA(nfa, inputString, stepByStep, timeout);
       stopwatch.stop();
 
       // Update execution time
@@ -239,12 +261,12 @@ class AutomatonSimulator {
   }
 
   /// Simulates an NFA with epsilon transitions
-  static SimulationResult _simulateNFA(
+  static Future<SimulationResult> _simulateNFA(
     FSA nfa,
     String inputString,
     bool stepByStep,
     Duration timeout,
-  ) {
+  ) async {
     final steps = <SimulationStep>[];
     final startTime = DateTime.now();
 
@@ -258,10 +280,12 @@ class AutomatonSimulator {
         ? currentStates.first.id
         : '{${currentStates.map((s) => s.id).join(',')}}';
 
-    steps.add(SimulationStep.initial(
-      initialState: initialStateId,
-      inputString: inputString,
-    ));
+    steps.add(
+      SimulationStep.initial(
+        initialState: initialStateId,
+        inputString: inputString,
+      ),
+    );
 
     // Process each input symbol
     while (remainingInput.isNotEmpty) {
@@ -306,13 +330,15 @@ class AutomatonSimulator {
             ? currentStates.first.id
             : '{${currentStates.map((s) => s.id).join(',')}}';
 
-        steps.add(SimulationStep.fsa(
-          currentState: currentStateId,
-          remainingInput: remainingInput,
-          usedTransition: symbol,
-          stepNumber: stepNumber,
-          consumedInput: symbol,
-        ));
+        steps.add(
+          SimulationStep.fsa(
+            currentState: currentStateId,
+            remainingInput: remainingInput,
+            usedTransition: symbol,
+            stepNumber: stepNumber,
+            consumedInput: symbol,
+          ),
+        );
       }
 
       currentStates = nextStates;
@@ -329,21 +355,24 @@ class AutomatonSimulator {
     }
 
     // Check if any current state is accepting
-    final isAccepted =
-        currentStates.intersection(nfa.acceptingStates).isNotEmpty;
+    final isAccepted = currentStates
+        .intersection(nfa.acceptingStates)
+        .isNotEmpty;
 
     // Add final step
     final finalStateId = currentStates.length == 1
         ? currentStates.first.id
         : '{${currentStates.map((s) => s.id).join(',')}}';
 
-    steps.add(SimulationStep.finalStep(
-      finalState: finalStateId,
-      remainingInput: remainingInput,
-      stackContents: '',
-      tapeContents: '',
-      stepNumber: stepNumber + 1,
-    ));
+    steps.add(
+      SimulationStep.finalStep(
+        finalState: finalStateId,
+        remainingInput: remainingInput,
+        stackContents: '',
+        tapeContents: '',
+        stepNumber: stepNumber + 1,
+      ),
+    );
 
     if (isAccepted) {
       return SimulationResult.success(
@@ -362,8 +391,8 @@ class AutomatonSimulator {
   }
 
   /// Tests if an automaton accepts a specific string
-  static Result<bool> accepts(FSA automaton, String inputString) {
-    final simulationResult = simulate(automaton, inputString);
+  static Future<Result<bool>> accepts(FSA automaton, String inputString) async {
+    final simulationResult = await simulate(automaton, inputString);
     if (!simulationResult.isSuccess) {
       return Failure(simulationResult.error!);
     }
@@ -372,8 +401,8 @@ class AutomatonSimulator {
   }
 
   /// Tests if an automaton rejects a specific string
-  static Result<bool> rejects(FSA automaton, String inputString) {
-    final acceptsResult = accepts(automaton, inputString);
+  static Future<Result<bool>> rejects(FSA automaton, String inputString) async {
+    final acceptsResult = await accepts(automaton, inputString);
     if (!acceptsResult.isSuccess) {
       return Failure(acceptsResult.error!);
     }
@@ -382,20 +411,22 @@ class AutomatonSimulator {
   }
 
   /// Finds all strings of a given length that the automaton accepts
-  static Result<Set<String>> findAcceptedStrings(
+  static Future<Result<Set<String>>> findAcceptedStrings(
     FSA automaton,
     int maxLength, {
     int maxResults = 100,
-  }) {
+  }) async {
     try {
       final acceptedStrings = <String>{};
       final alphabet = automaton.alphabet.toList();
 
       // Generate all possible strings up to maxLength
-      for (int length = 0;
-          length <= maxLength && acceptedStrings.length < maxResults;
-          length++) {
-        _generateStrings(
+      for (
+        int length = 0;
+        length <= maxLength && acceptedStrings.length < maxResults;
+        length++
+      ) {
+        await _generateStrings(
           automaton,
           alphabet,
           '',
@@ -412,18 +443,18 @@ class AutomatonSimulator {
   }
 
   /// Recursively generates strings and tests them
-  static void _generateStrings(
+  static Future<void> _generateStrings(
     FSA automaton,
     List<String> alphabet,
     String currentString,
     int remainingLength,
     Set<String> acceptedStrings,
     int maxResults,
-  ) {
+  ) async {
     if (acceptedStrings.length >= maxResults) return;
 
     if (remainingLength == 0) {
-      final acceptsResult = accepts(automaton, currentString);
+      final acceptsResult = await accepts(automaton, currentString);
       if (acceptsResult.isSuccess && acceptsResult.data!) {
         acceptedStrings.add(currentString);
       }
@@ -431,7 +462,7 @@ class AutomatonSimulator {
     }
 
     for (final symbol in alphabet) {
-      _generateStrings(
+      await _generateStrings(
         automaton,
         alphabet,
         currentString + symbol,
@@ -443,20 +474,22 @@ class AutomatonSimulator {
   }
 
   /// Finds all strings of a given length that the automaton rejects
-  static Result<Set<String>> findRejectedStrings(
+  static Future<Result<Set<String>>> findRejectedStrings(
     FSA automaton,
     int maxLength, {
     int maxResults = 100,
-  }) {
+  }) async {
     try {
       final rejectedStrings = <String>{};
       final alphabet = automaton.alphabet.toList();
 
       // Generate all possible strings up to maxLength
-      for (int length = 0;
-          length <= maxLength && rejectedStrings.length < maxResults;
-          length++) {
-        _generateRejectedStrings(
+      for (
+        int length = 0;
+        length <= maxLength && rejectedStrings.length < maxResults;
+        length++
+      ) {
+        await _generateRejectedStrings(
           automaton,
           alphabet,
           '',
@@ -473,18 +506,18 @@ class AutomatonSimulator {
   }
 
   /// Recursively generates strings and tests them for rejection
-  static void _generateRejectedStrings(
+  static Future<void> _generateRejectedStrings(
     FSA automaton,
     List<String> alphabet,
     String currentString,
     int remainingLength,
     Set<String> rejectedStrings,
     int maxResults,
-  ) {
+  ) async {
     if (rejectedStrings.length >= maxResults) return;
 
     if (remainingLength == 0) {
-      final acceptsResult = accepts(automaton, currentString);
+      final acceptsResult = await accepts(automaton, currentString);
       if (acceptsResult.isSuccess && !acceptsResult.data!) {
         rejectedStrings.add(currentString);
       }
@@ -492,7 +525,7 @@ class AutomatonSimulator {
     }
 
     for (final symbol in alphabet) {
-      _generateRejectedStrings(
+      await _generateRejectedStrings(
         automaton,
         alphabet,
         currentString + symbol,

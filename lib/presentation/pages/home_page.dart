@@ -119,11 +119,10 @@ class _HomePageState extends ConsumerState<HomePage> {
               Text(
                 _getCurrentPageDescription(currentIndex),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withOpacity(0.7),
-                    ),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.7),
+                ),
               ),
           ],
         ),
@@ -196,9 +195,9 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     final automatonState = ref.read(automatonProvider);
     if (automatonState.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(automatonState.error!)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(automatonState.error!)));
       return;
     }
 
@@ -213,18 +212,14 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   void _showHelpDialog(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const HelpPage(),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => const HelpPage()));
   }
 
   void _showSettingsDialog(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => SettingsPage(),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => SettingsPage()));
   }
 }

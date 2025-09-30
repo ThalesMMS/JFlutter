@@ -52,15 +52,15 @@ class PrologGrammarDefinition extends GrammarDefinition {
   }
 
   Parser<String> variableToken() => ref2(
-        token,
-        pattern('A-Z_') & pattern('A-Za-z0-9_').star(),
-        'Variable expected',
-      );
+    token,
+    pattern('A-Z_') & pattern('A-Za-z0-9_').star(),
+    'Variable expected',
+  );
   Parser<String> valueToken() => ref2(
-        token,
-        pattern('a-z') & pattern('A-Za-z0-9_').star(),
-        'Value expected',
-      );
+    token,
+    pattern('a-z') & pattern('A-Za-z0-9_').star(),
+    'Value expected',
+  );
   Parser<String> openParenToken() => ref1(token, '(');
   Parser<String> closeParentToken() => ref1(token, ')');
   Parser<String> commaToken() => ref1(token, ',');

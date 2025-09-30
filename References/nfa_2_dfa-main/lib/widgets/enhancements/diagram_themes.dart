@@ -12,8 +12,9 @@ class DiagramThemeManager {
   DiagramThemeManager._();
 
   DiagramTheme _currentTheme = DiagramThemes.defaultLight;
-  final ValueNotifier<DiagramTheme> _themeNotifier =
-      ValueNotifier(DiagramThemes.defaultLight);
+  final ValueNotifier<DiagramTheme> _themeNotifier = ValueNotifier(
+    DiagramThemes.defaultLight,
+  );
 
   /// تم فعلی
   DiagramTheme get currentTheme => _currentTheme;
@@ -36,8 +37,9 @@ class DiagramThemeManager {
     final savedThemeName = await _loadThemePreference();
     if (savedThemeName != null) {
       final theme = DiagramThemes.getAllThemes().firstWhere(
-          (t) => t.name == savedThemeName,
-          orElse: () => DiagramThemes.defaultLight);
+        (t) => t.name == savedThemeName,
+        orElse: () => DiagramThemes.defaultLight,
+      );
       setTheme(theme, animate: false);
     }
   }
@@ -198,11 +200,7 @@ enum ThemeCategory {
 }
 
 /// سطح دسترسی‌پذیری
-enum AccessibilityLevel {
-  normal,
-  enhanced,
-  highContrast,
-}
+enum AccessibilityLevel { normal, enhanced, highContrast }
 
 /// مجموعه تم‌های از پیش تعریف شده
 class DiagramThemes {
@@ -582,16 +580,13 @@ class _ThemeSelectorState extends State<ThemeSelector>
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.palette,
-            color: Theme.of(context).primaryColor,
-          ),
+          Icon(Icons.palette, color: Theme.of(context).primaryColor),
           const SizedBox(width: 12),
           Text(
             'Select Theme',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
           ),
           const Spacer(),
           if (widget.allowCustomThemes)
@@ -660,8 +655,9 @@ class _ThemeSelectorState extends State<ThemeSelector>
           color: theme.backgroundColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color:
-                isSelected ? theme.primaryColor : Colors.grey.withOpacity(0.3),
+            color: isSelected
+                ? theme.primaryColor
+                : Colors.grey.withOpacity(0.3),
             width: isSelected ? 3 : 1,
           ),
           boxShadow: [
@@ -675,9 +671,7 @@ class _ThemeSelectorState extends State<ThemeSelector>
         child: Stack(
           children: [
             // پیش‌نمایش تم
-            Positioned.fill(
-              child: _buildThemePreview(theme),
-            ),
+            Positioned.fill(child: _buildThemePreview(theme)),
 
             // نام تم
             Positioned(
@@ -745,11 +739,7 @@ class _ThemeSelectorState extends State<ThemeSelector>
                     shape: BoxShape.circle,
                     color: theme.primaryColor,
                   ),
-                  child: const Icon(
-                    Icons.check,
-                    size: 16,
-                    color: Colors.white,
-                  ),
+                  child: const Icon(Icons.check, size: 16, color: Colors.white),
                 ),
               ),
           ],
@@ -759,9 +749,7 @@ class _ThemeSelectorState extends State<ThemeSelector>
   }
 
   Widget _buildThemePreview(DiagramTheme theme) {
-    return CustomPaint(
-      painter: ThemePreviewPainter(theme),
-    );
+    return CustomPaint(painter: ThemePreviewPainter(theme));
   }
 
   String _getCategoryDisplayName(ThemeCategory category) {

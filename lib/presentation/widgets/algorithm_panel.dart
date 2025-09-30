@@ -63,9 +63,9 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
             children: [
               Text(
                 'Algorithms',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
 
@@ -197,9 +197,9 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
       children: [
         Text(
           'Regex to NFA',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
         Row(
@@ -256,18 +256,15 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           border: Border.all(
-            color: isCurrentAlgorithm
-                ? color
-                : color.withValues(alpha: 0.3),
+            color: isCurrentAlgorithm ? color : color.withValues(alpha: 0.3),
             width: isCurrentAlgorithm ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(8),
           color: isCurrentAlgorithm
               ? color.withValues(alpha: 0.1)
               : isDisabled
-                  ? colorScheme.surfaceContainerHighest
-                      .withValues(alpha: 0.5)
-                  : null,
+              ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
+              : null,
         ),
         child: Row(
           children: [
@@ -296,11 +293,11 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: isDisabled
-                              ? colorScheme.outline.withValues(alpha: 0.5)
-                              : color,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      color: isDisabled
+                          ? colorScheme.outline.withValues(alpha: 0.5)
+                          : color,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -308,10 +305,10 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                         ? _executionStatus!
                         : description,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: isDisabled
-                              ? colorScheme.outline.withValues(alpha: 0.5)
-                              : colorScheme.onSurface.withValues(alpha: 0.7),
-                        ),
+                      color: isDisabled
+                          ? colorScheme.outline.withValues(alpha: 0.5)
+                          : colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
                   ),
                 ],
               ),
@@ -320,9 +317,9 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
               Text(
                 '${(_executionProgress * 100).toInt()}%',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: color,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
               )
             else
               Icon(
@@ -358,19 +355,18 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
               const SizedBox(width: 8),
               Text(
                 'Executing $_currentAlgorithm',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
               ),
             ],
           ),
           const SizedBox(height: 12),
           LinearProgressIndicator(
             value: _executionProgress,
-            backgroundColor: Theme.of(context)
-                .colorScheme
-                .outline
-                .withValues(alpha: 0.2),
+            backgroundColor: Theme.of(
+              context,
+            ).colorScheme.outline.withValues(alpha: 0.2),
             valueColor: AlwaysStoppedAnimation<Color>(
               Theme.of(context).colorScheme.primary,
             ),
@@ -397,9 +393,9 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
         children: [
           Text(
             'Algorithm Steps',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 12),
           SizedBox(
@@ -416,20 +412,18 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: isCurrentStep
-                        ? Theme.of(context)
-                            .colorScheme
-                            .primaryContainer
-                            .withValues(alpha: 0.3)
+                        ? Theme.of(
+                            context,
+                          ).colorScheme.primaryContainer.withValues(alpha: 0.3)
                         : isCompleted
-                            ? Theme.of(context).colorScheme.surface
-                            : null,
+                        ? Theme.of(context).colorScheme.surface
+                        : null,
                     border: Border.all(
                       color: isCurrentStep
                           ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context)
-                              .colorScheme
-                              .outline
-                              .withValues(alpha: 0.2),
+                          : Theme.of(
+                              context,
+                            ).colorScheme.outline.withValues(alpha: 0.2),
                     ),
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -440,14 +434,16 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                         backgroundColor: isCompleted
                             ? Colors.green
                             : isCurrentStep
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context)
-                                    .colorScheme
-                                    .outline
-                                    .withValues(alpha: 0.3),
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(
+                                context,
+                              ).colorScheme.outline.withValues(alpha: 0.3),
                         child: isCompleted
-                            ? const Icon(Icons.check,
-                                size: 16, color: Colors.white)
+                            ? const Icon(
+                                Icons.check,
+                                size: 16,
+                                color: Colors.white,
+                              )
                             : Text(
                                 '${index + 1}',
                                 style: TextStyle(
@@ -466,12 +462,8 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                           children: [
                             Text(
                               step.title,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(fontWeight: FontWeight.w600),
                             ),
                             const SizedBox(height: 4),
                             Text(
@@ -507,7 +499,8 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
     if (widget.onCompareEquivalence == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Load a DFA before comparing equivalence.')),
+          content: Text('Load a DFA before comparing equivalence.'),
+        ),
       );
       return;
     }
@@ -544,8 +537,9 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
       _currentStepIndex = 0;
     });
 
-    final loadResult =
-        await _fileService.loadAutomatonFromJFLAP(selection.files.single.path!);
+    final loadResult = await _fileService.loadAutomatonFromJFLAP(
+      selection.files.single.path!,
+    );
 
     if (!mounted) return;
 
@@ -556,7 +550,8 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text(loadResult.error ?? 'Unable to load automaton.')),
+          content: Text(loadResult.error ?? 'Unable to load automaton.'),
+        ),
       );
       return;
     }
@@ -582,9 +577,9 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
         _isExecuting = false;
         _executionStatus = 'Comparison failed';
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Comparison failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Comparison failed: $e')));
     }
   }
 
@@ -625,8 +620,8 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                 result == null
                     ? 'Equivalence comparison'
                     : result
-                        ? 'Automata are equivalent'
-                        : 'Automata are not equivalent',
+                    ? 'Automata are equivalent'
+                    : 'Automata are not equivalent',
                 style: theme.textTheme.titleMedium?.copyWith(
                   color: accent,
                   fontWeight: FontWeight.w600,
@@ -708,10 +703,7 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
             title: 'Update Transitions',
             description: 'Redirect transitions to merged states',
           ),
-          AlgorithmStep(
-            title: 'Finalize',
-            description: 'Create minimized DFA',
-          ),
+          AlgorithmStep(title: 'Finalize', description: 'Create minimized DFA'),
         ]);
         break;
       case 'FA to Regex':
@@ -785,9 +777,5 @@ class AlgorithmStep {
   final String description;
   final Map<String, dynamic>? data;
 
-  AlgorithmStep({
-    required this.title,
-    required this.description,
-    this.data,
-  });
+  AlgorithmStep({required this.title, required this.description, this.data});
 }

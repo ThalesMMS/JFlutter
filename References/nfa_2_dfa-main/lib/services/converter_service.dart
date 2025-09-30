@@ -19,7 +19,7 @@ class NFAToDFAConverter {
   ConversionMetrics? _lastMetrics;
 
   NFAToDFAConverter({ConverterConfig? config})
-      : _config = config ?? ConverterConfig.defaultConfig();
+    : _config = config ?? ConverterConfig.defaultConfig();
 
   Stream<ConversionProgress> get progressStream => _progressController.stream;
 
@@ -129,16 +129,19 @@ class NFAToDFAConverter {
     final transitions = nfa.getTransitionCount();
     final epsilonTransitions = nfa.getEpsilonTransitionCount();
 
-    final baseComplexity =
-        (states > 0 && alphabet > 0) ? (states * alphabet).toDouble() : 1.0;
+    final baseComplexity = (states > 0 && alphabet > 0)
+        ? (states * alphabet).toDouble()
+        : 1.0;
     final epsilonFactor = epsilonTransitions * 1.5;
     final transitionDensity = nfa.getTransitionDensity();
 
-    final adjustedComplexity = (baseComplexity + epsilonFactor) *
+    final adjustedComplexity =
+        (baseComplexity + epsilonFactor) *
         (transitionDensity > 0 ? transitionDensity : 1);
 
     final level = _determineComplexityLevel(adjustedComplexity);
-    final shouldUseParallel = level.index >= ComplexityLevel.high.index &&
+    final shouldUseParallel =
+        level.index >= ComplexityLevel.high.index &&
         states > _config.parallelThreshold;
 
     return ComplexityAnalysis(
@@ -325,12 +328,14 @@ class _SequentialConverter {
       if (processed.contains(currentSet)) continue;
       processed.add(currentSet);
 
-      onProgress(ConversionProgress.processingState(
-        dfa.getStateName(currentSet),
-        stepCounter,
-        processed.length,
-        queue.length,
-      ));
+      onProgress(
+        ConversionProgress.processingState(
+          dfa.getStateName(currentSet),
+          stepCounter,
+          processed.length,
+          queue.length,
+        ),
+      );
 
       final step = DetailedStep(
         stepNumber: stepCounter++,
@@ -402,10 +407,10 @@ class _SequentialConverter {
 
   StateSet _getOrCreateStateSet(Set<String> stateNames) {
     final stateModels = stateNames
-        .map((name) => StateModel(
-              name: name,
-              isFinal: nfa.finalStates.contains(name),
-            ))
+        .map(
+          (name) =>
+              StateModel(name: name, isFinal: nfa.finalStates.contains(name)),
+        )
         .toSet();
     return StateSet(stateModels);
   }
@@ -445,8 +450,11 @@ class _ParallelConverter {
   });
 
   Future<ConversionResult> execute() async {
-    onProgress(ConversionProgress.message(
-        'Parallel conversion not yet implemented, falling back to sequential.'));
+    onProgress(
+      ConversionProgress.message(
+        'Parallel conversion not yet implemented, falling back to sequential.',
+      ),
+    );
     final sequential = _SequentialConverter(
       nfa: nfa,
       options: options,
@@ -478,16 +486,16 @@ class ConverterConfig {
 
   factory ConverterConfig.defaultConfig() => const ConverterConfig();
   factory ConverterConfig.performance() => const ConverterConfig(
-        maxCacheSize: 500,
-        parallelThreshold: 10,
-        yieldInterval: 5,
-        enableOptimizations: true,
-      );
+    maxCacheSize: 500,
+    parallelThreshold: 10,
+    yieldInterval: 5,
+    enableOptimizations: true,
+  );
   factory ConverterConfig.memory() => const ConverterConfig(
-        maxCacheSize: 50,
-        yieldInterval: 20,
-        enableOptimizations: false,
-      );
+    maxCacheSize: 50,
+    yieldInterval: 20,
+    enableOptimizations: false,
+  );
 }
 
 /// Enhanced conversion options
@@ -515,9 +523,12 @@ class ConversionProgress {
   final Map<String, dynamic> data;
   final DateTime timestamp;
 
-  ConversionProgress._(this.type, this.message,
-      {this.percentage, this.data = const {}})
-      : timestamp = DateTime.now();
+  ConversionProgress._(
+    this.type,
+    this.message, {
+    this.percentage,
+    this.data = const {},
+  }) : timestamp = DateTime.now();
 
   factory ConversionProgress.started(NFA nfa, ComplexityAnalysis complexity) =>
       ConversionProgress._(
@@ -533,12 +544,16 @@ class ConversionProgress {
         percentage: 10.0,
       );
   factory ConversionProgress.subsetConstruction() => ConversionProgress._(
-        ConversionProgressType.subsetConstruction,
-        'الگوریتم Subset Construction',
-        percentage: 20.0,
-      );
+    ConversionProgressType.subsetConstruction,
+    'الگوریتم Subset Construction',
+    percentage: 20.0,
+  );
   factory ConversionProgress.processingState(
-      String stateName, int step, int processed, int remaining) {
+    String stateName,
+    int step,
+    int processed,
+    int remaining,
+  ) {
     final total = processed + remaining;
     final percentage = total > 0 ? (processed / total) * 60 + 20 : 50.0;
     return ConversionProgress._(
@@ -549,24 +564,29 @@ class ConversionProgress {
         'stateName': stateName,
         'step': step,
         'processed': processed,
-        'remaining': remaining
+        'remaining': remaining,
       },
     );
   }
-  factory ConversionProgress.finalizingDFA() =>
-      ConversionProgress._(ConversionProgressType.finalizing, 'تکمیل DFA',
-          percentage: 90.0);
+  factory ConversionProgress.finalizingDFA() => ConversionProgress._(
+    ConversionProgressType.finalizing,
+    'تکمیل DFA',
+    percentage: 90.0,
+  );
   factory ConversionProgress.completed(
-          ConversionResult result, ConversionMetrics metrics) =>
-      ConversionProgress._(
-        ConversionProgressType.completed,
-        'تبدیل کامل شد در ${metrics.conversionTime.inMilliseconds}ms',
-        percentage: 100.0,
-        data: {'result': result.toString(), 'metrics': metrics.toString()},
-      );
+    ConversionResult result,
+    ConversionMetrics metrics,
+  ) => ConversionProgress._(
+    ConversionProgressType.completed,
+    'تبدیل کامل شد در ${metrics.conversionTime.inMilliseconds}ms',
+    percentage: 100.0,
+    data: {'result': result.toString(), 'metrics': metrics.toString()},
+  );
   factory ConversionProgress.fromCache() => ConversionProgress._(
-      ConversionProgressType.completed, 'نتیجه از کش دریافت شد',
-      percentage: 100.0);
+    ConversionProgressType.completed,
+    'نتیجه از کش دریافت شد',
+    percentage: 100.0,
+  );
   factory ConversionProgress.batchProgress(int current, int total) =>
       ConversionProgress._(
         ConversionProgressType.batchProgress,
@@ -574,9 +594,11 @@ class ConversionProgress {
         percentage: (current / total) * 100,
         data: {'current': current, 'total': total},
       );
-  factory ConversionProgress.error(String error) =>
-      ConversionProgress._(ConversionProgressType.error, 'خطا: $error',
-          data: {'error': error});
+  factory ConversionProgress.error(String error) => ConversionProgress._(
+    ConversionProgressType.error,
+    'خطا: $error',
+    data: {'error': error},
+  );
   factory ConversionProgress.message(String message) =>
       ConversionProgress._(ConversionProgressType.message, message);
 }
@@ -680,29 +702,28 @@ class ConversionResult {
     List<String> warnings = const [],
     Duration? processingTime,
     ConversionAlgorithm? algorithmUsed,
-  }) =>
-      ConversionResult._(
-        isSuccess: true,
-        nfa: nfa,
-        dfa: dfa,
-        steps: steps,
-        warnings: warnings,
-        processingTime: processingTime,
-        algorithmUsed: algorithmUsed,
-      );
+  }) => ConversionResult._(
+    isSuccess: true,
+    nfa: nfa,
+    dfa: dfa,
+    steps: steps,
+    warnings: warnings,
+    processingTime: processingTime,
+    algorithmUsed: algorithmUsed,
+  );
 
-  factory ConversionResult.error(String message,
-          {List<String> errors = const [], StackTrace? stackTrace}) =>
-      ConversionResult._(
-          isSuccess: false,
-          errorMessage: message,
-          errors: errors,
-          stackTrace: stackTrace);
+  factory ConversionResult.error(
+    String message, {
+    List<String> errors = const [],
+    StackTrace? stackTrace,
+  }) => ConversionResult._(
+    isSuccess: false,
+    errorMessage: message,
+    errors: errors,
+    stackTrace: stackTrace,
+  );
 
-  ConversionResult copyWith({
-    DFA? dfa,
-    ConversionAlgorithm? algorithmUsed,
-  }) =>
+  ConversionResult copyWith({DFA? dfa, ConversionAlgorithm? algorithmUsed}) =>
       ConversionResult._(
         isSuccess: isSuccess,
         errorMessage: errorMessage,

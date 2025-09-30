@@ -22,11 +22,14 @@ class TuringMachine {
   String description;
 
   late LinkedHashMap<Configuration, Behaviour> machine;
-  TuringMachine(List<Configuration> configurations, List<Behaviour> behaviours,
-      {required this.tape, required this.initial_config})
-      : machine = LinkedHashMap(),
-        current_config = initial_config,
-        description = "Enter a description for this turing machine here" {
+  TuringMachine(
+    List<Configuration> configurations,
+    List<Behaviour> behaviours, {
+    required this.tape,
+    required this.initial_config,
+  }) : machine = LinkedHashMap(),
+       current_config = initial_config,
+       description = "Enter a description for this turing machine here" {
     //Write code to convert ordered entires into hashmap key-pair values
     // ignore: unnecessary_this
     for (int i = 0; i < configurations.length; i++) {
@@ -39,8 +42,10 @@ class TuringMachine {
   //Updates the state of the turing machine by exactly one Configuration-Behavior pair computation.
   //Returns true if the step was successful, false otherwise
   void stepIntoConfig() {
-    Configuration key =
-        Configuration(m_config: current_config, symbol: tape.symbol);
+    Configuration key = Configuration(
+      m_config: current_config,
+      symbol: tape.symbol,
+    );
     //TO-DO:Override equals and hashcode functions for all composite data types to ensure proper key matching while referencing the hash map.
     //DONE: 3:51 AM 01-04-2024
     if (machine[key] == null) {

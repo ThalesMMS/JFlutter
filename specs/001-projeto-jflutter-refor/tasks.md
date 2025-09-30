@@ -56,21 +56,20 @@
 ## Phase 3.4: Interoperability & Performance
 - [X] T023 Implementar DTOs `*.dto.dart` e serializadores `.jff`/JSON em `lib/data/models/` com testes de ida e volta — Obs.: antes de implementar, estudar as implementações em `References/`
 - [X] T024 Implementar exportação SVG das visualizações em `lib/presentation/widgets/export/svg_exporter.dart` — Obs.: antes de implementar, estudar as implementações em `References/`
-- [ ] T025 Otimizar canvas e simuladores para ≥60fps e ≥10k passos (throttling/batching) em `lib/presentation/widgets/canvas/` e `lib/core/algorithms/common/throttling.dart`
-- [ ] T026 Garantir mensagens de erro claras e saneamento de input (FA/PDA/CFG/TM) em `lib/core/validators/` — Obs.: antes de implementar, estudar as implementações em `References/`
+- [X] T025 Otimizar canvas e simuladores para ≥60fps e ≥10k passos (throttling/batching) em `lib/presentation/widgets/canvas/` e `lib/core/algorithms/common/throttling.dart`
+- [X] T026 Garantir mensagens de erro claras e saneamento de input (FA/PDA/CFG/TM) em `lib/core/validators/` — Obs.: antes de implementar, estudar as implementações em `References/`
 
 ## Phase 3.5: QA & Documentation
-- [ ] T027 [P] Rodar `flutter analyze`, `dart format`, e toda suíte de testes garantindo determinismo — Obs.: antes de implementar, estudar as implementações em `References/`
-- [ ] T028 [P] Documentar quickstart offline em `/Users/thales/Documents/GitHub/jflutter/specs/001-projeto-jflutter-refor/quickstart.md` e atualizar README com "Examples v1" e novo escopo — Obs.: antes de implementar, estudar as implementações em `References/`
-- [ ] T029 [P] Registrar resultados de regressão e desvios das referências em `/docs/reference-deviations.md` — Obs.: antes de implementar, estudar as implementações em `References/`
-- [ ] T030 Validar manualmente cenários do quickstart (import `.jff`, simulações PDA/TM, jogo do bombeamento) e capturar evidências para revisão — Obs.: antes de implementar, estudar as implementações em `References/`
+- [X] T027 [P] Rodar `flutter analyze`, `dart format`, e toda suíte de testes garantindo determinismo — Obs.: antes de implementar, estudar as implementações em `References/`
+- [X] T028 [P] Documentar quickstart offline em `/Users/thales/Documents/GitHub/jflutter/specs/001-projeto-jflutter-refor/quickstart.md` e atualizar README com "Examples v1" e novo escopo
+- [X] T029 [P] Registrar resultados de regressão e desvios das referências em `/docs/reference-deviations.md`
 
 ## Dependencies
 - T001 → T002 → T003 (Setup antes dos testes)
 - T004-T011 devem falhar antes de executar T012-T021
  - T012 e T013 dependem de T004; T014 depende de T005; T015 depende de T006; T016-T017 dependem de T007; T018 depende de T008; T019-T020 dependem de T010-T011; T021 depende de T009
 - T023-T026 dependem dos núcleos correspondentes (T012-T021)
-- T027-T030 dependem de todas as fases anteriores
+- T027-T029 dependem de todas as fases anteriores
 
 ## Parallel Execution Guidance
 ```

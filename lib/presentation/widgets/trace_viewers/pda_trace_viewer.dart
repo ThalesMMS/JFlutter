@@ -15,11 +15,13 @@ class PDATraceViewer extends StatelessWidget {
       result: _asSimulationResult(),
       title: 'PDA Trace (${result.steps.length} steps)',
       buildStepLine: (SimulationStep step, int index) {
-        final remaining =
-            step.remainingInput.isEmpty ? 'λ' : step.remainingInput;
+        final remaining = step.remainingInput.isEmpty
+            ? 'λ'
+            : step.remainingInput;
         final stack = step.stackContents.isEmpty ? 'λ' : step.stackContents;
-        final transition =
-            step.usedTransition != null ? ' | ${step.usedTransition}' : '';
+        final transition = step.usedTransition != null
+            ? ' | ${step.usedTransition}'
+            : '';
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
@@ -28,19 +30,19 @@ class PDATraceViewer extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Text('${index + 1}.',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(fontWeight: FontWeight.bold)),
+              Text(
+                '${index + 1}.',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'q=${step.currentState} | rem=$remaining | stack=$stack$transition',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(fontFamily: 'monospace'),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),
                 ),
               ),
             ],

@@ -109,7 +109,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
     return parenCount == 0 && !inBracket;
   }
 
-  void _testStringMatch() {
+  void _testStringMatch() async {
     setState(() {
       _testString = _testStringController.text;
       _errorMessage = '';
@@ -128,8 +128,10 @@ class _RegexPageState extends ConsumerState<RegexPage> {
           return;
         }
 
-        final simulationResult =
-            AutomatonSimulator.simulateNFA(conversionResult.data!, _testString);
+        final simulationResult = await AutomatonSimulator.simulateNFA(
+          conversionResult.data!,
+          _testString,
+        );
 
         if (simulationResult.isSuccess && simulationResult.data != null) {
           _matches = simulationResult.data!.isAccepted;
@@ -194,8 +196,9 @@ class _RegexPageState extends ConsumerState<RegexPage> {
     if (!regexToNfaResult.isSuccess || regexToNfaResult.data == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content:
-              Text(regexToNfaResult.error ?? 'Failed to convert regex to NFA'),
+          content: Text(
+            regexToNfaResult.error ?? 'Failed to convert regex to NFA',
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -220,13 +223,14 @@ class _RegexPageState extends ConsumerState<RegexPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text(
-            'Converted regex to DFA. Opening the DFA in the FSA workspace.'),
+          'Converted regex to DFA. Opening the DFA in the FSA workspace.',
+        ),
       ),
     );
 
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const FSAPage()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => const FSAPage()));
   }
 
   void _pushAutomatonToProvider(FSA automaton) {
@@ -294,8 +298,10 @@ class _RegexPageState extends ConsumerState<RegexPage> {
       final completedFirst = DFACompleter.complete(firstDfaResult.data!);
       final completedSecond = DFACompleter.complete(secondDfaResult.data!);
 
-      final equivalent =
-          EquivalenceChecker.areEquivalent(completedFirst, completedSecond);
+      final equivalent = EquivalenceChecker.areEquivalent(
+        completedFirst,
+        completedSecond,
+      );
 
       setState(() {
         _equivalenceResult = equivalent;
@@ -332,9 +338,9 @@ class _RegexPageState extends ConsumerState<RegexPage> {
           children: [
             Text(
               'Regular Expression',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
 
@@ -373,8 +379,8 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                     _isValid
                         ? 'Valid regex'
                         : (_errorMessage.isNotEmpty
-                            ? _errorMessage
-                            : 'Invalid regex'),
+                              ? _errorMessage
+                              : 'Invalid regex'),
                     style: TextStyle(
                       color: _isValid ? Colors.green : Colors.red,
                       fontSize: 14,
@@ -502,8 +508,9 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                             ? Colors.green
                             : Colors.orange,
                         fontSize: 14,
-                        fontWeight:
-                            _equivalenceResult == true ? FontWeight.bold : null,
+                        fontWeight: _equivalenceResult == true
+                            ? FontWeight.bold
+                            : null,
                       ),
                     ),
                   ),
@@ -523,8 +530,8 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                     Text(
                       'Regex Help',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     const Text(
@@ -560,10 +567,9 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                 color: Theme.of(context).colorScheme.surface,
                 border: Border(
                   right: BorderSide(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .outline
-                        .withValues(alpha: 0.2),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withValues(alpha: 0.2),
                   ),
                 ),
               ),
@@ -573,10 +579,8 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                   children: [
                     Text(
                       'Regular Expression',
-                      style:
-                          Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 16),
 
@@ -614,8 +618,8 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                           _isValid
                               ? 'Valid regex'
                               : (_errorMessage.isNotEmpty
-                                  ? _errorMessage
-                                  : 'Invalid regex'),
+                                    ? _errorMessage
+                                    : 'Invalid regex'),
                           style: TextStyle(
                             color: _isValid ? Colors.green : Colors.red,
                             fontSize: 14,
@@ -763,12 +767,8 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                           children: [
                             Text(
                               'Regex Help',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 8),
                             const Text(
@@ -802,8 +802,8 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                   Text(
                     'Algorithms',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 16),
 

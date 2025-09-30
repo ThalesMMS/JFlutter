@@ -92,8 +92,10 @@ class PerformanceMonitor {
     final times = _operationTimes[operation] ?? [];
     if (times.isEmpty) return Duration.zero;
 
-    final totalMs =
-        times.fold<int>(0, (sum, time) => sum + time.inMilliseconds);
+    final totalMs = times.fold<int>(
+      0,
+      (sum, time) => sum + time.inMilliseconds,
+    );
     return Duration(milliseconds: totalMs ~/ times.length);
   }
 
@@ -202,8 +204,10 @@ class EnhancedAutomatonOperations {
           final nextStates = _computeNextStates(nfa, currentNfaStates, symbol);
 
           if (nextStates.isNotEmpty) {
-            final nextStatesClosure =
-                _getEpsilonClosureOptimized(nfa, nextStates);
+            final nextStatesClosure = _getEpsilonClosureOptimized(
+              nfa,
+              nextStates,
+            );
             final nextStateKey = _generateStateKey(nextStatesClosure);
 
             if (!visitedStates.containsKey(nextStateKey)) {
@@ -216,7 +220,10 @@ class EnhancedAutomatonOperations {
             }
 
             dfa.addTransition(
-                currentDfaState, symbol, dfaStates[nextStateKey]!);
+              currentDfaState,
+              symbol,
+              dfaStates[nextStateKey]!,
+            );
           }
         }
       }
@@ -277,7 +284,10 @@ class EnhancedAutomatonOperations {
 
   /// محاسبه حالت‌های بعدی برای یک نماد
   Set<String> _computeNextStates(
-      NFA nfa, Set<String> currentStates, String symbol) {
+    NFA nfa,
+    Set<String> currentStates,
+    String symbol,
+  ) {
     final nextStates = <String>{};
     for (final state in currentStates) {
       nextStates.addAll(nfa.getTransitions(state, symbol));
@@ -344,7 +354,9 @@ class EnhancedAutomatonOperations {
 
   /// عملیات اشتراک با پردازش پیشرفته
   Future<IntersectionResult> intersectionWithParallelProcessing(
-      NFA nfa1, NFA nfa2) async {
+    NFA nfa1,
+    NFA nfa2,
+  ) async {
     final stopwatch = Stopwatch()..start();
 
     try {
@@ -385,7 +397,9 @@ class EnhancedAutomatonOperations {
 
   /// عملیات الحاق با بهینه‌سازی مسیر
   Future<ConcatenationResult> concatenateWithOptimization(
-      NFA nfa1, NFA nfa2) async {
+    NFA nfa1,
+    NFA nfa2,
+  ) async {
     final stopwatch = Stopwatch()..start();
 
     try {
@@ -585,17 +599,22 @@ class EnhancedAutomatonOperations {
   static Map<String, dynamic> getPerformanceReport() {
     return {
       'average_times': {
-        'nfa_to_dfa':
-            PerformanceMonitor.getAverageTime('nfa_to_dfa').inMilliseconds,
+        'nfa_to_dfa': PerformanceMonitor.getAverageTime(
+          'nfa_to_dfa',
+        ).inMilliseconds,
         'union': PerformanceMonitor.getAverageTime('union').inMilliseconds,
-        'intersection':
-            PerformanceMonitor.getAverageTime('intersection').inMilliseconds,
-        'concatenation':
-            PerformanceMonitor.getAverageTime('concatenation').inMilliseconds,
-        'kleene_star':
-            PerformanceMonitor.getAverageTime('kleene_star').inMilliseconds,
-        'complement':
-            PerformanceMonitor.getAverageTime('complement').inMilliseconds,
+        'intersection': PerformanceMonitor.getAverageTime(
+          'intersection',
+        ).inMilliseconds,
+        'concatenation': PerformanceMonitor.getAverageTime(
+          'concatenation',
+        ).inMilliseconds,
+        'kleene_star': PerformanceMonitor.getAverageTime(
+          'kleene_star',
+        ).inMilliseconds,
+        'complement': PerformanceMonitor.getAverageTime(
+          'complement',
+        ).inMilliseconds,
       },
       'cache_size': AutomatonCache._dfaCache.length,
       'epsilon_cache_size': AutomatonCache._epsilonClosureCache.length,
@@ -604,7 +623,7 @@ class EnhancedAutomatonOperations {
         'parallel_processing': enableParallelProcessing,
         'minimization_enabled': enableMinimization,
         'max_processing_time': maxProcessingTime,
-      }
+      },
     };
   }
 

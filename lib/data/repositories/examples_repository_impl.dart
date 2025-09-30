@@ -25,7 +25,8 @@ class ExamplesRepositoryImpl implements ExamplesRepository {
 
   /// Loads examples by category (enhanced functionality)
   Future<ListResult<ExampleEntity>> loadExamplesByCategory(
-      ExampleCategory category) async {
+    ExampleCategory category,
+  ) async {
     return await _service.loadExamplesByCategory(category);
   }
 
@@ -36,7 +37,8 @@ class ExamplesRepositoryImpl implements ExamplesRepository {
 
   /// Get examples by difficulty (enhanced functionality)
   Future<ListResult<ExampleEntity>> getExamplesByDifficulty(
-      DifficultyLevel difficulty) async {
+    DifficultyLevel difficulty,
+  ) async {
     return await _service.getExamplesByDifficulty(difficulty);
   }
 

@@ -199,17 +199,23 @@ class _AdvancedStateDiagramState extends State<AdvancedStateDiagram>
     if (!widget.enableKeyboardShortcuts) return false;
     if (event is! KeyDownEvent) return false;
 
-    final isCtrlPressed = event.logicalKey == LogicalKeyboardKey.control ||
-        HardwareKeyboard.instance.logicalKeysPressed
-            .contains(LogicalKeyboardKey.controlLeft) ||
-        HardwareKeyboard.instance.logicalKeysPressed
-            .contains(LogicalKeyboardKey.controlRight);
+    final isCtrlPressed =
+        event.logicalKey == LogicalKeyboardKey.control ||
+        HardwareKeyboard.instance.logicalKeysPressed.contains(
+          LogicalKeyboardKey.controlLeft,
+        ) ||
+        HardwareKeyboard.instance.logicalKeysPressed.contains(
+          LogicalKeyboardKey.controlRight,
+        );
 
-    final isCmdPressed = event.logicalKey == LogicalKeyboardKey.meta ||
-        HardwareKeyboard.instance.logicalKeysPressed
-            .contains(LogicalKeyboardKey.metaLeft) ||
-        HardwareKeyboard.instance.logicalKeysPressed
-            .contains(LogicalKeyboardKey.metaRight);
+    final isCmdPressed =
+        event.logicalKey == LogicalKeyboardKey.meta ||
+        HardwareKeyboard.instance.logicalKeysPressed.contains(
+          LogicalKeyboardKey.metaLeft,
+        ) ||
+        HardwareKeyboard.instance.logicalKeysPressed.contains(
+          LogicalKeyboardKey.metaRight,
+        );
 
     final isModifierPressed = isCtrlPressed || isCmdPressed;
 
@@ -311,8 +317,10 @@ class _AdvancedStateDiagramState extends State<AdvancedStateDiagram>
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
               ),
             ),
           ),
@@ -362,8 +370,9 @@ class _AdvancedStateDiagramState extends State<AdvancedStateDiagram>
         onPanStart: _onPanStart,
         onPanUpdate: _onPanUpdate,
         onPanEnd: _onPanEnd,
-        onSecondaryTapDown:
-            widget.enableContextMenu ? _onSecondaryTapDown : null,
+        onSecondaryTapDown: widget.enableContextMenu
+            ? _onSecondaryTapDown
+            : null,
         child: CustomPaint(
           painter: StateDiagramPainter(
             data: widget.data,
@@ -381,9 +390,7 @@ class _AdvancedStateDiagramState extends State<AdvancedStateDiagram>
           child: SizedBox(
             width: 800,
             height: 600,
-            child: Stack(
-              children: _buildNodeWidgets(),
-            ),
+            child: Stack(children: _buildNodeWidgets()),
           ),
         ),
       ),
@@ -453,9 +460,9 @@ class _AdvancedStateDiagramState extends State<AdvancedStateDiagram>
             children: [
               Text(
                 'Statistics',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               _buildStatItem('Total States', _statistics!.totalNodes),
@@ -477,16 +484,10 @@ class _AdvancedStateDiagramState extends State<AdvancedStateDiagram>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            '$label: ',
-            style: const TextStyle(fontSize: 12),
-          ),
+          Text('$label: ', style: const TextStyle(fontSize: 12)),
           Text(
             '$value',
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -564,8 +565,9 @@ class _AdvancedStateDiagramState extends State<AdvancedStateDiagram>
 
   void _onNodeTap(String nodeId) {
     if (widget.enableMultiSelection &&
-        HardwareKeyboard.instance.logicalKeysPressed
-            .contains(LogicalKeyboardKey.controlLeft)) {
+        HardwareKeyboard.instance.logicalKeysPressed.contains(
+          LogicalKeyboardKey.controlLeft,
+        )) {
       _toggleNodeSelection(nodeId);
     } else {
       _selectNode(nodeId);
@@ -801,16 +803,25 @@ class _AdvancedStateDiagramState extends State<AdvancedStateDiagram>
           mainAxisSize: MainAxisSize.min,
           children: [
             _buildContextMenuItem(
-                'Add State', Icons.add_circle_outline, _addState),
+              'Add State',
+              Icons.add_circle_outline,
+              _addState,
+            ),
             _buildContextMenuItem(
-                'Delete Selected', Icons.delete_outline, _deleteSelected),
+              'Delete Selected',
+              Icons.delete_outline,
+              _deleteSelected,
+            ),
             const Divider(height: 1),
             _buildContextMenuItem('Copy', Icons.copy, _copySelected),
             _buildContextMenuItem('Paste', Icons.paste, _pasteSelected),
             const Divider(height: 1),
             _buildContextMenuItem('Select All', Icons.select_all, _selectAll),
             _buildContextMenuItem(
-                'Clear Selection', Icons.clear, _clearSelection),
+              'Clear Selection',
+              Icons.clear,
+              _clearSelection,
+            ),
           ],
         ),
       ),
@@ -818,7 +829,10 @@ class _AdvancedStateDiagramState extends State<AdvancedStateDiagram>
   }
 
   Widget _buildContextMenuItem(
-      String title, IconData icon, VoidCallback onTap) {
+    String title,
+    IconData icon,
+    VoidCallback onTap,
+  ) {
     return InkWell(
       onTap: () {
         _hideContextMenu();
@@ -866,10 +880,7 @@ class StateNodeWidget extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: _getNodeColor().withOpacity(0.2),
-        border: Border.all(
-          color: _getNodeColor(),
-          width: isSelected ? 3 : 2,
-        ),
+        border: Border.all(color: _getNodeColor(), width: isSelected ? 3 : 2),
         boxShadow: [
           if (isHovered || isSelected)
             BoxShadow(
@@ -898,10 +909,7 @@ class StateNodeWidget extends StatelessWidget {
                 margin: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: _getNodeColor(),
-                    width: 1,
-                  ),
+                  border: Border.all(color: _getNodeColor(), width: 1),
                 ),
               ),
             ),
@@ -1023,18 +1031,28 @@ class StateDiagramPainter extends CustomPainter {
   }
 
   void _drawSelfLoop(
-      Canvas canvas, Offset nodePos, Paint paint, String? label) {
+    Canvas canvas,
+    Offset nodePos,
+    Paint paint,
+    String? label,
+  ) {
     const radius = 30.0;
     final center = nodePos + const Offset(0, -radius - 35);
-    final rect =
-        Rect.fromCenter(center: center, width: radius * 2, height: radius * 2);
+    final rect = Rect.fromCenter(
+      center: center,
+      width: radius * 2,
+      height: radius * 2,
+    );
 
     canvas.drawArc(rect, -math.pi / 4, math.pi * 1.5, false, paint);
 
     // Arrow head
-    final arrowPos = center +
+    final arrowPos =
+        center +
         Offset(
-            radius * math.cos(-math.pi / 4), radius * math.sin(-math.pi / 4));
+          radius * math.cos(-math.pi / 4),
+          radius * math.sin(-math.pi / 4),
+        );
     _drawArrowHead(canvas, arrowPos, -math.pi / 4, paint);
 
     // Label
@@ -1044,7 +1062,12 @@ class StateDiagramPainter extends CustomPainter {
   }
 
   void _drawRegularEdge(
-      Canvas canvas, Offset from, Offset to, Paint paint, String? label) {
+    Canvas canvas,
+    Offset from,
+    Offset to,
+    Paint paint,
+    String? label,
+  ) {
     const nodeRadius = 35.0;
 
     // Calculate edge points (from node border to node border)
@@ -1056,7 +1079,8 @@ class StateDiagramPainter extends CustomPainter {
     final endPoint = to - unitVector * nodeRadius;
 
     // Draw curve for better visual appeal
-    final controlPoint = (startPoint + endPoint) / 2 +
+    final controlPoint =
+        (startPoint + endPoint) / 2 +
         Offset(-unitVector.dy, unitVector.dx) * 20;
 
     final path = Path();
@@ -1076,24 +1100,31 @@ class StateDiagramPainter extends CustomPainter {
 
     // Label
     if (label != null && label.isNotEmpty) {
-      final labelPos = (startPoint + endPoint) / 2 +
+      final labelPos =
+          (startPoint + endPoint) / 2 +
           Offset(-unitVector.dy, unitVector.dx) * 15;
       _drawEdgeLabel(canvas, labelPos, label);
     }
   }
 
   void _drawArrowHead(
-      Canvas canvas, Offset tip, double direction, Paint paint) {
+    Canvas canvas,
+    Offset tip,
+    double direction,
+    Paint paint,
+  ) {
     const arrowLength = 12.0;
     const arrowAngle = math.pi / 6;
 
-    final p1 = tip +
+    final p1 =
+        tip +
         Offset(
           arrowLength * math.cos(direction + math.pi - arrowAngle),
           arrowLength * math.sin(direction + math.pi - arrowAngle),
         );
 
-    final p2 = tip +
+    final p2 =
+        tip +
         Offset(
           arrowLength * math.cos(direction + math.pi + arrowAngle),
           arrowLength * math.sin(direction + math.pi + arrowAngle),
@@ -1168,23 +1199,53 @@ class StateDiagramPainter extends CustomPainter {
 
     // Top edge
     _drawDashedLine(
-        canvas, rect.topLeft, rect.topRight, paint, dashWidth, dashSpace);
+      canvas,
+      rect.topLeft,
+      rect.topRight,
+      paint,
+      dashWidth,
+      dashSpace,
+    );
 
     // Right edge
     _drawDashedLine(
-        canvas, rect.topRight, rect.bottomRight, paint, dashWidth, dashSpace);
+      canvas,
+      rect.topRight,
+      rect.bottomRight,
+      paint,
+      dashWidth,
+      dashSpace,
+    );
 
     // Bottom edge
     _drawDashedLine(
-        canvas, rect.bottomRight, rect.bottomLeft, paint, dashWidth, dashSpace);
+      canvas,
+      rect.bottomRight,
+      rect.bottomLeft,
+      paint,
+      dashWidth,
+      dashSpace,
+    );
 
     // Left edge
     _drawDashedLine(
-        canvas, rect.bottomLeft, rect.topLeft, paint, dashWidth, dashSpace);
+      canvas,
+      rect.bottomLeft,
+      rect.topLeft,
+      paint,
+      dashWidth,
+      dashSpace,
+    );
   }
 
-  void _drawDashedLine(Canvas canvas, Offset start, Offset end, Paint paint,
-      double dashWidth, double dashSpace) {
+  void _drawDashedLine(
+    Canvas canvas,
+    Offset start,
+    Offset end,
+    Paint paint,
+    double dashWidth,
+    double dashSpace,
+  ) {
     final direction = end - start;
     final totalDistance = direction.distance;
     final unitVector = direction / totalDistance;
@@ -1335,10 +1396,7 @@ class DiagramController extends ChangeNotifier {
   }
 
   void addNode(StateNode node) {
-    _data = StateDiagramData(
-      nodes: [..._data.nodes, node],
-      edges: _data.edges,
-    );
+    _data = StateDiagramData(nodes: [..._data.nodes, node], edges: _data.edges);
     notifyListeners();
   }
 
@@ -1353,10 +1411,7 @@ class DiagramController extends ChangeNotifier {
   }
 
   void addEdge(StateEdge edge) {
-    _data = StateDiagramData(
-      nodes: _data.nodes,
-      edges: [..._data.edges, edge],
-    );
+    _data = StateDiagramData(nodes: _data.nodes, edges: [..._data.edges, edge]);
     notifyListeners();
   }
 
@@ -1374,10 +1429,7 @@ class StateDiagramData {
   final List<StateNode> nodes;
   final List<StateEdge> edges;
 
-  const StateDiagramData({
-    required this.nodes,
-    required this.edges,
-  });
+  const StateDiagramData({required this.nodes, required this.edges});
 
   @override
   bool operator ==(Object other) {
@@ -1500,9 +1552,7 @@ class DiagramStatistics {
 class DiagramTheme {
   final DiagramColorScheme colorScheme;
 
-  const DiagramTheme({
-    required this.colorScheme,
-  });
+  const DiagramTheme({required this.colorScheme});
 }
 
 class DiagramColorScheme {
@@ -1589,7 +1639,11 @@ class _DiagramExampleState extends State<DiagramExample> {
         const StateEdge(id: 'e2', fromId: 'state1', toId: 'state2', label: 'b'),
         const StateEdge(id: 'e3', fromId: 'state2', toId: 'end', label: 'c'),
         const StateEdge(
-            id: 'e4', fromId: 'state1', toId: 'state1', label: 'loop'),
+          id: 'e4',
+          fromId: 'state1',
+          toId: 'state1',
+          label: 'loop',
+        ),
       ],
     );
     controller.updateData(data);

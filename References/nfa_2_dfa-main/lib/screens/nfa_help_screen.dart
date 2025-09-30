@@ -86,21 +86,14 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
       vsync: this,
     )..repeat(reverse: true);
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeOutCubic,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fadeController, curve: Curves.easeOutCubic),
+    );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.elasticOut,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.elasticOut),
+        );
 
     _fadeController.forward();
     _slideController.forward();
@@ -131,8 +124,10 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
               _buildHelpAppBar(context, theme, isDark),
               SliverToBoxAdapter(
                 child: AnimatedBuilder(
-                  animation:
-                      Listenable.merge([_fadeAnimation, _slideAnimation]),
+                  animation: Listenable.merge([
+                    _fadeAnimation,
+                    _slideAnimation,
+                  ]),
                   builder: (context, child) {
                     return SlideTransition(
                       position: _slideAnimation,
@@ -212,9 +207,7 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
         decoration: BoxDecoration(
           color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: theme.colorScheme.primary.withOpacity(0.3),
-          ),
+          border: Border.all(color: theme.colorScheme.primary.withOpacity(0.3)),
         ),
         child: IconButton(
           icon: Icon(
@@ -238,10 +231,7 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
         child: FlexibleSpaceBar(
           title: ShaderMask(
             shaderCallback: (bounds) => LinearGradient(
-              colors: [
-                theme.colorScheme.primary,
-                theme.colorScheme.secondary,
-              ],
+              colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
             ).createShader(bounds),
             child: Text(
               '📚 راهنمای کامل',
@@ -364,23 +354,21 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildStatCard(
-      String number, String label, IconData icon, ThemeData theme) {
+    String number,
+    String label,
+    IconData icon,
+    ThemeData theme,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: theme.colorScheme.primary.withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: theme.colorScheme.primary.withOpacity(0.3),
-        ),
+        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.3)),
       ),
       child: Column(
         children: [
-          Icon(
-            icon,
-            color: theme.colorScheme.primary,
-            size: 24,
-          ),
+          Icon(icon, color: theme.colorScheme.primary, size: 24),
           const SizedBox(height: 4),
           Text(
             number,
@@ -404,16 +392,17 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildQuickStartSection(
-      BuildContext context, ThemeData theme, bool isDark) {
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.2),
-        ),
+        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -445,13 +434,25 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
           ),
           const SizedBox(height: 20),
           _buildQuickStartStep(
-              '1', 'روی "NFA جدید" کلیک کنید', Icons.add_circle),
+            '1',
+            'روی "NFA جدید" کلیک کنید',
+            Icons.add_circle,
+          ),
           _buildQuickStartStep(
-              '2', 'حالت‌های خود را تعریف کنید', Icons.radio_button_checked),
+            '2',
+            'حالت‌های خود را تعریف کنید',
+            Icons.radio_button_checked,
+          ),
           _buildQuickStartStep(
-              '3', 'گذارها را اضافه کنید', Icons.arrow_forward),
+            '3',
+            'گذارها را اضافه کنید',
+            Icons.arrow_forward,
+          ),
           _buildQuickStartStep(
-              '4', 'رشته‌های ورودی را تست کنید', Icons.play_arrow),
+            '4',
+            'رشته‌های ورودی را تست کنید',
+            Icons.play_arrow,
+          ),
         ],
       ),
     );
@@ -487,9 +488,7 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -498,7 +497,10 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildSectionsGrid(
-      BuildContext context, ThemeData theme, bool isDark) {
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -549,7 +551,11 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
                   return Transform.scale(
                     scale: value,
                     child: _buildSectionCard(
-                        context, _sections[index], theme, isDark),
+                      context,
+                      _sections[index],
+                      theme,
+                      isDark,
+                    ),
                   );
                 },
               );
@@ -561,7 +567,11 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildSectionCard(
-      BuildContext context, HelpSection section, ThemeData theme, bool isDark) {
+    BuildContext context,
+    HelpSection section,
+    ThemeData theme,
+    bool isDark,
+  ) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -579,9 +589,7 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
               ],
             ),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: section.color.withOpacity(0.3),
-            ),
+            border: Border.all(color: section.color.withOpacity(0.3)),
             boxShadow: [
               BoxShadow(
                 color: section.color.withOpacity(0.2),
@@ -598,10 +606,7 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      section.color,
-                      section.color.withOpacity(0.8),
-                    ],
+                    colors: [section.color, section.color.withOpacity(0.8)],
                   ),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
@@ -612,11 +617,7 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
                     ),
                   ],
                 ),
-                child: Icon(
-                  section.icon,
-                  color: Colors.white,
-                  size: 32,
-                ),
+                child: Icon(section.icon, color: Colors.white, size: 32),
               ),
               const SizedBox(height: 16),
               Text(
@@ -631,8 +632,10 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
               ),
               const SizedBox(height: 8),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: section.color.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
@@ -654,7 +657,10 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildExamplesSection(
-      BuildContext context, ThemeData theme, bool isDark) {
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
     final examples = [
       {'title': 'NFA ساده', 'desc': 'رشته‌های شامل "ab"', 'difficulty': 'آسان'},
       {'title': 'NFA پیچیده', 'desc': 'عبارات منظم', 'difficulty': 'متوسط'},
@@ -693,14 +699,19 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
           ),
           const SizedBox(height: 24),
           ...examples.map(
-              (example) => _buildExampleCard(context, example, theme, isDark)),
+            (example) => _buildExampleCard(context, example, theme, isDark),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildExampleCard(BuildContext context, Map<String, String> example,
-      ThemeData theme, bool isDark) {
+  Widget _buildExampleCard(
+    BuildContext context,
+    Map<String, String> example,
+    ThemeData theme,
+    bool isDark,
+  ) {
     Color difficultyColor = Colors.green;
     if (example['difficulty'] == 'متوسط') difficultyColor = Colors.orange;
     if (example['difficulty'] == 'سخت') difficultyColor = Colors.red;
@@ -711,9 +722,7 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
       decoration: BoxDecoration(
         color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.2),
-        ),
+        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
       ),
       child: Row(
         children: [
@@ -725,11 +734,7 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
               ),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
-              Icons.code,
-              color: Colors.white,
-              size: 24,
-            ),
+            child: const Icon(Icons.code, color: Colors.white, size: 24),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -833,16 +838,18 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildFAQCard(BuildContext context, Map<String, String> faq,
-      ThemeData theme, bool isDark) {
+  Widget _buildFAQCard(
+    BuildContext context,
+    Map<String, String> faq,
+    ThemeData theme,
+    bool isDark,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.2),
-        ),
+        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
       ),
       child: ExpansionTile(
         title: Text(
@@ -868,7 +875,11 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
   }
 
   void _showSectionDetail(
-      BuildContext context, HelpSection section, ThemeData theme, bool isDark) {
+    BuildContext context,
+    HelpSection section,
+    ThemeData theme,
+    bool isDark,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -885,13 +896,11 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [
-                    section.color,
-                    section.color.withOpacity(0.8),
-                  ],
+                  colors: [section.color, section.color.withOpacity(0.8)],
                 ),
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(28)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
               ),
               child: Row(
                 children: [
@@ -901,11 +910,7 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Icon(
-                      section.icon,
-                      color: Colors.white,
-                      size: 32,
-                    ),
+                    child: Icon(section.icon, color: Colors.white, size: 32),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -985,16 +990,12 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
 
   static List<Widget> _getCreatingNFAContent() {
     return [
-      _buildContentSection(
-        '🚀 ایجاد NFA جدید',
-        'مراحل ایجاد یک NFA جدید:',
-        [
-          '1. روی دکمه "NFA جدید" در صفحه اصلی کلیک کنید',
-          '2. نام مناسبی برای پروژه خود انتخاب کنید',
-          '3. توضیح کوتاهی از هدف NFA بنویسید',
-          '4. روی "ایجاد" کلیک کنید',
-        ],
-      ),
+      _buildContentSection('🚀 ایجاد NFA جدید', 'مراحل ایجاد یک NFA جدید:', [
+        '1. روی دکمه "NFA جدید" در صفحه اصلی کلیک کنید',
+        '2. نام مناسبی برای پروژه خود انتخاب کنید',
+        '3. توضیح کوتاهی از هدف NFA بنویسید',
+        '4. روی "ایجاد" کلیک کنید',
+      ]),
       _buildContentSection(
         '📋 تنظیمات اولیه',
         'پس از ایجاد NFA، می‌توانید تنظیمات زیر را انجام دهید:',
@@ -1030,39 +1031,27 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
           '🟠 حالت ترکیبی: هم میانی و هم نهایی',
         ],
       ),
-      _buildContentSection(
-        '➕ اضافه کردن حالت',
-        'مراحل اضافه کردن حالت جدید:',
-        [
-          '1. روی دکمه "+" در پنل حالت‌ها کلیک کنید',
-          '2. نام حالت را وارد کنید (مثل q0, q1, s1)',
-          '3. نوع حالت را انتخاب کنید',
-          '4. در صورت نیاز، توضیح اضافه کنید',
-          '5. روی "تایید" کلیک کنید',
-        ],
-      ),
-      _buildContentSection(
-        '✏️ ویرایش حالت‌ها',
-        'امکانات ویرایش حالت‌ها:',
-        [
-          '• تغییر نام حالت',
-          '• تبدیل نوع حالت (عادی ↔ نهایی)',
-          '• اضافه کردن توضیحات',
-          '• حذف حالت (با احتیاط)',
-          '• کپی کردن حالت',
-        ],
-      ),
-      _buildContentSection(
-        '⚠️ نکات مهم',
-        'نکاتی که باید رعایت کنید:',
-        [
-          '• هر NFA باید دقیقاً یک حالت اولیه داشته باشد',
-          '• حداقل یک حالت نهایی لازم است',
-          '• نام حالت‌ها باید منحصر به فرد باشند',
-          '• از نام‌های کوتاه و معنادار استفاده کنید',
-          '• حذف حالت، تمام گذارهای مربوطه را حذف می‌کند',
-        ],
-      ),
+      _buildContentSection('➕ اضافه کردن حالت', 'مراحل اضافه کردن حالت جدید:', [
+        '1. روی دکمه "+" در پنل حالت‌ها کلیک کنید',
+        '2. نام حالت را وارد کنید (مثل q0, q1, s1)',
+        '3. نوع حالت را انتخاب کنید',
+        '4. در صورت نیاز، توضیح اضافه کنید',
+        '5. روی "تایید" کلیک کنید',
+      ]),
+      _buildContentSection('✏️ ویرایش حالت‌ها', 'امکانات ویرایش حالت‌ها:', [
+        '• تغییر نام حالت',
+        '• تبدیل نوع حالت (عادی ↔ نهایی)',
+        '• اضافه کردن توضیحات',
+        '• حذف حالت (با احتیاط)',
+        '• کپی کردن حالت',
+      ]),
+      _buildContentSection('⚠️ نکات مهم', 'نکاتی که باید رعایت کنید:', [
+        '• هر NFA باید دقیقاً یک حالت اولیه داشته باشد',
+        '• حداقل یک حالت نهایی لازم است',
+        '• نام حالت‌ها باید منحصر به فرد باشند',
+        '• از نام‌های کوتاه و معنادار استفاده کنید',
+        '• حذف حالت، تمام گذارهای مربوطه را حذف می‌کند',
+      ]),
     ];
   }
 
@@ -1078,16 +1067,12 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
           '• گذارها جهت‌دار هستند',
         ],
       ),
-      _buildContentSection(
-        '➕ اضافه کردن گذار',
-        'مراحل تعریف گذار جدید:',
-        [
-          '1. حالت مبدأ را انتخاب کنید',
-          '2. نماد ورودی را وارد کنید (a, b, ε, ...)',
-          '3. حالت مقصد را انتخاب کنید',
-          '4. روی "اضافه کردن گذار" کلیک کنید',
-        ],
-      ),
+      _buildContentSection('➕ اضافه کردن گذار', 'مراحل تعریف گذار جدید:', [
+        '1. حالت مبدأ را انتخاب کنید',
+        '2. نماد ورودی را وارد کنید (a, b, ε, ...)',
+        '3. حالت مقصد را انتخاب کنید',
+        '4. روی "اضافه کردن گذار" کلیک کنید',
+      ]),
       _buildContentSection(
         '🔤 انواع نمادها',
         'نمادهای قابل استفاده در گذارها:',
@@ -1125,88 +1110,60 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
           '• جزئیات گام به گام',
         ],
       ),
-      _buildContentSection(
-        '📊 نمایش مسیر',
-        'ویژگی‌های نمایش مسیر پردازش:',
-        [
-          '• نمایش حالت فعلی در هر گام',
-          '• مشخص کردن نماد خوانده شده',
-          '• نمایش تمام مسیرهای ممکن',
-          '• هایلایت حالت‌های نهایی',
-          '• نمایش گذارهای اپسیلون',
-        ],
-      ),
-      _buildContentSection(
-        '✅ تفسیر نتایج',
-        'چگونه نتایج تست را تفسیر کنیم:',
-        [
-          '• سبز: رشته پذیرفته شده',
-          '• قرمز: رشته رد شده',
-          '• زرد: پردازش در حال انجام',
-          '• آبی: حالت‌های فعال',
-          '• خاکستری: حالت‌های غیرفعال',
-        ],
-      ),
-      _buildContentSection(
-        '🔍 نکات تست',
-        'نکاتی برای تست موثر:',
-        [
-          '• رشته‌های کوتاه را ابتدا تست کنید',
-          '• موارد مرزی را بررسی کنید',
-          '• رشته خالی را تست کنید',
-          '• ترکیبات مختلف نمادها را امتحان کنید',
-          '• رشته‌های طولانی را نیز تست کنید',
-        ],
-      ),
+      _buildContentSection('📊 نمایش مسیر', 'ویژگی‌های نمایش مسیر پردازش:', [
+        '• نمایش حالت فعلی در هر گام',
+        '• مشخص کردن نماد خوانده شده',
+        '• نمایش تمام مسیرهای ممکن',
+        '• هایلایت حالت‌های نهایی',
+        '• نمایش گذارهای اپسیلون',
+      ]),
+      _buildContentSection('✅ تفسیر نتایج', 'چگونه نتایج تست را تفسیر کنیم:', [
+        '• سبز: رشته پذیرفته شده',
+        '• قرمز: رشته رد شده',
+        '• زرد: پردازش در حال انجام',
+        '• آبی: حالت‌های فعال',
+        '• خاکستری: حالت‌های غیرفعال',
+      ]),
+      _buildContentSection('🔍 نکات تست', 'نکاتی برای تست موثر:', [
+        '• رشته‌های کوتاه را ابتدا تست کنید',
+        '• موارد مرزی را بررسی کنید',
+        '• رشته خالی را تست کنید',
+        '• ترکیبات مختلف نمادها را امتحان کنید',
+        '• رشته‌های طولانی را نیز تست کنید',
+      ]),
     ];
   }
 
   static List<Widget> _getSaveLoadContent() {
     return [
-      _buildContentSection(
-        '💾 ذخیره پروژه',
-        'روش‌های مختلف ذخیره‌سازی:',
-        [
-          '• ذخیره خودکار در حین کار',
-          '• ذخیره دستی با Ctrl+S',
-          '• صادرات به فایل JSON',
-          '• ایجاد نسخه پشتیبان',
-          '• اشتراک‌گذاری با دیگران',
-        ],
-      ),
-      _buildContentSection(
-        '📂 بارگذاری فایل',
-        'بازیابی پروژه‌های قبلی:',
-        [
-          '• انتخاب فایل از سیستم',
-          '• بررسی اعتبار فایل',
-          '• بارگذاری تنظیمات',
-          '• بازیابی حالت‌ها و گذارها',
-          '• حفظ تاریخچه تغییرات',
-        ],
-      ),
-      _buildContentSection(
-        '📋 فرمت فایل',
-        'ساختار فایل‌های ذخیره شده:',
-        [
-          '• فرمت JSON استاندارد',
-          '• شامل تمام اطلاعات NFA',
-          '• متادیتا و تنظیمات',
-          '• تاریخ ایجاد و ویرایش',
-          '• نسخه سازگاری',
-        ],
-      ),
-      _buildContentSection(
-        '🔒 امنیت داده‌ها',
-        'حفاظت از اطلاعات شما:',
-        [
-          '• رمزگذاری محتوای حساس',
-          '• پشتیبان‌گیری خودکار',
-          '• حفظ حریم خصوصی',
-          '• عدم ارسال به سرور',
-          '• کنترل کامل بر داده‌ها',
-        ],
-      ),
+      _buildContentSection('💾 ذخیره پروژه', 'روش‌های مختلف ذخیره‌سازی:', [
+        '• ذخیره خودکار در حین کار',
+        '• ذخیره دستی با Ctrl+S',
+        '• صادرات به فایل JSON',
+        '• ایجاد نسخه پشتیبان',
+        '• اشتراک‌گذاری با دیگران',
+      ]),
+      _buildContentSection('📂 بارگذاری فایل', 'بازیابی پروژه‌های قبلی:', [
+        '• انتخاب فایل از سیستم',
+        '• بررسی اعتبار فایل',
+        '• بارگذاری تنظیمات',
+        '• بازیابی حالت‌ها و گذارها',
+        '• حفظ تاریخچه تغییرات',
+      ]),
+      _buildContentSection('📋 فرمت فایل', 'ساختار فایل‌های ذخیره شده:', [
+        '• فرمت JSON استاندارد',
+        '• شامل تمام اطلاعات NFA',
+        '• متادیتا و تنظیمات',
+        '• تاریخ ایجاد و ویرایش',
+        '• نسخه سازگاری',
+      ]),
+      _buildContentSection('🔒 امنیت داده‌ها', 'حفاظت از اطلاعات شما:', [
+        '• رمزگذاری محتوای حساس',
+        '• پشتیبان‌گیری خودکار',
+        '• حفظ حریم خصوصی',
+        '• عدم ارسال به سرور',
+        '• کنترل کامل بر داده‌ها',
+      ]),
     ];
   }
 
@@ -1222,16 +1179,12 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
           '• بهینه‌سازی نتیجه نهایی',
         ],
       ),
-      _buildContentSection(
-        '🤝 اشتراک NFA ها',
-        'عملیات اشتراک دو NFA:',
-        [
-          '• پیدا کردن زبان مشترک',
-          '• ایجاد NFA جدید',
-          '• حفظ ویژگی‌های هر دو',
-          '• بهینه‌سازی تعداد حالت‌ها',
-        ],
-      ),
+      _buildContentSection('🤝 اشتراک NFA ها', 'عملیات اشتراک دو NFA:', [
+        '• پیدا کردن زبان مشترک',
+        '• ایجاد NFA جدید',
+        '• حفظ ویژگی‌های هر دو',
+        '• بهینه‌سازی تعداد حالت‌ها',
+      ]),
       _buildContentSection(
         '🔀 تبدیل NFA به DFA',
         'الگوریتم تبدیل برای بهینه‌سازی:',
@@ -1242,51 +1195,35 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
           '• حذف حالت‌های غیرضروری',
         ],
       ),
-      _buildContentSection(
-        '⚡ بهینه‌سازی',
-        'تکنیک‌های بهبود عملکرد:',
-        [
-          '• حذف حالت‌های غیرقابل دسترس',
-          '• ادغام حالت‌های مشابه',
-          '• کاهش گذارهای اپسیلون',
-          '• بهینه‌سازی مسیرها',
-        ],
-      ),
+      _buildContentSection('⚡ بهینه‌سازی', 'تکنیک‌های بهبود عملکرد:', [
+        '• حذف حالت‌های غیرقابل دسترس',
+        '• ادغام حالت‌های مشابه',
+        '• کاهش گذارهای اپسیلون',
+        '• بهینه‌سازی مسیرها',
+      ]),
     ];
   }
 
   static List<Widget> _getTipsContent() {
     return [
-      _buildContentSection(
-        '💡 نکات طراحی',
-        'راهنمایی‌هایی برای طراحی بهتر:',
-        [
-          '• ابتدا الگو را روی کاغذ بکشید',
-          '• از نام‌های معنادار استفاده کنید',
-          '• مراحل پردازش را گام به گام طراحی کنید',
-          '• موارد استثنا را در نظر بگیرید',
-        ],
-      ),
-      _buildContentSection(
-        '🚀 بهبود عملکرد',
-        'روش‌هایی برای کار سریع‌تر:',
-        [
-          '• از کلیدهای میانبر استفاده کنید',
-          '• الگوهای متداول را ذخیره کنید',
-          '• از قالب‌های آماده بهره بگیرید',
-          '• تست‌های منظم انجام دهید',
-        ],
-      ),
-      _buildContentSection(
-        '🐛 رفع مشکلات',
-        'حل مشکلات رایج:',
-        [
-          '• بررسی تعریف صحیح حالت اولیه',
-          '• کنترل وجود حالت نهایی',
-          '• چک کردن درستی گذارها',
-          '• تست با رشته‌های ساده',
-        ],
-      ),
+      _buildContentSection('💡 نکات طراحی', 'راهنمایی‌هایی برای طراحی بهتر:', [
+        '• ابتدا الگو را روی کاغذ بکشید',
+        '• از نام‌های معنادار استفاده کنید',
+        '• مراحل پردازش را گام به گام طراحی کنید',
+        '• موارد استثنا را در نظر بگیرید',
+      ]),
+      _buildContentSection('🚀 بهبود عملکرد', 'روش‌هایی برای کار سریع‌تر:', [
+        '• از کلیدهای میانبر استفاده کنید',
+        '• الگوهای متداول را ذخیره کنید',
+        '• از قالب‌های آماده بهره بگیرید',
+        '• تست‌های منظم انجام دهید',
+      ]),
+      _buildContentSection('🐛 رفع مشکلات', 'حل مشکلات رایج:', [
+        '• بررسی تعریف صحیح حالت اولیه',
+        '• کنترل وجود حالت نهایی',
+        '• چک کردن درستی گذارها',
+        '• تست با رشته‌های ساده',
+      ]),
       _buildContentSection(
         '📚 منابع یادگیری',
         'منابع پیشنهادی برای مطالعه بیشتر:',
@@ -1301,7 +1238,10 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
   }
 
   static Widget _buildContentSection(
-      String title, String description, List<String> items) {
+    String title,
+    String description,
+    List<String> items,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
       child: Column(
@@ -1325,33 +1265,35 @@ class _HelpScreenState extends State<HelpScreen> with TickerProviderStateMixin {
             ),
           ),
           const SizedBox(height: 16),
-          ...items.map((item) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      margin: const EdgeInsets.only(top: 6, right: 8),
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF667EEA),
-                        shape: BoxShape.circle,
+          ...items.map(
+            (item) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    margin: const EdgeInsets.only(top: 6, right: 8),
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF667EEA),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      item,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF2D3748),
+                        height: 1.4,
                       ),
                     ),
-                    Expanded(
-                      child: Text(
-                        item,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF2D3748),
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              )),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -1383,8 +1325,9 @@ class HelpBackgroundPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color =
-          (isDark ? Colors.white : const Color(0xFF667EEA)).withOpacity(0.05)
+      ..color = (isDark ? Colors.white : const Color(0xFF667EEA)).withOpacity(
+        0.05,
+      )
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
 
@@ -1411,7 +1354,8 @@ class HelpBackgroundPainter extends CustomPainter {
       path.moveTo(startX, 0);
 
       for (double y = 0; y <= size.height; y += 10) {
-        final x = startX +
+        final x =
+            startX +
             math.sin((y * 0.01) + (animation.value * 2 * math.pi)) * amplitude;
         path.lineTo(x, y);
       }

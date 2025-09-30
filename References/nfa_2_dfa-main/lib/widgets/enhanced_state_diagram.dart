@@ -259,9 +259,7 @@ class _EnhancedStateDiagramState extends State<EnhancedStateDiagram>
         children: [
           if (widget.headerWidget != null) widget.headerWidget!,
           if (widget.showToolbar) _buildToolbar(),
-          Expanded(
-            child: _buildMainContent(),
-          ),
+          Expanded(child: _buildMainContent()),
           if (widget.showStatusBar) _buildStatusBar(),
           if (widget.footerWidget != null) widget.footerWidget!,
         ],
@@ -276,20 +274,14 @@ class _EnhancedStateDiagramState extends State<EnhancedStateDiagram>
       decoration: BoxDecoration(
         color: Theme.of(context).appBarTheme.backgroundColor,
         border: Border(
-          bottom: BorderSide(
-            color: Theme.of(context).dividerColor,
-            width: 1,
-          ),
+          bottom: BorderSide(color: Theme.of(context).dividerColor, width: 1),
         ),
       ),
       child: Row(
         children: [
           // Title
           if (widget.title != null) ...[
-            Text(
-              widget.title!,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
+            Text(widget.title!, style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(width: 16),
           ],
 
@@ -381,9 +373,7 @@ class _EnhancedStateDiagramState extends State<EnhancedStateDiagram>
     return Row(
       children: [
         // Main diagram area
-        Expanded(
-          child: _buildEnhancedDiagram(),
-        ),
+        Expanded(child: _buildEnhancedDiagram()),
 
         // Analytics panel
         if (widget.showAnalyticsPanel && _shouldShowAnalyticsPanel())
@@ -458,18 +448,12 @@ class _EnhancedStateDiagramState extends State<EnhancedStateDiagram>
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceVariant,
         border: Border(
-          top: BorderSide(
-            color: Theme.of(context).dividerColor,
-            width: 1,
-          ),
+          top: BorderSide(color: Theme.of(context).dividerColor, width: 1),
         ),
       ),
       child: Row(
         children: [
-          Text(
-            _getStatusText(),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
+          Text(_getStatusText(), style: Theme.of(context).textTheme.bodySmall),
           const Spacer(),
           if (_diagramState.isLoading) ...[
             const SizedBox(
@@ -478,10 +462,7 @@ class _EnhancedStateDiagramState extends State<EnhancedStateDiagram>
               child: CircularProgressIndicator(strokeWidth: 2),
             ),
             const SizedBox(width: 8),
-            Text(
-              'Processing...',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+            Text('Processing...', style: Theme.of(context).textTheme.bodySmall),
           ],
         ],
       ),
@@ -494,10 +475,7 @@ class _EnhancedStateDiagramState extends State<EnhancedStateDiagram>
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         border: Border(
-          left: BorderSide(
-            color: Theme.of(context).dividerColor,
-            width: 1,
-          ),
+          left: BorderSide(color: Theme.of(context).dividerColor, width: 1),
         ),
       ),
       child: Column(
@@ -530,10 +508,8 @@ class _EnhancedStateDiagramState extends State<EnhancedStateDiagram>
                         flex: 3,
                         child: Text(
                           entry.value.toString(),
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
@@ -991,10 +967,7 @@ class PerformanceOptimizer {
   final PerformanceSettings settings;
   final dynamic automaton;
 
-  PerformanceOptimizer({
-    required this.settings,
-    required this.automaton,
-  });
+  PerformanceOptimizer({required this.settings, required this.automaton});
 
   Widget optimize(Widget widget) {
     // Apply performance optimizations
@@ -1010,9 +983,7 @@ class PerformanceOptimizer {
 class DiagramMinimapController {
   final dynamic automaton;
 
-  DiagramMinimapController({
-    required this.automaton,
-  });
+  DiagramMinimapController({required this.automaton});
 
   Widget buildMinimap(BuildContext context) {
     return Container(
@@ -1040,10 +1011,7 @@ class AnimationSystemManager {
   final AnimationSettings settings;
   late List<AnimationController> _controllers;
 
-  AnimationSystemManager({
-    required this.vsync,
-    required this.settings,
-  }) {
+  AnimationSystemManager({required this.vsync, required this.settings}) {
     _controllers = [];
   }
 
@@ -1069,10 +1037,8 @@ class DiagramThemeManager {
   DiagramThemeData? currentTheme;
   final EnhancedDiagramConfig config;
 
-  DiagramThemeManager({
-    DiagramThemeData? initialTheme,
-    required this.config,
-  }) : currentTheme = initialTheme ?? DiagramThemePresets.defaultTheme;
+  DiagramThemeManager({DiagramThemeData? initialTheme, required this.config})
+    : currentTheme = initialTheme ?? DiagramThemePresets.defaultTheme;
 
   void setTheme(DiagramThemeData theme) {
     currentTheme = theme;
@@ -1093,10 +1059,7 @@ class LayoutAlgorithmManager {
   LayoutAlgorithmType algorithm;
   final dynamic automaton;
 
-  LayoutAlgorithmManager({
-    required this.algorithm,
-    required this.automaton,
-  });
+  LayoutAlgorithmManager({required this.algorithm, required this.automaton});
 
   Future<void> changeAlgorithm(LayoutAlgorithmType newAlgorithm) async {
     algorithm = newAlgorithm;

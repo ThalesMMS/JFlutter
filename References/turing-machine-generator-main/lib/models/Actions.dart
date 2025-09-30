@@ -86,5 +86,5 @@ enum ActionType {
   E,
   // ignore: constant_identifier_names
   @HiveField(4)
-  NONE;
+  NONE,
 }

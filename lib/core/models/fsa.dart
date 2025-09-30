@@ -77,10 +77,7 @@ class FSA extends Automaton {
         'height': bounds.height,
       },
       'zoomLevel': zoomLevel,
-      'panOffset': {
-        'x': panOffset.x,
-        'y': panOffset.y,
-      },
+      'panOffset': {'x': panOffset.x, 'y': panOffset.y},
     };
   }
 
@@ -131,7 +128,8 @@ class FSA extends Automaton {
         final FSATransition fsaTransition = transition;
         final transitionErrors = fsaTransition.validate();
         errors.addAll(
-            transitionErrors.map((e) => 'Transition ${fsaTransition.id}: $e'));
+          transitionErrors.map((e) => 'Transition ${fsaTransition.id}: $e'),
+        );
       }
     }
 
@@ -145,7 +143,8 @@ class FSA extends Automaton {
           for (final symbol in transition.inputSymbols) {
             if (inputSymbols.contains(symbol)) {
               errors.add(
-                  'Non-deterministic transition from state ${state.id} on symbol $symbol');
+                'Non-deterministic transition from state ${state.id} on symbol $symbol',
+              );
             }
             inputSymbols.add(symbol);
           }
@@ -281,7 +280,9 @@ class FSA extends Automaton {
 
   /// Gets all transitions from a state that accept a specific symbol
   Set<FSATransition> getTransitionsFromStateOnSymbol(
-      State state, String symbol) {
+    State state,
+    String symbol,
+  ) {
     return fsaTransitions
         .where((t) => t.fromState == state && t.acceptsSymbol(symbol))
         .toSet();
@@ -339,7 +340,9 @@ class FSA extends Automaton {
 
   /// Gets all states reachable from a set of states on a specific symbol
   Set<State> getStatesReachableOnSymbolFromSet(
-      Set<State> states, String symbol) {
+    Set<State> states,
+    String symbol,
+  ) {
     final reachable = <State>{};
 
     for (final state in states) {

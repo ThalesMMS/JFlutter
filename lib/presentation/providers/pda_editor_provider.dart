@@ -137,8 +137,9 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
 
   void _updateStateWithPda(PDA pda) {
     final transitions = pda.pdaTransitions;
-    final nondeterministicTransitionIds =
-        _findNondeterministicTransitions(transitions);
+    final nondeterministicTransitionIds = _findNondeterministicTransitions(
+      transitions,
+    );
     final lambdaTransitionIds = transitions
         .where((t) => t.isLambdaInput || t.isLambdaPop || t.isLambdaPush)
         .map((t) => t.id)
@@ -155,5 +156,5 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
 /// Provider exposing the current PDA editor state.
 final pdaEditorProvider =
     StateNotifierProvider<PDAEditorNotifier, PDAEditorState>(
-  (ref) => PDAEditorNotifier(),
-);
+      (ref) => PDAEditorNotifier(),
+    );

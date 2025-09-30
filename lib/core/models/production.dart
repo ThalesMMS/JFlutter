@@ -337,15 +337,13 @@ class Production {
     final rightSideStr = parts[1].trim();
 
     if (rightSideStr == 'ε' || rightSideStr.isEmpty) {
-      return Production.lambda(
-        id: id,
-        leftSide: leftSide.first,
-        order: order,
-      );
+      return Production.lambda(id: id, leftSide: leftSide.first, order: order);
     }
 
-    final rightSide =
-        rightSideStr.split(RegExp(r'\s+')).where((s) => s.isNotEmpty).toList();
+    final rightSide = rightSideStr
+        .split(RegExp(r'\s+'))
+        .where((s) => s.isNotEmpty)
+        .toList();
 
     return Production(
       id: id,

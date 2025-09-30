@@ -8,11 +8,7 @@ import 'performance_optimizer.dart';
 import 'dart:async';
 
 /// کلاس‌های مورد نیاز برای minimap
-enum StateType {
-  normal,
-  start,
-  final_,
-}
+enum StateType { normal, start, final_ }
 
 class StateNode {
   final String id;
@@ -212,13 +208,9 @@ class _DiagramMinimapState extends State<DiagramMinimap>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
 
     _controller = MinimapController(
       diagramSize: widget.diagramSize,
@@ -298,9 +290,7 @@ class _DiagramMinimapState extends State<DiagramMinimap>
       child: Column(
         children: [
           _buildMinimapHeader(),
-          Expanded(
-            child: _buildMinimapView(),
-          ),
+          Expanded(child: _buildMinimapView()),
           if (widget.showStatistics) _buildStatistics(),
           if (widget.config.showZoomControls) _buildZoomControls(),
         ],
@@ -321,11 +311,7 @@ class _DiagramMinimapState extends State<DiagramMinimap>
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.map,
-            size: 16,
-            color: widget.theme.primaryColor,
-          ),
+          Icon(Icons.map, size: 16, color: widget.theme.primaryColor),
           const SizedBox(width: 4),
           Text(
             'Minimap',
@@ -376,8 +362,10 @@ class _DiagramMinimapState extends State<DiagramMinimap>
   }
 
   Widget _buildStatistics() {
-    final visibleNodes =
-        _controller.getVisibleNodes(widget.nodes, widget.viewport);
+    final visibleNodes = _controller.getVisibleNodes(
+      widget.nodes,
+      widget.viewport,
+    );
     final totalNodes = widget.nodes.length;
     final totalTransitions = widget.transitions.length;
 
@@ -387,9 +375,7 @@ class _DiagramMinimapState extends State<DiagramMinimap>
       decoration: BoxDecoration(
         color: widget.theme.primaryColor.withOpacity(0.05),
         border: Border(
-          top: BorderSide(
-            color: widget.theme.primaryColor.withOpacity(0.2),
-          ),
+          top: BorderSide(color: widget.theme.primaryColor.withOpacity(0.2)),
         ),
       ),
       child: Column(
@@ -407,8 +393,10 @@ class _DiagramMinimapState extends State<DiagramMinimap>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _buildStatItem('Zoom', '${(_currentZoom * 100).round()}%'),
-              _buildStatItem('Scale',
-                  '1:${(widget.diagramSize.width / widget.config.size.width).round()}'),
+              _buildStatItem(
+                'Scale',
+                '1:${(widget.diagramSize.width / widget.config.size.width).round()}',
+              ),
             ],
           ),
         ],
@@ -451,9 +439,7 @@ class _DiagramMinimapState extends State<DiagramMinimap>
           bottomRight: Radius.circular(widget.config.borderRadius),
         ),
         border: Border(
-          top: BorderSide(
-            color: widget.theme.primaryColor.withOpacity(0.2),
-          ),
+          top: BorderSide(color: widget.theme.primaryColor.withOpacity(0.2)),
         ),
       ),
       child: Row(
@@ -489,15 +475,9 @@ class _DiagramMinimapState extends State<DiagramMinimap>
         decoration: BoxDecoration(
           color: widget.theme.primaryColor.withOpacity(0.1),
           borderRadius: BorderRadius.circular(4),
-          border: Border.all(
-            color: widget.theme.primaryColor.withOpacity(0.3),
-          ),
+          border: Border.all(color: widget.theme.primaryColor.withOpacity(0.3)),
         ),
-        child: Icon(
-          icon,
-          size: 14,
-          color: widget.theme.primaryColor,
-        ),
+        child: Icon(icon, size: 14, color: widget.theme.primaryColor),
       ),
     );
   }
@@ -616,10 +596,7 @@ class MinimapController {
   final Size minimapSize;
   late final double scale;
 
-  MinimapController({
-    required this.diagramSize,
-    required this.minimapSize,
-  }) {
+  MinimapController({required this.diagramSize, required this.minimapSize}) {
     scale = math.min(
       minimapSize.width / diagramSize.width,
       minimapSize.height / diagramSize.height,
@@ -628,16 +605,15 @@ class MinimapController {
 
   /// تبدیل مختصات minimap به مختصات دیاگرام
   Offset minimapToDiagramCoordinates(
-      Offset minimapPoint, Size actualMinimapSize) {
+    Offset minimapPoint,
+    Size actualMinimapSize,
+  ) {
     final actualScale = math.min(
       actualMinimapSize.width / diagramSize.width,
       actualMinimapSize.height / diagramSize.height,
     );
 
-    return Offset(
-      minimapPoint.dx / actualScale,
-      minimapPoint.dy / actualScale,
-    );
+    return Offset(minimapPoint.dx / actualScale, minimapPoint.dy / actualScale);
   }
 
   /// تبدیل delta مختصات minimap به delta دیاگرام
@@ -647,24 +623,20 @@ class MinimapController {
       actualMinimapSize.height / diagramSize.height,
     );
 
-    return Offset(
-      minimapDelta.dx / actualScale,
-      minimapDelta.dy / actualScale,
-    );
+    return Offset(minimapDelta.dx / actualScale, minimapDelta.dy / actualScale);
   }
 
   /// تبدیل مختصات دیاگرام به مختصات minimap
   Offset diagramToMinimapCoordinates(
-      Offset diagramPoint, Size actualMinimapSize) {
+    Offset diagramPoint,
+    Size actualMinimapSize,
+  ) {
     final actualScale = math.min(
       actualMinimapSize.width / diagramSize.width,
       actualMinimapSize.height / diagramSize.height,
     );
 
-    return Offset(
-      diagramPoint.dx * actualScale,
-      diagramPoint.dy * actualScale,
-    );
+    return Offset(diagramPoint.dx * actualScale, diagramPoint.dy * actualScale);
   }
 
   /// محاسبه محدوده نودها
@@ -774,20 +746,12 @@ class MinimapPainter extends CustomPainter {
 
     // خطوط عمودی
     for (double x = 0; x <= diagramSize.width; x += gridSpacing) {
-      canvas.drawLine(
-        Offset(x, 0),
-        Offset(x, diagramSize.height),
-        paint,
-      );
+      canvas.drawLine(Offset(x, 0), Offset(x, diagramSize.height), paint);
     }
 
     // خطوط افقی
     for (double y = 0; y <= diagramSize.height; y += gridSpacing) {
-      canvas.drawLine(
-        Offset(0, y),
-        Offset(diagramSize.width, y),
-        paint,
-      );
+      canvas.drawLine(Offset(0, y), Offset(diagramSize.width, y), paint);
     }
   }
 
@@ -800,8 +764,9 @@ class MinimapPainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
 
     for (final transition in transitions) {
-      final fromNode =
-          nodes.where((n) => n.id == transition.fromState).firstOrNull;
+      final fromNode = nodes
+          .where((n) => n.id == transition.fromState)
+          .firstOrNull;
       final toNode = nodes.where((n) => n.id == transition.toState).firstOrNull;
 
       if (fromNode != null && toNode != null) {
@@ -922,10 +887,7 @@ class MinimapPainter extends CustomPainter {
 
     textPainter.layout();
 
-    final offset = Offset(
-      size.width - textPainter.width - 4,
-      4,
-    );
+    final offset = Offset(size.width - textPainter.width - 4, 4);
 
     // رسم پس‌زمینه متن
     final bgRect = Rect.fromLTWH(
@@ -1060,9 +1022,7 @@ class _MinimapSettingsState extends State<MinimapSettings> {
       decoration: BoxDecoration(
         color: widget.theme.backgroundColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: widget.theme.primaryColor.withOpacity(0.3),
-        ),
+        border: Border.all(color: widget.theme.primaryColor.withOpacity(0.3)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -1112,18 +1072,18 @@ class _MinimapSettingsState extends State<MinimapSettings> {
           _config.size.width,
           100,
           400,
-          (value) => _updateConfig(_config.copyWith(
-            size: Size(value, _config.size.height),
-          )),
+          (value) => _updateConfig(
+            _config.copyWith(size: Size(value, _config.size.height)),
+          ),
         ),
         _buildSlider(
           'Height',
           _config.size.height,
           75,
           300,
-          (value) => _updateConfig(_config.copyWith(
-            size: Size(_config.size.width, value),
-          )),
+          (value) => _updateConfig(
+            _config.copyWith(size: Size(_config.size.width, value)),
+          ),
         ),
         _buildSlider(
           'Node Size',
@@ -1210,9 +1170,11 @@ class _MinimapSettingsState extends State<MinimapSettings> {
             _config.autoHideDuration.inSeconds.toDouble(),
             1,
             10,
-            (value) => _updateConfig(_config.copyWith(
-              autoHideDuration: Duration(seconds: value.round()),
-            )),
+            (value) => _updateConfig(
+              _config.copyWith(
+                autoHideDuration: Duration(seconds: value.round()),
+              ),
+            ),
           ),
       ],
     );
@@ -1331,9 +1293,7 @@ class _MinimapSettingsState extends State<MinimapSettings> {
         decoration: BoxDecoration(
           color: widget.theme.primaryColor.withOpacity(0.1),
           borderRadius: BorderRadius.circular(6),
-          border: Border.all(
-            color: widget.theme.primaryColor.withOpacity(0.3),
-          ),
+          border: Border.all(color: widget.theme.primaryColor.withOpacity(0.3)),
         ),
         child: Text(
           label,
@@ -1430,9 +1390,7 @@ class MinimapStatistics extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.backgroundColor.withOpacity(0.95),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: theme.primaryColor.withOpacity(0.3),
-        ),
+        border: Border.all(color: theme.primaryColor.withOpacity(0.3)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -1452,11 +1410,15 @@ class MinimapStatistics extends StatelessWidget {
           _buildStatRow('Start States', '${stats.startStates}'),
           _buildStatRow('Final States', '${stats.finalStates}'),
           const Divider(height: 16),
-          _buildStatRow('Viewport Coverage',
-              '${stats.viewportCoverage.toStringAsFixed(1)}%'),
+          _buildStatRow(
+            'Viewport Coverage',
+            '${stats.viewportCoverage.toStringAsFixed(1)}%',
+          ),
           _buildStatRow('Diagram Scale', '1:${stats.scale.toStringAsFixed(0)}'),
           _buildStatRow(
-              'Node Density', '${stats.nodeDensity.toStringAsFixed(2)}/unit²'),
+            'Node Density',
+            '${stats.nodeDensity.toStringAsFixed(2)}/unit²',
+          ),
         ],
       ),
     );
@@ -1489,12 +1451,15 @@ class MinimapStatistics extends StatelessWidget {
   }
 
   MinimapStats _calculateStatistics() {
-    final visibleNodes =
-        nodes.where((node) => viewport.contains(node.position)).length;
-    final startStates =
-        nodes.where((node) => node.type == StateType.start).length;
-    final finalStates =
-        nodes.where((node) => node.type == StateType.final_).length;
+    final visibleNodes = nodes
+        .where((node) => viewport.contains(node.position))
+        .length;
+    final startStates = nodes
+        .where((node) => node.type == StateType.start)
+        .length;
+    final finalStates = nodes
+        .where((node) => node.type == StateType.final_)
+        .length;
 
     final viewportArea = viewport.width * viewport.height;
     final diagramArea = diagramSize.width * diagramSize.height;
@@ -1594,13 +1559,9 @@ class _AdvancedMinimapState extends State<AdvancedMinimap>
       vsync: this,
     );
 
-    _pulseAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.2,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
+    _pulseAnimation = Tween<double>(begin: 0.8, end: 1.2).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
 
     _pulseController.repeat(reverse: true);
   }
@@ -1741,7 +1702,10 @@ extension StateNodeExtensions on StateNode {
 class MinimapUtils {
   /// محاسبه بهترین سایز minimap بر اساس سایز دیاگرام
   static Size calculateOptimalSize(
-      Size diagramSize, double maxWidth, double maxHeight) {
+    Size diagramSize,
+    double maxWidth,
+    double maxHeight,
+  ) {
     final aspectRatio = diagramSize.width / diagramSize.height;
 
     if (aspectRatio > 1) {
@@ -1789,7 +1753,10 @@ class MinimapUtils {
 
   /// محاسبه مختصات بهینه برای قرارگیری minimap
   static Offset calculateOptimalPosition(
-      Size screenSize, Size minimapSize, EdgeInsets safeArea) {
+    Size screenSize,
+    Size minimapSize,
+    EdgeInsets safeArea,
+  ) {
     final rightMargin = 16.0;
     final bottomMargin = 16.0;
 

@@ -68,10 +68,7 @@ class TMTransition extends Transition {
       'fromState': fromState.id,
       'toState': toState.id,
       'label': label,
-      'controlPoint': {
-        'x': controlPoint.x,
-        'y': controlPoint.y,
-      },
+      'controlPoint': {'x': controlPoint.x, 'y': controlPoint.y},
       'type': type.name,
       'transitionType': 'tm',
       'readSymbol': readSymbol,

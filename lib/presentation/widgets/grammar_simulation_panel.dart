@@ -57,16 +57,13 @@ class _GrammarSimulationPanelState
   Widget _buildHeader(BuildContext context) {
     return Row(
       children: [
-        Icon(
-          Icons.play_arrow,
-          color: Theme.of(context).colorScheme.primary,
-        ),
+        Icon(Icons.play_arrow, color: Theme.of(context).colorScheme.primary),
         const SizedBox(width: 8),
         Text(
           'Grammar Parser',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
       ],
     );
@@ -84,9 +81,9 @@ class _GrammarSimulationPanelState
         children: [
           Text(
             'Parsing Algorithm',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
@@ -97,7 +94,9 @@ class _GrammarSimulationPanelState
             ),
             items: const [
               DropdownMenuItem(
-                  value: 'CYK', child: Text('CYK (Cocke-Younger-Kasami)')),
+                value: 'CYK',
+                child: Text('CYK (Cocke-Younger-Kasami)'),
+              ),
               DropdownMenuItem(value: 'LL', child: Text('LL Parser')),
               DropdownMenuItem(value: 'LR', child: Text('LR Parser')),
             ],
@@ -127,9 +126,9 @@ class _GrammarSimulationPanelState
         children: [
           Text(
             'Test String',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           TextField(
@@ -145,11 +144,10 @@ class _GrammarSimulationPanelState
           Text(
             'Examples: aabb, abab, aabbb (for S → aSb | ab)',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.7),
-                ),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
           ),
         ],
       ),
@@ -180,9 +178,9 @@ class _GrammarSimulationPanelState
         children: [
           Text(
             'Parse Results',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           Expanded(
@@ -203,8 +201,7 @@ class _GrammarSimulationPanelState
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color:
-              Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -219,15 +216,15 @@ class _GrammarSimulationPanelState
           Text(
             'No parse results yet',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
+              color: Theme.of(context).colorScheme.outline,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             'Enter a string and click Parse to see results',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
+              color: Theme.of(context).colorScheme.outline,
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -260,9 +257,9 @@ class _GrammarSimulationPanelState
               Text(
                 _parseResult!,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: color,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -277,9 +274,9 @@ class _GrammarSimulationPanelState
             const SizedBox(height: 16),
             Text(
               'Parse Steps:',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             Expanded(
@@ -288,17 +285,19 @@ class _GrammarSimulationPanelState
                 itemBuilder: (context, index) {
                   return Container(
                     margin: const EdgeInsets.only(bottom: 4),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
                       '${index + 1}. ${_parseSteps[index]}',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontFamily: 'monospace',
-                          ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),
                     ),
                   );
                 },

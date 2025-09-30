@@ -10,43 +10,59 @@ class SerializationService {
     final builder = XmlBuilder();
     builder.processing('xml', 'version="1.0" encoding="UTF-8"');
 
-    builder.element('structure', nest: () {
-      builder.attribute('type', 'fa');
-      builder.element('automaton', nest: () {
-        // Add states
-        final states = automatonData['states'] as List<dynamic>? ?? [];
-        for (final state in states) {
-          final stateMap = state as Map<String, dynamic>;
-          builder.element('state', nest: () {
-            builder.attribute('id', stateMap['id'] as String);
-            builder.attribute('name',
-                stateMap['name'] as String? ?? stateMap['id'] as String);
-            if (stateMap['isInitial'] == true) {
-              builder.element('initial');
+    builder.element(
+      'structure',
+      nest: () {
+        builder.attribute('type', 'fa');
+        builder.element(
+          'automaton',
+          nest: () {
+            // Add states
+            final states = automatonData['states'] as List<dynamic>? ?? [];
+            for (final state in states) {
+              final stateMap = state as Map<String, dynamic>;
+              builder.element(
+                'state',
+                nest: () {
+                  builder.attribute('id', stateMap['id'] as String);
+                  builder.attribute(
+                    'name',
+                    stateMap['name'] as String? ?? stateMap['id'] as String,
+                  );
+                  if (stateMap['isInitial'] == true) {
+                    builder.element('initial');
+                  }
+                  if (stateMap['isFinal'] == true) {
+                    builder.element('final');
+                  }
+                },
+              );
             }
-            if (stateMap['isFinal'] == true) {
-              builder.element('final');
-            }
-          });
-        }
 
-        // Add transitions
-        final transitions =
-            automatonData['transitions'] as Map<String, dynamic>? ?? {};
-        for (final transition in transitions.entries) {
-          final from = transition.key;
-          final targets = transition.value as List<dynamic>? ?? [];
-          for (final target in targets) {
-            builder.element('transition', nest: () {
-              builder.element('from', nest: from);
-              builder.element('to', nest: target as String);
-              builder.element('read',
-                  nest: ''); // JFLAP uses empty string for epsilon
-            });
-          }
-        }
-      });
-    });
+            // Add transitions
+            final transitions =
+                automatonData['transitions'] as Map<String, dynamic>? ?? {};
+            for (final transition in transitions.entries) {
+              final from = transition.key;
+              final targets = transition.value as List<dynamic>? ?? [];
+              for (final target in targets) {
+                builder.element(
+                  'transition',
+                  nest: () {
+                    builder.element('from', nest: from);
+                    builder.element('to', nest: target as String);
+                    builder.element(
+                      'read',
+                      nest: '',
+                    ); // JFLAP uses empty string for epsilon
+                  },
+                );
+              }
+            }
+          },
+        );
+      },
+    );
 
     return builder.buildDocument().toXmlString(pretty: true);
   }
@@ -82,8 +98,9 @@ class SerializationService {
       }
 
       // Parse transitions
-      for (final transitionElement
-          in automatonElement.findAllElements('transition')) {
+      for (final transitionElement in automatonElement.findAllElements(
+        'transition',
+      )) {
         final from = transitionElement.findElements('from').first.innerText;
         final to = transitionElement.findElements('to').first.innerText;
 
@@ -107,7 +124,8 @@ class SerializationService {
   /// Serializes automaton to JSON format
   String serializeAutomatonToJson(Map<String, dynamic> automatonData) {
     final dto = AutomatonDto(
-      id: automatonData['id'] as String? ??
+      id:
+          automatonData['id'] as String? ??
           'automaton_${DateTime.now().millisecondsSinceEpoch}',
       name: automatonData['name'] as String? ?? 'Automaton',
       type: automatonData['type'] as String? ?? 'dfa',
@@ -159,7 +177,9 @@ class SerializationService {
 
   /// Round-trip test: serialize to format then deserialize back
   Result<Map<String, dynamic>> roundTripTest(
-      Map<String, dynamic> automatonData, SerializationFormat format) {
+    Map<String, dynamic> automatonData,
+    SerializationFormat format,
+  ) {
     try {
       String serialized;
       Result<Map<String, dynamic>> deserialized;
@@ -187,7 +207,9 @@ class SerializationService {
 
   /// Validates that serialized data can be deserialized back correctly
   bool validateRoundTrip(
-      Map<String, dynamic> original, Map<String, dynamic> roundTripped) {
+    Map<String, dynamic> original,
+    Map<String, dynamic> roundTripped,
+  ) {
     // Basic validation - in a real implementation, you'd do deep comparison
     return original['states']?.length == roundTripped['states']?.length &&
         original['transitions']?.length == roundTripped['transitions']?.length;

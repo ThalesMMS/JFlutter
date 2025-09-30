@@ -21,8 +21,11 @@ class NFAOperationResult {
     this.metadata,
   });
 
-  factory NFAOperationResult.success(NFA result,
-      {String? message, Map<String, dynamic>? metadata}) {
+  factory NFAOperationResult.success(
+    NFA result, {
+    String? message,
+    Map<String, dynamic>? metadata,
+  }) {
     return NFAOperationResult(
       success: true,
       message: message ?? 'Operation completed successfully',
@@ -32,10 +35,7 @@ class NFAOperationResult {
   }
 
   factory NFAOperationResult.failure(String message) {
-    return NFAOperationResult(
-      success: false,
-      message: message,
-    );
+    return NFAOperationResult(success: false, message: message);
   }
 }
 
@@ -138,16 +138,16 @@ class NFA extends Automaton {
     String? name,
     String? description,
     Map<String, dynamic>? metadata,
-  })  : _states = states ?? <String>{},
-        _alphabet = alphabet ?? <String>{},
-        _transitions = transitions ?? <String, Map<String, Set<String>>>{},
-        _startState = startState ?? '',
-        _finalStates = finalStates ?? <String>{},
-        _name = name ?? 'Unnamed NFA',
-        _description = description ?? '',
-        _metadata = metadata ?? <String, dynamic>{},
-        _createdAt = DateTime.now(),
-        _modifiedAt = DateTime.now();
+  }) : _states = states ?? <String>{},
+       _alphabet = alphabet ?? <String>{},
+       _transitions = transitions ?? <String, Map<String, Set<String>>>{},
+       _startState = startState ?? '',
+       _finalStates = finalStates ?? <String>{},
+       _name = name ?? 'Unnamed NFA',
+       _description = description ?? '',
+       _metadata = metadata ?? <String, dynamic>{},
+       _createdAt = DateTime.now(),
+       _modifiedAt = DateTime.now();
 
   // Enhanced getters
   Set<String> get states => UnmodifiableSetView(_states);
@@ -253,8 +253,9 @@ class NFA extends Automaton {
           for (final symbol in stateTransitions.keys) {
             final destinations = stateTransitions[symbol];
             if (destinations is List) {
-              nfa._transitions[state]![symbol] =
-                  destinations.map((e) => e.toString()).toSet();
+              nfa._transitions[state]![symbol] = destinations
+                  .map((e) => e.toString())
+                  .toSet();
             } else if (destinations != null) {
               nfa._transitions[state]![symbol] = {destinations.toString()};
             }
@@ -691,13 +692,15 @@ class NFA extends Automaton {
     visitedStates.addAll(currentStates);
     stateVisits += currentStates.length;
 
-    steps.add(NFATraceStep(
-      currentStates: currentStates,
-      consumedInput: '',
-      remainingInput: input,
-      epsilonClosure: currentStates,
-      transitions: {},
-    ));
+    steps.add(
+      NFATraceStep(
+        currentStates: currentStates,
+        consumedInput: '',
+        remainingInput: input,
+        epsilonClosure: currentStates,
+        transitions: {},
+      ),
+    );
 
     for (int i = 0; i < input.length; i++) {
       final symbol = input[i];
@@ -714,14 +717,16 @@ class NFA extends Automaton {
       }
 
       if (nextStates.isEmpty) {
-        steps.add(NFATraceStep(
-          currentStates: <String>{},
-          consumedInput: input.substring(0, i + 1),
-          remainingInput: input.substring(i + 1),
-          lastSymbol: symbol,
-          epsilonClosure: <String>{},
-          transitions: transitionMap,
-        ));
+        steps.add(
+          NFATraceStep(
+            currentStates: <String>{},
+            consumedInput: input.substring(0, i + 1),
+            remainingInput: input.substring(i + 1),
+            lastSymbol: symbol,
+            epsilonClosure: <String>{},
+            transitions: transitionMap,
+          ),
+        );
         break;
       }
 
@@ -729,14 +734,16 @@ class NFA extends Automaton {
       visitedStates.addAll(currentStates);
       stateVisits += currentStates.length;
 
-      steps.add(NFATraceStep(
-        currentStates: nextStates,
-        consumedInput: input.substring(0, i + 1),
-        remainingInput: input.substring(i + 1),
-        lastSymbol: symbol,
-        epsilonClosure: currentStates,
-        transitions: transitionMap,
-      ));
+      steps.add(
+        NFATraceStep(
+          currentStates: nextStates,
+          consumedInput: input.substring(0, i + 1),
+          remainingInput: input.substring(i + 1),
+          lastSymbol: symbol,
+          epsilonClosure: currentStates,
+          transitions: transitionMap,
+        ),
+      );
     }
 
     final accepted = currentStates.any((state) => _finalStates.contains(state));
@@ -749,8 +756,9 @@ class NFA extends Automaton {
       'states_visited': visitedStates.length,
       'total_state_visits': stateVisits,
       'transitions_taken': transitionsTaken,
-      'final_states_reached':
-          currentStates.where((s) => _finalStates.contains(s)).toSet(),
+      'final_states_reached': currentStates
+          .where((s) => _finalStates.contains(s))
+          .toSet(),
     });
 
     _operationCount++;
@@ -789,12 +797,14 @@ class NFA extends Automaton {
 
     if (!thisValidation.isValid) {
       return NFAOperationResult.failure(
-          'NFA اول نامعتبر است: ${thisValidation.errors.join(', ')}');
+        'NFA اول نامعتبر است: ${thisValidation.errors.join(', ')}',
+      );
     }
 
     if (!otherValidation.isValid) {
       return NFAOperationResult.failure(
-          'NFA دوم نامعتبر است: ${otherValidation.errors.join(', ')}');
+        'NFA دوم نامعتبر است: ${otherValidation.errors.join(', ')}',
+      );
     }
 
     try {
@@ -810,8 +820,10 @@ class NFA extends Automaton {
         result.addState('this_$state', isFinal: _finalStates.contains(state));
       }
       for (final state in other._states) {
-        result.addState('other_$state',
-            isFinal: other._finalStates.contains(state));
+        result.addState(
+          'other_$state',
+          isFinal: other._finalStates.contains(state),
+        );
       }
 
       for (final fromState in _transitions.keys) {
@@ -845,12 +857,14 @@ class NFA extends Automaton {
 
     if (!thisValidation.isValid) {
       return NFAOperationResult.failure(
-          'NFA اول نامعتبر است: ${thisValidation.errors.join(', ')}');
+        'NFA اول نامعتبر است: ${thisValidation.errors.join(', ')}',
+      );
     }
 
     if (!otherValidation.isValid) {
       return NFAOperationResult.failure(
-          'NFA دوم نامعتبر است: ${otherValidation.errors.join(', ')}');
+        'NFA دوم نامعتبر است: ${otherValidation.errors.join(', ')}',
+      );
     }
 
     try {
@@ -860,8 +874,10 @@ class NFA extends Automaton {
         result.addState(state, isFinal: false);
       }
       for (final state in other._states) {
-        result.addState('next_$state',
-            isFinal: other._finalStates.contains(state));
+        result.addState(
+          'next_$state',
+          isFinal: other._finalStates.contains(state),
+        );
       }
 
       result.setStartState(_startState);
@@ -896,7 +912,8 @@ class NFA extends Automaton {
     final validation = validate();
     if (!validation.isValid) {
       return NFAOperationResult.failure(
-          'NFA نامعتبر است: ${validation.errors.join(', ')}');
+        'NFA نامعتبر است: ${validation.errors.join(', ')}',
+      );
     }
 
     try {
@@ -921,7 +938,10 @@ class NFA extends Automaton {
 
       for (final finalState in _finalStates) {
         result.addTransition(
-            'star_$finalState', epsilon, 'star_${_startState}');
+          'star_$finalState',
+          epsilon,
+          'star_${_startState}',
+        );
       }
 
       return NFAOperationResult.success(result);
@@ -1041,13 +1061,15 @@ class NFA extends Automaton {
     for (final fromState in _transitions.keys) {
       if (!_states.contains(fromState)) {
         errors.add(
-            'حالت مبدأ "$fromState" در انتقال‌ها وجود دارد ولی در مجموعه حالات نیست');
+          'حالت مبدأ "$fromState" در انتقال‌ها وجود دارد ولی در مجموعه حالات نیست',
+        );
       }
       final stateTransitions = _transitions[fromState]!;
       for (final symbol in stateTransitions.keys) {
         if (symbol != epsilon && !_alphabet.contains(symbol)) {
-          warnings
-              .add('نماد "$symbol" در انتقال‌ها استفاده شده ولی در الفبا نیست');
+          warnings.add(
+            'نماد "$symbol" در انتقال‌ها استفاده شده ولی در الفبا نیست',
+          );
         }
         for (final toState in stateTransitions[symbol]!) {
           if (!_states.contains(toState)) {

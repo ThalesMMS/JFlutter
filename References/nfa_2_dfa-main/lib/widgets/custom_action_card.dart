@@ -1,19 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
-enum CardAnimationType {
-  scale,
-  rotate,
-  flip,
-  slide,
-  glow,
-}
+enum CardAnimationType { scale, rotate, flip, slide, glow }
 
-enum CardSize {
-  small,
-  medium,
-  large,
-}
+enum CardSize { small, medium, large }
 
 class AdvancedCustomActionCard extends StatefulWidget {
   final IconData icon;
@@ -113,58 +103,35 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
     );
 
     // Scale Animation
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: _getScaleEnd(),
-    ).animate(CurvedAnimation(
-      parent: _primaryController,
-      curve: Curves.elasticOut,
-    ));
+    _scaleAnimation = Tween<double>(begin: 1.0, end: _getScaleEnd()).animate(
+      CurvedAnimation(parent: _primaryController, curve: Curves.elasticOut),
+    );
 
     // Rotate Animation
-    _rotateAnimation = Tween<double>(
-      begin: 0.0,
-      end: 0.05,
-    ).animate(CurvedAnimation(
-      parent: _primaryController,
-      curve: Curves.easeInOut,
-    ));
+    _rotateAnimation = Tween<double>(begin: 0.0, end: 0.05).animate(
+      CurvedAnimation(parent: _primaryController, curve: Curves.easeInOut),
+    );
 
     // Flip Animation
-    _flipAnimation = Tween<double>(
-      begin: 0.0,
-      end: math.pi,
-    ).animate(CurvedAnimation(
-      parent: _primaryController,
-      curve: Curves.easeInOut,
-    ));
+    _flipAnimation = Tween<double>(begin: 0.0, end: math.pi).animate(
+      CurvedAnimation(parent: _primaryController, curve: Curves.easeInOut),
+    );
 
     // Slide Animation
-    _slideAnimation = Tween<Offset>(
-      begin: Offset.zero,
-      end: const Offset(0, -0.1),
-    ).animate(CurvedAnimation(
-      parent: _primaryController,
-      curve: Curves.easeOut,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: Offset.zero, end: const Offset(0, -0.1)).animate(
+          CurvedAnimation(parent: _primaryController, curve: Curves.easeOut),
+        );
 
     // Glow Animation
-    _glowAnimation = Tween<double>(
-      begin: 0.3,
-      end: 0.8,
-    ).animate(CurvedAnimation(
-      parent: _primaryController,
-      curve: Curves.easeInOut,
-    ));
+    _glowAnimation = Tween<double>(begin: 0.3, end: 0.8).animate(
+      CurvedAnimation(parent: _primaryController, curve: Curves.easeInOut),
+    );
 
     // Pulse Animation
-    _pulseAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.1,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
 
     // Parallax Animation
     _parallaxAnimation = Tween<Offset>(
@@ -262,10 +229,8 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
       case CardAnimationType.rotate:
         return AnimatedBuilder(
           animation: _rotateAnimation,
-          builder: (context, child) => Transform.rotate(
-            angle: _rotateAnimation.value,
-            child: child,
-          ),
+          builder: (context, child) =>
+              Transform.rotate(angle: _rotateAnimation.value, child: child),
           child: child,
         );
       case CardAnimationType.flip:
@@ -361,9 +326,7 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
                 Material(
                   color: Colors.transparent,
                   child: Container(
-                    decoration: BoxDecoration(
-                      gradient: widget.gradient,
-                    ),
+                    decoration: BoxDecoration(gradient: widget.gradient),
                     child: widget.enableParallax
                         ? AnimatedBuilder(
                             animation: _parallaxAnimation,
@@ -403,11 +366,7 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
 
                 // Badge
                 if (widget.badge != null)
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: widget.badge!,
-                  ),
+                  Positioned(top: 8, right: 8, child: widget.badge!),
 
                 // Disabled Overlay
                 if (!widget.isEnabled)
@@ -430,10 +389,8 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
     if (widget.enablePulse) {
       card = AnimatedBuilder(
         animation: _pulseAnimation,
-        builder: (context, child) => Transform.scale(
-          scale: _pulseAnimation.value,
-          child: child,
-        ),
+        builder: (context, child) =>
+            Transform.scale(scale: _pulseAnimation.value, child: child),
         child: card,
       );
     }

@@ -7,13 +7,13 @@ import 'package:petitparser/petitparser.dart';
 
 final authority =
     seq3(_credentials.optional(), _hostname.optional(), _port.optional()).map3(
-  (credentials, hostname, port) => {
-    #username: credentials?.$1,
-    #password: credentials?.$2?.$2,
-    #hostname: hostname,
-    #port: port?.$2,
-  },
-);
+      (credentials, hostname, port) => {
+        #username: credentials?.$1,
+        #password: credentials?.$2?.$2,
+        #hostname: hostname,
+        #port: port?.$2,
+      },
+    );
 
 final _credentials = seq3(
   _username,

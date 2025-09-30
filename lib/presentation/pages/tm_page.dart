@@ -187,9 +187,7 @@ class _TMPageState extends ConsumerState<TMPage> {
         return ListView(
           controller: controller,
           padding: const EdgeInsets.all(16),
-          children: const [
-            TMSimulationPanel(),
-          ],
+          children: const [TMSimulationPanel()],
         );
       },
       initialChildSize: 0.7,
@@ -204,9 +202,7 @@ class _TMPageState extends ConsumerState<TMPage> {
         return ListView(
           controller: controller,
           padding: const EdgeInsets.all(16),
-          children: const [
-            TMAlgorithmPanel(),
-          ],
+          children: const [TMAlgorithmPanel()],
         );
       },
       initialChildSize: 0.6,
@@ -219,9 +215,7 @@ class _TMPageState extends ConsumerState<TMPage> {
         return ListView(
           controller: controller,
           padding: const EdgeInsets.all(16),
-          children: [
-            _buildInfoPanel(context),
-          ],
+          children: [_buildInfoPanel(context)],
         );
       },
       initialChildSize: 0.45,
@@ -231,7 +225,7 @@ class _TMPageState extends ConsumerState<TMPage> {
 
   Future<void> _showDraggableSheet({
     required Widget Function(BuildContext context, ScrollController controller)
-        builder,
+    builder,
     double initialChildSize = 0.6,
     double minChildSize = 0.3,
     double maxChildSize = 0.9,
@@ -251,8 +245,9 @@ class _TMPageState extends ConsumerState<TMPage> {
             return Padding(
               padding: const EdgeInsets.only(top: 8),
               child: ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(16)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
+                ),
                 child: Material(
                   color: color,
                   child: SafeArea(
@@ -268,10 +263,7 @@ class _TMPageState extends ConsumerState<TMPage> {
     );
   }
 
-  Widget _buildInfoPanel(
-    BuildContext context, {
-    EdgeInsetsGeometry? margin,
-  }) {
+  Widget _buildInfoPanel(BuildContext context, {EdgeInsetsGeometry? margin}) {
     final theme = Theme.of(context);
     return Container(
       margin: margin,
@@ -300,11 +292,20 @@ class _TMPageState extends ConsumerState<TMPage> {
           _buildInfoRow('Tape Symbols', _formatSet(_tapeSymbols), theme),
           _buildInfoRow('Move Directions', _formatSet(_moveDirections), theme),
           _buildInfoRow(
-              'Initial State', _hasInitialState ? 'Yes' : 'No', theme),
+            'Initial State',
+            _hasInitialState ? 'Yes' : 'No',
+            theme,
+          ),
           _buildInfoRow(
-              'Accepting State', _hasAcceptingState ? 'Yes' : 'No', theme),
+            'Accepting State',
+            _hasAcceptingState ? 'Yes' : 'No',
+            theme,
+          ),
           _buildInfoRow(
-              'Simulation Ready', _isMachineReady ? 'Yes' : 'No', theme),
+            'Simulation Ready',
+            _isMachineReady ? 'Yes' : 'No',
+            theme,
+          ),
           _buildInfoRow(
             'Nondeterministic Transitions',
             _nondeterministicTransitionIds.isEmpty
@@ -331,10 +332,7 @@ class _TMPageState extends ConsumerState<TMPage> {
     final emphasizedStyle = textStyle?.copyWith(fontWeight: FontWeight.w600);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Text(
-        '$label: $value',
-        style: emphasizedStyle,
-      ),
+      child: Text('$label: $value', style: emphasizedStyle),
     );
   }
 

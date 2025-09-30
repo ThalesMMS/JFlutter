@@ -77,8 +77,4 @@ class TuringTransitionEntity {
 }
 
 /// Directions the Turing machine head can move
-enum TuringMoveDirection {
-  left,
-  right,
-  stay,
-}
+enum TuringMoveDirection { left, right, stay }

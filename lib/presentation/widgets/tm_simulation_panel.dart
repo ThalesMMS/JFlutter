@@ -22,7 +22,7 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
   bool? _isAccepted;
   String? _simulationResult;
   List<String> _simulationSteps = [];
-  List<String> _tapeHistory = <String>[];
+  List<String> _tapeHistory = [];
 
   @override
   void dispose() {
@@ -54,16 +54,13 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
   Widget _buildHeader(BuildContext context) {
     return Row(
       children: [
-        Icon(
-          Icons.play_arrow,
-          color: Theme.of(context).colorScheme.primary,
-        ),
+        Icon(Icons.play_arrow, color: Theme.of(context).colorScheme.primary),
         const SizedBox(width: 8),
         Text(
           'TM Simulation',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
       ],
     );
@@ -81,9 +78,9 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
         children: [
           Text(
             'Simulation Input',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 12),
           TextField(
@@ -98,9 +95,10 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
           Text(
             'Examples: 101 (binary), 1100 (palindrome), 111 (counting)',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color:
-                      Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                ),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
           ),
         ],
       ),
@@ -131,9 +129,9 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
         children: [
           Text(
             'Simulation Results',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           Expanded(
@@ -169,15 +167,15 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
           Text(
             'No simulation results yet',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
+              color: Theme.of(context).colorScheme.outline,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             'Enter an input string and click Simulate to see results',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
+              color: Theme.of(context).colorScheme.outline,
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -204,9 +202,9 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
               child: Text(
                 _simulationResult ?? 'Simulation error',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: colorScheme.onErrorContainer,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  color: colorScheme.onErrorContainer,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
@@ -240,9 +238,9 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
                 child: Text(
                   message,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: color,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -251,9 +249,9 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
             const SizedBox(height: 16),
             Text(
               'Simulation Steps:',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             if (_hasSimulationResult)
@@ -263,7 +261,9 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
                   steps: _buildSyntheticSteps(),
                   errorMessage: _isAccepted == null
                       ? (_simulationResult ?? 'Simulation error')
-                      : (_isAccepted == true ? '' : (_simulationResult ?? 'Rejected')),
+                      : (_isAccepted == true
+                            ? ''
+                            : (_simulationResult ?? 'Rejected')),
                   executionTime: const Duration(milliseconds: 0),
                 ),
               ),
@@ -297,11 +297,7 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
     });
 
     final result = await Future(
-      () => TMSimulator.simulate(
-        tm,
-        inputString,
-        stepByStep: true,
-      ),
+      () => TMSimulator.simulate(tm, inputString, stepByStep: true),
     );
 
     if (!mounted) {
@@ -324,8 +320,9 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
 
     final simulation = result.data!;
     final steps = _describeSteps(simulation.steps);
-    final tapeHistory =
-        simulation.steps.map((step) => step.tapeContents).toList();
+    final tapeHistory = simulation.steps
+        .map((step) => step.tapeContents)
+        .toList();
 
     setState(() {
       _isSimulating = false;
@@ -334,8 +331,8 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
       _simulationResult = simulation.accepted
           ? 'Accepted'
           : simulation.errorMessage != null
-              ? 'Rejected: ${simulation.errorMessage}'
-              : 'Rejected';
+          ? 'Rejected: ${simulation.errorMessage}'
+          : 'Rejected';
       _simulationSteps = steps;
       _tapeHistory = tapeHistory;
     });

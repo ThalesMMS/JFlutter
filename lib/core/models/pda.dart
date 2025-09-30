@@ -88,10 +88,7 @@ class PDA extends Automaton {
         'height': bounds.height,
       },
       'zoomLevel': zoomLevel,
-      'panOffset': {
-        'x': panOffset.x,
-        'y': panOffset.y,
-      },
+      'panOffset': {'x': panOffset.x, 'y': panOffset.y},
       'stackAlphabet': stackAlphabet.toList(),
       'initialStackSymbol': initialStackSymbol,
     };
@@ -158,19 +155,22 @@ class PDA extends Automaton {
         final PDATransition pdaTransition = transition;
         final transitionErrors = pdaTransition.validate();
         errors.addAll(
-            transitionErrors.map((e) => 'Transition ${pdaTransition.id}: $e'));
+          transitionErrors.map((e) => 'Transition ${pdaTransition.id}: $e'),
+        );
 
         // Validate stack symbols
         if (!pdaTransition.isLambdaPop &&
             !stackAlphabet.contains(pdaTransition.popSymbol)) {
           errors.add(
-              'Transition ${pdaTransition.id} references invalid pop symbol');
+            'Transition ${pdaTransition.id} references invalid pop symbol',
+          );
         }
 
         if (!pdaTransition.isLambdaPush &&
             !stackAlphabet.contains(pdaTransition.pushSymbol)) {
           errors.add(
-              'Transition ${pdaTransition.id} references invalid push symbol');
+            'Transition ${pdaTransition.id} references invalid push symbol',
+          );
         }
       }
     }
@@ -200,7 +200,9 @@ class PDA extends Automaton {
 
   /// Gets all transitions from a state that accept a specific input symbol
   Set<PDATransition> getTransitionsFromStateOnInput(
-      State state, String inputSymbol) {
+    State state,
+    String inputSymbol,
+  ) {
     return pdaTransitions
         .where((t) => t.fromState == state && t.acceptsInput(inputSymbol))
         .toSet();
@@ -208,7 +210,9 @@ class PDA extends Automaton {
 
   /// Gets all transitions from a state that can pop a specific stack symbol
   Set<PDATransition> getTransitionsFromStateOnStack(
-      State state, String stackSymbol) {
+    State state,
+    String stackSymbol,
+  ) {
     return pdaTransitions
         .where((t) => t.fromState == state && t.canPop(stackSymbol))
         .toSet();
@@ -221,10 +225,12 @@ class PDA extends Automaton {
     String stackSymbol,
   ) {
     return pdaTransitions
-        .where((t) =>
-            t.fromState == state &&
-            t.acceptsInput(inputSymbol) &&
-            t.canPop(stackSymbol))
+        .where(
+          (t) =>
+              t.fromState == state &&
+              t.acceptsInput(inputSymbol) &&
+              t.canPop(stackSymbol),
+        )
         .toSet();
   }
 

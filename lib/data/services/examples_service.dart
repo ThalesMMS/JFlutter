@@ -30,7 +30,8 @@ class ExamplesService {
 
   /// Loads examples by category with caching
   Future<ListResult<ExampleEntity>> loadExamplesByCategory(
-      ExampleCategory category) async {
+    ExampleCategory category,
+  ) async {
     if (_categoryCache.containsKey(category)) {
       return Success(_categoryCache[category]!);
     }
@@ -85,7 +86,8 @@ class ExamplesService {
 
   /// Gets examples filtered by difficulty level
   Future<ListResult<ExampleEntity>> getExamplesByDifficulty(
-      DifficultyLevel difficulty) async {
+    DifficultyLevel difficulty,
+  ) async {
     final allExamplesResult = await loadAllExamples();
     if (allExamplesResult.isFailure) {
       return Failure(allExamplesResult.error!);
@@ -100,7 +102,8 @@ class ExamplesService {
 
   /// Gets examples filtered by complexity level
   Future<ListResult<ExampleEntity>> getExamplesByComplexity(
-      ComplexityLevel complexity) async {
+    ComplexityLevel complexity,
+  ) async {
     final allExamplesResult = await loadAllExamples();
     if (allExamplesResult.isFailure) {
       return Failure(allExamplesResult.error!);
@@ -129,8 +132,9 @@ class ExamplesService {
 
   /// Gets recommended examples for beginners
   Future<ListResult<ExampleEntity>> getBeginnerExamples() async {
-    final easyExamplesResult =
-        await getExamplesByDifficulty(DifficultyLevel.easy);
+    final easyExamplesResult = await getExamplesByDifficulty(
+      DifficultyLevel.easy,
+    );
     if (easyExamplesResult.isFailure) {
       return Failure(easyExamplesResult.error!);
     }
@@ -142,8 +146,9 @@ class ExamplesService {
 
   /// Gets advanced examples for experienced users
   Future<ListResult<ExampleEntity>> getAdvancedExamples() async {
-    final hardExamplesResult =
-        await getExamplesByDifficulty(DifficultyLevel.hard);
+    final hardExamplesResult = await getExamplesByDifficulty(
+      DifficultyLevel.hard,
+    );
     if (hardExamplesResult.isFailure) {
       return Failure(hardExamplesResult.error!);
     }
@@ -217,8 +222,9 @@ class ExamplesService {
   Map<ComplexityLevel, int> _countByComplexity(List<ExampleEntity> examples) {
     final counts = <ComplexityLevel, int>{};
     for (final level in ComplexityLevel.values) {
-      counts[level] =
-          examples.where((e) => e.estimatedComplexity == level).length;
+      counts[level] = examples
+          .where((e) => e.estimatedComplexity == level)
+          .length;
     }
     return counts;
   }
@@ -267,10 +273,14 @@ class ExamplesLibraryStats {
 
   @override
   String toString() {
-    final difficultyCount =
-        examplesByDifficulty.values.fold<int>(0, (sum, value) => sum + value);
-    final complexityCount =
-        examplesByComplexity.values.fold<int>(0, (sum, value) => sum + value);
+    final difficultyCount = examplesByDifficulty.values.fold<int>(
+      0,
+      (sum, value) => sum + value,
+    );
+    final complexityCount = examplesByComplexity.values.fold<int>(
+      0,
+      (sum, value) => sum + value,
+    );
 
     return 'ExamplesLibraryStats('
         'total: $totalExamples, '

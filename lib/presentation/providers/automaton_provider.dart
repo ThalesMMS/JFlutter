@@ -27,9 +27,9 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
   AutomatonProvider({
     required AutomatonService automatonService,
     required LayoutRepository layoutRepository,
-  })  : _automatonService = automatonService,
-        _layoutRepository = layoutRepository,
-        super(const AutomatonState());
+  }) : _automatonService = automatonService,
+       _layoutRepository = layoutRepository,
+       super(const AutomatonState());
 
   /// Creates a new automaton
   Future<void> createAutomaton({
@@ -61,15 +61,9 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       );
 
       if (result.isSuccess) {
-        state = state.copyWith(
-          currentAutomaton: result.data,
-          isLoading: false,
-        );
+        state = state.copyWith(currentAutomaton: result.data, isLoading: false);
       } else {
-        state = state.copyWith(
-          isLoading: false,
-          error: result.error,
-        );
+        state = state.copyWith(isLoading: false, error: result.error);
       }
     } catch (e) {
       state = state.copyWith(
@@ -101,7 +95,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
 
     try {
       // Use the core algorithm directly
-      final result = AutomatonSimulator.simulate(
+      final result = await AutomatonSimulator.simulate(
         state.currentAutomaton!,
         inputString,
         stepByStep: true,
@@ -109,15 +103,9 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       );
 
       if (result.isSuccess) {
-        state = state.copyWith(
-          simulationResult: result.data,
-          isLoading: false,
-        );
+        state = state.copyWith(simulationResult: result.data, isLoading: false);
       } else {
-        state = state.copyWith(
-          isLoading: false,
-          error: result.error,
-        );
+        state = state.copyWith(isLoading: false, error: result.error);
       }
     } catch (e) {
       state = state.copyWith(
@@ -149,10 +137,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
           simulationResult: null,
         );
       } else {
-        state = state.copyWith(
-          isLoading: false,
-          error: result.error,
-        );
+        state = state.copyWith(isLoading: false, error: result.error);
       }
     } catch (e) {
       state = state.copyWith(
@@ -184,10 +169,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
           simulationResult: null,
         );
       } else {
-        state = state.copyWith(
-          isLoading: false,
-          error: result.error,
-        );
+        state = state.copyWith(isLoading: false, error: result.error);
       }
     } catch (e) {
       state = state.copyWith(
@@ -231,10 +213,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
 
     try {
       final result = FSAToGrammarConverter.convert(state.currentAutomaton!);
-      state = state.copyWith(
-        isLoading: false,
-        grammarResult: result,
-      );
+      state = state.copyWith(isLoading: false, grammarResult: result);
       return result;
     } catch (e) {
       state = state.copyWith(
@@ -270,10 +249,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
           simulationResult: null,
         );
       } else {
-        state = state.copyWith(
-          isLoading: false,
-          error: result.error,
-        );
+        state = state.copyWith(isLoading: false, error: result.error);
       }
     } catch (e) {
       state = state.copyWith(
@@ -303,10 +279,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
           simulationResult: null,
         );
       } else {
-        state = state.copyWith(
-          isLoading: false,
-          error: result.error,
-        );
+        state = state.copyWith(isLoading: false, error: result.error);
       }
     } catch (e) {
       state = state.copyWith(
@@ -328,16 +301,10 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
 
       if (result.isSuccess) {
         // Store the regex result in state
-        state = state.copyWith(
-          regexResult: result.data,
-          isLoading: false,
-        );
+        state = state.copyWith(regexResult: result.data, isLoading: false);
         return result.data;
       } else {
-        state = state.copyWith(
-          isLoading: false,
-          error: result.error,
-        );
+        state = state.copyWith(isLoading: false, error: result.error);
         return null;
       }
     } catch (e) {
@@ -361,8 +328,10 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     );
 
     try {
-      final areEquivalent =
-          EquivalenceChecker.areEquivalent(state.currentAutomaton!, other);
+      final areEquivalent = EquivalenceChecker.areEquivalent(
+        state.currentAutomaton!,
+        other,
+      );
       state = state.copyWith(
         isLoading: false,
         equivalenceResult: areEquivalent,
@@ -403,14 +372,16 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
   /// Converts FSA to AutomatonEntity
   AutomatonEntity _convertFsaToEntity(FSA fsa) {
     final states = fsa.states
-        .map((s) => StateEntity(
-              id: s.id,
-              name: s.label,
-              x: s.position.x,
-              y: s.position.y,
-              isInitial: s.isInitial,
-              isFinal: s.isAccepting,
-            ))
+        .map(
+          (s) => StateEntity(
+            id: s.id,
+            name: s.label,
+            x: s.position.x,
+            y: s.position.y,
+            isInitial: s.isInitial,
+            isFinal: s.isAccepting,
+          ),
+        )
         .toList();
 
     // Build transitions map from FSA transitions
@@ -442,13 +413,15 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
   /// Converts AutomatonEntity to FSA
   FSA _convertEntityToFsa(AutomatonEntity entity) {
     final states = entity.states
-        .map((s) => State(
-              id: s.id,
-              label: s.name,
-              position: Vector2(s.x, s.y),
-              isInitial: s.isInitial,
-              isAccepting: s.isFinal,
-            ))
+        .map(
+          (s) => State(
+            id: s.id,
+            label: s.name,
+            position: Vector2(s.x, s.y),
+            isInitial: s.isInitial,
+            isAccepting: s.isFinal,
+          ),
+        )
         .toSet();
 
     final initialState = states.where((s) => s.isInitial).firstOrNull;
@@ -467,13 +440,15 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
 
         for (final toStateId in entry.value) {
           final toState = states.firstWhere((s) => s.id == toStateId);
-          transitions.add(FSATransition(
-            id: 't${transitionId++}',
-            fromState: fromState,
-            toState: toState,
-            label: symbol,
-            inputSymbols: {symbol},
-          ));
+          transitions.add(
+            FSATransition(
+              id: 't${transitionId++}',
+              fromState: fromState,
+              toState: toState,
+              label: symbol,
+              inputSymbols: {symbol},
+            ),
+          );
         }
       }
     }
@@ -534,8 +509,9 @@ class AutomatonState {
       simulationResult: simulationResult == _unset
           ? this.simulationResult
           : simulationResult as sim_result.SimulationResult?,
-      regexResult:
-          regexResult == _unset ? this.regexResult : regexResult as String?,
+      regexResult: regexResult == _unset
+          ? this.regexResult
+          : regexResult as String?,
       grammarResult: grammarResult == _unset
           ? this.grammarResult
           : grammarResult as Grammar?,
@@ -554,10 +530,10 @@ class AutomatonState {
 /// Provider instances
 final automatonProvider =
     StateNotifierProvider<AutomatonProvider, AutomatonState>((ref) {
-  final automatonService = AutomatonService();
+      final automatonService = AutomatonService();
 
-  return AutomatonProvider(
-    automatonService: automatonService,
-    layoutRepository: LayoutRepositoryImpl(),
-  );
-});
+      return AutomatonProvider(
+        automatonService: automatonService,
+        layoutRepository: LayoutRepositoryImpl(),
+      );
+    });

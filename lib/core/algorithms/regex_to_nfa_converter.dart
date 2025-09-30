@@ -23,8 +23,10 @@ class RegexToNFAConverter {
       }
 
       // Convert to NFA using Thompson's construction
-      final nfa =
-          _thompsonConstruction(parsedRegex, contextAlphabet: contextAlphabet);
+      final nfa = _thompsonConstruction(
+        parsedRegex,
+        contextAlphabet: contextAlphabet,
+      );
 
       return ResultFactory.success(nfa);
     } catch (e) {
@@ -47,14 +49,16 @@ class RegexToNFAConverter {
         parenCount--;
         if (parenCount < 0) {
           return ResultFactory.failure(
-              'Unbalanced parentheses in regular expression');
+            'Unbalanced parentheses in regular expression',
+          );
         }
       }
     }
 
     if (parenCount != 0) {
       return ResultFactory.failure(
-          'Unbalanced parentheses in regular expression');
+        'Unbalanced parentheses in regular expression',
+      );
     }
 
     // Check for invalid characters
@@ -62,7 +66,8 @@ class RegexToNFAConverter {
     for (int i = 0; i < regex.length; i++) {
       if (!validChars.hasMatch(regex[i])) {
         return ResultFactory.failure(
-            'Invalid character in regular expression: ${regex[i]}');
+          'Invalid character in regular expression: ${regex[i]}',
+        );
       }
     }
 
@@ -130,7 +135,8 @@ class RegexToNFAConverter {
             tokens.add(RegexToken(type: TokenType.symbol, value: char));
           } else {
             tokens.add(
-                RegexToken(type: TokenType.charClass, value: buf.toString()));
+              RegexToken(type: TokenType.charClass, value: buf.toString()),
+            );
             i = j; // will be incremented by i++ at end
           }
           break;
@@ -252,8 +258,10 @@ class RegexToNFAConverter {
   }
 
   /// Converts regex node to NFA using Thompson's construction
-  static FSA _thompsonConstruction(RegexNode node,
-      {Set<String>? contextAlphabet}) {
+  static FSA _thompsonConstruction(
+    RegexNode node, {
+    Set<String>? contextAlphabet,
+  }) {
     final nfa = _buildNFA(node, contextAlphabet: contextAlphabet);
     return nfa;
   }
@@ -268,16 +276,17 @@ class RegexToNFAConverter {
       case UnionNode(:final left, :final right):
         return _buildUnionNFA(left, right, contextAlphabet: contextAlphabet);
       case ConcatenationNode(:final left, :final right):
-        return _buildConcatenationNFA(left, right,
-            contextAlphabet: contextAlphabet);
+        return _buildConcatenationNFA(
+          left,
+          right,
+          contextAlphabet: contextAlphabet,
+        );
       case KleeneStarNode(:final child):
-        return _buildKleeneStarNFA(child,
-            contextAlphabet: contextAlphabet);
+        return _buildKleeneStarNFA(child, contextAlphabet: contextAlphabet);
       case PlusNode(:final child):
         return _buildPlusNFA(child, contextAlphabet: contextAlphabet);
       case QuestionNode(:final child):
-        return _buildQuestionNFA(child,
-            contextAlphabet: contextAlphabet);
+        return _buildQuestionNFA(child, contextAlphabet: contextAlphabet);
       case SetNode(:final symbols):
         return _buildSetNFA(symbols);
       case ShortcutNode(:final code):
@@ -371,8 +380,11 @@ class RegexToNFAConverter {
   }
 
   /// Builds NFA for union (|)
-  static FSA _buildUnionNFA(RegexNode left, RegexNode right,
-      {Set<String>? contextAlphabet}) {
+  static FSA _buildUnionNFA(
+    RegexNode left,
+    RegexNode right, {
+    Set<String>? contextAlphabet,
+  }) {
     final leftNFA = _buildNFA(left, contextAlphabet: contextAlphabet);
     final rightNFA = _buildNFA(right, contextAlphabet: contextAlphabet);
 
@@ -403,31 +415,39 @@ class RegexToNFAConverter {
     allTransitions.addAll(rightNFA.fsaTransitions);
 
     // Add epsilon transitions
-    allTransitions.add(FSATransition.epsilon(
-      id: 't_eps1',
-      fromState: newInitial,
-      toState: leftNFA.initialState!,
-    ));
-    allTransitions.add(FSATransition.epsilon(
-      id: 't_eps2',
-      fromState: newInitial,
-      toState: rightNFA.initialState!,
-    ));
+    allTransitions.add(
+      FSATransition.epsilon(
+        id: 't_eps1',
+        fromState: newInitial,
+        toState: leftNFA.initialState!,
+      ),
+    );
+    allTransitions.add(
+      FSATransition.epsilon(
+        id: 't_eps2',
+        fromState: newInitial,
+        toState: rightNFA.initialState!,
+      ),
+    );
 
     for (final acceptingState in leftNFA.acceptingStates) {
-      allTransitions.add(FSATransition.epsilon(
-        id: 't_eps3_${acceptingState.id}',
-        fromState: acceptingState,
-        toState: newFinal,
-      ));
+      allTransitions.add(
+        FSATransition.epsilon(
+          id: 't_eps3_${acceptingState.id}',
+          fromState: acceptingState,
+          toState: newFinal,
+        ),
+      );
     }
 
     for (final acceptingState in rightNFA.acceptingStates) {
-      allTransitions.add(FSATransition.epsilon(
-        id: 't_eps4_${acceptingState.id}',
-        fromState: acceptingState,
-        toState: newFinal,
-      ));
+      allTransitions.add(
+        FSATransition.epsilon(
+          id: 't_eps4_${acceptingState.id}',
+          fromState: acceptingState,
+          toState: newFinal,
+        ),
+      );
     }
 
     return FSA(
@@ -445,8 +465,11 @@ class RegexToNFAConverter {
   }
 
   /// Builds NFA for concatenation
-  static FSA _buildConcatenationNFA(RegexNode left, RegexNode right,
-      {Set<String>? contextAlphabet}) {
+  static FSA _buildConcatenationNFA(
+    RegexNode left,
+    RegexNode right, {
+    Set<String>? contextAlphabet,
+  }) {
     final leftNFA = _buildNFA(left, contextAlphabet: contextAlphabet);
     final rightNFA = _buildNFA(right, contextAlphabet: contextAlphabet);
 
@@ -454,8 +477,10 @@ class RegexToNFAConverter {
   }
 
   /// Builds NFA for Kleene star (*)
-  static FSA _buildKleeneStarNFA(RegexNode child,
-      {Set<String>? contextAlphabet}) {
+  static FSA _buildKleeneStarNFA(
+    RegexNode child, {
+    Set<String>? contextAlphabet,
+  }) {
     final childNFA = _buildNFA(child, contextAlphabet: contextAlphabet);
 
     // Create new initial and final states
@@ -483,23 +508,29 @@ class RegexToNFAConverter {
     allTransitions.addAll(childNFA.fsaTransitions);
 
     // Add epsilon transitions
-    allTransitions.add(FSATransition.epsilon(
-      id: 't_eps1',
-      fromState: newInitial,
-      toState: childNFA.initialState!,
-    ));
+    allTransitions.add(
+      FSATransition.epsilon(
+        id: 't_eps1',
+        fromState: newInitial,
+        toState: childNFA.initialState!,
+      ),
+    );
 
     for (final acceptingState in childNFA.acceptingStates) {
-      allTransitions.add(FSATransition.epsilon(
-        id: 't_eps2_${acceptingState.id}',
-        fromState: acceptingState,
-        toState: newFinal,
-      ));
-      allTransitions.add(FSATransition.epsilon(
-        id: 't_eps3_${acceptingState.id}',
-        fromState: acceptingState,
-        toState: childNFA.initialState!,
-      ));
+      allTransitions.add(
+        FSATransition.epsilon(
+          id: 't_eps2_${acceptingState.id}',
+          fromState: acceptingState,
+          toState: newFinal,
+        ),
+      );
+      allTransitions.add(
+        FSATransition.epsilon(
+          id: 't_eps3_${acceptingState.id}',
+          fromState: acceptingState,
+          toState: childNFA.initialState!,
+        ),
+      );
     }
 
     return FSA(
@@ -520,8 +551,10 @@ class RegexToNFAConverter {
   static FSA _buildPlusNFA(RegexNode child, {Set<String>? contextAlphabet}) {
     // Plus is equivalent to concatenation of child and Kleene star of child
     final childNFA = _buildNFA(child, contextAlphabet: contextAlphabet);
-    final kleeneNFA =
-        _buildKleeneStarNFA(child, contextAlphabet: contextAlphabet);
+    final kleeneNFA = _buildKleeneStarNFA(
+      child,
+      contextAlphabet: contextAlphabet,
+    );
 
     return _concatenateAutomata(childNFA, kleeneNFA);
   }
@@ -531,7 +564,8 @@ class RegexToNFAConverter {
     final rightInitial = rightNFA.initialState;
     if (rightInitial == null) {
       throw ArgumentError(
-          'Right automaton must have an initial state for concatenation');
+        'Right automaton must have an initial state for concatenation',
+      );
     }
 
     final allStates = <State>{...leftNFA.states, ...rightNFA.states};
@@ -577,25 +611,28 @@ class RegexToNFAConverter {
     math.Rectangle leftBounds,
     math.Rectangle rightBounds,
   ) {
-    final left =
-        math.min(leftBounds.left.toDouble(), rightBounds.left.toDouble());
-    final top = math.min(leftBounds.top.toDouble(), rightBounds.top.toDouble());
-    final right =
-        math.max(leftBounds.right.toDouble(), rightBounds.right.toDouble());
-    final bottom =
-        math.max(leftBounds.bottom.toDouble(), rightBounds.bottom.toDouble());
-
-    return math.Rectangle<double>(
-      left,
-      top,
-      right - left,
-      bottom - top,
+    final left = math.min(
+      leftBounds.left.toDouble(),
+      rightBounds.left.toDouble(),
     );
+    final top = math.min(leftBounds.top.toDouble(), rightBounds.top.toDouble());
+    final right = math.max(
+      leftBounds.right.toDouble(),
+      rightBounds.right.toDouble(),
+    );
+    final bottom = math.max(
+      leftBounds.bottom.toDouble(),
+      rightBounds.bottom.toDouble(),
+    );
+
+    return math.Rectangle<double>(left, top, right - left, bottom - top);
   }
 
   /// Builds NFA for question (?)
-  static FSA _buildQuestionNFA(RegexNode child,
-      {Set<String>? contextAlphabet}) {
+  static FSA _buildQuestionNFA(
+    RegexNode child, {
+    Set<String>? contextAlphabet,
+  }) {
     // Question is equivalent to union of child and epsilon
     final childNFA = _buildNFA(child, contextAlphabet: contextAlphabet);
 
@@ -624,23 +661,29 @@ class RegexToNFAConverter {
     allTransitions.addAll(childNFA.fsaTransitions);
 
     // Add epsilon transitions
-    allTransitions.add(FSATransition.epsilon(
-      id: 't_eps1',
-      fromState: newInitial,
-      toState: childNFA.initialState!,
-    ));
-    allTransitions.add(FSATransition.epsilon(
-      id: 't_eps2',
-      fromState: newInitial,
-      toState: newFinal,
-    ));
+    allTransitions.add(
+      FSATransition.epsilon(
+        id: 't_eps1',
+        fromState: newInitial,
+        toState: childNFA.initialState!,
+      ),
+    );
+    allTransitions.add(
+      FSATransition.epsilon(
+        id: 't_eps2',
+        fromState: newInitial,
+        toState: newFinal,
+      ),
+    );
 
     for (final acceptingState in childNFA.acceptingStates) {
-      allTransitions.add(FSATransition.epsilon(
-        id: 't_eps3_${acceptingState.id}',
-        fromState: acceptingState,
-        toState: newFinal,
-      ));
+      allTransitions.add(
+        FSATransition.epsilon(
+          id: 't_eps3_${acceptingState.id}',
+          fromState: acceptingState,
+          toState: newFinal,
+        ),
+      );
     }
 
     return FSA(
@@ -716,7 +759,9 @@ class RegexToNFAConverter {
   }
 
   static Set<String> _expandShortcut(
-      String code, Set<String>? contextAlphabet) {
+    String code,
+    Set<String>? contextAlphabet,
+  ) {
     switch (code) {
       case 'd':
       case 'D':
@@ -726,11 +771,17 @@ class RegexToNFAConverter {
         return {
           '_',
           ...List.generate(
-              26, (i) => String.fromCharCode('a'.codeUnitAt(0) + i)),
+            26,
+            (i) => String.fromCharCode('a'.codeUnitAt(0) + i),
+          ),
           ...List.generate(
-              26, (i) => String.fromCharCode('A'.codeUnitAt(0) + i)),
+            26,
+            (i) => String.fromCharCode('A'.codeUnitAt(0) + i),
+          ),
           ...List.generate(
-              10, (i) => String.fromCharCode('0'.codeUnitAt(0) + i)),
+            10,
+            (i) => String.fromCharCode('0'.codeUnitAt(0) + i),
+          ),
         }.toSet();
       case 's':
       case 'S':

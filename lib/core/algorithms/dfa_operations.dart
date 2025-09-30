@@ -17,15 +17,18 @@ class DFAOperations {
   static Result<void> _validateDfa(FSA dfa, {String context = 'DFA'}) {
     if (dfa.initialState == null) {
       return ResultFactory.failure(
-          '$context deve possuir estado inicial definido.');
+        '$context deve possuir estado inicial definido.',
+      );
     }
     if (!dfa.isDeterministic) {
       return ResultFactory.failure(
-          '$context deve ser determinístico (sem transições não determinísticas).');
+        '$context deve ser determinístico (sem transições não determinísticas).',
+      );
     }
     if (dfa.hasEpsilonTransitions) {
       return ResultFactory.failure(
-          '$context não pode conter transições ε (epsilon).');
+        '$context não pode conter transições ε (epsilon).',
+      );
     }
     // Validate transitions symbols are part of alphabet
     for (final t in dfa.fsaTransitions) {
@@ -33,7 +36,8 @@ class DFAOperations {
       for (final s in t.inputSymbols) {
         if (!dfa.alphabet.contains(s)) {
           return ResultFactory.failure(
-              '$context possui transição com símbolo fora do alfabeto: "$s".');
+            '$context possui transição com símbolo fora do alfabeto: "$s".',
+          );
         }
       }
     }
@@ -50,12 +54,14 @@ class DFAOperations {
     if (a.alphabet.isEmpty &&
         a.fsaTransitions.any((t) => !t.isEpsilonTransition)) {
       return ResultFactory.failure(
-          'Operando A possui transições rotuladas, mas alfabeto está vazio.');
+        'Operando A possui transições rotuladas, mas alfabeto está vazio.',
+      );
     }
     if (b.alphabet.isEmpty &&
         b.fsaTransitions.any((t) => !t.isEpsilonTransition)) {
       return ResultFactory.failure(
-          'Operando B possui transições rotuladas, mas alfabeto está vazio.');
+        'Operando B possui transições rotuladas, mas alfabeto está vazio.',
+      );
     }
     return ResultFactory.success(null);
   }
@@ -142,7 +148,8 @@ class DFAOperations {
       if (valid.isFailure) return ResultFactory.failure(valid.error!);
       if (dfa.initialState == null) {
         return ResultFactory.failure(
-            'Automato não possui estado inicial definido.');
+          'Automato não possui estado inicial definido.',
+        );
       }
 
       final completed = _completeWithAlphabet(dfa, dfa.alphabet);
@@ -160,8 +167,9 @@ class DFAOperations {
         label: 'start',
         position: completed.initialState!.position + Vector2(40, -40),
         isInitial: true,
-        isAccepting:
-            reachable.any((state) => completed.acceptingStates.contains(state)),
+        isAccepting: reachable.any(
+          (state) => completed.acceptingStates.contains(state),
+        ),
       );
 
       final transitions = <FSATransition>{
@@ -175,11 +183,13 @@ class DFAOperations {
       for (final state in reachable) {
         final target = stateCopies[state.id];
         if (target != null) {
-          transitions.add(FSATransition.epsilon(
-            id: 't_suffix_${newInitial.id}_${target.id}',
-            fromState: newInitial,
-            toState: target,
-          ));
+          transitions.add(
+            FSATransition.epsilon(
+              id: 't_suffix_${newInitial.id}_${target.id}',
+              fromState: newInitial,
+              toState: target,
+            ),
+          );
         }
       }
 
@@ -226,7 +236,8 @@ class DFAOperations {
     try {
       if (a.initialState == null || b.initialState == null) {
         return ResultFactory.failure(
-            'Ambos DFAs precisam ter estado inicial definido.');
+          'Ambos DFAs precisam ter estado inicial definido.',
+        );
       }
 
       final combinedAlphabet = {...a.alphabet, ...b.alphabet};
@@ -272,7 +283,8 @@ class DFAOperations {
             .toList();
         if (transitionsForSymbol.isEmpty) {
           throw StateError(
-              'Deterministic automaton expected transition for $symbol');
+            'Deterministic automaton expected transition for $symbol',
+          );
         }
         return transitionsForSymbol.first.toState;
       }
@@ -292,12 +304,14 @@ class DFAOperations {
           final nextA = nextState(completedA, stateA, symbol);
           final nextB = nextState(completedB, stateB, symbol);
           final targetState = getOrCreate(nextA, nextB, isInitial: false);
-          transitions.add(FSATransition.deterministic(
-            id: 't_${currentState.id}_${symbol}_${targetState.id}',
-            fromState: currentState,
-            toState: targetState,
-            symbol: symbol,
-          ));
+          transitions.add(
+            FSATransition.deterministic(
+              id: 't_${currentState.id}_${symbol}_${targetState.id}',
+              fromState: currentState,
+              toState: targetState,
+              symbol: symbol,
+            ),
+          );
         }
       }
 
@@ -347,10 +361,9 @@ class DFAOperations {
     for (final transition in base.fsaTransitions) {
       final fromState = stateCopies[transition.fromState.id]!;
       final toState = stateCopies[transition.toState.id]!;
-      transitions.add(transition.copyWith(
-        fromState: fromState,
-        toState: toState,
-      ));
+      transitions.add(
+        transition.copyWith(fromState: fromState, toState: toState),
+      );
     }
 
     final states = stateCopies.values.toSet();
@@ -472,15 +485,17 @@ class FSAOperations {
                 : TransitionType.deterministic;
             for (final destination in destinations) {
               final toState = stateCopies[destination.id]!;
-              newTransitions.add(FSATransition(
-                id: 't_${fromState.id}_${symbol}_${toState.id}',
-                fromState: fromState,
-                toState: toState,
-                label: symbol,
-                inputSymbols: {symbol},
-                lambdaSymbol: null,
-                type: transitionType,
-              ));
+              newTransitions.add(
+                FSATransition(
+                  id: 't_${fromState.id}_${symbol}_${toState.id}',
+                  fromState: fromState,
+                  toState: toState,
+                  label: symbol,
+                  inputSymbols: {symbol},
+                  lambdaSymbol: null,
+                  type: transitionType,
+                ),
+              );
             }
           }
         }

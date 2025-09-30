@@ -54,7 +54,8 @@ class NFAToDFAConverter {
     for (final acceptingState in nfa.acceptingStates) {
       if (!nfa.states.contains(acceptingState)) {
         return ResultFactory.failure(
-            'Accepting state must be in the states set');
+          'Accepting state must be in the states set',
+        );
       }
     }
 
@@ -94,8 +95,10 @@ class NFAToDFAConverter {
 
         // Find all states reachable from the closure on this symbol
         for (final closureState in closure) {
-          final transitions =
-              nfa.getTransitionsFromStateOnSymbol(closureState, symbol);
+          final transitions = nfa.getTransitionsFromStateOnSymbol(
+            closureState,
+            symbol,
+          );
           for (final transition in transitions) {
             reachableStates.add(transition.toState);
           }
@@ -176,8 +179,10 @@ class NFAToDFAConverter {
 
         // Find all states reachable from current state set on this symbol
         for (final state in currentStateSet) {
-          final transitions =
-              nfa.getTransitionsFromStateOnSymbol(state, symbol);
+          final transitions = nfa.getTransitionsFromStateOnSymbol(
+            state,
+            symbol,
+          );
           for (final transition in transitions) {
             nextStateSet.add(transition.toState);
           }
@@ -262,12 +267,14 @@ class NFAToDFAConverter {
       final steps = <NFADFAConversionStep>[];
 
       // Step 1: Validate input
-      steps.add(NFADFAConversionStep(
-        stepNumber: 1,
-        description: 'Validating input NFA',
-        nfa: nfa,
-        dfa: null,
-      ));
+      steps.add(
+        NFADFAConversionStep(
+          stepNumber: 1,
+          description: 'Validating input NFA',
+          nfa: nfa,
+          dfa: null,
+        ),
+      );
 
       final validationResult = _validateInput(nfa);
       if (!validationResult.isSuccess) {
@@ -275,36 +282,44 @@ class NFAToDFAConverter {
       }
 
       // Step 2: Remove epsilon transitions
-      steps.add(NFADFAConversionStep(
-        stepNumber: 2,
-        description: 'Removing epsilon transitions',
-        nfa: nfa,
-        dfa: null,
-      ));
+      steps.add(
+        NFADFAConversionStep(
+          stepNumber: 2,
+          description: 'Removing epsilon transitions',
+          nfa: nfa,
+          dfa: null,
+        ),
+      );
 
       final nfaWithoutEpsilon = _removeEpsilonTransitions(nfa);
-      steps.add(NFADFAConversionStep(
-        stepNumber: 3,
-        description: 'Epsilon transitions removed',
-        nfa: nfaWithoutEpsilon,
-        dfa: null,
-      ));
+      steps.add(
+        NFADFAConversionStep(
+          stepNumber: 3,
+          description: 'Epsilon transitions removed',
+          nfa: nfaWithoutEpsilon,
+          dfa: null,
+        ),
+      );
 
       // Step 3: Build DFA
-      steps.add(NFADFAConversionStep(
-        stepNumber: 4,
-        description: 'Building DFA using subset construction',
-        nfa: nfaWithoutEpsilon,
-        dfa: null,
-      ));
+      steps.add(
+        NFADFAConversionStep(
+          stepNumber: 4,
+          description: 'Building DFA using subset construction',
+          nfa: nfaWithoutEpsilon,
+          dfa: null,
+        ),
+      );
 
       final dfa = _buildDFA(nfaWithoutEpsilon);
-      steps.add(NFADFAConversionStep(
-        stepNumber: 5,
-        description: 'DFA construction completed',
-        nfa: nfaWithoutEpsilon,
-        dfa: dfa,
-      ));
+      steps.add(
+        NFADFAConversionStep(
+          stepNumber: 5,
+          description: 'DFA construction completed',
+          nfa: nfaWithoutEpsilon,
+          dfa: dfa,
+        ),
+      );
 
       final result = NFAToDFAConversionResult(
         originalNFA: nfa,
@@ -317,7 +332,8 @@ class NFAToDFAConverter {
       return ResultFactory.success(result);
     } catch (e) {
       return ResultFactory.failure(
-          'Error converting NFA to DFA with steps: $e');
+        'Error converting NFA to DFA with steps: $e',
+      );
     }
   }
 }

@@ -99,16 +99,16 @@ class ConversionResult {
     this.steps = const [],
     this.warnings = const [],
     this.processingTime,
-  })  : isSuccess = true,
-        errorMessage = null;
+  }) : isSuccess = true,
+       errorMessage = null;
 
   ConversionResult.error(this.errorMessage)
-      : isSuccess = false,
-        nfa = null,
-        dfa = null,
-        steps = [],
-        warnings = [],
-        processingTime = null;
+    : isSuccess = false,
+      nfa = null,
+      dfa = null,
+      steps = [],
+      warnings = [],
+      processingTime = null;
 }
 
 class DetailedStep {

@@ -60,10 +60,7 @@ class FSATransition extends Transition {
       'fromState': fromState.id,
       'toState': toState.id,
       'label': label,
-      'controlPoint': {
-        'x': controlPoint.x,
-        'y': controlPoint.y,
-      },
+      'controlPoint': {'x': controlPoint.x, 'y': controlPoint.y},
       'type': type.name,
       'transitionType': 'fsa',
       'inputSymbols': inputSymbols.toList(),
@@ -102,11 +99,7 @@ class FSATransition extends Transition {
 
   @override
   int get hashCode {
-    return Object.hash(
-      super.hashCode,
-      inputSymbols,
-      lambdaSymbol,
-    );
+    return Object.hash(super.hashCode, inputSymbols, lambdaSymbol);
   }
 
   @override
@@ -122,12 +115,14 @@ class FSATransition extends Transition {
 
     if (inputSymbols.isEmpty && lambdaSymbol == null) {
       errors.add(
-          'FSA transition must have input symbols or be an epsilon transition');
+        'FSA transition must have input symbols or be an epsilon transition',
+      );
     }
 
     if (lambdaSymbol != null && inputSymbols.isNotEmpty) {
       errors.add(
-          'FSA transition cannot have both input symbols and lambda symbol');
+        'FSA transition cannot have both input symbols and lambda symbol',
+      );
     }
 
     if (lambdaSymbol != null && lambdaSymbol!.isEmpty) {

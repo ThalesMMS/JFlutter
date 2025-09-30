@@ -62,7 +62,7 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
         'منحصر بفرد بودن',
         'مرتب بودن',
         'متناهی بودن',
-        'تعریف شده بودن'
+        'تعریف شده بودن',
       ],
     ),
     EnhancedLessonSection(
@@ -128,7 +128,7 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
       keyPoints: [
         'مجموعه‌های متناهی',
         'مجموعه‌های نامتناهی',
-        'مقایسه اندازه‌ها'
+        'مقایسه اندازه‌ها',
       ],
     ),
     EnhancedLessonSection(
@@ -212,13 +212,13 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
 
       _pageController
           .animateToPage(
-        index,
-        duration: const Duration(milliseconds: 700),
-        curve: Curves.easeInOutCubic,
-      )
+            index,
+            duration: const Duration(milliseconds: 700),
+            curve: Curves.easeInOutCubic,
+          )
           .then((_) {
-        if (mounted) _contentController.forward();
-      });
+            if (mounted) _contentController.forward();
+          });
 
       _fabController.reverse();
     }
@@ -288,7 +288,10 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
   }
 
   Widget _buildSectionContent(
-      int index, bool isDark, MediaQueryData mediaQuery) {
+    int index,
+    bool isDark,
+    MediaQueryData mediaQuery,
+  ) {
     final section = _sections[index];
     final sectionContentData = MathContentData.lessonSections.length > index
         ? MathContentData.lessonSections[index]
@@ -317,30 +320,34 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
                               .asMap()
                               .entries
                               .map((entry) {
-                            return AnimatedFadeIn(
-                              delay: Duration(
-                                  milliseconds: 200 + (entry.key * 150)),
-                              child: ContentCard(
-                                content: entry.value,
-                                color: section.primaryColor,
-                              ),
-                            );
-                          }).toList(),
+                                return AnimatedFadeIn(
+                                  delay: Duration(
+                                    milliseconds: 200 + (entry.key * 150),
+                                  ),
+                                  child: ContentCard(
+                                    content: entry.value,
+                                    color: section.primaryColor,
+                                  ),
+                                );
+                              })
+                              .toList(),
                         if (sectionContentData != null &&
                             sectionContentData.content.examples.isNotEmpty)
                           ...sectionContentData.content.examples
                               .asMap()
                               .entries
                               .map((entry) {
-                            return AnimatedFadeIn(
-                              delay:
-                                  Duration(milliseconds: 300 + entry.key * 200),
-                              child: ExampleCard(
-                                example: entry.value,
-                                color: Colors.amber,
-                              ),
-                            );
-                          }).toList(),
+                                return AnimatedFadeIn(
+                                  delay: Duration(
+                                    milliseconds: 300 + entry.key * 200,
+                                  ),
+                                  child: ExampleCard(
+                                    example: entry.value,
+                                    color: Colors.amber,
+                                  ),
+                                );
+                              })
+                              .toList(),
                         const SizedBox(height: 32),
                         if (sectionContentData != null &&
                             sectionContentData.content.questions.isNotEmpty)
@@ -379,8 +386,9 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
               stops: const [0.0, 0.6, 1.0],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              transform:
-                  GradientRotation(_transitionController.value * math.pi / 4),
+              transform: GradientRotation(
+                _transitionController.value * math.pi / 4,
+              ),
             ),
           ),
           child: Container(
@@ -408,7 +416,9 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
   }
 
   Widget _buildEnhancedHeader(
-      EnhancedLessonSection section, MediaQueryData mediaQuery) {
+    EnhancedLessonSection section,
+    MediaQueryData mediaQuery,
+  ) {
     return Transform.translate(
       offset: Offset(0, 50 * (1 - _contentController.value)),
       child: Opacity(
@@ -440,7 +450,7 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
                         gradient: LinearGradient(
                           colors: [
                             section.primaryColor,
-                            section.secondaryColor
+                            section.secondaryColor,
                           ],
                         ),
                         borderRadius: BorderRadius.circular(24),
@@ -465,7 +475,9 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 6),
+                            horizontal: 16,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
                             color: section.primaryColor.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(20),
@@ -545,8 +557,10 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
                 runSpacing: 8,
                 children: section.keyPoints.map((point) {
                   return Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: section.primaryColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(16),
@@ -615,11 +629,7 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
       ),
       child: Column(
         children: [
-          Icon(
-            Icons.lightbulb_outline,
-            size: 48,
-            color: section.primaryColor,
-          ),
+          Icon(Icons.lightbulb_outline, size: 48, color: section.primaryColor),
           const SizedBox(height: 16),
           Text(
             'نکته مهم',
@@ -670,7 +680,8 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
                             color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                                color: Colors.white.withOpacity(0.3)),
+                              color: Colors.white.withOpacity(0.3),
+                            ),
                           ),
                           child: const Icon(
                             Icons.arrow_back_ios_rounded,
@@ -715,12 +726,15 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
                       filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(20),
-                          border:
-                              Border.all(color: Colors.white.withOpacity(0.3)),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.3),
+                          ),
                         ),
                         child: Text(
                           '${_currentSection + 1} / ${_sections.length}',
@@ -765,10 +779,7 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
                 fontSize: 16,
               ),
             ),
-            icon: const Icon(
-              Icons.quiz_outlined,
-              color: Colors.white,
-            ),
+            icon: const Icon(Icons.quiz_outlined, color: Colors.white),
           ),
 
           // دکمه قبلی "فهرست" در سمت راست
@@ -809,264 +820,265 @@ class _MathFoundationsLessonState extends State<MathFoundationsLesson>
 
   Widget _buildFloatingMenu(bool isDark, MediaQueryData mediaQuery) {
     return AnimatedPositioned(
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOutCubic,
-        bottom: _isMenuOpen ? 0 : -(mediaQuery.size.height * 0.6 + 40),
-        left: 0,
-        right: 0,
-        child: GestureDetector(
-          onVerticalDragUpdate: (details) {
-            setState(() {
-              _dragPosition += details.delta.dy;
-            });
-          },
-          onVerticalDragEnd: (details) {
-            if (_dragPosition > 100) {
-              _toggleMenu();
-            }
-            setState(() {
-              _dragPosition = 0;
-            });
-          },
-          child: Container(
-            height: mediaQuery.size.height * 0.6,
-            margin: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
-              borderRadius: BorderRadius.circular(32),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  blurRadius: 40,
-                  offset: const Offset(0, -20),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        _sections[_currentSection]
-                            .primaryColor
-                            .withOpacity(0.1),
-                        _sections[_currentSection]
-                            .secondaryColor
-                            .withOpacity(0.1),
-                      ],
-                    ),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(32),
-                      topRight: Radius.circular(32),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.list_alt,
-                        size: 28,
-                        color: _sections[_currentSection].primaryColor,
-                      ),
-                      const SizedBox(width: 16),
-                      const Expanded(
-                        child: Text(
-                          'فهرست مطالب درس',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: _toggleMenu,
-                        child: const Icon(Icons.close),
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOutCubic,
+      bottom: _isMenuOpen ? 0 : -(mediaQuery.size.height * 0.6 + 40),
+      left: 0,
+      right: 0,
+      child: GestureDetector(
+        onVerticalDragUpdate: (details) {
+          setState(() {
+            _dragPosition += details.delta.dy;
+          });
+        },
+        onVerticalDragEnd: (details) {
+          if (_dragPosition > 100) {
+            _toggleMenu();
+          }
+          setState(() {
+            _dragPosition = 0;
+          });
+        },
+        child: Container(
+          height: mediaQuery.size.height * 0.6,
+          margin: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+            borderRadius: BorderRadius.circular(32),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 40,
+                offset: const Offset(0, -20),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      _sections[_currentSection].primaryColor.withOpacity(0.1),
+                      _sections[_currentSection].secondaryColor.withOpacity(
+                        0.1,
                       ),
                     ],
                   ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(32),
+                    topRight: Radius.circular(32),
+                  ),
                 ),
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _sections.length,
-                    itemBuilder: (context, index) {
-                      final section = _sections[index];
-                      final isSelected = _currentSection == index;
-                      final isCompleted = index < _currentSection;
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.list_alt,
+                      size: 28,
+                      color: _sections[_currentSection].primaryColor,
+                    ),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Text(
+                        'فهرست مطالب درس',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: _toggleMenu,
+                      child: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _sections.length,
+                  itemBuilder: (context, index) {
+                    final section = _sections[index];
+                    final isSelected = _currentSection == index;
+                    final isCompleted = index < _currentSection;
 
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () => _navigateToSection(index),
-                            borderRadius: BorderRadius.circular(20),
-                            child: Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                gradient: isSelected
-                                    ? LinearGradient(
-                                        colors: [
-                                          section.primaryColor.withOpacity(0.2),
-                                          section.secondaryColor
-                                              .withOpacity(0.2),
-                                        ],
-                                      )
-                                    : null,
-                                color: !isSelected && !isCompleted
-                                    ? Colors.grey.withOpacity(0.1)
-                                    : null,
-                                borderRadius: BorderRadius.circular(20),
-                                border: isSelected
-                                    ? Border.all(
-                                        color: section.primaryColor
-                                            .withOpacity(0.5),
-                                        width: 2,
-                                      )
-                                    : null,
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 50,
-                                    height: 50,
-                                    decoration: BoxDecoration(
-                                      gradient: isSelected || isCompleted
-                                          ? LinearGradient(
-                                              colors: [
-                                                section.primaryColor,
-                                                section.secondaryColor
-                                              ],
-                                            )
-                                          : null,
-                                      color: !isSelected && !isCompleted
-                                          ? Colors.grey.withOpacity(0.3)
-                                          : null,
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    child: Center(
-                                      child: isCompleted
-                                          ? const Icon(
-                                              Icons.check,
-                                              color: Colors.white,
-                                              size: 24,
-                                            )
-                                          : isSelected
-                                              ? const Icon(
-                                                  Icons.play_arrow,
-                                                  color: Colors.white,
-                                                  size: 24,
-                                                )
-                                              : Text(
-                                                  section.emoji,
-                                                  style: const TextStyle(
-                                                      fontSize: 20),
-                                                ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                section.title,
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: isSelected
-                                                      ? FontWeight.bold
-                                                      : FontWeight.w600,
-                                                  color: isSelected
-                                                      ? section.primaryColor
-                                                      : isDark
-                                                          ? Colors.white
-                                                          : Colors.black87,
-                                                ),
-                                              ),
-                                            ),
-                                            if (isSelected)
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 8,
-                                                        vertical: 4),
-                                                decoration: BoxDecoration(
-                                                  color: section.primaryColor,
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                ),
-                                                child: const Text(
-                                                  'فعال',
-                                                  style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 10,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          section.subtitle,
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.grey[600],
-                                          ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.timer_outlined,
-                                              size: 14,
-                                              color: Colors.grey[500],
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              '${section.estimatedTime} دقیقه',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.grey[500],
-                                              ),
-                                            ),
-                                            const SizedBox(width: 16),
-                                            Icon(
-                                              Icons.signal_cellular_alt,
-                                              size: 14,
-                                              color: Colors.grey[500],
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              section.difficulty,
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.grey[500],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () => _navigateToSection(index),
+                          borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              gradient: isSelected
+                                  ? LinearGradient(
+                                      colors: [
+                                        section.primaryColor.withOpacity(0.2),
+                                        section.secondaryColor.withOpacity(0.2),
                                       ],
-                                    ),
+                                    )
+                                  : null,
+                              color: !isSelected && !isCompleted
+                                  ? Colors.grey.withOpacity(0.1)
+                                  : null,
+                              borderRadius: BorderRadius.circular(20),
+                              border: isSelected
+                                  ? Border.all(
+                                      color: section.primaryColor.withOpacity(
+                                        0.5,
+                                      ),
+                                      width: 2,
+                                    )
+                                  : null,
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 50,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    gradient: isSelected || isCompleted
+                                        ? LinearGradient(
+                                            colors: [
+                                              section.primaryColor,
+                                              section.secondaryColor,
+                                            ],
+                                          )
+                                        : null,
+                                    color: !isSelected && !isCompleted
+                                        ? Colors.grey.withOpacity(0.3)
+                                        : null,
+                                    borderRadius: BorderRadius.circular(16),
                                   ),
-                                ],
-                              ),
+                                  child: Center(
+                                    child: isCompleted
+                                        ? const Icon(
+                                            Icons.check,
+                                            color: Colors.white,
+                                            size: 24,
+                                          )
+                                        : isSelected
+                                        ? const Icon(
+                                            Icons.play_arrow,
+                                            color: Colors.white,
+                                            size: 24,
+                                          )
+                                        : Text(
+                                            section.emoji,
+                                            style: const TextStyle(
+                                              fontSize: 20,
+                                            ),
+                                          ),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              section.title,
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: isSelected
+                                                    ? FontWeight.bold
+                                                    : FontWeight.w600,
+                                                color: isSelected
+                                                    ? section.primaryColor
+                                                    : isDark
+                                                    ? Colors.white
+                                                    : Colors.black87,
+                                              ),
+                                            ),
+                                          ),
+                                          if (isSelected)
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 4,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: section.primaryColor,
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                              child: const Text(
+                                                'فعال',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        section.subtitle,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.timer_outlined,
+                                            size: 14,
+                                            color: Colors.grey[500],
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            '${section.estimatedTime} دقیقه',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[500],
+                                            ),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          Icon(
+                                            Icons.signal_cellular_alt,
+                                            size: 14,
+                                            color: Colors.grey[500],
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            section.difficulty,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[500],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ));
+        ),
+      ),
+    );
   }
 }
 

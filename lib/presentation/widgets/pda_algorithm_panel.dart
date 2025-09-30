@@ -40,16 +40,13 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
   Widget _buildHeader(BuildContext context) {
     return Row(
       children: [
-        Icon(
-          Icons.auto_awesome,
-          color: Theme.of(context).colorScheme.primary,
-        ),
+        Icon(Icons.auto_awesome, color: Theme.of(context).colorScheme.primary),
         const SizedBox(width: 8),
         Text(
           'PDA Analysis',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
       ],
     );
@@ -149,18 +146,18 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: _isAnalyzing
-                              ? colorScheme.outline
-                              : colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      color: _isAnalyzing
+                          ? colorScheme.outline
+                          : colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     description,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurface.withValues(alpha: 0.7),
-                        ),
+                      color: colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
                   ),
                 ],
               ),
@@ -190,9 +187,9 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
         children: [
           Text(
             'Analysis Results',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           Expanded(
@@ -228,15 +225,15 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
           Text(
             'No analysis results yet',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
+              color: Theme.of(context).colorScheme.outline,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             'Select an algorithm above to analyze your PDA',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
+              color: Theme.of(context).colorScheme.outline,
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -249,8 +246,9 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color:
-            Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+        color: Theme.of(
+          context,
+        ).colorScheme.primaryContainer.withValues(alpha: 0.3),
         border: Border.all(
           color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
         ),
@@ -259,9 +257,9 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
       child: SingleChildScrollView(
         child: Text(
           _analysisResult!,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontFamily: 'monospace',
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),
         ),
       ),
     );
@@ -337,14 +335,16 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
         );
       }
 
-      final mergedGroups =
-          summary.mergeGroups.where((group) => group.isMeaningful);
+      final mergedGroups = summary.mergeGroups.where(
+        (group) => group.isMeaningful,
+      );
       if (mergedGroups.isNotEmpty) {
         buffer.writeln('Merged equivalent states:');
         for (final group in mergedGroups) {
           final mergedNames = _formatStateList(group.mergedStates);
           buffer.writeln(
-              '  $mergedNames → ${_formatStateName(group.representative)}');
+            '  $mergedNames → ${_formatStateName(group.representative)}',
+          );
         }
       }
 
@@ -363,7 +363,8 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
 
       buffer.writeln('');
       buffer.writeln(
-          'Resulting states: ${_formatStateList(summary.minimizedPda.states)}');
+        'Resulting states: ${_formatStateList(summary.minimizedPda.states)}',
+      );
 
       return buffer.toString();
     });
@@ -388,7 +389,8 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
 
       if (nondeterministicTransitions.isEmpty) {
         buffer.writeln(
-            'Result: PDA is deterministic (no conflicting transitions).');
+          'Result: PDA is deterministic (no conflicting transitions).',
+        );
       } else {
         buffer.writeln('Result: PDA is NON-deterministic.');
         buffer.writeln('Conflicting transitions:');
@@ -396,15 +398,15 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
           if (nondeterministicTransitions.contains(transition.id)) {
             final input =
                 transition.isLambdaInput || transition.inputSymbol.isEmpty
-                    ? 'λ'
-                    : transition.inputSymbol;
+                ? 'λ'
+                : transition.inputSymbol;
             final pop = transition.isLambdaPop || transition.popSymbol.isEmpty
                 ? 'λ'
                 : transition.popSymbol;
             final push =
                 transition.isLambdaPush || transition.pushSymbol.isEmpty
-                    ? 'λ'
-                    : transition.pushSymbol;
+                ? 'λ'
+                : transition.pushSymbol;
             buffer.writeln(
               '  ${transition.fromState.label} -- $input, pop $pop / push $push → ${transition.toState.label}',
             );
@@ -415,7 +417,8 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
       if (editorState.lambdaTransitionIds.isNotEmpty) {
         buffer.writeln('');
         buffer.writeln(
-            'Lambda transitions present: ${editorState.lambdaTransitionIds.length}');
+          'Lambda transitions present: ${editorState.lambdaTransitionIds.length}',
+        );
       }
 
       return buffer.toString();
@@ -440,14 +443,16 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
       }
 
       final analysis = analysisResult.data!;
-      final reachable = analysis.reachabilityAnalysis.reachableStates
-          .map((state) => state.label)
-          .toList()
-        ..sort();
-      final unreachable = analysis.reachabilityAnalysis.unreachableStates
-          .map((state) => state.label)
-          .toList()
-        ..sort();
+      final reachable =
+          analysis.reachabilityAnalysis.reachableStates
+              .map((state) => state.label)
+              .toList()
+            ..sort();
+      final unreachable =
+          analysis.reachabilityAnalysis.unreachableStates
+              .map((state) => state.label)
+              .toList()
+            ..sort();
 
       final buffer = StringBuffer();
       buffer.writeln('Initial state: ${pda.initialState?.label ?? '—'}');
@@ -456,7 +461,8 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
       buffer.writeln('');
       buffer.writeln('Unreachable states (${unreachable.length}):');
       buffer.writeln(
-          unreachable.isEmpty ? '  ∅' : '  {${unreachable.join(', ')}}');
+        unreachable.isEmpty ? '  ∅' : '  {${unreachable.join(', ')}}',
+      );
 
       return buffer.toString();
     });
@@ -511,7 +517,8 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
       buffer.writeln('Stack alphabet symbols observed:');
       final stackSymbols = analysis.stackAnalysis.stackSymbols.toList()..sort();
       buffer.writeln(
-          stackSymbols.isEmpty ? '  ∅' : '  {${stackSymbols.join(', ')}}');
+        stackSymbols.isEmpty ? '  ∅' : '  {${stackSymbols.join(', ')}}',
+      );
       buffer.writeln('Accepting states:');
       final acceptingLabels = pda.acceptingStates.map((s) => s.label).toList()
         ..sort();
@@ -590,7 +597,8 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
       );
       buffer.writeln('');
       buffer.writeln(
-          'Total transitions: ${analysis.transitionAnalysis.totalTransitions}');
+        'Total transitions: ${analysis.transitionAnalysis.totalTransitions}',
+      );
       buffer.writeln(
         'PDA transitions: ${analysis.transitionAnalysis.pdaTransitions}, '
         'FSA transitions: ${analysis.transitionAnalysis.fsaTransitions}',
@@ -639,9 +647,7 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
     }
     messenger
       ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   String _formatStateList(Iterable<automaton_models.State> states) {

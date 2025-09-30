@@ -44,29 +44,27 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       vsync: this,
     )..repeat();
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _mainAnimationController,
-      curve: const Interval(0.0, 0.6, curve: Curves.easeOutCubic),
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _mainAnimationController,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOutCubic),
+      ),
+    );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.5),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _mainAnimationController,
-      curve: const Interval(0.2, 0.8, curve: Curves.elasticOut),
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _mainAnimationController,
+            curve: const Interval(0.2, 0.8, curve: Curves.elasticOut),
+          ),
+        );
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _mainAnimationController,
-      curve: const Interval(0.4, 1.0, curve: Curves.bounceOut),
-    ));
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _mainAnimationController,
+        curve: const Interval(0.4, 1.0, curve: Curves.bounceOut),
+      ),
+    );
 
     _rotationAnimation = Tween<double>(
       begin: 0,
@@ -121,10 +119,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 _buildHeroSection(context, isDark),
                                 const SizedBox(height: 40),
                                 _buildGlassmorphicActions(
-                                    context, nfaProvider, isDark),
+                                  context,
+                                  nfaProvider,
+                                  isDark,
+                                ),
                                 const SizedBox(height: 40),
                                 _buildAdvancedRecentProjects(
-                                    context, nfaProvider, isDark),
+                                  context,
+                                  nfaProvider,
+                                  isDark,
+                                ),
                                 const SizedBox(height: 32),
                                 _buildFloatingHelpSection(context, isDark),
                                 const SizedBox(height: 100), // Bottom padding
@@ -147,7 +151,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildAnimatedBackground(
-      BuildContext context, bool isDark, Size size) {
+    BuildContext context,
+    bool isDark,
+    Size size,
+  ) {
     return Positioned.fill(
       child: Container(
         decoration: BoxDecoration(
@@ -185,7 +192,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildModernAppBar(
-      BuildContext context, ThemeData theme, bool isDark) {
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
     return SliverAppBar(
       expandedHeight: 140,
       floating: true,
@@ -302,7 +312,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       builder: (context, child) {
         return Transform.translate(
           offset: Offset(
-              0, math.sin(_floatingAnimationController.value * math.pi) * 5),
+            0,
+            math.sin(_floatingAnimationController.value * math.pi) * 5,
+          ),
           child: Container(
             width: double.infinity,
             padding: const EdgeInsets.all(32),
@@ -356,11 +368,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           ),
                         ],
                       ),
-                      child: Icon(
-                        greetingIcon,
-                        color: Colors.white,
-                        size: 32,
-                      ),
+                      child: Icon(greetingIcon, color: Colors.white, size: 32),
                     ),
                     const SizedBox(width: 20),
                     Expanded(
@@ -387,8 +395,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           Text(
                             'آماده ساخت و تحلیل NFA جادویی هستید؟ ✨',
                             style: theme.textTheme.bodyLarge?.copyWith(
-                              color:
-                                  theme.colorScheme.onSurface.withOpacity(0.8),
+                              color: theme.colorScheme.onSurface.withOpacity(
+                                0.8,
+                              ),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -399,8 +408,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
                 const SizedBox(height: 24),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
@@ -436,7 +447,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildGlassmorphicActions(
-      BuildContext context, NFAProvider nfaProvider, bool isDark) {
+    BuildContext context,
+    NFAProvider nfaProvider,
+    bool isDark,
+  ) {
     final theme = Theme.of(context);
 
     return Column(
@@ -626,11 +640,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           ),
                         ],
                       ),
-                      child: Icon(
-                        icon,
-                        size: 36,
-                        color: Colors.white,
-                      ),
+                      child: Icon(icon, size: 36, color: Colors.white),
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -677,7 +687,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildAdvancedRecentProjects(
-      BuildContext context, NFAProvider nfaProvider, bool isDark) {
+    BuildContext context,
+    NFAProvider nfaProvider,
+    bool isDark,
+  ) {
     final recentProjects = nfaProvider.recentProjects;
     final theme = Theme.of(context);
 
@@ -693,10 +706,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [
-                        Colors.purple,
-                        Colors.pink,
-                      ],
+                      colors: [Colors.purple, Colors.pink],
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -718,8 +728,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
             if (recentProjects.isNotEmpty)
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -747,7 +759,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           _buildEmptyState(context, theme, isDark)
         else
           _buildProjectsList(
-              context, recentProjects, nfaProvider, theme, isDark),
+            context,
+            recentProjects,
+            nfaProvider,
+            theme,
+            isDark,
+          ),
       ],
     );
   }
@@ -759,9 +776,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       decoration: BoxDecoration(
         color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.2),
-        ),
+        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
       ),
       child: Column(
         children: [
@@ -803,8 +818,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildProjectsList(BuildContext context, List<RecentProject> projects,
-      NFAProvider nfaProvider, ThemeData theme, bool isDark) {
+  Widget _buildProjectsList(
+    BuildContext context,
+    List<RecentProject> projects,
+    NFAProvider nfaProvider,
+    ThemeData theme,
+    bool isDark,
+  ) {
     return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -821,7 +841,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               child: Opacity(
                 opacity: value,
                 child: _buildAdvancedProjectCard(
-                    context, projects[index], nfaProvider, theme, isDark),
+                  context,
+                  projects[index],
+                  nfaProvider,
+                  theme,
+                  isDark,
+                ),
               ),
             );
           },
@@ -830,15 +855,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildAdvancedProjectCard(BuildContext context, RecentProject project,
-      NFAProvider nfaProvider, ThemeData theme, bool isDark) {
+  Widget _buildAdvancedProjectCard(
+    BuildContext context,
+    RecentProject project,
+    NFAProvider nfaProvider,
+    ThemeData theme,
+    bool isDark,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.2),
-        ),
+        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
         boxShadow: [
           BoxShadow(
             color: theme.colorScheme.primary.withOpacity(0.1),
@@ -900,7 +928,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: theme.colorScheme.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
@@ -986,8 +1016,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       animation: _floatingAnimationController,
       builder: (context, child) {
         return Transform.translate(
-          offset: Offset(0,
-              math.sin(_floatingAnimationController.value * math.pi * 2) * 3),
+          offset: Offset(
+            0,
+            math.sin(_floatingAnimationController.value * math.pi * 2) * 3,
+          ),
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
@@ -1031,7 +1063,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => const HelpScreen()),
+                          builder: (context) => const HelpScreen(),
+                        ),
                       );
                     },
                   ),
@@ -1064,7 +1097,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => const AboutScreen()),
+                          builder: (context) => const AboutScreen(),
+                        ),
                       );
                     },
                   ),
@@ -1097,9 +1131,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               colors: colors.map((c) => c.withOpacity(0.1)).toList(),
             ),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: colors.first.withOpacity(0.3),
-            ),
+            border: Border.all(color: colors.first.withOpacity(0.3)),
           ),
           child: Column(
             children: [
@@ -1116,11 +1148,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
                   ],
                 ),
-                child: Icon(
-                  icon,
-                  color: Colors.white,
-                  size: 24,
-                ),
+                child: Icon(icon, color: Colors.white, size: 24),
               ),
               const SizedBox(height: 12),
               Text(
@@ -1134,8 +1162,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               Text(
                 subtitle,
                 style: TextStyle(
-                  color:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.6),
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
@@ -1149,7 +1178,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildFloatingActionButton(
-      BuildContext context, NFAProvider nfaProvider, bool isDark) {
+    BuildContext context,
+    NFAProvider nfaProvider,
+    bool isDark,
+  ) {
     return Positioned(
       bottom: 30,
       right: 30,
@@ -1157,7 +1189,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         animation: _floatingAnimationController,
         builder: (context, child) {
           return Transform.scale(
-            scale: 1.0 +
+            scale:
+                1.0 +
                 (math.sin(_floatingAnimationController.value * math.pi * 2) *
                     0.05),
             child: Container(
@@ -1165,10 +1198,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    const Color(0xFF667EEA),
-                    const Color(0xFF764BA2),
-                  ],
+                  colors: [const Color(0xFF667EEA), const Color(0xFF764BA2)],
                 ),
                 borderRadius: BorderRadius.circular(28),
                 boxShadow: [
@@ -1193,11 +1223,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.add_rounded,
-                          color: Colors.white,
-                          size: 28,
-                        ),
+                        Icon(Icons.add_rounded, color: Colors.white, size: 28),
                         SizedBox(width: 8),
                         Text(
                           'شروع سریع',
@@ -1229,17 +1255,20 @@ class ParticlesPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color =
-          (isDark ? Colors.white : const Color(0xFF667EEA)).withOpacity(0.1)
+      ..color = (isDark ? Colors.white : const Color(0xFF667EEA)).withOpacity(
+        0.1,
+      )
       ..strokeWidth = 2
       ..style = PaintingStyle.fill;
 
     // Draw floating particles
     for (int i = 0; i < 15; i++) {
-      final x = (size.width * 0.1) +
+      final x =
+          (size.width * 0.1) +
           (i * size.width * 0.06) +
           (math.sin(animation.value * 2 * math.pi + i) * 20);
-      final y = (size.height * 0.1) +
+      final y =
+          (size.height * 0.1) +
           (i * size.height * 0.05) +
           (math.cos(animation.value * 2 * math.pi + i) * 30);
 

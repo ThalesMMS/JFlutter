@@ -16,24 +16,23 @@ class TuringMachineDto {
   });
 
   factory TuringMachineDto.fromJson(Map<String, dynamic> json) {
-    final transitionsJson =
-        Map<String, dynamic>.from(json['transitions'] as Map);
-    final transitions = transitionsJson.map(
-      (state, value) {
-        final stateTransitions = Map<String, dynamic>.from(value as Map);
-        return MapEntry(
-          state,
-          stateTransitions.map(
-            (symbol, transitionJson) => MapEntry(
-              symbol,
-              TuringTransitionDto.fromJson(
-                Map<String, dynamic>.from(transitionJson as Map),
-              ),
+    final transitionsJson = Map<String, dynamic>.from(
+      json['transitions'] as Map,
+    );
+    final transitions = transitionsJson.map((state, value) {
+      final stateTransitions = Map<String, dynamic>.from(value as Map);
+      return MapEntry(
+        state,
+        stateTransitions.map(
+          (symbol, transitionJson) => MapEntry(
+            symbol,
+            TuringTransitionDto.fromJson(
+              Map<String, dynamic>.from(transitionJson as Map),
             ),
           ),
-        );
-      },
-    );
+        ),
+      );
+    });
 
     return TuringMachineDto(
       id: json['id'] as String,
@@ -45,8 +44,9 @@ class TuringMachineDto {
       tapeAlphabet: (json['tapeAlphabet'] as List<dynamic>)
           .map((e) => e as String)
           .toList(),
-      states:
-          (json['states'] as List<dynamic>).map((e) => e as String).toList(),
+      states: (json['states'] as List<dynamic>)
+          .map((e) => e as String)
+          .toList(),
       initialState: json['initialState'] as String,
       finalStates: (json['finalStates'] as List<dynamic>)
           .map((e) => e as String)
@@ -68,27 +68,24 @@ class TuringMachineDto {
   final Map<String, Map<String, TuringTransitionDto>> transitions;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'name': name,
-        'type': type,
-        'inputAlphabet': inputAlphabet,
-        'tapeAlphabet': tapeAlphabet,
-        'states': states,
-        'initialState': initialState,
-        'finalStates': finalStates,
-        'blankSymbol': blankSymbol,
-        'transitions': transitions.map(
-          (state, transitionMap) => MapEntry(
-            state,
-            transitionMap.map(
-              (symbol, transition) => MapEntry(
-                symbol,
-                transition.toJson(),
-              ),
-            ),
-          ),
+    'id': id,
+    'name': name,
+    'type': type,
+    'inputAlphabet': inputAlphabet,
+    'tapeAlphabet': tapeAlphabet,
+    'states': states,
+    'initialState': initialState,
+    'finalStates': finalStates,
+    'blankSymbol': blankSymbol,
+    'transitions': transitions.map(
+      (state, transitionMap) => MapEntry(
+        state,
+        transitionMap.map(
+          (symbol, transition) => MapEntry(symbol, transition.toJson()),
         ),
-      };
+      ),
+    ),
+  };
 
   static const DeepCollectionEquality _deepCollectionEquality =
       DeepCollectionEquality();
@@ -111,17 +108,17 @@ class TuringMachineDto {
 
   @override
   int get hashCode => Object.hashAll([
-        id,
-        name,
-        type,
-        _deepCollectionEquality.hash(inputAlphabet),
-        _deepCollectionEquality.hash(tapeAlphabet),
-        _deepCollectionEquality.hash(states),
-        initialState,
-        _deepCollectionEquality.hash(finalStates),
-        blankSymbol,
-        _deepCollectionEquality.hash(transitions),
-      ]);
+    id,
+    name,
+    type,
+    _deepCollectionEquality.hash(inputAlphabet),
+    _deepCollectionEquality.hash(tapeAlphabet),
+    _deepCollectionEquality.hash(states),
+    initialState,
+    _deepCollectionEquality.hash(finalStates),
+    blankSymbol,
+    _deepCollectionEquality.hash(transitions),
+  ]);
 
   @override
   String toString() {
@@ -154,10 +151,10 @@ class TuringTransitionDto {
   final String direction;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'newState': newState,
-        'writeSymbol': writeSymbol,
-        'direction': direction,
-      };
+    'newState': newState,
+    'writeSymbol': writeSymbol,
+    'direction': direction,
+  };
 
   @override
   bool operator ==(Object other) {
@@ -180,10 +177,7 @@ class TuringTransitionDto {
 
 /// DTO for JFLAP Turing machine structure
 class JflapTuringMachineDto {
-  const JflapTuringMachineDto({
-    required this.type,
-    required this.structure,
-  });
+  const JflapTuringMachineDto({required this.type, required this.structure});
 
   factory JflapTuringMachineDto.fromJson(Map<String, dynamic> json) {
     return JflapTuringMachineDto(
@@ -198,9 +192,9 @@ class JflapTuringMachineDto {
   final JflapTuringStructureDto structure;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'type': type,
-        'structure': structure.toJson(),
-      };
+    'type': type,
+    'structure': structure.toJson(),
+  };
 
   @override
   bool operator ==(Object other) {
@@ -232,8 +226,9 @@ class JflapTuringStructureDto {
 
   factory JflapTuringStructureDto.fromJson(Map<String, dynamic> json) {
     return JflapTuringStructureDto(
-      states:
-          (json['states'] as List<dynamic>).map((e) => e as String).toList(),
+      states: (json['states'] as List<dynamic>)
+          .map((e) => e as String)
+          .toList(),
       inputAlphabet: (json['inputAlphabet'] as List<dynamic>)
           .map((e) => e as String)
           .toList(),
@@ -264,14 +259,14 @@ class JflapTuringStructureDto {
   final List<JflapTuringTransitionDto> transitions;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'states': states,
-        'inputAlphabet': inputAlphabet,
-        'tapeAlphabet': tapeAlphabet,
-        'initialState': initialState,
-        'finalStates': finalStates,
-        'blankSymbol': blankSymbol,
-        'transitions': transitions.map((e) => e.toJson()).toList(),
-      };
+    'states': states,
+    'inputAlphabet': inputAlphabet,
+    'tapeAlphabet': tapeAlphabet,
+    'initialState': initialState,
+    'finalStates': finalStates,
+    'blankSymbol': blankSymbol,
+    'transitions': transitions.map((e) => e.toJson()).toList(),
+  };
 
   static const DeepCollectionEquality _deepCollectionEquality =
       DeepCollectionEquality();
@@ -291,14 +286,14 @@ class JflapTuringStructureDto {
 
   @override
   int get hashCode => Object.hashAll([
-        _deepCollectionEquality.hash(states),
-        _deepCollectionEquality.hash(inputAlphabet),
-        _deepCollectionEquality.hash(tapeAlphabet),
-        initialState,
-        _deepCollectionEquality.hash(finalStates),
-        blankSymbol,
-        _deepCollectionEquality.hash(transitions),
-      ]);
+    _deepCollectionEquality.hash(states),
+    _deepCollectionEquality.hash(inputAlphabet),
+    _deepCollectionEquality.hash(tapeAlphabet),
+    initialState,
+    _deepCollectionEquality.hash(finalStates),
+    blankSymbol,
+    _deepCollectionEquality.hash(transitions),
+  ]);
 
   @override
   String toString() {
@@ -336,12 +331,12 @@ class JflapTuringTransitionDto {
   final String direction;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'from': from,
-        'to': to,
-        'read': read,
-        'write': write,
-        'direction': direction,
-      };
+    'from': from,
+    'to': to,
+    'read': read,
+    'write': write,
+    'direction': direction,
+  };
 
   @override
   bool operator ==(Object other) {

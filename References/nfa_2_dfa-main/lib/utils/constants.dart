@@ -436,8 +436,9 @@ class AppAnimations {
   static const Duration snackBarDuration = Duration(seconds: 3);
   static const Duration neonPulseDuration = Duration(milliseconds: 1500);
   static const Duration glowCycleDuration = Duration(milliseconds: 2000);
-  static const Duration particleAnimationDuration =
-      Duration(milliseconds: 3000);
+  static const Duration particleAnimationDuration = Duration(
+    milliseconds: 3000,
+  );
   static const Duration backgroundShiftDuration = Duration(seconds: 10);
 
   // تاخیرها برای انیمیشن‌های متوالی
@@ -456,9 +457,7 @@ class AppAnimations {
 
   // متدهای کمکی برای انیمیشن‌ها
   static Duration getScaledDuration(Duration base, double speed) {
-    return Duration(
-      milliseconds: (base.inMilliseconds / speed).round(),
-    );
+    return Duration(milliseconds: (base.inMilliseconds / speed).round());
   }
 
   static Curve getCombinedCurve(Curve primary, Curve secondary, double t) {

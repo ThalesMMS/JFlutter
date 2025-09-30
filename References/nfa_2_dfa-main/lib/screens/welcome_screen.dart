@@ -5,10 +5,7 @@ import 'dart:math' as math;
 class WelcomeScreen extends StatefulWidget {
   final VoidCallback? onCompleted;
 
-  const WelcomeScreen({
-    super.key,
-    this.onCompleted,
-  });
+  const WelcomeScreen({super.key, this.onCompleted});
 
   @override
   State<WelcomeScreen> createState() => _WelcomeScreenState();
@@ -85,10 +82,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     if (widget.onCompleted != null) {
       widget.onCompleted!();
     } else {
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        '/main',
-        (route) => false,
-      );
+      Navigator.of(context).pushNamedAndRemoveUntil('/main', (route) => false);
     }
   }
 
@@ -139,12 +133,16 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                       if (_currentPage > 0)
                         IconButton(
                           onPressed: _previousPage,
-                          icon: Icon(Icons.arrow_back_ios_rounded,
-                              color: theme.colorScheme.primary),
+                          icon: Icon(
+                            Icons.arrow_back_ios_rounded,
+                            color: theme.colorScheme.primary,
+                          ),
                         ),
                       const Spacer(),
-                      ...List.generate(_totalPages,
-                          (index) => _buildProgressDot(index, theme)),
+                      ...List.generate(
+                        _totalPages,
+                        (index) => _buildProgressDot(index, theme),
+                      ),
                       const Spacer(),
                       TextButton(
                         onPressed: _skipWelcome,
@@ -270,8 +268,10 @@ class _WelcomeScreenState extends State<WelcomeScreen>
             animation: _floatController,
             builder: (context, child) {
               return Transform.translate(
-                offset: Offset(0.0,
-                    15.0 * math.sin(_floatController.value * 2.0 * math.pi)),
+                offset: Offset(
+                  0.0,
+                  15.0 * math.sin(_floatController.value * 2.0 * math.pi),
+                ),
                 child: child,
               );
             },
@@ -518,22 +518,26 @@ class _WelcomeScreenState extends State<WelcomeScreen>
           Positioned(
             left: 75.0,
             top: 35.0,
-            child: Text('a',
-                style: TextStyle(
-                  color: theme.colorScheme.primary,
-                  fontSize: 12.0,
-                  fontWeight: FontWeight.bold,
-                )),
+            child: Text(
+              'a',
+              style: TextStyle(
+                color: theme.colorScheme.primary,
+                fontSize: 12.0,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
           Positioned(
             left: 75.0,
             top: 85.0,
-            child: Text('ε',
-                style: TextStyle(
-                  color: Colors.orange,
-                  fontSize: 12.0,
-                  fontWeight: FontWeight.bold,
-                )),
+            child: Text(
+              'ε',
+              style: TextStyle(
+                color: Colors.orange,
+                fontSize: 12.0,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -626,12 +630,14 @@ class _WelcomeScreenState extends State<WelcomeScreen>
               opacity: 1.0 - (progress * 0.5),
               child: Column(
                 children: [
-                  Text('NFA',
-                      style: TextStyle(
-                        color: theme.colorScheme.tertiary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12.0,
-                      )),
+                  Text(
+                    'NFA',
+                    style: TextStyle(
+                      color: theme.colorScheme.tertiary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12.0,
+                    ),
+                  ),
                   const SizedBox(height: 8.0),
                   Row(
                     children: [
@@ -672,12 +678,14 @@ class _WelcomeScreenState extends State<WelcomeScreen>
               opacity: 0.3 + (progress * 0.7),
               child: Column(
                 children: [
-                  Text('DFA',
-                      style: TextStyle(
-                        color: theme.colorScheme.tertiary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12.0,
-                      )),
+                  Text(
+                    'DFA',
+                    style: TextStyle(
+                      color: theme.colorScheme.tertiary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12.0,
+                    ),
+                  ),
                   const SizedBox(height: 8.0),
                   Row(
                     children: [
@@ -695,8 +703,12 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     );
   }
 
-  Widget _buildStateNode(ThemeData theme, String label, bool isStart,
-      {bool isAccepting = false}) {
+  Widget _buildStateNode(
+    ThemeData theme,
+    String label,
+    bool isStart, {
+    bool isAccepting = false,
+  }) {
     return Container(
       width: 30.0,
       height: 30.0,
@@ -704,8 +716,9 @@ class _WelcomeScreenState extends State<WelcomeScreen>
         shape: BoxShape.circle,
         color: theme.colorScheme.surface,
         border: Border.all(
-          color:
-              isStart ? theme.colorScheme.primary : theme.colorScheme.outline,
+          color: isStart
+              ? theme.colorScheme.primary
+              : theme.colorScheme.outline,
           width: isAccepting ? 3.0 : 2.0,
         ),
       ),
@@ -738,15 +751,17 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   }
 
   Widget _buildFeatureCard(
-      ThemeData theme, IconData icon, String title, String subtitle) {
+    ThemeData theme,
+    IconData icon,
+    String title,
+    String subtitle,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16.0),
-        border: Border.all(
-          color: theme.colorScheme.primary.withOpacity(0.2),
-        ),
+        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.2)),
         boxShadow: [
           BoxShadow(
             color: theme.colorScheme.primary.withOpacity(0.05),
@@ -821,8 +836,9 @@ class _WelcomeScreenState extends State<WelcomeScreen>
             animation: _pulseController,
             builder: (context, child) {
               final isLastPage = _currentPage == _totalPages - 1;
-              final scale =
-                  isLastPage ? 1.0 + (_pulseController.value * 0.05) : 1.0;
+              final scale = isLastPage
+                  ? 1.0 + (_pulseController.value * 0.05)
+                  : 1.0;
 
               return Transform.scale(
                 scale: scale,

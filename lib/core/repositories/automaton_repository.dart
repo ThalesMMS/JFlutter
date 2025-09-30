@@ -64,8 +64,10 @@ abstract class AlgorithmRepository {
   Future<AutomatonResult> regexToNfa(String regex);
 
   /// Converts DFA to regex
-  Future<StringResult> dfaToRegex(AutomatonEntity dfa,
-      {bool allowLambda = false});
+  Future<StringResult> dfaToRegex(
+    AutomatonEntity dfa, {
+    bool allowLambda = false,
+  });
 
   /// Converts FSA to regular grammar
   Future<GrammarResult> fsaToGrammar(AutomatonEntity fsa);
@@ -75,11 +77,15 @@ abstract class AlgorithmRepository {
 
   /// Runs word simulation on an automaton
   Future<Result<SimulationResult>> simulateWord(
-      AutomatonEntity automaton, String word);
+    AutomatonEntity automaton,
+    String word,
+  );
 
   /// Runs step-by-step simulation
   Future<Result<List<SimulationStep>>> createStepByStepSimulation(
-      AutomatonEntity automaton, String word);
+    AutomatonEntity automaton,
+    String word,
+  );
 }
 
 /// Repository interface for examples

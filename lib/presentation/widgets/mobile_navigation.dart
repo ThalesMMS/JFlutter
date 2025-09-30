@@ -80,11 +80,10 @@ class MobileNavigation extends StatelessWidget {
             Text(
               item.label,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: color,
-                    fontWeight:
-                        isSelected ? FontWeight.w600 : FontWeight.normal,
-                    fontSize: 9, // Even smaller text
-                  ),
+                color: color,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                fontSize: 9, // Even smaller text
+              ),
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

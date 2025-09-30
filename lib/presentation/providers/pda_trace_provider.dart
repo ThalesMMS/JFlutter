@@ -75,7 +75,8 @@ class PDATraceNotifier extends StateNotifier<PDATraceState> {
 }
 
 /// Provider exposing PDA trace state.
-final pdaTraceProvider =
-    StateNotifierProvider<PDATraceNotifier, PDATraceState>((ref) {
-  return PDATraceNotifier();
-});
+final pdaTraceProvider = StateNotifierProvider<PDATraceNotifier, PDATraceState>(
+  (ref) {
+    return PDATraceNotifier();
+  },
+);

@@ -114,9 +114,9 @@ class _PDAPageState extends ConsumerState<PDAPage> {
         children: [
           Text(
             'Pushdown Automata Editor',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
@@ -199,10 +199,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
                       child: Row(
                         children: [
                           if (icon != null) ...[
-                            Icon(
-                              icon,
-                              color: theme.colorScheme.primary,
-                            ),
+                            Icon(icon, color: theme.colorScheme.primary),
                             const SizedBox(width: 12),
                           ],
                           Expanded(
@@ -225,9 +222,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
                       child: ListView(
                         controller: scrollController,
                         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-                        children: [
-                          child,
-                        ],
+                        children: [child],
                       ),
                     ),
                   ],
@@ -309,16 +304,12 @@ class _PDAPageState extends ConsumerState<PDAPage> {
         Text(
           'Current PDA: ${_latestPda?.name ?? 'None'}',
           key: const ValueKey('pda_info_current_name'),
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: chips,
-        ),
+        Wrap(spacing: 8, runSpacing: 8, children: chips),
       ],
     );
   }

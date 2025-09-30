@@ -99,17 +99,14 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
       children: [
         Row(
           children: [
-            Icon(
-              Icons.games,
-              color: Theme.of(context).colorScheme.primary,
-            ),
+            Icon(Icons.games, color: Theme.of(context).colorScheme.primary),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 'Pumping Lemma Game',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -120,17 +117,17 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
           children: [
             Text(
               'Level: ${_currentLevel + 1}/${_challenges.length}',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(width: 16),
             Text(
               'Score: $_score',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
           ],
         ),
@@ -153,9 +150,9 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
             const SizedBox(height: 16),
             Text(
               'Welcome to the Pumping Lemma Game!',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
@@ -170,8 +167,10 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
               icon: const Icon(Icons.play_arrow),
               label: const Text('Start Game'),
               style: ElevatedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
               ),
             ),
           ],
@@ -202,7 +201,9 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
   }
 
   Widget _buildChallengeCard(
-      BuildContext context, PumpingLemmaChallenge challenge) {
+    BuildContext context,
+    PumpingLemmaChallenge challenge,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -214,17 +215,17 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
         children: [
           Text(
             'Challenge ${_currentLevel + 1}',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
             'Language: ${challenge.language}',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontFamily: 'monospace',
-                  fontWeight: FontWeight.bold,
-                ),
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -234,16 +235,16 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
           const SizedBox(height: 12),
           Text(
             'Examples:',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 4),
           Text(
             challenge.examples.join(', '),
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontFamily: 'monospace',
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),
           ),
         ],
       ),
@@ -262,9 +263,9 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
         children: [
           Text(
             'Is this language regular?',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 16),
           _buildAnswerOption(
@@ -306,10 +307,7 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
           border: Border.all(
             color: isSelected
                 ? color
-                : Theme.of(context)
-                    .colorScheme
-                    .outline
-                    .withValues(alpha: 0.3),
+                : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
             width: isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(8),
@@ -320,33 +318,28 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
               icon,
               color: isSelected
                   ? color
-                  : Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.6),
+                  : Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.6),
               size: 24,
             ),
             const SizedBox(width: 12),
             Text(
               label,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: isSelected ? color : null,
-                    fontWeight: isSelected ? FontWeight.w600 : null,
-                  ),
+                color: isSelected ? color : null,
+                fontWeight: isSelected ? FontWeight.w600 : null,
+              ),
             ),
             const Spacer(),
             if (isSelected)
-              Icon(
-                Icons.radio_button_checked,
-                color: color,
-              )
+              Icon(Icons.radio_button_checked, color: color)
             else
               Icon(
                 Icons.radio_button_unchecked,
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.6),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.6),
               ),
           ],
         ),
@@ -396,18 +389,18 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
               Text(
                 isCorrect ? 'Correct!' : 'Incorrect',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: color,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 16),
           Text(
             'Explanation:',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           Text(
@@ -421,9 +414,11 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
                 child: ElevatedButton.icon(
                   onPressed: _nextChallenge,
                   icon: const Icon(Icons.arrow_forward),
-                  label: Text(_currentLevel < _challenges.length - 1
-                      ? 'Next Challenge'
-                      : 'Finish Game'),
+                  label: Text(
+                    _currentLevel < _challenges.length - 1
+                        ? 'Next Challenge'
+                        : 'Finish Game',
+                  ),
                 ),
               ),
               if (_currentLevel < _challenges.length - 1) ...[
@@ -462,25 +457,25 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
             const SizedBox(height: 16),
             Text(
               'Game Complete!',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
               'Final Score: $_score/${_challenges.length}',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 16),
             Text(
               _score == _challenges.length
                   ? 'Perfect! You mastered the pumping lemma!'
                   : _score >= _challenges.length * 0.8
-                      ? 'Great job! You have a good understanding of the pumping lemma.'
-                      : 'Good effort! Keep practicing to improve your understanding.',
+                  ? 'Great job! You have a good understanding of the pumping lemma.'
+                  : 'Good effort! Keep practicing to improve your understanding.',
               style: Theme.of(context).textTheme.bodyLarge,
               textAlign: TextAlign.center,
             ),
@@ -490,8 +485,10 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
               icon: const Icon(Icons.refresh),
               label: const Text('Play Again'),
               style: ElevatedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
               ),
             ),
           ],
@@ -517,7 +514,9 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
     final isCorrect =
         _selectedAnswer == (challenge.isRegular ? 'regular' : 'not_regular');
 
-    ref.read(pumpingLemmaProgressProvider.notifier).recordAnswer(
+    ref
+        .read(pumpingLemmaProgressProvider.notifier)
+        .recordAnswer(
           challengeId: challenge.id,
           challengeTitle: 'Challenge ${challenge.id}: ${challenge.description}',
           language: challenge.language,
@@ -547,7 +546,9 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
 
   void _retryChallenge() {
     final challenge = _challenges[_currentLevel];
-    ref.read(pumpingLemmaProgressProvider.notifier).recordRetry(
+    ref
+        .read(pumpingLemmaProgressProvider.notifier)
+        .recordRetry(
           challengeId: challenge.id,
           challengeTitle: 'Challenge ${challenge.id}: ${challenge.description}',
           language: challenge.language,

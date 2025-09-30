@@ -32,15 +32,20 @@ void main() {
       final file = File('jflutter_js/examples/$fileName');
       final jsonString = file.readAsStringSync();
       final decoded = jsonDecode(jsonString);
-      expect(decoded, isA<Map<String, dynamic>>(),
-          reason: 'Fixture $fileName must decode to a JSON object');
+      expect(
+        decoded,
+        isA<Map<String, dynamic>>(),
+        reason: 'Fixture $fileName must decode to a JSON object',
+      );
       return decoded as Map<String, dynamic>;
     }
 
     test('Returns failure when DFA example is missing states', () {
       final json = loadExample('afd_ends_with_a.json');
-      final metadata =
-          metadataFor(category: ExampleCategory.dfa, fileName: 'afd_ends_with_a.json');
+      final metadata = metadataFor(
+        category: ExampleCategory.dfa,
+        fileName: 'afd_ends_with_a.json',
+      );
 
       json.remove('states');
 

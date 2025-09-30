@@ -52,8 +52,12 @@ class SvgExporter {
   }) {
     // Convert grammar to automaton for visualization
     final automaton = _grammarToAutomaton(grammar);
-    return exportAutomatonToSvg(automaton,
-        width: width, height: height, options: options);
+    return exportAutomatonToSvg(
+      automaton,
+      width: width,
+      height: height,
+      options: options,
+    );
   }
 
   /// Exports Turing machine visualization (placeholder - not yet implemented)
@@ -75,8 +79,9 @@ class SvgExporter {
   static void _addSvgStyles(StringBuffer buffer) {
     buffer.writeln('<defs>');
     // Arrow markers for transitions
-    buffer
-        .writeln('  <marker id="arrowhead" markerWidth="10" markerHeight="7"');
+    buffer.writeln(
+      '  <marker id="arrowhead" markerWidth="10" markerHeight="7"',
+    );
     buffer.writeln('    refX="9" refY="3.5" orient="auto">');
     buffer.writeln('    <polygon points="0 0, 10 3.5, 0 7" fill="#000"/>');
     buffer.writeln('  </marker>');
@@ -85,16 +90,19 @@ class SvgExporter {
     buffer.writeln('  <mask id="accepting-state-mask">');
     buffer.writeln('    <rect width="100%" height="100%" fill="white"/>');
     buffer.writeln(
-        '    <circle cx="0" cy="0" r="$_stateRadius" fill="transparent"');
+      '    <circle cx="0" cy="0" r="$_stateRadius" fill="transparent"',
+    );
     buffer.writeln('      stroke="black" stroke-width="3"/>');
     buffer.writeln('  </mask>');
 
     buffer.writeln('</defs>');
     buffer.writeln('<style>');
     buffer.writeln(
-        '  .state { font-family: $_fontFamily; font-size: 14px; text-anchor: middle; }');
+      '  .state { font-family: $_fontFamily; font-size: 14px; text-anchor: middle; }',
+    );
     buffer.writeln(
-        '  .transition { font-family: $_fontFamily; font-size: 12px; text-anchor: middle; }');
+      '  .transition { font-family: $_fontFamily; font-size: 12px; text-anchor: middle; }',
+    );
     buffer.writeln('  .tape { font-family: monospace; font-size: 16px; }');
     buffer.writeln('  .head { font-weight: bold; fill: red; }');
     buffer.writeln('</style>');
@@ -108,8 +116,11 @@ class SvgExporter {
     SvgExportOptions options,
   ) {
     // Calculate positions for states (simple grid layout)
-    final statePositions =
-        _calculateStatePositions(automaton.states, width, height);
+    final statePositions = _calculateStatePositions(
+      automaton.states,
+      width,
+      height,
+    );
 
     // Draw transitions first (behind states)
     _addTransitions(buffer, automaton, statePositions, options);
@@ -173,19 +184,24 @@ class SvgExporter {
       if (isAccepting) {
         // Draw double circle for accepting states
         buffer.writeln(
-            '    <circle cx="${pos.x}" cy="${pos.y}" r="${_stateRadius + 5}"');
+          '    <circle cx="${pos.x}" cy="${pos.y}" r="${_stateRadius + 5}"',
+        );
         buffer.writeln(
-            '      fill="none" stroke="$strokeColor" stroke-width="$strokeWidth"/>');
+          '      fill="none" stroke="$strokeColor" stroke-width="$strokeWidth"/>',
+        );
       }
-      buffer
-          .writeln('    <circle cx="${pos.x}" cy="${pos.y}" r="$_stateRadius"');
+      buffer.writeln(
+        '    <circle cx="${pos.x}" cy="${pos.y}" r="$_stateRadius"',
+      );
       buffer.writeln('      fill="${isInitial ? '#e3f2fd' : '#fff'}"');
-      buffer
-          .writeln('      stroke="$strokeColor" stroke-width="$strokeWidth"/>');
+      buffer.writeln(
+        '      stroke="$strokeColor" stroke-width="$strokeWidth"/>',
+      );
 
       // Add state label
       buffer.writeln(
-          '    <text x="${pos.x}" y="${pos.y + 5}" class="state">${state.name}</text>');
+        '    <text x="${pos.x}" y="${pos.y + 5}" class="state">${state.name}</text>',
+      );
 
       // Add initial arrow if needed
       if (isInitial) {
@@ -222,7 +238,8 @@ class SvgExporter {
         final midX = (fromPos.x + toPos.x) / 2;
         final midY = (fromPos.y + toPos.y) / 2;
         buffer.writeln(
-            '    <text x="$midX" y="$midY" class="transition">ε</text>'); // Default epsilon
+          '    <text x="$midX" y="$midY" class="transition">ε</text>',
+        ); // Default epsilon
         buffer.writeln('  </g>');
       }
     }
@@ -240,10 +257,15 @@ class SvgExporter {
   }
 
   static void _addTitle(
-      StringBuffer buffer, String title, double width, double height) {
+    StringBuffer buffer,
+    String title,
+    double width,
+    double height,
+  ) {
     buffer.writeln('  <g class="title">');
     buffer.writeln(
-        '    <text x="${width / 2}" y="30" font-size="18" font-weight="bold"');
+      '    <text x="${width / 2}" y="30" font-size="18" font-weight="bold"',
+    );
     buffer.writeln('      text-anchor="middle">$title</text>');
     buffer.writeln('  </g>');
   }
@@ -288,24 +310,28 @@ class SvgExporter {
 
     // Create states for each non-terminal
     for (final variable in grammar.nonTerminals) {
-      states.add(StateEntity(
-        id: variable,
-        name: variable,
-        x: 0.0,
-        y: 0.0,
-        isInitial: variable == grammar.startSymbol,
-        isFinal: false,
-      ));
+      states.add(
+        StateEntity(
+          id: variable,
+          name: variable,
+          x: 0.0,
+          y: 0.0,
+          isInitial: variable == grammar.startSymbol,
+          isFinal: false,
+        ),
+      );
     }
 
     // Create transitions based on productions (simplified)
     for (final production in grammar.productions) {
-      final from =
-          production.leftSide.isNotEmpty ? production.leftSide.first : '';
+      final from = production.leftSide.isNotEmpty
+          ? production.leftSide.first
+          : '';
       for (final symbol in production.rightSide) {
         if (symbol.isNotEmpty) {
-          final to =
-              grammar.nonTerminals.contains(symbol) ? symbol : 'terminal';
+          final to = grammar.nonTerminals.contains(symbol)
+              ? symbol
+              : 'terminal';
           transitions.putIfAbsent(from, () => []);
           transitions[from]!.add(to);
         }

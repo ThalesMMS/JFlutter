@@ -46,10 +46,7 @@ class TouchInteraction {
   Map<String, dynamic> toJson() {
     return {
       'type': type.name,
-      'position': {
-        'x': position.x,
-        'y': position.y,
-      },
+      'position': {'x': position.x, 'y': position.y},
       'selectedStates': selectedStates.toList(),
       'selectedTransitions': selectedTransitions.toList(),
       'timestamp': timestamp.toIso8601String(),
@@ -68,8 +65,9 @@ class TouchInteraction {
         (json['position'] as Map<String, dynamic>)['y'] as double,
       ),
       selectedStates: Set<String>.from(json['selectedStates'] as List),
-      selectedTransitions:
-          Set<String>.from(json['selectedTransitions'] as List),
+      selectedTransitions: Set<String>.from(
+        json['selectedTransitions'] as List,
+      ),
       timestamp: DateTime.parse(json['timestamp'] as String),
     );
   }
@@ -88,7 +86,12 @@ class TouchInteraction {
   @override
   int get hashCode {
     return Object.hash(
-        type, position, selectedStates, selectedTransitions, timestamp);
+      type,
+      position,
+      selectedStates,
+      selectedTransitions,
+      timestamp,
+    );
   }
 
   @override

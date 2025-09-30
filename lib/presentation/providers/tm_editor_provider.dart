@@ -102,8 +102,9 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
       transitions: transitionSet.map<Transition>((t) => t).toSet(),
       alphabet: alphabet,
       initialState: initialState,
-      acceptingStates:
-          acceptingStates.isEmpty ? {states.last} : acceptingStates,
+      acceptingStates: acceptingStates.isEmpty
+          ? {states.last}
+          : acceptingStates,
       created: now,
       modified: now,
       bounds: const math.Rectangle(0, 0, 800, 600),
@@ -114,8 +115,9 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
       panOffset: Vector2.zero(),
     );
 
-    final nondeterministicTransitionIds =
-        _findNondeterministicTransitions(transitionSet);
+    final nondeterministicTransitionIds = _findNondeterministicTransitions(
+      transitionSet,
+    );
 
     state = state.copyWith(
       tm: tm,
@@ -127,9 +129,7 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
     return tm;
   }
 
-  Set<String> _findNondeterministicTransitions(
-    Set<TMTransition> transitions,
-  ) {
+  Set<String> _findNondeterministicTransitions(Set<TMTransition> transitions) {
     final grouped = <String, List<TMTransition>>{};
 
     for (final transition in transitions) {

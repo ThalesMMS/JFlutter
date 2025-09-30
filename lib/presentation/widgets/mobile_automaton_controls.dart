@@ -52,13 +52,10 @@ class _MobileAutomatonControlsState extends State<MobileAutomatonControls>
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.easeInOut,
-    ));
+    _slideAnimation = Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+        .animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeInOut),
+        );
   }
 
   @override
@@ -265,14 +262,13 @@ class _MobileAutomatonControlsState extends State<MobileAutomatonControls>
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: isActive
-                    ? effectiveColor
-                    : Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.7),
-                fontWeight: isActive ? FontWeight.w600 : null,
-              ),
+            color: isActive
+                ? effectiveColor
+                : Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.7),
+            fontWeight: isActive ? FontWeight.w600 : null,
+          ),
           textAlign: TextAlign.center,
         ),
       ],
@@ -297,9 +293,9 @@ class _MobileAutomatonControlsState extends State<MobileAutomatonControls>
           const SizedBox(width: 4),
           Text(
             '${(widget.zoomLevel * 100).toInt()}%',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -326,7 +322,8 @@ class _MobileAutomatonControlsState extends State<MobileAutomatonControls>
       builder: (context) => AlertDialog(
         title: const Text('Clear Canvas'),
         content: const Text(
-            'Are you sure you want to clear all states and transitions? This action cannot be undone.'),
+          'Are you sure you want to clear all states and transitions? This action cannot be undone.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),

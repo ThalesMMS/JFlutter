@@ -30,11 +30,7 @@ class _HelpPageState extends ConsumerState<HelpPage> {
       icon: Icons.text_fields,
       content: _GrammarHelpContent(),
     ),
-    HelpSection(
-      title: 'PDA',
-      icon: Icons.storage,
-      content: _PDAHelpContent(),
-    ),
+    HelpSection(title: 'PDA', icon: Icons.storage, content: _PDAHelpContent()),
     HelpSection(
       title: 'Turing Machine',
       icon: Icons.settings,
@@ -194,10 +190,7 @@ class _HelpPageState extends ConsumerState<HelpPage> {
               Text('4. Run simulations to test your work'),
               Text('5. Use algorithms to transform structures'),
               SizedBox(height: 16),
-              Text(
-                'Tips:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
+              Text('Tips:', style: TextStyle(fontWeight: FontWeight.bold)),
               Text('• Tap and hold for context menus'),
               Text('• Pinch to zoom on canvas'),
               Text('• Swipe between pages on mobile'),
@@ -221,11 +214,7 @@ class HelpSection {
   final IconData icon;
   final Widget content;
 
-  HelpSection({
-    required this.title,
-    required this.icon,
-    required this.content,
-  });
+  HelpSection({required this.title, required this.icon, required this.content});
 }
 
 // Help content widgets for each section
@@ -282,12 +271,18 @@ class _GettingStartedContent extends StatelessWidget {
           _buildSectionTitle('Basic Operations'),
           const SizedBox(height: 16),
           _buildOperationCard(
-              'Create', 'Add new states, transitions, or rules'),
+            'Create',
+            'Add new states, transitions, or rules',
+          ),
           _buildOperationCard('Edit', 'Modify existing elements'),
           _buildOperationCard(
-              'Simulate', 'Test your automaton with input strings'),
+            'Simulate',
+            'Test your automaton with input strings',
+          ),
           _buildOperationCard(
-              'Convert', 'Transform between different representations'),
+            'Convert',
+            'Transform between different representations',
+          ),
           _buildOperationCard('Save/Load', 'Persist your work in JFLAP format'),
         ],
       ),
@@ -297,10 +292,7 @@ class _GettingStartedContent extends StatelessWidget {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-      ),
+      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
     );
   }
 
@@ -318,10 +310,7 @@ class _GettingStartedContent extends StatelessWidget {
   Widget _buildOperationCard(String title, String description) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8.0),
-      child: ListTile(
-        title: Text(title),
-        subtitle: Text(description),
-      ),
+      child: ListTile(title: Text(title), subtitle: Text(description)),
     );
   }
 }
@@ -345,14 +334,26 @@ class _FSAHelpContent extends StatelessWidget {
           _buildSectionTitle('Creating an FSA'),
           const SizedBox(height: 16),
           _buildStepCard('1', 'Add States', 'Tap the canvas to add states'),
-          _buildStepCard('2', 'Set Initial State',
-              'Double-tap a state to make it initial'),
           _buildStepCard(
-              '3', 'Set Final States', 'Long-press states to mark as final'),
-          _buildStepCard('4', 'Add Transitions',
-              'Drag between states to create transitions'),
+            '2',
+            'Set Initial State',
+            'Double-tap a state to make it initial',
+          ),
           _buildStepCard(
-              '5', 'Label Transitions', 'Tap transitions to add input symbols'),
+            '3',
+            'Set Final States',
+            'Long-press states to mark as final',
+          ),
+          _buildStepCard(
+            '4',
+            'Add Transitions',
+            'Drag between states to create transitions',
+          ),
+          _buildStepCard(
+            '5',
+            'Label Transitions',
+            'Tap transitions to add input symbols',
+          ),
           const SizedBox(height: 24),
           _buildSectionTitle('Simulation'),
           const SizedBox(height: 16),
@@ -367,11 +368,17 @@ class _FSAHelpContent extends StatelessWidget {
           _buildSectionTitle('Algorithms'),
           const SizedBox(height: 16),
           _buildAlgorithmCard(
-              'NFA to DFA', 'Convert non-deterministic to deterministic'),
+            'NFA to DFA',
+            'Convert non-deterministic to deterministic',
+          ),
           _buildAlgorithmCard(
-              'DFA Minimization', 'Reduce the number of states'),
+            'DFA Minimization',
+            'Reduce the number of states',
+          ),
           _buildAlgorithmCard(
-              'Equality Test', 'Check if two FSAs are equivalent'),
+            'Equality Test',
+            'Check if two FSAs are equivalent',
+          ),
         ],
       ),
     );
@@ -380,10 +387,7 @@ class _FSAHelpContent extends StatelessWidget {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-      ),
+      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
     );
   }
 
@@ -391,9 +395,7 @@ class _FSAHelpContent extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 8.0),
       child: ListTile(
-        leading: CircleAvatar(
-          child: Text(number),
-        ),
+        leading: CircleAvatar(child: Text(number)),
         title: Text(title),
         subtitle: Text(description),
       ),
@@ -431,9 +433,13 @@ class _GrammarHelpContent extends StatelessWidget {
           _buildSectionTitle('Grammar Components'),
           const SizedBox(height: 16),
           _buildComponentCard(
-              'Variables', 'Nonterminal symbols (usually uppercase)'),
+            'Variables',
+            'Nonterminal symbols (usually uppercase)',
+          ),
           _buildComponentCard(
-              'Terminals', 'Terminal symbols (usually lowercase)'),
+            'Terminals',
+            'Terminal symbols (usually lowercase)',
+          ),
           _buildComponentCard('Start Symbol', 'The initial nonterminal'),
           _buildComponentCard('Productions', 'Rules of the form A → α'),
           const SizedBox(height: 24),
@@ -460,20 +466,14 @@ class _GrammarHelpContent extends StatelessWidget {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-      ),
+      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
     );
   }
 
   Widget _buildComponentCard(String title, String description) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8.0),
-      child: ListTile(
-        title: Text(title),
-        subtitle: Text(description),
-      ),
+      child: ListTile(title: Text(title), subtitle: Text(description)),
     );
   }
 
@@ -509,7 +509,9 @@ class _PDAHelpContent extends StatelessWidget {
           _buildComponentCard('States', 'Finite set of states'),
           _buildComponentCard('Stack', 'LIFO data structure'),
           _buildComponentCard(
-              'Transitions', 'Read input, pop/push stack, change state'),
+            'Transitions',
+            'Read input, pop/push stack, change state',
+          ),
           const SizedBox(height: 24),
           _buildSectionTitle('Transition Format'),
           const SizedBox(height: 16),
@@ -540,20 +542,14 @@ class _PDAHelpContent extends StatelessWidget {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-      ),
+      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
     );
   }
 
   Widget _buildComponentCard(String title, String description) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8.0),
-      child: ListTile(
-        title: Text(title),
-        subtitle: Text(description),
-      ),
+      child: ListTile(title: Text(title), subtitle: Text(description)),
     );
   }
 }
@@ -578,8 +574,10 @@ class _TMHelpContent extends StatelessWidget {
           _buildComponentCard('Tape', 'Infinite sequence of cells'),
           _buildComponentCard('Head', 'Read/write head that moves left/right'),
           _buildComponentCard('States', 'Finite set of control states'),
-          _buildComponentCard('Transitions',
-              'Read symbol, write symbol, move head, change state'),
+          _buildComponentCard(
+            'Transitions',
+            'Read symbol, write symbol, move head, change state',
+          ),
           const SizedBox(height: 24),
           _buildSectionTitle('Transition Format'),
           const SizedBox(height: 16),
@@ -608,20 +606,14 @@ class _TMHelpContent extends StatelessWidget {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-      ),
+      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
     );
   }
 
   Widget _buildComponentCard(String title, String description) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8.0),
-      child: ListTile(
-        title: Text(title),
-        subtitle: Text(description),
-      ),
+      child: ListTile(title: Text(title), subtitle: Text(description)),
     );
   }
 }
@@ -656,7 +648,9 @@ class _RegexHelpContent extends StatelessWidget {
           _buildSectionTitle('Common Patterns'),
           const SizedBox(height: 16),
           _buildPatternCard(
-              'Email', r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'),
+            'Email',
+            r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+          ),
           _buildPatternCard('Phone Number', r'^\+?[\d\s\-\(\)]+$'),
           _buildPatternCard('Integer', r'^-?\d+$'),
           _buildPatternCard('Decimal', r'^-?\d+\.?\d*$'),
@@ -675,15 +669,27 @@ class _RegexHelpContent extends StatelessWidget {
           const SizedBox(height: 24),
           _buildSectionTitle('Testing and Validation'),
           const SizedBox(height: 16),
-          _buildStepCard('1', 'Enter Regex',
-              'Type your regular expression in the input field'),
+          _buildStepCard(
+            '1',
+            'Enter Regex',
+            'Type your regular expression in the input field',
+          ),
           _buildStepCard('2', 'Validate', 'Check if the syntax is correct'),
           _buildStepCard(
-              '3', 'Test String', 'Enter a string to test against the regex'),
+            '3',
+            'Test String',
+            'Enter a string to test against the regex',
+          ),
           _buildStepCard(
-              '4', 'View Results', 'See if the string matches the pattern'),
+            '4',
+            'View Results',
+            'See if the string matches the pattern',
+          ),
           _buildStepCard(
-              '5', 'Convert', 'Convert the regex to an equivalent automaton'),
+            '5',
+            'Convert',
+            'Convert the regex to an equivalent automaton',
+          ),
         ],
       ),
     );
@@ -692,10 +698,7 @@ class _RegexHelpContent extends StatelessWidget {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-      ),
+      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
     );
   }
 
@@ -731,10 +734,7 @@ class _RegexHelpContent extends StatelessWidget {
         title: Text(name),
         subtitle: Text(
           pattern,
-          style: const TextStyle(
-            fontFamily: 'monospace',
-            fontSize: 12,
-          ),
+          style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
         ),
       ),
     );
@@ -744,9 +744,7 @@ class _RegexHelpContent extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 8.0),
       child: ListTile(
-        leading: CircleAvatar(
-          child: Text(number),
-        ),
+        leading: CircleAvatar(child: Text(number)),
         title: Text(title),
         subtitle: Text(description),
       ),
@@ -773,14 +771,26 @@ class _PumpingLemmaHelpContent extends StatelessWidget {
           _buildSectionTitle('How to Play'),
           const SizedBox(height: 16),
           _buildStepCard(
-              '1', 'Choose Language', 'Select a language to analyze'),
+            '1',
+            'Choose Language',
+            'Select a language to analyze',
+          ),
           _buildStepCard(
-              '2', 'Find Pumping Length', 'Determine the pumping length p'),
+            '2',
+            'Find Pumping Length',
+            'Determine the pumping length p',
+          ),
           _buildStepCard('3', 'Choose String', 'Pick a string longer than p'),
           _buildStepCard(
-              '4', 'Decompose String', 'Split into xyz where |xy| ≤ p'),
+            '4',
+            'Decompose String',
+            'Split into xyz where |xy| ≤ p',
+          ),
           _buildStepCard(
-              '5', 'Pump String', 'Show that xyⁿz is not in the language'),
+            '5',
+            'Pump String',
+            'Show that xyⁿz is not in the language',
+          ),
           const SizedBox(height: 24),
           _buildSectionTitle('Pumping Lemma Statement'),
           const SizedBox(height: 16),
@@ -796,9 +806,13 @@ class _PumpingLemmaHelpContent extends StatelessWidget {
           const SizedBox(height: 16),
           _buildTipCard('Start Simple', 'Begin with basic languages like aⁿbⁿ'),
           _buildTipCard(
-              'Use Contradiction', 'Show pumping leads to strings not in L'),
+            'Use Contradiction',
+            'Show pumping leads to strings not in L',
+          ),
           _buildTipCard(
-              'Consider All Cases', 'Check different ways to split the string'),
+            'Consider All Cases',
+            'Check different ways to split the string',
+          ),
         ],
       ),
     );
@@ -807,10 +821,7 @@ class _PumpingLemmaHelpContent extends StatelessWidget {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-      ),
+      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
     );
   }
 
@@ -818,9 +829,7 @@ class _PumpingLemmaHelpContent extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 8.0),
       child: ListTile(
-        leading: CircleAvatar(
-          child: Text(number),
-        ),
+        leading: CircleAvatar(child: Text(number)),
         title: Text(title),
         subtitle: Text(description),
       ),
@@ -883,11 +892,17 @@ class _FileOperationsHelpContent extends StatelessWidget {
           _buildSectionTitle('Import/Export'),
           const SizedBox(height: 16),
           _buildOperationCard(
-              'Import from JFLAP', 'Load files created in desktop JFLAP'),
+            'Import from JFLAP',
+            'Load files created in desktop JFLAP',
+          ),
           _buildOperationCard(
-              'Export for Sharing', 'Save in formats others can use'),
+            'Export for Sharing',
+            'Save in formats others can use',
+          ),
           _buildOperationCard(
-              'Backup Work', 'Create copies of your structures'),
+            'Backup Work',
+            'Create copies of your structures',
+          ),
         ],
       ),
     );
@@ -896,30 +911,21 @@ class _FileOperationsHelpContent extends StatelessWidget {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-      ),
+      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
     );
   }
 
   Widget _buildFormatCard(String title, String description) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8.0),
-      child: ListTile(
-        title: Text(title),
-        subtitle: Text(description),
-      ),
+      child: ListTile(title: Text(title), subtitle: Text(description)),
     );
   }
 
   Widget _buildOperationCard(String title, String description) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8.0),
-      child: ListTile(
-        title: Text(title),
-        subtitle: Text(description),
-      ),
+      child: ListTile(title: Text(title), subtitle: Text(description)),
     );
   }
 }
@@ -934,9 +940,7 @@ class _TroubleshootingContent extends StatelessWidget {
         children: [
           _buildSectionTitle('Troubleshooting'),
           const SizedBox(height: 16),
-          const Text(
-            'Common issues and solutions for using JFlutter.',
-          ),
+          const Text('Common issues and solutions for using JFlutter.'),
           const SizedBox(height: 24),
           _buildSectionTitle('Performance Issues'),
           const SizedBox(height: 16),
@@ -995,10 +999,7 @@ class _TroubleshootingContent extends StatelessWidget {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-      ),
+      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
     );
   }
 
@@ -1008,10 +1009,7 @@ class _TroubleshootingContent extends StatelessWidget {
       child: ExpansionTile(
         title: Text(title),
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(solution),
-          ),
+          Padding(padding: const EdgeInsets.all(16.0), child: Text(solution)),
         ],
       ),
     );

@@ -77,9 +77,7 @@ class FAAlgorithms {
     // Induced subgraph on nodes that can reach accepting
     // Detect any cycle in this subgraph using DFS colors
     const int white = 0, gray = 1, black = 2;
-    final color = <String, int>{
-      for (final s in canReachAccepting) s: white,
-    };
+    final color = <String, int>{for (final s in canReachAccepting) s: white};
 
     bool hasCycle = false;
     void dfs(String u) {

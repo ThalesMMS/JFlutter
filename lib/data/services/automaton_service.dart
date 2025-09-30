@@ -43,21 +43,24 @@ class AutomatonService {
       final toState = stateById[transitionData.toStateId];
       if (fromState == null || toState == null) {
         throw StateError(
-            'Transition references unknown state: ${transitionData.fromStateId} -> ${transitionData.toStateId}');
+          'Transition references unknown state: ${transitionData.fromStateId} -> ${transitionData.toStateId}',
+        );
       }
 
       final symbol = transitionData.symbol;
       final isLambda =
           symbol == 'λ' || symbol == 'ε' || symbol.toLowerCase() == 'lambda';
 
-      transitions.add(FSATransition(
-        id: 't${id}_$transitionIndex',
-        fromState: fromState,
-        toState: toState,
-        label: symbol,
-        inputSymbols: isLambda ? <String>{} : {symbol},
-        lambdaSymbol: isLambda ? symbol : null,
-      ));
+      transitions.add(
+        FSATransition(
+          id: 't${id}_$transitionIndex',
+          fromState: fromState,
+          toState: toState,
+          label: symbol,
+          inputSymbols: isLambda ? <String>{} : {symbol},
+          lambdaSymbol: isLambda ? symbol : null,
+        ),
+      );
       transitionIndex++;
     }
 

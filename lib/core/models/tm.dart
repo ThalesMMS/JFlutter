@@ -94,10 +94,7 @@ class TM extends Automaton {
         'height': bounds.height,
       },
       'zoomLevel': zoomLevel,
-      'panOffset': {
-        'x': panOffset.x,
-        'y': panOffset.y,
-      },
+      'panOffset': {'x': panOffset.x, 'y': panOffset.y},
       'tapeAlphabet': tapeAlphabet.toList(),
       'blankSymbol': blankSymbol,
       'tapeCount': tapeCount,
@@ -170,23 +167,27 @@ class TM extends Automaton {
         final TMTransition tmTransition = transition;
         final transitionErrors = tmTransition.validate();
         errors.addAll(
-            transitionErrors.map((e) => 'Transition ${tmTransition.id}: $e'));
+          transitionErrors.map((e) => 'Transition ${tmTransition.id}: $e'),
+        );
 
         // Validate tape symbols
         if (!tapeAlphabet.contains(tmTransition.readSymbol)) {
           errors.add(
-              'Transition ${tmTransition.id} references invalid read symbol');
+            'Transition ${tmTransition.id} references invalid read symbol',
+          );
         }
 
         if (!tapeAlphabet.contains(tmTransition.writeSymbol)) {
           errors.add(
-              'Transition ${tmTransition.id} references invalid write symbol');
+            'Transition ${tmTransition.id} references invalid write symbol',
+          );
         }
 
         // Validate tape number
         if (tmTransition.tapeNumber >= tapeCount) {
           errors.add(
-              'Transition ${tmTransition.id} references invalid tape number');
+            'Transition ${tmTransition.id} references invalid tape number',
+          );
         }
       }
     }
@@ -206,7 +207,9 @@ class TM extends Automaton {
 
   /// Gets all transitions from a state that can read a specific symbol
   Set<TMTransition> getTransitionsFromStateOnSymbol(
-      State state, String symbol) {
+    State state,
+    String symbol,
+  ) {
     return tmTransitions
         .where((t) => t.fromState == state && t.canRead(symbol))
         .toSet();
@@ -219,10 +222,12 @@ class TM extends Automaton {
     int tapeNumber,
   ) {
     return tmTransitions
-        .where((t) =>
-            t.fromState == state &&
-            t.canRead(symbol) &&
-            t.tapeNumber == tapeNumber)
+        .where(
+          (t) =>
+              t.fromState == state &&
+              t.canRead(symbol) &&
+              t.tapeNumber == tapeNumber,
+        )
         .toSet();
   }
 

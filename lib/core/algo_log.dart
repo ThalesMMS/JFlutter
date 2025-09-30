@@ -2,8 +2,9 @@ import 'package:flutter/foundation.dart';
 
 /// Centralized logging for algorithm execution steps
 class AlgoLog {
-  static final ValueNotifier<List<String>> _lines =
-      ValueNotifier<List<String>>([]);
+  static final ValueNotifier<List<String>> _lines = ValueNotifier<List<String>>(
+    [],
+  );
   static final ValueNotifier<Set<String>> _highlights =
       ValueNotifier<Set<String>>({});
 

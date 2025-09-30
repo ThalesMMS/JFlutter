@@ -42,7 +42,8 @@ class _PumpingLemmaPageState extends ConsumerState<PumpingLemmaPage> {
                       child: ElevatedButton.icon(
                         onPressed: () => setState(() => _showGame = !_showGame),
                         icon: Icon(
-                            _showGame ? Icons.visibility_off : Icons.games),
+                          _showGame ? Icons.visibility_off : Icons.games,
+                        ),
                         label: Text(_showGame ? 'Hide Game' : 'Show Game'),
                       ),
                     ),
@@ -50,8 +51,9 @@ class _PumpingLemmaPageState extends ConsumerState<PumpingLemmaPage> {
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: () => setState(() => _showHelp = !_showHelp),
-                        icon:
-                            Icon(_showHelp ? Icons.visibility_off : Icons.help),
+                        icon: Icon(
+                          _showHelp ? Icons.visibility_off : Icons.help,
+                        ),
                         label: Text(_showHelp ? 'Hide Help' : 'Show Help'),
                       ),
                     ),
@@ -64,9 +66,11 @@ class _PumpingLemmaPageState extends ConsumerState<PumpingLemmaPage> {
                     onPressed: () =>
                         setState(() => _showProgress = !_showProgress),
                     icon: Icon(
-                        _showProgress ? Icons.visibility_off : Icons.analytics),
-                    label:
-                        Text(_showProgress ? 'Hide Progress' : 'Show Progress'),
+                      _showProgress ? Icons.visibility_off : Icons.analytics,
+                    ),
+                    label: Text(
+                      _showProgress ? 'Hide Progress' : 'Show Progress',
+                    ),
                   ),
                 ),
               ],
@@ -117,8 +121,8 @@ class _PumpingLemmaPageState extends ConsumerState<PumpingLemmaPage> {
                 Text(
                   'Pumping Lemma Game',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(

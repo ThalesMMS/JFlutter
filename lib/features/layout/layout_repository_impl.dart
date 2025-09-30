@@ -61,11 +61,13 @@ class LayoutRepositoryImpl implements LayoutRepository {
           ? remaining
           : (remaining < columns ? remaining : columns);
 
-      final horizontalSpacing =
-          itemsInRow > 1 ? area.width / (itemsInRow - 1) : 0;
+      final horizontalSpacing = itemsInRow > 1
+          ? area.width / (itemsInRow - 1)
+          : 0;
       final effectiveWidth = horizontalSpacing * (itemsInRow - 1);
-      final startX =
-          itemsInRow > 1 ? area.center.x - effectiveWidth / 2 : area.center.x;
+      final startX = itemsInRow > 1
+          ? area.center.x - effectiveWidth / 2
+          : area.center.x;
 
       for (int col = 0; col < itemsInRow; col++) {
         if (index >= states.length) break;
@@ -114,7 +116,8 @@ class LayoutRepositoryImpl implements LayoutRepository {
 
   @override
   Future<AutomatonResult> applyHierarchicalLayout(
-      AutomatonEntity automaton) async {
+    AutomatonEntity automaton,
+  ) async {
     final states = automaton.states;
     if (states.isEmpty) {
       return Success(automaton);
@@ -173,8 +176,9 @@ class LayoutRepositoryImpl implements LayoutRepository {
     final newStates = <StateEntity>[];
     final left = area.center.x - area.width / 2;
     final top = area.center.y - area.height / 2;
-    final verticalSpacing =
-        layers.length > 1 ? area.height / (layers.length - 1) : 0;
+    final verticalSpacing = layers.length > 1
+        ? area.height / (layers.length - 1)
+        : 0;
 
     for (int i = 0; i < layers.length; i++) {
       final layerStates = layers[i];
@@ -221,8 +225,9 @@ class LayoutRepositoryImpl implements LayoutRepository {
     int processed = 0;
     for (int ring = 0; ring < rings && processed < states.length; ring++) {
       final remaining = states.length - processed;
-      final ringSize =
-          ring == rings - 1 ? remaining : math.min(perRing, remaining);
+      final ringSize = ring == rings - 1
+          ? remaining
+          : math.min(perRing, remaining);
       final ringFactor = rings == 1 ? 1.0 : (ring + 1) / rings;
       final radiusX = maxRadiusX * ringFactor;
       final radiusY = maxRadiusY * ringFactor;
@@ -252,7 +257,7 @@ class LayoutRepositoryImpl implements LayoutRepository {
     final offset = _canvasCenter - centroid;
     final newStates = [
       for (final state in states)
-        state.copyWith(x: state.x + offset.x, y: state.y + offset.y)
+        state.copyWith(x: state.x + offset.x, y: state.y + offset.y),
     ];
 
     return Success(automaton.copyWith(states: newStates));
@@ -275,10 +280,7 @@ class _Bounds {
   double get width => maxX - minX;
   double get height => maxY - minY;
 
-  Vector2 get center => Vector2(
-        (minX + maxX) / 2,
-        (minY + maxY) / 2,
-      );
+  Vector2 get center => Vector2((minX + maxX) / 2, (minY + maxY) / 2);
 
   factory _Bounds.fromStates(List<StateEntity> states) {
     double minX = double.infinity;
@@ -339,12 +341,18 @@ _LayoutArea _computeLayoutArea(
   }
 
   return _LayoutArea(
-      center: center, width: width, height: height, columns: columns);
+    center: center,
+    width: width,
+    height: height,
+    columns: columns,
+  );
 }
 
 double _scaledDimension(double original, double scale, double canvasDimension) {
-  final available =
-      math.max(1.0, canvasDimension - 2 * LayoutRepositoryImpl._canvasPadding);
+  final available = math.max(
+    1.0,
+    canvasDimension - 2 * LayoutRepositoryImpl._canvasPadding,
+  );
   final minSize = math.min(LayoutRepositoryImpl._minLayoutSize, available);
   final base = math.max(original.abs(), LayoutRepositoryImpl._minLayoutSize);
   final scaled = base * scale;
@@ -356,11 +364,13 @@ Vector2 _adjustCenter(Vector2 desired, double width, double height) {
   final halfWidth = width / 2;
   final halfHeight = height / 2;
   final minX = LayoutRepositoryImpl._canvasPadding + halfWidth;
-  final maxX = LayoutRepositoryImpl._canvasSize.x -
+  final maxX =
+      LayoutRepositoryImpl._canvasSize.x -
       LayoutRepositoryImpl._canvasPadding -
       halfWidth;
   final minY = LayoutRepositoryImpl._canvasPadding + halfHeight;
-  final maxY = LayoutRepositoryImpl._canvasSize.y -
+  final maxY =
+      LayoutRepositoryImpl._canvasSize.y -
       LayoutRepositoryImpl._canvasPadding -
       halfHeight;
 
@@ -404,7 +414,5 @@ List<StateEntity> _mergeStates(
     for (final state in positioned) state.id: state,
   };
 
-  return [
-    for (final state in original) positionedById[state.id] ?? state,
-  ];
+  return [for (final state in original) positionedById[state.id] ?? state];
 }

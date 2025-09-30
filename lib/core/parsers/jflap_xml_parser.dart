@@ -82,19 +82,22 @@ class JFLAPXMLParser {
       // Parse transições
       final transitionElements = root.findElements('transition');
       for (final transitionElement in transitionElements) {
-        final fromId = transitionElement
+        final fromId =
+            transitionElement
                 .findElements('from')
                 .firstOrNull
                 ?.innerText
                 .trim() ??
             '';
-        final toId = transitionElement
+        final toId =
+            transitionElement
                 .findElements('to')
                 .firstOrNull
                 ?.innerText
                 .trim() ??
             '';
-        final read = transitionElement
+        final read =
+            transitionElement
                 .findElements('read')
                 .firstOrNull
                 ?.innerText

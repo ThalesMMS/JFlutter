@@ -6,20 +6,28 @@ class CYKParser {
   static Result<CYKResult> parse(Grammar g, String input) {
     try {
       if (input.isEmpty) {
-        final acceptsEmpty = g.productions
-            .any((p) => p.isLambda && p.leftSide.first == g.startSymbol);
-        return ResultFactory.success(CYKResult(
-          accepted: acceptsEmpty,
-          table: const [],
-          derivation:
-              acceptsEmpty ? CYKDerivation.node(g.startSymbol, []) : null,
-        ));
+        final acceptsEmpty = g.productions.any(
+          (p) => p.isLambda && p.leftSide.first == g.startSymbol,
+        );
+        return ResultFactory.success(
+          CYKResult(
+            accepted: acceptsEmpty,
+            table: const [],
+            derivation: acceptsEmpty
+                ? CYKDerivation.node(g.startSymbol, [])
+                : null,
+          ),
+        );
       }
       final n = input.length;
-      final table =
-          List.generate(n, (i) => List.generate(n, (j) => <String>{}));
+      final table = List.generate(
+        n,
+        (i) => List.generate(n, (j) => <String>{}),
+      );
       final back = List.generate(
-          n, (i) => List.generate(n, (j) => <String, CYKBackptr>{}));
+        n,
+        (i) => List.generate(n, (j) => <String, CYKBackptr>{}),
+      );
 
       // Precompute productions A→a and A→BC
       final unary = <String, Set<String>>{}; // a -> {A}
@@ -78,14 +86,19 @@ class CYKParser {
         tree = _buildTree(back, 0, n - 1, g.startSymbol);
       }
       return ResultFactory.success(
-          CYKResult(accepted: accepted, table: table, derivation: tree));
+        CYKResult(accepted: accepted, table: table, derivation: tree),
+      );
     } catch (e) {
       return ResultFactory.failure('CYK parse error: $e');
     }
   }
 
   static CYKDerivation _buildTree(
-      List<List<Map<String, CYKBackptr>>> back, int i, int j, String A) {
+    List<List<Map<String, CYKBackptr>>> back,
+    int i,
+    int j,
+    String A,
+  ) {
     final bp = back[i][j][A];
     if (bp == null) return CYKDerivation.node(A, []);
     if (bp.isLeaf) {
@@ -103,10 +116,13 @@ class CYKParser {
 class CYKResult {
   final bool accepted;
   final List<List<Set<String>>>
-      table; // upper triangular table; table[i][len-1]
+  table; // upper triangular table; table[i][len-1]
   final CYKDerivation? derivation;
-  const CYKResult(
-      {required this.accepted, required this.table, required this.derivation});
+  const CYKResult({
+    required this.accepted,
+    required this.table,
+    required this.derivation,
+  });
 }
 
 class CYKDerivation {
@@ -126,8 +142,8 @@ class CYKBackptr {
   final (int, int, String)? right; // (i, j, C)
   const CYKBackptr._(this.isLeaf, this.leafSymbol, this.left, this.right);
   factory CYKBackptr.leaf(String a) => CYKBackptr._(true, a, null, null);
-  factory CYKBackptr.internal(
-          {required (int, int, String) left,
-          required (int, int, String) right}) =>
-      CYKBackptr._(false, null, left, right);
+  factory CYKBackptr.internal({
+    required (int, int, String) left,
+    required (int, int, String) right,
+  }) => CYKBackptr._(false, null, left, right);
 }

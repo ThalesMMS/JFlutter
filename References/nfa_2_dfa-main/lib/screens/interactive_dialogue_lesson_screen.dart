@@ -4,9 +4,7 @@ import '/models/math_content_data1.dart';
 import '/widgets/math_lesson_widgets1.dart';
 
 class InteractiveDialogueLessonScreen extends StatefulWidget {
-  const InteractiveDialogueLessonScreen({
-    Key? key,
-  }) : super(key: key);
+  const InteractiveDialogueLessonScreen({Key? key}) : super(key: key);
 
   @override
   State<InteractiveDialogueLessonScreen> createState() =>
@@ -45,11 +43,12 @@ class _InteractiveDialogueLessonScreenState
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    _progressAnimation =
-        Tween<double>(begin: 0.0, end: 0.0).animate(CurvedAnimation(
-      parent: _progressAnimationController,
-      curve: Curves.easeInOut,
-    ));
+    _progressAnimation = Tween<double>(begin: 0.0, end: 0.0).animate(
+      CurvedAnimation(
+        parent: _progressAnimationController,
+        curve: Curves.easeInOut,
+      ),
+    );
   }
 
   void _initializeLesson() {
@@ -107,18 +106,24 @@ class _InteractiveDialogueLessonScreenState
     if (_progressAnimationController.isCompleted ||
         _progressAnimationController.isDismissed) {
       _progressAnimation =
-          Tween<double>(begin: _progressAnimation.value, end: currentProgress)
-              .animate(CurvedAnimation(
-        parent: _progressAnimationController,
-        curve: Curves.easeInOut,
-      ));
+          Tween<double>(
+            begin: _progressAnimation.value,
+            end: currentProgress,
+          ).animate(
+            CurvedAnimation(
+              parent: _progressAnimationController,
+              curve: Curves.easeInOut,
+            ),
+          );
       _progressAnimationController.forward(from: 0.0);
     } else {
       _progressAnimation = Tween<double>(begin: 0.0, end: currentProgress)
-          .animate(CurvedAnimation(
-        parent: _progressAnimationController,
-        curve: Curves.easeInOut,
-      ));
+          .animate(
+            CurvedAnimation(
+              parent: _progressAnimationController,
+              curve: Curves.easeInOut,
+            ),
+          );
     }
   }
 
@@ -231,8 +236,9 @@ class _InteractiveDialogueLessonScreenState
         return LinearProgressIndicator(
           value: _progressAnimation.value,
           backgroundColor: Colors.grey[200],
-          valueColor:
-              const AlwaysStoppedAnimation<Color>(AppColors.primaryBlue),
+          valueColor: const AlwaysStoppedAnimation<Color>(
+            AppColors.primaryBlue,
+          ),
           minHeight: 5,
         );
       },
@@ -264,8 +270,10 @@ class _InteractiveDialogueLessonScreenState
           ),
           Text(
             'بخش ${(_currentSectionIndex + 1)} از ${MathContentData.sections.length}',
-            style:
-                TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontWeight: FontWeight.bold,
+            ),
           ),
           ElevatedButton.icon(
             icon: const Icon(Icons.arrow_forward),
@@ -303,9 +311,9 @@ class _InteractiveDialogueLessonScreenState
             Text(
               'تبریک! 🎉',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.successGreen,
-                  ),
+                fontWeight: FontWeight.bold,
+                color: AppColors.successGreen,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -349,16 +357,19 @@ class _InteractiveDialogueLessonScreenState
       color: Colors.grey[50],
       elevation: 0,
       shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: Colors.grey[200]!)),
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey[200]!),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             _buildStatRow('زمان صرف شده', _formatDuration(timeSpent)),
             const Divider(height: 16),
-            _buildStatRow('بخش‌های تکمیل شده',
-                '${MathContentData.sections.length}/${MathContentData.sections.length}'),
+            _buildStatRow(
+              'بخش‌های تکمیل شده',
+              '${MathContentData.sections.length}/${MathContentData.sections.length}',
+            ),
             const Divider(height: 16),
             _buildStatRow('پیشرفت کلی', '100%'),
           ],
@@ -373,11 +384,14 @@ class _InteractiveDialogueLessonScreenState
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label,
-              style: const TextStyle(fontSize: 13, color: Colors.black54)),
-          Text(value,
-              style:
-                  const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 13, color: Colors.black54),
+          ),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          ),
         ],
       ),
     );
@@ -395,7 +409,8 @@ class _InteractiveDialogueLessonScreenState
       builder: (context) => AlertDialog(
         title: const Text('خروج از درس'),
         content: const Text(
-            'آیا مطمئن هستید که می‌خواهید از درس خارج شوید؟ پیشرفت شما ذخیره خواهد شد.'),
+          'آیا مطمئن هستید که می‌خواهید از درس خارج شوید؟ پیشرفت شما ذخیره خواهد شد.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),

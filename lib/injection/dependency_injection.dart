@@ -30,17 +30,11 @@ Future<void> setupDependencyInjection() async {
   );
 
   // Services
-  getIt.registerLazySingleton<AutomatonService>(
-    () => AutomatonService(),
-  );
+  getIt.registerLazySingleton<AutomatonService>(() => AutomatonService());
 
-  getIt.registerLazySingleton<SimulationService>(
-    () => SimulationService(),
-  );
+  getIt.registerLazySingleton<SimulationService>(() => SimulationService());
 
-  getIt.registerLazySingleton<ConversionService>(
-    () => ConversionService(),
-  );
+  getIt.registerLazySingleton<ConversionService>(() => ConversionService());
 
   // Repositories
   getIt.registerLazySingleton<AutomatonRepository>(
@@ -55,9 +49,7 @@ Future<void> setupDependencyInjection() async {
     () => AlgorithmRepositoryImpl(),
   );
 
-  getIt.registerLazySingleton<LayoutRepository>(
-    () => LayoutRepositoryImpl(),
-  );
+  getIt.registerLazySingleton<LayoutRepository>(() => LayoutRepositoryImpl());
 
   // Use Cases
   getIt.registerLazySingleton<CreateAutomatonUseCase>(
@@ -200,9 +192,7 @@ Future<void> setupDependencyInjection() async {
   );
 
   getIt.registerFactory<GrammarProvider>(
-    () => GrammarProvider(
-      conversionService: getIt<ConversionService>(),
-    ),
+    () => GrammarProvider(conversionService: getIt<ConversionService>()),
   );
 }
 

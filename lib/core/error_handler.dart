@@ -95,8 +95,9 @@ class ErrorHandler {
         showSuccess(context, successMessage);
       }
     } else {
-      final errorMessage =
-          errorPrefix != null ? '$errorPrefix: ${result.error}' : result.error!;
+      final errorMessage = errorPrefix != null
+          ? '$errorPrefix: ${result.error}'
+          : result.error!;
       showError(context, errorMessage);
     }
   }
@@ -152,8 +153,11 @@ class ErrorHandler {
   }
 
   /// Logs an error (for debugging purposes)
-  static void logError(String message,
-      [Object? error, StackTrace? stackTrace]) {
+  static void logError(
+    String message, [
+    Object? error,
+    StackTrace? stackTrace,
+  ]) {
     if (kDebugMode) {
       print('ERROR: $message');
       if (error != null) {
@@ -196,8 +200,9 @@ extension ResultHandlerExtension<T> on Result<T> {
       }
       onSuccess?.call(data as T);
     } else {
-      final errorMessage =
-          errorPrefix != null ? '$errorPrefix: $error' : error!;
+      final errorMessage = errorPrefix != null
+          ? '$errorPrefix: $error'
+          : error!;
       ErrorHandler.showError(context, errorMessage);
       onFailure?.call(error!);
     }

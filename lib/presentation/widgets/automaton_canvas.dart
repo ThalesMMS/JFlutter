@@ -55,8 +55,9 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
         _states.clear();
         _transitions.clear();
         _states.addAll(widget.automaton!.states);
-        _transitions
-            .addAll(widget.automaton!.transitions.cast<FSATransition>());
+        _transitions.addAll(
+          widget.automaton!.transitions.cast<FSATransition>(),
+        );
       });
     } else {
       setState(() {
@@ -141,7 +142,6 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
     );
   }
 
-
   void _updateTransitionPreview(Offset? position) {
     if (_transitionStart == null) {
       if (_transitionPreviewPosition != null) {
@@ -162,9 +162,9 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
     });
   }
 
-
-  Future<_TransitionSymbolInput?> _showSymbolDialog(
-      {FSATransition? transition}) async {
+  Future<_TransitionSymbolInput?> _showSymbolDialog({
+    FSATransition? transition,
+  }) async {
     final existingSymbols = transition?.lambdaSymbol != null
         ? 'ε'
         : transition?.inputSymbols.join(', ') ?? '';
@@ -174,7 +174,8 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
       builder: (context) {
         return AlertDialog(
           title: Text(
-              transition == null ? 'Transition Symbols' : 'Edit Transition'),
+            transition == null ? 'Transition Symbols' : 'Edit Transition',
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -236,15 +237,18 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
     _notifyAutomatonChanged();
   }
 
-
   void _notifyAutomatonChanged() {
-    if (widget.automaton != null) {
-      final updatedAutomaton = widget.automaton!.copyWith(
-        states: _states.toSet(),
-        transitions: _transitions.toSet(),
-      );
-      widget.onAutomatonChanged(updatedAutomaton);
-    }
+    _pointerThrottler.schedule(() {
+      setState(() {
+        if (widget.automaton != null) {
+          final updatedAutomaton = widget.automaton!.copyWith(
+            states: _states.toSet(),
+            transitions: _transitions.toSet(),
+          );
+          widget.onAutomatonChanged(updatedAutomaton);
+        }
+      });
+    });
   }
 
   @override
@@ -290,8 +294,9 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
             onStateDeleted: (state) {
               setState(() {
                 _states.removeWhere((s) => s.id == state.id);
-                _transitions.removeWhere((t) =>
-                    t.fromState.id == state.id || t.toState.id == state.id);
+                _transitions.removeWhere(
+                  (t) => t.fromState.id == state.id || t.toState.id == state.id,
+                );
                 if (_selectedState?.id == state.id) {
                   _selectedState = null;
                 }
@@ -334,11 +339,7 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
             ),
           ),
           // Canvas controls
-          Positioned(
-            top: 8,
-            right: 8,
-            child: _buildCanvasControls(context),
-          ),
+          Positioned(top: 8, right: 8, child: _buildCanvasControls(context)),
           // Empty state message
           if (_states.isEmpty)
             Center(
@@ -354,15 +355,15 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
                   Text(
                     'Empty Canvas',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Colors.grey.shade600,
-                        ),
+                      color: Colors.grey.shade600,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Tap "Add State" to create your first state',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey.shade500,
-                        ),
+                      color: Colors.grey.shade500,
+                    ),
                   ),
                 ],
               ),
@@ -393,8 +394,9 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
             onPressed: _addStateAtCenter,
             icon: const Icon(Icons.add_circle),
             tooltip: 'Add State',
-            color:
-                _isAddingState ? Theme.of(context).colorScheme.primary : null,
+            color: _isAddingState
+                ? Theme.of(context).colorScheme.primary
+                : null,
           ),
           IconButton(
             onPressed: _enableTransitionAdding,
@@ -439,17 +441,20 @@ class AutomatonPainter extends CustomPainter {
     this.selectedState,
     this.transitionStart,
     this.transitionPreviewPosition,
-  })  : _nondeterministicTransitionIds = <String>{},
-        _epsilonTransitionIds = transitions
-            .where((t) => t.isEpsilonTransition)
-            .map((t) => t.id)
-            .toSet(),
-        _nondeterministicStateIds = <String>{} {
-    _nondeterministicTransitionIds
-        .addAll(_identifyNondeterministicTransitions(transitions));
+  }) : _nondeterministicTransitionIds = <String>{},
+       _epsilonTransitionIds = transitions
+           .where((t) => t.isEpsilonTransition)
+           .map((t) => t.id)
+           .toSet(),
+       _nondeterministicStateIds = <String>{} {
+    _nondeterministicTransitionIds.addAll(
+      _identifyNondeterministicTransitions(transitions),
+    );
     _nondeterministicStateIds.addAll(
       _identifyNondeterministicStates(
-          transitions, _nondeterministicTransitionIds),
+        transitions,
+        _nondeterministicTransitionIds,
+      ),
     );
   }
 
@@ -495,8 +500,8 @@ class AutomatonPainter extends CustomPainter {
       ..color = isSelected
           ? Colors.blue
           : isNondeterministic
-              ? Colors.deepOrange
-              : Colors.black;
+          ? Colors.deepOrange
+          : Colors.black;
     canvas.drawCircle(stateCenter, radius, borderPaint);
 
     if (state.isAccepting) {
@@ -536,8 +541,8 @@ class AutomatonPainter extends CustomPainter {
     final transitionColor = _epsilonTransitionIds.contains(transition.id)
         ? Colors.purple
         : _nondeterministicTransitionIds.contains(transition.id)
-            ? Colors.deepOrange
-            : Colors.black;
+        ? Colors.deepOrange
+        : Colors.black;
 
     final strokePaint = Paint()
       ..style = PaintingStyle.stroke
@@ -692,7 +697,10 @@ class AutomatonPainter extends CustomPainter {
   }
 
   void _drawTransitionPreview(
-      Canvas canvas, automaton_state.State start, Paint paint) {
+    Canvas canvas,
+    automaton_state.State start,
+    Paint paint,
+  ) {
     if (transitionPreviewPosition == null) {
       return;
     }
@@ -739,12 +747,7 @@ class AutomatonPainter extends CustomPainter {
 
     final path = Path()
       ..moveTo(startPoint.dx, startPoint.dy)
-      ..quadraticBezierTo(
-        control.dx,
-        control.dy,
-        endPoint.dx,
-        endPoint.dy,
-      );
+      ..quadraticBezierTo(control.dx, control.dy, endPoint.dx, endPoint.dy);
 
     canvas.drawPath(path, previewPaint);
 
@@ -787,8 +790,8 @@ class AutomatonPainter extends CustomPainter {
       final symbols = transition.isEpsilonTransition
           ? <String>{transition.lambdaSymbol ?? 'ε'}
           : transition.inputSymbols.isEmpty
-              ? {transition.label}
-              : transition.inputSymbols;
+          ? {transition.label}
+          : transition.inputSymbols;
 
       final symbolBuckets = outgoingByState.putIfAbsent(
         transition.fromState.id,
@@ -797,8 +800,10 @@ class AutomatonPainter extends CustomPainter {
 
       for (final rawSymbol in symbols) {
         final symbol = rawSymbol.isEmpty ? 'ε' : rawSymbol;
-        final transitionsForSymbol =
-            symbolBuckets.putIfAbsent(symbol, () => <FSATransition>[]);
+        final transitionsForSymbol = symbolBuckets.putIfAbsent(
+          symbol,
+          () => <FSATransition>[],
+        );
         transitionsForSymbol.add(transition);
       }
     }
@@ -806,8 +811,9 @@ class AutomatonPainter extends CustomPainter {
     for (final symbolBuckets in outgoingByState.values) {
       for (final transitionsForSymbol in symbolBuckets.values) {
         if (transitionsForSymbol.length > 1) {
-          nondeterministicIds
-              .addAll(transitionsForSymbol.map((transition) => transition.id));
+          nondeterministicIds.addAll(
+            transitionsForSymbol.map((transition) => transition.id),
+          );
         }
       }
     }
@@ -835,10 +841,7 @@ class _StateEditDialog extends StatefulWidget {
   final automaton_state.State state;
   final ValueChanged<automaton_state.State> onStateUpdated;
 
-  const _StateEditDialog({
-    required this.state,
-    required this.onStateUpdated,
-  });
+  const _StateEditDialog({required this.state, required this.onStateUpdated});
 
   @override
   State<_StateEditDialog> createState() => _StateEditDialogState();

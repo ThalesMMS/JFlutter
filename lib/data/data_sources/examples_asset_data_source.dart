@@ -127,7 +127,8 @@ class ExamplesAssetDataSource {
 
   /// Loads examples filtered by category
   Future<ListResult<ExampleEntity>> loadExamplesByCategory(
-      ExampleCategory category) async {
+    ExampleCategory category,
+  ) async {
     try {
       final examples = <ExampleEntity>[];
 
@@ -142,7 +143,8 @@ class ExamplesAssetDataSource {
       }
 
       examples.sort(
-          (a, b) => a.difficultyLevel.index.compareTo(b.difficultyLevel.index));
+        (a, b) => a.difficultyLevel.index.compareTo(b.difficultyLevel.index),
+      );
 
       return Success(examples);
     } catch (e) {
@@ -162,18 +164,25 @@ class ExamplesAssetDataSource {
 
   /// Internal method to load example with metadata
   Future<Result<ExampleEntity>> _loadExampleWithMetadata(
-      String name, ExampleMetadata metadata) async {
+    String name,
+    ExampleMetadata metadata,
+  ) async {
     final assetPath = 'jflutter_js/examples/${metadata.fileName}';
 
     try {
       final jsonString = await rootBundle.loadString(assetPath);
       final json = jsonDecode(jsonString);
       if (json is! Map<String, dynamic>) {
-        return Failure('Example $name has invalid JSON structure. Expected an object.');
+        return Failure(
+          'Example $name has invalid JSON structure. Expected an object.',
+        );
       }
 
-      final conversionResult =
-          _convertExampleJson(json, metadata, exampleName: name);
+      final conversionResult = _convertExampleJson(
+        json,
+        metadata,
+        exampleName: name,
+      );
       if (conversionResult.isFailure) {
         return Failure(conversionResult.error!);
       }
@@ -240,21 +249,30 @@ class ExamplesAssetDataSource {
     ExampleMetadata metadata,
     String exampleName,
   ) {
-    final statesResult =
-        _parseStates(json['states'], exampleName, metadata.category);
+    final statesResult = _parseStates(
+      json['states'],
+      exampleName,
+      metadata.category,
+    );
     if (statesResult.isFailure) {
       return Failure(statesResult.error!);
     }
 
-    final transitionsResult =
-        _parseTransitions(json['transitions'], exampleName, metadata.category);
+    final transitionsResult = _parseTransitions(
+      json['transitions'],
+      exampleName,
+      metadata.category,
+    );
     if (transitionsResult.isFailure) {
       return Failure(transitionsResult.error!);
     }
 
-    final alphabetResult =
-        _parseStringList(json['alphabet'], 'alphabet', exampleName,
-            allowEmpty: true);
+    final alphabetResult = _parseStringList(
+      json['alphabet'],
+      'alphabet',
+      exampleName,
+      allowEmpty: true,
+    );
     if (alphabetResult.isFailure) {
       return Failure(alphabetResult.error!);
     }
@@ -267,37 +285,46 @@ class ExamplesAssetDataSource {
     final nextId = nextIdRaw is int
         ? nextIdRaw
         : nextIdRaw is String
-            ? int.tryParse(nextIdRaw) ?? states.length
-            : states.length;
+        ? int.tryParse(nextIdRaw) ?? states.length
+        : states.length;
 
     final type = (json['type'] as String?) ?? metadata.category.name;
 
-    return Success(AutomatonModel(
-      id: json['id'] as String? ??
-          'example_${exampleName.toLowerCase().replaceAll(' ', '_')}',
-      name: json['name'] as String? ?? exampleName,
-      alphabet: alphabet,
-      states: states,
-      transitions: transitions,
-      initialId: json['initialId'] as String?,
-      nextId: nextId,
-      type: type,
-    ));
+    return Success(
+      AutomatonModel(
+        id:
+            json['id'] as String? ??
+            'example_${exampleName.toLowerCase().replaceAll(' ', '_')}',
+        name: json['name'] as String? ?? exampleName,
+        alphabet: alphabet,
+        states: states,
+        transitions: transitions,
+        initialId: json['initialId'] as String?,
+        nextId: nextId,
+        type: type,
+      ),
+    );
   }
 
   Result<AutomatonModel?> _validateCfgExample(
     Map<String, dynamic> json,
     String exampleName,
   ) {
-    final variablesResult =
-        _parseStringList(json['variables'], 'variables', exampleName);
+    final variablesResult = _parseStringList(
+      json['variables'],
+      'variables',
+      exampleName,
+    );
     if (variablesResult.isFailure) {
       return Failure(variablesResult.error!);
     }
 
-    final alphabetResult =
-        _parseStringList(json['alphabet'], 'alphabet', exampleName,
-            allowEmpty: true);
+    final alphabetResult = _parseStringList(
+      json['alphabet'],
+      'alphabet',
+      exampleName,
+      allowEmpty: true,
+    );
     if (alphabetResult.isFailure) {
       return Failure(alphabetResult.error!);
     }
@@ -352,14 +379,20 @@ class ExamplesAssetDataSource {
     Map<String, dynamic> json,
     String exampleName,
   ) {
-    final statesResult =
-        _parseStates(json['states'], exampleName, ExampleCategory.pda);
+    final statesResult = _parseStates(
+      json['states'],
+      exampleName,
+      ExampleCategory.pda,
+    );
     if (statesResult.isFailure) {
       return Failure(statesResult.error!);
     }
 
-    final transitionsResult =
-        _parseTransitions(json['transitions'], exampleName, ExampleCategory.pda);
+    final transitionsResult = _parseTransitions(
+      json['transitions'],
+      exampleName,
+      ExampleCategory.pda,
+    );
     if (transitionsResult.isFailure) {
       return Failure(transitionsResult.error!);
     }
@@ -402,21 +435,30 @@ class ExamplesAssetDataSource {
     Map<String, dynamic> json,
     String exampleName,
   ) {
-    final statesResult =
-        _parseStates(json['states'], exampleName, ExampleCategory.tm);
+    final statesResult = _parseStates(
+      json['states'],
+      exampleName,
+      ExampleCategory.tm,
+    );
     if (statesResult.isFailure) {
       return Failure(statesResult.error!);
     }
 
-    final transitionsResult =
-        _parseTransitions(json['transitions'], exampleName, ExampleCategory.tm);
+    final transitionsResult = _parseTransitions(
+      json['transitions'],
+      exampleName,
+      ExampleCategory.tm,
+    );
     if (transitionsResult.isFailure) {
       return Failure(transitionsResult.error!);
     }
 
-    final alphabetResult =
-        _parseStringList(json['alphabet'], 'alphabet', exampleName,
-            allowEmpty: false);
+    final alphabetResult = _parseStringList(
+      json['alphabet'],
+      'alphabet',
+      exampleName,
+      allowEmpty: false,
+    );
     if (alphabetResult.isFailure) {
       return Failure(alphabetResult.error!);
     }
@@ -473,7 +515,7 @@ class ExamplesAssetDataSource {
           'Example "$exampleName" has an invalid state entry at index $i; expected an object.',
         );
       }
-      states.add(StateModel.fromJson(Map<String, dynamic>.from(state))); 
+      states.add(StateModel.fromJson(Map<String, dynamic>.from(state)));
     }
 
     return Success(states);
@@ -578,8 +620,9 @@ class ExamplesAssetDataSource {
     for (final entry in _exampleMetadata.entries) {
       if (entry.key.toLowerCase().contains(lowerQuery) ||
           entry.value.description.toLowerCase().contains(lowerQuery) ||
-          entry.value.tags
-              .any((tag) => tag.toLowerCase().contains(lowerQuery))) {
+          entry.value.tags.any(
+            (tag) => tag.toLowerCase().contains(lowerQuery),
+          )) {
         results.add(entry.key);
       }
     }

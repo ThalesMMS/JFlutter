@@ -92,7 +92,9 @@ class LayoutManager {
   }
 
   LayoutResult _applyConstraints(
-      LayoutResult result, LayoutConstraints constraints) {
+    LayoutResult result,
+    LayoutConstraints constraints,
+  ) {
     final nodes = Map<String, NodePosition>.from(result.nodePositions);
 
     // اعمال boundaries
@@ -101,10 +103,14 @@ class LayoutManager {
       final constrainedPos = NodePosition(
         nodeId: pos.nodeId,
         position: Offset(
-          pos.position.dx
-              .clamp(constraints.bounds.left, constraints.bounds.right),
-          pos.position.dy
-              .clamp(constraints.bounds.top, constraints.bounds.bottom),
+          pos.position.dx.clamp(
+            constraints.bounds.left,
+            constraints.bounds.right,
+          ),
+          pos.position.dy.clamp(
+            constraints.bounds.top,
+            constraints.bounds.bottom,
+          ),
         ),
         size: pos.size,
       );
@@ -163,7 +169,9 @@ class ForceDirectedLayout {
   }
 
   Future<LayoutResult> calculate(
-      GraphData graph, LayoutConstraints constraints) async {
+    GraphData graph,
+    LayoutConstraints constraints,
+  ) async {
     final positions = <String, Offset>{};
     final velocities = <String, Offset>{};
     final forces = <String, Offset>{};
@@ -194,7 +202,12 @@ class ForceDirectedLayout {
 
       // اعمال forces و به‌روزرسانی positions
       totalEnergy = _updatePositions(
-          graph.nodes, positions, velocities, forces, constraints.bounds);
+        graph.nodes,
+        positions,
+        velocities,
+        forces,
+        constraints.bounds,
+      );
 
       iteration++;
 
@@ -226,7 +239,10 @@ class ForceDirectedLayout {
   }
 
   void _initializePositions(
-      List<GraphNode> nodes, Map<String, Offset> positions, Rect bounds) {
+    List<GraphNode> nodes,
+    Map<String, Offset> positions,
+    Rect bounds,
+  ) {
     final random = math.Random();
     final center = bounds.center;
     final radius = math.min(bounds.width, bounds.height) * 0.3;
@@ -245,8 +261,11 @@ class ForceDirectedLayout {
     }
   }
 
-  void _calculateRepulsionForces(List<GraphNode> nodes,
-      Map<String, Offset> positions, Map<String, Offset> forces) {
+  void _calculateRepulsionForces(
+    List<GraphNode> nodes,
+    Map<String, Offset> positions,
+    Map<String, Offset> forces,
+  ) {
     for (int i = 0; i < nodes.length; i++) {
       for (int j = i + 1; j < nodes.length; j++) {
         final node1 = nodes[i];
@@ -271,8 +290,11 @@ class ForceDirectedLayout {
     }
   }
 
-  void _calculateSpringForces(List<GraphEdge> edges,
-      Map<String, Offset> positions, Map<String, Offset> forces) {
+  void _calculateSpringForces(
+    List<GraphEdge> edges,
+    Map<String, Offset> positions,
+    Map<String, Offset> forces,
+  ) {
     for (final edge in edges) {
       final pos1 = positions[edge.from]!;
       final pos2 = positions[edge.to]!;
@@ -293,8 +315,13 @@ class ForceDirectedLayout {
     }
   }
 
-  double _updatePositions(List<GraphNode> nodes, Map<String, Offset> positions,
-      Map<String, Offset> velocities, Map<String, Offset> forces, Rect bounds) {
+  double _updatePositions(
+    List<GraphNode> nodes,
+    Map<String, Offset> positions,
+    Map<String, Offset> velocities,
+    Map<String, Offset> forces,
+    Rect bounds,
+  ) {
     double totalEnergy = 0.0;
 
     for (final node in nodes) {
@@ -311,10 +338,14 @@ class ForceDirectedLayout {
       // به‌روزرسانی position
       final currentPos = positions[node.id]!;
       final newPos = Offset(
-        (currentPos.dx + newVelocity.dx)
-            .clamp(bounds.left + 50, bounds.right - 50),
-        (currentPos.dy + newVelocity.dy)
-            .clamp(bounds.top + 50, bounds.bottom - 50),
+        (currentPos.dx + newVelocity.dx).clamp(
+          bounds.left + 50,
+          bounds.right - 50,
+        ),
+        (currentPos.dy + newVelocity.dy).clamp(
+          bounds.top + 50,
+          bounds.bottom - 50,
+        ),
       );
       positions[node.id] = newPos;
 
@@ -326,7 +357,9 @@ class ForceDirectedLayout {
   }
 
   double _calculateQuality(
-      GraphData graph, Map<String, NodePosition> positions) {
+    GraphData graph,
+    Map<String, NodePosition> positions,
+  ) {
     double quality = 1.0;
 
     // کیفیت بر اساس تداخل نودها
@@ -334,8 +367,9 @@ class ForceDirectedLayout {
     quality *= math.max(0.0, 1.0 - overlaps / graph.nodes.length);
 
     // کیفیت بر اساس توزیع یکنواخت
-    final distribution =
-        _calculateDistributionQuality(positions.values.toList());
+    final distribution = _calculateDistributionQuality(
+      positions.values.toList(),
+    );
     quality *= distribution;
 
     return quality;
@@ -348,13 +382,15 @@ class ForceDirectedLayout {
         final pos1 = positions[i];
         final pos2 = positions[j];
         final rect1 = Rect.fromCenter(
-            center: pos1.position,
-            width: pos1.size.width,
-            height: pos1.size.height);
+          center: pos1.position,
+          width: pos1.size.width,
+          height: pos1.size.height,
+        );
         final rect2 = Rect.fromCenter(
-            center: pos2.position,
-            width: pos2.size.width,
-            height: pos2.size.height);
+          center: pos2.position,
+          width: pos2.size.width,
+          height: pos2.size.height,
+        );
 
         if (rect1.overlaps(rect2)) {
           overlaps++;
@@ -380,7 +416,7 @@ class ForceDirectedLayout {
     final median = distances[distances.length ~/ 2];
     final variance =
         distances.map((d) => math.pow(d - median, 2)).reduce((a, b) => a + b) /
-            distances.length;
+        distances.length;
 
     return math.max(0.0, 1.0 - variance / (median * median));
   }
@@ -396,18 +432,16 @@ class CircularLayout {
   double _startAngle = 0.0;
   bool _clockwise = true;
 
-  void configure({
-    double? radius,
-    double? startAngle,
-    bool? clockwise,
-  }) {
+  void configure({double? radius, double? startAngle, bool? clockwise}) {
     _radius = radius ?? _radius;
     _startAngle = startAngle ?? _startAngle;
     _clockwise = clockwise ?? _clockwise;
   }
 
   Future<LayoutResult> calculate(
-      GraphData graph, LayoutConstraints constraints) async {
+    GraphData graph,
+    LayoutConstraints constraints,
+  ) async {
     final nodePositions = <String, NodePosition>{};
     final center = constraints.bounds.center;
     final nodes = graph.nodes;
@@ -422,14 +456,17 @@ class CircularLayout {
     }
 
     // محاسبه شعاع بهینه
-    final optimalRadius =
-        _calculateOptimalRadius(nodes.length, constraints.bounds);
+    final optimalRadius = _calculateOptimalRadius(
+      nodes.length,
+      constraints.bounds,
+    );
     final actualRadius = math.min(_radius, optimalRadius);
 
     // قرار دادن نودها در دایره
     for (int i = 0; i < nodes.length; i++) {
       final node = nodes[i];
-      final angle = _startAngle +
+      final angle =
+          _startAngle +
           (i * 2 * math.pi / nodes.length) * (_clockwise ? 1 : -1);
 
       final x = center.dx + actualRadius * math.cos(angle);
@@ -443,8 +480,11 @@ class CircularLayout {
     }
 
     final layoutBounds = _calculateBounds(nodePositions.values.toList());
-    final quality =
-        _calculateCircularQuality(nodePositions, center, actualRadius);
+    final quality = _calculateCircularQuality(
+      nodePositions,
+      center,
+      actualRadius,
+    );
 
     return LayoutResult(
       nodePositions: nodePositions,
@@ -467,7 +507,10 @@ class CircularLayout {
   }
 
   double _calculateCircularQuality(
-      Map<String, NodePosition> positions, Offset center, double radius) {
+    Map<String, NodePosition> positions,
+    Offset center,
+    double radius,
+  ) {
     if (positions.isEmpty) return 1.0;
 
     double quality = 1.0;
@@ -511,7 +554,9 @@ class TreeLayout {
   }
 
   Future<LayoutResult> calculate(
-      GraphData graph, LayoutConstraints constraints) async {
+    GraphData graph,
+    LayoutConstraints constraints,
+  ) async {
     final nodePositions = <String, NodePosition>{};
 
     // تشخیص root node
@@ -573,8 +618,9 @@ class TreeLayout {
         id: nodeId,
         graphNode: graphNode,
         level: level,
-        children:
-            children.map((childId) => buildNode(childId, level + 1)).toList(),
+        children: children
+            .map((childId) => buildNode(childId, level + 1))
+            .toList(),
       );
     }
 
@@ -582,9 +628,10 @@ class TreeLayout {
   }
 
   Future<void> _calculateTreePositions(
-      TreeNode tree,
-      Map<String, NodePosition> positions,
-      LayoutConstraints constraints) async {
+    TreeNode tree,
+    Map<String, NodePosition> positions,
+    LayoutConstraints constraints,
+  ) async {
     // محاسبه عرض هر سطح
     final levelWidths = <int, double>{};
     _calculateLevelWidths(tree, levelWidths);
@@ -595,7 +642,13 @@ class TreeLayout {
     final startY = bounds.top + 50;
 
     await _positionNode(
-        tree, positions, startX, startY, bounds.width - 100, levelWidths);
+      tree,
+      positions,
+      startX,
+      startY,
+      bounds.width - 100,
+      levelWidths,
+    );
   }
 
   void _calculateLevelWidths(TreeNode node, Map<int, double> levelWidths) {
@@ -609,18 +662,21 @@ class TreeLayout {
   }
 
   Future<void> _positionNode(
-      TreeNode node,
-      Map<String, NodePosition> positions,
-      double x,
-      double y,
-      double availableWidth,
-      Map<int, double> levelWidths) async {
+    TreeNode node,
+    Map<String, NodePosition> positions,
+    double x,
+    double y,
+    double availableWidth,
+    Map<int, double> levelWidths,
+  ) async {
     // موقعیت نود جاری
-    final nodeX = _direction == TreeDirection.topDown ||
+    final nodeX =
+        _direction == TreeDirection.topDown ||
             _direction == TreeDirection.bottomUp
         ? x
         : y;
-    final nodeY = _direction == TreeDirection.topDown ||
+    final nodeY =
+        _direction == TreeDirection.topDown ||
             _direction == TreeDirection.bottomUp
         ? y
         : x;
@@ -644,7 +700,13 @@ class TreeLayout {
         final childX = childStartX + i * _siblingDistance;
 
         await _positionNode(
-            child, positions, childX, childY, availableWidth, levelWidths);
+          child,
+          positions,
+          childX,
+          childY,
+          availableWidth,
+          levelWidths,
+        );
 
         // توقف برای جلوگیری از blocking
         if (i % 5 == 0) {
@@ -655,13 +717,17 @@ class TreeLayout {
   }
 
   Future<LayoutResult> _fallbackToForceDirected(
-      GraphData graph, LayoutConstraints constraints) async {
+    GraphData graph,
+    LayoutConstraints constraints,
+  ) async {
     final forceDirected = ForceDirectedLayout();
     return await forceDirected.calculate(graph, constraints);
   }
 
   double _calculateTreeQuality(
-      TreeNode tree, Map<String, NodePosition> positions) {
+    TreeNode tree,
+    Map<String, NodePosition> positions,
+  ) {
     // کیفیت بر اساس تراز بودن سطوح و عدم تداخل
     return 0.8; // مقدار ثابت برای سادگی
   }
@@ -691,7 +757,9 @@ class GridLayout {
   }
 
   Future<LayoutResult> calculate(
-      GraphData graph, LayoutConstraints constraints) async {
+    GraphData graph,
+    LayoutConstraints constraints,
+  ) async {
     final nodePositions = <String, NodePosition>{};
     final nodes = graph.nodes;
 
@@ -705,8 +773,10 @@ class GridLayout {
     }
 
     // محاسبه تعداد columns بهینه
-    final optimalColumns =
-        _calculateOptimalColumns(nodes.length, constraints.bounds);
+    final optimalColumns = _calculateOptimalColumns(
+      nodes.length,
+      constraints.bounds,
+    );
     final actualColumns = math.min(_columns, optimalColumns);
     final rows = (nodes.length / actualColumns).ceil();
 
@@ -761,7 +831,9 @@ class GridLayout {
   }
 
   double _calculateGridQuality(
-      Map<String, NodePosition> positions, int columns) {
+    Map<String, NodePosition> positions,
+    int columns,
+  ) {
     // Grid layout همیشه کیفیت بالایی دارد
     return 0.9;
   }
@@ -793,7 +865,9 @@ class CustomLayout {
   }
 
   Future<LayoutResult> calculate(
-      GraphData graph, LayoutConstraints constraints) async {
+    GraphData graph,
+    LayoutConstraints constraints,
+  ) async {
     final nodePositions = <String, NodePosition>{};
 
     // اعمال موقعیت‌های ثابت
@@ -826,10 +900,11 @@ class CustomLayout {
   }
 
   Future<void> _applyRule(
-      LayoutRule rule,
-      GraphData graph,
-      Map<String, NodePosition> positions,
-      LayoutConstraints constraints) async {
+    LayoutRule rule,
+    GraphData graph,
+    Map<String, NodePosition> positions,
+    LayoutConstraints constraints,
+  ) async {
     switch (rule.type) {
       case LayoutRuleType.alignHorizontal:
         _alignNodesHorizontally(rule.nodeIds, positions, graph, rule.value);
@@ -839,11 +914,19 @@ class CustomLayout {
         break;
       case LayoutRuleType.distributeHorizontal:
         _distributeNodesHorizontally(
-            rule.nodeIds, positions, graph, constraints.bounds);
+          rule.nodeIds,
+          positions,
+          graph,
+          constraints.bounds,
+        );
         break;
       case LayoutRuleType.distributeVertical:
         _distributeNodesVertically(
-            rule.nodeIds, positions, graph, constraints.bounds);
+          rule.nodeIds,
+          positions,
+          graph,
+          constraints.bounds,
+        );
         break;
       case LayoutRuleType.keepDistance:
         _maintainDistance(rule.nodeIds, positions, graph, rule.value);
@@ -854,8 +937,12 @@ class CustomLayout {
     }
   }
 
-  void _alignNodesHorizontally(List<String> nodeIds,
-      Map<String, NodePosition> positions, GraphData graph, double y) {
+  void _alignNodesHorizontally(
+    List<String> nodeIds,
+    Map<String, NodePosition> positions,
+    GraphData graph,
+    double y,
+  ) {
     for (final nodeId in nodeIds) {
       if (positions.containsKey(nodeId)) {
         final current = positions[nodeId]!;
@@ -868,8 +955,12 @@ class CustomLayout {
     }
   }
 
-  void _alignNodesVertically(List<String> nodeIds,
-      Map<String, NodePosition> positions, GraphData graph, double x) {
+  void _alignNodesVertically(
+    List<String> nodeIds,
+    Map<String, NodePosition> positions,
+    GraphData graph,
+    double x,
+  ) {
     for (final nodeId in nodeIds) {
       if (positions.containsKey(nodeId)) {
         final current = positions[nodeId]!;
@@ -882,8 +973,12 @@ class CustomLayout {
     }
   }
 
-  void _distributeNodesHorizontally(List<String> nodeIds,
-      Map<String, NodePosition> positions, GraphData graph, Rect bounds) {
+  void _distributeNodesHorizontally(
+    List<String> nodeIds,
+    Map<String, NodePosition> positions,
+    GraphData graph,
+    Rect bounds,
+  ) {
     if (nodeIds.length < 2) return;
 
     final spacing = (bounds.width - 100) / (nodeIds.length - 1);
@@ -902,8 +997,12 @@ class CustomLayout {
     }
   }
 
-  void _distributeNodesVertically(List<String> nodeIds,
-      Map<String, NodePosition> positions, GraphData graph, Rect bounds) {
+  void _distributeNodesVertically(
+    List<String> nodeIds,
+    Map<String, NodePosition> positions,
+    GraphData graph,
+    Rect bounds,
+  ) {
     if (nodeIds.length < 2) return;
 
     final spacing = (bounds.height - 100) / (nodeIds.length - 1);
@@ -922,8 +1021,12 @@ class CustomLayout {
     }
   }
 
-  void _maintainDistance(List<String> nodeIds,
-      Map<String, NodePosition> positions, GraphData graph, double distance) {
+  void _maintainDistance(
+    List<String> nodeIds,
+    Map<String, NodePosition> positions,
+    GraphData graph,
+    double distance,
+  ) {
     if (nodeIds.length < 2) return;
 
     final firstNodeId = nodeIds[0];
@@ -935,8 +1038,10 @@ class CustomLayout {
       final nodeId = nodeIds[i];
       if (positions.containsKey(nodeId)) {
         final current = positions[nodeId]!;
-        final angle = math.atan2(current.position.dy - firstPos.dy,
-            current.position.dx - firstPos.dx);
+        final angle = math.atan2(
+          current.position.dy - firstPos.dy,
+          current.position.dx - firstPos.dx,
+        );
         final newPos = Offset(
           firstPos.dx + distance * math.cos(angle),
           firstPos.dy + distance * math.sin(angle),
@@ -951,8 +1056,12 @@ class CustomLayout {
     }
   }
 
-  void _centerNodesAround(List<String> nodeIds,
-      Map<String, NodePosition> positions, GraphData graph, Offset center) {
+  void _centerNodesAround(
+    List<String> nodeIds,
+    Map<String, NodePosition> positions,
+    GraphData graph,
+    Offset center,
+  ) {
     final radius = 100.0;
 
     for (int i = 0; i < nodeIds.length; i++) {
@@ -972,11 +1081,13 @@ class CustomLayout {
   }
 
   Future<void> _fillRemainingNodes(
-      GraphData graph,
-      Map<String, NodePosition> positions,
-      LayoutConstraints constraints) async {
-    final remainingNodes =
-        graph.nodes.where((node) => !positions.containsKey(node.id)).toList();
+    GraphData graph,
+    Map<String, NodePosition> positions,
+    LayoutConstraints constraints,
+  ) async {
+    final remainingNodes = graph.nodes
+        .where((node) => !positions.containsKey(node.id))
+        .toList();
 
     if (remainingNodes.isEmpty) return;
 
@@ -985,9 +1096,11 @@ class CustomLayout {
     final remainingGraph = GraphData(
       nodes: remainingNodes,
       edges: graph.edges
-          .where((edge) =>
-              remainingNodes.any((n) => n.id == edge.from) &&
-              remainingNodes.any((n) => n.id == edge.to))
+          .where(
+            (edge) =>
+                remainingNodes.any((n) => n.id == edge.from) &&
+                remainingNodes.any((n) => n.id == edge.to),
+          )
           .toList(),
     );
 
@@ -996,7 +1109,9 @@ class CustomLayout {
   }
 
   double _calculateCustomQuality(
-      Map<String, NodePosition> positions, List<LayoutRule> rules) {
+    Map<String, NodePosition> positions,
+    List<LayoutRule> rules,
+  ) {
     // کیفیت بر اساس رعایت rules
     double quality = 1.0;
 
@@ -1038,9 +1153,12 @@ class LayoutAnimator {
     _enableAnimations = enableAnimations ?? _enableAnimations;
   }
 
-  Future<void> animateToLayout(Map<String, NodePosition> fromPositions,
-      Map<String, NodePosition> toPositions, TickerProvider vsync,
-      {VoidCallback? onComplete}) async {
+  Future<void> animateToLayout(
+    Map<String, NodePosition> fromPositions,
+    Map<String, NodePosition> toPositions,
+    TickerProvider vsync, {
+    VoidCallback? onComplete,
+  }) async {
     if (!_enableAnimations) {
       onComplete?.call();
       return;
@@ -1073,10 +1191,9 @@ class LayoutAnimator {
         end: toPosition.position,
       );
 
-      final animation = tween.animate(CurvedAnimation(
-        parent: controller,
-        curve: _animationCurve,
-      ));
+      final animation = tween.animate(
+        CurvedAnimation(parent: controller, curve: _animationCurve),
+      );
 
       _controllers[nodeId] = controller;
       _positionTweens[nodeId] = tween;
@@ -1143,7 +1260,9 @@ class LayoutOptimizer {
   final PerformanceOptimizer _performanceOptimizer = PerformanceOptimizer();
 
   Future<GraphData> optimizeGraph(
-      GraphData graph, LayoutConstraints constraints) async {
+    GraphData graph,
+    LayoutConstraints constraints,
+  ) async {
     // بهینه‌سازی بر اساس عملکرد سیستم
     final report = await _getLatestPerformanceReport();
 
@@ -1160,15 +1279,18 @@ class LayoutOptimizer {
   Future<PerformanceReport?> _getLatestPerformanceReport() async {
     // دریافت آخرین گزارش عملکرد
     try {
-      return await _performanceOptimizer.monitor.reports.first
-          .timeout(Duration(milliseconds: 100));
+      return await _performanceOptimizer.monitor.reports.first.timeout(
+        Duration(milliseconds: 100),
+      );
     } catch (e) {
       return null;
     }
   }
 
   GraphData _aggressiveOptimization(
-      GraphData graph, LayoutConstraints constraints) {
+    GraphData graph,
+    LayoutConstraints constraints,
+  ) {
     // حذف نودهای کم‌اهمیت
     final importantNodes = _selectImportantNodes(graph, 0.3); // ۳۰٪ نودها
 
@@ -1179,7 +1301,9 @@ class LayoutOptimizer {
   }
 
   GraphData _moderateOptimization(
-      GraphData graph, LayoutConstraints constraints) {
+    GraphData graph,
+    LayoutConstraints constraints,
+  ) {
     // حذف برخی نودهای کم‌اهمیت
     final importantNodes = _selectImportantNodes(graph, 0.7); // ۷۰٪ نودها
 
@@ -1200,8 +1324,11 @@ class LayoutOptimizer {
     }
 
     final sortedNodes = graph.nodes.toList()
-      ..sort((a, b) =>
-          (connectionCounts[b.id] ?? 0).compareTo(connectionCounts[a.id] ?? 0));
+      ..sort(
+        (a, b) => (connectionCounts[b.id] ?? 0).compareTo(
+          connectionCounts[a.id] ?? 0,
+        ),
+      );
 
     return sortedNodes.take(nodeCount).toList();
   }
@@ -1209,7 +1336,8 @@ class LayoutOptimizer {
   List<GraphEdge> _filterEdges(List<GraphEdge> edges, Set<String> nodeIds) {
     return edges
         .where(
-            (edge) => nodeIds.contains(edge.from) && nodeIds.contains(edge.to))
+          (edge) => nodeIds.contains(edge.from) && nodeIds.contains(edge.to),
+        )
         .toList();
   }
 
@@ -1244,7 +1372,9 @@ Rect _calculateBounds(List<NodePosition> positions) {
 }
 
 List<EdgePosition> _calculateEdgePositions(
-    List<GraphEdge> edges, Map<String, NodePosition> nodePositions) {
+  List<GraphEdge> edges,
+  Map<String, NodePosition> nodePositions,
+) {
   final edgePositions = <EdgePosition>[];
 
   for (final edge in edges) {
@@ -1252,13 +1382,17 @@ List<EdgePosition> _calculateEdgePositions(
     final toPos = nodePositions[edge.to];
 
     if (fromPos != null && toPos != null) {
-      edgePositions.add(EdgePosition(
-        edgeId: edge.id,
-        from: fromPos.position,
-        to: toPos.position,
-        controlPoints:
-            _calculateControlPoints(fromPos.position, toPos.position),
-      ));
+      edgePositions.add(
+        EdgePosition(
+          edgeId: edge.id,
+          from: fromPos.position,
+          to: toPos.position,
+          controlPoints: _calculateControlPoints(
+            fromPos.position,
+            toPos.position,
+          ),
+        ),
+      );
     }
   }
 
@@ -1283,26 +1417,11 @@ List<Offset> _calculateControlPoints(Offset from, Offset to) {
 
 /// کلاس‌های مدل و داده‌ای
 
-enum LayoutType {
-  forceDirected,
-  circular,
-  tree,
-  grid,
-  custom,
-}
+enum LayoutType { forceDirected, circular, tree, grid, custom }
 
-enum TreeDirection {
-  topDown,
-  bottomUp,
-  leftRight,
-  rightLeft,
-}
+enum TreeDirection { topDown, bottomUp, leftRight, rightLeft }
 
-enum TreeAlignment {
-  left,
-  center,
-  right,
-}
+enum TreeAlignment { left, center, right }
 
 enum LayoutRuleType {
   alignHorizontal,
@@ -1318,11 +1437,8 @@ class GraphData {
   final List<GraphEdge> edges;
   final bool isTree;
 
-  GraphData({
-    required this.nodes,
-    required this.edges,
-    bool? isTree,
-  }) : isTree = isTree ?? _checkIsTree(nodes, edges);
+  GraphData({required this.nodes, required this.edges, bool? isTree})
+    : isTree = isTree ?? _checkIsTree(nodes, edges);
 
   static bool _checkIsTree(List<GraphNode> nodes, List<GraphEdge> edges) {
     if (nodes.length != edges.length + 1) return false;
@@ -1568,9 +1684,7 @@ class _LayoutWidgetState extends State<LayoutWidget>
   @override
   Widget build(BuildContext context) {
     if (_currentLayout == null) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     return Stack(
@@ -1592,11 +1706,7 @@ class _LayoutWidgetState extends State<LayoutWidget>
             child: CircularProgressIndicator(),
           ),
 
-        Positioned(
-          bottom: 10,
-          left: 10,
-          child: _buildLayoutInfo(),
-        ),
+        Positioned(bottom: 10, left: 10, child: _buildLayoutInfo()),
       ],
     );
   }

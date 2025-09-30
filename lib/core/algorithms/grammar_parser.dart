@@ -6,11 +6,12 @@ import '../result.dart';
 /// Parses strings using context-free grammars
 enum ParsingStrategyHint { auto, bruteForce, cyk, ll, lr }
 
-typedef _ParsingStrategy = ParseResult? Function(
-  Grammar grammar,
-  String inputString,
-  Duration timeout,
-);
+typedef _ParsingStrategy =
+    ParseResult? Function(
+      Grammar grammar,
+      String inputString,
+      Duration timeout,
+    );
 
 class GrammarParser {
   /// Parses a string using a grammar
@@ -99,7 +100,8 @@ class GrammarParser {
         final result = strategy(grammar, inputString, timeout);
         if (result != null) {
           return result.copyWith(
-              executionTime: DateTime.now().difference(startTime));
+            executionTime: DateTime.now().difference(startTime),
+          );
         }
       } catch (e) {
         // Try next strategy
@@ -169,7 +171,12 @@ class GrammarParser {
     // Simple brute force: try all possible derivations
     final derivations = <List<String>>[];
     _findDerivations(
-        grammar, [grammar.startSymbol], inputString, derivations, timeout);
+      grammar,
+      [grammar.startSymbol],
+      inputString,
+      derivations,
+      timeout,
+    );
 
     if (derivations.isNotEmpty) {
       return ParseResult.success(
@@ -222,7 +229,12 @@ class GrammarParser {
           newDerivation.insertAll(i, production.rightSide);
 
           _findDerivations(
-              grammar, newDerivation, targetString, derivations, timeout);
+            grammar,
+            newDerivation,
+            targetString,
+            derivations,
+            timeout,
+          );
         }
       }
     }
@@ -304,17 +316,24 @@ class GrammarParser {
         for (int i = 0; i < production.rightSide.length - 1; i++) {
           final newNonTerminal = '${currentLeft}_$i';
           if (i == production.rightSide.length - 2) {
-            productions.add(Production(
-              id: 'p_cnf_${productions.length}',
-              leftSide: currentLeft,
-              rightSide: [production.rightSide[i], production.rightSide[i + 1]],
-            ));
+            productions.add(
+              Production(
+                id: 'p_cnf_${productions.length}',
+                leftSide: currentLeft,
+                rightSide: [
+                  production.rightSide[i],
+                  production.rightSide[i + 1],
+                ],
+              ),
+            );
           } else {
-            productions.add(Production(
-              id: 'p_cnf_${productions.length}',
-              leftSide: currentLeft,
-              rightSide: [production.rightSide[i], newNonTerminal],
-            ));
+            productions.add(
+              Production(
+                id: 'p_cnf_${productions.length}',
+                leftSide: currentLeft,
+                rightSide: [production.rightSide[i], newNonTerminal],
+              ),
+            );
             currentLeft = [newNonTerminal];
           }
         }
@@ -424,23 +443,30 @@ class GrammarParser {
       for (final terminal in firstSet) {
         if (grammar.terminals.contains(terminal)) {
           actions[terminal] = ParseAction(
-              type: ParseActionType.reduce,
-              stateNumber: 0,
-              production: production);
+            type: ParseActionType.reduce,
+            stateNumber: 0,
+            production: production,
+          );
         }
       }
     }
 
     return ParseTable(
-      actionTable: table.map((key, value) => MapEntry(
+      actionTable: table.map(
+        (key, value) => MapEntry(
           key,
-          value.map((k, v) => MapEntry(
+          value.map(
+            (k, v) => MapEntry(
               k,
               ParseAction(
                 type: v.type,
                 stateNumber: v.stateNumber,
                 production: v.production,
-              ))))),
+              ),
+            ),
+          ),
+        ),
+      ),
       gotoTable: {}, // Tabela goto não é usada em LL
       grammar: grammar,
       type: ParseType.ll,
@@ -521,8 +547,9 @@ class GrammarParser {
 
         final newState = stack.last;
         stack.add(production.leftSide.first);
-        stack
-            .add(parseTable.getGoto(newState, production.leftSide.first) ?? '');
+        stack.add(
+          parseTable.getGoto(newState, production.leftSide.first) ?? '',
+        );
 
         derivations.add([...production.leftSide, ...production.rightSide]);
       } else if (action.type == ParseActionType.accept) {
@@ -547,21 +574,29 @@ class GrammarParser {
     for (final production in grammar.productions) {
       if (production.leftSide.isNotEmpty &&
           production.leftSide.first == grammar.startSymbol) {
-        table['0']!['\$'] =
-            const ParseAction(type: ParseActionType.accept, stateNumber: 0);
+        table['0']!['\$'] = const ParseAction(
+          type: ParseActionType.accept,
+          stateNumber: 0,
+        );
       }
     }
 
     return ParseTable(
-      actionTable: table.map((key, value) => MapEntry(
+      actionTable: table.map(
+        (key, value) => MapEntry(
           key,
-          value.map((k, v) => MapEntry(
+          value.map(
+            (k, v) => MapEntry(
               k,
               ParseAction(
                 type: v.type,
                 stateNumber: v.stateNumber,
                 production: v.production,
-              ))))),
+              ),
+            ),
+          ),
+        ),
+      ),
       gotoTable: {}, // Tabela goto simplificada para LR
       grammar: grammar,
       type: ParseType.lr,
@@ -599,9 +634,11 @@ class GrammarParser {
       final alphabet = grammar.terminals.toList();
 
       // Generate all possible strings up to maxLength
-      for (int length = 0;
-          length <= maxLength && generatedStrings.length < maxResults;
-          length++) {
+      for (
+        int length = 0;
+        length <= maxLength && generatedStrings.length < maxResults;
+        length++
+      ) {
         _generateStrings(
           grammar,
           alphabet,

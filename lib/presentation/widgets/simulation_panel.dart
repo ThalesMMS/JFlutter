@@ -102,8 +102,9 @@ class _SimulationPanelState extends State<SimulationPanel> {
     final step = _simulationSteps[index];
 
     if (index == 0) {
-      final input =
-          step.remainingInput.isEmpty ? 'ε' : '"${step.remainingInput}"';
+      final input = step.remainingInput.isEmpty
+          ? 'ε'
+          : '"${step.remainingInput}"';
       return 'Start at ${_formatState(step.currentState)} with input $input.';
     }
 
@@ -114,7 +115,8 @@ class _SimulationPanelState extends State<SimulationPanel> {
       return 'Final configuration ${_formatState(step.currentState)} – input $verdict.';
     }
 
-    final consumed = step.usedTransition ??
+    final consumed =
+        step.usedTransition ??
         (_simulationSteps[index - 1].remainingInput.isNotEmpty
             ? _simulationSteps[index - 1].remainingInput[0]
             : 'ε');
@@ -146,9 +148,9 @@ class _SimulationPanelState extends State<SimulationPanel> {
             children: [
               Text(
                 'Simulation',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
 
@@ -195,8 +197,8 @@ class _SimulationPanelState extends State<SimulationPanel> {
                 Text(
                   'Simulation Result',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 _buildResultCard(context, widget.simulationResult!),
@@ -214,8 +216,8 @@ class _SimulationPanelState extends State<SimulationPanel> {
                 Text(
                   'Regex Result',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 _buildRegexResultCard(context, widget.regexResult!),
@@ -253,9 +255,9 @@ class _SimulationPanelState extends State<SimulationPanel> {
               Text(
                 isAccepted ? 'Accepted' : 'Rejected',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: color,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -270,9 +272,9 @@ class _SimulationPanelState extends State<SimulationPanel> {
             const SizedBox(height: 8),
             Text(
               'Error: ${result.errorMessage}',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: colorScheme.error,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: colorScheme.error),
             ),
           ],
         ],
@@ -295,18 +297,14 @@ class _SimulationPanelState extends State<SimulationPanel> {
         children: [
           Row(
             children: [
-              Icon(
-                Icons.text_fields,
-                color: colorScheme.primary,
-                size: 20,
-              ),
+              Icon(Icons.text_fields, color: colorScheme.primary, size: 20),
               const SizedBox(width: 8),
               Text(
                 'Regular Expression',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -322,9 +320,9 @@ class _SimulationPanelState extends State<SimulationPanel> {
             child: Text(
               regex,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontFamily: 'monospace',
-                    fontWeight: FontWeight.bold,
-                  ),
+                fontFamily: 'monospace',
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -352,9 +350,9 @@ class _SimulationPanelState extends State<SimulationPanel> {
               const SizedBox(width: 8),
               Text(
                 'Step-by-Step Mode',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
               ),
               const Spacer(),
               Switch(
@@ -394,19 +392,18 @@ class _SimulationPanelState extends State<SimulationPanel> {
             children: [
               Text(
                 'Step-by-Step Execution',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
               const Spacer(),
               Text(
                 'Step ${_currentStepIndex + 1} of ${_simulationSteps.length}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.7),
-                    ),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.7),
+                ),
               ),
             ],
           ),
@@ -462,41 +459,38 @@ class _SimulationPanelState extends State<SimulationPanel> {
               Text(
                 'Step ${_currentStepIndex + 1}',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: color,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          Text(
-            description,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          Text(description, style: Theme.of(context).textTheme.bodyMedium),
           if (consumed != null) ...[
             const SizedBox(height: 4),
             Text(
               'Consumed: "$consumed"',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontFamily: 'monospace',
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
             ),
           ],
           if (nextState != null) ...[
             const SizedBox(height: 4),
             Text(
               'Next state: ${_formatState(nextState)}',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontFamily: 'monospace',
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
             ),
           ],
           const SizedBox(height: 4),
           Text(
             'Remaining input: ${remaining.isEmpty ? 'ε' : '"$remaining"'}',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontFamily: 'monospace',
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
           ),
         ],
       ),
@@ -540,10 +534,7 @@ class _SimulationPanelState extends State<SimulationPanel> {
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Theme.of(context)
-              .colorScheme
-              .outline
-              .withValues(alpha: 0.2),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
       child: ListView.builder(
@@ -551,18 +542,18 @@ class _SimulationPanelState extends State<SimulationPanel> {
         itemBuilder: (context, index) {
           final isCurrentStep = index == _currentStepIndex;
           final isFinal = index == _simulationSteps.length - 1;
-          final isAcceptedStep =
-              isFinal ? (widget.simulationResult?.isAccepted ?? false) : false;
+          final isAcceptedStep = isFinal
+              ? (widget.simulationResult?.isAccepted ?? false)
+              : false;
 
           return Container(
             margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: isCurrentStep
-                  ? Theme.of(context)
-                      .colorScheme
-                      .primaryContainer
-                      .withValues(alpha: 0.3)
+                  ? Theme.of(
+                      context,
+                    ).colorScheme.primaryContainer.withValues(alpha: 0.3)
                   : null,
               borderRadius: BorderRadius.circular(4),
             ),
@@ -572,10 +563,9 @@ class _SimulationPanelState extends State<SimulationPanel> {
                   radius: 12,
                   backgroundColor: isCurrentStep
                       ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context)
-                          .colorScheme
-                          .outline
-                          .withValues(alpha: 0.3),
+                      : Theme.of(
+                          context,
+                        ).colorScheme.outline.withValues(alpha: 0.3),
                   child: Text(
                     '${index + 1}',
                     style: TextStyle(

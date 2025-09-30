@@ -19,9 +19,7 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
         children: [
           _buildHeader(context),
           _buildTabBar(context),
-          Flexible(
-            child: _buildTabContent(context),
-          ),
+          Flexible(child: _buildTabContent(context)),
         ],
       ),
     );
@@ -39,9 +37,9 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
           const SizedBox(width: 8),
           Text(
             'Pumping Lemma Help',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -53,10 +51,7 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: Theme.of(context)
-                .colorScheme
-                .outline
-                .withValues(alpha: 0.2),
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
           ),
         ),
       ),
@@ -92,14 +87,13 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
             label,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: isSelected
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.6),
-                  fontWeight: isSelected ? FontWeight.w600 : null,
-                ),
+              color: isSelected
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.6),
+              fontWeight: isSelected ? FontWeight.w600 : null,
+            ),
           ),
         ),
       ),
@@ -251,8 +245,11 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
     );
   }
 
-  Widget _buildSection(BuildContext context,
-      {required String title, required String content}) {
+  Widget _buildSection(
+    BuildContext context, {
+    required String title,
+    required String content,
+  }) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -264,15 +261,12 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
         children: [
           Text(
             title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          Text(
-            content,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          Text(content, style: Theme.of(context).textTheme.bodyMedium),
         ],
       ),
     );
@@ -311,17 +305,14 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
               const SizedBox(width: 8),
               Text(
                 title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          Text(
-            description,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          Text(description, style: Theme.of(context).textTheme.bodyMedium),
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.all(8),
@@ -332,9 +323,9 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
             child: Text(
               'Example: $example',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontFamily: 'monospace',
-                    fontStyle: FontStyle.italic,
-                  ),
+                fontFamily: 'monospace',
+                fontStyle: FontStyle.italic,
+              ),
             ),
           ),
         ],
@@ -364,27 +355,21 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
         children: [
           Text(
             title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          Text(
-            description,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          Text(description, style: Theme.of(context).textTheme.bodyMedium),
           const SizedBox(height: 8),
           Text(
             'Proof:',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 4),
-          Text(
-            proof,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
+          Text(proof, style: Theme.of(context).textTheme.bodySmall),
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -395,9 +380,9 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
             child: Text(
               result,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],

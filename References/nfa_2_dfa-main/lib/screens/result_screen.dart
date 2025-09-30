@@ -118,8 +118,11 @@ class _ResultScreenState extends State<ResultScreen>
                   color: Colors.green.shade100,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.check_circle,
-                    color: Colors.green.shade700, size: 20),
+                child: Icon(
+                  Icons.check_circle,
+                  color: Colors.green.shade700,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               const Text('نتیجه تبدیل DFA'),
@@ -138,7 +141,9 @@ class _ResultScreenState extends State<ResultScreen>
               icon: const Icon(Icons.home_outlined),
               tooltip: 'بازگشت به صفحه اصلی',
               onPressed: () => Navigator.popUntil(
-                  context, ModalRoute.withName(AppRoutes.home)),
+                context,
+                ModalRoute.withName(AppRoutes.home),
+              ),
             ),
           ],
           bottom: PreferredSize(
@@ -157,16 +162,19 @@ class _ResultScreenState extends State<ResultScreen>
                 indicatorColor: Theme.of(context).colorScheme.primary,
                 indicatorWeight: 3,
                 labelStyle: const TextStyle(fontWeight: FontWeight.w600),
-                unselectedLabelStyle:
-                    const TextStyle(fontWeight: FontWeight.normal),
+                unselectedLabelStyle: const TextStyle(
+                  fontWeight: FontWeight.normal,
+                ),
                 tabs: const [
                   Tab(icon: Icon(Icons.dashboard_outlined), text: 'خلاصه'),
                   Tab(
-                      icon: Icon(Icons.table_chart_outlined),
-                      text: 'جدول انتقال'),
+                    icon: Icon(Icons.table_chart_outlined),
+                    text: 'جدول انتقال',
+                  ),
                   Tab(
-                      icon: Icon(Icons.play_circle_outline),
-                      text: 'آزمایش رشته'),
+                    icon: Icon(Icons.play_circle_outline),
+                    text: 'آزمایش رشته',
+                  ),
                   Tab(icon: Icon(Icons.account_tree_outlined), text: 'نمودار'),
                 ],
               ),
@@ -196,7 +204,8 @@ class _ResultScreenState extends State<ResultScreen>
   void _shareResult(ConversionResult result) {
     final conversionTimeMs = _getConversionTimeMs(result);
 
-    final summary = '''
+    final summary =
+        '''
 نتیجه تبدیل NFA به DFA:
 • تعداد حالت‌های NFA: ${result.nfa!.states.length}
 • تعداد حالت‌های DFA: ${result.dfa!.states.length}
@@ -342,10 +351,9 @@ class _SummaryTabState extends State<_SummaryTab>
                   Text(
                     'آمار کلی',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color:
-                              Theme.of(context).colorScheme.onPrimaryContainer,
-                        ),
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    ),
                   ),
                 ],
               ),
@@ -394,14 +402,19 @@ class _SummaryTabState extends State<_SummaryTab>
                             color: Colors.purple,
                           ),
                         ),
-                        const Text('زمان تبدیل',
-                            style: TextStyle(fontSize: 10)),
+                        const Text(
+                          'زمان تبدیل',
+                          style: TextStyle(fontSize: 10),
+                        ),
                       ],
                     ),
                     Column(
                       children: [
-                        const Icon(Icons.trending_up,
-                            size: 20, color: Colors.teal),
+                        const Icon(
+                          Icons.trending_up,
+                          size: 20,
+                          color: Colors.teal,
+                        ),
                         Text(
                           '${((widget.result.dfa!.states.length / widget.result.nfa!.states.length) * 100).toStringAsFixed(0)}%',
                           style: const TextStyle(
@@ -410,8 +423,10 @@ class _SummaryTabState extends State<_SummaryTab>
                             color: Colors.teal,
                           ),
                         ),
-                        const Text('نسبت حالت‌ها',
-                            style: TextStyle(fontSize: 10)),
+                        const Text(
+                          'نسبت حالت‌ها',
+                          style: TextStyle(fontSize: 10),
+                        ),
                       ],
                     ),
                   ],
@@ -442,9 +457,9 @@ class _SummaryTabState extends State<_SummaryTab>
                 const SizedBox(width: 8),
                 Text(
                   'مقایسه تفصیلی',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -506,16 +521,18 @@ class _SummaryTabState extends State<_SummaryTab>
                       color: Colors.orange.shade200,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(Icons.warning_amber_rounded,
-                        color: Colors.orange),
+                    child: const Icon(
+                      Icons.warning_amber_rounded,
+                      color: Colors.orange,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Text(
                     'هشدارها',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange.shade800,
-                        ),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange.shade800,
+                    ),
                   ),
                 ],
               ),
@@ -537,7 +554,9 @@ class _SummaryTabState extends State<_SummaryTab>
                         child: Text(
                           '${entry.key + 1}',
                           style: const TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.bold),
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -571,9 +590,9 @@ class _SummaryTabState extends State<_SummaryTab>
                 const SizedBox(width: 8),
                 Text(
                   'خروجی و ذخیره‌سازی',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -624,7 +643,8 @@ class _SummaryTabState extends State<_SummaryTab>
   void _exportAsText() {
     final conversionTimeMs = _getConversionTimeMs(widget.result);
 
-    final textData = '''
+    final textData =
+        '''
 === نتیجه تبدیل NFA به DFA ===
 
 NFA:
@@ -647,9 +667,9 @@ DFA:
 
     Clipboard.setData(ClipboardData(text: textData));
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('داده‌ها به صورت متن کپی شد')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('داده‌ها به صورت متن کپی شد')));
   }
 
   Map<String, dynamic> _automatonToJson(dynamic automaton) {
@@ -721,9 +741,9 @@ class _StringTesterTabState extends State<_StringTesterTab>
   void _testString() {
     final input = _controller.text.trim();
     if (input.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('لطفاً رشته‌ای وارد کنید')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('لطفاً رشته‌ای وارد کنید')));
       return;
     }
 
@@ -790,16 +810,16 @@ class _StringTesterTabState extends State<_StringTesterTab>
                   Text(
                     'آزمایش رشته',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'الفبای DFA: {${widget.dfa.alphabet.map((e) => e.toString()).join(', ')}}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontFamily: 'monospace',
-                          color: Theme.of(context).colorScheme.secondary,
-                        ),
+                      fontFamily: 'monospace',
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -902,16 +922,14 @@ class _StringTesterTabState extends State<_StringTesterTab>
                 Text(
                   'تاریخچه تست‌ها',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 TextButton.icon(
                   onPressed: _clearHistory,
                   icon: const Icon(Icons.clear_all, size: 16),
                   label: const Text('پاک کردن'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.red,
-                  ),
+                  style: TextButton.styleFrom(foregroundColor: Colors.red),
                 ),
               ],
             ),
@@ -982,15 +1000,15 @@ class _StringTesterTabState extends State<_StringTesterTab>
                     Text(
                       'هنوز رشته‌ای تست نشده',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'رشته‌ای وارد کنید و دکمه تست را فشار دهید',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
                     ),
                   ],
                 ),
@@ -1048,8 +1066,9 @@ class _DiagramTabState extends State<_DiagramTab> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color:
-                Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceVariant.withOpacity(0.3),
             border: Border(
               bottom: BorderSide(color: Theme.of(context).dividerColor),
             ),
@@ -1098,9 +1117,11 @@ class _DiagramTabState extends State<_DiagramTab> {
                         setState(() => _showMinimap = !_showMinimap),
                   ),
                   IconButton(
-                    icon: Icon(_enableAnimations
-                        ? Icons.animation
-                        : Icons.stop_circle_outlined),
+                    icon: Icon(
+                      _enableAnimations
+                          ? Icons.animation
+                          : Icons.stop_circle_outlined,
+                    ),
                     tooltip: 'تغییر وضعیت انیمیشن‌ها',
                     onPressed: () =>
                         setState(() => _enableAnimations = !_enableAnimations),
@@ -1114,7 +1135,8 @@ class _DiagramTabState extends State<_DiagramTab> {
         Expanded(
           child: EnhancedStateDiagram(
             key: ValueKey(
-                '${_selectedLayout}_${_showMinimap}_${_enableAnimations}'),
+              '${_selectedLayout}_${_showMinimap}_${_enableAnimations}',
+            ),
             automaton: widget.dfa,
             title: 'نمودار DFA نهایی',
             description: 'نتیجه تبدیل NFA به DFA',
@@ -1152,9 +1174,9 @@ class _EnhancedStatItem extends StatelessWidget {
         Text(
           value,
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
@@ -1189,28 +1211,30 @@ class _EnhancedComparisonRow extends StatelessWidget {
           children: [
             Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
             const SizedBox(width: 8),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text(title, style: Theme.of(context).textTheme.titleMedium),
           ],
         ),
         const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color:
-                Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceVariant.withOpacity(0.3),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('NFA: $nfaValue',
-                  style: const TextStyle(fontFamily: 'monospace')),
+              Text(
+                'NFA: $nfaValue',
+                style: const TextStyle(fontFamily: 'monospace'),
+              ),
               const SizedBox(height: 4),
-              Text('DFA: $dfaValue',
-                  style: const TextStyle(fontFamily: 'monospace')),
+              Text(
+                'DFA: $dfaValue',
+                style: const TextStyle(fontFamily: 'monospace'),
+              ),
             ],
           ),
         ),

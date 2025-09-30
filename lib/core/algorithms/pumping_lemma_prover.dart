@@ -74,12 +74,18 @@ class PumpingLemmaProver {
     final startTime = DateTime.now();
 
     // Find the pumping length
-    final pumpingLength =
-        _findPumpingLength(automaton, maxPumpingLength, timeout);
+    final pumpingLength = _findPumpingLength(
+      automaton,
+      maxPumpingLength,
+      timeout,
+    );
 
     // Find a string that can be pumped
-    final pumpableString =
-        _findPumpableString(automaton, pumpingLength, timeout);
+    final pumpableString = _findPumpableString(
+      automaton,
+      pumpingLength,
+      timeout,
+    );
 
     if (pumpableString != null) {
       return PumpingLemmaProof.success(
@@ -106,8 +112,9 @@ class PumpingLemmaProver {
 
     // The pumping length is at most the number of states
     final numStates = automaton.states.length;
-    final pumpingLength =
-        numStates < maxPumpingLength ? numStates : maxPumpingLength;
+    final pumpingLength = numStates < maxPumpingLength
+        ? numStates
+        : maxPumpingLength;
 
     // Check timeout
     if (DateTime.now().difference(startTime) > timeout) {
@@ -140,8 +147,11 @@ class PumpingLemmaProver {
         break;
       }
 
-      final pumpableString =
-          _testStringPumpability(automaton, string, pumpingLength);
+      final pumpableString = _testStringPumpability(
+        automaton,
+        string,
+        pumpingLength,
+      );
       if (pumpableString != null) {
         return pumpableString;
       }
@@ -166,8 +176,13 @@ class PumpingLemmaProver {
     }
 
     for (final symbol in alphabet) {
-      _generateStrings(alphabet, currentString + symbol, remainingLength - 1,
-          strings, maxStrings);
+      _generateStrings(
+        alphabet,
+        currentString + symbol,
+        remainingLength - 1,
+        strings,
+        maxStrings,
+      );
     }
   }
 
@@ -234,8 +249,10 @@ class PumpingLemmaProver {
       final nextStates = <State>{};
 
       for (final state in currentStates) {
-        final transitions =
-            automaton.getTransitionsFromStateOnSymbol(state, symbol);
+        final transitions = automaton.getTransitionsFromStateOnSymbol(
+          state,
+          symbol,
+        );
         for (final transition in transitions) {
           nextStates.add(transition.toState);
         }
@@ -268,7 +285,9 @@ class PumpingLemmaProver {
 
       // Handle empty automaton
       if (automaton.states.isEmpty) {
-        return const Failure('Cannot disprove pumping lemma for empty automaton');
+        return const Failure(
+          'Cannot disprove pumping lemma for empty automaton',
+        );
       }
 
       // Handle automaton with no initial state
@@ -277,8 +296,11 @@ class PumpingLemmaProver {
       }
 
       // Disprove the pumping lemma
-      final result =
-          _disprovePumpingLemma(automaton, maxPumpingLength, timeout);
+      final result = _disprovePumpingLemma(
+        automaton,
+        maxPumpingLength,
+        timeout,
+      );
       stopwatch.stop();
 
       // Update execution time
@@ -299,12 +321,18 @@ class PumpingLemmaProver {
     final startTime = DateTime.now();
 
     // Find the pumping length
-    final pumpingLength =
-        _findPumpingLength(automaton, maxPumpingLength, timeout);
+    final pumpingLength = _findPumpingLength(
+      automaton,
+      maxPumpingLength,
+      timeout,
+    );
 
     // Find a string that cannot be pumped
-    final nonPumpableString =
-        _findNonPumpableString(automaton, pumpingLength, timeout);
+    final nonPumpableString = _findNonPumpableString(
+      automaton,
+      pumpingLength,
+      timeout,
+    );
 
     if (nonPumpableString != null) {
       return PumpingLemmaDisproof.success(
@@ -344,8 +372,11 @@ class PumpingLemmaProver {
         break;
       }
 
-      final nonPumpableString =
-          _testStringNonPumpability(automaton, string, pumpingLength);
+      final nonPumpableString = _testStringNonPumpability(
+        automaton,
+        string,
+        pumpingLength,
+      );
       if (nonPumpableString != null) {
         return nonPumpableString;
       }
@@ -411,7 +442,11 @@ class PumpingLemmaProver {
 
   /// Finds a counter example for non-pumpability
   static String _findCounterExample(
-      FSA automaton, String x, String y, String z) {
+    FSA automaton,
+    String x,
+    String y,
+    String z,
+  ) {
     // Try different values of i to find a counter example
     for (int i = 0; i <= 5; i++) {
       final pumpedString = x + (y * i) + z;
@@ -465,12 +500,18 @@ class PumpingLemmaProver {
     Duration timeout,
   ) {
     // Find the pumping length
-    final pumpingLength =
-        _findPumpingLength(automaton, maxPumpingLength, timeout);
+    final pumpingLength = _findPumpingLength(
+      automaton,
+      maxPumpingLength,
+      timeout,
+    );
 
     // Find a string that can be pumped
-    final pumpableString =
-        _findPumpableString(automaton, pumpingLength, timeout);
+    final pumpableString = _findPumpableString(
+      automaton,
+      pumpingLength,
+      timeout,
+    );
 
     return pumpableString != null;
   }

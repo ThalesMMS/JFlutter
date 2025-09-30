@@ -88,7 +88,9 @@ class _GrammarPageState extends ConsumerState<GrammarPage> {
                     margin: const EdgeInsets.all(8),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Column(
@@ -96,10 +98,8 @@ class _GrammarPageState extends ConsumerState<GrammarPage> {
                       children: [
                         Text(
                           'Context-Free Grammar Editor',
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 8),
                         Text(

@@ -150,20 +150,23 @@ class Grammar {
     for (final production in productions) {
       final productionErrors = production.validate();
       errors.addAll(
-          productionErrors.map((e) => 'Production ${production.id}: $e'));
+        productionErrors.map((e) => 'Production ${production.id}: $e'),
+      );
 
       // Validate production symbols
       for (final symbol in production.leftSide) {
         if (!nonterminals.contains(symbol)) {
           errors.add(
-              'Production ${production.id} references undefined non-terminal: $symbol');
+            'Production ${production.id} references undefined non-terminal: $symbol',
+          );
         }
       }
 
       for (final symbol in production.rightSide) {
         if (!terminals.contains(symbol) && !nonterminals.contains(symbol)) {
           errors.add(
-              'Production ${production.id} references undefined symbol: $symbol');
+            'Production ${production.id} references undefined symbol: $symbol',
+          );
         }
       }
     }
@@ -235,8 +238,10 @@ class Grammar {
 
   /// Checks if the grammar has unit productions
   bool get hasUnitProductions {
-    return productions.any((p) =>
-        p.rightSide.length == 1 && nonterminals.contains(p.rightSide.first));
+    return productions.any(
+      (p) =>
+          p.rightSide.length == 1 && nonterminals.contains(p.rightSide.first),
+    );
   }
 
   /// Checks if the grammar has left recursion
@@ -273,8 +278,9 @@ class Grammar {
           if (nullable.add(production.leftSide.first)) {
             changed = true;
           }
-        } else if (production.rightSide
-            .every((symbol) => nullable.contains(symbol))) {
+        } else if (production.rightSide.every(
+          (symbol) => nullable.contains(symbol),
+        )) {
           if (nullable.add(production.leftSide.first)) {
             changed = true;
           }
@@ -293,8 +299,9 @@ class Grammar {
     while (changed) {
       changed = false;
       for (final production in productions) {
-        if (production.rightSide.every((symbol) =>
-            terminals.contains(symbol) || productive.contains(symbol))) {
+        if (production.rightSide.every(
+          (symbol) => terminals.contains(symbol) || productive.contains(symbol),
+        )) {
           if (productive.add(production.leftSide.first)) {
             changed = true;
           }
@@ -360,10 +367,7 @@ class Grammar {
   }
 
   /// Creates a simple regular grammar
-  factory Grammar.simpleRegular({
-    required String id,
-    required String name,
-  }) {
+  factory Grammar.simpleRegular({required String id, required String name}) {
     final now = DateTime.now();
     const production1 = Production(
       id: 'p1',

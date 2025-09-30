@@ -12,12 +12,14 @@ class GrammarEditor extends ConsumerStatefulWidget {
 }
 
 class _GrammarEditorState extends ConsumerState<GrammarEditor> {
-  final TextEditingController _startSymbolController =
-      TextEditingController(text: 'S');
+  final TextEditingController _startSymbolController = TextEditingController(
+    text: 'S',
+  );
   final TextEditingController _leftSideController = TextEditingController();
   final TextEditingController _rightSideController = TextEditingController();
-  final TextEditingController _grammarNameController =
-      TextEditingController(text: 'My Grammar');
+  final TextEditingController _grammarNameController = TextEditingController(
+    text: 'My Grammar',
+  );
 
   String? _selectedProductionId;
   bool _isEditing = false;
@@ -83,8 +85,8 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
                 child: Text(
                   'Grammar Editor',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -99,8 +101,10 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
                 icon: const Icon(Icons.add, size: 16),
                 label: const Text('Add Rule'),
                 style: ElevatedButton.styleFrom(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                 ),
               ),
               ElevatedButton.icon(
@@ -110,8 +114,10 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Theme.of(context).colorScheme.error,
                   foregroundColor: Theme.of(context).colorScheme.onError,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                 ),
               ),
             ],
@@ -122,17 +128,14 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
 
     return Row(
       children: [
-        Icon(
-          Icons.text_fields,
-          color: Theme.of(context).colorScheme.primary,
-        ),
+        Icon(Icons.text_fields, color: Theme.of(context).colorScheme.primary),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             'Grammar Editor',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
         ),
         const SizedBox(width: 8),
@@ -171,9 +174,9 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
         children: [
           Text(
             'Grammar Information',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 12),
           LayoutBuilder(
@@ -260,9 +263,9 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
         children: [
           Text(
             _isEditing ? 'Edit Production Rule' : 'Add Production Rule',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 12),
           LayoutBuilder(
@@ -345,8 +348,9 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     ElevatedButton.icon(
-                      onPressed:
-                          _isEditing ? _updateProduction : _addProduction,
+                      onPressed: _isEditing
+                          ? _updateProduction
+                          : _addProduction,
                       icon: Icon(_isEditing ? Icons.save : Icons.add),
                       label: Text(_isEditing ? 'Update' : 'Add'),
                     ),
@@ -357,10 +361,12 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
                         icon: const Icon(Icons.cancel),
                         label: const Text('Cancel'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              Theme.of(context).colorScheme.surface,
-                          foregroundColor:
-                              Theme.of(context).colorScheme.onSurface,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.surface,
+                          foregroundColor: Theme.of(
+                            context,
+                          ).colorScheme.onSurface,
                         ),
                       ),
                     ],
@@ -383,8 +389,9 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
                       label: const Text('Cancel'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.surface,
-                        foregroundColor:
-                            Theme.of(context).colorScheme.onSurface,
+                        foregroundColor: Theme.of(
+                          context,
+                        ).colorScheme.onSurface,
                       ),
                     ),
                   ],
@@ -398,16 +405,18 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
   }
 
   Widget _buildProductionsList(
-      BuildContext context, List<Production> productions) {
+    BuildContext context,
+    List<Production> productions,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           'Production Rules (${productions.length})',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
         if (productions.isEmpty)
@@ -439,15 +448,15 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
           Text(
             'No production rules yet',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
+              color: Theme.of(context).colorScheme.outline,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             'Add your first production rule above',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
+              color: Theme.of(context).colorScheme.outline,
+            ),
           ),
         ],
       ),
@@ -455,7 +464,10 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
   }
 
   Widget _buildProductionItem(
-      BuildContext context, Production production, int index) {
+    BuildContext context,
+    Production production,
+    int index,
+  ) {
     final isSelected = _selectedProductionId == production.id;
 
     return Container(
@@ -467,10 +479,7 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
         border: Border.all(
           color: isSelected
               ? Theme.of(context).colorScheme.primary
-              : Theme.of(context)
-                  .colorScheme
-                  .outline
-                  .withValues(alpha: 0.2),
+              : Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
         ),
         borderRadius: BorderRadius.circular(8),
       ),
@@ -488,9 +497,9 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
         title: Text(
           '${_formatSymbols(production.leftSide)} → ${_formatRightSide(production)}',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontFamily: 'monospace',
-                fontWeight: FontWeight.w600,
-              ),
+            fontFamily: 'monospace',
+            fontWeight: FontWeight.w600,
+          ),
         ),
         subtitle: Text(
           'Rule ${index + 1}',
@@ -558,7 +567,9 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
         parsedRight.length == 1 && _isLambdaSymbol(parsedRight.first);
     final normalizedRight = isLambda ? <String>[] : parsedRight;
 
-    ref.read(grammarProvider.notifier).addProduction(
+    ref
+        .read(grammarProvider.notifier)
+        .addProduction(
           leftSide: parsedLeft,
           rightSide: normalizedRight,
           isLambda: isLambda,
@@ -592,7 +603,9 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
         parsedRight.length == 1 && _isLambdaSymbol(parsedRight.first);
     final normalizedRight = isLambda ? <String>[] : parsedRight;
 
-    ref.read(grammarProvider.notifier).updateProduction(
+    ref
+        .read(grammarProvider.notifier)
+        .updateProduction(
           _selectedProductionId!,
           leftSide: parsedLeft,
           rightSide: normalizedRight,

@@ -6,11 +6,7 @@ sealed class State<T> {
   bool isInitial;
   bool isFinal;
 
-  State({
-    required this.name,
-    this.isInitial = false,
-    this.isFinal = false,
-  });
+  State({required this.name, this.isInitial = false, this.isFinal = false});
 
   final Map<String, T> _transitions = {};
 
@@ -24,22 +20,14 @@ sealed class State<T> {
 }
 
 class NonDeterministicState extends State<Set<NonDeterministicState>> {
-  NonDeterministicState({
-    required super.name,
-    super.isInitial,
-    super.isFinal,
-  });
+  NonDeterministicState({required super.name, super.isInitial, super.isFinal});
 
   Set<NonDeterministicState> executeTransition(String input) =>
       transitions[input] ?? transitions[epsilon] ?? {};
 }
 
 class DeterministicState extends State<DeterministicState> {
-  DeterministicState({
-    required super.name,
-    super.isInitial,
-    super.isFinal,
-  });
+  DeterministicState({required super.name, super.isInitial, super.isFinal});
 
   DeterministicState executeTransition(String input) {
     if (transitions.isEmpty) throw InvalidTransitionException();

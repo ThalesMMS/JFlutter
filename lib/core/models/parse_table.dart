@@ -40,11 +40,14 @@ class ParseTable {
   /// Converts the parse table to a JSON representation
   Map<String, dynamic> toJson() {
     return {
-      'actionTable': actionTable.map((state, terminals) => MapEntry(
-            state,
-            terminals
-                .map((terminal, action) => MapEntry(terminal, action.toJson())),
-          )),
+      'actionTable': actionTable.map(
+        (state, terminals) => MapEntry(
+          state,
+          terminals.map(
+            (terminal, action) => MapEntry(terminal, action.toJson()),
+          ),
+        ),
+      ),
       'gotoTable': gotoTable,
       'grammar': grammar.toJson(),
       'type': type.name,
@@ -54,21 +57,24 @@ class ParseTable {
   /// Creates a parse table from a JSON representation
   factory ParseTable.fromJson(Map<String, dynamic> json) {
     return ParseTable(
-      actionTable: (json['actionTable'] as Map<String, dynamic>)
-          .map((state, terminals) => MapEntry(
-                state,
-                (terminals as Map<String, dynamic>)
-                    .map((terminal, action) => MapEntry(
-                          terminal,
-                          ParseAction.fromJson(action as Map<String, dynamic>),
-                        )),
-              )),
+      actionTable: (json['actionTable'] as Map<String, dynamic>).map(
+        (state, terminals) => MapEntry(
+          state,
+          (terminals as Map<String, dynamic>).map(
+            (terminal, action) => MapEntry(
+              terminal,
+              ParseAction.fromJson(action as Map<String, dynamic>),
+            ),
+          ),
+        ),
+      ),
       gotoTable: Map<String, Map<String, String>>.from(
-        (json['gotoTable'] as Map<String, dynamic>).map((state, nonterminals) =>
-            MapEntry(
-              state,
-              Map<String, String>.from(nonterminals as Map<String, dynamic>),
-            )),
+        (json['gotoTable'] as Map<String, dynamic>).map(
+          (state, nonterminals) => MapEntry(
+            state,
+            Map<String, String>.from(nonterminals as Map<String, dynamic>),
+          ),
+        ),
       ),
       grammar: Grammar.fromJson(json['grammar'] as Map<String, dynamic>),
       type: ParseType.values.firstWhere(
@@ -358,33 +364,22 @@ class ParseAction {
 
   /// Creates a shift action
   factory ParseAction.shift(int stateNumber) {
-    return ParseAction(
-      type: ParseActionType.shift,
-      stateNumber: stateNumber,
-    );
+    return ParseAction(type: ParseActionType.shift, stateNumber: stateNumber);
   }
 
   /// Creates a reduce action
   factory ParseAction.reduce(Production production) {
-    return ParseAction(
-      type: ParseActionType.reduce,
-      production: production,
-    );
+    return ParseAction(type: ParseActionType.reduce, production: production);
   }
 
   /// Creates an accept action
   factory ParseAction.accept() {
-    return const ParseAction(
-      type: ParseActionType.accept,
-    );
+    return const ParseAction(type: ParseActionType.accept);
   }
 
   /// Creates an error action
   factory ParseAction.error(String errorMessage) {
-    return ParseAction(
-      type: ParseActionType.error,
-      errorMessage: errorMessage,
-    );
+    return ParseAction(type: ParseActionType.error, errorMessage: errorMessage);
   }
 }
 

@@ -20,7 +20,9 @@ import '../../presentation/widgets/export/svg_exporter.dart';
 class FileOperationsService {
   /// Saves automaton to JFLAP XML format (.jff)
   Future<StringResult> saveAutomatonToJFLAP(
-      FSA automaton, String filePath) async {
+    FSA automaton,
+    String filePath,
+  ) async {
     try {
       final xml = _buildJFLAPXML(automaton);
       final file = File(filePath);
@@ -46,7 +48,9 @@ class FileOperationsService {
 
   /// Saves grammar to JFLAP XML format (.cfg)
   Future<StringResult> saveGrammarToJFLAP(
-      Grammar grammar, String filePath) async {
+    Grammar grammar,
+    String filePath,
+  ) async {
     try {
       final xml = _buildGrammarXML(grammar);
       final file = File(filePath);
@@ -72,12 +76,16 @@ class FileOperationsService {
 
   /// Exports automaton to PNG image
   Future<StringResult> exportAutomatonToPNG(
-      FSA automaton, String filePath) async {
+    FSA automaton,
+    String filePath,
+  ) async {
     try {
       const size = Size(_kCanvasWidth, _kCanvasHeight);
       final recorder = ui.PictureRecorder();
-      final canvas =
-          Canvas(recorder, Rect.fromLTWH(0, 0, size.width, size.height));
+      final canvas = Canvas(
+        recorder,
+        Rect.fromLTWH(0, 0, size.width, size.height),
+      );
 
       // Fill background
       canvas.drawRect(
@@ -90,8 +98,10 @@ class FileOperationsService {
       painter.paint(canvas, size);
 
       final picture = recorder.endRecording();
-      final image =
-          await picture.toImage(size.width.toInt(), size.height.toInt());
+      final image = await picture.toImage(
+        size.width.toInt(),
+        size.height.toInt(),
+      );
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) {
         return const Failure('Failed to encode PNG data');
@@ -108,8 +118,10 @@ class FileOperationsService {
 
   /// Exports automaton to SVG format (enhanced version)
   Future<StringResult> exportAutomatonToSVG(
-      AutomatonEntity automaton, String filePath,
-      {SvgExportOptions? options}) async {
+    AutomatonEntity automaton,
+    String filePath, {
+    SvgExportOptions? options,
+  }) async {
     try {
       final svg = SvgExporter.exportAutomatonToSvg(automaton, options: options);
       final file = File(filePath);
@@ -122,8 +134,10 @@ class FileOperationsService {
 
   /// Exports grammar to SVG format (as state diagram)
   Future<StringResult> exportGrammarToSVG(
-      GrammarEntity grammar, String filePath,
-      {SvgExportOptions? options}) async {
+    GrammarEntity grammar,
+    String filePath, {
+    SvgExportOptions? options,
+  }) async {
     try {
       final svg = SvgExporter.exportGrammarToSvg(grammar, options: options);
       final file = File(filePath);
@@ -136,8 +150,10 @@ class FileOperationsService {
 
   /// Exports Turing machine to SVG format
   Future<StringResult> exportTuringMachineToSVG(
-      TuringMachineEntity tm, String filePath,
-      {SvgExportOptions? options}) async {
+    TuringMachineEntity tm,
+    String filePath, {
+    SvgExportOptions? options,
+  }) async {
     try {
       final svg = SvgExporter.exportTuringMachineToSvg(tm, options: options);
       final file = File(filePath);
@@ -150,7 +166,9 @@ class FileOperationsService {
 
   /// Exports automaton to SVG format (legacy FSA support)
   Future<StringResult> exportLegacyAutomatonToSVG(
-      FSA automaton, String filePath) async {
+    FSA automaton,
+    String filePath,
+  ) async {
     try {
       final svg = _buildSVG(automaton);
       final file = File(filePath);
@@ -173,7 +191,9 @@ class FileOperationsService {
 
   /// Creates a new file with unique name
   Future<StringResult> createUniqueFile(
-      String baseName, String extension) async {
+    String baseName,
+    String extension,
+  ) async {
     try {
       final dirResult = await getDocumentsDirectory();
       if (!dirResult.isSuccess) return Failure(dirResult.error!);
@@ -226,37 +246,49 @@ class FileOperationsService {
   String _buildJFLAPXML(FSA automaton) {
     final builder = XmlBuilder();
     builder.processing('xml', 'version="1.0" encoding="UTF-8"');
-    builder.element('structure', nest: () {
-      builder.attribute('type', 'fa');
-      builder.element('automaton', nest: () {
-        // Add states
-        for (final state in automaton.states) {
-          builder.element('state', nest: () {
-            builder.attribute('id', state.id);
-            builder.attribute('name', state.label);
-            if (state.isInitial) {
-              builder.element('initial');
+    builder.element(
+      'structure',
+      nest: () {
+        builder.attribute('type', 'fa');
+        builder.element(
+          'automaton',
+          nest: () {
+            // Add states
+            for (final state in automaton.states) {
+              builder.element(
+                'state',
+                nest: () {
+                  builder.attribute('id', state.id);
+                  builder.attribute('name', state.label);
+                  if (state.isInitial) {
+                    builder.element('initial');
+                  }
+                  if (state.isAccepting) {
+                    builder.element('final');
+                  }
+                  builder.element('x', nest: state.position.x.toString());
+                  builder.element('y', nest: state.position.y.toString());
+                },
+              );
             }
-            if (state.isAccepting) {
-              builder.element('final');
-            }
-            builder.element('x', nest: state.position.x.toString());
-            builder.element('y', nest: state.position.y.toString());
-          });
-        }
 
-        // Add transitions
-        for (final transition in automaton.transitions) {
-          if (transition is FSATransition) {
-            builder.element('transition', nest: () {
-              builder.element('from', nest: transition.fromState.id);
-              builder.element('to', nest: transition.toState.id);
-              builder.element('read', nest: transition.symbol);
-            });
-          }
-        }
-      });
-    });
+            // Add transitions
+            for (final transition in automaton.transitions) {
+              if (transition is FSATransition) {
+                builder.element(
+                  'transition',
+                  nest: () {
+                    builder.element('from', nest: transition.fromState.id);
+                    builder.element('to', nest: transition.toState.id);
+                    builder.element('read', nest: transition.symbol);
+                  },
+                );
+              }
+            }
+          },
+        );
+      },
+    );
 
     return builder.buildDocument().toXmlString(pretty: true);
   }
@@ -276,18 +308,21 @@ class FileOperationsService {
       final isInitial = stateElement.findElements('initial').isNotEmpty;
       final isAccepting = stateElement.findElements('final').isNotEmpty;
 
-      states.add(automaton_state.State(
-        id: id,
-        label: name,
-        position: Vector2(x, y),
-        isInitial: isInitial,
-        isAccepting: isAccepting,
-      ));
+      states.add(
+        automaton_state.State(
+          id: id,
+          label: name,
+          position: Vector2(x, y),
+          isInitial: isInitial,
+          isAccepting: isAccepting,
+        ),
+      );
     }
 
     // Parse transitions
-    for (final transitionElement
-        in automatonElement.findAllElements('transition')) {
+    for (final transitionElement in automatonElement.findAllElements(
+      'transition',
+    )) {
       final fromId = transitionElement.findElements('from').first.text;
       final toId = transitionElement.findElements('to').first.text;
       final symbol = transitionElement.findElements('read').first.text;
@@ -295,13 +330,15 @@ class FileOperationsService {
       final fromState = states.firstWhere((s) => s.id == fromId);
       final toState = states.firstWhere((s) => s.id == toId);
 
-      transitions.add(FSATransition(
-        id: 't${transitions.length}',
-        fromState: fromState,
-        toState: toState,
-        label: symbol,
-        inputSymbols: {symbol},
-      ));
+      transitions.add(
+        FSATransition(
+          id: 't${transitions.length}',
+          fromState: fromState,
+          toState: toState,
+          label: symbol,
+          inputSymbols: {symbol},
+        ),
+      );
     }
 
     return FSA(
@@ -310,8 +347,10 @@ class FileOperationsService {
       states: states.toSet(),
       transitions: transitions.toSet(),
       alphabet: transitions.map((t) => t.symbol).toSet(),
-      initialState:
-          states.firstWhere((s) => s.isInitial, orElse: () => states.first),
+      initialState: states.firstWhere(
+        (s) => s.isInitial,
+        orElse: () => states.first,
+      ),
       acceptingStates: states.where((s) => s.isAccepting).toSet(),
       bounds: const math.Rectangle(0, 0, 400, 300),
       created: DateTime.now(),
@@ -323,20 +362,32 @@ class FileOperationsService {
   String _buildGrammarXML(Grammar grammar) {
     final builder = XmlBuilder();
     builder.processing('xml', 'version="1.0" encoding="UTF-8"');
-    builder.element('structure', nest: () {
-      builder.attribute('type', 'grammar');
-      builder.element('grammar', nest: () {
-        builder.attribute('type', grammar.type.name);
-        builder.element('start', nest: grammar.startSymbol);
+    builder.element(
+      'structure',
+      nest: () {
+        builder.attribute('type', 'grammar');
+        builder.element(
+          'grammar',
+          nest: () {
+            builder.attribute('type', grammar.type.name);
+            builder.element('start', nest: grammar.startSymbol);
 
-        for (final production in grammar.productions) {
-          builder.element('production', nest: () {
-            builder.element('left', nest: production.leftSide.join(' '));
-            builder.element('right', nest: production.rightSide.join(' '));
-          });
-        }
-      });
-    });
+            for (final production in grammar.productions) {
+              builder.element(
+                'production',
+                nest: () {
+                  builder.element('left', nest: production.leftSide.join(' '));
+                  builder.element(
+                    'right',
+                    nest: production.rightSide.join(' '),
+                  );
+                },
+              );
+            }
+          },
+        );
+      },
+    );
 
     return builder.buildDocument().toXmlString(pretty: true);
   }
@@ -347,19 +398,28 @@ class FileOperationsService {
     final startSymbol = grammarElement.findElements('start').first.text;
     final productions = <Production>{};
 
-    for (final productionElement
-        in grammarElement.findAllElements('production')) {
-      final leftSide =
-          productionElement.findElements('left').first.text.split(' ');
-      final rightSide =
-          productionElement.findElements('right').first.text.split(' ');
+    for (final productionElement in grammarElement.findAllElements(
+      'production',
+    )) {
+      final leftSide = productionElement
+          .findElements('left')
+          .first
+          .text
+          .split(' ');
+      final rightSide = productionElement
+          .findElements('right')
+          .first
+          .text
+          .split(' ');
 
-      productions.add(Production(
-        id: 'p${productions.length}',
-        leftSide: leftSide,
-        rightSide: rightSide,
-        order: productions.length,
-      ));
+      productions.add(
+        Production(
+          id: 'p${productions.length}',
+          leftSide: leftSide,
+          rightSide: rightSide,
+          order: productions.length,
+        ),
+      );
     }
 
     return Grammar(
@@ -384,7 +444,8 @@ class FileOperationsService {
     final buffer = StringBuffer();
     buffer.writeln('<?xml version="1.0" encoding="UTF-8"?>');
     buffer.writeln(
-        '<svg xmlns="http://www.w3.org/2000/svg" width="$_kCanvasWidth" height="$_kCanvasHeight">');
+      '<svg xmlns="http://www.w3.org/2000/svg" width="$_kCanvasWidth" height="$_kCanvasHeight">',
+    );
 
     // Draw transitions first (so they appear behind states)
     for (final transition in drawingData.transitions) {
@@ -421,21 +482,22 @@ class FileOperationsService {
   _AutomatonDrawingData _prepareDrawingData(FSA automaton) {
     final states = automaton.states.toList()
       ..sort((a, b) => a.id.compareTo(b.id));
-    final transitions = automaton.transitions
-        .whereType<FSATransition>()
-        .toList()
-      ..sort((a, b) => a.id.compareTo(b.id));
+    final transitions =
+        automaton.transitions.whereType<FSATransition>().toList()
+          ..sort((a, b) => a.id.compareTo(b.id));
 
     final drawableStates = states
         .map(
           (state) => _DrawableState(
             center: Offset(state.position.x, state.position.y),
             label: state.label,
-            fillColor:
-                state.isAccepting ? _kAcceptingFillColor : _kDefaultFillColor,
+            fillColor: state.isAccepting
+                ? _kAcceptingFillColor
+                : _kDefaultFillColor,
             strokeColor: state.isInitial ? _kInitialStrokeColor : _kStrokeColor,
-            strokeWidth:
-                state.isInitial ? _kInitialStrokeWidth : _kDefaultStrokeWidth,
+            strokeWidth: state.isInitial
+                ? _kInitialStrokeWidth
+                : _kDefaultStrokeWidth,
           ),
         )
         .toList();
@@ -443,10 +505,14 @@ class FileOperationsService {
     final drawableTransitions = transitions
         .map(
           (transition) => _DrawableTransition(
-            from: Offset(transition.fromState.position.x,
-                transition.fromState.position.y),
+            from: Offset(
+              transition.fromState.position.x,
+              transition.fromState.position.y,
+            ),
             to: Offset(
-                transition.toState.position.x, transition.toState.position.y),
+              transition.toState.position.x,
+              transition.toState.position.y,
+            ),
             label: transition.symbol,
           ),
         )

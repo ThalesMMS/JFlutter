@@ -18,11 +18,12 @@ class TuringMachineModel {
   List<Behaviour> behaviours;
   @HiveField(3)
   String description;
-  TuringMachineModel(
-      {required this.initial_config,
-      required this.configs,
-      required this.behaviours,
-      required this.description});
+  TuringMachineModel({
+    required this.initial_config,
+    required this.configs,
+    required this.behaviours,
+    required this.description,
+  });
   //Factory constructor for Model to save this machine object
   factory TuringMachineModel.fromMachine({required TuringMachine machine}) {
     //Construct object from machine object.

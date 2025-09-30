@@ -172,12 +172,14 @@ class _StateDiagramState extends State<StateDiagram>
           }
 
           _transitions.putIfAbsent(from, () => []);
-          _transitions[from]!.add(TransitionInfo(
-            from: from,
-            to: toState,
-            symbol: symbol,
-            isEpsilon: symbol == NFA.epsilon,
-          ));
+          _transitions[from]!.add(
+            TransitionInfo(
+              from: from,
+              to: toState,
+              symbol: symbol,
+              isEpsilon: symbol == NFA.epsilon,
+            ),
+          );
         }
       });
     });
@@ -204,12 +206,14 @@ class _StateDiagramState extends State<StateDiagram>
         }
 
         _transitions.putIfAbsent(fromName, () => []);
-        _transitions[fromName]!.add(TransitionInfo(
-          from: fromName,
-          to: toName,
-          symbol: symbol,
-          isEpsilon: false,
-        ));
+        _transitions[fromName]!.add(
+          TransitionInfo(
+            from: fromName,
+            to: toName,
+            symbol: symbol,
+            isEpsilon: false,
+          ),
+        );
       });
     });
   }
@@ -267,7 +271,12 @@ class _StateDiagramState extends State<StateDiagram>
         runSpacing: 12,
         children: [
           _buildLegendItem('Start State', widget.config.startStateColor, true),
-          _buildLegendItem('Final State', widget.config.finalStateColor, false, isDouble: true),
+          _buildLegendItem(
+            'Final State',
+            widget.config.finalStateColor,
+            false,
+            isDouble: true,
+          ),
           _buildLegendItem('Normal State', widget.config.stateColor, false),
           _buildLegendItem('Selected', widget.config.selectedColor, false),
           _buildLegendItem('Highlighted', widget.config.highlightColor, false),
@@ -276,7 +285,12 @@ class _StateDiagramState extends State<StateDiagram>
     );
   }
 
-  Widget _buildLegendItem(String label, Color color, bool isStart, {bool isDouble = false}) {
+  Widget _buildLegendItem(
+    String label,
+    Color color,
+    bool isStart, {
+    bool isDouble = false,
+  }) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -293,28 +307,22 @@ class _StateDiagramState extends State<StateDiagram>
           ),
           child: isDouble
               ? Container(
-            margin: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: color, width: 1),
-            ),
-          )
+                  margin: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: color, width: 1),
+                  ),
+                )
               : isStart
-              ? Center(
-            child: Icon(
-              Icons.play_arrow,
-              size: 12,
-              color: color,
-            ),
-          )
+              ? Center(child: Icon(Icons.play_arrow, size: 12, color: color))
               : null,
         ),
         const SizedBox(width: 8),
         Text(
           label,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w500,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
         ),
       ],
     );
@@ -343,13 +351,12 @@ class _StateDiagramState extends State<StateDiagram>
       graphView = AnimatedBuilder(
         animation: _animationController,
         builder: (context, child) {
-          final curvedValue = Curves.elasticOut.transform(_animationController.value);
+          final curvedValue = Curves.elasticOut.transform(
+            _animationController.value,
+          );
           return Transform.scale(
             scale: curvedValue,
-            child: Opacity(
-              opacity: _animationController.value,
-              child: child,
-            ),
+            child: Opacity(opacity: _animationController.value, child: child),
           );
         },
         child: graphView,
@@ -385,7 +392,10 @@ class _StateDiagramState extends State<StateDiagram>
         onEnter: (event) => _handleNodeHover(nodeId, event.position),
         onExit: (_) => _handleNodeExit(),
         child: AnimatedBuilder(
-          animation: Listenable.merge([_pulseController, _transitionController]),
+          animation: Listenable.merge([
+            _pulseController,
+            _transitionController,
+          ]),
           builder: (context, child) {
             final isHighlighted = widget.highlightedState == nodeId;
             final pulseValue = isHighlighted ? _pulseController.value : 0.0;
@@ -400,11 +410,16 @@ class _StateDiagramState extends State<StateDiagram>
     );
   }
 
-  Widget _buildNodeContainer(String nodeId, NodeInfo nodeInfo, double pulseValue) {
+  Widget _buildNodeContainer(
+    String nodeId,
+    NodeInfo nodeInfo,
+    double pulseValue,
+  ) {
     final isSelected = _selectedState == nodeId;
     final isHovered = _hoveredState == nodeId;
     final isHighlighted = widget.highlightedState == nodeId;
-    final selfLoops = _transitions[nodeId]?.where((t) => t.isSelfLoop).toList() ?? [];
+    final selfLoops =
+        _transitions[nodeId]?.where((t) => t.isSelfLoop).toList() ?? [];
 
     return Container(
       width: widget.config.nodeSize,
@@ -413,7 +428,12 @@ class _StateDiagramState extends State<StateDiagram>
         shape: BoxShape.circle,
         gradient: _getNodeGradient(nodeInfo, isSelected, isHovered),
         border: Border.all(
-          color: _getNodeBorderColor(nodeInfo, isSelected, isHovered, isHighlighted),
+          color: _getNodeBorderColor(
+            nodeInfo,
+            isSelected,
+            isHovered,
+            isHighlighted,
+          ),
           width: _getNodeBorderWidth(nodeInfo, isSelected, isHovered),
         ),
         boxShadow: _getNodeShadows(nodeInfo, isSelected, isHovered, pulseValue),
@@ -428,8 +448,11 @@ class _StateDiagramState extends State<StateDiagram>
               nodeId,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: widget.config.fontSize * (0.8 + (_currentScale * 0.2)),
-                color: isSelected ? Colors.white : Theme.of(context).textTheme.bodyLarge?.color,
+                fontSize:
+                    widget.config.fontSize * (0.8 + (_currentScale * 0.2)),
+                color: isSelected
+                    ? Colors.white
+                    : Theme.of(context).textTheme.bodyLarge?.color,
               ),
               textAlign: TextAlign.center,
               overflow: TextOverflow.ellipsis,
@@ -445,7 +468,10 @@ class _StateDiagramState extends State<StateDiagram>
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Theme.of(context).dividerColor, width: 0.5),
+                  border: Border.all(
+                    color: Theme.of(context).dividerColor,
+                    width: 0.5,
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -465,10 +491,16 @@ class _StateDiagramState extends State<StateDiagram>
     );
   }
 
-  Gradient _getNodeGradient(NodeInfo nodeInfo, bool isSelected, bool isHovered) {
+  Gradient _getNodeGradient(
+    NodeInfo nodeInfo,
+    bool isSelected,
+    bool isHovered,
+  ) {
     final baseColor = _getNodeColor(nodeInfo);
     final color1 = isSelected ? baseColor : baseColor.withOpacity(0.1);
-    final color2 = isSelected ? baseColor.withOpacity(0.7) : baseColor.withOpacity(0.05);
+    final color2 = isSelected
+        ? baseColor.withOpacity(0.7)
+        : baseColor.withOpacity(0.05);
 
     if (isHovered) {
       return RadialGradient(
@@ -476,12 +508,15 @@ class _StateDiagramState extends State<StateDiagram>
       );
     }
 
-    return RadialGradient(
-      colors: [color1, color2],
-    );
+    return RadialGradient(colors: [color1, color2]);
   }
 
-  List<BoxShadow> _getNodeShadows(NodeInfo nodeInfo, bool isSelected, bool isHovered, double pulseValue) {
+  List<BoxShadow> _getNodeShadows(
+    NodeInfo nodeInfo,
+    bool isSelected,
+    bool isHovered,
+    double pulseValue,
+  ) {
     final shadows = <BoxShadow>[
       BoxShadow(
         color: Colors.black.withOpacity(0.1),
@@ -508,10 +543,7 @@ class _StateDiagramState extends State<StateDiagram>
       margin: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(
-          color: _getNodeColor(nodeInfo),
-          width: 2,
-        ),
+        border: Border.all(color: _getNodeColor(nodeInfo), width: 2),
       ),
     );
   }
@@ -528,11 +560,7 @@ class _StateDiagramState extends State<StateDiagram>
           color: widget.config.startStateColor,
           border: Border.all(color: Colors.white, width: 2),
         ),
-        child: const Icon(
-          Icons.play_arrow,
-          size: 8,
-          color: Colors.white,
-        ),
+        child: const Icon(Icons.play_arrow, size: 8, color: Colors.white),
       ),
     );
   }
@@ -542,10 +570,7 @@ class _StateDiagramState extends State<StateDiagram>
       child: Container(
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(
-            color: widget.config.selectedColor,
-            width: 3,
-          ),
+          border: Border.all(color: widget.config.selectedColor, width: 3),
         ),
       ),
     );
@@ -637,9 +662,9 @@ class _StateDiagramState extends State<StateDiagram>
         children: [
           Text(
             'State: $_selectedState',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           if (nodeInfo.isStart)
@@ -653,23 +678,27 @@ class _StateDiagramState extends State<StateDiagram>
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 4),
-            ...transitions.take(3).map((t) => Padding(
-              padding: const EdgeInsets.only(left: 8, top: 2),
-              child: Text(
-                '${t.symbol} → ${t.to}',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontFamily: 'monospace',
+            ...transitions
+                .take(3)
+                .map(
+                  (t) => Padding(
+                    padding: const EdgeInsets.only(left: 8, top: 2),
+                    child: Text(
+                      '${t.symbol} → ${t.to}',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
+                    ),
+                  ),
                 ),
-              ),
-            )),
             if (transitions.length > 3)
               Padding(
                 padding: const EdgeInsets.only(left: 8, top: 2),
                 child: Text(
                   '... and ${transitions.length - 3} more',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontStyle: FontStyle.italic,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
                 ),
               ),
           ],
@@ -799,10 +828,7 @@ class _StateDiagramState extends State<StateDiagram>
     );
 
     if (tooltip != null) {
-      return Tooltip(
-        message: tooltip,
-        child: button,
-      );
+      return Tooltip(message: tooltip, child: button);
     }
 
     return button;
@@ -853,13 +879,19 @@ class _StateDiagramState extends State<StateDiagram>
   // Control Methods
   void _zoomIn() {
     final currentValue = _transformationController.value;
-    final newScale = math.min(currentValue.getMaxScaleOnAxis() * 1.2, widget.config.maxScale);
+    final newScale = math.min(
+      currentValue.getMaxScaleOnAxis() * 1.2,
+      widget.config.maxScale,
+    );
     _transformationController.value = Matrix4.identity()..scale(newScale);
   }
 
   void _zoomOut() {
     final currentValue = _transformationController.value;
-    final newScale = math.max(currentValue.getMaxScaleOnAxis() / 1.2, widget.config.minScale);
+    final newScale = math.max(
+      currentValue.getMaxScaleOnAxis() / 1.2,
+      widget.config.minScale,
+    );
     _transformationController.value = Matrix4.identity()..scale(newScale);
   }
 
@@ -893,8 +925,8 @@ class _StateDiagramState extends State<StateDiagram>
       isFinal = nfa.finalStates.contains(nodeId);
     } else if (widget.automaton is DFA) {
       final dfa = widget.automaton as DFA;
-      isStart = dfa.startState != null &&
-          dfa.getStateName(dfa.startState!) == nodeId;
+      isStart =
+          dfa.startState != null && dfa.getStateName(dfa.startState!) == nodeId;
       isFinal = dfa.finalStates.any((s) => dfa.getStateName(s) == nodeId);
     }
 
@@ -907,14 +939,23 @@ class _StateDiagramState extends State<StateDiagram>
     return widget.config.stateColor;
   }
 
-  Color _getNodeBorderColor(NodeInfo nodeInfo, bool isSelected, bool isHovered, bool isHighlighted) {
+  Color _getNodeBorderColor(
+    NodeInfo nodeInfo,
+    bool isSelected,
+    bool isHovered,
+    bool isHighlighted,
+  ) {
     if (isSelected) return widget.config.selectedColor;
     if (isHovered) return widget.config.hoverColor;
     if (isHighlighted) return widget.config.highlightColor;
     return _getNodeColor(nodeInfo);
   }
 
-  double _getNodeBorderWidth(NodeInfo nodeInfo, bool isSelected, bool isHovered) {
+  double _getNodeBorderWidth(
+    NodeInfo nodeInfo,
+    bool isSelected,
+    bool isHovered,
+  ) {
     if (isSelected) return 4.0;
     if (isHovered) return 3.0;
     if (nodeInfo.isStart) return 3.0;
@@ -980,22 +1021,14 @@ class StateDiagramConfig {
 }
 
 /// جهت چیدمان گراف
-enum LayoutDirection {
-  leftToRight,
-  topToBottom,
-  rightToLeft,
-  bottomToTop,
-}
+enum LayoutDirection { leftToRight, topToBottom, rightToLeft, bottomToTop }
 
 /// اطلاعات نود
 class NodeInfo {
   final bool isStart;
   final bool isFinal;
 
-  const NodeInfo({
-    required this.isStart,
-    required this.isFinal,
-  });
+  const NodeInfo({required this.isStart, required this.isFinal});
 }
 
 /// اطلاعات انتقال

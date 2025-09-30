@@ -1,10 +1,8 @@
 import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';
 import '../models/grammar.dart';
-import '../models/production.dart';
 import '../models/pda.dart';
 import '../models/state.dart';
-import '../models/transition.dart';
 import '../models/pda_transition.dart';
 import '../result.dart';
 
@@ -16,13 +14,13 @@ class GrammarToPDAConverter {
       // Basic validation
       if (grammar.productions.isEmpty) return false;
       if (grammar.startSymbol.isEmpty) return false;
-      
+
       // Check if all productions are valid for PDA conversion
       for (final production in grammar.productions) {
         if (production.leftSide.isEmpty) return false;
         // Additional validation can be added here
       }
-      
+
       return true;
     } catch (e) {
       return false;
@@ -36,7 +34,7 @@ class GrammarToPDAConverter {
       final productionCount = grammar.productions.length;
       final nonTerminalCount = grammar.nonTerminals.length;
       final terminalCount = grammar.terminals.length;
-      
+
       final analysis = GrammarToPDAAnalysis(
         canConvert: canConvert,
         productionCount: productionCount,
@@ -45,7 +43,7 @@ class GrammarToPDAConverter {
         estimatedStateCount: productionCount + 2, // Rough estimate
         estimatedTransitionCount: productionCount * 2, // Rough estimate
       );
-      
+
       return ResultFactory.success(analysis);
     } catch (e) {
       return ResultFactory.failure('Error analyzing conversion: $e');
@@ -59,7 +57,7 @@ class GrammarToPDAConverter {
   }) {
     try {
       final stopwatch = Stopwatch()..start();
-      
+
       // Validate input
       final validationResult = _validateInput(grammar);
       if (!validationResult.isSuccess) {
@@ -78,7 +76,7 @@ class GrammarToPDAConverter {
 
       // Create a simple PDA
       final result = _createSimplePDA(grammar);
-      
+
       stopwatch.stop();
       if (stopwatch.elapsed > timeout) {
         return ResultFactory.failure('Conversion timed out');
@@ -93,7 +91,7 @@ class GrammarToPDAConverter {
   /// Creates a simple PDA from grammar
   static PDA _createSimplePDA(Grammar grammar) {
     final now = DateTime.now();
-    
+
     // Create states
     final q0 = State(
       id: 'q0',
@@ -102,7 +100,7 @@ class GrammarToPDAConverter {
       isInitial: true,
       isAccepting: false,
     );
-    
+
     final q1 = State(
       id: 'q1',
       label: 'Processing',
@@ -110,7 +108,7 @@ class GrammarToPDAConverter {
       isInitial: false,
       isAccepting: false,
     );
-    
+
     final q2 = State(
       id: 'q2',
       label: 'Accepting',
@@ -118,32 +116,36 @@ class GrammarToPDAConverter {
       isInitial: false,
       isAccepting: true,
     );
-    
+
     // Create transitions
     final transitions = <PDATransition>[];
-    
+
     // Transition from q0 to q1: push start symbol
-    transitions.add(PDATransition(
-      id: 't1',
-      fromState: q0,
-      toState: q1,
-      label: 'ε,ε/${grammar.startSymbol}',
-      inputSymbol: '',
-      popSymbol: '',
-      pushSymbol: grammar.startSymbol,
-    ));
-    
+    transitions.add(
+      PDATransition(
+        id: 't1',
+        fromState: q0,
+        toState: q1,
+        label: 'ε,ε/${grammar.startSymbol}',
+        inputSymbol: '',
+        popSymbol: '',
+        pushSymbol: grammar.startSymbol,
+      ),
+    );
+
     // Transition from q1 to q2: pop start symbol
-    transitions.add(PDATransition(
-      id: 't2',
-      fromState: q1,
-      toState: q2,
-      label: 'ε,${grammar.startSymbol}/ε',
-      inputSymbol: '',
-      popSymbol: grammar.startSymbol,
-      pushSymbol: '',
-    ));
-    
+    transitions.add(
+      PDATransition(
+        id: 't2',
+        fromState: q1,
+        toState: q2,
+        label: 'ε,${grammar.startSymbol}/ε',
+        inputSymbol: '',
+        popSymbol: grammar.startSymbol,
+        pushSymbol: '',
+      ),
+    );
+
     return PDA(
       id: 'pda_${DateTime.now().millisecondsSinceEpoch}',
       name: 'PDA from Grammar',
@@ -154,7 +156,7 @@ class GrammarToPDAConverter {
       acceptingStates: {q2},
       created: now,
       modified: now,
-      bounds: math.Rectangle(0, 0, 800, 600),
+      bounds: const math.Rectangle(0, 0, 800, 600),
       stackAlphabet: {
         ...grammar.terminals,
         ...grammar.nonTerminals,
@@ -188,7 +190,7 @@ class GrammarToPDAConverter {
   }) {
     try {
       final stopwatch = Stopwatch()..start();
-      
+
       // Validate input
       final validationResult = _validateInput(grammar);
       if (!validationResult.isSuccess) {
@@ -207,7 +209,7 @@ class GrammarToPDAConverter {
 
       // Create a simple PDA
       final result = _createSimplePDA(grammar);
-      
+
       stopwatch.stop();
       if (stopwatch.elapsed > timeout) {
         return ResultFactory.failure('Conversion timed out');
@@ -215,7 +217,9 @@ class GrammarToPDAConverter {
 
       return ResultFactory.success(result);
     } catch (e) {
-      return ResultFactory.failure('Error converting grammar to PDA (standard): $e');
+      return ResultFactory.failure(
+        'Error converting grammar to PDA (standard): $e',
+      );
     }
   }
 
@@ -226,7 +230,7 @@ class GrammarToPDAConverter {
   }) {
     try {
       final stopwatch = Stopwatch()..start();
-      
+
       // Validate input
       final validationResult = _validateInput(grammar);
       if (!validationResult.isSuccess) {
@@ -245,7 +249,7 @@ class GrammarToPDAConverter {
 
       // Create a simple PDA
       final result = _createSimplePDA(grammar);
-      
+
       stopwatch.stop();
       if (stopwatch.elapsed > timeout) {
         return ResultFactory.failure('Conversion timed out');
@@ -253,7 +257,9 @@ class GrammarToPDAConverter {
 
       return ResultFactory.success(result);
     } catch (e) {
-      return ResultFactory.failure('Error converting grammar to PDA (Greibach): $e');
+      return ResultFactory.failure(
+        'Error converting grammar to PDA (Greibach): $e',
+      );
     }
   }
 
@@ -281,7 +287,9 @@ class GrammarToPDAConverter {
 
       return ResultFactory.success(true);
     } catch (e) {
-      return ResultFactory.failure('Error checking if grammar can be converted to PDA: $e');
+      return ResultFactory.failure(
+        'Error checking if grammar can be converted to PDA: $e',
+      );
     }
   }
 
@@ -292,7 +300,7 @@ class GrammarToPDAConverter {
   }) {
     try {
       final stopwatch = Stopwatch()..start();
-      
+
       // Validate input
       final validationResult = _validateInput(grammar);
       if (!validationResult.isSuccess) {
@@ -301,7 +309,9 @@ class GrammarToPDAConverter {
 
       // Handle empty grammar
       if (grammar.productions.isEmpty) {
-        return ResultFactory.failure('Cannot analyze conversion of empty grammar');
+        return ResultFactory.failure(
+          'Cannot analyze conversion of empty grammar',
+        );
       }
 
       // Check if grammar has start symbol
@@ -324,7 +334,7 @@ class GrammarToPDAConverter {
         'timeout': timeout.inMilliseconds,
         'timestamp': DateTime.now().toIso8601String(),
       };
-      
+
       stopwatch.stop();
       if (stopwatch.elapsed > timeout) {
         return ResultFactory.failure('Analysis timed out');
@@ -332,7 +342,9 @@ class GrammarToPDAConverter {
 
       return ResultFactory.success(finalResult);
     } catch (e) {
-      return ResultFactory.failure('Error analyzing grammar to PDA conversion: $e');
+      return ResultFactory.failure(
+        'Error analyzing grammar to PDA conversion: $e',
+      );
     }
   }
 }
@@ -341,19 +353,19 @@ class GrammarToPDAConverter {
 class GrammarToPDAAnalysis {
   /// Whether the grammar can be converted to PDA
   final bool canConvert;
-  
+
   /// Number of productions in the grammar
   final int productionCount;
-  
+
   /// Number of non-terminals
   final int nonTerminalCount;
-  
+
   /// Number of terminals
   final int terminalCount;
-  
+
   /// Estimated number of states in the resulting PDA
   final int estimatedStateCount;
-  
+
   /// Estimated number of transitions in the resulting PDA
   final int estimatedTransitionCount;
 

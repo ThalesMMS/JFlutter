@@ -4,31 +4,31 @@ import 'production.dart';
 class Grammar {
   /// Unique identifier for the grammar
   final String id;
-  
+
   /// User-defined name for the grammar
   final String name;
-  
+
   /// Set of terminal symbols
   final Set<String> terminals;
-  
+
   /// Set of non-terminal symbols
   final Set<String> nonterminals;
-  
+
   /// Non-terminals (alias for nonterminals)
   Set<String> get nonTerminals => nonterminals;
-  
+
   /// Grammar start symbol
   final String startSymbol;
-  
+
   /// Set of production rules
   final Set<Production> productions;
-  
+
   /// Type of the grammar
   final GrammarType type;
-  
+
   /// Creation timestamp
   final DateTime created;
-  
+
   /// Last modification timestamp
   final DateTime modified;
 
@@ -126,45 +126,51 @@ class Grammar {
   /// Validates the grammar properties
   List<String> validate() {
     final errors = <String>[];
-    
+
     if (id.isEmpty) {
       errors.add('Grammar ID cannot be empty');
     }
-    
+
     if (name.isEmpty) {
       errors.add('Grammar name cannot be empty');
     }
-    
+
     if (startSymbol.isEmpty) {
       errors.add('Grammar must have a start symbol');
     }
-    
+
     if (!nonterminals.contains(startSymbol)) {
       errors.add('Start symbol must be a non-terminal');
     }
-    
+
     if (productions.isEmpty) {
       errors.add('Grammar must have at least one production');
     }
-    
+
     for (final production in productions) {
       final productionErrors = production.validate();
-      errors.addAll(productionErrors.map((e) => 'Production ${production.id}: $e'));
-      
+      errors.addAll(
+        productionErrors.map((e) => 'Production ${production.id}: $e'),
+      );
+
       // Validate production symbols
       for (final symbol in production.leftSide) {
         if (!nonterminals.contains(symbol)) {
-          errors.add('Production ${production.id} references undefined non-terminal: $symbol');
+          errors.add(
+            'Production ${production.id} references undefined non-terminal: $symbol',
+          );
         }
       }
-      
+
       for (final symbol in production.rightSide) {
         if (!terminals.contains(symbol) && !nonterminals.contains(symbol)) {
-          errors.add('Production ${production.id} references undefined symbol: $symbol');
+          errors.add(
+            'Production ${production.id} references undefined symbol: $symbol',
+          );
         }
       }
     }
-    
+
     return errors;
   }
 
@@ -195,12 +201,16 @@ class Grammar {
 
   /// Gets all productions that start with a specific symbol
   Set<Production> getProductionsStartingWith(String symbol) {
-    return productions.where((p) => p.rightSide.isNotEmpty && p.rightSide.first == symbol).toSet();
+    return productions
+        .where((p) => p.rightSide.isNotEmpty && p.rightSide.first == symbol)
+        .toSet();
   }
 
   /// Gets all productions that end with a specific symbol
   Set<Production> getProductionsEndingWith(String symbol) {
-    return productions.where((p) => p.rightSide.isNotEmpty && p.rightSide.last == symbol).toSet();
+    return productions
+        .where((p) => p.rightSide.isNotEmpty && p.rightSide.last == symbol)
+        .toSet();
   }
 
   /// Gets all lambda productions
@@ -228,13 +238,16 @@ class Grammar {
 
   /// Checks if the grammar has unit productions
   bool get hasUnitProductions {
-    return productions.any((p) => p.rightSide.length == 1 && nonterminals.contains(p.rightSide.first));
+    return productions.any(
+      (p) =>
+          p.rightSide.length == 1 && nonterminals.contains(p.rightSide.first),
+    );
   }
 
   /// Checks if the grammar has left recursion
   bool get hasLeftRecursion {
     for (final production in productions) {
-      if (production.rightSide.isNotEmpty && 
+      if (production.rightSide.isNotEmpty &&
           production.leftSide.contains(production.rightSide.first)) {
         return true;
       }
@@ -245,7 +258,7 @@ class Grammar {
   /// Checks if the grammar has right recursion
   bool get hasRightRecursion {
     for (final production in productions) {
-      if (production.rightSide.isNotEmpty && 
+      if (production.rightSide.isNotEmpty &&
           production.leftSide.contains(production.rightSide.last)) {
         return true;
       }
@@ -257,7 +270,7 @@ class Grammar {
   Set<String> get nullableNonterminals {
     final nullable = <String>{};
     bool changed = true;
-    
+
     while (changed) {
       changed = false;
       for (final production in productions) {
@@ -265,14 +278,16 @@ class Grammar {
           if (nullable.add(production.leftSide.first)) {
             changed = true;
           }
-        } else if (production.rightSide.every((symbol) => nullable.contains(symbol))) {
+        } else if (production.rightSide.every(
+          (symbol) => nullable.contains(symbol),
+        )) {
           if (nullable.add(production.leftSide.first)) {
             changed = true;
           }
         }
       }
     }
-    
+
     return nullable;
   }
 
@@ -280,19 +295,20 @@ class Grammar {
   Set<String> get productiveNonterminals {
     final productive = <String>{};
     bool changed = true;
-    
+
     while (changed) {
       changed = false;
       for (final production in productions) {
-        if (production.rightSide.every((symbol) => 
-            terminals.contains(symbol) || productive.contains(symbol))) {
+        if (production.rightSide.every(
+          (symbol) => terminals.contains(symbol) || productive.contains(symbol),
+        )) {
           if (productive.add(production.leftSide.first)) {
             changed = true;
           }
         }
       }
     }
-    
+
     return productive;
   }
 
@@ -300,7 +316,7 @@ class Grammar {
   Set<String> get reachableNonterminals {
     final reachable = <String>{startSymbol};
     bool changed = true;
-    
+
     while (changed) {
       changed = false;
       for (final production in productions) {
@@ -313,7 +329,7 @@ class Grammar {
         }
       }
     }
-    
+
     return reachable;
   }
 
@@ -351,26 +367,23 @@ class Grammar {
   }
 
   /// Creates a simple regular grammar
-  factory Grammar.simpleRegular({
-    required String id,
-    required String name,
-  }) {
+  factory Grammar.simpleRegular({required String id, required String name}) {
     final now = DateTime.now();
-    final production1 = Production(
+    const production1 = Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['a', 'A'],
       isLambda: false,
       order: 1,
     );
-    final production2 = Production(
+    const production2 = Production(
       id: 'p2',
       leftSide: ['A'],
       rightSide: ['b'],
       isLambda: false,
       order: 2,
     );
-    
+
     return Grammar(
       id: id,
       name: name,
@@ -390,21 +403,21 @@ class Grammar {
     required String name,
   }) {
     final now = DateTime.now();
-    final production1 = Production(
+    const production1 = Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['a', 'S', 'b'],
       isLambda: false,
       order: 1,
     );
-    final production2 = Production(
+    const production2 = Production(
       id: 'p2',
       leftSide: ['S'],
       rightSide: [],
       isLambda: true,
       order: 2,
     );
-    
+
     return Grammar(
       id: id,
       name: name,
@@ -423,13 +436,13 @@ class Grammar {
 enum GrammarType {
   /// Regular grammar
   regular,
-  
+
   /// Context-free grammar
   contextFree,
-  
+
   /// Context-sensitive grammar
   contextSensitive,
-  
+
   /// Unrestricted grammar
   unrestricted,
 }
@@ -480,15 +493,15 @@ extension GrammarTypeExtension on GrammarType {
 
   /// Returns whether this grammar type supports left recursion
   bool get supportsLeftRecursion {
-    return this == GrammarType.contextFree || 
-           this == GrammarType.contextSensitive || 
-           this == GrammarType.unrestricted;
+    return this == GrammarType.contextFree ||
+        this == GrammarType.contextSensitive ||
+        this == GrammarType.unrestricted;
   }
 
   /// Returns whether this grammar type supports lambda productions
   bool get supportsLambdaProductions {
-    return this == GrammarType.contextFree || 
-           this == GrammarType.contextSensitive || 
-           this == GrammarType.unrestricted;
+    return this == GrammarType.contextFree ||
+        this == GrammarType.contextSensitive ||
+        this == GrammarType.unrestricted;
   }
 }

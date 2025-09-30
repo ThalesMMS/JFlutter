@@ -139,10 +139,7 @@ class AppTheme {
       accent: const Color(0xFFFD79A8),
       background: const Color(0xFF1E1E2E),
       surface: const Color(0xFF2A2A3E),
-      gradient: [
-        const Color(0xFF667eea),
-        const Color(0xFF764ba2),
-      ],
+      gradient: [const Color(0xFF667eea), const Color(0xFF764ba2)],
       neonGlow: const Color(0xFF6C5CE7),
     ),
   };
@@ -154,51 +151,55 @@ class AppTheme {
 
   /// تم روشن اپلیکیشن با طراحی مدرن و هماهنگ
   static ThemeData lightTheme({String? customTheme}) {
-    final themeColors = customTheme != null ? getThemeColors(customTheme) : null;
+    final themeColors = customTheme != null
+        ? getThemeColors(customTheme)
+        : null;
     final colorScheme = themeColors != null
         ? ColorScheme.fromSeed(
-      seedColor: themeColors.primary,
-      brightness: Brightness.light,
-      surface: _surfaceLight,
-      onSurface: const Color(0xFF1C1B1F),
-    )
+            seedColor: themeColors.primary,
+            brightness: Brightness.light,
+            surface: _surfaceLight,
+            onSurface: const Color(0xFF1C1B1F),
+          )
         : ColorScheme.fromSeed(
-      seedColor: _primaryLight,
-      brightness: Brightness.light,
-      surface: _surfaceLight,
-      onSurface: const Color(0xFF1C1B1F),
-    );
+            seedColor: _primaryLight,
+            brightness: Brightness.light,
+            surface: _surfaceLight,
+            onSurface: const Color(0xFF1C1B1F),
+          );
 
     return _buildTheme(colorScheme, Brightness.light, themeColors);
   }
 
   /// تم تاریک اپلیکیشن با طراحی مدرن و سازگار با چشم
   static ThemeData darkTheme({String? customTheme}) {
-    final themeColors = customTheme != null ? getThemeColors(customTheme) : null;
+    final themeColors = customTheme != null
+        ? getThemeColors(customTheme)
+        : null;
     final colorScheme = themeColors != null
         ? ColorScheme.fromSeed(
-      seedColor: themeColors.primary,
-      brightness: Brightness.dark,
-      surface: themeColors.surface,
-      background: themeColors.background,
-      onSurface: const Color(0xFFE6E1E5),
-    )
+            seedColor: themeColors.primary,
+            brightness: Brightness.dark,
+            surface: themeColors.surface,
+            background: themeColors.background,
+            onSurface: const Color(0xFFE6E1E5),
+          )
         : ColorScheme.fromSeed(
-      seedColor: _primaryDark,
-      brightness: Brightness.dark,
-      surface: _surfaceDark,
-      onSurface: const Color(0xFFE6E1E5),
-    );
+            seedColor: _primaryDark,
+            brightness: Brightness.dark,
+            surface: _surfaceDark,
+            onSurface: const Color(0xFFE6E1E5),
+          );
 
     return _buildTheme(colorScheme, Brightness.dark, themeColors);
   }
 
   /// ساخت تم با پیکربندی کامل
   static ThemeData _buildTheme(
-      ColorScheme colorScheme,
-      Brightness brightness,
-      ThemeColors? themeColors,
-      ) {
+    ColorScheme colorScheme,
+    Brightness brightness,
+    ThemeColors? themeColors,
+  ) {
     final isDark = brightness == Brightness.dark;
     final isCustomTheme = themeColors != null;
 
@@ -216,7 +217,9 @@ class AppTheme {
             ? themeColors.surface.withOpacity(0.8)
             : Colors.transparent,
         foregroundColor: colorScheme.onSurface,
-        systemOverlayStyle: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+        systemOverlayStyle: isDark
+            ? SystemUiOverlayStyle.light
+            : SystemUiOverlayStyle.dark,
         titleTextStyle: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w600,
@@ -224,12 +227,12 @@ class AppTheme {
           fontFamily: AppConstants.defaultFontFamily,
           shadows: isCustomTheme
               ? [
-            Shadow(
-              color: themeColors.neonGlow.withOpacity(0.5),
-              blurRadius: 10,
-              offset: const Offset(0, 0),
-            ),
-          ]
+                  Shadow(
+                    color: themeColors.neonGlow.withOpacity(0.5),
+                    blurRadius: 10,
+                    offset: const Offset(0, 0),
+                  ),
+                ]
               : null,
         ),
         iconTheme: IconThemeData(
@@ -240,20 +243,20 @@ class AppTheme {
       // تم کارت‌های پیشرفته با گلاسمورفیسم
       cardTheme: CardThemeData(
         elevation: isCustomTheme ? 0 : AppConstants.defaultElevation,
-        color: isCustomTheme
-            ? themeColors.surface.withOpacity(0.15)
-            : null,
+        color: isCustomTheme ? themeColors.surface.withOpacity(0.15) : null,
         shadowColor: isCustomTheme
             ? themeColors.neonGlow.withOpacity(0.2)
             : colorScheme.shadow.withOpacity(isDark ? 0.3 : 0.1),
-        surfaceTintColor: isCustomTheme ? Colors.transparent : colorScheme.surfaceTint,
+        surfaceTintColor: isCustomTheme
+            ? Colors.transparent
+            : colorScheme.surfaceTint,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
           side: isCustomTheme
               ? BorderSide(
-            color: themeColors.primary.withOpacity(0.3),
-            width: 1,
-          )
+                  color: themeColors.primary.withOpacity(0.3),
+                  width: 1,
+                )
               : BorderSide.none,
         ),
         margin: const EdgeInsets.symmetric(
@@ -264,78 +267,88 @@ class AppTheme {
 
       // تم دکمه‌های برجسته با افکت نئون
       elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          elevation: isCustomTheme ? 0 : 2,
-          backgroundColor: isCustomTheme ? themeColors.primary : null,
-          foregroundColor: isCustomTheme ? Colors.black : null,
-          shadowColor: isCustomTheme
-              ? themeColors.neonGlow.withOpacity(0.5)
-              : colorScheme.shadow.withOpacity(0.2),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
-            side: isCustomTheme
-                ? BorderSide(
-              color: themeColors.neonGlow.withOpacity(0.8),
-              width: 2,
-            )
-                : BorderSide.none,
-          ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppConstants.defaultPadding * 1.5,
-            vertical: AppConstants.defaultPadding,
-          ),
-          minimumSize: const Size(120, AppConstants.defaultInputHeight),
-          textStyle: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.5,
-            shadows: isCustomTheme
-                ? [
-              Shadow(
-                color: themeColors.neonGlow.withOpacity(0.7),
-                blurRadius: 8,
-                offset: const Offset(0, 0),
+        style:
+            ElevatedButton.styleFrom(
+              elevation: isCustomTheme ? 0 : 2,
+              backgroundColor: isCustomTheme ? themeColors.primary : null,
+              foregroundColor: isCustomTheme ? Colors.black : null,
+              shadowColor: isCustomTheme
+                  ? themeColors.neonGlow.withOpacity(0.5)
+                  : colorScheme.shadow.withOpacity(0.2),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(
+                  AppConstants.defaultBorderRadius,
+                ),
+                side: isCustomTheme
+                    ? BorderSide(
+                        color: themeColors.neonGlow.withOpacity(0.8),
+                        width: 2,
+                      )
+                    : BorderSide.none,
               ),
-            ]
-                : null,
-          ),
-        ).copyWith(
-          overlayColor: isCustomTheme
-              ? MaterialStateProperty.all(themeColors.neonGlow.withOpacity(0.2))
-              : null,
-        ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppConstants.defaultPadding * 1.5,
+                vertical: AppConstants.defaultPadding,
+              ),
+              minimumSize: const Size(120, AppConstants.defaultInputHeight),
+              textStyle: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+                shadows: isCustomTheme
+                    ? [
+                        Shadow(
+                          color: themeColors.neonGlow.withOpacity(0.7),
+                          blurRadius: 8,
+                          offset: const Offset(0, 0),
+                        ),
+                      ]
+                    : null,
+              ),
+            ).copyWith(
+              overlayColor: isCustomTheme
+                  ? MaterialStateProperty.all(
+                      themeColors.neonGlow.withOpacity(0.2),
+                    )
+                  : null,
+            ),
       ),
 
       // تم دکمه‌های متنی با افکت درخشش
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: isCustomTheme ? themeColors.primary : null,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
-          ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppConstants.defaultPadding,
-            vertical: AppConstants.defaultPadding / 2,
-          ),
-          textStyle: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            letterSpacing: 0.3,
-            shadows: isCustomTheme
-                ? [
-              Shadow(
-                color: themeColors.primary.withOpacity(0.5),
-                blurRadius: 4,
-                offset: const Offset(0, 0),
+        style:
+            TextButton.styleFrom(
+              foregroundColor: isCustomTheme ? themeColors.primary : null,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(
+                  AppConstants.defaultBorderRadius,
+                ),
               ),
-            ]
-                : null,
-          ),
-        ).copyWith(
-          overlayColor: isCustomTheme
-              ? MaterialStateProperty.all(themeColors.primary.withOpacity(0.1))
-              : null,
-        ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppConstants.defaultPadding,
+                vertical: AppConstants.defaultPadding / 2,
+              ),
+              textStyle: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.3,
+                shadows: isCustomTheme
+                    ? [
+                        Shadow(
+                          color: themeColors.primary.withOpacity(0.5),
+                          blurRadius: 4,
+                          offset: const Offset(0, 0),
+                        ),
+                      ]
+                    : null,
+              ),
+            ).copyWith(
+              overlayColor: isCustomTheme
+                  ? MaterialStateProperty.all(
+                      themeColors.primary.withOpacity(0.1),
+                    )
+                  : null,
+            ),
       ),
 
       // تم فیلدهای ورودی با افکت گلو
@@ -377,7 +390,9 @@ class AppTheme {
         ),
         labelStyle: TextStyle(
           fontSize: 16,
-          color: isCustomTheme ? themeColors.primary : colorScheme.onSurfaceVariant,
+          color: isCustomTheme
+              ? themeColors.primary
+              : colorScheme.onSurfaceVariant,
           fontWeight: FontWeight.w400,
         ),
         hintStyle: TextStyle(
@@ -389,14 +404,18 @@ class AppTheme {
       // تم فهرست‌ها و ListTile ها
       listTileTheme: ListTileThemeData(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius / 2),
+          borderRadius: BorderRadius.circular(
+            AppConstants.defaultBorderRadius / 2,
+          ),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppConstants.defaultPadding,
           vertical: AppConstants.defaultPadding / 4,
         ),
         tileColor: isCustomTheme ? themeColors.surface.withOpacity(0.1) : null,
-        selectedTileColor: isCustomTheme ? themeColors.primary.withOpacity(0.2) : null,
+        selectedTileColor: isCustomTheme
+            ? themeColors.primary.withOpacity(0.2)
+            : null,
         textColor: isCustomTheme ? Colors.white : null,
         iconColor: isCustomTheme ? themeColors.primary : null,
       ),
@@ -411,12 +430,14 @@ class AppTheme {
             ? themeColors.neonGlow.withOpacity(0.3)
             : colorScheme.shadow.withOpacity(isDark ? 0.4 : 0.2),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius * 2),
+          borderRadius: BorderRadius.circular(
+            AppConstants.defaultBorderRadius * 2,
+          ),
           side: isCustomTheme
               ? BorderSide(
-            color: themeColors.primary.withOpacity(0.3),
-            width: 1,
-          )
+                  color: themeColors.primary.withOpacity(0.3),
+                  width: 1,
+                )
               : BorderSide.none,
         ),
         titleTextStyle: TextStyle(
@@ -425,12 +446,12 @@ class AppTheme {
           color: isCustomTheme ? Colors.white : colorScheme.onSurface,
           shadows: isCustomTheme
               ? [
-            Shadow(
-              color: themeColors.neonGlow.withOpacity(0.5),
-              blurRadius: 8,
-              offset: const Offset(0, 0),
-            ),
-          ]
+                  Shadow(
+                    color: themeColors.neonGlow.withOpacity(0.5),
+                    blurRadius: 8,
+                    offset: const Offset(0, 0),
+                  ),
+                ]
               : null,
         ),
         contentTextStyle: TextStyle(
@@ -450,9 +471,9 @@ class AppTheme {
           borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
           side: isCustomTheme
               ? BorderSide(
-            color: themeColors.primary.withOpacity(0.5),
-            width: 1,
-          )
+                  color: themeColors.primary.withOpacity(0.5),
+                  width: 1,
+                )
               : BorderSide.none,
         ),
         elevation: isCustomTheme ? 0 : (isDark ? 6 : 4),
@@ -476,16 +497,20 @@ class AppTheme {
             fontSize: 12,
             fontWeight: FontWeight.w500,
             color: isCustomTheme
-                ? (isSelected ? themeColors.primary : Colors.white.withOpacity(0.7))
-                : (isSelected ? colorScheme.primary : colorScheme.onSurfaceVariant),
+                ? (isSelected
+                      ? themeColors.primary
+                      : Colors.white.withOpacity(0.7))
+                : (isSelected
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant),
             shadows: isCustomTheme && isSelected
                 ? [
-              Shadow(
-                color: themeColors.neonGlow.withOpacity(0.7),
-                blurRadius: 6,
-                offset: const Offset(0, 0),
-              ),
-            ]
+                    Shadow(
+                      color: themeColors.neonGlow.withOpacity(0.7),
+                      blurRadius: 6,
+                      offset: const Offset(0, 0),
+                    ),
+                  ]
                 : null,
           );
         }),
@@ -493,17 +518,21 @@ class AppTheme {
           final isSelected = states.contains(MaterialState.selected);
           return IconThemeData(
             color: isCustomTheme
-                ? (isSelected ? themeColors.primary : Colors.white.withOpacity(0.7))
-                : (isSelected ? colorScheme.primary : colorScheme.onSurfaceVariant),
+                ? (isSelected
+                      ? themeColors.primary
+                      : Colors.white.withOpacity(0.7))
+                : (isSelected
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant),
             size: isSelected ? 26 : 22,
             shadows: isCustomTheme && isSelected
                 ? [
-              Shadow(
-                color: themeColors.neonGlow.withOpacity(0.7),
-                blurRadius: 8,
-                offset: const Offset(0, 0),
-              ),
-            ]
+                    Shadow(
+                      color: themeColors.neonGlow.withOpacity(0.7),
+                      blurRadius: 8,
+                      offset: const Offset(0, 0),
+                    ),
+                  ]
                 : null,
           );
         }),
@@ -526,10 +555,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: isCustomTheme
-              ? BorderSide(
-            color: themeColors.neonGlow,
-            width: 2,
-          )
+              ? BorderSide(color: themeColors.neonGlow, width: 2)
               : BorderSide.none,
         ),
       ),
@@ -541,31 +567,28 @@ class AppTheme {
             : colorScheme.onSurfaceVariant,
         indicator: isCustomTheme
             ? BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: themeColors.neonGlow,
-              width: 3,
-            ),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: themeColors.neonGlow.withOpacity(0.5),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        )
+                border: Border(
+                  bottom: BorderSide(color: themeColors.neonGlow, width: 3),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: themeColors.neonGlow.withOpacity(0.5),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              )
             : null,
         labelStyle: TextStyle(
           fontWeight: FontWeight.w600,
           shadows: isCustomTheme
               ? [
-            Shadow(
-              color: themeColors.primary.withOpacity(0.5),
-              blurRadius: 4,
-              offset: const Offset(0, 0),
-            ),
-          ]
+                  Shadow(
+                    color: themeColors.primary.withOpacity(0.5),
+                    blurRadius: 4,
+                    offset: const Offset(0, 0),
+                  ),
+                ]
               : null,
         ),
       ),
@@ -574,19 +597,19 @@ class AppTheme {
       switchTheme: SwitchThemeData(
         thumbColor: isCustomTheme
             ? MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
-            return themeColors.primary;
-          }
-          return Colors.white;
-        })
+                if (states.contains(MaterialState.selected)) {
+                  return themeColors.primary;
+                }
+                return Colors.white;
+              })
             : null,
         trackColor: isCustomTheme
             ? MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
-            return themeColors.primary.withOpacity(0.5);
-          }
-          return themeColors.surface.withOpacity(0.5);
-        })
+                if (states.contains(MaterialState.selected)) {
+                  return themeColors.primary.withOpacity(0.5);
+                }
+                return themeColors.surface.withOpacity(0.5);
+              })
             : null,
       ),
 
@@ -602,10 +625,7 @@ class AppTheme {
             : null,
         valueIndicatorColor: isCustomTheme ? themeColors.surface : null,
         valueIndicatorTextStyle: isCustomTheme
-            ? const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w500,
-        )
+            ? const TextStyle(color: Colors.white, fontWeight: FontWeight.w500)
             : null,
       ),
 
@@ -619,12 +639,12 @@ class AppTheme {
       // Extensions برای Material3
       extensions: isCustomTheme
           ? [
-        CustomThemeExtension(
-          glowColor: themeColors.neonGlow,
-          gradientColors: themeColors.gradient,
-          glassColor: themeColors.surface.withOpacity(0.1),
-        ),
-      ]
+              CustomThemeExtension(
+                glowColor: themeColors.neonGlow,
+                gradientColors: themeColors.gradient,
+                glassColor: themeColors.surface.withOpacity(0.1),
+              ),
+            ]
           : null,
     );
   }
@@ -663,22 +683,10 @@ class AppTheme {
       fontWeight: FontWeight.w600,
       letterSpacing: -0.25,
     ),
-    displaySmall: TextStyle(
-      fontSize: 24,
-      fontWeight: FontWeight.w600,
-    ),
-    headlineLarge: TextStyle(
-      fontSize: 22,
-      fontWeight: FontWeight.w600,
-    ),
-    headlineMedium: TextStyle(
-      fontSize: 20,
-      fontWeight: FontWeight.w500,
-    ),
-    headlineSmall: TextStyle(
-      fontSize: 18,
-      fontWeight: FontWeight.w500,
-    ),
+    displaySmall: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+    headlineLarge: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+    headlineMedium: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+    headlineSmall: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
     titleLarge: TextStyle(
       fontSize: 16,
       fontWeight: FontWeight.w600,
@@ -736,10 +744,7 @@ class AppTheme {
     return BoxDecoration(
       color: surfaceColor.withOpacity(opacity),
       borderRadius: BorderRadius.circular(borderRadius),
-      border: Border.all(
-        color: borderColor.withOpacity(0.3),
-        width: 1,
-      ),
+      border: Border.all(color: borderColor.withOpacity(0.3), width: 1),
       boxShadow: [
         BoxShadow(
           color: borderColor.withOpacity(0.1),
@@ -757,10 +762,7 @@ class AppTheme {
   }) {
     return BoxDecoration(
       borderRadius: BorderRadius.circular(borderRadius),
-      border: Border.all(
-        color: glowColor,
-        width: 2,
-      ),
+      border: Border.all(color: glowColor, width: 2),
       boxShadow: [
         BoxShadow(
           color: glowColor.withOpacity(0.5 * intensity),
@@ -783,7 +785,7 @@ class AppTheme {
       colors: colors,
       stops: List.generate(
         colors.length,
-            (index) => index / (colors.length - 1),
+        (index) => index / (colors.length - 1),
       ),
     );
   }
@@ -837,9 +839,9 @@ class CustomThemeExtension extends ThemeExtension<CustomThemeExtension> {
 
   @override
   CustomThemeExtension lerp(
-      ThemeExtension<CustomThemeExtension>? other,
-      double t,
-      ) {
+    ThemeExtension<CustomThemeExtension>? other,
+    double t,
+  ) {
     if (other is! CustomThemeExtension) {
       return this;
     }

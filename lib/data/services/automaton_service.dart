@@ -43,20 +43,24 @@ class AutomatonService {
       final toState = stateById[transitionData.toStateId];
       if (fromState == null || toState == null) {
         throw StateError(
-            'Transition references unknown state: ${transitionData.fromStateId} -> ${transitionData.toStateId}');
+          'Transition references unknown state: ${transitionData.fromStateId} -> ${transitionData.toStateId}',
+        );
       }
 
       final symbol = transitionData.symbol;
-      final isLambda = symbol == 'λ' || symbol == 'ε' || symbol.toLowerCase() == 'lambda';
+      final isLambda =
+          symbol == 'λ' || symbol == 'ε' || symbol.toLowerCase() == 'lambda';
 
-      transitions.add(FSATransition(
-        id: 't${id}_$transitionIndex',
-        fromState: fromState,
-        toState: toState,
-        label: symbol,
-        inputSymbols: isLambda ? <String>{} : {symbol},
-        lambdaSymbol: isLambda ? symbol : null,
-      ));
+      transitions.add(
+        FSATransition(
+          id: 't${id}_$transitionIndex',
+          fromState: fromState,
+          toState: toState,
+          label: symbol,
+          inputSymbols: isLambda ? <String>{} : {symbol},
+          lambdaSymbol: isLambda ? symbol : null,
+        ),
+      );
       transitionIndex++;
     }
 
@@ -179,13 +183,13 @@ class AutomatonService {
       _automata.removeAt(index);
       return ResultFactory.success(null);
     } catch (e) {
-          return ResultFactory.failure('Error deleting automaton: $e');
+      return ResultFactory.failure('Error deleting automaton: $e');
     }
   }
 
   /// Lists all automata
   Result<List<FSA>> listAutomata() {
-        return ResultFactory.success(List.from(_automata));
+    return ResultFactory.success(List.from(_automata));
   }
 
   /// Clears all automata

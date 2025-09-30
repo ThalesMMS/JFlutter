@@ -9,17 +9,20 @@ class TransitionHelpers {
   static void showQuickAdd(BuildContext context) {
     final nfaProvider = Provider.of<NFAProvider>(context, listen: false);
     final states = nfaProvider.currentNFA.states.toList()..sort();
-    final alphabetWithEpsilon = ['ε', ...nfaProvider.currentNFA.alphabet]..sort();
-    
+    final alphabetWithEpsilon = ['ε', ...nfaProvider.currentNFA.alphabet]
+      ..sort();
+
     String? selectedFromState;
     String? selectedToState;
     List<String> selectedSymbols = [];
-    
+
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           title: Row(
             children: [
               Container(
@@ -47,11 +50,13 @@ class TransitionHelpers {
                   Text(
                     'یک State مبدأ و مقصد انتخاب کنید، سپس نمادهای مورد نظر را انتخاب کنید:',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.7),
                     ),
                   ),
                   const SizedBox(height: 20),
-                  
+
                   // From State Selection
                   Text(
                     'از State:',
@@ -70,15 +75,20 @@ class TransitionHelpers {
                       filled: true,
                       fillColor: Theme.of(context).colorScheme.surface,
                     ),
-                    items: states.map((state) => DropdownMenuItem(
-                      value: state,
-                      child: Text(state),
-                    )).toList(),
-                    onChanged: (value) => setState(() => selectedFromState = value),
+                    items: states
+                        .map(
+                          (state) => DropdownMenuItem(
+                            value: state,
+                            child: Text(state),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) =>
+                        setState(() => selectedFromState = value),
                     hint: const Text('State مبدأ را انتخاب کنید'),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // To State Selection
                   Text(
                     'به State:',
@@ -97,15 +107,20 @@ class TransitionHelpers {
                       filled: true,
                       fillColor: Theme.of(context).colorScheme.surface,
                     ),
-                    items: states.map((state) => DropdownMenuItem(
-                      value: state,
-                      child: Text(state),
-                    )).toList(),
-                    onChanged: (value) => setState(() => selectedToState = value),
+                    items: states
+                        .map(
+                          (state) => DropdownMenuItem(
+                            value: state,
+                            child: Text(state),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) =>
+                        setState(() => selectedToState = value),
                     hint: const Text('State مقصد را انتخاب کنید'),
                   ),
                   const SizedBox(height: 20),
-                  
+
                   // Symbols Selection
                   Text(
                     'نمادها:',
@@ -128,17 +143,30 @@ class TransitionHelpers {
                         final isSelected = selectedSymbols.contains(symbol);
                         return CheckboxListTile(
                           title: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: symbol == 'ε'
                                     ? [
-                                        Theme.of(context).colorScheme.secondaryContainer,
-                                        Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.7),
+                                        Theme.of(
+                                          context,
+                                        ).colorScheme.secondaryContainer,
+                                        Theme.of(context)
+                                            .colorScheme
+                                            .secondaryContainer
+                                            .withOpacity(0.7),
                                       ]
                                     : [
-                                        Theme.of(context).colorScheme.tertiaryContainer,
-                                        Theme.of(context).colorScheme.tertiaryContainer.withOpacity(0.7),
+                                        Theme.of(
+                                          context,
+                                        ).colorScheme.tertiaryContainer,
+                                        Theme.of(context)
+                                            .colorScheme
+                                            .tertiaryContainer
+                                            .withOpacity(0.7),
                                       ],
                               ),
                               borderRadius: BorderRadius.circular(8),
@@ -148,8 +176,12 @@ class TransitionHelpers {
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: symbol == 'ε'
-                                    ? Theme.of(context).colorScheme.onSecondaryContainer
-                                    : Theme.of(context).colorScheme.onTertiaryContainer,
+                                    ? Theme.of(
+                                        context,
+                                      ).colorScheme.onSecondaryContainer
+                                    : Theme.of(
+                                        context,
+                                      ).colorScheme.onTertiaryContainer,
                               ),
                             ),
                           ),
@@ -169,16 +201,22 @@ class TransitionHelpers {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Preview
-                  if (selectedFromState != null && selectedToState != null && selectedSymbols.isNotEmpty)
+                  if (selectedFromState != null &&
+                      selectedToState != null &&
+                      selectedSymbols.isNotEmpty)
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primaryContainer.withOpacity(0.3),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withOpacity(0.3),
                         ),
                       ),
                       child: Column(
@@ -194,30 +232,35 @@ class TransitionHelpers {
                               const SizedBox(width: 8),
                               Text(
                                 'پیش‌نمایش:',
-                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
+                                style: Theme.of(context).textTheme.titleSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 8),
-                          ...selectedSymbols.map((symbol) => Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: Text(
-                              '$selectedFromState --($symbol)--> $selectedToState',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                fontFamily: 'monospace',
+                          ...selectedSymbols.map(
+                            (symbol) => Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Text(
+                                '$selectedFromState --($symbol)--> $selectedToState',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(fontFamily: 'monospace'),
                               ),
                             ),
-                          )),
+                          ),
                           const SizedBox(height: 8),
                           Text(
                             '${selectedSymbols.length} انتقال اضافه خواهد شد',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
                           ),
                         ],
                       ),
@@ -232,9 +275,10 @@ class TransitionHelpers {
               child: const Text('انصراف'),
             ),
             ElevatedButton.icon(
-              onPressed: (selectedFromState != null && 
-                         selectedToState != null && 
-                         selectedSymbols.isNotEmpty)
+              onPressed:
+                  (selectedFromState != null &&
+                      selectedToState != null &&
+                      selectedSymbols.isNotEmpty)
                   ? () {
                       _addMultipleTransitions(
                         context,
@@ -263,25 +307,30 @@ class TransitionHelpers {
   ) {
     final nfaProvider = Provider.of<NFAProvider>(context, listen: false);
     final allStates = nfaProvider.currentNFA.states.toList()..sort();
-    final alphabetWithEpsilon = ['ε', ...nfaProvider.currentNFA.alphabet]..sort();
-    
+    final alphabetWithEpsilon = ['ε', ...nfaProvider.currentNFA.alphabet]
+      ..sort();
+
     // Create editable copy of transitions
     Map<String, Set<String>> editableTransitions = {};
     symbolTransitions.forEach((symbol, states) {
       editableTransitions[symbol] = Set.from(states);
     });
-    
+
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           title: Row(
             children: [
               Hero(
                 tag: 'state_$fromState',
                 child: CircleAvatar(
-                  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer,
                   child: Text(
                     fromState.length > 2
                         ? fromState.substring(0, 2).toUpperCase()
@@ -320,10 +369,14 @@ class TransitionHelpers {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceVariant.withOpacity(0.5),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.outline.withOpacity(0.3),
                       ),
                     ),
                     child: Column(
@@ -339,9 +392,8 @@ class TransitionHelpers {
                             const SizedBox(width: 8),
                             Text(
                               'افزودن انتقال جدید',
-                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
@@ -360,12 +412,14 @@ class TransitionHelpers {
                                     vertical: 8,
                                   ),
                                 ),
-                                items: alphabetWithEpsilon.map((symbol) => 
-                                  DropdownMenuItem(
-                                    value: symbol,
-                                    child: Text(symbol),
-                                  ),
-                                ).toList(),
+                                items: alphabetWithEpsilon
+                                    .map(
+                                      (symbol) => DropdownMenuItem(
+                                        value: symbol,
+                                        child: Text(symbol),
+                                      ),
+                                    )
+                                    .toList(),
                                 onChanged: (symbol) {
                                   if (symbol != null) {
                                     _showAddTransitionToState(
@@ -387,7 +441,7 @@ class TransitionHelpers {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Existing transitions
                   if (editableTransitions.isNotEmpty) ...[
                     Text(
@@ -400,7 +454,7 @@ class TransitionHelpers {
                     ...editableTransitions.entries.map((entry) {
                       final symbol = entry.key;
                       final toStates = entry.value;
-                      
+
                       return Card(
                         margin: const EdgeInsets.only(bottom: 8),
                         elevation: 2,
@@ -409,17 +463,30 @@ class TransitionHelpers {
                         ),
                         child: ExpansionTile(
                           leading: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: symbol == 'ε'
                                     ? [
-                                        Theme.of(context).colorScheme.secondaryContainer,
-                                        Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.7),
+                                        Theme.of(
+                                          context,
+                                        ).colorScheme.secondaryContainer,
+                                        Theme.of(context)
+                                            .colorScheme
+                                            .secondaryContainer
+                                            .withOpacity(0.7),
                                       ]
                                     : [
-                                        Theme.of(context).colorScheme.tertiaryContainer,
-                                        Theme.of(context).colorScheme.tertiaryContainer.withOpacity(0.7),
+                                        Theme.of(
+                                          context,
+                                        ).colorScheme.tertiaryContainer,
+                                        Theme.of(context)
+                                            .colorScheme
+                                            .tertiaryContainer
+                                            .withOpacity(0.7),
                                       ],
                               ),
                               borderRadius: BorderRadius.circular(6),
@@ -429,8 +496,12 @@ class TransitionHelpers {
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: symbol == 'ε'
-                                    ? Theme.of(context).colorScheme.onSecondaryContainer
-                                    : Theme.of(context).colorScheme.onTertiaryContainer,
+                                    ? Theme.of(
+                                        context,
+                                      ).colorScheme.onSecondaryContainer
+                                    : Theme.of(
+                                        context,
+                                      ).colorScheme.onTertiaryContainer,
                               ),
                             ),
                           ),
@@ -455,10 +526,15 @@ class TransitionHelpers {
                           ),
                           children: toStates.map((toState) {
                             return ListTile(
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 2,
+                              ),
                               leading: CircleAvatar(
                                 radius: 16,
-                                backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.secondaryContainer,
                                 child: Text(
                                   toState.length > 2
                                       ? toState.substring(0, 2).toUpperCase()
@@ -466,7 +542,9 @@ class TransitionHelpers {
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
-                                    color: Theme.of(context).colorScheme.onSecondaryContainer,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSecondaryContainer,
                                   ),
                                 ),
                               ),
@@ -482,8 +560,11 @@ class TransitionHelpers {
                                 ),
                                 onPressed: () {
                                   setState(() {
-                                    editableTransitions[symbol]?.remove(toState);
-                                    if (editableTransitions[symbol]?.isEmpty == true) {
+                                    editableTransitions[symbol]?.remove(
+                                      toState,
+                                    );
+                                    if (editableTransitions[symbol]?.isEmpty ==
+                                        true) {
                                       editableTransitions.remove(symbol);
                                     }
                                   });
@@ -500,23 +581,30 @@ class TransitionHelpers {
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceVariant.withOpacity(0.3),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Column(
                         children: [
                           Icon(
                             Icons.info_outline,
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withOpacity(0.6),
                             size: 48,
                           ),
                           const SizedBox(height: 12),
                           Text(
                             'هیچ انتقالی برای این State تعریف نشده',
                             textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withOpacity(0.6),
+                                ),
                           ),
                         ],
                       ),
@@ -533,7 +621,13 @@ class TransitionHelpers {
             ),
             FilledButton.icon(
               onPressed: () {
-                _applyTransitionChanges(context, nfaProvider, fromState, symbolTransitions, editableTransitions);
+                _applyTransitionChanges(
+                  context,
+                  nfaProvider,
+                  fromState,
+                  symbolTransitions,
+                  editableTransitions,
+                );
                 Navigator.of(context).pop();
               },
               icon: const Icon(Icons.save),
@@ -557,7 +651,10 @@ class TransitionHelpers {
     int skippedCount = 0;
 
     for (String symbol in symbols) {
-      if (nfaProvider.currentNFA.transitions[fromState]?[symbol]?.contains(toState) != true) {
+      if (nfaProvider.currentNFA.transitions[fromState]?[symbol]?.contains(
+            toState,
+          ) !=
+          true) {
         nfaProvider.addTransition(fromState, symbol, toState);
         addedCount++;
       } else {
@@ -566,21 +663,18 @@ class TransitionHelpers {
     }
 
     HapticFeedback.lightImpact();
-    
+
     String message = '';
     if (addedCount > 0 && skippedCount == 0) {
       message = '$addedCount انتقال با موفقیت اضافه شد.';
     } else if (addedCount > 0 && skippedCount > 0) {
-      message = '$addedCount انتقال اضافه شد، $skippedCount انتقال از قبل موجود بود.';
+      message =
+          '$addedCount انتقال اضافه شد، $skippedCount انتقال از قبل موجود بود.';
     } else {
       message = 'همه انتقال‌ها از قبل موجود بودند.';
     }
-    
-    UIHelpers.showSnackBar(
-      context,
-      message,
-      isError: addedCount == 0,
-    );
+
+    UIHelpers.showSnackBar(context, message, isError: addedCount == 0);
   }
 
   static void _showAddTransitionToState(
@@ -598,7 +692,8 @@ class TransitionHelpers {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: allStates.map((state) {
-            final isAlreadyAdded = editableTransitions[symbol]?.contains(state) == true;
+            final isAlreadyAdded =
+                editableTransitions[symbol]?.contains(state) == true;
             return ListTile(
               leading: CircleAvatar(
                 radius: 16,
@@ -606,7 +701,9 @@ class TransitionHelpers {
                     ? Theme.of(context).colorScheme.surfaceVariant
                     : Theme.of(context).colorScheme.primaryContainer,
                 child: Text(
-                  state.length > 2 ? state.substring(0, 2).toUpperCase() : state.toUpperCase(),
+                  state.length > 2
+                      ? state.substring(0, 2).toUpperCase()
+                      : state.toUpperCase(),
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
@@ -619,14 +716,16 @@ class TransitionHelpers {
               title: Text(state),
               subtitle: isAlreadyAdded ? const Text('قبلاً اضافه شده') : null,
               enabled: !isAlreadyAdded,
-              onTap: isAlreadyAdded ? null : () {
-                setState(() {
-                  editableTransitions[symbol] ??= <String>{};
-                  editableTransitions[symbol]!.add(state);
-                });
-                Navigator.of(context).pop();
-                HapticFeedback.lightImpact();
-              },
+              onTap: isAlreadyAdded
+                  ? null
+                  : () {
+                      setState(() {
+                        editableTransitions[symbol] ??= <String>{};
+                        editableTransitions[symbol]!.add(state);
+                      });
+                      Navigator.of(context).pop();
+                      HapticFeedback.lightImpact();
+                    },
             );
           }).toList(),
         ),
@@ -671,7 +770,12 @@ class TransitionHelpers {
     );
   }
 
-  static int _countTotalTransitions(Map<String, Set<String>> symbolTransitions) {
-    return symbolTransitions.values.fold(0, (sum, states) => sum + states.length);
+  static int _countTotalTransitions(
+    Map<String, Set<String>> symbolTransitions,
+  ) {
+    return symbolTransitions.values.fold(
+      0,
+      (sum, states) => sum + states.length,
+    );
   }
 }

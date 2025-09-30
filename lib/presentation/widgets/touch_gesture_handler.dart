@@ -54,7 +54,6 @@ class _TouchGestureHandlerState<T extends Transition>
   Offset? _dragStartPosition;
   Offset? _dragStartCanvasPosition;
   bool _isDragging = false;
-  bool _isZooming = false;
   double _scale = 1.0;
   double _initialScale = 1.0;
   Offset _panOffset = Offset.zero;
@@ -68,7 +67,10 @@ class _TouchGestureHandlerState<T extends Transition>
   // Double tap handling
   DateTime? _lastTapTime;
   Offset? _lastTapPosition;
-  
+
+  // Zoom handling
+  bool _isZooming = false;
+
   // Context menu
   bool _showContextMenu = false;
   Offset? _contextMenuPosition;
@@ -196,12 +198,17 @@ class _TouchGestureHandlerState<T extends Transition>
     if (_isDragging && _draggedState != null && details.pointerCount == 1) {
       // Handle single finger drag
       final deltaLocal = details.localFocalPoint - _dragStartPosition!;
-      final deltaCanvas = Offset(deltaLocal.dx / _scale, deltaLocal.dy / _scale);
+      final deltaCanvas = Offset(
+        deltaLocal.dx / _scale,
+        deltaLocal.dy / _scale,
+      );
       final startCanvas = _dragStartCanvasPosition!;
       final newPosition = startCanvas + deltaCanvas;
-      widget.onStateMoved(_draggedState!.copyWith(
-        position: Vector2(newPosition.dx, newPosition.dy),
-      ));
+      widget.onStateMoved(
+        _draggedState!.copyWith(
+          position: Vector2(newPosition.dx, newPosition.dy),
+        ),
+      );
     } else if (_isPanning && details.pointerCount == 1) {
       setState(() {
         _panOffset += details.focalPointDelta;
@@ -266,7 +273,8 @@ class _TouchGestureHandlerState<T extends Transition>
       labelOffset: 16,
     );
 
-    return _distanceToQuadratic(point, curve.start, curve.control, curve.end) <= 18;
+    return _distanceToQuadratic(point, curve.start, curve.control, curve.end) <=
+        18;
   }
 
   bool _isPointOnSelfLoop(Offset point, T transition) {
@@ -275,7 +283,11 @@ class _TouchGestureHandlerState<T extends Transition>
       transition.fromState.position.y,
     );
     final loops = widget.transitions
-        .where((t) => t.fromState.id == transition.fromState.id && t.fromState == t.toState)
+        .where(
+          (t) =>
+              t.fromState.id == transition.fromState.id &&
+              t.fromState == t.toState,
+        )
         .toList();
     final index = loops.indexOf(transition);
     final radius = widget.selfLoopBaseRadius + index * widget.selfLoopSpacing;
@@ -286,7 +298,10 @@ class _TouchGestureHandlerState<T extends Transition>
       return false;
     }
 
-    final angle = math.atan2(point.dy - loopCenter.dy, point.dx - loopCenter.dx);
+    final angle = math.atan2(
+      point.dy - loopCenter.dy,
+      point.dx - loopCenter.dx,
+    );
     final normalized = _normalizeAngle(angle);
     final start = _normalizeAngle(1.1 * math.pi);
     final end = start + 1.6 * math.pi;
@@ -349,12 +364,12 @@ class _TouchGestureHandlerState<T extends Transition>
           onScaleEnd: _handleScaleEnd,
           child: Transform(
             transform: Matrix4.identity()
-              ..translate(_panOffset.dx, _panOffset.dy)
-              ..scale(_scale),
+              ..translateByVector3(Vector3(_panOffset.dx, _panOffset.dy, 0))
+              ..scaleByVector3(Vector3.all(_scale)),
             child: widget.child,
           ),
         ),
-        
+
         // Context menu
         if (_showContextMenu && _contextMenuPosition != null)
           Positioned(
@@ -377,7 +392,7 @@ class _TouchGestureHandlerState<T extends Transition>
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
           ),
         ),
         child: Column(
@@ -423,13 +438,16 @@ class _TouchGestureHandlerState<T extends Transition>
                 },
               ),
             ],
-            if (_contextMenuState == null && _contextMenuTransition == null) ...[
+            if (_contextMenuState == null &&
+                _contextMenuTransition == null) ...[
               _buildContextMenuItem(
                 context,
                 icon: Icons.add_circle,
                 label: 'Add State',
                 onTap: () {
-                  final canvasPoint = _toCanvasCoordinates(_contextMenuPosition!);
+                  final canvasPoint = _toCanvasCoordinates(
+                    _contextMenuPosition!,
+                  );
                   widget.onStateAdded(canvasPoint);
                   _closeContextMenu();
                 },

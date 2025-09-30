@@ -2,6 +2,8 @@
 
 **A modern, mobile-first Flutter application for learning formal language theory and automata**
 
+> ℹ️ **Referências de implementação**: durante a migração em andamento utilizamos os projetos armazenados em `References/` como fonte de verdade para estruturas de dados e algoritmos. Os repositórios em Dart e o módulo Python `automata-main` servem para validar comportamento enquanto reconstruímos o núcleo do JFlutter.
+
 JFlutter is a complete port of the classic JFLAP educational tool, rebuilt from the ground up with Flutter for modern mobile devices. It provides an interactive, touch-optimized interface for creating, editing, and simulating finite automata, context-free grammars, and other formal language constructs.
 
 ## ✅ Current Status
@@ -48,6 +50,35 @@ The project has been successfully fixed and is now fully functional on all suppo
 - **Bottom Navigation** - Mobile-optimized navigation
 - **Visual Feedback** - Real-time algorithm execution feedback
 - **Overflow Prevention** - All UI elements handle small screens gracefully
+
+### 📚 Examples v1 - Offline Examples Library
+
+**Complete offline educational library** with curated examples for automata theory learning:
+
+#### **Finite Automata (DFA/NFA)**
+- `afd_ends_with_a.json` - DFA accepting strings ending with 'a'
+- `afd_binary_divisible_by_3.json` - DFA for binary numbers divisible by 3
+- `afd_parity_AB.json` - DFA for even/odd A-B patterns
+- `afn_lambda_a_or_ab.json` - NFA with ε-transitions for 'a' or 'ab'
+
+#### **Context-Free Grammars (CFG)**
+- `glc_palindrome.json` - Grammar generating palindromes
+- `glc_balanced_parentheses.json` - Grammar for balanced parentheses
+
+#### **Pushdown Automata (PDA)**
+- `apda_palindrome.json` - PDA accepting palindromes
+
+#### **Turing Machines (TM)**
+- `tm_binary_to_unary.json` - TM converting binary to unary representation
+
+**Features**:
+- ✅ **100% Offline** - No internet required after installation
+- ✅ **Educational Metadata** - Each example includes learning objectives and difficulty levels
+- ✅ **Reference Validation** - Examples validated against authoritative implementations
+- ✅ **Progressive Learning** - Examples ordered from basic to advanced concepts
+- ✅ **Quickstart Integration** - Seamless integration with the quickstart workflow
+
+Assets are bundled in `jflutter_js/examples/` via `pubspec.yaml`, ensuring offline access per the "Examples v1" contract.
 
 ## 🏗️ Architecture
 
@@ -98,6 +129,13 @@ lib/
 
 ## 🚀 Getting Started
 
+### Quickstart Guide
+For a comprehensive hands-on tutorial, see our **[Quickstart Guide](specs/001-projeto-jflutter-refor/quickstart.md)** which covers:
+- Complete offline workflow (Import → Simulate → Convert → Validate)
+- Examples v1 library usage
+- Educational integration strategies
+- Troubleshooting and performance optimization
+
 ### Prerequisites
 - Flutter SDK 3.16+ 
 - Dart SDK 3.0+
@@ -116,6 +154,12 @@ flutter pub get
 # Run the app
 flutter run
 ```
+
+### First Launch Experience
+1. **Startup**: App loads in < 3 seconds with Examples v1 library ready
+2. **Offline Ready**: All examples and algorithms work without internet
+3. **Touch Optimized**: Canvas responds to gestures at 60fps
+4. **Educational Focus**: Progressive learning path from basic to advanced concepts
 
 ### Android release signing
 
@@ -186,6 +230,10 @@ export JFLUTTER_KEY_PASSWORD="$JFLUTTER_KEY_PASSWORD"
 ```bash
 flutter analyze
 ```
+
+## 📚 Referências para a Migração
+
+O diretório `References/` acompanha JFlutter e reúne implementações consolidadas que usamos como base de conferência: vários projetos em Dart e o `automata-main` em Python. Cada refatoração de estrutura ou algoritmo será comparada com essas referências até que os novos testes automatizados estejam disponíveis.
 
 ## 📊 Project Status
 

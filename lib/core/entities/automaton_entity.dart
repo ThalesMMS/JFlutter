@@ -1,5 +1,3 @@
-import '../result.dart';
-
 /// Core domain entity representing an automaton
 /// This is the central business entity that all other layers depend on
 class AutomatonEntity {
@@ -46,7 +44,8 @@ class AutomatonEntity {
   }
 
   /// Checks if the automaton has lambda transitions
-  bool get hasLambda => alphabet.contains('λ') || 
+  bool get hasLambda =>
+      alphabet.contains('λ') ||
       transitions.keys.any((key) => key.endsWith('|λ'));
 
   /// Gets a state by its ID

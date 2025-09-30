@@ -5,19 +5,19 @@ import 'package:vector_math/vector_math_64.dart';
 class LayoutSettings {
   /// Radius of state nodes
   final double nodeRadius;
-  
+
   /// Thickness of transition edges
   final double edgeThickness;
-  
+
   /// Color scheme for the layout
   final ColorScheme colorScheme;
-  
+
   /// Whether to show the grid
   final bool showGrid;
-  
+
   /// Whether to snap to grid
   final bool snapToGrid;
-  
+
   /// Size of the grid
   final double gridSize;
 
@@ -58,12 +58,12 @@ class LayoutSettings {
         'primary': colorScheme.primary.value,
         'secondary': colorScheme.secondary.value,
         'surface': colorScheme.surface.value,
-        'background': colorScheme.background.value,
+        'background': colorScheme.surface.value,
         'error': colorScheme.error.value,
         'onPrimary': colorScheme.onPrimary.value,
         'onSecondary': colorScheme.onSecondary.value,
         'onSurface': colorScheme.onSurface.value,
-        'onBackground': colorScheme.onBackground.value,
+        'onBackground': colorScheme.onSurface.value,
         'onError': colorScheme.onError.value,
       },
       'showGrid': showGrid,
@@ -75,7 +75,7 @@ class LayoutSettings {
   /// Creates layout settings from a JSON representation
   factory LayoutSettings.fromJson(Map<String, dynamic> json) {
     final colorSchemeData = json['colorScheme'] as Map<String, dynamic>;
-    
+
     return LayoutSettings(
       nodeRadius: json['nodeRadius'] as double? ?? 20.0,
       edgeThickness: json['edgeThickness'] as double? ?? 2.0,
@@ -83,12 +83,10 @@ class LayoutSettings {
         primary: Color(colorSchemeData['primary'] as int),
         secondary: Color(colorSchemeData['secondary'] as int),
         surface: Color(colorSchemeData['surface'] as int),
-        background: Color(colorSchemeData['background'] as int),
         error: Color(colorSchemeData['error'] as int),
         onPrimary: Color(colorSchemeData['onPrimary'] as int),
         onSecondary: Color(colorSchemeData['onSecondary'] as int),
         onSurface: Color(colorSchemeData['onSurface'] as int),
-        onBackground: Color(colorSchemeData['onBackground'] as int),
         onError: Color(colorSchemeData['onError'] as int),
       ),
       showGrid: json['showGrid'] as bool? ?? false,
@@ -150,17 +148,18 @@ class LayoutSettings {
   /// Checks if a position should snap to grid
   bool shouldSnapToGrid(Vector2 position) {
     if (!snapToGrid) return false;
-    
+
     final snappedX = (position.x / gridSize).round() * gridSize;
     final snappedY = (position.y / gridSize).round() * gridSize;
-    
-    return (position.x - snappedX).abs() < 5.0 && (position.y - snappedY).abs() < 5.0;
+
+    return (position.x - snappedX).abs() < 5.0 &&
+        (position.y - snappedY).abs() < 5.0;
   }
 
   /// Snaps a position to the grid
   Vector2 snapPositionToGrid(Vector2 position) {
     if (!snapToGrid) return position;
-    
+
     return Vector2(
       (position.x / gridSize).round() * gridSize,
       (position.y / gridSize).round() * gridSize,
@@ -185,10 +184,7 @@ class LayoutSettings {
 
   /// Gets the position for a given grid cell
   Vector2 getPositionFromGridCell(Vector2 cell) {
-    return Vector2(
-      cell.x * gridSize,
-      cell.y * gridSize,
-    );
+    return Vector2(cell.x * gridSize, cell.y * gridSize);
   }
 
   /// Creates default layout settings

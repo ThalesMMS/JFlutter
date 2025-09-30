@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../widgets/pumping_lemma_game.dart';
+import '../widgets/pumping_lemma_game/pumping_lemma_game.dart';
 import '../widgets/pumping_lemma_help.dart';
 import '../widgets/pumping_lemma_progress.dart';
 
@@ -41,7 +41,9 @@ class _PumpingLemmaPageState extends ConsumerState<PumpingLemmaPage> {
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: () => setState(() => _showGame = !_showGame),
-                        icon: Icon(_showGame ? Icons.visibility_off : Icons.games),
+                        icon: Icon(
+                          _showGame ? Icons.visibility_off : Icons.games,
+                        ),
                         label: Text(_showGame ? 'Hide Game' : 'Show Game'),
                       ),
                     ),
@@ -49,7 +51,9 @@ class _PumpingLemmaPageState extends ConsumerState<PumpingLemmaPage> {
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: () => setState(() => _showHelp = !_showHelp),
-                        icon: Icon(_showHelp ? Icons.visibility_off : Icons.help),
+                        icon: Icon(
+                          _showHelp ? Icons.visibility_off : Icons.help,
+                        ),
                         label: Text(_showHelp ? 'Hide Help' : 'Show Help'),
                       ),
                     ),
@@ -59,15 +63,20 @@ class _PumpingLemmaPageState extends ConsumerState<PumpingLemmaPage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () => setState(() => _showProgress = !_showProgress),
-                    icon: Icon(_showProgress ? Icons.visibility_off : Icons.analytics),
-                    label: Text(_showProgress ? 'Hide Progress' : 'Show Progress'),
+                    onPressed: () =>
+                        setState(() => _showProgress = !_showProgress),
+                    icon: Icon(
+                      _showProgress ? Icons.visibility_off : Icons.analytics,
+                    ),
+                    label: Text(
+                      _showProgress ? 'Hide Progress' : 'Show Progress',
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          
+
           // Game (collapsible on mobile)
           if (_showGame) ...[
             Container(
@@ -77,7 +86,7 @@ class _PumpingLemmaPageState extends ConsumerState<PumpingLemmaPage> {
             ),
             const SizedBox(height: 8),
           ],
-          
+
           // Help panel (collapsible on mobile)
           if (_showHelp) ...[
             Container(
@@ -87,7 +96,7 @@ class _PumpingLemmaPageState extends ConsumerState<PumpingLemmaPage> {
             ),
             const SizedBox(height: 8),
           ],
-          
+
           // Progress panel (collapsible on mobile)
           if (_showProgress) ...[
             Container(
@@ -97,13 +106,13 @@ class _PumpingLemmaPageState extends ConsumerState<PumpingLemmaPage> {
             ),
             const SizedBox(height: 8),
           ],
-          
+
           // Info panel (always visible)
           Container(
             margin: const EdgeInsets.all(8),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceVariant,
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Column(

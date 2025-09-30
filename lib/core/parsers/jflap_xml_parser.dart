@@ -9,20 +9,20 @@ class JFLAPXMLParser {
     try {
       final document = XmlDocument.parse(xmlContent);
       final root = document.rootElement;
-      
+
       // Verificar se é um arquivo JFLAP válido
       if (root.name.local != 'structure') {
-        return Failure('Arquivo não é um formato JFLAP válido');
+        return const Failure('Arquivo não é um formato JFLAP válido');
       }
-      
+
       // Obter o tipo do autômato
       final typeElement = root.findElements('type').firstOrNull;
       if (typeElement == null) {
-        return Failure('Tipo de autômato não especificado');
+        return const Failure('Tipo de autômato não especificado');
       }
-      
+
       final type = typeElement.innerText.trim();
-      
+
       // Parse baseado no tipo
       switch (type) {
         case 'fa':
@@ -34,7 +34,7 @@ class JFLAPXMLParser {
       return Failure('Erro ao parsear arquivo JFLAP: $e');
     }
   }
-  
+
   /// Parse um autômato finito (FSA)
   static Result<AutomatonEntity> _parseFSA(XmlElement root) {
     try {
@@ -43,23 +43,23 @@ class JFLAPXMLParser {
       final alphabet = <String>{};
       String? initialId;
       int nextId = 0;
-      
+
       // Parse estados
       final stateElements = root.findElements('state');
       final stateMap = <String, String>{};
-      
+
       for (final stateElement in stateElements) {
         final id = stateElement.getAttribute('id') ?? '';
         final name = stateElement.getAttribute('name') ?? id;
         final x = double.tryParse(stateElement.getAttribute('x') ?? '0') ?? 0.0;
         final y = double.tryParse(stateElement.getAttribute('y') ?? '0') ?? 0.0;
-        
+
         // Verificar se é estado inicial
         final initial = stateElement.findElements('initial').isNotEmpty;
-        
+
         // Verificar se é estado final
         final finalState = stateElement.findElements('final').isNotEmpty;
-        
+
         final state = StateEntity(
           id: name,
           name: name,
@@ -68,28 +68,46 @@ class JFLAPXMLParser {
           isInitial: initial,
           isFinal: finalState,
         );
-        
+
         states.add(state);
         stateMap[id] = name;
-        
+
         if (initial) {
           initialId = name;
         }
-        
+
         nextId++;
       }
-      
+
       // Parse transições
       final transitionElements = root.findElements('transition');
       for (final transitionElement in transitionElements) {
-        final fromId = transitionElement.findElements('from').firstOrNull?.innerText.trim() ?? '';
-        final toId = transitionElement.findElements('to').firstOrNull?.innerText.trim() ?? '';
-        final read = transitionElement.findElements('read').firstOrNull?.innerText.trim() ?? '';
-        
+        final fromId =
+            transitionElement
+                .findElements('from')
+                .firstOrNull
+                ?.innerText
+                .trim() ??
+            '';
+        final toId =
+            transitionElement
+                .findElements('to')
+                .firstOrNull
+                ?.innerText
+                .trim() ??
+            '';
+        final read =
+            transitionElement
+                .findElements('read')
+                .firstOrNull
+                ?.innerText
+                .trim() ??
+            '';
+
         final fromState = stateMap[fromId];
         final toState = stateMap[toId];
         final symbol = read.isEmpty ? 'λ' : read;
-        
+
         if (fromState != null && toState != null) {
           alphabet.add(symbol);
           final key = '$fromState|$symbol';
@@ -97,7 +115,7 @@ class JFLAPXMLParser {
           transitions[key]!.add(toState);
         }
       }
-      
+
       final automaton = AutomatonEntity(
         id: 'parsed_automaton',
         name: 'Parsed Automaton',
@@ -108,7 +126,7 @@ class JFLAPXMLParser {
         nextId: nextId,
         type: AutomatonType.nfa,
       );
-      
+
       return Success(automaton);
     } catch (e) {
       return Failure('Erro ao parsear FSA: $e');

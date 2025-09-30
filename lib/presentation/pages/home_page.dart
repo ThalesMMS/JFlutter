@@ -92,7 +92,8 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final currentIndex = ref.watch(homeNavigationProvider);
-    final isMobile = screenSize.width < 1024; // Better breakpoint for modern devices
+    final isMobile =
+        screenSize.width < 1024; // Better breakpoint for modern devices
 
     // Handle navigation changes
     if (_lastNavigationIndex != currentIndex) {
@@ -118,7 +119,9 @@ class _HomePageState extends ConsumerState<HomePage> {
               Text(
                 _getCurrentPageDescription(currentIndex),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.7),
                 ),
               ),
           ],
@@ -166,14 +169,14 @@ class _HomePageState extends ConsumerState<HomePage> {
       case 0: // FSA
         return FloatingActionButton(
           onPressed: () => _createNewAutomaton(context),
-          child: const Icon(Icons.add),
           tooltip: 'Create New Automaton',
+          child: const Icon(Icons.add),
         );
       case 1: // Grammar
         return FloatingActionButton(
           onPressed: () => _createNewGrammar(context),
-          child: const Icon(Icons.add),
           tooltip: 'Create New Grammar',
+          child: const Icon(Icons.add),
         );
       default:
         return null;
@@ -192,9 +195,9 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     final automatonState = ref.read(automatonProvider);
     if (automatonState.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(automatonState.error!)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(automatonState.error!)));
       return;
     }
 
@@ -209,18 +212,14 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   void _showHelpDialog(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const HelpPage(),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => const HelpPage()));
   }
 
   void _showSettingsDialog(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => SettingsPage(),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => SettingsPage()));
   }
 }

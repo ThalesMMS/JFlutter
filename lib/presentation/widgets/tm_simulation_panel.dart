@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/algorithms/tm_simulator.dart';
 import '../../core/models/simulation_step.dart';
 import '../providers/tm_editor_provider.dart';
+import 'trace_viewers/tm_trace_viewer.dart';
 
 /// Panel for Turing Machine simulation and string testing
 class TMSimulationPanel extends ConsumerStatefulWidget {
@@ -53,16 +54,13 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
   Widget _buildHeader(BuildContext context) {
     return Row(
       children: [
-        Icon(
-          Icons.play_arrow,
-          color: Theme.of(context).colorScheme.primary,
-        ),
+        Icon(Icons.play_arrow, color: Theme.of(context).colorScheme.primary),
         const SizedBox(width: 8),
         Text(
           'TM Simulation',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
       ],
     );
@@ -72,7 +70,7 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -80,9 +78,9 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
         children: [
           Text(
             'Simulation Input',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 12),
           TextField(
@@ -97,7 +95,9 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
           Text(
             'Examples: 101 (binary), 1100 (palindrome), 111 (counting)',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
         ],
@@ -129,9 +129,9 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
         children: [
           Text(
             'Simulation Results',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           Expanded(
@@ -149,10 +149,10 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -190,7 +190,7 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: colorScheme.errorContainer,
-          border: Border.all(color: colorScheme.error.withOpacity(0.4)),
+          border: Border.all(color: colorScheme.error.withValues(alpha: 0.4)),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -202,9 +202,9 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
               child: Text(
                 _simulationResult ?? 'Simulation error',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: colorScheme.onErrorContainer,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  color: colorScheme.onErrorContainer,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
@@ -219,8 +219,8 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withValues(alpha: 0.1),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -238,72 +238,35 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
                 child: Text(
                   message,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: color,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
           ),
-
           if (_simulationSteps.isNotEmpty) ...[
             const SizedBox(height: 16),
             Text(
               'Simulation Steps:',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
-            Expanded(
-              child: ListView.builder(
-                itemCount: _simulationSteps.length,
-                itemBuilder: (context, index) {
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 4),
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Row(
-                      children: [
-                        Text(
-                          '${index + 1}.',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            _simulationSteps[index],
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  fontFamily: 'monospace',
-                                ),
-                          ),
-                        ),
-                        if (index < _tapeHistory.length &&
-                            _tapeHistory[index].isNotEmpty)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primaryContainer,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              'Tape: ${_tapeHistory[index]}',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  );
-                },
+            if (_hasSimulationResult)
+              TMTraceViewer(
+                result: TMSimulationResult.failure(
+                  inputString: '',
+                  steps: _buildSyntheticSteps(),
+                  errorMessage: _isAccepted == null
+                      ? (_simulationResult ?? 'Simulation error')
+                      : (_isAccepted == true
+                            ? ''
+                            : (_simulationResult ?? 'Rejected')),
+                  executionTime: const Duration(milliseconds: 0),
+                ),
               ),
-            ),
           ],
         ],
       ),
@@ -334,11 +297,7 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
     });
 
     final result = await Future(
-      () => TMSimulator.simulate(
-        tm,
-        inputString,
-        stepByStep: true,
-      ),
+      () => TMSimulator.simulate(tm, inputString, stepByStep: true),
     );
 
     if (!mounted) {
@@ -361,7 +320,9 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
 
     final simulation = result.data!;
     final steps = _describeSteps(simulation.steps);
-    final tapeHistory = simulation.steps.map((step) => step.tapeContents).toList();
+    final tapeHistory = simulation.steps
+        .map((step) => step.tapeContents)
+        .toList();
 
     setState(() {
       _isSimulating = false;
@@ -370,8 +331,8 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
       _simulationResult = simulation.accepted
           ? 'Accepted'
           : simulation.errorMessage != null
-              ? 'Rejected: ${simulation.errorMessage}'
-              : 'Rejected';
+          ? 'Rejected: ${simulation.errorMessage}'
+          : 'Rejected';
       _simulationSteps = steps;
       _tapeHistory = tapeHistory;
     });
@@ -391,6 +352,19 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
       descriptions.add(buffer.toString());
     }
     return descriptions;
+  }
+
+  List<SimulationStep> _buildSyntheticSteps() {
+    return _simulationSteps.asMap().entries.map((entry) {
+      final idx = entry.key;
+      final text = entry.value;
+      return SimulationStep(
+        currentState: 'q',
+        remainingInput: '',
+        tapeContents: text,
+        stepNumber: idx + 1,
+      );
+    }).toList();
   }
 
   void _showError(String message) {

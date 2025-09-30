@@ -20,10 +20,7 @@ class LL1ParseTable {
   final Map<String, Map<String, List<List<String>>>> table;
   final Set<String> terminals;
 
-  const LL1ParseTable({
-    required this.table,
-    required this.terminals,
-  });
+  const LL1ParseTable({required this.table, required this.terminals});
 
   Set<String> get nonTerminals => table.keys.toSet();
 }
@@ -61,8 +58,14 @@ class GrammarAnalyzer {
 
       if (alpha.isEmpty) {
         for (final alt in alternatives) {
-          newProductions.add(_productionFrom(nonTerminal, alt,
-              productionCounter++, grammarId: grammar.id));
+          newProductions.add(
+            _productionFrom(
+              nonTerminal,
+              alt,
+              productionCounter++,
+              grammarId: grammar.id,
+            ),
+          );
         }
         continue;
       }
@@ -70,36 +73,56 @@ class GrammarAnalyzer {
       changed = true;
       final prime = _generatePrimeSymbol(nonTerminal, newNonTerminals);
       newNonTerminals.add(prime);
-      notes.add('Introduced non-terminal $prime to remove left recursion from $nonTerminal.');
+      notes.add(
+        'Introduced non-terminal $prime to remove left recursion from $nonTerminal.',
+      );
 
       if (beta.isEmpty) {
         beta.add(<String>[]);
-        notes.add('Added implicit ε-production for $nonTerminal to preserve language.');
+        notes.add(
+          'Added implicit ε-production for $nonTerminal to preserve language.',
+        );
       }
 
       for (final betaAlt in beta) {
         final updated = [...betaAlt, prime];
-        newProductions.add(_productionFrom(nonTerminal, updated,
-            productionCounter++, grammarId: grammar.id));
+        newProductions.add(
+          _productionFrom(
+            nonTerminal,
+            updated,
+            productionCounter++,
+            grammarId: grammar.id,
+          ),
+        );
         derivations.add(
-            '$nonTerminal → ${_formatSymbols(betaAlt)}$prime (from β production)');
+          '$nonTerminal → ${_formatSymbols(betaAlt)}$prime (from β production)',
+        );
       }
 
       for (final alphaAlt in alpha) {
         final updated = [...alphaAlt, prime];
-        newProductions.add(_productionFrom(prime, updated,
-            productionCounter++, grammarId: grammar.id));
+        newProductions.add(
+          _productionFrom(
+            prime,
+            updated,
+            productionCounter++,
+            grammarId: grammar.id,
+          ),
+        );
         derivations.add(
-            '$prime → ${_formatSymbols(alphaAlt)}$prime (from α production)');
+          '$prime → ${_formatSymbols(alphaAlt)}$prime (from α production)',
+        );
       }
 
-      newProductions.add(Production(
-        id: '${grammar.id}_rec_$productionCounter',
-        leftSide: [prime],
-        rightSide: const [],
-        isLambda: true,
-        order: productionCounter++,
-      ));
+      newProductions.add(
+        Production(
+          id: '${grammar.id}_rec_$productionCounter',
+          leftSide: [prime],
+          rightSide: const [],
+          isLambda: true,
+          order: productionCounter++,
+        ),
+      );
       derivations.add('$prime → ε (allows termination of recursion)');
     }
 
@@ -158,7 +181,8 @@ class GrammarAnalyzer {
         );
         newNonTerminals.add(newSymbol);
         notes.add(
-            'Introduced non-terminal $newSymbol to factor prefix ${_formatSymbols(prefix)} from $nonTerminal.');
+          'Introduced non-terminal $newSymbol to factor prefix ${_formatSymbols(prefix)} from $nonTerminal.',
+        );
 
         grouped[nonTerminal] = [
           ...alternatives.where((alt) => !toFactor.contains(alt)),
@@ -166,15 +190,20 @@ class GrammarAnalyzer {
         ];
 
         grouped[newSymbol] = toFactor
-            .map((alt) =>
-                alt.length == prefix.length ? <String>[] : alt.sublist(prefix.length))
+            .map(
+              (alt) => alt.length == prefix.length
+                  ? <String>[]
+                  : alt.sublist(prefix.length),
+            )
             .toList();
 
         derivations.add(
-            '$nonTerminal → ${_formatSymbols(prefix)}$newSymbol (factored ${toFactor.length} productions)');
+          '$nonTerminal → ${_formatSymbols(prefix)}$newSymbol (factored ${toFactor.length} productions)',
+        );
         for (final alt in grouped[newSymbol]!) {
           derivations.add(
-              '$newSymbol → ${alt.isEmpty ? 'ε' : alt.join(' ')} (remaining suffix)');
+            '$newSymbol → ${alt.isEmpty ? 'ε' : alt.join(' ')} (remaining suffix)',
+          );
         }
         break;
       }
@@ -186,17 +215,25 @@ class GrammarAnalyzer {
 
     for (final entry in grouped.entries) {
       for (final alt in entry.value) {
-        newProductions.add(_productionFrom(entry.key, alt,
-            productionCounter++, grammarId: grammar.id));
+        newProductions.add(
+          _productionFrom(
+            entry.key,
+            alt,
+            productionCounter++,
+            grammarId: grammar.id,
+          ),
+        );
       }
       if (entry.value.isEmpty) {
-        newProductions.add(Production(
-          id: '${grammar.id}_fact_${productionCounter}',
-          leftSide: [entry.key],
-          rightSide: const [],
-          isLambda: true,
-          order: productionCounter++,
-        ));
+        newProductions.add(
+          Production(
+            id: '${grammar.id}_fact_$productionCounter',
+            leftSide: [entry.key],
+            rightSide: const [],
+            isLambda: true,
+            order: productionCounter++,
+          ),
+        );
       }
     }
 
@@ -215,9 +252,8 @@ class GrammarAnalyzer {
     );
   }
 
-  static Result<GrammarAnalysisReport<Map<String, Set<String>>>> computeFirstSets(
-    Grammar grammar,
-  ) {
+  static Result<GrammarAnalysisReport<Map<String, Set<String>>>>
+  computeFirstSets(Grammar grammar) {
     if (grammar.productions.isEmpty) {
       return ResultFactory.failure('The grammar has no productions.');
     }
@@ -245,7 +281,8 @@ class GrammarAnalyzer {
             if (first[left]!.add('ε')) {
               changed = true;
               derivations.add(
-                  "FIRST($left) gains ε due to production $left → ε");
+                'FIRST($left) gains ε due to production $left → ε',
+              );
             }
             continue;
           }
@@ -256,7 +293,8 @@ class GrammarAnalyzer {
               if (first[left]!.add('ε')) {
                 changed = true;
                 derivations.add(
-                    "FIRST($left) gains ε because production $left → ${_formatSymbols(right)} contains ε");
+                  'FIRST($left) gains ε because production $left → ${_formatSymbols(right)} contains ε',
+                );
               }
               break;
             }
@@ -265,7 +303,8 @@ class GrammarAnalyzer {
               if (first[left]!.add(symbol)) {
                 changed = true;
                 derivations.add(
-                    "FIRST($left) gains terminal $symbol from production $left → ${_formatSymbols(right)}");
+                  'FIRST($left) gains terminal $symbol from production $left → ${_formatSymbols(right)}',
+                );
               }
               break;
             }
@@ -278,7 +317,8 @@ class GrammarAnalyzer {
             if (targetFirst.length > previousLength) {
               changed = true;
               derivations.add(
-                  "FIRST($left) absorbs FIRST($symbol) − {ε} via production $left → ${_formatSymbols(right)}");
+                'FIRST($left) absorbs FIRST($symbol) − {ε} via production $left → ${_formatSymbols(right)}',
+              );
             }
 
             if (!source.contains('ε')) {
@@ -289,7 +329,8 @@ class GrammarAnalyzer {
               if (first[left]!.add('ε')) {
                 changed = true;
                 derivations.add(
-                    "FIRST($left) gains ε because all symbols in $left → ${_formatSymbols(right)} can derive ε");
+                  'FIRST($left) gains ε because all symbols in $left → ${_formatSymbols(right)} can derive ε',
+                );
               }
             }
           }
@@ -297,11 +338,13 @@ class GrammarAnalyzer {
       }
     } while (changed);
 
-    notes.add('Computed FIRST sets for ${grammar.nonterminals.length} non-terminals.');
+    notes.add(
+      'Computed FIRST sets for ${grammar.nonterminals.length} non-terminals.',
+    );
 
     final resultMap = {
       for (final entry in first.entries)
-        if (grammar.nonterminals.contains(entry.key)) entry.key: entry.value
+        if (grammar.nonterminals.contains(entry.key)) entry.key: entry.value,
     };
 
     return ResultFactory.success(
@@ -313,9 +356,8 @@ class GrammarAnalyzer {
     );
   }
 
-  static Result<GrammarAnalysisReport<Map<String, Set<String>>>> computeFollowSets(
-    Grammar grammar,
-  ) {
+  static Result<GrammarAnalysisReport<Map<String, Set<String>>>>
+  computeFollowSets(Grammar grammar) {
     final firstResult = computeFirstSets(grammar);
     if (firstResult.isFailure) {
       return ResultFactory.failure(firstResult.error!);
@@ -327,7 +369,9 @@ class GrammarAnalyzer {
     final derivations = List<String>.from(firstResult.data!.derivations);
 
     follow[grammar.startSymbol]!.add('\$');
-    derivations.add('FOLLOW(${grammar.startSymbol}) includes \$ (start symbol).');
+    derivations.add(
+      'FOLLOW(${grammar.startSymbol}) includes \$ (start symbol).',
+    );
 
     final productions = _groupProductions(grammar);
 
@@ -352,7 +396,8 @@ class GrammarAnalyzer {
             if (targetFollow.length > previousLength) {
               changed = true;
               derivations.add(
-                  "FOLLOW($symbol) gains ${withoutEpsilon.join(', ')} from FIRST of suffix in $left → ${_formatSymbols(right)}");
+                "FOLLOW($symbol) gains ${withoutEpsilon.join(', ')} from FIRST of suffix in $left → ${_formatSymbols(right)}",
+              );
             }
 
             if (suffix.isEmpty || firstOfSuffix.contains('ε')) {
@@ -361,7 +406,8 @@ class GrammarAnalyzer {
               if (targetFollow.length > previousFollowLength) {
                 changed = true;
                 derivations.add(
-                    "FOLLOW($symbol) absorbs FOLLOW($left) because suffix can derive ε in $left → ${_formatSymbols(right)}");
+                  'FOLLOW($symbol) absorbs FOLLOW($left) because suffix can derive ε in $left → ${_formatSymbols(right)}',
+                );
               }
             }
           }
@@ -369,7 +415,9 @@ class GrammarAnalyzer {
       }
     } while (changed);
 
-    notes.add('Computed FOLLOW sets for ${grammar.nonterminals.length} non-terminals.');
+    notes.add(
+      'Computed FOLLOW sets for ${grammar.nonterminals.length} non-terminals.',
+    );
 
     return ResultFactory.success(
       GrammarAnalysisReport<Map<String, Set<String>>>(
@@ -407,10 +455,14 @@ class GrammarAnalyzer {
         final firstSet = _firstOfSequence(right, first);
         final targets = firstSet.where((symbol) => symbol != 'ε');
         for (final terminal in targets) {
-          final cell = table[left]!.putIfAbsent(terminal, () => <List<String>>[]);
+          final cell = table[left]!.putIfAbsent(
+            terminal,
+            () => <List<String>>[],
+          );
           cell.add(right);
           derivations.add(
-              'Placed $left → ${_formatSymbols(right)} in table[$left, $terminal].');
+            'Placed $left → ${_formatSymbols(right)} in table[$left, $terminal].',
+          );
           if (cell.length > 1) {
             final conflictDescription =
                 'Conflict at [$left, $terminal]: ${cell.map(_formatSymbols).join(' vs ')}';
@@ -422,10 +474,14 @@ class GrammarAnalyzer {
 
         if (firstSet.contains('ε')) {
           for (final terminal in follow[left]!) {
-            final cell = table[left]!.putIfAbsent(terminal, () => <List<String>>[]);
+            final cell = table[left]!.putIfAbsent(
+              terminal,
+              () => <List<String>>[],
+            );
             cell.add(const []);
             derivations.add(
-                'Placed $left → ε in table[$left, $terminal] using FOLLOW set.');
+              'Placed $left → ε in table[$left, $terminal] using FOLLOW set.',
+            );
             if (cell.length > 1) {
               final conflictDescription =
                   'Conflict at [$left, $terminal]: ${cell.map(_formatSymbols).join(' vs ')}';
@@ -518,9 +574,9 @@ class GrammarAnalyzer {
   }
 
   static String _generatePrimeSymbol(String base, Set<String> existing) {
-    var candidate = "${base}'";
+    var candidate = "$base'";
     while (existing.contains(candidate)) {
-      candidate = "${candidate}'";
+      candidate = "$candidate'";
     }
     return candidate;
   }
@@ -602,7 +658,9 @@ _FactoringResult? _findCommonPrefix(List<List<String>> alternatives) {
     for (var j = i + 1; j < alternatives.length; j++) {
       final second = alternatives[j];
       final prefix = <String>[];
-      final length = first.length < second.length ? first.length : second.length;
+      final length = first.length < second.length
+          ? first.length
+          : second.length;
       for (var k = 0; k < length; k++) {
         if (first[k] == second[k]) {
           prefix.add(first[k]);
@@ -615,16 +673,21 @@ _FactoringResult? _findCommonPrefix(List<List<String>> alternatives) {
       }
 
       final group = alternatives
-          .where((alt) =>
-              alt.length >= prefix.length &&
-              ListEquality().equals(alt.sublist(0, prefix.length), prefix))
+          .where(
+            (alt) =>
+                alt.length >= prefix.length &&
+                const ListEquality().equals(
+                  alt.sublist(0, prefix.length),
+                  prefix,
+                ),
+          )
           .toList();
 
       if (group.length < 2) {
         continue;
       }
 
-      if (best == null || prefix.length > best!.prefix.length) {
+      if (best == null || prefix.length > best.prefix.length) {
         best = _FactoringResult(prefix: prefix, alternatives: group);
       }
     }
@@ -648,4 +711,3 @@ class ListEquality {
     return true;
   }
 }
-

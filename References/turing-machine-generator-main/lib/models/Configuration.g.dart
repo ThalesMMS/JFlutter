@@ -54,7 +54,4 @@ Configuration _$ConfigurationFromJson(Map<String, dynamic> json) =>
     );
 
 Map<String, dynamic> _$ConfigurationToJson(Configuration instance) =>
-    <String, dynamic>{
-      'm_config': instance.m_config,
-      'symbol': instance.symbol,
-    };
+    <String, dynamic>{'m_config': instance.m_config, 'symbol': instance.symbol};

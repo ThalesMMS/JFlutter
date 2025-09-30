@@ -79,10 +79,8 @@ class AutomatonModel {
           .toList(),
       transitions: Map<String, List<String>>.from(
         (json['transitions'] as Map).map(
-          (key, value) => MapEntry(
-            key as String,
-            List<String>.from(value as List),
-          ),
+          (key, value) =>
+              MapEntry(key as String, List<String>.from(value as List)),
         ),
       ),
       initialId: json['initialId'] as String?,
@@ -214,9 +212,7 @@ class StateModel {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is StateModel &&
-          runtimeType == other.runtimeType &&
-          id == other.id;
+      other is StateModel && runtimeType == other.runtimeType && id == other.id;
 
   @override
   int get hashCode => id.hashCode;

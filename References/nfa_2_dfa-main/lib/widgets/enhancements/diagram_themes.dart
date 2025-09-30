@@ -7,11 +7,14 @@ import 'dart:math' as math;
 /// مدیریت کننده تمام تم‌های دیاگرام حالت
 class DiagramThemeManager {
   static DiagramThemeManager? _instance;
-  static DiagramThemeManager get instance => _instance ??= DiagramThemeManager._();
+  static DiagramThemeManager get instance =>
+      _instance ??= DiagramThemeManager._();
   DiagramThemeManager._();
 
   DiagramTheme _currentTheme = DiagramThemes.defaultLight;
-  final ValueNotifier<DiagramTheme> _themeNotifier = ValueNotifier(DiagramThemes.defaultLight);
+  final ValueNotifier<DiagramTheme> _themeNotifier = ValueNotifier(
+    DiagramThemes.defaultLight,
+  );
 
   /// تم فعلی
   DiagramTheme get currentTheme => _currentTheme;
@@ -33,8 +36,10 @@ class DiagramThemeManager {
   Future<void> loadSavedTheme() async {
     final savedThemeName = await _loadThemePreference();
     if (savedThemeName != null) {
-      final theme = DiagramThemes.getAllThemes()
-          .firstWhere((t) => t.name == savedThemeName, orElse: () => DiagramThemes.defaultLight);
+      final theme = DiagramThemes.getAllThemes().firstWhere(
+        (t) => t.name == savedThemeName,
+        orElse: () => DiagramThemes.defaultLight,
+      );
       setTheme(theme, animate: false);
     }
   }
@@ -175,7 +180,9 @@ class DiagramTheme {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is DiagramTheme && runtimeType == other.runtimeType && name == other.name;
+      other is DiagramTheme &&
+          runtimeType == other.runtimeType &&
+          name == other.name;
 
   @override
   int get hashCode => name.hashCode;
@@ -193,11 +200,7 @@ enum ThemeCategory {
 }
 
 /// سطح دسترسی‌پذیری
-enum AccessibilityLevel {
-  normal,
-  enhanced,
-  highContrast,
-}
+enum AccessibilityLevel { normal, enhanced, highContrast }
 
 /// مجموعه تم‌های از پیش تعریف شده
 class DiagramThemes {
@@ -577,16 +580,13 @@ class _ThemeSelectorState extends State<ThemeSelector>
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.palette,
-            color: Theme.of(context).primaryColor,
-          ),
+          Icon(Icons.palette, color: Theme.of(context).primaryColor),
           const SizedBox(width: 12),
           Text(
             'Select Theme',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
           ),
           const Spacer(),
           if (widget.allowCustomThemes)
@@ -671,9 +671,7 @@ class _ThemeSelectorState extends State<ThemeSelector>
         child: Stack(
           children: [
             // پیش‌نمایش تم
-            Positioned.fill(
-              child: _buildThemePreview(theme),
-            ),
+            Positioned.fill(child: _buildThemePreview(theme)),
 
             // نام تم
             Positioned(
@@ -741,11 +739,7 @@ class _ThemeSelectorState extends State<ThemeSelector>
                     shape: BoxShape.circle,
                     color: theme.primaryColor,
                   ),
-                  child: const Icon(
-                    Icons.check,
-                    size: 16,
-                    color: Colors.white,
-                  ),
+                  child: const Icon(Icons.check, size: 16, color: Colors.white),
                 ),
               ),
           ],
@@ -755,9 +749,7 @@ class _ThemeSelectorState extends State<ThemeSelector>
   }
 
   Widget _buildThemePreview(DiagramTheme theme) {
-    return CustomPaint(
-      painter: ThemePreviewPainter(theme),
-    );
+    return CustomPaint(painter: ThemePreviewPainter(theme));
   }
 
   String _getCategoryDisplayName(ThemeCategory category) {

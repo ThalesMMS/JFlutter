@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'dart:math' as math;
 import 'dart:async';
 
-
 /// Data model for the entire state diagram.
 class StateDiagramData {
   final List<StateNode> nodes;
@@ -67,12 +66,7 @@ class DiagramColorScheme {
   });
 }
 
-enum AnimationState {
-  stopped,
-  playing,
-  paused,
-  error,
-}
+enum AnimationState { stopped, playing, paused, error }
 
 enum NodeEntranceType {
   fadeScale,
@@ -82,12 +76,7 @@ enum NodeEntranceType {
   rotateIn,
 }
 
-enum NodeExitType {
-  fadeScale,
-  slideToRight,
-  slideToBottom,
-  implode,
-}
+enum NodeExitType { fadeScale, slideToRight, slideToBottom, implode }
 
 enum PathAnimationEventType {
   stepStarted,
@@ -99,10 +88,7 @@ enum PathAnimationEventType {
   completed,
 }
 
-enum NodeAnimationEventType {
-  entrance,
-  exit,
-}
+enum NodeAnimationEventType { entrance, exit }
 
 enum TimelineEventType {
   nodeEntrance,
@@ -205,11 +191,7 @@ class ParticleState {
   final String? symbol;
   final double opacity;
 
-  ParticleState({
-    required this.position,
-    this.symbol,
-    required this.opacity,
-  });
+  ParticleState({required this.position, this.symbol, required this.opacity});
 }
 
 class TimelineEvent {
@@ -345,7 +327,8 @@ class AnimationSystem extends ChangeNotifier {
     _speed = speed ?? _speed;
     _loopEnabled = loopEnabled ?? _loopEnabled;
     _autoPlay = autoPlay ?? _autoPlay;
-    _enablePerformanceMetrics = enablePerformanceMetrics ?? _enablePerformanceMetrics;
+    _enablePerformanceMetrics =
+        enablePerformanceMetrics ?? _enablePerformanceMetrics;
 
     _pathManager.configure(
       defaultDuration: _defaultDuration,
@@ -426,11 +409,11 @@ class AnimationSystem extends ChangeNotifier {
 
   /// اجرای string در مسیر
   Future<void> executeString(
-      String input,
-      List<StateNode> nodes,
-      List<StateEdge> edges,
-      Map<String, Offset> nodePositions,
-      ) async {
+    String input,
+    List<StateNode> nodes,
+    List<StateEdge> edges,
+    Map<String, Offset> nodePositions,
+  ) async {
     stop(); // Stop any current animation
     final path = _findExecutionPath(input, nodes, edges);
     if (path.isEmpty) {
@@ -439,19 +422,25 @@ class AnimationSystem extends ChangeNotifier {
     }
 
     _timeline.clearEvents();
-    _timeline.addEvent(TimelineEvent(
-      id: 'path_${DateTime.now().millisecondsSinceEpoch}',
-      name: 'Animate: $input',
-      type: TimelineEventType.pathAnimation,
-      timestamp: Duration.zero,
-      duration: Duration(milliseconds: (path.length * (_defaultDuration.inMilliseconds / _speed)).round()),
-      data: {
-        'path': path,
-        'nodePositions': nodePositions,
-        'input': input,
-        'stepDuration': _defaultDuration,
-      },
-    ));
+    _timeline.addEvent(
+      TimelineEvent(
+        id: 'path_${DateTime.now().millisecondsSinceEpoch}',
+        name: 'Animate: $input',
+        type: TimelineEventType.pathAnimation,
+        timestamp: Duration.zero,
+        duration: Duration(
+          milliseconds:
+              (path.length * (_defaultDuration.inMilliseconds / _speed))
+                  .round(),
+        ),
+        data: {
+          'path': path,
+          'nodePositions': nodePositions,
+          'input': input,
+          'stepDuration': _defaultDuration,
+        },
+      ),
+    );
 
     if (_autoPlay) {
       await play();
@@ -461,11 +450,11 @@ class AnimationSystem extends ChangeNotifier {
 
   /// انیمیشن ورود نود
   Future<void> animateNodeEntrance(
-      String nodeId,
-      Offset position, {
-        NodeEntranceType type = NodeEntranceType.fadeScale,
-        Duration? duration,
-      }) async {
+    String nodeId,
+    Offset position, {
+    NodeEntranceType type = NodeEntranceType.fadeScale,
+    Duration? duration,
+  }) async {
     await _nodeManager.animateEntrance(
       nodeId: nodeId,
       position: position,
@@ -476,10 +465,10 @@ class AnimationSystem extends ChangeNotifier {
 
   /// انیمیشن خروج نود
   Future<void> animateNodeExit(
-      String nodeId, {
-        NodeExitType type = NodeExitType.fadeScale,
-        Duration? duration,
-      }) async {
+    String nodeId, {
+    NodeExitType type = NodeExitType.fadeScale,
+    Duration? duration,
+  }) async {
     await _nodeManager.animateExit(
       nodeId: nodeId,
       type: type,
@@ -489,11 +478,11 @@ class AnimationSystem extends ChangeNotifier {
 
   /// ایجاد ripple effect
   void createRipple(
-      Offset position, {
-        Color? color,
-        double? maxRadius,
-        Duration? duration,
-      }) {
+    Offset position, {
+    Color? color,
+    double? maxRadius,
+    Duration? duration,
+  }) {
     _rippleManager.createRipple(
       position: position,
       color: color ?? Colors.blue.withOpacity(0.3),
@@ -504,12 +493,12 @@ class AnimationSystem extends ChangeNotifier {
 
   /// هایلایت کردن transition
   void highlightTransition(
-      String edgeId,
-      Offset from,
-      Offset to, {
-        Color? color,
-        Duration? duration,
-      }) {
+    String edgeId,
+    Offset from,
+    Offset to, {
+    Color? color,
+    Duration? duration,
+  }) {
     _transitionHighlighter.highlight(
       edgeId: edgeId,
       from: from,
@@ -520,42 +509,53 @@ class AnimationSystem extends ChangeNotifier {
   }
 
   List<PathStep> _findExecutionPath(
-      String input,
-      List<StateNode> nodes,
-      List<StateEdge> edges,
-      ) {
+    String input,
+    List<StateNode> nodes,
+    List<StateEdge> edges,
+  ) {
     final path = <PathStep>[];
     if (nodes.isEmpty) return path;
 
-    final startNode = nodes.firstWhere((n) => n.isStart, orElse: () => nodes.first);
+    final startNode = nodes.firstWhere(
+      (n) => n.isStart,
+      orElse: () => nodes.first,
+    );
     String currentNodeId = startNode.id;
 
-    path.add(PathStep(
-      nodeId: currentNodeId,
-      edgeId: null,
-      symbol: null,
-      timestamp: Duration.zero,
-    ));
+    path.add(
+      PathStep(
+        nodeId: currentNodeId,
+        edgeId: null,
+        symbol: null,
+        timestamp: Duration.zero,
+      ),
+    );
 
     for (int i = 0; i < input.length; i++) {
       final symbol = input[i];
       final transition = edges.firstWhere(
-            (e) => e.fromId == currentNodeId && e.label == symbol,
+        (e) => e.fromId == currentNodeId && e.label == symbol,
         orElse: () => const StateEdge(id: '', fromId: '', toId: ''),
       );
 
       if (transition.id.isEmpty) {
-        debugPrint("Path execution stopped: No transition for symbol '$symbol' from node '$currentNodeId'.");
+        debugPrint(
+          "Path execution stopped: No transition for symbol '$symbol' from node '$currentNodeId'.",
+        );
         break;
       }
 
       currentNodeId = transition.toId;
-      path.add(PathStep(
-        nodeId: currentNodeId,
-        edgeId: transition.id,
-        symbol: symbol,
-        timestamp: Duration(milliseconds: (i + 1) * 1000), // Relative timestamp
-      ));
+      path.add(
+        PathStep(
+          nodeId: currentNodeId,
+          edgeId: transition.id,
+          symbol: symbol,
+          timestamp: Duration(
+            milliseconds: (i + 1) * 1000,
+          ), // Relative timestamp
+        ),
+      );
     }
     return path;
   }
@@ -641,7 +641,8 @@ class PathAnimationController {
   final Curve curve;
   final double speed;
 
-  final StreamController<PathAnimationEvent> _eventController = StreamController<PathAnimationEvent>.broadcast();
+  final StreamController<PathAnimationEvent> _eventController =
+      StreamController<PathAnimationEvent>.broadcast();
   bool _isDisposed = false;
 
   PathAnimationController({
@@ -660,11 +661,13 @@ class PathAnimationController {
       if (_isDisposed) break;
       final step = path[i];
 
-      _eventController.add(PathAnimationEvent(
-        type: PathAnimationEventType.stepStarted,
-        step: step,
-        progress: i / path.length,
-      ));
+      _eventController.add(
+        PathAnimationEvent(
+          type: PathAnimationEventType.stepStarted,
+          step: step,
+          progress: i / path.length,
+        ),
+      );
 
       if (i > 0) {
         final previousStep = path[i - 1];
@@ -678,66 +681,116 @@ class PathAnimationController {
 
       await _animateNodeActivation(step.nodeId);
 
-      _eventController.add(PathAnimationEvent(
-        type: PathAnimationEventType.stepCompleted,
-        step: step,
-        progress: (i + 1) / path.length,
-      ));
+      _eventController.add(
+        PathAnimationEvent(
+          type: PathAnimationEventType.stepCompleted,
+          step: step,
+          progress: (i + 1) / path.length,
+        ),
+      );
 
-      await Future.delayed(Duration(milliseconds: (stepDuration.inMilliseconds * 0.2 / speed).round()));
+      await Future.delayed(
+        Duration(
+          milliseconds: (stepDuration.inMilliseconds * 0.2 / speed).round(),
+        ),
+      );
     }
 
     if (!_isDisposed) {
-      _eventController.add(PathAnimationEvent(
-        type: PathAnimationEventType.completed,
-        step: path.last,
-        progress: 1.0,
-      ));
+      _eventController.add(
+        PathAnimationEvent(
+          type: PathAnimationEventType.completed,
+          step: path.last,
+          progress: 1.0,
+        ),
+      );
     }
   }
 
-  Future<void> _animateMovement(Offset from, Offset to, String? edgeId, String? symbol) async {
-    _eventController.add(PathAnimationEvent(
-      type: PathAnimationEventType.particleMoving,
-      step: PathStep(nodeId: '', edgeId: edgeId, symbol: symbol, timestamp: Duration.zero),
-      progress: 0.0,
-      data: {'from': from, 'to': to, 'symbol': symbol},
-    ));
+  Future<void> _animateMovement(
+    Offset from,
+    Offset to,
+    String? edgeId,
+    String? symbol,
+  ) async {
+    _eventController.add(
+      PathAnimationEvent(
+        type: PathAnimationEventType.particleMoving,
+        step: PathStep(
+          nodeId: '',
+          edgeId: edgeId,
+          symbol: symbol,
+          timestamp: Duration.zero,
+        ),
+        progress: 0.0,
+        data: {'from': from, 'to': to, 'symbol': symbol},
+      ),
+    );
 
     const steps = 20;
     for (int i = 0; i <= steps; i++) {
       if (_isDisposed) break;
       final t = i / steps;
       final position = Offset.lerp(from, to, curve.transform(t))!;
-      _eventController.add(PathAnimationEvent(
-        type: PathAnimationEventType.particlePosition,
-        step: PathStep(nodeId: '', edgeId: edgeId, symbol: symbol, timestamp: Duration.zero),
-        progress: t,
-        data: {'position': position, 'symbol': symbol},
-      ));
-      await Future.delayed(Duration(milliseconds: (stepDuration.inMilliseconds / steps / speed).round()));
+      _eventController.add(
+        PathAnimationEvent(
+          type: PathAnimationEventType.particlePosition,
+          step: PathStep(
+            nodeId: '',
+            edgeId: edgeId,
+            symbol: symbol,
+            timestamp: Duration.zero,
+          ),
+          progress: t,
+          data: {'position': position, 'symbol': symbol},
+        ),
+      );
+      await Future.delayed(
+        Duration(
+          milliseconds: (stepDuration.inMilliseconds / steps / speed).round(),
+        ),
+      );
     }
   }
 
   Future<void> _animateNodeActivation(String nodeId) async {
-    _eventController.add(PathAnimationEvent(
-      type: PathAnimationEventType.nodeActivated,
-      step: PathStep(nodeId: nodeId, edgeId: null, symbol: null, timestamp: Duration.zero),
-      progress: 0.0,
-    ));
+    _eventController.add(
+      PathAnimationEvent(
+        type: PathAnimationEventType.nodeActivated,
+        step: PathStep(
+          nodeId: nodeId,
+          edgeId: null,
+          symbol: null,
+          timestamp: Duration.zero,
+        ),
+        progress: 0.0,
+      ),
+    );
 
     const pulseSteps = 10;
     for (int i = 0; i <= pulseSteps; i++) {
       if (_isDisposed) break;
       final t = i / pulseSteps;
       final scale = 1.0 + 0.2 * math.sin(t * math.pi);
-      _eventController.add(PathAnimationEvent(
-        type: PathAnimationEventType.nodePulse,
-        step: PathStep(nodeId: nodeId, edgeId: null, symbol: null, timestamp: Duration.zero),
-        progress: t,
-        data: {'scale': scale},
-      ));
-      await Future.delayed(Duration(milliseconds: (stepDuration.inMilliseconds * 0.3 / pulseSteps / speed).round()));
+      _eventController.add(
+        PathAnimationEvent(
+          type: PathAnimationEventType.nodePulse,
+          step: PathStep(
+            nodeId: nodeId,
+            edgeId: null,
+            symbol: null,
+            timestamp: Duration.zero,
+          ),
+          progress: t,
+          data: {'scale': scale},
+        ),
+      );
+      await Future.delayed(
+        Duration(
+          milliseconds: (stepDuration.inMilliseconds * 0.3 / pulseSteps / speed)
+              .round(),
+        ),
+      );
     }
   }
 
@@ -752,7 +805,6 @@ class PathAnimationController {
     }
   }
 }
-
 
 /// مدیر انیمیشن نودها
 class NodeAnimationManager {
@@ -827,7 +879,8 @@ class NodeAnimationController {
   final Offset position;
   final Duration duration;
   final Curve curve;
-  final StreamController<NodeAnimationEvent> _eventController = StreamController<NodeAnimationEvent>.broadcast();
+  final StreamController<NodeAnimationEvent> _eventController =
+      StreamController<NodeAnimationEvent>.broadcast();
   bool _isDisposed = false;
 
   NodeAnimationController({
@@ -845,13 +898,17 @@ class NodeAnimationController {
       if (_isDisposed) break;
       final t = curve.transform(i / steps);
       final properties = _calculateEntranceProperties(type, t);
-      _eventController.add(NodeAnimationEvent(
-        nodeId: nodeId,
-        type: NodeAnimationEventType.entrance,
-        properties: properties,
-        progress: t,
-      ));
-      await Future.delayed(Duration(milliseconds: duration.inMilliseconds ~/ steps));
+      _eventController.add(
+        NodeAnimationEvent(
+          nodeId: nodeId,
+          type: NodeAnimationEventType.entrance,
+          properties: properties,
+          progress: t,
+        ),
+      );
+      await Future.delayed(
+        Duration(milliseconds: duration.inMilliseconds ~/ steps),
+      );
     }
   }
 
@@ -861,17 +918,24 @@ class NodeAnimationController {
       if (_isDisposed) break;
       final t = curve.transform(i / steps);
       final properties = _calculateExitProperties(type, t);
-      _eventController.add(NodeAnimationEvent(
-        nodeId: nodeId,
-        type: NodeAnimationEventType.exit,
-        properties: properties,
-        progress: t,
-      ));
-      await Future.delayed(Duration(milliseconds: duration.inMilliseconds ~/ steps));
+      _eventController.add(
+        NodeAnimationEvent(
+          nodeId: nodeId,
+          type: NodeAnimationEventType.exit,
+          properties: properties,
+          progress: t,
+        ),
+      );
+      await Future.delayed(
+        Duration(milliseconds: duration.inMilliseconds ~/ steps),
+      );
     }
   }
 
-  NodeAnimationProperties _calculateEntranceProperties(NodeEntranceType type, double t) {
+  NodeAnimationProperties _calculateEntranceProperties(
+    NodeEntranceType type,
+    double t,
+  ) {
     switch (type) {
       case NodeEntranceType.fadeScale:
         return NodeAnimationProperties(opacity: t, scale: 0.3 + (0.7 * t));
@@ -882,11 +946,18 @@ class NodeAnimationController {
       case NodeEntranceType.bounceIn:
         return NodeAnimationProperties(opacity: t, scale: _bounceOut(t));
       case NodeEntranceType.rotateIn:
-        return NodeAnimationProperties(opacity: t, scale: t, rotation: (1 - t) * 2 * math.pi);
+        return NodeAnimationProperties(
+          opacity: t,
+          scale: t,
+          rotation: (1 - t) * 2 * math.pi,
+        );
     }
   }
 
-  NodeAnimationProperties _calculateExitProperties(NodeExitType type, double t) {
+  NodeAnimationProperties _calculateExitProperties(
+    NodeExitType type,
+    double t,
+  ) {
     switch (type) {
       case NodeExitType.fadeScale:
         return NodeAnimationProperties(opacity: 1 - t, scale: 1.0 - (0.7 * t));
@@ -895,7 +966,11 @@ class NodeAnimationController {
       case NodeExitType.slideToBottom:
         return NodeAnimationProperties(offset: Offset(0, 100 * t));
       case NodeExitType.implode:
-        return NodeAnimationProperties(opacity: 1 - t, scale: 1.0 - t, rotation: t * 2 * math.pi);
+        return NodeAnimationProperties(
+          opacity: 1 - t,
+          scale: 1.0 - t,
+          rotation: t * 2 * math.pi,
+        );
     }
   }
 
@@ -949,13 +1024,15 @@ class RippleAnimationManager {
     });
   }
 
-  List<RippleState> getCurrentRipples() => _activeRipples.map((c) => c.currentState).toList();
+  List<RippleState> getCurrentRipples() =>
+      _activeRipples.map((c) => c.currentState).toList();
   void stopAll() {
     for (var c in _activeRipples) {
       c.stop();
     }
     _activeRipples.clear();
   }
+
   void dispose() => stopAll();
 }
 
@@ -976,7 +1053,12 @@ class RippleController {
     required this.duration,
     required this.curve,
   }) {
-    _currentState = RippleState(position: position, radius: 0, opacity: 1.0, color: color);
+    _currentState = RippleState(
+      position: position,
+      radius: 0,
+      opacity: 1.0,
+      color: color,
+    );
   }
 
   RippleState get currentState => _currentState;
@@ -992,7 +1074,9 @@ class RippleController {
         opacity: (1.0 - t).clamp(0.0, 1.0),
         color: color,
       );
-      await Future.delayed(Duration(microseconds: duration.inMicroseconds ~/ steps));
+      await Future.delayed(
+        Duration(microseconds: duration.inMicroseconds ~/ steps),
+      );
     }
   }
 
@@ -1013,7 +1097,11 @@ class TransitionHighlighter {
   }) {
     _activeHighlights[edgeId]?.stop();
     final controller = TransitionHighlightController(
-      edgeId: edgeId, from: from, to: to, color: color, duration: duration,
+      edgeId: edgeId,
+      from: from,
+      to: to,
+      color: color,
+      duration: duration,
     );
     _activeHighlights[edgeId] = controller;
     controller.animate().whenComplete(() {
@@ -1022,13 +1110,15 @@ class TransitionHighlighter {
     });
   }
 
-  List<TransitionHighlightState> getCurrentHighlights() => _activeHighlights.values.map((c) => c.currentState).toList();
+  List<TransitionHighlightState> getCurrentHighlights() =>
+      _activeHighlights.values.map((c) => c.currentState).toList();
   void clear() {
     for (var c in _activeHighlights.values) {
       c.stop();
     }
     _activeHighlights.clear();
   }
+
   void dispose() => clear();
 }
 
@@ -1049,7 +1139,14 @@ class TransitionHighlightController {
     required this.color,
     required this.duration,
   }) {
-    _currentState = TransitionHighlightState(edgeId: edgeId, from: from, to: to, color: color, progress: 0.0, thickness: 3.0);
+    _currentState = TransitionHighlightState(
+      edgeId: edgeId,
+      from: from,
+      to: to,
+      color: color,
+      progress: 0.0,
+      thickness: 3.0,
+    );
   }
 
   TransitionHighlightState get currentState => _currentState;
@@ -1062,18 +1159,22 @@ class TransitionHighlightController {
       final progress = t < 0.5 ? t * 2 : 2 * (1 - t);
       final thickness = 3.0 + 2.0 * math.sin(t * math.pi * 4);
       _currentState = TransitionHighlightState(
-        edgeId: edgeId, from: from, to: to,
+        edgeId: edgeId,
+        from: from,
+        to: to,
         color: color.withOpacity(0.7 + 0.3 * progress),
-        progress: progress, thickness: thickness,
+        progress: progress,
+        thickness: thickness,
       );
-      await Future.delayed(Duration(microseconds: duration.inMicroseconds ~/ steps));
+      await Future.delayed(
+        Duration(microseconds: duration.inMicroseconds ~/ steps),
+      );
     }
   }
 
   void stop() => _isDisposed = true;
   void dispose() => _isDisposed = true;
 }
-
 
 /// مدیر Timeline انیمیشن
 class AnimationTimeline {
@@ -1082,7 +1183,8 @@ class AnimationTimeline {
   Duration _totalDuration = Duration.zero;
   bool _isPlaying = false;
   Timer? _timer;
-  final StreamController<TimelineState> _stateController = StreamController<TimelineState>.broadcast();
+  final StreamController<TimelineState> _stateController =
+      StreamController<TimelineState>.broadcast();
 
   Stream<TimelineState> get stateStream => _stateController.stream;
   Duration get currentTime => _currentTime;
@@ -1119,9 +1221,13 @@ class AnimationTimeline {
     _timer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
       _currentTime += const Duration(milliseconds: 16);
 
-      final currentEvents = _events.where((e) =>
-      _currentTime >= e.timestamp && _currentTime <= e.timestamp + e.duration
-      ).toList();
+      final currentEvents = _events
+          .where(
+            (e) =>
+                _currentTime >= e.timestamp &&
+                _currentTime <= e.timestamp + e.duration,
+          )
+          .toList();
 
       for (final event in currentEvents) {
         if (!_isEventActive(event.id)) {
@@ -1162,7 +1268,10 @@ class AnimationTimeline {
 
   Future<void> stepForward() async {
     if (_events.isEmpty) return;
-    final nextEvent = _events.firstWhere((e) => e.timestamp > _currentTime, orElse: () => _events.last);
+    final nextEvent = _events.firstWhere(
+      (e) => e.timestamp > _currentTime,
+      orElse: () => _events.last,
+    );
     _currentTime = nextEvent.timestamp;
     _executeEvent(nextEvent);
     _notifyStateChange();
@@ -1170,15 +1279,22 @@ class AnimationTimeline {
 
   Future<void> stepBackward() async {
     if (_events.isEmpty) return;
-    final prevEvent = _events.lastWhere((e) => e.timestamp < _currentTime, orElse: () => _events.first);
+    final prevEvent = _events.lastWhere(
+      (e) => e.timestamp < _currentTime,
+      orElse: () => _events.first,
+    );
     _currentTime = prevEvent.timestamp;
     _executeEvent(prevEvent);
     _notifyStateChange();
   }
 
   Future<void> seekTo(Duration time) async {
-    _currentTime = Duration(milliseconds: time.inMilliseconds.clamp(0, _totalDuration.inMilliseconds));
-    final eventsToExecute = _events.where((e) => e.timestamp <= _currentTime).toList();
+    _currentTime = Duration(
+      milliseconds: time.inMilliseconds.clamp(0, _totalDuration.inMilliseconds),
+    );
+    final eventsToExecute = _events
+        .where((e) => e.timestamp <= _currentTime)
+        .toList();
     for (final event in eventsToExecute) {
       _executeEvent(event);
     }
@@ -1190,32 +1306,42 @@ class AnimationTimeline {
     switch (event.type) {
       case TimelineEventType.nodeEntrance:
         AnimationSystem()._nodeManager.animateEntrance(
-          nodeId: data['nodeId'], position: data['position'],
-          type: data['type'] ?? NodeEntranceType.fadeScale, duration: event.duration,
+          nodeId: data['nodeId'],
+          position: data['position'],
+          type: data['type'] ?? NodeEntranceType.fadeScale,
+          duration: event.duration,
         );
         break;
       case TimelineEventType.nodeExit:
         AnimationSystem()._nodeManager.animateExit(
           nodeId: data['nodeId'],
-          type: data['type'] ?? NodeExitType.fadeScale, duration: event.duration,
+          type: data['type'] ?? NodeExitType.fadeScale,
+          duration: event.duration,
         );
         break;
       case TimelineEventType.pathAnimation:
         AnimationSystem()._pathManager.animatePath(
-          path: data['path'], nodePositions: data['nodePositions'],
-          input: data['input'], stepDuration: data['stepDuration'],
+          path: data['path'],
+          nodePositions: data['nodePositions'],
+          input: data['input'],
+          stepDuration: data['stepDuration'],
         );
         break;
       case TimelineEventType.rippleEffect:
         AnimationSystem()._rippleManager.createRipple(
-          position: data['position'], color: data['color'],
-          maxRadius: data['maxRadius'], duration: event.duration,
+          position: data['position'],
+          color: data['color'],
+          maxRadius: data['maxRadius'],
+          duration: event.duration,
         );
         break;
       case TimelineEventType.transitionHighlight:
         AnimationSystem()._transitionHighlighter.highlight(
-          edgeId: data['edgeId'], from: data['from'], to: data['to'],
-          color: data['color'], duration: event.duration,
+          edgeId: data['edgeId'],
+          from: data['from'],
+          to: data['to'],
+          color: data['color'],
+          duration: event.duration,
         );
         break;
     }
@@ -1223,12 +1349,16 @@ class AnimationTimeline {
 
   void _notifyStateChange() {
     if (_stateController.isClosed) return;
-    _stateController.add(TimelineState(
-      currentTime: _currentTime,
-      totalDuration: _totalDuration,
-      isPlaying: _isPlaying,
-      progress: _totalDuration.inMilliseconds > 0 ? _currentTime.inMilliseconds / _totalDuration.inMilliseconds : 0.0,
-    ));
+    _stateController.add(
+      TimelineState(
+        currentTime: _currentTime,
+        totalDuration: _totalDuration,
+        isPlaying: _isPlaying,
+        progress: _totalDuration.inMilliseconds > 0
+            ? _currentTime.inMilliseconds / _totalDuration.inMilliseconds
+            : 0.0,
+      ),
+    );
   }
 
   void dispose() {
@@ -1250,7 +1380,8 @@ class AnimationMetrics {
 
   bool get isRecording => _isRecording;
   int get frameCount => _frameCount;
-  double get averageFrameTime => _frameCount > 0 ? _totalFrameTime / _frameCount : 0.0;
+  double get averageFrameTime =>
+      _frameCount > 0 ? _totalFrameTime / _frameCount : 0.0;
   double get fps => averageFrameTime > 0 ? 1000.0 / averageFrameTime : 0.0;
   int get droppedFrames => _droppedFrames;
   List<AnimationSession> get sessions => List.unmodifiable(_sessions);
@@ -1261,7 +1392,10 @@ class AnimationMetrics {
     _totalFrameTime = 0.0;
     _droppedFrames = 0;
     _isRecording = true;
-    _metricsTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) => _recordFrame());
+    _metricsTimer = Timer.periodic(
+      const Duration(milliseconds: 16),
+      (timer) => _recordFrame(),
+    );
   }
 
   void pauseSession() {
@@ -1272,9 +1406,12 @@ class AnimationMetrics {
   void endSession() {
     if (_sessionStartTime != null) {
       final session = AnimationSession(
-        startTime: _sessionStartTime!, endTime: DateTime.now(),
-        frameCount: _frameCount, averageFrameTime: averageFrameTime,
-        droppedFrames: _droppedFrames, fps: fps,
+        startTime: _sessionStartTime!,
+        endTime: DateTime.now(),
+        frameCount: _frameCount,
+        averageFrameTime: averageFrameTime,
+        droppedFrames: _droppedFrames,
+        fps: fps,
       );
       _sessions.add(session);
       if (_sessions.length > 10) _sessions.removeAt(0);
@@ -1291,8 +1428,10 @@ class AnimationMetrics {
     _totalFrameTime += frameTime;
     if (frameTime > 20.0) _droppedFrames++;
     final frame = PerformanceFrame(
-      timestamp: DateTime.now(), frameTime: frameTime,
-      fps: 1000.0 / frameTime, isDropped: frameTime > 20.0,
+      timestamp: DateTime.now(),
+      frameTime: frameTime,
+      fps: 1000.0 / frameTime,
+      isDropped: frameTime > 20.0,
     );
     _frames.add(frame);
     if (_frames.length > 100) _frames.removeAt(0);
@@ -1301,13 +1440,18 @@ class AnimationMetrics {
   MetricsReport generateReport() {
     if (_sessions.isEmpty) {
       return MetricsReport(
-          totalSessions: 0, averageFps: 0, totalDroppedFrames: 0,
-          performanceScore: 100, recommendations: []
+        totalSessions: 0,
+        averageFps: 0,
+        totalDroppedFrames: 0,
+        performanceScore: 100,
+        recommendations: [],
       );
     }
     return MetricsReport(
       totalSessions: _sessions.length,
-      averageFps: _sessions.map((s) => s.fps).reduce((a, b) => a + b) / _sessions.length,
+      averageFps:
+          _sessions.map((s) => s.fps).reduce((a, b) => a + b) /
+          _sessions.length,
       totalDroppedFrames: _sessions.fold(0, (sum, s) => sum + s.droppedFrames),
       performanceScore: _calculatePerformanceScore(),
       recommendations: _generateRecommendations(),
@@ -1316,18 +1460,33 @@ class AnimationMetrics {
 
   double _calculatePerformanceScore() {
     if (_sessions.isEmpty) return 100.0;
-    final avgFps = _sessions.map((s) => s.fps).reduce((a, b) => a + b) / _sessions.length;
+    final avgFps =
+        _sessions.map((s) => s.fps).reduce((a, b) => a + b) / _sessions.length;
     final totalDropped = _sessions.fold(0, (sum, s) => sum + s.droppedFrames);
     final fpsScore = (avgFps / 60.0).clamp(0.0, 1.0) * 70.0;
-    final droppedScore = totalDropped == 0 ? 30.0 : math.max(0.0, 30.0 - totalDropped);
+    final droppedScore = totalDropped == 0
+        ? 30.0
+        : math.max(0.0, 30.0 - totalDropped);
     return fpsScore + droppedScore;
   }
 
   List<String> _generateRecommendations() {
     final recs = <String>[];
-    if (fps < 30) recs.addAll(['Consider reducing animation complexity', 'Enable performance optimization mode']);
-    if (droppedFrames > 10) recs.addAll(['Reduce concurrent animations', 'Use simpler animation curves']);
-    if (averageFrameTime > 25) recs.addAll(['Optimize rendering performance', 'Consider reducing particle effects']);
+    if (fps < 30)
+      recs.addAll([
+        'Consider reducing animation complexity',
+        'Enable performance optimization mode',
+      ]);
+    if (droppedFrames > 10)
+      recs.addAll([
+        'Reduce concurrent animations',
+        'Use simpler animation curves',
+      ]);
+    if (averageFrameTime > 25)
+      recs.addAll([
+        'Optimize rendering performance',
+        'Consider reducing particle effects',
+      ]);
     return recs;
   }
 
@@ -1337,7 +1496,6 @@ class AnimationMetrics {
     _sessions.clear();
   }
 }
-
 
 /// Widget اصلی نمایش انیمیشن
 class AnimatedStateDiagram extends StatefulWidget {
@@ -1388,21 +1546,27 @@ class _AnimatedStateDiagramState extends State<AnimatedStateDiagram> {
 
   void _setupAnimationListeners() {
     _subscriptions.add(
-        widget.animationSystem.timeline.stateStream.listen((_) {
-          _subscribeToPathControllers();
-        })
+      widget.animationSystem.timeline.stateStream.listen((_) {
+        _subscribeToPathControllers();
+      }),
     );
     _subscribeToPathControllers();
   }
 
   void _subscribeToPathControllers() {
-    final activeControllers = widget.animationSystem.pathManager._activeAnimations;
-    _subscriptions.whereType<StreamSubscription<PathAnimationEvent>>().forEach((sub) => sub.cancel());
+    final activeControllers =
+        widget.animationSystem.pathManager._activeAnimations;
+    _subscriptions.whereType<StreamSubscription<PathAnimationEvent>>().forEach(
+      (sub) => sub.cancel(),
+    );
 
     for (final controller in activeControllers) {
-      final sub = controller.events.listen(_handlePathEvent, onDone: () {
-        if (mounted) setState(() => _particles.clear());
-      });
+      final sub = controller.events.listen(
+        _handlePathEvent,
+        onDone: () {
+          if (mounted) setState(() => _particles.clear());
+        },
+      );
       _subscriptions.add(sub);
     }
   }
@@ -1414,24 +1578,32 @@ class _AnimatedStateDiagramState extends State<AnimatedStateDiagram> {
         case PathAnimationEventType.particleMoving:
           final data = event.data!;
           _particles[event.step.edgeId ?? ''] = ParticleState(
-            position: data['from'], symbol: data['symbol'], opacity: 1.0,
+            position: data['from'],
+            symbol: data['symbol'],
+            opacity: 1.0,
           );
           break;
         case PathAnimationEventType.particlePosition:
           final data = event.data!;
           _particles[event.step.edgeId ?? ''] = ParticleState(
-            position: data['position'], symbol: data['symbol'],
+            position: data['position'],
+            symbol: data['symbol'],
             opacity: 1.0 - event.progress * 0.5,
           );
           break;
         case PathAnimationEventType.nodeActivated:
-          _nodeAnimations[event.step.nodeId] = NodeAnimationProperties(scale: 1.2);
+          _nodeAnimations[event.step.nodeId] = NodeAnimationProperties(
+            scale: 1.2,
+          );
           break;
         case PathAnimationEventType.nodePulse:
-          _nodeAnimations[event.step.nodeId] = NodeAnimationProperties(scale: event.data!['scale']);
+          _nodeAnimations[event.step.nodeId] = NodeAnimationProperties(
+            scale: event.data!['scale'],
+          );
           break;
         case PathAnimationEventType.stepCompleted:
-          _nodeAnimations[event.step.nodeId] = NodeAnimationProperties(); // Reset
+          _nodeAnimations[event.step.nodeId] =
+              NodeAnimationProperties(); // Reset
           break;
         case PathAnimationEventType.completed:
           _particles.clear();
@@ -1450,9 +1622,13 @@ class _AnimatedStateDiagramState extends State<AnimatedStateDiagram> {
       }
       setState(() {
         _ripples.clear();
-        _ripples.addAll(widget.animationSystem.rippleManager.getCurrentRipples());
+        _ripples.addAll(
+          widget.animationSystem.rippleManager.getCurrentRipples(),
+        );
         _highlights.clear();
-        _highlights.addAll(widget.animationSystem.transitionHighlighter.getCurrentHighlights());
+        _highlights.addAll(
+          widget.animationSystem.transitionHighlighter.getCurrentHighlights(),
+        );
       });
     });
   }
@@ -1535,15 +1711,23 @@ class AnimatedDiagramPainter extends CustomPainter {
 
   void _drawRipples(Canvas canvas) {
     for (final ripple in ripples) {
-      final paint = Paint()..color = ripple.color.withOpacity(ripple.opacity)..style = PaintingStyle.stroke..strokeWidth = 2.0;
+      final paint = Paint()
+        ..color = ripple.color.withOpacity(ripple.opacity)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.0;
       canvas.drawCircle(ripple.position, ripple.radius, paint);
-      final innerPaint = Paint()..color = ripple.color.withOpacity(ripple.opacity * 0.3)..style = PaintingStyle.fill;
+      final innerPaint = Paint()
+        ..color = ripple.color.withOpacity(ripple.opacity * 0.3)
+        ..style = PaintingStyle.fill;
       canvas.drawCircle(ripple.position, ripple.radius * 0.7, innerPaint);
     }
   }
 
   void _drawEdges(Canvas canvas) {
-    final defaultPaint = Paint()..color = theme?.colorScheme.edgeDefault ?? Colors.grey..strokeWidth = 1.5..style = PaintingStyle.stroke;
+    final defaultPaint = Paint()
+      ..color = theme?.colorScheme.edgeDefault ?? Colors.grey
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
     for (final edge in data.edges) {
       final fromPos = nodePositions[edge.fromId];
       final toPos = nodePositions[edge.toId];
@@ -1558,7 +1742,10 @@ class AnimatedDiagramPainter extends CustomPainter {
       }
 
       final paint = highlight != null
-          ? (Paint()..color = highlight.color..strokeWidth = highlight.thickness..style = PaintingStyle.stroke)
+          ? (Paint()
+              ..color = highlight.color
+              ..strokeWidth = highlight.thickness
+              ..style = PaintingStyle.stroke)
           : defaultPaint;
 
       if (edge.fromId == edge.toId) {
@@ -1569,35 +1756,77 @@ class AnimatedDiagramPainter extends CustomPainter {
     }
   }
 
-  void _drawSelfLoop(Canvas canvas, Offset nodePos, Paint paint, String? label) {
+  void _drawSelfLoop(
+    Canvas canvas,
+    Offset nodePos,
+    Paint paint,
+    String? label,
+  ) {
     const radius = 25.0;
     final center = nodePos + const Offset(0, -radius - 30);
-    final rect = Rect.fromCenter(center: center, width: radius * 2, height: radius * 2);
+    final rect = Rect.fromCenter(
+      center: center,
+      width: radius * 2,
+      height: radius * 2,
+    );
     canvas.drawArc(rect, -math.pi / 4, math.pi * 1.5, false, paint);
-    final arrowPos = center + Offset(radius * math.cos(-math.pi / 4), radius * math.sin(-math.pi / 4));
+    final arrowPos =
+        center +
+        Offset(
+          radius * math.cos(-math.pi / 4),
+          radius * math.sin(-math.pi / 4),
+        );
     _drawArrowHead(canvas, arrowPos, -math.pi / 4, paint);
   }
 
-  void _drawRegularEdge(Canvas canvas, Offset from, Offset to, Paint paint, String? label) {
+  void _drawRegularEdge(
+    Canvas canvas,
+    Offset from,
+    Offset to,
+    Paint paint,
+    String? label,
+  ) {
     const nodeRadius = 30.0;
     final direction = to - from;
     final unitVector = direction / direction.distance;
     final startPoint = from + unitVector * nodeRadius;
     final endPoint = to - unitVector * nodeRadius;
     canvas.drawLine(startPoint, endPoint, paint);
-    final arrowDirection = math.atan2(endPoint.dy - startPoint.dy, endPoint.dx - startPoint.dx);
+    final arrowDirection = math.atan2(
+      endPoint.dy - startPoint.dy,
+      endPoint.dx - startPoint.dx,
+    );
     _drawArrowHead(canvas, endPoint, arrowDirection, paint);
     if (label != null && label.isNotEmpty) {
       _drawEdgeLabel(canvas, (startPoint + endPoint) / 2, label);
     }
   }
 
-  void _drawArrowHead(Canvas canvas, Offset tip, double direction, Paint paint) {
+  void _drawArrowHead(
+    Canvas canvas,
+    Offset tip,
+    double direction,
+    Paint paint,
+  ) {
     const arrowLength = 10.0;
     const arrowAngle = math.pi / 6;
-    final p1 = tip + Offset(arrowLength * math.cos(direction + math.pi - arrowAngle), arrowLength * math.sin(direction + math.pi - arrowAngle));
-    final p2 = tip + Offset(arrowLength * math.cos(direction + math.pi + arrowAngle), arrowLength * math.sin(direction + math.pi + arrowAngle));
-    final path = Path()..moveTo(tip.dx, tip.dy)..lineTo(p1.dx, p1.dy)..moveTo(tip.dx, tip.dy)..lineTo(p2.dx, p2.dy);
+    final p1 =
+        tip +
+        Offset(
+          arrowLength * math.cos(direction + math.pi - arrowAngle),
+          arrowLength * math.sin(direction + math.pi - arrowAngle),
+        );
+    final p2 =
+        tip +
+        Offset(
+          arrowLength * math.cos(direction + math.pi + arrowAngle),
+          arrowLength * math.sin(direction + math.pi + arrowAngle),
+        );
+    final path = Path()
+      ..moveTo(tip.dx, tip.dy)
+      ..lineTo(p1.dx, p1.dy)
+      ..moveTo(tip.dx, tip.dy)
+      ..lineTo(p2.dx, p2.dy);
     canvas.drawPath(path, paint);
   }
 
@@ -1605,23 +1834,43 @@ class AnimatedDiagramPainter extends CustomPainter {
     final textPainter = TextPainter(
       text: TextSpan(
         text: label,
-        style: TextStyle(color: theme?.colorScheme.textSecondary ?? Colors.grey[600], fontSize: 11, fontWeight: FontWeight.w500),
+        style: TextStyle(
+          color: theme?.colorScheme.textSecondary ?? Colors.grey[600],
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+        ),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
-    textPainter.paint(canvas, position - Offset(textPainter.width / 2, textPainter.height / 2));
+    textPainter.paint(
+      canvas,
+      position - Offset(textPainter.width / 2, textPainter.height / 2),
+    );
   }
 
   void _drawParticles(Canvas canvas) {
     for (final particle in particles.values) {
       if (particle.symbol == null) continue;
-      final paint = Paint()..color = Colors.orange.withOpacity(particle.opacity)..style = PaintingStyle.fill;
+      final paint = Paint()
+        ..color = Colors.orange.withOpacity(particle.opacity)
+        ..style = PaintingStyle.fill;
       canvas.drawCircle(particle.position, 8, paint);
       final textPainter = TextPainter(
-        text: TextSpan(text: particle.symbol!, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+        text: TextSpan(
+          text: particle.symbol!,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         textDirection: TextDirection.ltr,
       )..layout();
-      textPainter.paint(canvas, particle.position - Offset(textPainter.width / 2, textPainter.height / 2));
+      textPainter.paint(
+        canvas,
+        particle.position -
+            Offset(textPainter.width / 2, textPainter.height / 2),
+      );
     }
   }
 
@@ -1631,34 +1880,56 @@ class AnimatedDiagramPainter extends CustomPainter {
       if (position == null) continue;
       final anim = nodeAnimations[node.id] ?? NodeAnimationProperties();
       canvas.save();
-      canvas.translate(position.dx + anim.offset.dx, position.dy + anim.offset.dy);
+      canvas.translate(
+        position.dx + anim.offset.dx,
+        position.dy + anim.offset.dy,
+      );
       canvas.scale(anim.scale);
       canvas.rotate(anim.rotation);
 
-      final paint = Paint()..color = _getNodeColor(node).withOpacity(anim.opacity)..style = PaintingStyle.fill;
-      final borderPaint = Paint()..color = _getNodeBorderColor(node).withOpacity(anim.opacity)..strokeWidth = 2.0..style = PaintingStyle.stroke;
+      final paint = Paint()
+        ..color = _getNodeColor(node).withOpacity(anim.opacity)
+        ..style = PaintingStyle.fill;
+      final borderPaint = Paint()
+        ..color = _getNodeBorderColor(node).withOpacity(anim.opacity)
+        ..strokeWidth = 2.0
+        ..style = PaintingStyle.stroke;
       canvas.drawCircle(Offset.zero, 30, paint);
       canvas.drawCircle(Offset.zero, 30, borderPaint);
       if (node.isFinal) {
-        final innerPaint = Paint()..color = _getNodeBorderColor(node).withOpacity(anim.opacity)..strokeWidth = 1.5..style = PaintingStyle.stroke;
+        final innerPaint = Paint()
+          ..color = _getNodeBorderColor(node).withOpacity(anim.opacity)
+          ..strokeWidth = 1.5
+          ..style = PaintingStyle.stroke;
         canvas.drawCircle(Offset.zero, 22, innerPaint);
       }
       final textPainter = TextPainter(
         text: TextSpan(
           text: node.label,
-          style: TextStyle(color: (theme?.colorScheme.textPrimary ?? Colors.black).withOpacity(anim.opacity), fontSize: 12, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: (theme?.colorScheme.textPrimary ?? Colors.black).withOpacity(
+              anim.opacity,
+            ),
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         textDirection: TextDirection.ltr,
         textAlign: TextAlign.center,
       )..layout();
-      textPainter.paint(canvas, Offset(-textPainter.width / 2, -textPainter.height / 2));
+      textPainter.paint(
+        canvas,
+        Offset(-textPainter.width / 2, -textPainter.height / 2),
+      );
       canvas.restore();
     }
   }
 
   Color _getNodeColor(StateNode node) {
-    if (node.isStart) return theme?.colorScheme.stateStart ?? Colors.green.shade100;
-    if (node.isFinal) return theme?.colorScheme.stateFinal ?? Colors.red.shade100;
+    if (node.isStart)
+      return theme?.colorScheme.stateStart ?? Colors.green.shade100;
+    if (node.isFinal)
+      return theme?.colorScheme.stateFinal ?? Colors.red.shade100;
     return theme?.colorScheme.stateDefault ?? Colors.blue.shade100;
   }
 
@@ -1671,7 +1942,6 @@ class AnimatedDiagramPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant AnimatedDiagramPainter oldDelegate) => true;
 }
-
 
 /// Widget کنترل انیمیشن
 class AnimationControlPanel extends StatefulWidget {
@@ -1736,7 +2006,8 @@ class _AnimationControlPanelState extends State<AnimationControlPanel> {
               border: const OutlineInputBorder(),
               suffixIcon: IconButton(
                 icon: const Icon(Icons.play_circle_fill),
-                onPressed: () => widget.onStringSubmitted(_stringController.text),
+                onPressed: () =>
+                    widget.onStringSubmitted(_stringController.text),
               ),
             ),
             onSubmitted: widget.onStringSubmitted,
@@ -1744,14 +2015,22 @@ class _AnimationControlPanelState extends State<AnimationControlPanel> {
           const SizedBox(height: 12),
           StreamBuilder<TimelineState>(
             stream: system.timeline.stateStream,
-            initialData: TimelineState(currentTime: Duration.zero, totalDuration: Duration.zero, isPlaying: false, progress: 0),
+            initialData: TimelineState(
+              currentTime: Duration.zero,
+              totalDuration: Duration.zero,
+              isPlaying: false,
+              progress: 0,
+            ),
             builder: (context, snapshot) {
               final state = snapshot.data!;
               return Column(
                 children: [
                   if (state.totalDuration > Duration.zero)
                     Slider(
-                      value: state.currentTime.inMilliseconds.toDouble().clamp(0.0, state.totalDuration.inMilliseconds.toDouble()),
+                      value: state.currentTime.inMilliseconds.toDouble().clamp(
+                        0.0,
+                        state.totalDuration.inMilliseconds.toDouble(),
+                      ),
                       min: 0.0,
                       max: state.totalDuration.inMilliseconds.toDouble(),
                       onChanged: (value) {
@@ -1761,8 +2040,14 @@ class _AnimationControlPanelState extends State<AnimationControlPanel> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(_formatDuration(state.currentTime), style: Theme.of(context).textTheme.bodySmall),
-                      Text(_formatDuration(state.totalDuration), style: Theme.of(context).textTheme.bodySmall),
+                      Text(
+                        _formatDuration(state.currentTime),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      Text(
+                        _formatDuration(state.totalDuration),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
                     ],
                   ),
                 ],
@@ -1772,31 +2057,49 @@ class _AnimationControlPanelState extends State<AnimationControlPanel> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              IconButton(onPressed: system.stepBackward, icon: const Icon(Icons.skip_previous), tooltip: 'Step Backward'),
+              IconButton(
+                onPressed: system.stepBackward,
+                icon: const Icon(Icons.skip_previous),
+                tooltip: 'Step Backward',
+              ),
               IconButton(
                 iconSize: 36,
-                onPressed: system.state == AnimationState.playing ? system.pause : system.play,
-                icon: Icon(system.state == AnimationState.playing ? Icons.pause_circle_filled : Icons.play_circle_filled),
-                tooltip: system.state == AnimationState.playing ? 'Pause' : 'Play',
+                onPressed: system.state == AnimationState.playing
+                    ? system.pause
+                    : system.play,
+                icon: Icon(
+                  system.state == AnimationState.playing
+                      ? Icons.pause_circle_filled
+                      : Icons.play_circle_filled,
+                ),
+                tooltip: system.state == AnimationState.playing
+                    ? 'Pause'
+                    : 'Play',
               ),
-              IconButton(onPressed: system.stop, icon: const Icon(Icons.stop), tooltip: 'Stop'),
-              IconButton(onPressed: system.stepForward, icon: const Icon(Icons.skip_next), tooltip: 'Step Forward'),
-
+              IconButton(
+                onPressed: system.stop,
+                icon: const Icon(Icons.stop),
+                tooltip: 'Stop',
+              ),
+              IconButton(
+                onPressed: system.stepForward,
+                icon: const Icon(Icons.skip_next),
+                tooltip: 'Step Forward',
+              ),
               const Spacer(),
-
               Text('Speed', style: Theme.of(context).textTheme.bodySmall),
               SizedBox(
                 width: 120,
                 child: Slider(
                   value: system.speed,
-                  min: 0.1, max: 3.0, divisions: 29,
+                  min: 0.1,
+                  max: 3.0,
+                  divisions: 29,
                   label: '${system.speed.toStringAsFixed(1)}x',
                   onChanged: (value) => system.configure(speed: value),
                 ),
               ),
-
               const SizedBox(width: 8),
-
               Tooltip(
                 message: 'Loop Animation',
                 child: Switch(
@@ -1864,7 +2167,11 @@ class _AnimationMetricsWidgetState extends State<AnimationMetricsWidget> {
             value: score / 100.0,
             backgroundColor: Colors.grey.shade800,
             valueColor: AlwaysStoppedAnimation<Color>(
-              score > 80 ? Colors.greenAccent : score > 50 ? Colors.orangeAccent : Colors.redAccent,
+              score > 80
+                  ? Colors.greenAccent
+                  : score > 50
+                  ? Colors.orangeAccent
+                  : Colors.redAccent,
             ),
           ),
           const SizedBox(width: 12),
@@ -1872,9 +2179,21 @@ class _AnimationMetricsWidgetState extends State<AnimationMetricsWidget> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Perf: ${score.toStringAsFixed(1)}%', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              Text('FPS: ${report.averageFps.toStringAsFixed(1)}', style: const TextStyle(color: Colors.white70, fontSize: 12)),
-              Text('Dropped: ${report.totalDroppedFrames}', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+              Text(
+                'Perf: ${score.toStringAsFixed(1)}%',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                'FPS: ${report.averageFps.toStringAsFixed(1)}',
+                style: const TextStyle(color: Colors.white70, fontSize: 12),
+              ),
+              Text(
+                'Dropped: ${report.totalDroppedFrames}',
+                style: const TextStyle(color: Colors.white70, fontSize: 12),
+              ),
             ],
           ),
         ],
@@ -1959,14 +2278,19 @@ class _AnimationSystemExampleState extends State<AnimationSystemExample> {
                   animationSystem: _animationSystem,
                   onNodeTap: (nodeId) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Node tapped: $nodeId'), duration: const Duration(seconds: 1)),
+                      SnackBar(
+                        content: Text('Node tapped: $nodeId'),
+                        duration: const Duration(seconds: 1),
+                      ),
                     );
                   },
                 ),
                 Positioned(
                   top: 0,
                   left: 0,
-                  child: AnimationMetricsWidget(metrics: _animationSystem.metrics),
+                  child: AnimationMetricsWidget(
+                    metrics: _animationSystem.metrics,
+                  ),
                 ),
               ],
             ),
@@ -1999,12 +2323,17 @@ class _AnimationSystemExampleState extends State<AnimationSystemExample> {
               Text('Total Sessions: ${report.totalSessions}'),
               Text('Average FPS: ${report.averageFps.toStringAsFixed(1)}'),
               Text('Total Dropped Frames: ${report.totalDroppedFrames}'),
-              Text('Performance Score: ${report.performanceScore.toStringAsFixed(1)}%'),
+              Text(
+                'Performance Score: ${report.performanceScore.toStringAsFixed(1)}%',
+              ),
               if (report.recommendations.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                const Text('Recommendations:', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text(
+                  'Recommendations:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 ...report.recommendations.map((r) => Text('• $r')),
-              ]
+              ],
             ],
           ),
         ),

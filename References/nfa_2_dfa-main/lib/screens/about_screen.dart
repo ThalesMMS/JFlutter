@@ -45,29 +45,27 @@ class _AboutScreenState extends State<AboutScreen>
       vsync: this,
     )..repeat(reverse: true);
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _mainAnimationController,
-      curve: const Interval(0.0, 0.6, curve: Curves.easeOutCubic),
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _mainAnimationController,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOutCubic),
+      ),
+    );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.5),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _mainAnimationController,
-      curve: const Interval(0.2, 0.8, curve: Curves.elasticOut),
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _mainAnimationController,
+            curve: const Interval(0.2, 0.8, curve: Curves.elasticOut),
+          ),
+        );
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _mainAnimationController,
-      curve: const Interval(0.4, 1.0, curve: Curves.bounceOut),
-    ));
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _mainAnimationController,
+        curve: const Interval(0.4, 1.0, curve: Curves.bounceOut),
+      ),
+    );
 
     _rotationAnimation = Tween<double>(
       begin: 0,
@@ -146,7 +144,11 @@ class _AboutScreenState extends State<AboutScreen>
     );
   }
 
-  Widget _buildAnimatedBackground(BuildContext context, bool isDark, Size size) {
+  Widget _buildAnimatedBackground(
+    BuildContext context,
+    bool isDark,
+    Size size,
+  ) {
     return Positioned.fill(
       child: Container(
         decoration: BoxDecoration(
@@ -155,15 +157,15 @@ class _AboutScreenState extends State<AboutScreen>
             end: Alignment.bottomRight,
             colors: isDark
                 ? [
-              const Color(0xFF1A1A2E),
-              const Color(0xFF16213E),
-              const Color(0xFF0F3460),
-            ]
+                    const Color(0xFF1A1A2E),
+                    const Color(0xFF16213E),
+                    const Color(0xFF0F3460),
+                  ]
                 : [
-              const Color(0xFFE3F2FD),
-              const Color(0xFFF3E5F5),
-              const Color(0xFFFFF3E0),
-            ],
+                    const Color(0xFFE3F2FD),
+                    const Color(0xFFF3E5F5),
+                    const Color(0xFFFFF3E0),
+                  ],
             stops: const [0.0, 0.5, 1.0],
           ),
         ),
@@ -183,7 +185,11 @@ class _AboutScreenState extends State<AboutScreen>
     );
   }
 
-  Widget _buildModernAppBar(BuildContext context, ThemeData theme, bool isDark) {
+  Widget _buildModernAppBar(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
     return SliverAppBar(
       expandedHeight: 140,
       floating: true,
@@ -205,7 +211,9 @@ class _AboutScreenState extends State<AboutScreen>
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
+                      color: (isDark ? Colors.white : Colors.black).withOpacity(
+                        0.1,
+                      ),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: theme.colorScheme.primary.withOpacity(0.3),
@@ -280,7 +288,10 @@ class _AboutScreenState extends State<AboutScreen>
       animation: _floatingAnimationController,
       builder: (context, child) {
         return Transform.translate(
-          offset: Offset(0, math.sin(_floatingAnimationController.value * math.pi) * 5),
+          offset: Offset(
+            0,
+            math.sin(_floatingAnimationController.value * math.pi) * 5,
+          ),
           child: Container(
             width: double.infinity,
             padding: const EdgeInsets.all(32),
@@ -290,13 +301,13 @@ class _AboutScreenState extends State<AboutScreen>
                 end: Alignment.bottomRight,
                 colors: isDark
                     ? [
-                  const Color(0xFF2D1B69).withOpacity(0.3),
-                  const Color(0xFF11998E).withOpacity(0.2),
-                ]
+                        const Color(0xFF2D1B69).withOpacity(0.3),
+                        const Color(0xFF11998E).withOpacity(0.2),
+                      ]
                     : [
-                  const Color(0xFF667EEA).withOpacity(0.2),
-                  const Color(0xFF764BA2).withOpacity(0.1),
-                ],
+                        const Color(0xFF667EEA).withOpacity(0.2),
+                        const Color(0xFF764BA2).withOpacity(0.1),
+                      ],
               ),
               borderRadius: BorderRadius.circular(28),
               border: Border.all(
@@ -379,7 +390,10 @@ class _AboutScreenState extends State<AboutScreen>
                 ),
                 const SizedBox(height: 24),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
@@ -461,7 +475,8 @@ class _AboutScreenState extends State<AboutScreen>
               context: context,
               icon: Icons.rocket_launch_rounded,
               title: 'هدف پروژه',
-              description: 'ایجاد پلتفرمی آسان و کاربرپسند برای یادگیری و کار با اتوماتای غیرقطعی محدود',
+              description:
+                  'ایجاد پلتفرمی آسان و کاربرپسند برای یادگیری و کار با اتوماتای غیرقطعی محدود',
               colors: [const Color(0xFF667EEA), const Color(0xFF764BA2)],
               delay: 0,
             ),
@@ -469,7 +484,8 @@ class _AboutScreenState extends State<AboutScreen>
               context: context,
               icon: Icons.lightbulb_rounded,
               title: 'ویژگی‌های کلیدی',
-              description: 'طراحی بصری، محاسبات پیشرفته، رابط کاربری مدرن و پشتیبانی کامل از زبان فارسی',
+              description:
+                  'طراحی بصری، محاسبات پیشرفته، رابط کاربری مدرن و پشتیبانی کامل از زبان فارسی',
               colors: [const Color(0xFF11998E), const Color(0xFF38EF7D)],
               delay: 200,
             ),
@@ -477,7 +493,8 @@ class _AboutScreenState extends State<AboutScreen>
               context: context,
               icon: Icons.school_rounded,
               title: 'کاربرد آموزشی',
-              description: 'مناسب برای دانشجویان، اساتید و علاقه‌مندان به علوم کامپیوتر نظری',
+              description:
+                  'مناسب برای دانشجویان، اساتید و علاقه‌مندان به علوم کامپیوتر نظری',
               colors: [const Color(0xFFFC466B), const Color(0xFF3F5EFB)],
               delay: 400,
             ),
@@ -511,9 +528,7 @@ class _AboutScreenState extends State<AboutScreen>
                 colors: colors.map((c) => c.withOpacity(0.1)).toList(),
               ),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: colors.first.withOpacity(0.2),
-              ),
+              border: Border.all(color: colors.first.withOpacity(0.2)),
               boxShadow: [
                 BoxShadow(
                   color: colors.first.withOpacity(0.1),
@@ -538,11 +553,7 @@ class _AboutScreenState extends State<AboutScreen>
                       ),
                     ],
                   ),
-                  child: Icon(
-                    icon,
-                    color: Colors.white,
-                    size: 32,
-                  ),
+                  child: Icon(icon, color: Colors.white, size: 32),
                 ),
                 const SizedBox(width: 20),
                 Expanded(
@@ -560,7 +571,9 @@ class _AboutScreenState extends State<AboutScreen>
                       Text(
                         description,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.7),
                           height: 1.4,
                         ),
                       ),
@@ -617,13 +630,13 @@ class _AboutScreenState extends State<AboutScreen>
               end: Alignment.bottomRight,
               colors: isDark
                   ? [
-                const Color(0xFF1A1A2E).withOpacity(0.3),
-                const Color(0xFF16213E).withOpacity(0.2),
-              ]
+                      const Color(0xFF1A1A2E).withOpacity(0.3),
+                      const Color(0xFF16213E).withOpacity(0.2),
+                    ]
                   : [
-                Colors.white.withOpacity(0.3),
-                Colors.white.withOpacity(0.1),
-              ],
+                      Colors.white.withOpacity(0.3),
+                      Colors.white.withOpacity(0.1),
+                    ],
             ),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
@@ -676,7 +689,10 @@ class _AboutScreenState extends State<AboutScreen>
                         ),
                         const SizedBox(height: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: theme.colorScheme.primary.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
@@ -762,12 +778,30 @@ class _AboutScreenState extends State<AboutScreen>
           spacing: 16,
           runSpacing: 16,
           children: [
-            _buildTechChip('Flutter', Icons.flutter_dash, [Colors.blue, Colors.cyan]),
-            _buildTechChip('Dart', Icons.code, [Colors.green, Colors.lightGreen]),
-            _buildTechChip('Provider', Icons.settings, [Colors.orange, Colors.deepOrange]),
-            _buildTechChip('Material Design', Icons.design_services, [Colors.purple, Colors.deepPurple]),
-            _buildTechChip('Custom Animations', Icons.animation, [Colors.pink, Colors.red]),
-            _buildTechChip('Persian Support', Icons.language, [Colors.indigo, Colors.blue]),
+            _buildTechChip('Flutter', Icons.flutter_dash, [
+              Colors.blue,
+              Colors.cyan,
+            ]),
+            _buildTechChip('Dart', Icons.code, [
+              Colors.green,
+              Colors.lightGreen,
+            ]),
+            _buildTechChip('Provider', Icons.settings, [
+              Colors.orange,
+              Colors.deepOrange,
+            ]),
+            _buildTechChip('Material Design', Icons.design_services, [
+              Colors.purple,
+              Colors.deepPurple,
+            ]),
+            _buildTechChip('Custom Animations', Icons.animation, [
+              Colors.pink,
+              Colors.red,
+            ]),
+            _buildTechChip('Persian Support', Icons.language, [
+              Colors.indigo,
+              Colors.blue,
+            ]),
           ],
         ),
       ],
@@ -782,9 +816,7 @@ class _AboutScreenState extends State<AboutScreen>
           colors: colors.map((c) => c.withOpacity(0.1)).toList(),
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: colors.first.withOpacity(0.3),
-        ),
+        border: Border.all(color: colors.first.withOpacity(0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -795,19 +827,12 @@ class _AboutScreenState extends State<AboutScreen>
               gradient: LinearGradient(colors: colors),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              icon,
-              color: Colors.white,
-              size: 16,
-            ),
+            child: Icon(icon, color: Colors.white, size: 16),
           ),
           const SizedBox(width: 8),
           Text(
             label,
-            style: TextStyle(
-              color: colors.first,
-              fontWeight: FontWeight.w600,
-            ),
+            style: TextStyle(color: colors.first, fontWeight: FontWeight.w600),
           ),
         ],
       ),
@@ -826,13 +851,13 @@ class _AboutScreenState extends State<AboutScreen>
           end: Alignment.bottomRight,
           colors: isDark
               ? [
-            const Color(0xFF2D1B69).withOpacity(0.3),
-            const Color(0xFF11998E).withOpacity(0.2),
-          ]
+                  const Color(0xFF2D1B69).withOpacity(0.3),
+                  const Color(0xFF11998E).withOpacity(0.2),
+                ]
               : [
-            const Color(0xFF667EEA).withOpacity(0.2),
-            const Color(0xFF764BA2).withOpacity(0.1),
-          ],
+                  const Color(0xFF667EEA).withOpacity(0.2),
+                  const Color(0xFF764BA2).withOpacity(0.1),
+                ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
@@ -937,9 +962,7 @@ class _AboutScreenState extends State<AboutScreen>
             colors: colors.map((c) => c.withOpacity(0.1)).toList(),
           ),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: colors.first.withOpacity(0.3),
-          ),
+          border: Border.all(color: colors.first.withOpacity(0.3)),
           boxShadow: [
             BoxShadow(
               color: colors.first.withOpacity(0.2),
@@ -958,11 +981,7 @@ class _AboutScreenState extends State<AboutScreen>
                 gradient: LinearGradient(colors: colors),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                icon,
-                color: Colors.white,
-                size: 24,
-              ),
+              child: Icon(icon, color: Colors.white, size: 24),
             ),
             const SizedBox(height: 8),
             Text(
@@ -1048,10 +1067,7 @@ class ParticlesPainter extends CustomPainter {
   final AnimationController animation;
   final bool isDark;
 
-  ParticlesPainter({
-    required this.animation,
-    required this.isDark,
-  });
+  ParticlesPainter({required this.animation, required this.isDark});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1065,7 +1081,8 @@ class ParticlesPainter extends CustomPainter {
     for (int i = 0; i < particleCount; i++) {
       final progress = (animation.value + (i / particleCount)) % 1.0;
       final x = random.nextDouble() * size.width;
-      final y = (random.nextDouble() * size.height + progress * 50) % size.height;
+      final y =
+          (random.nextDouble() * size.height + progress * 50) % size.height;
       final radius = random.nextDouble() * 3 + 1;
 
       final opacity = (math.sin(progress * math.pi * 2) * 0.5 + 0.5) * 0.3;
@@ -1079,7 +1096,8 @@ class ParticlesPainter extends CustomPainter {
       for (int j = i + 1; j < math.min(i + 5, particleCount); j++) {
         final progress2 = (animation.value + (j / particleCount)) % 1.0;
         final x2 = random.nextDouble() * size.width;
-        final y2 = (random.nextDouble() * size.height + progress2 * 50) % size.height;
+        final y2 =
+            (random.nextDouble() * size.height + progress2 * 50) % size.height;
 
         final distance = math.sqrt(math.pow(x2 - x, 2) + math.pow(y2 - y, 2));
         if (distance < 100) {

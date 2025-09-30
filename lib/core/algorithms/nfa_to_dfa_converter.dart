@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';
 import '../models/fsa.dart';
 import '../models/state.dart';
@@ -28,10 +27,10 @@ class NFAToDFAConverter {
 
       // Step 1: Remove epsilon transitions if present
       final nfaWithoutEpsilon = _removeEpsilonTransitions(nfa);
-      
+
       // Step 2: Build DFA using subset construction
       final dfa = _buildDFA(nfaWithoutEpsilon);
-      
+
       return ResultFactory.success(dfa);
     } catch (e) {
       return ResultFactory.failure('Error converting NFA to DFA: $e');
@@ -43,21 +42,23 @@ class NFAToDFAConverter {
     if (nfa.states.isEmpty) {
       return ResultFactory.failure('NFA must have at least one state');
     }
-    
+
     if (nfa.initialState == null) {
       return ResultFactory.failure('NFA must have an initial state');
     }
-    
+
     if (!nfa.states.contains(nfa.initialState)) {
       return ResultFactory.failure('Initial state must be in the states set');
     }
-    
+
     for (final acceptingState in nfa.acceptingStates) {
       if (!nfa.states.contains(acceptingState)) {
-        return ResultFactory.failure('Accepting state must be in the states set');
+        return ResultFactory.failure(
+          'Accepting state must be in the states set',
+        );
       }
     }
-    
+
     return ResultFactory.success(null);
   }
 
@@ -80,7 +81,7 @@ class NFAToDFAConverter {
     // Add new transitions for epsilon closure
     for (final state in nfa.states) {
       final closure = epsilonClosures[state]!;
-      
+
       // If any state in the closure is accepting, make the original state accepting
       for (final closureState in closure) {
         if (nfa.acceptingStates.contains(closureState)) {
@@ -91,10 +92,13 @@ class NFAToDFAConverter {
       // For each symbol in the alphabet
       for (final symbol in nfa.alphabet) {
         final reachableStates = <State>{};
-        
+
         // Find all states reachable from the closure on this symbol
         for (final closureState in closure) {
-          final transitions = nfa.getTransitionsFromStateOnSymbol(closureState, symbol);
+          final transitions = nfa.getTransitionsFromStateOnSymbol(
+            closureState,
+            symbol,
+          );
           for (final transition in transitions) {
             reachableStates.add(transition.toState);
           }
@@ -135,12 +139,14 @@ class NFAToDFAConverter {
 
   /// Builds DFA using subset construction
   static FSA _buildDFA(FSA nfa) {
-    final dfaStates = <String, State>{}; // Use string keys instead of Set<State>
+    final dfaStates =
+        <String, State>{}; // Use string keys instead of Set<State>
     final dfaTransitions = <FSATransition>{};
     final dfaAcceptingStates = <State>{};
     final queue = <String>[];
     final processed = <String>{};
-    final stateSetMap = <String, Set<State>>{}; // Map string keys to actual state sets
+    final stateSetMap =
+        <String, Set<State>>{}; // Map string keys to actual state sets
 
     // Start with the initial state
     final initialStateSet = {nfa.initialState!};
@@ -152,12 +158,12 @@ class NFAToDFAConverter {
 
     // Process each state set
     int stateCounter = 1;
-    int maxStates = 1000; // Performance safeguard
+    const int maxStates = 1000; // Performance safeguard
     while (queue.isNotEmpty && stateCounter < maxStates) {
       final currentStateKey = queue.removeAt(0);
       if (processed.contains(currentStateKey)) continue;
       processed.add(currentStateKey);
-      
+
       final currentStateSet = stateSetMap[currentStateKey]!;
 
       final currentDFAState = dfaStates[currentStateKey]!;
@@ -173,7 +179,10 @@ class NFAToDFAConverter {
 
         // Find all states reachable from current state set on this symbol
         for (final state in currentStateSet) {
-          final transitions = nfa.getTransitionsFromStateOnSymbol(state, symbol);
+          final transitions = nfa.getTransitionsFromStateOnSymbol(
+            state,
+            symbol,
+          );
           for (final transition in transitions) {
             nextStateSet.add(transition.toState);
           }
@@ -181,7 +190,7 @@ class NFAToDFAConverter {
 
         if (nextStateSet.isNotEmpty) {
           final nextStateKey = _getStateSetKey(nextStateSet);
-          
+
           // Create or get the DFA state for this set
           State nextDFAState;
           if (dfaStates.containsKey(nextStateKey)) {
@@ -233,7 +242,7 @@ class NFAToDFAConverter {
     final stateIds = stateSet.map((s) => s.id).toList()..sort();
     final stateId = 'q${counter}_${stateIds.join('_')}';
     final stateLabel = '{${stateIds.join(',')}}';
-    
+
     // Calculate position as center of the states
     double sumX = 0;
     double sumY = 0;
@@ -256,14 +265,16 @@ class NFAToDFAConverter {
   static Result<NFAToDFAConversionResult> convertWithSteps(FSA nfa) {
     try {
       final steps = <NFADFAConversionStep>[];
-      
+
       // Step 1: Validate input
-      steps.add(NFADFAConversionStep(
-        stepNumber: 1,
-        description: 'Validating input NFA',
-        nfa: nfa,
-        dfa: null,
-      ));
+      steps.add(
+        NFADFAConversionStep(
+          stepNumber: 1,
+          description: 'Validating input NFA',
+          nfa: nfa,
+          dfa: null,
+        ),
+      );
 
       final validationResult = _validateInput(nfa);
       if (!validationResult.isSuccess) {
@@ -271,47 +282,58 @@ class NFAToDFAConverter {
       }
 
       // Step 2: Remove epsilon transitions
-      steps.add(NFADFAConversionStep(
-        stepNumber: 2,
-        description: 'Removing epsilon transitions',
-        nfa: nfa,
-        dfa: null,
-      ));
+      steps.add(
+        NFADFAConversionStep(
+          stepNumber: 2,
+          description: 'Removing epsilon transitions',
+          nfa: nfa,
+          dfa: null,
+        ),
+      );
 
       final nfaWithoutEpsilon = _removeEpsilonTransitions(nfa);
-      steps.add(NFADFAConversionStep(
-        stepNumber: 3,
-        description: 'Epsilon transitions removed',
-        nfa: nfaWithoutEpsilon,
-        dfa: null,
-      ));
+      steps.add(
+        NFADFAConversionStep(
+          stepNumber: 3,
+          description: 'Epsilon transitions removed',
+          nfa: nfaWithoutEpsilon,
+          dfa: null,
+        ),
+      );
 
       // Step 3: Build DFA
-      steps.add(NFADFAConversionStep(
-        stepNumber: 4,
-        description: 'Building DFA using subset construction',
-        nfa: nfaWithoutEpsilon,
-        dfa: null,
-      ));
+      steps.add(
+        NFADFAConversionStep(
+          stepNumber: 4,
+          description: 'Building DFA using subset construction',
+          nfa: nfaWithoutEpsilon,
+          dfa: null,
+        ),
+      );
 
       final dfa = _buildDFA(nfaWithoutEpsilon);
-      steps.add(NFADFAConversionStep(
-        stepNumber: 5,
-        description: 'DFA construction completed',
-        nfa: nfaWithoutEpsilon,
-        dfa: dfa,
-      ));
+      steps.add(
+        NFADFAConversionStep(
+          stepNumber: 5,
+          description: 'DFA construction completed',
+          nfa: nfaWithoutEpsilon,
+          dfa: dfa,
+        ),
+      );
 
       final result = NFAToDFAConversionResult(
         originalNFA: nfa,
         resultDFA: dfa,
         steps: steps,
-        executionTime: Duration.zero, // Would be calculated in real implementation
+        executionTime:
+            Duration.zero, // Would be calculated in real implementation
       );
 
       return ResultFactory.success(result);
     } catch (e) {
-      return ResultFactory.failure('Error converting NFA to DFA with steps: $e');
+      return ResultFactory.failure(
+        'Error converting NFA to DFA with steps: $e',
+      );
     }
   }
 }
@@ -320,13 +342,13 @@ class NFAToDFAConverter {
 class NFAToDFAConversionResult {
   /// Original NFA
   final FSA originalNFA;
-  
+
   /// Resulting DFA
   final FSA resultDFA;
-  
+
   /// Conversion steps
   final List<NFADFAConversionStep> steps;
-  
+
   /// Execution time
   final Duration executionTime;
 
@@ -357,13 +379,13 @@ class NFAToDFAConversionResult {
 class NFADFAConversionStep {
   /// Step number
   final int stepNumber;
-  
+
   /// Description of the step
   final String description;
-  
+
   /// NFA at this step
   final FSA? nfa;
-  
+
   /// DFA at this step
   final FSA? dfa;
 
@@ -379,4 +401,3 @@ class NFADFAConversionStep {
     return 'NFADFAConversionStep(stepNumber: $stepNumber, description: $description)';
   }
 }
-

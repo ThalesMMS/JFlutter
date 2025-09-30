@@ -21,7 +21,11 @@ class NFAOperationResult {
     this.metadata,
   });
 
-  factory NFAOperationResult.success(NFA result, {String? message, Map<String, dynamic>? metadata}) {
+  factory NFAOperationResult.success(
+    NFA result, {
+    String? message,
+    Map<String, dynamic>? metadata,
+  }) {
     return NFAOperationResult(
       success: true,
       message: message ?? 'Operation completed successfully',
@@ -31,10 +35,7 @@ class NFAOperationResult {
   }
 
   factory NFAOperationResult.failure(String message) {
-    return NFAOperationResult(
-      success: false,
-      message: message,
-    );
+    return NFAOperationResult(success: false, message: message);
   }
 }
 
@@ -137,16 +138,16 @@ class NFA extends Automaton {
     String? name,
     String? description,
     Map<String, dynamic>? metadata,
-  })  : _states = states ?? <String>{},
-        _alphabet = alphabet ?? <String>{},
-        _transitions = transitions ?? <String, Map<String, Set<String>>>{},
-        _startState = startState ?? '',
-        _finalStates = finalStates ?? <String>{},
-        _name = name ?? 'Unnamed NFA',
-        _description = description ?? '',
-        _metadata = metadata ?? <String, dynamic>{},
-        _createdAt = DateTime.now(),
-        _modifiedAt = DateTime.now();
+  }) : _states = states ?? <String>{},
+       _alphabet = alphabet ?? <String>{},
+       _transitions = transitions ?? <String, Map<String, Set<String>>>{},
+       _startState = startState ?? '',
+       _finalStates = finalStates ?? <String>{},
+       _name = name ?? 'Unnamed NFA',
+       _description = description ?? '',
+       _metadata = metadata ?? <String, dynamic>{},
+       _createdAt = DateTime.now(),
+       _modifiedAt = DateTime.now();
 
   // Enhanced getters
   Set<String> get states => UnmodifiableSetView(_states);
@@ -211,12 +212,12 @@ class NFA extends Automaton {
   }
 
   factory NFA.fromRegex(String pattern, {String? name}) {
-
     final nfa = NFA(name: name ?? 'Regex NFA ($pattern)');
 
     nfa.addState('q0', isFinal: true);
     nfa.setStartState('q0');
-    nfa._description = 'Generated from regex: $pattern (placeholder implementation)';
+    nfa._description =
+        'Generated from regex: $pattern (placeholder implementation)';
     return nfa;
   }
 
@@ -245,14 +246,16 @@ class NFA extends Automaton {
         final transitionsMap = json['transitions'] as Map<String, dynamic>;
 
         for (final state in transitionsMap.keys) {
-          final stateTransitions = transitionsMap[state] as Map<String, dynamic>;
+          final stateTransitions =
+              transitionsMap[state] as Map<String, dynamic>;
           nfa._transitions[state] = <String, Set<String>>{};
 
           for (final symbol in stateTransitions.keys) {
             final destinations = stateTransitions[symbol];
             if (destinations is List) {
-              nfa._transitions[state]![symbol] =
-                  destinations.map((e) => e.toString()).toSet();
+              nfa._transitions[state]![symbol] = destinations
+                  .map((e) => e.toString())
+                  .toSet();
             } else if (destinations != null) {
               nfa._transitions[state]![symbol] = {destinations.toString()};
             }
@@ -274,7 +277,6 @@ class NFA extends Automaton {
       if (json['modifiedAt'] != null) {
         nfa._modifiedAt = DateTime.parse(json['modifiedAt']);
       }
-
     } catch (e) {
       throw FormatException('Invalid JSON format for NFA: $e');
     }
@@ -690,13 +692,15 @@ class NFA extends Automaton {
     visitedStates.addAll(currentStates);
     stateVisits += currentStates.length;
 
-    steps.add(NFATraceStep(
-      currentStates: currentStates,
-      consumedInput: '',
-      remainingInput: input,
-      epsilonClosure: currentStates,
-      transitions: {},
-    ));
+    steps.add(
+      NFATraceStep(
+        currentStates: currentStates,
+        consumedInput: '',
+        remainingInput: input,
+        epsilonClosure: currentStates,
+        transitions: {},
+      ),
+    );
 
     for (int i = 0; i < input.length; i++) {
       final symbol = input[i];
@@ -713,14 +717,16 @@ class NFA extends Automaton {
       }
 
       if (nextStates.isEmpty) {
-        steps.add(NFATraceStep(
-          currentStates: <String>{},
-          consumedInput: input.substring(0, i + 1),
-          remainingInput: input.substring(i + 1),
-          lastSymbol: symbol,
-          epsilonClosure: <String>{},
-          transitions: transitionMap,
-        ));
+        steps.add(
+          NFATraceStep(
+            currentStates: <String>{},
+            consumedInput: input.substring(0, i + 1),
+            remainingInput: input.substring(i + 1),
+            lastSymbol: symbol,
+            epsilonClosure: <String>{},
+            transitions: transitionMap,
+          ),
+        );
         break;
       }
 
@@ -728,14 +734,16 @@ class NFA extends Automaton {
       visitedStates.addAll(currentStates);
       stateVisits += currentStates.length;
 
-      steps.add(NFATraceStep(
-        currentStates: nextStates,
-        consumedInput: input.substring(0, i + 1),
-        remainingInput: input.substring(i + 1),
-        lastSymbol: symbol,
-        epsilonClosure: currentStates,
-        transitions: transitionMap,
-      ));
+      steps.add(
+        NFATraceStep(
+          currentStates: nextStates,
+          consumedInput: input.substring(0, i + 1),
+          remainingInput: input.substring(i + 1),
+          lastSymbol: symbol,
+          epsilonClosure: currentStates,
+          transitions: transitionMap,
+        ),
+      );
     }
 
     final accepted = currentStates.any((state) => _finalStates.contains(state));
@@ -748,7 +756,9 @@ class NFA extends Automaton {
       'states_visited': visitedStates.length,
       'total_state_visits': stateVisits,
       'transitions_taken': transitionsTaken,
-      'final_states_reached': currentStates.where((s) => _finalStates.contains(s)).toSet(),
+      'final_states_reached': currentStates
+          .where((s) => _finalStates.contains(s))
+          .toSet(),
     });
 
     _operationCount++;
@@ -786,11 +796,15 @@ class NFA extends Automaton {
     final otherValidation = other.validate();
 
     if (!thisValidation.isValid) {
-      return NFAOperationResult.failure('NFA اول نامعتبر است: ${thisValidation.errors.join(', ')}');
+      return NFAOperationResult.failure(
+        'NFA اول نامعتبر است: ${thisValidation.errors.join(', ')}',
+      );
     }
 
     if (!otherValidation.isValid) {
-      return NFAOperationResult.failure('NFA دوم نامعتبر است: ${otherValidation.errors.join(', ')}');
+      return NFAOperationResult.failure(
+        'NFA دوم نامعتبر است: ${otherValidation.errors.join(', ')}',
+      );
     }
 
     try {
@@ -806,7 +820,10 @@ class NFA extends Automaton {
         result.addState('this_$state', isFinal: _finalStates.contains(state));
       }
       for (final state in other._states) {
-        result.addState('other_$state', isFinal: other._finalStates.contains(state));
+        result.addState(
+          'other_$state',
+          isFinal: other._finalStates.contains(state),
+        );
       }
 
       for (final fromState in _transitions.keys) {
@@ -839,11 +856,15 @@ class NFA extends Automaton {
     final otherValidation = other.validate();
 
     if (!thisValidation.isValid) {
-      return NFAOperationResult.failure('NFA اول نامعتبر است: ${thisValidation.errors.join(', ')}');
+      return NFAOperationResult.failure(
+        'NFA اول نامعتبر است: ${thisValidation.errors.join(', ')}',
+      );
     }
 
     if (!otherValidation.isValid) {
-      return NFAOperationResult.failure('NFA دوم نامعتبر است: ${otherValidation.errors.join(', ')}');
+      return NFAOperationResult.failure(
+        'NFA دوم نامعتبر است: ${otherValidation.errors.join(', ')}',
+      );
     }
 
     try {
@@ -853,7 +874,10 @@ class NFA extends Automaton {
         result.addState(state, isFinal: false);
       }
       for (final state in other._states) {
-        result.addState('next_$state', isFinal: other._finalStates.contains(state));
+        result.addState(
+          'next_$state',
+          isFinal: other._finalStates.contains(state),
+        );
       }
 
       result.setStartState(_startState);
@@ -887,7 +911,9 @@ class NFA extends Automaton {
   NFAOperationResult kleeneStar() {
     final validation = validate();
     if (!validation.isValid) {
-      return NFAOperationResult.failure('NFA نامعتبر است: ${validation.errors.join(', ')}');
+      return NFAOperationResult.failure(
+        'NFA نامعتبر است: ${validation.errors.join(', ')}',
+      );
     }
 
     try {
@@ -911,7 +937,11 @@ class NFA extends Automaton {
       result.addTransition(newStart, epsilon, 'star_${_startState}');
 
       for (final finalState in _finalStates) {
-        result.addTransition('star_$finalState', epsilon, 'star_${_startState}');
+        result.addTransition(
+          'star_$finalState',
+          epsilon,
+          'star_${_startState}',
+        );
       }
 
       return NFAOperationResult.success(result);
@@ -936,7 +966,8 @@ class NFA extends Automaton {
   bool get isComplete {
     for (final state in _states) {
       for (final symbol in _alphabet) {
-        if (!_transitions.containsKey(state) || !_transitions[state]!.containsKey(symbol)) {
+        if (!_transitions.containsKey(state) ||
+            !_transitions[state]!.containsKey(symbol)) {
           return false;
         }
       }
@@ -954,6 +985,7 @@ class NFA extends Automaton {
     }
     return count;
   }
+
   int getTransitionCount() => transitionCount;
   int getEpsilonTransitionCount() {
     int count = 0;
@@ -964,10 +996,12 @@ class NFA extends Automaton {
     }
     return count;
   }
+
   double getTransitionDensity() {
     if (stateCount == 0 || alphabet.isEmpty) return 0.0;
     return transitionCount / (stateCount * alphabet.length);
   }
+
   bool get hasEpsilonTransitions {
     for (final stateTransitions in _transitions.values) {
       if (stateTransitions.containsKey(epsilon)) {
@@ -982,19 +1016,23 @@ class NFA extends Automaton {
     _metadata[key] = value;
     _updateModifiedTime();
   }
+
   dynamic getMetadata(String key) => _metadata[key];
   void removeMetadata(String key) {
     _metadata.remove(key);
     _updateModifiedTime();
   }
+
   void setName(String name) {
     _name = name;
     _updateModifiedTime();
   }
+
   void setDescription(String description) {
     _description = description;
     _updateModifiedTime();
   }
+
   void _updateModifiedTime() {
     _modifiedAt = DateTime.now();
   }
@@ -1022,12 +1060,16 @@ class NFA extends Automaton {
     }
     for (final fromState in _transitions.keys) {
       if (!_states.contains(fromState)) {
-        errors.add('حالت مبدأ "$fromState" در انتقال‌ها وجود دارد ولی در مجموعه حالات نیست');
+        errors.add(
+          'حالت مبدأ "$fromState" در انتقال‌ها وجود دارد ولی در مجموعه حالات نیست',
+        );
       }
       final stateTransitions = _transitions[fromState]!;
       for (final symbol in stateTransitions.keys) {
         if (symbol != epsilon && !_alphabet.contains(symbol)) {
-          warnings.add('نماد "$symbol" در انتقال‌ها استفاده شده ولی در الفبا نیست');
+          warnings.add(
+            'نماد "$symbol" در انتقال‌ها استفاده شده ولی در الفبا نیست',
+          );
         }
         for (final toState in stateTransitions[symbol]!) {
           if (!_states.contains(toState)) {

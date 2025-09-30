@@ -13,7 +13,8 @@ class GrammarAlgorithmPanel extends ConsumerStatefulWidget {
   const GrammarAlgorithmPanel({super.key});
 
   @override
-  ConsumerState<GrammarAlgorithmPanel> createState() => _GrammarAlgorithmPanelState();
+  ConsumerState<GrammarAlgorithmPanel> createState() =>
+      _GrammarAlgorithmPanelState();
 }
 
 class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
@@ -42,16 +43,13 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
   Widget _buildHeader(BuildContext context) {
     return Row(
       children: [
-        Icon(
-          Icons.auto_awesome,
-          color: Theme.of(context).colorScheme.primary,
-        ),
+        Icon(Icons.auto_awesome, color: Theme.of(context).colorScheme.primary),
         const SizedBox(width: 8),
         Text(
           'Grammar Analysis',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
       ],
     );
@@ -114,8 +112,12 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
     );
   }
 
-  Widget _buildConversionSection(BuildContext context, GrammarState grammarState) {
-    final isDisabled = grammarState.isConverting || grammarState.productions.isEmpty;
+  Widget _buildConversionSection(
+    BuildContext context,
+    GrammarState grammarState,
+  ) {
+    final isDisabled =
+        grammarState.isConverting || grammarState.productions.isEmpty;
     final buttonLabel = grammarState.isConverting
         ? 'Converting...'
         : 'Convert Right-Linear Grammar to FSA';
@@ -125,9 +127,9 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
       children: [
         Text(
           'Conversions',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
         SizedBox(
@@ -150,8 +152,10 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
             child: Text(
               'Add at least one production rule to enable conversions.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                  ),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
             ),
           ),
         if (grammarState.error != null)
@@ -160,8 +164,8 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
             child: Text(
               grammarState.error!,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.error,
-                  ),
+                color: Theme.of(context).colorScheme.error,
+              ),
             ),
           ),
       ],
@@ -176,7 +180,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
     required VoidCallback onPressed,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return InkWell(
       onTap: _isAnalyzing ? null : onPressed,
       borderRadius: BorderRadius.circular(8),
@@ -184,22 +188,20 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           border: Border.all(
-            color: _isAnalyzing 
-                ? colorScheme.outline.withOpacity(0.3)
-                : colorScheme.primary.withOpacity(0.3),
+            color: _isAnalyzing
+                ? colorScheme.outline.withValues(alpha: 0.3)
+                : colorScheme.primary.withValues(alpha: 0.3),
           ),
           borderRadius: BorderRadius.circular(8),
-          color: _isAnalyzing 
-              ? colorScheme.surfaceVariant.withOpacity(0.5)
+          color: _isAnalyzing
+              ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
               : null,
         ),
         child: Row(
           children: [
             Icon(
               icon,
-              color: _isAnalyzing 
-                  ? colorScheme.outline
-                  : colorScheme.primary,
+              color: _isAnalyzing ? colorScheme.outline : colorScheme.primary,
               size: 24,
             ),
             const SizedBox(width: 12),
@@ -210,7 +212,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: _isAnalyzing 
+                      color: _isAnalyzing
                           ? colorScheme.outline
                           : colorScheme.primary,
                       fontWeight: FontWeight.w600,
@@ -220,7 +222,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
                   Text(
                     description,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withOpacity(0.7),
+                      color: colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -235,7 +237,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
             else
               Icon(
                 Icons.arrow_forward_ios,
-                color: colorScheme.primary.withOpacity(0.5),
+                color: colorScheme.primary.withValues(alpha: 0.5),
                 size: 16,
               ),
           ],
@@ -245,7 +247,9 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
   }
 
   Future<void> _convertToAutomaton() async {
-    final result = await ref.read(grammarProvider.notifier).convertToAutomaton();
+    final result = await ref
+        .read(grammarProvider.notifier)
+        .convertToAutomaton();
 
     if (!mounted) return;
 
@@ -259,7 +263,9 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Grammar converted to automaton. Switched to FSA workspace.'),
+          content: Text(
+            'Grammar converted to automaton. Switched to FSA workspace.',
+          ),
           duration: Duration(seconds: 2),
         ),
       );
@@ -281,9 +287,9 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
         children: [
           Text(
             'Analysis Results',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           Expanded(
@@ -301,10 +307,10 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -340,18 +346,20 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+        color: Theme.of(
+          context,
+        ).colorScheme.primaryContainer.withValues(alpha: 0.3),
         border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
         ),
         borderRadius: BorderRadius.circular(8),
       ),
       child: SingleChildScrollView(
         child: Text(
           _analysisResult!,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontFamily: 'monospace',
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),
         ),
       ),
     );
@@ -430,8 +438,9 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
   Future<void> _performAnalysis<T>(
     String algorithmName,
     Future<Result<GrammarAnalysisReport<T>>> Function(Grammar grammar)
-        runAnalysis,
-    String Function(Grammar original, GrammarAnalysisReport<T> report) formatter,
+    runAnalysis,
+    String Function(Grammar original, GrammarAnalysisReport<T> report)
+    formatter,
   ) async {
     setState(() {
       _isAnalyzing = true;
@@ -539,9 +548,11 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
         if (entries.isEmpty) {
           row.add('-');
         } else {
-          row.add(entries
-              .map((symbols) => symbols.isEmpty ? 'ε' : symbols.join(' '))
-              .join(' | '));
+          row.add(
+            entries
+                .map((symbols) => symbols.isEmpty ? 'ε' : symbols.join(' '))
+                .join(' | '),
+          );
         }
       }
       buffer.writeln(row.join('\t'));
@@ -578,10 +589,9 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
         continue;
       }
       final left = production.leftSide.first;
-      final right =
-          production.isLambda || production.rightSide.isEmpty
-              ? 'ε'
-              : production.rightSide.join(' ');
+      final right = production.isLambda || production.rightSide.isEmpty
+          ? 'ε'
+          : production.rightSide.join(' ');
       grouped.putIfAbsent(left, () => <String>[]).add(right);
     }
 

@@ -9,19 +9,19 @@ import 'tm_transition.dart';
 abstract class Transition {
   /// Unique identifier for the transition within the automaton
   final String id;
-  
+
   /// Source state of the transition
   final State fromState;
-  
+
   /// Destination state of the transition
   final State toState;
-  
+
   /// Display label for the transition
   final String label;
-  
+
   /// Control point for curved transitions on mobile
   final Vector2 controlPoint;
-  
+
   /// Type of the transition (deterministic, nondeterministic)
   final TransitionType type;
 
@@ -50,7 +50,7 @@ abstract class Transition {
   /// Creates a transition from a JSON representation
   static Transition fromJson(Map<String, dynamic> json) {
     final type = json['transitionType'] as String? ?? 'fsa';
-    
+
     switch (type) {
       case 'fsa':
         return FSATransition.fromJson(json);
@@ -77,14 +77,7 @@ abstract class Transition {
 
   @override
   int get hashCode {
-    return Object.hash(
-      id,
-      fromState,
-      toState,
-      label,
-      controlPoint,
-      type,
-    );
+    return Object.hash(id, fromState, toState, label, controlPoint, type);
   }
 
   @override
@@ -96,19 +89,19 @@ abstract class Transition {
   /// Validates the transition properties
   List<String> validate() {
     final errors = <String>[];
-    
+
     if (id.isEmpty) {
       errors.add('Transition ID cannot be empty');
     }
-    
+
     if (label.isEmpty) {
       errors.add('Transition label cannot be empty');
     }
-    
+
     if (fromState == toState && controlPoint == Vector2.zero()) {
       errors.add('Self-loop transitions must have a control point');
     }
-    
+
     return errors;
   }
 
@@ -142,10 +135,10 @@ abstract class Transition {
 enum TransitionType {
   /// Deterministic transition
   deterministic,
-  
+
   /// Non-deterministic transition
   nondeterministic,
-  
+
   /// Epsilon/lambda transition
   epsilon,
 }
@@ -169,4 +162,3 @@ extension TransitionTypeExtension on TransitionType {
     return this == TransitionType.nondeterministic;
   }
 }
-

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/algorithms/pda_simulator.dart';
-import '../../core/models/simulation_step.dart';
 import '../../core/result.dart';
 import '../providers/pda_editor_provider.dart';
+import 'trace_viewers/pda_trace_viewer.dart';
 
 /// Panel for PDA simulation and string testing
 class PDASimulationPanel extends ConsumerStatefulWidget {
@@ -16,7 +16,9 @@ class PDASimulationPanel extends ConsumerStatefulWidget {
 
 class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
   final TextEditingController _inputController = TextEditingController();
-  final TextEditingController _initialStackController = TextEditingController(text: 'Z');
+  final TextEditingController _initialStackController = TextEditingController(
+    text: 'Z',
+  );
 
   bool _isSimulating = false;
   PDASimulationResult? _simulationResult;
@@ -54,16 +56,13 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
   Widget _buildHeader(BuildContext context) {
     return Row(
       children: [
-        Icon(
-          Icons.play_arrow,
-          color: Theme.of(context).colorScheme.primary,
-        ),
+        Icon(Icons.play_arrow, color: Theme.of(context).colorScheme.primary),
         const SizedBox(width: 8),
         Text(
           'PDA Simulation',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
       ],
     );
@@ -73,7 +72,7 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -81,9 +80,9 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
         children: [
           Text(
             'Simulation Input',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 12),
           TextField(
@@ -118,7 +117,9 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
           Text(
             'Examples: aabb (for balanced parentheses), abab (for palindromes)',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
         ],
@@ -149,9 +150,9 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
       children: [
         Text(
           'Simulation Results',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
         Container(
@@ -169,10 +170,10 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -216,8 +217,8 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withValues(alpha: 0.1),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -240,74 +241,35 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
               ),
             ],
           ),
-
-          if (hasResult)
+          if (result case final simulationResult?)
             Padding(
               padding: const EdgeInsets.only(top: 4.0),
               child: Text(
-                'Time: ${result!.executionTime.inMilliseconds} ms',
+                'Time: ${simulationResult.executionTime.inMilliseconds} ms',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
-
           if (errorText != null && errorText.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 8.0),
               child: Text(
                 errorText,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
+                  color: Theme.of(context).colorScheme.error,
+                ),
               ),
             ),
-
-          if (hasResult && result!.steps.isNotEmpty) ...[
+          if (result case final simulationResult?
+              when simulationResult.steps.isNotEmpty) ...[
             const SizedBox(height: 16),
             Text(
               'Simulation Steps:',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: result.steps.length,
-              itemBuilder: (context, index) {
-                final step = result.steps[index];
-                final remainingInput =
-                    step.remainingInput.isEmpty ? 'λ' : step.remainingInput;
-                final stack = step.stackContents.isEmpty ? 'λ' : step.stackContents;
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 4),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        '${index + 1}.',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'State ${step.currentState} | Remaining: $remainingInput | Stack: $stack${step.usedTransition != null ? ' | Transition: ${step.usedTransition}' : ''}',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontFamily: 'monospace',
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
+            PDATraceViewer(result: simulationResult),
           ],
         ],
       ),

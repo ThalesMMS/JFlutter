@@ -1,19 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
-enum CardAnimationType {
-  scale,
-  rotate,
-  flip,
-  slide,
-  glow,
-}
+enum CardAnimationType { scale, rotate, flip, slide, glow }
 
-enum CardSize {
-  small,
-  medium,
-  large,
-}
+enum CardSize { small, medium, large }
 
 class AdvancedCustomActionCard extends StatefulWidget {
   final IconData icon;
@@ -64,7 +54,8 @@ class AdvancedCustomActionCard extends StatefulWidget {
   });
 
   @override
-  State<AdvancedCustomActionCard> createState() => _AdvancedCustomActionCardState();
+  State<AdvancedCustomActionCard> createState() =>
+      _AdvancedCustomActionCardState();
 }
 
 class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
@@ -72,7 +63,7 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
   late final AnimationController _primaryController;
   late final AnimationController _pulseController;
   late final AnimationController _parallaxController;
-  
+
   late final Animation<double> _scaleAnimation;
   late final Animation<double> _rotateAnimation;
   late final Animation<double> _flipAnimation;
@@ -89,7 +80,7 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
   void initState() {
     super.initState();
     _initializeAnimations();
-    
+
     if (widget.enablePulse) {
       _pulseController.repeat(reverse: true);
     }
@@ -112,58 +103,35 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
     );
 
     // Scale Animation
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: _getScaleEnd(),
-    ).animate(CurvedAnimation(
-      parent: _primaryController,
-      curve: Curves.elasticOut,
-    ));
+    _scaleAnimation = Tween<double>(begin: 1.0, end: _getScaleEnd()).animate(
+      CurvedAnimation(parent: _primaryController, curve: Curves.elasticOut),
+    );
 
     // Rotate Animation
-    _rotateAnimation = Tween<double>(
-      begin: 0.0,
-      end: 0.05,
-    ).animate(CurvedAnimation(
-      parent: _primaryController,
-      curve: Curves.easeInOut,
-    ));
+    _rotateAnimation = Tween<double>(begin: 0.0, end: 0.05).animate(
+      CurvedAnimation(parent: _primaryController, curve: Curves.easeInOut),
+    );
 
     // Flip Animation
-    _flipAnimation = Tween<double>(
-      begin: 0.0,
-      end: math.pi,
-    ).animate(CurvedAnimation(
-      parent: _primaryController,
-      curve: Curves.easeInOut,
-    ));
+    _flipAnimation = Tween<double>(begin: 0.0, end: math.pi).animate(
+      CurvedAnimation(parent: _primaryController, curve: Curves.easeInOut),
+    );
 
     // Slide Animation
-    _slideAnimation = Tween<Offset>(
-      begin: Offset.zero,
-      end: const Offset(0, -0.1),
-    ).animate(CurvedAnimation(
-      parent: _primaryController,
-      curve: Curves.easeOut,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: Offset.zero, end: const Offset(0, -0.1)).animate(
+          CurvedAnimation(parent: _primaryController, curve: Curves.easeOut),
+        );
 
     // Glow Animation
-    _glowAnimation = Tween<double>(
-      begin: 0.3,
-      end: 0.8,
-    ).animate(CurvedAnimation(
-      parent: _primaryController,
-      curve: Curves.easeInOut,
-    ));
+    _glowAnimation = Tween<double>(begin: 0.3, end: 0.8).animate(
+      CurvedAnimation(parent: _primaryController, curve: Curves.easeInOut),
+    );
 
     // Pulse Animation
-    _pulseAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.1,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
 
     // Parallax Animation
     _parallaxAnimation = Tween<Offset>(
@@ -204,7 +172,7 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
 
   void _onHover(bool isHovering) {
     if (!widget.isEnabled) return;
-    
+
     setState(() {
       _isHovering = isHovering;
       if (_isHovering) {
@@ -217,18 +185,18 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
 
   void _onPanUpdate(DragUpdateDetails details) {
     if (!widget.enableParallax || !widget.isEnabled) return;
-    
+
     setState(() {
       _localPosition = details.localPosition;
       final size = _getCardSize();
       final center = Offset(size.width / 2, size.height / 2);
       final offset = (_localPosition - center) / 100;
-      
+
       _parallaxAnimation = Tween<Offset>(
         begin: Offset.zero,
         end: offset,
       ).animate(_parallaxController);
-      
+
       _parallaxController.forward();
     });
   }
@@ -261,10 +229,8 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
       case CardAnimationType.rotate:
         return AnimatedBuilder(
           animation: _rotateAnimation,
-          builder: (context, child) => Transform.rotate(
-            angle: _rotateAnimation.value,
-            child: child,
-          ),
+          builder: (context, child) =>
+              Transform.rotate(angle: _rotateAnimation.value, child: child),
           child: child,
         );
       case CardAnimationType.flip:
@@ -288,14 +254,14 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
 
   List<BoxShadow> _buildShadows() {
     if (widget.customShadows != null) return widget.customShadows!;
-    
+
     final colors = (widget.gradient as LinearGradient).colors;
     final primaryColor = colors.first;
-    
-    double intensity = widget.animationType == CardAnimationType.glow 
-        ? _glowAnimation.value 
+
+    double intensity = widget.animationType == CardAnimationType.glow
+        ? _glowAnimation.value
         : (_isHovering ? 0.5 : 0.3);
-    
+
     if (widget.enablePulse) {
       intensity *= _pulseAnimation.value;
     }
@@ -320,11 +286,13 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
   @override
   Widget build(BuildContext context) {
     final cardSize = _getCardSize();
-    
+
     Widget card = MouseRegion(
       onEnter: (_) => _onHover(true),
       onExit: (_) => _onHover(false),
-      cursor: widget.isEnabled ? SystemMouseCursors.click : SystemMouseCursors.forbidden,
+      cursor: widget.isEnabled
+          ? SystemMouseCursors.click
+          : SystemMouseCursors.forbidden,
       child: GestureDetector(
         onPanUpdate: _onPanUpdate,
         onPanEnd: _onPanEnd,
@@ -353,14 +321,12 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
                 // Background Pattern
                 if (widget.backgroundPattern != null)
                   Positioned.fill(child: widget.backgroundPattern!),
-                
+
                 // Main Content
                 Material(
                   color: Colors.transparent,
                   child: Container(
-                    decoration: BoxDecoration(
-                      gradient: widget.gradient,
-                    ),
+                    decoration: BoxDecoration(gradient: widget.gradient),
                     child: widget.enableParallax
                         ? AnimatedBuilder(
                             animation: _parallaxAnimation,
@@ -372,7 +338,7 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
                         : _buildCardContent(),
                   ),
                 ),
-                
+
                 // Overlay
                 if (widget.overlayColor != null)
                   Positioned.fill(
@@ -383,7 +349,7 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
                       ),
                     ),
                   ),
-                
+
                 // Ripple Effect
                 if (widget.enableRipple)
                   Positioned.fill(
@@ -397,15 +363,11 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
                       ),
                     ),
                   ),
-                
+
                 // Badge
                 if (widget.badge != null)
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: widget.badge!,
-                  ),
-                
+                  Positioned(top: 8, right: 8, child: widget.badge!),
+
                 // Disabled Overlay
                 if (!widget.isEnabled)
                   Positioned.fill(
@@ -427,10 +389,8 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
     if (widget.enablePulse) {
       card = AnimatedBuilder(
         animation: _pulseAnimation,
-        builder: (context, child) => Transform.scale(
-          scale: _pulseAnimation.value,
-          child: child,
-        ),
+        builder: (context, child) =>
+            Transform.scale(scale: _pulseAnimation.value, child: child),
         child: card,
       );
     }
@@ -462,7 +422,7 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
             ),
           ),
           SizedBox(height: _getSpacing()),
-          
+
           // Title
           Text(
             widget.title,
@@ -483,13 +443,13 @@ class _AdvancedCustomActionCardState extends State<AdvancedCustomActionCard>
             overflow: TextOverflow.ellipsis,
           ),
           SizedBox(height: _getSpacing() / 2),
-          
+
           // Subtitle
           Text(
             widget.subtitle,
             style: TextStyle(
-              color: widget.isEnabled 
-                  ? Colors.white.withOpacity(0.9) 
+              color: widget.isEnabled
+                  ? Colors.white.withOpacity(0.9)
                   : Colors.white.withOpacity(0.6),
               fontSize: _getSubtitleSize(),
               shadows: const [

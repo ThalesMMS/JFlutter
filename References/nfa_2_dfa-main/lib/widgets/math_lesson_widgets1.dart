@@ -53,8 +53,10 @@ class _MathLessonWidgetState extends State<MathLessonWidget>
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0)
-        .animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
     _fadeController.forward();
   }
 
@@ -166,10 +168,7 @@ class _MathLessonWidgetState extends State<MathLessonWidget>
       children: [
         Text(
           'پیشرفت: ${(progress * 100).toInt()}%',
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.white.withOpacity(0.9),
-          ),
+          style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.9)),
         ),
         const SizedBox(height: 4),
         LinearProgressIndicator(
@@ -210,10 +209,7 @@ class _MathLessonWidgetState extends State<MathLessonWidget>
             ),
             child: const Column(
               children: [
-                Text(
-                  '🎉',
-                  style: TextStyle(fontSize: 40),
-                ),
+                Text('🎉', style: TextStyle(fontSize: 40)),
                 SizedBox(height: 8),
                 Text(
                   'به درس مقدمات ریاضی خوش آمدید!',
@@ -227,10 +223,7 @@ class _MathLessonWidgetState extends State<MathLessonWidget>
                 SizedBox(height: 4),
                 Text(
                   'آماده یادگیری مفاهیم جذاب ریاضی هستید؟',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.white),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -254,10 +247,7 @@ class _MathLessonWidgetState extends State<MathLessonWidget>
             return AnimatedContainer(
               duration: Duration(milliseconds: 300 + (index * 100)),
               margin: const EdgeInsets.only(bottom: 12),
-              child: ObjectiveCard(
-                objective: objective,
-                index: index + 1,
-              ),
+              child: ObjectiveCard(objective: objective, index: index + 1),
             );
           }),
 
@@ -287,10 +277,7 @@ class _MathLessonWidgetState extends State<MathLessonWidget>
                 children: [
                   Text(
                     'شروع درس',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(width: 8),
                   Icon(Icons.play_arrow),
@@ -452,11 +439,8 @@ class ObjectiveCard extends StatefulWidget {
   final String objective;
   final int index;
 
-  const ObjectiveCard({
-    Key? key,
-    required this.objective,
-    required this.index,
-  }) : super(key: key);
+  const ObjectiveCard({Key? key, required this.objective, required this.index})
+    : super(key: key);
 
   @override
   State<ObjectiveCard> createState() => _ObjectiveCardState();
@@ -475,10 +459,14 @@ class _ObjectiveCardState extends State<ObjectiveCard>
       duration: Duration(milliseconds: 600 + (widget.index * 100)),
       vsync: this,
     );
-    _slideAnimation = Tween<double>(begin: 50.0, end: 0.0)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
+    _slideAnimation = Tween<double>(
+      begin: 50.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _controller.forward();
@@ -839,19 +827,20 @@ class _DialogueMessageWidgetState extends State<DialogueMessageWidget>
       vsync: this,
     );
 
-    _slideAnimation = Tween<Offset>(
-      begin: Offset(widget.isTeacher ? -1.0 : 1.0, 0.0),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutBack,
-    ));
+    _slideAnimation =
+        Tween<Offset>(
+          begin: Offset(widget.isTeacher ? -1.0 : 1.0, 0.0),
+          end: Offset.zero,
+        ).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutBack,
+          ),
+        );
 
-    _fadeAnimation =
-        Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
-          parent: _animationController,
-          curve: Curves.easeIn,
-        ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
+    );
 
     _animationController.forward();
   }
@@ -894,33 +883,33 @@ class _DialogueMessageWidgetState extends State<DialogueMessageWidget>
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        color:
-        widget.isTeacher ? AppColors.teacherBlue : AppColors.studentGreen,
+        color: widget.isTeacher
+            ? AppColors.teacherBlue
+            : AppColors.studentGreen,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: (widget.isTeacher
-                ? AppColors.teacherBlue
-                : AppColors.studentGreen)
-                .withOpacity(0.3),
+            color:
+                (widget.isTeacher
+                        ? AppColors.teacherBlue
+                        : AppColors.studentGreen)
+                    .withOpacity(0.3),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Center(
-        child: Text(
-          widget.avatar,
-          style: const TextStyle(fontSize: 24),
-        ),
+        child: Text(widget.avatar, style: const TextStyle(fontSize: 24)),
       ),
     );
   }
 
   Widget _buildMessageBubble() {
     return Column(
-      crossAxisAlignment:
-      widget.isTeacher ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+      crossAxisAlignment: widget.isTeacher
+          ? CrossAxisAlignment.start
+          : CrossAxisAlignment.end,
       children: [
         // نام گوینده
         Padding(
@@ -1104,16 +1093,12 @@ class _InteractiveQuizWidgetState extends State<InteractiveQuizWidget>
     );
 
     _shakeAnimation = Tween<double>(begin: 0.0, end: 10.0).animate(
-        CurvedAnimation(
-          parent: _shakeController,
-          curve: Curves.elasticIn,
-        ));
+      CurvedAnimation(parent: _shakeController, curve: Curves.elasticIn),
+    );
 
-    _celebrateAnimation =
-        Tween<double>(begin: 1.0, end: 1.2).animate(CurvedAnimation(
-          parent: _celebrateController,
-          curve: Curves.elasticOut,
-        ));
+    _celebrateAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(parent: _celebrateController, curve: Curves.elasticOut),
+    );
   }
 
   @override
@@ -1166,7 +1151,7 @@ class _InteractiveQuizWidgetState extends State<InteractiveQuizWidget>
   Widget _buildDifficultyIndicator(int difficulty) {
     final List<Widget> stars = List.generate(
       3,
-          (index) => Icon(
+      (index) => Icon(
         index < difficulty ? Icons.star : Icons.star_border,
         color: AppColors.warningOrange,
         size: 18,
@@ -1251,8 +1236,10 @@ class _InteractiveQuizWidgetState extends State<InteractiveQuizWidget>
               ),
               if (_showResult)
                 Container(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: _isCorrect
                         ? AppColors.successGreen
@@ -1284,8 +1271,10 @@ class _InteractiveQuizWidgetState extends State<InteractiveQuizWidget>
               children: [
                 _buildDifficultyIndicator(widget.questionData.difficulty),
                 Container(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.secondaryYellow.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
@@ -1401,22 +1390,22 @@ class _InteractiveQuizWidgetState extends State<InteractiveQuizWidget>
                             width: 24,
                             height: 24,
                             decoration: BoxDecoration(
-                              color: isSelected ||
-                                  (_showResult && isCorrectOption)
+                              color:
+                                  isSelected || (_showResult && isCorrectOption)
                                   ? borderColor
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: borderColor, width: 2),
                             ),
                             child:
-                            isSelected || (_showResult && isCorrectOption)
+                                isSelected || (_showResult && isCorrectOption)
                                 ? Icon(
-                              _showResult && isCorrectOption
-                                  ? Icons.check
-                                  : Icons.circle,
-                              color: Colors.white,
-                              size: 12,
-                            )
+                                    _showResult && isCorrectOption
+                                        ? Icons.check
+                                        : Icons.circle,
+                                    color: Colors.white,
+                                    size: 12,
+                                  )
                                 : null,
                           ),
                           const SizedBox(width: 12),
@@ -1426,8 +1415,9 @@ class _InteractiveQuizWidgetState extends State<InteractiveQuizWidget>
                               style: TextStyle(
                                 fontSize: 14,
                                 color: textColor,
-                                fontWeight: isSelected ||
-                                    (_showResult && isCorrectOption)
+                                fontWeight:
+                                    isSelected ||
+                                        (_showResult && isCorrectOption)
                                     ? FontWeight.w600
                                     : FontWeight.normal,
                               ),
@@ -1485,8 +1475,7 @@ class _InteractiveQuizWidgetState extends State<InteractiveQuizWidget>
                     },
                     icon: const Icon(Icons.help_outline),
                     style: IconButton.styleFrom(
-                      backgroundColor:
-                      AppColors.warningOrange.withOpacity(0.1),
+                      backgroundColor: AppColors.warningOrange.withOpacity(0.1),
                       foregroundColor: AppColors.warningOrange,
                     ),
                     tooltip: 'راهنمایی',
@@ -1505,8 +1494,9 @@ class _InteractiveQuizWidgetState extends State<InteractiveQuizWidget>
                     : AppColors.errorRed.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color:
-                  _isCorrect ? AppColors.successGreen : AppColors.errorRed,
+                  color: _isCorrect
+                      ? AppColors.successGreen
+                      : AppColors.errorRed,
                 ),
               ),
               child: Column(
@@ -1601,17 +1591,12 @@ class _InteractiveQuizWidgetState extends State<InteractiveQuizWidget>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Row(
           children: [
             Icon(Icons.lightbulb, color: AppColors.warningOrange),
             SizedBox(width: 8),
-            Text(
-              'راهنمایی',
-              style: TextStyle(color: AppColors.warningOrange),
-            ),
+            Text('راهنمایی', style: TextStyle(color: AppColors.warningOrange)),
           ],
         ),
         content: Text(
@@ -1628,7 +1613,6 @@ class _InteractiveQuizWidgetState extends State<InteractiveQuizWidget>
     );
   }
 }
-
 
 // 📊 ویجت نمایش پیشرفت
 class ProgressIndicatorWidget extends StatefulWidget {
@@ -1662,13 +1646,13 @@ class _ProgressIndicatorWidgetState extends State<ProgressIndicatorWidget>
       duration: widget.animationDuration,
       vsync: this,
     );
-    _progressAnimation = Tween<double>(
-      begin: 0.0,
-      end: widget.progress,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutCubic,
-    ));
+    _progressAnimation = Tween<double>(begin: 0.0, end: widget.progress)
+        .animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
     _animationController.forward();
   }
 
@@ -1676,13 +1660,16 @@ class _ProgressIndicatorWidgetState extends State<ProgressIndicatorWidget>
   void didUpdateWidget(ProgressIndicatorWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.progress != widget.progress) {
-      _progressAnimation = Tween<double>(
-        begin: oldWidget.progress,
-        end: widget.progress,
-      ).animate(CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeOutCubic,
-      ));
+      _progressAnimation =
+          Tween<double>(
+            begin: oldWidget.progress,
+            end: widget.progress,
+          ).animate(
+            CurvedAnimation(
+              parent: _animationController,
+              curve: Curves.easeOutCubic,
+            ),
+          );
       _animationController.forward(from: 0.0);
     }
   }
@@ -1796,21 +1783,14 @@ class ImportantNoteWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withOpacity(0.3),
-          width: 1,
-        ),
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                icon ?? noteIcon,
-                color: color,
-                size: 20,
-              ),
+              Icon(icon ?? noteIcon, color: color, size: 20),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(

@@ -20,7 +20,7 @@ class MobileNavigation extends StatelessWidget {
         color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -36,7 +36,7 @@ class MobileNavigation extends StatelessWidget {
               final index = entry.key;
               final item = entry.value;
               final isSelected = currentIndex == index;
-              
+
               return Expanded(
                 child: _buildNavigationItem(
                   context,
@@ -59,8 +59,10 @@ class MobileNavigation extends StatelessWidget {
     VoidCallback onTap,
   ) {
     final colorScheme = Theme.of(context).colorScheme;
-    final color = isSelected ? colorScheme.primary : colorScheme.onSurface.withOpacity(0.6);
-    
+    final color = isSelected
+        ? colorScheme.primary
+        : colorScheme.onSurface.withValues(alpha: 0.6);
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),

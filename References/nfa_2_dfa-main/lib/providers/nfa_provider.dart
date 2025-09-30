@@ -17,7 +17,6 @@ class RecentProject {
 }
 
 class NFAProvider with ChangeNotifier {
-
   NFA _currentNFA = NFA.empty();
 
   final FileService _fileService = FileService();
@@ -133,7 +132,10 @@ class NFAProvider with ChangeNotifier {
   }
 
   void loadRecentProject(String id) {
-    final project = _recentProjects.firstWhere((p) => p.id == id, orElse: () => throw Exception('پروژه یافت نشد'));
+    final project = _recentProjects.firstWhere(
+      (p) => p.id == id,
+      orElse: () => throw Exception('پروژه یافت نشد'),
+    );
     _currentNFA = NFA.fromJson(project.nfaJson);
     notifyListeners();
   }
@@ -154,9 +156,7 @@ class NFAProvider with ChangeNotifier {
     _addOrUpdateRecentProject(name, nfaJson);
   }
 
-
-  void checkExternalChanges() {
-  }
+  void checkExternalChanges() {}
 
   void recoverFromError() {
     _hasCriticalError = false;

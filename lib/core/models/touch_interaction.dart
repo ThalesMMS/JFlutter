@@ -4,16 +4,16 @@ import 'package:vector_math/vector_math_64.dart';
 class TouchInteraction {
   /// Type of interaction
   final InteractionType type;
-  
+
   /// Position of the touch
   final Vector2 position;
-  
+
   /// Set of selected states
   final Set<String> selectedStates;
-  
+
   /// Set of selected transitions
   final Set<String> selectedTransitions;
-  
+
   /// Timestamp of the interaction
   final DateTime timestamp;
 
@@ -46,10 +46,7 @@ class TouchInteraction {
   Map<String, dynamic> toJson() {
     return {
       'type': type.name,
-      'position': {
-        'x': position.x,
-        'y': position.y,
-      },
+      'position': {'x': position.x, 'y': position.y},
       'selectedStates': selectedStates.toList(),
       'selectedTransitions': selectedTransitions.toList(),
       'timestamp': timestamp.toIso8601String(),
@@ -68,7 +65,9 @@ class TouchInteraction {
         (json['position'] as Map<String, dynamic>)['y'] as double,
       ),
       selectedStates: Set<String>.from(json['selectedStates'] as List),
-      selectedTransitions: Set<String>.from(json['selectedTransitions'] as List),
+      selectedTransitions: Set<String>.from(
+        json['selectedTransitions'] as List,
+      ),
       timestamp: DateTime.parse(json['timestamp'] as String),
     );
   }
@@ -86,7 +85,13 @@ class TouchInteraction {
 
   @override
   int get hashCode {
-    return Object.hash(type, position, selectedStates, selectedTransitions, timestamp);
+    return Object.hash(
+      type,
+      position,
+      selectedStates,
+      selectedTransitions,
+      timestamp,
+    );
   }
 
   @override
@@ -240,19 +245,19 @@ class TouchInteraction {
 enum InteractionType {
   /// Single tap
   tap,
-  
+
   /// Long press
   longPress,
-  
+
   /// Drag gesture
   drag,
-  
+
   /// Pinch gesture
   pinch,
-  
+
   /// Pan gesture
   pan,
-  
+
   /// Double tap
   doubleTap,
 }
@@ -285,15 +290,15 @@ extension InteractionTypeExtension on InteractionType {
   /// Returns whether this interaction type is a gesture
   bool get isGesture {
     return this == InteractionType.drag ||
-           this == InteractionType.pinch ||
-           this == InteractionType.pan;
+        this == InteractionType.pinch ||
+        this == InteractionType.pan;
   }
 
   /// Returns whether this interaction type is a tap
   bool get isTap {
     return this == InteractionType.tap ||
-           this == InteractionType.doubleTap ||
-           this == InteractionType.longPress;
+        this == InteractionType.doubleTap ||
+        this == InteractionType.longPress;
   }
 
   /// Returns the minimum duration for this interaction type

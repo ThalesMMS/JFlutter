@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../providers/pumping_lemma_progress_provider.dart';
+import '../../presentation/providers/pumping_lemma_progress_provider.dart';
 
 /// Progress tracking panel for the Pumping Lemma Game.
 class PumpingLemmaProgress extends ConsumerWidget {
@@ -33,16 +33,13 @@ class PumpingLemmaProgress extends ConsumerWidget {
   Widget _buildHeader(BuildContext context) {
     return Row(
       children: [
-        Icon(
-          Icons.analytics,
-          color: Theme.of(context).colorScheme.primary,
-        ),
+        Icon(Icons.analytics, color: Theme.of(context).colorScheme.primary),
         const SizedBox(width: 8),
         Text(
           'Progress',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
       ],
     );
@@ -59,7 +56,7 @@ class PumpingLemmaProgress extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -67,15 +64,16 @@ class PumpingLemmaProgress extends ConsumerWidget {
         children: [
           Text(
             'Overall Progress',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 12),
           LinearProgressIndicator(
             value: ratio,
-            backgroundColor:
-                Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            backgroundColor: Theme.of(
+              context,
+            ).colorScheme.outline.withValues(alpha: 0.2),
             valueColor: AlwaysStoppedAnimation<Color>(
               Theme.of(context).colorScheme.primary,
             ),
@@ -91,9 +89,9 @@ class PumpingLemmaProgress extends ConsumerWidget {
               Text(
                 '${(ratio * 100).toInt()}%',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
             ],
           ),
@@ -113,7 +111,7 @@ class PumpingLemmaProgress extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -121,9 +119,9 @@ class PumpingLemmaProgress extends ConsumerWidget {
         children: [
           Text(
             'Statistics',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 12),
           Row(
@@ -188,30 +186,26 @@ class PumpingLemmaProgress extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withValues(alpha: 0.1),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
         children: [
-          Icon(
-            icon,
-            color: color,
-            size: 24,
-          ),
+          Icon(icon, color: color, size: 24),
           const SizedBox(height: 4),
           Text(
             value,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
+              color: color,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           Text(
             title,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: color,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: color),
           ),
         ],
       ),
@@ -229,9 +223,9 @@ class PumpingLemmaProgress extends ConsumerWidget {
       children: [
         Text(
           'Challenge History',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
         Container(
@@ -277,15 +271,15 @@ class PumpingLemmaProgress extends ConsumerWidget {
           Text(
             'No challenges completed yet',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
+              color: Theme.of(context).colorScheme.outline,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             'Complete some challenges to see your progress here',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
+              color: Theme.of(context).colorScheme.outline,
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -299,14 +293,15 @@ class PumpingLemmaProgress extends ConsumerWidget {
     int index,
   ) {
     final color = entry.isCorrect == true ? Colors.green : Colors.red;
-    final title = entry.challengeTitle ?? 'Challenge ${entry.challengeId ?? index + 1}';
+    final title =
+        entry.challengeTitle ?? 'Challenge ${entry.challengeId ?? index + 1}';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withValues(alpha: 0.1),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -330,22 +325,22 @@ class PumpingLemmaProgress extends ConsumerWidget {
               children: [
                 Text(
                   title,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 if (entry.language != null)
                   Text(
                     entry.language!,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontFamily: 'monospace',
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
                   ),
                 Text(
                   _formatTime(entry.timestamp),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: color,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: color),
                 ),
               ],
             ),
@@ -360,9 +355,9 @@ class PumpingLemmaProgress extends ConsumerWidget {
               Text(
                 entry.isCorrect == true ? 'Correct' : 'Wrong',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: color,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -371,19 +366,17 @@ class PumpingLemmaProgress extends ConsumerWidget {
     );
   }
 
-  Widget _buildRetryItem(
-    BuildContext context,
-    PumpingLemmaHistoryEntry entry,
-  ) {
+  Widget _buildRetryItem(BuildContext context, PumpingLemmaHistoryEntry entry) {
     final color = Colors.amber.shade700;
-    final title = entry.challengeTitle ?? 'Challenge ${entry.challengeId ?? '-'}';
+    final title =
+        entry.challengeTitle ?? 'Challenge ${entry.challengeId ?? '-'}';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withValues(alpha: 0.1),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -391,11 +384,7 @@ class PumpingLemmaProgress extends ConsumerWidget {
           CircleAvatar(
             radius: 16,
             backgroundColor: color,
-            child: const Icon(
-              Icons.refresh,
-              color: Colors.white,
-              size: 18,
-            ),
+            child: const Icon(Icons.refresh, color: Colors.white, size: 18),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -405,26 +394,23 @@ class PumpingLemmaProgress extends ConsumerWidget {
                 Text(
                   'Retry selected',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: color,
-                      ),
+                    fontWeight: FontWeight.w600,
+                    color: color,
+                  ),
                 ),
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
+                Text(title, style: Theme.of(context).textTheme.bodySmall),
                 if (entry.language != null)
                   Text(
                     entry.language!,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontFamily: 'monospace',
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
                   ),
                 Text(
                   _formatTime(entry.timestamp),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: color,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: color),
                 ),
               ],
             ),

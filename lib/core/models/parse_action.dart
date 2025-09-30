@@ -4,16 +4,16 @@ import 'production.dart';
 class ParseAction {
   /// Type of parsing action
   final ParseActionType type;
-  
+
   /// State number for the action
   final int state;
-  
+
   /// Symbol for the action (can be null for some actions)
   final String? symbol;
-  
+
   /// Production rule for reduce actions
   final Production? production;
-  
+
   /// Next state for shift actions
   final int? nextState;
 
@@ -54,10 +54,7 @@ class ParseAction {
   }
 
   /// Creates an accept action
-  factory ParseAction.accept({
-    required int state,
-    required String symbol,
-  }) {
+  factory ParseAction.accept({required int state, required String symbol}) {
     return ParseAction(
       type: ParseActionType.accept,
       state: state,
@@ -66,10 +63,7 @@ class ParseAction {
   }
 
   /// Creates an error action
-  factory ParseAction.error({
-    required int state,
-    required String symbol,
-  }) {
+  factory ParseAction.error({required int state, required String symbol}) {
     return ParseAction(
       type: ParseActionType.error,
       state: state,
@@ -112,14 +106,13 @@ class ParseAction {
 enum ParseActionType {
   /// Shift action - move to next state
   shift,
-  
+
   /// Reduce action - apply production rule
   reduce,
-  
+
   /// Accept action - parsing successful
   accept,
-  
+
   /// Error action - parsing failed
   error,
 }
-

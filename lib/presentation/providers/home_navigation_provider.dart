@@ -37,5 +37,5 @@ class HomeNavigationNotifier extends StateNotifier<int> {
 /// Provides the current navigation index for the home page.
 final homeNavigationProvider =
     StateNotifierProvider<HomeNavigationNotifier, int>(
-  (ref) => HomeNavigationNotifier(),
-);
+      (ref) => HomeNavigationNotifier(),
+    );

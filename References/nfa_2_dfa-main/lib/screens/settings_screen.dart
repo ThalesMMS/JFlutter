@@ -31,21 +31,14 @@ class _SettingsScreenState extends State<SettingsScreen>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeInOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
+    );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0.0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.easeOutCubic,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0.0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+        );
 
     _fadeController.forward();
     _slideController.forward();
@@ -138,11 +131,20 @@ class _SettingsScreenState extends State<SettingsScreen>
                         title: 'ظاهر و نمایش',
                         icon: Icons.palette_outlined,
                         children: [
-                          _buildAdvancedThemeModeTile(context, settingsProvider),
+                          _buildAdvancedThemeModeTile(
+                            context,
+                            settingsProvider,
+                          ),
                           _buildDivider(),
-                          _buildCustomThemeTile(context, settingsProvider), // ویجت جدید انتخاب تم
+                          _buildCustomThemeTile(
+                            context,
+                            settingsProvider,
+                          ), // ویجت جدید انتخاب تم
                           _buildDivider(),
-                          _buildAdvancedTextScaleTile(context, settingsProvider),
+                          _buildAdvancedTextScaleTile(
+                            context,
+                            settingsProvider,
+                          ),
                         ],
                       ),
                       const SizedBox(height: 24),
@@ -194,7 +196,10 @@ class _SettingsScreenState extends State<SettingsScreen>
                             ),
                             title: const Text('درباره ما'),
                             subtitle: const Text('اطلاعات بیشتر درباره برنامه'),
-                            trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                            trailing: const Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 16,
+                            ),
                             onTap: () => _showAdvancedAboutDialog(context),
                           ),
                         ],
@@ -213,11 +218,11 @@ class _SettingsScreenState extends State<SettingsScreen>
 
   // ساخت بخش‌های انیمیشن‌دار
   Widget _buildAnimatedSection(
-      BuildContext context, {
-        required String title,
-        required IconData icon,
-        required List<Widget> children,
-      }) {
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
     final theme = Theme.of(context);
 
     return TweenAnimationBuilder<double>(
@@ -226,10 +231,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       builder: (context, value, child) {
         return Transform.translate(
           offset: Offset(0, 20 * (1 - value)),
-          child: Opacity(
-            opacity: value,
-            child: child,
-          ),
+          child: Opacity(opacity: value, child: child),
         );
       },
       child: Column(
@@ -245,11 +247,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                     color: theme.colorScheme.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(
-                    icon,
-                    color: theme.colorScheme.primary,
-                    size: 20,
-                  ),
+                  child: Icon(icon, color: theme.colorScheme.primary, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Text(
@@ -285,7 +283,10 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   // تم پیشرفته
-  Widget _buildAdvancedThemeModeTile(BuildContext context, SettingsProvider provider) {
+  Widget _buildAdvancedThemeModeTile(
+    BuildContext context,
+    SettingsProvider provider,
+  ) {
     final theme = Theme.of(context);
 
     return ListTile(
@@ -306,19 +307,33 @@ class _SettingsScreenState extends State<SettingsScreen>
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildThemePreview(context, ThemeMode.light, provider.themeMode == ThemeMode.light),
+          _buildThemePreview(
+            context,
+            ThemeMode.light,
+            provider.themeMode == ThemeMode.light,
+          ),
           const SizedBox(width: 8),
-          _buildThemePreview(context, ThemeMode.dark, provider.themeMode == ThemeMode.dark),
+          _buildThemePreview(
+            context,
+            ThemeMode.dark,
+            provider.themeMode == ThemeMode.dark,
+          ),
           const SizedBox(width: 8),
-          _buildThemePreview(context, ThemeMode.system, provider.themeMode == ThemeMode.system),
+          _buildThemePreview(
+            context,
+            ThemeMode.system,
+            provider.themeMode == ThemeMode.system,
+          ),
         ],
       ),
       onTap: () => _showAdvancedThemeDialog(context, provider),
     );
   }
 
-
-  Widget _buildCustomThemeTile(BuildContext context, SettingsProvider provider) {
+  Widget _buildCustomThemeTile(
+    BuildContext context,
+    SettingsProvider provider,
+  ) {
     final theme = Theme.of(context);
     final currentThemeData = ThemePresets.presets[provider.currentTheme];
     final currentThemeName = currentThemeData?['name'] ?? provider.currentTheme;
@@ -346,7 +361,6 @@ class _SettingsScreenState extends State<SettingsScreen>
       onTap: () => _showThemeSelector(context, provider),
     );
   }
-
 
   void _showThemeSelector(BuildContext context, SettingsProvider provider) {
     final themes = provider.availableThemes;
@@ -378,9 +392,9 @@ class _SettingsScreenState extends State<SettingsScreen>
             const SizedBox(height: 20),
             Text(
               'انتخاب تم برنامه',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 24),
             Expanded(
@@ -390,7 +404,9 @@ class _SettingsScreenState extends State<SettingsScreen>
                   final themeName = themes[index];
                   final themeData = ThemePresets.presets[themeName];
                   final themeDisplayName = themeData?['name'] ?? themeName;
-                  final themeDescription = provider.getThemeDescription(themeName);
+                  final themeDescription = provider.getThemeDescription(
+                    themeName,
+                  );
                   final primaryColor = provider.getThemePrimaryColor(themeName);
                   final isSelected = provider.currentTheme == themeName;
 
@@ -400,24 +416,39 @@ class _SettingsScreenState extends State<SettingsScreen>
                       leading: CircleAvatar(
                         backgroundColor: primaryColor,
                         child: isSelected
-                            ? const Icon(Icons.check, color: Colors.black, size: 20)
+                            ? const Icon(
+                                Icons.check,
+                                color: Colors.black,
+                                size: 20,
+                              )
                             : null,
                       ),
                       title: Text(themeDisplayName),
-                      subtitle: Text(themeDescription, maxLines: 2, overflow: TextOverflow.ellipsis),
+                      subtitle: Text(
+                        themeDescription,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       trailing: isSelected
-                          ? Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary)
+                          ? Icon(
+                              Icons.check_circle,
+                              color: Theme.of(context).colorScheme.primary,
+                            )
                           : null,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                         side: BorderSide(
-                          color: isSelected ? Theme.of(context).colorScheme.primary : Colors.transparent,
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.primary
+                              : Colors.transparent,
                           width: 1.5,
                         ),
                       ),
                       onTap: () {
                         HapticFeedback.lightImpact();
-                        context.read<SettingsProvider>().updateCurrentTheme(themeName);
+                        context.read<SettingsProvider>().updateCurrentTheme(
+                          themeName,
+                        );
                         Navigator.pop(context);
                       },
                     ),
@@ -433,7 +464,11 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   // پیش‌نمایش تم
-  Widget _buildThemePreview(BuildContext context, ThemeMode mode, bool isSelected) {
+  Widget _buildThemePreview(
+    BuildContext context,
+    ThemeMode mode,
+    bool isSelected,
+  ) {
     final theme = Theme.of(context);
     Color primaryColor;
     Color backgroundColor;
@@ -466,7 +501,9 @@ class _SettingsScreenState extends State<SettingsScreen>
           color: backgroundColor,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected ? primaryColor : theme.colorScheme.outline.withOpacity(0.3),
+            color: isSelected
+                ? primaryColor
+                : theme.colorScheme.outline.withOpacity(0.3),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -478,7 +515,10 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   // اسلایدر پیشرفته اندازه متن
-  Widget _buildAdvancedTextScaleTile(BuildContext context, SettingsProvider provider) {
+  Widget _buildAdvancedTextScaleTile(
+    BuildContext context,
+    SettingsProvider provider,
+  ) {
     final theme = Theme.of(context);
 
     return Padding(
@@ -502,7 +542,10 @@ class _SettingsScreenState extends State<SettingsScreen>
               const SizedBox(width: 12),
               const Expanded(child: Text('اندازه متن')),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
@@ -530,7 +573,9 @@ class _SettingsScreenState extends State<SettingsScreen>
                       enabledThumbRadius: 12,
                       elevation: 4,
                     ),
-                    overlayShape: const RoundSliderOverlayShape(overlayRadius: 24),
+                    overlayShape: const RoundSliderOverlayShape(
+                      overlayRadius: 24,
+                    ),
                   ),
                   child: Slider(
                     value: provider.textScaleFactor,
@@ -539,7 +584,9 @@ class _SettingsScreenState extends State<SettingsScreen>
                     divisions: 7,
                     onChanged: (value) {
                       HapticFeedback.selectionClick();
-                      context.read<SettingsProvider>().updateTextScaleFactor(value);
+                      context.read<SettingsProvider>().updateTextScaleFactor(
+                        value,
+                      );
                     },
                   ),
                 ),
@@ -561,7 +608,10 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   // تایل پیشرفته زبان
-  Widget _buildAdvancedLocaleTile(BuildContext context, SettingsProvider provider) {
+  Widget _buildAdvancedLocaleTile(
+    BuildContext context,
+    SettingsProvider provider,
+  ) {
     final theme = Theme.of(context);
 
     return ListTile(
@@ -624,13 +674,13 @@ class _SettingsScreenState extends State<SettingsScreen>
 
   // تایل اطلاعات
   Widget _buildInfoTile(
-      BuildContext context, {
-        required IconData icon,
-        required String title,
-        required String subtitle,
-        Widget? trailing,
-        VoidCallback? onTap,
-      }) {
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    Widget? trailing,
+    VoidCallback? onTap,
+  }) {
     final theme = Theme.of(context);
 
     return ListTile(
@@ -645,7 +695,11 @@ class _SettingsScreenState extends State<SettingsScreen>
       ),
       title: Text(title),
       subtitle: Text(subtitle),
-      trailing: trailing ?? (onTap != null ? const Icon(Icons.arrow_forward_ios_rounded, size: 16) : null),
+      trailing:
+          trailing ??
+          (onTap != null
+              ? const Icon(Icons.arrow_forward_ios_rounded, size: 16)
+              : null),
       onTap: onTap,
     );
   }
@@ -663,7 +717,10 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   // دیالوگ پیشرفته تم
-  void _showAdvancedThemeDialog(BuildContext context, SettingsProvider provider) {
+  void _showAdvancedThemeDialog(
+    BuildContext context,
+    SettingsProvider provider,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -688,27 +745,32 @@ class _SettingsScreenState extends State<SettingsScreen>
             const SizedBox(height: 20),
             Text(
               'انتخاب حالت تم',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 24),
-            ...ThemeMode.values.map((mode) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: ListTile(
-                leading: Icon(_getThemeIcon(mode)),
-                title: Text(_themeModeToString(mode)),
-                subtitle: Text(_getThemeDescription(mode)),
-                trailing: provider.themeMode == mode
-                    ? Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary)
-                    : null,
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  context.read<SettingsProvider>().updateThemeMode(mode);
-                  Navigator.pop(context);
-                },
+            ...ThemeMode.values.map(
+              (mode) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: ListTile(
+                  leading: Icon(_getThemeIcon(mode)),
+                  title: Text(_themeModeToString(mode)),
+                  subtitle: Text(_getThemeDescription(mode)),
+                  trailing: provider.themeMode == mode
+                      ? Icon(
+                          Icons.check_circle,
+                          color: Theme.of(context).colorScheme.primary,
+                        )
+                      : null,
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    context.read<SettingsProvider>().updateThemeMode(mode);
+                    Navigator.pop(context);
+                  },
+                ),
               ),
-            )),
+            ),
             const SizedBox(height: 20),
           ],
         ),
@@ -760,48 +822,57 @@ class _SettingsScreenState extends State<SettingsScreen>
             const SizedBox(height: 20),
             Text(
               'انتخاب زبان',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 24),
-            ...languages.map((lang) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                  child: Text(
-                    lang['flag']!,
-                    style: const TextStyle(fontSize: 20),
+            ...languages.map(
+              (lang) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.primaryContainer,
+                    child: Text(
+                      lang['flag']!,
+                      style: const TextStyle(fontSize: 20),
+                    ),
                   ),
+                  title: Text(lang['name']!),
+                  subtitle: Text('کد زبان: ${lang['code']}'),
+                  trailing: lang['code'] == 'fa'
+                      ? Icon(
+                          Icons.check_circle,
+                          color: Theme.of(context).colorScheme.primary,
+                        )
+                      : null,
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    if (lang['code'] != 'fa') {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'زبان ${lang['name']} در نسخه‌های بعدی اضافه خواهد شد',
+                          ),
+                          behavior: SnackBarBehavior.floating,
+                          margin: const EdgeInsets.all(16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          action: SnackBarAction(
+                            label: 'باشه',
+                            onPressed: () {},
+                          ),
+                        ),
+                      );
+                    }
+                    Navigator.pop(context);
+                  },
                 ),
-                title: Text(lang['name']!),
-                subtitle: Text('کد زبان: ${lang['code']}'),
-                trailing: lang['code'] == 'fa'
-                    ? Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary)
-                    : null,
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  if (lang['code'] != 'fa') {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('زبان ${lang['name']} در نسخه‌های بعدی اضافه خواهد شد'),
-                        behavior: SnackBarBehavior.floating,
-                        margin: const EdgeInsets.all(16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        action: SnackBarAction(
-                          label: 'باشه',
-                          onPressed: () {},
-                        ),
-                      ),
-                    );
-                  }
-                  Navigator.pop(context);
-                },
               ),
-            )),
+            ),
             const SizedBox(height: 20),
           ],
         ),
@@ -834,9 +905,9 @@ class _SettingsScreenState extends State<SettingsScreen>
             const SizedBox(height: 20),
             Text(
               'تماس با پشتیبانی',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 24),
             ListTile(
@@ -909,7 +980,9 @@ class _SettingsScreenState extends State<SettingsScreen>
               Text(
                 'نسخه ${AppConstants.appVersion}',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.7),
                 ),
               ),
               const SizedBox(height: 16),

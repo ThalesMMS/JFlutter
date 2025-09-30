@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 
 class SettingsProvider with ChangeNotifier {
-
   ThemeMode _themeMode = ThemeMode.system;
   Locale _locale = const Locale('fa', 'IR');
   double _textScaleFactor = 1.0;
@@ -38,18 +37,15 @@ class SettingsProvider with ChangeNotifier {
     'volcano',
     'arctic',
     'rainbow',
-    'minimal_glass'
+    'minimal_glass',
   ];
 
   Future<void> loadSettings() async {
     _isLoading = true;
 
     try {
-
       await Future.delayed(const Duration(milliseconds: 500));
-
     } catch (e) {
-
       debugPrint('Error loading settings: $e');
     } finally {
       _isLoading = false;
@@ -59,9 +55,7 @@ class SettingsProvider with ChangeNotifier {
   }
 
   Future<void> saveSettings() async {
-    try {
-
-    } catch (e) {
+    try {} catch (e) {
       debugPrint('Error saving settings: $e');
     }
   }
@@ -92,7 +86,8 @@ class SettingsProvider with ChangeNotifier {
 
   // تغییر تم جاری
   void updateCurrentTheme(String newTheme) {
-    if (!availableThemes.contains(newTheme) || newTheme == _currentTheme) return;
+    if (!availableThemes.contains(newTheme) || newTheme == _currentTheme)
+      return;
     _currentTheme = newTheme;
     notifyListeners();
     saveSettings();

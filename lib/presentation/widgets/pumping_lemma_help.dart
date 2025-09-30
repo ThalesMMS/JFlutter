@@ -19,9 +19,7 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
         children: [
           _buildHeader(context),
           _buildTabBar(context),
-          Flexible(
-            child: _buildTabContent(context),
-          ),
+          Flexible(child: _buildTabContent(context)),
         ],
       ),
     );
@@ -39,9 +37,9 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
           const SizedBox(width: 8),
           Text(
             'Pumping Lemma Help',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -53,7 +51,7 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
           ),
         ),
       ),
@@ -69,7 +67,7 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
 
   Widget _buildTab(BuildContext context, String label, int index) {
     final isSelected = _selectedTab == index;
-    
+
     return Expanded(
       child: InkWell(
         onTap: () => setState(() => _selectedTab = index),
@@ -78,7 +76,7 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color: isSelected 
+                color: isSelected
                     ? Theme.of(context).colorScheme.primary
                     : Colors.transparent,
                 width: 2,
@@ -89,9 +87,11 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
             label,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: isSelected 
+              color: isSelected
                   ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  : Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.6),
               fontWeight: isSelected ? FontWeight.w600 : null,
             ),
           ),
@@ -122,19 +122,22 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
           _buildSection(
             context,
             title: 'What is the Pumping Lemma?',
-            content: 'The Pumping Lemma is a fundamental theorem in formal language theory that provides a necessary condition for a language to be regular. It helps us prove that certain languages are not regular.',
+            content:
+                'The Pumping Lemma is a fundamental theorem in formal language theory that provides a necessary condition for a language to be regular. It helps us prove that certain languages are not regular.',
           ),
           const SizedBox(height: 16),
           _buildSection(
             context,
             title: 'The Theorem',
-            content: 'For any regular language L, there exists a constant p (called the pumping length) such that any string s in L with |s| ≥ p can be written as s = xyz where:\n\n• |xy| ≤ p\n• |y| > 0\n• xyᵏz ∈ L for all k ≥ 0',
+            content:
+                'For any regular language L, there exists a constant p (called the pumping length) such that any string s in L with |s| ≥ p can be written as s = xyz where:\n\n• |xy| ≤ p\n• |y| > 0\n• xyᵏz ∈ L for all k ≥ 0',
           ),
           const SizedBox(height: 16),
           _buildSection(
             context,
             title: 'How to Use It',
-            content: 'To prove a language L is not regular:\n\n1. Assume L is regular\n2. Let p be the pumping length\n3. Choose a string s ∈ L with |s| ≥ p\n4. Show that for any decomposition s = xyz satisfying the conditions, there exists k ≥ 0 such that xyᵏz ∉ L\n5. This contradicts the pumping lemma, so L is not regular',
+            content:
+                'To prove a language L is not regular:\n\n1. Assume L is regular\n2. Let p be the pumping length\n3. Choose a string s ∈ L with |s| ≥ p\n4. Show that for any decomposition s = xyz satisfying the conditions, there exists k ≥ 0 such that xyᵏz ∉ L\n5. This contradicts the pumping lemma, so L is not regular',
           ),
         ],
       ),
@@ -151,15 +154,18 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
             context,
             step: 1,
             title: 'Identify the Language',
-            description: 'Look at the given language and understand what strings it contains.',
-            example: 'L = {aⁿbⁿ | n ≥ 0} contains strings like ε, ab, aabb, aaabbb, etc.',
+            description:
+                'Look at the given language and understand what strings it contains.',
+            example:
+                'L = {aⁿbⁿ | n ≥ 0} contains strings like ε, ab, aabb, aaabbb, etc.',
           ),
           const SizedBox(height: 16),
           _buildStep(
             context,
             step: 2,
             title: 'Assume Regularity',
-            description: 'Assume the language is regular and let p be the pumping length.',
+            description:
+                'Assume the language is regular and let p be the pumping length.',
             example: 'Assume L is regular with pumping length p.',
           ),
           const SizedBox(height: 16),
@@ -167,7 +173,8 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
             context,
             step: 3,
             title: 'Choose a String',
-            description: 'Select a string s ∈ L with |s| ≥ p that will be hard to pump.',
+            description:
+                'Select a string s ∈ L with |s| ≥ p that will be hard to pump.',
             example: 'Choose s = aᵖbᵖ. This string has length 2p ≥ p.',
           ),
           const SizedBox(height: 16),
@@ -175,16 +182,20 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
             context,
             step: 4,
             title: 'Consider Decompositions',
-            description: 'For any decomposition s = xyz with |xy| ≤ p and |y| > 0, analyze what happens when you pump.',
-            example: 'Since |xy| ≤ p, y consists only of a\'s. Pumping y gives more a\'s than b\'s.',
+            description:
+                'For any decomposition s = xyz with |xy| ≤ p and |y| > 0, analyze what happens when you pump.',
+            example:
+                'Since |xy| ≤ p, y consists only of a\'s. Pumping y gives more a\'s than b\'s.',
           ),
           const SizedBox(height: 16),
           _buildStep(
             context,
             step: 5,
             title: 'Find Contradiction',
-            description: 'Show that pumping leads to a string not in the language.',
-            example: 'xy²z = aᵖ⁺|y|bᵖ has more a\'s than b\'s, so it\'s not in L.',
+            description:
+                'Show that pumping leads to a string not in the language.',
+            example:
+                'xy²z = aᵖ⁺|y|bᵖ has more a\'s than b\'s, so it\'s not in L.',
           ),
         ],
       ),
@@ -200,8 +211,10 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
           _buildExample(
             context,
             title: 'Regular Language: L = {aⁿ | n ≥ 0}',
-            description: 'This language is regular because it can be recognized by a simple automaton.',
-            proof: 'For any string aᵖ, we can decompose it as x = ε, y = a, z = aᵖ⁻¹. Then xyᵏz = aᵏaᵖ⁻¹ = aᵖ⁺ᵏ⁻¹, which is always in L.',
+            description:
+                'This language is regular because it can be recognized by a simple automaton.',
+            proof:
+                'For any string aᵖ, we can decompose it as x = ε, y = a, z = aᵖ⁻¹. Then xyᵏz = aᵏaᵖ⁻¹ = aᵖ⁺ᵏ⁻¹, which is always in L.',
             result: 'REGULAR',
             isRegular: true,
           ),
@@ -209,8 +222,10 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
           _buildExample(
             context,
             title: 'Non-Regular Language: L = {aⁿbⁿ | n ≥ 0}',
-            description: 'This language is not regular because it requires counting.',
-            proof: 'Assume L is regular with pumping length p. Choose s = aᵖbᵖ. For any decomposition s = xyz with |xy| ≤ p, y consists only of a\'s. Pumping y gives xy²z = aᵖ⁺|y|bᵖ, which has more a\'s than b\'s and is not in L.',
+            description:
+                'This language is not regular because it requires counting.',
+            proof:
+                'Assume L is regular with pumping length p. Choose s = aᵖbᵖ. For any decomposition s = xyz with |xy| ≤ p, y consists only of a\'s. Pumping y gives xy²z = aᵖ⁺|y|bᵖ, which has more a\'s than b\'s and is not in L.',
             result: 'NOT REGULAR',
             isRegular: false,
           ),
@@ -218,8 +233,10 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
           _buildExample(
             context,
             title: 'Non-Regular Language: L = {ww | w ∈ {a,b}*}',
-            description: 'This language contains strings that are concatenations of a word with itself.',
-            proof: 'Assume L is regular with pumping length p. Choose s = aᵖbaᵖb. For any decomposition s = xyz with |xy| ≤ p, y consists only of a\'s from the first part. Pumping y breaks the symmetry required for the string to be in L.',
+            description:
+                'This language contains strings that are concatenations of a word with itself.',
+            proof:
+                'Assume L is regular with pumping length p. Choose s = aᵖbaᵖb. For any decomposition s = xyz with |xy| ≤ p, y consists only of a\'s from the first part. Pumping y breaks the symmetry required for the string to be in L.',
             result: 'NOT REGULAR',
             isRegular: false,
           ),
@@ -228,11 +245,15 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
     );
   }
 
-  Widget _buildSection(BuildContext context, {required String title, required String content}) {
+  Widget _buildSection(
+    BuildContext context, {
+    required String title,
+    required String content,
+  }) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -240,21 +261,19 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
         children: [
           Text(
             title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          Text(
-            content,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          Text(content, style: Theme.of(context).textTheme.bodyMedium),
         ],
       ),
     );
   }
 
-  Widget _buildStep(BuildContext context, {
+  Widget _buildStep(
+    BuildContext context, {
     required int step,
     required String title,
     required String description,
@@ -263,7 +282,7 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -286,17 +305,14 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
               const SizedBox(width: 8),
               Text(
                 title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          Text(
-            description,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          Text(description, style: Theme.of(context).textTheme.bodyMedium),
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.all(8),
@@ -317,7 +333,8 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
     );
   }
 
-  Widget _buildExample(BuildContext context, {
+  Widget _buildExample(
+    BuildContext context, {
     required String title,
     required String description,
     required String proof,
@@ -325,12 +342,12 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
     required bool isRegular,
   }) {
     final color = isRegular ? Colors.green : Colors.red;
-    
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withValues(alpha: 0.1),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -338,27 +355,21 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
         children: [
           Text(
             title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          Text(
-            description,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          Text(description, style: Theme.of(context).textTheme.bodyMedium),
           const SizedBox(height: 8),
           Text(
             'Proof:',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 4),
-          Text(
-            proof,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
+          Text(proof, style: Theme.of(context).textTheme.bodySmall),
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

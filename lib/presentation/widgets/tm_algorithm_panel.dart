@@ -65,16 +65,13 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
   Widget _buildHeader(BuildContext context) {
     return Row(
       children: [
-        Icon(
-          Icons.auto_awesome,
-          color: Theme.of(context).colorScheme.primary,
-        ),
+        Icon(Icons.auto_awesome, color: Theme.of(context).colorScheme.primary),
         const SizedBox(width: 8),
         Text(
           'TM Analysis',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
       ],
     );
@@ -152,25 +149,23 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
         decoration: BoxDecoration(
           border: Border.all(
             color: _isAnalyzing
-                ? colorScheme.outline.withOpacity(0.3)
+                ? colorScheme.outline.withValues(alpha: 0.3)
                 : isSelected
-                    ? colorScheme.primary
-                    : colorScheme.primary.withOpacity(0.3),
+                ? colorScheme.primary
+                : colorScheme.primary.withValues(alpha: 0.3),
           ),
           borderRadius: BorderRadius.circular(8),
           color: _isAnalyzing
-              ? colorScheme.surfaceVariant.withOpacity(0.5)
+              ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
               : isSelected
-                  ? colorScheme.primaryContainer.withOpacity(0.35)
-                  : null,
+              ? colorScheme.primaryContainer.withValues(alpha: 0.35)
+              : null,
         ),
         child: Row(
           children: [
             Icon(
               icon,
-              color: _isAnalyzing
-                  ? colorScheme.outline
-                  : colorScheme.primary,
+              color: _isAnalyzing ? colorScheme.outline : colorScheme.primary,
               size: 24,
             ),
             const SizedBox(width: 12),
@@ -181,18 +176,18 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: _isAnalyzing
-                              ? colorScheme.outline
-                              : colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      color: _isAnalyzing
+                          ? colorScheme.outline
+                          : colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     description,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurface.withOpacity(0.7),
-                        ),
+                      color: colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
                   ),
                 ],
               ),
@@ -206,7 +201,7 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
             else
               Icon(
                 Icons.arrow_forward_ios,
-                color: colorScheme.primary.withOpacity(0.5),
+                color: colorScheme.primary.withValues(alpha: 0.5),
                 size: 16,
               ),
           ],
@@ -223,13 +218,15 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
         children: [
           Text(
             'Analysis Results',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           Expanded(
-            child: hasData ? _buildResults(context) : _buildEmptyResults(context),
+            child: hasData
+                ? _buildResults(context)
+                : _buildEmptyResults(context),
           ),
         ],
       ),
@@ -241,10 +238,10 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -259,15 +256,15 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
           Text(
             'No analysis results yet',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
+              color: Theme.of(context).colorScheme.outline,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             'Select an algorithm above to analyze your TM.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
+              color: Theme.of(context).colorScheme.outline,
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -283,8 +280,8 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: colorScheme.error.withOpacity(0.2)),
-          color: colorScheme.errorContainer.withOpacity(0.4),
+          border: Border.all(color: colorScheme.error.withValues(alpha: 0.2)),
+          color: colorScheme.errorContainer.withValues(alpha: 0.4),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -295,8 +292,8 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
               child: Text(
                 _analysisError!,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onErrorContainer,
-                    ),
+                  color: colorScheme.onErrorContainer,
+                ),
               ),
             ),
           ],
@@ -513,9 +510,9 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceVariant,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: colorScheme.outline.withOpacity(0.4)),
+        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.4)),
       ),
       child: SingleChildScrollView(
         child: Column(
@@ -563,7 +560,8 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
         _analysis = result.data;
         _analyzedTm = tm;
       } else {
-        _analysisError = result.error ??
+        _analysisError =
+            result.error ??
             'Analysis failed due to an unknown error. Please verify the machine configuration.';
       }
     });
@@ -574,7 +572,7 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: colorScheme.primaryContainer.withOpacity(0.5),
+        color: colorScheme.primaryContainer.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -584,9 +582,9 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
           Expanded(
             child: Text(
               'Analysis focus: ${_focusLabel(focus)}',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -628,10 +626,10 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
         border: Border.all(
           color: highlight
               ? colorScheme.primary
-              : colorScheme.outline.withOpacity(0.4),
+              : colorScheme.outline.withValues(alpha: 0.4),
         ),
         color: highlight
-            ? colorScheme.primaryContainer.withOpacity(0.35)
+            ? colorScheme.primaryContainer.withValues(alpha: 0.35)
             : colorScheme.surface,
       ),
       child: Column(
@@ -639,9 +637,9 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
         children: [
           Text(
             title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           ...children,
@@ -700,17 +698,14 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+            child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
           ),
           Text(
             value,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: valueColor,
-                  fontWeight: highlight ? FontWeight.bold : null,
-                ),
+              color: valueColor,
+              fontWeight: highlight ? FontWeight.bold : null,
+            ),
           ),
         ],
       ),
@@ -737,9 +732,9 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
           Text(
             label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
-                ),
+              color: colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const SizedBox(height: 4),
           Wrap(
@@ -750,12 +745,12 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
                   (value) => Chip(
                     label: Text(value),
                     backgroundColor: isWarning
-                        ? colorScheme.errorContainer.withOpacity(0.5)
-                        : colorScheme.secondaryContainer.withOpacity(0.4),
+                        ? colorScheme.errorContainer.withValues(alpha: 0.5)
+                        : colorScheme.secondaryContainer.withValues(alpha: 0.4),
                     side: BorderSide(
                       color: isWarning
                           ? colorScheme.error
-                          : colorScheme.secondary.withOpacity(0.5),
+                          : colorScheme.secondary.withValues(alpha: 0.5),
                     ),
                   ),
                 )
@@ -796,9 +791,9 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
           Expanded(
             child: Text(
               message,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: textColor,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: textColor),
             ),
           ),
         ],

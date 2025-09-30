@@ -6,28 +6,28 @@ import 'transition.dart';
 class PDATransition extends Transition {
   /// Input symbol that triggers this transition
   final String inputSymbol;
-  
+
   /// Symbol to pop from the stack
   final String popSymbol;
-  
+
   /// Symbol to push onto the stack
   final String pushSymbol;
-  
+
   /// Whether the input is lambda (epsilon)
   final bool isLambdaInput;
-  
+
   /// Whether the pop operation is lambda (epsilon)
   final bool isLambdaPop;
-  
+
   /// Whether the push operation is lambda (epsilon)
   final bool isLambdaPush;
-  
+
   /// Read symbol (alias for inputSymbol)
   String get readSymbol => inputSymbol;
-  
+
   /// Stack pop symbol (alias for popSymbol)
   String get stackPop => popSymbol;
-  
+
   /// Stack push symbol (alias for pushSymbol)
   String get stackPush => pushSymbol;
 
@@ -86,10 +86,7 @@ class PDATransition extends Transition {
       'fromState': fromState.id,
       'toState': toState.id,
       'label': label,
-      'controlPoint': {
-        'x': controlPoint.x,
-        'y': controlPoint.y,
-      },
+      'controlPoint': {'x': controlPoint.x, 'y': controlPoint.y},
       'type': type.name,
       'transitionType': 'pda',
       'inputSymbol': inputSymbol,
@@ -161,31 +158,33 @@ class PDATransition extends Transition {
   @override
   List<String> validate() {
     final errors = super.validate();
-    
+
     if (inputSymbol.isEmpty && !isLambdaInput) {
       errors.add('PDA transition must have input symbol or be lambda input');
     }
-    
+
     if (popSymbol.isEmpty && !isLambdaPop) {
       errors.add('PDA transition must have pop symbol or be lambda pop');
     }
-    
+
     if (pushSymbol.isEmpty && !isLambdaPush) {
       errors.add('PDA transition must have push symbol or be lambda push');
     }
-    
+
     if (isLambdaInput && inputSymbol.isNotEmpty) {
-      errors.add('PDA transition cannot have both input symbol and lambda input');
+      errors.add(
+        'PDA transition cannot have both input symbol and lambda input',
+      );
     }
-    
+
     if (isLambdaPop && popSymbol.isNotEmpty) {
       errors.add('PDA transition cannot have both pop symbol and lambda pop');
     }
-    
+
     if (isLambdaPush && pushSymbol.isNotEmpty) {
       errors.add('PDA transition cannot have both push symbol and lambda push');
     }
-    
+
     return errors;
   }
 
@@ -232,7 +231,7 @@ class PDATransition extends Transition {
       fromState: fromState,
       toState: toState,
       label: label ?? 'ε,ε→ε',
-          controlPoint: controlPoint ?? Vector2.zero(),
+      controlPoint: controlPoint ?? Vector2.zero(),
       type: TransitionType.epsilon,
       inputSymbol: '',
       popSymbol: '',
@@ -259,7 +258,7 @@ class PDATransition extends Transition {
       fromState: fromState,
       toState: toState,
       label: label ?? '$inputSymbol,$popSymbol→$pushSymbol',
-          controlPoint: controlPoint ?? Vector2.zero(),
+      controlPoint: controlPoint ?? Vector2.zero(),
       type: TransitionType.deterministic,
       inputSymbol: inputSymbol,
       popSymbol: popSymbol,
@@ -281,7 +280,7 @@ class PDATransition extends Transition {
       fromState: fromState,
       toState: toState,
       label: label ?? '$inputSymbol,ε→ε',
-          controlPoint: controlPoint ?? Vector2.zero(),
+      controlPoint: controlPoint ?? Vector2.zero(),
       type: TransitionType.deterministic,
       inputSymbol: inputSymbol,
       popSymbol: '',
@@ -306,7 +305,7 @@ class PDATransition extends Transition {
       fromState: fromState,
       toState: toState,
       label: label ?? 'ε,$popSymbol→$pushSymbol',
-          controlPoint: controlPoint ?? Vector2.zero(),
+      controlPoint: controlPoint ?? Vector2.zero(),
       type: TransitionType.deterministic,
       inputSymbol: '',
       popSymbol: popSymbol,

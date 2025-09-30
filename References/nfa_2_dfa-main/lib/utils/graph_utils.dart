@@ -7,7 +7,6 @@ import '../models/state_model.dart';
 
 /// کلاس ابزاری برای محاسبات مربوط به گراف
 class GraphUtils {
-
   /// محاسبه فاصله بین دو نقطه
   static double distance(Offset p1, Offset p2) {
     return math.sqrt(math.pow(p1.dx - p2.dx, 2) + math.pow(p1.dy - p2.dy, 2));
@@ -77,11 +76,11 @@ class GraphUtils {
 
   /// محاسبه نقطه تقاطع خط با دایره
   static Offset? lineCircleIntersection(
-      Offset lineStart,
-      Offset lineEnd,
-      Offset circleCenter,
-      double circleRadius,
-      ) {
+    Offset lineStart,
+    Offset lineEnd,
+    Offset circleCenter,
+    double circleRadius,
+  ) {
     final dx = lineEnd.dx - lineStart.dx;
     final dy = lineEnd.dy - lineStart.dy;
     final fx = lineStart.dx - circleCenter.dx;
@@ -103,10 +102,7 @@ class GraphUtils {
 
     if (t < 0 || t > 1) return null;
 
-    return Offset(
-      lineStart.dx + t * dx,
-      lineStart.dy + t * dy,
-    );
+    return Offset(lineStart.dx + t * dx, lineStart.dy + t * dy);
   }
 
   /// تولید رنگ تصادفی
@@ -136,7 +132,8 @@ class GraphUtils {
 
   /// محاسبه رنگ متضاد
   static Color getContrastColor(Color color) {
-    final luminance = (0.299 * color.red + 0.587 * color.green + 0.114 * color.blue) / 255;
+    final luminance =
+        (0.299 * color.red + 0.587 * color.green + 0.114 * color.blue) / 255;
     return luminance > 0.5 ? Colors.black : Colors.white;
   }
 
@@ -147,10 +144,7 @@ class GraphUtils {
 
   /// انیمیشن نرم بین دو نقطه
   static Offset lerpOffset(Offset start, Offset end, double t) {
-    return Offset(
-      lerp(start.dx, end.dx, t),
-      lerp(start.dy, end.dy, t),
-    );
+    return Offset(lerp(start.dx, end.dx, t), lerp(start.dy, end.dy, t));
   }
 
   /// تابع easing برای انیمیشن‌های نرم
@@ -164,21 +158,16 @@ class GraphUtils {
     final distance = GraphUtils.distance(start, end);
     final controlOffset = distance * 0.3;
 
-    final perpendicular = Offset(
-      -(end.dy - start.dy),
-      end.dx - start.dx,
-    ).normalize() * controlOffset;
+    final perpendicular =
+        Offset(-(end.dy - start.dy), end.dx - start.dx).normalize() *
+        controlOffset;
 
-    return [
-      start + perpendicular,
-      end + perpendicular,
-    ];
+    return [start + perpendicular, end + perpendicular];
   }
 }
 
 /// Extension برای کلاس Offset
 extension OffsetExtensions on Offset {
-
   /// نرمال کردن بردار
   Offset normalize() {
     final length = distance;
@@ -190,10 +179,7 @@ extension OffsetExtensions on Offset {
   Offset rotate(double angle) {
     final cos = math.cos(angle);
     final sin = math.sin(angle);
-    return Offset(
-      dx * cos - dy * sin,
-      dx * sin + dy * cos,
-    );
+    return Offset(dx * cos - dy * sin, dx * sin + dy * cos);
   }
 
   /// محاسبه طول بردار
@@ -213,7 +199,6 @@ extension OffsetExtensions on Offset {
 
 /// Extension برای کلاس Color
 extension ColorExtensions on Color {
-
   /// تیره کردن رنگ
   Color darken([double amount = 0.1]) {
     assert(amount >= 0 && amount <= 1);
@@ -245,73 +230,64 @@ extension ColorExtensions on Color {
 
 /// کلاس کمکی برای انیمیشن‌ها
 class AnimationHelper {
-
   /// ایجاد انیمیشن ورود با افکت bounce
   static Animation<double> createBounceAnimation(
-      AnimationController controller, {
-        double begin = 0.0,
-        double end = 1.0,
-      }) {
-    return Tween<double>(begin: begin, end: end).animate(
-      CurvedAnimation(
-        parent: controller,
-        curve: Curves.elasticOut,
-      ),
-    );
+    AnimationController controller, {
+    double begin = 0.0,
+    double end = 1.0,
+  }) {
+    return Tween<double>(
+      begin: begin,
+      end: end,
+    ).animate(CurvedAnimation(parent: controller, curve: Curves.elasticOut));
   }
 
   /// ایجاد انیمیشن fade
   static Animation<double> createFadeAnimation(
-      AnimationController controller, {
-        double begin = 0.0,
-        double end = 1.0,
-      }) {
-    return Tween<double>(begin: begin, end: end).animate(
-      CurvedAnimation(
-        parent: controller,
-        curve: Curves.easeInOut,
-      ),
-    );
+    AnimationController controller, {
+    double begin = 0.0,
+    double end = 1.0,
+  }) {
+    return Tween<double>(
+      begin: begin,
+      end: end,
+    ).animate(CurvedAnimation(parent: controller, curve: Curves.easeInOut));
   }
 
   /// ایجاد انیمیشن اسلاید
   static Animation<Offset> createSlideAnimation(
-      AnimationController controller, {
-        Offset begin = const Offset(0, 1),
-        Offset end = Offset.zero,
-      }) {
-    return Tween<Offset>(begin: begin, end: end).animate(
-      CurvedAnimation(
-        parent: controller,
-        curve: Curves.easeOutCubic,
-      ),
-    );
+    AnimationController controller, {
+    Offset begin = const Offset(0, 1),
+    Offset end = Offset.zero,
+  }) {
+    return Tween<Offset>(
+      begin: begin,
+      end: end,
+    ).animate(CurvedAnimation(parent: controller, curve: Curves.easeOutCubic));
   }
 
   /// ایجاد انیمیشن چرخش
   static Animation<double> createRotationAnimation(
-      AnimationController controller, {
-        double begin = 0.0,
-        double end = 1.0,
-      }) {
-    return Tween<double>(begin: begin, end: end).animate(
-      CurvedAnimation(
-        parent: controller,
-        curve: Curves.linear,
-      ),
-    );
+    AnimationController controller, {
+    double begin = 0.0,
+    double end = 1.0,
+  }) {
+    return Tween<double>(
+      begin: begin,
+      end: end,
+    ).animate(CurvedAnimation(parent: controller, curve: Curves.linear));
   }
 }
 
 /// کلاس برای محاسبات مربوط به اتوماتا
 class AutomatonUtils {
-
   /// استخراج تمام حالات از اتوماتا
   static List<String> extractStates(dynamic automaton) {
     if (automaton is NFA) {
       return automaton.states.toList()..sort();
     } else if (automaton is DFA) {
-      return automaton.states.map((s) => automaton.getStateName(s)).toList()..sort();
+      return automaton.states.map((s) => automaton.getStateName(s)).toList()
+        ..sort();
     }
     return [];
   }
@@ -371,10 +347,10 @@ class AutomatonUtils {
 
   /// شبیه‌سازی گام به گام NFA
   static List<String> simulateNFAStep(
-      NFA nfa,
-      List<String> currentStates,
-      String symbol,
-      ) {
+    NFA nfa,
+    List<String> currentStates,
+    String symbol,
+  ) {
     final newStates = <String>{};
 
     for (final state in currentStates) {
@@ -387,10 +363,10 @@ class AutomatonUtils {
 
   /// شبیه‌سازی گام به گام DFA
   static String? simulateDFAStep(
-      DFA dfa,
-      String currentStateName,
-      String symbol,
-      ) {
+    DFA dfa,
+    String currentStateName,
+    String symbol,
+  ) {
     final currentStateSet = findStateSetByName(dfa, currentStateName);
     if (currentStateSet == null) return null;
 
@@ -400,21 +376,18 @@ class AutomatonUtils {
   }
 
   /// بررسی پذیرش رشته
-  static bool isAccepted(
-      dynamic automaton,
-      List<String> currentStates,
-      ) {
+  static bool isAccepted(dynamic automaton, List<String> currentStates) {
     final finalStates = getFinalStates(automaton);
     return currentStates.any((state) => finalStates.contains(state));
   }
 
   /// تولید گزارش شبیه‌سازی
   static String generateSimulationReport(
-      String input,
-      List<String> path,
-      bool accepted,
-      String automatonType,
-      ) {
+    String input,
+    List<String> path,
+    bool accepted,
+    String automatonType,
+  ) {
     final buffer = StringBuffer();
     buffer.writeln('=== گزارش شبیه‌سازی ===');
     buffer.writeln('نوع اتوماتا: $automatonType');
@@ -438,7 +411,6 @@ class AutomatonUtils {
 
 /// کلاس برای تنظیمات و تم‌های رنگی
 class ThemeHelper {
-
   /// دریافت تم روشن
   static ThemeData getLightTheme() {
     return ThemeData(
@@ -480,7 +452,6 @@ class ThemeHelper {
 
 /// کلاس کمکی برای validation
 class ValidationHelper {
-
   /// بررسی معتبر بودن نام حالت
   static bool isValidStateName(String name) {
     if (name.isEmpty) return false;
@@ -524,7 +495,6 @@ class ValidationResult {
 
 /// کلاس کمکی برای export و import
 class FileHelper {
-
   /// تولید نام فایل با timestamp
   static String generateFileName(String prefix, String extension) {
     final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
@@ -540,7 +510,6 @@ class FileHelper {
     }
     return {};
   }
-
 
   static Map<String, Map<String, List<String>>> _nfaTransitionsToJson(NFA nfa) {
     final transitions = <String, Map<String, List<String>>>{};

@@ -13,34 +13,23 @@ import '../../core/models/fsa.dart';
 import '../../core/models/fsa_transition.dart';
 import '../../core/models/state.dart';
 import '../../core/models/grammar.dart';
-import '../../core/models/pda.dart';
 import '../../core/models/simulation_result.dart' as sim_result;
-import '../../core/models/tm.dart';
-import '../../core/repositories/automaton_repository.dart';
-import '../../core/result.dart';
 import '../../core/entities/automaton_entity.dart';
 import '../../data/services/automaton_service.dart';
-import '../../data/services/conversion_service.dart';
-import '../../data/services/simulation_service.dart';
+import '../../core/repositories/automaton_repository.dart';
 import '../../features/layout/layout_repository_impl.dart';
 
 /// Provider for automaton state management
 class AutomatonProvider extends StateNotifier<AutomatonState> {
   final AutomatonService _automatonService;
-  final SimulationService _simulationService;
-  final ConversionService _conversionService;
   final LayoutRepository _layoutRepository;
 
   AutomatonProvider({
     required AutomatonService automatonService,
-    required SimulationService simulationService,
-    required ConversionService conversionService,
     required LayoutRepository layoutRepository,
-  })  : _automatonService = automatonService,
-        _simulationService = simulationService,
-        _conversionService = conversionService,
-        _layoutRepository = layoutRepository,
-        super(const AutomatonState());
+  }) : _automatonService = automatonService,
+       _layoutRepository = layoutRepository,
+       super(const AutomatonState());
 
   /// Creates a new automaton
   Future<void> createAutomaton({
@@ -49,14 +38,14 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     required List<String> alphabet,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     try {
       // Create a simple automaton with one state
       final result = _automatonService.createAutomaton(
         CreateAutomatonRequest(
           name: name,
           description: description,
-          states: [
+          states: const [
             StateData(
               id: 'q0',
               name: 'q0',
@@ -65,22 +54,16 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
               isAccepting: false,
             ),
           ],
-          transitions: [],
+          transitions: const [],
           alphabet: alphabet,
-          bounds: Rect(0, 0, 400, 300),
+          bounds: const Rect(0, 0, 400, 300),
         ),
       );
 
       if (result.isSuccess) {
-        state = state.copyWith(
-          currentAutomaton: result.data,
-          isLoading: false,
-        );
+        state = state.copyWith(currentAutomaton: result.data, isLoading: false);
       } else {
-        state = state.copyWith(
-          isLoading: false,
-          error: result.error,
-        );
+        state = state.copyWith(isLoading: false, error: result.error);
       }
     } catch (e) {
       state = state.copyWith(
@@ -112,7 +95,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
 
     try {
       // Use the core algorithm directly
-      final result = AutomatonSimulator.simulate(
+      final result = await AutomatonSimulator.simulate(
         state.currentAutomaton!,
         inputString,
         stepByStep: true,
@@ -120,15 +103,9 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       );
 
       if (result.isSuccess) {
-        state = state.copyWith(
-          simulationResult: result.data,
-          isLoading: false,
-        );
+        state = state.copyWith(simulationResult: result.data, isLoading: false);
       } else {
-        state = state.copyWith(
-          isLoading: false,
-          error: result.error,
-        );
+        state = state.copyWith(isLoading: false, error: result.error);
       }
     } catch (e) {
       state = state.copyWith(
@@ -160,10 +137,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
           simulationResult: null,
         );
       } else {
-        state = state.copyWith(
-          isLoading: false,
-          error: result.error,
-        );
+        state = state.copyWith(isLoading: false, error: result.error);
       }
     } catch (e) {
       state = state.copyWith(
@@ -195,10 +169,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
           simulationResult: null,
         );
       } else {
-        state = state.copyWith(
-          isLoading: false,
-          error: result.error,
-        );
+        state = state.copyWith(isLoading: false, error: result.error);
       }
     } catch (e) {
       state = state.copyWith(
@@ -242,10 +213,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
 
     try {
       final result = FSAToGrammarConverter.convert(state.currentAutomaton!);
-      state = state.copyWith(
-        isLoading: false,
-        grammarResult: result,
-      );
+      state = state.copyWith(isLoading: false, grammarResult: result);
       return result;
     } catch (e) {
       state = state.copyWith(
@@ -281,10 +249,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
           simulationResult: null,
         );
       } else {
-        state = state.copyWith(
-          isLoading: false,
-          error: result.error,
-        );
+        state = state.copyWith(isLoading: false, error: result.error);
       }
     } catch (e) {
       state = state.copyWith(
@@ -314,10 +279,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
           simulationResult: null,
         );
       } else {
-        state = state.copyWith(
-          isLoading: false,
-          error: result.error,
-        );
+        state = state.copyWith(isLoading: false, error: result.error);
       }
     } catch (e) {
       state = state.copyWith(
@@ -339,16 +301,10 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
 
       if (result.isSuccess) {
         // Store the regex result in state
-        state = state.copyWith(
-          regexResult: result.data,
-          isLoading: false,
-        );
+        state = state.copyWith(regexResult: result.data, isLoading: false);
         return result.data;
       } else {
-        state = state.copyWith(
-          isLoading: false,
-          error: result.error,
-        );
+        state = state.copyWith(isLoading: false, error: result.error);
         return null;
       }
     } catch (e) {
@@ -372,8 +328,10 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     );
 
     try {
-      final areEquivalent =
-          EquivalenceChecker.areEquivalent(state.currentAutomaton!, other);
+      final areEquivalent = EquivalenceChecker.areEquivalent(
+        state.currentAutomaton!,
+        other,
+      );
       state = state.copyWith(
         isLoading: false,
         equivalenceResult: areEquivalent,
@@ -413,14 +371,18 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
 
   /// Converts FSA to AutomatonEntity
   AutomatonEntity _convertFsaToEntity(FSA fsa) {
-    final states = fsa.states.map((s) => StateEntity(
-      id: s.id,
-      name: s.label,
-      x: s.position.x,
-      y: s.position.y,
-      isInitial: s.isInitial,
-      isFinal: s.isAccepting,
-    )).toList();
+    final states = fsa.states
+        .map(
+          (s) => StateEntity(
+            id: s.id,
+            name: s.label,
+            x: s.position.x,
+            y: s.position.y,
+            isInitial: s.isInitial,
+            isFinal: s.isAccepting,
+          ),
+        )
+        .toList();
 
     // Build transitions map from FSA transitions
     final transitions = <String, List<String>>{};
@@ -450,13 +412,17 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
 
   /// Converts AutomatonEntity to FSA
   FSA _convertEntityToFsa(AutomatonEntity entity) {
-    final states = entity.states.map((s) => State(
-      id: s.id,
-      label: s.name,
-      position: Vector2(s.x, s.y),
-      isInitial: s.isInitial,
-      isAccepting: s.isFinal,
-    )).toSet();
+    final states = entity.states
+        .map(
+          (s) => State(
+            id: s.id,
+            label: s.name,
+            position: Vector2(s.x, s.y),
+            isInitial: s.isInitial,
+            isAccepting: s.isFinal,
+          ),
+        )
+        .toSet();
 
     final initialState = states.where((s) => s.isInitial).firstOrNull;
     final acceptingStates = states.where((s) => s.isAccepting).toSet();
@@ -464,23 +430,25 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     // Build FSA transitions from transitions map
     final transitions = <FSATransition>{};
     int transitionId = 1;
-    
+
     for (final entry in entity.transitions.entries) {
       final parts = entry.key.split('|');
       if (parts.length == 2) {
         final fromStateId = parts[0];
         final symbol = parts[1];
         final fromState = states.firstWhere((s) => s.id == fromStateId);
-        
+
         for (final toStateId in entry.value) {
           final toState = states.firstWhere((s) => s.id == toStateId);
-          transitions.add(FSATransition(
-            id: 't${transitionId++}',
-            fromState: fromState,
-            toState: toState,
-            label: symbol,
-            inputSymbols: {symbol},
-          ));
+          transitions.add(
+            FSATransition(
+              id: 't${transitionId++}',
+              fromState: fromState,
+              toState: toState,
+              label: symbol,
+              inputSymbols: {symbol},
+            ),
+          );
         }
       }
     }
@@ -495,7 +463,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       acceptingStates: acceptingStates,
       created: DateTime.now(),
       modified: DateTime.now(),
-      bounds: Rectangle(0, 0, 800, 600),
+      bounds: const Rectangle(0, 0, 800, 600),
     );
   }
 }
@@ -541,8 +509,9 @@ class AutomatonState {
       simulationResult: simulationResult == _unset
           ? this.simulationResult
           : simulationResult as sim_result.SimulationResult?,
-      regexResult:
-          regexResult == _unset ? this.regexResult : regexResult as String?,
+      regexResult: regexResult == _unset
+          ? this.regexResult
+          : regexResult as String?,
       grammarResult: grammarResult == _unset
           ? this.grammarResult
           : grammarResult as Grammar?,
@@ -561,12 +530,10 @@ class AutomatonState {
 /// Provider instances
 final automatonProvider =
     StateNotifierProvider<AutomatonProvider, AutomatonState>((ref) {
-  final automatonService = AutomatonService();
+      final automatonService = AutomatonService();
 
-  return AutomatonProvider(
-    automatonService: automatonService,
-    simulationService: SimulationService(),
-    conversionService: ConversionService(),
-    layoutRepository: LayoutRepositoryImpl(),
-  );
-});
+      return AutomatonProvider(
+        automatonService: automatonService,
+        layoutRepository: LayoutRepositoryImpl(),
+      );
+    });

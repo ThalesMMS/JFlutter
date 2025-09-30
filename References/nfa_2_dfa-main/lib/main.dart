@@ -19,7 +19,6 @@ import 'providers/settings_provider.dart';
 import 'utils/theme.dart';
 import 'utils/constants.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([
@@ -115,11 +114,11 @@ class NFAToDFAApp extends StatelessWidget {
         const begin = Offset(1.0, 0.0);
         const end = Offset.zero;
         const curve = Curves.easeInOut;
-        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-        return SlideTransition(
-          position: animation.drive(tween),
-          child: child,
-        );
+        var tween = Tween(
+          begin: begin,
+          end: end,
+        ).chain(CurveTween(curve: curve));
+        return SlideTransition(position: animation.drive(tween), child: child);
       },
       transitionDuration: AppConstants.pageTransitionDuration,
     );
@@ -157,11 +156,7 @@ class GeometricLinesPainter extends CustomPainter {
     // خطوط افقی متحرک
     for (int i = 0; i < 8; i++) {
       double yOffset = (animationValue * 50 + i * 80) % (size.height + 80);
-      canvas.drawLine(
-        Offset(0, yOffset),
-        Offset(size.width, yOffset),
-        paint2,
-      );
+      canvas.drawLine(Offset(0, yOffset), Offset(size.width, yOffset), paint2);
     }
   }
 
@@ -304,46 +299,42 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+      ),
+    );
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.5,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: const Interval(0.0, 0.8, curve: Curves.elasticOut),
-    ));
+    _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.0, 0.8, curve: Curves.elasticOut),
+      ),
+    );
 
     // انیمیشن‌های خروج
-    _exitFadeAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.0,
-    ).animate(CurvedAnimation(
-      parent: _exitAnimationController,
-      curve: const Interval(0.3, 1.0, curve: Curves.easeInOut),
-    ));
+    _exitFadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(
+        parent: _exitAnimationController,
+        curve: const Interval(0.3, 1.0, curve: Curves.easeInOut),
+      ),
+    );
 
-    _exitScaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.8,
-    ).animate(CurvedAnimation(
-      parent: _exitAnimationController,
-      curve: const Interval(0.0, 0.7, curve: Curves.easeInOut),
-    ));
+    _exitScaleAnimation = Tween<double>(begin: 1.0, end: 0.8).animate(
+      CurvedAnimation(
+        parent: _exitAnimationController,
+        curve: const Interval(0.0, 0.7, curve: Curves.easeInOut),
+      ),
+    );
 
-    _exitSlideAnimation = Tween<Offset>(
-      begin: Offset.zero,
-      end: const Offset(0.0, -0.2),
-    ).animate(CurvedAnimation(
-      parent: _exitAnimationController,
-      curve: const Interval(0.2, 1.0, curve: Curves.easeInOut),
-    ));
+    _exitSlideAnimation =
+        Tween<Offset>(begin: Offset.zero, end: const Offset(0.0, -0.2)).animate(
+          CurvedAnimation(
+            parent: _exitAnimationController,
+            curve: const Interval(0.2, 1.0, curve: Curves.easeInOut),
+          ),
+        );
 
     _animationController.forward();
 
@@ -371,14 +362,11 @@ class _SplashScreenState extends State<SplashScreen>
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
-        const WelcomeScreen(),
+            const WelcomeScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           // انیمیشن fade برای صفحه welcome
           return FadeTransition(
-            opacity: CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeIn,
-            ),
+            opacity: CurvedAnimation(parent: animation, curve: Curves.easeIn),
             child: child,
           );
         },
@@ -401,7 +389,10 @@ class _SplashScreenState extends State<SplashScreen>
         children: [
           // پس‌زمینه گرادیان متحرک با انیمیشن خروج
           AnimatedBuilder(
-            animation: Listenable.merge([_animationController, _exitAnimationController]),
+            animation: Listenable.merge([
+              _animationController,
+              _exitAnimationController,
+            ]),
             builder: (context, child) {
               double backgroundOpacity = _isExiting
                   ? _exitFadeAnimation.value
@@ -414,19 +405,19 @@ class _SplashScreenState extends State<SplashScreen>
                     end: Alignment.bottomRight,
                     colors: [
                       Color.lerp(
-                          const Color(0xFF0F0C29),
-                          const Color(0xFF24243e),
-                          _animationController.value
+                        const Color(0xFF0F0C29),
+                        const Color(0xFF24243e),
+                        _animationController.value,
                       )!.withOpacity(backgroundOpacity),
                       Color.lerp(
-                          const Color(0xFF24243e),
-                          const Color(0xFF302B63),
-                          _animationController.value
+                        const Color(0xFF24243e),
+                        const Color(0xFF302B63),
+                        _animationController.value,
                       )!.withOpacity(backgroundOpacity),
                       Color.lerp(
-                          const Color(0xFF302B63),
-                          const Color(0xFF0F0C29),
-                          _animationController.value
+                        const Color(0xFF302B63),
+                        const Color(0xFF0F0C29),
+                        _animationController.value,
                       )!.withOpacity(backgroundOpacity),
                     ],
                     stops: const [0.0, 0.5, 1.0],
@@ -439,9 +430,13 @@ class _SplashScreenState extends State<SplashScreen>
           // ذرات متحرک در پس‌زمینه با انیمیشن خروج
           ...List.generate(20, (index) {
             return AnimatedBuilder(
-              animation: Listenable.merge([_animationController, _exitAnimationController]),
+              animation: Listenable.merge([
+                _animationController,
+                _exitAnimationController,
+              ]),
               builder: (context, child) {
-                double animValue = (_animationController.value + index * 0.1) % 1.0;
+                double animValue =
+                    (_animationController.value + index * 0.1) % 1.0;
                 double particleOpacity = _isExiting
                     ? (0.1 + (animValue * 0.2)) * _exitFadeAnimation.value
                     : (0.1 + (animValue * 0.2));
@@ -459,7 +454,9 @@ class _SplashScreenState extends State<SplashScreen>
                         color: Colors.white.withOpacity(particleOpacity),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF9333EA).withOpacity(0.3 * particleOpacity),
+                            color: const Color(
+                              0xFF9333EA,
+                            ).withOpacity(0.3 * particleOpacity),
                             blurRadius: 8,
                             spreadRadius: 1,
                           ),
@@ -477,9 +474,14 @@ class _SplashScreenState extends State<SplashScreen>
             top: -50,
             left: -50,
             child: AnimatedBuilder(
-              animation: Listenable.merge([_animationController, _exitAnimationController]),
+              animation: Listenable.merge([
+                _animationController,
+                _exitAnimationController,
+              ]),
               builder: (context, child) {
-                double circleOpacity = _isExiting ? _exitFadeAnimation.value : 1.0;
+                double circleOpacity = _isExiting
+                    ? _exitFadeAnimation.value
+                    : 1.0;
                 return Transform.rotate(
                   angle: _animationController.value * 2,
                   child: Container(
@@ -489,8 +491,12 @@ class _SplashScreenState extends State<SplashScreen>
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          const Color(0xFF9333EA).withOpacity(0.3 * circleOpacity),
-                          const Color(0xFF9333EA).withOpacity(0.1 * circleOpacity),
+                          const Color(
+                            0xFF9333EA,
+                          ).withOpacity(0.3 * circleOpacity),
+                          const Color(
+                            0xFF9333EA,
+                          ).withOpacity(0.1 * circleOpacity),
                           Colors.transparent,
                         ],
                       ),
@@ -505,9 +511,14 @@ class _SplashScreenState extends State<SplashScreen>
             bottom: -80,
             right: -80,
             child: AnimatedBuilder(
-              animation: Listenable.merge([_animationController, _exitAnimationController]),
+              animation: Listenable.merge([
+                _animationController,
+                _exitAnimationController,
+              ]),
               builder: (context, child) {
-                double circleOpacity = _isExiting ? _exitFadeAnimation.value : 1.0;
+                double circleOpacity = _isExiting
+                    ? _exitFadeAnimation.value
+                    : 1.0;
                 return Transform.rotate(
                   angle: -_animationController.value * 1.5,
                   child: Container(
@@ -517,8 +528,12 @@ class _SplashScreenState extends State<SplashScreen>
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          const Color(0xFF7C3AED).withOpacity(0.4 * circleOpacity),
-                          const Color(0xFF7C3AED).withOpacity(0.2 * circleOpacity),
+                          const Color(
+                            0xFF7C3AED,
+                          ).withOpacity(0.4 * circleOpacity),
+                          const Color(
+                            0xFF7C3AED,
+                          ).withOpacity(0.2 * circleOpacity),
                           Colors.transparent,
                         ],
                       ),
@@ -536,7 +551,10 @@ class _SplashScreenState extends State<SplashScreen>
               return Opacity(
                 opacity: _isExiting ? _exitFadeAnimation.value : 1.0,
                 child: CustomPaint(
-                  size: Size(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height),
+                  size: Size(
+                    MediaQuery.of(context).size.width,
+                    MediaQuery.of(context).size.height,
+                  ),
                   painter: GeometricLinesPainter(_animationController.value),
                 ),
               );
@@ -545,12 +563,16 @@ class _SplashScreenState extends State<SplashScreen>
 
           // محتوای اصلی با انیمیشن خروج
           AnimatedBuilder(
-            animation: Listenable.merge([_animationController, _exitAnimationController]),
+            animation: Listenable.merge([
+              _animationController,
+              _exitAnimationController,
+            ]),
             builder: (context, child) {
               return Center(
                 child: SlideTransition(
-                  position: _isExiting ? _exitSlideAnimation :
-                  AlwaysStoppedAnimation(Offset.zero),
+                  position: _isExiting
+                      ? _exitSlideAnimation
+                      : AlwaysStoppedAnimation(Offset.zero),
                   child: ScaleTransition(
                     scale: _isExiting ? _exitScaleAnimation : _scaleAnimation,
                     child: FadeTransition(
@@ -574,12 +596,16 @@ class _SplashScreenState extends State<SplashScreen>
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF9333EA).withOpacity(0.6),
+                                  color: const Color(
+                                    0xFF9333EA,
+                                  ).withOpacity(0.6),
                                   blurRadius: 30,
                                   spreadRadius: 5,
                                 ),
                                 BoxShadow(
-                                  color: const Color(0xFF7C3AED).withOpacity(0.4),
+                                  color: const Color(
+                                    0xFF7C3AED,
+                                  ).withOpacity(0.4),
                                   blurRadius: 60,
                                   spreadRadius: 10,
                                 ),
@@ -595,7 +621,10 @@ class _SplashScreenState extends State<SplashScreen>
 
                           // عنوان با افکت گلو
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 10,
+                            ),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(15),
                               boxShadow: [
@@ -692,7 +721,11 @@ class _SplashScreenState extends State<SplashScreen>
                                   animation: _animationController,
                                   builder: (context, child) {
                                     double delay = index * 0.3;
-                                    double animationValue = ((_animationController.value * 2 - delay) % 2.0).clamp(0.0, 1.0);
+                                    double animationValue =
+                                        ((_animationController.value * 2 -
+                                                    delay) %
+                                                2.0)
+                                            .clamp(0.0, 1.0);
                                     double scale = 0.5 + (0.5 * animationValue);
 
                                     return Transform.scale(
@@ -703,11 +736,16 @@ class _SplashScreenState extends State<SplashScreen>
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
                                           gradient: const LinearGradient(
-                                            colors: [Color(0xFF9333EA), Color(0xFF7C3AED)],
+                                            colors: [
+                                              Color(0xFF9333EA),
+                                              Color(0xFF7C3AED),
+                                            ],
                                           ),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: const Color(0xFF9333EA).withOpacity(0.6),
+                                              color: const Color(
+                                                0xFF9333EA,
+                                              ).withOpacity(0.6),
                                               blurRadius: 8,
                                               spreadRadius: 2,
                                             ),
@@ -756,11 +794,7 @@ class ErrorScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.red,
-              ),
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
               const SizedBox(height: 24),
               const Text(
                 'خطای سیستم',
@@ -774,10 +808,7 @@ class ErrorScreen extends StatelessWidget {
               Text(
                 error,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                ),
+                style: const TextStyle(fontSize: 16, color: Colors.grey),
               ),
               const SizedBox(height: 32),
               Row(
@@ -796,9 +827,7 @@ class ErrorScreen extends StatelessWidget {
                     onPressed: onReset,
                     icon: const Icon(Icons.restore),
                     label: const Text('بازنشانی'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.red,
-                    ),
+                    style: TextButton.styleFrom(foregroundColor: Colors.red),
                   ),
                 ],
               ),
@@ -825,23 +854,17 @@ class UnknownScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.search_off,
-              size: 64,
-              color: Colors.grey,
-            ),
+            const Icon(Icons.search_off, size: 64, color: Colors.grey),
             const SizedBox(height: 16),
             const Text(
               'صفحه مورد نظر پیدا نشد',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: () => Navigator.of(context)
-                  .pushNamedAndRemoveUntil('/main', (route) => false),
+              onPressed: () => Navigator.of(
+                context,
+              ).pushNamedAndRemoveUntil('/main', (route) => false),
               icon: const Icon(Icons.home),
               label: const Text('بازگشت به خانه'),
             ),

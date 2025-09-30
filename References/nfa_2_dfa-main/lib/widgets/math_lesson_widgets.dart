@@ -4,7 +4,6 @@ import 'dart:math' as math;
 import 'dart:ui';
 import '../models/math_content_data.dart';
 
-
 class AnimatedFadeIn extends StatefulWidget {
   final Widget child;
   final Duration delay;
@@ -39,17 +38,23 @@ class _AnimatedFadeInState extends State<AnimatedFadeIn>
 
     _controller = AnimationController(vsync: this, duration: widget.duration);
     _scaleController = AnimationController(
-        vsync: this,
-        duration: Duration(milliseconds: widget.duration.inMilliseconds + 200));
+      vsync: this,
+      duration: Duration(milliseconds: widget.duration.inMilliseconds + 200),
+    );
 
-    _opacity = Tween<double>(begin: 0.0, end: 1.0)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutQuart));
+    _opacity = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutQuart));
 
-    _position = Tween<Offset>(begin: widget.offset, end: Offset.zero)
-        .animate(CurvedAnimation(parent: _controller, curve: widget.curve));
+    _position = Tween<Offset>(
+      begin: widget.offset,
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: widget.curve));
 
-    _scale = Tween<double>(begin: 0.8, end: 1.0)
-        .animate(CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut));
+    _scale = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut),
+    );
 
     Future.delayed(widget.delay, () {
       if (mounted) {
@@ -122,11 +127,13 @@ class _ContentCardState extends State<ContentCard>
       vsync: this,
     );
 
-    _hoverAnimation = Tween<double>(begin: 1.0, end: 1.02)
-        .animate(CurvedAnimation(parent: _hoverController, curve: Curves.elasticOut));
+    _hoverAnimation = Tween<double>(begin: 1.0, end: 1.02).animate(
+      CurvedAnimation(parent: _hoverController, curve: Curves.elasticOut),
+    );
 
-    _glowAnimation = Tween<double>(begin: 0.0, end: 1.0)
-        .animate(CurvedAnimation(parent: _glowController, curve: Curves.easeInOut));
+    _glowAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
+    );
 
     if (widget.hasGlow) {
       _glowController.repeat(reverse: true);
@@ -194,7 +201,9 @@ class _ContentCardState extends State<ContentCard>
                         ],
                       ),
                       border: Border.all(
-                        color: widget.color.withOpacity(0.3 + (_glowAnimation.value * 0.2)),
+                        color: widget.color.withOpacity(
+                          0.3 + (_glowAnimation.value * 0.2),
+                        ),
                         width: 1.5,
                       ),
                       borderRadius: BorderRadius.circular(20),
@@ -235,7 +244,9 @@ class _ContentCardState extends State<ContentCard>
                           widget.content.content,
                           style: TextStyle(
                             fontSize: 15,
-                            color: isDark ? Colors.white.withOpacity(0.9) : Colors.black87,
+                            color: isDark
+                                ? Colors.white.withOpacity(0.9)
+                                : Colors.black87,
                             height: 1.6,
                             letterSpacing: 0.2,
                           ),
@@ -401,15 +412,26 @@ class _ExampleCardState extends State<ExampleCard>
                 ],
               ),
               const SizedBox(height: 16),
-              _buildInfoRow('مسئله', widget.example.problem, Icons.help_outline),
+              _buildInfoRow(
+                'مسئله',
+                widget.example.problem,
+                Icons.help_outline,
+              ),
               const SizedBox(height: 12),
-              _buildInfoRow('پاسخ', widget.example.solution, Icons.check_circle_outline),
+              _buildInfoRow(
+                'پاسخ',
+                widget.example.solution,
+                Icons.check_circle_outline,
+              ),
               const SizedBox(height: 16),
               InkWell(
                 onTap: _toggleSteps,
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
@@ -446,7 +468,10 @@ class _ExampleCardState extends State<ExampleCard>
                 ),
               ),
               SizeTransition(
-                sizeFactor: CurvedAnimation(parent: _expandController, curve: Curves.elasticOut),
+                sizeFactor: CurvedAnimation(
+                  parent: _expandController,
+                  curve: Curves.elasticOut,
+                ),
                 child: Column(
                   children: [
                     const SizedBox(height: 16),
@@ -493,7 +518,9 @@ class _ExampleCardState extends State<ExampleCard>
                                   style: TextStyle(
                                     height: 1.5,
                                     fontSize: 14,
-                                    color: isDark ? Colors.white.withOpacity(0.9) : Colors.black87,
+                                    color: isDark
+                                        ? Colors.white.withOpacity(0.9)
+                                        : Colors.black87,
                                   ),
                                 ),
                               ),
@@ -523,11 +550,7 @@ class _ExampleCardState extends State<ExampleCard>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            color: widget.color,
-            size: 18,
-          ),
+          Icon(icon, color: widget.color, size: 18),
           const SizedBox(width: 8),
           Text(
             '$label: ',
@@ -567,8 +590,7 @@ class QuizView extends StatefulWidget {
   State<QuizView> createState() => _QuizViewState();
 }
 
-class _QuizViewState extends State<QuizView>
-    with TickerProviderStateMixin {
+class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
   int _currentIndex = 0;
   final Map<int, int> _selectedAnswers = {};
   bool _showResult = false;
@@ -599,23 +621,28 @@ class _QuizViewState extends State<QuizView>
   void _selectAnswer(int questionIndex, int answerIndex) {
     setState(() => _tappedAnswerIndex = answerIndex);
 
-    bool isCorrect = widget.questions[questionIndex].correctAnswer == answerIndex;
+    bool isCorrect =
+        widget.questions[questionIndex].correctAnswer == answerIndex;
 
     if (isCorrect) {
       HapticFeedback.mediumImpact();
-      _celebrationController.forward().then((_) => _celebrationController.reset());
+      _celebrationController.forward().then(
+        (_) => _celebrationController.reset(),
+      );
     } else {
       HapticFeedback.lightImpact();
     }
 
     Future.delayed(const Duration(milliseconds: 1200), () {
-      if(mounted) {
+      if (mounted) {
         setState(() {
           _selectedAnswers[questionIndex] = answerIndex;
           _tappedAnswerIndex = null;
           if (_currentIndex < widget.questions.length - 1) {
             _currentIndex++;
-            _progressController.animateTo((_currentIndex + 1) / widget.questions.length);
+            _progressController.animateTo(
+              (_currentIndex + 1) / widget.questions.length,
+            );
           } else {
             _showResult = true;
           }
@@ -696,11 +723,7 @@ class _QuizViewState extends State<QuizView>
                           color: widget.color.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Icon(
-                          Icons.quiz,
-                          color: widget.color,
-                          size: 20,
-                        ),
+                        child: Icon(Icons.quiz, color: widget.color, size: 20),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -721,7 +744,9 @@ class _QuizViewState extends State<QuizView>
                               child: LinearProgressIndicator(
                                 value: progress,
                                 backgroundColor: widget.color.withOpacity(0.2),
-                                valueColor: AlwaysStoppedAnimation<Color>(widget.color),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  widget.color,
+                                ),
                                 minHeight: 6,
                               ),
                             ),
@@ -760,7 +785,9 @@ class _QuizViewState extends State<QuizView>
 
                     AnswerState state = AnswerState.unselected;
                     if (isSelected) {
-                      state = isCorrect ? AnswerState.correct : AnswerState.incorrect;
+                      state = isCorrect
+                          ? AnswerState.correct
+                          : AnswerState.incorrect;
                     } else if (showResult && isCorrect) {
                       state = AnswerState.showCorrect;
                     }
@@ -782,14 +809,17 @@ class _QuizViewState extends State<QuizView>
               ),
               // Celebration animation overlay
               if (_tappedAnswerIndex != null &&
-                  _tappedAnswerIndex == widget.questions[_currentIndex].correctAnswer)
+                  _tappedAnswerIndex ==
+                      widget.questions[_currentIndex].correctAnswer)
                 AnimatedBuilder(
                   animation: _celebrationController,
                   builder: (context, child) {
                     return Positioned.fill(
                       child: IgnorePointer(
                         child: CustomPaint(
-                          painter: ConfettiPainter(_celebrationController.value),
+                          painter: ConfettiPainter(
+                            _celebrationController.value,
+                          ),
                         ),
                       ),
                     );
@@ -836,9 +866,11 @@ class _AnswerOptionState extends State<AnswerOption>
       vsync: this,
     );
     _scaleAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
-        CurvedAnimation(parent: _animationController, curve: Curves.elasticOut));
+      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
+    );
     _shakeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: _animationController, curve: Curves.elasticOut));
+      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
+    );
   }
 
   @override
@@ -850,7 +882,8 @@ class _AnswerOptionState extends State<AnswerOption>
   @override
   void didUpdateWidget(AnswerOption oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.state != oldWidget.state && widget.state != AnswerState.unselected) {
+    if (widget.state != oldWidget.state &&
+        widget.state != AnswerState.unselected) {
       _animationController.forward(from: 0);
     }
   }
@@ -896,7 +929,9 @@ class _AnswerOptionState extends State<AnswerOption>
         return Transform.translate(
           offset: Offset(shakeOffset, 0),
           child: Transform.scale(
-            scale: widget.state == AnswerState.correct ? _scaleAnimation.value : 1.0,
+            scale: widget.state == AnswerState.correct
+                ? _scaleAnimation.value
+                : 1.0,
             child: GestureDetector(
               onTap: widget.onTap,
               child: AnimatedContainer(
@@ -910,12 +945,12 @@ class _AnswerOptionState extends State<AnswerOption>
                   border: Border.all(color: borderColor, width: 2),
                   boxShadow: widget.state != AnswerState.unselected
                       ? [
-                    BoxShadow(
-                      color: borderColor.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
+                          BoxShadow(
+                            color: borderColor.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ]
                       : null,
                 ),
                 child: Row(
@@ -939,11 +974,7 @@ class _AnswerOptionState extends State<AnswerOption>
                           color: iconColor.withOpacity(0.2),
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(
-                          icon,
-                          color: iconColor,
-                          size: 20,
-                        ),
+                        child: Icon(icon, color: iconColor, size: 20),
                       ),
                   ],
                 ),
@@ -987,8 +1018,10 @@ class _QuizResultCardState extends State<QuizResultCard>
       duration: const Duration(seconds: 2),
       vsync: this,
     );
-    _scoreAnimation = Tween<double>(begin: 0.0, end: widget.score.toDouble()).animate(
-        CurvedAnimation(parent: _scoreController, curve: Curves.elasticOut));
+    _scoreAnimation = Tween<double>(begin: 0.0, end: widget.score.toDouble())
+        .animate(
+          CurvedAnimation(parent: _scoreController, curve: Curves.elasticOut),
+        );
 
     _scoreController.forward();
   }
@@ -1030,10 +1063,7 @@ class _QuizResultCardState extends State<QuizResultCard>
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(25),
         gradient: LinearGradient(
-          colors: [
-            resultColor.withOpacity(0.2),
-            resultColor.withOpacity(0.05),
-          ],
+          colors: [resultColor.withOpacity(0.2), resultColor.withOpacity(0.05)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -1053,11 +1083,7 @@ class _QuizResultCardState extends State<QuizResultCard>
               color: resultColor.withOpacity(0.2),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              resultIcon,
-              size: 40,
-              color: resultColor,
-            ),
+            child: Icon(resultIcon, size: 40, color: resultColor),
           ),
           const SizedBox(height: 16),
           Text(
@@ -1070,20 +1096,14 @@ class _QuizResultCardState extends State<QuizResultCard>
           ),
           Text(
             resultMessage,
-            style: TextStyle(
-              fontSize: 16,
-              color: resultColor.withOpacity(0.8),
-            ),
+            style: TextStyle(fontSize: 16, color: resultColor.withOpacity(0.8)),
           ),
           const SizedBox(height: 24),
           SizedBox(
             width: 120,
             height: 120,
             child: CustomPaint(
-              painter: CircularProgressPainter(
-                percentage,
-                resultColor,
-              ),
+              painter: CircularProgressPainter(percentage, resultColor),
               child: Center(
                 child: AnimatedBuilder(
                   animation: _scoreAnimation,
@@ -1180,7 +1200,12 @@ class ConfettiPainter extends CustomPainter {
   final double animationValue;
   final _random = math.Random();
   final List<Color> _colors = [
-    Colors.red, Colors.blue, Colors.green, Colors.yellow, Colors.purple, Colors.orange
+    Colors.red,
+    Colors.blue,
+    Colors.green,
+    Colors.yellow,
+    Colors.purple,
+    Colors.orange,
   ];
 
   ConfettiPainter(this.animationValue);
@@ -1237,8 +1262,9 @@ class _InteractiveVennDiagramState extends State<InteractiveVennDiagram>
       duration: const Duration(seconds: 2),
       vsync: this,
     )..repeat(reverse: true);
-    _pulseAnimation = Tween<double>(begin: 0.0, end: 1.0)
-        .animate(CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut));
+    _pulseAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
   }
 
   @override
@@ -1247,7 +1273,12 @@ class _InteractiveVennDiagramState extends State<InteractiveVennDiagram>
     super.dispose();
   }
 
-  Widget _buildButton(String label, VennOperation op, Color color, IconData icon) {
+  Widget _buildButton(
+    String label,
+    VennOperation op,
+    Color color,
+    IconData icon,
+  ) {
     final isSelected = _operation == op;
     return Expanded(
       child: GestureDetector(
@@ -1262,10 +1293,10 @@ class _InteractiveVennDiagramState extends State<InteractiveVennDiagram>
           decoration: BoxDecoration(
             gradient: isSelected
                 ? LinearGradient(
-              colors: [color, color.withOpacity(0.7)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            )
+                    colors: [color, color.withOpacity(0.7)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
                 : null,
             color: isSelected ? null : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
@@ -1275,22 +1306,18 @@ class _InteractiveVennDiagramState extends State<InteractiveVennDiagram>
             ),
             boxShadow: isSelected
                 ? [
-              BoxShadow(
-                color: color.withOpacity(0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              )
-            ]
+                    BoxShadow(
+                      color: color.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
                 : null,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                icon,
-                color: isSelected ? Colors.white : color,
-                size: 16,
-              ),
+              Icon(icon, color: isSelected ? Colors.white : color, size: 16),
               const SizedBox(height: 4),
               Text(
                 label,
@@ -1343,11 +1370,7 @@ class _InteractiveVennDiagramState extends State<InteractiveVennDiagram>
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.account_tree,
-                    color: Colors.indigo[300],
-                    size: 24,
-                  ),
+                  Icon(Icons.account_tree, color: Colors.indigo[300], size: 24),
                   const SizedBox(width: 8),
                   Text(
                     'نمودار ون تعاملی',
@@ -1366,15 +1389,16 @@ class _InteractiveVennDiagramState extends State<InteractiveVennDiagram>
                 decoration: BoxDecoration(
                   color: Colors.black.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(15),
-                  border: Border.all(
-                    color: Colors.indigo.withOpacity(0.2),
-                  ),
+                  border: Border.all(color: Colors.indigo.withOpacity(0.2)),
                 ),
                 child: AnimatedBuilder(
                   animation: _pulseAnimation,
                   builder: (context, child) {
                     return CustomPaint(
-                      painter: VennDiagramPainter(_operation, _pulseAnimation.value),
+                      painter: VennDiagramPainter(
+                        _operation,
+                        _pulseAnimation.value,
+                      ),
                     );
                   },
                 ),
@@ -1382,13 +1406,33 @@ class _InteractiveVennDiagramState extends State<InteractiveVennDiagram>
               const SizedBox(height: 20),
               Row(
                 children: [
-                  _buildButton('اجتماع', VennOperation.union, Colors.blue, Icons.all_inclusive),
+                  _buildButton(
+                    'اجتماع',
+                    VennOperation.union,
+                    Colors.blue,
+                    Icons.all_inclusive,
+                  ),
                   const SizedBox(width: 6),
-                  _buildButton('اشتراک', VennOperation.intersection, Colors.red, Icons.crop_free),
+                  _buildButton(
+                    'اشتراک',
+                    VennOperation.intersection,
+                    Colors.red,
+                    Icons.crop_free,
+                  ),
                   const SizedBox(width: 6),
-                  _buildButton('تفاضل A', VennOperation.diffA, Colors.green, Icons.remove_circle_outline),
+                  _buildButton(
+                    'تفاضل A',
+                    VennOperation.diffA,
+                    Colors.green,
+                    Icons.remove_circle_outline,
+                  ),
                   const SizedBox(width: 6),
-                  _buildButton('تفاضل B', VennOperation.diffB, Colors.purple, Icons.remove_circle_outline),
+                  _buildButton(
+                    'تفاضل B',
+                    VennOperation.diffB,
+                    Colors.purple,
+                    Icons.remove_circle_outline,
+                  ),
                 ],
               ),
             ],
@@ -1412,17 +1456,22 @@ class VennDiagramPainter extends CustomPainter {
     final radius = math.min(size.width, size.height) / 3.5;
     final offset = radius / 2.2;
 
-    final animatedOffset = offset + (math.sin(animationValue * 2 * math.pi) * 2);
+    final animatedOffset =
+        offset + (math.sin(animationValue * 2 * math.pi) * 2);
 
     final circleA = Path()
       ..addOval(
         Rect.fromCircle(
-            center: center.translate(-animatedOffset, 0), radius: radius),
+          center: center.translate(-animatedOffset, 0),
+          radius: radius,
+        ),
       );
     final circleB = Path()
       ..addOval(
         Rect.fromCircle(
-            center: center.translate(animatedOffset, 0), radius: radius),
+          center: center.translate(animatedOffset, 0),
+          radius: radius,
+        ),
       );
 
     final paintStroke = Paint()
@@ -1492,7 +1541,10 @@ class VennDiagramPainter extends CustomPainter {
       textDirection: TextDirection.ltr,
     );
     textPainter.layout();
-    textPainter.paint(canvas, position - Offset(textPainter.width / 2, textPainter.height / 2));
+    textPainter.paint(
+      canvas,
+      position - Offset(textPainter.width / 2, textPainter.height / 2),
+    );
   }
 
   @override

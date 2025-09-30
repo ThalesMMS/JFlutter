@@ -200,7 +200,8 @@ class GrammarToFSAConverter {
       }
       if (production.rightSide.length == 1) {
         final symbol = production.rightSide.first;
-        return !_isLambdaSymbol(symbol) && !grammar.nonterminals.contains(symbol);
+        return !_isLambdaSymbol(symbol) &&
+            !grammar.nonterminals.contains(symbol);
       }
       return false;
     });

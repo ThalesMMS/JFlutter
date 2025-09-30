@@ -35,7 +35,8 @@ class MobileAutomatonControls extends StatefulWidget {
   });
 
   @override
-  State<MobileAutomatonControls> createState() => _MobileAutomatonControlsState();
+  State<MobileAutomatonControls> createState() =>
+      _MobileAutomatonControlsState();
 }
 
 class _MobileAutomatonControlsState extends State<MobileAutomatonControls>
@@ -51,13 +52,10 @@ class _MobileAutomatonControlsState extends State<MobileAutomatonControls>
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.easeInOut,
-    ));
+    _slideAnimation = Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+        .animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeInOut),
+        );
   }
 
   @override
@@ -91,7 +89,7 @@ class _MobileAutomatonControlsState extends State<MobileAutomatonControls>
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -123,7 +121,7 @@ class _MobileAutomatonControlsState extends State<MobileAutomatonControls>
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -230,7 +228,7 @@ class _MobileAutomatonControlsState extends State<MobileAutomatonControls>
     Color? color,
   }) {
     final effectiveColor = color ?? Theme.of(context).colorScheme.primary;
-    
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -238,14 +236,14 @@ class _MobileAutomatonControlsState extends State<MobileAutomatonControls>
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: isActive 
-                ? effectiveColor.withOpacity(0.2)
-                : effectiveColor.withOpacity(0.1),
+            color: isActive
+                ? effectiveColor.withValues(alpha: 0.2)
+                : effectiveColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: isActive 
+              color: isActive
                   ? effectiveColor
-                  : effectiveColor.withOpacity(0.3),
+                  : effectiveColor.withValues(alpha: 0.3),
               width: isActive ? 2 : 1,
             ),
           ),
@@ -253,9 +251,9 @@ class _MobileAutomatonControlsState extends State<MobileAutomatonControls>
             onPressed: onPressed,
             icon: Icon(
               icon,
-              color: isActive 
+              color: isActive
                   ? effectiveColor
-                  : effectiveColor.withOpacity(0.7),
+                  : effectiveColor.withValues(alpha: 0.7),
               size: 24,
             ),
           ),
@@ -264,9 +262,11 @@ class _MobileAutomatonControlsState extends State<MobileAutomatonControls>
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: isActive 
+            color: isActive
                 ? effectiveColor
-                : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                : Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.7),
             fontWeight: isActive ? FontWeight.w600 : null,
           ),
           textAlign: TextAlign.center,
@@ -279,7 +279,7 @@ class _MobileAutomatonControlsState extends State<MobileAutomatonControls>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -293,9 +293,9 @@ class _MobileAutomatonControlsState extends State<MobileAutomatonControls>
           const SizedBox(width: 4),
           Text(
             '${(widget.zoomLevel * 100).toInt()}%',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -306,7 +306,7 @@ class _MobileAutomatonControlsState extends State<MobileAutomatonControls>
     setState(() {
       _isExpanded = !_isExpanded;
     });
-    
+
     if (_isExpanded) {
       _slideController.forward();
       // Provide haptic feedback
@@ -321,7 +321,9 @@ class _MobileAutomatonControlsState extends State<MobileAutomatonControls>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Clear Canvas'),
-        content: const Text('Are you sure you want to clear all states and transitions? This action cannot be undone.'),
+        content: const Text(
+          'Are you sure you want to clear all states and transitions? This action cannot be undone.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -371,8 +373,10 @@ class MobileQuickActionButton extends StatelessWidget {
         // Provide haptic feedback
         HapticFeedback.lightImpact();
       },
-      backgroundColor: backgroundColor ?? Theme.of(context).colorScheme.secondary,
-      foregroundColor: foregroundColor ?? Theme.of(context).colorScheme.onSecondary,
+      backgroundColor:
+          backgroundColor ?? Theme.of(context).colorScheme.secondary,
+      foregroundColor:
+          foregroundColor ?? Theme.of(context).colorScheme.onSecondary,
       tooltip: tooltip,
       child: Icon(icon),
     );
@@ -417,7 +421,7 @@ class _MobileGestureDetectorState extends State<MobileGestureDetector> {
       onTap: widget.onTap,
       onDoubleTap: widget.onDoubleTap,
       onLongPress: widget.onLongPress,
-      onPanStart: widget.onPanStart != null 
+      onPanStart: widget.onPanStart != null
           ? (details) => widget.onPanStart!(details.localPosition)
           : null,
       onPanUpdate: widget.onPanUpdate != null

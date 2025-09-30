@@ -120,17 +120,16 @@ class PumpingLemmaProgressState {
 /// Manages the progress state for the Pumping Lemma game.
 class PumpingLemmaProgressNotifier
     extends StateNotifier<PumpingLemmaProgressState> {
-  PumpingLemmaProgressNotifier()
-      : super(const PumpingLemmaProgressState());
+  PumpingLemmaProgressNotifier() : super(const PumpingLemmaProgressState());
 
   /// Starts a fresh session with the provided total number of challenges.
   void startNewGame({required int totalChallenges}) {
     state = PumpingLemmaProgressState(
       totalChallenges: totalChallenges,
-      completedChallengeIds: <int>{},
+      completedChallengeIds: const <int>{},
       score: 0,
       attempts: 0,
-      history: <PumpingLemmaHistoryEntry>[],
+      history: const <PumpingLemmaHistoryEntry>[],
     );
   }
 
@@ -191,16 +190,17 @@ class PumpingLemmaProgressNotifier
     final totalChallenges = state.totalChallenges;
     state = PumpingLemmaProgressState(
       totalChallenges: totalChallenges,
-      completedChallengeIds: <int>{},
+      completedChallengeIds: const <int>{},
       score: 0,
       attempts: 0,
-      history: <PumpingLemmaHistoryEntry>[],
+      history: const <PumpingLemmaHistoryEntry>[],
     );
   }
 }
 
 /// Provider exposing the Pumping Lemma game progress state.
 final pumpingLemmaProgressProvider =
-    StateNotifierProvider<PumpingLemmaProgressNotifier, PumpingLemmaProgressState>(
-  (ref) => PumpingLemmaProgressNotifier(),
-);
+    StateNotifierProvider<
+      PumpingLemmaProgressNotifier,
+      PumpingLemmaProgressState
+    >((ref) => PumpingLemmaProgressNotifier());

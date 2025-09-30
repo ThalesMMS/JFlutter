@@ -12,30 +12,17 @@ enum AdvancedConversionAlgorithm {
   memoryOptimizedConstruction,
   streamingConstruction,
   parallelConstruction,
-  intelligentCaching
+  intelligentCaching,
 }
 
 /// سطوح بهینه‌سازی
-enum OptimizationLevel {
-  minimal,
-  balanced,
-  aggressive,
-  maximum
-}
+enum OptimizationLevel { minimal, balanced, aggressive, maximum }
 
 /// استراتژی‌های مدیریت حافظه
-enum MemoryStrategy {
-  conservative,
-  balanced,
-  generous
-}
+enum MemoryStrategy { conservative, balanced, generous }
 
 /// نوع پردازش
-enum ProcessingMode {
-  sequential,
-  parallel,
-  adaptive
-}
+enum ProcessingMode { sequential, parallel, adaptive }
 
 /// کلاس پیشرفته برای گزارش تبدیل
 class EnhancedConversionReport {
@@ -130,7 +117,10 @@ ${conversionSteps.length > 10 ? '  ... و ${conversionSteps.length - 10} مرح�
       'optimizationsApplied': optimizationsApplied,
       'performanceMetrics': performanceMetrics,
       'memoryUsage': memoryUsage,
-      'timingBreakdown': timingBreakdown.map((k, v) => MapEntry(k, v.inMilliseconds)),
+      'timingBreakdown': timingBreakdown.map(
+        (k, v) => 
+          MapEntry(k, v.inMilliseconds),
+      ),
       'warnings': warnings,
       'recommendations': recommendations,
       'totalSteps': conversionSteps.length,
@@ -204,16 +194,24 @@ class AdvancedConversionConfig {
       maxStatesLimit: maxStatesLimit ?? this.maxStatesLimit,
       maxMemoryMB: maxMemoryMB ?? this.maxMemoryMB,
       maxTimeLimit: maxTimeLimit ?? this.maxTimeLimit,
-      enableDetailedLogging: enableDetailedLogging ?? this.enableDetailedLogging,
+      enableDetailedLogging:
+          enableDetailedLogging ?? this.enableDetailedLogging,
       enableCaching: enableCaching ?? this.enableCaching,
-      enablePreOptimization: enablePreOptimization ?? this.enablePreOptimization,
-      enablePostOptimization: enablePostOptimization ?? this.enablePostOptimization,
-      enableParallelProcessing: enableParallelProcessing ?? this.enableParallelProcessing,
+      enablePreOptimization:
+          enablePreOptimization ?? this.enablePreOptimization,
+      enablePostOptimization:
+          enablePostOptimization ?? this.enablePostOptimization,
+      enableParallelProcessing:
+          enableParallelProcessing ?? this.enableParallelProcessing,
       parallelWorkers: parallelWorkers ?? this.parallelWorkers,
-      cacheHitRatioThreshold: cacheHitRatioThreshold ?? this.cacheHitRatioThreshold,
-      enableProgressiveConstruction: enableProgressiveConstruction ?? this.enableProgressiveConstruction,
-      enableStatePrediction: enableStatePrediction ?? this.enableStatePrediction,
-      enableCompressionAnalysis: enableCompressionAnalysis ?? this.enableCompressionAnalysis,
+      cacheHitRatioThreshold:
+          cacheHitRatioThreshold ?? this.cacheHitRatioThreshold,
+      enableProgressiveConstruction:
+          enableProgressiveConstruction ?? this.enableProgressiveConstruction,
+      enableStatePrediction:
+          enableStatePrediction ?? this.enableStatePrediction,
+      enableCompressionAnalysis:
+          enableCompressionAnalysis ?? this.enableCompressionAnalysis,
     );
   }
 }
@@ -231,12 +229,14 @@ class IntelligentCache {
 
   IntelligentCache({int maxSize = 10000}) : _maxSize = maxSize;
 
-  double get hitRatio => (_hits + _misses) > 0 ? _hits / (_hits + _misses) : 0.0;
+  double get hitRatio =>
+      (_hits + _misses) > 0 ? _hits / (_hits + _misses) : 0.0;
 
   Map<String, int> get stats => {
     'hits': _hits,
     'misses': _misses,
-    'total_entries': _epsilonClosureCache.length + _moveCache.length + _stateSetCache.length,
+    'total_entries':
+        _epsilonClosureCache.length + _moveCache.length + _stateSetCache.length,
     'hit_ratio_percent': (hitRatio * 100).round(),
   };
 
@@ -313,7 +313,11 @@ class NFAAnalyzer {
     final complexity = _calculateComplexity(nfa);
     final characteristics = _identifyCharacteristics(nfa);
     final bottlenecks = _identifyBottlenecks(nfa);
-    final recommendations = _generateRecommendations(nfa, complexity, characteristics);
+    final recommendations = _generateRecommendations(
+      nfa,
+      complexity,
+      characteristics,
+    );
 
     stopwatch.stop();
 
@@ -334,8 +338,8 @@ class NFAAnalyzer {
 
     // محاسبه پیچیدگی تخمینی DFA
     final estimatedDFAStates = math.min(
-        math.pow(2, stateCount).toInt(),
-        stateCount * stateCount
+      math.pow(2, stateCount).toInt(),
+      stateCount * stateCount,
     );
 
     final nondeterminismDegree = _calculateNondeterminismDegree(nfa);
@@ -371,7 +375,9 @@ class NFAAnalyzer {
       }
     }
 
-    return totalTransitions > 0 ? nondeterministicTransitions / totalTransitions : 0.0;
+    return totalTransitions > 0
+        ? nondeterministicTransitions / totalTransitions
+        : 0.0;
   }
 
   static int _calculateCyclomaticComplexity(NFA nfa) {
@@ -386,10 +392,12 @@ class NFAAnalyzer {
   static Set<String> _identifyCharacteristics(NFA nfa) {
     final characteristics = <String>{};
 
-    if (_hasEpsilonTransitions(nfa)) characteristics.add('دارای انتقال‌های اپسیلون');
+    if (_hasEpsilonTransitions(nfa))
+      characteristics.add('دارای انتقال‌های اپسیلون');
     if (_isHighlyNondeterministic(nfa)) characteristics.add('غیرقطعیت بالا');
     if (_hasSelfLoops(nfa)) characteristics.add('دارای حلقه‌های خودی');
-    if (_hasUnreachableStates(nfa)) characteristics.add('دارای حالات غیرقابل دسترس');
+    if (_hasUnreachableStates(nfa))
+      characteristics.add('دارای حالات غیرقابل دسترس');
     if (_hasDeadStates(nfa)) characteristics.add('دارای حالات مرده');
     if (_isMinimal(nfa)) characteristics.add('کمینه');
     if (_hasLongPaths(nfa)) characteristics.add('دارای مسیرهای طولانی');
@@ -494,7 +502,8 @@ class NFAAnalyzer {
     int maxPath = 0;
     for (final symbol in [...nfa.alphabet, NFA.epsilon]) {
       for (final next in nfa.getTransitions(state, symbol)) {
-        if (next != state) { // جلوگیری از حلقه بی‌نهایت
+        if (next != state) {
+          // جلوگیری از حلقه بی‌نهایت
           maxPath = math.max(maxPath, _dfsLongestPath(nfa, next, visited));
         }
       }
@@ -530,7 +539,9 @@ class NFAAnalyzer {
 
       final ratio = nondeterministicCount / nfa.states.length;
       if (ratio > 0.5) {
-        bottlenecks.add('نماد $symbol در ${(ratio * 100).round()}% حالات غیرقطعی');
+        bottlenecks.add(
+          'نماد $symbol در ${(ratio * 100).round()}% حالات غیرقطعی',
+        );
       }
     }
 
@@ -538,19 +549,25 @@ class NFAAnalyzer {
   }
 
   static List<String> _generateRecommendations(
-      NFA nfa,
-      NFAComplexityMetrics complexity,
-      Set<String> characteristics
-      ) {
+    NFA nfa,
+    NFAComplexityMetrics complexity,
+    Set<String> characteristics,
+  ) {
     final recommendations = <String>[];
 
     if (complexity.estimatedDFAStates > 10000) {
-      recommendations.add('استفاده از الگوریتم LazyConstruction برای کاهش مصرف حافظه');
-      recommendations.add('فعال‌سازی حد مجاز حالات برای جلوگیری از انفجار حالت');
+      recommendations.add(
+        'استفاده از الگوریتم LazyConstruction برای کاهش مصرف حافظه',
+      );
+      recommendations.add(
+        'فعال‌سازی حد مجاز حالات برای جلوگیری از انفجار حالت',
+      );
     }
 
     if (complexity.nondeterminismDegree > 0.5) {
-      recommendations.add('استفاده از بهینه‌سازی پیش از تبدیل برای کاهش غیرقطعیت');
+      recommendations.add(
+        'استفاده از بهینه‌سازی پیش از تبدیل برای کاهش غیرقطعیت',
+      );
     }
 
     if (characteristics.contains('دارای انتقال‌های اپسیلون')) {
@@ -662,21 +679,24 @@ class EnhancedNFAToDFAConverter {
     this.onProgress,
     this.onLog,
   }) {
-    _cache = IntelligentCache(
-        maxSize: _getCacheSize()
-    );
+    _cache = IntelligentCache(maxSize: _getCacheSize());
   }
 
   int _getCacheSize() {
     switch (config.memoryStrategy) {
-      case MemoryStrategy.conservative: return 1000;
-      case MemoryStrategy.balanced: return 10000;
-      case MemoryStrategy.generous: return 100000;
+      case MemoryStrategy.conservative:
+        return 1000;
+      case MemoryStrategy.balanced:
+        return 10000;
+      case MemoryStrategy.generous:
+        return 100000;
     }
   }
 
   /// تبدیل پیشرفته با گزارش تفصیلی
-  Future<(DFA, EnhancedConversionReport)> convertWithEnhancedReport(NFA nfa) async {
+  Future<(DFA, EnhancedConversionReport)> convertWithEnhancedReport(
+    NFA nfa,
+  ) async {
     _overallStopwatch = Stopwatch()..start();
     _conversionSteps.clear();
     _timingBreakdown.clear();
@@ -693,7 +713,9 @@ class EnhancedNFAToDFAConverter {
       _analysisResult = NFAAnalyzer.analyze(nfa);
       analysisStopwatch.stop();
       _timingBreakdown['تحلیل NFA'] = analysisStopwatch.elapsed;
-      _log('تحلیل NFA تکمیل شد در ${analysisStopwatch.elapsed.inMilliseconds} ms');
+      _log(
+        'تحلیل NFA تکمیل شد در ${analysisStopwatch.elapsed.inMilliseconds} ms',
+      );
 
       // مرحله 2: اعتبارسنجی
       await _validateNFA(nfa);
@@ -721,14 +743,13 @@ class EnhancedNFAToDFAConverter {
       _reportProgress('تکمیل شد', 1.0);
 
       final report = _generateEnhancedReport(
-          nfa,
-          optimizedDFA,
-          preprocessStopwatch.elapsed,
-          postprocessStopwatch.elapsed
+        nfa,
+        optimizedDFA,
+        preprocessStopwatch.elapsed,
+        postprocessStopwatch.elapsed,
       );
 
       return (optimizedDFA, report);
-
     } catch (e) {
       _overallStopwatch?.stop();
       _log('خطا در تبدیل: $e');
@@ -751,14 +772,18 @@ class EnhancedNFAToDFAConverter {
 
     // بررسی محدودیت‌ها
     if (nfa.states.length > config.maxStatesLimit) {
-      _warnings.add('تعداد حالات NFA (${nfa.states.length}) از حد مجاز بیشتر است');
+      _warnings.add(
+        'تعداد حالات NFA (${nfa.states.length}) از حد مجاز بیشتر است',
+      );
     }
 
     // تخمین پیچیدگی
     final estimatedStates = _analysisResult?.complexity.estimatedDFAStates ?? 0;
     if (estimatedStates > config.maxStatesLimit) {
       _warnings.add('تعداد حالات تخمینی DFA ($estimatedStates) خیلی زیاد است');
-      _recommendations.add('استفاده از الگوریتم LazyConstruction پیشنهاد می‌شود');
+      _recommendations.add(
+        'استفاده از الگوریتم LazyConstruction پیشنهاد می‌شود',
+      );
     }
   }
 
@@ -769,19 +794,27 @@ class EnhancedNFAToDFAConverter {
 
     if (config.enablePreOptimization) {
       // حذف حالات غیرقابل دسترس
-      if (_analysisResult?.characteristics.contains('دارای حالات غیرقابل دسترس') == true) {
+      if (_analysisResult?.characteristics.contains(
+            'دارای حالات غیرقابل دسترس',
+          ) ==
+          true) {
         result = await _removeUnreachableStates(result);
         _conversionSteps.add('حذف حالات غیرقابل دسترس');
       }
 
       // حذف حالات مرده
-      if (_analysisResult?.characteristics.contains('دارای حالات مرده') == true) {
+      if (_analysisResult?.characteristics.contains('دارای حالات مرده') ==
+          true) {
         result = await _removeDeadStates(result);
         _conversionSteps.add('حذف حالات مرده');
       }
 
       // پیش‌محاسبه epsilon closures
-      if (config.enableCaching && _analysisResult?.characteristics.contains('دارای انتقال‌های اپسیلون') == true) {
+      if (config.enableCaching &&
+          _analysisResult?.characteristics.contains(
+                'دارای انتقال‌های اپسیلون',
+              ) ==
+              true) {
         await _precomputeEpsilonClosures(result);
         _conversionSteps.add('پیش‌محاسبه epsilon closures');
       }
@@ -845,15 +878,29 @@ class EnhancedNFAToDFAConverter {
 
       // گزارش پیشرفت
       if (progressCounter++ % 10 == 0) {
-        final progress = 0.3 + (processedCount * 0.5 / math.max(100, processedStates.length));
+        final progress =
+            0.3 +
+            (processedCount * 0.5 / math.max(100, processedStates.length));
         _reportProgress('پردازش حالت $processedCount', progress);
       }
 
       // تطبیق استراتژی بر اساس اندازه حالت فعلی
       if (current.states.length > 10) {
-        await _processTransitionsParallel(nfa, dfa, current, pendingStates, stateMap);
+        await _processTransitionsParallel(
+          nfa,
+          dfa,
+          current,
+          pendingStates,
+          stateMap,
+        );
       } else {
-        await _processTransitionsSequential(nfa, dfa, current, pendingStates, stateMap);
+        await _processTransitionsSequential(
+          nfa,
+          dfa,
+          current,
+          pendingStates,
+          stateMap,
+        );
       }
     }
 
@@ -897,25 +944,34 @@ class EnhancedNFAToDFAConverter {
 
     int batchIndex = 0;
     while (batchIndex * batchSize < allStates.length) {
-      final batch = allStates.skip(batchIndex * batchSize).take(batchSize).toList();
+      final batch = allStates
+          .skip(batchIndex * batchSize)
+          .take(batchSize)
+          .toList();
 
       for (final state in batch) {
         for (final symbol in nfa.alphabet) {
           final nextState = await _processSingleTransition(nfa, state, symbol);
-          if (nextState != null && !allStates.any((s) => _stateSetEquals(s, nextState))) {
+          if (nextState != null &&
+              !allStates.any((s) => _stateSetEquals(s, nextState))) {
             dfa.addState(nextState);
             allStates.add(nextState);
           }
 
           if (nextState != null) {
-            final existing = allStates.firstWhere((s) => _stateSetEquals(s, nextState));
+            final existing = allStates.firstWhere(
+              (s) => _stateSetEquals(s, nextState),
+            );
             dfa.addTransition(state, symbol, existing);
           }
         }
       }
 
       batchIndex++;
-      _reportProgress('پردازش batch ${batchIndex}', 0.3 + (batchIndex * 0.5 / (allStates.length / batchSize + 1)));
+      _reportProgress(
+        'پردازش batch ${batchIndex}',
+        0.3 + (batchIndex * 0.5 / (allStates.length / batchSize + 1)),
+      );
 
       // پاکسازی کش در صورت نیاز
       if (batchIndex % 10 == 0) {
@@ -993,7 +1049,9 @@ class EnhancedNFAToDFAConverter {
     _log('اجرای الگوریتم کش هوشمند');
 
     // تنظیم کش بر اساس تحلیل NFA
-    final hasEpsilon = _analysisResult?.characteristics.contains('دارای انتقال‌های اپسیلون') ?? false;
+    final hasEpsilon =
+        _analysisResult?.characteristics.contains('دارای انتقال‌های اپسیلون') ??
+        false;
     final complexity = _analysisResult?.complexity.nondeterminismDegree ?? 0.0;
 
     if (hasEpsilon) {
@@ -1037,10 +1095,14 @@ class EnhancedNFAToDFAConverter {
     while (lazyQueue.isNotEmpty && builtStates.length < config.maxStatesLimit) {
       final (currentState, symbol) = lazyQueue.removeFirst();
 
-      final nextState = await _processSingleTransition(nfa, currentState, symbol);
+      final nextState = await _processSingleTransition(
+        nfa,
+        currentState,
+        symbol,
+      );
       if (nextState != null) {
         final existing = builtStates.cast<StateSet?>().firstWhere(
-              (s) => s != null && _stateSetEquals(s, nextState),
+          (s) => s != null && _stateSetEquals(s, nextState),
           orElse: () => null,
         );
 
@@ -1059,7 +1121,10 @@ class EnhancedNFAToDFAConverter {
       }
 
       if (lazyQueue.length % 50 == 0) {
-        _reportProgress('Lazy construction', 0.3 + (builtStates.length * 0.5 / config.maxStatesLimit));
+        _reportProgress(
+          'Lazy construction',
+          0.3 + (builtStates.length * 0.5 / config.maxStatesLimit),
+        );
       }
     }
 
@@ -1125,15 +1190,27 @@ class EnhancedNFAToDFAConverter {
     }
   }
 
-  Future<StateSet?> _processSingleTransition(NFA nfa, StateSet currentState, String symbol) async {
-    final moveResult = await _getMoveResult(nfa, currentState.stateNames.toSet(), symbol);
+  Future<StateSet?> _processSingleTransition(
+    NFA nfa,
+    StateSet currentState,
+    String symbol,
+  ) async {
+    final moveResult = await _getMoveResult(
+      nfa,
+      currentState.stateNames.toSet(),
+      symbol,
+    );
     if (moveResult.isEmpty) return null;
 
     final closure = await _getEpsilonClosure(nfa, moveResult);
     return _createStateSet(closure, nfa);
   }
 
-  Future<Set<String>> _getMoveResult(NFA nfa, Set<String> states, String symbol) async {
+  Future<Set<String>> _getMoveResult(
+    NFA nfa,
+    Set<String> states,
+    String symbol,
+  ) async {
     if (!config.enableCaching) {
       return _computeMove(nfa, states, symbol);
     }
@@ -1164,8 +1241,9 @@ class EnhancedNFAToDFAConverter {
 
   bool _stateSetEquals(StateSet a, StateSet b) {
     if (a.states.length != b.states.length) return false;
-    return a.states.every((stateA) =>
-        b.states.any((stateB) => stateA.name == stateB.name));
+    return a.states.every(
+      (stateA) => b.states.any((stateB) => stateA.name == stateB.name),
+    );
   }
 
   Stream<StateSet> _generateStateStream(NFA nfa) async* {
@@ -1194,12 +1272,12 @@ class EnhancedNFAToDFAConverter {
   }
 
   Future<void> _parallelWorker(
-      int workerId,
-      NFA nfa,
-      DFA dfa,
-      Queue<StateSet> workQueue,
-      Set<StateSet> processedStates
-      ) async {
+    int workerId,
+    NFA nfa,
+    DFA dfa,
+    Queue<StateSet> workQueue,
+    Set<StateSet> processedStates,
+  ) async {
     while (workQueue.isNotEmpty) {
       final current = workQueue.removeFirst();
       if (processedStates.contains(current)) continue;
@@ -1208,7 +1286,8 @@ class EnhancedNFAToDFAConverter {
 
       for (final symbol in nfa.alphabet) {
         final next = await _processSingleTransition(nfa, current, symbol);
-        if (next != null && !processedStates.any((s) => _stateSetEquals(s, next))) {
+        if (next != null &&
+            !processedStates.any((s) => _stateSetEquals(s, next))) {
           dfa.addState(next);
           workQueue.add(next);
         }
@@ -1217,9 +1296,12 @@ class EnhancedNFAToDFAConverter {
   }
 
   Future<void> _processTransitionsSequential(
-      NFA nfa, DFA dfa, StateSet current,
-      Queue<StateSet> pending, Map<String, StateSet> stateMap
-      ) async {
+    NFA nfa,
+    DFA dfa,
+    StateSet current,
+    Queue<StateSet> pending,
+    Map<String, StateSet> stateMap,
+  ) async {
     for (final symbol in nfa.alphabet) {
       final next = await _processSingleTransition(nfa, current, symbol);
       if (next != null) {
@@ -1236,9 +1318,12 @@ class EnhancedNFAToDFAConverter {
   }
 
   Future<void> _processTransitionsParallel(
-      NFA nfa, DFA dfa, StateSet current,
-      Queue<StateSet> pending, Map<String, StateSet> stateMap
-      ) async {
+    NFA nfa,
+    DFA dfa,
+    StateSet current,
+    Queue<StateSet> pending,
+    Map<String, StateSet> stateMap,
+  ) async {
     final futures = <Future<(String, StateSet?)>>[];
 
     for (final symbol in nfa.alphabet) {
@@ -1261,7 +1346,11 @@ class EnhancedNFAToDFAConverter {
     }
   }
 
-  Future<(String, StateSet?)> _processTransitionAsync(NFA nfa, StateSet current, String symbol) async {
+  Future<(String, StateSet?)> _processTransitionAsync(
+    NFA nfa,
+    StateSet current,
+    String symbol,
+  ) async {
     final next = await _processSingleTransition(nfa, current, symbol);
     return (symbol, next);
   }
@@ -1348,8 +1437,11 @@ class EnhancedNFAToDFAConverter {
   }
 
   EnhancedConversionReport _generateEnhancedReport(
-      NFA nfa, DFA dfa, Duration preprocessTime, Duration postprocessTime
-      ) {
+    NFA nfa,
+    DFA dfa,
+    Duration preprocessTime,
+    Duration postprocessTime,
+  ) {
     final totalTime = _overallStopwatch!.elapsed;
     final cacheStats = _cache.stats;
 
@@ -1385,8 +1477,12 @@ class EnhancedNFAToDFAConverter {
 
   List<String> _getAppliedOptimizations() {
     final optimizations = <String>[];
-    optimizations.add('الگوریتم: ${config.algorithm.toString().split('.').last}');
-    optimizations.add('سطح بهینه‌سازی: ${config.optimizationLevel.toString().split('.').last}');
+    optimizations.add(
+      'الگوریتم: ${config.algorithm.toString().split('.').last}',
+    );
+    optimizations.add(
+      'سطح بهینه‌سازی: ${config.optimizationLevel.toString().split('.').last}',
+    );
 
     if (config.enableCaching) optimizations.add('کش هوشمند');
     if (config.enableParallelProcessing) optimizations.add('پردازش موازی');
@@ -1396,7 +1492,11 @@ class EnhancedNFAToDFAConverter {
     return optimizations;
   }
 
-  Map<String, dynamic> _generatePerformanceMetrics(NFA nfa, DFA dfa, Duration totalTime) {
+  Map<String, dynamic> _generatePerformanceMetrics(
+    NFA nfa,
+    DFA dfa,
+    Duration totalTime,
+  ) {
     final cacheStats = _cache.stats;
     return {
       'سرعت تبدیل': totalTime.inMilliseconds > 0
@@ -1404,7 +1504,8 @@ class EnhancedNFAToDFAConverter {
           : 'بی‌نهایت',
       'کارایی کش': '${cacheStats['hit_ratio_percent']}%',
       'ورودی‌های کش': cacheStats['total_entries'],
-      'نسبت تبدیل': '1:${(dfa.states.length / math.max(1, nfa.states.length)).toStringAsFixed(2)}',
+      'نسبت تبدیل':
+          '1:${(dfa.states.length / math.max(1, nfa.states.length)).toStringAsFixed(2)}',
       'استفاده از حافظه': '${config.memoryStrategy.toString().split('.').last}',
       'پردازش': '${config.processingMode.toString().split('.').last}',
     };
@@ -1412,7 +1513,8 @@ class EnhancedNFAToDFAConverter {
 
   Map<String, dynamic> _generateMemoryUsage(Map<String, int> cacheStats) {
     return {
-      'کش epsilon closure': '${cacheStats['epsilon_closure_entries'] ?? 0} ورودی',
+      'کش epsilon closure':
+          '${cacheStats['epsilon_closure_entries'] ?? 0} ورودی',
       'کش move': '${cacheStats['move_entries'] ?? 0} ورودی',
       'کل حافظه کش': '${cacheStats['total_entries']} ورودی',
       'نرخ بازده کش': '${cacheStats['hit_ratio_percent']}%',
@@ -1434,7 +1536,8 @@ class EnhancedNFAToDFAConverter {
 
   List<String> getConversionSteps() => List.unmodifiable(_conversionSteps);
 
-  Map<String, Duration> getTimingBreakdown() => Map.unmodifiable(_timingBreakdown);
+  Map<String, Duration> getTimingBreakdown() =>
+      Map.unmodifiable(_timingBreakdown);
 
   List<String> getWarnings() => List.unmodifiable(_warnings);
 
@@ -1445,7 +1548,8 @@ class EnhancedNFAToDFAConverter {
 
 /// کلاس ساده برای تبدیل سریع
 class FastNFAToDFAConverter {
-  static Future<DFA> convert(NFA nfa, {
+  static Future<DFA> convert(
+    NFA nfa, {
     OptimizationLevel optimization = OptimizationLevel.minimal,
     bool enableCaching = true,
   }) async {
@@ -1464,10 +1568,10 @@ class FastNFAToDFAConverter {
 /// کلاس مقایسه‌کننده الگوریتم‌ها
 class AlgorithmBenchmark {
   static Future<BenchmarkResult> compareAlgorithms(
-      NFA nfa, {
-        List<AdvancedConversionAlgorithm>? algorithms,
-        int iterations = 3,
-      }) async {
+    NFA nfa, {
+    List<AdvancedConversionAlgorithm>? algorithms,
+    int iterations = 3,
+  }) async {
     algorithms ??= AdvancedConversionAlgorithm.values;
 
     final results = <AlgorithmResult>[];
@@ -1500,22 +1604,24 @@ class AlgorithmBenchmark {
       final validTimes = times.where((t) => t.inMilliseconds >= 0).toList();
       if (validTimes.isNotEmpty) {
         final avgTime = Duration(
-            milliseconds: (validTimes.map((t) => t.inMilliseconds).reduce((a, b) => a + b) / validTimes.length).round()
+          milliseconds:
+              (validTimes.map((t) => t.inMilliseconds).reduce((a, b) => a + b) /
+                      validTimes.length)
+                  .round(),
         );
 
-        results.add(AlgorithmResult(
-          algorithm: algorithm,
-          averageTime: avgTime,
-          dfaStates: resultDFA?.states.length ?? 0,
-          iterations: validTimes.length,
-        ));
+        results.add(
+          AlgorithmResult(
+            algorithm: algorithm,
+            averageTime: avgTime,
+            dfaStates: resultDFA?.states.length ?? 0,
+            iterations: validTimes.length,
+          ),
+        );
       }
     }
 
-    return BenchmarkResult(
-      nfaStates: nfa.states.length,
-      results: results,
-    );
+    return BenchmarkResult(nfaStates: nfa.states.length, results: results);
   }
 }
 
@@ -1544,16 +1650,15 @@ class BenchmarkResult {
   final int nfaStates;
   final List<AlgorithmResult> results;
 
-  BenchmarkResult({
-    required this.nfaStates,
-    required this.results,
-  });
+  BenchmarkResult({required this.nfaStates, required this.results});
 
-  AlgorithmResult? get fastest => results.isEmpty ? null :
-  results.reduce((a, b) => a.averageTime < b.averageTime ? a : b);
+  AlgorithmResult? get fastest => results.isEmpty
+      ? null
+      : results.reduce((a, b) => a.averageTime < b.averageTime ? a : b);
 
-  AlgorithmResult? get mostCompact => results.isEmpty ? null :
-  results.reduce((a, b) => a.dfaStates < b.dfaStates ? a : b);
+  AlgorithmResult? get mostCompact => results.isEmpty
+      ? null
+      : results.reduce((a, b) => a.dfaStates < b.dfaStates ? a : b);
 
   @override
   String toString() {
@@ -1593,7 +1698,6 @@ class ConversionProfileManager {
       enableCaching: false,
       enableDetailedLogging: false,
     ),
-
     'متعادل': AdvancedConversionConfig(
       algorithm: AdvancedConversionAlgorithm.hybridConstruction,
       optimizationLevel: OptimizationLevel.balanced,
@@ -1602,7 +1706,6 @@ class ConversionProfileManager {
       enablePreOptimization: true,
       enablePostOptimization: true,
     ),
-
     'بهینه': AdvancedConversionConfig(
       algorithm: AdvancedConversionAlgorithm.intelligentCaching,
       optimizationLevel: OptimizationLevel.aggressive,
@@ -1613,7 +1716,6 @@ class ConversionProfileManager {
       enablePostOptimization: true,
       enableDetailedLogging: true,
     ),
-
     'حداکثر': AdvancedConversionConfig(
       algorithm: AdvancedConversionAlgorithm.parallelConstruction,
       optimizationLevel: OptimizationLevel.maximum,
@@ -1628,7 +1730,6 @@ class ConversionProfileManager {
       enableStatePrediction: true,
       enableCompressionAnalysis: true,
     ),
-
     'حافظه_کم': AdvancedConversionConfig(
       algorithm: AdvancedConversionAlgorithm.memoryOptimizedConstruction,
       optimizationLevel: OptimizationLevel.balanced,
@@ -1637,7 +1738,6 @@ class ConversionProfileManager {
       maxMemoryMB: 64,
       enableCaching: false,
     ),
-
     'جریانی': AdvancedConversionConfig(
       algorithm: AdvancedConversionAlgorithm.streamingConstruction,
       optimizationLevel: OptimizationLevel.minimal,
@@ -1678,14 +1778,16 @@ class PerformanceMonitor {
   final List<ConversionMetric> _metrics = [];
 
   void recordConversion(NFA nfa, DFA dfa, EnhancedConversionReport report) {
-    _metrics.add(ConversionMetric(
-      timestamp: DateTime.now(),
-      nfaStates: nfa.states.length,
-      dfaStates: dfa.states.length,
-      conversionTime: report.conversionTime,
-      algorithm: report.performanceMetrics['الگوریتم'].toString(),
-      compressionRatio: report.compressionRatio,
-    ));
+    _metrics.add(
+      ConversionMetric(
+        timestamp: DateTime.now(),
+        nfaStates: nfa.states.length,
+        dfaStates: dfa.states.length,
+        conversionTime: report.conversionTime,
+        algorithm: report.performanceMetrics['الگوریتم'].toString(),
+        compressionRatio: report.compressionRatio,
+      ),
+    );
   }
 
   PerformanceStatistics getStatistics() {
@@ -1698,10 +1800,13 @@ class PerformanceMonitor {
 
     return PerformanceStatistics(
       totalConversions: _metrics.length,
-      averageTime: Duration(milliseconds: (times.reduce((a, b) => a + b) / times.length).round()),
+      averageTime: Duration(
+        milliseconds: (times.reduce((a, b) => a + b) / times.length).round(),
+      ),
       minTime: Duration(milliseconds: times.reduce(math.min)),
       maxTime: Duration(milliseconds: times.reduce(math.max)),
-      averageCompression: compressions.reduce((a, b) => a + b) / compressions.length,
+      averageCompression:
+          compressions.reduce((a, b) => a + b) / compressions.length,
       algorithmUsage: _getAlgorithmUsage(),
     );
   }
@@ -1801,7 +1906,8 @@ class ValidationResult {
 /// کلاس یوتیلیتی‌های پیشرفته
 class AdvancedNFAToDFAUtils {
   /// تبدیل با تنظیمات خودکار
-  static Future<DFA> convertWithAutoConfig(NFA nfa, {
+  static Future<DFA> convertWithAutoConfig(
+    NFA nfa, {
     Function(String, double)? onProgress,
   }) async {
     final profile = ConversionProfileManager.recommendProfile(nfa);
@@ -1817,7 +1923,8 @@ class AdvancedNFAToDFAUtils {
     final profiles = ConversionProfileManager.getAvailableProfiles();
     final results = <String, (Duration, int)>{};
 
-    for (final profileName in profiles.take(3)) { // محدود به 3 پروفایل برای سرعت
+    for (final profileName in profiles.take(3)) {
+      // محدود به 3 پروفایل برای سرعت
       try {
         final config = ConversionProfileManager.getProfile(profileName);
         final converter = EnhancedNFAToDFAConverter(config: config);
@@ -1840,7 +1947,9 @@ class AdvancedNFAToDFAUtils {
     for (final entry in results.entries) {
       final (time, states) = entry.value;
       if (time.inMilliseconds >= 0) {
-        buffer.writeln('${entry.key}: ${time.inMilliseconds}ms، ${states} حالت DFA');
+        buffer.writeln(
+          '${entry.key}: ${time.inMilliseconds}ms، ${states} حالت DFA',
+        );
       } else {
         buffer.writeln('${entry.key}: خطا');
       }
@@ -1858,10 +1967,7 @@ class AdvancedNFAToDFAUtils {
 ${analysis.toString()}
 
 === پیشنهاد پروفایل ===
-پروفایل پیشنهادی: ${ConversionProfileManager.getAvailableProfiles().firstWhere(
-            (name) => ConversionProfileManager.getProfile(name) == recommendation,
-        orElse: () => 'سفارشی'
-    )}
+پروفایل پیشنهادی: ${ConversionProfileManager.getAvailableProfiles().firstWhere((name) => ConversionProfileManager.getProfile(name) == recommendation, orElse: () => 'سفارشی')}
 
 تنظیمات پیشنهادی:
   الگوریتم: ${recommendation.algorithm.toString().split('.').last}
@@ -1874,12 +1980,16 @@ ${analysis.toString()}
 
   /// تست صحت تبدیل
   static Future<bool> verifyConversion(
-      NFA nfa,
-      DFA dfa, {
-        int testCount = 100,
-        int maxStringLength = 10,
-      }) async {
-    final testStrings = _generateComprehensiveTestStrings(nfa, testCount, maxStringLength);
+    NFA nfa,
+    DFA dfa, {
+    int testCount = 100,
+    int maxStringLength = 10,
+  }) async {
+    final testStrings = _generateComprehensiveTestStrings(
+      nfa,
+      testCount,
+      maxStringLength,
+    );
 
     for (final testString in testStrings) {
       if (nfa.accepts(testString) != dfa.acceptsString(testString)) {
@@ -1890,7 +2000,11 @@ ${analysis.toString()}
     return true;
   }
 
-  static List<String> _generateComprehensiveTestStrings(NFA nfa, int count, int maxLength) {
+  static List<String> _generateComprehensiveTestStrings(
+    NFA nfa,
+    int count,
+    int maxLength,
+  ) {
     final tests = <String>[''];
     final alphabet = nfa.alphabet.toList();
 

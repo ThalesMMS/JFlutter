@@ -1,4 +1,3 @@
-
 import '../models/fsa.dart';
 import '../models/state.dart';
 
@@ -23,13 +22,20 @@ class EquivalenceChecker {
       final stateA = currentPair[0];
       final stateB = currentPair[1];
 
-      if (a.acceptingStates.contains(stateA) != b.acceptingStates.contains(stateB)) {
+      if (a.acceptingStates.contains(stateA) !=
+          b.acceptingStates.contains(stateB)) {
         return false;
       }
 
       for (final symbol in alphabet) {
-        final nextStateA = a.getTransitionsFromStateOnSymbol(stateA, symbol).firstOrNull?.toState;
-        final nextStateB = b.getTransitionsFromStateOnSymbol(stateB, symbol).firstOrNull?.toState;
+        final nextStateA = a
+            .getTransitionsFromStateOnSymbol(stateA, symbol)
+            .firstOrNull
+            ?.toState;
+        final nextStateB = b
+            .getTransitionsFromStateOnSymbol(stateB, symbol)
+            .firstOrNull
+            ?.toState;
 
         if (nextStateA != null && nextStateB != null) {
           final pairKey = '${nextStateA.id},${nextStateB.id}';

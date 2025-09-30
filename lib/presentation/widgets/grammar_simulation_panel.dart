@@ -11,10 +11,12 @@ class GrammarSimulationPanel extends ConsumerStatefulWidget {
   const GrammarSimulationPanel({super.key});
 
   @override
-  ConsumerState<GrammarSimulationPanel> createState() => _GrammarSimulationPanelState();
+  ConsumerState<GrammarSimulationPanel> createState() =>
+      _GrammarSimulationPanelState();
 }
 
-class _GrammarSimulationPanelState extends ConsumerState<GrammarSimulationPanel> {
+class _GrammarSimulationPanelState
+    extends ConsumerState<GrammarSimulationPanel> {
   final TextEditingController _inputController = TextEditingController();
 
   bool _isParsing = false;
@@ -55,16 +57,13 @@ class _GrammarSimulationPanelState extends ConsumerState<GrammarSimulationPanel>
   Widget _buildHeader(BuildContext context) {
     return Row(
       children: [
-        Icon(
-          Icons.play_arrow,
-          color: Theme.of(context).colorScheme.primary,
-        ),
+        Icon(Icons.play_arrow, color: Theme.of(context).colorScheme.primary),
         const SizedBox(width: 8),
         Text(
           'Grammar Parser',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
       ],
     );
@@ -74,7 +73,7 @@ class _GrammarSimulationPanelState extends ConsumerState<GrammarSimulationPanel>
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -82,25 +81,31 @@ class _GrammarSimulationPanelState extends ConsumerState<GrammarSimulationPanel>
         children: [
           Text(
             'Parsing Algorithm',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
-            value: _selectedAlgorithm,
+            initialValue: _selectedAlgorithm,
             decoration: const InputDecoration(
               border: OutlineInputBorder(),
               isDense: true,
             ),
             items: const [
-              DropdownMenuItem(value: 'CYK', child: Text('CYK (Cocke-Younger-Kasami)')),
+              DropdownMenuItem(
+                value: 'CYK',
+                child: Text('CYK (Cocke-Younger-Kasami)'),
+              ),
               DropdownMenuItem(value: 'LL', child: Text('LL Parser')),
               DropdownMenuItem(value: 'LR', child: Text('LR Parser')),
             ],
             onChanged: (value) {
+              if (value == null) {
+                return;
+              }
               setState(() {
-                _selectedAlgorithm = value!;
+                _selectedAlgorithm = value;
               });
             },
           ),
@@ -113,7 +118,7 @@ class _GrammarSimulationPanelState extends ConsumerState<GrammarSimulationPanel>
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -121,9 +126,9 @@ class _GrammarSimulationPanelState extends ConsumerState<GrammarSimulationPanel>
         children: [
           Text(
             'Test String',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           TextField(
@@ -139,7 +144,9 @@ class _GrammarSimulationPanelState extends ConsumerState<GrammarSimulationPanel>
           Text(
             'Examples: aabb, abab, aabbb (for S → aSb | ab)',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
         ],
@@ -171,9 +178,9 @@ class _GrammarSimulationPanelState extends ConsumerState<GrammarSimulationPanel>
         children: [
           Text(
             'Parse Results',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           Expanded(
@@ -191,10 +198,10 @@ class _GrammarSimulationPanelState extends ConsumerState<GrammarSimulationPanel>
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -228,12 +235,12 @@ class _GrammarSimulationPanelState extends ConsumerState<GrammarSimulationPanel>
   Widget _buildResults(BuildContext context) {
     final isAccepted = _parseResult == 'Accepted';
     final color = isAccepted ? Colors.green : Colors.red;
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withValues(alpha: 0.1),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -256,7 +263,6 @@ class _GrammarSimulationPanelState extends ConsumerState<GrammarSimulationPanel>
               ),
             ],
           ),
-
           if (_executionTime != null) ...[
             const SizedBox(height: 8),
             Text(
@@ -264,14 +270,13 @@ class _GrammarSimulationPanelState extends ConsumerState<GrammarSimulationPanel>
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ],
-
           if (_parseSteps.isNotEmpty) ...[
             const SizedBox(height: 16),
             Text(
               'Parse Steps:',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             Expanded(
@@ -280,16 +285,19 @@ class _GrammarSimulationPanelState extends ConsumerState<GrammarSimulationPanel>
                 itemBuilder: (context, index) {
                   return Container(
                     margin: const EdgeInsets.only(bottom: 4),
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
                       '${index + 1}. ${_parseSteps[index]}',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontFamily: 'monospace',
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),
                     ),
                   );
                 },
@@ -399,7 +407,8 @@ class _GrammarSimulationPanelState extends ConsumerState<GrammarSimulationPanel>
       steps.add('No derivation steps available for this parser.');
     }
 
-    if (parseResult.errorMessage != null && parseResult.errorMessage!.isNotEmpty) {
+    if (parseResult.errorMessage != null &&
+        parseResult.errorMessage!.isNotEmpty) {
       steps.add(parseResult.errorMessage!);
     }
 

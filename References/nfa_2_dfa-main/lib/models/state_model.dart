@@ -2,15 +2,9 @@ class StateModel {
   final String name;
   final bool isFinal;
 
-  const StateModel({
-    required this.name,
-    this.isFinal = false,
-  });
+  const StateModel({required this.name, this.isFinal = false});
 
-  StateModel copyWith({
-    String? name,
-    bool? isFinal,
-  }) {
+  StateModel copyWith({String? name, bool? isFinal}) {
     return StateModel(
       name: name ?? this.name,
       isFinal: isFinal ?? this.isFinal,
@@ -19,10 +13,7 @@ class StateModel {
 
   // تبدیل به JSON
   Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      'isFinal': isFinal,
-    };
+    return {'name': name, 'isFinal': isFinal};
   }
 
   // ساخت از JSON
@@ -86,9 +77,9 @@ class StateSet {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is StateSet && 
-           states.length == other.states.length &&
-           states.every((s) => other.states.contains(s));
+    return other is StateSet &&
+        states.length == other.states.length &&
+        states.every((s) => other.states.contains(s));
   }
 
   @override

@@ -27,10 +27,10 @@ class DFAMinimizer {
 
       // Step 1: Remove unreachable states
       final dfaWithoutUnreachable = _removeUnreachableStates(dfa);
-      
+
       // Step 2: Minimize using Hopcroft algorithm
       final minimizedDFA = _minimizeWithHopcroft(dfaWithoutUnreachable);
-      
+
       return ResultFactory.success(minimizedDFA);
     } catch (e) {
       return ResultFactory.failure('Error minimizing DFA: $e');
@@ -42,26 +42,28 @@ class DFAMinimizer {
     if (dfa.states.isEmpty) {
       return ResultFactory.failure('DFA must have at least one state');
     }
-    
+
     if (dfa.initialState == null) {
       return ResultFactory.failure('DFA must have an initial state');
     }
-    
+
     if (!dfa.states.contains(dfa.initialState)) {
       return ResultFactory.failure('Initial state must be in the states set');
     }
-    
+
     for (final acceptingState in dfa.acceptingStates) {
       if (!dfa.states.contains(acceptingState)) {
-        return ResultFactory.failure('Accepting state must be in the states set');
+        return ResultFactory.failure(
+          'Accepting state must be in the states set',
+        );
       }
     }
-    
+
     // Check if DFA is deterministic
     if (!dfa.isDeterministic) {
       return ResultFactory.failure('Input must be a deterministic automaton');
     }
-    
+
     return ResultFactory.success(null);
   }
 
@@ -69,19 +71,24 @@ class DFAMinimizer {
   static FSA _removeUnreachableStates(FSA dfa) {
     final reachableStates = dfa.getReachableStates(dfa.initialState!);
     final unreachableStates = dfa.states.difference(reachableStates);
-    
+
     if (unreachableStates.isEmpty) {
       return dfa;
     }
 
     // Remove transitions involving unreachable states
-    final newTransitions = dfa.transitions.where((transition) =>
-        reachableStates.contains(transition.fromState) &&
-        reachableStates.contains(transition.toState)
-    ).toSet();
+    final newTransitions = dfa.transitions
+        .where(
+          (transition) =>
+              reachableStates.contains(transition.fromState) &&
+              reachableStates.contains(transition.toState),
+        )
+        .toSet();
 
     // Remove unreachable states from accepting states
-    final newAcceptingStates = dfa.acceptingStates.intersection(reachableStates);
+    final newAcceptingStates = dfa.acceptingStates.intersection(
+      reachableStates,
+    );
 
     return FSA(
       id: '${dfa.id}_no_unreachable',
@@ -121,11 +128,11 @@ class DFAMinimizer {
     // Process worklist
     while (worklist.isNotEmpty) {
       final currentSet = worklist.removeAt(0);
-      
+
       // For each symbol in the alphabet
       for (final symbol in dfa.alphabet) {
         final predecessors = <State>{};
-        
+
         // Find all states that transition to current set on this symbol
         for (final transition in dfa.transitions) {
           if (transition is FSATransition &&
@@ -141,11 +148,11 @@ class DFAMinimizer {
           for (final set in partition) {
             final intersection = set.intersection(predecessors);
             final difference = set.difference(predecessors);
-            
+
             if (intersection.isNotEmpty && difference.isNotEmpty) {
               newPartition.add(intersection);
               newPartition.add(difference);
-              
+
               // Add smaller set to worklist
               if (intersection.length <= difference.length) {
                 worklist.add(intersection);
@@ -179,19 +186,21 @@ class DFAMinimizer {
     for (final equivalenceClass in partition) {
       final newState = _createMinimizedState(equivalenceClass, stateCounter++);
       newStates.add(newState);
-      
+
       // Map original states to new state
       for (final originalState in equivalenceClass) {
         stateMap[originalState] = newState;
       }
-      
+
       // Check if this is the initial state
       if (equivalenceClass.contains(originalDFA.initialState)) {
         newInitialState = newState;
       }
-      
+
       // Check if this is an accepting state
-      if (equivalenceClass.intersection(originalDFA.acceptingStates).isNotEmpty) {
+      if (equivalenceClass
+          .intersection(originalDFA.acceptingStates)
+          .isNotEmpty) {
         newAcceptingStates.add(newState);
       }
     }
@@ -201,14 +210,17 @@ class DFAMinimizer {
       if (originalTransition is FSATransition) {
         final fromState = stateMap[originalTransition.fromState]!;
         final toState = stateMap[originalTransition.toState]!;
-        
+
         // Check if transition already exists
-        final existingTransition = newTransitions.where((t) =>
-            t.fromState == fromState &&
-            t.toState == toState &&
-            t.inputSymbols == originalTransition.inputSymbols
-        ).firstOrNull;
-        
+        final existingTransition = newTransitions
+            .where(
+              (t) =>
+                  t.fromState == fromState &&
+                  t.toState == toState &&
+                  t.inputSymbols == originalTransition.inputSymbols,
+            )
+            .firstOrNull;
+
         if (existingTransition == null) {
           final newTransition = FSATransition(
             id: 't_${fromState.id}_${toState.id}_${originalTransition.inputSymbols.join('_')}',
@@ -242,8 +254,10 @@ class DFAMinimizer {
   static State _createMinimizedState(Set<State> equivalenceClass, int counter) {
     final stateIds = equivalenceClass.map((s) => s.id).toList()..sort();
     final stateId = 'q${counter}_min';
-    final stateLabel = stateIds.length == 1 ? stateIds.first : '{${stateIds.join(',')}}';
-    
+    final stateLabel = stateIds.length == 1
+        ? stateIds.first
+        : '{${stateIds.join(',')}}';
+
     // Calculate position as center of the states
     double sumX = 0;
     double sumY = 0;
@@ -251,7 +265,10 @@ class DFAMinimizer {
       sumX += state.position.x;
       sumY += state.position.y;
     }
-    final position = Vector2(sumX / equivalenceClass.length, sumY / equivalenceClass.length);
+    final position = Vector2(
+      sumX / equivalenceClass.length,
+      sumY / equivalenceClass.length,
+    );
 
     return State(
       id: stateId,
@@ -266,14 +283,16 @@ class DFAMinimizer {
   static Result<DFAMinimizationResult> minimizeWithSteps(FSA dfa) {
     try {
       final steps = <MinimizationStep>[];
-      
+
       // Step 1: Validate input
-      steps.add(MinimizationStep(
-        stepNumber: 1,
-        description: 'Validating input DFA',
-        dfa: dfa,
-        partition: null,
-      ));
+      steps.add(
+        MinimizationStep(
+          stepNumber: 1,
+          description: 'Validating input DFA',
+          dfa: dfa,
+          partition: null,
+        ),
+      );
 
       final validationResult = _validateInput(dfa);
       if (!validationResult.isSuccess) {
@@ -281,20 +300,24 @@ class DFAMinimizer {
       }
 
       // Step 2: Remove unreachable states
-      steps.add(MinimizationStep(
-        stepNumber: 2,
-        description: 'Removing unreachable states',
-        dfa: dfa,
-        partition: null,
-      ));
+      steps.add(
+        MinimizationStep(
+          stepNumber: 2,
+          description: 'Removing unreachable states',
+          dfa: dfa,
+          partition: null,
+        ),
+      );
 
       final dfaWithoutUnreachable = _removeUnreachableStates(dfa);
-      steps.add(MinimizationStep(
-        stepNumber: 3,
-        description: 'Unreachable states removed',
-        dfa: dfaWithoutUnreachable,
-        partition: null,
-      ));
+      steps.add(
+        MinimizationStep(
+          stepNumber: 3,
+          description: 'Unreachable states removed',
+          dfa: dfaWithoutUnreachable,
+          partition: null,
+        ),
+      );
 
       // Step 3: Initialize partition
       final initialPartition = <Set<State>>[
@@ -303,34 +326,41 @@ class DFAMinimizer {
       ];
       initialPartition.removeWhere((set) => set.isEmpty);
 
-      steps.add(MinimizationStep(
-        stepNumber: 4,
-        description: 'Initial partition created',
-        dfa: dfaWithoutUnreachable,
-        partition: initialPartition,
-      ));
+      steps.add(
+        MinimizationStep(
+          stepNumber: 4,
+          description: 'Initial partition created',
+          dfa: dfaWithoutUnreachable,
+          partition: initialPartition,
+        ),
+      );
 
       // Step 4: Minimize using Hopcroft algorithm
-      steps.add(MinimizationStep(
-        stepNumber: 5,
-        description: 'Applying Hopcroft minimization algorithm',
-        dfa: dfaWithoutUnreachable,
-        partition: initialPartition,
-      ));
+      steps.add(
+        MinimizationStep(
+          stepNumber: 5,
+          description: 'Applying Hopcroft minimization algorithm',
+          dfa: dfaWithoutUnreachable,
+          partition: initialPartition,
+        ),
+      );
 
       final minimizedDFA = _minimizeWithHopcroft(dfaWithoutUnreachable);
-      steps.add(MinimizationStep(
-        stepNumber: 6,
-        description: 'DFA minimization completed',
-        dfa: minimizedDFA,
-        partition: null,
-      ));
+      steps.add(
+        MinimizationStep(
+          stepNumber: 6,
+          description: 'DFA minimization completed',
+          dfa: minimizedDFA,
+          partition: null,
+        ),
+      );
 
       final result = DFAMinimizationResult(
         originalDFA: dfa,
         resultDFA: minimizedDFA,
         steps: steps,
-        executionTime: Duration.zero, // Would be calculated in real implementation
+        executionTime:
+            Duration.zero, // Would be calculated in real implementation
       );
 
       return ResultFactory.success(result);
@@ -344,13 +374,13 @@ class DFAMinimizer {
 class DFAMinimizationResult {
   /// Original DFA
   final FSA originalDFA;
-  
+
   /// Resulting minimized DFA
   final FSA resultDFA;
-  
+
   /// Minimization steps
   final List<MinimizationStep> steps;
-  
+
   /// Execution time
   final Duration executionTime;
 
@@ -390,13 +420,13 @@ class DFAMinimizationResult {
 class MinimizationStep {
   /// Step number
   final int stepNumber;
-  
+
   /// Description of the step
   final String description;
-  
+
   /// DFA at this step
   final FSA? dfa;
-  
+
   /// Partition at this step
   final List<Set<State>>? partition;
 
@@ -412,4 +442,3 @@ class MinimizationStep {
     return 'MinimizationStep(stepNumber: $stepNumber, description: $description)';
   }
 }
-

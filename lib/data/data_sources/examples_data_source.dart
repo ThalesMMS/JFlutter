@@ -40,10 +40,9 @@ class ExamplesDataSource {
     final assetPath = 'jflutter_js/examples/$fileName';
 
     try {
-
       final jsonString = await rootBundle.loadString(assetPath);
       final json = jsonDecode(jsonString) as Map<String, dynamic>;
-      
+
       // Convert legacy format to new format
       final automatonModel = _convertLegacyFormat(json);
       final automaton = automatonModel.toEntity();
@@ -52,18 +51,23 @@ class ExamplesDataSource {
         name: name,
         description: _getDescription(name),
         category: _getCategory(name),
+        subcategory: 'Basics',
+        difficultyLevel: DifficultyLevel.easy,
+        tags: const ['example', 'offline'],
+        estimatedComplexity: ComplexityLevel.low,
         automaton: automaton,
       );
 
       return Success(example);
     } on foundation.FlutterError catch (e) {
-      final message = e.message ?? e.toString();
-      if (message.contains('Unable to load asset')) {
+      final message = e.message;
+      final resolvedMessage = message.isEmpty ? e.toString() : message;
+      if (resolvedMessage.contains('Unable to load asset')) {
         return Failure(
           'Example asset not found for $name. Expected at jflutter_js/examples/$fileName',
         );
       }
-      return Failure('Error loading example $name: $e');
+      return Failure('Error loading example $name: $resolvedMessage');
     }
   }
 
@@ -80,7 +84,7 @@ class ExamplesDataSource {
       for (final entry in transData.entries) {
         final key = entry.key;
         final value = entry.value;
-        
+
         if (value is List) {
           transitions[key] = List<String>.from(value);
         } else {

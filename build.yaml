@@ -1,0 +1,14 @@
+targets:
+  $default:
+    builders:
+      freezed:
+        options:
+          union_key: type
+          copy_with: true
+      json_serializable:
+        options:
+          any_map: true
+          explicit_to_json: true
+          include_if_null: false
+
+

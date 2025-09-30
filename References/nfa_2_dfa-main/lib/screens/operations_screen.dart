@@ -111,22 +111,33 @@ class _OperationsScreenState extends State<OperationsScreen>
 
       switch (operationInfo.operationType) {
         case OperationType.union:
-          final result = await _operations.unionWithOptimization(_automaton1!, _automaton2!);
+          final result = await _operations.unionWithOptimization(
+            _automaton1!,
+            _automaton2!,
+          );
           finalAutomaton = result.resultDfa;
           resultInfo = 'DFA حاصل: ${result.resultDfa.stateCount} حالت';
           break;
         case OperationType.intersection:
-          final result = await _operations.intersectionWithParallelProcessing(_automaton1!, _automaton2!);
+          final result = await _operations.intersectionWithParallelProcessing(
+            _automaton1!,
+            _automaton2!,
+          );
           finalAutomaton = result.resultDfa;
           resultInfo = 'DFA حاصل: ${result.resultDfa.stateCount} حالت';
           break;
         case OperationType.concatenation:
-          final result = await _operations.concatenateWithOptimization(_automaton1!, _automaton2!);
+          final result = await _operations.concatenateWithOptimization(
+            _automaton1!,
+            _automaton2!,
+          );
           finalAutomaton = result.resultNfa;
           resultInfo = 'NFA حاصل: ${result.resultNfa.stateCount} حالت';
           break;
         case OperationType.kleeneStar:
-          final result = await _operations.kleeneStarWithCycleDetection(_automaton1!);
+          final result = await _operations.kleeneStarWithCycleDetection(
+            _automaton1!,
+          );
           finalAutomaton = result.resultNfa;
           resultInfo = 'NFA حاصل: ${result.resultNfa.stateCount} حالت';
           break;
@@ -141,9 +152,9 @@ class _OperationsScreenState extends State<OperationsScreen>
 
       if (mounted) Navigator.pop(context); // بستن دیالوگ "در حال انجام"
       await _showResultDialog(operationInfo, finalAutomaton, resultInfo);
-
     } catch (e) {
-      if (mounted) Navigator.pop(context); // بستن دیالوگ "در حال انجام" در صورت خطا
+      if (mounted)
+        Navigator.pop(context); // بستن دیالوگ "در حال انجام" در صورت خطا
       _showErrorSnackBar('خطا در انجام عملیات: ${e.toString()}');
     } finally {
       if (mounted) {
@@ -176,8 +187,11 @@ class _OperationsScreenState extends State<OperationsScreen>
     );
   }
 
-  Future<void> _showResultDialog(OperationInfo operationInfo, dynamic finalAutomaton, String resultInfo) async {
-
+  Future<void> _showResultDialog(
+    OperationInfo operationInfo,
+    dynamic finalAutomaton,
+    String resultInfo,
+  ) async {
     final nfaProvider = Provider.of<NFAProvider>(context, listen: false);
 
     return showDialog(
@@ -278,8 +292,11 @@ class _OperationsScreenState extends State<OperationsScreen>
               return ListTile(
                 leading: const Icon(Icons.history),
                 title: Text(project.name),
-                subtitle: Text('${(project.nfaJson['states'] as List).length} حالت'),
-                onTap: () => Navigator.pop(context, NFA.fromJson(project.nfaJson)),
+                subtitle: Text(
+                  '${(project.nfaJson['states'] as List).length} حالت',
+                ),
+                onTap: () =>
+                    Navigator.pop(context, NFA.fromJson(project.nfaJson)),
               );
             },
           ),
@@ -506,7 +523,8 @@ class _OperationsScreenState extends State<OperationsScreen>
       itemCount: _operationList.length,
       itemBuilder: (context, index) {
         final operation = _operationList[index];
-        final canPerform = _automaton1 != null &&
+        final canPerform =
+            _automaton1 != null &&
             (!operation.requiresSecondAutomaton || _automaton2 != null);
 
         return _buildOperationCard(operation, canPerform);
@@ -518,8 +536,9 @@ class _OperationsScreenState extends State<OperationsScreen>
     return Card(
       elevation: canPerform ? 4 : 2,
       child: InkWell(
-        onTap:
-        canPerform && !_isOperationInProgress ? () => _performOperation(operation) : null,
+        onTap: canPerform && !_isOperationInProgress
+            ? () => _performOperation(operation)
+            : null,
         borderRadius: BorderRadius.circular(8),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -699,31 +718,35 @@ class _OperationsScreenState extends State<OperationsScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: _operationList
-                .map((op) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(op.icon, size: 16, color: op.color),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
+                .map(
+                  (op) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          op.name,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          op.description,
-                          style: const TextStyle(fontSize: 12),
+                        Icon(op.icon, size: 16, color: op.color),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                op.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                op.description,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
                   ),
-                ],
-              ),
-            ))
+                )
                 .toList(),
           ),
         ),

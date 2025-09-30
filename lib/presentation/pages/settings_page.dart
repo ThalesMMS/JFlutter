@@ -10,10 +10,11 @@ class SettingsPage extends StatefulWidget {
     super.key,
     SettingsRepository? repository,
     SettingsStorage? storage,
-  }) : repository = repository ??
-            SharedPreferencesSettingsRepository(
-              storage: storage ?? const SharedPreferencesSettingsStorage(),
-            );
+  }) : repository =
+           repository ??
+           SharedPreferencesSettingsRepository(
+             storage: storage ?? const SharedPreferencesSettingsStorage(),
+           );
 
   final SettingsRepository repository;
 
@@ -60,9 +61,9 @@ class _SettingsPageState extends State<SettingsPage> {
     try {
       await widget.repository.saveSettings(currentSettings);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Settings saved!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Settings saved!')));
     } catch (error, stackTrace) {
       debugPrint('Failed to save settings: $error');
       debugPrintStack(stackTrace: stackTrace);
@@ -111,9 +112,7 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
@@ -140,19 +139,15 @@ class _SettingsPageState extends State<SettingsPage> {
             _buildSectionHeader('Symbols'),
             _buildSymbolSettings(),
             const SizedBox(height: 24),
-
             _buildSectionHeader('Theme'),
             _buildThemeSettings(),
             const SizedBox(height: 24),
-
             _buildSectionHeader('Canvas'),
             _buildCanvasSettings(),
             const SizedBox(height: 24),
-
             _buildSectionHeader('General'),
             _buildGeneralSettings(),
             const SizedBox(height: 24),
-
             _buildSectionHeader('Actions'),
             _buildActionButtons(),
           ],
@@ -166,9 +161,9 @@ class _SettingsPageState extends State<SettingsPage> {
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Text(
         title,
-        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -233,12 +228,13 @@ class _SettingsPageState extends State<SettingsPage> {
               const ['System', 'Light', 'Dark'],
               (value) {
                 setState(() {
-                  _settings = _settings.copyWith(themeMode: value.toLowerCase());
+                  _settings = _settings.copyWith(
+                    themeMode: value.toLowerCase(),
+                  );
                 });
               },
-              chipKeyBuilder: (option) => ValueKey(
-                'settings_theme_${option.toLowerCase()}',
-              ),
+              chipKeyBuilder: (option) =>
+                  ValueKey('settings_theme_${option.toLowerCase()}'),
             ),
           ],
         ),
@@ -402,20 +398,15 @@ class _SettingsPageState extends State<SettingsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
+        Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 4),
-        Text(
-          subtitle,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
+        Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
           children: options.map((option) {
-            final isSelected = option.toLowerCase().contains(currentValue.toLowerCase()) ||
+            final isSelected =
+                option.toLowerCase().contains(currentValue.toLowerCase()) ||
                 (currentValue == 'λ' && option.contains('Lambda')) ||
                 (currentValue == 'ε' && option.contains('Epsilon')) ||
                 (currentValue == 'system' && option == 'System') ||
@@ -451,23 +442,13 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
+              Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
             ],
           ),
         ),
-        Switch(
-          key: switchKey,
-          value: value,
-          onChanged: onChanged,
-        ),
+        Switch(key: switchKey, value: value, onChanged: onChanged),
       ],
     );
   }
@@ -484,15 +465,9 @@ class _SettingsPageState extends State<SettingsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
+        Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 4),
-        Text(
-          subtitle,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
+        Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
         const SizedBox(height: 8),
         Row(
           children: [
@@ -518,4 +493,3 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 }
-

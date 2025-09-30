@@ -16,10 +16,7 @@ void main() {
 
     q2.setTransition(MapEntry(epsilon, {q2}));
 
-    final nfa1 = NFA(
-      states: {q0, q1, q2},
-      alphabet: {'0', '1'},
-    );
+    final nfa1 = NFA(states: {q0, q1, q2}, alphabet: {'0', '1'});
 
     test('Should accept the string "10"', () {
       final result = nfa1.evaluate('10');
@@ -79,10 +76,7 @@ void main() {
 
     q1.setTransition(MapEntry('1', {q2}));
 
-    final nfa2 = NFA(
-      states: {q0, q1, q2},
-      alphabet: {'0', '1'},
-    );
+    final nfa2 = NFA(states: {q0, q1, q2}, alphabet: {'0', '1'});
 
     test('Should accept the string "11"', () {
       final result = nfa2.evaluate('11');
@@ -189,10 +183,7 @@ void main() {
 
     q2.setTransition(MapEntry('a', {q3}));
 
-    final nfa3 = NFA(
-      states: {q0, q1, q2, q3},
-      alphabet: {'a', 'b'},
-    );
+    final nfa3 = NFA(states: {q0, q1, q2, q3}, alphabet: {'a', 'b'});
 
     test('Should accept the string "bba"', () {
       final result = nfa3.evaluate('bba');

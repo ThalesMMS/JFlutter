@@ -11,7 +11,6 @@ import '../models/dfa.dart';
 import '../models/state_model.dart';
 import 'graph_painter.dart';
 
-
 enum GraphLayoutType {
   circular,
   hierarchical,
@@ -85,7 +84,6 @@ class GraphTheme {
 }
 
 class GraphAnimationController {
-
   double value = 0.0;
 
   void update(double newValue) {
@@ -181,7 +179,10 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
       vsync: this,
     );
     _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _entryAnimationController, curve: Curves.elasticOut),
+      CurvedAnimation(
+        parent: _entryAnimationController,
+        curve: Curves.elasticOut,
+      ),
     );
 
     _simulationAnimationController = AnimationController(
@@ -189,24 +190,32 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
       vsync: this,
     );
     _simulationProgress = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _simulationAnimationController, curve: Curves.easeInOut),
+      CurvedAnimation(
+        parent: _simulationAnimationController,
+        curve: Curves.easeInOut,
+      ),
     );
 
     _highlightAnimationController = AnimationController(
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-    _highlightColor = ColorTween(
-      begin: Colors.orange.shade300,
-      end: Colors.orange.shade600,
-    ).animate(CurvedAnimation(parent: _highlightAnimationController, curve: Curves.easeInOut));
+    _highlightColor =
+        ColorTween(
+          begin: Colors.orange.shade300,
+          end: Colors.orange.shade600,
+        ).animate(
+          CurvedAnimation(
+            parent: _highlightAnimationController,
+            curve: Curves.easeInOut,
+          ),
+        );
 
     _graphAnimationController = GraphAnimationController();
 
     _entryAnimationController.forward();
     _highlightAnimationController.repeat(reverse: true);
   }
-
 
   void _calculateLayout() {
     final states = _getStates();
@@ -228,7 +237,7 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
         _calculateGridLayout(states, size);
         break;
       case GraphLayoutType.manual:
-      // Positions are handled manually
+        // Positions are handled manually
         break;
       default:
         _calculateCircularLayout(states, size);
@@ -260,7 +269,6 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
     _calculatedPositions.clear();
     final startState = _getStartState();
     if (startState.isEmpty) {
-
       _calculateCircularLayout(states, size);
       return;
     }
@@ -302,7 +310,6 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
   }
 
   void _calculateForceLayout(List<String> states, Size size) {
-
     _calculateGridLayout(states, size);
   }
 
@@ -392,7 +399,11 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
       children: [
         _buildInfoChip('حالات', '${_getStates().length}', Icons.bubble_chart),
         _buildInfoChip('الفبا', '${_getAlphabet().length}', Icons.translate),
-        _buildInfoChip('نوع', widget.automaton is NFA ? 'NFA' : 'DFA', Icons.device_hub),
+        _buildInfoChip(
+          'نوع',
+          widget.automaton is NFA ? 'NFA' : 'DFA',
+          Icons.device_hub,
+        ),
       ],
     );
   }
@@ -415,7 +426,10 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
       child: Text(
         'حالت انتخاب شده: $_selectedState\n${_getStateInfo(_selectedState!)}',
         textAlign: TextAlign.center,
-        style: TextStyle(fontWeight: FontWeight.bold, color: _currentTheme.textColor),
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: _currentTheme.textColor,
+        ),
       ),
     );
   }
@@ -425,7 +439,11 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: _currentTheme.primaryColor.withOpacity(0.1),
-        border: Border(bottom: BorderSide(color: _currentTheme.primaryColor.withOpacity(0.3))),
+        border: Border(
+          bottom: BorderSide(
+            color: _currentTheme.primaryColor.withOpacity(0.3),
+          ),
+        ),
       ),
       child: Column(
         children: [
@@ -434,7 +452,10 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
               Expanded(
                 child: Text(
                   'ورودی: $_simulationInput',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               Text(
@@ -470,7 +491,9 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               ElevatedButton(
-                onPressed: _currentInputIndex < _simulationInput.length ? _nextStep : null,
+                onPressed: _currentInputIndex < _simulationInput.length
+                    ? _nextStep
+                    : null,
                 child: const Text('قدم بعدی'),
               ),
               ElevatedButton(
@@ -489,11 +512,13 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
     return ScaleTransition(
       scale: _scaleAnimation,
       child: GestureDetector(
-        onScaleStart: (details) {
-        },
+        onScaleStart: (details) {},
         onScaleUpdate: (details) {
           setState(() {
-            _scaleFactor = math.max(0.5, math.min(3.0, _scaleFactor * details.scale));
+            _scaleFactor = math.max(
+              0.5,
+              math.min(3.0, _scaleFactor * details.scale),
+            );
           });
         },
         onPanStart: (details) {
@@ -508,8 +533,9 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
           if (_isDragging && _draggedState != null) {
             setState(() {
               _manualPositions[_draggedState!] =
-                  (_manualPositions[_draggedState!] ?? _getEffectivePositions()[_draggedState!]!) +
-                      details.delta / _scaleFactor;
+                  (_manualPositions[_draggedState!] ??
+                      _getEffectivePositions()[_draggedState!]!) +
+                  details.delta / _scaleFactor;
             });
           } else {
             setState(() {
@@ -543,7 +569,6 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
   }
 
   Widget _buildSimpleGraph() {
-
     return CustomPaint(
       painter: SimpleAutomatonPainter(
         states: _getStates(),
@@ -630,14 +655,16 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
         FloatingActionButton(
           heroTag: "zoom_in",
           mini: true,
-          onPressed: () => setState(() => _scaleFactor = math.min(3.0, _scaleFactor * 1.2)),
+          onPressed: () =>
+              setState(() => _scaleFactor = math.min(3.0, _scaleFactor * 1.2)),
           child: const Icon(Icons.zoom_in),
         ),
         const SizedBox(height: 8),
         FloatingActionButton(
           heroTag: "zoom_out",
           mini: true,
-          onPressed: () => setState(() => _scaleFactor = math.max(0.5, _scaleFactor / 1.2)),
+          onPressed: () =>
+              setState(() => _scaleFactor = math.max(0.5, _scaleFactor / 1.2)),
           child: const Icon(Icons.zoom_out),
         ),
         const SizedBox(height: 8),
@@ -684,17 +711,21 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
     final alphabet = _getAlphabet().toSet();
     for (int i = 0; i < _simulationInput.length; i++) {
       if (!alphabet.contains(_simulationInput[i])) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('نماد "${_simulationInput[i]}" در الفبا موجود نیست'),
-          backgroundColor: Colors.red,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('نماد "${_simulationInput[i]}" در الفبا موجود نیست'),
+            backgroundColor: Colors.red,
+          ),
+        );
         return;
       }
     }
 
     Set<String> initialStates = {_getStartState()};
     if (widget.automaton is NFA) {
-      initialStates = _getEpsilonClosureForSet({_getStartState()}, widget.automaton as NFA);
+      initialStates = _getEpsilonClosureForSet({
+        _getStartState(),
+      }, widget.automaton as NFA);
     }
 
     setState(() {
@@ -780,7 +811,9 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
 
   void _checkAcceptance() {
     final finalStates = _getFinalStates();
-    _simulationAccepted = _currentStates.any((state) => finalStates.contains(state));
+    _simulationAccepted = _currentStates.any(
+      (state) => finalStates.contains(state),
+    );
   }
 
   void _stopSimulation() {
@@ -793,7 +826,6 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
       _simulationAccepted = false;
     });
   }
-
 
   Set<String> _getEpsilonClosureForSet(Set<String> states, NFA nfa) {
     var closure = <String>{};
@@ -953,7 +985,6 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
       } else if (defaultPositions.containsKey(state)) {
         positions[state] = defaultPositions[state]!;
       } else {
-
         positions[state] = Offset(150.0 * (states.indexOf(state) + 1), 200);
       }
     }
@@ -970,14 +1001,14 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
       final statePos = entry.value;
       final adjustedPos = statePos * _scaleFactor + _panOffset;
       final distance = (position - adjustedPos).distance;
-      if (distance < closestDistance && distance <= (_nodeSize * _scaleFactor)) {
+      if (distance < closestDistance &&
+          distance <= (_nodeSize * _scaleFactor)) {
         closestDistance = distance;
         closestState = state;
       }
     }
     return closestState;
   }
-
 
   void _showSimulationDialog() {
     showDialog(
@@ -1061,7 +1092,9 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
 
   Future<void> _exportGraph() async {
     try {
-      final boundary = _repaintBoundaryKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      final boundary =
+          _repaintBoundaryKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
       if (boundary != null) {
         final image = await boundary.toImage(pixelRatio: 2.0);
         final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
@@ -1079,16 +1112,18 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطا در ذخیره تصویر: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('خطا در ذخیره تصویر: $e')));
       }
     }
   }
 
   Future<void> _shareGraph() async {
     try {
-      final boundary = _repaintBoundaryKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      final boundary =
+          _repaintBoundaryKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
       if (boundary != null) {
         final image = await boundary.toImage(pixelRatio: 2.0);
         final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
@@ -1097,19 +1132,20 @@ class _GraphVisualizationScreenState extends State<GraphVisualizationScreen>
           final file = File('${directory.path}/automaton_graph.png');
           await file.writeAsBytes(byteData.buffer.asUint8List());
 
-          await Share.shareXFiles([XFile(file.path)], text: 'نمایش گرافیکی اتوماتا');
+          await Share.shareXFiles([
+            XFile(file.path),
+          ], text: 'نمایش گرافیکی اتوماتا');
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطا در اشتراک‌گذاری: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('خطا در اشتراک‌گذاری: $e')));
       }
     }
   }
 }
-
 
 class SimpleAutomatonPainter extends CustomPainter {
   final List<String> states;
@@ -1179,7 +1215,14 @@ class SimpleAutomatonPainter extends CustomPainter {
     }
   }
 
-  void _drawArrow(Canvas canvas, Offset start, Offset end, String symbol, Paint paint, Paint arrowPaint) {
+  void _drawArrow(
+    Canvas canvas,
+    Offset start,
+    Offset end,
+    String symbol,
+    Paint paint,
+    Paint arrowPaint,
+  ) {
     // Calculate edge points on circle circumference
     final direction = (end - start).normalize();
     final adjustedStart = start + direction * (nodeSize * scaleFactor);
@@ -1192,15 +1235,19 @@ class SimpleAutomatonPainter extends CustomPainter {
     final arrowSize = 8.0 * scaleFactor;
     final arrowAngle = math.pi / 6;
 
-    final arrowPoint1 = adjustedEnd + Offset(
-      -arrowSize * math.cos(direction.direction - arrowAngle),
-      -arrowSize * math.sin(direction.direction - arrowAngle),
-    );
+    final arrowPoint1 =
+        adjustedEnd +
+        Offset(
+          -arrowSize * math.cos(direction.direction - arrowAngle),
+          -arrowSize * math.sin(direction.direction - arrowAngle),
+        );
 
-    final arrowPoint2 = adjustedEnd + Offset(
-      -arrowSize * math.cos(direction.direction + arrowAngle),
-      -arrowSize * math.sin(direction.direction + arrowAngle),
-    );
+    final arrowPoint2 =
+        adjustedEnd +
+        Offset(
+          -arrowSize * math.cos(direction.direction + arrowAngle),
+          -arrowSize * math.sin(direction.direction + arrowAngle),
+        );
 
     final arrowPath = Path()
       ..moveTo(adjustedEnd.dx, adjustedEnd.dy)
@@ -1235,7 +1282,11 @@ class SimpleAutomatonPainter extends CustomPainter {
     canvas.drawPath(arrowPath, arrowPaint);
 
     // Draw label
-    _drawTransitionLabel(canvas, loopCenter + Offset(0, -loopRadius - 10), symbol);
+    _drawTransitionLabel(
+      canvas,
+      loopCenter + Offset(0, -loopRadius - 10),
+      symbol,
+    );
   }
 
   void _drawTransitionLabel(Canvas canvas, Offset position, String symbol) {
@@ -1305,11 +1356,7 @@ class SimpleAutomatonPainter extends CustomPainter {
     }
 
     // Draw main circle
-    canvas.drawCircle(
-      center,
-      radius,
-      Paint()..color = nodeColor,
-    );
+    canvas.drawCircle(center, radius, Paint()..color = nodeColor);
 
     // Draw border
     canvas.drawCircle(

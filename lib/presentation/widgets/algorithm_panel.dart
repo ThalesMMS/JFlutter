@@ -61,127 +61,133 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-            Text(
-              'Algorithms',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
+              Text(
+                'Algorithms',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
-            ),
-            const SizedBox(height: 16),
-            
-            // Regex to NFA conversion
-            _buildRegexInput(context),
-            
-            const SizedBox(height: 12),
-            
-            // NFA to DFA conversion
-            _buildAlgorithmButton(
-              context,
-              title: 'NFA to DFA',
-              description: 'Convert non-deterministic to deterministic automaton',
-              icon: Icons.transform,
-              onPressed: () => _executeAlgorithm('NFA to DFA', widget.onNfaToDfa),
-            ),
-            
-            const SizedBox(height: 12),
-            
-            // DFA minimization
-            _buildAlgorithmButton(
-              context,
-              title: 'Minimize DFA',
-              description: 'Minimize deterministic finite automaton',
-              icon: Icons.compress,
-              onPressed: () => _executeAlgorithm('Minimize DFA', widget.onMinimizeDfa),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Complete DFA
-            _buildAlgorithmButton(
-              context,
-              title: 'Complete DFA',
-              description: 'Add trap state to make DFA complete',
-              icon: Icons.add_circle_outline,
-              onPressed: () => _executeAlgorithm('Complete DFA', widget.onCompleteDfa),
-            ),
-
-            const SizedBox(height: 12),
-            
-            // FA to Regex conversion
-            _buildAlgorithmButton(
-              context,
-              title: 'FA to Regex',
-              description: 'Convert finite automaton to regular expression',
-              icon: Icons.text_fields,
-              onPressed: () => _executeAlgorithm('FA to Regex', widget.onFaToRegex),
-            ),
-
-            const SizedBox(height: 12),
-
-            // FSA to Grammar conversion
-            _buildAlgorithmButton(
-              context,
-              title: 'FSA to Grammar',
-              description: 'Convert finite automaton to regular grammar',
-              icon: Icons.transform,
-              onPressed: () => _executeAlgorithm('FSA to Grammar', widget.onFsaToGrammar),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Auto Layout
-            _buildAlgorithmButton(
-              context,
-              title: 'Auto Layout',
-              description: 'Arrange states in a circle',
-              icon: Icons.auto_awesome_motion,
-              onPressed: widget.onAutoLayout,
-            ),
-
-            const SizedBox(height: 12),
-
-            // Compare Equivalence
-            _buildAlgorithmButton(
-              context,
-              title: 'Compare Equivalence',
-              description: 'Compare two DFAs for equivalence',
-              icon: Icons.compare_arrows,
-              onPressed: _onCompareEquivalencePressed,
-            ),
-            
-            const SizedBox(height: 12),
-            
-            // Clear automaton
-            _buildAlgorithmButton(
-              context,
-              title: 'Clear',
-              description: 'Clear current automaton',
-              icon: Icons.clear,
-              onPressed: widget.onClear,
-              isDestructive: true,
-            ),
-            
-            // Progress indicator
-            if (_isExecuting) ...[
               const SizedBox(height: 16),
-              _buildProgressIndicator(context),
-            ],
-            
-            // Algorithm execution steps
-            if (_algorithmSteps.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              _buildAlgorithmSteps(context),
-            ],
 
-            if (widget.equivalenceResult != null ||
-                (widget.equivalenceDetails?.isNotEmpty ?? false)) ...[
-              const SizedBox(height: 16),
-              _buildEquivalenceResult(context),
+              // Regex to NFA conversion
+              _buildRegexInput(context),
+
+              const SizedBox(height: 12),
+
+              // NFA to DFA conversion
+              _buildAlgorithmButton(
+                context,
+                title: 'NFA to DFA',
+                description:
+                    'Convert non-deterministic to deterministic automaton',
+                icon: Icons.transform,
+                onPressed: () =>
+                    _executeAlgorithm('NFA to DFA', widget.onNfaToDfa),
+              ),
+
+              const SizedBox(height: 12),
+
+              // DFA minimization
+              _buildAlgorithmButton(
+                context,
+                title: 'Minimize DFA',
+                description: 'Minimize deterministic finite automaton',
+                icon: Icons.compress,
+                onPressed: () =>
+                    _executeAlgorithm('Minimize DFA', widget.onMinimizeDfa),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Complete DFA
+              _buildAlgorithmButton(
+                context,
+                title: 'Complete DFA',
+                description: 'Add trap state to make DFA complete',
+                icon: Icons.add_circle_outline,
+                onPressed: () =>
+                    _executeAlgorithm('Complete DFA', widget.onCompleteDfa),
+              ),
+
+              const SizedBox(height: 12),
+
+              // FA to Regex conversion
+              _buildAlgorithmButton(
+                context,
+                title: 'FA to Regex',
+                description: 'Convert finite automaton to regular expression',
+                icon: Icons.text_fields,
+                onPressed: () =>
+                    _executeAlgorithm('FA to Regex', widget.onFaToRegex),
+              ),
+
+              const SizedBox(height: 12),
+
+              // FSA to Grammar conversion
+              _buildAlgorithmButton(
+                context,
+                title: 'FSA to Grammar',
+                description: 'Convert finite automaton to regular grammar',
+                icon: Icons.transform,
+                onPressed: () =>
+                    _executeAlgorithm('FSA to Grammar', widget.onFsaToGrammar),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Auto Layout
+              _buildAlgorithmButton(
+                context,
+                title: 'Auto Layout',
+                description: 'Arrange states in a circle',
+                icon: Icons.auto_awesome_motion,
+                onPressed: widget.onAutoLayout,
+              ),
+
+              const SizedBox(height: 12),
+
+              // Compare Equivalence
+              _buildAlgorithmButton(
+                context,
+                title: 'Compare Equivalence',
+                description: 'Compare two DFAs for equivalence',
+                icon: Icons.compare_arrows,
+                onPressed: _onCompareEquivalencePressed,
+              ),
+
+              const SizedBox(height: 12),
+
+              // Clear automaton
+              _buildAlgorithmButton(
+                context,
+                title: 'Clear',
+                description: 'Clear current automaton',
+                icon: Icons.clear,
+                onPressed: widget.onClear,
+                isDestructive: true,
+              ),
+
+              // Progress indicator
+              if (_isExecuting) ...[
+                const SizedBox(height: 16),
+                _buildProgressIndicator(context),
+              ],
+
+              // Algorithm execution steps
+              if (_algorithmSteps.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                _buildAlgorithmSteps(context),
+              ],
+
+              if (widget.equivalenceResult != null ||
+                  (widget.equivalenceDetails?.isNotEmpty ?? false)) ...[
+                const SizedBox(height: 16),
+                _buildEquivalenceResult(context),
+              ],
             ],
-          ],
+          ),
         ),
       ),
-        ),
     );
   }
 
@@ -191,9 +197,9 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
       children: [
         Text(
           'Regex to NFA',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
         Row(
@@ -216,7 +222,8 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
             const SizedBox(width: 8),
             ElevatedButton(
               onPressed: () {
-                if (_regexController.text.isNotEmpty && widget.onRegexToNfa != null) {
+                if (_regexController.text.isNotEmpty &&
+                    widget.onRegexToNfa != null) {
                   widget.onRegexToNfa!(_regexController.text);
                 }
               },
@@ -239,8 +246,9 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
     final colorScheme = Theme.of(context).colorScheme;
     final color = isDestructive ? colorScheme.error : colorScheme.primary;
     final isCurrentAlgorithm = _currentAlgorithm == title;
-    final isDisabled = (_isExecuting && !isCurrentAlgorithm) || onPressed == null;
-    
+    final isDisabled =
+        (_isExecuting && !isCurrentAlgorithm) || onPressed == null;
+
     return InkWell(
       onTap: isDisabled ? null : onPressed,
       borderRadius: BorderRadius.circular(8),
@@ -248,17 +256,15 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           border: Border.all(
-            color: isCurrentAlgorithm 
-                ? color
-                : color.withOpacity(0.3),
+            color: isCurrentAlgorithm ? color : color.withValues(alpha: 0.3),
             width: isCurrentAlgorithm ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(8),
-          color: isCurrentAlgorithm 
-              ? color.withOpacity(0.1)
-              : isDisabled 
-                  ? colorScheme.surfaceVariant.withOpacity(0.5)
-                  : null,
+          color: isCurrentAlgorithm
+              ? color.withValues(alpha: 0.1)
+              : isDisabled
+              ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
+              : null,
         ),
         child: Row(
           children: [
@@ -274,8 +280,8 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
             else
               Icon(
                 icon,
-                color: isDisabled 
-                    ? colorScheme.outline.withOpacity(0.5)
+                color: isDisabled
+                    ? colorScheme.outline.withValues(alpha: 0.5)
                     : color,
                 size: 24,
               ),
@@ -287,8 +293,8 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: isDisabled 
-                          ? colorScheme.outline.withOpacity(0.5)
+                      color: isDisabled
+                          ? colorScheme.outline.withValues(alpha: 0.5)
                           : color,
                       fontWeight: FontWeight.w600,
                     ),
@@ -299,9 +305,9 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                         ? _executionStatus!
                         : description,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: isDisabled 
-                          ? colorScheme.outline.withOpacity(0.5)
-                          : colorScheme.onSurface.withOpacity(0.7),
+                      color: isDisabled
+                          ? colorScheme.outline.withValues(alpha: 0.5)
+                          : colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -318,9 +324,9 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
             else
               Icon(
                 Icons.arrow_forward_ios,
-                color: isDisabled 
-                    ? colorScheme.outline.withOpacity(0.5)
-                    : color.withOpacity(0.5),
+                color: isDisabled
+                    ? colorScheme.outline.withValues(alpha: 0.5)
+                    : color.withValues(alpha: 0.5),
                 size: 16,
               ),
           ],
@@ -333,7 +339,7 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -349,16 +355,18 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
               const SizedBox(width: 8),
               Text(
                 'Executing $_currentAlgorithm',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
               ),
             ],
           ),
           const SizedBox(height: 12),
           LinearProgressIndicator(
             value: _executionProgress,
-            backgroundColor: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            backgroundColor: Theme.of(
+              context,
+            ).colorScheme.outline.withValues(alpha: 0.2),
             valueColor: AlwaysStoppedAnimation<Color>(
               Theme.of(context).colorScheme.primary,
             ),
@@ -377,7 +385,7 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -385,12 +393,12 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
         children: [
           Text(
             'Algorithm Steps',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 12),
-          Container(
+          SizedBox(
             height: 200,
             child: ListView.builder(
               itemCount: _algorithmSteps.length,
@@ -398,20 +406,24 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                 final step = _algorithmSteps[index];
                 final isCurrentStep = index == _currentStepIndex;
                 final isCompleted = index < _currentStepIndex;
-                
+
                 return Container(
                   margin: const EdgeInsets.only(bottom: 8),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: isCurrentStep 
-                        ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
+                    color: isCurrentStep
+                        ? Theme.of(
+                            context,
+                          ).colorScheme.primaryContainer.withValues(alpha: 0.3)
                         : isCompleted
-                            ? Theme.of(context).colorScheme.surface
-                            : null,
+                        ? Theme.of(context).colorScheme.surface
+                        : null,
                     border: Border.all(
-                      color: isCurrentStep 
+                      color: isCurrentStep
                           ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                          : Theme.of(
+                              context,
+                            ).colorScheme.outline.withValues(alpha: 0.2),
                     ),
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -422,14 +434,20 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                         backgroundColor: isCompleted
                             ? Colors.green
                             : isCurrentStep
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(
+                                context,
+                              ).colorScheme.outline.withValues(alpha: 0.3),
                         child: isCompleted
-                            ? const Icon(Icons.check, size: 16, color: Colors.white)
+                            ? const Icon(
+                                Icons.check,
+                                size: 16,
+                                color: Colors.white,
+                              )
                             : Text(
                                 '${index + 1}',
                                 style: TextStyle(
-                                  color: isCurrentStep 
+                                  color: isCurrentStep
                                       ? Theme.of(context).colorScheme.onPrimary
                                       : Theme.of(context).colorScheme.onSurface,
                                   fontSize: 10,
@@ -444,9 +462,8 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                           children: [
                             Text(
                               step.title,
-                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(fontWeight: FontWeight.w600),
                             ),
                             const SizedBox(height: 4),
                             Text(
@@ -481,7 +498,9 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
   Future<void> _onCompareEquivalencePressed() async {
     if (widget.onCompareEquivalence == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Load a DFA before comparing equivalence.')),
+        const SnackBar(
+          content: Text('Load a DFA before comparing equivalence.'),
+        ),
       );
       return;
     }
@@ -518,8 +537,9 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
       _currentStepIndex = 0;
     });
 
-    final loadResult =
-        await _fileService.loadAutomatonFromJFLAP(selection.files.single.path!);
+    final loadResult = await _fileService.loadAutomatonFromJFLAP(
+      selection.files.single.path!,
+    );
 
     if (!mounted) return;
 
@@ -529,7 +549,9 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
         _executionStatus = 'Failed to load automaton';
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(loadResult.error ?? 'Unable to load automaton.')),
+        SnackBar(
+          content: Text(loadResult.error ?? 'Unable to load automaton.'),
+        ),
       );
       return;
     }
@@ -555,9 +577,9 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
         _isExecuting = false;
         _executionStatus = 'Comparison failed';
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Comparison failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Comparison failed: $e')));
     }
   }
 
@@ -583,9 +605,9 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: accent.withOpacity(0.12),
+        color: accent.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: accent.withOpacity(0.4)),
+        border: Border.all(color: accent.withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -598,8 +620,8 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                 result == null
                     ? 'Equivalence comparison'
                     : result
-                        ? 'Automata are equivalent'
-                        : 'Automata are not equivalent',
+                    ? 'Automata are equivalent'
+                    : 'Automata are not equivalent',
                 style: theme.textTheme.titleMedium?.copyWith(
                   color: accent,
                   fontWeight: FontWeight.w600,
@@ -618,7 +640,7 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
 
   void _executeAlgorithm(String algorithmName, VoidCallback? callback) {
     if (callback == null) return;
-    
+
     setState(() {
       _isExecuting = true;
       _currentAlgorithm = algorithmName;
@@ -627,17 +649,17 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
       _algorithmSteps.clear();
       _currentStepIndex = 0;
     });
-    
+
     // Generate algorithm steps
     _generateAlgorithmSteps(algorithmName);
-    
+
     // Execute the algorithm with progress simulation
     _simulateAlgorithmExecution(callback);
   }
 
   void _generateAlgorithmSteps(String algorithmName) {
     final steps = <AlgorithmStep>[];
-    
+
     switch (algorithmName) {
       case 'NFA to DFA':
         steps.addAll([
@@ -681,10 +703,7 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
             title: 'Update Transitions',
             description: 'Redirect transitions to merged states',
           ),
-          AlgorithmStep(
-            title: 'Finalize',
-            description: 'Create minimized DFA',
-          ),
+          AlgorithmStep(title: 'Finalize', description: 'Create minimized DFA'),
         ]);
         break;
       case 'FA to Regex':
@@ -712,7 +731,7 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
         ]);
         break;
     }
-    
+
     setState(() {
       _algorithmSteps = steps;
     });
@@ -730,18 +749,19 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
         _executionProgress = 1.0;
         _executionStatus = 'Completed successfully';
       });
-      
+
       // Execute the actual callback
       callback();
       return;
     }
-    
+
     setState(() {
       _currentStepIndex = stepIndex;
       _executionProgress = stepIndex / _algorithmSteps.length;
-      _executionStatus = 'Executing step ${stepIndex + 1} of ${_algorithmSteps.length}';
+      _executionStatus =
+          'Executing step ${stepIndex + 1} of ${_algorithmSteps.length}';
     });
-    
+
     // Simulate step execution time
     Future.delayed(const Duration(milliseconds: 800), () {
       if (mounted) {
@@ -757,9 +777,5 @@ class AlgorithmStep {
   final String description;
   final Map<String, dynamic>? data;
 
-  AlgorithmStep({
-    required this.title,
-    required this.description,
-    this.data,
-  });
+  AlgorithmStep({required this.title, required this.description, this.data});
 }

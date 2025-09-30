@@ -9,6 +9,7 @@ import '../../core/models/transition.dart';
 import '../providers/pda_editor_provider.dart';
 import 'touch_gesture_handler.dart';
 import 'transition_geometry.dart';
+import '../../core/algorithms/common/throttling.dart';
 
 /// Interactive canvas for drawing and editing Pushdown Automata
 class PDACanvas extends ConsumerStatefulWidget {
@@ -31,7 +32,7 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
   automaton_state.State? _selectedState;
   bool _isAddingState = false;
   bool _isAddingTransition = false;
-  automaton_state.State? _transitionStart;
+  final FrameThrottler _moveThrottler = FrameThrottler();
 
   @override
   void initState() {
@@ -54,7 +55,9 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withValues(alpha: 0.2),
                 ),
               ),
               child: ClipRRect(
@@ -71,6 +74,9 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
                   onStateDeleted: _deleteState,
                   onTransitionDeleted: _deleteTransition,
                   onTransitionEdited: _editTransition,
+                  stateRadius: 25,
+                  selfLoopBaseRadius: 36,
+                  selfLoopSpacing: 10,
                   child: CustomPaint(
                     key: widget.canvasKey,
                     painter: _PDACanvasPainter(
@@ -83,9 +89,6 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
                     ),
                     size: Size.infinite,
                   ),
-                  stateRadius: 25,
-                  selfLoopBaseRadius: 36,
-                  selfLoopSpacing: 10,
                 ),
               ),
             ),
@@ -104,9 +107,9 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
         children: [
           Text(
             'PDA Canvas',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Wrap(
@@ -154,9 +157,14 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
                 children: [
                   if (editorState.nondeterministicTransitionIds.isNotEmpty)
                     Chip(
-                      avatar: const Icon(Icons.report, color: Colors.white, size: 18),
-                      backgroundColor:
-                          Theme.of(context).colorScheme.errorContainer,
+                      avatar: const Icon(
+                        Icons.report,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.errorContainer,
                       label: Text(
                         '${editorState.nondeterministicTransitionIds.length} nondeterministic',
                         style: TextStyle(
@@ -188,8 +196,8 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
   }) {
     final colorScheme = Theme.of(context).colorScheme;
     final color = isSelected ? colorScheme.primary : colorScheme.onSurface;
-    final backgroundColor = isSelected 
-        ? colorScheme.primaryContainer 
+    final backgroundColor = isSelected
+        ? colorScheme.primaryContainer
         : colorScheme.surface;
 
     return ElevatedButton.icon(
@@ -211,14 +219,17 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
   }
 
   void _moveState(automaton_state.State state) {
-    setState(() {
-      final index = _states.indexWhere((s) => s.id == state.id);
-      if (index != -1) {
-        _states[index] = state;
-        _syncTransitionsForState(state);
-      }
+    _moveThrottler.schedule(() {
+      if (!mounted) return;
+      setState(() {
+        final index = _states.indexWhere((s) => s.id == state.id);
+        if (index != -1) {
+          _states[index] = state;
+          _syncTransitionsForState(state);
+        }
+      });
+      _notifyEditor();
     });
-    _notifyEditor();
   }
 
   void _addState(Offset position) {
@@ -280,7 +291,8 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
     setState(() {
       _states.removeWhere((s) => s.id == state.id);
       _transitions.removeWhere(
-          (t) => t.fromState.id == state.id || t.toState.id == state.id);
+        (t) => t.fromState.id == state.id || t.toState.id == state.id,
+      );
       if (_selectedState?.id == state.id) {
         _selectedState = null;
       }
@@ -297,7 +309,7 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
 
   void _editTransition(Transition transition) async {
     if (transition is! PDATransition) return;
-    
+
     final config = await _showTransitionEditDialog(
       context,
       fromState: transition.fromState,
@@ -366,7 +378,8 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
       return;
     }
 
-    final renderBox = widget.canvasKey.currentContext?.findRenderObject() as RenderBox?;
+    final renderBox =
+        widget.canvasKey.currentContext?.findRenderObject() as RenderBox?;
     final size = renderBox?.size ?? const Size(600, 400);
     final center = Offset(size.width / 2, size.height / 2);
     final radius = math.max(100, math.min(size.width, size.height) / 2 - 60);
@@ -389,14 +402,15 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
   }
 
   void _notifyEditor() {
-    ref.read(pdaEditorProvider.notifier).updateFromCanvas(
-          states: _states,
-          transitions: _transitions,
-        );
-    final currentPda = ref.read(pdaEditorProvider).pda;
-    if (currentPda != null) {
-      widget.onPDAModified(currentPda);
-    }
+    _moveThrottler.schedule(() {
+      ref
+          .read(pdaEditorProvider.notifier)
+          .updateFromCanvas(states: _states, transitions: _transitions);
+      final currentPda = ref.read(pdaEditorProvider).pda;
+      if (currentPda != null) {
+        widget.onPDAModified(currentPda);
+      }
+    });
   }
 
   void _syncTransitionsForState(automaton_state.State state) {
@@ -405,10 +419,12 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
       if (transition.fromState.id == state.id ||
           transition.toState.id == state.id) {
         _transitions[i] = transition.copyWith(
-          fromState:
-              transition.fromState.id == state.id ? state : transition.fromState,
-          toState:
-              transition.toState.id == state.id ? state : transition.toState,
+          fromState: transition.fromState.id == state.id
+              ? state
+              : transition.fromState,
+          toState: transition.toState.id == state.id
+              ? state
+              : transition.toState,
         );
       }
     }
@@ -421,13 +437,13 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
     PDATransition? existing,
   }) {
     final inputController = TextEditingController(
-      text: existing?.inputSymbol ?? ''
+      text: existing?.inputSymbol ?? '',
     );
     final popController = TextEditingController(
-      text: existing?.popSymbol ?? 'Z'
+      text: existing?.popSymbol ?? 'Z',
     );
     final pushController = TextEditingController(
-      text: existing?.pushSymbol ?? ''
+      text: existing?.pushSymbol ?? '',
     );
 
     return showDialog<_PDATransitionConfig?>(
@@ -443,7 +459,11 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text(existing == null ? 'Configure PDA Transition' : 'Edit PDA Transition'),
+              title: Text(
+                existing == null
+                    ? 'Configure PDA Transition'
+                    : 'Edit PDA Transition',
+              ),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -474,7 +494,7 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
                             });
                           },
                         ),
-                        const Text('λ')
+                        const Text('λ'),
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -646,17 +666,17 @@ class _PDACanvasPainter extends CustomPainter {
 
   void _drawState(Canvas canvas, automaton_state.State state) {
     final paint = Paint()
-      ..color = state == selectedState 
-          ? Colors.blue.withOpacity(0.3)
-          : Colors.grey.withOpacity(0.2)
+      ..color = state == selectedState
+          ? Colors.blue.withValues(alpha: 0.3)
+          : Colors.grey.withValues(alpha: 0.2)
       ..style = PaintingStyle.fill;
 
     final strokePaint = Paint()
-      ..color = state.isInitial 
-          ? Colors.green 
-          : state.isAccepting 
-              ? Colors.red 
-              : Colors.black
+      ..color = state.isInitial
+          ? Colors.green
+          : state.isAccepting
+          ? Colors.red
+          : Colors.black
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
 
@@ -744,12 +764,7 @@ class _PDACanvasPainter extends CustomPainter {
     );
   }
 
-  void _drawArrow(
-    Canvas canvas,
-    Offset position,
-    double angle,
-    Paint paint,
-  ) {
+  void _drawArrow(Canvas canvas, Offset position, double angle, Paint paint) {
     const arrowLength = 15.0;
     const arrowAngle = math.pi / 6;
 
@@ -777,7 +792,10 @@ class _PDACanvasPainter extends CustomPainter {
       ..strokeWidth = 3;
 
     canvas.drawLine(arrowStart, arrowEnd, paint);
-    final angle = math.atan2(arrowEnd.dy - arrowStart.dy, arrowEnd.dx - arrowStart.dx);
+    final angle = math.atan2(
+      arrowEnd.dy - arrowStart.dy,
+      arrowEnd.dx - arrowStart.dx,
+    );
     _drawArrow(canvas, arrowEnd, angle, paint);
   }
 
@@ -791,7 +809,11 @@ class _PDACanvasPainter extends CustomPainter {
     const spacing = 10.0;
 
     final loops = transitions
-        .where((t) => t.fromState.id == transition.fromState.id && t.fromState == t.toState)
+        .where(
+          (t) =>
+              t.fromState.id == transition.fromState.id &&
+              t.fromState == t.toState,
+        )
         .toList();
     final index = loops.indexOf(transition);
     final radius = baseRadius + index * spacing;
@@ -806,17 +828,14 @@ class _PDACanvasPainter extends CustomPainter {
     final path = Path()..addArc(rect, startAngle, sweepAngle);
     canvas.drawPath(path, paint);
 
-    final endAngle = startAngle + sweepAngle;
+    const endAngle = startAngle + sweepAngle;
     final arrowPoint = Offset(
       rect.center.dx + rect.width / 2 * math.cos(endAngle),
       rect.center.dy + rect.height / 2 * math.sin(endAngle),
     );
     _drawArrow(canvas, arrowPoint, endAngle + math.pi / 2, paint);
 
-    final labelPosition = Offset(
-      rect.center.dx,
-      rect.top - 12,
-    );
+    final labelPosition = Offset(rect.center.dx, rect.top - 12);
     _drawLabel(
       canvas,
       labelPosition,
@@ -827,7 +846,7 @@ class _PDACanvasPainter extends CustomPainter {
 
   void _drawLabel(Canvas canvas, Offset position, String text, Color color) {
     final labelBackground = Paint()
-      ..color = color.withOpacity(0.1)
+      ..color = color.withValues(alpha: 0.1)
       ..style = PaintingStyle.fill;
 
     final textPainter = TextPainter(
@@ -879,10 +898,7 @@ class _StateEditDialog extends StatefulWidget {
   final automaton_state.State state;
   final ValueChanged<automaton_state.State> onStateUpdated;
 
-  const _StateEditDialog({
-    required this.state,
-    required this.onStateUpdated,
-  });
+  const _StateEditDialog({required this.state, required this.onStateUpdated});
 
   @override
   State<_StateEditDialog> createState() => _StateEditDialogState();
@@ -939,10 +955,7 @@ class _StateEditDialogState extends State<_StateEditDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
         ),
-        ElevatedButton(
-          onPressed: _saveState,
-          child: const Text('Save'),
-        ),
+        ElevatedButton(onPressed: _saveState, child: const Text('Save')),
       ],
     );
   }

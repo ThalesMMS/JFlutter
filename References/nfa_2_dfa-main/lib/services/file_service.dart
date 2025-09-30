@@ -19,7 +19,11 @@ class FileOperationResult<T> {
     this.metadata,
   });
 
-  factory FileOperationResult.success(T data, {String? message, Map<String, dynamic>? metadata}) {
+  factory FileOperationResult.success(
+    T data, {
+    String? message,
+    Map<String, dynamic>? metadata,
+  }) {
     return FileOperationResult(
       success: true,
       message: message ?? 'عملیات با موفقیت انجام شد',
@@ -28,7 +32,11 @@ class FileOperationResult<T> {
     );
   }
 
-  factory FileOperationResult.failure(String message, {FileOperationError? error, Map<String, dynamic>? metadata}) {
+  factory FileOperationResult.failure(
+    String message, {
+    FileOperationError? error,
+    Map<String, dynamic>? metadata,
+  }) {
     return FileOperationResult(
       success: false,
       message: message,
@@ -197,7 +205,13 @@ class FileService {
       }
 
       // بررسی وجود فیلدهای ضروری
-      final requiredFields = ['states', 'alphabet', 'startState', 'finalStates', 'transitions'];
+      final requiredFields = [
+        'states',
+        'alphabet',
+        'startState',
+        'finalStates',
+        'transitions',
+      ];
       for (final field in requiredFields) {
         if (!jsonMap.containsKey(field)) {
           return FileOperationResult.failure(
@@ -247,7 +261,6 @@ class FileService {
         message: 'NFA با موفقیت از فایل "${p.basename(file.path)}" بارگذاری شد',
         metadata: metadata,
       );
-
     } catch (e) {
       return FileOperationResult.failure(
         'خطای غیرمنتظره در بارگذاری فایل: ${e.toString()}',
@@ -258,13 +271,13 @@ class FileService {
 
   /// ذخیره NFA در فایل JSON با قابلیت‌های پیشرفته
   Future<FileOperationResult<String>> saveNfaToFile(
-      NFA nfa,
-      String fileName, {
-        String? directoryPath,
-        bool createBackup = true,
-        bool validate = true,
-        Map<String, dynamic>? additionalMetadata,
-      }) async {
+    NFA nfa,
+    String fileName, {
+    String? directoryPath,
+    bool createBackup = true,
+    bool validate = true,
+    Map<String, dynamic>? additionalMetadata,
+  }) async {
     try {
       // اعتبارسنجی NFA
       if (validate) {
@@ -346,7 +359,6 @@ class FileService {
         message: 'NFA با موفقیت در "${p.basename(filePath)}" ذخیره شد',
         metadata: metadata,
       );
-
     } catch (e) {
       return FileOperationResult.failure(
         'خطای غیرمنتظره در ذخیره فایل: ${e.toString()}',
@@ -380,12 +392,16 @@ class FileService {
 
       for (final platformFile in result.files) {
         if (platformFile.path != null) {
-          final loadResult = await loadNfaFromFile(filePath: platformFile.path!);
+          final loadResult = await loadNfaFromFile(
+            filePath: platformFile.path!,
+          );
           if (loadResult.success && loadResult.data != null) {
             nfaList.add(loadResult.data!);
             loadedFiles.add(p.basename(platformFile.path!));
           } else {
-            errors.add('${p.basename(platformFile.path!)}: ${loadResult.message}');
+            errors.add(
+              '${p.basename(platformFile.path!)}: ${loadResult.message}',
+            );
           }
         }
       }
@@ -415,7 +431,6 @@ class FileService {
         message: message,
         metadata: metadata,
       );
-
     } catch (e) {
       return FileOperationResult.failure(
         'خطا در بارگذاری چندین فایل: ${e.toString()}',
@@ -426,10 +441,10 @@ class FileService {
 
   /// ذخیره چندین NFA در فایل‌های جداگانه
   Future<FileOperationResult<List<String>>> saveMultipleNfaFiles(
-      List<NFA> nfaList, {
-        String? directoryPath,
-        String prefix = 'nfa',
-      }) async {
+    List<NFA> nfaList, {
+    String? directoryPath,
+    String prefix = 'nfa',
+  }) async {
     try {
       if (nfaList.isEmpty) {
         return FileOperationResult.failure(
@@ -500,7 +515,6 @@ class FileService {
         message: message,
         metadata: metadata,
       );
-
     } catch (e) {
       return FileOperationResult.failure(
         'خطا در ذخیره چندین فایل: ${e.toString()}',
@@ -511,11 +525,11 @@ class FileService {
 
   /// صادرات NFA به فرمت‌های مختلف
   Future<FileOperationResult<String>> exportNfa(
-      NFA nfa,
-      String fileName,
-      ExportFormat format, {
-        String? directoryPath,
-      }) async {
+    NFA nfa,
+    String fileName,
+    ExportFormat format, {
+    String? directoryPath,
+  }) async {
     try {
       String? outputPath = directoryPath;
       if (outputPath == null) {
@@ -542,12 +556,8 @@ class FileService {
       return FileOperationResult.success(
         filePath,
         message: 'NFA به فرمت $format صادر شد',
-        metadata: {
-          'format': format.toString(),
-          'file_size': content.length,
-        },
+        metadata: {'format': format.toString(), 'file_size': content.length},
       );
-
     } catch (e) {
       return FileOperationResult.failure(
         'خطا در صادرات: ${e.toString()}',
@@ -557,7 +567,9 @@ class FileService {
   }
 
   /// بازیابی فایل‌های پشتیبان
-  Future<FileOperationResult<List<File>>> findBackupFiles(String originalFilePath) async {
+  Future<FileOperationResult<List<File>>> findBackupFiles(
+    String originalFilePath,
+  ) async {
     try {
       final originalFile = File(originalFilePath);
       final directory = originalFile.parent;
@@ -565,18 +577,20 @@ class FileService {
 
       final backupFiles = <File>[];
       await for (final entity in directory.list()) {
-        if (entity is File && entity.path.contains('$baseName.$_backupExtension')) {
+        if (entity is File &&
+            entity.path.contains('$baseName.$_backupExtension')) {
           backupFiles.add(entity);
         }
       }
 
-      backupFiles.sort((a, b) => b.statSync().modified.compareTo(a.statSync().modified));
+      backupFiles.sort(
+        (a, b) => b.statSync().modified.compareTo(a.statSync().modified),
+      );
 
       return FileOperationResult.success(
         backupFiles,
         message: '${backupFiles.length} فایل پشتیبان یافت شد',
       );
-
     } catch (e) {
       return FileOperationResult.failure(
         'خطا در جستجوی فایل‌های پشتیبان: ${e.toString()}',
@@ -585,14 +599,16 @@ class FileService {
     }
   }
 
-
   Future<FileOperationResult<String>> _createBackup(File originalFile) async {
     try {
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final backupPath = '${originalFile.path}.$timestamp.$_backupExtension';
       await originalFile.copy(backupPath);
 
-      return FileOperationResult.success(backupPath, message: 'پشتیبان ایجاد شد');
+      return FileOperationResult.success(
+        backupPath,
+        message: 'پشتیبان ایجاد شد',
+      );
     } catch (e) {
       return FileOperationResult.failure(
         'خطا در ایجاد پشتیبان: ${e.toString()}',
@@ -650,7 +666,9 @@ class FileService {
 
     // حالات پایانی
     if (nfa.finalStates.isNotEmpty) {
-      buffer.writeln('  node [shape=doublecircle]; ${nfa.finalStates.join(' ')};');
+      buffer.writeln(
+        '  node [shape=doublecircle]; ${nfa.finalStates.join(' ')};',
+      );
       buffer.writeln('  node [shape=circle];');
     }
 
@@ -707,7 +725,9 @@ class FileService {
     for (final fromState in nfa.transitions.keys) {
       for (final symbol in nfa.transitions[fromState]!.keys) {
         for (final toState in nfa.transitions[fromState]![symbol]!) {
-          buffer.writeln('    <transition from="$fromState" symbol="$symbol" to="$toState"/>');
+          buffer.writeln(
+            '    <transition from="$fromState" symbol="$symbol" to="$toState"/>',
+          );
         }
       }
     }
@@ -750,10 +770,10 @@ class FileService {
 /// فرمت‌های صادرات پشتیبانی شده
 enum ExportFormat {
   json,
-  dot,   // Graphviz DOT format
-  csv,   // Comma Separated Values
-  xml,   // XML format
-  yaml,  // YAML format
+  dot, // Graphviz DOT format
+  csv, // Comma Separated Values
+  xml, // XML format
+  yaml, // YAML format
 }
 
 /// نتیجه اعتبارسنجی

@@ -115,7 +115,8 @@ class _SimulationPanelState extends State<SimulationPanel> {
       return 'Final configuration ${_formatState(step.currentState)} – input $verdict.';
     }
 
-    final consumed = step.usedTransition ??
+    final consumed =
+        step.usedTransition ??
         (_simulationSteps[index - 1].remainingInput.isNotEmpty
             ? _simulationSteps[index - 1].remainingInput[0]
             : 'ε');
@@ -147,12 +148,12 @@ class _SimulationPanelState extends State<SimulationPanel> {
             children: [
               Text(
                 'Simulation',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
-              
+
               // Input field
               TextField(
                 controller: _inputController,
@@ -164,9 +165,9 @@ class _SimulationPanelState extends State<SimulationPanel> {
                 ),
                 onSubmitted: (_) => _simulate(),
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Simulate button
               SizedBox(
                 width: double.infinity,
@@ -185,12 +186,12 @@ class _SimulationPanelState extends State<SimulationPanel> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Step-by-step controls
               _buildStepByStepControls(context),
-              
+
               // Results
               if (widget.simulationResult != null) ...[
                 Text(
@@ -202,13 +203,13 @@ class _SimulationPanelState extends State<SimulationPanel> {
                 const SizedBox(height: 8),
                 _buildResultCard(context, widget.simulationResult!),
               ],
-              
+
               // Step-by-step execution
               if (_isStepByStep && _simulationSteps.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 _buildStepByStepExecution(context),
               ],
-              
+
               // Regex Result
               if (widget.regexResult != null) ...[
                 const SizedBox(height: 16),
@@ -231,13 +232,13 @@ class _SimulationPanelState extends State<SimulationPanel> {
   Widget _buildResultCard(BuildContext context, SimulationResult result) {
     final colorScheme = Theme.of(context).colorScheme;
     final isAccepted = result.isAccepted;
-    final color = isAccepted ? Colors.green : Colors.red;
-    
+    final color = isAccepted ? colorScheme.tertiary : colorScheme.error;
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withValues(alpha: 0.1),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -260,7 +261,6 @@ class _SimulationPanelState extends State<SimulationPanel> {
               ),
             ],
           ),
-          
           if (result.steps.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
@@ -268,14 +268,13 @@ class _SimulationPanelState extends State<SimulationPanel> {
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
-          
           if (result.errorMessage.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
               'Error: ${result.errorMessage}',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colorScheme.error,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: colorScheme.error),
             ),
           ],
         ],
@@ -285,12 +284,12 @@ class _SimulationPanelState extends State<SimulationPanel> {
 
   Widget _buildRegexResultCard(BuildContext context, String regex) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: colorScheme.primary.withOpacity(0.1),
-        border: Border.all(color: colorScheme.primary.withOpacity(0.3)),
+        color: colorScheme.primary.withValues(alpha: 0.1),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.3)),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -298,11 +297,7 @@ class _SimulationPanelState extends State<SimulationPanel> {
         children: [
           Row(
             children: [
-              Icon(
-                Icons.text_fields,
-                color: colorScheme.primary,
-                size: 20,
-              ),
+              Icon(Icons.text_fields, color: colorScheme.primary, size: 20),
               const SizedBox(width: 8),
               Text(
                 'Regular Expression',
@@ -339,7 +334,7 @@ class _SimulationPanelState extends State<SimulationPanel> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -355,9 +350,9 @@ class _SimulationPanelState extends State<SimulationPanel> {
               const SizedBox(width: 8),
               Text(
                 'Step-by-Step Mode',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
               ),
               const Spacer(),
               Switch(
@@ -387,7 +382,7 @@ class _SimulationPanelState extends State<SimulationPanel> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -397,32 +392,34 @@ class _SimulationPanelState extends State<SimulationPanel> {
             children: [
               Text(
                 'Step-by-Step Execution',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
               const Spacer(),
               Text(
                 'Step ${_currentStepIndex + 1} of ${_simulationSteps.length}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          
+
           // Current step display
           if (_currentStepIndex < _simulationSteps.length)
             _buildCurrentStep(context, _simulationSteps[_currentStepIndex]),
-          
+
           const SizedBox(height: 12),
-          
+
           // Navigation controls
           _buildStepNavigationControls(context),
-          
+
           const SizedBox(height: 12),
-          
+
           // Step list
           _buildStepList(context),
         ],
@@ -433,9 +430,10 @@ class _SimulationPanelState extends State<SimulationPanel> {
   Widget _buildCurrentStep(BuildContext context, SimulationStep step) {
     final bool isFinal = _currentStepIndex == _simulationSteps.length - 1;
     final bool accepted = widget.simulationResult?.isAccepted ?? false;
+    final colorScheme = Theme.of(context).colorScheme;
     final color = isFinal
-        ? (accepted ? Colors.green : Colors.red)
-        : Theme.of(context).colorScheme.primary;
+        ? (accepted ? colorScheme.tertiary : colorScheme.error)
+        : colorScheme.primary;
     final icon = isFinal
         ? (accepted ? Icons.check_circle : Icons.cancel)
         : Icons.play_circle;
@@ -447,8 +445,8 @@ class _SimulationPanelState extends State<SimulationPanel> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        border: Border.all(color: color.withOpacity(0.35)),
+        color: color.withValues(alpha: 0.12),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -461,41 +459,38 @@ class _SimulationPanelState extends State<SimulationPanel> {
               Text(
                 'Step ${_currentStepIndex + 1}',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: color,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          Text(
-            description,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          Text(description, style: Theme.of(context).textTheme.bodyMedium),
           if (consumed != null) ...[
             const SizedBox(height: 4),
             Text(
               'Consumed: "$consumed"',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontFamily: 'monospace',
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
             ),
           ],
           if (nextState != null) ...[
             const SizedBox(height: 4),
             Text(
               'Next state: ${_formatState(nextState)}',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontFamily: 'monospace',
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
             ),
           ],
           const SizedBox(height: 4),
           Text(
             'Remaining input: ${remaining.isEmpty ? 'ε' : '"$remaining"'}',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontFamily: 'monospace',
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
           ),
         ],
       ),
@@ -516,7 +511,9 @@ class _SimulationPanelState extends State<SimulationPanel> {
           tooltip: _isPlaying ? 'Pause' : 'Play',
         ),
         IconButton(
-          onPressed: _currentStepIndex < _simulationSteps.length - 1 ? _nextStep : null,
+          onPressed: _currentStepIndex < _simulationSteps.length - 1
+              ? _nextStep
+              : null,
           icon: const Icon(Icons.skip_next),
           tooltip: 'Next Step',
         ),
@@ -537,24 +534,26 @@ class _SimulationPanelState extends State<SimulationPanel> {
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
       child: ListView.builder(
         itemCount: _simulationSteps.length,
         itemBuilder: (context, index) {
-          final step = _simulationSteps[index];
           final isCurrentStep = index == _currentStepIndex;
           final isFinal = index == _simulationSteps.length - 1;
-          final isAcceptedStep =
-              isFinal ? (widget.simulationResult?.isAccepted ?? false) : false;
+          final isAcceptedStep = isFinal
+              ? (widget.simulationResult?.isAccepted ?? false)
+              : false;
 
           return Container(
             margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: isCurrentStep 
-                  ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
+              color: isCurrentStep
+                  ? Theme.of(
+                      context,
+                    ).colorScheme.primaryContainer.withValues(alpha: 0.3)
                   : null,
               borderRadius: BorderRadius.circular(4),
             ),
@@ -564,7 +563,9 @@ class _SimulationPanelState extends State<SimulationPanel> {
                   radius: 12,
                   backgroundColor: isCurrentStep
                       ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                      : Theme.of(
+                          context,
+                        ).colorScheme.outline.withValues(alpha: 0.3),
                   child: Text(
                     '${index + 1}',
                     style: TextStyle(
@@ -588,7 +589,7 @@ class _SimulationPanelState extends State<SimulationPanel> {
                 if (isAcceptedStep)
                   Icon(
                     Icons.check_circle,
-                    color: Colors.green,
+                    color: Theme.of(context).colorScheme.tertiary,
                     size: 16,
                   ),
               ],
@@ -619,7 +620,7 @@ class _SimulationPanelState extends State<SimulationPanel> {
     setState(() {
       _isPlaying = true;
     });
-    
+
     _playStepAnimation();
   }
 

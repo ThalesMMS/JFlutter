@@ -122,17 +122,17 @@ class AddStateUseCase {
       );
 
       final updatedStates = [...automaton.states, newState];
-      
+
       // If this is the initial state, update initialId
       String? newInitialId = automaton.initialId;
       if (isInitial) {
         newInitialId = newState.id;
         // Remove initial flag from other states
-        updatedStates.forEach((state) {
+        for (var state in updatedStates) {
           if (state.id != newState.id && state.isInitial) {
             state = state.copyWith(isInitial: false);
           }
-        });
+        }
       }
 
       final updatedAutomaton = automaton.copyWith(
@@ -210,8 +210,10 @@ class AddTransitionUseCase {
   }) async {
     try {
       final transitionKey = '$fromStateId|$symbol';
-      final updatedTransitions = Map<String, List<String>>.from(automaton.transitions);
-      
+      final updatedTransitions = Map<String, List<String>>.from(
+        automaton.transitions,
+      );
+
       if (updatedTransitions.containsKey(transitionKey)) {
         if (!updatedTransitions[transitionKey]!.contains(toStateId)) {
           updatedTransitions[transitionKey]!.add(toStateId);
@@ -250,8 +252,10 @@ class RemoveTransitionUseCase {
   }) async {
     try {
       final transitionKey = '$fromStateId|$symbol';
-      final updatedTransitions = Map<String, List<String>>.from(automaton.transitions);
-      
+      final updatedTransitions = Map<String, List<String>>.from(
+        automaton.transitions,
+      );
+
       if (updatedTransitions.containsKey(transitionKey)) {
         if (toStateId != null) {
           updatedTransitions[transitionKey]!.remove(toStateId);

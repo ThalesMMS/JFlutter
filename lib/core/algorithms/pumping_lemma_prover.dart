@@ -1,6 +1,5 @@
 import '../models/fsa.dart';
 import '../models/state.dart';
-import '../models/fsa_transition.dart';
 import '../result.dart';
 
 /// Proves or disproves the pumping lemma for regular languages
@@ -13,7 +12,7 @@ class PumpingLemmaProver {
   }) {
     try {
       final stopwatch = Stopwatch()..start();
-      
+
       // Validate input
       final validationResult = _validateInput(automaton);
       if (!validationResult.isSuccess) {
@@ -22,21 +21,21 @@ class PumpingLemmaProver {
 
       // Handle empty automaton
       if (automaton.states.isEmpty) {
-        return Failure('Cannot prove pumping lemma for empty automaton');
+        return const Failure('Cannot prove pumping lemma for empty automaton');
       }
 
       // Handle automaton with no initial state
       if (automaton.initialState == null) {
-        return Failure('Automaton must have an initial state');
+        return const Failure('Automaton must have an initial state');
       }
 
       // Prove the pumping lemma
       final result = _provePumpingLemma(automaton, maxPumpingLength, timeout);
       stopwatch.stop();
-      
+
       // Update execution time
       final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
-      
+
       return Success(finalResult);
     } catch (e) {
       return Failure('Error proving pumping lemma: $e');
@@ -46,24 +45,24 @@ class PumpingLemmaProver {
   /// Validates the input automaton
   static Result<void> _validateInput(FSA automaton) {
     if (automaton.states.isEmpty) {
-      return Failure('Automaton must have at least one state');
+      return const Failure('Automaton must have at least one state');
     }
-    
+
     if (automaton.initialState == null) {
-      return Failure('Automaton must have an initial state');
+      return const Failure('Automaton must have an initial state');
     }
-    
+
     if (!automaton.states.contains(automaton.initialState)) {
-      return Failure('Initial state must be in the states set');
+      return const Failure('Initial state must be in the states set');
     }
-    
+
     for (final acceptingState in automaton.acceptingStates) {
       if (!automaton.states.contains(acceptingState)) {
-        return Failure('Accepting state must be in the states set');
+        return const Failure('Accepting state must be in the states set');
       }
     }
-    
-    return Success(null);
+
+    return const Success(null);
   }
 
   /// Proves the pumping lemma for the automaton
@@ -73,13 +72,21 @@ class PumpingLemmaProver {
     Duration timeout,
   ) {
     final startTime = DateTime.now();
-    
+
     // Find the pumping length
-    final pumpingLength = _findPumpingLength(automaton, maxPumpingLength, timeout);
-    
+    final pumpingLength = _findPumpingLength(
+      automaton,
+      maxPumpingLength,
+      timeout,
+    );
+
     // Find a string that can be pumped
-    final pumpableString = _findPumpableString(automaton, pumpingLength, timeout);
-    
+    final pumpableString = _findPumpableString(
+      automaton,
+      pumpingLength,
+      timeout,
+    );
+
     if (pumpableString != null) {
       return PumpingLemmaProof.success(
         pumpingLength: pumpingLength,
@@ -102,16 +109,18 @@ class PumpingLemmaProver {
     Duration timeout,
   ) {
     final startTime = DateTime.now();
-    
+
     // The pumping length is at most the number of states
     final numStates = automaton.states.length;
-    final pumpingLength = numStates < maxPumpingLength ? numStates : maxPumpingLength;
-    
+    final pumpingLength = numStates < maxPumpingLength
+        ? numStates
+        : maxPumpingLength;
+
     // Check timeout
     if (DateTime.now().difference(startTime) > timeout) {
       return pumpingLength;
     }
-    
+
     return pumpingLength;
   }
 
@@ -122,28 +131,32 @@ class PumpingLemmaProver {
     Duration timeout,
   ) {
     final startTime = DateTime.now();
-    
+
     // Generate strings of length >= pumpingLength
     final alphabet = automaton.alphabet.toList();
     final strings = <String>[];
-    
+
     // Generate strings of length pumpingLength to pumpingLength + 10
     for (int length = pumpingLength; length <= pumpingLength + 10; length++) {
       _generateStrings(alphabet, '', length, strings, 100);
     }
-    
+
     // Test each string for pumpability
     for (final string in strings) {
       if (DateTime.now().difference(startTime) > timeout) {
         break;
       }
-      
-      final pumpableString = _testStringPumpability(automaton, string, pumpingLength);
+
+      final pumpableString = _testStringPumpability(
+        automaton,
+        string,
+        pumpingLength,
+      );
       if (pumpableString != null) {
         return pumpableString;
       }
     }
-    
+
     return null;
   }
 
@@ -156,14 +169,20 @@ class PumpingLemmaProver {
     int maxStrings,
   ) {
     if (strings.length >= maxStrings) return;
-    
+
     if (remainingLength == 0) {
       strings.add(currentString);
       return;
     }
-    
+
     for (final symbol in alphabet) {
-      _generateStrings(alphabet, currentString + symbol, remainingLength - 1, strings, maxStrings);
+      _generateStrings(
+        alphabet,
+        currentString + symbol,
+        remainingLength - 1,
+        strings,
+        maxStrings,
+      );
     }
   }
 
@@ -177,34 +196,35 @@ class PumpingLemmaProver {
     if (!_isStringAccepted(automaton, string)) {
       return null;
     }
-    
+
     // Check if string length >= pumpingLength
     if (string.length < pumpingLength) {
       return null;
     }
-    
+
     // Try all possible decompositions xyz where |xy| <= pumpingLength and |y| > 0
     for (int i = 0; i <= pumpingLength; i++) {
       for (int j = i + 1; j <= pumpingLength; j++) {
         if (j > string.length) break;
-        
+
         final x = string.substring(0, i);
         final y = string.substring(i, j);
         final z = string.substring(j);
-        
+
         // Check if y is not empty
         if (y.isEmpty) continue;
-        
+
         // Check if xy^i z is accepted for all i >= 0
         bool canPump = true;
-        for (int k = 0; k <= 3; k++) { // Test i = 0, 1, 2, 3
+        for (int k = 0; k <= 3; k++) {
+          // Test i = 0, 1, 2, 3
           final pumpedString = x + (y * k) + z;
           if (!_isStringAccepted(automaton, pumpedString)) {
             canPump = false;
             break;
           }
         }
-        
+
         if (canPump) {
           return PumpableString(
             originalString: string,
@@ -216,32 +236,35 @@ class PumpingLemmaProver {
         }
       }
     }
-    
+
     return null;
   }
 
   /// Checks if a string is accepted by the automaton
   static bool _isStringAccepted(FSA automaton, String string) {
     var currentStates = {automaton.initialState!};
-    
+
     for (int i = 0; i < string.length; i++) {
       final symbol = string[i];
       final nextStates = <State>{};
-      
+
       for (final state in currentStates) {
-        final transitions = automaton.getTransitionsFromStateOnSymbol(state, symbol);
+        final transitions = automaton.getTransitionsFromStateOnSymbol(
+          state,
+          symbol,
+        );
         for (final transition in transitions) {
           nextStates.add(transition.toState);
         }
       }
-      
+
       currentStates = nextStates;
-      
+
       if (currentStates.isEmpty) {
         return false;
       }
     }
-    
+
     return currentStates.intersection(automaton.acceptingStates).isNotEmpty;
   }
 
@@ -253,7 +276,7 @@ class PumpingLemmaProver {
   }) {
     try {
       final stopwatch = Stopwatch()..start();
-      
+
       // Validate input
       final validationResult = _validateInput(automaton);
       if (!validationResult.isSuccess) {
@@ -262,21 +285,27 @@ class PumpingLemmaProver {
 
       // Handle empty automaton
       if (automaton.states.isEmpty) {
-        return Failure('Cannot disprove pumping lemma for empty automaton');
+        return const Failure(
+          'Cannot disprove pumping lemma for empty automaton',
+        );
       }
 
       // Handle automaton with no initial state
       if (automaton.initialState == null) {
-        return Failure('Automaton must have an initial state');
+        return const Failure('Automaton must have an initial state');
       }
 
       // Disprove the pumping lemma
-      final result = _disprovePumpingLemma(automaton, maxPumpingLength, timeout);
+      final result = _disprovePumpingLemma(
+        automaton,
+        maxPumpingLength,
+        timeout,
+      );
       stopwatch.stop();
-      
+
       // Update execution time
       final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
-      
+
       return Success(finalResult);
     } catch (e) {
       return Failure('Error disproving pumping lemma: $e');
@@ -290,13 +319,21 @@ class PumpingLemmaProver {
     Duration timeout,
   ) {
     final startTime = DateTime.now();
-    
+
     // Find the pumping length
-    final pumpingLength = _findPumpingLength(automaton, maxPumpingLength, timeout);
-    
+    final pumpingLength = _findPumpingLength(
+      automaton,
+      maxPumpingLength,
+      timeout,
+    );
+
     // Find a string that cannot be pumped
-    final nonPumpableString = _findNonPumpableString(automaton, pumpingLength, timeout);
-    
+    final nonPumpableString = _findNonPumpableString(
+      automaton,
+      pumpingLength,
+      timeout,
+    );
+
     if (nonPumpableString != null) {
       return PumpingLemmaDisproof.success(
         pumpingLength: pumpingLength,
@@ -319,28 +356,32 @@ class PumpingLemmaProver {
     Duration timeout,
   ) {
     final startTime = DateTime.now();
-    
+
     // Generate strings of length >= pumpingLength
     final alphabet = automaton.alphabet.toList();
     final strings = <String>[];
-    
+
     // Generate strings of length pumpingLength to pumpingLength + 10
     for (int length = pumpingLength; length <= pumpingLength + 10; length++) {
       _generateStrings(alphabet, '', length, strings, 100);
     }
-    
+
     // Test each string for non-pumpability
     for (final string in strings) {
       if (DateTime.now().difference(startTime) > timeout) {
         break;
       }
-      
-      final nonPumpableString = _testStringNonPumpability(automaton, string, pumpingLength);
+
+      final nonPumpableString = _testStringNonPumpability(
+        automaton,
+        string,
+        pumpingLength,
+      );
       if (nonPumpableString != null) {
         return nonPumpableString;
       }
     }
-    
+
     return null;
   }
 
@@ -354,34 +395,35 @@ class PumpingLemmaProver {
     if (!_isStringAccepted(automaton, string)) {
       return null;
     }
-    
+
     // Check if string length >= pumpingLength
     if (string.length < pumpingLength) {
       return null;
     }
-    
+
     // Try all possible decompositions xyz where |xy| <= pumpingLength and |y| > 0
     for (int i = 0; i <= pumpingLength; i++) {
       for (int j = i + 1; j <= pumpingLength; j++) {
         if (j > string.length) break;
-        
+
         final x = string.substring(0, i);
         final y = string.substring(i, j);
         final z = string.substring(j);
-        
+
         // Check if y is not empty
         if (y.isEmpty) continue;
-        
+
         // Check if xy^i z is accepted for all i >= 0
         bool canPump = true;
-        for (int k = 0; k <= 3; k++) { // Test i = 0, 1, 2, 3
+        for (int k = 0; k <= 3; k++) {
+          // Test i = 0, 1, 2, 3
           final pumpedString = x + (y * k) + z;
           if (!_isStringAccepted(automaton, pumpedString)) {
             canPump = false;
             break;
           }
         }
-        
+
         if (!canPump) {
           return NonPumpableString(
             originalString: string,
@@ -394,12 +436,17 @@ class PumpingLemmaProver {
         }
       }
     }
-    
+
     return null;
   }
 
   /// Finds a counter example for non-pumpability
-  static String _findCounterExample(FSA automaton, String x, String y, String z) {
+  static String _findCounterExample(
+    FSA automaton,
+    String x,
+    String y,
+    String z,
+  ) {
     // Try different values of i to find a counter example
     for (int i = 0; i <= 5; i++) {
       final pumpedString = x + (y * i) + z;
@@ -407,7 +454,7 @@ class PumpingLemmaProver {
         return pumpedString;
       }
     }
-    
+
     return '';
   }
 
@@ -419,7 +466,7 @@ class PumpingLemmaProver {
   }) {
     try {
       final stopwatch = Stopwatch()..start();
-      
+
       // Validate input
       final validationResult = _validateInput(automaton);
       if (!validationResult.isSuccess) {
@@ -428,18 +475,18 @@ class PumpingLemmaProver {
 
       // Handle empty automaton
       if (automaton.states.isEmpty) {
-        return Failure('Cannot test regularity for empty automaton');
+        return const Failure('Cannot test regularity for empty automaton');
       }
 
       // Handle automaton with no initial state
       if (automaton.initialState == null) {
-        return Failure('Automaton must have an initial state');
+        return const Failure('Automaton must have an initial state');
       }
 
       // Test regularity
       final result = _testRegularity(automaton, maxPumpingLength, timeout);
       stopwatch.stop();
-      
+
       return Success(result);
     } catch (e) {
       return Failure('Error testing regularity: $e');
@@ -452,14 +499,20 @@ class PumpingLemmaProver {
     int maxPumpingLength,
     Duration timeout,
   ) {
-    final startTime = DateTime.now();
-    
     // Find the pumping length
-    final pumpingLength = _findPumpingLength(automaton, maxPumpingLength, timeout);
-    
+    final pumpingLength = _findPumpingLength(
+      automaton,
+      maxPumpingLength,
+      timeout,
+    );
+
     // Find a string that can be pumped
-    final pumpableString = _findPumpableString(automaton, pumpingLength, timeout);
-    
+    final pumpableString = _findPumpableString(
+      automaton,
+      pumpingLength,
+      timeout,
+    );
+
     return pumpableString != null;
   }
 }

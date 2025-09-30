@@ -9,7 +9,7 @@ import 'automaton.dart';
 class PDA extends Automaton {
   /// Stack alphabet symbols
   final Set<String> stackAlphabet;
-  
+
   /// Initial stack symbol
   final String initialStackSymbol;
 
@@ -43,7 +43,7 @@ class PDA extends Automaton {
     AutomatonType? type,
     DateTime? created,
     DateTime? modified,
-        math.Rectangle? bounds,
+    math.Rectangle? bounds,
     double? zoomLevel,
     Vector2? panOffset,
     Set<String>? stackAlphabet,
@@ -88,10 +88,7 @@ class PDA extends Automaton {
         'height': bounds.height,
       },
       'zoomLevel': zoomLevel,
-      'panOffset': {
-        'x': panOffset.x,
-        'y': panOffset.y,
-      },
+      'panOffset': {'x': panOffset.x, 'y': panOffset.y},
       'stackAlphabet': stackAlphabet.toList(),
       'initialStackSymbol': initialStackSymbol,
     };
@@ -117,7 +114,7 @@ class PDA extends Automaton {
           .toSet(),
       created: DateTime.parse(json['created'] as String),
       modified: DateTime.parse(json['modified'] as String),
-          bounds: math.Rectangle(
+      bounds: math.Rectangle(
         (json['bounds'] as Map<String, dynamic>)['x'] as double,
         (json['bounds'] as Map<String, dynamic>)['y'] as double,
         (json['bounds'] as Map<String, dynamic>)['width'] as double,
@@ -137,39 +134,47 @@ class PDA extends Automaton {
   @override
   List<String> validate() {
     final errors = super.validate();
-    
+
     // Validate PDA-specific properties
     if (stackAlphabet.isEmpty) {
       errors.add('PDA must have a non-empty stack alphabet');
     }
-    
+
     if (initialStackSymbol.isEmpty) {
       errors.add('PDA must have an initial stack symbol');
     }
-    
+
     if (!stackAlphabet.contains(initialStackSymbol)) {
       errors.add('Initial stack symbol must be in the stack alphabet');
     }
-    
+
     for (final transition in transitions) {
       if (transition is! PDATransition) {
         errors.add('PDA can only contain PDA transitions');
       } else {
-        final pdaTransition = transition as PDATransition;
+        final PDATransition pdaTransition = transition;
         final transitionErrors = pdaTransition.validate();
-        errors.addAll(transitionErrors.map((e) => 'Transition ${pdaTransition.id}: $e'));
-        
+        errors.addAll(
+          transitionErrors.map((e) => 'Transition ${pdaTransition.id}: $e'),
+        );
+
         // Validate stack symbols
-        if (!pdaTransition.isLambdaPop && !stackAlphabet.contains(pdaTransition.popSymbol)) {
-          errors.add('Transition ${pdaTransition.id} references invalid pop symbol');
+        if (!pdaTransition.isLambdaPop &&
+            !stackAlphabet.contains(pdaTransition.popSymbol)) {
+          errors.add(
+            'Transition ${pdaTransition.id} references invalid pop symbol',
+          );
         }
-        
-        if (!pdaTransition.isLambdaPush && !stackAlphabet.contains(pdaTransition.pushSymbol)) {
-          errors.add('Transition ${pdaTransition.id} references invalid push symbol');
+
+        if (!pdaTransition.isLambdaPush &&
+            !stackAlphabet.contains(pdaTransition.pushSymbol)) {
+          errors.add(
+            'Transition ${pdaTransition.id} references invalid push symbol',
+          );
         }
       }
     }
-    
+
     return errors;
   }
 
@@ -194,14 +199,20 @@ class PDA extends Automaton {
   }
 
   /// Gets all transitions from a state that accept a specific input symbol
-  Set<PDATransition> getTransitionsFromStateOnInput(State state, String inputSymbol) {
+  Set<PDATransition> getTransitionsFromStateOnInput(
+    State state,
+    String inputSymbol,
+  ) {
     return pdaTransitions
         .where((t) => t.fromState == state && t.acceptsInput(inputSymbol))
         .toSet();
   }
 
   /// Gets all transitions from a state that can pop a specific stack symbol
-  Set<PDATransition> getTransitionsFromStateOnStack(State state, String stackSymbol) {
+  Set<PDATransition> getTransitionsFromStateOnStack(
+    State state,
+    String stackSymbol,
+  ) {
     return pdaTransitions
         .where((t) => t.fromState == state && t.canPop(stackSymbol))
         .toSet();
@@ -214,10 +225,12 @@ class PDA extends Automaton {
     String stackSymbol,
   ) {
     return pdaTransitions
-        .where((t) => 
-            t.fromState == state &&
-            t.acceptsInput(inputSymbol) &&
-            t.canPop(stackSymbol))
+        .where(
+          (t) =>
+              t.fromState == state &&
+              t.acceptsInput(inputSymbol) &&
+              t.canPop(stackSymbol),
+        )
         .toSet();
   }
 
@@ -233,18 +246,18 @@ class PDA extends Automaton {
     final closure = <State>{state};
     final queue = <State>[state];
     final stackSymbols = <String>{stackSymbol};
-    
+
     while (queue.isNotEmpty) {
       final current = queue.removeAt(0);
       final epsilonTransitions = getEpsilonTransitionsFromState(current);
-      
+
       for (final transition in epsilonTransitions) {
         if (transition.canPop(stackSymbol)) {
           if (!closure.contains(transition.toState)) {
             closure.add(transition.toState);
             queue.add(transition.toState);
           }
-          
+
           // Add new stack symbols from push operations
           if (!transition.isLambdaPush) {
             stackSymbols.add(transition.pushSymbol);
@@ -252,7 +265,7 @@ class PDA extends Automaton {
         }
       }
     }
-    
+
     return closure;
   }
 
@@ -262,7 +275,7 @@ class PDA extends Automaton {
     required String name,
     Set<String>? stackAlphabet,
     String? initialStackSymbol,
-        math.Rectangle? bounds,
+    math.Rectangle? bounds,
   }) {
     final now = DateTime.now();
     return PDA(
@@ -274,7 +287,7 @@ class PDA extends Automaton {
       acceptingStates: {},
       created: now,
       modified: now,
-          bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
+      bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
       stackAlphabet: stackAlphabet ?? {'Z'},
       initialStackSymbol: initialStackSymbol ?? 'Z',
     );
@@ -291,7 +304,7 @@ class PDA extends Automaton {
     bool isAccepting = false,
     Set<String>? stackAlphabet,
     String? initialStackSymbol,
-        math.Rectangle? bounds,
+    math.Rectangle? bounds,
   }) {
     final now = DateTime.now();
     final state = State(
@@ -301,7 +314,7 @@ class PDA extends Automaton {
       isInitial: isInitial,
       isAccepting: isAccepting,
     );
-    
+
     return PDA(
       id: id,
       name: name,
@@ -312,7 +325,7 @@ class PDA extends Automaton {
       acceptingStates: isAccepting ? {state} : {},
       created: now,
       modified: now,
-          bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
+      bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
       stackAlphabet: stackAlphabet ?? {'Z'},
       initialStackSymbol: initialStackSymbol ?? 'Z',
     );
@@ -322,7 +335,7 @@ class PDA extends Automaton {
   factory PDA.balancedParentheses({
     required String id,
     required String name,
-        math.Rectangle? bounds,
+    math.Rectangle? bounds,
   }) {
     final now = DateTime.now();
     final q0 = State(
@@ -339,7 +352,7 @@ class PDA extends Automaton {
       isInitial: false,
       isAccepting: true,
     );
-    
+
     final t1 = PDATransition.readAndStack(
       id: 't1',
       fromState: q0,
@@ -348,7 +361,7 @@ class PDA extends Automaton {
       popSymbol: 'Z',
       pushSymbol: 'Z(',
     );
-    
+
     final t2 = PDATransition.readAndStack(
       id: 't2',
       fromState: q0,
@@ -357,7 +370,7 @@ class PDA extends Automaton {
       popSymbol: '(',
       pushSymbol: '((',
     );
-    
+
     final t3 = PDATransition.readAndStack(
       id: 't3',
       fromState: q0,
@@ -366,7 +379,7 @@ class PDA extends Automaton {
       popSymbol: '(',
       pushSymbol: '',
     );
-    
+
     final t4 = PDATransition.readAndStack(
       id: 't4',
       fromState: q0,
@@ -375,7 +388,7 @@ class PDA extends Automaton {
       popSymbol: 'Z',
       pushSymbol: '',
     );
-    
+
     return PDA(
       id: id,
       name: name,
@@ -386,12 +399,12 @@ class PDA extends Automaton {
       acceptingStates: {q1},
       created: now,
       modified: now,
-          bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
+      bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
       stackAlphabet: {'Z', '('},
       initialStackSymbol: 'Z',
     );
   }
-  
+
   /// Gets PDA transition from state on symbol and stack top
   PDATransition? getPDATransitionFromStateOnSymbolAndStackTop(
     String stateId,

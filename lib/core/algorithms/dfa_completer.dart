@@ -1,4 +1,3 @@
-
 import 'package:vector_math/vector_math_64.dart';
 import '../models/fsa.dart';
 import '../models/state.dart';
@@ -14,7 +13,9 @@ class DFACompleter {
 
     for (final state in states) {
       for (final symbol in alphabet) {
-        final hasTransition = transitions.any((t) => t.fromState == state && t.inputSymbols.contains(symbol));
+        final hasTransition = transitions.any(
+          (t) => t.fromState == state && t.inputSymbols.contains(symbol),
+        );
         if (!hasTransition) {
           trapState ??= State(
             id: 'q_trap',
@@ -23,12 +24,14 @@ class DFACompleter {
             isInitial: false,
             isAccepting: false,
           );
-          transitions.add(FSATransition.deterministic(
-            id: 't_${state.id}_${symbol}_trap',
-            fromState: state,
-            toState: trapState,
-            symbol: symbol,
-          ));
+          transitions.add(
+            FSATransition.deterministic(
+              id: 't_${state.id}_${symbol}_trap',
+              fromState: state,
+              toState: trapState,
+              symbol: symbol,
+            ),
+          );
         }
       }
     }
@@ -36,12 +39,14 @@ class DFACompleter {
     if (trapState != null) {
       states.add(trapState);
       for (final symbol in alphabet) {
-        transitions.add(FSATransition.deterministic(
-          id: 't_trap_${symbol}_trap',
-          fromState: trapState,
-          toState: trapState,
-          symbol: symbol,
-        ));
+        transitions.add(
+          FSATransition.deterministic(
+            id: 't_trap_${symbol}_trap',
+            fromState: trapState,
+            toState: trapState,
+            symbol: symbol,
+          ),
+        );
       }
     }
 

@@ -11,6 +11,7 @@ import '../../core/models/tm_transition.dart';
 import '../../core/models/transition.dart';
 import '../providers/tm_editor_provider.dart';
 import 'touch_gesture_handler.dart';
+import '../../core/algorithms/common/throttling.dart';
 
 /// Interactive canvas for drawing and editing Turing Machines
 class TMCanvas extends ConsumerStatefulWidget {
@@ -33,7 +34,7 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
   automaton_state.State? _selectedState;
   bool _isAddingState = false;
   bool _isAddingTransition = false;
-  automaton_state.State? _transitionStart;
+  final FrameThrottler _moveThrottler = FrameThrottler();
 
   @override
   void initState() {
@@ -56,7 +57,9 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withValues(alpha: 0.2),
                 ),
               ),
               child: ClipRRect(
@@ -73,6 +76,7 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
                   onStateDeleted: _deleteState,
                   onTransitionDeleted: _deleteTransition,
                   onTransitionEdited: _editTransition,
+                  stateRadius: 30,
                   child: CustomPaint(
                     key: widget.canvasKey,
                     painter: _TMCanvasPainter(
@@ -84,7 +88,6 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
                     ),
                     size: Size.infinite,
                   ),
-                  stateRadius: 30,
                 ),
               ),
             ),
@@ -102,9 +105,9 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
         children: [
           Text(
             'TM Canvas',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Wrap(
@@ -144,8 +147,7 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
               padding: const EdgeInsets.only(top: 8.0),
               child: Chip(
                 avatar: const Icon(Icons.report, color: Colors.white, size: 18),
-                backgroundColor:
-                    Theme.of(context).colorScheme.errorContainer,
+                backgroundColor: Theme.of(context).colorScheme.errorContainer,
                 label: Text(
                   '${editorState.nondeterministicTransitionIds.length} nondeterministic',
                   style: TextStyle(
@@ -168,8 +170,8 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
   }) {
     final colorScheme = Theme.of(context).colorScheme;
     final color = isSelected ? colorScheme.primary : colorScheme.onSurface;
-    final backgroundColor = isSelected 
-        ? colorScheme.primaryContainer 
+    final backgroundColor = isSelected
+        ? colorScheme.primaryContainer
         : colorScheme.surface;
 
     return ElevatedButton.icon(
@@ -191,14 +193,17 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
   }
 
   void _moveState(automaton_state.State state) {
-    setState(() {
-      final index = _states.indexWhere((s) => s.id == state.id);
-      if (index != -1) {
-        _states[index] = state;
-        _syncTransitionsForState(state);
-      }
+    _moveThrottler.schedule(() {
+      if (!mounted) return;
+      setState(() {
+        final index = _states.indexWhere((s) => s.id == state.id);
+        if (index != -1) {
+          _states[index] = state;
+          _syncTransitionsForState(state);
+        }
+      });
+      _notifyEditor();
     });
-    _notifyEditor();
   }
 
   void _addState(Offset position) {
@@ -260,8 +265,9 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
   void _deleteState(automaton_state.State state) {
     setState(() {
       _states.remove(state);
-      _transitions.removeWhere((t) => 
-          t.fromState == state || t.toState == state);
+      _transitions.removeWhere(
+        (t) => t.fromState == state || t.toState == state,
+      );
       if (_selectedState == state) {
         _selectedState = null;
       }
@@ -288,15 +294,17 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
   }
 
   void _notifyEditor() {
-    final notifier = ref.read(tmEditorProvider.notifier);
-    final tm = notifier.updateFromCanvas(
-      states: List<automaton_state.State>.unmodifiable(_states),
-      transitions: List<TMTransition>.unmodifiable(_transitions),
-    );
+    _moveThrottler.schedule(() {
+      final notifier = ref.read(tmEditorProvider.notifier);
+      final tm = notifier.updateFromCanvas(
+        states: List<automaton_state.State>.unmodifiable(_states),
+        transitions: List<TMTransition>.unmodifiable(_transitions),
+      );
 
-    if (tm != null) {
-      widget.onTMModified(tm);
-    }
+      if (tm != null) {
+        widget.onTMModified(tm);
+      }
+    });
   }
 
   void _syncTransitionsForState(automaton_state.State state) {
@@ -305,10 +313,12 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
       if (transition.fromState.id == state.id ||
           transition.toState.id == state.id) {
         _transitions[i] = transition.copyWith(
-          fromState:
-              transition.fromState.id == state.id ? state : transition.fromState,
-          toState:
-              transition.toState.id == state.id ? state : transition.toState,
+          fromState: transition.fromState.id == state.id
+              ? state
+              : transition.fromState,
+          toState: transition.toState.id == state.id
+              ? state
+              : transition.toState,
         );
       }
     }
@@ -322,55 +332,61 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
     final result = await showDialog<TMTransition>(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Edit Transition'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildTextField(readController, 'Read Symbol'),
-              const SizedBox(height: 12),
-              _buildTextField(writeController, 'Write Symbol'),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<TapeDirection>(
-                value: direction,
-                items: TapeDirection.values
-                    .map(
-                      (dir) => DropdownMenuItem(
-                        value: dir,
-                        child: Text(dir.name.toUpperCase()),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    direction = value;
-                  }
-                },
-                decoration: const InputDecoration(
-                  labelText: 'Direction',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.of(context).pop(
-                  transition.copyWith(
-                    readSymbol: readController.text.trim(),
-                    writeSymbol: writeController.text.trim(),
-                    direction: direction,
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Edit Transition'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildTextField(readController, 'Read Symbol'),
+                  const SizedBox(height: 12),
+                  _buildTextField(writeController, 'Write Symbol'),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<TapeDirection>(
+                    initialValue: direction,
+                    items: TapeDirection.values
+                        .map(
+                          (dir) => DropdownMenuItem(
+                            value: dir,
+                            child: Text(dir.name.toUpperCase()),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setDialogState(() {
+                          direction = value;
+                        });
+                      }
+                    },
+                    decoration: const InputDecoration(
+                      labelText: 'Direction',
+                      border: OutlineInputBorder(),
+                    ),
                   ),
-                );
-              },
-              child: const Text('Save'),
-            ),
-          ],
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(
+                      transition.copyWith(
+                        readSymbol: readController.text.trim(),
+                        writeSymbol: writeController.text.trim(),
+                        direction: direction,
+                      ),
+                    );
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -439,17 +455,17 @@ class _TMCanvasPainter extends CustomPainter {
 
   void _drawState(Canvas canvas, automaton_state.State state) {
     final paint = Paint()
-      ..color = state == selectedState 
-          ? Colors.blue.withOpacity(0.3)
-          : Colors.grey.withOpacity(0.2)
+      ..color = state == selectedState
+          ? Colors.blue.withValues(alpha: 0.3)
+          : Colors.grey.withValues(alpha: 0.2)
       ..style = PaintingStyle.fill;
 
     final strokePaint = Paint()
-      ..color = state.isInitial 
-          ? Colors.green 
-          : state.isAccepting 
-              ? Colors.red 
-              : Colors.black
+      ..color = state.isInitial
+          ? Colors.green
+          : state.isAccepting
+          ? Colors.red
+          : Colors.black
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
 
@@ -493,11 +509,18 @@ class _TMCanvasPainter extends CustomPainter {
   }
 
   void _drawTransition(Canvas canvas, TMTransition transition) {
-    final fromPos = Offset(transition.fromState.position.x, transition.fromState.position.y);
-    final toPos = Offset(transition.toState.position.x, transition.toState.position.y);
+    final fromPos = Offset(
+      transition.fromState.position.x,
+      transition.fromState.position.y,
+    );
+    final toPos = Offset(
+      transition.toState.position.x,
+      transition.toState.position.y,
+    );
 
-    final isNondeterministic =
-        nondeterministicTransitionIds.contains(transition.id);
+    final isNondeterministic = nondeterministicTransitionIds.contains(
+      transition.id,
+    );
     final paint = Paint()
       ..color = isNondeterministic ? Colors.red : Colors.black
       ..style = PaintingStyle.stroke
@@ -520,10 +543,11 @@ class _TMCanvasPainter extends CustomPainter {
       TapeDirection.right => 'R',
       TapeDirection.stay => 'S',
     };
-    
+
     final textPainter = TextPainter(
       text: TextSpan(
-        text: '${transition.readSymbol}/${transition.writeSymbol},$directionSymbol',
+        text:
+            '${transition.readSymbol}/${transition.writeSymbol},$directionSymbol',
         style: TextStyle(
           color: isNondeterministic ? Colors.red : Colors.black,
           fontSize: 12,
@@ -588,10 +612,7 @@ class _StateEditDialog extends StatefulWidget {
   final automaton_state.State state;
   final ValueChanged<automaton_state.State> onStateUpdated;
 
-  const _StateEditDialog({
-    required this.state,
-    required this.onStateUpdated,
-  });
+  const _StateEditDialog({required this.state, required this.onStateUpdated});
 
   @override
   State<_StateEditDialog> createState() => _StateEditDialogState();
@@ -648,10 +669,7 @@ class _StateEditDialogState extends State<_StateEditDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
         ),
-        ElevatedButton(
-          onPressed: _saveState,
-          child: const Text('Save'),
-        ),
+        ElevatedButton(onPressed: _saveState, child: const Text('Save')),
       ],
     );
   }

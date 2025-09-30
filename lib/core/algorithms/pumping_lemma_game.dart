@@ -1,6 +1,5 @@
 import '../models/fsa.dart';
 import '../models/state.dart';
-import '../models/fsa_transition.dart';
 import '../models/pumping_lemma_game.dart' as models;
 import '../models/pumping_attempt.dart';
 import '../result.dart';
@@ -16,7 +15,7 @@ class PumpingLemmaGame {
   }) {
     try {
       final stopwatch = Stopwatch()..start();
-      
+
       // Validate input
       final validationResult = _validateInput(automaton);
       if (!validationResult.isSuccess) {
@@ -25,18 +24,18 @@ class PumpingLemmaGame {
 
       // Handle empty automaton
       if (automaton.states.isEmpty) {
-        return Failure('Cannot create game with empty automaton');
+        return const Failure('Cannot create game with empty automaton');
       }
 
       // Handle automaton with no initial state
       if (automaton.initialState == null) {
-        return Failure('Automaton must have an initial state');
+        return const Failure('Automaton must have an initial state');
       }
 
       // Create the game
       final result = _createGame(automaton, maxPumpingLength, timeout);
       stopwatch.stop();
-      
+
       return Success(result);
     } catch (e) {
       return Failure('Error creating pumping lemma game: $e');
@@ -46,24 +45,24 @@ class PumpingLemmaGame {
   /// Validates the input automaton
   static Result<void> _validateInput(FSA automaton) {
     if (automaton.states.isEmpty) {
-      return Failure('Automaton must have at least one state');
+      return const Failure('Automaton must have at least one state');
     }
-    
+
     if (automaton.initialState == null) {
-      return Failure('Automaton must have an initial state');
+      return const Failure('Automaton must have an initial state');
     }
-    
+
     if (!automaton.states.contains(automaton.initialState)) {
-      return Failure('Initial state must be in the states set');
+      return const Failure('Initial state must be in the states set');
     }
-    
+
     for (final acceptingState in automaton.acceptingStates) {
       if (!automaton.states.contains(acceptingState)) {
-        return Failure('Accepting state must be in the states set');
+        return const Failure('Accepting state must be in the states set');
       }
     }
-    
-    return Success(null);
+
+    return const Success(null);
   }
 
   /// Creates the game
@@ -72,14 +71,20 @@ class PumpingLemmaGame {
     int maxPumpingLength,
     Duration timeout,
   ) {
-    final startTime = DateTime.now();
-    
     // Find the pumping length
-    final pumpingLength = _findPumpingLength(automaton, maxPumpingLength, timeout);
-    
+    final pumpingLength = _findPumpingLength(
+      automaton,
+      maxPumpingLength,
+      timeout,
+    );
+
     // Generate a challenge string
-    final challengeString = _generateChallengeString(automaton, pumpingLength, timeout);
-    
+    final challengeString = _generateChallengeString(
+      automaton,
+      pumpingLength,
+      timeout,
+    );
+
     // Create the game
     return models.PumpingLemmaGame(
       automaton: automaton,
@@ -99,16 +104,18 @@ class PumpingLemmaGame {
     Duration timeout,
   ) {
     final startTime = DateTime.now();
-    
+
     // The pumping length is at most the number of states
     final numStates = automaton.states.length;
-    final pumpingLength = numStates < maxPumpingLength ? numStates : maxPumpingLength;
-    
+    final pumpingLength = numStates < maxPumpingLength
+        ? numStates
+        : maxPumpingLength;
+
     // Check timeout
     if (DateTime.now().difference(startTime) > timeout) {
       return pumpingLength;
     }
-    
+
     return pumpingLength;
   }
 
@@ -119,99 +126,107 @@ class PumpingLemmaGame {
     Duration timeout,
   ) {
     final startTime = DateTime.now();
-    
+
     // Generate a string that can be pumped
     final alphabet = automaton.alphabet.toList();
     final random = math.Random();
-    
+
     // Try to generate a string of length >= pumpingLength
     for (int attempt = 0; attempt < 100; attempt++) {
       if (DateTime.now().difference(startTime) > timeout) {
         break;
       }
-      
+
       final length = pumpingLength + random.nextInt(10);
       var string = '';
-      
+
       for (int i = 0; i < length; i++) {
         string += alphabet[random.nextInt(alphabet.length)];
       }
-      
+
       // Check if string can be pumped
       if (_canStringBePumped(automaton, string, pumpingLength)) {
         return string;
       }
     }
-    
+
     // Fallback: return a simple string
     return 'a' * pumpingLength;
   }
 
   /// Checks if a string can be pumped
-  static bool _canStringBePumped(FSA automaton, String string, int pumpingLength) {
+  static bool _canStringBePumped(
+    FSA automaton,
+    String string,
+    int pumpingLength,
+  ) {
     // Check if string is accepted by automaton
     if (!_isStringAccepted(automaton, string)) {
       return false;
     }
-    
+
     // Check if string length >= pumpingLength
     if (string.length < pumpingLength) {
       return false;
     }
-    
+
     // Try all possible decompositions xyz where |xy| <= pumpingLength and |y| > 0
     for (int i = 0; i <= pumpingLength; i++) {
       for (int j = i + 1; j <= pumpingLength; j++) {
         if (j > string.length) break;
-        
+
         final x = string.substring(0, i);
         final y = string.substring(i, j);
         final z = string.substring(j);
-        
+
         // Check if y is not empty
         if (y.isEmpty) continue;
-        
+
         // Check if xy^i z is accepted for all i >= 0
         bool canPump = true;
-        for (int k = 0; k <= 3; k++) { // Test i = 0, 1, 2, 3
+        for (int k = 0; k <= 3; k++) {
+          // Test i = 0, 1, 2, 3
           final pumpedString = x + (y * k) + z;
           if (!_isStringAccepted(automaton, pumpedString)) {
             canPump = false;
             break;
           }
         }
-        
+
         if (canPump) {
           return true;
         }
       }
     }
-    
+
     return false;
   }
 
   /// Checks if a string is accepted by the automaton
   static bool _isStringAccepted(FSA automaton, String string) {
     var currentStates = {automaton.initialState!};
-    
+
     for (int i = 0; i < string.length; i++) {
       final symbol = string[i];
       final nextStates = <State>{};
-      
+
       for (final state in currentStates) {
-        final transitions = automaton.getTransitionsFromStateOnSymbol(state, symbol);
+        final transitions = automaton.getTransitionsFromStateOnSymbol(
+          state,
+          symbol,
+        );
         for (final transition in transitions) {
           nextStates.add(transition.toState);
         }
       }
-      
+
       currentStates = nextStates;
-      
+
       if (currentStates.isEmpty) {
         return false;
       }
     }
-    
+
     return currentStates.intersection(automaton.acceptingStates).isNotEmpty;
   }
 
@@ -223,7 +238,7 @@ class PumpingLemmaGame {
   }) {
     try {
       final stopwatch = Stopwatch()..start();
-      
+
       // Validate input
       final validationResult = _validateAttemptInput(game, attempt);
       if (!validationResult.isSuccess) {
@@ -233,10 +248,10 @@ class PumpingLemmaGame {
       // Validate the attempt
       final result = _validateAttempt(game, attempt, timeout);
       stopwatch.stop();
-      
+
       // Update execution time
       final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
-      
+
       return Success(finalResult);
     } catch (e) {
       return Failure('Error validating pumping attempt: $e');
@@ -249,18 +264,18 @@ class PumpingLemmaGame {
     PumpingAttempt attempt,
   ) {
     if (attempt.x == null || attempt.y == null || attempt.z == null) {
-      return Failure('Attempt must have x, y, and z components');
+      return const Failure('Attempt must have x, y, and z components');
     }
-    
+
     if (attempt.y!.isEmpty) {
-      return Failure('y component cannot be empty');
+      return const Failure('y component cannot be empty');
     }
-    
+
     if (attempt.x!.length + attempt.y!.length > game.pumpingLength) {
-      return Failure('|xy| must be <= pumping length');
+      return const Failure('|xy| must be <= pumping length');
     }
-    
-    return Success(null);
+
+    return const Success(null);
   }
 
   /// Validates the attempt
@@ -270,7 +285,7 @@ class PumpingLemmaGame {
     Duration timeout,
   ) {
     final startTime = DateTime.now();
-    
+
     // Check if the decomposition is correct
     final originalString = attempt.x! + attempt.y! + attempt.z!;
     if (originalString != game.challengeString) {
@@ -280,7 +295,7 @@ class PumpingLemmaGame {
         executionTime: DateTime.now().difference(startTime),
       );
     }
-    
+
     // Check if |xy| <= pumping length
     if (attempt.x!.length + attempt.y!.length > game.pumpingLength) {
       return PumpingAttemptResult.failure(
@@ -289,7 +304,7 @@ class PumpingLemmaGame {
         executionTime: DateTime.now().difference(startTime),
       );
     }
-    
+
     // Check if |y| > 0
     if (attempt.y!.isEmpty) {
       return PumpingAttemptResult.failure(
@@ -298,17 +313,18 @@ class PumpingLemmaGame {
         executionTime: DateTime.now().difference(startTime),
       );
     }
-    
+
     // Check if xy^i z is accepted for all i >= 0
     bool canPump = true;
-    for (int i = 0; i <= 3; i++) { // Test i = 0, 1, 2, 3
+    for (int i = 0; i <= 3; i++) {
+      // Test i = 0, 1, 2, 3
       final pumpedString = attempt.x! + (attempt.y! * i) + attempt.z!;
       if (!_isStringAccepted(game.automaton, pumpedString)) {
         canPump = false;
         break;
       }
     }
-    
+
     if (canPump) {
       return PumpingAttemptResult.success(
         attempt: attempt,
@@ -331,20 +347,22 @@ class PumpingLemmaGame {
   }) {
     try {
       final stopwatch = Stopwatch()..start();
-      
+
       // Validate the attempt
       final validationResult = validateAttempt(game, attempt, timeout: timeout);
       if (!validationResult.isSuccess) {
         return Failure(validationResult.error!);
       }
-      
+
       final attemptResult = validationResult.data!;
-      
+
       // Update the game
-      final updatedAttempts = List<PumpingAttempt>.from(game.attempts)..add(attempt);
+      final updatedAttempts = List<PumpingAttempt>.from(game.attempts)
+        ..add(attempt);
       final updatedScore = game.score + (attemptResult.isSuccess ? 10 : 0);
-      final isCompleted = attemptResult.isSuccess || updatedAttempts.length >= 5;
-      
+      final isCompleted =
+          attemptResult.isSuccess || updatedAttempts.length >= 5;
+
       final updatedGame = models.PumpingLemmaGame(
         automaton: game.automaton,
         pumpingLength: game.pumpingLength,
@@ -354,9 +372,9 @@ class PumpingLemmaGame {
         score: updatedScore,
         maxScore: game.maxScore,
       );
-      
+
       stopwatch.stop();
-      
+
       return Success(updatedGame);
     } catch (e) {
       return Failure('Error updating game: $e');
@@ -370,11 +388,11 @@ class PumpingLemmaGame {
   }) {
     try {
       final stopwatch = Stopwatch()..start();
-      
+
       // Generate a hint
       final hint = _generateHint(game, timeout);
       stopwatch.stop();
-      
+
       return Success(hint);
     } catch (e) {
       return Failure('Error generating hint: $e');
@@ -382,26 +400,21 @@ class PumpingLemmaGame {
   }
 
   /// Generates a hint
-  static String _generateHint(
-    models.PumpingLemmaGame game,
-    Duration timeout,
-  ) {
-    final startTime = DateTime.now();
-    
+  static String _generateHint(models.PumpingLemmaGame game, Duration timeout) {
     // Try to find a valid decomposition
     final string = game.challengeString;
     final pumpingLength = game.pumpingLength;
-    
+
     for (int i = 0; i <= pumpingLength; i++) {
       for (int j = i + 1; j <= pumpingLength; j++) {
         if (j > string.length) break;
-        
+
         final x = string.substring(0, i);
         final y = string.substring(i, j);
         final z = string.substring(j);
-        
+
         if (y.isEmpty) continue;
-        
+
         // Check if this decomposition works
         bool canPump = true;
         for (int k = 0; k <= 3; k++) {
@@ -411,13 +424,13 @@ class PumpingLemmaGame {
             break;
           }
         }
-        
+
         if (canPump) {
           return 'Try x = "$x", y = "$y", z = "$z"';
         }
       }
     }
-    
+
     return 'The pumping length is ${game.pumpingLength}. Try to find a decomposition where |xy| <= ${game.pumpingLength} and |y| > 0.';
   }
 
@@ -428,14 +441,14 @@ class PumpingLemmaGame {
   }) {
     try {
       final stopwatch = Stopwatch()..start();
-      
+
       // Analyze the game
       final result = _analyzeGame(game, timeout);
       stopwatch.stop();
-      
+
       // Update execution time
       final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
-      
+
       return Success(finalResult);
     } catch (e) {
       return Failure('Error analyzing game: $e');
@@ -448,19 +461,20 @@ class PumpingLemmaGame {
     Duration timeout,
   ) {
     final startTime = DateTime.now();
-    
+
     // Analyze attempts
     final totalAttempts = game.attempts.length;
-    final successfulAttempts = game.attempts.where((a) => 
-        _validateAttempt(game, a, timeout).isSuccess).length;
+    final successfulAttempts = game.attempts
+        .where((a) => _validateAttempt(game, a, timeout).isSuccess)
+        .length;
     final failedAttempts = totalAttempts - successfulAttempts;
-    
+
     // Analyze score
     final scorePercentage = (game.score / game.maxScore) * 100;
-    
+
     // Analyze difficulty
     final difficulty = _calculateDifficulty(game);
-    
+
     return GameAnalysis(
       totalAttempts: totalAttempts,
       successfulAttempts: successfulAttempts,
@@ -476,7 +490,7 @@ class PumpingLemmaGame {
     // Difficulty is based on pumping length and string length
     final pumpingLength = game.pumpingLength;
     final stringLength = game.challengeString.length;
-    
+
     // Higher pumping length and string length = higher difficulty
     return (pumpingLength + stringLength) / 100.0;
   }

@@ -58,28 +58,38 @@ class AlgorithmOperations {
   }
 
   /// Simulates a finite automaton
-  static Result<SimulationResult> simulateAutomaton(
+  static Future<Result<SimulationResult>> simulateAutomaton(
     FSA automaton,
     String inputString, {
     bool stepByStep = false,
     Duration timeout = const Duration(seconds: 5),
-  }) {
+  }) async {
     try {
-      return AutomatonSimulator.simulate(automaton, inputString, stepByStep: stepByStep, timeout: timeout);
+      return await AutomatonSimulator.simulate(
+        automaton,
+        inputString,
+        stepByStep: stepByStep,
+        timeout: timeout,
+      );
     } catch (e) {
       return ResultFactory.failure('Error simulating automaton: $e');
     }
   }
 
   /// Simulates an NFA with epsilon transitions
-  static Result<SimulationResult> simulateNfa(
+  static Future<Result<SimulationResult>> simulateNfa(
     FSA nfa,
     String inputString, {
     bool stepByStep = false,
     Duration timeout = const Duration(seconds: 5),
-  }) {
+  }) async {
     try {
-      return AutomatonSimulator.simulateNFA(nfa, inputString, stepByStep: stepByStep, timeout: timeout);
+      return await AutomatonSimulator.simulateNFA(
+        nfa,
+        inputString,
+        stepByStep: stepByStep,
+        timeout: timeout,
+      );
     } catch (e) {
       return ResultFactory.failure('Error simulating NFA: $e');
     }
@@ -105,7 +115,11 @@ class AlgorithmOperations {
     Duration timeout = const Duration(seconds: 10),
   }) {
     try {
-      return PumpingLemmaProver.provePumpingLemma(automaton, maxPumpingLength: maxPumpingLength, timeout: timeout);
+      return PumpingLemmaProver.provePumpingLemma(
+        automaton,
+        maxPumpingLength: maxPumpingLength,
+        timeout: timeout,
+      );
     } catch (e) {
       return ResultFactory.failure('Error proving pumping lemma: $e');
     }
@@ -118,7 +132,11 @@ class AlgorithmOperations {
     Duration timeout = const Duration(seconds: 10),
   }) {
     try {
-      return PumpingLemmaProver.disprovePumpingLemma(automaton, maxPumpingLength: maxPumpingLength, timeout: timeout);
+      return PumpingLemmaProver.disprovePumpingLemma(
+        automaton,
+        maxPumpingLength: maxPumpingLength,
+        timeout: timeout,
+      );
     } catch (e) {
       return ResultFactory.failure('Error disproving pumping lemma: $e');
     }
@@ -131,12 +149,15 @@ class AlgorithmOperations {
     Duration timeout = const Duration(seconds: 10),
   }) {
     try {
-      return PumpingLemmaProver.isLanguageRegular(automaton, maxPumpingLength: maxPumpingLength, timeout: timeout);
+      return PumpingLemmaProver.isLanguageRegular(
+        automaton,
+        maxPumpingLength: maxPumpingLength,
+        timeout: timeout,
+      );
     } catch (e) {
       return ResultFactory.failure('Error testing language regularity: $e');
     }
   }
-
 
   /// Simulates a PDA
   static Result<PDASimulationResult> simulatePda(
@@ -146,7 +167,12 @@ class AlgorithmOperations {
     Duration timeout = const Duration(seconds: 5),
   }) {
     try {
-      return PDASimulator.simulate(pda, inputString, stepByStep: stepByStep, timeout: timeout);
+      return PDASimulator.simulate(
+        pda,
+        inputString,
+        stepByStep: stepByStep,
+        timeout: timeout,
+      );
     } catch (e) {
       return ResultFactory.failure('Error simulating PDA: $e');
     }
@@ -160,7 +186,12 @@ class AlgorithmOperations {
     Duration timeout = const Duration(seconds: 5),
   }) {
     try {
-      return TMSimulator.simulate(tm, inputString, stepByStep: stepByStep, timeout: timeout);
+      return TMSimulator.simulate(
+        tm,
+        inputString,
+        stepByStep: stepByStep,
+        timeout: timeout,
+      );
     } catch (e) {
       return ResultFactory.failure('Error simulating Turing machine: $e');
     }
@@ -172,7 +203,10 @@ class AlgorithmOperations {
     Duration timeout = const Duration(seconds: 10),
   }) {
     try {
-      return GrammarToPDAConverter.convertGrammarToPDA(grammar, timeout: timeout);
+      return GrammarToPDAConverter.convertGrammarToPDA(
+        grammar,
+        timeout: timeout,
+      );
     } catch (e) {
       return ResultFactory.failure('Error converting grammar to PDA: $e');
     }
@@ -185,7 +219,11 @@ class AlgorithmOperations {
     Duration timeout = const Duration(seconds: 10),
   }) {
     try {
-      return PumpingLemmaGame.createGame(automaton, maxPumpingLength: maxPumpingLength, timeout: timeout);
+      return PumpingLemmaGame.createGame(
+        automaton,
+        maxPumpingLength: maxPumpingLength,
+        timeout: timeout,
+      );
     } catch (e) {
       return ResultFactory.failure('Error creating pumping lemma game: $e');
     }
@@ -241,20 +279,19 @@ class AlgorithmOperations {
     }
   }
 
-
   /// Tests if an automaton accepts a specific string
-  static Result<bool> accepts(FSA automaton, String inputString) {
+  static Future<Result<bool>> accepts(FSA automaton, String inputString) async {
     try {
-      return AutomatonSimulator.accepts(automaton, inputString);
+      return await AutomatonSimulator.accepts(automaton, inputString);
     } catch (e) {
       return ResultFactory.failure('Error testing acceptance: $e');
     }
   }
 
   /// Tests if an automaton rejects a specific string
-  static Result<bool> rejects(FSA automaton, String inputString) {
+  static Future<Result<bool>> rejects(FSA automaton, String inputString) async {
     try {
-      return AutomatonSimulator.rejects(automaton, inputString);
+      return await AutomatonSimulator.rejects(automaton, inputString);
     } catch (e) {
       return ResultFactory.failure('Error testing rejection: $e');
     }
@@ -279,26 +316,34 @@ class AlgorithmOperations {
   }
 
   /// Finds all strings of a given length that an automaton accepts
-  static Result<Set<String>> findAcceptedStrings(
+  static Future<Result<Set<String>>> findAcceptedStrings(
     FSA automaton,
     int maxLength, {
     int maxResults = 100,
-  }) {
+  }) async {
     try {
-      return AutomatonSimulator.findAcceptedStrings(automaton, maxLength, maxResults: maxResults);
+      return await AutomatonSimulator.findAcceptedStrings(
+        automaton,
+        maxLength,
+        maxResults: maxResults,
+      );
     } catch (e) {
       return ResultFactory.failure('Error finding accepted strings: $e');
     }
   }
 
   /// Finds all strings of a given length that an automaton rejects
-  static Result<Set<String>> findRejectedStrings(
+  static Future<Result<Set<String>>> findRejectedStrings(
     FSA automaton,
     int maxLength, {
     int maxResults = 100,
-  }) {
+  }) async {
     try {
-      return AutomatonSimulator.findRejectedStrings(automaton, maxLength, maxResults: maxResults);
+      return await AutomatonSimulator.findRejectedStrings(
+        automaton,
+        maxLength,
+        maxResults: maxResults,
+      );
     } catch (e) {
       return ResultFactory.failure('Error finding rejected strings: $e');
     }
@@ -311,12 +356,15 @@ class AlgorithmOperations {
     int maxResults = 100,
   }) {
     try {
-      return GrammarParser.findGeneratedStrings(grammar, maxLength, maxResults: maxResults);
+      return GrammarParser.findGeneratedStrings(
+        grammar,
+        maxLength,
+        maxResults: maxResults,
+      );
     } catch (e) {
       return ResultFactory.failure('Error finding generated strings: $e');
     }
   }
-
 
   /// Analyzes a PDA
   static Result<PDAAnalysis> analyzePda(
@@ -325,7 +373,11 @@ class AlgorithmOperations {
     Duration timeout = const Duration(seconds: 10),
   }) {
     try {
-      return PDASimulator.analyzePDA(pda, maxInputLength: maxInputLength, timeout: timeout);
+      return PDASimulator.analyzePDA(
+        pda,
+        maxInputLength: maxInputLength,
+        timeout: timeout,
+      );
     } catch (e) {
       return ResultFactory.failure('Error analyzing PDA: $e');
     }
@@ -338,7 +390,11 @@ class AlgorithmOperations {
     Duration timeout = const Duration(seconds: 10),
   }) {
     try {
-      return TMSimulator.analyzeTM(tm, maxInputLength: maxInputLength, timeout: timeout);
+      return TMSimulator.analyzeTM(
+        tm,
+        maxInputLength: maxInputLength,
+        timeout: timeout,
+      );
     } catch (e) {
       return ResultFactory.failure('Error analyzing Turing machine: $e');
     }
@@ -350,7 +406,9 @@ class AlgorithmOperations {
       final canConvert = GrammarToPDAConverter.canConvertToPDA(grammar);
       return ResultFactory.success(canConvert);
     } catch (e) {
-      return ResultFactory.failure('Error testing grammar to PDA conversion: $e');
+      return ResultFactory.failure(
+        'Error testing grammar to PDA conversion: $e',
+      );
     }
   }
 
@@ -362,7 +420,9 @@ class AlgorithmOperations {
     try {
       return GrammarToPDAConverter.analyzeConversion(grammar);
     } catch (e) {
-      return ResultFactory.failure('Error analyzing grammar to PDA conversion: $e');
+      return ResultFactory.failure(
+        'Error analyzing grammar to PDA conversion: $e',
+      );
     }
   }
 
@@ -372,9 +432,14 @@ class AlgorithmOperations {
     Duration timeout = const Duration(seconds: 10),
   }) {
     try {
-      return GrammarToPDAConverter.convertGrammarToPDAStandard(grammar, timeout: timeout);
+      return GrammarToPDAConverter.convertGrammarToPDAStandard(
+        grammar,
+        timeout: timeout,
+      );
     } catch (e) {
-      return ResultFactory.failure('Error converting grammar to PDA (standard): $e');
+      return ResultFactory.failure(
+        'Error converting grammar to PDA (standard): $e',
+      );
     }
   }
 
@@ -384,9 +449,14 @@ class AlgorithmOperations {
     Duration timeout = const Duration(seconds: 10),
   }) {
     try {
-      return GrammarToPDAConverter.convertGrammarToPDAGreibach(grammar, timeout: timeout);
+      return GrammarToPDAConverter.convertGrammarToPDAGreibach(
+        grammar,
+        timeout: timeout,
+      );
     } catch (e) {
-      return ResultFactory.failure('Error converting grammar to PDA (Greibach): $e');
+      return ResultFactory.failure(
+        'Error converting grammar to PDA (Greibach): $e',
+      );
     }
   }
 }

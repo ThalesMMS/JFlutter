@@ -8,14 +8,15 @@ class UIHelpers {
 
   /// نمایش SnackBar با امکانات پیشرفته
   static void showSnackBar(
-      BuildContext context,
-      String message, {
-        SnackBarType type = SnackBarType.info,
-        Duration duration = const Duration(seconds: 3),
-        SnackBarAction? action,
-        bool showCloseIcon = false,
-        VoidCallback? onVisible, required bool isError,
-      }) {
+    BuildContext context,
+    String message, {
+    SnackBarType type = SnackBarType.info,
+    Duration duration = const Duration(seconds: 3),
+    SnackBarAction? action,
+    bool showCloseIcon = false,
+    VoidCallback? onVisible,
+    required bool isError,
+  }) {
     final theme = Theme.of(context);
     Color backgroundColor;
     Color textColor;
@@ -104,7 +105,8 @@ class UIHelpers {
               if (icon != null) ...[
                 Icon(
                   icon,
-                  color: iconColor ??
+                  color:
+                      iconColor ??
                       (isDangerous ? StatusColors.error : StatusColors.info),
                   size: 28,
                 ),
@@ -181,11 +183,7 @@ class UIHelpers {
           title: Row(
             children: [
               if (icon != null) ...[
-                Icon(
-                  icon,
-                  color: iconColor ?? StatusColors.info,
-                  size: 28,
-                ),
+                Icon(icon, color: iconColor ?? StatusColors.info, size: 28),
                 const SizedBox(width: AppConstants.smallPadding),
               ],
               Expanded(
@@ -246,11 +244,15 @@ class UIHelpers {
           children: [
             // handle برای کشیدن
             Container(
-              margin: const EdgeInsets.symmetric(vertical: AppConstants.smallPadding),
+              margin: const EdgeInsets.symmetric(
+                vertical: AppConstants.smallPadding,
+              ),
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.4),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurfaceVariant.withOpacity(0.4),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -380,7 +382,7 @@ class ValidationHelpers {
     }
 
     final RegExp emailRegex = RegExp(
-        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
     );
 
     if (!emailRegex.hasMatch(value!)) {
@@ -405,7 +407,8 @@ class ValidationHelpers {
   }
 
   /// اعتبارسنجی رمز عبور
-  static String? validatePassword(String? value, {
+  static String? validatePassword(
+    String? value, {
     int minLength = 8,
     bool requireUppercase = true,
     bool requireLowercase = true,
@@ -432,7 +435,8 @@ class ValidationHelpers {
       return 'رمز عبور باید شامل اعداد باشد';
     }
 
-    if (requireSpecialChars && !RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(value)) {
+    if (requireSpecialChars &&
+        !RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(value)) {
       return 'رمز عبور باید شامل کاراکترهای خاص باشد';
     }
 
@@ -447,9 +451,18 @@ class GeneralHelpers {
   /// تبدیل timestamp به تاریخ فارسی
   static String formatPersianDate(DateTime dateTime) {
     const months = [
-      'فروردین', 'اردیبهشت', 'خرداد', 'تیر',
-      'مرداد', 'شهریور', 'مهر', 'آبان',
-      'آذر', 'دی', 'بهمن', 'اسفند'
+      'فروردین',
+      'اردیبهشت',
+      'خرداد',
+      'تیر',
+      'مرداد',
+      'شهریور',
+      'مهر',
+      'آبان',
+      'آذر',
+      'دی',
+      'بهمن',
+      'اسفند',
     ];
 
     return '${dateTime.day} ${months[dateTime.month - 1]} ${dateTime.year}';
@@ -491,7 +504,13 @@ class GeneralHelpers {
 
   /// ایجاد رنگ تصادفی
   static Color generateRandomColor() {
-    return Color((0xFF000000 + (0xFFFFFF * (DateTime.now().millisecondsSinceEpoch % 1000) / 1000)).round());
+    return Color(
+      (0xFF000000 +
+              (0xFFFFFF *
+                  (DateTime.now().millisecondsSinceEpoch % 1000) /
+                  1000))
+          .round(),
+    );
   }
 
   /// تاخیر async
@@ -527,17 +546,7 @@ class GeneralHelpers {
 }
 
 /// انواع SnackBar
-enum SnackBarType {
-  info,
-  success,
-  warning,
-  error,
-}
+enum SnackBarType { info, success, warning, error }
 
 /// انواع هپتیک فیدبک
-enum HapticType {
-  light,
-  medium,
-  heavy,
-  selection,
-}
+enum HapticType { light, medium, heavy, selection }

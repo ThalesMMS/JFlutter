@@ -159,7 +159,7 @@ class NFAToDFAConverter {
     // Process each state set
     int stateCounter = 1;
     const int maxStates = 1000; // Performance safeguard
-    while (queue.isNotEmpty && stateCounter < maxStates) {
+    while (queue.isNotEmpty) {
       final currentStateKey = queue.removeAt(0);
       if (processed.contains(currentStateKey)) continue;
       processed.add(currentStateKey);
@@ -196,6 +196,11 @@ class NFAToDFAConverter {
           if (dfaStates.containsKey(nextStateKey)) {
             nextDFAState = dfaStates[nextStateKey]!;
           } else {
+            if (stateCounter >= maxStates) {
+              throw StateError(
+                'Exceeded maximum number of DFA states ($maxStates) during subset construction.',
+              );
+            }
             nextDFAState = _createDFAState(nextStateSet, stateCounter++);
             dfaStates[nextStateKey] = nextDFAState;
             stateSetMap[nextStateKey] = nextStateSet;

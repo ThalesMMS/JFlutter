@@ -25,9 +25,13 @@ class RegexPipeline {
   static Result<FSA> run(String pattern) {
     try {
       final astResult = parse(pattern);
-      if (astResult is Failure) return ResultFactory.failure(astResult.error);
-      final fsa = _buildFromAst((astResult as Success<RegexNode>).data);
-      return ResultFactory.success(fsa);
+      switch (astResult) {
+        case Success<RegexNode>(data: final RegexNode ast):
+          final fsa = _buildFromAst(ast);
+          return ResultFactory.success(fsa);
+        case Failure<RegexNode>(message: final message):
+          return ResultFactory.failure(message);
+      }
     } catch (e) {
       return ResultFactory.failure('Regex pipeline error: $e');
     }
@@ -40,12 +44,14 @@ class RegexPipeline {
     }
     try {
       final parser = _buildParser();
-      final pp.Result parseResult = parser.end().parse(pattern);
-      if (parseResult.isSuccess) {
-        return ResultFactory.success(parseResult.value as RegexNode);
+      final pp.Result<RegexNode> result = parser.end().parse(pattern);
+      switch (result) {
+        case pp.Success<RegexNode>(value: final ast):
+          return ResultFactory.success(ast);
+        case pp.Failure(position: final position):
+          return ResultFactory.failure(
+              'Invalid regular expression at $position');
       }
-      return ResultFactory.failure(
-          'Invalid regular expression at ${parseResult.position}');
     } catch (e) {
       return ResultFactory.failure('Regex parse error: $e');
     }
@@ -69,12 +75,12 @@ class RegexPipeline {
         .map<RegexNode>((value) => SymbolNode(symbol: value as String));
 
     // Primary: group | dot | literal
-    late pp.Parser<RegexNode> primary;
     final primaryRef = pp.undefined<RegexNode>();
     final pp.Parser<RegexNode> dotParser =
         pp.char('.').map<RegexNode>((_) => const DotNode());
     final pp.Parser<RegexNode> groupParser = (lparen & primaryRef & rparen).map<RegexNode>((v) => v[1] as RegexNode);
-    primary = groupParser.or(dotParser).or(literal);
+    final pp.Parser<RegexNode> primary =
+        pp.choice<RegexNode>([groupParser, dotParser, literal]);
 
     // Unary: primary followed by postfix operators (*, +, ?), multiple allowed
     final pp.Parser<RegexNode> unary =

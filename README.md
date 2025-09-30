@@ -51,6 +51,13 @@ The project has been successfully fixed and is now fully functional on all suppo
 - **Visual Feedback** - Real-time algorithm execution feedback
 - **Overflow Prevention** - All UI elements handle small screens gracefully
 
+### 📚 Offline Examples Library
+- **Finite Automata (DFA/NFA)**: `afd_ends_with_a.json`, `afd_binary_divisible_by_3.json`, `afd_parity_AB.json`, `afn_lambda_a_or_ab.json`
+- **Context-Free Grammars (CFG)**: `glc_palindrome.json`, `glc_balanced_parentheses.json`
+- **Pushdown Automata (PDA)**: `apda_palindrome.json`
+- **Turing Machines (TM)**: `tm_binary_to_unary.json`
+- Assets are bundled em `jflutter_js/examples/` via `pubspec.yaml`, garantindo acesso offline conforme o contrato "Examples v1".
+
 ## 🏗️ Architecture
 
 ### **Clean Architecture Implementation**

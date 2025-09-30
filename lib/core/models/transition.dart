@@ -25,6 +25,9 @@ abstract class Transition {
   /// Type of the transition (deterministic, nondeterministic)
   final TransitionType type;
 
+  /// Primary symbol for this transition (to be overridden by subclasses)
+  String get symbol => label;
+
   Transition({
     required this.id,
     required this.fromState,

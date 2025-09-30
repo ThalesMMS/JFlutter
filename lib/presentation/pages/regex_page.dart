@@ -109,7 +109,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
     return parenCount == 0 && !inBracket;
   }
 
-  void _testStringMatch() async {
+  Future<void> _testStringMatch() async {
     setState(() {
       _testString = _testStringController.text;
       _errorMessage = '';
@@ -118,21 +118,29 @@ class _RegexPageState extends ConsumerState<RegexPage> {
         _matches = false;
         return;
       }
+    });
 
-      try {
-        final conversionResult = RegexToNFAConverter.convert(_currentRegex);
-        if (!conversionResult.isSuccess || conversionResult.data == null) {
+    if (!_isValid || _currentRegex.isEmpty) {
+      return;
+    }
+
+    try {
+      final conversionResult = RegexToNFAConverter.convert(_currentRegex);
+      if (!conversionResult.isSuccess || conversionResult.data == null) {
+        setState(() {
           _matches = false;
           _errorMessage =
               conversionResult.error ?? 'Unable to convert regex to NFA';
-          return;
-        }
+        });
+        return;
+      }
 
-        final simulationResult = await AutomatonSimulator.simulateNFA(
-          conversionResult.data!,
-          _testString,
-        );
+      final simulationResult = await AutomatonSimulator.simulateNFA(
+        conversionResult.data!,
+        _testString,
+      );
 
+      setState(() {
         if (simulationResult.isSuccess && simulationResult.data != null) {
           _matches = simulationResult.data!.isAccepted;
           if (!_matches && simulationResult.data!.errorMessage.isNotEmpty) {
@@ -143,11 +151,13 @@ class _RegexPageState extends ConsumerState<RegexPage> {
           _errorMessage =
               simulationResult.error ?? 'Failed to simulate automaton';
         }
-      } catch (e) {
+      });
+    } catch (e) {
+      setState(() {
         _matches = false;
         _errorMessage = 'Error testing string: $e';
-      }
-    });
+      });
+    }
   }
 
   void _convertToNFA() {

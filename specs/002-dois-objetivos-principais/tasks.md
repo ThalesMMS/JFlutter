@@ -36,25 +36,25 @@
 - Always include precise file paths and package references within `lib/`
 
 ## Phase 3.1: Setup
-- [ ] T001 Atualizar `/docs/references-alignment.md` com plano de verificação usando `References/automata-main` e `jflutter_js/examples`
-- [ ] T002 Validar `pubspec.yaml` para Flutter 3.22+/Dart 3.x; confirmar `freezed`, `json_serializable`, `riverpod` configurados
-- [ ] T003 Configurar `build_runner` e lints; garantir `flutter analyze` limpo
+- [x] T001 Atualizar `/docs/references-alignment.md` com plano de verificação usando `References/automata-main` e `jflutter_js/examples`
+- [x] T002 Validar `pubspec.yaml` para Flutter 3.22+/Dart 3.x; confirmar `freezed`, `json_serializable`, `riverpod` configurados
+- [x] T003 Configurar `build_runner` e lints; garantir `flutter analyze` limpo
 
 ## Phase 3.2: Tests First (TDD) ⚠️ MUST COMPLETE BEFORE 3.3
-- [ ] T004 [P] Escrever testes de comparação DFA em `test/unit/dfa_validation_test.dart` contra `References/automata-main` (5 casos: aceitação, rejeição, cadeia vazia, ciclo, complementação)
-- [ ] T005 [P] Escrever testes de comparação NFA em `test/unit/nfa_validation_test.dart` contra `References/automata-main` (5 casos: não-determinismo, ε-transições, aceitação, rejeição, beira do alfabeto)
-- [ ] T006 [P] Escrever testes de comparação GLC em `test/unit/glc_validation_test.dart` contra `References/automata-main` (5 casos: derivação válida, inválida, CNF/CYK, recursão esquerda, ambiguidades)
-- [ ] T007 [P] Escrever testes de comparação TM em `test/unit/tm_validation_test.dart` contra `References/automata-main` (5 casos: aceita, rejeita, laço detectável, transformação, limites de fita)
-- [ ] T008 [P] Escrever testes de comparação REGEX em `test/unit/regex_validation_test.dart` contra `References/automata-main` (regex→NFA, FA→regex, equivalência)
-- [ ] T009 [P] Escrever testes de comparação PDA em `test/unit/pda_validation_test.dart` contra `References/automata-main` (simulação, conversão GLC→PDA)
-- [ ] T010 [P] Escrever testes de comparação Pumping Lemma em `test/unit/pumping_lemma_validation_test.dart` contra `References/automata-main` (prova, disproof, regularidade)
-- [ ] T011 [P] Escrever testes de comparação CYK em `test/unit/cyk_validation_test.dart` contra `References/automata-main` (parsing CNF, derivação)
-- [ ] T012 [P] Escrever testes de comparação NFA→DFA em `test/unit/nfa_to_dfa_validation_test.dart` contra `References/automata-main` (conversão, equivalência)
-- [ ] T013 [P] Escrever testes de comparação DFA Minimization em `test/unit/dfa_minimization_validation_test.dart` contra `References/automata-main` (minimização, equivalência)
-- [ ] T014 [P] Escrever testes de comparação Equivalence Checker em `test/unit/equivalence_validation_test.dart` contra `References/automata-main` (DFA≡DFA, NFA≡NFA)
-- [ ] T015 [P] Escrever testes de interoperabilidade e round-trip para `.jff`/JSON/SVG em `test/integration/`
-- [ ] T016 [P] Escrever testes widget/golden para traços imutáveis e visualizações em `test/widget/`
-- [ ] T017 [P] Escrever testes de UX de erro (import inválido → banner inline com retry)
+- [x] T004 [P] Escrever testes de comparação DFA em `test/unit/dfa_validation_test.dart` contra `References/automata-main` (5 casos: aceitação, rejeição, cadeia vazia, ciclo, complementação)
+- [x] T005 [P] Escrever testes de comparação NFA em `test/unit/nfa_validation_test.dart` contra `References/automata-main` (5 casos: não-determinismo, ε-transições, aceitação, rejeição, beira do alfabeto)
+- [x] T006 [P] Escrever testes de comparação GLC em `test/unit/glc_validation_test.dart` contra `References/automata-main` (5 casos: derivação válida, inválida, CNF/CYK, recursão esquerda, ambiguidades)
+- [x] T007 [P] Escrever testes de comparação TM em `test/unit/tm_validation_test.dart` contra `References/automata-main` (5 casos: aceita, rejeita, laço detectável, transformação, limites de fita)
+- [x] T008 [P] Escrever testes de comparação REGEX em `test/unit/regex_validation_test.dart` contra `References/automata-main` (regex→NFA, FA→regex, equivalência)
+- [x] T009 [P] Escrever testes de comparação PDA em `test/unit/pda_validation_test.dart` contra `References/automata-main` (simulação, conversão GLC→PDA)
+- [x] T010 [P] Escrever testes de comparação Pumping Lemma em `test/unit/pumping_lemma_validation_test.dart` contra `References/automata-main` (prova, disproof, regularidade)
+- [x] T011 [P] Escrever testes de comparação CYK em `test/unit/cyk_validation_test.dart` contra `References/automata-main` (parsing CNF, derivação)
+- [x] T012 [P] Escrever testes de comparação NFA→DFA em `test/unit/nfa_to_dfa_validation_test.dart` contra `References/automata-main` (conversão, equivalência)
+- [x] T013 [P] Escrever testes de comparação DFA Minimization em `test/unit/dfa_minimization_validation_test.dart` contra `References/automata-main` (minimização, equivalência)
+- [x] T014 [P] Escrever testes de comparação Equivalence Checker em `test/unit/equivalence_validation_test.dart` contra `References/automata-main` (DFA≡DFA, NFA≡NFA)
+- [x] T015 [P] Escrever testes de interoperabilidade e round-trip para `.jff`/JSON/SVG em `test/integration/`
+- [x] T016 [P] Escrever testes widget/golden para traços imutáveis e visualizações em `test/widget/`
+- [x] T017 [P] Escrever testes de UX de erro (import inválido → banner inline com retry)
 
 ## Phase 3.3: Core Implementation (ONLY after tests fail)
 - [ ] T018 [P] Revisar/ajustar algoritmos DFA em `lib/core/algorithms/dfa_operations.dart` conforme desvios identificados

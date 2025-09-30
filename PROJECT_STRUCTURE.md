@@ -87,7 +87,7 @@ models/
 ├── grammar.dart                   # Context-free grammar
 ├── layout_settings.dart           # Layout configuration
 ├── parse_action.dart              # Parsing action
-├── parse_table.dart               # LL/LR parsing table
+├── parse_table.dart               # We are using PetitParser for parsing
 ├── pda.dart                       # Pushdown automaton
 ├── pda_transition.dart            # PDA transition
 ├── production.dart                # Grammar production

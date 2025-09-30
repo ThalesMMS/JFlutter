@@ -3,12 +3,81 @@ import 'dart:convert';
 
 import 'package:jflutter/core/entities/automaton_entity.dart';
 import 'package:jflutter/core/entities/grammar_entity.dart';
+import 'package:jflutter/core/entities/turing_machine_entity.dart';
 import 'package:jflutter/core/repositories/automaton_repository.dart';
 import 'package:jflutter/data/data_sources/examples_asset_data_source.dart';
 import 'package:jflutter/data/services/examples_service.dart';
 import 'package:jflutter/data/services/serialization_service.dart';
 import 'package:jflutter/presentation/widgets/export/svg_exporter.dart';
 import 'package:flutter/material.dart';
+
+TuringMachineEntity _buildSimpleTuringMachine() {
+  const initialStateId = 'q0';
+  const acceptingStateId = 'qAccept';
+
+  final states = <TuringStateEntity>[
+    _tmState(initialStateId, isInitial: true),
+    _tmState(acceptingStateId, isAccepting: true),
+  ];
+
+  final transitions = <TuringTransitionEntity>[
+    _tmTransition(
+      id: 't0',
+      from: initialStateId,
+      to: acceptingStateId,
+      read: 'a',
+      write: 'a',
+      direction: TuringMoveDirection.right,
+    ),
+  ];
+
+  return TuringMachineEntity(
+    id: 'tm_test',
+    name: 'Test TM',
+    inputAlphabet: const {'a'},
+    tapeAlphabet: const {'a', '_'},
+    blankSymbol: '_',
+    states: states,
+    transitions: transitions,
+    initialStateId: initialStateId,
+    acceptingStateIds: const {acceptingStateId},
+    rejectingStateIds: const <String>{},
+    nextStateIndex: states.length,
+  );
+}
+
+TuringStateEntity _tmState(
+  String id, {
+  bool isInitial = false,
+  bool isAccepting = false,
+  bool isRejecting = false,
+}) {
+  return TuringStateEntity(
+    id: id,
+    name: id,
+    isInitial: isInitial,
+    isAccepting: isAccepting,
+    isRejecting: isRejecting,
+  );
+}
+
+TuringTransitionEntity _tmTransition({
+  required String id,
+  required String from,
+  required String to,
+  required String read,
+  required String write,
+  required TuringMoveDirection direction,
+}) {
+  return TuringTransitionEntity(
+    id: id,
+    fromStateId: from,
+    toStateId: to,
+    readSymbol: read,
+    writeSymbol: write,
+    moveDirection: direction,
+  );
+}
 
 void main() {
   group('Examples v1 Library Tests', () {
@@ -448,7 +517,7 @@ void main() {
       test('Turing machine SVG export produces valid structure', () {
         final svg = SvgExporter.exportTuringMachineToSvg(
           // Mock TM entity for testing
-          null, // Placeholder since TM entity doesn't exist yet
+          _buildSimpleTuringMachine(),
         );
 
         // Verify SVG structure

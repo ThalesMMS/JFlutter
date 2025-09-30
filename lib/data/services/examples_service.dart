@@ -267,11 +267,16 @@ class ExamplesLibraryStats {
 
   @override
   String toString() {
+    final difficultyCount =
+        examplesByDifficulty.values.fold<int>(0, (sum, value) => sum + value);
+    final complexityCount =
+        examplesByComplexity.values.fold<int>(0, (sum, value) => sum + value);
+
     return 'ExamplesLibraryStats('
         'total: $totalExamples, '
         'categories: ${examplesByCategory.length}, '
-        'difficulties: ${examplesByDifficulty.values.reduce((a, b) => a + b)}, '
-        'complexities: ${examplesByComplexity.values.reduce((a, b) => a + b)}, '
+        'difficulties: $difficultyCount, '
+        'complexities: $complexityCount, '
         'topTags: ${mostCommonTags.take(3).join(", ")}'
         ')';
   }

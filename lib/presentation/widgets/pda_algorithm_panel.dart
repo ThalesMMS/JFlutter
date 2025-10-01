@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/algorithms/pda_simulator.dart';
-import '../../core/algorithms/pda_to_cfg_converter.dart';
+import '../../core/models/grammar.dart';
 import '../../core/models/state.dart' as automaton_models;
+import '../../data/services/conversion_service.dart';
 import '../providers/pda_editor_provider.dart';
 
 /// Panel for PDA analysis algorithms
@@ -17,6 +18,8 @@ class PDAAlgorithmPanel extends ConsumerStatefulWidget {
 class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
   bool _isAnalyzing = false;
   String? _analysisResult;
+  Grammar? _latestConvertedGrammar;
+  final ConversionService _conversionService = ConversionService();
 
   @override
   Widget build(BuildContext context) {
@@ -242,24 +245,36 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
   }
 
   Widget _buildResults(BuildContext context) {
+    final grammar = _latestConvertedGrammar;
+    final theme = Theme.of(context);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.primaryContainer.withValues(alpha: 0.3),
+        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
         border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+          color: theme.colorScheme.primary.withValues(alpha: 0.3),
         ),
         borderRadius: BorderRadius.circular(8),
       ),
       child: SingleChildScrollView(
-        child: Text(
-          _analysisResult!,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SelectableText(
+              _analysisResult!,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontFamily: 'monospace',
+              ),
+            ),
+            if (grammar != null) ...[
+              const SizedBox(height: 16),
+              Divider(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
+              const SizedBox(height: 12),
+              _buildGrammarSummary(context, grammar),
+            ],
+          ],
         ),
       ),
     );
@@ -274,16 +289,29 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
       return;
     }
 
+    setState(() {
+      _latestConvertedGrammar = null;
+    });
+
     _performAnalysis('PDA to CFG Conversion', () async {
-      final conversionResult = PDAtoCFGConverter.convert(pda);
+      final conversionResult = _conversionService.convertPdaToCfg(
+        ConversionRequest.pdaToCfg(pda: pda),
+      );
       if (conversionResult.isSuccess) {
-        return conversionResult.data!;
+        _latestConvertedGrammar = conversionResult.data!.grammar;
+        final grammar = _latestConvertedGrammar!;
+        final extraSummary =
+            'Generated grammar has ${grammar.productions.length} productions '
+            'and ${grammar.nonterminals.length} non-terminals.';
+        return '${conversionResult.data!.description}\n$extraSummary';
       }
 
       final message = 'Conversion failed: ${conversionResult.error}';
+      _latestConvertedGrammar = null;
       _showSnackbar(message);
       return message;
-    });
+    },
+        resetConvertedGrammar: false);
   }
 
   void _minimizePDA() {
@@ -610,11 +638,15 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
 
   void _performAnalysis(
     String algorithmName,
-    Future<String> Function() analysisFunction,
-  ) {
+    Future<String> Function() analysisFunction, {
+    bool resetConvertedGrammar = true,
+  }) {
     setState(() {
       _isAnalyzing = true;
       _analysisResult = null;
+      if (resetConvertedGrammar) {
+        _latestConvertedGrammar = null;
+      }
     });
 
     Future.microtask(() async {
@@ -638,6 +670,81 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
         });
       }
     });
+  }
+
+  Widget _buildGrammarSummary(BuildContext context, Grammar grammar) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+    final terminals = grammar.terminals.toList()..sort();
+    final nonterminals = grammar.nonterminals.toList()..sort();
+    final productions = grammar.productions.toList()
+      ..sort((a, b) {
+        final orderComparison = a.order.compareTo(b.order);
+        if (orderComparison != 0) {
+          return orderComparison;
+        }
+        return a.id.compareTo(b.id);
+      });
+
+    String _formatSymbols(List<String> symbols) {
+      if (symbols.isEmpty) {
+        return 'ε';
+      }
+      return symbols.join(' ');
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Generated Grammar',
+          style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Start symbol: ${grammar.startSymbol}',
+          style: textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 12,
+          runSpacing: 4,
+          children: [
+            Text(
+              'Non-terminals: {${nonterminals.join(', ')}}',
+              style: textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurface.withValues(alpha: 0.8),
+              ),
+            ),
+            Text(
+              'Terminals: {${terminals.join(', ')}}',
+              style: textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurface.withValues(alpha: 0.8),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Productions (${productions.length}):',
+          style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 8),
+        ...productions.map(
+          (production) => Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Text(
+              '• ${_formatSymbols(production.leftSide)} → '
+              '${production.isLambda ? 'ε' : _formatSymbols(production.rightSide)}',
+              style: textTheme.bodyMedium?.copyWith(
+                fontFamily: 'monospace',
+                color: colorScheme.onSurface.withValues(alpha: 0.9),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   void _showSnackbar(String message) {

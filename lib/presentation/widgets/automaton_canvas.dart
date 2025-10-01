@@ -343,6 +343,7 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
                     simulationResult: widget.simulationResult,
                     currentStepIndex: widget.currentStepIndex,
                     showTrace: widget.showTrace,
+                    surfaceColor: Theme.of(context).colorScheme.surface,
                   ),
                   size: Size.infinite,
                 ),
@@ -445,6 +446,7 @@ class AutomatonPainter extends CustomPainter {
   final SimulationResult? simulationResult;
   final int? currentStepIndex;
   final bool showTrace;
+  final Color surfaceColor;
   final Set<String> _nondeterministicTransitionIds;
   final Set<String> _epsilonTransitionIds;
   final Set<String> _nondeterministicStateIds;
@@ -461,6 +463,7 @@ class AutomatonPainter extends CustomPainter {
     this.simulationResult,
     this.currentStepIndex,
     this.showTrace = false,
+    required this.surfaceColor,
   }) : _nondeterministicTransitionIds = <String>{},
        _epsilonTransitionIds = transitions
            .where((t) => t.isEpsilonTransition)
@@ -595,19 +598,23 @@ class AutomatonPainter extends CustomPainter {
     final fillPaint = Paint()..style = PaintingStyle.fill;
     final strokePaint = Paint()..style = PaintingStyle.stroke;
 
+    // Draw a solid background before applying highlights
+    fillPaint.color = surfaceColor;
+    canvas.drawCircle(stateCenter, radius, fillPaint);
+
     // Draw background highlights (batch similar fills)
     if (isNondeterministic) {
-      fillPaint.color = Colors.deepOrange.withValues(alpha: 0.15);
+      fillPaint.color = Colors.deepOrange.withOpacity(0.15);
       canvas.drawCircle(stateCenter, radius, fillPaint);
     }
 
     if (isVisited) {
-      fillPaint.color = Colors.green.withValues(alpha: 0.2);
+      fillPaint.color = Colors.green.withOpacity(0.2);
       canvas.drawCircle(stateCenter, radius, fillPaint);
     }
 
     if (isCurrent) {
-      fillPaint.color = Colors.blue.withValues(alpha: 0.3);
+      fillPaint.color = Colors.blue.withOpacity(0.3);
       canvas.drawCircle(stateCenter, radius, fillPaint);
     }
 
@@ -1011,7 +1018,8 @@ class AutomatonPainter extends CustomPainter {
         oldDelegate.transitionPreviewPosition != transitionPreviewPosition ||
         oldDelegate.simulationResult != simulationResult ||
         oldDelegate.currentStepIndex != currentStepIndex ||
-        oldDelegate.showTrace != showTrace;
+        oldDelegate.showTrace != showTrace ||
+        oldDelegate.surfaceColor != surfaceColor;
   }
 
   /// Get the level of detail based on the number of elements

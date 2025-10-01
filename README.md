@@ -558,9 +558,8 @@ This project is distributed under a dual license structure:
 - **Open Source Community** - For inspiration and support
 
 ### Community & Contributors
+- **Prof. Zenilton Kleber Gonçalves do Patrocínio Júnior** - For educational guidance and feedback
 - **[@Gaok1](https://github.com/Gaok1)** - Luis Phillip Lemos Martins - For inspiring this Flutter port project
-- **Dart/Flutter Community** - For continuous support and feedback
-- **Automata Theory Educators** - For educational requirements and feedback
 - **Open Source Contributors** - For various libraries and tools used
 
 ### Academic References

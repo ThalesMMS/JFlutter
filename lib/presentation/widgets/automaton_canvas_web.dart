@@ -49,6 +49,7 @@ class _AutomatonCanvasWebState extends State<AutomatonCanvas> {
   bool _isReady = false;
   bool _skipNextSync = false;
   FSA? _lastAutomaton;
+  void Function(Object?)? _postMessageInterceptor;
 
   @override
   void initState() {
@@ -104,16 +105,24 @@ class _AutomatonCanvasWebState extends State<AutomatonCanvas> {
   }
 
   void _handleMessage(html.MessageEvent event) {
+    final data = _coerceMap(event.data);
+    final dynamic typeValue = data?['type'];
+    final String? messageType = typeValue is String ? typeValue : null;
+
+    if (messageType == 'highlight' || messageType == 'clear_highlight') {
+      _postMessage(event.data);
+      return;
+    }
+
     if (event.source != _iframe?.contentWindow) {
       return;
     }
 
-    final data = _coerceMap(event.data);
     if (data == null) {
       return;
     }
 
-    switch (data['type']) {
+    switch (messageType) {
       case 'editor_ready':
         if (!_isReady) {
           setState(() {
@@ -203,12 +212,18 @@ class _AutomatonCanvasWebState extends State<AutomatonCanvas> {
     _lastAutomaton = automaton;
   }
 
-  void _postMessage(Map<String, dynamic> message) {
+  void _postMessage(Object? message) {
+    _postMessageInterceptor?.call(message);
     final target = _iframe?.contentWindow;
     if (target == null) {
       return;
     }
     target.postMessage(message, '*');
+  }
+
+  @visibleForTesting
+  void debugInterceptPostMessage(void Function(Object?)? interceptor) {
+    _postMessageInterceptor = interceptor;
   }
 
   Map<String, dynamic> _encodeAutomaton(FSA automaton) {

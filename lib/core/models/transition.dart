@@ -25,6 +25,9 @@ abstract class Transition {
   /// Type of the transition (deterministic, nondeterministic)
   final TransitionType type;
 
+  /// Primary symbol for this transition (to be overridden by subclasses)
+  String get symbol => label;
+
   Transition({
     required this.id,
     required this.fromState,
@@ -32,7 +35,7 @@ abstract class Transition {
     required this.label,
     Vector2? controlPoint,
     this.type = TransitionType.deterministic,
-  }) : controlPoint = controlPoint ?? Vector2.zero();
+  }) : controlPoint = (controlPoint ?? Vector2.zero()).clone();
 
   /// Creates a copy of this transition with updated properties
   Transition copyWith({

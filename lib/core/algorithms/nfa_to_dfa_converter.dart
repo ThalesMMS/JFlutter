@@ -25,11 +25,8 @@ class NFAToDFAConverter {
         return ResultFactory.failure('NFA must have an initial state');
       }
 
-      // Step 1: Remove epsilon transitions if present
-      final nfaWithoutEpsilon = _removeEpsilonTransitions(nfa);
-
-      // Step 2: Build DFA using subset construction
-      final dfa = _buildDFA(nfaWithoutEpsilon);
+      // Build DFA directly from NFA using epsilon-closures in subset construction
+      final dfa = _buildDFAWithEpsilon(nfa);
 
       return ResultFactory.success(dfa);
     } catch (e) {
@@ -64,7 +61,21 @@ class NFAToDFAConverter {
 
   /// Removes epsilon transitions from the NFA
   static FSA _removeEpsilonTransitions(FSA nfa) {
-    if (!nfa.hasEpsilonTransitions) {
+    // Treat typical epsilon markers uniformly, regardless of encoding.
+    bool isEpsilonSymbol(String s) {
+      final normalized = s.trim().toLowerCase();
+      return normalized.isEmpty ||
+          normalized == 'ε' ||
+          normalized == 'λ' ||
+          normalized == 'lambda';
+    }
+
+    if (!nfa.hasEpsilonTransitions &&
+        !nfa.fsaTransitions.any(
+          (t) =>
+              (t.lambdaSymbol != null && isEpsilonSymbol(t.lambdaSymbol!)) ||
+              (t.inputSymbols.any(isEpsilonSymbol)),
+        )) {
       return nfa;
     }
 
@@ -72,10 +83,15 @@ class NFAToDFAConverter {
     final newStates = Set<State>.from(nfa.states);
     final newAcceptingStates = Set<State>.from(nfa.acceptingStates);
 
-    // For each state, compute its epsilon closure
+    // For each state, compute its epsilon closure (include transitions encoded via
+    // lambdaSymbol or inputSymbols containing an epsilon-like marker)
     final epsilonClosures = <State, Set<State>>{};
     for (final state in nfa.states) {
-      epsilonClosures[state] = nfa.getEpsilonClosure(state);
+      epsilonClosures[state] = _epsilonClosureFlexible(
+        nfa,
+        state,
+        isEpsilonSymbol,
+      );
     }
 
     // Add new transitions for epsilon closure
@@ -89,16 +105,19 @@ class NFAToDFAConverter {
         }
       }
 
-      // For each symbol in the alphabet
-      for (final symbol in nfa.alphabet) {
+      // For each symbol in the alphabet (excluding epsilon-like markers)
+      final workingAlphabet = nfa.alphabet
+          .where((s) => !isEpsilonSymbol(s))
+          .toSet();
+      for (final symbol in workingAlphabet) {
         final reachableStates = <State>{};
 
         // Find all states reachable from the closure on this symbol
         for (final closureState in closure) {
-          final transitions = nfa.getTransitionsFromStateOnSymbol(
-            closureState,
-            symbol,
-          );
+          final transitions = nfa
+              .getTransitionsFromStateOnSymbol(closureState, symbol)
+              .where((t) => !t.isEpsilonTransition)
+              .toList();
           for (final transition in transitions) {
             reachableStates.add(transition.toState);
           }
@@ -126,7 +145,7 @@ class NFAToDFAConverter {
       name: '${nfa.name} (No Epsilon)',
       states: newStates,
       transitions: newTransitions,
-      alphabet: nfa.alphabet,
+      alphabet: nfa.alphabet.where((s) => !isEpsilonSymbol(s)).toSet(),
       initialState: nfa.initialState,
       acceptingStates: newAcceptingStates,
       created: nfa.created,
@@ -137,19 +156,29 @@ class NFAToDFAConverter {
     );
   }
 
-  /// Builds DFA using subset construction
-  static FSA _buildDFA(FSA nfa) {
-    final dfaStates =
-        <String, State>{}; // Use string keys instead of Set<State>
+  /// Builds DFA using subset construction with epsilon-closures over the original NFA
+  static FSA _buildDFAWithEpsilon(FSA nfa) {
+    bool isEpsilonSymbol(String s) {
+      final normalized = s.trim().toLowerCase();
+      return normalized.isEmpty ||
+          normalized == 'ε' ||
+          normalized == 'λ' ||
+          normalized == 'lambda';
+    }
+
+    final dfaStates = <String, State>{};
     final dfaTransitions = <FSATransition>{};
     final dfaAcceptingStates = <State>{};
     final queue = <String>[];
     final processed = <String>{};
-    final stateSetMap =
-        <String, Set<State>>{}; // Map string keys to actual state sets
+    final stateSetMap = <String, Set<State>>{};
 
-    // Start with the initial state
-    final initialStateSet = {nfa.initialState!};
+    // Start with the epsilon-closure of the initial state
+    final initialStateSet = _epsilonClosureFlexible(
+      nfa,
+      nfa.initialState!,
+      isEpsilonSymbol,
+    );
     final initialStateKey = _getStateSetKey(initialStateSet);
     final initialState = _createDFAState(initialStateSet, 0);
     dfaStates[initialStateKey] = initialState;
@@ -159,7 +188,7 @@ class NFAToDFAConverter {
     // Process each state set
     int stateCounter = 1;
     const int maxStates = 1000; // Performance safeguard
-    while (queue.isNotEmpty && stateCounter < maxStates) {
+    while (queue.isNotEmpty) {
       final currentStateKey = queue.removeAt(0);
       if (processed.contains(currentStateKey)) continue;
       processed.add(currentStateKey);
@@ -173,18 +202,22 @@ class NFAToDFAConverter {
         dfaAcceptingStates.add(currentDFAState);
       }
 
-      // For each symbol in the alphabet
-      for (final symbol in nfa.alphabet) {
+      // For each symbol in the alphabet (excluding epsilon-like markers)
+      final workingAlphabet = nfa.alphabet
+          .where((s) => !isEpsilonSymbol(s))
+          .toSet();
+      for (final symbol in workingAlphabet) {
         final nextStateSet = <State>{};
 
-        // Find all states reachable from current state set on this symbol
+        // Move on symbol, then take epsilon-closure
         for (final state in currentStateSet) {
-          final transitions = nfa.getTransitionsFromStateOnSymbol(
-            state,
-            symbol,
-          );
+          final transitions = nfa
+              .getTransitionsFromStateOnSymbol(state, symbol)
+              .toList();
           for (final transition in transitions) {
-            nextStateSet.add(transition.toState);
+            nextStateSet.addAll(
+              _epsilonClosureFlexible(nfa, transition.toState, isEpsilonSymbol),
+            );
           }
         }
 
@@ -196,6 +229,11 @@ class NFAToDFAConverter {
           if (dfaStates.containsKey(nextStateKey)) {
             nextDFAState = dfaStates[nextStateKey]!;
           } else {
+            if (stateCounter >= maxStates) {
+              throw StateError(
+                'Exceeded maximum number of DFA states ($maxStates) during subset construction.',
+              );
+            }
             nextDFAState = _createDFAState(nextStateSet, stateCounter++);
             dfaStates[nextStateKey] = nextDFAState;
             stateSetMap[nextStateKey] = nextStateSet;
@@ -220,7 +258,7 @@ class NFAToDFAConverter {
       name: '${nfa.name} (DFA)',
       states: dfaStates.values.toSet(),
       transitions: dfaTransitions,
-      alphabet: nfa.alphabet,
+      alphabet: nfa.alphabet.where((s) => !isEpsilonSymbol(s)).toSet(),
       initialState: initialState,
       acceptingStates: dfaAcceptingStates,
       created: nfa.created,
@@ -281,42 +319,22 @@ class NFAToDFAConverter {
         return ResultFactory.failure(validationResult.error!);
       }
 
-      // Step 2: Remove epsilon transitions
+      // Step 2: Build DFA (epsilon-aware subset construction)
       steps.add(
         NFADFAConversionStep(
           stepNumber: 2,
-          description: 'Removing epsilon transitions',
+          description: 'Building DFA using epsilon-closure subset construction',
           nfa: nfa,
           dfa: null,
         ),
       );
 
-      final nfaWithoutEpsilon = _removeEpsilonTransitions(nfa);
+      final dfa = _buildDFAWithEpsilon(nfa);
       steps.add(
         NFADFAConversionStep(
           stepNumber: 3,
-          description: 'Epsilon transitions removed',
-          nfa: nfaWithoutEpsilon,
-          dfa: null,
-        ),
-      );
-
-      // Step 3: Build DFA
-      steps.add(
-        NFADFAConversionStep(
-          stepNumber: 4,
-          description: 'Building DFA using subset construction',
-          nfa: nfaWithoutEpsilon,
-          dfa: null,
-        ),
-      );
-
-      final dfa = _buildDFA(nfaWithoutEpsilon);
-      steps.add(
-        NFADFAConversionStep(
-          stepNumber: 5,
           description: 'DFA construction completed',
-          nfa: nfaWithoutEpsilon,
+          nfa: nfa,
           dfa: dfa,
         ),
       );
@@ -336,6 +354,33 @@ class NFAToDFAConverter {
       );
     }
   }
+}
+
+/// Flexible epsilon-closure that treats both explicit epsilon transitions and
+/// any transition whose symbol set contains an epsilon-like marker as epsilon.
+Set<State> _epsilonClosureFlexible(
+  FSA automaton,
+  State start,
+  bool Function(String) isEpsilonSymbol,
+) {
+  final closure = <State>{start};
+  final queue = <State>[start];
+
+  while (queue.isNotEmpty) {
+    final state = queue.removeAt(0);
+    for (final t in automaton.fsaTransitions) {
+      final isFrom = t.fromState.id == state.id;
+      final isEps =
+          t.isEpsilonTransition || t.inputSymbols.any(isEpsilonSymbol);
+      if (isFrom && isEps) {
+        if (closure.add(t.toState)) {
+          queue.add(t.toState);
+        }
+      }
+    }
+  }
+
+  return closure;
 }
 
 /// Result of NFA to DFA conversion with step-by-step information

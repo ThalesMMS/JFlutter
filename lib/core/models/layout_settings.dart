@@ -74,24 +74,60 @@ class LayoutSettings {
 
   /// Creates layout settings from a JSON representation
   factory LayoutSettings.fromJson(Map<String, dynamic> json) {
-    final colorSchemeData = json['colorScheme'] as Map<String, dynamic>;
+    const defaultScheme = ColorScheme.light();
+    final colorSchemeData = (json['colorScheme'] as Map?)
+        ?.cast<String, dynamic>();
 
     return LayoutSettings(
-      nodeRadius: json['nodeRadius'] as double? ?? 20.0,
-      edgeThickness: json['edgeThickness'] as double? ?? 2.0,
-      colorScheme: ColorScheme.light(
-        primary: Color(colorSchemeData['primary'] as int),
-        secondary: Color(colorSchemeData['secondary'] as int),
-        surface: Color(colorSchemeData['surface'] as int),
-        error: Color(colorSchemeData['error'] as int),
-        onPrimary: Color(colorSchemeData['onPrimary'] as int),
-        onSecondary: Color(colorSchemeData['onSecondary'] as int),
-        onSurface: Color(colorSchemeData['onSurface'] as int),
-        onError: Color(colorSchemeData['onError'] as int),
-      ),
+      nodeRadius: (json['nodeRadius'] as num?)?.toDouble() ?? 20.0,
+      edgeThickness: (json['edgeThickness'] as num?)?.toDouble() ?? 2.0,
+      colorScheme: colorSchemeData == null
+          ? defaultScheme
+          : ColorScheme.light(
+              primary: _colorFromJson(
+                colorSchemeData,
+                'primary',
+                defaultScheme.primary,
+              ),
+              secondary: _colorFromJson(
+                colorSchemeData,
+                'secondary',
+                defaultScheme.secondary,
+              ),
+              surface: _colorFromJson(
+                colorSchemeData,
+                'surface',
+                defaultScheme.surface,
+              ),
+              error: _colorFromJson(
+                colorSchemeData,
+                'error',
+                defaultScheme.error,
+              ),
+              onPrimary: _colorFromJson(
+                colorSchemeData,
+                'onPrimary',
+                defaultScheme.onPrimary,
+              ),
+              onSecondary: _colorFromJson(
+                colorSchemeData,
+                'onSecondary',
+                defaultScheme.onSecondary,
+              ),
+              onSurface: _colorFromJson(
+                colorSchemeData,
+                'onSurface',
+                defaultScheme.onSurface,
+              ),
+              onError: _colorFromJson(
+                colorSchemeData,
+                'onError',
+                defaultScheme.onError,
+              ),
+            ),
       showGrid: json['showGrid'] as bool? ?? false,
       snapToGrid: json['snapToGrid'] as bool? ?? false,
-      gridSize: json['gridSize'] as double? ?? 20.0,
+      gridSize: (json['gridSize'] as num?)?.toDouble() ?? 20.0,
     );
   }
 
@@ -235,4 +271,12 @@ class LayoutSettings {
       gridSize: 30.0,
     );
   }
+}
+
+Color _colorFromJson(Map<String, dynamic>? data, String key, Color fallback) {
+  final value = data?[key];
+  if (value is int) {
+    return Color(value);
+  }
+  return fallback;
 }

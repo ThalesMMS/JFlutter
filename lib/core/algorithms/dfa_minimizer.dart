@@ -6,6 +6,15 @@ import '../result.dart';
 
 /// Minimizes a Deterministic Finite Automaton (DFA) using the Hopcroft algorithm
 class DFAMinimizer {
+  /// Returns true if the provided symbol should be treated as epsilon.
+  static bool _isEpsilonSymbol(String s) {
+    final normalized = s.trim().toLowerCase();
+    return normalized.isEmpty ||
+        normalized == 'ε' ||
+        normalized == 'λ' ||
+        normalized == 'lambda';
+  }
+
   /// Minimizes a DFA to an equivalent minimal DFA
   static Result<FSA> minimize(FSA dfa) {
     try {
@@ -108,6 +117,11 @@ class DFAMinimizer {
 
   /// Minimizes DFA using Hopcroft algorithm
   static FSA _minimizeWithHopcroft(FSA dfa) {
+    // Filter alphabet to exclude epsilon-like symbols if present
+    final workingAlphabet = dfa.alphabet
+        .where((s) => !_isEpsilonSymbol(s))
+        .toSet();
+
     // Initialize partition with accepting and non-accepting states
     final partition = <Set<State>>[
       dfa.acceptingStates.toSet(),
@@ -129,8 +143,8 @@ class DFAMinimizer {
     while (worklist.isNotEmpty) {
       final currentSet = worklist.removeAt(0);
 
-      // For each symbol in the alphabet
-      for (final symbol in dfa.alphabet) {
+      // For each symbol in the (filtered) alphabet
+      for (final symbol in workingAlphabet) {
         final predecessors = <State>{};
 
         // Find all states that transition to current set on this symbol
@@ -208,20 +222,24 @@ class DFAMinimizer {
     // Create transitions
     for (final originalTransition in originalDFA.transitions) {
       if (originalTransition is FSATransition) {
+        // Skip epsilon-like transitions if any slipped through
+        if (originalTransition.lambdaSymbol != null ||
+            originalTransition.inputSymbols.any(_isEpsilonSymbol)) {
+          continue;
+        }
         final fromState = stateMap[originalTransition.fromState]!;
         final toState = stateMap[originalTransition.toState]!;
 
-        // Check if transition already exists
-        final existingTransition = newTransitions
-            .where(
-              (t) =>
-                  t.fromState == fromState &&
-                  t.toState == toState &&
-                  t.inputSymbols == originalTransition.inputSymbols,
-            )
-            .firstOrNull;
+        // Check if an equivalent transition already exists (by endpoints and symbol set contents)
+        final exists = newTransitions.any(
+          (t) =>
+              t.fromState == fromState &&
+              t.toState == toState &&
+              t.inputSymbols.length == originalTransition.inputSymbols.length &&
+              t.inputSymbols.containsAll(originalTransition.inputSymbols),
+        );
 
-        if (existingTransition == null) {
+        if (!exists) {
           final newTransition = FSATransition(
             id: 't_${fromState.id}_${toState.id}_${originalTransition.inputSymbols.join('_')}',
             fromState: fromState,

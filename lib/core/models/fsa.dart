@@ -10,11 +10,11 @@ class FSA extends Automaton {
   FSA({
     required super.id,
     required super.name,
-    required super.states,
-    required super.transitions,
-    required super.alphabet,
+    required Set<State> super.states,
+    required Set<Transition> super.transitions,
+    required Set<String> super.alphabet,
     super.initialState,
-    required super.acceptingStates,
+    required Set<State> super.acceptingStates,
     required super.created,
     required super.modified,
     required super.bounds,
@@ -83,6 +83,9 @@ class FSA extends Automaton {
 
   /// Creates an FSA from a JSON representation
   factory FSA.fromJson(Map<String, dynamic> json) {
+    final boundsData = (json['bounds'] as Map?)?.cast<String, dynamic>();
+    final panOffsetData = (json['panOffset'] as Map?)?.cast<String, dynamic>();
+
     return FSA(
       id: json['id'] as String,
       name: json['name'] as String,
@@ -101,18 +104,30 @@ class FSA extends Automaton {
           .toSet(),
       created: DateTime.parse(json['created'] as String),
       modified: DateTime.parse(json['modified'] as String),
-      bounds: math.Rectangle(
-        (json['bounds'] as Map<String, dynamic>)['x'] as double,
-        (json['bounds'] as Map<String, dynamic>)['y'] as double,
-        (json['bounds'] as Map<String, dynamic>)['width'] as double,
-        (json['bounds'] as Map<String, dynamic>)['height'] as double,
-      ),
-      zoomLevel: json['zoomLevel'] as double? ?? 1.0,
-      panOffset: Vector2(
-        (json['panOffset'] as Map<String, dynamic>)['x'] as double,
-        (json['panOffset'] as Map<String, dynamic>)['y'] as double,
-      ),
+      bounds: _parseBounds(json['bounds'] as Map<String, dynamic>),
+      zoomLevel: (json['zoomLevel'] as num?)?.toDouble() ?? 1.0,
+      panOffset: _parsePanOffset(json['panOffset'] as Map<String, dynamic>?),
     );
+  }
+
+  static math.Rectangle<double> _parseBounds(Map<String, dynamic> boundsJson) {
+    final x = (boundsJson['x'] as num).toDouble();
+    final y = (boundsJson['y'] as num).toDouble();
+    final width = (boundsJson['width'] as num).toDouble();
+    final height = (boundsJson['height'] as num).toDouble();
+
+    return math.Rectangle<double>(x, y, width, height);
+  }
+
+  static Vector2 _parsePanOffset(Map<String, dynamic>? panOffsetJson) {
+    if (panOffsetJson == null) {
+      return Vector2.zero();
+    }
+
+    final x = (panOffsetJson['x'] as num?)?.toDouble() ?? 0.0;
+    final y = (panOffsetJson['y'] as num?)?.toDouble() ?? 0.0;
+
+    return Vector2(x, y);
   }
 
   /// Validates the FSA properties

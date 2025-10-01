@@ -23,18 +23,38 @@ class State {
   /// Type of the state (normal, trap, etc.)
   final StateType type;
 
-  /// Additional properties for different automaton types
+  /// Additional properties for different automaton types (unmodifiable)
   final Map<String, dynamic> properties;
 
-  const State({
+  const State._internal({
     required this.id,
     required this.label,
     required this.position,
-    this.isInitial = false,
-    this.isAccepting = false,
-    this.type = StateType.normal,
-    this.properties = const {},
+    required this.isInitial,
+    required this.isAccepting,
+    required this.type,
+    required this.properties,
   }) : name = label;
+
+  factory State({
+    required String id,
+    required String label,
+    required Vector2 position,
+    bool isInitial = false,
+    bool isAccepting = false,
+    StateType type = StateType.normal,
+    Map<String, dynamic> properties = const {},
+  }) {
+    return State._internal(
+      id: id,
+      label: label,
+      position: position.clone(),
+      isInitial: isInitial,
+      isAccepting: isAccepting,
+      type: type,
+      properties: Map<String, dynamic>.unmodifiable(Map.of(properties)),
+    );
+  }
 
   /// Creates a copy of this state with updated properties
   State copyWith({
@@ -49,7 +69,7 @@ class State {
     return State(
       id: id ?? this.id,
       label: label ?? this.label,
-      position: position ?? this.position,
+      position: (position ?? this.position).clone(),
       isInitial: isInitial ?? this.isInitial,
       isAccepting: isAccepting ?? this.isAccepting,
       type: type ?? this.type,
@@ -72,13 +92,14 @@ class State {
 
   /// Creates a state from a JSON representation
   factory State.fromJson(Map<String, dynamic> json) {
+    final positionData = (json['position'] as Map?)?.cast<String, dynamic>();
+    final positionX = (positionData?['x'] as num?)?.toDouble() ?? 0.0;
+    final positionY = (positionData?['y'] as num?)?.toDouble() ?? 0.0;
+
     return State(
       id: json['id'] as String,
       label: json['label'] as String,
-      position: Vector2(
-        (json['position'] as Map<String, dynamic>)['x'] as double,
-        (json['position'] as Map<String, dynamic>)['y'] as double,
-      ),
+      position: Vector2(positionX, positionY),
       isInitial: json['isInitial'] as bool? ?? false,
       isAccepting: json['isAccepting'] as bool? ?? false,
       type: StateType.values.firstWhere(

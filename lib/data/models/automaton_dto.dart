@@ -9,16 +9,20 @@ class AutomatonDto {
   final String? initialId;
   final int nextId;
 
-  const AutomatonDto({
+  AutomatonDto({
     required this.id,
     required this.name,
     required this.type,
-    required this.alphabet,
-    required this.states,
-    required this.transitions,
+    required List<String> alphabet,
+    required List<StateDto> states,
+    required Map<String, List<String>> transitions,
     this.initialId,
     required this.nextId,
-  });
+  }) : alphabet = List<String>.unmodifiable(alphabet),
+       states = List<StateDto>.unmodifiable(states),
+       transitions = Map<String, List<String>>.unmodifiable(
+         transitions.map((k, v) => MapEntry(k, List<String>.unmodifiable(v))),
+       );
 
   factory AutomatonDto.fromJson(Map<String, dynamic> json) {
     return AutomatonDto(

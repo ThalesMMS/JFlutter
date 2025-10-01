@@ -14,19 +14,19 @@ abstract class Automaton {
   /// User-defined name for the automaton
   final String name;
 
-  /// Set of all states in the automaton
+  /// Set of all states in the automaton (unmodifiable)
   final Set<State> states;
 
-  /// Set of all transitions in the automaton
+  /// Set of all transitions in the automaton (unmodifiable)
   final Set<Transition> transitions;
 
-  /// Input alphabet symbols
+  /// Input alphabet symbols (unmodifiable)
   final Set<String> alphabet;
 
   /// Initial state (can be null)
   final State? initialState;
 
-  /// Set of accepting/final states
+  /// Set of accepting/final states (unmodifiable)
   final Set<State> acceptingStates;
 
   /// Type of the automaton
@@ -50,18 +50,22 @@ abstract class Automaton {
   Automaton({
     required this.id,
     required this.name,
-    required this.states,
-    required this.transitions,
-    required this.alphabet,
+    required Set<State> states,
+    required Set<Transition> transitions,
+    required Set<String> alphabet,
     this.initialState,
-    required this.acceptingStates,
+    required Set<State> acceptingStates,
     required this.type,
     required this.created,
     required this.modified,
     required this.bounds,
     this.zoomLevel = 1.0,
     Vector2? panOffset,
-  }) : panOffset = panOffset ?? Vector2.zero();
+  }) : states = Set<State>.unmodifiable(states),
+       transitions = Set<Transition>.unmodifiable(transitions),
+       alphabet = Set<String>.unmodifiable(alphabet),
+       acceptingStates = Set<State>.unmodifiable(acceptingStates),
+       panOffset = (panOffset ?? Vector2.zero()).clone();
 
   /// Creates a copy of this automaton with updated properties
   Automaton copyWith({

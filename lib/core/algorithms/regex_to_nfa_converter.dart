@@ -7,6 +7,12 @@ import '../result.dart';
 
 /// Converts Regular Expressions to Non-deterministic Finite Automata (NFA)
 class RegexToNFAConverter {
+  static int _idSeq = 0;
+  static String _newStateId(String prefix) =>
+      '${prefix}_${DateTime.now().microsecondsSinceEpoch}_${_idSeq++}';
+  static String _newTransId(String prefix) =>
+      '${prefix}_${DateTime.now().microsecondsSinceEpoch}_${_idSeq++}';
+
   /// Converts a regular expression to an equivalent NFA
   static Result<FSA> convert(String regex, {Set<String>? contextAlphabet}) {
     try {
@@ -61,13 +67,33 @@ class RegexToNFAConverter {
       );
     }
 
-    // Check for invalid characters
-    final validChars = RegExp(r'[a-zA-Z0-9\(\)\|\*\+\?\.]');
+    // Check for invalid characters (allow epsilon literal ε)
+    final validChars = RegExp(r'[a-zA-Z0-9\(\)\[\]\|\*\+\?\.|ε]');
     for (int i = 0; i < regex.length; i++) {
       if (!validChars.hasMatch(regex[i])) {
         return ResultFactory.failure(
           'Invalid character in regular expression: ${regex[i]}',
         );
+      }
+    }
+
+    // Check operator placement (reject repeated quantifiers and leading quantifiers)
+    // Disallow patterns like '**', '++', '??', '*+', '+*', '?*', etc., and starting with quantifier
+    const quantifiers = {'*', '+', '?'};
+    if (regex.isNotEmpty && quantifiers.contains(regex[0])) {
+      return ResultFactory.failure('Regex cannot start with a quantifier');
+    }
+    for (int i = 1; i < regex.length; i++) {
+      final prev = regex[i - 1];
+      final curr = regex[i];
+      if (quantifiers.contains(prev) && quantifiers.contains(curr)) {
+        return ResultFactory.failure('Consecutive quantifiers are not allowed');
+      }
+      if (curr == '|' && (i == 0 || i == regex.length - 1)) {
+        return ResultFactory.failure('Union operator cannot be at ends');
+      }
+      if (curr == ')' && (i == 0 || regex[i - 1] == '(')) {
+        return ResultFactory.failure('Empty parentheses are not allowed');
       }
     }
 
@@ -157,7 +183,11 @@ class RegexToNFAConverter {
           }
           break;
         default:
-          tokens.add(RegexToken(type: TokenType.symbol, value: char));
+          if (char == 'ε') {
+            tokens.add(RegexToken(type: TokenType.epsilon, value: char));
+          } else {
+            tokens.add(RegexToken(type: TokenType.symbol, value: char));
+          }
           break;
       }
 
@@ -242,6 +272,8 @@ class RegexToNFAConverter {
         return SymbolNode(symbol: token.value);
       case TokenType.dot:
         return const DotNode();
+      case TokenType.epsilon:
+        return const EpsilonNode();
       case TokenType.charClass:
         return SetNode(symbols: _parseCharClass(token.value));
       case TokenType.charShortcut:
@@ -269,6 +301,8 @@ class RegexToNFAConverter {
   /// Builds NFA from regex node
   static FSA _buildNFA(RegexNode node, {Set<String>? contextAlphabet}) {
     switch (node) {
+      case EpsilonNode():
+        return _buildEpsilonNFA();
       case SymbolNode(:final symbol):
         return _buildSymbolNFA(symbol);
       case DotNode():
@@ -296,18 +330,50 @@ class RegexToNFAConverter {
     }
   }
 
-  /// Builds NFA for a single symbol
-  static FSA _buildSymbolNFA(String symbol) {
+  /// Builds NFA for epsilon
+  static FSA _buildEpsilonNFA() {
     final now = DateTime.now();
     final q0 = State(
-      id: 'q0',
+      id: _newStateId('q'),
       label: 'q0',
       position: Vector2(100, 100),
       isInitial: true,
       isAccepting: false,
     );
     final q1 = State(
-      id: 'q1',
+      id: _newStateId('q'),
+      label: 'q1',
+      position: Vector2(200, 100),
+      isInitial: false,
+      isAccepting: true,
+    );
+    final t = FSATransition.epsilon(id: 'te', fromState: q0, toState: q1);
+    return FSA(
+      id: 'eps_${now.millisecondsSinceEpoch}',
+      name: 'Epsilon',
+      states: {q0, q1},
+      transitions: {t},
+      alphabet: {},
+      initialState: q0,
+      acceptingStates: {q1},
+      created: now,
+      modified: now,
+      bounds: const math.Rectangle(0, 0, 800, 600),
+    );
+  }
+
+  /// Builds NFA for a single symbol
+  static FSA _buildSymbolNFA(String symbol) {
+    final now = DateTime.now();
+    final q0 = State(
+      id: _newStateId('q'),
+      label: 'q0',
+      position: Vector2(100, 100),
+      isInitial: true,
+      isAccepting: false,
+    );
+    final q1 = State(
+      id: _newStateId('q'),
       label: 'q1',
       position: Vector2(200, 100),
       isInitial: false,
@@ -315,7 +381,7 @@ class RegexToNFAConverter {
     );
 
     final transition = FSATransition.deterministic(
-      id: 't1',
+      id: _newTransId('t'),
       fromState: q0,
       toState: q1,
       symbol: symbol,
@@ -354,7 +420,7 @@ class RegexToNFAConverter {
     );
 
     final transition = FSATransition(
-      id: 't1',
+      id: _newTransId('t'),
       fromState: q0,
       toState: q1,
       label: '.',
@@ -391,14 +457,14 @@ class RegexToNFAConverter {
     // Create new initial and final states
     final now = DateTime.now();
     final newInitial = State(
-      id: 'q_initial',
+      id: _newStateId('q_init'),
       label: 'q_initial',
       position: Vector2(50, 100),
       isInitial: true,
       isAccepting: false,
     );
     final newFinal = State(
-      id: 'q_final',
+      id: _newStateId('q_final'),
       label: 'q_final',
       position: Vector2(350, 100),
       isInitial: false,
@@ -417,14 +483,14 @@ class RegexToNFAConverter {
     // Add epsilon transitions
     allTransitions.add(
       FSATransition.epsilon(
-        id: 't_eps1',
+        id: _newTransId('t_eps'),
         fromState: newInitial,
         toState: leftNFA.initialState!,
       ),
     );
     allTransitions.add(
       FSATransition.epsilon(
-        id: 't_eps2',
+        id: _newTransId('t_eps'),
         fromState: newInitial,
         toState: rightNFA.initialState!,
       ),
@@ -433,7 +499,7 @@ class RegexToNFAConverter {
     for (final acceptingState in leftNFA.acceptingStates) {
       allTransitions.add(
         FSATransition.epsilon(
-          id: 't_eps3_${acceptingState.id}',
+          id: _newTransId('t_eps'),
           fromState: acceptingState,
           toState: newFinal,
         ),
@@ -443,7 +509,7 @@ class RegexToNFAConverter {
     for (final acceptingState in rightNFA.acceptingStates) {
       allTransitions.add(
         FSATransition.epsilon(
-          id: 't_eps4_${acceptingState.id}',
+          id: _newTransId('t_eps'),
           fromState: acceptingState,
           toState: newFinal,
         ),
@@ -486,14 +552,14 @@ class RegexToNFAConverter {
     // Create new initial and final states
     final now = DateTime.now();
     final newInitial = State(
-      id: 'q_initial',
+      id: _newStateId('q_init'),
       label: 'q_initial',
       position: Vector2(50, 100),
       isInitial: true,
       isAccepting: true, // Accept empty string
     );
     final newFinal = State(
-      id: 'q_final',
+      id: _newStateId('q_final'),
       label: 'q_final',
       position: Vector2(350, 100),
       isInitial: false,
@@ -510,7 +576,7 @@ class RegexToNFAConverter {
     // Add epsilon transitions
     allTransitions.add(
       FSATransition.epsilon(
-        id: 't_eps1',
+        id: _newTransId('t_eps'),
         fromState: newInitial,
         toState: childNFA.initialState!,
       ),
@@ -519,14 +585,14 @@ class RegexToNFAConverter {
     for (final acceptingState in childNFA.acceptingStates) {
       allTransitions.add(
         FSATransition.epsilon(
-          id: 't_eps2_${acceptingState.id}',
+          id: _newTransId('t_eps'),
           fromState: acceptingState,
           toState: newFinal,
         ),
       );
       allTransitions.add(
         FSATransition.epsilon(
-          id: 't_eps3_${acceptingState.id}',
+          id: _newTransId('t_eps'),
           fromState: acceptingState,
           toState: childNFA.initialState!,
         ),
@@ -540,7 +606,7 @@ class RegexToNFAConverter {
       transitions: allTransitions,
       alphabet: childNFA.alphabet,
       initialState: newInitial,
-      acceptingStates: {newFinal},
+      acceptingStates: {newFinal, newInitial},
       created: now,
       modified: now,
       bounds: const math.Rectangle(0, 0, 800, 600),
@@ -639,14 +705,14 @@ class RegexToNFAConverter {
     // Create new initial and final states
     final now = DateTime.now();
     final newInitial = State(
-      id: 'q_initial',
+      id: _newStateId('q_init'),
       label: 'q_initial',
       position: Vector2(50, 100),
       isInitial: true,
       isAccepting: true, // Accept empty string
     );
     final newFinal = State(
-      id: 'q_final',
+      id: _newStateId('q_final'),
       label: 'q_final',
       position: Vector2(350, 100),
       isInitial: false,
@@ -663,14 +729,14 @@ class RegexToNFAConverter {
     // Add epsilon transitions
     allTransitions.add(
       FSATransition.epsilon(
-        id: 't_eps1',
+        id: _newTransId('t_eps'),
         fromState: newInitial,
         toState: childNFA.initialState!,
       ),
     );
     allTransitions.add(
       FSATransition.epsilon(
-        id: 't_eps2',
+        id: _newTransId('t_eps'),
         fromState: newInitial,
         toState: newFinal,
       ),
@@ -679,7 +745,7 @@ class RegexToNFAConverter {
     for (final acceptingState in childNFA.acceptingStates) {
       allTransitions.add(
         FSATransition.epsilon(
-          id: 't_eps3_${acceptingState.id}',
+          id: _newTransId('t_eps'),
           fromState: acceptingState,
           toState: newFinal,
         ),
@@ -693,7 +759,7 @@ class RegexToNFAConverter {
       transitions: allTransitions,
       alphabet: childNFA.alphabet,
       initialState: newInitial,
-      acceptingStates: {newFinal},
+      acceptingStates: {newFinal, newInitial},
       created: now,
       modified: now,
       bounds: const math.Rectangle(0, 0, 800, 600),
@@ -704,31 +770,37 @@ class RegexToNFAConverter {
   static FSA _buildSetNFA(Set<String> symbols) {
     final now = DateTime.now();
     final q0 = State(
-      id: 'q0',
+      id: _newStateId('q'),
       label: 'q0',
       position: Vector2(100, 100),
       isInitial: true,
       isAccepting: false,
     );
     final q1 = State(
-      id: 'q1',
+      id: _newStateId('q'),
       label: 'q1',
       position: Vector2(200, 100),
       isInitial: false,
       isAccepting: true,
     );
-    final t = FSATransition(
-      id: 't',
-      fromState: q0,
-      toState: q1,
-      label: '[…]',
-      inputSymbols: symbols,
-    );
+
+    final transitions = <FSATransition>{};
+    for (final s in symbols) {
+      transitions.add(
+        FSATransition.deterministic(
+          id: _newTransId('t'),
+          fromState: q0,
+          toState: q1,
+          symbol: s,
+        ),
+      );
+    }
+
     return FSA(
       id: 'set_${now.millisecondsSinceEpoch}',
       name: 'Class',
       states: {q0, q1},
-      transitions: {t},
+      transitions: transitions,
       alphabet: symbols,
       initialState: q0,
       acceptingStates: {q1},
@@ -808,6 +880,11 @@ class DotNode extends RegexNode {
   const DotNode();
 }
 
+/// Epsilon node (empty string)
+class EpsilonNode extends RegexNode {
+  const EpsilonNode();
+}
+
 /// Set/character class node ([...])
 class SetNode extends RegexNode {
   final Set<String> symbols;
@@ -864,6 +941,7 @@ enum TokenType {
   dot,
   charClass,
   charShortcut,
+  epsilon,
 }
 
 /// Token for regex parsing

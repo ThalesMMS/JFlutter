@@ -214,5 +214,45 @@ void main() {
       );
       expect(fa.FAAlgorithms.areEquivalent(dfa1, dfa2), isTrue);
     });
+
+    test('NFA→DFA conversion reports guard exhaustion as failure', () {
+      const largeStateCount = 1001;
+      final states = List.generate(largeStateCount, (index) {
+        return State(
+          id: 'q$index',
+          label: 'q$index',
+          position: Vector2(index * 5.0, 0.0),
+          isInitial: index == 0,
+          isAccepting: index == largeStateCount - 1,
+        );
+      });
+
+      final transitions = <FSATransition>{
+        for (var i = 0; i < largeStateCount - 1; i++)
+          FSATransition.deterministic(
+            id: 't_${states[i].id}_${states[i + 1].id}',
+            fromState: states[i],
+            toState: states[i + 1],
+            symbol: 'a',
+          ),
+      };
+
+      final nfa = FSA(
+        id: 'large_nfa',
+        name: 'Large NFA',
+        states: states.toSet(),
+        transitions: transitions,
+        alphabet: {'a'},
+        initialState: states.first,
+        acceptingStates: {states.last},
+        created: DateTime.now(),
+        modified: DateTime.now(),
+        bounds: const math.Rectangle(0, 0, 800, 600),
+      );
+
+      final result = fa.FAAlgorithms.nfaToDfa(nfa);
+      expect(result.isFailure, isTrue);
+      expect(result.error, contains('Exceeded maximum number of DFA states'));
+    });
   });
 }

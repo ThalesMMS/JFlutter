@@ -7,7 +7,7 @@ import 'automaton.dart';
 
 /// Pushdown Automaton (PDA) implementation
 class PDA extends Automaton {
-  /// Stack alphabet symbols
+  /// Stack alphabet symbols (unmodifiable)
   final Set<String> stackAlphabet;
 
   /// Initial stack symbol
@@ -26,9 +26,10 @@ class PDA extends Automaton {
     required super.bounds,
     super.zoomLevel,
     super.panOffset,
-    required this.stackAlphabet,
+    required Set<String> stackAlphabet,
     this.initialStackSymbol = 'Z',
-  }) : super(type: AutomatonType.pda);
+  }) : stackAlphabet = Set<String>.unmodifiable(stackAlphabet),
+       super(type: AutomatonType.pda);
 
   /// Creates a copy of this PDA with updated properties
   @override
@@ -62,7 +63,9 @@ class PDA extends Automaton {
       bounds: bounds ?? this.bounds,
       zoomLevel: zoomLevel ?? this.zoomLevel,
       panOffset: panOffset ?? this.panOffset,
-      stackAlphabet: stackAlphabet ?? this.stackAlphabet,
+      stackAlphabet: stackAlphabet != null
+          ? Set<String>.unmodifiable(stackAlphabet)
+          : this.stackAlphabet,
       initialStackSymbol: initialStackSymbol ?? this.initialStackSymbol,
     );
   }
@@ -96,6 +99,9 @@ class PDA extends Automaton {
 
   /// Creates a PDA from a JSON representation
   factory PDA.fromJson(Map<String, dynamic> json) {
+    final boundsData = (json['bounds'] as Map?)?.cast<String, dynamic>();
+    final panOffsetData = (json['panOffset'] as Map?)?.cast<String, dynamic>();
+
     return PDA(
       id: json['id'] as String,
       name: json['name'] as String,
@@ -115,15 +121,15 @@ class PDA extends Automaton {
       created: DateTime.parse(json['created'] as String),
       modified: DateTime.parse(json['modified'] as String),
       bounds: math.Rectangle(
-        (json['bounds'] as Map<String, dynamic>)['x'] as double,
-        (json['bounds'] as Map<String, dynamic>)['y'] as double,
-        (json['bounds'] as Map<String, dynamic>)['width'] as double,
-        (json['bounds'] as Map<String, dynamic>)['height'] as double,
+        (boundsData?['x'] as num?)?.toDouble() ?? 0.0,
+        (boundsData?['y'] as num?)?.toDouble() ?? 0.0,
+        (boundsData?['width'] as num?)?.toDouble() ?? 0.0,
+        (boundsData?['height'] as num?)?.toDouble() ?? 0.0,
       ),
-      zoomLevel: json['zoomLevel'] as double? ?? 1.0,
+      zoomLevel: (json['zoomLevel'] as num?)?.toDouble() ?? 1.0,
       panOffset: Vector2(
-        (json['panOffset'] as Map<String, dynamic>)['x'] as double,
-        (json['panOffset'] as Map<String, dynamic>)['y'] as double,
+        (panOffsetData?['x'] as num?)?.toDouble() ?? 0.0,
+        (panOffsetData?['y'] as num?)?.toDouble() ?? 0.0,
       ),
       stackAlphabet: Set<String>.from(json['stackAlphabet'] as List),
       initialStackSymbol: json['initialStackSymbol'] as String? ?? 'Z',

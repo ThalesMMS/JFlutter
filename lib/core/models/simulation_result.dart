@@ -8,13 +8,13 @@ class SimulationResult {
   final String errorMessage;
   final Duration executionTime;
 
-  const SimulationResult._({
+  SimulationResult._({
     required this.inputString,
     required this.accepted,
-    required this.steps,
+    required List<SimulationStep> steps,
     this.errorMessage = '',
     required this.executionTime,
-  });
+  }) : steps = List<SimulationStep>.unmodifiable(steps);
 
   factory SimulationResult.success({
     required String inputString,

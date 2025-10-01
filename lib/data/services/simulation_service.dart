@@ -6,7 +6,9 @@ import '../../core/algorithms/automaton_simulator.dart';
 /// Service for automaton simulation operations
 class SimulationService {
   /// Simulates a DFA explicitly
-  Future<Result<SimulationResult>> simulateDFA(SimulationRequest request) async {
+  Future<Result<SimulationResult>> simulateDFA(
+    SimulationRequest request,
+  ) async {
     try {
       if (request.automaton == null) {
         return ResultFactory.failure('Automaton is required');
@@ -52,7 +54,9 @@ class SimulationService {
   }
 
   /// Simulates an NFA with epsilon transitions
-  Future<Result<SimulationResult>> simulateNFA(SimulationRequest request) async {
+  Future<Result<SimulationResult>> simulateNFA(
+    SimulationRequest request,
+  ) async {
     try {
       // Validate request
       if (request.automaton == null) {
@@ -126,7 +130,9 @@ class SimulationService {
   }
 
   /// Finds accepted strings
-  Future<Result<Set<String>>> findAcceptedStrings(SimulationRequest request) async {
+  Future<Result<Set<String>>> findAcceptedStrings(
+    SimulationRequest request,
+  ) async {
     try {
       // Validate request
       if (request.automaton == null) {
@@ -147,7 +153,9 @@ class SimulationService {
   }
 
   /// Finds rejected strings
-  Future<Result<Set<String>>> findRejectedStrings(SimulationRequest request) async {
+  Future<Result<Set<String>>> findRejectedStrings(
+    SimulationRequest request,
+  ) async {
     try {
       // Validate request
       if (request.automaton == null) {

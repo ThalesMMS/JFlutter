@@ -143,8 +143,6 @@
 * * *
 
 ## Resumo do que saiu (✂)
-
-*   **LR/SLR(1)** em qualquer forma (tabelas, conflitos shift/reduce, conversão “via LR”).
     
 *   **Parser “força bruta” para GI** (e comparações que dependam dele).
     

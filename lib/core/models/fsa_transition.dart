@@ -4,7 +4,7 @@ import 'transition.dart';
 
 /// Transition for Finite State Automata (FSA)
 class FSATransition extends Transition {
-  /// Set of input symbols that trigger this transition
+  /// Set of input symbols that trigger this transition (unmodifiable)
   final Set<String> inputSymbols;
 
   /// Lambda symbol for epsilon transitions (null if not an epsilon transition)
@@ -17,16 +17,44 @@ class FSATransition extends Transition {
   }
 
   FSATransition({
-    required super.id,
-    required super.fromState,
-    required super.toState,
-    required super.label,
-    super.controlPoint,
-    super.type,
-    required this.inputSymbols,
+    required String id,
+    required State fromState,
+    required State toState,
+    String? label,
+    Vector2? controlPoint,
+    TransitionType? type,
+    Set<String>? inputSymbols,
     this.lambdaSymbol,
     String? symbol,
-  });
+  }) : inputSymbols = Set<String>.unmodifiable(
+         (inputSymbols ??
+                 (symbol != null ? <String>{symbol} : const <String>{}))
+             .toSet(),
+       ),
+       super(
+         id: id,
+         fromState: fromState,
+         toState: toState,
+         label:
+             label ??
+             (lambdaSymbol != null
+                 ? (label ?? 'ε')
+                 : (symbol ??
+                       ((inputSymbols != null && inputSymbols.isNotEmpty)
+                           ? inputSymbols.join(',')
+                           : ''))),
+         controlPoint: controlPoint,
+         type:
+             type ??
+             (() {
+               if (lambdaSymbol != null) return TransitionType.epsilon;
+               final count =
+                   (inputSymbols ?? (symbol != null ? {symbol} : {})).length;
+               return count <= 1
+                   ? TransitionType.deterministic
+                   : TransitionType.nondeterministic;
+             }()),
+       );
 
   /// Creates a copy of this FSA transition with updated properties
   @override
@@ -47,7 +75,9 @@ class FSATransition extends Transition {
       label: label ?? this.label,
       controlPoint: controlPoint ?? this.controlPoint,
       type: type ?? this.type,
-      inputSymbols: inputSymbols ?? this.inputSymbols,
+      inputSymbols: inputSymbols != null
+          ? Set<String>.unmodifiable(inputSymbols)
+          : this.inputSymbols,
       lambdaSymbol: lambdaSymbol ?? this.lambdaSymbol,
     );
   }
@@ -70,15 +100,17 @@ class FSATransition extends Transition {
 
   /// Creates an FSA transition from a JSON representation
   factory FSATransition.fromJson(Map<String, dynamic> json) {
+    final controlPointData = (json['controlPoint'] as Map?)
+        ?.cast<String, dynamic>();
+    final controlPointX = (controlPointData?['x'] as num?)?.toDouble() ?? 0.0;
+    final controlPointY = (controlPointData?['y'] as num?)?.toDouble() ?? 0.0;
+
     return FSATransition(
       id: json['id'] as String,
       fromState: State.fromJson(json['fromState'] as Map<String, dynamic>),
       toState: State.fromJson(json['toState'] as Map<String, dynamic>),
       label: json['label'] as String,
-      controlPoint: Vector2(
-        (json['controlPoint'] as Map<String, dynamic>)['x'] as double,
-        (json['controlPoint'] as Map<String, dynamic>)['y'] as double,
-      ),
+      controlPoint: Vector2(controlPointX, controlPointY),
       type: TransitionType.values.firstWhere(
         (e) => e.name == json['type'],
         orElse: () => TransitionType.deterministic,

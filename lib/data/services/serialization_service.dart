@@ -137,14 +137,15 @@ class SerializationService {
         return StateDto(
           id: stateMap['id'] as String,
           name: stateMap['name'] as String? ?? stateMap['id'] as String,
-          x: 0.0, // Default position
-          y: 0.0,
+          x: (stateMap['x'] as num?)?.toDouble() ?? 0.0,
+          y: (stateMap['y'] as num?)?.toDouble() ?? 0.0,
           isInitial: stateMap['isInitial'] as bool? ?? false,
           isFinal: stateMap['isFinal'] as bool? ?? false,
         );
       }).toList(),
-      transitions:
-          automatonData['transitions'] as Map<String, List<String>>? ?? {},
+      transitions: Map<String, List<String>>.from(
+        automatonData['transitions'] as Map<String, dynamic>? ?? {},
+      ),
       initialId: automatonData['initialId'] as String?,
       nextId: (automatonData['states'] as List<dynamic>? ?? []).length,
     );

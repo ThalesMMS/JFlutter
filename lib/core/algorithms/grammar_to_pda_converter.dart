@@ -8,6 +8,15 @@ import '../result.dart';
 
 /// Converts context-free grammars to pushdown automata
 class GrammarToPDAConverter {
+  /// Compatibility entrypoint expected by tests: converts a grammar to a PDA
+  /// by delegating to [convertGrammarToPDA].
+  static Result<PDA> convert(
+    Grammar grammar, {
+    Duration timeout = const Duration(seconds: 10),
+  }) {
+    return convertGrammarToPDA(grammar, timeout: timeout);
+  }
+
   /// Checks if a grammar can be converted to PDA
   static bool canConvertToPDA(Grammar grammar) {
     try {
@@ -75,7 +84,7 @@ class GrammarToPDAConverter {
       }
 
       // Create a simple PDA
-      final result = _createSimplePDA(grammar);
+      final result = _createStandardPDA(grammar);
 
       stopwatch.stop();
       if (stopwatch.elapsed > timeout) {
@@ -88,8 +97,8 @@ class GrammarToPDAConverter {
     }
   }
 
-  /// Creates a simple PDA from grammar
-  static PDA _createSimplePDA(Grammar grammar) {
+  /// Creates a PDA from grammar using the standard CFG-to-PDA construction
+  static PDA _createStandardPDA(Grammar grammar) {
     final now = DateTime.now();
 
     // Create states
@@ -119,29 +128,77 @@ class GrammarToPDAConverter {
 
     // Create transitions
     final transitions = <PDATransition>[];
+    int transitionId = 1;
 
-    // Transition from q0 to q1: push start symbol
+    // Transition from q0 to q1: push start symbol onto initial stack symbol
     transitions.add(
       PDATransition(
-        id: 't1',
+        id: 't${transitionId++}',
         fromState: q0,
         toState: q1,
-        label: 'ε,ε/${grammar.startSymbol}',
+        label: 'ε,Z/${grammar.startSymbol}Z',
         inputSymbol: '',
-        popSymbol: '',
-        pushSymbol: grammar.startSymbol,
+        popSymbol: 'Z',
+        pushSymbol: '${grammar.startSymbol}Z',
       ),
     );
 
-    // Transition from q1 to q2: pop start symbol
+    // Add transitions for each production A → α
+    for (final production in grammar.productions) {
+      if (production.leftSide.isNotEmpty) {
+        final leftSide = production.leftSide.first; // A
+        final rightSide = production.rightSide; // α
+
+        // Create transition: (q1, ε, A) → (q1, α^R)
+        // Handle both non-empty and empty right sides
+        String pushString;
+        if (rightSide.isEmpty || production.isLambda) {
+          // For A → ε, just pop A without pushing anything
+          pushString = '';
+        } else {
+          // For A → α, push α in the same order
+          // The standard CFG-to-PDA construction pushes α^R, but we need to push α
+          pushString = rightSide.join('');
+        }
+
+        transitions.add(
+          PDATransition(
+            id: 't${transitionId++}',
+            fromState: q1,
+            toState: q1,
+            label: 'ε,$leftSide/$pushString',
+            inputSymbol: '',
+            popSymbol: leftSide,
+            pushSymbol: pushString,
+          ),
+        );
+      }
+    }
+
+    // Add transitions for each terminal a: (q1, a, a) → (q1, ε)
+    for (final terminal in grammar.terminals) {
+      transitions.add(
+        PDATransition(
+          id: 't${transitionId++}',
+          fromState: q1,
+          toState: q1,
+          label: '$terminal,$terminal/ε',
+          inputSymbol: terminal,
+          popSymbol: terminal,
+          pushSymbol: '',
+        ),
+      );
+    }
+
+    // Transition from q1 to q2: pop initial stack symbol (accept by empty stack)
     transitions.add(
       PDATransition(
-        id: 't2',
+        id: 't${transitionId++}',
         fromState: q1,
         toState: q2,
-        label: 'ε,${grammar.startSymbol}/ε',
+        label: 'ε,Z/ε',
         inputSymbol: '',
-        popSymbol: grammar.startSymbol,
+        popSymbol: 'Z',
         pushSymbol: '',
       ),
     );
@@ -208,7 +265,7 @@ class GrammarToPDAConverter {
       }
 
       // Create a simple PDA
-      final result = _createSimplePDA(grammar);
+      final result = _createStandardPDA(grammar);
 
       stopwatch.stop();
       if (stopwatch.elapsed > timeout) {
@@ -248,7 +305,7 @@ class GrammarToPDAConverter {
       }
 
       // Create a simple PDA
-      final result = _createSimplePDA(grammar);
+      final result = _createStandardPDA(grammar);
 
       stopwatch.stop();
       if (stopwatch.elapsed > timeout) {

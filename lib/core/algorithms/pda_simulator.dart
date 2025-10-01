@@ -22,32 +22,14 @@ class PDASimulator {
     Duration timeout = const Duration(seconds: 5),
   }) {
     try {
-      final stopwatch = Stopwatch()..start();
-
-      // Validate input
-      final validationResult = _validateInput(pda, inputString);
-      if (!validationResult.isSuccess) {
-        return Failure(validationResult.error!);
-      }
-
-      // Handle empty PDA
-      if (pda.states.isEmpty) {
-        return const Failure('Cannot simulate empty PDA');
-      }
-
-      // Handle PDA with no initial state
-      if (pda.initialState == null) {
-        return const Failure('PDA must have an initial state');
-      }
-
-      // Simulate as DPDA
-      final result = _simulateDPDA(pda, inputString, stepByStep, timeout);
-      stopwatch.stop();
-
-      // Update execution time
-      final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
-
-      return Success(finalResult);
+      // Delegate to epsilon-aware NPDA search with final-state acceptance.
+      return simulateNPDA(
+        pda,
+        inputString,
+        stepByStep: stepByStep,
+        timeout: timeout,
+        mode: PDAAcceptanceMode.finalState,
+      );
     } catch (e) {
       return Failure('Error simulating PDA: $e');
     }
@@ -73,13 +55,9 @@ class PDASimulator {
       }
     }
 
-    // Validate input string symbols
-    for (int i = 0; i < inputString.length; i++) {
-      final symbol = inputString[i];
-      if (!pda.alphabet.contains(symbol)) {
-        return Failure('Input string contains invalid symbol: $symbol');
-      }
-    }
+    // Do not hard-reject unknown input symbols here; allow the
+    // simulation to proceed and naturally reject if no transitions
+    // match. This aligns with reference semantics and tests.
 
     return const Success(null);
   }
@@ -349,24 +327,34 @@ class PDASimulator {
         continue;
       }
 
-      // Generate ε-moves first (no input consumption)
-      for (final t in pda.getEpsilonTransitionsFromState(state)) {
+      // Generate ε-moves first (no input consumption). Consider either
+      // explicit lambda flags or empty strings in the transition fields.
+      for (final t in pda.pdaTransitions.where(
+        (t) =>
+            t.fromState == state && (t.isLambdaInput || t.inputSymbol.isEmpty),
+      )) {
+        final lambdaPop = t.isLambdaPop || t.popSymbol.isEmpty;
+        final lambdaPush = t.isLambdaPush || t.pushSymbol.isEmpty;
         final canPop =
-            t.isLambdaPop || (stack.isNotEmpty && stack.last == t.popSymbol);
+            lambdaPop || (stack.isNotEmpty && stack.last == t.popSymbol);
         if (!canPop) continue;
+
         final newStack = List<String>.from(stack);
-        if (!t.isLambdaPop && newStack.isNotEmpty) {
+        if (!lambdaPop && newStack.isNotEmpty) {
           newStack.removeLast();
         }
-        if (!t.isLambdaPush && t.pushSymbol.isNotEmpty) {
-          newStack.add(t.pushSymbol);
+        if (!lambdaPush && t.pushSymbol.isNotEmpty) {
+          for (final ch in t.pushSymbol.split('').reversed) {
+            newStack.add(ch);
+          }
         }
+
         final step = SimulationStep.pda(
           currentState: state.id,
           remainingInput: remaining,
           stackContents: newStack.join(''),
           usedTransition:
-              'ε,${t.isLambdaPop ? 'ε' : t.popSymbol}→${t.isLambdaPush ? 'ε' : t.pushSymbol}',
+              'ε,${lambdaPop ? 'ε' : t.popSymbol}→${lambdaPush ? 'ε' : t.pushSymbol}',
           stepNumber: (steps.isNotEmpty ? steps.last.stepNumber : 0) + 1,
           consumedInput: '',
         );
@@ -382,25 +370,31 @@ class PDASimulator {
       // Generate input-consuming moves if input remains
       if (remaining.isNotEmpty) {
         final a = remaining[0];
-        for (final t in pda.getTransitionsFromStateOnInputAndStack(
-          state,
-          a,
-          stack.isNotEmpty ? stack.last : '',
+        for (final t in pda.pdaTransitions.where(
+          (t) => t.fromState == state && !t.isLambdaInput && t.inputSymbol == a,
         )) {
+          final lambdaPop = t.isLambdaPop || t.popSymbol.isEmpty;
+          final lambdaPush = t.isLambdaPush || t.pushSymbol.isEmpty;
+          final canPop =
+              lambdaPop || (stack.isNotEmpty && stack.last == t.popSymbol);
+          if (!canPop) continue;
+
           final newStack = List<String>.from(stack);
-          if (!t.isLambdaPop && newStack.isNotEmpty) {
+          if (!lambdaPop && newStack.isNotEmpty) {
             newStack.removeLast();
           }
-          if (!t.isLambdaPush && t.pushSymbol.isNotEmpty) {
-            newStack.add(t.pushSymbol);
-          }
           final newRemaining = remaining.substring(1);
+          if (!lambdaPush && t.pushSymbol.isNotEmpty) {
+            for (final ch in t.pushSymbol.split('').reversed) {
+              newStack.add(ch);
+            }
+          }
           final step = SimulationStep.pda(
             currentState: state.id,
             remainingInput: newRemaining,
             stackContents: newStack.join(''),
             usedTransition:
-                '$a,${t.isLambdaPop ? 'ε' : t.popSymbol}→${t.isLambdaPush ? 'ε' : t.pushSymbol}',
+                '$a,${lambdaPop ? 'ε' : t.popSymbol}→${lambdaPush ? 'ε' : t.pushSymbol}',
             stepNumber: (steps.isNotEmpty ? steps.last.stepNumber : 0) + 1,
             consumedInput: a,
           );

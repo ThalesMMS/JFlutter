@@ -2,6 +2,8 @@ import '../models/grammar.dart';
 import '../models/production.dart';
 import '../models/parse_table.dart';
 import '../result.dart';
+import 'grammar_parser_simple_recursive.dart';
+import 'grammar_parser_earley.dart';
 
 /// Parses strings using context-free grammars
 enum ParsingStrategyHint { auto, bruteForce, cyk, ll, lr }
@@ -21,43 +23,83 @@ class GrammarParser {
     Duration timeout = const Duration(seconds: 5),
     ParsingStrategyHint strategyHint = ParsingStrategyHint.auto,
   }) {
-    try {
-      final stopwatch = Stopwatch()..start();
-
-      // Validate input
-      final validationResult = _validateInput(grammar, inputString);
-      if (!validationResult.isSuccess) {
-        return Failure(validationResult.error!);
-      }
-
-      // Handle empty grammar
-      if (grammar.productions.isEmpty) {
-        return const Failure('Cannot parse with empty grammar');
-      }
-
-      // Handle grammar with no start symbol
-      if (grammar.startSymbol.isEmpty) {
-        return const Failure('Grammar must have a start symbol');
-      }
-
-      // Parse the string
-      final strategies = _resolveStrategies(strategyHint);
-      final result = _parseString(
-        grammar,
-        inputString,
-        timeout,
-        strategies,
-        strategyHint,
-      );
-      stopwatch.stop();
-
-      // Update execution time
-      final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
-
-      return Success(finalResult);
-    } catch (e) {
-      return Failure('Error parsing string: $e');
+    // Validate input (symbols and basic invariants)
+    final validation = _validateInput(grammar, inputString);
+    if (!validation.isSuccess) {
+      return Failure(validation.error!);
     }
+
+    // First, decide acceptance robustly with Earley
+    // Fast path: detect Dyck-1 grammar (balanced single-type brackets) and
+    // recognize in linear time to handle very long inputs efficiently.
+    final dyckDelims = _detectDyck1Delimiters(grammar);
+    if (dyckDelims != null) {
+      final open = dyckDelims.item1;
+      final close = dyckDelims.item2;
+
+      // Ensure grammar uses only these two terminals for safety
+      final onlyDyckTerminals =
+          grammar.terminals.length == 2 &&
+          grammar.terminals.contains(open) &&
+          grammar.terminals.contains(close);
+      if (onlyDyckTerminals) {
+        final dyckAccepted = _fastDyck1Recognize(inputString, open, close);
+        if (!dyckAccepted) {
+          return Success(
+            ParseResult.failure(
+              inputString: inputString,
+              errorMessage:
+                  'String "$inputString" cannot be derived from grammar',
+              executionTime: const Duration(),
+            ),
+          );
+        }
+        // Accepted via fast path; optionally attempt to build derivation later
+        final parser = SimpleRecursiveDescentParser(grammar);
+        final rd = parser.parse(inputString, timeout: timeout);
+        if (rd.isSuccess) {
+          return rd;
+        }
+        return Success(
+          ParseResult.success(
+            inputString: inputString,
+            derivations: const <List<String>>[],
+            executionTime: const Duration(),
+          ),
+        );
+      }
+    }
+
+    // Fall back to Earley general recognizer
+    final earley = EarleyRecognizer(grammar);
+    final accepted = earley.recognizes(inputString, timeout: timeout);
+    if (!accepted) {
+      // Return a successful result object with accepted=false so callers can
+      // assert on acceptance without treating it as an exceptional failure
+      return Success(
+        ParseResult.failure(
+          inputString: inputString,
+          errorMessage: 'String "$inputString" cannot be derived from grammar',
+          executionTime: const Duration(),
+        ),
+      );
+    }
+
+    // If accepted, optionally build a derivation using the simple parser (best-effort)
+    final parser = SimpleRecursiveDescentParser(grammar);
+    final rd = parser.parse(inputString, timeout: timeout);
+    if (rd.isSuccess) {
+      return rd;
+    }
+
+    // Fallback: accepted without a derivation trace
+    return Success(
+      ParseResult.success(
+        inputString: inputString,
+        derivations: const <List<String>>[],
+        executionTime: const Duration(),
+      ),
+    );
   }
 
   /// Validates the input grammar and string
@@ -155,6 +197,74 @@ class GrammarParser {
     }
   }
 
+  /// Detects if the grammar represents Dyck-1 language S → SS | open S close | ε
+  /// Returns the delimiters (open, close) when detected, otherwise null.
+  static _Pair<String, String>? _detectDyck1Delimiters(Grammar grammar) {
+    final s = grammar.startSymbol;
+    // Must have exactly one non-terminal S
+    if (grammar.nonTerminals.length != 1 || !grammar.nonTerminals.contains(s)) {
+      return null;
+    }
+
+    // Look for productions: S→SS, S→open S close, S→ε
+    bool hasConcat = false;
+    bool hasEps = false;
+    String? open;
+    String? close;
+
+    for (final p in grammar.productions) {
+      if (p.leftSide.isEmpty || p.leftSide.first != s) continue;
+      if (p.isLambda || p.rightSide.isEmpty) {
+        hasEps = true;
+        continue;
+      }
+      if (p.rightSide.length == 2) {
+        if (p.rightSide[0] == s && p.rightSide[1] == s) {
+          hasConcat = true;
+          continue;
+        }
+      }
+      if (p.rightSide.length == 3) {
+        final a = p.rightSide[0];
+        final mid = p.rightSide[1];
+        final b = p.rightSide[2];
+        if (mid == s &&
+            grammar.terminals.contains(a) &&
+            grammar.terminals.contains(b)) {
+          open = a;
+          close = b;
+          // keep scanning to confirm other rules too
+        }
+      }
+    }
+
+    if (hasConcat && hasEps && open != null && close != null) {
+      return _Pair(open!, close!);
+    }
+    return null;
+  }
+
+  /// Linear-time recognizer for Dyck-1 strings over given delimiters
+  static bool _fastDyck1Recognize(String input, String open, String close) {
+    int balance = 0;
+    for (int i = 0; i < input.length; i++) {
+      final c = input[i];
+      if (c == open) {
+        balance++;
+      } else if (c == close) {
+        balance--;
+        if (balance < 0) return false;
+      } else {
+        // Unknown symbol; reject here (validation should have caught earlier)
+        return false;
+      }
+    }
+    return balance == 0;
+  }
+
+  /// Tiny tuple helper
+  // Placeholder within class removed; see top-level class below.
+
   /// Parses using brute force (exhaustive search)
   static ParseResult? _parseWithBruteForce(
     Grammar grammar,
@@ -163,25 +273,19 @@ class GrammarParser {
   ) {
     final startTime = DateTime.now();
 
-    // Check timeout
-    if (DateTime.now().difference(startTime) > timeout) {
-      return null;
-    }
-
-    // Simple brute force: try all possible derivations
-    final derivations = <List<String>>[];
-    _findDerivations(
+    // Use a simple recursive descent approach
+    final result = _parseWithRecursiveDescent(
       grammar,
-      [grammar.startSymbol],
+      grammar.startSymbol,
       inputString,
-      derivations,
+      startTime,
       timeout,
     );
 
-    if (derivations.isNotEmpty) {
+    if (result != null) {
       return ParseResult.success(
         inputString: inputString,
-        derivations: derivations,
+        derivations: [result],
         executionTime: DateTime.now().difference(startTime),
       );
     }
@@ -189,55 +293,96 @@ class GrammarParser {
     return null;
   }
 
-  /// Recursively finds derivations
-  static void _findDerivations(
+  /// Parses using recursive descent approach
+  static List<String>? _parseWithRecursiveDescent(
     Grammar grammar,
-    List<String> currentDerivation,
+    String nonTerminal,
     String targetString,
-    List<List<String>> derivations,
+    DateTime startTime,
     Duration timeout,
   ) {
-    final startTime = DateTime.now();
-
     // Check timeout
     if (DateTime.now().difference(startTime) > timeout) {
-      return;
+      return null;
     }
 
-    // Check if current derivation matches target
-    final currentString = currentDerivation.join('');
-    if (currentString == targetString) {
-      derivations.add(List.from(currentDerivation));
-      return;
+    // If target is empty, check if non-terminal can derive empty string
+    if (targetString.isEmpty) {
+      if (_canDeriveEmptyStringFromSymbol(grammar, nonTerminal, <String>{})) {
+        return [nonTerminal];
+      }
+      return null;
     }
 
-    // Check if current derivation is too long
-    if (currentString.length > targetString.length) {
-      return;
-    }
+    // Try all productions for this non-terminal
+    for (final production in grammar.productions) {
+      if (production.leftSide.isNotEmpty &&
+          production.leftSide.first == nonTerminal) {
+        // Handle epsilon productions
+        if (production.rightSide.isEmpty || production.isLambda) {
+          if (targetString.isEmpty) {
+            return [nonTerminal];
+          }
+          continue;
+        }
 
-    // Try all possible productions
-    for (int i = 0; i < currentDerivation.length; i++) {
-      final symbol = currentDerivation[i];
-      if (grammar.nonTerminals.contains(symbol)) {
-        final productions = grammar.productions
-            .where((p) => p.leftSide.isNotEmpty && p.leftSide.first == symbol)
-            .toList();
-        for (final production in productions) {
-          final newDerivation = List<String>.from(currentDerivation);
-          newDerivation.removeAt(i);
-          newDerivation.insertAll(i, production.rightSide);
+        // Handle terminal productions
+        if (production.rightSide.length == 1 &&
+            grammar.terminals.contains(production.rightSide.first)) {
+          if (targetString == production.rightSide.first) {
+            return [nonTerminal, production.rightSide.first];
+          }
+          continue;
+        }
 
-          _findDerivations(
+        // Handle non-terminal productions
+        if (production.rightSide.length == 1 &&
+            grammar.nonTerminals.contains(production.rightSide.first)) {
+          final result = _parseWithRecursiveDescent(
             grammar,
-            newDerivation,
+            production.rightSide.first,
             targetString,
-            derivations,
+            startTime,
             timeout,
           );
+          if (result != null) {
+            return [nonTerminal, ...result];
+          }
+        }
+
+        // Handle productions with multiple symbols
+        if (production.rightSide.length > 1) {
+          // Try to split the target string in all possible ways
+          for (int split = 0; split <= targetString.length; split++) {
+            final leftPart = targetString.substring(0, split);
+            final rightPart = targetString.substring(split);
+
+            if (production.rightSide.length == 2) {
+              final leftResult = _parseWithRecursiveDescent(
+                grammar,
+                production.rightSide[0],
+                leftPart,
+                startTime,
+                timeout,
+              );
+              final rightResult = _parseWithRecursiveDescent(
+                grammar,
+                production.rightSide[1],
+                rightPart,
+                startTime,
+                timeout,
+              );
+
+              if (leftResult != null && rightResult != null) {
+                return [nonTerminal, ...leftResult, ...rightResult];
+              }
+            }
+          }
         }
       }
     }
+
+    return null;
   }
 
   /// Parses using CYK algorithm
@@ -248,12 +393,20 @@ class GrammarParser {
   ) {
     final startTime = DateTime.now();
 
-    // Check timeout
-    if (DateTime.now().difference(startTime) > timeout) {
+    // Handle empty string case
+    if (inputString.isEmpty) {
+      // Check if grammar can derive empty string
+      if (_canDeriveEmptyString(grammar)) {
+        return ParseResult.success(
+          inputString: inputString,
+          derivations: [],
+          executionTime: DateTime.now().difference(startTime),
+        );
+      }
       return null;
     }
 
-    // Convert grammar to Chomsky Normal Form (simplified)
+    // Convert grammar to Chomsky Normal Form
     final cnfGrammar = _convertToCNF(grammar);
 
     // Apply CYK algorithm
@@ -300,6 +453,59 @@ class GrammarParser {
     }
 
     return null;
+  }
+
+  /// Checks if a grammar can derive the empty string
+  static bool _canDeriveEmptyString(Grammar grammar) {
+    // Check if start symbol can derive empty string
+    return _canDeriveEmptyStringFromSymbol(
+      grammar,
+      grammar.startSymbol,
+      <String>{},
+    );
+  }
+
+  /// Recursively checks if a symbol can derive empty string
+  static bool _canDeriveEmptyStringFromSymbol(
+    Grammar grammar,
+    String symbol,
+    Set<String> visited,
+  ) {
+    if (visited.contains(symbol)) {
+      return false; // Avoid infinite recursion
+    }
+    visited.add(symbol);
+
+    for (final production in grammar.productions) {
+      if (production.leftSide.isNotEmpty &&
+          production.leftSide.first == symbol) {
+        if (production.rightSide.isEmpty || production.isLambda) {
+          return true; // Direct epsilon production
+        }
+
+        // Check if all symbols in right side can derive empty string
+        bool allCanDeriveEmpty = true;
+        for (final rightSymbol in production.rightSide) {
+          if (grammar.terminals.contains(rightSymbol)) {
+            allCanDeriveEmpty = false;
+            break;
+          }
+          if (!_canDeriveEmptyStringFromSymbol(
+            grammar,
+            rightSymbol,
+            Set.from(visited),
+          )) {
+            allCanDeriveEmpty = false;
+            break;
+          }
+        }
+        if (allCanDeriveEmpty) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 
   /// Converts grammar to Chomsky Normal Form (simplified)
@@ -685,6 +891,13 @@ class GrammarParser {
       );
     }
   }
+}
+
+/// Tiny tuple helper (top-level)
+class _Pair<A, B> {
+  final A item1;
+  final B item2;
+  const _Pair(this.item1, this.item2);
 }
 
 /// Result of parsing a string with a grammar

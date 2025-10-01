@@ -329,7 +329,10 @@ class AlgorithmRepositoryImpl implements AlgorithmRepository {
     try {
       final automaton =
           _entityToAutomaton(automatonEntity) as FSA; // Converte para o modelo
-      final simResult = await algorithms.AutomatonSimulator.simulate(automaton, word);
+      final simResult = await algorithms.AutomatonSimulator.simulate(
+        automaton,
+        word,
+      );
 
       if (simResult.isFailure) {
         return Failure(simResult.error!);

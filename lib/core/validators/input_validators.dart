@@ -28,14 +28,14 @@ class InputValidators {
           'Automaton has no initial state',
         ),
       );
-      } else if (!fsa.states.contains(fsa.initialState)) {
-        issues.add(
-          ValidationIssue(
-            'FSA_INVALID_INITIAL',
-            'Initial state ${fsa.initialState!.id} is not in states set',
-          ),
-        );
-      }
+    } else if (!fsa.states.contains(fsa.initialState)) {
+      issues.add(
+        ValidationIssue(
+          'FSA_INVALID_INITIAL',
+          'Initial state ${fsa.initialState!.id} is not in states set',
+        ),
+      );
+    }
 
     // Alphabet validation
     if (fsa.alphabet.isEmpty) {
@@ -125,14 +125,14 @@ class InputValidators {
       issues.add(
         const ValidationIssue('PDA_NO_INITIAL', 'PDA has no initial state'),
       );
-      } else if (!pda.states.contains(pda.initialState)) {
-        issues.add(
-          ValidationIssue(
-            'PDA_INVALID_INITIAL',
-            'Initial state ${pda.initialState!.id} is not in states set',
-          ),
-        );
-      }
+    } else if (!pda.states.contains(pda.initialState)) {
+      issues.add(
+        ValidationIssue(
+          'PDA_INVALID_INITIAL',
+          'Initial state ${pda.initialState!.id} is not in states set',
+        ),
+      );
+    }
     if (pda.acceptingStates.isEmpty) {
       issues.add(
         const ValidationIssue(
@@ -327,14 +327,14 @@ class InputValidators {
       issues.add(
         const ValidationIssue('TM_NO_INITIAL', 'TM has no initial state'),
       );
-      } else if (!tm.states.contains(tm.initialState)) {
-        issues.add(
-          ValidationIssue(
-            'TM_INVALID_INITIAL',
-            'Initial state ${tm.initialState!.id} is not in states set',
-          ),
-        );
-      }
+    } else if (!tm.states.contains(tm.initialState)) {
+      issues.add(
+        ValidationIssue(
+          'TM_INVALID_INITIAL',
+          'Initial state ${tm.initialState!.id} is not in states set',
+        ),
+      );
+    }
     if (tm.acceptingStates.isEmpty) {
       issues.add(
         const ValidationIssue('TM_NO_ACCEPTING', 'TM has no accepting states'),

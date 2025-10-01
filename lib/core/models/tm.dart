@@ -7,7 +7,7 @@ import 'automaton.dart';
 
 /// Turing Machine (TM) implementation
 class TM extends Automaton {
-  /// Tape alphabet symbols
+  /// Tape alphabet symbols (unmodifiable)
   final Set<String> tapeAlphabet;
 
   /// Blank symbol
@@ -29,10 +29,11 @@ class TM extends Automaton {
     required super.bounds,
     super.zoomLevel,
     super.panOffset,
-    required this.tapeAlphabet,
+    required Set<String> tapeAlphabet,
     this.blankSymbol = 'B',
     this.tapeCount = 1, // Always 1 for single-tape TM
-  }) : super(type: AutomatonType.tm);
+  }) : tapeAlphabet = Set<String>.unmodifiable(tapeAlphabet),
+       super(type: AutomatonType.tm);
 
   /// Creates a copy of this TM with updated properties
   @override
@@ -67,7 +68,9 @@ class TM extends Automaton {
       bounds: bounds ?? this.bounds,
       zoomLevel: zoomLevel ?? this.zoomLevel,
       panOffset: panOffset ?? this.panOffset,
-      tapeAlphabet: tapeAlphabet ?? this.tapeAlphabet,
+      tapeAlphabet: tapeAlphabet != null
+          ? Set<String>.unmodifiable(tapeAlphabet)
+          : this.tapeAlphabet,
       blankSymbol: blankSymbol ?? this.blankSymbol,
       tapeCount: tapeCount ?? this.tapeCount,
     );
@@ -103,6 +106,9 @@ class TM extends Automaton {
 
   /// Creates a TM from a JSON representation
   factory TM.fromJson(Map<String, dynamic> json) {
+    final boundsData = (json['bounds'] as Map?)?.cast<String, dynamic>();
+    final panOffsetData = (json['panOffset'] as Map?)?.cast<String, dynamic>();
+
     return TM(
       id: json['id'] as String,
       name: json['name'] as String,
@@ -122,15 +128,15 @@ class TM extends Automaton {
       created: DateTime.parse(json['created'] as String),
       modified: DateTime.parse(json['modified'] as String),
       bounds: math.Rectangle(
-        (json['bounds'] as Map<String, dynamic>)['x'] as double,
-        (json['bounds'] as Map<String, dynamic>)['y'] as double,
-        (json['bounds'] as Map<String, dynamic>)['width'] as double,
-        (json['bounds'] as Map<String, dynamic>)['height'] as double,
+        (boundsData?['x'] as num?)?.toDouble() ?? 0.0,
+        (boundsData?['y'] as num?)?.toDouble() ?? 0.0,
+        (boundsData?['width'] as num?)?.toDouble() ?? 0.0,
+        (boundsData?['height'] as num?)?.toDouble() ?? 0.0,
       ),
-      zoomLevel: json['zoomLevel'] as double? ?? 1.0,
+      zoomLevel: (json['zoomLevel'] as num?)?.toDouble() ?? 1.0,
       panOffset: Vector2(
-        (json['panOffset'] as Map<String, dynamic>)['x'] as double,
-        (json['panOffset'] as Map<String, dynamic>)['y'] as double,
+        (panOffsetData?['x'] as num?)?.toDouble() ?? 0.0,
+        (panOffsetData?['y'] as num?)?.toDouble() ?? 0.0,
       ),
       tapeAlphabet: Set<String>.from(json['tapeAlphabet'] as List),
       blankSymbol: json['blankSymbol'] as String? ?? 'B',

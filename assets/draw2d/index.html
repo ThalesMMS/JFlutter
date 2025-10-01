@@ -2,6 +2,37 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+<!-- <<<<<<< codex/document-bridge-envelope-and-message-schemas -->
+    <title>Draw2D Bridge</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body {
+        margin: 0;
+        font-family: sans-serif;
+        background-color: #0f172a;
+        color: #e2e8f0;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        align-items: center;
+        justify-content: center;
+      }
+
+      main {
+        padding: 24px;
+        text-align: center;
+      }
+
+      h1 {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+
+      p {
+        font-size: 14px;
+        margin: 0;
+/* ======= */
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Draw2D Placeholder</title>
     <style>
@@ -51,10 +82,18 @@
       #draw2d-placeholder p {
         margin: 0;
         font-size: 14px;
+/* >>>>>>> 003-ui-improvement-taskforce */
       }
     </style>
   </head>
   <body>
+<!-- <<<<<<< codex/document-bridge-envelope-and-message-schemas -->
+    <main>
+      <h1>Draw2D Canvas Bridge</h1>
+      <p>Open the console to inspect messages exchanged with Flutter.</p>
+    </main>
+    <script src="editor.js"></script>
+<!-- ======= -->
     <div id="draw2d-root">
       <div id="draw2d-placeholder">
         <h1>Draw2D Canvas Preview</h1>
@@ -62,5 +101,6 @@
       </div>
     </div>
     <script type="module" src="editor.js"></script>
+<!-- >>>>>>> 003-ui-improvement-taskforce -->
   </body>
 </html>

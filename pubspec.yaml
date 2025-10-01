@@ -125,12 +125,18 @@ flutter:
     - jflutter_js/examples/apda_palindrome.json
     # Turing machine example
     - jflutter_js/examples/tm_binary_to_unary.json
+# <<<<<<< codex/document-bridge-envelope-and-message-schemas
+    # Draw2D WebView bridge
+    - assets/draw2d/index.html
+    - assets/draw2d/editor.js
+# =======
 # <<<<<<< codex/add-draw2d-mapping-and-event-handling
     - assets/draw2d/editor.html
     - assets/draw2d/editor.js
 # =======
     # Draw2D prototype assets
     - assets/draw2d/
+# >>>>>>> 003-ui-improvement-taskforce
 # >>>>>>> 003-ui-improvement-taskforce
 
 flutter_launcher_icons:

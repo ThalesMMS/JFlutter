@@ -8,6 +8,9 @@ import '../../core/models/state.dart';
 class Draw2DAutomatonMapper {
   const Draw2DAutomatonMapper._();
 
+  static const double _stateDiameter = 60.0;
+  static const double _stateRadius = _stateDiameter / 2;
+
   /// Converts the provided [automaton] into a Draw2D compatible JSON map.
   static Map<String, dynamic> toJson(FSA? automaton) {
     if (automaton == null) {
@@ -58,6 +61,8 @@ class Draw2DAutomatonMapper {
 
   static Map<String, dynamic> _stateToJson(String id, State state) {
     final position = state.position;
+    final x = position.x.isFinite ? position.x : 0.0;
+    final y = position.y.isFinite ? position.y : 0.0;
     return {
       'id': id,
       'sourceId': state.id,
@@ -65,8 +70,8 @@ class Draw2DAutomatonMapper {
       'isInitial': state.isInitial,
       'isAccepting': state.isAccepting,
       'position': {
-        'x': position.x.isFinite ? position.x : 0.0,
-        'y': position.y.isFinite ? position.y : 0.0,
+        'x': x - _stateRadius,
+        'y': y - _stateRadius,
       },
     };
   }

@@ -1,5 +1,7 @@
 (function () {
   const CANVAS_ID = 'canvas';
+  const STATE_DIAMETER = 60;
+  const STATE_RADIUS = STATE_DIAMETER / 2;
   const canvasElement = document.getElementById(CANVAS_ID);
   let canvasInstance = null;
   const stateFigures = new Map();
@@ -98,8 +100,8 @@
   function scheduleMove(sourceId, figure) {
     moveQueue.set(sourceId, {
       id: sourceId,
-      x: figure.getX(),
-      y: figure.getY(),
+      x: figure.getX() + STATE_RADIUS,
+      y: figure.getY() + STATE_RADIUS,
     });
 
     if (moveTimer) {
@@ -118,13 +120,17 @@
 
   function createStateFigure(state) {
     const canvas = ensureCanvas();
+    const position = state.position || {};
+    const x = typeof position.x === 'number' ? position.x : 0;
+    const y = typeof position.y === 'number' ? position.y : 0;
+
     const figure = new draw2d.shape.basic.Circle({
-      diameter: 60,
+      diameter: STATE_DIAMETER,
       stroke: 2,
       color: state.isInitial ? '#3949ab' : '#1e88e5',
       bgColor: state.isAccepting ? '#c8e6c9' : '#ffffff',
-      x: state.position.x,
-      y: state.position.y,
+      x: x,
+      y: y,
     });
 
     figure.setUserData({

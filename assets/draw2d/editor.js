@@ -66,7 +66,9 @@
         id: `t_${Date.now()}`,
         fromStateId: sourceData.sourceId,
         toStateId: targetData.sourceId,
-        label: '',
+        readSymbol: '',
+        writeSymbol: '',
+        direction: 'R',
       });
 
       connection.remove();
@@ -194,6 +196,25 @@
     });
   }
 
+  function formatTransitionLabel(transition) {
+    if (!transition) {
+      return '';
+    }
+
+    const read = (transition.readSymbol || '').trim();
+    const write = (transition.writeSymbol || '').trim();
+    const direction = (transition.direction || '').trim().toUpperCase();
+    const readableRead = read.length > 0 ? read : '∅';
+    const readableWrite = write.length > 0 ? write : '∅';
+    const directionSymbol = direction === 'L'
+      ? 'L'
+      : direction === 'S'
+        ? 'S'
+        : 'R';
+
+    return `${readableRead}/${readableWrite},${directionSymbol}`;
+  }
+
   function createTransitionFigure(transition) {
     const from = stateFigures.get(transition.from);
     const to = stateFigures.get(transition.to);
@@ -226,7 +247,7 @@
     }
 
     const label = new draw2d.shape.basic.Label({
-      text: transition.label,
+      text: formatTransitionLabel(transition),
       fontColor: '#263238',
       padding: 4,
       bgColor: '#ffffff',
@@ -239,14 +260,57 @@
     );
 
     connection.on('dblclick', function () {
-      const current = label.getText();
-      const result = window.prompt('Transition label', current);
-      if (typeof result === 'string' && result !== current) {
-        sendMessage('transition.label', {
-          id: transition.sourceId,
-          label: result,
-        });
+      const entry = transitionFigures.get(transition.id) || {};
+      const currentRead = entry.readSymbol || transition.readSymbol || '';
+      const currentWrite = entry.writeSymbol || transition.writeSymbol || '';
+      const currentDirection = (entry.direction || transition.direction || 'R').toUpperCase();
+
+      const readResult = window.prompt('Read symbol', currentRead);
+      if (readResult === null) {
+        return;
       }
+
+      const writeResult = window.prompt('Write symbol', currentWrite);
+      if (writeResult === null) {
+        return;
+      }
+
+      const directionResult = window.prompt(
+        'Direction (L, R, S)',
+        currentDirection,
+      );
+      if (directionResult === null) {
+        return;
+      }
+
+      const normalisedDirection = (directionResult || 'R').trim().toUpperCase();
+
+      const updatedData = {
+        ...entry,
+        readSymbol: readResult,
+        writeSymbol: writeResult,
+        direction: normalisedDirection,
+      };
+
+      label.setText(formatTransitionLabel(updatedData));
+      transitionFigures.set(transition.id, {
+        ...updatedData,
+        connection: connection,
+        label: label,
+        sourceId: transition.sourceId,
+        baseStyle: entry.baseStyle || {
+          stroke: baseStroke,
+          color: baseColor,
+        },
+      });
+
+      sendMessage('transition.label', {
+        id: transition.sourceId,
+        readSymbol: readResult,
+        writeSymbol: writeResult,
+        direction: normalisedDirection,
+        label: label.getText(),
+      });
     });
 
     ensureCanvas().add(connection);
@@ -258,6 +322,9 @@
         stroke: baseStroke,
         color: baseColor,
       },
+      readSymbol: transition.readSymbol || '',
+      writeSymbol: transition.writeSymbol || '',
+      direction: (transition.direction || 'R').toUpperCase(),
     });
   }
 

@@ -1,0 +1,34 @@
+JFlutter User Guide Supplement
+==============================
+
+Draw2D Canvas Toggle
+--------------------
+
+* Navigate to **Settings → Canvas**.
+* Enable **Use Draw2D Canvas** to switch the FSA editor to the WebView-powered renderer.
+* Tap **Save Settings**. The preference is persisted via `SharedPreferences` and propagated through Riverpod (`settingsProvider`).
+* Return to the automaton workspace. Supported platforms will render the Draw2D canvas; unsupported targets display a warning placeholder.
+
+Bridge Message Reference
+------------------------
+
+* **loadAutomaton** (Flutter → WebView): complete snapshot of states, transitions, and alphabet.
+* **node:add** (WebView → Flutter): create or replace a state using `{ id, label, x, y, isInitial, isAccepting }`.
+* **node:move** (WebView → Flutter): update a state's position.
+* **edge:link** (WebView → Flutter): connect two states with `symbols` (array or comma-delimited string).
+
+Manual Verification Checklist
+-----------------------------
+
+1. Enable the Draw2D toggle and save.
+2. Inject `node:add`, `node:move`, and `edge:link` events from the browser console or the integration test harness.
+3. Confirm the automaton updates in Flutter (state list, positions, transitions, alphabet).
+4. Disable the toggle to restore the legacy Flutter canvas.
+5. Run `flutter analyze` and `flutter test` to validate CI parity.
+
+Troubleshooting
+---------------
+
+* **WebView unavailable**: The widget falls back to an instructional placeholder when the platform lacks WebView support.
+* **Bridge not responding**: Check the console for malformed JSON. The bridge ignores invalid payloads by design.
+* **Settings not persisting**: Ensure the settings dialog `Save` action completes; the provider mirrors the persisted value after success.

@@ -4,9 +4,14 @@ import '../../core/entities/automaton_entity.dart';
 import '../../core/models/fsa.dart';
 import '../providers/algorithm_provider.dart';
 import '../providers/automaton_provider.dart';
+import '../providers/settings_provider.dart';
 import '../widgets/algorithm_panel.dart';
 import '../widgets/automaton_canvas.dart';
+// <<<<<<< codex/implement-draw2d-integration-with-webview
 import '../widgets/draw2d_canvas_view.dart';
+// =======
+import '../widgets/draw2d_automaton_canvas.dart';
+// >>>>>>> 003-ui-improvement-taskforce
 import '../widgets/simulation_panel.dart';
 import 'grammar_page.dart';
 import 'regex_page.dart';
@@ -33,8 +38,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
               ? TextStyle(color: theme.colorScheme.onErrorContainer)
               : null,
         ),
-        backgroundColor:
-            isError ? theme.colorScheme.errorContainer : null,
+        backgroundColor: isError ? theme.colorScheme.errorContainer : null,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -107,7 +111,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
       AlgorithmProvider notifier,
       AutomatonEntity entity,
     )
-        algorithm,
+    algorithm,
     required String successMessage,
     bool requireDfa = false,
     bool requireLambda = false,
@@ -142,7 +146,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
       AutomatonEntity current,
       AutomatonEntity other,
     )
-        algorithm,
+    algorithm,
     required String successMessage,
     bool requireDfa = false,
     String? invalidMessage,
@@ -217,7 +221,8 @@ class _FSAPageState extends ConsumerState<FSAPage> {
   Future<void> _handleUnionDfa(FSA other) async {
     await _runBinaryAlgorithm(
       other: other,
-      algorithm: (notifier, current, loaded) => notifier.unionDfa(current, loaded),
+      algorithm: (notifier, current, loaded) =>
+          notifier.unionDfa(current, loaded),
       successMessage: 'Union computed successfully.',
       requireDfa: true,
       invalidMessage:
@@ -254,13 +259,15 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     final automaton = state.currentAutomaton;
     final hasAutomaton = automaton != null;
     final hasLambda = automaton?.hasEpsilonTransitions ?? false;
-    final isDfa = automaton != null &&
+    final isDfa =
+        automaton != null &&
         automaton.isDeterministic &&
         !automaton.hasEpsilonTransitions;
 
     return AlgorithmPanel(
-      onNfaToDfa:
-          hasAutomaton ? () => automatonNotifier.convertNfaToDfa() : null,
+      onNfaToDfa: hasAutomaton
+          ? () => automatonNotifier.convertNfaToDfa()
+          : null,
       onRemoveLambda: hasLambda ? _handleRemoveLambda : null,
       onMinimizeDfa: isDfa ? () => automatonNotifier.minimizeDfa() : null,
       onCompleteDfa: isDfa ? () => automatonNotifier.completeDfa() : null,
@@ -271,12 +278,12 @@ class _FSAPageState extends ConsumerState<FSAPage> {
       onPrefixClosure: isDfa ? _handlePrefixClosure : null,
       onSuffixClosure: isDfa ? _handleSuffixClosure : null,
       onFsaToGrammar: hasAutomaton ? _handleFsaToGrammar : null,
-      onAutoLayout:
-          hasAutomaton ? () => automatonNotifier.applyAutoLayout() : null,
+      onAutoLayout: hasAutomaton
+          ? () => automatonNotifier.applyAutoLayout()
+          : null,
       onClear: () => automatonNotifier.clearAutomaton(),
-      onRegexToNfa: (regex) => ref
-          .read(automatonProvider.notifier)
-          .convertRegexToNfa(regex),
+      onRegexToNfa: (regex) =>
+          ref.read(automatonProvider.notifier).convertRegexToNfa(regex),
       onFaToRegex: hasAutomaton ? _handleFaToRegex : null,
       onCompareEquivalence: isDfa ? _handleCompareEquivalence : null,
       equivalenceResult: state.equivalenceResult,
@@ -360,15 +367,18 @@ class _FSAPageState extends ConsumerState<FSAPage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(automatonProvider);
+    final useDraw2dCanvas = ref.watch(settingsProvider).useDraw2dCanvas;
     final screenSize = MediaQuery.of(context).size;
     final isMobile = screenSize.width < 1024;
 
     return Scaffold(
-      body: isMobile ? _buildMobileLayout(state) : _buildDesktopLayout(state),
+      body: isMobile
+          ? _buildMobileLayout(state, useDraw2dCanvas)
+          : _buildDesktopLayout(state, useDraw2dCanvas),
     );
   }
 
-  Widget _buildMobileLayout(AutomatonState state) {
+  Widget _buildMobileLayout(AutomatonState state, bool useDraw2dCanvas) {
     return Column(
       children: [
         Padding(
@@ -395,9 +405,15 @@ class _FSAPageState extends ConsumerState<FSAPage> {
         Expanded(
           child: Container(
             margin: const EdgeInsets.all(8),
+// <<<<<<< codex/implement-draw2d-integration-with-webview
             child: _buildCanvasArea(
               state: state,
               isMobile: true,
+// =======
+            child: _buildAutomatonCanvas(
+              state,
+              useDraw2dCanvas: useDraw2dCanvas,
+// >>>>>>> 003-ui-improvement-taskforce
             ),
           ),
         ),
@@ -470,26 +486,26 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     );
   }
 
-  Widget _buildDesktopLayout(AutomatonState state) {
+  Widget _buildDesktopLayout(AutomatonState state, bool useDraw2dCanvas) {
     return Row(
       children: [
         // Left panel - Controls
         Expanded(
           flex: 2,
-          child: Column(
-            children: [
-              _buildAlgorithmPanelForState(state),
-            ],
-          ),
+          child: Column(children: [_buildAlgorithmPanelForState(state)]),
         ),
         const SizedBox(width: 16),
         // Center panel - Canvas
         Expanded(
           flex: 3,
+// <<<<<<< codex/implement-draw2d-integration-with-webview
           child: _buildCanvasArea(
             state: state,
             isMobile: false,
           ),
+// =======
+          child: _buildAutomatonCanvas(state, useDraw2dCanvas: useDraw2dCanvas),
+// >>>>>>> 003-ui-improvement-taskforce
         ),
         const SizedBox(width: 16),
         // Right panel - Simulation
@@ -504,6 +520,32 @@ class _FSAPageState extends ConsumerState<FSAPage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildAutomatonCanvas(
+    AutomatonState state, {
+    required bool useDraw2dCanvas,
+  }) {
+    final automaton = state.currentAutomaton;
+    if (useDraw2dCanvas) {
+      return Draw2dAutomatonCanvas(
+        automaton: automaton,
+        canvasKey: _canvasKey,
+        onAutomatonChanged: (updated) {
+          ref.read(automatonProvider.notifier).updateAutomaton(updated);
+        },
+      );
+    }
+
+    return AutomatonCanvas(
+      automaton: automaton,
+      canvasKey: _canvasKey,
+      onAutomatonChanged: (updated) {
+        ref.read(automatonProvider.notifier).updateAutomaton(updated);
+      },
+      simulationResult: state.simulationResult,
+      showTrace: state.simulationResult != null,
     );
   }
 }

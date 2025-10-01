@@ -2,6 +2,7 @@ import '../models/grammar.dart';
 import '../models/production.dart';
 import '../models/parse_table.dart';
 import '../result.dart';
+import 'grammar_parser.dart';
 
 /// Simple grammar parser that can handle basic CFG parsing
 class SimpleGrammarParser {

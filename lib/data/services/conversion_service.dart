@@ -1,5 +1,6 @@
 import '../../core/models/fsa.dart';
 import '../../core/models/grammar.dart';
+import '../../core/models/pda.dart';
 import '../../core/result.dart';
 import '../../core/algorithms/nfa_to_dfa_converter.dart';
 import '../../core/algorithms/dfa_minimizer.dart';
@@ -7,6 +8,8 @@ import '../../core/algorithms/regex_to_nfa_converter.dart';
 import '../../core/algorithms/fa_to_regex_converter.dart';
 import '../../core/algorithms/grammar_to_pda_converter.dart';
 import '../../core/algorithms/grammar_to_fsa_converter.dart';
+import '../../core/algorithms/fsa_to_grammar_converter.dart';
+import '../../core/algorithms/pda_to_cfg_converter.dart';
 
 /// Service for automaton conversion operations
 class ConversionService {
@@ -193,6 +196,45 @@ class ConversionService {
       return ResultFactory.failure('Error converting grammar to automaton: $e');
     }
   }
+
+  /// Converts a finite automaton to a grammar
+  Result<Grammar> convertFsaToGrammar(ConversionRequest request) {
+    try {
+      if (request.automaton == null) {
+        return ResultFactory.failure('Automaton is required');
+      }
+
+      if (request.conversionType != ConversionType.fsaToGrammar) {
+        return ResultFactory.failure(
+          'Invalid conversion type for automaton to grammar conversion',
+        );
+      }
+
+      final grammar = FSAToGrammarConverter.convert(request.automaton!);
+      return ResultFactory.success(grammar);
+    } catch (e) {
+      return ResultFactory.failure('Error converting automaton to grammar: $e');
+    }
+  }
+
+  /// Converts a PDA to an equivalent CFG
+  Result<PdaToCfgConversion> convertPdaToCfg(ConversionRequest request) {
+    try {
+      if (request.pda == null) {
+        return ResultFactory.failure('PDA is required');
+      }
+
+      if (request.conversionType != ConversionType.pdaToCfg) {
+        return ResultFactory.failure(
+          'Invalid conversion type for PDA to CFG conversion',
+        );
+      }
+
+      return PDAtoCFGConverter.convert(request.pda!);
+    } catch (e) {
+      return ResultFactory.failure('Error converting PDA to grammar: $e');
+    }
+  }
 }
 
 /// Request for conversion operations
@@ -200,12 +242,14 @@ class ConversionRequest {
   final FSA? automaton;
   final Grammar? grammar;
   final String? regex;
+  final PDA? pda;
   final ConversionType conversionType;
 
   const ConversionRequest({
     this.automaton,
     this.grammar,
     this.regex,
+    this.pda,
     required this.conversionType,
   });
 
@@ -272,6 +316,22 @@ class ConversionRequest {
       conversionType: ConversionType.grammarToFsa,
     );
   }
+
+  /// Creates a conversion request for automaton to grammar
+  factory ConversionRequest.fsaToGrammar({required FSA automaton}) {
+    return ConversionRequest(
+      automaton: automaton,
+      conversionType: ConversionType.fsaToGrammar,
+    );
+  }
+
+  /// Creates a conversion request for PDA to CFG
+  factory ConversionRequest.pdaToCfg({required PDA pda}) {
+    return ConversionRequest(
+      pda: pda,
+      conversionType: ConversionType.pdaToCfg,
+    );
+  }
 }
 
 /// Types of conversions supported
@@ -284,6 +344,8 @@ enum ConversionType {
   grammarToPdaStandard,
   grammarToPdaGreibach,
   grammarToFsa,
+  fsaToGrammar,
+  pdaToCfg,
 }
 
 /// Extension on ConversionType for better usability
@@ -306,6 +368,10 @@ extension ConversionTypeExtension on ConversionType {
         return 'Grammar to PDA (Greibach)';
       case ConversionType.grammarToFsa:
         return 'Grammar to FSA';
+      case ConversionType.fsaToGrammar:
+        return 'Automaton to Grammar';
+      case ConversionType.pdaToCfg:
+        return 'PDA to CFG';
     }
   }
 }

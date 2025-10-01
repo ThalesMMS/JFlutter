@@ -1,18 +1,14 @@
-# JFlutter 🚀
+# JFlutter
 
-**A modern, mobile-first Flutter application for learning formal language theory and automata**
-
-> ℹ️ **Referências de implementação**: durante a migração em andamento utilizamos os projetos armazenados em `References/` como fonte de verdade para estruturas de dados e algoritmos. Os repositórios em Dart e o módulo Python `automata-main` servem para validar comportamento enquanto reconstruímos o núcleo do JFlutter.
+A modern, mobile-first Flutter application for learning formal language theory and automata
 
 JFlutter is a complete port of the classic JFLAP educational tool, rebuilt from the ground up with Flutter for modern mobile devices. It provides an interactive, touch-optimized interface for creating, editing, and simulating finite automata, context-free grammars, and other formal language constructs.
 
-## ✅ Current Status
+## Project Status
 
-**🎉 FULLY FUNCTIONAL - READY FOR USE**
+**Status:** Work in Progress
 
-The project has been successfully completed with all core objectives achieved. The application is fully functional on all supported platforms with enhanced performance, comprehensive diagnostics, and robust import/export capabilities.
-
-**Latest Updates** (Phase 2 - Core Objectives):
+Development is ongoing as we continue refining the application and expanding coverage across platforms, tests, and documentation. Recent focus areas from the latest milestone include:
 - ✅ **Performance Optimization** - Canvas optimized for large automata with LOD rendering and viewport culling
 - ✅ **Trace Persistence** - Immutable trace navigation between simulators with unified state management
 - ✅ **Import/Export Validation** - Comprehensive validation for .jff, JSON, and SVG formats
@@ -21,9 +17,9 @@ The project has been successfully completed with all core objectives achieved. T
 - ✅ **Quickstart Verified** - Application successfully builds and runs on macOS with evidence captured
 - ✅ **Documentation Updated** - README and reference deviations documented
 
-## ✨ Key Features
+## Key Features
 
-### 🎯 **Core Functionality**
+### Core Functionality
 - **Interactive Automaton Creation** - Touch-optimized canvas for drawing states and transitions
 - **Real-time Simulation** - Test strings against automata with step-by-step visualization
 - **Algorithm Integration** - 13 core algorithms fully integrated with the UI
@@ -31,7 +27,7 @@ The project has been successfully completed with all core objectives achieved. T
 - **Modern UI/UX** - Material 3 design with dark/light theme support
 - **Responsive Layout** - All screens adapt to different screen sizes
 
-### 🔧 **Implemented Algorithms**
+### Implemented Algorithms
 - **NFA to DFA Conversion** - Convert non-deterministic to deterministic automata
 - **DFA Minimization** - Minimize deterministic finite automata
 - **Regex to NFA** - Convert regular expressions to automata
@@ -42,7 +38,7 @@ The project has been successfully completed with all core objectives achieved. T
 - **PDA Simulation** - Pushdown automata simulation
 - **Turing Machine** - Single-tape Turing machine simulation
 
-### 📱 **Mobile Experience**
+### Mobile Experience
 - **Touch Gestures** - Pinch-to-zoom, pan, tap-to-add states
 - **Responsive Layout** - Adapts to different screen sizes
 - **Collapsible Panels** - Space-efficient mobile interface
@@ -50,21 +46,21 @@ The project has been successfully completed with all core objectives achieved. T
 - **Visual Feedback** - Real-time algorithm execution feedback
 - **Overflow Prevention** - All UI elements handle small screens gracefully
 
-### 🚀 **Performance & Optimization**
+### Performance & Optimization
 - **Level-of-Detail Rendering** - Optimized canvas rendering for large automata
 - **Viewport Culling** - Only renders visible elements for better performance
 - **Trace Visualization** - Enhanced simulation trace rendering with step indicators
 - **Memory Management** - Efficient state management and resource disposal
 - **Responsive Canvas** - Smooth interactions at 60fps on mobile devices
 
-### 🔧 **Enhanced Features**
+### Enhanced Features
 - **Unified Trace Management** - Seamless trace persistence across all simulator types
 - **Comprehensive Diagnostics** - Detailed automaton validation with actionable suggestions
 - **Import/Export Validation** - Robust validation for JFLAP XML, JSON, and SVG formats
 - **Error Handling** - User-friendly error messages with technical diagnostics
 - **Cross-Format Compatibility** - Ensures data integrity across different file formats
 
-### 📚 Examples v1 - Offline Examples Library
+### Examples v1 - Offline Examples Library
 
 **Complete offline educational library** with curated examples for automata theory learning:
 
@@ -93,9 +89,9 @@ The project has been successfully completed with all core objectives achieved. T
 
 Assets are bundled in `jflutter_js/examples/` via `pubspec.yaml`, ensuring offline access per the "Examples v1" contract.
 
-## 🏗️ Architecture
+## Architecture
 
-### **Clean Architecture Implementation**
+### Clean Architecture Implementation
 ```
 ┌─────────────────────────────────────┐
 │        Presentation Layer           │
@@ -109,7 +105,7 @@ Assets are bundled in `jflutter_js/examples/` via `pubspec.yaml`, ensuring offli
 └─────────────────────────────────────┘
 ```
 
-### **Project Structure**
+### Project Structure
 ```
 lib/
 ├── app.dart                        # Root widget and global configuration
@@ -140,7 +136,7 @@ lib/
     └── widgets/                    # Reusable UI components
 ```
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Quickstart Guide
 For a comprehensive hands-on tutorial, see our **[Quickstart Guide](specs/001-projeto-jflutter-refor/quickstart.md)** which covers:
@@ -207,7 +203,7 @@ export JFLUTTER_KEY_PASSWORD="$JFLUTTER_KEY_PASSWORD"
 - ✅ **Web** - Responsive web interface
 - ✅ **Desktop** - Windows, macOS, Linux support
 
-## 📱 How to Use
+## How to Use
 
 ### Creating an Automaton
 1. Open the **FSA** tab
@@ -235,13 +231,13 @@ export JFLUTTER_KEY_PASSWORD="$JFLUTTER_KEY_PASSWORD"
 4. Test strings with the simulation panel
 5. Use algorithms to convert between formats
 
-## 🧪 Testing
+## Testing
 
 ### Test Suite Status
 
 The project has comprehensive test coverage with **264 out of 283 tests passing (93.3%)**.
 
-#### ✅ **Core Algorithm Tests** (100% Passing)
+#### Core Algorithm Tests (100% Passing)
 
 All core algorithm validation tests pass with 100% coverage:
 
@@ -264,7 +260,7 @@ flutter test test/unit/core/                             # 48/48 ✅
 
 **Total Core Algorithm Tests: 242/242 (100%)** ✅
 
-#### ⚠️ **Known Test Failures** (Non-Critical)
+#### Known Test Failures (Non-Critical)
 
 **Import/Export Tests** (12/31 passing, 39%):
 - **JFF (JFLAP) Format Issues** (4 failures):
@@ -291,7 +287,7 @@ flutter test test/unit/core/                             # 48/48 ✅
 
 **Impact Assessment**: These failures are in **edge case file format handling** and **UI test infrastructure**. They do not affect the application's core functionality, algorithm correctness, or user experience.
 
-#### 🚀 **Running Tests**
+#### Running Tests
 
 ```bash
 # Run all tests
@@ -381,7 +377,9 @@ test/widget/presentation/visualizations_test.dart:
 5. **Implement Golden Tests** - Set up golden test infrastructure for visual regression
 6. **Add E2E Tests** - End-to-end user flow testing
 
-## 📚 Reference Implementation Methodology
+## Reference Implementation Methodology
+
+During the ongoing migration we rely on the projects stored in `References/` as the source of truth for algorithms and data structures. The Dart repositories and the Python `automata-main` module provide validation checkpoints while the Flutter core is rebuilt.
 
 ### Validation Approach
 The `References/` directory contains authoritative implementations used as the source of truth for algorithms and data structures during the migration process. Each algorithm modification is cross-validated against these references to ensure correctness and maintainability.
@@ -406,9 +404,9 @@ The `References/` directory contains authoritative implementations used as the s
 - **Compatibility** - Ensure compatibility with reference API changes
 - **Documentation** - Keep reference usage documentation current
 
-## 📊 Project Status
+## Project Overview
 
-### ✅ **Completed Features**
+### Completed Features
 - **Core Algorithms** - 13 algorithms fully implemented and tested
 - **Data Models** - Complete model library with mobile extensions
 - **UI Components** - Modern, responsive interface
@@ -422,7 +420,7 @@ The `References/` directory contains authoritative implementations used as the s
 - **Pumping Lemma Game** - Interactive educational game
 - **Settings Screen** - Comprehensive configuration options
 
-### 🎯 **Phase 2 Objectives (Completed)**
+### Phase 2 Objectives (Completed)
 - **Performance Optimization** - Canvas optimized for large automata with LOD rendering
 - **Trace Persistence** - Unified trace management across all simulator types
 - **Import/Export Validation** - Comprehensive validation for multiple file formats
@@ -430,14 +428,14 @@ The `References/` directory contains authoritative implementations used as the s
 - **Code Quality** - Clean static analysis and standardized formatting
 - **Quickstart Verification** - Application builds and runs successfully on all platforms
 
-### 📋 **Future Enhancements**
+### Future Enhancements
 - **Advanced Visualizations** - More sophisticated algorithm step visualization
 - **Enhanced Export Options** - Additional file format support
 - **Tutorial System** - Guided learning experience
 - **Advanced Grammar Features** - More grammar analysis tools
 - **PDA Canvas** - Pushdown automata visualization improvements
 
-## 🛠️ Development
+## Development
 
 ### Code Quality
 - **Clean Architecture** - Separation of concerns
@@ -462,7 +460,7 @@ The `References/` directory contains authoritative implementations used as the s
 - Document **public APIs**
 - Ensure **responsive design** for all screen sizes
 
-## 📚 Educational Value
+## Educational Value
 
 JFlutter is designed for:
 - **Computer Science Students** - Learning automata theory
@@ -477,7 +475,7 @@ JFlutter is designed for:
 4. **Advanced Topics** - Move to grammars and parsing
 5. **Interactive Games** - Use pumping lemma for deeper understanding
 
-## 🎯 Performance
+## Performance
 
 - **Optimized Rendering** - Custom painters for smooth canvas
 - **Efficient State** - Minimal rebuilds with Riverpod
@@ -485,13 +483,13 @@ JFlutter is designed for:
 - **Mobile Performance** - 60fps on modern devices
 - **Responsive UI** - Smooth adaptation to different screen sizes
 
-## 📄 License
+## License
 
 This project is distributed under a dual license structure:
 
 ### Port to Flutter
 - **License**: Apache License 2.0
-- **Copyright**: 2025 Thales Matheus Mendonça Santos
+- **Copyright**: 2025–present JFlutter contributors (see [Contributors](#community--contributors))
 - **Contact**: thalesmmsradio@gmail.com
 - **File**: [LICENSE.txt](LICENSE.txt)
 
@@ -505,7 +503,7 @@ This project is distributed under a dual license structure:
 - The **original JFLAP algorithms and concepts** remain under the original JFLAP license, which prohibits commercial use
 - This dual structure ensures compliance with the original license while allowing the Flutter port to be freely used and modified
 
-## 🙏 Acknowledgments & References
+## Acknowledgments & References
 
 ### Port Development
 - **Thales Matheus Mendonça Santos** - Complete Flutter port development
@@ -573,6 +571,4 @@ This project is distributed under a dual license structure:
 
 ---
 
-**JFlutter** - Bringing automata theory to your fingertips! 📱✨
-
-*Modern, mobile-first, and educational - the future of formal language learning*
+JFlutter continua evoluindo para tornar o estudo de linguagens formais acessível em dispositivos modernos.

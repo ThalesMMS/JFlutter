@@ -63,7 +63,6 @@
         return;
       }
 
-// <<<<<<< codex/add-draw2d-backed-pda-canvas-widget
       if (currentModelType === 'pda') {
         const metadata = promptForPdaTransition();
         if (!metadata) {
@@ -82,6 +81,15 @@
           isLambdaPop: metadata.isLambdaPop,
           isLambdaPush: metadata.isLambdaPush,
         });
+      } else if (currentModelType === 'tm') {
+        sendMessage('transition.add', {
+          id: `t_${Date.now()}`,
+          fromStateId: sourceData.sourceId,
+          toStateId: targetData.sourceId,
+          readSymbol: '',
+          writeSymbol: '',
+          direction: 'R',
+        });
       } else {
         sendMessage('transition.add', {
           id: `t_${Date.now()}`,
@@ -90,16 +98,6 @@
           label: '',
         });
       }
-// =======
-      sendMessage('transition.add', {
-        id: `t_${Date.now()}`,
-        fromStateId: sourceData.sourceId,
-        toStateId: targetData.sourceId,
-        readSymbol: '',
-        writeSymbol: '',
-        direction: 'R',
-      });
-// >>>>>>> 003-ui-improvement-taskforce
 
       connection.remove();
     });
@@ -178,6 +176,20 @@
       hasOwn(transition, 'isLambdaInput') ||
       hasOwn(transition, 'isLambdaPop') ||
       hasOwn(transition, 'isLambdaPush')
+    );
+  }
+
+  function isTmTransition(transition) {
+    if (currentModelType === 'tm') {
+      return true;
+    }
+    if (!transition) {
+      return false;
+    }
+    return (
+      hasOwn(transition, 'readSymbol') ||
+      hasOwn(transition, 'writeSymbol') ||
+      hasOwn(transition, 'direction')
     );
   }
 
@@ -374,16 +386,15 @@
     }
 
     const isPda = isPdaTransition(transition);
+    const isTm = isTmTransition(transition);
     const labelText = isPda
       ? formatPdaTransitionLabel(transition)
-      : transition.label;
+      : isTm
+        ? formatTransitionLabel(transition)
+        : transition.label;
 
     const label = new draw2d.shape.basic.Label({
-// <<<<<<< codex/add-draw2d-backed-pda-canvas-widget
       text: labelText,
-// =======
-      text: formatTransitionLabel(transition),
-// >>>>>>> 003-ui-improvement-taskforce
       fontColor: '#263238',
       padding: 4,
       bgColor: '#ffffff',
@@ -396,7 +407,6 @@
     );
 
     connection.on('dblclick', function () {
-// <<<<<<< codex/add-draw2d-backed-pda-canvas-widget
       const entry = transitionFigures.get(transition.id);
       if (!entry) {
         return;
@@ -407,7 +417,7 @@
         if (!metadata) {
           return;
         }
-        entry.data = {
+        const updatedData = {
           ...entry.data,
           readSymbol: metadata.readSymbol,
           popSymbol: metadata.popSymbol,
@@ -416,9 +426,11 @@
           isLambdaPop: metadata.isLambdaPop,
           isLambdaPush: metadata.isLambdaPush,
         };
-        const formatted = formatPdaTransitionLabel(entry.data);
-        entry.data.label = formatted;
+        const formatted = formatPdaTransitionLabel(updatedData);
+        updatedData.label = formatted;
+        entry.data = updatedData;
         label.setText(formatted);
+        transitionFigures.set(transition.id, entry);
         sendMessage('transition.label', {
           id: entry.sourceId,
           label: formatted,
@@ -429,69 +441,75 @@
           isLambdaPop: metadata.isLambdaPop,
           isLambdaPush: metadata.isLambdaPush,
         });
-      } else {
-        const currentText = label.getText();
-        const result = window.prompt('Transition label', currentText);
-        if (typeof result === 'string' && result !== currentText) {
-          entry.data.label = result;
-          label.setText(result);
-          sendMessage('transition.label', {
-            id: entry.sourceId,
-            label: result,
-          });
+        return;
+      }
+
+      if (isTmTransition(entry.data)) {
+        const currentRead = entry.data.readSymbol || '';
+        const currentWrite = entry.data.writeSymbol || '';
+        const currentDirection = (entry.data.direction || 'R').toUpperCase();
+
+        const readResult = window.prompt('Read symbol', currentRead);
+        if (readResult === null) {
+          return;
         }
-// =======
-      const entry = transitionFigures.get(transition.id) || {};
-      const currentRead = entry.readSymbol || transition.readSymbol || '';
-      const currentWrite = entry.writeSymbol || transition.writeSymbol || '';
-      const currentDirection = (entry.direction || transition.direction || 'R').toUpperCase();
 
-      const readResult = window.prompt('Read symbol', currentRead);
-      if (readResult === null) {
+        const writeResult = window.prompt('Write symbol', currentWrite);
+        if (writeResult === null) {
+          return;
+        }
+
+        const directionResult = window.prompt(
+          'Direction (L, R, S)',
+          currentDirection,
+        );
+        if (directionResult === null) {
+          return;
+        }
+
+        const normalisedDirection = (directionResult || 'R')
+          .trim()
+          .toUpperCase();
+
+        const updatedData = {
+          ...entry.data,
+          readSymbol: readResult,
+          writeSymbol: writeResult,
+          direction: normalisedDirection,
+        };
+        const formatted = formatTransitionLabel(updatedData);
+        updatedData.label = formatted;
+        entry.data = updatedData;
+        label.setText(formatted);
+        transitionFigures.set(transition.id, entry);
+
+        sendMessage('transition.label', {
+          id: entry.sourceId,
+          readSymbol: readResult,
+          writeSymbol: writeResult,
+          direction: normalisedDirection,
+          label: formatted,
+        });
         return;
       }
 
-      const writeResult = window.prompt('Write symbol', currentWrite);
-      if (writeResult === null) {
+      const currentText = entry.data && typeof entry.data.label === 'string'
+        ? entry.data.label
+        : label.getText();
+      const result = window.prompt('Transition label', currentText);
+      if (typeof result !== 'string' || result === currentText) {
         return;
       }
 
-      const directionResult = window.prompt(
-        'Direction (L, R, S)',
-        currentDirection,
-      );
-      if (directionResult === null) {
-        return;
-// >>>>>>> 003-ui-improvement-taskforce
-      }
-
-      const normalisedDirection = (directionResult || 'R').trim().toUpperCase();
-
-      const updatedData = {
-        ...entry,
-        readSymbol: readResult,
-        writeSymbol: writeResult,
-        direction: normalisedDirection,
+      entry.data = {
+        ...entry.data,
+        label: result,
       };
-
-      label.setText(formatTransitionLabel(updatedData));
-      transitionFigures.set(transition.id, {
-        ...updatedData,
-        connection: connection,
-        label: label,
-        sourceId: transition.sourceId,
-        baseStyle: entry.baseStyle || {
-          stroke: baseStroke,
-          color: baseColor,
-        },
-      });
-
+      label.setText(result);
+      transitionFigures.set(transition.id, entry);
       sendMessage('transition.label', {
-        id: transition.sourceId,
-        readSymbol: readResult,
-        writeSymbol: writeResult,
-        direction: normalisedDirection,
-        label: label.getText(),
+        id: entry.sourceId,
+        label: result,
       });
     });
 
@@ -523,6 +541,19 @@
       data.isLambdaPush = hasOwn(transition, 'isLambdaPush')
         ? Boolean(transition.isLambdaPush)
         : false;
+    } else if (isTm) {
+      data.readSymbol = hasOwn(transition, 'readSymbol')
+        ? transition.readSymbol || ''
+        : '';
+      data.writeSymbol = hasOwn(transition, 'writeSymbol')
+        ? transition.writeSymbol || ''
+        : '';
+      data.direction = hasOwn(transition, 'direction')
+        ? String(transition.direction || 'R').toUpperCase()
+        : 'R';
+      if (hasOwn(transition, 'tapeNumber')) {
+        data.tapeNumber = transition.tapeNumber;
+      }
     }
 
     transitionFigures.set(transition.id, {
@@ -533,13 +564,7 @@
         stroke: baseStroke,
         color: baseColor,
       },
-// <<<<<<< codex/add-draw2d-backed-pda-canvas-widget
       data: data,
-// =======
-      readSymbol: transition.readSymbol || '',
-      writeSymbol: transition.writeSymbol || '',
-      direction: (transition.direction || 'R').toUpperCase(),
-// >>>>>>> 003-ui-improvement-taskforce
     });
   }
 

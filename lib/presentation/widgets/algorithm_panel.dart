@@ -10,7 +10,14 @@ class AlgorithmPanel extends StatefulWidget {
   final VoidCallback? onClear;
   final Function(String)? onRegexToNfa;
   final VoidCallback? onFaToRegex;
+  final VoidCallback? onRemoveLambda;
   final VoidCallback? onCompleteDfa;
+  final VoidCallback? onComplementDfa;
+  final Future<void> Function(FSA other)? onUnionDfa;
+  final Future<void> Function(FSA other)? onIntersectionDfa;
+  final Future<void> Function(FSA other)? onDifferenceDfa;
+  final VoidCallback? onPrefixClosure;
+  final VoidCallback? onSuffixClosure;
   final VoidCallback? onFsaToGrammar;
   final VoidCallback? onAutoLayout;
   final Future<void> Function(FSA other)? onCompareEquivalence;
@@ -24,7 +31,14 @@ class AlgorithmPanel extends StatefulWidget {
     this.onClear,
     this.onRegexToNfa,
     this.onFaToRegex,
+    this.onRemoveLambda,
     this.onCompleteDfa,
+    this.onComplementDfa,
+    this.onUnionDfa,
+    this.onIntersectionDfa,
+    this.onDifferenceDfa,
+    this.onPrefixClosure,
+    this.onSuffixClosure,
     this.onFsaToGrammar,
     this.onAutoLayout,
     this.onCompareEquivalence,
@@ -45,6 +59,23 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
   String? _executionStatus;
   List<AlgorithmStep> _algorithmSteps = [];
   int _currentStepIndex = 0;
+
+  void _showSnack(String message, {bool isError = false}) {
+    final theme = Theme.of(context);
+    final snackBar = SnackBar(
+      content: Text(
+        message,
+        style: isError
+            ? TextStyle(color: theme.colorScheme.onErrorContainer)
+            : null,
+      ),
+      backgroundColor:
+          isError ? theme.colorScheme.errorContainer : null,
+      behavior: SnackBarBehavior.floating,
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
 
   @override
   void dispose() {
@@ -87,6 +118,18 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
 
               const SizedBox(height: 12),
 
+              // Remove lambda transitions
+              _buildAlgorithmButton(
+                context,
+                title: 'Remove λ-transitions',
+                description: 'Eliminate epsilon transitions from the automaton',
+                icon: Icons.highlight_off,
+                onPressed: () =>
+                    _executeAlgorithm('Remove λ-transitions', widget.onRemoveLambda),
+              ),
+
+              const SizedBox(height: 12),
+
               // DFA minimization
               _buildAlgorithmButton(
                 context,
@@ -107,6 +150,116 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                 icon: Icons.add_circle_outline,
                 onPressed: () =>
                     _executeAlgorithm('Complete DFA', widget.onCompleteDfa),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Complement DFA
+              _buildAlgorithmButton(
+                context,
+                title: 'Complement DFA',
+                description: 'Flip accepting states after completion',
+                icon: Icons.flip,
+                onPressed: () =>
+                    _executeAlgorithm('Complement DFA', widget.onComplementDfa),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Union of DFAs
+              _buildAlgorithmButton(
+                context,
+                title: 'Union of DFAs',
+                description: 'Combine this DFA with another automaton from file',
+                icon: Icons.merge_type,
+                onPressed: () => _runBinaryOperation(
+                  algorithmName: 'Union of DFAs',
+                  callback: widget.onUnionDfa,
+                  dialogTitle: 'Select DFA for union',
+                  steps: _buildBinaryOperationSteps(
+                    actionTitle: 'Compute Union',
+                    actionDescription:
+                        'Create the product automaton accepting when either DFA accepts',
+                  ),
+                  executingStatus: 'Building union automaton...',
+                  successStatus: 'Union complete',
+                  missingCallbackMessage:
+                      'Load a DFA before computing the union.',
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Intersection of DFAs
+              _buildAlgorithmButton(
+                context,
+                title: 'Intersection of DFAs',
+                description:
+                    'Intersect this DFA with another automaton from file',
+                icon: Icons.call_merge,
+                onPressed: () => _runBinaryOperation(
+                  algorithmName: 'Intersection of DFAs',
+                  callback: widget.onIntersectionDfa,
+                  dialogTitle: 'Select DFA for intersection',
+                  steps: _buildBinaryOperationSteps(
+                    actionTitle: 'Compute Intersection',
+                    actionDescription:
+                        'Construct the product automaton accepting when both DFAs accept',
+                  ),
+                  executingStatus: 'Building intersection automaton...',
+                  successStatus: 'Intersection complete',
+                  missingCallbackMessage:
+                      'Load a DFA before computing the intersection.',
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Difference of DFAs
+              _buildAlgorithmButton(
+                context,
+                title: 'Difference of DFAs',
+                description:
+                    'Compute the language difference with another DFA from file',
+                icon: Icons.call_split,
+                onPressed: () => _runBinaryOperation(
+                  algorithmName: 'Difference of DFAs',
+                  callback: widget.onDifferenceDfa,
+                  dialogTitle: 'Select DFA for difference',
+                  steps: _buildBinaryOperationSteps(
+                    actionTitle: 'Compute Difference',
+                    actionDescription:
+                        'Build the product automaton accepting strings in A but not in B',
+                  ),
+                  executingStatus: 'Building difference automaton...',
+                  successStatus: 'Difference complete',
+                  missingCallbackMessage:
+                      'Load a DFA before computing the difference.',
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Prefix closure
+              _buildAlgorithmButton(
+                context,
+                title: 'Prefix Closure',
+                description: 'Accept all prefixes of the DFA language',
+                icon: Icons.vertical_align_top,
+                onPressed: () =>
+                    _executeAlgorithm('Prefix Closure', widget.onPrefixClosure),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Suffix closure
+              _buildAlgorithmButton(
+                context,
+                title: 'Suffix Closure',
+                description: 'Accept all suffixes of the DFA language',
+                icon: Icons.vertical_align_bottom,
+                onPressed: () =>
+                    _executeAlgorithm('Suffix Closure', widget.onSuffixClosure),
               ),
 
               const SizedBox(height: 12),
@@ -495,18 +648,46 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
     );
   }
 
-  Future<void> _onCompareEquivalencePressed() async {
-    if (widget.onCompareEquivalence == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Load a DFA before comparing equivalence.'),
-        ),
+  List<AlgorithmStep> _buildBinaryOperationSteps({
+    required String actionTitle,
+    required String actionDescription,
+  }) {
+    return [
+      AlgorithmStep(
+        title: 'Load Automaton',
+        description: 'Parse the selected JFLAP file',
+      ),
+      AlgorithmStep(
+        title: 'Normalise DFAs',
+        description: 'Align alphabets and ensure determinism',
+      ),
+      AlgorithmStep(
+        title: actionTitle,
+        description: actionDescription,
+      ),
+    ];
+  }
+
+  Future<void> _runBinaryOperation({
+    required String algorithmName,
+    required Future<void> Function(FSA other)? callback,
+    required String dialogTitle,
+    required List<AlgorithmStep> steps,
+    required String executingStatus,
+    required String successStatus,
+    String? missingCallbackMessage,
+  }) async {
+    if (callback == null) {
+      _showSnack(
+        missingCallbackMessage ??
+            'Load a DFA before executing $algorithmName.',
+        isError: true,
       );
       return;
     }
 
     final selection = await FilePicker.platform.pickFiles(
-      dialogTitle: 'Select DFA to compare',
+      dialogTitle: dialogTitle,
       type: FileType.custom,
       allowedExtensions: const ['jff'],
     );
@@ -517,24 +698,11 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
 
     setState(() {
       _isExecuting = true;
-      _currentAlgorithm = 'Compare Equivalence';
+      _currentAlgorithm = algorithmName;
       _executionStatus = 'Loading automaton...';
-      _executionProgress = 0.25;
-      _algorithmSteps = [
-        AlgorithmStep(
-          title: 'Load Automaton',
-          description: 'Parse the selected JFLAP file',
-        ),
-        AlgorithmStep(
-          title: 'Normalize DFAs',
-          description: 'Prepare automata for comparison',
-        ),
-        AlgorithmStep(
-          title: 'Compare Languages',
-          description: 'Search for distinguishing strings',
-        ),
-      ];
-      _currentStepIndex = 0;
+      _executionProgress = 0.0;
+      _algorithmSteps = steps;
+      _currentStepIndex = steps.isEmpty ? 0 : 0;
     });
 
     final loadResult = await _fileService.loadAutomatonFromJFLAP(
@@ -548,39 +716,66 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
         _isExecuting = false;
         _executionStatus = 'Failed to load automaton';
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(loadResult.error ?? 'Unable to load automaton.'),
-        ),
-      );
+      _showSnack(loadResult.error ?? 'Unable to load automaton.', isError: true);
       return;
     }
 
-    setState(() {
-      _currentStepIndex = 1;
-      _executionProgress = 0.6;
-      _executionStatus = 'Comparing automata...';
-    });
+    if (steps.length > 1) {
+      setState(() {
+        _currentStepIndex = 1;
+        _executionProgress = 1 / steps.length;
+        _executionStatus = executingStatus;
+      });
+    } else {
+      setState(() {
+        _executionProgress = 0.5;
+        _executionStatus = executingStatus;
+      });
+    }
 
     try {
-      await widget.onCompareEquivalence!(loadResult.data!);
+      await callback(loadResult.data!);
       if (!mounted) return;
       setState(() {
         _isExecuting = false;
-        _executionStatus = 'Comparison complete';
+        _executionStatus = successStatus;
         _executionProgress = 1.0;
-        _currentStepIndex = _algorithmSteps.length - 1;
+        _currentStepIndex = steps.isEmpty ? 0 : steps.length - 1;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _isExecuting = false;
-        _executionStatus = 'Comparison failed';
+        _executionStatus = '$algorithmName failed';
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Comparison failed: $e')));
+      _showSnack('$algorithmName failed: $e', isError: true);
     }
+  }
+
+  Future<void> _onCompareEquivalencePressed() async {
+    await _runBinaryOperation(
+      algorithmName: 'Compare Equivalence',
+      callback: widget.onCompareEquivalence,
+      dialogTitle: 'Select DFA to compare',
+      steps: [
+        AlgorithmStep(
+          title: 'Load Automaton',
+          description: 'Parse the selected JFLAP file',
+        ),
+        AlgorithmStep(
+          title: 'Normalize DFAs',
+          description: 'Prepare automata for comparison',
+        ),
+        AlgorithmStep(
+          title: 'Compare Languages',
+          description: 'Search for distinguishing strings',
+        ),
+      ],
+      executingStatus: 'Comparing automata...',
+      successStatus: 'Comparison complete',
+      missingCallbackMessage:
+          'Load a DFA before comparing equivalence.',
+    );
   }
 
   Widget _buildEquivalenceResult(BuildContext context) {
@@ -704,6 +899,90 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
             description: 'Redirect transitions to merged states',
           ),
           AlgorithmStep(title: 'Finalize', description: 'Create minimized DFA'),
+        ]);
+        break;
+      case 'Remove λ-transitions':
+        steps.addAll([
+          AlgorithmStep(
+            title: 'Detect λ-transitions',
+            description: 'Identify all epsilon transitions and their sources',
+          ),
+          AlgorithmStep(
+            title: 'Propagate Symbols',
+            description: 'Distribute incoming symbols over λ-reachable states',
+          ),
+          AlgorithmStep(
+            title: 'Rebuild Transitions',
+            description: 'Create direct transitions without λ moves',
+          ),
+          AlgorithmStep(
+            title: 'Cleanup',
+            description: 'Remove unreachable states and duplicate transitions',
+          ),
+        ]);
+        break;
+      case 'Complete DFA':
+        steps.addAll([
+          AlgorithmStep(
+            title: 'Inspect Alphabet',
+            description: 'Verify coverage of every symbol from each state',
+          ),
+          AlgorithmStep(
+            title: 'Add Trap State',
+            description: 'Create a sink for missing transitions',
+          ),
+          AlgorithmStep(
+            title: 'Connect Missing Arcs',
+            description: 'Redirect incomplete transitions to the trap state',
+          ),
+        ]);
+        break;
+      case 'Complement DFA':
+        steps.addAll([
+          AlgorithmStep(
+            title: 'Validate Determinism',
+            description: 'Ensure the automaton is a proper DFA',
+          ),
+          AlgorithmStep(
+            title: 'Complete Automaton',
+            description: 'Add missing transitions using a trap state',
+          ),
+          AlgorithmStep(
+            title: 'Flip Accepting States',
+            description: 'Toggle which states are accepting',
+          ),
+        ]);
+        break;
+      case 'Prefix Closure':
+        steps.addAll([
+          AlgorithmStep(
+            title: 'Validate Determinism',
+            description: 'Confirm the DFA has no nondeterminism or λ moves',
+          ),
+          AlgorithmStep(
+            title: 'Complete Automaton',
+            description: 'Ensure every symbol has an outgoing transition',
+          ),
+          AlgorithmStep(
+            title: 'Mark Prefix States',
+            description: 'Identify states that can reach an accepting state',
+          ),
+        ]);
+        break;
+      case 'Suffix Closure':
+        steps.addAll([
+          AlgorithmStep(
+            title: 'Validate Determinism',
+            description: 'Confirm determinism and absence of λ transitions',
+          ),
+          AlgorithmStep(
+            title: 'Expand Initial Access',
+            description: 'Add ε-links to states reachable from the initial state',
+          ),
+          AlgorithmStep(
+            title: 'Determinize Result',
+            description: 'Convert the resulting NFA back into a DFA',
+          ),
         ]);
         break;
       case 'FA to Regex':

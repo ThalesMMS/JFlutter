@@ -4,6 +4,7 @@ import 'package:vector_math/vector_math_64.dart' hide Colors;
 import '../../core/models/fsa.dart';
 import '../../core/models/state.dart' as automaton_state;
 import '../../core/models/fsa_transition.dart';
+import '../../core/models/transition.dart';
 import '../../core/models/simulation_result.dart';
 import '../../core/models/simulation_step.dart';
 import 'touch_gesture_handler.dart';
@@ -42,6 +43,16 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
   automaton_state.State? _transitionStart;
   Offset? _transitionPreviewPosition;
   final FrameThrottler _pointerThrottler = FrameThrottler();
+
+  CanvasInteractionMode get _interactionMode {
+    if (_isAddingTransition) {
+      return CanvasInteractionMode.addTransition;
+    }
+    if (_isAddingState) {
+      return CanvasInteractionMode.addState;
+    }
+    return CanvasInteractionMode.none;
+  }
 
   @override
   void initState() {
@@ -111,6 +122,7 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
       _isAddingTransition = true;
       _isAddingState = false;
       _selectedState = null;
+      _transitionStart = null;
       _transitionPreviewPosition = null;
     });
   }
@@ -129,6 +141,30 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
       _isAddingState = false;
     });
 
+    _notifyAutomatonChanged();
+  }
+
+  Future<void> _addTransitionFromHandler(Transition transition) async {
+    final symbolInput = await _showSymbolDialog();
+    if (symbolInput == null) {
+      return;
+    }
+
+    final newTransition = FSATransition(
+      id: 't${_transitions.length + 1}',
+      fromState: transition.fromState,
+      toState: transition.toState,
+      label: symbolInput.label,
+      inputSymbols: symbolInput.inputSymbols,
+      lambdaSymbol: symbolInput.lambdaSymbol,
+    );
+
+    setState(() {
+      _transitions.add(newTransition);
+      _isAddingTransition = false;
+      _transitionStart = null;
+      _transitionPreviewPosition = null;
+    });
     _notifyAutomatonChanged();
   }
 
@@ -167,6 +203,52 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
       setState(() {
         _transitionPreviewPosition = position;
       });
+    });
+  }
+
+  void _handleTransitionPreview(TransitionDragPreview? preview) {
+    if (preview == null) {
+      if (_transitionStart != null || _transitionPreviewPosition != null) {
+        setState(() {
+          _transitionStart = null;
+          _transitionPreviewPosition = null;
+        });
+      }
+      return;
+    }
+
+    if (_transitionStart != preview.fromState) {
+      setState(() {
+        _transitionStart = preview.fromState;
+        _transitionPreviewPosition = preview.currentPosition;
+      });
+      return;
+    }
+
+    if (_transitionPreviewPosition == preview.currentPosition) {
+      return;
+    }
+
+    _pointerThrottler.schedule(() {
+      if (!mounted) return;
+      setState(() {
+        _transitionPreviewPosition = preview.currentPosition;
+      });
+    });
+  }
+
+  void _handleInteractionModeHandled() {
+    if (!_isAddingState && !_isAddingTransition &&
+        _transitionStart == null &&
+        _transitionPreviewPosition == null) {
+      return;
+    }
+
+    setState(() {
+      _isAddingState = false;
+      _isAddingTransition = false;
+      _transitionStart = null;
+      _transitionPreviewPosition = null;
     });
   }
 
@@ -291,10 +373,7 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
               _addState(position);
             },
             onTransitionAdded: (transition) {
-              setState(() {
-                _transitions.add(transition);
-              });
-              _notifyAutomatonChanged();
+              _addTransitionFromHandler(transition);
             },
             onStateEdited: (state) {
               _editState(state);
@@ -320,6 +399,9 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
             onTransitionEdited: (transition) {
               _editTransition(transition);
             },
+            interactionMode: _interactionMode,
+            onTransitionPreview: _handleTransitionPreview,
+            onInteractionModeHandled: _handleInteractionModeHandled,
             child: MouseRegion(
               onExit: (_) {
                 _updateTransitionPreview(null);
@@ -343,6 +425,7 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
                     simulationResult: widget.simulationResult,
                     currentStepIndex: widget.currentStepIndex,
                     showTrace: widget.showTrace,
+                    surfaceColor: Theme.of(context).colorScheme.surface,
                   ),
                   size: Size.infinite,
                 ),
@@ -445,6 +528,7 @@ class AutomatonPainter extends CustomPainter {
   final SimulationResult? simulationResult;
   final int? currentStepIndex;
   final bool showTrace;
+  final Color surfaceColor;
   final Set<String> _nondeterministicTransitionIds;
   final Set<String> _epsilonTransitionIds;
   final Set<String> _nondeterministicStateIds;
@@ -461,6 +545,7 @@ class AutomatonPainter extends CustomPainter {
     this.simulationResult,
     this.currentStepIndex,
     this.showTrace = false,
+    required this.surfaceColor,
   }) : _nondeterministicTransitionIds = <String>{},
        _epsilonTransitionIds = transitions
            .where((t) => t.isEpsilonTransition)
@@ -595,19 +680,23 @@ class AutomatonPainter extends CustomPainter {
     final fillPaint = Paint()..style = PaintingStyle.fill;
     final strokePaint = Paint()..style = PaintingStyle.stroke;
 
+    // Draw a solid background before applying highlights
+    fillPaint.color = surfaceColor;
+    canvas.drawCircle(stateCenter, radius, fillPaint);
+
     // Draw background highlights (batch similar fills)
     if (isNondeterministic) {
-      fillPaint.color = Colors.deepOrange.withValues(alpha: 0.15);
+      fillPaint.color = Colors.deepOrange.withOpacity(0.15);
       canvas.drawCircle(stateCenter, radius, fillPaint);
     }
 
     if (isVisited) {
-      fillPaint.color = Colors.green.withValues(alpha: 0.2);
+      fillPaint.color = Colors.green.withOpacity(0.2);
       canvas.drawCircle(stateCenter, radius, fillPaint);
     }
 
     if (isCurrent) {
-      fillPaint.color = Colors.blue.withValues(alpha: 0.3);
+      fillPaint.color = Colors.blue.withOpacity(0.3);
       canvas.drawCircle(stateCenter, radius, fillPaint);
     }
 
@@ -1011,7 +1100,8 @@ class AutomatonPainter extends CustomPainter {
         oldDelegate.transitionPreviewPosition != transitionPreviewPosition ||
         oldDelegate.simulationResult != simulationResult ||
         oldDelegate.currentStepIndex != currentStepIndex ||
-        oldDelegate.showTrace != showTrace;
+        oldDelegate.showTrace != showTrace ||
+        oldDelegate.surfaceColor != surfaceColor;
   }
 
   /// Get the level of detail based on the number of elements

@@ -265,6 +265,38 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     }
   }
 
+  /// Returns the current automaton as a domain entity when available.
+  AutomatonEntity? get currentAutomatonEntity {
+    final current = state.currentAutomaton;
+    if (current == null) return null;
+    return _convertFsaToEntity(current);
+  }
+
+  /// Converts the provided FSA to its [AutomatonEntity] representation.
+  AutomatonEntity convertFsaToEntity(FSA automaton) {
+    return _convertFsaToEntity(automaton);
+  }
+
+  /// Converts the provided [AutomatonEntity] back to an [FSA].
+  FSA convertEntityToFsa(AutomatonEntity entity) {
+    return _convertEntityToFsa(entity);
+  }
+
+  /// Replaces the current automaton with the one represented by [entity].
+  void replaceCurrentAutomaton(AutomatonEntity entity) {
+    final updated = _convertEntityToFsa(entity);
+    state = state.copyWith(
+      currentAutomaton: updated,
+      simulationResult: null,
+      regexResult: null,
+      grammarResult: null,
+      equivalenceResult: null,
+      equivalenceDetails: null,
+      error: null,
+      isLoading: false,
+    );
+  }
+
   /// Converts regex to NFA
   Future<void> convertRegexToNfa(String regex) async {
     state = state.copyWith(

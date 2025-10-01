@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/algorithms/grammar_analyzer.dart';
 import '../../core/models/grammar.dart';
+import '../../core/models/pda.dart';
 import '../../core/result.dart';
 import '../providers/automaton_provider.dart';
 import '../providers/grammar_provider.dart';
 import '../providers/home_navigation_provider.dart';
+import '../providers/pda_editor_provider.dart';
 
 /// Panel for grammar analysis algorithms
 class GrammarAlgorithmPanel extends ConsumerStatefulWidget {
@@ -116,11 +118,10 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
     BuildContext context,
     GrammarState grammarState,
   ) {
-    final isDisabled =
-        grammarState.isConverting || grammarState.productions.isEmpty;
-    final buttonLabel = grammarState.isConverting
-        ? 'Converting...'
-        : 'Convert Right-Linear Grammar to FSA';
+    final hasProductions = grammarState.productions.isNotEmpty;
+    final isBusy = grammarState.isConverting;
+    final isDisabled = isBusy || !hasProductions;
+    final activeConversion = grammarState.activeConversion;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -132,21 +133,50 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: isDisabled ? null : _convertToAutomaton,
-            icon: grammarState.isConverting
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.sync_alt),
-            label: Text(buttonLabel),
-          ),
+        _buildConversionButton(
+          context,
+          label: 'Convert Right-Linear Grammar to FSA',
+          processingLabel: 'Converting to FSA...',
+          icon: Icons.sync_alt,
+          isProcessing: isBusy &&
+              activeConversion == GrammarConversionType.grammarToFsa,
+          isDisabled: isDisabled,
+          onPressed: _convertToAutomaton,
         ),
-        if (grammarState.productions.isEmpty)
+        const SizedBox(height: 12),
+        _buildConversionButton(
+          context,
+          label: 'Convert Grammar to PDA (General)',
+          processingLabel: 'Converting to PDA...',
+          icon: Icons.auto_fix_high,
+          isProcessing: isBusy &&
+              activeConversion == GrammarConversionType.grammarToPda,
+          isDisabled: isDisabled,
+          onPressed: _convertToPdaGeneral,
+        ),
+        const SizedBox(height: 12),
+        _buildConversionButton(
+          context,
+          label: 'Convert Grammar to PDA (Standard)',
+          processingLabel: 'Converting (Standard)...',
+          icon: Icons.layers,
+          isProcessing: isBusy &&
+              activeConversion == GrammarConversionType.grammarToPdaStandard,
+          isDisabled: isDisabled,
+          onPressed: _convertToPdaStandard,
+        ),
+        const SizedBox(height: 12),
+        _buildConversionButton(
+          context,
+          label: 'Convert Grammar to PDA (Greibach)',
+          processingLabel: 'Converting (Greibach)...',
+          icon: Icons.stacked_bar_chart,
+          isProcessing: isBusy &&
+              activeConversion == GrammarConversionType.grammarToPdaGreibach,
+          isDisabled: isDisabled,
+          onPressed: _convertToPdaGreibach,
+        ),
+        if (!hasProductions)
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: Text(
@@ -271,6 +301,91 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
       );
     } else {
       final message = result.error ?? 'Failed to convert grammar to automaton.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
+  }
+
+  Widget _buildConversionButton(
+    BuildContext context, {
+    required String label,
+    required String processingLabel,
+    required IconData icon,
+    required bool isProcessing,
+    required bool isDisabled,
+    required Future<void> Function() onPressed,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: isDisabled
+            ? null
+            : () async {
+                await onPressed();
+              },
+        icon: isProcessing
+            ? const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Icon(icon),
+        label: Text(isProcessing ? processingLabel : label),
+      ),
+    );
+  }
+
+  Future<void> _convertToPdaGeneral() {
+    return _handlePdaConversion(
+      convert: () => ref.read(grammarProvider.notifier).convertToPda(),
+      successMessage:
+          'Grammar converted to PDA (general). Switched to PDA workspace.',
+    );
+  }
+
+  Future<void> _convertToPdaStandard() {
+    return _handlePdaConversion(
+      convert: () =>
+          ref.read(grammarProvider.notifier).convertToPdaStandard(),
+      successMessage:
+          'Grammar converted to PDA (standard). Switched to PDA workspace.',
+    );
+  }
+
+  Future<void> _convertToPdaGreibach() {
+    return _handlePdaConversion(
+      convert: () =>
+          ref.read(grammarProvider.notifier).convertToPdaGreibach(),
+      successMessage:
+          'Grammar converted to PDA (Greibach). Switched to PDA workspace.',
+    );
+  }
+
+  Future<void> _handlePdaConversion({
+    required Future<Result<PDA>> Function() convert,
+    required String successMessage,
+  }) async {
+    final result = await convert();
+
+    if (!mounted) return;
+
+    if (result.isSuccess) {
+      final pda = result.data!;
+      ref.read(pdaEditorProvider.notifier).setPda(pda);
+      ref.read(homeNavigationProvider.notifier).goToPda();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(successMessage),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } else {
+      final message = result.error ?? 'Failed to convert grammar to PDA.';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),

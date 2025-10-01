@@ -6,6 +6,67 @@ import '../../core/models/state.dart' as automaton_state;
 import '../../core/models/transition.dart';
 import 'transition_geometry.dart';
 
+/// Interaction modes supported by [TouchGestureHandler].
+enum CanvasInteractionMode { none, addState, addTransition }
+
+/// Minimal information about a transition drag used for preview rendering.
+class TransitionDragPreview {
+  final automaton_state.State fromState;
+  final Offset currentPosition;
+
+  const TransitionDragPreview({
+    required this.fromState,
+    required this.currentPosition,
+  });
+}
+
+/// Lightweight transition representation emitted when a connection is created.
+class TransitionLink extends Transition {
+  TransitionLink({
+    super.id = '__link__',
+    required super.fromState,
+    required super.toState,
+    super.label = '',
+    super.controlPoint,
+    super.type,
+  });
+
+  @override
+  TransitionLink copyWith({
+    String? id,
+    automaton_state.State? fromState,
+    automaton_state.State? toState,
+    String? label,
+    Vector2? controlPoint,
+    TransitionType? type,
+  }) {
+    return TransitionLink(
+      id: id ?? this.id,
+      fromState: fromState ?? this.fromState,
+      toState: toState ?? this.toState,
+      label: label ?? this.label,
+      controlPoint: controlPoint ?? this.controlPoint,
+      type: type ?? this.type,
+    );
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'fromState': fromState.toJson(),
+      'toState': toState.toJson(),
+      'label': label,
+      'controlPoint': {
+        'x': controlPoint.x,
+        'y': controlPoint.y,
+      },
+      'type': type.name,
+      'transitionType': 'link',
+    };
+  }
+}
+
 /// Comprehensive touch gesture handler for mobile automaton editing
 class TouchGestureHandler<T extends Transition> extends StatefulWidget {
   final List<automaton_state.State> states;
@@ -14,7 +75,7 @@ class TouchGestureHandler<T extends Transition> extends StatefulWidget {
   final ValueChanged<automaton_state.State?> onStateSelected;
   final ValueChanged<automaton_state.State> onStateMoved;
   final ValueChanged<Offset> onStateAdded;
-  final ValueChanged<T> onTransitionAdded;
+  final ValueChanged<Transition> onTransitionAdded;
   final ValueChanged<automaton_state.State> onStateEdited;
   final ValueChanged<automaton_state.State> onStateDeleted;
   final ValueChanged<T> onTransitionDeleted;
@@ -23,6 +84,9 @@ class TouchGestureHandler<T extends Transition> extends StatefulWidget {
   final double stateRadius;
   final double selfLoopBaseRadius;
   final double selfLoopSpacing;
+  final CanvasInteractionMode interactionMode;
+  final ValueChanged<TransitionDragPreview?>? onTransitionPreview;
+  final VoidCallback? onInteractionModeHandled;
 
   const TouchGestureHandler({
     super.key,
@@ -41,6 +105,9 @@ class TouchGestureHandler<T extends Transition> extends StatefulWidget {
     this.stateRadius = 30,
     this.selfLoopBaseRadius = 40,
     this.selfLoopSpacing = 12,
+    this.interactionMode = CanvasInteractionMode.none,
+    this.onTransitionPreview,
+    this.onInteractionModeHandled,
   });
 
   @override
@@ -59,10 +126,14 @@ class _TouchGestureHandlerState<T extends Transition>
   Offset _panOffset = Offset.zero;
   Offset _initialPanOffset = Offset.zero;
   bool _isPanning = false;
+  automaton_state.State? _transitionStartState;
+  Offset? _transitionDragPosition;
 
   // Long press handling
   Timer? _longPressTimer;
   Offset? _longPressPosition;
+  bool _longPressCanceled = false;
+  static const double _dragCancelThreshold = 12.0;
 
   // Double tap handling
   DateTime? _lastTapTime;
@@ -76,11 +147,27 @@ class _TouchGestureHandlerState<T extends Transition>
   Offset? _contextMenuPosition;
   automaton_state.State? _contextMenuState;
   T? _contextMenuTransition;
+  final GlobalKey _contextMenuKey = GlobalKey();
+
+  bool get _isAddStateMode =>
+      widget.interactionMode == CanvasInteractionMode.addState;
+
+  bool get _isAddTransitionMode =>
+      widget.interactionMode == CanvasInteractionMode.addTransition;
 
   @override
   void dispose() {
     _longPressTimer?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant TouchGestureHandler<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.interactionMode != widget.interactionMode &&
+        widget.interactionMode != CanvasInteractionMode.addTransition) {
+      _clearTransitionPreview();
+    }
   }
 
   /// Converts a local position (affected by current pan/zoom) to canvas coordinates
@@ -95,7 +182,30 @@ class _TouchGestureHandlerState<T extends Transition>
   /// Handles tap gestures
   void _handleTap(TapDownDetails details) {
     final position = details.localPosition;
+    if (_showContextMenu && !_isPointInsideContextMenu(position)) {
+      _closeContextMenu();
+      return;
+    }
+
     final canvasPosition = _toCanvasCoordinates(position);
+    final state = _findStateAt(canvasPosition);
+    final transition = _findTransitionAt(canvasPosition);
+
+    if (_isAddStateMode) {
+      if (state == null && transition == null) {
+        widget.onStateAdded(canvasPosition);
+        widget.onInteractionModeHandled?.call();
+      }
+      return;
+    }
+
+    if (_isAddTransitionMode) {
+      if (state == null) {
+        _clearTransitionPreview();
+      }
+      return;
+    }
+
     final now = DateTime.now();
 
     // Check for double tap
@@ -109,10 +219,6 @@ class _TouchGestureHandlerState<T extends Transition>
 
     _lastTapTime = now;
     _lastTapPosition = position;
-
-    // Find state or transition at tap position
-    final state = _findStateAt(canvasPosition);
-    final transition = _findTransitionAt(canvasPosition);
 
     if (state != null) {
       widget.onStateSelected(state);
@@ -142,14 +248,18 @@ class _TouchGestureHandlerState<T extends Transition>
   /// Handles long press for context menu
   void _handleLongPressStart(LongPressStartDetails details) {
     _longPressPosition = details.localPosition;
+    _longPressCanceled = false;
     _longPressTimer = Timer(const Duration(milliseconds: 500), () {
+      if (_longPressCanceled) {
+        return;
+      }
       _showContextMenuAt(details.localPosition);
     });
   }
 
   /// Handles long press end
   void _handleLongPressEnd(LongPressEndDetails details) {
-    _longPressTimer?.cancel();
+    _cancelPendingLongPress();
   }
 
   /// Shows context menu at position
@@ -169,6 +279,29 @@ class _TouchGestureHandlerState<T extends Transition>
   /// Handles scale start for zooming and panning
   void _handleScaleStart(ScaleStartDetails details) {
     _isZooming = true;
+
+    if (_showContextMenu &&
+        (details.pointerCount > 1 ||
+            !_isPointInsideContextMenu(details.localFocalPoint))) {
+      _closeContextMenu();
+    }
+
+    if (details.pointerCount > 1) {
+      _cancelPendingLongPress();
+    }
+
+    if (_isAddTransitionMode && details.pointerCount == 1) {
+      final canvasPoint = _toCanvasCoordinates(details.localFocalPoint);
+      final state = _findStateAt(canvasPoint);
+      if (state != null) {
+        _beginTransitionDrag(state, canvasPoint);
+      } else {
+        _clearTransitionPreview();
+      }
+      _isDragging = false;
+      _isPanning = false;
+      return;
+    }
 
     // Check if this is a single finger drag (pan)
     if (details.pointerCount == 1) {
@@ -195,6 +328,34 @@ class _TouchGestureHandlerState<T extends Transition>
 
   /// Handles scale update for zooming and panning
   void _handleScaleUpdate(ScaleUpdateDetails details) {
+    if (_showContextMenu &&
+        (details.pointerCount > 1 ||
+            !_isPointInsideContextMenu(details.localFocalPoint))) {
+      _closeContextMenu();
+    }
+
+    if (details.pointerCount == 1 &&
+        _longPressPosition != null &&
+        !_longPressCanceled) {
+      final displacement =
+          (details.localFocalPoint - _longPressPosition!).distance;
+      if (displacement > _dragCancelThreshold) {
+        _cancelPendingLongPress();
+      }
+    }
+
+    if (details.pointerCount > 1) {
+      _cancelPendingLongPress();
+    }
+
+    if (_isAddTransitionMode && details.pointerCount == 1) {
+      if (_transitionStartState != null) {
+        final canvasPoint = _toCanvasCoordinates(details.localFocalPoint);
+        _updateTransitionDrag(canvasPoint);
+      }
+      return;
+    }
+
     if (_isDragging && _draggedState != null && details.pointerCount == 1) {
       // Handle single finger drag
       final deltaLocal = details.localFocalPoint - _dragStartPosition!;
@@ -230,6 +391,16 @@ class _TouchGestureHandlerState<T extends Transition>
     _draggedState = null;
     _dragStartPosition = null;
     _dragStartCanvasPosition = null;
+    _cancelPendingLongPress();
+
+    if (_isAddTransitionMode) {
+      if (_transitionStartState != null) {
+        _finishTransitionDrag();
+      } else {
+        _clearTransitionPreview();
+      }
+      return;
+    }
   }
 
   /// Finds state at given position
@@ -349,6 +520,97 @@ class _TouchGestureHandlerState<T extends Transition>
     });
   }
 
+  void _cancelPendingLongPress() {
+    _longPressTimer?.cancel();
+    _longPressTimer = null;
+    _longPressCanceled = true;
+    _longPressPosition = null;
+  }
+
+  void _beginTransitionDrag(
+    automaton_state.State state,
+    Offset canvasPoint,
+  ) {
+    _transitionStartState = state;
+    _transitionDragPosition = canvasPoint;
+    widget.onTransitionPreview?.call(
+      TransitionDragPreview(
+        fromState: state,
+        currentPosition: canvasPoint,
+      ),
+    );
+  }
+
+  void _updateTransitionDrag(Offset canvasPoint) {
+    if (_transitionStartState == null) {
+      return;
+    }
+    if (_transitionDragPosition == canvasPoint) {
+      return;
+    }
+    _transitionDragPosition = canvasPoint;
+    widget.onTransitionPreview?.call(
+      TransitionDragPreview(
+        fromState: _transitionStartState!,
+        currentPosition: canvasPoint,
+      ),
+    );
+  }
+
+  void _finishTransitionDrag() {
+    if (_transitionStartState == null) {
+      _clearTransitionPreview();
+      return;
+    }
+
+    final startState = _transitionStartState!;
+    final dropPosition = _transitionDragPosition ??
+        Offset(startState.position.x, startState.position.y);
+    final targetState = _findStateAt(dropPosition);
+
+    if (targetState != null) {
+      widget.onTransitionAdded(
+        TransitionLink(
+          fromState: startState,
+          toState: targetState,
+        ),
+      );
+      widget.onInteractionModeHandled?.call();
+    }
+
+    _clearTransitionPreview();
+  }
+
+  void _clearTransitionPreview() {
+    if (_transitionStartState != null || _transitionDragPosition != null) {
+      widget.onTransitionPreview?.call(null);
+    }
+    _transitionStartState = null;
+    _transitionDragPosition = null;
+  }
+
+  bool _isPointInsideContextMenu(Offset position) {
+    if (!_showContextMenu) {
+      return false;
+    }
+    final menuContext = _contextMenuKey.currentContext;
+    final renderObject = menuContext?.findRenderObject() as RenderBox?;
+    final stackRenderObject = context.findRenderObject() as RenderBox?;
+    if (renderObject == null || stackRenderObject == null ||
+        !renderObject.hasSize) {
+      return false;
+    }
+    final topLeft =
+        stackRenderObject.globalToLocal(renderObject.localToGlobal(Offset.zero));
+    final rect = Rect.fromLTWH(
+      topLeft.dx,
+      topLeft.dy,
+      renderObject.size.width,
+      renderObject.size.height,
+    );
+    return rect.contains(position);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -371,6 +633,18 @@ class _TouchGestureHandlerState<T extends Transition>
         ),
 
         // Context menu
+        if (_showContextMenu)
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _closeContextMenu,
+              onPanStart: (_) => _closeContextMenu(),
+              onPanUpdate: (_) => _closeContextMenu(),
+              child: Container(
+                color: Colors.black.withOpacity(0.05),
+              ),
+            ),
+          ),
         if (_showContextMenu && _contextMenuPosition != null)
           Positioned(
             left: _contextMenuPosition!.dx,
@@ -387,6 +661,7 @@ class _TouchGestureHandlerState<T extends Transition>
       elevation: 8,
       borderRadius: BorderRadius.circular(8),
       child: Container(
+        key: _contextMenuKey,
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,

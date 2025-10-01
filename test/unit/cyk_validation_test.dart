@@ -43,10 +43,7 @@ void main() {
     group('CNF Parsing Tests', () {
       test('CNF Grammar should parse valid strings', () async {
         final testCases = [
-          'a', // Single terminal
-          'b', // Single terminal
-          'ab', // Two terminals
-          'ba', // Two terminals
+          'ab', // Valid: S→AB, A→a, B→b
         ];
 
         for (final testString in testCases) {
@@ -74,14 +71,21 @@ void main() {
       });
 
       test('CNF Grammar should reject invalid strings', () async {
-        final testCases = [
+        final validButRejected = [
           '', // Empty string
-          'c', // Invalid terminal
-          'abc', // Too many terminals
+          'a', // Incomplete (only A, no B)
+          'b', // Incomplete (only B, no A)
+          'ba', // Wrong order
           'aab', // Invalid pattern
         ];
 
-        for (final testString in testCases) {
+        final invalidSymbols = [
+          'c', // Invalid terminal (not in alphabet)
+          'abc', // Contains invalid terminal
+        ];
+
+        // Test strings with valid alphabet but invalid patterns
+        for (final testString in validButRejected) {
           final result = GrammarParser.parse(
             cnfGrammar,
             testString,
@@ -102,6 +106,21 @@ void main() {
                   'String "$testString" should be rejected by CYK algorithm',
             );
           }
+        }
+
+        // Test strings with invalid symbols (should fail the parse)
+        for (final testString in invalidSymbols) {
+          final result = GrammarParser.parse(
+            cnfGrammar,
+            testString,
+            strategyHint: ParsingStrategyHint.cyk,
+          );
+
+          expect(
+            result.isSuccess,
+            false,
+            reason: 'CYK parsing should fail for invalid symbol "$testString"',
+          );
         }
       });
 

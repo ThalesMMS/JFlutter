@@ -111,7 +111,8 @@ void main() {
       });
 
       test('DFA and NFA with different languages should not be equivalent', () {
-        final isEquivalent = EquivalenceChecker.areEquivalent(dfa1, nfa2);
+        // Use nonEquivalentDFA which has a different language
+        final isEquivalent = EquivalenceChecker.areEquivalent(nfa1, nonEquivalentDFA);
 
         expect(
           isEquivalent,
@@ -378,6 +379,8 @@ FSA _createNFA1() {
 }
 
 FSA _createNFA2() {
+  // NFA equivalent to NFA1 (accepts strings containing at least one '1')
+  // Different structure but same language
   final states = {
     State(
       id: 't0',

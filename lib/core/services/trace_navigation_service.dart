@@ -63,6 +63,10 @@ class TraceNavigationService {
 
     // Refresh history
     await _refreshHistory();
+
+    if (_traceHistory.isNotEmpty) {
+      _currentTraceIndex = 0;
+    }
   }
 
   /// Loads a trace by ID from history

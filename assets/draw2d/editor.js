@@ -1,3 +1,4 @@
+// <<<<<<< codex/add-draw2d-mapping-and-event-handling
 (function () {
   const CANVAS_ID = 'canvas';
   const canvasElement = document.getElementById(CANVAS_ID);
@@ -239,3 +240,30 @@
     loadModel: loadModel,
   };
 })();
+// =======
+const READY_MESSAGE = 'Draw2D placeholder booted';
+
+function emitReadySignal(message) {
+  if (window.Draw2dReadyChannel &&
+      typeof window.Draw2dReadyChannel.postMessage === 'function') {
+    window.Draw2dReadyChannel.postMessage(message);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  console.log(READY_MESSAGE);
+  emitReadySignal(READY_MESSAGE);
+});
+
+// Simulate Draw2D boot sequence placeholder
+setTimeout(() => {
+  const placeholder = document.getElementById('draw2d-placeholder');
+  if (!placeholder) {
+    return;
+  }
+
+  placeholder.querySelector('p').textContent =
+    'Draw2D placeholder is ready.';
+  placeholder.classList.add('ready');
+}, 300);
+// >>>>>>> 003-ui-improvement-taskforce

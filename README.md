@@ -63,6 +63,7 @@ The project has been successfully completed with all core objectives achieved. T
 - **Import/Export Validation** - Robust validation for JFLAP XML, JSON, and SVG formats
 - **Error Handling** - User-friendly error messages with technical diagnostics
 - **Cross-Format Compatibility** - Ensures data integrity across different file formats
+- **Draw2D Canvas Bridge** - Optional WebView renderer with Riverpod-managed toggle and JS bridge protocol
 
 ### 📚 Examples v1 - Offline Examples Library
 
@@ -139,6 +140,32 @@ lib/
     ├── theme/                      # App theming (Material 3)
     └── widgets/                    # Reusable UI components
 ```
+
+## 🧪 Manual Verification
+
+Follow these steps to validate the Draw2D bridge end-to-end:
+
+1. Open **Settings → Canvas** and enable **Use Draw2D Canvas**, then tap **Save Settings**.
+2. Return to the FSA workspace; supported platforms display the WebView canvas while unsupported targets show a placeholder warning.
+3. Use the browser console (or the integration test harness) to emit messages:
+   ```js
+   window.Draw2dBridge.postMessage(JSON.stringify({
+     type: 'node:add',
+     payload: { id: 'q1', label: 'q1', x: 160, y: 80, isInitial: false, isAccepting: true }
+   }));
+   window.Draw2dBridge.postMessage(JSON.stringify({
+     type: 'node:move',
+     payload: { id: 'q1', label: 'q1', x: 220, y: 120, isInitial: false, isAccepting: true }
+   }));
+   window.Draw2dBridge.postMessage(JSON.stringify({
+     type: 'edge:link',
+     payload: { id: 't1', from: 'q0', to: 'q1', symbols: ['a'] }
+   }));
+   ```
+4. Confirm the automaton updates in Flutter (new state, repositioned node, transition list, and alphabet badge).
+5. Disable the toggle and verify that the legacy Flutter canvas returns.
+
+For the message contract, see [`docs/canvas_bridge.md`](docs/canvas_bridge.md).
 
 ## 🚀 Getting Started
 

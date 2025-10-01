@@ -3,6 +3,7 @@ import '../../core/models/simulation_result.dart';
 import '../../core/models/simulation_step.dart';
 import '../../core/services/trace_persistence_service.dart';
 import '../../core/services/trace_navigation_service.dart';
+import '../../core/services/simulation_highlight_service.dart';
 
 /// State for trace navigation
 class TraceNavigationState {
@@ -16,6 +17,8 @@ class TraceNavigationState {
   final bool canGoToNextStep;
   final bool canGoToPreviousTrace;
   final bool canGoToNextTrace;
+  final Set<String> highlightedStates;
+  final Set<String> highlightedTransitions;
 
   const TraceNavigationState({
     this.currentTrace,
@@ -28,6 +31,8 @@ class TraceNavigationState {
     this.canGoToNextStep = false,
     this.canGoToPreviousTrace = false,
     this.canGoToNextTrace = false,
+    this.highlightedStates = const {},
+    this.highlightedTransitions = const {},
   });
 
   TraceNavigationState copyWith({
@@ -41,6 +46,8 @@ class TraceNavigationState {
     bool? canGoToNextStep,
     bool? canGoToPreviousTrace,
     bool? canGoToNextTrace,
+    Set<String>? highlightedStates,
+    Set<String>? highlightedTransitions,
   }) {
     return TraceNavigationState(
       currentTrace: currentTrace ?? this.currentTrace,
@@ -53,6 +60,9 @@ class TraceNavigationState {
       canGoToNextStep: canGoToNextStep ?? this.canGoToNextStep,
       canGoToPreviousTrace: canGoToPreviousTrace ?? this.canGoToPreviousTrace,
       canGoToNextTrace: canGoToNextTrace ?? this.canGoToNextTrace,
+      highlightedStates: highlightedStates ?? this.highlightedStates,
+      highlightedTransitions:
+          highlightedTransitions ?? this.highlightedTransitions,
     );
   }
 
@@ -106,9 +116,13 @@ final traceNavigationServiceProvider = Provider<TraceNavigationService>((ref) {
 /// Provider for trace navigation state
 class TraceNavigationNotifier extends StateNotifier<TraceNavigationState> {
   final TraceNavigationService _navigationService;
+  final SimulationHighlightService _highlightService;
 
-  TraceNavigationNotifier(this._navigationService)
-    : super(const TraceNavigationState()) {
+  TraceNavigationNotifier(
+    this._navigationService, {
+    SimulationHighlightService? highlightService,
+  })  : _highlightService = highlightService ?? SimulationHighlightService(),
+        super(const TraceNavigationState()) {
     _initializeState();
   }
 
@@ -118,19 +132,7 @@ class TraceNavigationNotifier extends StateNotifier<TraceNavigationState> {
 
     try {
       await _navigationService.loadTraceHistory();
-      final currentTrace = _navigationService.currentTrace;
-
-      if (currentTrace != null) {
-        state = state.copyWith(
-          currentTrace: currentTrace,
-          currentStepIndex: _navigationService.currentStepIndex,
-          isLoading: false,
-        );
-      } else {
-        state = state.copyWith(isLoading: false);
-      }
-
-      await _updateNavigationCapabilities();
+      await _updateStateFromService();
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -309,6 +311,7 @@ class TraceNavigationNotifier extends StateNotifier<TraceNavigationState> {
     try {
       await _navigationService.clearAllTraces();
       state = const TraceNavigationState();
+      _highlightService.clear();
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -327,7 +330,9 @@ class TraceNavigationNotifier extends StateNotifier<TraceNavigationState> {
     final currentTrace = _navigationService.currentTrace;
     final currentStepIndex = _navigationService.currentStepIndex;
     final traceHistory = _navigationService.traceHistory;
-    final currentTraceIndex = _navigationService.currentStepIndex;
+    final currentTraceIndex = _navigationService.currentTraceIndex;
+    final highlight =
+        _highlightService.computeFromResult(currentTrace, currentStepIndex);
 
     state = state.copyWith(
       currentTrace: currentTrace,
@@ -336,7 +341,11 @@ class TraceNavigationNotifier extends StateNotifier<TraceNavigationState> {
       currentTraceIndex: currentTraceIndex,
       isLoading: false,
       error: null,
+      highlightedStates: highlight.stateIds,
+      highlightedTransitions: highlight.transitionIds,
     );
+
+    _highlightService.dispatch(highlight);
 
     await _updateNavigationCapabilities();
   }

@@ -19,6 +19,9 @@ class TraceNavigationService {
   /// Gets the current step index in the current trace
   int get currentStepIndex => _currentStepIndex;
 
+  /// Gets the index of the active trace in history.
+  int get currentTraceIndex => _currentTraceIndex;
+
   /// Gets whether there is a current trace
   bool get hasCurrentTrace => _currentTrace != null;
 

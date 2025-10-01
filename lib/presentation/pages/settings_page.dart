@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:jflutter/core/models/settings_model.dart';
 import 'package:jflutter/core/repositories/settings_repository.dart';
 import 'package:jflutter/data/repositories/settings_repository_impl.dart';
 import 'package:jflutter/data/storage/settings_storage.dart';
+import 'package:jflutter/presentation/providers/settings_provider.dart';
 
-class SettingsPage extends StatefulWidget {
+class SettingsPage extends ConsumerStatefulWidget {
   SettingsPage({
     super.key,
     SettingsRepository? repository,
@@ -19,10 +21,11 @@ class SettingsPage extends StatefulWidget {
   final SettingsRepository repository;
 
   @override
-  State<SettingsPage> createState() => _SettingsPageState();
+  @override
+  ConsumerState<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> {
+class _SettingsPageState extends ConsumerState<SettingsPage> {
   bool _isLoading = false;
   SettingsModel _settings = const SettingsModel();
 
@@ -44,6 +47,7 @@ class _SettingsPageState extends State<SettingsPage> {
         _settings = settings;
         _isLoading = false;
       });
+      await ref.read(settingsProvider.notifier).refreshFromModel(settings);
     } catch (error, stackTrace) {
       debugPrint('Failed to load settings: $error');
       debugPrintStack(stackTrace: stackTrace);
@@ -60,6 +64,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
     try {
       await widget.repository.saveSettings(currentSettings);
+      await ref
+          .read(settingsProvider.notifier)
+          .refreshFromModel(currentSettings);
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -81,6 +88,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
     try {
       await widget.repository.saveSettings(defaults);
+      await ref.read(settingsProvider.notifier).refreshFromModel(defaults);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Settings reset to defaults!')),
@@ -249,6 +257,18 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            _buildSwitchSetting(
+              'Use Draw2D Canvas',
+              'Enable the web-based Draw2D renderer (preview)',
+              _settings.useDraw2dCanvas,
+              (value) {
+                setState(() {
+                  _settings = _settings.copyWith(useDraw2dCanvas: value);
+                });
+              },
+              switchKey: const ValueKey('settings_use_draw2d_canvas_switch'),
+            ),
+            const SizedBox(height: 16),
             _buildSwitchSetting(
               'Show Grid',
               'Display grid lines on canvas',

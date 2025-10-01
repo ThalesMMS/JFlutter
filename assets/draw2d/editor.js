@@ -63,6 +63,7 @@
         return;
       }
 
+// <<<<<<< codex/add-draw2d-backed-pda-canvas-widget
       if (currentModelType === 'pda') {
         const metadata = promptForPdaTransition();
         if (!metadata) {
@@ -89,6 +90,16 @@
           label: '',
         });
       }
+// =======
+      sendMessage('transition.add', {
+        id: `t_${Date.now()}`,
+        fromStateId: sourceData.sourceId,
+        toStateId: targetData.sourceId,
+        readSymbol: '',
+        writeSymbol: '',
+        direction: 'R',
+      });
+// >>>>>>> 003-ui-improvement-taskforce
 
       connection.remove();
     });
@@ -312,6 +323,25 @@
     });
   }
 
+  function formatTransitionLabel(transition) {
+    if (!transition) {
+      return '';
+    }
+
+    const read = (transition.readSymbol || '').trim();
+    const write = (transition.writeSymbol || '').trim();
+    const direction = (transition.direction || '').trim().toUpperCase();
+    const readableRead = read.length > 0 ? read : '∅';
+    const readableWrite = write.length > 0 ? write : '∅';
+    const directionSymbol = direction === 'L'
+      ? 'L'
+      : direction === 'S'
+        ? 'S'
+        : 'R';
+
+    return `${readableRead}/${readableWrite},${directionSymbol}`;
+  }
+
   function createTransitionFigure(transition) {
     const from = stateFigures.get(transition.from);
     const to = stateFigures.get(transition.to);
@@ -349,7 +379,11 @@
       : transition.label;
 
     const label = new draw2d.shape.basic.Label({
+// <<<<<<< codex/add-draw2d-backed-pda-canvas-widget
       text: labelText,
+// =======
+      text: formatTransitionLabel(transition),
+// >>>>>>> 003-ui-improvement-taskforce
       fontColor: '#263238',
       padding: 4,
       bgColor: '#ffffff',
@@ -362,6 +396,7 @@
     );
 
     connection.on('dblclick', function () {
+// <<<<<<< codex/add-draw2d-backed-pda-canvas-widget
       const entry = transitionFigures.get(transition.id);
       if (!entry) {
         return;
@@ -405,7 +440,59 @@
             label: result,
           });
         }
+// =======
+      const entry = transitionFigures.get(transition.id) || {};
+      const currentRead = entry.readSymbol || transition.readSymbol || '';
+      const currentWrite = entry.writeSymbol || transition.writeSymbol || '';
+      const currentDirection = (entry.direction || transition.direction || 'R').toUpperCase();
+
+      const readResult = window.prompt('Read symbol', currentRead);
+      if (readResult === null) {
+        return;
       }
+
+      const writeResult = window.prompt('Write symbol', currentWrite);
+      if (writeResult === null) {
+        return;
+      }
+
+      const directionResult = window.prompt(
+        'Direction (L, R, S)',
+        currentDirection,
+      );
+      if (directionResult === null) {
+        return;
+// >>>>>>> 003-ui-improvement-taskforce
+      }
+
+      const normalisedDirection = (directionResult || 'R').trim().toUpperCase();
+
+      const updatedData = {
+        ...entry,
+        readSymbol: readResult,
+        writeSymbol: writeResult,
+        direction: normalisedDirection,
+      };
+
+      label.setText(formatTransitionLabel(updatedData));
+      transitionFigures.set(transition.id, {
+        ...updatedData,
+        connection: connection,
+        label: label,
+        sourceId: transition.sourceId,
+        baseStyle: entry.baseStyle || {
+          stroke: baseStroke,
+          color: baseColor,
+        },
+      });
+
+      sendMessage('transition.label', {
+        id: transition.sourceId,
+        readSymbol: readResult,
+        writeSymbol: writeResult,
+        direction: normalisedDirection,
+        label: label.getText(),
+      });
     });
 
     ensureCanvas().add(connection);
@@ -446,7 +533,13 @@
         stroke: baseStroke,
         color: baseColor,
       },
+// <<<<<<< codex/add-draw2d-backed-pda-canvas-widget
       data: data,
+// =======
+      readSymbol: transition.readSymbol || '',
+      writeSymbol: transition.writeSymbol || '',
+      direction: (transition.direction || 'R').toUpperCase(),
+// >>>>>>> 003-ui-improvement-taskforce
     });
   }
 

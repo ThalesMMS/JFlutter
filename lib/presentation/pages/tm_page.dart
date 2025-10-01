@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/tm.dart';
 import '../../core/models/tm_transition.dart';
+import '../providers/settings_provider.dart';
 import '../providers/tm_editor_provider.dart';
+import '../widgets/draw2d_tm_canvas_view.dart';
 import '../widgets/tm_algorithm_panel.dart';
 import '../widgets/tm_canvas.dart';
 import '../widgets/tm_simulation_panel.dart';
@@ -57,13 +59,16 @@ class _TMPageState extends ConsumerState<TMPage> {
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final isMobile = screenSize.width < 1024;
+    final useDraw2dCanvas = ref.watch(settingsProvider).useDraw2dCanvas;
 
     return Scaffold(
-      body: isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
+      body: isMobile
+          ? _buildMobileLayout(useDraw2dCanvas)
+          : _buildDesktopLayout(useDraw2dCanvas),
     );
   }
 
-  Widget _buildMobileLayout() {
+  Widget _buildMobileLayout(bool useDraw2dCanvas) {
     return SafeArea(
       child: Column(
         children: [
@@ -105,10 +110,12 @@ class _TMPageState extends ConsumerState<TMPage> {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(8),
-              child: TMCanvas(
-                canvasKey: _canvasKey,
-                onTMModified: _handleTMUpdate,
-              ),
+              child: useDraw2dCanvas
+                  ? Draw2DTMCanvasView(onTMModified: _handleTMUpdate)
+                  : TMCanvas(
+                      canvasKey: _canvasKey,
+                      onTMModified: _handleTMUpdate,
+                    ),
             ),
           ),
         ],
@@ -116,7 +123,7 @@ class _TMPageState extends ConsumerState<TMPage> {
     );
   }
 
-  Widget _buildDesktopLayout() {
+  Widget _buildDesktopLayout(bool useDraw2dCanvas) {
     return Row(
       children: [
         // Left panel - TM Canvas
@@ -124,10 +131,12 @@ class _TMPageState extends ConsumerState<TMPage> {
           flex: 2,
           child: Container(
             margin: const EdgeInsets.all(8),
-            child: TMCanvas(
-              canvasKey: _canvasKey,
-              onTMModified: _handleTMUpdate,
-            ),
+            child: useDraw2dCanvas
+                ? Draw2DTMCanvasView(onTMModified: _handleTMUpdate)
+                : TMCanvas(
+                    canvasKey: _canvasKey,
+                    onTMModified: _handleTMUpdate,
+                  ),
           ),
         ),
         const SizedBox(width: 16),

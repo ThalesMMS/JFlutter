@@ -6,6 +6,7 @@ import '../providers/algorithm_provider.dart';
 import '../providers/automaton_provider.dart';
 import '../widgets/algorithm_panel.dart';
 import '../widgets/automaton_canvas.dart';
+import '../widgets/draw2d_canvas_view.dart';
 import '../widgets/simulation_panel.dart';
 import 'grammar_page.dart';
 import 'regex_page.dart';
@@ -19,6 +20,7 @@ class FSAPage extends ConsumerStatefulWidget {
 }
 
 class _FSAPageState extends ConsumerState<FSAPage> {
+  static const bool _enableDraw2dDevPreview = false;
   final GlobalKey _canvasKey = GlobalKey();
 
   void _showSnack(String message, {bool isError = false}) {
@@ -323,6 +325,38 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     }
   }
 
+  Widget _buildCanvasArea({
+    required AutomatonState state,
+    required bool isMobile,
+  }) {
+    final automatonCanvas = AutomatonCanvas(
+      automaton: state.currentAutomaton,
+      canvasKey: _canvasKey,
+      onAutomatonChanged: (automaton) {
+        ref.read(automatonProvider.notifier).updateAutomaton(automaton);
+      },
+      simulationResult: state.simulationResult,
+      showTrace: state.simulationResult != null,
+    );
+
+    if (!_enableDraw2dDevPreview) {
+      return automatonCanvas;
+    }
+
+    final spacing = isMobile ? 8.0 : 12.0;
+
+    return Column(
+      children: [
+        Expanded(flex: 3, child: automatonCanvas),
+        SizedBox(height: spacing),
+        const Expanded(
+          flex: 2,
+          child: Draw2DCanvasView(),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(automatonProvider);
@@ -361,14 +395,9 @@ class _FSAPageState extends ConsumerState<FSAPage> {
         Expanded(
           child: Container(
             margin: const EdgeInsets.all(8),
-            child: AutomatonCanvas(
-              automaton: state.currentAutomaton,
-              canvasKey: _canvasKey,
-              onAutomatonChanged: (automaton) {
-                ref.read(automatonProvider.notifier).updateAutomaton(automaton);
-              },
-              simulationResult: state.simulationResult,
-              showTrace: state.simulationResult != null,
+            child: _buildCanvasArea(
+              state: state,
+              isMobile: true,
             ),
           ),
         ),
@@ -457,14 +486,9 @@ class _FSAPageState extends ConsumerState<FSAPage> {
         // Center panel - Canvas
         Expanded(
           flex: 3,
-          child: AutomatonCanvas(
-            automaton: state.currentAutomaton,
-            canvasKey: _canvasKey,
-            onAutomatonChanged: (automaton) {
-              ref.read(automatonProvider.notifier).updateAutomaton(automaton);
-            },
-            simulationResult: state.simulationResult,
-            showTrace: state.simulationResult != null,
+          child: _buildCanvasArea(
+            state: state,
+            isMobile: false,
           ),
         ),
         const SizedBox(width: 16),

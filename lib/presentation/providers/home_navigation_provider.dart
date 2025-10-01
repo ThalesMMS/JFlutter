@@ -32,6 +32,9 @@ class HomeNavigationNotifier extends StateNotifier<int> {
 
   /// Convenience method that switches to the FSA workspace.
   void goToFsa() => setIndex(fsaIndex);
+
+  /// Convenience method that switches to the PDA workspace.
+  void goToPda() => setIndex(pdaIndex);
 }
 
 /// Provides the current navigation index for the home page.

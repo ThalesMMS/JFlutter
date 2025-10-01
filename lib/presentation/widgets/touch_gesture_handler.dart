@@ -63,6 +63,8 @@ class _TouchGestureHandlerState<T extends Transition>
   // Long press handling
   Timer? _longPressTimer;
   Offset? _longPressPosition;
+  bool _longPressCanceled = false;
+  static const double _dragCancelThreshold = 12.0;
 
   // Double tap handling
   DateTime? _lastTapTime;
@@ -76,6 +78,7 @@ class _TouchGestureHandlerState<T extends Transition>
   Offset? _contextMenuPosition;
   automaton_state.State? _contextMenuState;
   T? _contextMenuTransition;
+  final GlobalKey _contextMenuKey = GlobalKey();
 
   @override
   void dispose() {
@@ -95,6 +98,11 @@ class _TouchGestureHandlerState<T extends Transition>
   /// Handles tap gestures
   void _handleTap(TapDownDetails details) {
     final position = details.localPosition;
+    if (_showContextMenu && !_isPointInsideContextMenu(position)) {
+      _closeContextMenu();
+      return;
+    }
+
     final canvasPosition = _toCanvasCoordinates(position);
     final now = DateTime.now();
 
@@ -142,14 +150,18 @@ class _TouchGestureHandlerState<T extends Transition>
   /// Handles long press for context menu
   void _handleLongPressStart(LongPressStartDetails details) {
     _longPressPosition = details.localPosition;
+    _longPressCanceled = false;
     _longPressTimer = Timer(const Duration(milliseconds: 500), () {
+      if (_longPressCanceled) {
+        return;
+      }
       _showContextMenuAt(details.localPosition);
     });
   }
 
   /// Handles long press end
   void _handleLongPressEnd(LongPressEndDetails details) {
-    _longPressTimer?.cancel();
+    _cancelPendingLongPress();
   }
 
   /// Shows context menu at position
@@ -169,6 +181,16 @@ class _TouchGestureHandlerState<T extends Transition>
   /// Handles scale start for zooming and panning
   void _handleScaleStart(ScaleStartDetails details) {
     _isZooming = true;
+
+    if (_showContextMenu &&
+        (details.pointerCount > 1 ||
+            !_isPointInsideContextMenu(details.localFocalPoint))) {
+      _closeContextMenu();
+    }
+
+    if (details.pointerCount > 1) {
+      _cancelPendingLongPress();
+    }
 
     // Check if this is a single finger drag (pan)
     if (details.pointerCount == 1) {
@@ -195,6 +217,26 @@ class _TouchGestureHandlerState<T extends Transition>
 
   /// Handles scale update for zooming and panning
   void _handleScaleUpdate(ScaleUpdateDetails details) {
+    if (_showContextMenu &&
+        (details.pointerCount > 1 ||
+            !_isPointInsideContextMenu(details.localFocalPoint))) {
+      _closeContextMenu();
+    }
+
+    if (details.pointerCount == 1 &&
+        _longPressPosition != null &&
+        !_longPressCanceled) {
+      final displacement =
+          (details.localFocalPoint - _longPressPosition!).distance;
+      if (displacement > _dragCancelThreshold) {
+        _cancelPendingLongPress();
+      }
+    }
+
+    if (details.pointerCount > 1) {
+      _cancelPendingLongPress();
+    }
+
     if (_isDragging && _draggedState != null && details.pointerCount == 1) {
       // Handle single finger drag
       final deltaLocal = details.localFocalPoint - _dragStartPosition!;
@@ -230,6 +272,7 @@ class _TouchGestureHandlerState<T extends Transition>
     _draggedState = null;
     _dragStartPosition = null;
     _dragStartCanvasPosition = null;
+    _cancelPendingLongPress();
   }
 
   /// Finds state at given position
@@ -349,6 +392,35 @@ class _TouchGestureHandlerState<T extends Transition>
     });
   }
 
+  void _cancelPendingLongPress() {
+    _longPressTimer?.cancel();
+    _longPressTimer = null;
+    _longPressCanceled = true;
+    _longPressPosition = null;
+  }
+
+  bool _isPointInsideContextMenu(Offset position) {
+    if (!_showContextMenu) {
+      return false;
+    }
+    final menuContext = _contextMenuKey.currentContext;
+    final renderObject = menuContext?.findRenderObject() as RenderBox?;
+    final stackRenderObject = context.findRenderObject() as RenderBox?;
+    if (renderObject == null || stackRenderObject == null ||
+        !renderObject.hasSize) {
+      return false;
+    }
+    final topLeft =
+        stackRenderObject.globalToLocal(renderObject.localToGlobal(Offset.zero));
+    final rect = Rect.fromLTWH(
+      topLeft.dx,
+      topLeft.dy,
+      renderObject.size.width,
+      renderObject.size.height,
+    );
+    return rect.contains(position);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -371,6 +443,18 @@ class _TouchGestureHandlerState<T extends Transition>
         ),
 
         // Context menu
+        if (_showContextMenu)
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _closeContextMenu,
+              onPanStart: (_) => _closeContextMenu(),
+              onPanUpdate: (_) => _closeContextMenu(),
+              child: Container(
+                color: Colors.black.withOpacity(0.05),
+              ),
+            ),
+          ),
         if (_showContextMenu && _contextMenuPosition != null)
           Positioned(
             left: _contextMenuPosition!.dx,
@@ -387,6 +471,7 @@ class _TouchGestureHandlerState<T extends Transition>
       elevation: 8,
       borderRadius: BorderRadius.circular(8),
       child: Container(
+        key: _contextMenuKey,
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,

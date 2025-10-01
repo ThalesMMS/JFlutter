@@ -5,7 +5,7 @@ import '../../core/models/fsa.dart';
 import '../providers/algorithm_provider.dart';
 import '../providers/automaton_provider.dart';
 import '../widgets/algorithm_panel.dart';
-import '../widgets/automaton_canvas.dart';
+import '../widgets/draw2d_canvas_view.dart';
 import '../widgets/simulation_panel.dart';
 import 'grammar_page.dart';
 import 'regex_page.dart';
@@ -19,8 +19,6 @@ class FSAPage extends ConsumerStatefulWidget {
 }
 
 class _FSAPageState extends ConsumerState<FSAPage> {
-  final GlobalKey _canvasKey = GlobalKey();
-
   void _showSnack(String message, {bool isError = false}) {
     final theme = Theme.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
@@ -361,15 +359,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
         Expanded(
           child: Container(
             margin: const EdgeInsets.all(8),
-            child: AutomatonCanvas(
-              automaton: state.currentAutomaton,
-              canvasKey: _canvasKey,
-              onAutomatonChanged: (automaton) {
-                ref.read(automatonProvider.notifier).updateAutomaton(automaton);
-              },
-              simulationResult: state.simulationResult,
-              showTrace: state.simulationResult != null,
-            ),
+            child: const Draw2DCanvasView(),
           ),
         ),
       ],
@@ -455,17 +445,9 @@ class _FSAPageState extends ConsumerState<FSAPage> {
         ),
         const SizedBox(width: 16),
         // Center panel - Canvas
-        Expanded(
+        const Expanded(
           flex: 3,
-          child: AutomatonCanvas(
-            automaton: state.currentAutomaton,
-            canvasKey: _canvasKey,
-            onAutomatonChanged: (automaton) {
-              ref.read(automatonProvider.notifier).updateAutomaton(automaton);
-            },
-            simulationResult: state.simulationResult,
-            showTrace: state.simulationResult != null,
-          ),
+          child: Draw2DCanvasView(),
         ),
         const SizedBox(width: 16),
         // Right panel - Simulation

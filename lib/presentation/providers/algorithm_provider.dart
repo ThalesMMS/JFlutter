@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/use_cases/algorithm_use_cases.dart';
 import '../../core/entities/automaton_entity.dart';
+import '../../data/repositories/algorithm_repository_impl.dart';
 
 /// Provider for algorithm operations
 class AlgorithmProvider extends StateNotifier<AlgorithmState> {
@@ -306,3 +307,30 @@ class AlgorithmState {
     );
   }
 }
+
+/// Provider instance for algorithm operations
+final algorithmProvider =
+    StateNotifierProvider<AlgorithmProvider, AlgorithmState>((ref) {
+      final repository = AlgorithmRepositoryImpl();
+
+      return AlgorithmProvider(
+        nfaToDfaUseCase: NfaToDfaUseCase(repository),
+        removeLambdaTransitionsUseCase:
+            RemoveLambdaTransitionsUseCase(repository),
+        minimizeDfaUseCase: MinimizeDfaUseCase(repository),
+        completeDfaUseCase: CompleteDfaUseCase(repository),
+        complementDfaUseCase: ComplementDfaUseCase(repository),
+        unionDfaUseCase: UnionDfaUseCase(repository),
+        intersectionDfaUseCase: IntersectionDfaUseCase(repository),
+        differenceDfaUseCase: DifferenceDfaUseCase(repository),
+        prefixClosureUseCase: PrefixClosureUseCase(repository),
+        suffixClosureUseCase: SuffixClosureUseCase(repository),
+        regexToNfaUseCase: RegexToNfaUseCase(repository),
+        dfaToRegexUseCase: DfaToRegexUseCase(repository),
+        fsaToGrammarUseCase: FsaToGrammarUseCase(repository),
+        checkEquivalenceUseCase: CheckEquivalenceUseCase(repository),
+        simulateWordUseCase: SimulateWordUseCase(repository),
+        createStepByStepSimulationUseCase:
+            CreateStepByStepSimulationUseCase(repository),
+      );
+    });

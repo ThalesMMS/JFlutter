@@ -1,11 +1,12 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../core/models/fsa.dart';
 import '../../features/canvas_bridge/draw2d_canvas_bridge.dart';
+import 'draw2d_canvas_fallback.dart';
+import 'draw2d_platform_support.dart';
 
 /// WebView-backed Draw2D canvas that mirrors the Flutter automaton state.
 class Draw2dAutomatonCanvas extends StatefulWidget {
@@ -85,35 +86,12 @@ class _Draw2dAutomatonCanvasState extends State<Draw2dAutomatonCanvas> {
     });
   }
 
-  bool get _isPlatformSupported {
-    if (kIsWeb) {
-      return false;
-    }
-    switch (defaultTargetPlatform) {
-      case TargetPlatform.android:
-      case TargetPlatform.iOS:
-      case TargetPlatform.macOS:
-        return true;
-      default:
-        return false;
-    }
-  }
+  bool get _isPlatformSupported => isDraw2dWebViewSupported();
 
   @override
   Widget build(BuildContext context) {
     if (!_isPlatformSupported || _controller == null) {
-      return Container(
-        key: widget.canvasKey,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: const BorderRadius.all(Radius.circular(12)),
-        ),
-        child: const Padding(
-          padding: EdgeInsets.all(24),
-          child: _UnsupportedCanvasMessage(),
-        ),
-      );
+      return Draw2dCanvasFallback(key: widget.canvasKey);
     }
 
     return KeyedSubtree(
@@ -134,25 +112,6 @@ class _WebViewBridgeMessenger implements BridgeMessenger {
     final serialized = jsonEncode(json);
     return _controller.runJavaScript(
       'window.draw2dBridge?.receive($serialized);',
-    );
-  }
-}
-
-class _UnsupportedCanvasMessage extends StatelessWidget {
-  const _UnsupportedCanvasMessage();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Column(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        Icon(Icons.web, size: 32),
-        SizedBox(height: 12),
-        Text(
-          'Draw2D canvas requires a supported WebView platform.',
-          textAlign: TextAlign.center,
-        ),
-      ],
     );
   }
 }

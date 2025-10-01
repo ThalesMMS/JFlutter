@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -10,6 +9,8 @@ import '../../core/models/pda.dart';
 import '../../core/services/draw2d_bridge_service.dart';
 import '../mappers/draw2d_pda_mapper.dart';
 import '../providers/pda_editor_provider.dart';
+import 'draw2d_canvas_fallback.dart';
+import 'draw2d_platform_support.dart';
 
 /// Draw2D canvas for editing pushdown automata.
 class Draw2DPdaCanvasView extends ConsumerStatefulWidget {
@@ -25,7 +26,7 @@ class Draw2DPdaCanvasView extends ConsumerStatefulWidget {
 }
 
 class _Draw2DPdaCanvasViewState extends ConsumerState<Draw2DPdaCanvasView> {
-  late final WebViewController _controller;
+  WebViewController? _controller;
   final Draw2DBridgeService _bridge = Draw2DBridgeService();
   ProviderSubscription<PDAEditorState>? _subscription;
   bool _isReady = false;
@@ -35,7 +36,11 @@ class _Draw2DPdaCanvasViewState extends ConsumerState<Draw2DPdaCanvasView> {
   @override
   void initState() {
     super.initState();
-    _controller = WebViewController()
+    if (!_isPlatformSupported) {
+      return;
+    }
+
+    final controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(Colors.transparent)
       ..addJavaScriptChannel('JFlutterBridge', onMessageReceived: _handleMessage)
@@ -51,7 +56,9 @@ class _Draw2DPdaCanvasViewState extends ConsumerState<Draw2DPdaCanvasView> {
       )
       ..loadFlutterAsset('assets/draw2d/editor.html');
 
-    _bridge.registerWebViewController(_controller);
+    _controller = controller;
+
+    _bridge.registerWebViewController(controller);
 
     _subscription = ref.listenManual<PDAEditorState>(
       pdaEditorProvider,
@@ -71,17 +78,27 @@ class _Draw2DPdaCanvasViewState extends ConsumerState<Draw2DPdaCanvasView> {
   void dispose() {
     _subscription?.close();
     _moveDebounce?.cancel();
-    _bridge.unregisterWebViewController(_controller);
+    final controller = _controller;
+    if (controller != null) {
+      _bridge.unregisterWebViewController(controller);
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final controller = _controller;
+    if (!_isPlatformSupported || controller == null) {
+      return const Draw2dCanvasFallback();
+    }
+
     return DecoratedBox(
       decoration: const BoxDecoration(color: Colors.transparent),
-      child: WebViewWidget(controller: _controller),
+      child: WebViewWidget(controller: controller),
     );
   }
+
+  bool get _isPlatformSupported => isDraw2dWebViewSupported();
 
   void _handleMessage(JavaScriptMessage message) {
     Map<String, dynamic> decoded;
@@ -220,8 +237,12 @@ class _Draw2DPdaCanvasViewState extends ConsumerState<Draw2DPdaCanvasView> {
   Future<void> _pushModel(PDA? pda) async {
     final payload = Draw2DPdaMapper.toJson(pda);
     final json = jsonEncode(payload);
+    final controller = _controller;
+    if (controller == null) {
+      return;
+    }
     try {
-      await _controller.runJavaScript('window.draw2dBridge?.loadModel($json);');
+      await controller.runJavaScript('window.draw2dBridge?.loadModel($json);');
     } catch (error, stackTrace) {
       debugPrint('Failed to push PDA model to Draw2D: $error');
       FlutterError.reportError(

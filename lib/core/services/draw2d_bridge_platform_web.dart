@@ -10,6 +10,8 @@ class Draw2DBridgePlatform {
 
   void unregisterWebViewController(Object controller) {}
 
+  bool get hasRegisteredController => false;
+
   void runJavaScript(String script) {}
 
   void postMessage(String type, Map<String, dynamic> payload) {

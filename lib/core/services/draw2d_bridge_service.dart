@@ -38,14 +38,18 @@ class Draw2DBridgeService {
 
     final encoded = jsonEncode(payload);
 
-    _platform.runJavaScript('window.draw2dBridge?.highlight($encoded);');
+    if (_platform.hasRegisteredController) {
+      _platform.runJavaScript('window.draw2dBridge?.highlight($encoded);');
+    }
 
     _platform.postMessage('highlight', payload);
   }
 
   /// Dispatches a request to clear all highlights.
   void clearHighlight() {
-    _platform.runJavaScript('window.draw2dBridge?.clearHighlight();');
+    if (_platform.hasRegisteredController) {
+      _platform.runJavaScript('window.draw2dBridge?.clearHighlight();');
+    }
     _platform.postMessage('clear_highlight', const {});
   }
 }

@@ -1,4 +1,3 @@
-// <<<<<<< codex/enhance-editor.js-with-new-features
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const STATE_RADIUS = 36;
 const SELF_LOOP_OFFSET = 48;
@@ -1206,7 +1205,6 @@ const editor = new AutomatonEditor();
 window.addEventListener('message', (event) => editor.handleMessage(event));
 
 window.parent?.postMessage({ type: 'editor_ready' }, '*');
-// =======
 (function () {
   'use strict';
 
@@ -1388,4 +1386,3 @@ window.parent?.postMessage({ type: 'editor_ready' }, '*');
     }
   });
 })();
-// >>>>>>> 003-ui-improvement-taskforce

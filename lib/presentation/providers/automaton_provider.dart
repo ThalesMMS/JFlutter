@@ -90,7 +90,6 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     );
   }
 
-// <<<<<<< codex/add-draw2d-mapping-and-event-handling
   /// Adds a new state or updates an existing one using coordinates supplied by
   /// the Draw2D canvas bridge.
   void addState({
@@ -433,7 +432,8 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       panOffset: Vector2.zero(),
       zoomLevel: 1.0,
     );
-// =======
+  }
+
   /// Applies an incremental patch produced by the web editor without forcing
   /// a full automaton reload. The patch uses the same schema defined for the
   /// JavaScript bridge.
@@ -449,7 +449,6 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       debugPrint('Failed to apply automaton patch: $error');
       debugPrint('$stackTrace');
     }
-// >>>>>>> 003-ui-improvement-taskforce
   }
 
   /// Simulates the current automaton with input string

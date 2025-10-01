@@ -6,11 +6,15 @@ import '../providers/algorithm_provider.dart';
 import '../providers/automaton_provider.dart';
 import '../providers/settings_provider.dart';
 import '../widgets/algorithm_panel.dart';
+// <<<<<<< codex/add-draw2d-mapping-and-event-handling
+import '../widgets/draw2d_canvas_view.dart';
+// =======
 import '../widgets/automaton_canvas.dart';
 // <<<<<<< codex/implement-draw2d-integration-with-webview
 import '../widgets/draw2d_canvas_view.dart';
 // =======
 import '../widgets/draw2d_automaton_canvas.dart';
+// >>>>>>> 003-ui-improvement-taskforce
 // >>>>>>> 003-ui-improvement-taskforce
 import '../widgets/simulation_panel.dart';
 import 'grammar_page.dart';
@@ -25,9 +29,12 @@ class FSAPage extends ConsumerStatefulWidget {
 }
 
 class _FSAPageState extends ConsumerState<FSAPage> {
+// <<<<<<< codex/add-draw2d-mapping-and-event-handling
+// =======
   static const bool _enableDraw2dDevPreview = false;
   final GlobalKey _canvasKey = GlobalKey();
 
+// >>>>>>> 003-ui-improvement-taskforce
   void _showSnack(String message, {bool isError = false}) {
     final theme = Theme.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
@@ -405,6 +412,9 @@ class _FSAPageState extends ConsumerState<FSAPage> {
         Expanded(
           child: Container(
             margin: const EdgeInsets.all(8),
+// <<<<<<< codex/add-draw2d-mapping-and-event-handling
+            child: const Draw2DCanvasView(),
+// =======
 // <<<<<<< codex/implement-draw2d-integration-with-webview
             child: _buildCanvasArea(
               state: state,
@@ -415,6 +425,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
               useDraw2dCanvas: useDraw2dCanvas,
 // >>>>>>> 003-ui-improvement-taskforce
             ),
+// >>>>>>> 003-ui-improvement-taskforce
           ),
         ),
       ],
@@ -496,8 +507,11 @@ class _FSAPageState extends ConsumerState<FSAPage> {
         ),
         const SizedBox(width: 16),
         // Center panel - Canvas
-        Expanded(
+        const Expanded(
           flex: 3,
+// <<<<<<< codex/add-draw2d-mapping-and-event-handling
+          child: Draw2DCanvasView(),
+// =======
 // <<<<<<< codex/implement-draw2d-integration-with-webview
           child: _buildCanvasArea(
             state: state,
@@ -505,6 +519,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
           ),
 // =======
           child: _buildAutomatonCanvas(state, useDraw2dCanvas: useDraw2dCanvas),
+// >>>>>>> 003-ui-improvement-taskforce
 // >>>>>>> 003-ui-improvement-taskforce
         ),
         const SizedBox(width: 16),

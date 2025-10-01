@@ -6,8 +6,16 @@
   let canvasInstance = null;
   const stateFigures = new Map();
   const transitionFigures = new Map();
+  const highlightedStates = new Set();
+  const highlightedTransitions = new Set();
   const moveQueue = new Map();
   let moveTimer = null;
+
+  const HIGHLIGHT_STROKE_WIDTH = 4;
+  const HIGHLIGHT_STATE_COLOR = '#ff9800';
+  const HIGHLIGHT_STATE_BACKGROUND = '#fff3e0';
+  const HIGHLIGHT_TRANSITION_COLOR = '#ff9800';
+  const HIGHLIGHT_TRANSITION_STROKE = 3;
 
   function sendMessage(type, payload) {
     const message = JSON.stringify({ type, payload });
@@ -95,6 +103,8 @@
     });
     stateFigures.clear();
     transitionFigures.clear();
+    highlightedStates.clear();
+    highlightedTransitions.clear();
   }
 
   function scheduleMove(sourceId, figure) {
@@ -124,11 +134,15 @@
     const x = typeof position.x === 'number' ? position.x : 0;
     const y = typeof position.y === 'number' ? position.y : 0;
 
+    const baseStroke = 2;
+    const baseColor = state.isInitial ? '#3949ab' : '#1e88e5';
+    const baseBackground = state.isAccepting ? '#c8e6c9' : '#ffffff';
+
     const figure = new draw2d.shape.basic.Circle({
       diameter: STATE_DIAMETER,
-      stroke: 2,
-      color: state.isInitial ? '#3949ab' : '#1e88e5',
-      bgColor: state.isAccepting ? '#c8e6c9' : '#ffffff',
+      stroke: baseStroke,
+      color: baseColor,
+      bgColor: baseBackground,
       x: x,
       y: y,
     });
@@ -168,7 +182,16 @@
     });
 
     canvas.add(figure);
-    stateFigures.set(state.id, { figure: figure, label: label });
+    stateFigures.set(state.id, {
+      figure: figure,
+      label: label,
+      sourceId: state.sourceId,
+      baseStyle: {
+        stroke: baseStroke,
+        color: baseColor,
+        bgColor: baseBackground,
+      },
+    });
   }
 
   function createTransitionFigure(transition) {
@@ -178,9 +201,12 @@
       return;
     }
 
+    const baseStroke = 2;
+    const baseColor = '#546e7a';
+
     const connection = new draw2d.Connection({
-      stroke: 2,
-      color: '#546e7a',
+      stroke: baseStroke,
+      color: baseColor,
       router: new draw2d.layout.connection.SplineConnectionRouter(),
     });
     connection.setUserData({
@@ -224,7 +250,84 @@
     });
 
     ensureCanvas().add(connection);
-    transitionFigures.set(transition.id, { connection: connection, label: label });
+    transitionFigures.set(transition.id, {
+      connection: connection,
+      label: label,
+      sourceId: transition.sourceId,
+      baseStyle: {
+        stroke: baseStroke,
+        color: baseColor,
+      },
+    });
+  }
+
+  function normaliseIds(values) {
+    if (!Array.isArray(values)) {
+      return [];
+    }
+    return values
+      .map(function (value) {
+        return typeof value === 'string' ? value.trim() : String(value || '').trim();
+      })
+      .filter(function (value) {
+        return value.length > 0;
+      });
+  }
+
+  function setStateHighlight(entry, shouldHighlight) {
+    if (!entry || !entry.figure) {
+      return;
+    }
+    if (shouldHighlight) {
+      entry.figure.setStroke(HIGHLIGHT_STROKE_WIDTH);
+      entry.figure.setColor(HIGHLIGHT_STATE_COLOR);
+      entry.figure.setBackgroundColor(HIGHLIGHT_STATE_BACKGROUND);
+      highlightedStates.add(entry.sourceId);
+    } else {
+      entry.figure.setStroke(entry.baseStyle.stroke);
+      entry.figure.setColor(entry.baseStyle.color);
+      entry.figure.setBackgroundColor(entry.baseStyle.bgColor);
+      highlightedStates.delete(entry.sourceId);
+    }
+  }
+
+  function setTransitionHighlight(entry, shouldHighlight) {
+    if (!entry || !entry.connection) {
+      return;
+    }
+    if (shouldHighlight) {
+      entry.connection.setStroke(HIGHLIGHT_TRANSITION_STROKE);
+      entry.connection.setColor(HIGHLIGHT_TRANSITION_COLOR);
+      highlightedTransitions.add(entry.sourceId);
+    } else {
+      entry.connection.setStroke(entry.baseStyle.stroke);
+      entry.connection.setColor(entry.baseStyle.color);
+      highlightedTransitions.delete(entry.sourceId);
+    }
+  }
+
+  function highlight(payload) {
+    const stateIds = new Set(normaliseIds(payload && payload.states));
+    const transitionIds = new Set(
+      normaliseIds(payload && payload.transitions),
+    );
+
+    stateFigures.forEach(function (entry) {
+      setStateHighlight(entry, stateIds.has(entry.sourceId));
+    });
+
+    transitionFigures.forEach(function (entry) {
+      setTransitionHighlight(entry, transitionIds.has(entry.sourceId));
+    });
+  }
+
+  function clearHighlight() {
+    stateFigures.forEach(function (entry) {
+      setStateHighlight(entry, false);
+    });
+    transitionFigures.forEach(function (entry) {
+      setTransitionHighlight(entry, false);
+    });
   }
 
   function loadModel(model) {
@@ -232,6 +335,7 @@
       return;
     }
 
+    clearHighlight();
     clearCanvas();
     model.states.forEach(function (state) {
       createStateFigure(state);
@@ -243,5 +347,33 @@
 
   window.draw2dBridge = {
     loadModel: loadModel,
+    highlight: highlight,
+    clearHighlight: clearHighlight,
   };
+
+  window.addEventListener('message', function (event) {
+    const data = event && event.data;
+    if (!data) {
+      return;
+    }
+
+    let payload = data.payload;
+    let type = data.type;
+
+    if (typeof data === 'string') {
+      try {
+        const parsed = JSON.parse(data);
+        type = parsed.type;
+        payload = parsed.payload;
+      } catch (error) {
+        return;
+      }
+    }
+
+    if (type === 'highlight') {
+      highlight(payload || {});
+    } else if (type === 'clear_highlight') {
+      clearHighlight();
+    }
+  });
 })();

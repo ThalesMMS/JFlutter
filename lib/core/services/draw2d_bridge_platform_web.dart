@@ -6,6 +6,12 @@ import 'dart:html' as html;
 class Draw2DBridgePlatform {
   const Draw2DBridgePlatform();
 
+  void registerWebViewController(Object controller) {}
+
+  void unregisterWebViewController(Object controller) {}
+
+  void runJavaScript(String script) {}
+
   void postMessage(String type, Map<String, dynamic> payload) {
     html.window.postMessage({'type': type, 'payload': payload}, '*');
   }

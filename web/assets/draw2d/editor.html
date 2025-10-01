@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Automaton Editor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="editor.css">
+</head>
+<body>
+  <div id="toolbar">
+    <button type="button" data-action="undo" title="Undo (Ctrl+Z)">Undo</button>
+    <button type="button" data-action="redo" title="Redo (Ctrl+Y)">Redo</button>
+    <span class="toolbar-divider"></span>
+    <button type="button" data-routing="bezier" class="active" title="Bezier routing">Bézier</button>
+    <button type="button" data-routing="manhattan" title="Manhattan routing">Manhattan</button>
+  </div>
+  <div id="canvas-container">
+    <svg id="editor-canvas" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="10" refY="3" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L10,3 L0,6 z" fill="#222" />
+        </marker>
+        <marker id="initial-arrow" markerWidth="12" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L12,6 L0,12 z" fill="#222" />
+        </marker>
+      </defs>
+    </svg>
+    <div id="status-overlay" class="hidden"></div>
+    <div id="marquee" class="hidden"></div>
+  </div>
+  <div id="label-editor" class="hidden">
+    <div class="editor-dialog">
+      <h2 id="label-editor-title">Edit Label</h2>
+      <input id="label-editor-input" type="text" spellcheck="false" autocomplete="off">
+      <div class="editor-actions">
+        <button type="button" data-action="cancel">Cancel</button>
+        <button type="button" data-action="save" class="primary">Save</button>
+      </div>
+    </div>
+  </div>
+  <script src="editor.js" type="module"></script>
+</body>
+</html>

@@ -18,8 +18,9 @@ import '../../core/models/simulation_result.dart' as sim_result;
 import '../../core/entities/automaton_entity.dart';
 import '../../data/services/automaton_service.dart';
 import '../../core/repositories/automaton_repository.dart';
-import '../../features/layout/layout_repository_impl.dart';
 import '../../core/services/trace_persistence_service.dart';
+import '../../core/utils/automaton_patch.dart';
+import '../../features/layout/layout_repository_impl.dart';
 
 /// Provider for automaton state management
 class AutomatonProvider extends StateNotifier<AutomatonState> {
@@ -85,6 +86,23 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       equivalenceResult: null,
       equivalenceDetails: null,
     );
+  }
+
+  /// Applies an incremental patch produced by the web editor without forcing
+  /// a full automaton reload. The patch uses the same schema defined for the
+  /// JavaScript bridge.
+  void applyAutomatonPatch(Map<String, dynamic> patch) {
+    final current = state.currentAutomaton;
+    if (current == null) {
+      return;
+    }
+    try {
+      final updated = applyAutomatonPatchToFsa(current, patch);
+      updateAutomaton(updated);
+    } catch (error, stackTrace) {
+      debugPrint('Failed to apply automaton patch: $error');
+      debugPrint('$stackTrace');
+    }
   }
 
   /// Simulates the current automaton with input string

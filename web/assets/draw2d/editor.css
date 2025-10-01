@@ -1,0 +1,257 @@
+:root {
+  color-scheme: light;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    Roboto, Helvetica, Arial, sans-serif;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #f5f6f8;
+  color: #222;
+}
+
+#canvas-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  cursor: default;
+}
+
+#editor-canvas {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #fafbfc 0%, #f2f4f7 100%);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#toolbar {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  align-items: center;
+  backdrop-filter: blur(8px);
+  z-index: 2;
+}
+
+#toolbar button {
+  border: none;
+  border-radius: 8px;
+  background: #e9ecf2;
+  color: #1a1f36;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+#toolbar button:hover {
+  background: #d7dbe6;
+}
+
+#toolbar button:active {
+  transform: translateY(1px);
+}
+
+#toolbar button.active {
+  background: #1f6feb;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(31, 111, 235, 0.35);
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.node {
+  cursor: pointer;
+  transition: filter 0.2s ease;
+}
+
+.node.selected {
+  filter: drop-shadow(0 0 8px rgba(33, 150, 243, 0.45));
+}
+
+.node circle.state-outline {
+  fill: #fff;
+  stroke: #1a1f36;
+  stroke-width: 2px;
+}
+
+.node circle.state-inner {
+  fill: none;
+  stroke: #1a1f36;
+  stroke-width: 2px;
+}
+
+.node text.state-label {
+  font-size: 16px;
+  font-weight: 700;
+  fill: #1a1f36;
+  text-anchor: middle;
+  alignment-baseline: middle;
+  pointer-events: none;
+}
+
+.transition {
+  cursor: pointer;
+}
+
+.transition.selected path.transition-path {
+  stroke: #1f6feb;
+  stroke-width: 2.8px;
+}
+
+.transition path.transition-path {
+  fill: none;
+  stroke: #1a1f36;
+  stroke-width: 2.2px;
+  marker-end: url(#arrowhead);
+}
+
+.transition text.transition-label {
+  font-size: 14px;
+  font-weight: 600;
+  fill: #1a1f36;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: auto;
+}
+
+.transition text.transition-label tspan {
+  font-weight: 500;
+}
+
+.initial-arrow {
+  stroke: #1a1f36;
+  stroke-width: 2px;
+  fill: none;
+  marker-end: url(#initial-arrow);
+}
+
+#label-editor {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: grid;
+  place-items: center;
+  z-index: 3;
+}
+
+#label-editor.hidden {
+  display: none;
+}
+
+.editor-dialog {
+  width: min(320px, 90vw);
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.25);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.editor-dialog h2 {
+  margin: 0;
+  font-size: 18px;
+  color: #111827;
+}
+
+#label-editor-input {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(17, 24, 39, 0.12);
+  padding: 10px 12px;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#label-editor-input:focus {
+  border-color: #1f6feb;
+  box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.25);
+}
+
+.editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.editor-actions button {
+  border: none;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.editor-actions button[data-action='cancel'] {
+  background: #e9ecf2;
+  color: #1a1f36;
+}
+
+.editor-actions button[data-action='cancel']:hover {
+  background: #d6dbe6;
+}
+
+.editor-actions button.primary {
+  background: #1f6feb;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(31, 111, 235, 0.32);
+}
+
+.editor-actions button.primary:hover {
+  background: #1857c7;
+}
+
+#marquee {
+  position: absolute;
+  border: 1.5px dashed rgba(31, 111, 235, 0.75);
+  background: rgba(31, 111, 235, 0.12);
+  pointer-events: none;
+  z-index: 2;
+}
+
+#marquee.hidden {
+  display: none;
+}
+
+#status-overlay {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.78);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.35);
+  z-index: 3;
+}
+
+#status-overlay.hidden {
+  display: none;
+}

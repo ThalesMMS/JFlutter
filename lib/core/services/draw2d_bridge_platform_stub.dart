@@ -18,6 +18,8 @@ class Draw2DBridgePlatform {
     }
   }
 
+  bool get hasRegisteredController => _controller != null;
+
   void runJavaScript(String script) {
     final controller = _controller;
     if (controller == null) {

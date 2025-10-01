@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -10,6 +9,8 @@ import '../../core/models/tm_transition.dart';
 import '../../core/services/draw2d_bridge_service.dart';
 import '../mappers/draw2d_tm_mapper.dart';
 import '../providers/tm_editor_provider.dart';
+import 'draw2d_canvas_fallback.dart';
+import 'draw2d_platform_support.dart';
 
 /// Draw2D-powered canvas for editing Turing Machines using the shared
 /// JavaScript editor.
@@ -26,7 +27,7 @@ class Draw2DTMCanvasView extends ConsumerStatefulWidget {
 }
 
 class _Draw2DTMCanvasViewState extends ConsumerState<Draw2DTMCanvasView> {
-  late final WebViewController _controller;
+  WebViewController? _controller;
   final Draw2DBridgeService _bridge = Draw2DBridgeService();
   ProviderSubscription<TMEditorState>? _subscription;
   bool _isReady = false;
@@ -36,7 +37,11 @@ class _Draw2DTMCanvasViewState extends ConsumerState<Draw2DTMCanvasView> {
   void initState() {
     super.initState();
 
-    _controller = WebViewController()
+    if (!_isPlatformSupported) {
+      return;
+    }
+
+    final controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(Colors.transparent)
       ..addJavaScriptChannel('JFlutterBridge', onMessageReceived: _handleMessage)
@@ -52,7 +57,9 @@ class _Draw2DTMCanvasViewState extends ConsumerState<Draw2DTMCanvasView> {
       )
       ..loadFlutterAsset('assets/draw2d/editor.html');
 
-    _bridge.registerWebViewController(_controller);
+    _controller = controller;
+
+    _bridge.registerWebViewController(controller);
 
     _subscription = ref.listenManual<TMEditorState>(
       tmEditorProvider,
@@ -68,17 +75,27 @@ class _Draw2DTMCanvasViewState extends ConsumerState<Draw2DTMCanvasView> {
   @override
   void dispose() {
     _subscription?.close();
-    _bridge.unregisterWebViewController(_controller);
+    final controller = _controller;
+    if (controller != null) {
+      _bridge.unregisterWebViewController(controller);
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final controller = _controller;
+    if (!_isPlatformSupported || controller == null) {
+      return const Draw2dCanvasFallback();
+    }
+
     return DecoratedBox(
       decoration: const BoxDecoration(color: Colors.transparent),
-      child: WebViewWidget(controller: _controller),
+      child: WebViewWidget(controller: controller),
     );
   }
+
+  bool get _isPlatformSupported => isDraw2dWebViewSupported();
 
   void _handleMessage(JavaScriptMessage message) {
     Map<String, dynamic> decoded;
@@ -204,7 +221,11 @@ class _Draw2DTMCanvasViewState extends ConsumerState<Draw2DTMCanvasView> {
   void _pushModel(TMEditorState state) {
     final payload = Draw2DTMMapper.toJson(state.tm);
     final json = jsonEncode(payload);
-    _controller
+    final controller = _controller;
+    if (controller == null) {
+      return;
+    }
+    controller
         .runJavaScript('window.draw2dBridge?.loadModel($json);')
         .catchError((error, stackTrace) {
       debugPrint('Failed to push Draw2D TM model: $error');

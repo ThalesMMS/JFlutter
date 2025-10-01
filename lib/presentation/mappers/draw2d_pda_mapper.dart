@@ -1,63 +1,66 @@
 import 'package:collection/collection.dart';
-import '../../core/models/fsa.dart';
-import '../../core/models/fsa_transition.dart';
+
+import '../../core/models/pda.dart';
+import '../../core/models/pda_transition.dart';
 import '../../core/models/state.dart';
 
-/// Utility that converts [FSA] models into the structure expected by the
-/// Draw2D canvas.
-class Draw2DAutomatonMapper {
-  const Draw2DAutomatonMapper._();
+/// Utility that converts [PDA] models into the structure expected by the
+/// Draw2D canvas runtime.
+class Draw2DPdaMapper {
+  const Draw2DPdaMapper._();
 
   static const double _stateDiameter = 60.0;
   static const double _stateRadius = _stateDiameter / 2;
 
-  /// Converts the provided [automaton] into a Draw2D compatible JSON map.
-  static Map<String, dynamic> toJson(FSA? automaton) {
-    if (automaton == null) {
+  /// Converts the provided [pda] into a Draw2D compatible JSON map.
+  static Map<String, dynamic> toJson(PDA? pda) {
+    if (pda == null) {
       return {
         'id': null,
-        'type': 'fsa',
+        'type': 'pda',
         'name': null,
         'alphabet': const <String>[],
         'states': const <Map<String, dynamic>>[],
         'transitions': const <Map<String, dynamic>>[],
         'initialStateId': null,
+        'stackAlphabet': const <String>[],
+        'initialStackSymbol': null,
       };
     }
 
-    final sortedStates = automaton.states.toList()
+    final sortedStates = pda.states.toList()
       ..sort((a, b) => a.id.compareTo(b.id));
-    final sortedTransitions = automaton.transitions
-        .whereType<FSATransition>()
-        .toList()
+    final sortedTransitions = pda.pdaTransitions.toList()
       ..sort((a, b) => a.id.compareTo(b.id));
 
     final Map<String, String> stateIdMap = {};
     final statesJson = sortedStates.map((state) {
-      final draw2dId = _stableStateId(automaton.id, state.id);
+      final draw2dId = _stableStateId(pda.id, state.id);
       stateIdMap[state.id] = draw2dId;
       return _stateToJson(draw2dId, state);
     }).toList(growable: false);
 
     final transitionsJson = sortedTransitions.map((transition) {
-      final draw2dId = _stableTransitionId(automaton.id, transition.id);
+      final draw2dId = _stableTransitionId(pda.id, transition.id);
       final fromId = stateIdMap[transition.fromState.id];
       final toId = stateIdMap[transition.toState.id];
       return _transitionToJson(draw2dId, fromId, toId, transition);
     }).whereNotNull().toList(growable: false);
 
-    final initialId = automaton.initialState != null
-        ? stateIdMap[automaton.initialState!.id]
+    final initialId = pda.initialState != null
+        ? stateIdMap[pda.initialState!.id]
         : null;
 
     return {
-      'id': automaton.id,
-      'type': 'fsa',
-      'name': automaton.name,
-      'alphabet': automaton.alphabet.toList()..sort(),
+      'id': pda.id,
+      'type': 'pda',
+      'name': pda.name,
+      'alphabet': pda.alphabet.toList()..sort(),
       'states': statesJson,
       'transitions': transitionsJson,
       'initialStateId': initialId,
+      'stackAlphabet': pda.stackAlphabet.toList()..sort(),
+      'initialStackSymbol': pda.initialStackSymbol,
     };
   }
 
@@ -82,27 +85,41 @@ class Draw2DAutomatonMapper {
     String draw2dId,
     String? fromId,
     String? toId,
-    FSATransition transition,
+    PDATransition transition,
   ) {
     if (fromId == null || toId == null) {
       return null;
     }
 
-    final sortedSymbols = transition.inputSymbols.toList()..sort();
-    final label = transition.lambdaSymbol ?? sortedSymbols.join(',');
-
     final control = transition.controlPoint;
+    final label = transition.label.isNotEmpty
+        ? transition.label
+        : _formatLabel(transition);
+
     return {
       'id': draw2dId,
       'sourceId': transition.id,
       'from': fromId,
       'to': toId,
       'label': label,
+      'readSymbol': transition.inputSymbol,
+      'popSymbol': transition.popSymbol,
+      'pushSymbol': transition.pushSymbol,
+      'isLambdaInput': transition.isLambdaInput,
+      'isLambdaPop': transition.isLambdaPop,
+      'isLambdaPush': transition.isLambdaPush,
       'controlPoint': {
         'x': control.x.isFinite ? control.x : 0.0,
         'y': control.y.isFinite ? control.y : 0.0,
       },
     };
+  }
+
+  static String _formatLabel(PDATransition transition) {
+    final read = transition.isLambdaInput ? 'λ' : transition.inputSymbol;
+    final pop = transition.isLambdaPop ? 'λ' : transition.popSymbol;
+    final push = transition.isLambdaPush ? 'λ' : transition.pushSymbol;
+    return '$read, $pop/$push';
   }
 
   static String _stableStateId(String automatonId, String stateId) {

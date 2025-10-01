@@ -98,12 +98,24 @@ class _HomePageState extends ConsumerState<HomePage> {
     // Handle navigation changes
     if (_lastNavigationIndex != currentIndex) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _pageController.hasClients) {
+        if (!mounted || !_pageController.hasClients) {
+          return;
+        }
+
+        final currentPage = _pageController.page?.round() ?? _pageController.initialPage;
+        if (currentPage == currentIndex) {
+          return;
+        }
+
+        final pageDistance = (currentIndex - currentPage).abs();
+        if (pageDistance <= 1) {
           _pageController.animateToPage(
             currentIndex,
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
           );
+        } else {
+          _pageController.jumpToPage(currentIndex);
         }
       });
       _lastNavigationIndex = currentIndex;

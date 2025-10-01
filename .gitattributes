@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Ignore reference implementations from GitHub language statistics
+References/** linguist-vendored

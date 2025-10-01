@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../../core/services/draw2d_bridge_service.dart';
 import '../mappers/draw2d_automaton_mapper.dart';
 import '../providers/automaton_provider.dart';
 
@@ -20,6 +21,7 @@ class Draw2DCanvasView extends ConsumerStatefulWidget {
 
 class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
   late final WebViewController _controller;
+  final Draw2DBridgeService _bridge = Draw2DBridgeService();
   ProviderSubscription<AutomatonState>? _subscription;
   bool _isReady = false;
   Timer? _moveDebounce;
@@ -44,6 +46,8 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
       )
       ..loadFlutterAsset('assets/draw2d/editor.html');
 
+    _bridge.registerWebViewController(_controller);
+
     _subscription = ref.listenManual<AutomatonState>(
       automatonProvider,
       (previous, next) {
@@ -62,6 +66,7 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
   void dispose() {
     _subscription?.close();
     _moveDebounce?.cancel();
+    _bridge.unregisterWebViewController(_controller);
     super.dispose();
   }
 

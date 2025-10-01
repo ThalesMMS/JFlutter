@@ -68,12 +68,13 @@ dependencies:
   
   # Vector math for positioning and calculations
   vector_math: ^2.1.4
-  
+
   # Collection utilities
   collection: ^1.18.0
   petitparser: ^7.0.1
   freezed_annotation: ^3.1.0
   json_annotation: ^4.9.0
+  webview_flutter: ^4.7.0
 
 dev_dependencies:
   flutter_test:
@@ -118,6 +119,9 @@ flutter:
     - jflutter_js/examples/apda_palindrome.json
     # Turing machine example
     - jflutter_js/examples/tm_binary_to_unary.json
+    # Draw2D WebView bridge
+    - assets/draw2d/index.html
+    - assets/draw2d/editor.js
 
 flutter_launcher_icons:
   image_path: "icon.PNG"

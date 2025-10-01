@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vector_math/vector_math_64.dart';
 import '../../core/algorithms/automaton_simulator.dart';
@@ -18,17 +19,21 @@ import '../../core/entities/automaton_entity.dart';
 import '../../data/services/automaton_service.dart';
 import '../../core/repositories/automaton_repository.dart';
 import '../../features/layout/layout_repository_impl.dart';
+import '../../core/services/trace_persistence_service.dart';
 
 /// Provider for automaton state management
 class AutomatonProvider extends StateNotifier<AutomatonState> {
   final AutomatonService _automatonService;
   final LayoutRepository _layoutRepository;
+  final TracePersistenceService? _tracePersistenceService;
 
   AutomatonProvider({
     required AutomatonService automatonService,
     required LayoutRepository layoutRepository,
+    TracePersistenceService? tracePersistenceService,
   }) : _automatonService = automatonService,
        _layoutRepository = layoutRepository,
+       _tracePersistenceService = tracePersistenceService,
        super(const AutomatonState());
 
   /// Creates a new automaton
@@ -389,6 +394,12 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
   void _addSimulationToHistory(sim_result.SimulationResult result) {
     final newHistory = [...state.simulationHistory, result];
     state = state.copyWith(simulationHistory: newHistory);
+
+    // Also save to trace persistence service if available
+    _tracePersistenceService?.saveTrace(result).catchError((error) {
+      // Silently fail - trace persistence is a nice-to-have feature
+      debugPrint('Failed to persist simulation trace: $error');
+    });
   }
 
   /// Get automaton from history

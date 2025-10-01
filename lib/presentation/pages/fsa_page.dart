@@ -110,6 +110,8 @@ class _FSAPageState extends ConsumerState<FSAPage> {
               onAutomatonChanged: (automaton) {
                 ref.read(automatonProvider.notifier).updateAutomaton(automaton);
               },
+              simulationResult: state.simulationResult,
+              showTrace: state.simulationResult != null,
             ),
           ),
         ),
@@ -241,6 +243,8 @@ class _FSAPageState extends ConsumerState<FSAPage> {
             onAutomatonChanged: (automaton) {
               ref.read(automatonProvider.notifier).updateAutomaton(automaton);
             },
+            simulationResult: state.simulationResult,
+            showTrace: state.simulationResult != null,
           ),
         ),
         const SizedBox(width: 16),

@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get_it/get_it.dart';
 import '../../core/models/simulation_result.dart';
 import '../../core/models/simulation_step.dart';
-import '../../data/services/trace_persistence_service.dart';
+import '../../data/services/trace_persistence_service.dart' as data_trace;
 import '../../injection/dependency_injection.dart';
 
 /// Unified trace state that can handle traces from any automaton type
@@ -125,7 +125,7 @@ class UnifiedTraceState {
 
 /// Unified trace notifier that handles traces across different automaton types
 class UnifiedTraceNotifier extends StateNotifier<UnifiedTraceState> {
-  final TracePersistenceService _persistenceService;
+  final data_trace.TracePersistenceService _persistenceService;
 
   UnifiedTraceNotifier(this._persistenceService)
     : super(const UnifiedTraceState()) {
@@ -300,17 +300,16 @@ class UnifiedTraceNotifier extends StateNotifier<UnifiedTraceState> {
   }
 }
 
-/// Provider for trace persistence service
-final tracePersistenceServiceProvider = Provider<TracePersistenceService>((
-  ref,
-) {
-  throw UnimplementedError('TracePersistenceService must be initialized');
-});
+/// Provider for trace persistence service (data layer version)
+final dataTracePersistenceServiceProvider =
+    Provider<data_trace.TracePersistenceService>((ref) {
+      throw UnimplementedError('TracePersistenceService must be initialized');
+    });
 
 /// Provider for unified trace state
 final unifiedTraceProvider =
     StateNotifierProvider<UnifiedTraceNotifier, UnifiedTraceState>((ref) {
-      final persistenceService = ref.watch(tracePersistenceServiceProvider);
+      final persistenceService = ref.watch(dataTracePersistenceServiceProvider);
       return UnifiedTraceNotifier(persistenceService);
     });
 

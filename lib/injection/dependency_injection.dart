@@ -12,7 +12,8 @@ import '../features/layout/layout_repository_impl.dart';
 import '../data/services/automaton_service.dart';
 import '../data/services/simulation_service.dart';
 import '../data/services/conversion_service.dart';
-import '../data/services/trace_persistence_service.dart';
+import '../core/services/trace_persistence_service.dart';
+import '../data/services/trace_persistence_service.dart' as data_trace;
 import '../presentation/providers/automaton_provider.dart';
 import '../presentation/providers/algorithm_provider.dart';
 import '../presentation/providers/grammar_provider.dart';
@@ -42,8 +43,14 @@ Future<void> setupDependencyInjection() async {
 
   getIt.registerLazySingleton<ConversionService>(() => ConversionService());
 
+  // Core trace persistence service (for AutomatonProvider, TraceNavigationProvider)
   getIt.registerLazySingleton<TracePersistenceService>(
-    () => TracePersistenceService(prefs),
+    () => TracePersistenceService(),
+  );
+
+  // Data layer trace persistence service (for UnifiedTraceNotifier)
+  getIt.registerLazySingleton<data_trace.TracePersistenceService>(
+    () => data_trace.TracePersistenceService(prefs),
   );
 
   // Repositories
@@ -176,6 +183,7 @@ Future<void> setupDependencyInjection() async {
     () => AutomatonProvider(
       automatonService: getIt<AutomatonService>(),
       layoutRepository: getIt<LayoutRepository>(),
+      tracePersistenceService: getIt<TracePersistenceService>(),
     ),
   );
 
@@ -206,7 +214,7 @@ Future<void> setupDependencyInjection() async {
   );
 
   getIt.registerFactory<UnifiedTraceNotifier>(
-    () => UnifiedTraceNotifier(getIt<TracePersistenceService>()),
+    () => UnifiedTraceNotifier(getIt<data_trace.TracePersistenceService>()),
   );
 }
 

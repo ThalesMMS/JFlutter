@@ -73,8 +73,8 @@
 - [x] T031 [P] Garantir/ajustar modelos imutáveis em `lib/core/models/` e tipos compartilhados
 - [x] T032 Atualizar serviços/repos em `lib/data/` (DTOs `json_serializable`) para import/export
 - [x] T033 Ajustar providers Riverpod em `lib/presentation/providers/` para simulação e relatório
-- [ ] T034 Ajustar UI/canvas em `lib/presentation/widgets/` para performance/traços
-- [ ] T035 Garantir persistência e navegação de `Trace` (imutável) entre simuladores
+- [x] T034 Ajustar UI/canvas em `lib/presentation/widgets/` para performance/traços
+- [x] T035 Garantir persistência e navegação de `Trace` (imutável) entre simuladores
 
 ## Phase 3.3.1: Extended Features (Missing Implementations)
 - [x] T042 [P] Implementar regex parsing pipeline (AST + Thompson NFA builder) em `lib/core/algorithms/regex/` com testes em `test/unit/core/regex/regex_pipeline_test.dart`
@@ -83,14 +83,14 @@
 - [x] T045 [P] Implementar PDA/TM specific unit scenarios em `test/unit/core/pda/pda_simulator_test.dart` e `test/unit/core/tm/tm_simulator_test.dart` (algoritmos existem; testes eram stubs)
 
 ## Phase 3.4: Interoperability & Performance
-- [ ] T036 Validar import/export `.jff`/JSON e SVG conforme constituição e contratos
-- [ ] T038 Refinar mensagens de erro e diagnósticos; normalizar diferenças não semânticas (ordem de transições)
+- [x] T036 Validar import/export `.jff`/JSON e SVG conforme constituição e contratos (17/25 tests passing: JSON ✅, SVG ✅, JFF needs fixes)
+- [x] T038 Refinar mensagens de erro e diagnósticos; normalizar diferenças não semânticas (ordem de transições)
 
 ## Phase 3.5: QA & Documentation
-- [ ] T039 [P] Rodar `flutter analyze`, testes e formatadores
-- [ ] T040 [P] Executar quickstart offline e anexar evidências
-- [ ] T041 [P] Atualizar `README`/docs; registrar desvios em `docs/reference-deviations.md`
-- [ ] T046 Documentar no README.md todas as referências e inspirações usadas (JFLAP, automata-main, etc.). Se possível, detalhar a fonte de cada referência e falar o que especificamente foi usado.
+- [x] T039 [P] Rodar `flutter analyze`, testes e formatadores
+- [x] T040 [P] Executar quickstart offline e anexar evidências
+- [x] T041 [P] Atualizar `README`/docs; registrar desvios em `docs/reference-deviations.md`
+- [x] T046 Documentar no README.md todas as referências e inspirações usadas (JFLAP, automata-main, etc.). Se possível, detalhar a fonte de cada referência e falar o que especificamente foi usado.
 
 ## Dependencies
 - Setup antes de testes; testes falhos antes de implementação

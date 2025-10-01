@@ -10,6 +10,7 @@
   const highlightedTransitions = new Set();
   const moveQueue = new Map();
   let moveTimer = null;
+  let currentModelType = 'fsa';
 
   const HIGHLIGHT_STROKE_WIDTH = 4;
   const HIGHLIGHT_STATE_COLOR = '#ff9800';
@@ -62,6 +63,34 @@
         return;
       }
 
+// <<<<<<< codex/add-draw2d-backed-pda-canvas-widget
+      if (currentModelType === 'pda') {
+        const metadata = promptForPdaTransition();
+        if (!metadata) {
+          connection.remove();
+          return;
+        }
+        sendMessage('transition.add', {
+          id: `t_${Date.now()}`,
+          fromStateId: sourceData.sourceId,
+          toStateId: targetData.sourceId,
+          label: metadata.label,
+          readSymbol: metadata.readSymbol,
+          popSymbol: metadata.popSymbol,
+          pushSymbol: metadata.pushSymbol,
+          isLambdaInput: metadata.isLambdaInput,
+          isLambdaPop: metadata.isLambdaPop,
+          isLambdaPush: metadata.isLambdaPush,
+        });
+      } else {
+        sendMessage('transition.add', {
+          id: `t_${Date.now()}`,
+          fromStateId: sourceData.sourceId,
+          toStateId: targetData.sourceId,
+          label: '',
+        });
+      }
+// =======
       sendMessage('transition.add', {
         id: `t_${Date.now()}`,
         fromStateId: sourceData.sourceId,
@@ -70,6 +99,7 @@
         writeSymbol: '',
         direction: 'R',
       });
+// >>>>>>> 003-ui-improvement-taskforce
 
       connection.remove();
     });
@@ -128,6 +158,103 @@
         sendMessage('state.move', update);
       });
     }, 80);
+  }
+
+  function hasOwn(object, key) {
+    return Object.prototype.hasOwnProperty.call(object || {}, key);
+  }
+
+  function isPdaTransition(transition) {
+    if (currentModelType === 'pda') {
+      return true;
+    }
+    if (!transition) {
+      return false;
+    }
+    return (
+      hasOwn(transition, 'readSymbol') ||
+      hasOwn(transition, 'popSymbol') ||
+      hasOwn(transition, 'pushSymbol') ||
+      hasOwn(transition, 'isLambdaInput') ||
+      hasOwn(transition, 'isLambdaPop') ||
+      hasOwn(transition, 'isLambdaPush')
+    );
+  }
+
+  function formatPdaTransitionLabel(data) {
+    if (!data) {
+      return '';
+    }
+    const read = data.isLambdaInput ? 'λ' : (data.readSymbol || '');
+    const pop = data.isLambdaPop ? 'λ' : (data.popSymbol || '');
+    const push = data.isLambdaPush ? 'λ' : (data.pushSymbol || '');
+    return `${read}, ${pop}/${push}`;
+  }
+
+  function normaliseStackResponse(raw) {
+    const text = typeof raw === 'string' ? raw.trim() : '';
+    const lower = text.toLowerCase();
+    const isLambda =
+      text === 'λ' || lower === 'lambda' || lower === 'epsilon' || lower === 'eps';
+    return {
+      symbol: isLambda ? '' : text,
+      isLambda: isLambda,
+    };
+  }
+
+  function promptForPdaTransition(existing) {
+    const readDefault = existing
+      ? existing.isLambdaInput
+        ? 'λ'
+        : existing.readSymbol || ''
+      : '';
+    const readInput = window.prompt(
+      'Input symbol (use λ for epsilon)',
+      readDefault,
+    );
+    if (readInput === null) {
+      return null;
+    }
+    const read = normaliseStackResponse(readInput);
+
+    const popDefault = existing
+      ? existing.isLambdaPop
+        ? 'λ'
+        : existing.popSymbol || 'Z'
+      : 'Z';
+    const popInput = window.prompt(
+      'Stack pop symbol (use λ for epsilon)',
+      popDefault,
+    );
+    if (popInput === null) {
+      return null;
+    }
+    const pop = normaliseStackResponse(popInput);
+
+    const pushDefault = existing
+      ? existing.isLambdaPush
+        ? 'λ'
+        : existing.pushSymbol || ''
+      : '';
+    const pushInput = window.prompt(
+      'Stack push symbol (use λ for epsilon)',
+      pushDefault,
+    );
+    if (pushInput === null) {
+      return null;
+    }
+    const push = normaliseStackResponse(pushInput);
+
+    const metadata = {
+      readSymbol: read.symbol,
+      popSymbol: pop.symbol,
+      pushSymbol: push.symbol,
+      isLambdaInput: read.isLambda,
+      isLambdaPop: pop.isLambda,
+      isLambdaPush: push.isLambda,
+    };
+    metadata.label = formatPdaTransitionLabel(metadata);
+    return metadata;
   }
 
   function createStateFigure(state) {
@@ -246,8 +373,17 @@
       }
     }
 
+    const isPda = isPdaTransition(transition);
+    const labelText = isPda
+      ? formatPdaTransitionLabel(transition)
+      : transition.label;
+
     const label = new draw2d.shape.basic.Label({
+// <<<<<<< codex/add-draw2d-backed-pda-canvas-widget
+      text: labelText,
+// =======
       text: formatTransitionLabel(transition),
+// >>>>>>> 003-ui-improvement-taskforce
       fontColor: '#263238',
       padding: 4,
       bgColor: '#ffffff',
@@ -260,6 +396,51 @@
     );
 
     connection.on('dblclick', function () {
+// <<<<<<< codex/add-draw2d-backed-pda-canvas-widget
+      const entry = transitionFigures.get(transition.id);
+      if (!entry) {
+        return;
+      }
+
+      if (isPdaTransition(entry.data)) {
+        const metadata = promptForPdaTransition(entry.data);
+        if (!metadata) {
+          return;
+        }
+        entry.data = {
+          ...entry.data,
+          readSymbol: metadata.readSymbol,
+          popSymbol: metadata.popSymbol,
+          pushSymbol: metadata.pushSymbol,
+          isLambdaInput: metadata.isLambdaInput,
+          isLambdaPop: metadata.isLambdaPop,
+          isLambdaPush: metadata.isLambdaPush,
+        };
+        const formatted = formatPdaTransitionLabel(entry.data);
+        entry.data.label = formatted;
+        label.setText(formatted);
+        sendMessage('transition.label', {
+          id: entry.sourceId,
+          label: formatted,
+          readSymbol: metadata.readSymbol,
+          popSymbol: metadata.popSymbol,
+          pushSymbol: metadata.pushSymbol,
+          isLambdaInput: metadata.isLambdaInput,
+          isLambdaPop: metadata.isLambdaPop,
+          isLambdaPush: metadata.isLambdaPush,
+        });
+      } else {
+        const currentText = label.getText();
+        const result = window.prompt('Transition label', currentText);
+        if (typeof result === 'string' && result !== currentText) {
+          entry.data.label = result;
+          label.setText(result);
+          sendMessage('transition.label', {
+            id: entry.sourceId,
+            label: result,
+          });
+        }
+// =======
       const entry = transitionFigures.get(transition.id) || {};
       const currentRead = entry.readSymbol || transition.readSymbol || '';
       const currentWrite = entry.writeSymbol || transition.writeSymbol || '';
@@ -281,6 +462,7 @@
       );
       if (directionResult === null) {
         return;
+// >>>>>>> 003-ui-improvement-taskforce
       }
 
       const normalisedDirection = (directionResult || 'R').trim().toUpperCase();
@@ -314,6 +496,35 @@
     });
 
     ensureCanvas().add(connection);
+    const data = {
+      id: transition.id,
+      sourceId: transition.sourceId,
+      from: transition.from,
+      to: transition.to,
+      label: labelText,
+    };
+
+    if (isPda) {
+      data.readSymbol = hasOwn(transition, 'readSymbol')
+        ? transition.readSymbol
+        : '';
+      data.popSymbol = hasOwn(transition, 'popSymbol')
+        ? transition.popSymbol
+        : '';
+      data.pushSymbol = hasOwn(transition, 'pushSymbol')
+        ? transition.pushSymbol
+        : '';
+      data.isLambdaInput = hasOwn(transition, 'isLambdaInput')
+        ? Boolean(transition.isLambdaInput)
+        : false;
+      data.isLambdaPop = hasOwn(transition, 'isLambdaPop')
+        ? Boolean(transition.isLambdaPop)
+        : false;
+      data.isLambdaPush = hasOwn(transition, 'isLambdaPush')
+        ? Boolean(transition.isLambdaPush)
+        : false;
+    }
+
     transitionFigures.set(transition.id, {
       connection: connection,
       label: label,
@@ -322,9 +533,13 @@
         stroke: baseStroke,
         color: baseColor,
       },
+// <<<<<<< codex/add-draw2d-backed-pda-canvas-widget
+      data: data,
+// =======
       readSymbol: transition.readSymbol || '',
       writeSymbol: transition.writeSymbol || '',
       direction: (transition.direction || 'R').toUpperCase(),
+// >>>>>>> 003-ui-improvement-taskforce
     });
   }
 
@@ -402,6 +617,7 @@
       return;
     }
 
+    currentModelType = typeof model.type === 'string' ? model.type : 'fsa';
     clearHighlight();
     clearCanvas();
     model.states.forEach(function (state) {

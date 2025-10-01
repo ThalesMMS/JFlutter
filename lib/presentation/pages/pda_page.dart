@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/pda.dart';
 import '../providers/pda_editor_provider.dart';
+import '../providers/settings_provider.dart';
+import '../widgets/draw2d_pda_canvas_view.dart';
 import '../widgets/pda_canvas.dart';
 import '../widgets/pda_simulation_panel.dart';
 import '../widgets/pda_algorithm_panel.dart';
@@ -38,12 +40,16 @@ class _PDAPageState extends ConsumerState<PDAPage> {
     final screenSize = MediaQuery.of(context).size;
     final isMobile = screenSize.width < 1024;
 
+    final useDraw2dCanvas = ref.watch(settingsProvider).useDraw2dCanvas;
+
     return Scaffold(
-      body: isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
+      body: isMobile
+          ? _buildMobileLayout(useDraw2dCanvas)
+          : _buildDesktopLayout(useDraw2dCanvas),
     );
   }
 
-  Widget _buildMobileLayout() {
+  Widget _buildMobileLayout(bool useDraw2dCanvas) {
     return SafeArea(
       child: Stack(
         children: [
@@ -52,10 +58,14 @@ class _PDAPageState extends ConsumerState<PDAPage> {
               Expanded(
                 child: Container(
                   margin: const EdgeInsets.all(8),
-                  child: PDACanvas(
-                    canvasKey: _canvasKey,
-                    onPDAModified: _handlePdaModified,
-                  ),
+                  child: useDraw2dCanvas
+                      ? Draw2DPdaCanvasView(
+                          onPdaModified: _handlePdaModified,
+                        )
+                      : PDACanvas(
+                          canvasKey: _canvasKey,
+                          onPDAModified: _handlePdaModified,
+                        ),
                 ),
               ),
               _buildMobileInfoPanel(context),
@@ -235,7 +245,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
     );
   }
 
-  Widget _buildDesktopLayout() {
+  Widget _buildDesktopLayout(bool useDraw2dCanvas) {
     return Row(
       children: [
         // Left panel - PDA Canvas
@@ -243,10 +253,14 @@ class _PDAPageState extends ConsumerState<PDAPage> {
           flex: 2,
           child: Container(
             margin: const EdgeInsets.all(8),
-            child: PDACanvas(
-              canvasKey: _canvasKey,
-              onPDAModified: _handlePdaModified,
-            ),
+            child: useDraw2dCanvas
+                ? Draw2DPdaCanvasView(
+                    onPdaModified: _handlePdaModified,
+                  )
+                : PDACanvas(
+                    canvasKey: _canvasKey,
+                    onPDAModified: _handlePdaModified,
+                  ),
           ),
         ),
         const SizedBox(width: 16),

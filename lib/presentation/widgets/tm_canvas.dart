@@ -34,7 +34,19 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
   automaton_state.State? _selectedState;
   bool _isAddingState = false;
   bool _isAddingTransition = false;
+  automaton_state.State? _transitionStart;
+  Offset? _transitionPreviewPosition;
   final FrameThrottler _moveThrottler = FrameThrottler();
+
+  CanvasInteractionMode get _interactionMode {
+    if (_isAddingTransition) {
+      return CanvasInteractionMode.addTransition;
+    }
+    if (_isAddingState) {
+      return CanvasInteractionMode.addState;
+    }
+    return CanvasInteractionMode.none;
+  }
 
   @override
   void initState() {
@@ -77,12 +89,17 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
                   onTransitionDeleted: _deleteTransition,
                   onTransitionEdited: _editTransition,
                   stateRadius: 30,
+                  interactionMode: _interactionMode,
+                  onTransitionPreview: _handleTransitionPreview,
+                  onInteractionModeHandled: _handleInteractionModeHandled,
                   child: CustomPaint(
                     key: widget.canvasKey,
                     painter: _TMCanvasPainter(
                       states: _states,
                       transitions: _transitions,
                       selectedState: _selectedState,
+                      transitionStart: _transitionStart,
+                      transitionPreviewPosition: _transitionPreviewPosition,
                       nondeterministicTransitionIds:
                           editorState.nondeterministicTransitionIds,
                     ),
@@ -122,6 +139,8 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
                 onPressed: () => setState(() {
                   _isAddingState = !_isAddingState;
                   _isAddingTransition = false;
+                  _transitionStart = null;
+                  _transitionPreviewPosition = null;
                 }),
               ),
               _buildToolButton(
@@ -132,6 +151,8 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
                 onPressed: () => setState(() {
                   _isAddingTransition = !_isAddingTransition;
                   _isAddingState = false;
+                  _transitionStart = null;
+                  _transitionPreviewPosition = null;
                 }),
               ),
               _buildToolButton(
@@ -222,25 +243,73 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
     _notifyEditor();
   }
 
-  void _addTransition(Transition transition) {
-    if (transition is! FSATransition) {
-      return;
-    }
-    // Convert FSA transition to TM transition
-    final tmTransition = TMTransition(
-      id: transition.id,
+  void _addTransition(Transition transition) async {
+    final baseTransition = TMTransition(
+      id: 't${_transitions.length + 1}',
       fromState: transition.fromState,
       toState: transition.toState,
-      label: transition.label,
-      readSymbol: transition.label,
-      writeSymbol: transition.label,
+      label: '',
+      readSymbol: '',
+      writeSymbol: '',
       direction: TapeDirection.right,
+    );
+
+    final configured = await _showTransitionDialog(baseTransition);
+    if (configured == null) {
+      return;
+    }
+
+    final directionSymbol = switch (configured.direction) {
+      TapeDirection.left => 'L',
+      TapeDirection.right => 'R',
+      TapeDirection.stay => 'S',
+    };
+
+    final tmTransition = configured.copyWith(
+      label:
+          '${configured.readSymbol}/${configured.writeSymbol},$directionSymbol',
     );
 
     setState(() {
       _transitions.add(tmTransition);
+      _isAddingTransition = false;
+      _transitionStart = null;
+      _transitionPreviewPosition = null;
     });
     _notifyEditor();
+  }
+
+  void _handleTransitionPreview(TransitionDragPreview? preview) {
+    if (preview == null) {
+      if (_transitionStart != null || _transitionPreviewPosition != null) {
+        setState(() {
+          _transitionStart = null;
+          _transitionPreviewPosition = null;
+        });
+      }
+      return;
+    }
+
+    setState(() {
+      _transitionStart = preview.fromState;
+      _transitionPreviewPosition = preview.currentPosition;
+    });
+  }
+
+  void _handleInteractionModeHandled() {
+    if (!_isAddingState &&
+        !_isAddingTransition &&
+        _transitionStart == null &&
+        _transitionPreviewPosition == null) {
+      return;
+    }
+
+    setState(() {
+      _isAddingState = false;
+      _isAddingTransition = false;
+      _transitionStart = null;
+      _transitionPreviewPosition = null;
+    });
   }
 
   void _editState(automaton_state.State state) {
@@ -289,6 +358,8 @@ class _TMCanvasState extends ConsumerState<TMCanvas> {
       _selectedState = null;
       _isAddingState = false;
       _isAddingTransition = false;
+      _transitionStart = null;
+      _transitionPreviewPosition = null;
     });
     _notifyEditor();
   }
@@ -431,12 +502,16 @@ class _TMCanvasPainter extends CustomPainter {
   final List<automaton_state.State> states;
   final List<TMTransition> transitions;
   final automaton_state.State? selectedState;
+  final automaton_state.State? transitionStart;
+  final Offset? transitionPreviewPosition;
   final Set<String> nondeterministicTransitionIds;
 
   _TMCanvasPainter({
     required this.states,
     required this.transitions,
     required this.selectedState,
+    required this.transitionStart,
+    required this.transitionPreviewPosition,
     this.nondeterministicTransitionIds = const {},
   });
 
@@ -450,6 +525,10 @@ class _TMCanvasPainter extends CustomPainter {
     // Draw states
     for (final state in states) {
       _drawState(canvas, state);
+    }
+
+    if (transitionStart != null) {
+      _drawTransitionPreview(canvas, transitionStart!);
     }
   }
 
@@ -506,6 +585,78 @@ class _TMCanvasPainter extends CustomPainter {
     if (state.isAccepting) {
       canvas.drawCircle(center, radius - 5, strokePaint);
     }
+  }
+
+  void _drawTransitionPreview(
+    Canvas canvas,
+    automaton_state.State start,
+  ) {
+    if (transitionPreviewPosition == null) {
+      return;
+    }
+
+    final previewPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.4)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+
+    final startCenter = Offset(start.position.x, start.position.y);
+    final pointer = transitionPreviewPosition!;
+    final delta = pointer - startCenter;
+
+    if (delta.distance < 1) {
+      return;
+    }
+
+    const stateRadius = 25.0;
+    if (delta.distance < stateRadius * 0.8) {
+      final loopRadius = stateRadius + 12;
+      final arcRect = Rect.fromCircle(
+        center: Offset(startCenter.dx, startCenter.dy - loopRadius),
+        radius: loopRadius,
+      );
+      const startAngle = 1.1 * math.pi;
+      const sweepAngle = 1.6 * math.pi;
+      canvas.drawArc(arcRect, startAngle, sweepAngle, false, previewPaint);
+
+      final endAngle = startAngle + sweepAngle;
+      final arrowPoint = Offset(
+        arcRect.center.dx + loopRadius * math.cos(endAngle),
+        arcRect.center.dy + loopRadius * math.sin(endAngle),
+      );
+      const arrowLength = 10.0;
+      const arrowOffset = 0.4;
+      final arrow1 = Offset(
+        arrowPoint.dx - arrowLength * math.cos(endAngle - arrowOffset),
+        arrowPoint.dy - arrowLength * math.sin(endAngle - arrowOffset),
+      );
+      final arrow2 = Offset(
+        arrowPoint.dx - arrowLength * math.cos(endAngle + arrowOffset),
+        arrowPoint.dy - arrowLength * math.sin(endAngle + arrowOffset),
+      );
+      canvas.drawLine(arrowPoint, arrow1, previewPaint);
+      canvas.drawLine(arrowPoint, arrow2, previewPaint);
+      return;
+    }
+
+    final unit = Offset(delta.dx / delta.distance, delta.dy / delta.distance);
+    final startPoint = startCenter + unit * stateRadius;
+    final endPoint = pointer;
+    canvas.drawLine(startPoint, endPoint, previewPaint);
+
+    const arrowLength = 10.0;
+    const arrowAngle = 0.5;
+    final angle = math.atan2(delta.dy, delta.dx);
+    final arrow1 = Offset(
+      endPoint.dx - arrowLength * math.cos(angle - arrowAngle),
+      endPoint.dy - arrowLength * math.sin(angle - arrowAngle),
+    );
+    final arrow2 = Offset(
+      endPoint.dx - arrowLength * math.cos(angle + arrowAngle),
+      endPoint.dy - arrowLength * math.sin(angle + arrowAngle),
+    );
+    canvas.drawLine(endPoint, arrow1, previewPaint);
+    canvas.drawLine(endPoint, arrow2, previewPaint);
   }
 
   void _drawTransition(Canvas canvas, TMTransition transition) {

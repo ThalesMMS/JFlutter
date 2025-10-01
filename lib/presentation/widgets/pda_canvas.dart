@@ -32,7 +32,19 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
   automaton_state.State? _selectedState;
   bool _isAddingState = false;
   bool _isAddingTransition = false;
+  automaton_state.State? _transitionStart;
+  Offset? _transitionPreviewPosition;
   final FrameThrottler _moveThrottler = FrameThrottler();
+
+  CanvasInteractionMode get _interactionMode {
+    if (_isAddingTransition) {
+      return CanvasInteractionMode.addTransition;
+    }
+    if (_isAddingState) {
+      return CanvasInteractionMode.addState;
+    }
+    return CanvasInteractionMode.none;
+  }
 
   @override
   void initState() {
@@ -77,12 +89,17 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
                   stateRadius: 25,
                   selfLoopBaseRadius: 36,
                   selfLoopSpacing: 10,
+                  interactionMode: _interactionMode,
+                  onTransitionPreview: _handleTransitionPreview,
+                  onInteractionModeHandled: _handleInteractionModeHandled,
                   child: CustomPaint(
                     key: widget.canvasKey,
                     painter: _PDACanvasPainter(
                       states: _states,
                       transitions: _transitions,
                       selectedState: _selectedState,
+                      transitionStart: _transitionStart,
+                      transitionPreviewPosition: _transitionPreviewPosition,
                       nondeterministicTransitionIds:
                           editorState.nondeterministicTransitionIds,
                       lambdaTransitionIds: editorState.lambdaTransitionIds,
@@ -124,6 +141,8 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
                 onPressed: () => setState(() {
                   _isAddingState = !_isAddingState;
                   _isAddingTransition = false;
+                  _transitionStart = null;
+                  _transitionPreviewPosition = null;
                 }),
               ),
               _buildToolButton(
@@ -134,6 +153,8 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
                 onPressed: () => setState(() {
                   _isAddingTransition = !_isAddingTransition;
                   _isAddingState = false;
+                  _transitionStart = null;
+                  _transitionPreviewPosition = null;
                 }),
               ),
               IconButton(
@@ -279,8 +300,43 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
     setState(() {
       _transitions.add(pdaTransition);
       _isAddingTransition = false;
+      _transitionStart = null;
+      _transitionPreviewPosition = null;
     });
     _notifyEditor();
+  }
+
+  void _handleTransitionPreview(TransitionDragPreview? preview) {
+    if (preview == null) {
+      if (_transitionStart != null || _transitionPreviewPosition != null) {
+        setState(() {
+          _transitionStart = null;
+          _transitionPreviewPosition = null;
+        });
+      }
+      return;
+    }
+
+    setState(() {
+      _transitionStart = preview.fromState;
+      _transitionPreviewPosition = preview.currentPosition;
+    });
+  }
+
+  void _handleInteractionModeHandled() {
+    if (!_isAddingState &&
+        !_isAddingTransition &&
+        _transitionStart == null &&
+        _transitionPreviewPosition == null) {
+      return;
+    }
+
+    setState(() {
+      _isAddingState = false;
+      _isAddingTransition = false;
+      _transitionStart = null;
+      _transitionPreviewPosition = null;
+    });
   }
 
   void _editState(automaton_state.State state) {
@@ -350,6 +406,8 @@ class _PDACanvasState extends ConsumerState<PDACanvas> {
       _selectedState = null;
       _isAddingState = false;
       _isAddingTransition = false;
+      _transitionStart = null;
+      _transitionPreviewPosition = null;
     });
     _notifyEditor();
   }
@@ -640,6 +698,8 @@ class _PDACanvasPainter extends CustomPainter {
   final List<automaton_state.State> states;
   final List<PDATransition> transitions;
   final automaton_state.State? selectedState;
+  final automaton_state.State? transitionStart;
+  final Offset? transitionPreviewPosition;
   final Set<String> nondeterministicTransitionIds;
   final Set<String> lambdaTransitionIds;
 
@@ -647,6 +707,8 @@ class _PDACanvasPainter extends CustomPainter {
     required this.states,
     required this.transitions,
     required this.selectedState,
+    required this.transitionStart,
+    required this.transitionPreviewPosition,
     required this.nondeterministicTransitionIds,
     required this.lambdaTransitionIds,
   });
@@ -661,6 +723,10 @@ class _PDACanvasPainter extends CustomPainter {
     // Draw states
     for (final state in states) {
       _drawState(canvas, state);
+    }
+
+    if (transitionStart != null) {
+      _drawTransitionPreview(canvas, transitionStart!);
     }
   }
 
@@ -717,6 +783,78 @@ class _PDACanvasPainter extends CustomPainter {
     if (state.isAccepting) {
       canvas.drawCircle(center, radius - 5, strokePaint);
     }
+  }
+
+  void _drawTransitionPreview(
+    Canvas canvas,
+    automaton_state.State start,
+  ) {
+    if (transitionPreviewPosition == null) {
+      return;
+    }
+
+    final previewPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..color = Colors.black.withValues(alpha: 0.4);
+
+    final startCenter = Offset(start.position.x, start.position.y);
+    final pointer = transitionPreviewPosition!;
+    final delta = pointer - startCenter;
+
+    if (delta.distance < 1) {
+      return;
+    }
+
+    const stateRadius = 25.0;
+    if (delta.distance < stateRadius * 0.8) {
+      final previewTransition = PDATransition(
+        id: '__preview__',
+        fromState: start,
+        toState: start,
+        label: '',
+        inputSymbol: '',
+        popSymbol: '',
+        pushSymbol: '',
+        isLambdaInput: false,
+        isLambdaPop: false,
+        isLambdaPush: false,
+      );
+      _drawSelfLoop(canvas, previewTransition, previewPaint);
+      return;
+    }
+
+    final unit = Offset(delta.dx / delta.distance, delta.dy / delta.distance);
+    final startPoint = startCenter + unit * stateRadius;
+    final endPoint = pointer;
+    final midPoint = Offset(
+      (startPoint.dx + endPoint.dx) / 2,
+      (startPoint.dy + endPoint.dy) / 2,
+    );
+    final normal = Offset(-unit.dy, unit.dx);
+    final curvatureScale = math.min(1.0, 120 / delta.distance);
+    final control = midPoint + normal * 40 * curvatureScale;
+
+    final path = Path()
+      ..moveTo(startPoint.dx, startPoint.dy)
+      ..quadraticBezierTo(control.dx, control.dy, endPoint.dx, endPoint.dy);
+    canvas.drawPath(path, previewPaint);
+
+    const arrowLength = 10.0;
+    const arrowAngle = 0.5;
+    final derivative = (endPoint - control) * 2;
+    final angle = math.atan2(derivative.dy, derivative.dx);
+    final arrow1 = Offset(
+      endPoint.dx - arrowLength * math.cos(angle - arrowAngle),
+      endPoint.dy - arrowLength * math.sin(angle - arrowAngle),
+    );
+    final arrow2 = Offset(
+      endPoint.dx - arrowLength * math.cos(angle + arrowAngle),
+      endPoint.dy - arrowLength * math.sin(angle + arrowAngle),
+    );
+
+    canvas.drawLine(endPoint, arrow1, previewPaint);
+    canvas.drawLine(endPoint, arrow2, previewPaint);
   }
 
   void _drawTransition(Canvas canvas, PDATransition transition) {

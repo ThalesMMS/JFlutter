@@ -86,6 +86,12 @@ class _AutomatonCanvasWebState extends State<AutomatonCanvas> {
   }
 
   void _registerViewFactory() {
+    if (!kIsWeb) {
+      throw UnsupportedError(
+        'AutomatonCanvas is only available on web builds.',
+      );
+    }
+
     if (_registeredFactories.contains(_viewType)) {
       return;
     }

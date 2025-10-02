@@ -35,6 +35,7 @@ class _Draw2DPdaCanvasViewState extends ConsumerState<Draw2DPdaCanvasView> {
   final Map<String, _PendingMove> _pendingMoves = {};
   Future<void>? _runtimeLoadOperation;
   bool _runtimeInjected = false;
+  bool _jqueryInjected = false;
 
   @override
   void initState() {
@@ -314,8 +315,23 @@ class _Draw2DPdaCanvasViewState extends ConsumerState<Draw2DPdaCanvasView> {
     }
   }
 
+  Future<void> _ensureJQuery(WebViewController controller) async {
+    if (_jqueryInjected) {
+      return;
+    }
+
+    final source =
+        await rootBundle.loadString('assets/draw2d/vendor/jquery-3.7.1.min.js');
+    final scriptLiteral = jsonEncode(source);
+    await controller.runJavaScript(
+      '(() => { if (typeof window.jQuery === "undefined") { const source = $scriptLiteral; try { window.eval(source); } catch (error) { console.error("Failed to evaluate jQuery runtime", error); throw error; } } })();',
+    );
+    _jqueryInjected = true;
+  }
+
   Future<void> _injectRuntime(WebViewController controller) async {
     try {
+      await _ensureJQuery(controller);
       final source = await rootBundle.loadString('assets/draw2d/vendor/draw2d.js');
       final scriptLiteral = jsonEncode(source);
       await controller.runJavaScript(

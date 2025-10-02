@@ -36,6 +36,8 @@ class _Draw2DTMCanvasViewState extends ConsumerState<Draw2DTMCanvasView> {
   TM? _lastEmittedTM;
   Future<void>? _runtimeLoadOperation;
   bool _runtimeInjected = false;
+  bool _jqueryInjected = false;
+  bool _jqueryUiInjected = false;
 
   @override
   void initState() {
@@ -310,8 +312,38 @@ class _Draw2DTMCanvasViewState extends ConsumerState<Draw2DTMCanvasView> {
     }
   }
 
+  Future<void> _ensureJQuery(WebViewController controller) async {
+    if (_jqueryInjected) {
+      return;
+    }
+
+    final source =
+        await rootBundle.loadString('assets/draw2d/vendor/jquery-3.7.1.min.js');
+    final scriptLiteral = jsonEncode(source);
+    await controller.runJavaScript(
+      '(() => { if (typeof window.jQuery === "undefined") { const source = $scriptLiteral; try { window.eval(source); } catch (error) { console.error("Failed to evaluate jQuery runtime", error); throw error; } } })();',
+    );
+    _jqueryInjected = true;
+  }
+
+  Future<void> _ensureJQueryUi(WebViewController controller) async {
+    await _ensureJQuery(controller);
+    if (_jqueryUiInjected) {
+      return;
+    }
+
+    final source = await rootBundle
+        .loadString('assets/draw2d/vendor/jquery-ui-1.13.2.min.js');
+    final scriptLiteral = jsonEncode(source);
+    await controller.runJavaScript(
+      '(() => { if (!(window.jQuery && window.jQuery.fn && window.jQuery.fn.droppable)) { const source = $scriptLiteral; try { window.eval(source); } catch (error) { console.error("Failed to evaluate jQuery UI runtime", error); throw error; } } })();',
+    );
+    _jqueryUiInjected = true;
+  }
+
   Future<void> _injectRuntime(WebViewController controller) async {
     try {
+      await _ensureJQueryUi(controller);
       final source = await rootBundle.loadString('assets/draw2d/vendor/draw2d.js');
       final scriptLiteral = jsonEncode(source);
       await controller.runJavaScript(

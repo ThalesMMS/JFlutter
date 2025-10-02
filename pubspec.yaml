@@ -127,6 +127,7 @@ flutter:
     - jflutter_js/examples/tm_binary_to_unary.json
     # Draw2D prototype assets
     - assets/draw2d/
+    - assets/draw2d/vendor/
 
 flutter_launcher_icons:
   image_path: "icon.PNG"

@@ -58,76 +58,85 @@
     postToFlutter('log', payload);
   }
 
+  const currentScript = document.currentScript;
+  const currentScriptSrc = currentScript && currentScript.src ? currentScript.src : null;
+
   logDebug('Editor script boot initialised');
   sendLog('debug', 'Editor script boot initialised', {
     userAgent: navigator.userAgent,
     readyState: document.readyState,
     location: window.location.href,
+    scriptSrc: currentScriptSrc,
   });
+
+  function checkDraw2dAvailability() {
+    if (window.draw2d && typeof window.draw2d.Canvas === 'function') {
+      sendLog('debug', 'Draw2D runtime available');
+      return true;
+    }
+    sendLog('warn', 'Draw2D runtime not available');
+    return false;
+  }
 
   function attemptDraw2dLoad() {
     if (window.draw2d && typeof window.draw2d.Canvas === 'function') {
-      sendLog('debug', 'Draw2D runtime already present at boot');
+      sendLog('debug', 'Draw2D runtime already present');
       return;
     }
 
-    const candidates = [
+    // Try to load Draw2D library using fetch and eval for iOS compatibility
+    const draw2dPaths = [
       'vendor/draw2d.js',
       './vendor/draw2d.js',
-      '/assets/draw2d/vendor/draw2d.js',
-      window.location.href.replace(/[^/]+$/, '') + 'vendor/draw2d.js',
+      'assets/draw2d/vendor/draw2d.js',
+      '/assets/draw2d/vendor/draw2d.js'
     ];
 
-    let attemptIndex = 0;
+    let currentPathIndex = 0;
 
-    function tryNext() {
-      if (window.draw2d && typeof window.draw2d.Canvas === 'function') {
-        sendLog('debug', 'Draw2D runtime became available before fetch attempts completed');
+    function tryNextPath() {
+      if (currentPathIndex >= draw2dPaths.length) {
+        sendLog('error', 'Failed to load Draw2D runtime from all paths');
         return;
       }
-      if (attemptIndex >= candidates.length) {
-        sendLog('error', 'All draw2d runtime fetch attempts failed');
-        return;
-      }
-      const path = candidates[attemptIndex++];
-      sendLog('debug', 'Attempting to fetch Draw2D runtime', { path: path });
+
+      const path = draw2dPaths[currentPathIndex++];
+      sendLog('debug', 'Attempting to fetch Draw2D from path', { path: path });
+
       fetch(path)
-        .then(function (response) {
+        .then(response => {
           if (!response.ok) {
-            sendLog('warn', 'Draw2D runtime fetch returned non-200', {
-              path: path,
-              status: response.status,
-            });
-            tryNext();
-            return;
+            throw new Error(`HTTP ${response.status}`);
           }
-          response.text().then(function (source) {
-            try {
-              // eslint-disable-next-line no-eval
-              eval(source);
-              sendLog('info', 'Draw2D runtime loaded via fetch', { path: path });
-            } catch (error) {
-              sendLog('error', 'Failed to evaluate Draw2D runtime', {
-                path: path,
-                message: String(error && error.message ? error.message : error),
-              });
-              tryNext();
-            }
-          });
+          return response.text();
         })
-        .catch(function (error) {
-          sendLog('warn', 'Draw2D runtime fetch failed', {
-            path: path,
-            message: String(error && error.message ? error.message : error),
+        .then(source => {
+          try {
+            // Use eval to execute the Draw2D library
+            eval(source);
+            sendLog('info', 'Draw2D runtime loaded successfully via fetch', { path: path });
+            // Retry canvas initialization
+            ensureCanvas();
+            notifyFlutterReady();
+          } catch (error) {
+            sendLog('error', 'Failed to evaluate Draw2D runtime', { 
+              path: path, 
+              error: error.message 
+            });
+            tryNextPath();
+          }
+        })
+        .catch(error => {
+          sendLog('warn', 'Failed to fetch Draw2D from path', { 
+            path: path, 
+            error: error.message 
           });
-          tryNext();
+          tryNextPath();
         });
     }
 
-    tryNext();
+    tryNextPath();
   }
-
-  attemptDraw2dLoad();
 
   function computeStateBaseStyle(flags) {
     return {
@@ -322,6 +331,22 @@
       sendLog('debug', 'notifyFlutterReady skipped: canvas not ready');
       return;
     }
+    
+    // Hide loading indicator
+    const loadingIndicator = document.getElementById('loading-indicator');
+    if (loadingIndicator) {
+      loadingIndicator.style.display = 'none';
+      sendLog('info', 'Loading indicator hidden');
+    }
+    
+    // Add visual indicator that canvas is ready
+    const canvasElement = document.getElementById(CANVAS_ID);
+    if (canvasElement) {
+      canvasElement.style.backgroundColor = '#e8f5e8'; // Light green to indicate ready
+      canvasElement.style.border = '2px solid #4caf50';
+      sendLog('info', 'Canvas ready indicator applied');
+    }
+    
     const readyPayload = JSON.stringify({ type: 'editor_ready', payload: {} });
     try {
       logDebug('Notifying Flutter that editor is ready');
@@ -367,11 +392,7 @@
       return canvasInstance;
     }
 
-    if (typeof window.draw2d === 'undefined' || !window.draw2d || typeof window.draw2d.Canvas !== 'function') {
-      if (!hasLoggedMissingDraw2dWarning) {
-        console.warn('[Draw2D] Canvas requested before draw2d runtime was ready. Deferring command.');
-        hasLoggedMissingDraw2dWarning = true;
-      }
+    if (!checkDraw2dAvailability()) {
       if (!pendingCanvasRetryHandle) {
         logDebug('Scheduling retry while waiting for draw2d runtime');
         sendLog('warn', 'Draw2D runtime not yet available; scheduling retry', {
@@ -1292,9 +1313,15 @@
   try {
     logDebug('Bootstrapping canvas immediately after load');
     sendLog('debug', 'Bootstrapping canvas immediately after load');
-    ensureCanvas();
-    notifyFlutterReady();
-    renderPendingModel();
+    
+    // Try to ensure Draw2D is available, fallback to dynamic loading
+    if (!checkDraw2dAvailability()) {
+      attemptDraw2dLoad();
+    } else {
+      ensureCanvas();
+      notifyFlutterReady();
+      renderPendingModel();
+    }
   } catch (_) {
     // Ignore readiness failure
   }

@@ -37,13 +37,31 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
 
     final controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(Colors.transparent)
+      ..setBackgroundColor(const Color(0x00000000)) // Use transparent color without Colors.transparent
+      ..enableZoom(false)
       ..addJavaScriptChannel(
         'JFlutterBridge',
         onMessageReceived: _handleMessage,
       )
-      ..setNavigationDelegate(NavigationDelegate())
-      ..loadFlutterAsset('assets/draw2d/editor.html');
+      ..addJavaScriptChannel(
+        'Alert',
+        onMessageReceived: (JavaScriptMessage message) {
+          debugPrint('[Draw2D][Alert] ${message.message}');
+        },
+      )
+      ..setNavigationDelegate(NavigationDelegate(
+        onNavigationRequest: (NavigationRequest request) {
+          // Allow navigation to assets
+          if (request.url.startsWith('file://') || 
+              request.url.contains('assets/') ||
+              request.url.contains('draw2d/') ||
+              request.url.contains('vendor/')) {
+            return NavigationDecision.navigate;
+          }
+          return NavigationDecision.prevent;
+        },
+      ))
+        ..loadFlutterAsset('assets/draw2d/minimal_editor.html');
 
     _controller = controller;
 

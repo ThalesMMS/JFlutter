@@ -18,11 +18,155 @@
       #canvas {
         width: 100%;
         height: 100%;
+        background-color: #f5f5f5;
+        border: 1px solid #ddd;
       }
     </style>
   </head>
   <body>
-    <div id="canvas"></div>
-    <script src="editor.js"></script>
+    <div id="canvas">
+      <div id="loading-indicator" style="
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        font-family: Arial, sans-serif;
+        text-align: center;
+        z-index: 1000;
+      ">
+        Loading Draw2D Canvas...
+      </div>
+    </div>
+    <script>
+      console.log('[Draw2D] HTML script starting - this should appear in logs');
+      
+      // Test JavaScript execution with a simple approach
+      try {
+        Alert.postMessage('HTML script is running!');
+      } catch (error) {
+        console.log('[Draw2D] Alert channel not available yet:', error);
+      }
+      
+      // Override alert to use Flutter channel
+      window.alert = function(message) {
+        try {
+          Alert.postMessage(message);
+        } catch (error) {
+          console.log('[Draw2D] Alert failed:', error);
+        }
+      };
+      
+      // Load Draw2D library with iOS compatibility
+      function loadDraw2dScript() {
+        console.log('[Draw2D] Starting loadDraw2dScript');
+        console.log('[Draw2D] Current location:', window.location.href);
+        console.log('[Draw2D] Document ready state:', document.readyState);
+        
+        const script = document.createElement('script');
+        script.src = 'draw2d.js';
+        console.log('[Draw2D] Created script element with src:', script.src);
+        
+        script.onload = function() {
+          console.log('[Draw2D] Library loaded successfully');
+          // Load editor script after Draw2D is loaded
+          const editorScript = document.createElement('script');
+          editorScript.src = 'editor.js';
+          console.log('[Draw2D] Loading editor script');
+          editorScript.onload = function() {
+            console.log('[Draw2D] Editor script loaded successfully');
+            // Clear timeout since we succeeded
+            clearTimeout(loadingTimeout);
+            // Hide loading indicator when everything is ready
+            const loadingIndicator = document.getElementById('loading-indicator');
+            if (loadingIndicator) {
+              loadingIndicator.style.display = 'none';
+            }
+          };
+          editorScript.onerror = function(error) {
+            console.error('[Draw2D] Failed to load editor script:', error);
+          };
+          document.head.appendChild(editorScript);
+        };
+        script.onerror = function(error) {
+          console.error('[Draw2D] Failed to load Draw2D library:', error);
+          console.log('[Draw2D] Trying alternative loading method');
+          // Try alternative loading method
+          loadDraw2dAlternative();
+        };
+        document.head.appendChild(script);
+        console.log('[Draw2D] Script element added to head');
+      }
+
+      function loadDraw2dAlternative() {
+        console.log('[Draw2D] Starting alternative loading method');
+        // Try loading with fetch and eval as fallback
+        console.log('[Draw2D] Attempting to fetch draw2d.js');
+        fetch('draw2d.js')
+          .then(response => {
+            console.log('[Draw2D] Fetch response status:', response.status, response.statusText);
+            if (!response.ok) throw new Error('Failed to fetch: ' + response.status);
+            return response.text();
+          })
+          .then(source => {
+            console.log('[Draw2D] Fetch successful, source length:', source.length);
+            try {
+              eval(source);
+              console.log('[Draw2D] Library loaded via fetch');
+              // Load editor script
+              const editorScript = document.createElement('script');
+              editorScript.src = 'editor.js';
+              console.log('[Draw2D] Loading editor script via alternative method');
+              editorScript.onload = function() {
+                console.log('[Draw2D] Editor script loaded via alternative method');
+                // Clear timeout since we succeeded
+                clearTimeout(loadingTimeout);
+                // Hide loading indicator when everything is ready
+                const loadingIndicator = document.getElementById('loading-indicator');
+                if (loadingIndicator) {
+                  loadingIndicator.style.display = 'none';
+                }
+              };
+              editorScript.onerror = function(error) {
+                console.error('[Draw2D] Failed to load editor script via alternative:', error);
+              };
+              document.head.appendChild(editorScript);
+            } catch (error) {
+              console.error('[Draw2D] Failed to evaluate library:', error);
+            }
+          })
+          .catch(error => {
+            console.error('[Draw2D] Failed to fetch library:', error);
+            console.log('[Draw2D] All loading methods failed');
+          });
+      }
+
+      // Add timeout to prevent infinite loading
+      const loadingTimeout = setTimeout(() => {
+        console.warn('[Draw2D] Loading timeout reached, hiding loading indicator');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        if (loadingIndicator) {
+          loadingIndicator.style.display = 'none';
+        }
+        // Try to load editor script anyway
+        const editorScript = document.createElement('script');
+        editorScript.src = 'editor.js';
+        document.head.appendChild(editorScript);
+      }, 10000); // 10 second timeout
+
+      // Load when DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+          clearTimeout(loadingTimeout);
+          loadDraw2dScript();
+        });
+      } else {
+        clearTimeout(loadingTimeout);
+        loadDraw2dScript();
+      }
+    </script>
   </body>
 </html>

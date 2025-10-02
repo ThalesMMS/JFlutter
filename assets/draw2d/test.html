@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Draw2D Asset Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>Draw2D Asset Loading Test</h1>
+    <div id="results"></div>
+    
+    <script>
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.textContent = message;
+            document.getElementById('results').appendChild(div);
+        }
+        
+        function testAssetAccess() {
+            addResult('Starting asset access tests...', 'info');
+            addResult(`Current location: ${window.location.href}`, 'info');
+            addResult(`Document ready state: ${document.readyState}`, 'info');
+            
+            // Test 1: Try to fetch draw2d.js
+            addResult('Test 1: Fetching draw2d.js...', 'info');
+            fetch('draw2d.js')
+                .then(response => {
+                    addResult(`Fetch response: ${response.status} ${response.statusText}`, 
+                        response.ok ? 'success' : 'error');
+                    if (response.ok) {
+                        return response.text();
+                    } else {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                })
+                .then(source => {
+                    addResult(`File size: ${source.length} characters`, 'success');
+                    addResult('✅ draw2d.js is accessible!', 'success');
+                })
+                .catch(error => {
+                    addResult(`❌ Failed to fetch draw2d.js: ${error.message}`, 'error');
+                });
+            
+            // Test 2: Try to fetch editor.js
+            addResult('Test 2: Fetching editor.js...', 'info');
+            fetch('editor.js')
+                .then(response => {
+                    addResult(`Fetch response: ${response.status} ${response.statusText}`, 
+                        response.ok ? 'success' : 'error');
+                    if (response.ok) {
+                        return response.text();
+                    } else {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                })
+                .then(source => {
+                    addResult(`File size: ${source.length} characters`, 'success');
+                    addResult('✅ editor.js is accessible!', 'success');
+                })
+                .catch(error => {
+                    addResult(`❌ Failed to fetch editor.js: ${error.message}`, 'error');
+                });
+        }
+        
+        // Run tests when page loads
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', testAssetAccess);
+        } else {
+            testAssetAccess();
+        }
+    </script>
+</body>
+</html>

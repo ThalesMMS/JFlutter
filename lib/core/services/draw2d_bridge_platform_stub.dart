@@ -6,22 +6,31 @@ import 'package:webview_flutter/webview_flutter.dart';
 class Draw2DBridgePlatform {
   Draw2DBridgePlatform();
 
-  WebViewController? _controller;
+  final List<WebViewController> _controllerStack = <WebViewController>[];
+
+  WebViewController? get _activeController =>
+      _controllerStack.isEmpty ? null : _controllerStack.last;
 
   void registerWebViewController(WebViewController controller) {
-    _controller = controller;
+    final existingIndex = _controllerStack.indexOf(controller);
+    if (existingIndex != -1) {
+      _controllerStack.removeAt(existingIndex);
+    }
+    _controllerStack.add(controller);
   }
 
   void unregisterWebViewController(WebViewController controller) {
-    if (identical(_controller, controller)) {
-      _controller = null;
+    final index = _controllerStack.indexOf(controller);
+    if (index == -1) {
+      return;
     }
+    _controllerStack.removeAt(index);
   }
 
-  bool get hasRegisteredController => _controller != null;
+  bool get hasRegisteredController => _activeController != null;
 
   void runJavaScript(String script) {
-    final controller = _controller;
+    final controller = _activeController;
     if (controller == null) {
       return;
     }

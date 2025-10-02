@@ -58,7 +58,6 @@ dependencies:
   cupertino_icons: ^1.0.8
 
   # Embedded Draw2D canvas (WebView wrapper)
-  
   # State management and dependency injection
   provider: ^6.1.2
   get_it: ^8.0.0

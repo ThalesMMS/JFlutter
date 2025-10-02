@@ -109,11 +109,20 @@ class _Draw2DPdaCanvasViewState extends ConsumerState<Draw2DPdaCanvasView> {
       case 'state.label':
         _handleStateLabel(payload);
         break;
+      case 'state.updateFlags':
+        _handleStateFlags(payload);
+        break;
+      case 'state.remove':
+        _handleStateRemove(payload);
+        break;
       case 'transition.add':
         _handleTransitionUpsert(payload, requireEndpoints: true);
         break;
       case 'transition.label':
         _handleTransitionUpsert(payload, requireEndpoints: false);
+        break;
+      case 'transition.remove':
+        _handleTransitionRemove(payload);
         break;
       default:
         debugPrint('Unhandled Draw2D PDA event: $type');
@@ -168,6 +177,44 @@ class _Draw2DPdaCanvasViewState extends ConsumerState<Draw2DPdaCanvasView> {
     }
   }
 
+  void _handleStateFlags(Map<String, dynamic> payload) {
+    final id = payload['id'] as String?;
+    if (id == null) {
+      return;
+    }
+
+    final bool? isInitial =
+        payload.containsKey('isInitial') ? payload['isInitial'] as bool? : null;
+    final bool? isAccepting = payload.containsKey('isAccepting')
+        ? payload['isAccepting'] as bool?
+        : null;
+
+    if (isInitial == null && isAccepting == null) {
+      return;
+    }
+
+    final updated = ref.read(pdaEditorProvider.notifier).updateStateFlags(
+          id: id,
+          isInitial: isInitial,
+          isAccepting: isAccepting,
+        );
+    if (updated != null) {
+      widget.onPdaModified(updated);
+    }
+  }
+
+  void _handleStateRemove(Map<String, dynamic> payload) {
+    final id = payload['id'] as String?;
+    if (id == null) {
+      return;
+    }
+
+    final updated = ref.read(pdaEditorProvider.notifier).removeState(id: id);
+    if (updated != null) {
+      widget.onPdaModified(updated);
+    }
+  }
+
   void _handleTransitionUpsert(
     Map<String, dynamic> payload, {
     required bool requireEndpoints,
@@ -198,6 +245,18 @@ class _Draw2DPdaCanvasViewState extends ConsumerState<Draw2DPdaCanvasView> {
           isLambdaPop: stackPayload?.isLambdaPop,
           isLambdaPush: stackPayload?.isLambdaPush,
         );
+    if (updated != null) {
+      widget.onPdaModified(updated);
+    }
+  }
+
+  void _handleTransitionRemove(Map<String, dynamic> payload) {
+    final id = payload['id'] as String?;
+    if (id == null) {
+      return;
+    }
+
+    final updated = ref.read(pdaEditorProvider.notifier).removeTransition(id: id);
     if (updated != null) {
       widget.onPdaModified(updated);
     }

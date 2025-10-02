@@ -214,6 +214,72 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     });
   }
 
+  /// Removes the state identified by [id] along with connected transitions.
+  void removeState({required String id}) {
+    _mutateAutomaton((current) {
+      if (current.states.every((state) => state.id != id)) {
+        return current;
+      }
+
+      final remainingStates =
+          current.states.where((state) => state.id != id).toList(growable: false);
+
+      if (remainingStates.isEmpty) {
+        return current.copyWith(
+          states: <State>{},
+          transitions: <Transition>{},
+          initialState: null,
+          acceptingStates: <State>{},
+          modified: DateTime.now(),
+        );
+      }
+
+      final initialCandidate = remainingStates
+          .firstWhereOrNull((state) => state.id == current.initialState?.id);
+      final resolvedInitial = initialCandidate ?? remainingStates.first;
+
+      final normalizedStates = remainingStates
+          .map(
+            (state) => state.copyWith(
+              isInitial: state.id == resolvedInitial.id,
+              isAccepting: current.acceptingStates
+                  .any((accepting) => accepting.id == state.id),
+            ),
+          )
+          .toList();
+
+      State? updatedInitial =
+          normalizedStates.firstWhereOrNull((state) => state.isInitial);
+      if (updatedInitial == null && normalizedStates.isNotEmpty) {
+        final fallback = normalizedStates.first.copyWith(isInitial: true);
+        normalizedStates[0] = fallback;
+        updatedInitial = fallback;
+      }
+
+      final statesById = {for (final state in normalizedStates) state.id: state};
+      final filteredTransitions = current.transitions
+          .whereType<FSATransition>()
+          .where(
+            (transition) =>
+                transition.fromState.id != id && transition.toState.id != id,
+          )
+          .toList();
+
+      final reboundTransitions =
+          _rebindTransitions(filteredTransitions, statesById);
+      final acceptingStates =
+          statesById.values.where((state) => state.isAccepting).toSet();
+
+      return current.copyWith(
+        states: statesById.values.toSet(),
+        transitions: reboundTransitions.map<Transition>((t) => t).toSet(),
+        initialState: updatedInitial,
+        acceptingStates: acceptingStates,
+        modified: DateTime.now(),
+      );
+    });
+  }
+
   /// Adds or updates a transition in the automaton.
   void addOrUpdateTransition({
     required String id,
@@ -279,6 +345,24 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     });
   }
 
+  /// Removes the transition identified by [id] from the automaton.
+  void removeTransition({required String id}) {
+    _mutateAutomaton((current) {
+      final transitions = current.transitions.whereType<FSATransition>().toList();
+      final index = transitions.indexWhere((transition) => transition.id == id);
+      if (index < 0) {
+        return current;
+      }
+
+      transitions.removeAt(index);
+
+      return current.copyWith(
+        transitions: transitions.map<Transition>((t) => t).toSet(),
+        modified: DateTime.now(),
+      );
+    });
+  }
+
   /// Updates the label of an existing state.
   void updateStateLabel({
     required String id,
@@ -308,6 +392,66 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
         transitions: updatedTransitions.map<Transition>((t) => t).toSet(),
         initialState:
             initialStateId != null ? statesById[initialStateId] : null,
+        acceptingStates: acceptingStates,
+        modified: DateTime.now(),
+      );
+    });
+  }
+
+  /// Updates the flag metadata for the state matching [id].
+  void updateStateFlags({
+    required String id,
+    bool? isInitial,
+    bool? isAccepting,
+  }) {
+    if (isInitial == null && isAccepting == null) {
+      return;
+    }
+
+    _mutateAutomaton((current) {
+      if (current.states.every((state) => state.id != id)) {
+        return current;
+      }
+
+      final updatedStates = current.states
+          .map((state) {
+            var newInitial = state.isInitial;
+            var newAccepting = state.isAccepting;
+
+            if (state.id == id) {
+              newInitial = isInitial ?? state.isInitial;
+              newAccepting = isAccepting ?? state.isAccepting;
+            } else if (isInitial == true) {
+              newInitial = false;
+            }
+
+            return state.copyWith(
+              isInitial: newInitial,
+              isAccepting: newAccepting,
+            );
+          })
+          .toList();
+
+      if (!updatedStates.any((state) => state.isInitial) &&
+          updatedStates.isNotEmpty) {
+        updatedStates[0] = updatedStates[0].copyWith(isInitial: true);
+      }
+
+      final statesById = {for (final state in updatedStates) state.id: state};
+      final updatedTransitions = _rebindTransitions(
+        current.transitions.whereType<FSATransition>(),
+        statesById,
+      );
+
+      final initialState =
+          updatedStates.firstWhereOrNull((state) => state.isInitial);
+      final acceptingStates =
+          statesById.values.where((state) => state.isAccepting).toSet();
+
+      return current.copyWith(
+        states: statesById.values.toSet(),
+        transitions: updatedTransitions.map<Transition>((t) => t).toSet(),
+        initialState: initialState,
         acceptingStates: acceptingStates,
         modified: DateTime.now(),
       );

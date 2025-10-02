@@ -173,6 +173,76 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
     return _rebuildState();
   }
 
+  TM? updateStateFlags({
+    required String id,
+    bool? isInitial,
+    bool? isAccepting,
+  }) {
+    if (isInitial == null && isAccepting == null) {
+      return state.tm;
+    }
+
+    final updates = <int, State>{};
+
+    for (var i = 0; i < _states.length; i++) {
+      final state = _states[i];
+      var newInitial = state.isInitial;
+      var newAccepting = state.isAccepting;
+
+      if (state.id == id) {
+        newInitial = isInitial ?? state.isInitial;
+        newAccepting = isAccepting ?? state.isAccepting;
+      } else if (isInitial == true) {
+        newInitial = false;
+      }
+
+      if (newInitial != state.isInitial || newAccepting != state.isAccepting) {
+        updates[i] = state.copyWith(
+          isInitial: newInitial,
+          isAccepting: newAccepting,
+        );
+      }
+    }
+
+    if (updates.isEmpty) {
+      return state.tm;
+    }
+
+    updates.forEach((index, updatedState) {
+      _states[index] = updatedState;
+      _rebindTransitionsForState(updatedState);
+    });
+
+    if (_states.isNotEmpty && !_states.any((state) => state.isInitial)) {
+      final fallback = _states[0].copyWith(isInitial: true);
+      _states[0] = fallback;
+      _rebindTransitionsForState(fallback);
+    }
+
+    return _rebuildState();
+  }
+
+  TM? removeState({required String id}) {
+    final index = _states.indexWhere((state) => state.id == id);
+    if (index == -1) {
+      return state.tm;
+    }
+
+    _states.removeAt(index);
+    _transitions.removeWhere(
+      (transition) =>
+          transition.fromState.id == id || transition.toState.id == id,
+    );
+
+    if (_states.isNotEmpty && !_states.any((state) => state.isInitial)) {
+      final fallback = _states[0].copyWith(isInitial: true);
+      _states[0] = fallback;
+      _rebindTransitionsForState(fallback);
+    }
+
+    return _rebuildState();
+  }
+
   /// Adds or updates a TM transition using the supplied values.
   TM? addOrUpdateTransition({
     required String id,
@@ -256,6 +326,16 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
       direction: direction ?? transition.direction,
       controlPoint: transition.controlPoint,
     );
+  }
+
+  TM? removeTransition({required String id}) {
+    final initialLength = _transitions.length;
+    _transitions.removeWhere((transition) => transition.id == id);
+    if (_transitions.length == initialLength) {
+      return state.tm;
+    }
+
+    return _rebuildState();
   }
 
   Set<String> _findNondeterministicTransitions(Set<TMTransition> transitions) {

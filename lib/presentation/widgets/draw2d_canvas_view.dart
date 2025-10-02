@@ -104,11 +104,20 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
       case 'state.label':
         _handleStateLabel(payload);
         break;
+      case 'state.updateFlags':
+        _handleStateFlags(payload);
+        break;
+      case 'state.remove':
+        _handleStateRemove(payload);
+        break;
       case 'transition.add':
         _handleTransitionAdd(payload);
         break;
       case 'transition.label':
         _handleTransitionLabel(payload);
+        break;
+      case 'transition.remove':
+        _handleTransitionRemove(payload);
         break;
       default:
         debugPrint('Unhandled Draw2D event: $type');
@@ -149,6 +158,37 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
     ref.read(automatonProvider.notifier).updateStateLabel(id: id, label: label);
   }
 
+  void _handleStateFlags(Map<String, dynamic> payload) {
+    final id = payload['id'] as String?;
+    if (id == null) {
+      return;
+    }
+
+    final bool? isInitial =
+        payload.containsKey('isInitial') ? payload['isInitial'] as bool? : null;
+    final bool? isAccepting = payload.containsKey('isAccepting')
+        ? payload['isAccepting'] as bool?
+        : null;
+
+    if (isInitial == null && isAccepting == null) {
+      return;
+    }
+
+    ref.read(automatonProvider.notifier).updateStateFlags(
+          id: id,
+          isInitial: isInitial,
+          isAccepting: isAccepting,
+        );
+  }
+
+  void _handleStateRemove(Map<String, dynamic> payload) {
+    final id = payload['id'] as String?;
+    if (id == null) {
+      return;
+    }
+    ref.read(automatonProvider.notifier).removeState(id: id);
+  }
+
   void _handleTransitionAdd(Map<String, dynamic> payload) {
     final id = payload['id'] as String? ?? _nextTransitionId();
     final from = payload['fromStateId'] as String?;
@@ -174,6 +214,14 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
     ref
         .read(automatonProvider.notifier)
         .updateTransitionLabel(id: id, label: label);
+  }
+
+  void _handleTransitionRemove(Map<String, dynamic> payload) {
+    final id = payload['id'] as String?;
+    if (id == null) {
+      return;
+    }
+    ref.read(automatonProvider.notifier).removeTransition(id: id);
   }
 
   void _flushMoves() {

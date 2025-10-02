@@ -166,6 +166,74 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
     });
   }
 
+  PDA? updateStateFlags({
+    required String id,
+    bool? isInitial,
+    bool? isAccepting,
+  }) {
+    if (isInitial == null && isAccepting == null) {
+      return state.pda;
+    }
+
+    return _mutatePda((current) {
+      final statesById = {
+        for (final state in current.states) state.id: state,
+      };
+      if (!statesById.containsKey(id)) {
+        return current;
+      }
+
+      final updatedStates = <String, State>{};
+      statesById.forEach((key, value) {
+        var newInitial = value.isInitial;
+        var newAccepting = value.isAccepting;
+
+        if (key == id) {
+          newInitial = isInitial ?? value.isInitial;
+          newAccepting = isAccepting ?? value.isAccepting;
+        } else if (isInitial == true) {
+          newInitial = false;
+        }
+
+        updatedStates[key] = value.copyWith(
+          isInitial: newInitial,
+          isAccepting: newAccepting,
+        );
+      });
+
+      return _finalisePda(
+        base: current,
+        statesById: updatedStates,
+        transitions: current.pdaTransitions,
+      );
+    });
+  }
+
+  PDA? removeState({required String id}) {
+    return _mutatePda((current) {
+      final statesById = {
+        for (final state in current.states) state.id: state,
+      };
+      final removed = statesById.remove(id);
+      if (removed == null) {
+        return current;
+      }
+
+      final remainingTransitions = current.pdaTransitions
+          .where(
+            (transition) =>
+                transition.fromState.id != id && transition.toState.id != id,
+          )
+          .toList();
+
+      return _finalisePda(
+        base: current,
+        statesById: statesById,
+        transitions: remainingTransitions,
+      );
+    });
+  }
+
   PDA? upsertTransition({
     required String id,
     String? fromStateId,
@@ -249,6 +317,27 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
       } else {
         transitions[transitions.length - 1] = finalTransition;
       }
+
+      return _finalisePda(
+        base: current,
+        statesById: statesById,
+        transitions: transitions,
+      );
+    });
+  }
+
+  PDA? removeTransition({required String id}) {
+    return _mutatePda((current) {
+      final transitions = current.pdaTransitions
+          .where((transition) => transition.id != id)
+          .toList(growable: false);
+      if (transitions.length == current.pdaTransitions.length) {
+        return current;
+      }
+
+      final statesById = {
+        for (final state in current.states) state.id: state,
+      };
 
       return _finalisePda(
         base: current,

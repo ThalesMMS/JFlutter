@@ -54,9 +54,8 @@ instance, ensuring the rest of the UI reacts immediately.
   instead of the legacy Flutter canvas.
 * Open the WebView's developer tools (when available) to inspect console logs.
   Every inbound/outbound message is printed with a `[Draw2D]` prefix.
-* The `Draw2DCanvasView` widget can be duplicated side-by-side with the native
-  canvas by toggling `_enableDraw2dDevPreview` in `fsa_page.dart`, which is
-  useful when validating layout parity.
+* The toolbar now shows "Canvas not connected" until the Draw2D bridge reports
+  readiness. If the message persists, inspect the console for bridge errors.
 
 ## Web Highlight Bridge
 

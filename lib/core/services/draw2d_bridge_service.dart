@@ -7,7 +7,7 @@ import 'draw2d_bridge_platform_stub.dart'
     if (dart.library.html) 'draw2d_bridge_platform_web.dart';
 
 /// Singleton facade responsible for communicating with the Draw2D runtime.
-class Draw2DBridgeService {
+class Draw2DBridgeService extends ChangeNotifier {
   Draw2DBridgeService._(this._platform);
 
   factory Draw2DBridgeService() => _instance;
@@ -17,8 +17,11 @@ class Draw2DBridgeService {
   );
 
   final Draw2DBridgePlatform _platform;
+  bool _isBridgeReady = false;
 
   bool get hasRegisteredController => _platform.hasRegisteredController;
+  bool get isBridgeReady => _isBridgeReady;
+  bool get hasActiveBridge => _isBridgeReady;
 
   /// Registers the [controller] currently rendering the Draw2D canvas.
   void registerWebViewController(WebViewController controller) {
@@ -26,6 +29,7 @@ class Draw2DBridgeService {
       '[Draw2D][Flutter] register controller ${identityHashCode(controller)}',
     );
     _platform.registerWebViewController(controller);
+    _setBridgeReady(false);
   }
 
   /// Removes the [controller] registration when it is no longer active.
@@ -34,6 +38,17 @@ class Draw2DBridgeService {
       '[Draw2D][Flutter] unregister controller ${identityHashCode(controller)}',
     );
     _platform.unregisterWebViewController(controller);
+    _setBridgeReady(false);
+  }
+
+  /// Marks the bridge as ready after receiving the handshake from the WebView.
+  void markBridgeReady() {
+    _setBridgeReady(true);
+  }
+
+  /// Clears the ready flag when the editor disconnects or reloads.
+  void markBridgeDisconnected() {
+    _setBridgeReady(false);
   }
 
   void runJavaScript(String script, {String? debugLabel}) {
@@ -105,5 +120,13 @@ class Draw2DBridgeService {
   void addStateAtCenter() {
     _invokeBridgeMethod('addStateAtCenter');
     _platform.postMessage('add_state_center', const {});
+  }
+
+  void _setBridgeReady(bool value) {
+    if (_isBridgeReady == value) {
+      return;
+    }
+    _isBridgeReady = value;
+    notifyListeners();
   }
 }

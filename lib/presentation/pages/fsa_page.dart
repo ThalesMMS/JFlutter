@@ -22,7 +22,6 @@ class FSAPage extends ConsumerStatefulWidget {
 }
 
 class _FSAPageState extends ConsumerState<FSAPage> {
-  static const bool _enableDraw2dDevPreview = false;
   final GlobalKey _canvasKey = GlobalKey();
   void _showSnack(String message, {bool isError = false}) {
     final theme = Theme.of(context);
@@ -343,32 +342,15 @@ class _FSAPageState extends ConsumerState<FSAPage> {
         showTrace: state.simulationResult != null,
       );
 
-      if (!_enableDraw2dDevPreview) {
-        return Stack(
-          children: [
-            Positioned.fill(child: automatonCanvas),
-            Positioned(top: 12, right: 12, child: Draw2DCanvasToolbar(onClear: () => ref.read(automatonProvider.notifier).clearAutomaton())),
-          ],
-        );
-      }
-
-      final spacing = isMobile ? 8.0 : 12.0;
-
-      return Column(
+      return Stack(
         children: [
-          Expanded(
-            flex: 3,
-            child: Stack(
-              children: [
-                Positioned.fill(child: automatonCanvas),
-                Positioned(top: 12, right: 12, child: Draw2DCanvasToolbar(onClear: () => ref.read(automatonProvider.notifier).clearAutomaton())),
-              ],
+          Positioned.fill(child: automatonCanvas),
+          Positioned(
+            top: 12,
+            right: 12,
+            child: Draw2DCanvasToolbar(
+              onClear: () => ref.read(automatonProvider.notifier).clearAutomaton(),
             ),
-          ),
-          SizedBox(height: spacing),
-          const Expanded(
-            flex: 2,
-            child: Draw2DCanvasView(),
           ),
         ],
       );

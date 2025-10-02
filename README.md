@@ -526,22 +526,22 @@ This project is distributed under a dual license structure:
   - **Validation**: All core algorithms validated against this implementation
 
 - **`References/dart-petitparser-examples-main/`** - Dart parser examples and utilities
-  - **Source**: [dart-petitparser-examples](https://github.com/petitparser/dart-petitparser-examples) by PetitParser team
+  - **Source**: [dart-petitparser-examples](https://github.com/petitparser/dart-petitparser-examples) by PetitParser
   - **Usage**: Regex parsing, grammar analysis, parser construction
   - **Validation**: Parser implementations validated against these examples
 
 - **`References/AutomataTheory-master/`** - Dart automata theory implementations
-  - **Source**: [AutomataTheory](https://github.com/dart-lang/samples/tree/master/automata_theory) by Dart team
+  - **Source**: [AutomataTheory](https://github.com/dart-lang/samples/tree/master/automata_theory) by Pedro Lemos
   - **Usage**: Finite automata operations, language theory concepts
   - **Validation**: Automaton operations validated against this reference
 
 - **`References/nfa_2_dfa-main/`** - NFA to DFA conversion algorithms
-  - **Source**: [nfa_2_dfa](https://github.com/nfa_2_dfa/nfa_2_dfa) by community contributors
+  - **Source**: [nfa_2_dfa](https://github.com/7Na7iD7/nfa_2_dfa) by Na7iD
   - **Usage**: NFA to DFA conversion algorithms, state minimization
   - **Validation**: Conversion algorithms validated against this implementation
 
 - **`References/turing-machine-generator-main/`** - Turing machine implementations
-  - **Source**: [turing-machine-generator](https://github.com/turing-machine-generator/turing-machine-generator) by community contributors
+  - **Source**: [turing-machine-generator](https://github.com/nikhil-RGB/turing-machine-generator) by Nikhil Narayanan
   - **Usage**: Turing machine simulation, tape operations, state management
   - **Validation**: TM operations validated against this reference
 

@@ -3,9 +3,14 @@
 ## Summary of Findings
 
 - The FSA page only embeds the Draw2D WebView on mobile/desktop targets. On web builds it still renders the legacy `AutomatonCanvas`, so the Draw2D toolbar cannot reach an active bridge instance. 【F:lib/presentation/pages/fsa_page.dart†L332-L379】
-- The `Draw2DCanvasView` used by the FSA page loads `assets/draw2d/minimal_editor.html`, a diagnostic harness that never exposes the `window.draw2dBridge` API expected by `Draw2DBridgeService`. As a result, calls such as `addStateAtCenter` no-op because the bridge wrapper is missing. 【F:lib/presentation/widgets/draw2d_canvas_view.dart†L18-L109】【F:assets/draw2d/minimal_editor.html†L1-L200】
+- The `Draw2DCanvasView` used by the FSA page now loads the production `assets/draw2d/editor.html`, but earlier builds blocked the internal `flutter-asset://` navigation that bootstraps the editor. When the page load is cancelled, `window.draw2dBridge` never calls back and commands such as `addStateAtCenter` no-op. 【F:lib/presentation/widgets/draw2d_canvas_view.dart†L18-L118】【F:assets/draw2d/editor.js†L587-L1369】
 - The TM and PDA screens use `Draw2DTMCanvasView` / `Draw2DPdaCanvasView`, which rely on `editor.html` and `editor.js`. Those scripts do register `window.draw2dBridge.addStateAtCenter` and forward actions back to Flutter, so the tooling mismatch only affects the FSA screen. 【F:lib/presentation/widgets/draw2d_tm_canvas_view.dart†L1-L86】【F:lib/presentation/widgets/draw2d_pda_canvas_view.dart†L1-L78】【F:assets/draw2d/editor.js†L587-L1369】
 - The "Add state" button invokes `Draw2DBridgeService.addStateAtCenter()`, which simply posts through the bridge. Because the FSA canvas never registers the bridge object, the command is dropped, explaining why none of the canvases respond when tested from that page. 【F:lib/presentation/widgets/draw2d_canvas_toolbar.dart†L23-L47】【F:lib/core/services/draw2d_bridge_service.dart†L41-L68】
+
+## Expected behaviour
+
+- All Draw2D-backed canvases (`Draw2DCanvasView`, `Draw2DTMCanvasView`, `Draw2DPdaCanvasView`) rely on the `editor_ready` message emitted by `editor.html` to unlock toolbar controls. The WebView must allow the internal `flutter-asset://` navigation triggered by `loadFlutterAsset`, otherwise the bridge never receives `editor_ready` and the UI stays in the "Canvas not connected" state. 【F:lib/presentation/widgets/draw2d_canvas_view.dart†L38-L118】【F:lib/presentation/widgets/draw2d_tm_canvas_view.dart†L32-L103】【F:lib/presentation/widgets/draw2d_pda_canvas_view.dart†L27-L96】
+
 
 ## Suggested Follow-Up Tasks
 

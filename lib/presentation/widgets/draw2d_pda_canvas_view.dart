@@ -295,7 +295,7 @@ class _Draw2DPdaCanvasViewState extends ConsumerState<Draw2DPdaCanvasView> {
 
   Future<void> _pushModel(PDA? pda) async {
     final payload = Draw2DPdaMapper.toJson(pda);
-    final json = jsonEncode(payload);
+    final json = _escapeForJsLiteral(jsonEncode(payload));
     final controller = _controller;
     if (controller == null) {
       return;
@@ -308,6 +308,10 @@ class _Draw2DPdaCanvasViewState extends ConsumerState<Draw2DPdaCanvasView> {
         FlutterErrorDetails(exception: error, stack: stackTrace),
       );
     }
+  }
+
+  String _escapeForJsLiteral(String value) {
+    return value.replaceAll(r'\', r'\\').replaceAll("'", r"\'");
   }
 
   _TransitionStackPayload? _parseStackPayload(Map<String, dynamic> payload) {

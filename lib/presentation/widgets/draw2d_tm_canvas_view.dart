@@ -276,7 +276,7 @@ class _Draw2DTMCanvasViewState extends ConsumerState<Draw2DTMCanvasView> {
 
   void _pushModel(TMEditorState state) {
     final payload = Draw2DTMMapper.toJson(state.tm);
-    final json = jsonEncode(payload);
+    final json = _escapeForJsLiteral(jsonEncode(payload));
     final controller = _controller;
     if (controller == null) {
       return;
@@ -289,6 +289,10 @@ class _Draw2DTMCanvasViewState extends ConsumerState<Draw2DTMCanvasView> {
         FlutterErrorDetails(exception: error, stack: stackTrace),
       );
     });
+  }
+
+  String _escapeForJsLiteral(String value) {
+    return value.replaceAll(r'\', r'\\').replaceAll("'", r"\'");
   }
 
   void _maybeEmitTM(TM? tm) {

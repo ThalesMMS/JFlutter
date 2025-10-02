@@ -288,7 +288,7 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
 
   Future<void> _pushModel(AutomatonState state) async {
     final payload = Draw2DAutomatonMapper.toJson(state.currentAutomaton);
-    final json = jsonEncode(payload);
+    final json = _escapeForJsLiteral(jsonEncode(payload));
     final controller = _controller;
     if (controller == null) {
       return;
@@ -303,6 +303,10 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
         FlutterErrorDetails(exception: error, stack: stackTrace),
       );
     }
+  }
+
+  String _escapeForJsLiteral(String value) {
+    return value.replaceAll(r'\', r'\\').replaceAll("'", r"\'");
   }
 
   String _nextStateId() {

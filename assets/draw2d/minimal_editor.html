@@ -85,8 +85,8 @@
 
                 if (draw2dApi !== null) {
                     window.draw2d = draw2dApi;
-                    console.log('[Draw2D] Found window.draw2d');
-                    Alert.postMessage('Found window.draw2d');
+                    console.log('[Draw2D] Found window.draw2d (immediate)');
+                    Alert.postMessage('Found window.draw2d (immediate) via ' + (activeDraw2dSource || 'unknown'));
                 } else if (typeof window.draw2d !== 'undefined' && window.draw2d !== null) {
                     draw2dApi = window.draw2d;
                     console.log('[Draw2D] Found window.draw2d');
@@ -167,14 +167,14 @@
                         if (draw2dAPI !== null) {
                             window.draw2d = draw2dAPI;
                             draw2dApi = draw2dAPI;
-                            console.log('[Draw2D] draw2d API found after', retryCount, 'retries');
-                            Alert.postMessage('draw2d API found after ' + retryCount + ' retries');
+                            console.log('[Draw2D] draw2d API found after', retryCount, 'retries from', activeDraw2dSource);
+                            Alert.postMessage('draw2d API found after ' + retryCount + ' retries from ' + (activeDraw2dSource || 'unknown'));
 
                             draw2dInitialized = true;
                             initializeDraw2dCanvas(draw2dAPI);
                         } else if (retryCount >= maxRetries) {
-                            console.error('[Draw2D] draw2d failed to initialize after', maxRetries, 'retries');
-                            Alert.postMessage('draw2d failed to initialize after ' + maxRetries + ' retries');
+                            console.error('[Draw2D] draw2d failed to initialize after', maxRetries, 'retries from', activeDraw2dSource);
+                            Alert.postMessage('draw2d failed to initialize after ' + maxRetries + ' retries from ' + (activeDraw2dSource || 'unknown'));
                             initializeFallbackCanvas();
                             return;
                         } else {

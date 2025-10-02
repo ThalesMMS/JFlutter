@@ -3,13 +3,13 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../core/services/draw2d_bridge_service.dart';
 import '../mappers/draw2d_automaton_mapper.dart';
 import '../providers/automaton_provider.dart';
 import 'draw2d_canvas_fallback.dart';
+import 'draw2d_html_builder.dart';
 import 'draw2d_platform_support.dart';
 
 /// Draw2D canvas embedded through a WebView that synchronises with the
@@ -28,9 +28,6 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
   bool _isReady = false;
   Timer? _moveDebounce;
   final Map<String, _PendingMove> _pendingMoves = {};
-  Future<void>? _runtimeLoadOperation;
-  bool _runtimeInjected = false;
-  bool _jqueryInjected = false;
 
   @override
   void initState() {
@@ -38,10 +35,24 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
     if (!_isPlatformSupported) {
       return;
     }
+    _initializeWebView();
+  }
 
+  @override
+  void dispose() {
+    _subscription?.close();
+    _moveDebounce?.cancel();
+    final controller = _controller;
+    if (controller != null) {
+      _bridge.unregisterWebViewController(controller);
+    }
+    super.dispose();
+  }
+
+  Future<void> _initializeWebView() async {
     final controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(const Color(0x00000000)) // Use transparent color without Colors.transparent
+      ..setBackgroundColor(const Color(0x00000000))
       ..enableZoom(false)
       ..addJavaScriptChannel(
         'JFlutterBridge',
@@ -55,10 +66,18 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
       )
       ..setNavigationDelegate(
         NavigationDelegate(),
-      )
-        ..loadFlutterAsset('assets/draw2d/editor.html');
+      );
 
-    _controller = controller;
+    final htmlDocument = await Draw2dHtmlBuilder.load();
+
+    await controller.loadHtmlString(htmlDocument);
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _controller = controller;
+    });
 
     _bridge.registerWebViewController(controller);
 
@@ -66,25 +85,11 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
       previous,
       next,
     ) {
-      if (!_isReady) {
-        return;
-      }
-      if (previous?.currentAutomaton == next.currentAutomaton) {
+      if (!_isReady || identical(previous?.currentAutomaton, next.currentAutomaton)) {
         return;
       }
       _pushModel(next);
     });
-  }
-
-  @override
-  void dispose() {
-    _subscription?.close();
-    _moveDebounce?.cancel();
-    final controller = _controller;
-    if (controller != null) {
-      _bridge.unregisterWebViewController(controller);
-    }
-    super.dispose();
   }
 
   @override
@@ -126,8 +131,8 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
         _bridge.markBridgeReady();
         _pushModel(ref.read(automatonProvider));
         break;
-      case 'runtime_request':
-        unawaited(_handleRuntimeRequest());
+      case 'log':
+        _handleWebLog(payload);
         break;
       case 'state.add':
         _handleStateAdd(payload);
@@ -152,9 +157,6 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
         break;
       case 'transition.remove':
         _handleTransitionRemove(payload);
-        break;
-      case 'log':
-        _handleWebLog(payload);
         break;
       default:
         debugPrint('Unhandled Draw2D event: $type');
@@ -274,56 +276,6 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
     ref.read(automatonProvider.notifier).removeTransition(id: id);
   }
 
-  Future<void> _handleRuntimeRequest() async {
-    if (_runtimeInjected) {
-      return;
-    }
-
-    final controller = _controller;
-    if (controller == null) {
-      return;
-    }
-
-    _runtimeLoadOperation ??= _injectRuntime(controller);
-    try {
-      await _runtimeLoadOperation;
-    } finally {
-      _runtimeLoadOperation = null;
-    }
-  }
-
-  Future<void> _ensureJQuery(WebViewController controller) async {
-    if (_jqueryInjected) {
-      return;
-    }
-
-    final source =
-        await rootBundle.loadString('assets/draw2d/vendor/jquery-3.7.1.min.js');
-    final scriptLiteral = jsonEncode(source);
-    await controller.runJavaScript(
-      '(() => { if (typeof window.jQuery === "undefined") { const source = $scriptLiteral; try { window.eval(source); } catch (error) { console.error("Failed to evaluate jQuery runtime", error); throw error; } } })();',
-    );
-    _jqueryInjected = true;
-  }
-
-  Future<void> _injectRuntime(WebViewController controller) async {
-    try {
-      await _ensureJQuery(controller);
-      final source = await rootBundle.loadString('assets/draw2d/vendor/draw2d.js');
-      final scriptLiteral = jsonEncode(source);
-      await controller.runJavaScript(
-        '(() => { const source = $scriptLiteral; if (window.draw2dBridge && typeof window.draw2dBridge.loadRuntimeFromFlutter === "function") { window.draw2dBridge.loadRuntimeFromFlutter(source); } })();',
-      );
-      _runtimeInjected = true;
-    } catch (error, stackTrace) {
-      _runtimeInjected = false;
-      debugPrint('Failed to inject Draw2D runtime: $error');
-      FlutterError.reportError(
-        FlutterErrorDetails(exception: error, stack: stackTrace),
-      );
-    }
-  }
-
   void _flushMoves() {
     final notifier = ref.read(automatonProvider.notifier);
     for (final move in _pendingMoves.values) {
@@ -336,14 +288,14 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
 
   Future<void> _pushModel(AutomatonState state) async {
     final payload = Draw2DAutomatonMapper.toJson(state.currentAutomaton);
-    final json = _escapeForJsLiteral(jsonEncode(payload));
+    final json = jsonEncode(payload);
     final controller = _controller;
     if (controller == null) {
       return;
     }
     try {
       await controller.runJavaScript(
-        '(() => { if (window.draw2dBridge && typeof window.draw2dBridge.loadModel === "function") { window.draw2dBridge.loadModel($json); } })();',
+        'window.draw2dBridge && window.draw2dBridge.loadModel($json);',
       );
     } catch (error, stackTrace) {
       debugPrint('Failed to push Draw2D model: $error');
@@ -351,10 +303,6 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
         FlutterErrorDetails(exception: error, stack: stackTrace),
       );
     }
-  }
-
-  String _escapeForJsLiteral(String value) {
-    return value.replaceAll(r'\', r'\\').replaceAll("'", r"\'");
   }
 
   String _nextStateId() {

@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:flutter/services.dart' show rootBundle;
 
 import '../../core/models/tm.dart';
 import '../../core/models/tm_transition.dart';
@@ -12,6 +11,7 @@ import '../../core/services/draw2d_bridge_service.dart';
 import '../mappers/draw2d_tm_mapper.dart';
 import '../providers/tm_editor_provider.dart';
 import 'draw2d_canvas_fallback.dart';
+import 'draw2d_html_builder.dart';
 import 'draw2d_platform_support.dart';
 
 /// Draw2D-powered canvas for editing Turing Machines using the shared
@@ -28,34 +28,62 @@ class Draw2DTMCanvasView extends ConsumerStatefulWidget {
   ConsumerState<Draw2DTMCanvasView> createState() => _Draw2DTMCanvasViewState();
 }
 
+
 class _Draw2DTMCanvasViewState extends ConsumerState<Draw2DTMCanvasView> {
   WebViewController? _controller;
   final Draw2DBridgeService _bridge = Draw2DBridgeService();
   ProviderSubscription<TMEditorState>? _subscription;
   bool _isReady = false;
   TM? _lastEmittedTM;
-  Future<void>? _runtimeLoadOperation;
-  bool _runtimeInjected = false;
-  bool _jqueryInjected = false;
 
   @override
   void initState() {
     super.initState();
-
     if (!_isPlatformSupported) {
       return;
     }
+    _initializeWebView();
+  }
 
+  @override
+  void dispose() {
+    _subscription?.close();
+    final controller = _controller;
+    if (controller != null) {
+      _bridge.unregisterWebViewController(controller);
+    }
+    super.dispose();
+  }
+
+  Future<void> _initializeWebView() async {
     final controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(Colors.transparent)
-      ..addJavaScriptChannel('JFlutterBridge', onMessageReceived: _handleMessage)
+      ..setBackgroundColor(const Color(0x00000000))
+      ..enableZoom(false)
+      ..addJavaScriptChannel(
+        'JFlutterBridge',
+        onMessageReceived: _handleMessage,
+      )
+      ..addJavaScriptChannel(
+        'Alert',
+        onMessageReceived: (JavaScriptMessage message) {
+          debugPrint('[Draw2D][Alert] ${message.message}');
+        },
+      )
       ..setNavigationDelegate(
         NavigationDelegate(),
-      )
-      ..loadFlutterAsset('assets/draw2d/editor.html');
+      );
 
-    _controller = controller;
+    final htmlDocument = await Draw2dHtmlBuilder.load();
+
+    await controller.loadHtmlString(htmlDocument);
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _controller = controller;
+    });
 
     _bridge.registerWebViewController(controller);
 
@@ -68,16 +96,6 @@ class _Draw2DTMCanvasViewState extends ConsumerState<Draw2DTMCanvasView> {
         _maybeEmitTM(next.tm);
       },
     );
-  }
-
-  @override
-  void dispose() {
-    _subscription?.close();
-    final controller = _controller;
-    if (controller != null) {
-      _bridge.unregisterWebViewController(controller);
-    }
-    super.dispose();
   }
 
   @override
@@ -118,9 +136,6 @@ class _Draw2DTMCanvasViewState extends ConsumerState<Draw2DTMCanvasView> {
         });
         _bridge.markBridgeReady();
         _pushModel(ref.read(tmEditorProvider));
-        break;
-      case 'runtime_request':
-        unawaited(_handleRuntimeRequest());
         break;
       case 'log':
         _handleWebLog(payload);
@@ -293,75 +308,23 @@ class _Draw2DTMCanvasViewState extends ConsumerState<Draw2DTMCanvasView> {
     _maybeEmitTM(tm);
   }
 
-  Future<void> _handleRuntimeRequest() async {
-    if (_runtimeInjected) {
-      return;
-    }
-
-    final controller = _controller;
-    if (controller == null) {
-      return;
-    }
-
-    _runtimeLoadOperation ??= _injectRuntime(controller);
-    try {
-      await _runtimeLoadOperation;
-    } finally {
-      _runtimeLoadOperation = null;
-    }
-  }
-
-  Future<void> _ensureJQuery(WebViewController controller) async {
-    if (_jqueryInjected) {
-      return;
-    }
-
-    final source =
-        await rootBundle.loadString('assets/draw2d/vendor/jquery-3.7.1.min.js');
-    final scriptLiteral = jsonEncode(source);
-    await controller.runJavaScript(
-      '(() => { if (typeof window.jQuery === "undefined") { const source = $scriptLiteral; try { window.eval(source); } catch (error) { console.error("Failed to evaluate jQuery runtime", error); throw error; } } })();',
-    );
-    _jqueryInjected = true;
-  }
-
-  Future<void> _injectRuntime(WebViewController controller) async {
-    try {
-      await _ensureJQuery(controller);
-      final source = await rootBundle.loadString('assets/draw2d/vendor/draw2d.js');
-      final scriptLiteral = jsonEncode(source);
-      await controller.runJavaScript(
-        '(() => { const source = $scriptLiteral; if (window.draw2dBridge && typeof window.draw2dBridge.loadRuntimeFromFlutter === "function") { window.draw2dBridge.loadRuntimeFromFlutter(source); } })();',
-      );
-      _runtimeInjected = true;
-    } catch (error, stackTrace) {
-      _runtimeInjected = false;
-      debugPrint('Failed to inject Draw2D runtime for TM editor: $error');
-      FlutterError.reportError(
-        FlutterErrorDetails(exception: error, stack: stackTrace),
-      );
-    }
-  }
-
-  void _pushModel(TMEditorState state) {
+  Future<void> _pushModel(TMEditorState state) async {
     final payload = Draw2DTMMapper.toJson(state.tm);
-    final json = _escapeForJsLiteral(jsonEncode(payload));
+    final json = jsonEncode(payload);
     final controller = _controller;
     if (controller == null) {
       return;
     }
-    controller
-        .runJavaScript('(() => { if (window.draw2dBridge && typeof window.draw2dBridge.loadModel === "function") { window.draw2dBridge.loadModel($json); } })();')
-        .catchError((error, stackTrace) {
+    try {
+      await controller.runJavaScript(
+        'window.draw2dBridge && window.draw2dBridge.loadModel($json);',
+      );
+    } catch (error, stackTrace) {
       debugPrint('Failed to push Draw2D TM model: $error');
       FlutterError.reportError(
         FlutterErrorDetails(exception: error, stack: stackTrace),
       );
-    });
-  }
-
-  String _escapeForJsLiteral(String value) {
-    return value.replaceAll(r'\', r'\\').replaceAll("'", r"\'");
+    }
   }
 
   void _maybeEmitTM(TM? tm) {

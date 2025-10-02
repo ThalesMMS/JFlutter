@@ -40,14 +40,7 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
       ..setBackgroundColor(Colors.transparent)
       ..addJavaScriptChannel('JFlutterBridge', onMessageReceived: _handleMessage)
       ..setNavigationDelegate(
-        NavigationDelegate(
-          onPageFinished: (_) {
-            setState(() {
-              _isReady = true;
-            });
-            _pushModel(ref.read(automatonProvider));
-          },
-        ),
+        NavigationDelegate(),
       )
       ..loadFlutterAsset('assets/draw2d/editor.html');
 
@@ -112,6 +105,12 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
         (decoded['payload'] as Map?)?.cast<String, dynamic>() ?? const {};
 
     switch (type) {
+      case 'editor_ready':
+        setState(() {
+          _isReady = true;
+        });
+        _pushModel(ref.read(automatonProvider));
+        break;
       case 'state.add':
         _handleStateAdd(payload);
         break;
@@ -259,7 +258,7 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
       return;
     }
     try {
-      await controller.runJavaScript('window.draw2dBridge?.loadModel($json);');
+      await controller.runJavaScript('(() => { if (window.draw2dBridge && typeof window.draw2dBridge.loadModel === "function") { window.draw2dBridge.loadModel($json); } })();');
     } catch (error, stackTrace) {
       debugPrint('Failed to push Draw2D model: $error');
       FlutterError.reportError(

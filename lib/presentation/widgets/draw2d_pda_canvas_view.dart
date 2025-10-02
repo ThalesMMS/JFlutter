@@ -45,14 +45,7 @@ class _Draw2DPdaCanvasViewState extends ConsumerState<Draw2DPdaCanvasView> {
       ..setBackgroundColor(Colors.transparent)
       ..addJavaScriptChannel('JFlutterBridge', onMessageReceived: _handleMessage)
       ..setNavigationDelegate(
-        NavigationDelegate(
-          onPageFinished: (_) {
-            setState(() {
-              _isReady = true;
-            });
-            _pushModel(ref.read(pdaEditorProvider).pda);
-          },
-        ),
+        NavigationDelegate(),
       )
       ..loadFlutterAsset('assets/draw2d/editor.html');
 
@@ -117,6 +110,12 @@ class _Draw2DPdaCanvasViewState extends ConsumerState<Draw2DPdaCanvasView> {
         (decoded['payload'] as Map?)?.cast<String, dynamic>() ?? const {};
 
     switch (type) {
+      case 'editor_ready':
+        setState(() {
+          _isReady = true;
+        });
+        _pushModel(ref.read(pdaEditorProvider).pda);
+        break;
       case 'state.add':
         _handleStateAdd(payload);
         break;
@@ -301,7 +300,7 @@ class _Draw2DPdaCanvasViewState extends ConsumerState<Draw2DPdaCanvasView> {
       return;
     }
     try {
-      await controller.runJavaScript('window.draw2dBridge?.loadModel($json);');
+      await controller.runJavaScript('(() => { if (window.draw2dBridge && typeof window.draw2dBridge.loadModel === "function") { window.draw2dBridge.loadModel($json); } })();');
     } catch (error, stackTrace) {
       debugPrint('Failed to push PDA model to Draw2D: $error');
       FlutterError.reportError(

@@ -973,6 +973,18 @@
     resetView: resetView,
   };
 
+  // Signal readiness to Flutter once the bridge and canvas are available
+  try {
+    ensureCanvas();
+    if (window.JFlutterBridge && typeof window.JFlutterBridge.postMessage === 'function') {
+      window.JFlutterBridge.postMessage(JSON.stringify({ type: 'editor_ready', payload: {} }));
+    } else if (window.Draw2DFlutterBridge && typeof window.Draw2DFlutterBridge.postMessage === 'function') {
+      window.Draw2DFlutterBridge.postMessage(JSON.stringify({ type: 'editor_ready', payload: {} }));
+    }
+  } catch (_) {
+    // Ignore readiness failure
+  }
+
   window.addEventListener('message', function (event) {
     const data = event && event.data;
     if (!data) {

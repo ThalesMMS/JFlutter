@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vector_math/vector_math_64.dart';
@@ -13,13 +14,15 @@ import '../../core/algorithms/regex_to_nfa_converter.dart';
 import '../../core/models/fsa.dart';
 import '../../core/models/fsa_transition.dart';
 import '../../core/models/state.dart';
+import '../../core/models/transition.dart';
 import '../../core/models/grammar.dart';
 import '../../core/models/simulation_result.dart' as sim_result;
 import '../../core/entities/automaton_entity.dart';
 import '../../data/services/automaton_service.dart';
 import '../../core/repositories/automaton_repository.dart';
-import '../../features/layout/layout_repository_impl.dart';
 import '../../core/services/trace_persistence_service.dart';
+import '../../core/utils/automaton_patch.dart';
+import '../../features/layout/layout_repository_impl.dart';
 
 /// Provider for automaton state management
 class AutomatonProvider extends StateNotifier<AutomatonState> {
@@ -85,6 +88,511 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       equivalenceResult: null,
       equivalenceDetails: null,
     );
+  }
+
+  /// Adds a new state or updates an existing one using coordinates supplied by
+  /// the Draw2D canvas bridge.
+  void addState({
+    required String id,
+    required String label,
+    required double x,
+    required double y,
+    bool? isInitial,
+    bool? isAccepting,
+  }) {
+    _mutateAutomaton((current) {
+      final List<State> updatedStates = [];
+      bool found = false;
+
+      for (final state in current.states) {
+        if (state.id == id) {
+          updatedStates.add(
+            state.copyWith(
+              label: label,
+              position: Vector2(x, y),
+              isInitial: isInitial ?? state.isInitial,
+              isAccepting: isAccepting ?? state.isAccepting,
+            ),
+          );
+          found = true;
+        } else {
+          updatedStates.add(state);
+        }
+      }
+
+      if (!found) {
+        updatedStates.add(
+          State(
+            id: id,
+            label: label,
+            position: Vector2(x, y),
+            isInitial: isInitial ?? current.states.isEmpty,
+            isAccepting: isAccepting ?? false,
+          ),
+        );
+      }
+
+      List<State> normalizedStates = updatedStates;
+      if (isInitial == true) {
+        normalizedStates = updatedStates
+            .map(
+              (state) => state.id == id
+                  ? state.copyWith(isInitial: true)
+                  : state.copyWith(isInitial: false),
+            )
+            .toList();
+      } else if (isInitial == false) {
+        normalizedStates = updatedStates
+            .map(
+              (state) => state.id == id
+                  ? state.copyWith(isInitial: false)
+                  : state,
+            )
+            .toList();
+      }
+
+      final statesById = {for (final state in normalizedStates) state.id: state};
+      final updatedTransitions = _rebindTransitions(
+        current.transitions.whereType<FSATransition>(),
+        statesById,
+      );
+
+      final initialStateId = isInitial == true
+          ? id
+          : current.initialState?.id ??
+              normalizedStates.firstWhereOrNull((state) => state.isInitial)?.id;
+      final initialState =
+          initialStateId != null ? statesById[initialStateId] : null;
+
+      final acceptingStates = statesById.values
+          .where((state) => state.isAccepting)
+          .toSet();
+
+      return current.copyWith(
+        states: statesById.values.toSet(),
+        transitions: updatedTransitions.map<Transition>((t) => t).toSet(),
+        initialState: initialState,
+        acceptingStates: acceptingStates,
+        modified: DateTime.now(),
+      );
+    });
+  }
+
+  /// Moves a state to a new position on the canvas.
+  void moveState({
+    required String id,
+    required double x,
+    required double y,
+  }) {
+    _mutateAutomaton((current) {
+      final updatedStates = current.states
+          .map(
+            (state) => state.id == id
+                ? state.copyWith(position: Vector2(x, y))
+                : state,
+          )
+          .toList();
+      final statesById = {for (final state in updatedStates) state.id: state};
+      final updatedTransitions = _rebindTransitions(
+        current.transitions.whereType<FSATransition>(),
+        statesById,
+      );
+
+      final initialStateId = current.initialState?.id;
+      final acceptingStates = statesById.values
+          .where((state) => state.isAccepting)
+          .toSet();
+
+      return current.copyWith(
+        states: statesById.values.toSet(),
+        transitions: updatedTransitions.map<Transition>((t) => t).toSet(),
+        initialState:
+            initialStateId != null ? statesById[initialStateId] : null,
+        acceptingStates: acceptingStates,
+        modified: DateTime.now(),
+      );
+    });
+  }
+
+  /// Removes the state identified by [id] along with connected transitions.
+  void removeState({required String id}) {
+    _mutateAutomaton((current) {
+      if (current.states.every((state) => state.id != id)) {
+        return current;
+      }
+
+      final remainingStates =
+          current.states.where((state) => state.id != id).toList(growable: false);
+
+      if (remainingStates.isEmpty) {
+        return current.copyWith(
+          states: <State>{},
+          transitions: <Transition>{},
+          initialState: null,
+          acceptingStates: <State>{},
+          modified: DateTime.now(),
+        );
+      }
+
+      final initialCandidate = remainingStates
+          .firstWhereOrNull((state) => state.id == current.initialState?.id);
+      final resolvedInitial = initialCandidate ?? remainingStates.first;
+
+      final normalizedStates = remainingStates
+          .map(
+            (state) => state.copyWith(
+              isInitial: state.id == resolvedInitial.id,
+              isAccepting: current.acceptingStates
+                  .any((accepting) => accepting.id == state.id),
+            ),
+          )
+          .toList();
+
+      State? updatedInitial =
+          normalizedStates.firstWhereOrNull((state) => state.isInitial);
+      if (updatedInitial == null && normalizedStates.isNotEmpty) {
+        final fallback = normalizedStates.first.copyWith(isInitial: true);
+        normalizedStates[0] = fallback;
+        updatedInitial = fallback;
+      }
+
+      final statesById = {for (final state in normalizedStates) state.id: state};
+      final filteredTransitions = current.transitions
+          .whereType<FSATransition>()
+          .where(
+            (transition) =>
+                transition.fromState.id != id && transition.toState.id != id,
+          )
+          .toList();
+
+      final reboundTransitions =
+          _rebindTransitions(filteredTransitions, statesById);
+      final acceptingStates =
+          statesById.values.where((state) => state.isAccepting).toSet();
+
+      return current.copyWith(
+        states: statesById.values.toSet(),
+        transitions: reboundTransitions.map<Transition>((t) => t).toSet(),
+        initialState: updatedInitial,
+        acceptingStates: acceptingStates,
+        modified: DateTime.now(),
+      );
+    });
+  }
+
+  /// Adds or updates a transition in the automaton.
+  void addOrUpdateTransition({
+    required String id,
+    required String fromStateId,
+    required String toStateId,
+    required String label,
+    double? controlPointX,
+    double? controlPointY,
+  }) {
+    _mutateAutomaton((current) {
+      final statesById = {
+        for (final state in current.states) state.id: state,
+      };
+      final fromState = statesById[fromStateId];
+      final toState = statesById[toStateId];
+      if (fromState == null || toState == null) {
+        return current;
+      }
+
+      final parsedLabel = _parseTransitionLabel(label);
+      final transitions = current.transitions.whereType<FSATransition>().toList();
+      final existingIndex =
+          transitions.indexWhere((transition) => transition.id == id);
+
+      final controlPoint = controlPointX != null && controlPointY != null
+          ? Vector2(controlPointX, controlPointY)
+          : null;
+
+      if (existingIndex >= 0) {
+        final existing = transitions[existingIndex];
+        transitions[existingIndex] = existing.copyWith(
+          fromState: fromState,
+          toState: toState,
+          label: label,
+          controlPoint: controlPoint ?? existing.controlPoint,
+          inputSymbols: parsedLabel.symbols,
+          lambdaSymbol: parsedLabel.lambdaSymbol,
+        );
+      } else {
+        transitions.add(
+          FSATransition(
+            id: id,
+            fromState: fromState,
+            toState: toState,
+            label: label,
+            controlPoint: controlPoint,
+            inputSymbols: parsedLabel.symbols,
+            lambdaSymbol: parsedLabel.lambdaSymbol,
+          ),
+        );
+      }
+
+      final updatedAlphabet = _mergeAlphabet(
+        current.alphabet,
+        parsedLabel.symbols,
+      );
+
+      return current.copyWith(
+        transitions: transitions.map<Transition>((t) => t).toSet(),
+        alphabet: updatedAlphabet,
+        modified: DateTime.now(),
+      );
+    });
+  }
+
+  /// Removes the transition identified by [id] from the automaton.
+  void removeTransition({required String id}) {
+    _mutateAutomaton((current) {
+      final transitions = current.transitions.whereType<FSATransition>().toList();
+      final index = transitions.indexWhere((transition) => transition.id == id);
+      if (index < 0) {
+        return current;
+      }
+
+      transitions.removeAt(index);
+
+      return current.copyWith(
+        transitions: transitions.map<Transition>((t) => t).toSet(),
+        modified: DateTime.now(),
+      );
+    });
+  }
+
+  /// Updates the label of an existing state.
+  void updateStateLabel({
+    required String id,
+    required String label,
+  }) {
+    _mutateAutomaton((current) {
+      final updatedStates = current.states
+          .map(
+            (state) => state.id == id
+                ? state.copyWith(label: label)
+                : state,
+          )
+          .toList();
+      final statesById = {for (final state in updatedStates) state.id: state};
+      final updatedTransitions = _rebindTransitions(
+        current.transitions.whereType<FSATransition>(),
+        statesById,
+      );
+
+      final initialStateId = current.initialState?.id;
+      final acceptingStates = statesById.values
+          .where((state) => state.isAccepting)
+          .toSet();
+
+      return current.copyWith(
+        states: statesById.values.toSet(),
+        transitions: updatedTransitions.map<Transition>((t) => t).toSet(),
+        initialState:
+            initialStateId != null ? statesById[initialStateId] : null,
+        acceptingStates: acceptingStates,
+        modified: DateTime.now(),
+      );
+    });
+  }
+
+  /// Updates the flag metadata for the state matching [id].
+  void updateStateFlags({
+    required String id,
+    bool? isInitial,
+    bool? isAccepting,
+  }) {
+    if (isInitial == null && isAccepting == null) {
+      return;
+    }
+
+    _mutateAutomaton((current) {
+      if (current.states.every((state) => state.id != id)) {
+        return current;
+      }
+
+      final updatedStates = current.states
+          .map((state) {
+            var newInitial = state.isInitial;
+            var newAccepting = state.isAccepting;
+
+            if (state.id == id) {
+              newInitial = isInitial ?? state.isInitial;
+              newAccepting = isAccepting ?? state.isAccepting;
+            } else if (isInitial == true) {
+              newInitial = false;
+            }
+
+            return state.copyWith(
+              isInitial: newInitial,
+              isAccepting: newAccepting,
+            );
+          })
+          .toList();
+
+      if (!updatedStates.any((state) => state.isInitial) &&
+          updatedStates.isNotEmpty) {
+        updatedStates[0] = updatedStates[0].copyWith(isInitial: true);
+      }
+
+      final statesById = {for (final state in updatedStates) state.id: state};
+      final updatedTransitions = _rebindTransitions(
+        current.transitions.whereType<FSATransition>(),
+        statesById,
+      );
+
+      final initialState =
+          updatedStates.firstWhereOrNull((state) => state.isInitial);
+      final acceptingStates =
+          statesById.values.where((state) => state.isAccepting).toSet();
+
+      return current.copyWith(
+        states: statesById.values.toSet(),
+        transitions: updatedTransitions.map<Transition>((t) => t).toSet(),
+        initialState: initialState,
+        acceptingStates: acceptingStates,
+        modified: DateTime.now(),
+      );
+    });
+  }
+
+  /// Updates the label (and symbol set) of an existing transition.
+  void updateTransitionLabel({
+    required String id,
+    required String label,
+  }) {
+    _mutateAutomaton((current) {
+      final transitions = current.transitions.whereType<FSATransition>().toList();
+      final index = transitions.indexWhere((transition) => transition.id == id);
+      if (index < 0) {
+        return current;
+      }
+
+      final parsedLabel = _parseTransitionLabel(label);
+      final existing = transitions[index];
+      transitions[index] = existing.copyWith(
+        label: label,
+        inputSymbols: parsedLabel.symbols,
+        lambdaSymbol: parsedLabel.lambdaSymbol,
+      );
+
+      final updatedAlphabet = _mergeAlphabet(
+        current.alphabet,
+        parsedLabel.symbols,
+      );
+
+      return current.copyWith(
+        transitions: transitions.map<Transition>((t) => t).toSet(),
+        alphabet: updatedAlphabet,
+        modified: DateTime.now(),
+      );
+    });
+  }
+
+  void _mutateAutomaton(FSA Function(FSA current) transform) {
+    final current = state.currentAutomaton ?? _createEmptyAutomaton();
+    final updated = transform(current);
+    if (identical(updated, state.currentAutomaton)) {
+      return;
+    }
+
+    state = state.copyWith(
+      currentAutomaton: updated,
+      simulationResult: null,
+      regexResult: null,
+      grammarResult: null,
+      equivalenceResult: null,
+      equivalenceDetails: null,
+      error: null,
+    );
+  }
+
+  Set<FSATransition> _rebindTransitions(
+    Iterable<FSATransition> transitions,
+    Map<String, State> statesById,
+  ) {
+    return transitions
+        .map(
+          (transition) => transition.copyWith(
+            fromState:
+                statesById[transition.fromState.id] ?? transition.fromState,
+            toState: statesById[transition.toState.id] ?? transition.toState,
+          ),
+        )
+        .toSet();
+  }
+
+  ({Set<String> symbols, String? lambdaSymbol}) _parseTransitionLabel(
+    String label,
+  ) {
+    final trimmed = label.trim();
+    if (trimmed.isEmpty) {
+      return (symbols: <String>{}, lambdaSymbol: null);
+    }
+
+    final normalized = trimmed.replaceAll(RegExp(r'\s+'), '');
+    final lower = normalized.toLowerCase();
+    if (lower == 'ε' || lower == 'lambda' || lower == 'λ') {
+      return (symbols: <String>{}, lambdaSymbol: 'ε');
+    }
+
+    final parts = normalized
+        .split(',')
+        .map((symbol) => symbol.trim())
+        .where((symbol) => symbol.isNotEmpty)
+        .toSet();
+    return (symbols: parts, lambdaSymbol: null);
+  }
+
+  Set<String> _mergeAlphabet(Set<String> alphabet, Set<String> additions) {
+    final filtered = additions
+        .map((symbol) => symbol.trim())
+        .where(
+          (symbol) =>
+              symbol.isNotEmpty &&
+              symbol != 'ε' &&
+              symbol != 'λ' &&
+              symbol.toLowerCase() != 'lambda',
+        )
+        .toSet();
+    return {...alphabet, ...filtered};
+  }
+
+  FSA _createEmptyAutomaton() {
+    final now = DateTime.now();
+    return FSA(
+      id: 'automaton_${now.microsecondsSinceEpoch}',
+      name: 'Untitled Automaton',
+      states: <State>{},
+      transitions: <Transition>{},
+      alphabet: <String>{},
+      initialState: null,
+      acceptingStates: <State>{},
+      created: now,
+      modified: now,
+      bounds: const Rectangle<double>(0, 0, 800, 600),
+      panOffset: Vector2.zero(),
+      zoomLevel: 1.0,
+    );
+  }
+
+  /// Applies an incremental patch produced by the web editor without forcing
+  /// a full automaton reload. The patch uses the same schema defined for the
+  /// JavaScript bridge.
+  void applyAutomatonPatch(Map<String, dynamic> patch) {
+    final current = state.currentAutomaton;
+    if (current == null) {
+      return;
+    }
+    try {
+      final updated = applyAutomatonPatchToFsa(current, patch);
+      updateAutomaton(updated);
+    } catch (error, stackTrace) {
+      debugPrint('Failed to apply automaton patch: $error');
+      debugPrint('$stackTrace');
+    }
   }
 
   /// Simulates the current automaton with input string

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:vector_math/vector_math_64.dart';
+import 'package:vector_math/vector_math_64.dart' as vmath;
 import '../../core/models/state.dart' as automaton_state;
 import '../../core/models/transition.dart';
 import 'transition_geometry.dart';
@@ -37,7 +37,7 @@ class TransitionLink extends Transition {
     automaton_state.State? fromState,
     automaton_state.State? toState,
     String? label,
-    Vector2? controlPoint,
+    vmath.Vector2? controlPoint,
     TransitionType? type,
   }) {
     return TransitionLink(
@@ -367,7 +367,7 @@ class _TouchGestureHandlerState<T extends Transition>
       final newPosition = startCanvas + deltaCanvas;
       widget.onStateMoved(
         _draggedState!.copyWith(
-          position: Vector2(newPosition.dx, newPosition.dy),
+          position: vmath.Vector2(newPosition.dx, newPosition.dy),
         ),
       );
     } else if (_isPanning && details.pointerCount == 1) {
@@ -625,9 +625,9 @@ class _TouchGestureHandlerState<T extends Transition>
           onScaleUpdate: _handleScaleUpdate,
           onScaleEnd: _handleScaleEnd,
           child: Transform(
-            transform: Matrix4.identity()
-              ..translateByVector3(Vector3(_panOffset.dx, _panOffset.dy, 0))
-              ..scaleByVector3(Vector3.all(_scale)),
+            transform: vmath.Matrix4.identity()
+              ..translateByVector3(vmath.Vector3(_panOffset.dx, _panOffset.dy, 0))
+              ..scaleByVector3(vmath.Vector3.all(_scale)),
             child: widget.child,
           ),
         ),

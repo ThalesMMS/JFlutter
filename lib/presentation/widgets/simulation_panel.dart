@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/models/simulation_result.dart';
 import '../../core/models/simulation_step.dart';
+import '../../core/services/simulation_highlight_service.dart';
 
 /// Panel for automaton simulation
 class SimulationPanel extends StatefulWidget {
@@ -21,6 +22,8 @@ class SimulationPanel extends StatefulWidget {
 
 class _SimulationPanelState extends State<SimulationPanel> {
   final TextEditingController _inputController = TextEditingController();
+  final SimulationHighlightService _highlightService =
+      SimulationHighlightService();
   bool _isSimulating = false;
   bool _isStepByStep = false;
   int _currentStepIndex = 0;
@@ -30,6 +33,7 @@ class _SimulationPanelState extends State<SimulationPanel> {
   @override
   void dispose() {
     _inputController.dispose();
+    _highlightService.clear();
     super.dispose();
   }
 
@@ -55,6 +59,8 @@ class _SimulationPanelState extends State<SimulationPanel> {
         _simulationSteps.clear();
       });
 
+      _highlightService.clear();
+
       widget.onSimulate(inputString);
 
       // Safety timeout in case no result is produced
@@ -75,6 +81,7 @@ class _SimulationPanelState extends State<SimulationPanel> {
         _currentStepIndex = 0;
         _isPlaying = false;
       });
+      _highlightService.clear();
       return;
     }
 
@@ -85,6 +92,7 @@ class _SimulationPanelState extends State<SimulationPanel> {
         _currentStepIndex = 0;
         _isPlaying = false;
       });
+      _highlightService.clear();
       return;
     }
 
@@ -93,6 +101,8 @@ class _SimulationPanelState extends State<SimulationPanel> {
       _currentStepIndex = 0;
       _isPlaying = false;
     });
+
+    _emitHighlightForCurrentStep();
   }
 
   String _describeStep(int index) {
@@ -364,6 +374,7 @@ class _SimulationPanelState extends State<SimulationPanel> {
                       _currentStepIndex = 0;
                       _isPlaying = false;
                       _simulationSteps.clear();
+                      _highlightService.clear();
                     }
                   });
                   if (value) {
@@ -605,6 +616,7 @@ class _SimulationPanelState extends State<SimulationPanel> {
       setState(() {
         _currentStepIndex--;
       });
+      _emitHighlightForCurrentStep();
     }
   }
 
@@ -613,6 +625,7 @@ class _SimulationPanelState extends State<SimulationPanel> {
       setState(() {
         _currentStepIndex++;
       });
+      _emitHighlightForCurrentStep();
     }
   }
 
@@ -637,6 +650,7 @@ class _SimulationPanelState extends State<SimulationPanel> {
           setState(() {
             _currentStepIndex++;
           });
+          _emitHighlightForCurrentStep();
           _playStepAnimation();
         }
       });
@@ -652,5 +666,15 @@ class _SimulationPanelState extends State<SimulationPanel> {
       _currentStepIndex = 0;
       _isPlaying = false;
     });
+    _highlightService.clear();
+  }
+
+  void _emitHighlightForCurrentStep() {
+    if (!_isStepByStep || _simulationSteps.isEmpty) {
+      _highlightService.clear();
+      return;
+    }
+
+    _highlightService.emitFromSteps(_simulationSteps, _currentStepIndex);
   }
 }

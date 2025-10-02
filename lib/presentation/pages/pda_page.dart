@@ -3,9 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/pda.dart';
 import '../providers/pda_editor_provider.dart';
-import '../widgets/pda_canvas.dart';
+import '../widgets/draw2d_pda_canvas_view.dart';
 import '../widgets/pda_simulation_panel.dart';
 import '../widgets/pda_algorithm_panel.dart';
+import '../widgets/draw2d_canvas_toolbar.dart';
 
 /// Page for working with Pushdown Automata
 class PDAPage extends ConsumerStatefulWidget {
@@ -52,9 +53,30 @@ class _PDAPageState extends ConsumerState<PDAPage> {
               Expanded(
                 child: Container(
                   margin: const EdgeInsets.all(8),
-                  child: PDACanvas(
-                    canvasKey: _canvasKey,
-                    onPDAModified: _handlePdaModified,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: Draw2DPdaCanvasView(
+                          onPdaModified: _handlePdaModified,
+                        ),
+                      ),
+                      Positioned(
+                        top: 12,
+                        right: 12,
+                        child: Draw2DCanvasToolbar(
+                          onClear: () => setState(() {
+                            _latestPda = null;
+                            _stateCount = 0;
+                            _transitionCount = 0;
+                            _hasUnsavedChanges = true;
+                            ref.read(pdaEditorProvider.notifier).updateFromCanvas(
+                              states: const [],
+                              transitions: const [],
+                            );
+                          }),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -243,9 +265,30 @@ class _PDAPageState extends ConsumerState<PDAPage> {
           flex: 2,
           child: Container(
             margin: const EdgeInsets.all(8),
-            child: PDACanvas(
-              canvasKey: _canvasKey,
-              onPDAModified: _handlePdaModified,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Draw2DPdaCanvasView(
+                    onPdaModified: _handlePdaModified,
+                  ),
+                ),
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: Draw2DCanvasToolbar(
+                    onClear: () => setState(() {
+                      _latestPda = null;
+                      _stateCount = 0;
+                      _transitionCount = 0;
+                      _hasUnsavedChanges = true;
+                      ref.read(pdaEditorProvider.notifier).updateFromCanvas(
+                        states: const [],
+                        transitions: const [],
+                      );
+                    }),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

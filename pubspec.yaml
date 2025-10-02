@@ -36,6 +36,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_web_plugins:
+    sdk: flutter
 
   # State persistence (localStorage analogue)
   shared_preferences: ^2.3.2
@@ -48,10 +50,14 @@ dependencies:
 
   # Clipboard support (built into Flutter)
 
+  # Embedded Draw2D workspace
+  webview_flutter: ^4.10.0
+
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  
+
+  # Embedded Draw2D canvas (WebView wrapper)
   # State management and dependency injection
   provider: ^6.1.2
   get_it: ^8.0.0
@@ -68,7 +74,7 @@ dependencies:
   
   # Vector math for positioning and calculations
   vector_math: ^2.1.4
-  
+
   # Collection utilities
   collection: ^1.18.0
   petitparser: ^7.0.1
@@ -118,6 +124,9 @@ flutter:
     - jflutter_js/examples/apda_palindrome.json
     # Turing machine example
     - jflutter_js/examples/tm_binary_to_unary.json
+    # Draw2D prototype assets
+    - assets/draw2d/
+    - assets/draw2d/vendor/
 
 flutter_launcher_icons:
   image_path: "icon.PNG"
@@ -159,6 +168,5 @@ flutter_launcher_icons:
   #       - asset: fonts/TrajanPro.ttf
   #       - asset: fonts/TrajanPro_Bold.ttf
   #         weight: 700
-  #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package

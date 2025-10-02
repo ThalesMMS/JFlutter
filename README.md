@@ -59,6 +59,7 @@ Development is ongoing as we continue refining the application and expanding cov
 - **Import/Export Validation** - Robust validation for JFLAP XML, JSON, and SVG formats
 - **Error Handling** - User-friendly error messages with technical diagnostics
 - **Cross-Format Compatibility** - Ensures data integrity across different file formats
+- **Draw2D Canvas Bridge** - Optional WebView renderer with Riverpod-managed toggle and JS bridge protocol
 
 ### Examples v1 - Offline Examples Library
 

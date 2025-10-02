@@ -69,9 +69,12 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
   @override
   void initState() {
     super.initState();
-    ref
-        .read(pumpingLemmaProgressProvider.notifier)
-        .startNewGame(totalChallenges: _challenges.length);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref
+          .read(pumpingLemmaProgressProvider.notifier)
+          .startNewGame(totalChallenges: _challenges.length);
+    });
   }
 
   @override

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Test</title>
+</head>
+<body>
+    <h1>Simple Test Page</h1>
+    <p>If you can see this, the HTML is loading!</p>
+    
+    <script>
+        console.log('Simple test script running');
+        // Override alert to use Flutter channel
+        window.alert = function(message) {
+            Alert.postMessage(message);
+        };
+        alert('Simple test alert - HTML is working!');
+    </script>
+</body>
+</html>

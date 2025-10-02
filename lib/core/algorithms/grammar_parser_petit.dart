@@ -1,3 +1,5 @@
+import 'package:petitparser/petitparser.dart';
+
 import '../models/grammar.dart';
 import '../models/production.dart';
 import '../result.dart' as jflutter_result;

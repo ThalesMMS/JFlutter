@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 import '../../core/models/tm.dart';
 import '../../core/models/tm_transition.dart';
@@ -32,6 +34,8 @@ class _Draw2DTMCanvasViewState extends ConsumerState<Draw2DTMCanvasView> {
   ProviderSubscription<TMEditorState>? _subscription;
   bool _isReady = false;
   TM? _lastEmittedTM;
+  Future<void>? _runtimeLoadOperation;
+  bool _runtimeInjected = false;
 
   @override
   void initState() {
@@ -114,6 +118,12 @@ class _Draw2DTMCanvasViewState extends ConsumerState<Draw2DTMCanvasView> {
         _bridge.markBridgeReady();
         _pushModel(ref.read(tmEditorProvider));
         break;
+      case 'runtime_request':
+        unawaited(_handleRuntimeRequest());
+        break;
+      case 'log':
+        _handleWebLog(payload);
+        break;
       case 'state.add':
         _handleStateAdd(payload);
         break;
@@ -142,6 +152,14 @@ class _Draw2DTMCanvasViewState extends ConsumerState<Draw2DTMCanvasView> {
         debugPrint('Unhandled Draw2D TM event: $type');
         break;
     }
+  }
+
+  void _handleWebLog(Map<String, dynamic> payload) {
+    final level = payload['level'] as String? ?? 'info';
+    final message = payload['message'] as String? ?? '';
+    final details = payload['details'];
+    final suffix = details != null ? ' ${jsonEncode(details)}' : '';
+    debugPrint('[Draw2D][Web][$level] $message$suffix');
   }
 
   void _handleStateAdd(Map<String, dynamic> payload) {
@@ -272,6 +290,41 @@ class _Draw2DTMCanvasViewState extends ConsumerState<Draw2DTMCanvasView> {
 
     final tm = notifier.removeTransition(id: id);
     _maybeEmitTM(tm);
+  }
+
+  Future<void> _handleRuntimeRequest() async {
+    if (_runtimeInjected) {
+      return;
+    }
+
+    final controller = _controller;
+    if (controller == null) {
+      return;
+    }
+
+    _runtimeLoadOperation ??= _injectRuntime(controller);
+    try {
+      await _runtimeLoadOperation;
+    } finally {
+      _runtimeLoadOperation = null;
+    }
+  }
+
+  Future<void> _injectRuntime(WebViewController controller) async {
+    try {
+      final source = await rootBundle.loadString('assets/draw2d/vendor/draw2d.js');
+      final scriptLiteral = jsonEncode(source);
+      await controller.runJavaScript(
+        '(() => { const source = $scriptLiteral; if (window.draw2dBridge && typeof window.draw2dBridge.loadRuntimeFromFlutter === "function") { window.draw2dBridge.loadRuntimeFromFlutter(source); } })();',
+      );
+      _runtimeInjected = true;
+    } catch (error, stackTrace) {
+      _runtimeInjected = false;
+      debugPrint('Failed to inject Draw2D runtime for TM editor: $error');
+      FlutterError.reportError(
+        FlutterErrorDetails(exception: error, stack: stackTrace),
+      );
+    }
   }
 
   void _pushModel(TMEditorState state) {

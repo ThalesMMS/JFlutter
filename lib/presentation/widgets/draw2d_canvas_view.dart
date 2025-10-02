@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../core/services/draw2d_bridge_service.dart';
@@ -27,6 +28,8 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
   bool _isReady = false;
   Timer? _moveDebounce;
   final Map<String, _PendingMove> _pendingMoves = {};
+  Future<void>? _runtimeLoadOperation;
+  bool _runtimeInjected = false;
 
   @override
   void initState() {
@@ -121,6 +124,9 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
         });
         _bridge.markBridgeReady();
         _pushModel(ref.read(automatonProvider));
+        break;
+      case 'runtime_request':
+        unawaited(_handleRuntimeRequest());
         break;
       case 'state.add':
         _handleStateAdd(payload);
@@ -265,6 +271,41 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
       return;
     }
     ref.read(automatonProvider.notifier).removeTransition(id: id);
+  }
+
+  Future<void> _handleRuntimeRequest() async {
+    if (_runtimeInjected) {
+      return;
+    }
+
+    final controller = _controller;
+    if (controller == null) {
+      return;
+    }
+
+    _runtimeLoadOperation ??= _injectRuntime(controller);
+    try {
+      await _runtimeLoadOperation;
+    } finally {
+      _runtimeLoadOperation = null;
+    }
+  }
+
+  Future<void> _injectRuntime(WebViewController controller) async {
+    try {
+      final source = await rootBundle.loadString('assets/draw2d/vendor/draw2d.js');
+      final scriptLiteral = jsonEncode(source);
+      await controller.runJavaScript(
+        '(() => { const source = $scriptLiteral; if (window.draw2dBridge && typeof window.draw2dBridge.loadRuntimeFromFlutter === "function") { window.draw2dBridge.loadRuntimeFromFlutter(source); } })();',
+      );
+      _runtimeInjected = true;
+    } catch (error, stackTrace) {
+      _runtimeInjected = false;
+      debugPrint('Failed to inject Draw2D runtime: $error');
+      FlutterError.reportError(
+        FlutterErrorDetails(exception: error, stack: stackTrace),
+      );
+    }
   }
 
   void _flushMoves() {

@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../core/models/pda.dart';
@@ -32,6 +33,8 @@ class _Draw2DPdaCanvasViewState extends ConsumerState<Draw2DPdaCanvasView> {
   bool _isReady = false;
   Timer? _moveDebounce;
   final Map<String, _PendingMove> _pendingMoves = {};
+  Future<void>? _runtimeLoadOperation;
+  bool _runtimeInjected = false;
 
   @override
   void initState() {
@@ -117,6 +120,12 @@ class _Draw2DPdaCanvasViewState extends ConsumerState<Draw2DPdaCanvasView> {
         _bridge.markBridgeReady();
         _pushModel(ref.read(pdaEditorProvider).pda);
         break;
+      case 'runtime_request':
+        unawaited(_handleRuntimeRequest());
+        break;
+      case 'log':
+        _handleWebLog(payload);
+        break;
       case 'state.add':
         _handleStateAdd(payload);
         break;
@@ -145,6 +154,14 @@ class _Draw2DPdaCanvasViewState extends ConsumerState<Draw2DPdaCanvasView> {
         debugPrint('Unhandled Draw2D PDA event: $type');
         break;
     }
+  }
+
+  void _handleWebLog(Map<String, dynamic> payload) {
+    final level = payload['level'] as String? ?? 'info';
+    final message = payload['message'] as String? ?? '';
+    final details = payload['details'];
+    final suffix = details != null ? ' ${jsonEncode(details)}' : '';
+    debugPrint('[Draw2D][Web][$level] $message$suffix');
   }
 
   void _handleStateAdd(Map<String, dynamic> payload) {
@@ -276,6 +293,41 @@ class _Draw2DPdaCanvasViewState extends ConsumerState<Draw2DPdaCanvasView> {
     final updated = ref.read(pdaEditorProvider.notifier).removeTransition(id: id);
     if (updated != null) {
       widget.onPdaModified(updated);
+    }
+  }
+
+  Future<void> _handleRuntimeRequest() async {
+    if (_runtimeInjected) {
+      return;
+    }
+
+    final controller = _controller;
+    if (controller == null) {
+      return;
+    }
+
+    _runtimeLoadOperation ??= _injectRuntime(controller);
+    try {
+      await _runtimeLoadOperation;
+    } finally {
+      _runtimeLoadOperation = null;
+    }
+  }
+
+  Future<void> _injectRuntime(WebViewController controller) async {
+    try {
+      final source = await rootBundle.loadString('assets/draw2d/vendor/draw2d.js');
+      final scriptLiteral = jsonEncode(source);
+      await controller.runJavaScript(
+        '(() => { const source = $scriptLiteral; if (window.draw2dBridge && typeof window.draw2dBridge.loadRuntimeFromFlutter === "function") { window.draw2dBridge.loadRuntimeFromFlutter(source); } })();',
+      );
+      _runtimeInjected = true;
+    } catch (error, stackTrace) {
+      _runtimeInjected = false;
+      debugPrint('Failed to inject Draw2D runtime for PDA editor: $error');
+      FlutterError.reportError(
+        FlutterErrorDetails(exception: error, stack: stackTrace),
+      );
     }
   }
 

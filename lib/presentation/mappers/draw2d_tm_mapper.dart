@@ -15,6 +15,7 @@ class Draw2DTMMapper {
       return {
         'id': null,
         'name': null,
+        'type': 'tm',
         'states': const <Map<String, dynamic>>[],
         'transitions': const <Map<String, dynamic>>[],
         'initialStateId': null,
@@ -48,6 +49,7 @@ class Draw2DTMMapper {
     return {
       'id': machine.id,
       'name': machine.name,
+      'type': 'tm',
       'states': statesJson,
       'transitions': transitionsJson,
       'initialStateId': initialId,

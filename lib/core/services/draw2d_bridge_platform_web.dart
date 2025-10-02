@@ -12,7 +12,7 @@ class Draw2DBridgePlatform {
 
   bool get hasRegisteredController => false;
 
-  void runJavaScript(String script) {}
+  void runJavaScript(String script, {String? debugLabel}) {}
 
   void postMessage(String type, Map<String, dynamic> payload) {
     html.window.postMessage({'type': type, 'payload': payload}, '*');

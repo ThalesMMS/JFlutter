@@ -4,13 +4,17 @@
   const STATE_RADIUS = STATE_DIAMETER / 2;
   const canvasElement = document.getElementById(CANVAS_ID);
   let canvasInstance = null;
+  let hasLoggedMissingDraw2dWarning = false;
   const stateFigures = new Map();
   const transitionFigures = new Map();
   const highlightedStates = new Set();
   const highlightedTransitions = new Set();
   const moveQueue = new Map();
   let moveTimer = null;
+  let pendingCanvasRetryHandle = null;
   let currentModelType = 'fsa';
+  let pendingModel = null;
+  const pendingCanvasTasks = [];
 
   const HIGHLIGHT_STROKE_WIDTH = 4;
   const HIGHLIGHT_STATE_COLOR = '#ff9800';
@@ -209,20 +213,84 @@
     }
   }
 
+  function notifyFlutterReady() {
+    if (!canvasInstance) {
+      return;
+    }
+    const readyPayload = JSON.stringify({ type: 'editor_ready', payload: {} });
+    try {
+      if (window.JFlutterBridge && typeof window.JFlutterBridge.postMessage === 'function') {
+        window.JFlutterBridge.postMessage(readyPayload);
+      } else if (window.Draw2DFlutterBridge && typeof window.Draw2DFlutterBridge.postMessage === 'function') {
+        window.Draw2DFlutterBridge.postMessage(readyPayload);
+      }
+    } catch (error) {
+      console.warn('[Draw2D] Failed to notify Flutter about readiness', error);
+    }
+  }
+
+  function flushPendingCanvasTasks() {
+    if (!canvasInstance || pendingCanvasTasks.length === 0) {
+      return;
+    }
+    const tasks = pendingCanvasTasks.splice(0, pendingCanvasTasks.length);
+    tasks.forEach(function (task) {
+      try {
+        task(canvasInstance);
+      } catch (error) {
+        console.error('[Draw2D] Deferred canvas task failed', error);
+      }
+    });
+  }
+
   function ensureCanvas() {
     if (canvasInstance) {
+      flushPendingCanvasTasks();
       return canvasInstance;
     }
 
-    canvasInstance = new draw2d.Canvas(CANVAS_ID);
+    if (typeof window.draw2d === 'undefined' || !window.draw2d || typeof window.draw2d.Canvas !== 'function') {
+      if (!hasLoggedMissingDraw2dWarning) {
+        console.warn('[Draw2D] Canvas requested before draw2d runtime was ready. Deferring command.');
+        hasLoggedMissingDraw2dWarning = true;
+      }
+      if (!pendingCanvasRetryHandle) {
+        pendingCanvasRetryHandle = window.setTimeout(function () {
+          pendingCanvasRetryHandle = null;
+          ensureCanvas();
+          notifyFlutterReady();
+        }, 100);
+      }
+      return null;
+    }
+
+    try {
+      canvasInstance = new window.draw2d.Canvas(CANVAS_ID);
+    } catch (error) {
+      console.error('[Draw2D] Failed to create canvas instance', error);
+      if (!pendingCanvasRetryHandle) {
+        pendingCanvasRetryHandle = window.setTimeout(function () {
+          pendingCanvasRetryHandle = null;
+          ensureCanvas();
+          notifyFlutterReady();
+        }, 100);
+      }
+      return null;
+    }
+
+    hasLoggedMissingDraw2dWarning = false;
+    if (pendingCanvasRetryHandle) {
+      window.clearTimeout(pendingCanvasRetryHandle);
+      pendingCanvasRetryHandle = null;
+    }
     canvasInstance.setScrollArea('#' + CANVAS_ID);
     canvasInstance.installEditPolicy(
-      new draw2d.policy.connection.DragConnectionCreatePolicy({
+      new window.draw2d.policy.connection.DragConnectionCreatePolicy({
         createConnection: function () {
-          return new draw2d.Connection({
+          return new window.draw2d.Connection({
             stroke: 2,
             color: '#546e7a',
-            router: new draw2d.layout.connection.SplineConnectionRouter(),
+            router: new window.draw2d.layout.connection.SplineConnectionRouter(),
           });
         },
       }),
@@ -302,16 +370,34 @@
       });
     });
 
+    notifyFlutterReady();
+    flushPendingCanvasTasks();
+    renderPendingModel();
     return canvasInstance;
   }
 
-  function clearCanvas() {
+  function withCanvas(task) {
     const canvas = ensureCanvas();
-    canvas.getLines().each(function (_, line) {
-      line.remove();
-    });
-    canvas.getFigures().each(function (_, figure) {
-      figure.remove();
+    if (canvas) {
+      try {
+        task(canvas);
+      } catch (error) {
+        console.error('[Draw2D] Canvas task failed', error);
+      }
+      return canvas;
+    }
+    pendingCanvasTasks.push(task);
+    return null;
+  }
+
+  function clearCanvas() {
+    withCanvas(function (canvas) {
+      canvas.getLines().each(function (_, line) {
+        line.remove();
+      });
+      canvas.getFigures().each(function (_, figure) {
+        figure.remove();
+      });
     });
     stateFigures.clear();
     transitionFigures.clear();
@@ -325,16 +411,17 @@
   }
 
   function addStateAtCenter() {
-    const canvas = ensureCanvas();
-    const vp = getViewportRect();
-    const cx = vp.left + vp.width / 2;
-    const cy = vp.top + vp.height / 2;
-    const point = canvas.fromDocumentToCanvasCoordinate(cx, cy);
-    sendMessage('state.add', {
-      id: `q_${Date.now()}`,
-      label: `q${stateFigures.size}`,
-      x: point.x,
-      y: point.y,
+    withCanvas(function (canvas) {
+      const vp = getViewportRect();
+      const cx = vp.left + vp.width / 2;
+      const cy = vp.top + vp.height / 2;
+      const point = canvas.fromDocumentToCanvasCoordinate(cx, cy);
+      sendMessage('state.add', {
+        id: `q_${Date.now()}`,
+        label: `q${stateFigures.size}`,
+        x: point.x,
+        y: point.y,
+      });
     });
   }
 
@@ -365,60 +452,74 @@
     return bounds;
   }
 
-  function setZoom(zoom, animate) {
-    const canvas = ensureCanvas();
+  function setZoomInternal(canvas, zoom, animate) {
     try {
       canvas.setZoom(zoom, !!animate);
     } catch (_) {
-      // Fallback: ignore if setZoom is unavailable
+      // Ignore if zoom helpers are unavailable
     }
   }
 
-  function getZoom() {
-    const canvas = ensureCanvas();
+  function getZoomInternal(canvas) {
     try {
-      return canvas.getZoom ? canvas.getZoom() : 1.0;
+      return typeof canvas.getZoom === 'function' ? canvas.getZoom() : 1.0;
     } catch (_) {
       return 1.0;
     }
   }
 
+  function setZoom(zoom, animate) {
+    withCanvas(function (canvas) {
+      setZoomInternal(canvas, zoom, animate);
+    });
+  }
+
   function zoomIn() {
-    const current = getZoom();
-    setZoom(Math.min(current * 1.1, 4.0), true);
+    withCanvas(function (canvas) {
+      const current = getZoomInternal(canvas);
+      setZoomInternal(canvas, Math.min(current * 1.1, 4.0), true);
+    });
   }
 
   function zoomOut() {
-    const current = getZoom();
-    setZoom(Math.max(current / 1.1, 0.1), true);
+    withCanvas(function (canvas) {
+      const current = getZoomInternal(canvas);
+      setZoomInternal(canvas, Math.max(current / 1.1, 0.1), true);
+    });
   }
 
   function resetView() {
-    setZoom(1.0, true);
+    withCanvas(function (canvas) {
+      setZoomInternal(canvas, 1.0, true);
+    });
   }
 
   function fitToContent() {
-    const canvas = ensureCanvas();
-    const vp = getViewportRect();
-    const content = computeContentBounds();
-    if (!content) {
-      resetView();
-      return;
-    }
-    const contentWidth = Math.max(1, content.right - content.left);
-    const contentHeight = Math.max(1, content.bottom - content.top);
-    const padding = 40;
-    const scaleX = (vp.width - padding) / contentWidth;
-    const scaleY = (vp.height - padding) / contentHeight;
-    const zoom = Math.max(0.1, Math.min(4.0, Math.min(scaleX, scaleY)));
-    setZoom(zoom, true);
-    const centerX = content.left + contentWidth / 2;
-    const centerY = content.top + contentHeight / 2;
-    try {
-      canvas.scrollTo(centerX - vp.width / (2 * zoom), centerY - vp.height / (2 * zoom));
-    } catch (_) {
-      // Ignore if scrollTo unavailable
-    }
+    withCanvas(function (canvas) {
+      const vp = getViewportRect();
+      const content = computeContentBounds();
+      if (!content) {
+        setZoomInternal(canvas, 1.0, true);
+        return;
+      }
+      const contentWidth = Math.max(1, content.right - content.left);
+      const contentHeight = Math.max(1, content.bottom - content.top);
+      const padding = 40;
+      const scaleX = (vp.width - padding) / contentWidth;
+      const scaleY = (vp.height - padding) / contentHeight;
+      const zoom = Math.max(0.1, Math.min(4.0, Math.min(scaleX, scaleY)));
+      setZoomInternal(canvas, zoom, true);
+      const centerX = content.left + contentWidth / 2;
+      const centerY = content.top + contentHeight / 2;
+      try {
+        canvas.scrollTo(
+          centerX - vp.width / (2 * zoom),
+          centerY - vp.height / (2 * zoom),
+        );
+      } catch (_) {
+        // Ignore if scroll helpers are unavailable
+      }
+    });
   }
 
   function scheduleMove(sourceId, figure) {
@@ -555,6 +656,9 @@
 
   function createStateFigure(state) {
     const canvas = ensureCanvas();
+    if (!canvas || !window.draw2d) {
+      return null;
+    }
     const position = state.position || {};
     const x = typeof position.x === 'number' ? position.x : 0;
     const y = typeof position.y === 'number' ? position.y : 0;
@@ -569,7 +673,7 @@
     };
     const baseStyle = computeStateBaseStyle(entryData);
 
-    const figure = new draw2d.shape.basic.Circle({
+    const figure = new window.draw2d.shape.basic.Circle({
       diameter: STATE_DIAMETER,
       stroke: baseStyle.stroke,
       color: baseStyle.color,
@@ -587,7 +691,7 @@
     figure.createPort('input');
     figure.createPort('output');
 
-    const label = new draw2d.shape.basic.Label({
+    const label = new window.draw2d.shape.basic.Label({
       text: state.label,
       fontColor: '#263238',
       padding: 5,
@@ -595,7 +699,7 @@
       bgColor: '#ffffff',
     });
     label.setSelectable(false);
-    figure.add(label, new draw2d.layout.locator.CenterLocator());
+    figure.add(label, new window.draw2d.layout.locator.CenterLocator());
 
     figure.on('dragend', function () {
       scheduleMove(state.sourceId, figure);
@@ -665,13 +769,18 @@
       return;
     }
 
+    const canvas = ensureCanvas();
+    if (!canvas || !window.draw2d) {
+      return;
+    }
+
     const baseStroke = 2;
     const baseColor = '#546e7a';
 
-    const connection = new draw2d.Connection({
+    const connection = new window.draw2d.Connection({
       stroke: baseStroke,
       color: baseColor,
-      router: new draw2d.layout.connection.SplineConnectionRouter(),
+      router: new window.draw2d.layout.connection.SplineConnectionRouter(),
     });
     connection.setUserData({
       type: 'transition',
@@ -685,7 +794,7 @@
     if (transition.controlPoint) {
       const point = transition.controlPoint;
       if (typeof point.x === 'number' && typeof point.y === 'number') {
-        connection.addPoint(new draw2d.geo.Point(point.x, point.y));
+        connection.addPoint(new window.draw2d.geo.Point(point.x, point.y));
       }
     }
 
@@ -697,7 +806,7 @@
         ? formatTransitionLabel(transition)
         : transition.label;
 
-    const label = new draw2d.shape.basic.Label({
+    const label = new window.draw2d.shape.basic.Label({
       text: labelText,
       fontColor: '#263238',
       padding: 4,
@@ -707,7 +816,7 @@
     label.setSelectable(false);
     connection.add(
       label,
-      new draw2d.layout.locator.ManhattanMidpointLocator(),
+      new window.draw2d.layout.locator.ManhattanMidpointLocator(),
     );
 
     connection.on('dblclick', function () {
@@ -821,7 +930,7 @@
       handleTransitionContextMenu(transition.id, event);
     });
 
-    ensureCanvas().add(connection);
+    canvas.add(connection);
     const data = {
       id: transition.id,
       sourceId: transition.sourceId,
@@ -946,11 +1055,7 @@
     });
   }
 
-  function loadModel(model) {
-    if (!model || !Array.isArray(model.states)) {
-      return;
-    }
-
+  function renderModel(model) {
     currentModelType = typeof model.type === 'string' ? model.type : 'fsa';
     clearHighlight();
     clearCanvas();
@@ -960,6 +1065,24 @@
     (model.transitions || []).forEach(function (transition) {
       createTransitionFigure(transition);
     });
+  }
+
+  function renderPendingModel() {
+    if (!pendingModel) {
+      return;
+    }
+    withCanvas(function () {
+      renderModel(pendingModel);
+    });
+  }
+
+  function loadModel(model) {
+    if (!model || !Array.isArray(model.states)) {
+      return;
+    }
+
+    pendingModel = model;
+    renderPendingModel();
   }
 
   window.draw2dBridge = {
@@ -976,11 +1099,8 @@
   // Signal readiness to Flutter once the bridge and canvas are available
   try {
     ensureCanvas();
-    if (window.JFlutterBridge && typeof window.JFlutterBridge.postMessage === 'function') {
-      window.JFlutterBridge.postMessage(JSON.stringify({ type: 'editor_ready', payload: {} }));
-    } else if (window.Draw2DFlutterBridge && typeof window.Draw2DFlutterBridge.postMessage === 'function') {
-      window.Draw2DFlutterBridge.postMessage(JSON.stringify({ type: 'editor_ready', payload: {} }));
-    }
+    notifyFlutterReady();
+    renderPendingModel();
   } catch (_) {
     // Ignore readiness failure
   }

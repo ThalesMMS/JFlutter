@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 /// Fallback implementation used on non-web platforms.
@@ -29,12 +30,24 @@ class Draw2DBridgePlatform {
 
   bool get hasRegisteredController => _activeController != null;
 
-  void runJavaScript(String script) {
+  void runJavaScript(String script, {String? debugLabel}) {
     final controller = _activeController;
     if (controller == null) {
       return;
     }
-    unawaited(controller.runJavaScript(script));
+    unawaited(
+      controller.runJavaScript(script).catchError((
+        Object error,
+        StackTrace stackTrace,
+      ) {
+        debugPrint(
+          '[Draw2D][Flutter] runJavaScript${debugLabel != null ? ' ($debugLabel)' : ''} failed: $error',
+        );
+        FlutterError.reportError(
+          FlutterErrorDetails(exception: error, stack: stackTrace),
+        );
+      }),
+    );
   }
 
   void postMessage(String type, Map<String, dynamic> payload) {}

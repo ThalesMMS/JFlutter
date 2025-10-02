@@ -11,8 +11,9 @@ class Draw2DBridgeService {
 
   factory Draw2DBridgeService() => _instance;
 
-  static final Draw2DBridgeService _instance =
-      Draw2DBridgeService._(createDraw2DBridgePlatform());
+  static final Draw2DBridgeService _instance = Draw2DBridgeService._(
+    createDraw2DBridgePlatform(),
+  );
 
   final Draw2DBridgePlatform _platform;
 
@@ -28,11 +29,20 @@ class Draw2DBridgeService {
     _platform.unregisterWebViewController(controller);
   }
 
-  void runJavaScript(String script) {
+  void runJavaScript(String script, {String? debugLabel}) {
     if (!hasRegisteredController) {
       return;
     }
-    _platform.runJavaScript(script);
+    _platform.runJavaScript(script, debugLabel: debugLabel);
+  }
+
+  void _invokeBridgeMethod(String methodName, {String? argumentSource}) {
+    final invocation = argumentSource == null
+        ? 'b.$methodName();'
+        : 'b.$methodName($argumentSource);';
+    final script =
+        '(() => { try { const b = window.draw2dBridge; if (b && typeof b.$methodName === "function") { $invocation } } catch (error) { console.error(`[Draw2D][Flutter] $methodName failed`, error); } })();';
+    runJavaScript(script, debugLabel: methodName);
   }
 
   /// Dispatches a highlight event to the Draw2D runtime.
@@ -47,40 +57,40 @@ class Draw2DBridgeService {
 
     final encoded = jsonEncode(payload);
 
-    runJavaScript('window.draw2dBridge?.highlight($encoded);');
+    _invokeBridgeMethod('highlight', argumentSource: encoded);
 
     _platform.postMessage('highlight', payload);
   }
 
   /// Dispatches a request to clear all highlights.
   void clearHighlight() {
-    runJavaScript('window.draw2dBridge?.clearHighlight();');
+    _invokeBridgeMethod('clearHighlight');
     _platform.postMessage('clear_highlight', const {});
   }
 
   // View operations
   void zoomIn() {
-    runJavaScript('window.draw2dBridge?.zoomIn();');
+    _invokeBridgeMethod('zoomIn');
     _platform.postMessage('zoom_in', const {});
   }
 
   void zoomOut() {
-    runJavaScript('window.draw2dBridge?.zoomOut();');
+    _invokeBridgeMethod('zoomOut');
     _platform.postMessage('zoom_out', const {});
   }
 
   void fitToContent() {
-    runJavaScript('window.draw2dBridge?.fitToContent();');
+    _invokeBridgeMethod('fitToContent');
     _platform.postMessage('fit_content', const {});
   }
 
   void resetView() {
-    runJavaScript('window.draw2dBridge?.resetView();');
+    _invokeBridgeMethod('resetView');
     _platform.postMessage('reset_view', const {});
   }
 
   void addStateAtCenter() {
-    runJavaScript('window.draw2dBridge?.addStateAtCenter();');
+    _invokeBridgeMethod('addStateAtCenter');
     _platform.postMessage('add_state_center', const {});
   }
 }

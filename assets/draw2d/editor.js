@@ -18,6 +18,188 @@
   const HIGHLIGHT_TRANSITION_COLOR = '#ff9800';
   const HIGHLIGHT_TRANSITION_STROKE = 3;
 
+  function computeStateBaseStyle(flags) {
+    return {
+      stroke: 2,
+      color: flags && flags.isInitial ? '#3949ab' : '#1e88e5',
+      bgColor: flags && flags.isAccepting ? '#c8e6c9' : '#ffffff',
+    };
+  }
+
+  function applyStateBaseStyle(entry) {
+    if (!entry || !entry.figure) {
+      return;
+    }
+    entry.figure.setStroke(entry.baseStyle.stroke);
+    entry.figure.setColor(entry.baseStyle.color);
+    entry.figure.setBackgroundColor(entry.baseStyle.bgColor);
+  }
+
+  function updateStateBaseStyle(entry) {
+    if (!entry) {
+      return;
+    }
+    entry.baseStyle = computeStateBaseStyle(entry.data);
+    if (!highlightedStates.has(entry.sourceId)) {
+      applyStateBaseStyle(entry);
+    }
+  }
+
+  function removeTransitionEntry(entry) {
+    if (!entry) {
+      return;
+    }
+    if (entry.connection) {
+      entry.connection.remove();
+    }
+    highlightedTransitions.delete(entry.sourceId);
+    transitionFigures.delete(entry.draw2dId);
+  }
+
+  function removeStateEntry(entry) {
+    if (!entry) {
+      return;
+    }
+    const draw2dId = entry.draw2dId;
+    if (entry.figure) {
+      entry.figure.remove();
+    }
+    highlightedStates.delete(entry.sourceId);
+    stateFigures.delete(draw2dId);
+
+    const transitionsToDelete = [];
+    transitionFigures.forEach(function (transitionEntry) {
+      if (
+        transitionEntry &&
+        transitionEntry.data &&
+        (transitionEntry.data.from === draw2dId ||
+          transitionEntry.data.to === draw2dId)
+      ) {
+        transitionsToDelete.push(transitionEntry);
+      }
+    });
+
+    transitionsToDelete.forEach(function (transitionEntry) {
+      removeTransitionEntry(transitionEntry);
+    });
+  }
+
+  function handleStateContextMenu(stateId, rawEvent) {
+    const entry = stateFigures.get(stateId);
+    if (!entry) {
+      return;
+    }
+
+    const event = rawEvent && rawEvent.event ? rawEvent.event : rawEvent;
+    if (event && typeof event.preventDefault === 'function') {
+      event.preventDefault();
+    }
+
+    const message = [
+      'State actions:',
+      `1) Toggle initial (${entry.data.isInitial ? 'on' : 'off'})`,
+      `2) Toggle accepting (${entry.data.isAccepting ? 'on' : 'off'})`,
+      '3) Delete state',
+    ].join('\n');
+
+    const input = window.prompt(message, '');
+    if (input === null) {
+      return;
+    }
+
+    const normalized = String(input).trim().toLowerCase();
+    if (normalized === '1' || normalized === 'initial' || normalized === 'toggle initial') {
+      toggleStateInitial(entry);
+    } else if (
+      normalized === '2' ||
+      normalized === 'accepting' ||
+      normalized === 'toggle accepting'
+    ) {
+      toggleStateAccepting(entry);
+    } else if (
+      normalized === '3' ||
+      normalized === 'delete' ||
+      normalized === 'remove'
+    ) {
+      const shouldDelete = window.confirm(
+        'Delete this state and its connected transitions?',
+      );
+      if (!shouldDelete) {
+        return;
+      }
+      removeStateEntry(entry);
+      sendMessage('state.remove', { id: entry.sourceId });
+    }
+  }
+
+  function handleTransitionContextMenu(transitionId, rawEvent) {
+    const entry = transitionFigures.get(transitionId);
+    if (!entry) {
+      return;
+    }
+
+    const event = rawEvent && rawEvent.event ? rawEvent.event : rawEvent;
+    if (event && typeof event.preventDefault === 'function') {
+      event.preventDefault();
+    }
+
+    const input = window.prompt('Transition actions:\n1) Delete transition', '');
+    if (input === null) {
+      return;
+    }
+
+    const normalized = String(input).trim().toLowerCase();
+    if (normalized === '1' || normalized === 'delete' || normalized === 'remove') {
+      const shouldDelete = window.confirm('Delete this transition?');
+      if (!shouldDelete) {
+        return;
+      }
+      removeTransitionEntry(entry);
+      sendMessage('transition.remove', { id: entry.sourceId });
+    }
+  }
+
+  function toggleStateInitial(entry) {
+    if (!entry || !entry.data) {
+      return;
+    }
+    const newInitial = !entry.data.isInitial;
+    entry.data.isInitial = newInitial;
+
+    if (newInitial) {
+      stateFigures.forEach(function (otherEntry) {
+        if (!otherEntry || otherEntry === entry || !otherEntry.data) {
+          return;
+        }
+        if (otherEntry.data.isInitial) {
+          otherEntry.data.isInitial = false;
+          updateStateBaseStyle(otherEntry);
+        }
+      });
+    }
+
+    updateStateBaseStyle(entry);
+    sendMessage('state.updateFlags', {
+      id: entry.sourceId,
+      isInitial: newInitial,
+      isAccepting: entry.data.isAccepting,
+    });
+  }
+
+  function toggleStateAccepting(entry) {
+    if (!entry || !entry.data) {
+      return;
+    }
+    const newAccepting = !entry.data.isAccepting;
+    entry.data.isAccepting = newAccepting;
+    updateStateBaseStyle(entry);
+    sendMessage('state.updateFlags', {
+      id: entry.sourceId,
+      isInitial: entry.data.isInitial,
+      isAccepting: newAccepting,
+    });
+  }
+
   function sendMessage(type, payload) {
     const message = JSON.stringify({ type, payload });
     if (window.JFlutterBridge && window.JFlutterBridge.postMessage) {
@@ -275,15 +457,21 @@
     const x = typeof position.x === 'number' ? position.x : 0;
     const y = typeof position.y === 'number' ? position.y : 0;
 
-    const baseStroke = 2;
-    const baseColor = state.isInitial ? '#3949ab' : '#1e88e5';
-    const baseBackground = state.isAccepting ? '#c8e6c9' : '#ffffff';
+    const entryData = {
+      id: state.id,
+      sourceId: state.sourceId,
+      label: state.label,
+      isInitial: Boolean(state.isInitial),
+      isAccepting: Boolean(state.isAccepting),
+      position: { x: x, y: y },
+    };
+    const baseStyle = computeStateBaseStyle(entryData);
 
     const figure = new draw2d.shape.basic.Circle({
       diameter: STATE_DIAMETER,
-      stroke: baseStroke,
-      color: baseColor,
-      bgColor: baseBackground,
+      stroke: baseStyle.stroke,
+      color: baseStyle.color,
+      bgColor: baseStyle.bgColor,
       x: x,
       y: y,
     });
@@ -309,12 +497,24 @@
 
     figure.on('dragend', function () {
       scheduleMove(state.sourceId, figure);
+      const stored = stateFigures.get(state.id);
+      if (stored && stored.data) {
+        stored.data.position = {
+          x: figure.getX(),
+          y: figure.getY(),
+        };
+      }
     });
 
     figure.on('dblclick', function () {
       const current = label.getText();
       const result = window.prompt('State label', current);
       if (typeof result === 'string' && result !== current) {
+        label.setText(result);
+        const stored = stateFigures.get(state.id);
+        if (stored && stored.data) {
+          stored.data.label = result;
+        }
         sendMessage('state.label', {
           id: state.sourceId,
           label: result,
@@ -322,16 +522,18 @@
       }
     });
 
+    figure.on('contextmenu', function (_, event) {
+      handleStateContextMenu(state.id, event);
+    });
+
     canvas.add(figure);
     stateFigures.set(state.id, {
       figure: figure,
       label: label,
       sourceId: state.sourceId,
-      baseStyle: {
-        stroke: baseStroke,
-        color: baseColor,
-        bgColor: baseBackground,
-      },
+      draw2dId: state.id,
+      baseStyle: baseStyle,
+      data: entryData,
     });
   }
 
@@ -513,6 +715,10 @@
       });
     });
 
+    connection.on('contextmenu', function (_, event) {
+      handleTransitionContextMenu(transition.id, event);
+    });
+
     ensureCanvas().add(connection);
     const data = {
       id: transition.id,
@@ -560,6 +766,7 @@
       connection: connection,
       label: label,
       sourceId: transition.sourceId,
+      draw2dId: transition.id,
       baseStyle: {
         stroke: baseStroke,
         color: baseColor,

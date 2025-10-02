@@ -123,11 +123,20 @@ class _Draw2DTMCanvasViewState extends ConsumerState<Draw2DTMCanvasView> {
       case 'state.label':
         _handleStateLabel(payload);
         break;
+      case 'state.updateFlags':
+        _handleStateFlags(payload);
+        break;
+      case 'state.remove':
+        _handleStateRemove(payload);
+        break;
       case 'transition.add':
         _handleTransitionAdd(payload);
         break;
       case 'transition.label':
         _handleTransitionUpdate(payload);
+        break;
+      case 'transition.remove':
+        _handleTransitionRemove(payload);
         break;
       default:
         debugPrint('Unhandled Draw2D TM event: $type');
@@ -174,6 +183,42 @@ class _Draw2DTMCanvasViewState extends ConsumerState<Draw2DTMCanvasView> {
     _maybeEmitTM(tm);
   }
 
+  void _handleStateFlags(Map<String, dynamic> payload) {
+    final notifier = ref.read(tmEditorProvider.notifier);
+    final id = payload['id'] as String?;
+    if (id == null) {
+      return;
+    }
+
+    final bool? isInitial =
+        payload.containsKey('isInitial') ? payload['isInitial'] as bool? : null;
+    final bool? isAccepting = payload.containsKey('isAccepting')
+        ? payload['isAccepting'] as bool?
+        : null;
+
+    if (isInitial == null && isAccepting == null) {
+      return;
+    }
+
+    final tm = notifier.updateStateFlags(
+      id: id,
+      isInitial: isInitial,
+      isAccepting: isAccepting,
+    );
+    _maybeEmitTM(tm);
+  }
+
+  void _handleStateRemove(Map<String, dynamic> payload) {
+    final notifier = ref.read(tmEditorProvider.notifier);
+    final id = payload['id'] as String?;
+    if (id == null) {
+      return;
+    }
+
+    final tm = notifier.removeState(id: id);
+    _maybeEmitTM(tm);
+  }
+
   void _handleTransitionAdd(Map<String, dynamic> payload) {
     final notifier = ref.read(tmEditorProvider.notifier);
     final id = payload['id'] as String?;
@@ -215,6 +260,17 @@ class _Draw2DTMCanvasViewState extends ConsumerState<Draw2DTMCanvasView> {
       writeSymbol: write,
       direction: direction,
     );
+    _maybeEmitTM(tm);
+  }
+
+  void _handleTransitionRemove(Map<String, dynamic> payload) {
+    final notifier = ref.read(tmEditorProvider.notifier);
+    final id = payload['id'] as String?;
+    if (id == null) {
+      return;
+    }
+
+    final tm = notifier.removeTransition(id: id);
     _maybeEmitTM(tm);
   }
 

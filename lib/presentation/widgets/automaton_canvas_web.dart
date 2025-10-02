@@ -9,13 +9,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/models/fsa.dart';
-import '../../core/models/fsa_transition.dart';
 import '../../core/models/simulation_result.dart';
 import '../../core/models/simulation_step.dart';
 import '../../core/models/state.dart' as automaton_state;
 import '../../core/models/transition.dart';
 import '../../core/services/draw2d_bridge_service.dart';
 import '../../core/utils/automaton_patch.dart';
+import '../mappers/draw2d_automaton_mapper.dart';
 
 /// Web implementation of the Automaton canvas that delegates rendering and
 /// interaction to the Draw2D-based JavaScript editor.
@@ -249,53 +249,19 @@ class _AutomatonCanvasWebState extends State<AutomatonCanvas> {
   }
 
   Map<String, dynamic> _encodeAutomaton(FSA automaton) {
-    final states = automaton.states.map((state) {
-      return {
-        'id': state.id,
-        'label': state.label,
-        'x': state.position.x,
-        'y': state.position.y,
-        'isInitial': state.isInitial,
-        'isAccepting': state.isAccepting,
-      };
-    }).toList();
+    final payload = Map<String, dynamic>.from(
+      Draw2DAutomatonMapper.toJson(automaton),
+    );
 
-    final transitions = automaton.transitions
-        .whereType<FSATransition>()
-        .map((transition) {
-      return {
-        'id': transition.id,
-        'from': transition.fromState.id,
-        'to': transition.toState.id,
-        'symbols': transition.inputSymbols.toList(),
-        if (transition.lambdaSymbol != null)
-          'lambdaSymbol': transition.lambdaSymbol,
-        'label': transition.label,
-        'controlPoint': {
-          'x': transition.controlPoint.x,
-          'y': transition.controlPoint.y,
-        },
-      };
-    }).toList();
-
-    final payload = <String, dynamic>{
-      'id': automaton.id,
-      'name': automaton.name,
-      'states': states,
-      'transitions': transitions,
-      'alphabet': automaton.alphabet.toList(),
-      'initialId': automaton.initialState?.id,
-      'acceptingIds':
-          automaton.acceptingStates.map((state) => state.id).toList(),
-      'viewport': {
-        'pan': {
-          'x': automaton.panOffset.x,
-          'y': automaton.panOffset.y,
-        },
-        'zoom': automaton.zoomLevel,
+    payload['viewport'] = {
+      'pan': {
+        'x': automaton.panOffset.x,
+        'y': automaton.panOffset.y,
       },
-      'timestamp': automaton.modified.toIso8601String(),
+      'zoom': automaton.zoomLevel,
     };
+
+    payload['timestamp'] = automaton.modified.toIso8601String();
 
     if (widget.showTrace && widget.simulationResult != null) {
       payload['trace'] = _encodeTrace(

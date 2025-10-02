@@ -16,6 +16,7 @@
   let pendingModel = null;
   const pendingCanvasTasks = [];
   let hasLoggedDraw2dDetected = false;
+  let hasRequestedRuntimeFromFlutter = false;
 
   const HIGHLIGHT_STROKE_WIDTH = 4;
   const HIGHLIGHT_STATE_COLOR = '#ff9800';
@@ -92,6 +93,43 @@
     return false;
   }
 
+  function requestRuntimeFromFlutter(reason) {
+    if (hasRequestedRuntimeFromFlutter) {
+      sendLog('debug', 'Runtime request already issued; skipping duplicate');
+      return;
+    }
+
+    hasRequestedRuntimeFromFlutter = true;
+    const payload = reason ? { reason: reason } : {};
+    sendLog('info', 'Requesting Draw2D runtime from Flutter bridge', payload);
+    if (!postToFlutter('runtime_request', payload)) {
+      sendLog('warn', 'No Flutter bridge accepted runtime_request message');
+    }
+  }
+
+  function loadRuntimeFromFlutter(source) {
+    if (typeof source !== 'string' || source.length === 0) {
+      sendLog('error', 'Received invalid runtime payload from Flutter');
+      hasRequestedRuntimeFromFlutter = false;
+      return;
+    }
+
+    try {
+      eval(source);
+      sendLog('info', 'Draw2D runtime injected from Flutter payload');
+    } catch (error) {
+      hasRequestedRuntimeFromFlutter = false;
+      sendLog('error', 'Failed to evaluate Draw2D runtime provided by Flutter', {
+        message: error && error.message ? error.message : String(error),
+      });
+      return;
+    }
+
+    ensureCanvas();
+    notifyFlutterReady();
+    renderPendingModel();
+  }
+
   function attemptDraw2dLoad() {
     if (window.draw2d && typeof window.draw2d.Canvas === 'function') {
       sendLog('debug', 'Draw2D runtime already present');
@@ -111,6 +149,7 @@
     function tryNextPath() {
       if (currentPathIndex >= draw2dPaths.length) {
         sendLog('error', 'Failed to load Draw2D runtime from all paths');
+        requestRuntimeFromFlutter('fetch_failed');
         return;
       }
 
@@ -141,9 +180,9 @@
           }
         })
         .catch(error => {
-          sendLog('warn', 'Failed to fetch Draw2D from path', { 
-            path: path, 
-            error: error.message 
+          sendLog('warn', 'Failed to fetch Draw2D from path', {
+            path: path,
+            error: error.message
           });
           tryNextPath();
         });
@@ -1306,6 +1345,7 @@
   }
 
   window.draw2dBridge = {
+    loadRuntimeFromFlutter: loadRuntimeFromFlutter,
     loadModel: loadModel,
     highlight: highlight,
     clearHighlight: clearHighlight,

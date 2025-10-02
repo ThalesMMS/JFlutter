@@ -36,6 +36,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_web_plugins:
+    sdk: flutter
 
   # State persistence (localStorage analogue)
   shared_preferences: ^2.3.2

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/entities/automaton_entity.dart';
 import '../../core/models/fsa.dart';
 import '../providers/algorithm_provider.dart';
 import '../providers/automaton_provider.dart';
-import '../providers/settings_provider.dart';
 import '../widgets/algorithm_panel.dart';
 import '../widgets/automaton_canvas.dart';
 import '../widgets/draw2d_canvas_view.dart';
+import '../widgets/draw2d_canvas_toolbar.dart';
 import '../widgets/simulation_panel.dart';
 import 'grammar_page.dart';
 import 'regex_page.dart';
@@ -330,35 +331,58 @@ class _FSAPageState extends ConsumerState<FSAPage> {
   Widget _buildCanvasArea({
     required AutomatonState state,
     required bool isMobile,
-    required bool useDraw2dCanvas,
   }) {
-    if (useDraw2dCanvas) {
-      return const Draw2DCanvasView();
+    if (kIsWeb) {
+      final automatonCanvas = AutomatonCanvas(
+        automaton: state.currentAutomaton,
+        canvasKey: _canvasKey,
+        onAutomatonChanged: (automaton) {
+          ref.read(automatonProvider.notifier).updateAutomaton(automaton);
+        },
+        simulationResult: state.simulationResult,
+        showTrace: state.simulationResult != null,
+      );
+
+      if (!_enableDraw2dDevPreview) {
+        return Stack(
+          children: [
+            Positioned.fill(child: automatonCanvas),
+            Positioned(top: 12, right: 12, child: Draw2DCanvasToolbar(onClear: () => ref.read(automatonProvider.notifier).clearAutomaton())),
+          ],
+        );
+      }
+
+      final spacing = isMobile ? 8.0 : 12.0;
+
+      return Column(
+        children: [
+          Expanded(
+            flex: 3,
+            child: Stack(
+              children: [
+                Positioned.fill(child: automatonCanvas),
+                Positioned(top: 12, right: 12, child: Draw2DCanvasToolbar(onClear: () => ref.read(automatonProvider.notifier).clearAutomaton())),
+              ],
+            ),
+          ),
+          SizedBox(height: spacing),
+          const Expanded(
+            flex: 2,
+            child: Draw2DCanvasView(),
+          ),
+        ],
+      );
     }
 
-    final automatonCanvas = AutomatonCanvas(
-      automaton: state.currentAutomaton,
-      canvasKey: _canvasKey,
-      onAutomatonChanged: (automaton) {
-        ref.read(automatonProvider.notifier).updateAutomaton(automaton);
-      },
-      simulationResult: state.simulationResult,
-      showTrace: state.simulationResult != null,
-    );
-
-    if (!_enableDraw2dDevPreview) {
-      return automatonCanvas;
-    }
-
-    final spacing = isMobile ? 8.0 : 12.0;
-
-    return Column(
+    return Stack(
       children: [
-        Expanded(flex: 3, child: automatonCanvas),
-        SizedBox(height: spacing),
-        const Expanded(
-          flex: 2,
-          child: Draw2DCanvasView(),
+        const Positioned.fill(child: Draw2DCanvasView()),
+        Positioned(
+          top: 12,
+          right: 12,
+          child: Draw2DCanvasToolbar(
+            onClear: () => ref.read(automatonProvider.notifier).clearAutomaton(),
+          ),
         ),
       ],
     );
@@ -367,18 +391,17 @@ class _FSAPageState extends ConsumerState<FSAPage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(automatonProvider);
-    final useDraw2dCanvas = ref.watch(settingsProvider).useDraw2dCanvas;
     final screenSize = MediaQuery.of(context).size;
     final isMobile = screenSize.width < 1024;
 
     return Scaffold(
       body: isMobile
-          ? _buildMobileLayout(state, useDraw2dCanvas)
-          : _buildDesktopLayout(state, useDraw2dCanvas),
+          ? _buildMobileLayout(state)
+          : _buildDesktopLayout(state),
     );
   }
 
-  Widget _buildMobileLayout(AutomatonState state, bool useDraw2dCanvas) {
+  Widget _buildMobileLayout(AutomatonState state) {
     return Column(
       children: [
         Padding(
@@ -408,7 +431,6 @@ class _FSAPageState extends ConsumerState<FSAPage> {
             child: _buildCanvasArea(
               state: state,
               isMobile: true,
-              useDraw2dCanvas: useDraw2dCanvas,
             ),
           ),
         ),
@@ -481,7 +503,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     );
   }
 
-  Widget _buildDesktopLayout(AutomatonState state, bool useDraw2dCanvas) {
+  Widget _buildDesktopLayout(AutomatonState state) {
     return Row(
       children: [
         // Left panel - Controls
@@ -496,7 +518,6 @@ class _FSAPageState extends ConsumerState<FSAPage> {
           child: _buildCanvasArea(
             state: state,
             isMobile: false,
-            useDraw2dCanvas: useDraw2dCanvas,
           ),
         ),
         const SizedBox(width: 16),

@@ -3,11 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/tm.dart';
 import '../../core/models/tm_transition.dart';
-import '../providers/settings_provider.dart';
 import '../providers/tm_editor_provider.dart';
 import '../widgets/draw2d_tm_canvas_view.dart';
+import '../widgets/draw2d_canvas_toolbar.dart';
 import '../widgets/tm_algorithm_panel.dart';
-import '../widgets/tm_canvas.dart';
 import '../widgets/tm_simulation_panel.dart';
 
 /// Page for working with Turing Machines
@@ -28,6 +27,7 @@ class _TMPageState extends ConsumerState<TMPage> {
   Set<String> _nondeterministicTransitionIds = const <String>{};
   bool _hasInitialState = false;
   bool _hasAcceptingState = false;
+  ProviderSubscription<TMEditorState>? _tmEditorSub;
 
   bool get _isMachineReady =>
       _currentTM != null && _hasInitialState && _hasAcceptingState;
@@ -37,38 +37,43 @@ class _TMPageState extends ConsumerState<TMPage> {
   @override
   void initState() {
     super.initState();
+    _tmEditorSub = ref.listenManual<TMEditorState>(
+      tmEditorProvider,
+      (previous, next) {
+        if (!mounted) return;
+        if (next.tm == null && _currentTM != null) {
+          setState(() {
+            _currentTM = null;
+            _stateCount = 0;
+            _transitionCount = 0;
+            _tapeSymbols = const <String>{};
+            _moveDirections = const <String>{};
+            _nondeterministicTransitionIds = const <String>{};
+            _hasInitialState = false;
+            _hasAcceptingState = false;
+          });
+        }
+      },
+    );
+  }
 
-    ref.listen<TMEditorState>(tmEditorProvider, (previous, next) {
-      if (!mounted) return;
-      if (next.tm == null && _currentTM != null) {
-        setState(() {
-          _currentTM = null;
-          _stateCount = 0;
-          _transitionCount = 0;
-          _tapeSymbols = const <String>{};
-          _moveDirections = const <String>{};
-          _nondeterministicTransitionIds = const <String>{};
-          _hasInitialState = false;
-          _hasAcceptingState = false;
-        });
-      }
-    });
+  @override
+  void dispose() {
+    _tmEditorSub?.close();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final isMobile = screenSize.width < 1024;
-    final useDraw2dCanvas = ref.watch(settingsProvider).useDraw2dCanvas;
 
     return Scaffold(
-      body: isMobile
-          ? _buildMobileLayout(useDraw2dCanvas)
-          : _buildDesktopLayout(useDraw2dCanvas),
+      body: isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
     );
   }
 
-  Widget _buildMobileLayout(bool useDraw2dCanvas) {
+  Widget _buildMobileLayout() {
     return SafeArea(
       child: Column(
         children: [
@@ -110,12 +115,29 @@ class _TMPageState extends ConsumerState<TMPage> {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(8),
-              child: useDraw2dCanvas
-                  ? Draw2DTMCanvasView(onTMModified: _handleTMUpdate)
-                  : TMCanvas(
-                      canvasKey: _canvasKey,
-                      onTMModified: _handleTMUpdate,
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: Draw2DTMCanvasView(onTMModified: _handleTMUpdate),
+                  ),
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: Draw2DCanvasToolbar(
+                      onClear: () => setState(() {
+                        _currentTM = null;
+                        _stateCount = 0;
+                        _transitionCount = 0;
+                        _tapeSymbols = const <String>{};
+                        _moveDirections = const <String>{};
+                        _nondeterministicTransitionIds = const <String>{};
+                        _hasInitialState = false;
+                        _hasAcceptingState = false;
+                      }),
                     ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -123,7 +145,7 @@ class _TMPageState extends ConsumerState<TMPage> {
     );
   }
 
-  Widget _buildDesktopLayout(bool useDraw2dCanvas) {
+  Widget _buildDesktopLayout() {
     return Row(
       children: [
         // Left panel - TM Canvas
@@ -131,12 +153,29 @@ class _TMPageState extends ConsumerState<TMPage> {
           flex: 2,
           child: Container(
             margin: const EdgeInsets.all(8),
-            child: useDraw2dCanvas
-                ? Draw2DTMCanvasView(onTMModified: _handleTMUpdate)
-                : TMCanvas(
-                    canvasKey: _canvasKey,
-                    onTMModified: _handleTMUpdate,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Draw2DTMCanvasView(onTMModified: _handleTMUpdate),
+                ),
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: Draw2DCanvasToolbar(
+                    onClear: () => setState(() {
+                      _currentTM = null;
+                      _stateCount = 0;
+                      _transitionCount = 0;
+                      _tapeSymbols = const <String>{};
+                      _moveDirections = const <String>{};
+                      _nondeterministicTransitionIds = const <String>{};
+                      _hasInitialState = false;
+                      _hasAcceptingState = false;
+                    }),
                   ),
+                ),
+              ],
+            ),
           ),
         ),
         const SizedBox(width: 16),

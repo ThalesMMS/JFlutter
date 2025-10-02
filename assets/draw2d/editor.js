@@ -319,6 +319,108 @@
     highlightedTransitions.clear();
   }
 
+  function getViewportRect() {
+    const rect = canvasElement.getBoundingClientRect();
+    return { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
+  }
+
+  function addStateAtCenter() {
+    const canvas = ensureCanvas();
+    const vp = getViewportRect();
+    const cx = vp.left + vp.width / 2;
+    const cy = vp.top + vp.height / 2;
+    const point = canvas.fromDocumentToCanvasCoordinate(cx, cy);
+    sendMessage('state.add', {
+      id: `q_${Date.now()}`,
+      label: `q${stateFigures.size}`,
+      x: point.x,
+      y: point.y,
+    });
+  }
+
+  function computeContentBounds() {
+    const bounds = { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity };
+    let hasAny = false;
+    stateFigures.forEach(function (entry) {
+      if (!entry || !entry.figure) return;
+      hasAny = true;
+      const b = entry.figure.getBoundingBox();
+      bounds.left = Math.min(bounds.left, b.x);
+      bounds.top = Math.min(bounds.top, b.y);
+      bounds.right = Math.max(bounds.right, b.x + b.w);
+      bounds.bottom = Math.max(bounds.bottom, b.y + b.h);
+    });
+    transitionFigures.forEach(function (entry) {
+      if (!entry || !entry.connection) return;
+      hasAny = true;
+      const b = entry.connection.getBoundingBox();
+      bounds.left = Math.min(bounds.left, b.x);
+      bounds.top = Math.min(bounds.top, b.y);
+      bounds.right = Math.max(bounds.right, b.x + b.w);
+      bounds.bottom = Math.max(bounds.bottom, b.y + b.h);
+    });
+    if (!hasAny) {
+      return null;
+    }
+    return bounds;
+  }
+
+  function setZoom(zoom, animate) {
+    const canvas = ensureCanvas();
+    try {
+      canvas.setZoom(zoom, !!animate);
+    } catch (_) {
+      // Fallback: ignore if setZoom is unavailable
+    }
+  }
+
+  function getZoom() {
+    const canvas = ensureCanvas();
+    try {
+      return canvas.getZoom ? canvas.getZoom() : 1.0;
+    } catch (_) {
+      return 1.0;
+    }
+  }
+
+  function zoomIn() {
+    const current = getZoom();
+    setZoom(Math.min(current * 1.1, 4.0), true);
+  }
+
+  function zoomOut() {
+    const current = getZoom();
+    setZoom(Math.max(current / 1.1, 0.1), true);
+  }
+
+  function resetView() {
+    setZoom(1.0, true);
+  }
+
+  function fitToContent() {
+    const canvas = ensureCanvas();
+    const vp = getViewportRect();
+    const content = computeContentBounds();
+    if (!content) {
+      resetView();
+      return;
+    }
+    const contentWidth = Math.max(1, content.right - content.left);
+    const contentHeight = Math.max(1, content.bottom - content.top);
+    const padding = 40;
+    const scaleX = (vp.width - padding) / contentWidth;
+    const scaleY = (vp.height - padding) / contentHeight;
+    const zoom = Math.max(0.1, Math.min(4.0, Math.min(scaleX, scaleY)));
+    setZoom(zoom, true);
+    const centerX = content.left + contentWidth / 2;
+    const centerY = content.top + contentHeight / 2;
+    try {
+      canvas.scrollTo(centerX - vp.width / (2 * zoom), centerY - vp.height / (2 * zoom));
+    } catch (_) {
+      // Ignore if scrollTo unavailable
+    }
+  }
+
   function scheduleMove(sourceId, figure) {
     moveQueue.set(sourceId, {
       id: sourceId,
@@ -864,6 +966,11 @@
     loadModel: loadModel,
     highlight: highlight,
     clearHighlight: clearHighlight,
+    addStateAtCenter: addStateAtCenter,
+    zoomIn: zoomIn,
+    zoomOut: zoomOut,
+    fitToContent: fitToContent,
+    resetView: resetView,
   };
 
   window.addEventListener('message', function (event) {
@@ -889,6 +996,16 @@
       highlight(payload || {});
     } else if (type === 'clear_highlight') {
       clearHighlight();
+    } else if (type === 'zoom_in') {
+      zoomIn();
+    } else if (type === 'zoom_out') {
+      zoomOut();
+    } else if (type === 'fit_content') {
+      fitToContent();
+    } else if (type === 'reset_view') {
+      resetView();
+    } else if (type === 'add_state_center') {
+      addStateAtCenter();
     }
   });
 })();

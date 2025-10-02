@@ -57,4 +57,30 @@ class Draw2DBridgeService {
     runJavaScript('window.draw2dBridge?.clearHighlight();');
     _platform.postMessage('clear_highlight', const {});
   }
+
+  // View operations
+  void zoomIn() {
+    runJavaScript('window.draw2dBridge?.zoomIn();');
+    _platform.postMessage('zoom_in', const {});
+  }
+
+  void zoomOut() {
+    runJavaScript('window.draw2dBridge?.zoomOut();');
+    _platform.postMessage('zoom_out', const {});
+  }
+
+  void fitToContent() {
+    runJavaScript('window.draw2dBridge?.fitToContent();');
+    _platform.postMessage('fit_content', const {});
+  }
+
+  void resetView() {
+    runJavaScript('window.draw2dBridge?.resetView();');
+    _platform.postMessage('reset_view', const {});
+  }
+
+  void addStateAtCenter() {
+    runJavaScript('window.draw2dBridge?.addStateAtCenter();');
+    _platform.postMessage('add_state_center', const {});
+  }
 }

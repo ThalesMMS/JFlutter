@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:html' as html;
 import 'dart:ui' as ui;
+import 'package:flutter_web_plugins/flutter_web_plugins.dart' as web;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -96,7 +97,7 @@ class _AutomatonCanvasWebState extends State<AutomatonCanvas> {
       return;
     }
 
-    ui.platformViewRegistry.registerViewFactory(_viewType, (int _) {
+    web.registerViewFactory(_viewType, (int _) {
       final iframe = html.IFrameElement()
         ..style.border = '0'
         ..style.width = '100%'

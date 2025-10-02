@@ -3,11 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/pda.dart';
 import '../providers/pda_editor_provider.dart';
-import '../providers/settings_provider.dart';
 import '../widgets/draw2d_pda_canvas_view.dart';
-import '../widgets/pda_canvas.dart';
 import '../widgets/pda_simulation_panel.dart';
 import '../widgets/pda_algorithm_panel.dart';
+import '../widgets/draw2d_canvas_toolbar.dart';
 
 /// Page for working with Pushdown Automata
 class PDAPage extends ConsumerStatefulWidget {
@@ -40,16 +39,12 @@ class _PDAPageState extends ConsumerState<PDAPage> {
     final screenSize = MediaQuery.of(context).size;
     final isMobile = screenSize.width < 1024;
 
-    final useDraw2dCanvas = ref.watch(settingsProvider).useDraw2dCanvas;
-
     return Scaffold(
-      body: isMobile
-          ? _buildMobileLayout(useDraw2dCanvas)
-          : _buildDesktopLayout(useDraw2dCanvas),
+      body: isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
     );
   }
 
-  Widget _buildMobileLayout(bool useDraw2dCanvas) {
+  Widget _buildMobileLayout() {
     return SafeArea(
       child: Stack(
         children: [
@@ -58,14 +53,31 @@ class _PDAPageState extends ConsumerState<PDAPage> {
               Expanded(
                 child: Container(
                   margin: const EdgeInsets.all(8),
-                  child: useDraw2dCanvas
-                      ? Draw2DPdaCanvasView(
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: Draw2DPdaCanvasView(
                           onPdaModified: _handlePdaModified,
-                        )
-                      : PDACanvas(
-                          canvasKey: _canvasKey,
-                          onPDAModified: _handlePdaModified,
                         ),
+                      ),
+                      Positioned(
+                        top: 12,
+                        right: 12,
+                        child: Draw2DCanvasToolbar(
+                          onClear: () => setState(() {
+                            _latestPda = null;
+                            _stateCount = 0;
+                            _transitionCount = 0;
+                            _hasUnsavedChanges = true;
+                            ref.read(pdaEditorProvider.notifier).updateFromCanvas(
+                              states: const [],
+                              transitions: const [],
+                            );
+                          }),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               _buildMobileInfoPanel(context),
@@ -245,7 +257,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
     );
   }
 
-  Widget _buildDesktopLayout(bool useDraw2dCanvas) {
+  Widget _buildDesktopLayout() {
     return Row(
       children: [
         // Left panel - PDA Canvas
@@ -253,14 +265,31 @@ class _PDAPageState extends ConsumerState<PDAPage> {
           flex: 2,
           child: Container(
             margin: const EdgeInsets.all(8),
-            child: useDraw2dCanvas
-                ? Draw2DPdaCanvasView(
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Draw2DPdaCanvasView(
                     onPdaModified: _handlePdaModified,
-                  )
-                : PDACanvas(
-                    canvasKey: _canvasKey,
-                    onPDAModified: _handlePdaModified,
                   ),
+                ),
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: Draw2DCanvasToolbar(
+                    onClear: () => setState(() {
+                      _latestPda = null;
+                      _stateCount = 0;
+                      _transitionCount = 0;
+                      _hasUnsavedChanges = true;
+                      ref.read(pdaEditorProvider.notifier).updateFromCanvas(
+                        states: const [],
+                        transitions: const [],
+                      );
+                    }),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         const SizedBox(width: 16),

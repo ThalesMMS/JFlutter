@@ -303,7 +303,6 @@ class _AutomatonCanvasState extends State<AutomatonCanvas> {
       },
     );
 
-    controller.dispose();
     return result;
   }
 

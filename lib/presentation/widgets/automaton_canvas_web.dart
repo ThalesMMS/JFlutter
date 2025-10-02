@@ -14,6 +14,7 @@ import '../../core/models/simulation_result.dart';
 import '../../core/models/simulation_step.dart';
 import '../../core/models/state.dart' as automaton_state;
 import '../../core/models/transition.dart';
+import '../../core/services/draw2d_bridge_service.dart';
 import '../../core/utils/automaton_patch.dart';
 
 /// Web implementation of the Automaton canvas that delegates rendering and
@@ -83,6 +84,7 @@ class _AutomatonCanvasWebState extends State<AutomatonCanvas> {
     _messageSubscription?.cancel();
     _messageSubscription = null;
     _iframe = null;
+    Draw2DBridgeService().markBridgeDisconnected();
     super.dispose();
   }
 
@@ -116,7 +118,19 @@ class _AutomatonCanvasWebState extends State<AutomatonCanvas> {
     final dynamic typeValue = data?['type'];
     final String? messageType = typeValue is String ? typeValue : null;
 
-    if (messageType == 'highlight' || messageType == 'clear_highlight') {
+    const forwardedTypes = <String>{
+      'highlight',
+      'clear_highlight',
+      'zoom_in',
+      'zoom_out',
+      'fit_content',
+      'reset_view',
+      'add_state_center',
+    };
+
+    if (messageType != null &&
+        forwardedTypes.contains(messageType) &&
+        event.source != _iframe?.contentWindow) {
       _postMessage(event.data);
       return;
     }
@@ -136,6 +150,7 @@ class _AutomatonCanvasWebState extends State<AutomatonCanvas> {
             _isReady = true;
           });
         }
+        Draw2DBridgeService().markBridgeReady();
         _postAutomaton(force: true);
         break;
       case 'patch':

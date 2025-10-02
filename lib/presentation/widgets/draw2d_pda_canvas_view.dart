@@ -114,6 +114,7 @@ class _Draw2DPdaCanvasViewState extends ConsumerState<Draw2DPdaCanvasView> {
         setState(() {
           _isReady = true;
         });
+        _bridge.markBridgeReady();
         _pushModel(ref.read(pdaEditorProvider).pda);
         break;
       case 'state.add':

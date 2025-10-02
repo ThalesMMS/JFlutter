@@ -61,7 +61,7 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
           return NavigationDecision.prevent;
         },
       ))
-        ..loadFlutterAsset('assets/draw2d/minimal_editor.html');
+        ..loadFlutterAsset('assets/draw2d/editor.html');
 
     _controller = controller;
 
@@ -128,6 +128,7 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
         setState(() {
           _isReady = true;
         });
+        _bridge.markBridgeReady();
         _pushModel(ref.read(automatonProvider));
         break;
       case 'state.add':

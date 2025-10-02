@@ -111,6 +111,7 @@ class _Draw2DTMCanvasViewState extends ConsumerState<Draw2DTMCanvasView> {
         setState(() {
           _isReady = true;
         });
+        _bridge.markBridgeReady();
         _pushModel(ref.read(tmEditorProvider));
         break;
       case 'state.add':

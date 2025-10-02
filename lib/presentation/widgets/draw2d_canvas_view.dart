@@ -49,18 +49,9 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
           debugPrint('[Draw2D][Alert] ${message.message}');
         },
       )
-      ..setNavigationDelegate(NavigationDelegate(
-        onNavigationRequest: (NavigationRequest request) {
-          // Allow navigation to assets
-          if (request.url.startsWith('file://') || 
-              request.url.contains('assets/') ||
-              request.url.contains('draw2d/') ||
-              request.url.contains('vendor/')) {
-            return NavigationDecision.navigate;
-          }
-          return NavigationDecision.prevent;
-        },
-      ))
+      ..setNavigationDelegate(
+        NavigationDelegate(),
+      )
         ..loadFlutterAsset('assets/draw2d/editor.html');
 
     _controller = controller;

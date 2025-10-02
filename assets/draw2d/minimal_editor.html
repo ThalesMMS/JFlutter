@@ -78,19 +78,20 @@
                 Alert.postMessage('Attempting to initialize Draw2D canvas...');
                 
                 // The Draw2D library uses a module system, so we need to access it differently
-                // Try to access the draw2d variable from the global scope
-                let draw2d = null;
-                
-                // Check if draw2d is available in global scope
-                if (typeof window.draw2d !== 'undefined' && window.draw2d !== null) {
-                    draw2d = window.draw2d;
+                // Try to access the draw2d variable from the global scope without shadowing it
+                const root = typeof globalThis !== 'undefined' ? globalThis : window;
+                let draw2dApi = typeof root.draw2d !== 'undefined'
+                    ? root.draw2d
+                    : null;
+
+                if (draw2dApi !== null) {
+                    window.draw2d = draw2dApi;
                     console.log('[Draw2D] Found window.draw2d');
                     Alert.postMessage('Found window.draw2d');
-                } else if (typeof draw2d !== 'undefined' && draw2d !== null) {
-                    // Try global scope
-                    draw2d = window.draw2d = draw2d;
-                    console.log('[Draw2D] Found draw2d in global scope, assigned to window');
-                    Alert.postMessage('Found draw2d in global scope, assigned to window');
+                } else if (typeof window.draw2d !== 'undefined' && window.draw2d !== null) {
+                    draw2dApi = window.draw2d;
+                    console.log('[Draw2D] Found window.draw2d');
+                    Alert.postMessage('Found window.draw2d');
                 } else {
                     // The draw2d variable exists but is null - the library needs time to initialize
                     console.log('[Draw2D] draw2d variable found but is null, waiting for initialization...');
@@ -108,12 +109,15 @@
                         
                         // Try different ways to access the Draw2D API
                         let draw2dAPI = null;
-                        
-                        // Method 1: Check if draw2d variable is now available
-                        if (typeof draw2d !== 'undefined' && draw2d !== null) {
-                            draw2dAPI = draw2d;
-                            console.log('[Draw2D] Found draw2d variable');
-                            Alert.postMessage('Found draw2d variable');
+
+                        // Method 1: Check if draw2d variable is now available globally
+                        const globalDraw2d = typeof root.draw2d !== 'undefined'
+                            ? root.draw2d
+                            : null;
+                        if (globalDraw2d !== null) {
+                            draw2dAPI = globalDraw2d;
+                            console.log('[Draw2D] Found global draw2d reference');
+                            Alert.postMessage('Found global draw2d reference');
                         }
                         // Method 2: Check if it's available on window
                         else if (typeof window.draw2d !== 'undefined' && window.draw2d !== null) {
@@ -121,7 +125,7 @@
                             console.log('[Draw2D] Found window.draw2d');
                             Alert.postMessage('Found window.draw2d');
                         }
-                        // Method 3: Try to access it from the global scope
+                        // Method 3: Try to access it from the global scope even if null
                         else if (typeof window.draw2d !== 'undefined') {
                             draw2dAPI = window.draw2d;
                             console.log('[Draw2D] Found window.draw2d (even if null)');
@@ -131,9 +135,9 @@
                         else {
                             try {
                                 // Try to evaluate the draw2d variable from the global scope
-                                const globalDraw2d = eval('draw2d');
-                                if (typeof globalDraw2d !== 'undefined' && globalDraw2d !== null) {
-                                    draw2dAPI = globalDraw2d;
+                                const legacyDraw2d = eval('draw2d');
+                                if (typeof legacyDraw2d !== 'undefined' && legacyDraw2d !== null) {
+                                    draw2dAPI = legacyDraw2d;
                                     console.log('[Draw2D] Found draw2d via eval');
                                     Alert.postMessage('Found draw2d via eval');
                                 }
@@ -157,10 +161,13 @@
                                     // Try to access the draw2d variable from the global scope
                                     const script = document.createElement('script');
                                     script.textContent = `
-                                        if (typeof draw2d !== 'undefined' && draw2d !== null) {
-                                            window.draw2d = draw2d;
-                                            console.log('[Draw2D] Successfully exposed draw2d to window');
-                                        }
+                                        (function() {
+                                            var root = typeof globalThis !== 'undefined' ? globalThis : window;
+                                            if (typeof root.draw2d !== 'undefined' && root.draw2d !== null) {
+                                                window.draw2d = root.draw2d;
+                                                console.log('[Draw2D] Successfully exposed draw2d to window');
+                                            }
+                                        })();
                                     `;
                                     document.head.appendChild(script);
                                     
@@ -178,6 +185,7 @@
                         
                         if (draw2dAPI !== null) {
                             window.draw2d = draw2dAPI;
+                            draw2dApi = draw2dAPI;
                             console.log('[Draw2D] draw2d API found after', retryCount, 'retries');
                             Alert.postMessage('draw2d API found after ' + retryCount + ' retries');
                             
@@ -199,18 +207,18 @@
                 }
                 
                 // Check if draw2d is properly initialized
-                if (draw2d === null || typeof draw2d === 'undefined') {
+                if (draw2dApi === null || typeof draw2dApi === 'undefined') {
                     console.error('[Draw2D] draw2d is null or undefined after initialization');
                     Alert.postMessage('draw2d is null or undefined after initialization');
                     initializeFallbackCanvas();
                     return;
                 }
-                
-                console.log('[Draw2D] draw2d is available:', Object.keys(draw2d));
-                Alert.postMessage('draw2d is available: ' + Object.keys(draw2d).length + ' properties');
-                
+
+                console.log('[Draw2D] draw2d is available:', Object.keys(draw2dApi));
+                Alert.postMessage('draw2d is available: ' + Object.keys(draw2dApi).length + ' properties');
+
                 // Initialize Draw2D canvas
-                initializeDraw2dCanvas(draw2d);
+                initializeDraw2dCanvas(draw2dApi);
                 
             } catch (error) {
                 console.error('[Draw2D] Error initializing Draw2D canvas:', error);

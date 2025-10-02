@@ -32,20 +32,34 @@
   }
 
   function postToFlutter(type, payload) {
-    const serialized = JSON.stringify({ type, payload });
+    const message = { type, payload };
+    const serialized = JSON.stringify(message);
     let posted = false;
+
     try {
       if (window.JFlutterBridge && window.JFlutterBridge.postMessage) {
         window.JFlutterBridge.postMessage(serialized);
         posted = true;
       }
+
       if (!posted && window.Draw2DFlutterBridge && window.Draw2DFlutterBridge.postMessage) {
         window.Draw2DFlutterBridge.postMessage(serialized);
+        posted = true;
+      }
+
+      if (
+        !posted &&
+        window.parent &&
+        window.parent !== window &&
+        typeof window.parent.postMessage === 'function'
+      ) {
+        window.parent.postMessage(message, '*');
         posted = true;
       }
     } catch (error) {
       console.warn('[Draw2D] Failed to post message to Flutter', error);
     }
+
     return posted;
   }
 
@@ -347,17 +361,10 @@
       sendLog('info', 'Canvas ready indicator applied');
     }
     
-    const readyPayload = JSON.stringify({ type: 'editor_ready', payload: {} });
-    try {
-      logDebug('Notifying Flutter that editor is ready');
-      sendLog('info', 'Draw2D editor ready');
-      if (window.JFlutterBridge && typeof window.JFlutterBridge.postMessage === 'function') {
-        window.JFlutterBridge.postMessage(readyPayload);
-      } else if (window.Draw2DFlutterBridge && typeof window.Draw2DFlutterBridge.postMessage === 'function') {
-        window.Draw2DFlutterBridge.postMessage(readyPayload);
-      }
-    } catch (error) {
-      console.warn('[Draw2D] Failed to notify Flutter about readiness', error);
+    logDebug('Notifying Flutter that editor is ready');
+    sendLog('info', 'Draw2D editor ready');
+    if (!postToFlutter('editor_ready', {})) {
+      console.warn('[Draw2D] No Flutter bridge target accepted editor_ready');
     }
   }
 
@@ -1349,7 +1356,13 @@
 
     logDebug(`Received window message type=${type}`, payload);
 
-    if (type === 'highlight') {
+    if (type === 'load_automaton') {
+      loadModel(payload || {});
+    } else if (type === 'clear_automaton') {
+      clearHighlight();
+      clearCanvas();
+      pendingModel = null;
+    } else if (type === 'highlight') {
       highlight(payload || {});
     } else if (type === 'clear_highlight') {
       clearHighlight();

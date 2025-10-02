@@ -5,10 +5,12 @@ import '../../core/entities/automaton_entity.dart';
 import '../../core/models/fsa.dart';
 import '../providers/algorithm_provider.dart';
 import '../providers/automaton_provider.dart';
+import '../providers/settings_provider.dart';
 import '../widgets/algorithm_panel.dart';
 import '../widgets/automaton_canvas.dart';
 import '../widgets/draw2d_canvas_view.dart';
 import '../widgets/draw2d_canvas_toolbar.dart';
+import '../widgets/draw2d_platform_support.dart';
 import '../widgets/simulation_panel.dart';
 import 'grammar_page.dart';
 import 'regex_page.dart';
@@ -331,8 +333,8 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     required AutomatonState state,
     required bool isMobile,
   }) {
-    if (kIsWeb) {
-      final automatonCanvas = AutomatonCanvas(
+    Widget buildAutomatonCanvas() {
+      return AutomatonCanvas(
         automaton: state.currentAutomaton,
         canvasKey: _canvasKey,
         onAutomatonChanged: (automaton) {
@@ -341,10 +343,12 @@ class _FSAPageState extends ConsumerState<FSAPage> {
         simulationResult: state.simulationResult,
         showTrace: state.simulationResult != null,
       );
+    }
 
+    Widget buildCanvasWithToolbar(Widget child) {
       return Stack(
         children: [
-          Positioned.fill(child: automatonCanvas),
+          Positioned.fill(child: child),
           Positioned(
             top: 12,
             right: 12,
@@ -356,18 +360,19 @@ class _FSAPageState extends ConsumerState<FSAPage> {
       );
     }
 
-    return Stack(
-      children: [
-        const Positioned.fill(child: Draw2DCanvasView()),
-        Positioned(
-          top: 12,
-          right: 12,
-          child: Draw2DCanvasToolbar(
-            onClear: () => ref.read(automatonProvider.notifier).clearAutomaton(),
-          ),
-        ),
-      ],
-    );
+    if (kIsWeb) {
+      return buildCanvasWithToolbar(buildAutomatonCanvas());
+    }
+
+    final settings = ref.watch(settingsProvider);
+    final useDraw2dCanvas =
+        settings.useDraw2dCanvas && isDraw2dWebViewSupported();
+
+    if (useDraw2dCanvas) {
+      return buildCanvasWithToolbar(const Draw2DCanvasView());
+    }
+
+    return buildCanvasWithToolbar(buildAutomatonCanvas());
   }
 
   @override

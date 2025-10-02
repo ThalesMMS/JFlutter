@@ -39,50 +39,49 @@
             console.log('[Draw2D] Alert channel not available:', error);
         }
         
+        const draw2dSources = ['vendor/draw2d.js', 'draw2d.js'];
+        let draw2dInitialized = false;
+        let activeDraw2dSource = null;
+
         // Load Draw2D library with timeout and error handling
         console.log('[Draw2D] Attempting to load Draw2D library with diagnostics');
         Alert.postMessage('Loading Draw2D library with diagnostics...');
-        
+
         // Set up timeout to detect if library loading hangs
         const libraryTimeout = setTimeout(() => {
+            if (draw2dInitialized) {
+                return;
+            }
             console.error('[Draw2D] Library loading timeout - likely hanging');
             Alert.postMessage('Draw2D library loading timeout - likely hanging');
-            
+
             // Hide loading indicator
             const loadingIndicator = document.getElementById('loading-indicator');
             if (loadingIndicator) {
                 loadingIndicator.style.display = 'none';
             }
-            
+
             // Initialize fallback canvas
             initializeFallbackCanvas();
         }, 5000); // 5 second timeout
-        
-        const script = document.createElement('script');
-        script.src = 'draw2d.js';
-        
-        script.onload = function() {
-            console.log('[Draw2D] Library loaded successfully');
+
+        function handleDraw2dLoaded(sourceLabel) {
+            console.log('[Draw2D] Library loaded successfully from', sourceLabel);
+            activeDraw2dSource = sourceLabel;
             clearTimeout(libraryTimeout);
             Alert.postMessage('Draw2D library loaded successfully!');
-            
-            // Hide loading indicator
+
             const loadingIndicator = document.getElementById('loading-indicator');
             if (loadingIndicator) {
                 loadingIndicator.style.display = 'none';
             }
-            
-            // Try to initialize Draw2D canvas
+
             try {
                 console.log('[Draw2D] Attempting to initialize Draw2D canvas...');
                 Alert.postMessage('Attempting to initialize Draw2D canvas...');
-                
-                // The Draw2D library uses a module system, so we need to access it differently
-                // Try to access the draw2d variable from the global scope without shadowing it
+
                 const root = typeof globalThis !== 'undefined' ? globalThis : window;
-                let draw2dApi = typeof root.draw2d !== 'undefined'
-                    ? root.draw2d
-                    : null;
+                let draw2dApi = typeof root.draw2d !== 'undefined' ? root.draw2d : null;
 
                 if (draw2dApi !== null) {
                     window.draw2d = draw2dApi;
@@ -93,48 +92,35 @@
                     console.log('[Draw2D] Found window.draw2d');
                     Alert.postMessage('Found window.draw2d');
                 } else {
-                    // The draw2d variable exists but is null - the library needs time to initialize
                     console.log('[Draw2D] draw2d variable found but is null, waiting for initialization...');
                     Alert.postMessage('draw2d variable found but is null, waiting for initialization...');
-                    
-                    // Wait for the library to initialize with a retry mechanism
+
                     let retryCount = 0;
                     const maxRetries = 10;
-                    const retryInterval = 100; // 100ms intervals
-                    
+                    const retryInterval = 100;
+
                     const waitForDraw2d = () => {
                         retryCount++;
                         console.log('[Draw2D] Retry attempt', retryCount, 'of', maxRetries);
                         Alert.postMessage('Retry attempt ' + retryCount + ' of ' + maxRetries);
-                        
-                        // Try different ways to access the Draw2D API
+
                         let draw2dAPI = null;
 
-                        // Method 1: Check if draw2d variable is now available globally
-                        const globalDraw2d = typeof root.draw2d !== 'undefined'
-                            ? root.draw2d
-                            : null;
+                        const globalDraw2d = typeof root.draw2d !== 'undefined' ? root.draw2d : null;
                         if (globalDraw2d !== null) {
                             draw2dAPI = globalDraw2d;
                             console.log('[Draw2D] Found global draw2d reference');
                             Alert.postMessage('Found global draw2d reference');
-                        }
-                        // Method 2: Check if it's available on window
-                        else if (typeof window.draw2d !== 'undefined' && window.draw2d !== null) {
+                        } else if (typeof window.draw2d !== 'undefined' && window.draw2d !== null) {
                             draw2dAPI = window.draw2d;
                             console.log('[Draw2D] Found window.draw2d');
                             Alert.postMessage('Found window.draw2d');
-                        }
-                        // Method 3: Try to access it from the global scope even if null
-                        else if (typeof window.draw2d !== 'undefined') {
+                        } else if (typeof window.draw2d !== 'undefined') {
                             draw2dAPI = window.draw2d;
                             console.log('[Draw2D] Found window.draw2d (even if null)');
                             Alert.postMessage('Found window.draw2d (even if null)');
-                        }
-                        // Method 4: Try to access it from the script's scope
-                        else {
+                        } else {
                             try {
-                                // Try to evaluate the draw2d variable from the global scope
                                 const legacyDraw2d = eval('draw2d');
                                 if (typeof legacyDraw2d !== 'undefined' && legacyDraw2d !== null) {
                                     draw2dAPI = legacyDraw2d;
@@ -145,22 +131,18 @@
                                 console.log('[Draw2D] eval failed:', error);
                             }
                         }
-                        
-                        // Method 5: Try to force initialization by executing the library's code
+
                         if (draw2dAPI === null) {
                             try {
                                 console.log('[Draw2D] Trying to force Draw2D initialization...');
                                 Alert.postMessage('Trying to force Draw2D initialization...');
-                                
-                                // Try to execute the library's initialization code
+
                                 if (typeof window.draw2d === 'undefined') {
-                                    // The library might need to be executed again
                                     console.log('[Draw2D] Attempting to re-execute library...');
                                     Alert.postMessage('Attempting to re-execute library...');
-                                    
-                                    // Try to access the draw2d variable from the global scope
-                                    const script = document.createElement('script');
-                                    script.textContent = `
+
+                                    const retryScript = document.createElement('script');
+                                    retryScript.textContent = `
                                         (function() {
                                             var root = typeof globalThis !== 'undefined' ? globalThis : window;
                                             if (typeof root.draw2d !== 'undefined' && root.draw2d !== null) {
@@ -169,9 +151,8 @@
                                             }
                                         })();
                                     `;
-                                    document.head.appendChild(script);
-                                    
-                                    // Check if it worked
+                                    document.head.appendChild(retryScript);
+
                                     if (typeof window.draw2d !== 'undefined' && window.draw2d !== null) {
                                         draw2dAPI = window.draw2d;
                                         console.log('[Draw2D] Successfully exposed draw2d to window');
@@ -182,14 +163,14 @@
                                 console.log('[Draw2D] Force initialization failed:', error);
                             }
                         }
-                        
+
                         if (draw2dAPI !== null) {
                             window.draw2d = draw2dAPI;
                             draw2dApi = draw2dAPI;
                             console.log('[Draw2D] draw2d API found after', retryCount, 'retries');
                             Alert.postMessage('draw2d API found after ' + retryCount + ' retries');
-                            
-                            // Continue with canvas initialization
+
+                            draw2dInitialized = true;
                             initializeDraw2dCanvas(draw2dAPI);
                         } else if (retryCount >= maxRetries) {
                             console.error('[Draw2D] draw2d failed to initialize after', maxRetries, 'retries');
@@ -201,12 +182,11 @@
                             return;
                         }
                     };
-                    
+
                     waitForDraw2d();
-                    return; // Exit early, waitForDraw2d will handle the rest
+                    return;
                 }
-                
-                // Check if draw2d is properly initialized
+
                 if (draw2dApi === null || typeof draw2dApi === 'undefined') {
                     console.error('[Draw2D] draw2d is null or undefined after initialization');
                     Alert.postMessage('draw2d is null or undefined after initialization');
@@ -217,32 +197,77 @@
                 console.log('[Draw2D] draw2d is available:', Object.keys(draw2dApi));
                 Alert.postMessage('draw2d is available: ' + Object.keys(draw2dApi).length + ' properties');
 
-                // Initialize Draw2D canvas
+                draw2dInitialized = true;
                 initializeDraw2dCanvas(draw2dApi);
-                
+
             } catch (error) {
                 console.error('[Draw2D] Error initializing Draw2D canvas:', error);
                 Alert.postMessage('Error initializing Draw2D canvas: ' + error.message);
                 initializeFallbackCanvas();
             }
-        };
-        
-        script.onerror = function(error) {
-            console.error('[Draw2D] Failed to load library:', error);
-            clearTimeout(libraryTimeout);
-            Alert.postMessage('Failed to load Draw2D library: ' + error.message);
-            
-            // Hide loading indicator
-            const loadingIndicator = document.getElementById('loading-indicator');
-            if (loadingIndicator) {
-                loadingIndicator.style.display = 'none';
+        }
+
+        function loadDraw2dViaScript(index) {
+            if (index >= draw2dSources.length) {
+                loadDraw2dAlternative(0);
+                return;
             }
-            
-            // Initialize fallback canvas
-            initializeFallbackCanvas();
-        };
-        
-        document.head.appendChild(script);
+
+            const source = draw2dSources[index];
+            console.log('[Draw2D] Trying to load library via <script> from', source);
+            Alert.postMessage('Attempting script load: ' + source);
+
+            const script = document.createElement('script');
+            script.src = source;
+            script.onload = function() {
+                handleDraw2dLoaded('script:' + source);
+            };
+            script.onerror = function(error) {
+                console.error('[Draw2D] Failed to load library from', source, error);
+                Alert.postMessage('Failed to load ' + source + ': ' + (error && error.message ? error.message : 'unknown error'));
+                loadDraw2dViaScript(index + 1);
+            };
+            document.head.appendChild(script);
+        }
+
+        function loadDraw2dAlternative(index) {
+            if (index >= draw2dSources.length) {
+                console.error('[Draw2D] All loading methods failed');
+                Alert.postMessage('All Draw2D loading methods failed');
+                initializeFallbackCanvas();
+                return;
+            }
+
+            const path = draw2dSources[index];
+            console.log('[Draw2D] Starting alternative loading method for', path);
+            Alert.postMessage('Attempting alternative load: ' + path);
+
+            fetch(path)
+                .then(response => {
+                    console.log('[Draw2D] Fetch response status:', response.status, response.statusText);
+                    if (!response.ok) throw new Error('Failed to fetch: ' + response.status);
+                    return response.text();
+                })
+                .then(source => {
+                    console.log('[Draw2D] Fetch successful, source length:', source.length);
+                    try {
+                        eval(source);
+                        console.log('[Draw2D] Library loaded via fetch', path);
+                        handleDraw2dLoaded('fetch:' + path);
+                    } catch (error) {
+                        console.error('[Draw2D] Failed to evaluate library from', path, error);
+                        Alert.postMessage('Failed to evaluate Draw2D from ' + path + ': ' + error.message);
+                        loadDraw2dAlternative(index + 1);
+                    }
+                })
+                .catch(error => {
+                    console.error('[Draw2D] Failed to fetch library:', error);
+                    Alert.postMessage('Failed to fetch Draw2D: ' + error.message);
+                    loadDraw2dAlternative(index + 1);
+                });
+        }
+
+        loadDraw2dViaScript(0);
         
         // Fallback canvas function
         function initializeFallbackCanvas() {

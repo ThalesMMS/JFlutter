@@ -16,6 +16,8 @@ class Draw2DBridgeService {
 
   final Draw2DBridgePlatform _platform;
 
+  bool get hasRegisteredController => _platform.hasRegisteredController;
+
   /// Registers the [controller] currently rendering the Draw2D canvas.
   void registerWebViewController(WebViewController controller) {
     _platform.registerWebViewController(controller);
@@ -24,6 +26,13 @@ class Draw2DBridgeService {
   /// Removes the [controller] registration when it is no longer active.
   void unregisterWebViewController(WebViewController controller) {
     _platform.unregisterWebViewController(controller);
+  }
+
+  void runJavaScript(String script) {
+    if (!hasRegisteredController) {
+      return;
+    }
+    _platform.runJavaScript(script);
   }
 
   /// Dispatches a highlight event to the Draw2D runtime.
@@ -38,18 +47,14 @@ class Draw2DBridgeService {
 
     final encoded = jsonEncode(payload);
 
-    if (_platform.hasRegisteredController) {
-      _platform.runJavaScript('window.draw2dBridge?.highlight($encoded);');
-    }
+    runJavaScript('window.draw2dBridge?.highlight($encoded);');
 
     _platform.postMessage('highlight', payload);
   }
 
   /// Dispatches a request to clear all highlights.
   void clearHighlight() {
-    if (_platform.hasRegisteredController) {
-      _platform.runJavaScript('window.draw2dBridge?.clearHighlight();');
-    }
+    runJavaScript('window.draw2dBridge?.clearHighlight();');
     _platform.postMessage('clear_highlight', const {});
   }
 }

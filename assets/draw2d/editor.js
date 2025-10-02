@@ -15,12 +15,119 @@
   let currentModelType = 'fsa';
   let pendingModel = null;
   const pendingCanvasTasks = [];
+  let hasLoggedDraw2dDetected = false;
 
   const HIGHLIGHT_STROKE_WIDTH = 4;
   const HIGHLIGHT_STATE_COLOR = '#ff9800';
   const HIGHLIGHT_STATE_BACKGROUND = '#fff3e0';
   const HIGHLIGHT_TRANSITION_COLOR = '#ff9800';
   const HIGHLIGHT_TRANSITION_STROKE = 3;
+
+  function logDebug(message, ...details) {
+    try {
+      console.info(`[Draw2D] ${message}`, ...details);
+    } catch (_) {
+      // Swallow logging failures silently.
+    }
+  }
+
+  function postToFlutter(type, payload) {
+    const serialized = JSON.stringify({ type, payload });
+    let posted = false;
+    try {
+      if (window.JFlutterBridge && window.JFlutterBridge.postMessage) {
+        window.JFlutterBridge.postMessage(serialized);
+        posted = true;
+      }
+      if (!posted && window.Draw2DFlutterBridge && window.Draw2DFlutterBridge.postMessage) {
+        window.Draw2DFlutterBridge.postMessage(serialized);
+        posted = true;
+      }
+    } catch (error) {
+      console.warn('[Draw2D] Failed to post message to Flutter', error);
+    }
+    return posted;
+  }
+
+  function sendLog(level, message, details) {
+    const payload = { level, message };
+    if (typeof details !== 'undefined') {
+      payload.details = details;
+    }
+    logDebug(`LOG[${level}] ${message}`, details);
+    postToFlutter('log', payload);
+  }
+
+  logDebug('Editor script boot initialised');
+  sendLog('debug', 'Editor script boot initialised', {
+    userAgent: navigator.userAgent,
+    readyState: document.readyState,
+    location: window.location.href,
+  });
+
+  function attemptDraw2dLoad() {
+    if (window.draw2d && typeof window.draw2d.Canvas === 'function') {
+      sendLog('debug', 'Draw2D runtime already present at boot');
+      return;
+    }
+
+    const candidates = [
+      'vendor/draw2d.js',
+      './vendor/draw2d.js',
+      '/assets/draw2d/vendor/draw2d.js',
+      window.location.href.replace(/[^/]+$/, '') + 'vendor/draw2d.js',
+    ];
+
+    let attemptIndex = 0;
+
+    function tryNext() {
+      if (window.draw2d && typeof window.draw2d.Canvas === 'function') {
+        sendLog('debug', 'Draw2D runtime became available before fetch attempts completed');
+        return;
+      }
+      if (attemptIndex >= candidates.length) {
+        sendLog('error', 'All draw2d runtime fetch attempts failed');
+        return;
+      }
+      const path = candidates[attemptIndex++];
+      sendLog('debug', 'Attempting to fetch Draw2D runtime', { path: path });
+      fetch(path)
+        .then(function (response) {
+          if (!response.ok) {
+            sendLog('warn', 'Draw2D runtime fetch returned non-200', {
+              path: path,
+              status: response.status,
+            });
+            tryNext();
+            return;
+          }
+          response.text().then(function (source) {
+            try {
+              // eslint-disable-next-line no-eval
+              eval(source);
+              sendLog('info', 'Draw2D runtime loaded via fetch', { path: path });
+            } catch (error) {
+              sendLog('error', 'Failed to evaluate Draw2D runtime', {
+                path: path,
+                message: String(error && error.message ? error.message : error),
+              });
+              tryNext();
+            }
+          });
+        })
+        .catch(function (error) {
+          sendLog('warn', 'Draw2D runtime fetch failed', {
+            path: path,
+            message: String(error && error.message ? error.message : error),
+          });
+          tryNext();
+        });
+    }
+
+    tryNext();
+  }
+
+  attemptDraw2dLoad();
 
   function computeStateBaseStyle(flags) {
     return {
@@ -205,20 +312,20 @@
   }
 
   function sendMessage(type, payload) {
-    const message = JSON.stringify({ type, payload });
-    if (window.JFlutterBridge && window.JFlutterBridge.postMessage) {
-      window.JFlutterBridge.postMessage(message);
-    } else if (window.Draw2DFlutterBridge && window.Draw2DFlutterBridge.postMessage) {
-      window.Draw2DFlutterBridge.postMessage(message);
-    }
+    logDebug(`Sending message to Flutter: ${type}`, payload);
+    postToFlutter(type, payload);
   }
 
   function notifyFlutterReady() {
     if (!canvasInstance) {
+      logDebug('notifyFlutterReady skipped: canvas not yet available');
+      sendLog('debug', 'notifyFlutterReady skipped: canvas not ready');
       return;
     }
     const readyPayload = JSON.stringify({ type: 'editor_ready', payload: {} });
     try {
+      logDebug('Notifying Flutter that editor is ready');
+      sendLog('info', 'Draw2D editor ready');
       if (window.JFlutterBridge && typeof window.JFlutterBridge.postMessage === 'function') {
         window.JFlutterBridge.postMessage(readyPayload);
       } else if (window.Draw2DFlutterBridge && typeof window.Draw2DFlutterBridge.postMessage === 'function') {
@@ -230,6 +337,10 @@
   }
 
   function flushPendingCanvasTasks() {
+    logDebug(`Flushing ${pendingCanvasTasks.length} pending canvas task(s)`);
+    if (pendingCanvasTasks.length > 0 && !canvasInstance) {
+      sendLog('debug', 'Pending canvas tasks flushed without active canvas');
+    }
     if (!canvasInstance || pendingCanvasTasks.length === 0) {
       return;
     }
@@ -244,7 +355,14 @@
   }
 
   function ensureCanvas() {
+    sendLog('debug', 'Ensuring canvas', {
+      hasCanvas: Boolean(canvasInstance),
+      hasDraw2d: typeof window.draw2d !== 'undefined',
+      readyState: document.readyState,
+    });
     if (canvasInstance) {
+      logDebug('Canvas already initialised; flushing queued tasks');
+      sendLog('debug', 'Canvas already initialised');
       flushPendingCanvasTasks();
       return canvasInstance;
     }
@@ -255,6 +373,11 @@
         hasLoggedMissingDraw2dWarning = true;
       }
       if (!pendingCanvasRetryHandle) {
+        logDebug('Scheduling retry while waiting for draw2d runtime');
+        sendLog('warn', 'Draw2D runtime not yet available; scheduling retry', {
+          readyState: document.readyState,
+          hasDraw2d: typeof window.draw2d !== 'undefined',
+        });
         pendingCanvasRetryHandle = window.setTimeout(function () {
           pendingCanvasRetryHandle = null;
           ensureCanvas();
@@ -264,11 +387,26 @@
       return null;
     }
 
+    if (!hasLoggedDraw2dDetected) {
+      hasLoggedDraw2dDetected = true;
+      sendLog('info', 'Draw2D runtime detected', {
+        version:
+            window.draw2d && window.draw2d.VERSION ? window.draw2d.VERSION : null,
+        sampleKeys: Object.keys(window.draw2d || {}).slice(0, 8),
+      });
+    }
+
     try {
+      logDebug('Creating new draw2d canvas instance');
+      sendLog('info', 'Creating Draw2D canvas instance');
       canvasInstance = new window.draw2d.Canvas(CANVAS_ID);
     } catch (error) {
       console.error('[Draw2D] Failed to create canvas instance', error);
       if (!pendingCanvasRetryHandle) {
+        logDebug('Scheduling retry after canvas creation failure');
+        sendLog('error', 'Failed to create Draw2D canvas instance; retry scheduled', {
+          message: String(error && error.message ? error.message : error),
+        });
         pendingCanvasRetryHandle = window.setTimeout(function () {
           pendingCanvasRetryHandle = null;
           ensureCanvas();
@@ -283,6 +421,12 @@
       window.clearTimeout(pendingCanvasRetryHandle);
       pendingCanvasRetryHandle = null;
     }
+    logDebug('Configuring canvas policies');
+    sendLog('info', 'Draw2D canvas configured', {
+      scrollArea: '#' + CANVAS_ID,
+      clientWidth: canvasElement ? canvasElement.clientWidth : null,
+      clientHeight: canvasElement ? canvasElement.clientHeight : null,
+    });
     canvasInstance.setScrollArea('#' + CANVAS_ID);
     canvasInstance.installEditPolicy(
       new window.draw2d.policy.connection.DragConnectionCreatePolicy({
@@ -380,18 +524,27 @@
     const canvas = ensureCanvas();
     if (canvas) {
       try {
+        logDebug('Executing canvas task immediately');
+        sendLog('debug', 'Executing canvas task immediately');
         task(canvas);
       } catch (error) {
         console.error('[Draw2D] Canvas task failed', error);
+        sendLog('error', 'Canvas task failed', {
+          message: String(error && error.message ? error.message : error),
+        });
       }
       return canvas;
     }
+    logDebug('Queueing canvas task until canvas is ready');
+    sendLog('debug', 'Queueing canvas task until canvas is ready');
     pendingCanvasTasks.push(task);
     return null;
   }
 
   function clearCanvas() {
     withCanvas(function (canvas) {
+      logDebug('Clearing existing canvas figures and lines');
+      sendLog('info', 'Clearing Draw2D canvas');
       canvas.getLines().each(function (_, line) {
         line.remove();
       });
@@ -412,6 +565,8 @@
 
   function addStateAtCenter() {
     withCanvas(function (canvas) {
+      logDebug('Adding state at viewport centre');
+      sendLog('info', 'Adding state at centre');
       const vp = getViewportRect();
       const cx = vp.left + vp.width / 2;
       const cy = vp.top + vp.height / 2;
@@ -470,6 +625,11 @@
 
   function setZoom(zoom, animate) {
     withCanvas(function (canvas) {
+      logDebug(`Applying zoom ${zoom} (animate=${Boolean(animate)})`);
+      sendLog('debug', 'Applying zoom', {
+        zoom: zoom,
+        animate: Boolean(animate),
+      });
       setZoomInternal(canvas, zoom, animate);
     });
   }
@@ -477,6 +637,8 @@
   function zoomIn() {
     withCanvas(function (canvas) {
       const current = getZoomInternal(canvas);
+      logDebug(`Zoom in requested; current=${current}`);
+      sendLog('debug', 'Zoom in requested', { currentZoom: current });
       setZoomInternal(canvas, Math.min(current * 1.1, 4.0), true);
     });
   }
@@ -484,12 +646,16 @@
   function zoomOut() {
     withCanvas(function (canvas) {
       const current = getZoomInternal(canvas);
+      logDebug(`Zoom out requested; current=${current}`);
+      sendLog('debug', 'Zoom out requested', { currentZoom: current });
       setZoomInternal(canvas, Math.max(current / 1.1, 0.1), true);
     });
   }
 
   function resetView() {
     withCanvas(function (canvas) {
+      logDebug('Resetting zoom to 1.0');
+      sendLog('info', 'Resetting view to default zoom');
       setZoomInternal(canvas, 1.0, true);
     });
   }
@@ -499,9 +665,13 @@
       const vp = getViewportRect();
       const content = computeContentBounds();
       if (!content) {
+        logDebug('Fit to content requested but no content available; resetting view');
+        sendLog('warn', 'Fit to content requested with no content; resetting view');
         setZoomInternal(canvas, 1.0, true);
         return;
       }
+      logDebug('Fitting viewport to content bounds', content);
+      sendLog('info', 'Fitting view to content', content);
       const contentWidth = Math.max(1, content.right - content.left);
       const contentHeight = Math.max(1, content.bottom - content.top);
       const padding = 40;
@@ -1072,15 +1242,37 @@
       return;
     }
     withCanvas(function () {
+      logDebug('Rendering pending automaton model', pendingModel);
+      sendLog('info', 'Rendering automaton model', {
+        states: Array.isArray(pendingModel.states)
+          ? pendingModel.states.length
+          : null,
+        transitions: Array.isArray(pendingModel.transitions)
+          ? pendingModel.transitions.length
+          : null,
+        type: pendingModel.type || 'fsa',
+      });
       renderModel(pendingModel);
     });
   }
 
   function loadModel(model) {
     if (!model || !Array.isArray(model.states)) {
+      logDebug('loadModel called with invalid model payload', model);
+      sendLog('error', 'Received invalid automaton model payload', {
+        hasStates: Boolean(model && Array.isArray(model.states)),
+      });
       return;
     }
 
+    logDebug('Received model from Flutter', model);
+    sendLog('info', 'Received automaton model from Flutter', {
+      states: model.states.length,
+      transitions: Array.isArray(model.transitions)
+        ? model.transitions.length
+        : null,
+      type: model.type || 'fsa',
+    });
     pendingModel = model;
     renderPendingModel();
   }
@@ -1098,6 +1290,8 @@
 
   // Signal readiness to Flutter once the bridge and canvas are available
   try {
+    logDebug('Bootstrapping canvas immediately after load');
+    sendLog('debug', 'Bootstrapping canvas immediately after load');
     ensureCanvas();
     notifyFlutterReady();
     renderPendingModel();
@@ -1124,6 +1318,10 @@
       }
     }
 
+    logDebug(`Received window message type=${type}`, payload);
+
+    logDebug(`Received window message type=${type}`, payload);
+
     if (type === 'highlight') {
       highlight(payload || {});
     } else if (type === 'clear_highlight') {
@@ -1139,5 +1337,15 @@
     } else if (type === 'add_state_center') {
       addStateAtCenter();
     }
+  });
+
+  window.addEventListener('load', function () {
+    sendLog('info', 'Window load event fired', {
+      hasDraw2d: typeof window.draw2d !== 'undefined',
+      readyState: document.readyState,
+      canvasMetrics: canvasElement
+        ? { width: canvasElement.clientWidth, height: canvasElement.clientHeight }
+        : null,
+    });
   });
 })();

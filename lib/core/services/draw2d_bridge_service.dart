@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import 'draw2d_bridge_platform_stub.dart'
@@ -21,18 +22,29 @@ class Draw2DBridgeService {
 
   /// Registers the [controller] currently rendering the Draw2D canvas.
   void registerWebViewController(WebViewController controller) {
+    debugPrint(
+      '[Draw2D][Flutter] register controller ${identityHashCode(controller)}',
+    );
     _platform.registerWebViewController(controller);
   }
 
   /// Removes the [controller] registration when it is no longer active.
   void unregisterWebViewController(WebViewController controller) {
+    debugPrint(
+      '[Draw2D][Flutter] unregister controller ${identityHashCode(controller)}',
+    );
     _platform.unregisterWebViewController(controller);
   }
 
   void runJavaScript(String script, {String? debugLabel}) {
     if (!hasRegisteredController) {
+      debugPrint(
+        '[Draw2D][Flutter] Ignored JS invocation${debugLabel != null ? ' ($debugLabel)' : ''}: no controller registered',
+      );
       return;
     }
+    final labelSuffix = debugLabel != null ? ' ($debugLabel)' : '';
+    debugPrint('[Draw2D][Flutter] Executing JS$labelSuffix');
     _platform.runJavaScript(script, debugLabel: debugLabel);
   }
 
@@ -40,6 +52,7 @@ class Draw2DBridgeService {
     final invocation = argumentSource == null
         ? 'b.$methodName();'
         : 'b.$methodName($argumentSource);';
+    debugPrint('[Draw2D][Flutter] Invoking bridge method $methodName');
     final script =
         '(() => { try { const b = window.draw2dBridge; if (b && typeof b.$methodName === "function") { $invocation } } catch (error) { console.error(`[Draw2D][Flutter] $methodName failed`, error); } })();';
     runJavaScript(script, debugLabel: methodName);

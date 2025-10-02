@@ -38,28 +38,29 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
     final controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(Colors.transparent)
-      ..addJavaScriptChannel('JFlutterBridge', onMessageReceived: _handleMessage)
-      ..setNavigationDelegate(
-        NavigationDelegate(),
+      ..addJavaScriptChannel(
+        'JFlutterBridge',
+        onMessageReceived: _handleMessage,
       )
+      ..setNavigationDelegate(NavigationDelegate())
       ..loadFlutterAsset('assets/draw2d/editor.html');
 
     _controller = controller;
 
     _bridge.registerWebViewController(controller);
 
-    _subscription = ref.listenManual<AutomatonState>(
-      automatonProvider,
-      (previous, next) {
-        if (!_isReady) {
-          return;
-        }
-        if (previous?.currentAutomaton == next.currentAutomaton) {
-          return;
-        }
-        _pushModel(next);
-      },
-    );
+    _subscription = ref.listenManual<AutomatonState>(automatonProvider, (
+      previous,
+      next,
+    ) {
+      if (!_isReady) {
+        return;
+      }
+      if (previous?.currentAutomaton == next.currentAutomaton) {
+        return;
+      }
+      _pushModel(next);
+    });
   }
 
   @override
@@ -135,10 +136,21 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
       case 'transition.remove':
         _handleTransitionRemove(payload);
         break;
+      case 'log':
+        _handleWebLog(payload);
+        break;
       default:
         debugPrint('Unhandled Draw2D event: $type');
         break;
     }
+  }
+
+  void _handleWebLog(Map<String, dynamic> payload) {
+    final level = payload['level'] as String? ?? 'info';
+    final message = payload['message'] as String? ?? '';
+    final details = payload['details'];
+    final suffix = details != null ? ' ${jsonEncode(details)}' : '';
+    debugPrint('[Draw2D][Web][$level] $message$suffix');
   }
 
   void _handleStateAdd(Map<String, dynamic> payload) {
@@ -180,8 +192,9 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
       return;
     }
 
-    final bool? isInitial =
-        payload.containsKey('isInitial') ? payload['isInitial'] as bool? : null;
+    final bool? isInitial = payload.containsKey('isInitial')
+        ? payload['isInitial'] as bool?
+        : null;
     final bool? isAccepting = payload.containsKey('isAccepting')
         ? payload['isAccepting'] as bool?
         : null;
@@ -190,7 +203,9 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
       return;
     }
 
-    ref.read(automatonProvider.notifier).updateStateFlags(
+    ref
+        .read(automatonProvider.notifier)
+        .updateStateFlags(
           id: id,
           isInitial: isInitial,
           isAccepting: isAccepting,
@@ -213,7 +228,9 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
     if (from == null || to == null) {
       return;
     }
-    ref.read(automatonProvider.notifier).addOrUpdateTransition(
+    ref
+        .read(automatonProvider.notifier)
+        .addOrUpdateTransition(
           id: id,
           fromStateId: from,
           toStateId: to,
@@ -258,7 +275,9 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
       return;
     }
     try {
-      await controller.runJavaScript('(() => { if (window.draw2dBridge && typeof window.draw2dBridge.loadModel === "function") { window.draw2dBridge.loadModel($json); } })();');
+      await controller.runJavaScript(
+        '(() => { if (window.draw2dBridge && typeof window.draw2dBridge.loadModel === "function") { window.draw2dBridge.loadModel($json); } })();',
+      );
     } catch (error, stackTrace) {
       debugPrint('Failed to push Draw2D model: $error');
       FlutterError.reportError(
@@ -287,8 +306,9 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
     if (automaton == null) {
       return 't0';
     }
-    final existing =
-        automaton.transitions.map((transition) => transition.id).toSet();
+    final existing = automaton.transitions
+        .map((transition) => transition.id)
+        .toSet();
     var index = existing.length;
     String candidate = 't$index';
     while (existing.contains(candidate)) {
@@ -300,11 +320,7 @@ class _Draw2DCanvasViewState extends ConsumerState<Draw2DCanvasView> {
 }
 
 class _PendingMove {
-  const _PendingMove({
-    required this.id,
-    required this.x,
-    required this.y,
-  });
+  const _PendingMove({required this.id, required this.x, required this.y});
 
   final String id;
   final double x;

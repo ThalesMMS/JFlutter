@@ -90,10 +90,21 @@ body {
 ''';
 
     String wrapScript(String source) {
-      final escaped = source.replaceAll('</script>', '<\\/script>');
+      final escaped = _escapeScriptContent(source);
       return '<script type="text/javascript">$escaped</script>';
     }
 
+    /// Escapes script content to prevent breaking out of <script> tags and XSS.
+    /// This replaces &, <, >, ", ', and </script> with safe equivalents.
+    String _escapeScriptContent(String input) {
+      return input
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#x27;')
+        .replaceAll('</script>', '<\\/script>');
+    }
     final buffer = StringBuffer()
       ..writeln('<!DOCTYPE html>')
       ..writeln('<html lang="en">')

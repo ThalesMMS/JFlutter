@@ -82,102 +82,135 @@
                 let draw2d = null;
                 
                 // Check if draw2d is available in global scope
-                if (typeof window.draw2d !== 'undefined') {
+                if (typeof window.draw2d !== 'undefined' && window.draw2d !== null) {
                     draw2d = window.draw2d;
                     console.log('[Draw2D] Found window.draw2d');
                     Alert.postMessage('Found window.draw2d');
-                } else if (typeof draw2d !== 'undefined') {
+                } else if (typeof draw2d !== 'undefined' && draw2d !== null) {
                     // Try global scope
                     draw2d = window.draw2d = draw2d;
                     console.log('[Draw2D] Found draw2d in global scope, assigned to window');
                     Alert.postMessage('Found draw2d in global scope, assigned to window');
                 } else {
-                    // Try to access it from the module system
-                    try {
-                        // The library might have exposed it in a different way
-                        if (typeof window.draw2d === 'undefined' && typeof draw2d === 'undefined') {
-                            console.log('[Draw2D] Trying to access draw2d from module system...');
-                            Alert.postMessage('Trying to access draw2d from module system...');
-                            
-                            // Check if there's a global draw2d variable
-                            if (typeof draw2d !== 'undefined') {
-                                window.draw2d = draw2d;
-                                draw2d = window.draw2d;
-                                console.log('[Draw2D] Successfully exposed draw2d to window');
-                                Alert.postMessage('Successfully exposed draw2d to window');
-                            } else {
-                                console.error('[Draw2D] draw2d not found in any scope');
-                                Alert.postMessage('draw2d not found in any scope');
-                                initializeFallbackCanvas();
-                                return;
+                    // The draw2d variable exists but is null - the library needs time to initialize
+                    console.log('[Draw2D] draw2d variable found but is null, waiting for initialization...');
+                    Alert.postMessage('draw2d variable found but is null, waiting for initialization...');
+                    
+                    // Wait for the library to initialize with a retry mechanism
+                    let retryCount = 0;
+                    const maxRetries = 10;
+                    const retryInterval = 100; // 100ms intervals
+                    
+                    const waitForDraw2d = () => {
+                        retryCount++;
+                        console.log('[Draw2D] Retry attempt', retryCount, 'of', maxRetries);
+                        Alert.postMessage('Retry attempt ' + retryCount + ' of ' + maxRetries);
+                        
+                        // Try different ways to access the Draw2D API
+                        let draw2dAPI = null;
+                        
+                        // Method 1: Check if draw2d variable is now available
+                        if (typeof draw2d !== 'undefined' && draw2d !== null) {
+                            draw2dAPI = draw2d;
+                            console.log('[Draw2D] Found draw2d variable');
+                            Alert.postMessage('Found draw2d variable');
+                        }
+                        // Method 2: Check if it's available on window
+                        else if (typeof window.draw2d !== 'undefined' && window.draw2d !== null) {
+                            draw2dAPI = window.draw2d;
+                            console.log('[Draw2D] Found window.draw2d');
+                            Alert.postMessage('Found window.draw2d');
+                        }
+                        // Method 3: Try to access it from the global scope
+                        else if (typeof window.draw2d !== 'undefined') {
+                            draw2dAPI = window.draw2d;
+                            console.log('[Draw2D] Found window.draw2d (even if null)');
+                            Alert.postMessage('Found window.draw2d (even if null)');
+                        }
+                        // Method 4: Try to access it from the script's scope
+                        else {
+                            try {
+                                // Try to evaluate the draw2d variable from the global scope
+                                const globalDraw2d = eval('draw2d');
+                                if (typeof globalDraw2d !== 'undefined' && globalDraw2d !== null) {
+                                    draw2dAPI = globalDraw2d;
+                                    console.log('[Draw2D] Found draw2d via eval');
+                                    Alert.postMessage('Found draw2d via eval');
+                                }
+                            } catch (error) {
+                                console.log('[Draw2D] eval failed:', error);
                             }
                         }
-                    } catch (error) {
-                        console.error('[Draw2D] Error accessing draw2d:', error);
-                        Alert.postMessage('Error accessing draw2d: ' + error.message);
-                        initializeFallbackCanvas();
-                        return;
-                    }
+                        
+                        // Method 5: Try to force initialization by executing the library's code
+                        if (draw2dAPI === null) {
+                            try {
+                                console.log('[Draw2D] Trying to force Draw2D initialization...');
+                                Alert.postMessage('Trying to force Draw2D initialization...');
+                                
+                                // Try to execute the library's initialization code
+                                if (typeof window.draw2d === 'undefined') {
+                                    // The library might need to be executed again
+                                    console.log('[Draw2D] Attempting to re-execute library...');
+                                    Alert.postMessage('Attempting to re-execute library...');
+                                    
+                                    // Try to access the draw2d variable from the global scope
+                                    const script = document.createElement('script');
+                                    script.textContent = `
+                                        if (typeof draw2d !== 'undefined' && draw2d !== null) {
+                                            window.draw2d = draw2d;
+                                            console.log('[Draw2D] Successfully exposed draw2d to window');
+                                        }
+                                    `;
+                                    document.head.appendChild(script);
+                                    
+                                    // Check if it worked
+                                    if (typeof window.draw2d !== 'undefined' && window.draw2d !== null) {
+                                        draw2dAPI = window.draw2d;
+                                        console.log('[Draw2D] Successfully exposed draw2d to window');
+                                        Alert.postMessage('Successfully exposed draw2d to window');
+                                    }
+                                }
+                            } catch (error) {
+                                console.log('[Draw2D] Force initialization failed:', error);
+                            }
+                        }
+                        
+                        if (draw2dAPI !== null) {
+                            window.draw2d = draw2dAPI;
+                            console.log('[Draw2D] draw2d API found after', retryCount, 'retries');
+                            Alert.postMessage('draw2d API found after ' + retryCount + ' retries');
+                            
+                            // Continue with canvas initialization
+                            initializeDraw2dCanvas(draw2dAPI);
+                        } else if (retryCount >= maxRetries) {
+                            console.error('[Draw2D] draw2d failed to initialize after', maxRetries, 'retries');
+                            Alert.postMessage('draw2d failed to initialize after ' + maxRetries + ' retries');
+                            initializeFallbackCanvas();
+                            return;
+                        } else {
+                            setTimeout(waitForDraw2d, retryInterval);
+                            return;
+                        }
+                    };
+                    
+                    waitForDraw2d();
+                    return; // Exit early, waitForDraw2d will handle the rest
+                }
+                
+                // Check if draw2d is properly initialized
+                if (draw2d === null || typeof draw2d === 'undefined') {
+                    console.error('[Draw2D] draw2d is null or undefined after initialization');
+                    Alert.postMessage('draw2d is null or undefined after initialization');
+                    initializeFallbackCanvas();
+                    return;
                 }
                 
                 console.log('[Draw2D] draw2d is available:', Object.keys(draw2d));
                 Alert.postMessage('draw2d is available: ' + Object.keys(draw2d).length + ' properties');
                 
-                // Try to create a Draw2D canvas
-                const canvas = document.getElementById('canvas');
-                if (!canvas) {
-                    console.error('[Draw2D] Canvas element not found');
-                    Alert.postMessage('Canvas element not found');
-                    initializeFallbackCanvas();
-                    return;
-                }
-                
-                // Create Draw2D canvas
-                const draw2dCanvas = new draw2d.Canvas('canvas');
-                console.log('[Draw2D] Draw2D canvas created successfully');
-                Alert.postMessage('Draw2D canvas created successfully!');
-                
-                // Store canvas globally
-                window.draw2dCanvas = draw2dCanvas;
-                
-                // Add function to add states
-                window.addStateAtCenter = function() {
-                    try {
-                        if (window.draw2dCanvas) {
-                            console.log('[Draw2D] Adding state to Draw2D canvas...');
-                            
-                            // Create a Draw2D state
-                            const state = new draw2d.shape.basic.Circle();
-                            state.setPosition(100, 100);
-                            state.setDimension(50, 50);
-                            state.setBackgroundColor('#4CAF50');
-                            state.setStroke(2);
-                            state.setColor('#2E7D32');
-                            
-                            // Add to canvas
-                            window.draw2dCanvas.add(state);
-                            
-                            console.log('[Draw2D] State added to Draw2D canvas');
-                            Alert.postMessage('State added to Draw2D canvas!');
-                            return true;
-                        } else {
-                            console.error('[Draw2D] Draw2D canvas not initialized');
-                            Alert.postMessage('Draw2D canvas not initialized');
-                            return false;
-                        }
-                    } catch (error) {
-                        console.error('[Draw2D] Error adding state to Draw2D canvas:', error);
-                        Alert.postMessage('Error adding state to Draw2D canvas: ' + error.message);
-                        return false;
-                    }
-                };
-                
-                // Change canvas background to indicate ready state
-                canvas.style.backgroundColor = '#e8f5e8';
-                canvas.style.border = '2px solid #4caf50';
-                
-                console.log('[Draw2D] Draw2D canvas setup complete!');
-                Alert.postMessage('Draw2D canvas setup complete!');
+                // Initialize Draw2D canvas
+                initializeDraw2dCanvas(draw2d);
                 
             } catch (error) {
                 console.error('[Draw2D] Error initializing Draw2D canvas:', error);
@@ -295,7 +328,76 @@
                 console.error('[Draw2D] Error initializing fallback canvas:', error);
                 Alert.postMessage('Error initializing fallback canvas: ' + error.message);
             }
-        }
-    </script>
-</body>
+            }
+            
+            // Function to initialize Draw2D canvas
+            function initializeDraw2dCanvas(draw2d) {
+                try {
+                    console.log('[Draw2D] Attempting to initialize Draw2D canvas...');
+                    Alert.postMessage('Attempting to initialize Draw2D canvas...');
+                    
+                    // Try to create a Draw2D canvas
+                    const canvas = document.getElementById('canvas');
+                    if (!canvas) {
+                        console.error('[Draw2D] Canvas element not found');
+                        Alert.postMessage('Canvas element not found');
+                        initializeFallbackCanvas();
+                        return;
+                    }
+                    
+                    // Create Draw2D canvas
+                    const draw2dCanvas = new draw2d.Canvas('canvas');
+                    console.log('[Draw2D] Draw2D canvas created successfully');
+                    Alert.postMessage('Draw2D canvas created successfully!');
+                    
+                    // Store canvas globally
+                    window.draw2dCanvas = draw2dCanvas;
+                    
+                    // Add function to add states
+                    window.addStateAtCenter = function() {
+                        try {
+                            if (window.draw2dCanvas) {
+                                console.log('[Draw2D] Adding state to Draw2D canvas...');
+                                
+                                // Create a Draw2D state
+                                const state = new draw2d.shape.basic.Circle();
+                                state.setPosition(100, 100);
+                                state.setDimension(50, 50);
+                                state.setBackgroundColor('#4CAF50');
+                                state.setStroke(2);
+                                state.setColor('#2E7D32');
+                                
+                                // Add to canvas
+                                window.draw2dCanvas.add(state);
+                                
+                                console.log('[Draw2D] State added to Draw2D canvas');
+                                Alert.postMessage('State added to Draw2D canvas!');
+                                return true;
+                            } else {
+                                console.error('[Draw2D] Draw2D canvas not initialized');
+                                Alert.postMessage('Draw2D canvas not initialized');
+                                return false;
+                            }
+                        } catch (error) {
+                            console.error('[Draw2D] Error adding state to Draw2D canvas:', error);
+                            Alert.postMessage('Error adding state to Draw2D canvas: ' + error.message);
+                            return false;
+                        }
+                    };
+                    
+                    // Change canvas background to indicate ready state
+                    canvas.style.backgroundColor = '#e8f5e8';
+                    canvas.style.border = '2px solid #4caf50';
+                    
+                    console.log('[Draw2D] Draw2D canvas setup complete!');
+                    Alert.postMessage('Draw2D canvas setup complete!');
+                    
+                } catch (error) {
+                    console.error('[Draw2D] Error initializing Draw2D canvas:', error);
+                    Alert.postMessage('Error initializing Draw2D canvas: ' + error.message);
+                    initializeFallbackCanvas();
+                }
+            }
+        </script>
+    </body>
 </html>

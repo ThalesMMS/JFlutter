@@ -6,6 +6,8 @@ import 'package:vector_math/vector_math_64.dart';
 import '../../core/models/fsa.dart';
 import '../../core/models/fsa_transition.dart';
 import '../../core/models/state.dart';
+import '../canvas/fl_nodes/fl_nodes_automaton_mapper.dart';
+import '../canvas/fl_nodes/fl_nodes_canvas_models.dart';
 
 /// Clock signature used for deterministic testing.
 typedef BridgeClock = DateTime Function();
@@ -73,194 +75,16 @@ class BridgeEvent {
   }
 }
 
-/// Serializable node description shared with the Draw2D runtime.
-class BridgeNode {
-  BridgeNode({
-    required this.id,
-    required this.label,
-    required this.x,
-    required this.y,
-    required this.isInitial,
-    required this.isAccepting,
-  });
-
-  final String id;
-  final String label;
-  final double x;
-  final double y;
-  final bool isInitial;
-  final bool isAccepting;
-
-  factory BridgeNode.fromJson(Map<String, dynamic> json) {
-    return BridgeNode(
-      id: json['id'] as String,
-      label: json['label'] as String? ?? json['id'] as String,
-      x: (json['x'] as num?)?.toDouble() ?? 0,
-      y: (json['y'] as num?)?.toDouble() ?? 0,
-      isInitial: json['isInitial'] as bool? ?? false,
-      isAccepting: json['isAccepting'] as bool? ?? false,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'label': label,
-      'x': x,
-      'y': y,
-      'isInitial': isInitial,
-      'isAccepting': isAccepting,
-    };
-  }
-}
-
-/// Serializable edge description shared with the Draw2D runtime.
-class BridgeEdge {
-  BridgeEdge({
-    required this.id,
-    required this.fromStateId,
-    required this.toStateId,
-    required this.symbols,
-  });
-
-  final String id;
-  final String fromStateId;
-  final String toStateId;
-  final List<String> symbols;
-
-  factory BridgeEdge.fromJson(Map<String, dynamic> json) {
-    final rawSymbols = json['symbols'];
-    final symbols = rawSymbols is List
-        ? rawSymbols.cast<String>()
-        : (rawSymbols is String && rawSymbols.isNotEmpty)
-        ? rawSymbols.split(',')
-        : <String>[];
-
-    return BridgeEdge(
-      id: json['id'] as String,
-      fromStateId: json['from'] as String,
-      toStateId: json['to'] as String,
-      symbols: symbols,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {'id': id, 'from': fromStateId, 'to': toStateId, 'symbols': symbols};
-  }
-}
-
 /// Converts between [FSA] instances and bridge-friendly payloads.
 class BridgeAutomatonMapper {
   static Map<String, dynamic> toBridgeAutomaton(FSA? automaton) {
-    if (automaton == null) {
-      return const {
-        'nodes': <Map<String, dynamic>>[],
-        'edges': <Map<String, dynamic>>[],
-        'metadata': <String, dynamic>{},
-      };
-    }
-
-    final nodes = automaton.states.map((state) {
-      final isInitial = automaton.initialState?.id == state.id;
-      final isAccepting = automaton.acceptingStates.any(
-        (accepting) => accepting.id == state.id,
-      );
-      return BridgeNode(
-        id: state.id,
-        label: state.label,
-        x: state.position.x,
-        y: state.position.y,
-        isInitial: isInitial,
-        isAccepting: isAccepting,
-      ).toJson();
-    }).toList();
-
-    final edges = automaton.fsaTransitions.map((transition) {
-      return BridgeEdge(
-        id: transition.id,
-        fromStateId: transition.fromState.id,
-        toStateId: transition.toState.id,
-        symbols: transition.inputSymbols.toList(),
-      ).toJson();
-    }).toList();
-
-    return {
-      'nodes': nodes,
-      'edges': edges,
-      'metadata': {
-        'id': automaton.id,
-        'name': automaton.name,
-        'alphabet': automaton.alphabet.toList(),
-      },
-    };
+    return FlNodesAutomatonMapper.toSnapshot(automaton).toJson();
   }
 
   /// Hydrates an [FSA] template with data received from the bridge.
   static FSA mergeIntoTemplate(Map<String, dynamic> payload, FSA template) {
-    final nodeMaps =
-        (payload['nodes'] as List?)?.cast<Map<String, dynamic>>() ?? const [];
-    final edgeMaps =
-        (payload['edges'] as List?)?.cast<Map<String, dynamic>>() ?? const [];
-
-    final nodes = nodeMaps.map(BridgeNode.fromJson).toList();
-    final edges = edgeMaps.map(BridgeEdge.fromJson).toList();
-
-    final states = nodes
-        .map(
-          (node) => State(
-            id: node.id,
-            label: node.label,
-            position: Vector2(node.x, node.y),
-            isInitial: node.isInitial,
-            isAccepting: node.isAccepting,
-          ),
-        )
-        .toSet();
-
-    final stateMap = {for (final state in states) state.id: state};
-
-    final transitions = edges.map((edge) {
-      final fromState = stateMap[edge.fromStateId];
-      final toState = stateMap[edge.toStateId];
-      if (fromState == null || toState == null) {
-        throw StateError('Edge references missing state: ${edge.toJson()}');
-      }
-      return FSATransition(
-        id: edge.id,
-        fromState: fromState,
-        toState: toState,
-        inputSymbols: edge.symbols.toSet(),
-        label: edge.symbols.join(','),
-      );
-    }).toSet();
-
-    BridgeNode? initialNode;
-    for (final node in nodes) {
-      if (node.isInitial) {
-        initialNode = node;
-        break;
-      }
-    }
-
-    final acceptingStates = {
-      for (final node in nodes.where((node) => node.isAccepting))
-        stateMap[node.id]!,
-    };
-
-    final alphabet = <String>{
-      ...template.alphabet,
-      for (final edge in edges) ...edge.symbols,
-    }..removeWhere((symbol) => symbol.isEmpty);
-
-    return template.copyWith(
-      states: states,
-      transitions: transitions,
-      acceptingStates: acceptingStates,
-      initialState: initialNode != null
-          ? stateMap[initialNode.id]
-          : template.initialState,
-      alphabet: alphabet,
-    );
+    final snapshot = FlNodesAutomatonSnapshot.fromJson(payload);
+    return FlNodesAutomatonMapper.mergeIntoTemplate(snapshot, template);
   }
 }
 
@@ -322,7 +146,7 @@ class Draw2dCanvasBridge {
   }
 
   void _handleNodeAdded(Map<String, dynamic> payload) {
-    final node = BridgeNode.fromJson(payload);
+    final node = FlNodesCanvasNode.fromJson(payload);
     final base = _ensureAutomaton();
     final updatedStates = base.states
         .where((state) => state.id != node.id)
@@ -351,7 +175,7 @@ class Draw2dCanvasBridge {
   }
 
   void _handleNodeMoved(Map<String, dynamic> payload) {
-    final node = BridgeNode.fromJson(payload);
+    final node = FlNodesCanvasNode.fromJson(payload);
     final base = _ensureAutomaton();
     final updatedStates = base.states.map((state) {
       if (state.id == node.id) {
@@ -365,7 +189,7 @@ class Draw2dCanvasBridge {
   }
 
   void _handleEdgeLinked(Map<String, dynamic> payload) {
-    final edge = BridgeEdge.fromJson(payload);
+    final edge = FlNodesCanvasEdge.fromJson(payload);
     final base = _ensureAutomaton();
     final states = base.states.toSet();
     final stateMap = {for (final state in states) state.id: state};

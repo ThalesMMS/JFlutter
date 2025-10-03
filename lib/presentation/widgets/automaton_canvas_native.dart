@@ -194,6 +194,8 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
               controller: _canvasController.controller,
               overlay: () => const <FlOverlayData>[],
               headerBuilder: (context, node, style, onToggleCollapse) {
+                final automatonNotifier =
+                    ref.read(automatonProvider.notifier);
                 final automatonState = _statesById[node.id];
                 final label = automatonState?.label ?? node.id;
                 final isInitial = automaton?.initialState?.id == node.id;
@@ -212,6 +214,8 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
                   isCurrent: isCurrent,
                   isVisited: isVisited,
                   isNondeterministic: isNondeterministic,
+                  isInitial: isInitial,
+                  isAccepting: isAccepting,
                 );
 
                 return _AutomatonNodeHeader(
@@ -221,6 +225,22 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
                   isCollapsed: node.state.isCollapsed,
                   colors: colors,
                   onToggleCollapse: onToggleCollapse,
+                  onToggleInitial: () {
+                    automatonNotifier.updateStateFlags(
+                      id: node.id,
+                      isInitial: !isInitial,
+                    );
+                  },
+                  onToggleAccepting: () {
+                    automatonNotifier.updateStateFlags(
+                      id: node.id,
+                      isAccepting: !isAccepting,
+                    );
+                  },
+                  initialToggleKey:
+                      Key('automaton-node-${node.id}-initial-toggle'),
+                  acceptingToggleKey:
+                      Key('automaton-node-${node.id}-accepting-toggle'),
                 );
               },
             ),
@@ -379,6 +399,8 @@ _HeaderColors _resolveHeaderColors(
   required bool isCurrent,
   required bool isVisited,
   required bool isNondeterministic,
+  required bool isInitial,
+  required bool isAccepting,
 }) {
   final colorScheme = theme.colorScheme;
   if (isHighlighted) {
@@ -405,6 +427,18 @@ _HeaderColors _resolveHeaderColors(
       foreground: colorScheme.onTertiaryContainer,
     );
   }
+  if (isAccepting) {
+    return _HeaderColors(
+      background: colorScheme.secondaryContainer,
+      foreground: colorScheme.onSecondaryContainer,
+    );
+  }
+  if (isInitial) {
+    return _HeaderColors(
+      background: colorScheme.primaryContainer,
+      foreground: colorScheme.onPrimaryContainer,
+    );
+  }
   return _HeaderColors(
     background: colorScheme.surfaceVariant,
     foreground: colorScheme.onSurfaceVariant,
@@ -419,6 +453,10 @@ class _AutomatonNodeHeader extends StatelessWidget {
     required this.isCollapsed,
     required this.colors,
     required this.onToggleCollapse,
+    required this.onToggleInitial,
+    required this.onToggleAccepting,
+    required this.initialToggleKey,
+    required this.acceptingToggleKey,
   });
 
   final String label;
@@ -427,6 +465,10 @@ class _AutomatonNodeHeader extends StatelessWidget {
   final bool isCollapsed;
   final _HeaderColors colors;
   final VoidCallback onToggleCollapse;
+  final VoidCallback onToggleInitial;
+  final VoidCallback onToggleAccepting;
+  final Key initialToggleKey;
+  final Key acceptingToggleKey;
 
   @override
   Widget build(BuildContext context) {
@@ -448,15 +490,6 @@ class _AutomatonNodeHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
         children: [
-          if (isInitial)
-            Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: Icon(
-                Icons.play_arrow_rounded,
-                size: 16,
-                color: colors.foreground,
-              ),
-            ),
           Expanded(
             child: Text(
               label,
@@ -465,25 +498,87 @@ class _AutomatonNodeHeader extends StatelessWidget {
               style: textStyle,
             ),
           ),
-          if (isAccepting)
-            Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: Icon(
-                Icons.check_circle,
-                size: 16,
-                color: colors.foreground,
+          const SizedBox(width: 8),
+          _HeaderActionButton(
+            buttonKey: initialToggleKey,
+            tooltip: isInitial ? 'Unset initial state' : 'Set as initial state',
+            icon: Icons.play_circle_outline,
+            activeIcon: Icons.play_circle,
+            isActive: isInitial,
+            color: colors.foreground,
+            onPressed: onToggleInitial,
+          ),
+          const SizedBox(width: 4),
+          _HeaderActionButton(
+            buttonKey: acceptingToggleKey,
+            tooltip:
+                isAccepting ? 'Unset accepting state' : 'Set as accepting state',
+            icon: Icons.check_circle_outline,
+            activeIcon: Icons.check_circle,
+            isActive: isAccepting,
+            color: colors.foreground,
+            onPressed: onToggleAccepting,
+          ),
+          const SizedBox(width: 4),
+          Tooltip(
+            message: isCollapsed ? 'Expand state' : 'Collapse state',
+            child: IconButton(
+              icon: Icon(
+                isCollapsed ? Icons.expand_more : Icons.expand_less,
+                size: 20,
+                color: colors.foreground.withOpacity(0.9),
               ),
-            ),
-          InkWell(
-            onTap: onToggleCollapse,
-            borderRadius: BorderRadius.circular(16),
-            child: Icon(
-              isCollapsed ? Icons.expand_more : Icons.expand_less,
-              size: 18,
-              color: colors.foreground,
+              onPressed: onToggleCollapse,
+              padding: EdgeInsets.zero,
+              constraints:
+                  const BoxConstraints.tightFor(width: 32, height: 32),
+              splashRadius: 18,
+              visualDensity: VisualDensity.compact,
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _HeaderActionButton extends StatelessWidget {
+  const _HeaderActionButton({
+    required this.tooltip,
+    required this.icon,
+    required this.activeIcon,
+    required this.isActive,
+    required this.color,
+    required this.onPressed,
+    this.buttonKey,
+  });
+
+  final String tooltip;
+  final IconData icon;
+  final IconData activeIcon;
+  final bool isActive;
+  final Color color;
+  final VoidCallback onPressed;
+  final Key? buttonKey;
+
+  @override
+  Widget build(BuildContext context) {
+    final resolvedIcon = Icon(
+      isActive ? activeIcon : icon,
+      size: 20,
+      color: isActive ? color : color.withOpacity(0.6),
+    );
+
+    return Tooltip(
+      message: tooltip,
+      child: IconButton(
+        key: buttonKey,
+        icon: resolvedIcon,
+        onPressed: onPressed,
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+        splashRadius: 18,
+        visualDensity: VisualDensity.compact,
       ),
     );
   }

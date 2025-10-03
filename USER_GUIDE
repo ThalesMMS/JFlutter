@@ -30,6 +30,11 @@ fl_nodes primitives:
   area. The controller receives either `addStateAtCenter()` or an
   `AddNodeEvent`, then forwards the mutation to `AutomatonProvider` so the new
   state appears across the app.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L236-L302】【F:lib/presentation/providers/automaton_provider.dart†L83-L166】
+* **Toggle initial/accepting flags** – tap the play/check icons in a state's
+  header to mark it as initial or accepting. The canvases call the respective
+  Riverpod notifiers (`AutomatonProvider`, `TMEditorNotifier`,
+  `PDAEditorNotifier`), so the change is reflected instantly across the
+  workspace.【F:lib/presentation/widgets/automaton_canvas_native.dart†L212-L308】【F:lib/presentation/widgets/tm_canvas_native.dart†L170-L306】【F:lib/presentation/widgets/pda_canvas_native.dart†L240-L360】
 * **Highlight Playback** – running a simulation pushes highlight payloads into
   the controller via the `FlNodesHighlightController` interface. The canvas
   updates instantly and clears highlights when the simulator stops.【F:lib/core/services/simulation_highlight_service.dart†L6-L74】【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L36-L45】

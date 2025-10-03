@@ -3,7 +3,8 @@ import 'dart:math' as math;
 
 import 'package:fl_nodes/fl_nodes.dart';
 // ignore: implementation_imports
-import 'package:fl_nodes/src/core/models/events.dart' show DragSelectionEndEvent;
+import 'package:fl_nodes/src/core/models/events.dart'
+    show DragSelectionEndEvent, NodeEditorEvent;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vector_math/vector_math_64.dart';
@@ -82,6 +83,7 @@ class _RecordingPdaEditorNotifier extends PDAEditorNotifier {
     bool? isLambdaInput,
     bool? isLambdaPop,
     bool? isLambdaPush,
+    Vector2? controlPoint,
   }) {
     transitionCalls.add({
       'id': id,
@@ -94,6 +96,7 @@ class _RecordingPdaEditorNotifier extends PDAEditorNotifier {
       'isLambdaInput': isLambdaInput,
       'isLambdaPop': isLambdaPop,
       'isLambdaPush': isLambdaPush,
+      'controlPoint': controlPoint,
     });
     return null;
   }
@@ -102,6 +105,16 @@ class _RecordingPdaEditorNotifier extends PDAEditorNotifier {
   PDA? removeTransition({required String id}) {
     return null;
   }
+}
+
+class _FakeLinkGeometryEvent extends NodeEditorEvent {
+  _FakeLinkGeometryEvent({
+    required this.linkId,
+    required this.controlPoint,
+  }) : super(id: 'geometry');
+
+  final String linkId;
+  final Offset? controlPoint;
 }
 
 Future<void> _flushEvents() async {
@@ -219,6 +232,74 @@ void main() {
       expect(encodedEdge.isLambdaPush, isFalse);
       expect(encodedEdge.controlPointX, closeTo(24, 0.0001));
       expect(encodedEdge.controlPointY, closeTo(32, 0.0001));
+    });
+
+    test('captures control point updates for PDA transitions', () async {
+      final q0 = State(
+        id: 'q0',
+        label: 'q0',
+        position: Vector2.zero(),
+        isInitial: true,
+      );
+      final q1 = State(
+        id: 'q1',
+        label: 'q1',
+        position: Vector2(140, 80),
+      );
+      final transition = PDATransition(
+        id: 't0',
+        fromState: q0,
+        toState: q1,
+        label: 'a, Z/AZ',
+        controlPoint: Vector2.zero(),
+        type: TransitionType.deterministic,
+        inputSymbol: 'a',
+        popSymbol: 'Z',
+        pushSymbol: 'AZ',
+        isLambdaInput: false,
+        isLambdaPop: false,
+        isLambdaPush: false,
+      );
+      final pda = PDA(
+        id: 'pda-ctrl',
+        name: 'control point test',
+        states: {q0, q1},
+        transitions: {transition},
+        alphabet: {'a'},
+        initialState: q0,
+        acceptingStates: {q1},
+        created: DateTime.utc(2024, 1, 1),
+        modified: DateTime.utc(2024, 1, 1),
+        bounds: const math.Rectangle<double>(0, 0, 400, 300),
+        stackAlphabet: {'Z', 'A'},
+        initialStackSymbol: 'Z',
+        zoomLevel: 1,
+        panOffset: Vector2.zero(),
+      );
+
+      controller.synchronize(pda);
+      notifier.transitionCalls.clear();
+
+      controller.controller.eventBus.emit(
+        _FakeLinkGeometryEvent(
+          linkId: 't0',
+          controlPoint: const Offset(60, 18),
+        ),
+      );
+
+      await _flushEvents();
+
+      final edge = controller.edgeById('t0');
+      expect(edge, isNotNull);
+      expect(edge!.controlPointX, closeTo(60, 1e-6));
+      expect(edge.controlPointY, closeTo(18, 1e-6));
+
+      expect(notifier.transitionCalls, isNotEmpty);
+      final lastCall = notifier.transitionCalls.last;
+      final Vector2? recorded = lastCall['controlPoint'] as Vector2?;
+      expect(recorded, isNotNull);
+      expect(recorded!.x, closeTo(60, 1e-6));
+      expect(recorded.y, closeTo(18, 1e-6));
     });
 
     test('captures AddNodeEvent data for PDA states', () async {

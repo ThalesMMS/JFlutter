@@ -13,6 +13,7 @@ import 'fl_nodes_automaton_mapper.dart';
 import 'fl_nodes_canvas_models.dart';
 import 'fl_nodes_highlight_controller.dart';
 import 'fl_nodes_label_field_editor.dart';
+import 'link_geometry_event_utils.dart';
 
 /// Controller that keeps the [FlNodeEditorController] in sync with the
 /// [AutomatonProvider].
@@ -257,6 +258,12 @@ class FlNodesCanvasController implements FlNodesHighlightController {
       return;
     }
 
+    final geometryPayload = parseLinkGeometryEvent(event);
+    if (geometryPayload != null) {
+      _handleLinkGeometryEvent(geometryPayload);
+      return;
+    }
+
     if (event is AddNodeEvent) {
       _handleNodeAdded(event.node);
     } else if (event is RemoveNodeEvent) {
@@ -270,6 +277,39 @@ class FlNodesCanvasController implements FlNodesHighlightController {
     } else if (event is RemoveLinkEvent) {
       _handleLinkRemoved(event.link);
     }
+  }
+
+  void _handleLinkGeometryEvent(LinkGeometryEventPayload payload) {
+    final edge = _edges[payload.linkId];
+    if (edge == null) {
+      return;
+    }
+
+    if (!payload.hasControlPoint) {
+      return;
+    }
+
+    final double updatedX = payload.controlPoint?.dx ?? 0;
+    final double updatedY = payload.controlPoint?.dy ?? 0;
+    if ((edge.controlPointX ?? 0) == updatedX &&
+        (edge.controlPointY ?? 0) == updatedY) {
+      return;
+    }
+
+    final updatedEdge = edge.copyWith(
+      controlPointX: updatedX,
+      controlPointY: updatedY,
+    );
+    _edges[payload.linkId] = updatedEdge;
+
+    _provider.addOrUpdateTransition(
+      id: updatedEdge.id,
+      fromStateId: updatedEdge.fromStateId,
+      toStateId: updatedEdge.toStateId,
+      label: updatedEdge.label,
+      controlPointX: updatedX,
+      controlPointY: updatedY,
+    );
   }
 
   void _handleNodeAdded(NodeInstance node) {

@@ -5,12 +5,9 @@ import '../../core/entities/automaton_entity.dart';
 import '../../core/models/fsa.dart';
 import '../providers/algorithm_provider.dart';
 import '../providers/automaton_provider.dart';
-import '../providers/settings_provider.dart';
 import '../widgets/algorithm_panel.dart';
 import '../widgets/automaton_canvas.dart';
-import '../widgets/draw2d_canvas_view.dart';
 import '../widgets/draw2d_canvas_toolbar.dart';
-import '../widgets/draw2d_platform_support.dart';
 import '../widgets/simulation_panel.dart';
 import 'grammar_page.dart';
 import 'regex_page.dart';
@@ -362,14 +359,6 @@ class _FSAPageState extends ConsumerState<FSAPage> {
 
     if (kIsWeb) {
       return buildCanvasWithToolbar(buildAutomatonCanvas());
-    }
-
-    final settings = ref.watch(settingsProvider);
-    final useDraw2dCanvas =
-        settings.useDraw2dCanvas && isDraw2dWebViewSupported();
-
-    if (useDraw2dCanvas) {
-      return buildCanvasWithToolbar(const Draw2DCanvasView());
     }
 
     return buildCanvasWithToolbar(buildAutomatonCanvas());

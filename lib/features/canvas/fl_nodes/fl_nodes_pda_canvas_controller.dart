@@ -1,0 +1,316 @@
+import 'dart:async';
+
+import 'package:fl_nodes/fl_nodes.dart';
+import 'package:flutter/material.dart';
+
+import '../../../core/models/pda.dart';
+import '../../../presentation/providers/pda_editor_provider.dart';
+import 'fl_nodes_canvas_models.dart';
+import 'fl_nodes_label_field_editor.dart';
+import 'fl_nodes_pda_mapper.dart';
+
+/// Controller responsible for synchronising the fl_nodes editor with the
+/// [PDAEditorNotifier].
+class FlNodesPdaCanvasController {
+  FlNodesPdaCanvasController({
+    required PDAEditorNotifier editorNotifier,
+    FlNodeEditorController? editorController,
+  })  : _notifier = editorNotifier,
+        controller = editorController ?? FlNodeEditorController() {
+    _registerPrototypes();
+    _subscription = controller.eventBus.events.listen(_handleEvent);
+  }
+
+  final PDAEditorNotifier _notifier;
+  final FlNodeEditorController controller;
+
+  final Map<String, FlNodesCanvasNode> _nodes = {};
+  final Map<String, FlNodesCanvasEdge> _edges = {};
+  StreamSubscription<NodeEditorEvent>? _subscription;
+  bool _isSynchronizing = false;
+
+  int get nodeCount => _nodes.length;
+  int get edgeCount => _edges.length;
+  Iterable<FlNodesCanvasNode> get nodes => _nodes.values;
+  Iterable<FlNodesCanvasEdge> get edges => _edges.values;
+  FlNodesCanvasNode? nodeById(String id) => _nodes[id];
+  FlNodesCanvasEdge? edgeById(String id) => _edges[id];
+
+  static const String _statePrototypeId = 'pda_state';
+  static const String _inPortId = 'incoming';
+  static const String _outPortId = 'outgoing';
+  static const String _labelFieldId = 'label';
+
+  late final ControlInputPortPrototype _inputPortPrototype =
+      ControlInputPortPrototype(
+    idName: _inPortId,
+    displayName: (_) => 'Entrada',
+  );
+
+  late final ControlOutputPortPrototype _outputPortPrototype =
+      ControlOutputPortPrototype(
+    idName: _outPortId,
+    displayName: (_) => 'Saída',
+  );
+
+  late final FieldPrototype _labelFieldPrototype = FieldPrototype(
+    idName: _labelFieldId,
+    displayName: (_) => 'Rótulo',
+    dataType: String,
+    defaultData: '',
+    style: const FlFieldStyle(),
+    visualizerBuilder: (value) {
+      final text = (value as String?)?.trim();
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Text(
+          text == null || text.isEmpty ? 'Sem nome' : text,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+      );
+    },
+    editorBuilder: (
+      context,
+      removeOverlay,
+      value,
+      setData,
+    ) {
+      return FlNodesLabelFieldEditor(
+        initialValue: (value as String?) ?? '',
+        onSubmit: (label) {
+          setData(label, eventType: FieldEventType.submit);
+          removeOverlay();
+        },
+        onCancel: () {
+          setData(value, eventType: FieldEventType.cancel);
+          removeOverlay();
+        },
+      );
+    },
+  );
+
+  late final NodePrototype _statePrototype = NodePrototype(
+    idName: _statePrototypeId,
+    displayName: (_) => 'Estado',
+    description: (_) => 'Estado do autômato com pilha',
+    ports: [_inputPortPrototype, _outputPortPrototype],
+    fields: [_labelFieldPrototype],
+    onExecute: (
+      ports,
+      fields,
+      execState,
+      forward,
+      put,
+    ) async {},
+  );
+
+  void dispose() {
+    _subscription?.cancel();
+    controller.dispose();
+  }
+
+  void _registerPrototypes() {
+    controller.registerNodePrototype(_statePrototype);
+  }
+
+  void synchronize(PDA? automaton) {
+    final snapshot = FlNodesPdaMapper.toSnapshot(automaton);
+    _isSynchronizing = true;
+    controller.clear();
+    _nodes
+      ..clear()
+      ..addEntries(snapshot.nodes.map((node) => MapEntry(node.id, node)));
+    _edges
+      ..clear()
+      ..addEntries(snapshot.edges.map((edge) => MapEntry(edge.id, edge)));
+
+    for (final node in snapshot.nodes) {
+      controller.addNodeFromExisting(
+        _buildNodeInstance(node),
+        isHandled: true,
+      );
+    }
+
+    for (final edge in snapshot.edges) {
+      controller.addLinkFromExisting(
+        _buildLink(edge),
+        isHandled: true,
+      );
+    }
+
+    _isSynchronizing = false;
+  }
+
+  NodeInstance _buildNodeInstance(FlNodesCanvasNode node) {
+    final ports = {
+      _inPortId: PortInstance(
+        prototype: _inputPortPrototype,
+        state: PortState(),
+      ),
+      _outPortId: PortInstance(
+        prototype: _outputPortPrototype,
+        state: PortState(),
+      ),
+    };
+
+    final fields = {
+      _labelFieldId: FieldInstance(
+        prototype: _labelFieldPrototype,
+        data: node.label,
+      ),
+    };
+
+    return NodeInstance(
+      id: node.id,
+      prototype: _statePrototype,
+      ports: ports,
+      fields: fields,
+      state: NodeState(),
+      offset: Offset(node.x, node.y),
+    );
+  }
+
+  Link _buildLink(FlNodesCanvasEdge edge) {
+    return Link(
+      id: edge.id,
+      fromTo: (
+        from: edge.fromStateId,
+        to: _outPortId,
+        fromPort: edge.toStateId,
+        toPort: _inPortId,
+      ),
+      state: LinkState(),
+    );
+  }
+
+  void _handleEvent(NodeEditorEvent event) {
+    if (_isSynchronizing || event.isHandled) {
+      return;
+    }
+
+    if (event is AddNodeEvent) {
+      _handleNodeAdded(event.node);
+    } else if (event is RemoveNodeEvent) {
+      _handleNodeRemoved(event.node);
+    } else if (event is DragSelectionEndEvent) {
+      _handleSelectionDragged(event.nodeIds);
+    } else if (event is NodeFieldEvent) {
+      _handleNodeField(event);
+    } else if (event is AddLinkEvent) {
+      _handleLinkAdded(event.link);
+    } else if (event is RemoveLinkEvent) {
+      _handleLinkRemoved(event.link);
+    }
+  }
+
+  void _handleNodeAdded(NodeInstance node) {
+    final label = _resolveLabel(node);
+    final canvasNode = FlNodesCanvasNode(
+      id: node.id,
+      label: label,
+      x: node.offset.dx,
+      y: node.offset.dy,
+      isInitial: _nodes.isEmpty,
+      isAccepting: false,
+    );
+    _nodes[node.id] = canvasNode;
+    _notifier.addOrUpdateState(
+      id: canvasNode.id,
+      label: canvasNode.label,
+      x: canvasNode.x,
+      y: canvasNode.y,
+    );
+  }
+
+  void _handleNodeRemoved(NodeInstance node) {
+    _nodes.remove(node.id);
+    final orphanedEdges = _edges.entries
+        .where((entry) =>
+            entry.value.fromStateId == node.id || entry.value.toStateId == node.id)
+        .map((entry) => entry.key)
+        .toList(growable: false);
+    for (final edgeId in orphanedEdges) {
+      _edges.remove(edgeId);
+      _notifier.removeTransition(id: edgeId);
+    }
+    _notifier.removeState(id: node.id);
+  }
+
+  void _handleSelectionDragged(Set<String> nodeIds) {
+    for (final nodeId in nodeIds) {
+      final instance = controller.nodes[nodeId];
+      if (instance == null) continue;
+      final updatedNode = _nodes[nodeId]?.copyWith(
+        x: instance.offset.dx,
+        y: instance.offset.dy,
+      );
+      if (updatedNode != null) {
+        _nodes[nodeId] = updatedNode;
+      }
+      _notifier.moveState(
+        id: nodeId,
+        x: instance.offset.dx,
+        y: instance.offset.dy,
+      );
+    }
+  }
+
+  void _handleNodeField(NodeFieldEvent event) {
+    if (event.eventType != FieldEventType.submit) {
+      return;
+    }
+    final updatedNode = _nodes[event.nodeId]?.copyWith(
+      label: (event.value as String?)?.trim() ?? '',
+    );
+    if (updatedNode != null) {
+      _nodes[event.nodeId] = updatedNode;
+      _notifier.updateStateLabel(
+        id: event.nodeId,
+        label: updatedNode.label.isEmpty ? event.nodeId : updatedNode.label,
+      );
+    }
+  }
+
+  void _handleLinkAdded(Link link) {
+    final fromStateId = link.fromTo.from;
+    final toStateId = link.fromTo.fromPort;
+    final edge = FlNodesCanvasEdge(
+      id: link.id,
+      fromStateId: fromStateId,
+      toStateId: toStateId,
+      symbols: const <String>[],
+      readSymbol: '',
+      popSymbol: '',
+      pushSymbol: '',
+      isLambdaInput: true,
+      isLambdaPop: true,
+      isLambdaPush: true,
+    );
+    _edges[edge.id] = edge;
+    _notifier.upsertTransition(
+      id: edge.id,
+      fromStateId: edge.fromStateId,
+      toStateId: edge.toStateId,
+      readSymbol: edge.readSymbol,
+      popSymbol: edge.popSymbol,
+      pushSymbol: edge.pushSymbol,
+      isLambdaInput: edge.isLambdaInput,
+      isLambdaPop: edge.isLambdaPop,
+      isLambdaPush: edge.isLambdaPush,
+    );
+  }
+
+  void _handleLinkRemoved(Link link) {
+    _edges.remove(link.id);
+    _notifier.removeTransition(id: link.id);
+  }
+
+  String _resolveLabel(NodeInstance node) {
+    final field = node.fields[_labelFieldId];
+    final data = field?.data;
+    if (data is String && data.trim().isNotEmpty) {
+      return data.trim();
+    }
+    return node.id;
+  }
+}

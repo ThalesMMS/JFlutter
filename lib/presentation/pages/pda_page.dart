@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/pda.dart';
 import '../providers/pda_editor_provider.dart';
-import '../widgets/draw2d_pda_canvas_view.dart';
+import '../widgets/draw2d_canvas_toolbar.dart';
+import '../widgets/pda_canvas_native.dart';
 import '../widgets/pda_simulation_panel.dart';
 import '../widgets/pda_algorithm_panel.dart';
 
@@ -54,8 +55,6 @@ class _PDAPageState extends ConsumerState<PDAPage> {
       _transitionCount = pda.pdaTransitions.length;
       _hasUnsavedChanges = true;
     });
-
-    ref.read(pdaEditorProvider.notifier).setPda(pda);
   }
 
   @override
@@ -77,8 +76,8 @@ class _PDAPageState extends ConsumerState<PDAPage> {
               Expanded(
                 child: Container(
                   margin: const EdgeInsets.all(8),
-                  child: Draw2DPdaCanvasView(
-                    onPdaModified: _handlePdaModified,
+                  child: _buildCanvasWithToolbar(
+                    PDACanvasNative(onPdaModified: _handlePdaModified),
                   ),
                 ),
               ),
@@ -267,8 +266,8 @@ class _PDAPageState extends ConsumerState<PDAPage> {
           flex: 2,
           child: Container(
             margin: const EdgeInsets.all(8),
-            child: Draw2DPdaCanvasView(
-              onPdaModified: _handlePdaModified,
+            child: _buildCanvasWithToolbar(
+              PDACanvasNative(onPdaModified: _handlePdaModified),
             ),
           ),
         ),
@@ -347,6 +346,21 @@ class _PDAPageState extends ConsumerState<PDAPage> {
       key: key,
       label: Text('$label: $value'),
       backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+    );
+  }
+
+  Widget _buildCanvasWithToolbar(Widget canvas) {
+    return Stack(
+      children: [
+        Positioned.fill(child: canvas),
+        Positioned(
+          top: 12,
+          right: 12,
+          child: Draw2DCanvasToolbar(
+            onClear: () => ref.read(pdaEditorProvider.notifier).clear(),
+          ),
+        ),
+      ],
     );
   }
 }

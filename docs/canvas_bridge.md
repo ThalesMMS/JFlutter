@@ -53,6 +53,13 @@ native Flutter affordances:
 * **Adding states** – the "Add state" button emits `addStateAtCenter()`. Double
   clicks are reported through `AddNodeEvent`, which is normalised into
   `AutomatonProvider.addState` and persisted in the Riverpod store.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L236-L302】【F:lib/presentation/providers/automaton_provider.dart†L83-L166】
+* **Editing transitions** – selecting a link spawns the inline overlay wired to
+  the appropriate notifier. FSAs expose the label editor, while TMs and PDAs
+  surface tape and stack controls respectively. Saving routes through
+  `AutomatonProvider.updateTransitionLabel`,
+  `TMEditorNotifier.updateTransitionOperations`, or
+  `PDAEditorNotifier.upsertTransition`, ensuring metadata, alphabets, and traces
+  stay in sync.【F:lib/presentation/widgets/automaton_canvas_native.dart†L227-L269】【F:lib/presentation/widgets/tm_canvas_native.dart†L207-L259】【F:lib/presentation/widgets/pda_canvas_native.dart†L274-L336】
 * **Simulation highlights** – `SimulationHighlightService` forwards each step to
   the controller notifier. The editor decorates nodes and transitions
   immediately and clears them when `clear()` is dispatched at the end of a

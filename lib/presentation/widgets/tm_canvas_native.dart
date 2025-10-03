@@ -1,10 +1,22 @@
+import 'dart:async';
+
+import 'package:collection/collection.dart';
 import 'package:fl_nodes/fl_nodes.dart';
+import 'package:fl_nodes/src/core/models/events.dart'
+    show
+        DragSelectionEndEvent,
+        LinkDeselectionEvent,
+        LinkSelectionEvent,
+        NodeEditorEvent,
+        RemoveLinkEvent;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/tm.dart';
 import '../../core/models/tm_transition.dart';
 import '../../features/canvas/fl_nodes/fl_nodes_tm_canvas_controller.dart';
+import '../../features/canvas/fl_nodes/link_overlay_utils.dart';
+import 'transition_editors/tm_transition_operations_editor.dart';
 import '../providers/tm_editor_provider.dart';
 
 class TMCanvasNative extends ConsumerStatefulWidget {
@@ -28,6 +40,12 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
   ProviderSubscription<TMEditorState>? _subscription;
   TM? _lastDeliveredTM;
   VoidCallback? _highlightListener;
+  StreamSubscription<NodeEditorEvent>? _eventSubscription;
+  VoidCallback? _controllerListener;
+  VoidCallback? _viewportOffsetListener;
+  VoidCallback? _viewportZoomListener;
+  String? _selectedLinkId;
+  final GlobalKey _canvasKey = GlobalKey();
 
   @override
   void initState() {
@@ -63,6 +81,11 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
         }
         if (_shouldSynchronize(previous, next)) {
           _canvasController.synchronize(next.tm);
+          final currentLink = _selectedLinkId;
+          if (currentLink != null &&
+              _canvasController.edgeById(currentLink) == null) {
+            _selectedLinkId = null;
+          }
         }
       },
     );
@@ -72,6 +95,7 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
       }
     };
     _canvasController.highlightNotifier.addListener(_highlightListener!);
+    _initialiseOverlayListeners();
   }
 
   bool _shouldSynchronize(TMEditorState? previous, TMEditorState next) {
@@ -119,10 +143,48 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
       _canvasController.highlightNotifier
           .removeListener(_highlightListener!);
     }
+    _eventSubscription?.cancel();
+    if (_controllerListener != null) {
+      _canvasController.controller.removeListener(_controllerListener!);
+    }
+    if (_viewportOffsetListener != null) {
+      _canvasController.controller.viewportOffsetNotifier
+          .removeListener(_viewportOffsetListener!);
+    }
+    if (_viewportZoomListener != null) {
+      _canvasController.controller.viewportZoomNotifier
+          .removeListener(_viewportZoomListener!);
+    }
     if (_ownsController) {
       _canvasController.dispose();
     }
     super.dispose();
+  }
+
+  void _initialiseOverlayListeners() {
+    final controller = _canvasController.controller;
+    _selectedLinkId = controller.selectedLinkIds.isNotEmpty
+        ? controller.selectedLinkIds.first
+        : null;
+    _controllerListener = () {
+      if (mounted) {
+        setState(() {});
+      }
+    };
+    controller.addListener(_controllerListener!);
+    _viewportOffsetListener = () {
+      if (mounted) {
+        setState(() {});
+      }
+    };
+    controller.viewportOffsetNotifier.addListener(_viewportOffsetListener!);
+    _viewportZoomListener = () {
+      if (mounted) {
+        setState(() {});
+      }
+    };
+    controller.viewportZoomNotifier.addListener(_viewportZoomListener!);
+    _eventSubscription = controller.eventBus.events.listen(_handleEditorEvent);
   }
 
   @override
@@ -148,49 +210,51 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
     return Stack(
       children: [
         Positioned.fill(
-          child: FlNodeEditorWidget(
-            controller: _canvasController.controller,
-            overlay: () => const <FlOverlayData>[],
-            headerBuilder: (context, node, style, onToggleCollapse) {
-              final state = statesById[node.id];
-              final label = state?.label ?? node.id;
-              final isInitial = initialStateId == node.id;
-              final isAccepting = acceptingIds.contains(node.id);
-              final isNondeterministic =
-                  nondeterministicStateIds.contains(node.id);
-              final isHighlighted = highlight.stateIds.contains(node.id);
-              final colors = _resolveHeaderColors(
-                theme,
-                isHighlighted: isHighlighted,
-                isInitial: isInitial,
-                isAccepting: isAccepting,
-                isNondeterministic: isNondeterministic,
-              );
+          child: KeyedSubtree(
+            key: _canvasKey,
+            child: FlNodeEditorWidget(
+              controller: _canvasController.controller,
+              overlay: _buildOverlay,
+              headerBuilder: (context, node, style, onToggleCollapse) {
+                final state = statesById[node.id];
+                final label = state?.label ?? node.id;
+                final isInitial = initialStateId == node.id;
+                final isAccepting = acceptingIds.contains(node.id);
+                final isNondeterministic =
+                    nondeterministicStateIds.contains(node.id);
+                final isHighlighted = highlight.stateIds.contains(node.id);
+                final colors = _resolveHeaderColors(
+                  theme,
+                  isHighlighted: isHighlighted,
+                  isInitial: isInitial,
+                  isAccepting: isAccepting,
+                  isNondeterministic: isNondeterministic,
+                );
 
-              final notifier = ref.read(tmEditorProvider.notifier);
-              return _TMNodeHeader(
-                label: label,
-                isInitial: isInitial,
-                isAccepting: isAccepting,
-                isCollapsed: node.state.isCollapsed,
-                colors: colors,
-                onToggleCollapse: onToggleCollapse,
-                onToggleInitial: () {
-                  notifier.updateStateFlags(
-                    id: node.id,
-                    isInitial: !isInitial,
-                  );
-                },
-                onToggleAccepting: () {
-                  notifier.updateStateFlags(
-                    id: node.id,
-                    isAccepting: !isAccepting,
-                  );
-                },
-                initialToggleKey: Key('tm-node-${node.id}-initial-toggle'),
-                acceptingToggleKey: Key('tm-node-${node.id}-accepting-toggle'),
-              );
-            },
+                final notifier = ref.read(tmEditorProvider.notifier);
+                return _TMNodeHeader(
+                  label: label,
+                  isInitial: isInitial,
+                  isAccepting: isAccepting,
+                  isCollapsed: node.state.isCollapsed,
+                  colors: colors,
+                  onToggleCollapse: onToggleCollapse,
+                  onToggleInitial: () {
+                    notifier.updateStateFlags(
+                      id: node.id,
+                      isInitial: !isInitial,
+                    );
+                  },
+                  onToggleAccepting: () {
+                    notifier.updateStateFlags(
+                      id: node.id,
+                      isAccepting: !isAccepting,
+                    );
+                  },
+                  initialToggleKey: Key('tm-node-${node.id}-initial-toggle'),
+                  acceptingToggleKey: Key('tm-node-${node.id}-accepting-toggle'),
+                );
+              },
           ),
         ),
         if (!hasStates) const _EmptyCanvasMessage(),
@@ -218,6 +282,99 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
         !_editorStylesEqual(_lastEditorStyle!, desiredStyle)) {
       _lastEditorStyle = desiredStyle;
       controller.setStyle(desiredStyle);
+    }
+  }
+
+  List<FlOverlayData> _buildOverlay() {
+    final linkId = _selectedLinkId;
+    if (linkId == null) {
+      return const <FlOverlayData>[];
+    }
+
+    final controller = _canvasController.controller;
+    final anchor = resolveLinkAnchorWorld(
+      controller,
+      linkId,
+      _canvasController.edgeById(linkId),
+    );
+    if (anchor == null) {
+      return const <FlOverlayData>[];
+    }
+
+    final position = projectCanvasPointToOverlay(
+      controller: controller,
+      canvasKey: _canvasKey,
+      worldOffset: anchor,
+    );
+    if (position == null) {
+      return const <FlOverlayData>[];
+    }
+
+    final editorState = ref.read(tmEditorProvider);
+    final transition = editorState.transitions
+        .firstWhereOrNull((candidate) => candidate.id == linkId);
+    final edge = _canvasController.edgeById(linkId);
+    final initialRead = transition?.readSymbol ?? edge?.readSymbol ?? '';
+    final initialWrite = transition?.writeSymbol ?? edge?.writeSymbol ?? '';
+    final direction = transition?.direction ??
+        edge?.direction ??
+        TapeDirection.right;
+
+    return [
+      FlOverlayData(
+        left: position.dx,
+        top: position.dy,
+        child: FractionalTranslation(
+          translation: const Offset(-0.5, -1.0),
+          child: TmTransitionOperationsEditor(
+            key: ValueKey('tm-transition-editor-$linkId-$initialRead-$initialWrite-${direction.name}'),
+            initialRead: initialRead,
+            initialWrite: initialWrite,
+            initialDirection: direction,
+            onSubmit: ({
+              required String readSymbol,
+              required String writeSymbol,
+              required TapeDirection direction,
+            }) {
+              ref.read(tmEditorProvider.notifier).updateTransitionOperations(
+                    id: linkId,
+                    readSymbol: readSymbol,
+                    writeSymbol: writeSymbol,
+                    direction: direction,
+                  );
+            },
+            onCancel: () => controller.clearSelection(),
+          ),
+        ),
+      ),
+    ];
+  }
+
+  void _handleEditorEvent(NodeEditorEvent event) {
+    if (!mounted) {
+      return;
+    }
+    if (event is LinkSelectionEvent) {
+      final ids = event.linkIds;
+      setState(() {
+        _selectedLinkId = ids.length == 1 ? ids.first : null;
+      });
+    } else if (event is LinkDeselectionEvent) {
+      if (_selectedLinkId != null) {
+        setState(() {
+          _selectedLinkId = null;
+        });
+      }
+    } else if (event is RemoveLinkEvent) {
+      if (_selectedLinkId == event.link.id) {
+        setState(() {
+          _selectedLinkId = null;
+        });
+      }
+    } else if (event is DragSelectionEndEvent) {
+      if (_selectedLinkId != null) {
+        setState(() {});
+      }
     }
   }
 

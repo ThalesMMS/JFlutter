@@ -116,6 +116,8 @@ class FlNodesCanvasNode {
 
 /// Directed edge rendered inside the fl_nodes editor.
 class FlNodesCanvasEdge {
+  static const Object _unset = Object();
+
   const FlNodesCanvasEdge({
     required this.id,
     required this.fromStateId,
@@ -193,8 +195,8 @@ class FlNodesCanvasEdge {
     String? toStateId,
     List<String>? symbols,
     String? lambdaSymbol,
-    double? controlPointX,
-    double? controlPointY,
+    Object? controlPointX = _unset,
+    Object? controlPointY = _unset,
     String? readSymbol,
     String? writeSymbol,
     TapeDirection? direction,
@@ -206,8 +208,12 @@ class FlNodesCanvasEdge {
       toStateId: toStateId ?? this.toStateId,
       symbols: symbols ?? this.symbols,
       lambdaSymbol: lambdaSymbol ?? this.lambdaSymbol,
-      controlPointX: controlPointX ?? this.controlPointX,
-      controlPointY: controlPointY ?? this.controlPointY,
+      controlPointX: identical(controlPointX, _unset)
+          ? this.controlPointX
+          : controlPointX as double?,
+      controlPointY: identical(controlPointY, _unset)
+          ? this.controlPointY
+          : controlPointY as double?,
       readSymbol: readSymbol ?? this.readSymbol,
       writeSymbol: writeSymbol ?? this.writeSymbol,
       direction: direction ?? this.direction,

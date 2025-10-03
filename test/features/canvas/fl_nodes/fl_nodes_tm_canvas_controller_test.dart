@@ -3,7 +3,8 @@ import 'dart:math' as math;
 
 import 'package:fl_nodes/fl_nodes.dart';
 // ignore: implementation_imports
-import 'package:fl_nodes/src/core/models/events.dart' show DragSelectionEndEvent;
+import 'package:fl_nodes/src/core/models/events.dart'
+    show DragSelectionEndEvent, NodeEditorEvent;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vector_math/vector_math_64.dart';
@@ -90,6 +91,16 @@ class _RecordingTmEditorNotifier extends TMEditorNotifier {
   TM? removeTransition({required String id}) {
     return null;
   }
+}
+
+class _FakeLinkGeometryEvent extends NodeEditorEvent {
+  _FakeLinkGeometryEvent({
+    required this.linkId,
+    required this.controlPoint,
+  }) : super(id: 'geometry');
+
+  final String linkId;
+  final Offset? controlPoint;
 }
 
 Future<void> _flushEvents() async {
@@ -201,6 +212,71 @@ void main() {
       expect(encodedEdge.direction, equals(TapeDirection.right));
       expect(encodedEdge.controlPointX, closeTo(60, 0.0001));
       expect(encodedEdge.controlPointY, closeTo(20, 0.0001));
+    });
+
+    test('captures control point drags for TM transitions', () async {
+      final q0 = State(
+        id: 'q0',
+        label: 'q0',
+        position: Vector2.zero(),
+        isInitial: true,
+      );
+      final q1 = State(
+        id: 'q1',
+        label: 'halt',
+        position: Vector2(160, 90),
+      );
+      final transition = TMTransition(
+        id: 't0',
+        fromState: q0,
+        toState: q1,
+        label: '1/0,R',
+        controlPoint: Vector2.zero(),
+        readSymbol: '1',
+        writeSymbol: '0',
+        direction: TapeDirection.right,
+      );
+      final tm = TM(
+        id: 'tm-ctrl',
+        name: 'control point test',
+        states: {q0, q1},
+        transitions: {transition},
+        alphabet: {'0', '1'},
+        initialState: q0,
+        acceptingStates: {q1},
+        created: DateTime.utc(2024, 1, 1),
+        modified: DateTime.utc(2024, 1, 1),
+        bounds: const math.Rectangle<double>(0, 0, 400, 300),
+        zoomLevel: 1,
+        panOffset: Vector2.zero(),
+        tapeAlphabet: {'0', '1', 'B'},
+        blankSymbol: 'B',
+        tapeCount: 1,
+      );
+
+      controller.synchronize(tm);
+      notifier.transitionCalls.clear();
+
+      controller.controller.eventBus.emit(
+        _FakeLinkGeometryEvent(
+          linkId: 't0',
+          controlPoint: const Offset(72, 24),
+        ),
+      );
+
+      await _flushEvents();
+
+      final edge = controller.edgeById('t0');
+      expect(edge, isNotNull);
+      expect(edge!.controlPointX, closeTo(72, 1e-6));
+      expect(edge.controlPointY, closeTo(24, 1e-6));
+
+      expect(notifier.transitionCalls, isNotEmpty);
+      final lastCall = notifier.transitionCalls.last;
+      final Vector2? recorded = lastCall['controlPoint'] as Vector2?;
+      expect(recorded, isNotNull);
+      expect(recorded!.x, closeTo(72, 1e-6));
+      expect(recorded.y, closeTo(24, 1e-6));
     });
 
     test('records AddNodeEvent invocations', () async {

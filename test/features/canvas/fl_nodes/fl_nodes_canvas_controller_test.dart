@@ -3,7 +3,8 @@ import 'dart:math' as math;
 
 import 'package:fl_nodes/fl_nodes.dart';
 // ignore: implementation_imports
-import 'package:fl_nodes/src/core/models/events.dart' show DragSelectionEndEvent;
+import 'package:fl_nodes/src/core/models/events.dart'
+    show DragSelectionEndEvent, NodeEditorEvent;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vector_math/vector_math_64.dart';
@@ -120,12 +121,16 @@ class _RecordingAutomatonProvider extends AutomatonProvider {
     required String fromStateId,
     required String toStateId,
     String? label,
+    double? controlPointX,
+    double? controlPointY,
   }) {
     transitionCalls.add({
       'id': id,
       'fromStateId': fromStateId,
       'toStateId': toStateId,
       'label': label,
+      'controlPointX': controlPointX,
+      'controlPointY': controlPointY,
     });
   }
 
@@ -133,6 +138,16 @@ class _RecordingAutomatonProvider extends AutomatonProvider {
   void removeTransition({required String id}) {
     // Intentionally left blank for tests.
   }
+}
+
+class _FakeLinkGeometryEvent extends NodeEditorEvent {
+  _FakeLinkGeometryEvent({
+    required this.linkId,
+    required this.controlPoint,
+  }) : super(id: 'geometry');
+
+  final String linkId;
+  final Offset? controlPoint;
 }
 
 Future<void> _flushEvents() async {
@@ -234,6 +249,60 @@ void main() {
       expect(encodedEdge!.fromStateId, equals('q0'));
       expect(encodedEdge.toStateId, equals('q1'));
       expect(encodedEdge.symbols, equals(['a']));
+    });
+
+    test('updates control points when link geometry changes', () async {
+      final q0 = State(
+        id: 'q0',
+        label: 'q0',
+        position: Vector2.zero(),
+        isInitial: true,
+      );
+      final q1 = State(
+        id: 'q1',
+        label: 'q1',
+        position: Vector2(120, 60),
+      );
+      final transition = FSATransition(
+        id: 't0',
+        fromState: q0,
+        toState: q1,
+        label: 'a',
+      );
+      final automaton = FSA(
+        id: 'a1',
+        name: 'control point test',
+        states: {q0, q1},
+        transitions: {transition},
+        alphabet: const {'a'},
+        initialState: q0,
+        acceptingStates: const {},
+        created: DateTime.utc(2024, 1, 1),
+        modified: DateTime.utc(2024, 1, 2),
+        bounds: const math.Rectangle<double>(0, 0, 400, 300),
+      );
+
+      controller.synchronize(automaton);
+      provider.transitionCalls.clear();
+
+      controller.controller.eventBus.emit(
+        _FakeLinkGeometryEvent(
+          linkId: 't0',
+          controlPoint: const Offset(48, 16),
+        ),
+      );
+
+      await _flushEvents();
+
+      final edge = controller.edgeById('t0');
+      expect(edge, isNotNull);
+      expect(edge!.controlPointX, closeTo(48, 1e-6));
+      expect(edge.controlPointY, closeTo(16, 1e-6));
+
+      expect(provider.transitionCalls, isNotEmpty);
+      final lastCall = provider.transitionCalls.last;
+      expect(lastCall['controlPointX'], closeTo(48, 1e-6));
+      expect(lastCall['controlPointY'], closeTo(16, 1e-6));
     });
 
     test('propagates AddNodeEvent payload to provider', () async {

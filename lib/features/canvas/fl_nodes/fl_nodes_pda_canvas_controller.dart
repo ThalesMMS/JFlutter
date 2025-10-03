@@ -5,6 +5,7 @@ import 'package:fl_nodes/fl_nodes.dart';
 import 'package:fl_nodes/src/core/models/events.dart'
     show DragSelectionEndEvent;
 import 'package:flutter/material.dart';
+import 'package:vector_math/vector_math_64.dart';
 
 import '../../../core/models/pda.dart';
 import '../../../core/models/simulation_highlight.dart';
@@ -13,6 +14,7 @@ import 'fl_nodes_canvas_models.dart';
 import 'fl_nodes_highlight_controller.dart';
 import 'fl_nodes_label_field_editor.dart';
 import 'fl_nodes_pda_mapper.dart';
+import 'link_geometry_event_utils.dart';
 
 /// Controller responsible for synchronising the fl_nodes editor with the
 /// [PDAEditorNotifier].
@@ -253,6 +255,12 @@ class FlNodesPdaCanvasController implements FlNodesHighlightController {
       return;
     }
 
+    final geometryPayload = parseLinkGeometryEvent(event);
+    if (geometryPayload != null) {
+      _handleLinkGeometryEvent(geometryPayload);
+      return;
+    }
+
     if (event is AddNodeEvent) {
       _handleNodeAdded(event.node);
     } else if (event is RemoveNodeEvent) {
@@ -266,6 +274,46 @@ class FlNodesPdaCanvasController implements FlNodesHighlightController {
     } else if (event is RemoveLinkEvent) {
       _handleLinkRemoved(event.link);
     }
+  }
+
+  void _handleLinkGeometryEvent(LinkGeometryEventPayload payload) {
+    final edge = _edges[payload.linkId];
+    if (edge == null) {
+      return;
+    }
+
+    if (!payload.hasControlPoint) {
+      return;
+    }
+
+    final double updatedX = payload.controlPoint?.dx ?? 0;
+    final double updatedY = payload.controlPoint?.dy ?? 0;
+    if ((edge.controlPointX ?? 0) == updatedX &&
+        (edge.controlPointY ?? 0) == updatedY) {
+      return;
+    }
+
+    final updatedEdge = edge.copyWith(
+      controlPointX: updatedX,
+      controlPointY: updatedY,
+    );
+    _edges[payload.linkId] = updatedEdge;
+
+    final vectorControlPoint = Vector2(updatedX, updatedY);
+
+    _notifier.upsertTransition(
+      id: updatedEdge.id,
+      fromStateId: updatedEdge.fromStateId,
+      toStateId: updatedEdge.toStateId,
+      label: updatedEdge.label,
+      readSymbol: updatedEdge.readSymbol,
+      popSymbol: updatedEdge.popSymbol,
+      pushSymbol: updatedEdge.pushSymbol,
+      isLambdaInput: updatedEdge.isLambdaInput,
+      isLambdaPop: updatedEdge.isLambdaPop,
+      isLambdaPush: updatedEdge.isLambdaPush,
+      controlPoint: vectorControlPoint,
+    );
   }
 
   void _handleNodeAdded(NodeInstance node) {

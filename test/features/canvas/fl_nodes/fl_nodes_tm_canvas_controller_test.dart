@@ -9,6 +9,7 @@ import 'package:vector_math/vector_math_64.dart';
 import 'package:jflutter/core/models/state.dart';
 import 'package:jflutter/core/models/tm.dart';
 import 'package:jflutter/core/models/tm_transition.dart';
+import 'package:jflutter/core/models/simulation_highlight.dart';
 import 'package:jflutter/features/canvas/fl_nodes/fl_nodes_tm_canvas_controller.dart';
 import 'package:jflutter/presentation/providers/tm_editor_provider.dart';
 
@@ -298,6 +299,118 @@ void main() {
       expect(call['readSymbol'], equals(''));
       expect(call['writeSymbol'], equals(''));
       expect(call['direction'], equals(TapeDirection.right));
+    });
+
+    test('applyHighlight toggles TM transitions without changing selection', () {
+      final q0 = State(
+        id: 'q0',
+        label: 'q0',
+        position: Vector2.zero(),
+        isInitial: true,
+      );
+      final q1 = State(
+        id: 'q1',
+        label: 'halt',
+        position: Vector2(120, 80),
+        isAccepting: true,
+      );
+      final transition = TMTransition(
+        id: 't0',
+        fromState: q0,
+        toState: q1,
+        label: '1/0,R',
+        controlPoint: Vector2(60, 20),
+        readSymbol: '1',
+        writeSymbol: '0',
+        direction: TapeDirection.right,
+      );
+      final tm = TM(
+        id: 'tm1',
+        name: 'Binary inverter',
+        states: {q0, q1},
+        transitions: {transition},
+        alphabet: {'0', '1'},
+        initialState: q0,
+        acceptingStates: {q1},
+        created: DateTime.utc(2024, 1, 1),
+        modified: DateTime.utc(2024, 1, 2),
+        bounds: const math.Rectangle<double>(0, 0, 400, 300),
+        zoomLevel: 1,
+        panOffset: Vector2.zero(),
+        tapeAlphabet: {'0', '1', 'B'},
+        blankSymbol: 'B',
+        tapeCount: 1,
+      );
+
+      controller.synchronize(tm);
+      final editor = controller.controller;
+
+      controller.applyHighlight(
+        const SimulationHighlight(transitionIds: {'t0'}),
+      );
+
+      expect(editor.linksById['t0']!.state.isSelected, isTrue);
+      expect(editor.selectedLinkIds, isEmpty);
+
+      controller.synchronize(tm);
+      expect(editor.linksById['t0']!.state.isSelected, isTrue);
+
+      controller.clearHighlight();
+      expect(editor.linksById['t0']!.state.isSelected, isFalse);
+    });
+
+    test('clearHighlight retains TM manual selections', () {
+      final q0 = State(
+        id: 'q0',
+        label: 'q0',
+        position: Vector2.zero(),
+        isInitial: true,
+      );
+      final q1 = State(
+        id: 'q1',
+        label: 'halt',
+        position: Vector2(120, 80),
+        isAccepting: true,
+      );
+      final transition = TMTransition(
+        id: 't0',
+        fromState: q0,
+        toState: q1,
+        label: '1/0,R',
+        controlPoint: Vector2(60, 20),
+        readSymbol: '1',
+        writeSymbol: '0',
+        direction: TapeDirection.right,
+      );
+      final tm = TM(
+        id: 'tm1',
+        name: 'Binary inverter',
+        states: {q0, q1},
+        transitions: {transition},
+        alphabet: {'0', '1'},
+        initialState: q0,
+        acceptingStates: {q1},
+        created: DateTime.utc(2024, 1, 1),
+        modified: DateTime.utc(2024, 1, 2),
+        bounds: const math.Rectangle<double>(0, 0, 400, 300),
+        zoomLevel: 1,
+        panOffset: Vector2.zero(),
+        tapeAlphabet: {'0', '1', 'B'},
+        blankSymbol: 'B',
+        tapeCount: 1,
+      );
+
+      controller.synchronize(tm);
+      final editor = controller.controller;
+
+      editor.selectLinkById('t0');
+      controller.applyHighlight(
+        const SimulationHighlight(transitionIds: {'t0'}),
+      );
+      controller.clearHighlight();
+
+      expect(editor.selectedLinkIds, contains('t0'));
+      expect(editor.linksById['t0']!.state.isSelected, isTrue);
     });
   });
 }

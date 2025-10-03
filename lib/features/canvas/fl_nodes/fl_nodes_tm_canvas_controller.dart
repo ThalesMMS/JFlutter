@@ -31,6 +31,7 @@ class FlNodesTmCanvasController implements FlNodesHighlightController {
   final Map<String, FlNodesCanvasEdge> _edges = {};
   final ValueNotifier<SimulationHighlight> highlightNotifier =
       ValueNotifier(SimulationHighlight.empty);
+  final Set<String> _highlightedTransitionIds = <String>{};
   StreamSubscription<NodeEditorEvent>? _subscription;
   bool _isSynchronizing = false;
 
@@ -175,11 +176,13 @@ class FlNodesTmCanvasController implements FlNodesHighlightController {
 
   @override
   void applyHighlight(SimulationHighlight highlight) {
+    _updateLinkHighlights(highlight.transitionIds);
     highlightNotifier.value = highlight;
   }
 
   @override
   void clearHighlight() {
+    _updateLinkHighlights(const <String>{});
     highlightNotifier.value = SimulationHighlight.empty;
   }
 
@@ -210,6 +213,11 @@ class FlNodesTmCanvasController implements FlNodesHighlightController {
         _buildLink(edge),
         isHandled: true,
       );
+    }
+
+    if (_highlightedTransitionIds.isNotEmpty ||
+        highlightNotifier.value.transitionIds.isNotEmpty) {
+      _updateLinkHighlights(_highlightedTransitionIds);
     }
 
     _isSynchronizing = false;
@@ -376,5 +384,38 @@ class FlNodesTmCanvasController implements FlNodesHighlightController {
       return data.trim();
     }
     return node.id;
+  }
+
+  void _updateLinkHighlights(Set<String> transitionIds) {
+    final desiredIds = Set<String>.from(transitionIds);
+    final idsToVisit = <String>{
+      ..._highlightedTransitionIds,
+      ...desiredIds,
+    };
+
+    final manualSelection = controller.selectedLinkIds.toSet();
+    var hasChanged = false;
+
+    for (final linkId in idsToVisit) {
+      final link = controller.linksById[linkId];
+      if (link == null) {
+        continue;
+      }
+      final shouldSelect =
+          desiredIds.contains(linkId) || manualSelection.contains(linkId);
+      if (link.state.isSelected != shouldSelect) {
+        link.state.isSelected = shouldSelect;
+        hasChanged = true;
+      }
+    }
+
+    if (hasChanged) {
+      controller.linksDataDirty = true;
+      controller.notifyListeners();
+    }
+
+    _highlightedTransitionIds
+      ..clear()
+      ..addAll(desiredIds);
   }
 }

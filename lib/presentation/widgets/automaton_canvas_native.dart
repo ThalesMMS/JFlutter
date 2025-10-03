@@ -72,6 +72,8 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
     _highlightListener = () {
       if (mounted) {
         setState(() {});
+        final editor = _canvasController.controller;
+        editor.notifyListeners();
       }
     };
     _canvasController.highlightNotifier.addListener(_highlightListener!);

@@ -30,6 +30,11 @@ fl_nodes primitives:
   area. The controller receives either `addStateAtCenter()` or an
   `AddNodeEvent`, then forwards the mutation to `AutomatonProvider` so the new
   state appears across the app.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L236-L302】【F:lib/presentation/providers/automaton_provider.dart†L83-L166】
+* **Edit transitions** – select a link to reveal the inline editor anchored to
+  that edge. FSAs expose a label field, while TMs and PDAs surface tape or stack
+  controls. Saving commits the change through the respective notifiers
+  (`AutomatonProvider`, `TMEditorNotifier`, `PDAEditorNotifier`), keeping the
+  transition list, alphabets, and metadata synchronised.【F:lib/presentation/widgets/automaton_canvas_native.dart†L227-L269】【F:lib/presentation/widgets/tm_canvas_native.dart†L207-L259】【F:lib/presentation/widgets/pda_canvas_native.dart†L274-L336】
 * **Toggle initial/accepting flags** – tap the play/check icons in a state's
   header to mark it as initial or accepting. The canvases call the respective
   Riverpod notifiers (`AutomatonProvider`, `TMEditorNotifier`,
@@ -71,8 +76,9 @@ Troubleshooting
 * **Canvas not updating**: check that `_isSynchronizing` isn't stuck to `true`
   (e.g., due to an exception while rebuilding nodes). If so, call
   `synchronize()` again after fixing the underlying data issue.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L96-L234】
-* **Labels not sticking**: ensure label edits trigger a submit event—pressing
-  <kbd>Enter</kbd> commits changes, whereas <kbd>Escape</kbd> cancels and keeps
-  the previous value by design.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L304-L327】
+* **Transition edits not sticking**: use the inline editor's **Save** button
+  (or <kbd>Enter</kbd> inside the field) to submit changes. Selecting another
+  edge or pressing **Cancel** dismisses the overlay without persisting
+  updates.【F:lib/presentation/widgets/automaton_canvas_native.dart†L247-L265】【F:lib/presentation/widgets/tm_canvas_native.dart†L233-L257】【F:lib/presentation/widgets/pda_canvas_native.dart†L309-L333】
 * **Highlights not clearing**: verify the `SimulationHighlightService` channel
   is registered and that `clear()` is called after simulations complete.【F:lib/core/services/simulation_highlight_service.dart†L6-L74】

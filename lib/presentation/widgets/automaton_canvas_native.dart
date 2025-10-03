@@ -1,4 +1,14 @@
+import 'dart:async';
+
+import 'package:collection/collection.dart';
 import 'package:fl_nodes/fl_nodes.dart';
+import 'package:fl_nodes/src/core/models/events.dart'
+    show
+        DragSelectionEndEvent,
+        LinkDeselectionEvent,
+        LinkSelectionEvent,
+        NodeEditorEvent,
+        RemoveLinkEvent;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +19,8 @@ import '../../core/models/simulation_highlight.dart';
 import '../../core/models/simulation_result.dart';
 import '../../core/models/state.dart' as automaton_state;
 import '../../features/canvas/fl_nodes/fl_nodes_canvas_controller.dart';
+import '../../features/canvas/fl_nodes/fl_nodes_label_field_editor.dart';
+import '../../features/canvas/fl_nodes/link_overlay_utils.dart';
 import '../providers/automaton_provider.dart';
 
 /// Shared automaton canvas backed by the fl_nodes editor. This replaces the
@@ -59,6 +71,11 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
   Set<String> _visitedStateIds = const {};
   String? _currentStateId;
   VoidCallback? _highlightListener;
+  StreamSubscription<NodeEditorEvent>? _eventSubscription;
+  VoidCallback? _controllerListener;
+  VoidCallback? _viewportOffsetListener;
+  VoidCallback? _viewportZoomListener;
+  String? _selectedLinkId;
   SimulationHighlight? _lastHighlight;
 
   @override
@@ -90,6 +107,7 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
       setState(() {});
     };
     _canvasController.highlightNotifier.addListener(_highlightListener!);
+    _initialiseOverlayListeners();
   }
 
   @override
@@ -104,6 +122,11 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
     final automatonChanged = !identical(oldWidget.automaton, widget.automaton);
     if (automatonChanged) {
       _canvasController.synchronize(widget.automaton);
+      final currentLink = _selectedLinkId;
+      if (currentLink != null &&
+          _canvasController.edgeById(currentLink) == null) {
+        _selectedLinkId = null;
+      }
     }
 
     if (automatonChanged ||
@@ -121,10 +144,48 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
     if (_highlightListener != null) {
       _canvasController.highlightNotifier.removeListener(_highlightListener!);
     }
+    _eventSubscription?.cancel();
+    if (_controllerListener != null) {
+      _canvasController.controller.removeListener(_controllerListener!);
+    }
+    if (_viewportOffsetListener != null) {
+      _canvasController.controller.viewportOffsetNotifier
+          .removeListener(_viewportOffsetListener!);
+    }
+    if (_viewportZoomListener != null) {
+      _canvasController.controller.viewportZoomNotifier
+          .removeListener(_viewportZoomListener!);
+    }
     if (_ownsController) {
       _canvasController.dispose();
     }
     super.dispose();
+  }
+
+  void _initialiseOverlayListeners() {
+    final controller = _canvasController.controller;
+    _selectedLinkId = controller.selectedLinkIds.isNotEmpty
+        ? controller.selectedLinkIds.first
+        : null;
+    _controllerListener = () {
+      if (mounted) {
+        setState(() {});
+      }
+    };
+    controller.addListener(_controllerListener!);
+    _viewportOffsetListener = () {
+      if (mounted) {
+        setState(() {});
+      }
+    };
+    controller.viewportOffsetNotifier.addListener(_viewportOffsetListener!);
+    _viewportZoomListener = () {
+      if (mounted) {
+        setState(() {});
+      }
+    };
+    controller.viewportZoomNotifier.addListener(_viewportZoomListener!);
+    _eventSubscription = controller.eventBus.events.listen(_handleEditorEvent);
   }
 
   void _applyEditorStyle(ThemeData theme) {
@@ -190,6 +251,87 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
     );
   }
 
+  List<FlOverlayData> _buildOverlay() {
+    final linkId = _selectedLinkId;
+    if (linkId == null) {
+      return const <FlOverlayData>[];
+    }
+
+    final controller = _canvasController.controller;
+    final anchor = resolveLinkAnchorWorld(
+      controller,
+      linkId,
+      _canvasController.edgeById(linkId),
+    );
+    if (anchor == null) {
+      return const <FlOverlayData>[];
+    }
+
+    final position = projectCanvasPointToOverlay(
+      controller: controller,
+      canvasKey: widget.canvasKey,
+      worldOffset: anchor,
+    );
+    if (position == null) {
+      return const <FlOverlayData>[];
+    }
+
+    final transition = widget.automaton?.fsaTransitions
+        .firstWhereOrNull((candidate) => candidate.id == linkId);
+    final label = transition?.label ??
+        _canvasController.edgeById(linkId)?.label ??
+        '';
+
+    return [
+      FlOverlayData(
+        left: position.dx,
+        top: position.dy,
+        child: FractionalTranslation(
+          translation: const Offset(-0.5, -1.0),
+          child: FlNodesLabelFieldEditor(
+            key: ValueKey('transition-editor-$linkId-$label'),
+            initialValue: label,
+            onSubmit: (value) {
+              ref.read(automatonProvider.notifier).updateTransitionLabel(
+                    id: linkId,
+                    label: value,
+                  );
+            },
+            onCancel: () => controller.clearSelection(),
+          ),
+        ),
+      ),
+    ];
+  }
+
+  void _handleEditorEvent(NodeEditorEvent event) {
+    if (!mounted) {
+      return;
+    }
+    if (event is LinkSelectionEvent) {
+      final ids = event.linkIds;
+      setState(() {
+        _selectedLinkId = ids.length == 1 ? ids.first : null;
+      });
+    } else if (event is LinkDeselectionEvent) {
+      if (_selectedLinkId != null) {
+        setState(() {
+          _selectedLinkId = null;
+        });
+      }
+    } else if (event is RemoveLinkEvent) {
+      if (_selectedLinkId == event.link.id) {
+        setState(() {
+          _selectedLinkId = null;
+        });
+      }
+    } else if (event is DragSelectionEndEvent) {
+      if (_selectedLinkId != null) {
+        setState(() {});
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -206,7 +348,7 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
             key: widget.canvasKey,
             child: FlNodeEditorWidget(
               controller: _canvasController.controller,
-              overlay: () => const <FlOverlayData>[],
+              overlay: _buildOverlay,
               headerBuilder: (context, node, style, onToggleCollapse) {
                 final automatonNotifier =
                     ref.read(automatonProvider.notifier);

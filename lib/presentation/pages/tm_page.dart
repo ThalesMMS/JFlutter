@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/models/state.dart' as automaton_state;
 import '../../core/models/tm.dart';
 import '../../core/models/tm_transition.dart';
 import '../providers/tm_editor_provider.dart';
 import '../widgets/tm_canvas_native.dart';
 import '../widgets/tm_algorithm_panel.dart';
 import '../widgets/tm_simulation_panel.dart';
+import '../widgets/fl_nodes_canvas_toolbar.dart';
+import '../../features/canvas/fl_nodes/fl_nodes_tm_canvas_controller.dart';
 
 /// Page for working with Turing Machines
 class TMPage extends ConsumerStatefulWidget {
@@ -26,6 +29,7 @@ class _TMPageState extends ConsumerState<TMPage> {
   bool _hasInitialState = false;
   bool _hasAcceptingState = false;
   ProviderSubscription<TMEditorState>? _tmEditorSub;
+  late final FlNodesTmCanvasController _canvasController;
 
   bool get _isMachineReady =>
       _currentTM != null && _hasInitialState && _hasAcceptingState;
@@ -35,6 +39,10 @@ class _TMPageState extends ConsumerState<TMPage> {
   @override
   void initState() {
     super.initState();
+    _canvasController = FlNodesTmCanvasController(
+      editorNotifier: ref.read(tmEditorProvider.notifier),
+    );
+    _canvasController.synchronize(ref.read(tmEditorProvider).tm);
     _tmEditorSub = ref.listenManual<TMEditorState>(
       tmEditorProvider,
       (previous, next) {
@@ -58,6 +66,7 @@ class _TMPageState extends ConsumerState<TMPage> {
   @override
   void dispose() {
     _tmEditorSub?.close();
+    _canvasController.dispose();
     super.dispose();
   }
 
@@ -113,7 +122,7 @@ class _TMPageState extends ConsumerState<TMPage> {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(8),
-              child: TMCanvasNative(onTMModified: _handleTMUpdate),
+              child: _buildCanvasWithToolbar(),
             ),
           ),
         ],
@@ -129,7 +138,7 @@ class _TMPageState extends ConsumerState<TMPage> {
           flex: 2,
           child: Container(
             margin: const EdgeInsets.all(8),
-            child: TMCanvasNative(onTMModified: _handleTMUpdate),
+            child: _buildCanvasWithToolbar(),
           ),
         ),
         const SizedBox(width: 16),
@@ -155,6 +164,36 @@ class _TMPageState extends ConsumerState<TMPage> {
           child: Container(
             margin: const EdgeInsets.all(8),
             child: _buildInfoPanel(context),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCanvasWithToolbar() {
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: TMCanvasNative(
+            controller: _canvasController,
+            onTMModified: _handleTMUpdate,
+          ),
+        ),
+        Positioned(
+          top: 12,
+          right: 12,
+          child: FlNodesCanvasToolbar(
+            onAddState: _canvasController.addStateAtCenter,
+            onZoomIn: _canvasController.zoomIn,
+            onZoomOut: _canvasController.zoomOut,
+            onFitToContent: _canvasController.fitToContent,
+            onResetView: _canvasController.resetView,
+            onClear: () {
+              ref.read(tmEditorProvider.notifier).updateFromCanvas(
+                    states: const <automaton_state.State>[],
+                    transitions: const <TMTransition>[],
+                  );
+            },
           ),
         ),
       ],

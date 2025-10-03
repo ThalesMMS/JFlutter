@@ -23,10 +23,12 @@ class AutomatonCanvas extends ConsumerStatefulWidget {
     this.simulationResult,
     this.currentStepIndex,
     this.showTrace = false,
+    this.controller,
   }) : _deprecatedOnAutomatonChanged = onAutomatonChanged;
 
   final FSA? automaton;
   final GlobalKey canvasKey;
+  final FlNodesCanvasController? controller;
 
   /// Legacy callback kept for compatibility while Draw2D bindings are phased
   /// out. Mutations now happen directly through [AutomatonProvider].
@@ -44,20 +46,35 @@ class AutomatonCanvas extends ConsumerStatefulWidget {
 
 class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
   late final FlNodesCanvasController _canvasController;
+  late final bool _ownsController;
   FlNodeEditorStyle? _lastEditorStyle;
   Map<String, automaton_state.State> _statesById = const {};
   Set<String> _nondeterministicStateIds = const {};
   Set<String> _visitedStateIds = const {};
   String? _currentStateId;
+  VoidCallback? _highlightListener;
 
   @override
   void initState() {
     super.initState();
-    _canvasController = FlNodesCanvasController(
-      automatonProvider: ref.read(automatonProvider.notifier),
-    );
+    final externalController = widget.controller;
+    if (externalController != null) {
+      _canvasController = externalController;
+      _ownsController = false;
+    } else {
+      _canvasController = FlNodesCanvasController(
+        automatonProvider: ref.read(automatonProvider.notifier),
+      );
+      _ownsController = true;
+    }
     _canvasController.synchronize(widget.automaton);
     _applyDerivedState(_computeDerivedState());
+    _highlightListener = () {
+      if (mounted) {
+        setState(() {});
+      }
+    };
+    _canvasController.highlightNotifier.addListener(_highlightListener!);
   }
 
   @override
@@ -86,7 +103,13 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
 
   @override
   void dispose() {
-    _canvasController.dispose();
+    if (_highlightListener != null) {
+      _canvasController.highlightNotifier
+          .removeListener(_highlightListener!);
+    }
+    if (_ownsController) {
+      _canvasController.dispose();
+    }
     super.dispose();
   }
 
@@ -158,6 +181,7 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
 
     final automaton = widget.automaton;
     final hasStates = automaton?.states.isNotEmpty ?? false;
+    final highlight = _canvasController.highlightNotifier.value;
 
     return Stack(
       children: [
@@ -178,9 +202,11 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
                 final isCurrent = widget.showTrace && _currentStateId == node.id;
                 final isNondeterministic =
                     _nondeterministicStateIds.contains(node.id);
+                final isHighlighted = highlight.stateIds.contains(node.id);
 
                 final colors = _resolveHeaderColors(
                   theme,
+                  isHighlighted: isHighlighted,
                   isCurrent: isCurrent,
                   isVisited: isVisited,
                   isNondeterministic: isNondeterministic,
@@ -347,11 +373,18 @@ class _HeaderColors {
 
 _HeaderColors _resolveHeaderColors(
   ThemeData theme, {
+  required bool isHighlighted,
   required bool isCurrent,
   required bool isVisited,
   required bool isNondeterministic,
 }) {
   final colorScheme = theme.colorScheme;
+  if (isHighlighted) {
+    return _HeaderColors(
+      background: colorScheme.primary,
+      foreground: colorScheme.onPrimary,
+    );
+  }
   if (isCurrent) {
     return _HeaderColors(
       background: colorScheme.primary,

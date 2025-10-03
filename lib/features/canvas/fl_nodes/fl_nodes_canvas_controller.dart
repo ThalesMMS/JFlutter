@@ -4,6 +4,7 @@ import 'package:fl_nodes/fl_nodes.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/models/fsa.dart';
+import '../../../core/models/simulation_highlight.dart';
 import '../../../presentation/providers/automaton_provider.dart';
 import 'fl_nodes_automaton_mapper.dart';
 import 'fl_nodes_canvas_models.dart';
@@ -27,6 +28,8 @@ class FlNodesCanvasController {
 
   final Map<String, FlNodesCanvasNode> _nodes = {};
   final Map<String, FlNodesCanvasEdge> _edges = {};
+  final ValueNotifier<SimulationHighlight> highlightNotifier =
+      ValueNotifier(SimulationHighlight.empty);
   StreamSubscription<NodeEditorEvent>? _subscription;
   bool _isSynchronizing = false;
 
@@ -101,7 +104,74 @@ class FlNodesCanvasController {
   /// Releases resources held by the controller.
   void dispose() {
     _subscription?.cancel();
+    highlightNotifier.dispose();
     controller.dispose();
+  }
+
+  void zoomIn() {
+    controller.setViewportZoom(
+      (controller.viewportZoom * 1.2).clamp(0.05, 10.0),
+    );
+  }
+
+  void zoomOut() {
+    controller.setViewportZoom(
+      (controller.viewportZoom / 1.2).clamp(0.05, 10.0),
+    );
+  }
+
+  void resetView() {
+    controller.setViewportOffset(Offset.zero, absolute: true);
+    controller.setViewportZoom(1.0);
+  }
+
+  void fitToContent() {
+    if (_nodes.isEmpty) {
+      resetView();
+      return;
+    }
+
+    final previousNodeSelection = controller.selectedNodeIds.toList();
+    final previousLinkSelection = controller.selectedLinkIds.toList();
+
+    controller.focusNodesById(_nodes.keys.toSet());
+    controller.clearSelection(isHandled: true);
+
+    if (previousNodeSelection.isNotEmpty) {
+      controller.selectNodesById(
+        previousNodeSelection.toSet(),
+        holdSelection: false,
+        isHandled: true,
+      );
+    }
+
+    if (previousLinkSelection.isNotEmpty) {
+      controller.selectLinkById(
+        previousLinkSelection.first,
+        holdSelection: false,
+        isHandled: true,
+      );
+      for (final linkId in previousLinkSelection.skip(1)) {
+        controller.selectLinkById(
+          linkId,
+          holdSelection: true,
+          isHandled: true,
+        );
+      }
+    }
+  }
+
+  void addStateAtCenter() {
+    final center = -controller.viewportOffset;
+    controller.addNode(_statePrototypeId, offset: center);
+  }
+
+  void applyHighlight(SimulationHighlight highlight) {
+    highlightNotifier.value = highlight;
+  }
+
+  void clearHighlight() {
+    highlightNotifier.value = SimulationHighlight.empty;
   }
 
   void _registerPrototypes() {
@@ -285,6 +355,10 @@ class FlNodesCanvasController {
     _edges.remove(link.id);
     _provider.removeTransition(id: link.id);
   }
+
+  FlNodesCanvasNode? nodeById(String id) => _nodes[id];
+
+  FlNodesCanvasEdge? edgeById(String id) => _edges[id];
 
   String _resolveLabel(NodeInstance node) {
     final field = node.fields[_labelFieldId];

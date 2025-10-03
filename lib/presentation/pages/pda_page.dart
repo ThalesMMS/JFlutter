@@ -3,10 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/pda.dart';
 import '../providers/pda_editor_provider.dart';
-import '../widgets/draw2d_canvas_toolbar.dart';
+import '../widgets/fl_nodes_canvas_toolbar.dart';
 import '../widgets/pda_canvas_native.dart';
 import '../widgets/pda_simulation_panel.dart';
 import '../widgets/pda_algorithm_panel.dart';
+import '../../features/canvas/fl_nodes/fl_nodes_pda_canvas_controller.dart';
 
 /// Page for working with Pushdown Automata
 class PDAPage extends ConsumerStatefulWidget {
@@ -22,10 +23,15 @@ class _PDAPageState extends ConsumerState<PDAPage> {
   int _transitionCount = 0;
   bool _hasUnsavedChanges = false;
   ProviderSubscription<PDAEditorState>? _pdaEditorSub;
+  late final FlNodesPdaCanvasController _canvasController;
 
   @override
   void initState() {
     super.initState();
+    _canvasController = FlNodesPdaCanvasController(
+      editorNotifier: ref.read(pdaEditorProvider.notifier),
+    );
+    _canvasController.synchronize(ref.read(pdaEditorProvider).pda);
     _pdaEditorSub = ref.listenManual<PDAEditorState>(
       pdaEditorProvider,
       (previous, next) {
@@ -45,6 +51,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
   @override
   void dispose() {
     _pdaEditorSub?.close();
+    _canvasController.dispose();
     super.dispose();
   }
 
@@ -77,7 +84,10 @@ class _PDAPageState extends ConsumerState<PDAPage> {
                 child: Container(
                   margin: const EdgeInsets.all(8),
                   child: _buildCanvasWithToolbar(
-                    PDACanvasNative(onPdaModified: _handlePdaModified),
+                    PDACanvasNative(
+                      controller: _canvasController,
+                      onPdaModified: _handlePdaModified,
+                    ),
                   ),
                 ),
               ),
@@ -266,9 +276,12 @@ class _PDAPageState extends ConsumerState<PDAPage> {
           flex: 2,
           child: Container(
             margin: const EdgeInsets.all(8),
-            child: _buildCanvasWithToolbar(
-              PDACanvasNative(onPdaModified: _handlePdaModified),
-            ),
+        child: _buildCanvasWithToolbar(
+          PDACanvasNative(
+            controller: _canvasController,
+            onPdaModified: _handlePdaModified,
+          ),
+        ),
           ),
         ),
         const SizedBox(width: 16),
@@ -356,8 +369,16 @@ class _PDAPageState extends ConsumerState<PDAPage> {
         Positioned(
           top: 12,
           right: 12,
-          child: Draw2DCanvasToolbar(
-            onClear: () => ref.read(pdaEditorProvider.notifier).clear(),
+          child: FlNodesCanvasToolbar(
+            onAddState: _canvasController.addStateAtCenter,
+            onZoomIn: _canvasController.zoomIn,
+            onZoomOut: _canvasController.zoomOut,
+            onFitToContent: _canvasController.fitToContent,
+            onResetView: _canvasController.resetView,
+            onClear: () => ref.read(pdaEditorProvider.notifier).updateFromCanvas(
+                  states: const <automaton_state.State>[],
+                  transitions: const <PDATransition>[],
+                ),
           ),
         ),
       ],

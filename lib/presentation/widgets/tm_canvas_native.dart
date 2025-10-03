@@ -11,9 +11,11 @@ class TMCanvasNative extends ConsumerStatefulWidget {
   const TMCanvasNative({
     super.key,
     required this.onTMModified,
+    this.controller,
   });
 
   final ValueChanged<TM> onTMModified;
+  final FlNodesTmCanvasController? controller;
 
   @override
   ConsumerState<TMCanvasNative> createState() => _TMCanvasNativeState();
@@ -21,16 +23,25 @@ class TMCanvasNative extends ConsumerStatefulWidget {
 
 class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
   late final FlNodesTmCanvasController _canvasController;
+  late final bool _ownsController;
   FlNodeEditorStyle? _lastEditorStyle;
   ProviderSubscription<TMEditorState>? _subscription;
   TM? _lastDeliveredTM;
+  VoidCallback? _highlightListener;
 
   @override
   void initState() {
     super.initState();
-    _canvasController = FlNodesTmCanvasController(
-      editorNotifier: ref.read(tmEditorProvider.notifier),
-    );
+    final externalController = widget.controller;
+    if (externalController != null) {
+      _canvasController = externalController;
+      _ownsController = false;
+    } else {
+      _canvasController = FlNodesTmCanvasController(
+        editorNotifier: ref.read(tmEditorProvider.notifier),
+      );
+      _ownsController = true;
+    }
     final initialState = ref.read(tmEditorProvider);
     _canvasController.synchronize(initialState.tm);
     _lastDeliveredTM = initialState.tm;
@@ -55,6 +66,12 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
         }
       },
     );
+    _highlightListener = () {
+      if (mounted) {
+        setState(() {});
+      }
+    };
+    _canvasController.highlightNotifier.addListener(_highlightListener!);
   }
 
   bool _shouldSynchronize(TMEditorState? previous, TMEditorState next) {
@@ -98,7 +115,13 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
   @override
   void dispose() {
     _subscription?.close();
-    _canvasController.dispose();
+    if (_highlightListener != null) {
+      _canvasController.highlightNotifier
+          .removeListener(_highlightListener!);
+    }
+    if (_ownsController) {
+      _canvasController.dispose();
+    }
     super.dispose();
   }
 
@@ -112,6 +135,7 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
     final states = editorState.states;
     final transitions = editorState.transitions;
     final hasStates = states.isNotEmpty;
+    final highlight = _canvasController.highlightNotifier.value;
 
     final statesById = {for (final state in states) state.id: state};
     final initialStateId = tm?.initialState?.id;
@@ -134,8 +158,10 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
               final isAccepting = acceptingIds.contains(node.id);
               final isNondeterministic =
                   nondeterministicStateIds.contains(node.id);
+              final isHighlighted = highlight.stateIds.contains(node.id);
               final colors = _resolveHeaderColors(
                 theme,
+                isHighlighted: isHighlighted,
                 isInitial: isInitial,
                 isAccepting: isAccepting,
                 isNondeterministic: isNondeterministic,
@@ -344,11 +370,18 @@ class _HeaderColors {
 
 _HeaderColors _resolveHeaderColors(
   ThemeData theme, {
+  required bool isHighlighted,
   required bool isInitial,
   required bool isAccepting,
   required bool isNondeterministic,
 }) {
   final colorScheme = theme.colorScheme;
+  if (isHighlighted) {
+    return _HeaderColors(
+      background: colorScheme.primary,
+      foreground: colorScheme.onPrimary,
+    );
+  }
   if (isNondeterministic) {
     return _HeaderColors(
       background: colorScheme.errorContainer,

@@ -142,7 +142,7 @@ class SimulationHighlightService {
     return highlight;
   }
 
-  /// Dispatches [highlight] to the Draw2D bridge.
+  /// Dispatches [highlight] to the active canvas highlight channel.
   void dispatch(SimulationHighlight highlight) {
     channel?.send(highlight);
   }

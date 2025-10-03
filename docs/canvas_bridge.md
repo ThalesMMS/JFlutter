@@ -1,82 +1,60 @@
-# Draw2D Canvas Bridge
+# fl_nodes Canvas Architecture
 
-The Draw2D workspace is rendered inside a `WebView` (`Draw2DCanvasView`) that
-loads `assets/draw2d/editor.html`. The HTML page bootstraps the Draw2D library
-and exposes a messaging layer so Flutter can keep the canvas in sync with the
-current automaton.
+The Draw2D bridge has been removed in favour of a fully native canvas powered
+by [`fl_nodes`](https://pub.dev/packages/fl_nodes). The Flutter widget tree
+embeds a [`FlNodeEditorWidget`](https://pub.dev/documentation/fl_nodes/latest/fl_nodes/FlNodeEditorWidget-class.html)
+managed by `FlNodesCanvasController`, which keeps the visual editor and the
+Riverpod state (`AutomatonProvider`) perfectly aligned.
 
-## Message Flow
+## Rendering Pipeline
 
-Communication happens through the `JFlutterBridge` JavaScript channel. Each
-message is a JSON envelope with a `type` string and an optional `payload`
-object. The bridge performs a handshake (`editor_ready`) before Flutter starts
-sending data so the toolbar can surface the “Canvas not connected” hint until
-Draw2D is ready.
+* `AutomatonCanvas` owns a [`FlNodesCanvasController`](../lib/presentation/widgets/automaton_canvas_native.dart)
+  and synchronises it with the active `FSA` whenever the provider emits a new
+  automaton. The controller instantiates a `FlNodeEditorController`, registers
+  the node prototype used to represent automaton states, and exposes a
+  `ValueNotifier` with the current highlight payload.【F:lib/presentation/widgets/automaton_canvas_native.dart†L13-L92】【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L14-L88】
+* The controller converts Riverpod data into `FlNodesAutomatonSnapshot`
+  instances through `FlNodesAutomatonMapper.toSnapshot`. Each state becomes a
+  `FlNodesCanvasNode` and each transition becomes a `FlNodesCanvasEdge`,
+  preserving metadata such as control points and accepting flags.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L96-L166】【F:lib/features/canvas/fl_nodes/fl_nodes_automaton_mapper.dart†L8-L59】
+* Snapshot data is replayed into the editor by creating concrete `NodeInstance`
+  and `Link` objects. During this phase the controller temporarily marks itself
+  as synchronising so that the inbound event listener ignores the synthetic
+  add/remove notifications fired by fl_nodes while the canvas is rebuilt.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L168-L234】
 
-### Flutter → JavaScript
+## Editing Flow
 
-Flutter keeps the WebView copy of the automaton in sync by executing
-`window.draw2dBridge.loadModel(model)` whenever the provider emits a new
-snapshot. The payload matches the structure returned by
-`Draw2DAutomatonMapper.toJson`:
+`FlNodesCanvasController` listens to the editor `eventBus` and forwards user
+edits back to `AutomatonProvider`:
 
-| Field            | Description                                            |
-| ---------------- | ------------------------------------------------------ |
-| `id`             | Automaton identifier used to derive stable node IDs.   |
-| `name`           | Human readable automaton name.                         |
-| `alphabet`       | Sorted list of input symbols.                          |
-| `states`         | Array of state objects (id, label, position, flags…).  |
-| `transitions`    | Array of transition objects (from, to, label, control).|
-| `initialStateId` | Draw2D identifier of the initial state (or `null`).    |
+* `AddNodeEvent`, `RemoveNodeEvent`, and `DragSelectionEndEvent` translate into
+  `addState`, `removeState`, and `moveState` calls, keeping coordinates and
+  labels aligned with the automaton model.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L236-L302】【F:lib/presentation/providers/automaton_provider.dart†L83-L166】
+* Node label edits invoke `updateStateLabel`, normalising blank labels to the
+  node identifier so existing transitions remain consistent.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L304-L327】【F:lib/presentation/providers/automaton_provider.dart†L168-L214】
+* Link creation and deletion map to `addOrUpdateTransition` and
+  `removeTransition`, ensuring the Riverpod graph stays in sync with the visual
+  wiring.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L329-L355】【F:lib/presentation/providers/automaton_provider.dart†L216-L260】
 
-Additional bridge commands mirror toolbar actions and simulator needs. All
-payloads are JSON-serialised before being injected:
+Toolbar buttons (zoom, fit, reset, add state) now call directly into the
+controller instead of posting JavaScript messages. This keeps the ergonomics of
+the previous bridge while avoiding WebView plumbing.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L48-L133】
 
-| Command                | Transport                          | Payload shape                         | Purpose |
-| ---------------------- | ---------------------------------- | ------------------------------------- | ------- |
-| `highlight`            | JS bridge method + `postMessage`   | `{ states: string[], transitions: string[] }` | Highlight states/transitions during simulations. |
-| `clear_highlight`      | JS bridge method + `postMessage`   | `{}`                                  | Remove active highlights. |
-| `zoom_in` / `zoom_out` | JS bridge method + `postMessage`   | `{}`                                  | Adjust canvas zoom level. |
-| `reset_view`           | JS bridge method + `postMessage`   | `{}`                                  | Restore the default pan/zoom. |
-| `fit_content`          | JS bridge method + `postMessage`   | `{}`                                  | Auto-frame the automaton. |
-| `add_state_center`     | JS bridge method + `postMessage`   | `{}`                                  | Insert a new state at the viewport centre. |
-| `load_automaton`       | `postMessage` (Flutter web builds) | Automaton snapshot + viewport & trace metadata | Initialise Draw2D in web builds. |
-| `clear_automaton`      | `postMessage` (Flutter web builds) | `{}`                                  | Remove the rendered automaton. |
+## Highlight Channel
 
-### JavaScript → Flutter
+Simulation playback relies on `SimulationHighlightService`, which now dispatches
+highlights through the `FlNodesHighlightController` interface implemented by the
+canvas controller. The notifier exposed by the controller drives visual overlays
+and remains compatible with existing Riverpod listeners.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L36-L45】【F:lib/core/services/simulation_highlight_service.dart†L6-L74】
 
-User interactions in Draw2D are forwarded back to Flutter through
-`JFlutterBridge`. The mobile WebView emits the following events:
+## Data Round-Tripping
 
-| `type`                 | Payload fields                                                   | Effect |
-| ---------------------- | ---------------------------------------------------------------- | ------ |
-| `editor_ready`         | `{}`                                                             | Marks the bridge as ready and triggers the first sync. |
-| `log`                  | `level`, `message`, `details?`                                   | Surfaces runtime diagnostics in Flutter logs. |
-| `state.add`            | `id?`, `label?`, `x`, `y`, `isInitial?`, `isAccepting?`          | Adds or replaces a state at the requested coordinates. |
-| `state.move`           | `id`, `x`, `y`                                                   | Updates a state's position (debounced every 60 ms). |
-| `state.label`          | `id`, `label`                                                    | Renames a state. |
-| `state.updateFlags`    | `id`, `isInitial?`, `isAccepting?`                               | Toggles initial/accepting flags. |
-| `state.remove`         | `id`                                                             | Deletes a state. |
-| `transition.add`       | `id?`, `fromStateId`, `toStateId`, `label?`                      | Creates or updates a transition. |
-| `transition.label`     | `id`, `label`                                                    | Updates transition symbols. |
-| `transition.remove`    | `id`                                                             | Deletes a transition. |
+When the editor needs to persist changes (for example, after receiving a patch
+from collaborative tooling) it converts the latest snapshot back into a new
+`FSA` via `FlNodesAutomatonMapper.mergeIntoTemplate`. The mapper rebuilds
+states, transitions, and alphabet entries using the template as a base, so
+existing metadata such as simulation history remains intact.【F:lib/features/canvas/fl_nodes/fl_nodes_automaton_mapper.dart†L61-L108】
 
-Flutter web builds reuse the same event names via `postMessage` and add
-request/patch helpers (`request_automaton`, `patch`, `viewport_patch`) so the
-HTML editor can ask for the latest snapshot or send diff updates.
-
-## Debugging Tips
-
-* Enable the "Use Draw2D Canvas" toggle in Settings to render the WebView
-  instead of the legacy Flutter canvas.
-* Open the WebView's developer tools (when available) to inspect console logs.
-  Every inbound/outbound message is printed with a `[Draw2D]` prefix.
-* The toolbar now shows "Canvas not connected" until the Draw2D bridge reports
-  readiness. If the message persists, inspect the console for bridge errors.
-
-## Web Highlight Bridge
-
-For Flutter Web builds a lightweight bridge lives in
-`web/assets/draw2d/editor.js`. It listens for `postMessage` calls with the
-`type` values `highlight` and `clear_highlight` so the simulation view can
-highlight states and transitions during playback.
+By keeping all synchronisation logic inside `FlNodesCanvasController`, the app
+no longer depends on HTML assets or platform-specific bridges, drastically
+simplifying deployment and reducing the sources of runtime failure.

@@ -58,18 +58,6 @@ class SettingsNotifier extends StateNotifier<SettingsModel> {
     }
   }
 
-  Future<void> setUseDraw2dCanvas(bool value) async {
-    if (_disposed) return;
-    final updated = state.copyWith(useDraw2dCanvas: value);
-    state = updated;
-    try {
-      await _repository.saveSettings(updated);
-    } catch (error, stackTrace) {
-      debugPrint('Failed to toggle Draw2D canvas: $error');
-      debugPrintStack(stackTrace: stackTrace);
-    }
-  }
-
   Future<void> resetToDefaults() async {
     const defaults = SettingsModel();
     await update(defaults);

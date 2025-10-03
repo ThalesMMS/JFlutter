@@ -39,13 +39,11 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     );
     _highlightChannel = FlNodesSimulationHighlightChannel(_canvasController);
     _highlightService = SimulationHighlightService(channel: _highlightChannel);
-    SimulationHighlightService.registerGlobalChannel(_highlightChannel);
   }
 
   @override
   void dispose() {
     _highlightService.clear();
-    SimulationHighlightService.registerGlobalChannel(null);
     _canvasController.dispose();
     super.dispose();
   }
@@ -435,10 +433,15 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     final screenSize = MediaQuery.of(context).size;
     final isMobile = screenSize.width < 1024;
 
-    return Scaffold(
-      body: isMobile
-          ? _buildMobileLayout(state)
-          : _buildDesktopLayout(state),
+    return ProviderScope(
+      overrides: [
+        canvasHighlightServiceProvider.overrideWithValue(_highlightService),
+      ],
+      child: Scaffold(
+        body: isMobile
+            ? _buildMobileLayout(state)
+            : _buildDesktopLayout(state),
+      ),
     );
   }
 

@@ -4,6 +4,7 @@ import '../providers/automaton_provider.dart';
 import '../providers/grammar_provider.dart';
 import '../providers/home_navigation_provider.dart';
 import '../widgets/mobile_navigation.dart';
+import '../../core/services/simulation_highlight_service.dart';
 import 'fsa_page.dart';
 import 'grammar_page.dart';
 import 'pda_page.dart';
@@ -24,6 +25,8 @@ class HomePage extends ConsumerStatefulWidget {
 class _HomePageState extends ConsumerState<HomePage> {
   late final PageController _pageController;
   int? _lastNavigationIndex;
+  final SimulationHighlightService _fallbackHighlightService =
+      SimulationHighlightService();
 
   final List<NavigationItem> _navigationItems = const [
     NavigationItem(
@@ -68,6 +71,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   void dispose() {
+    _fallbackHighlightService.clear();
     _pageController.dispose();
     super.dispose();
   }
@@ -94,6 +98,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     final currentIndex = ref.watch(homeNavigationProvider);
     final isMobile =
         screenSize.width < 1024; // Better breakpoint for modern devices
+    final hasCanvasHighlight = currentIndex == 0 || currentIndex == 2 || currentIndex == 3;
 
     // Handle navigation changes
     if (_lastNavigationIndex != currentIndex) {
@@ -121,7 +126,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       _lastNavigationIndex = currentIndex;
     }
 
-    return Scaffold(
+    final scaffold = Scaffold(
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -172,6 +177,21 @@ class _HomePageState extends ConsumerState<HomePage> {
             )
           : null,
       floatingActionButton: _buildFloatingActionButton(context, currentIndex),
+    );
+
+    if (hasCanvasHighlight) {
+      return scaffold;
+    }
+
+    _fallbackHighlightService.clear();
+
+    return ProviderScope(
+      overrides: [
+        canvasHighlightServiceProvider.overrideWithValue(
+          _fallbackHighlightService,
+        ),
+      ],
+      child: scaffold,
     );
   }
 

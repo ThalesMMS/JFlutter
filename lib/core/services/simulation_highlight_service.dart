@@ -1,6 +1,13 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../models/simulation_highlight.dart';
 import '../models/simulation_result.dart';
 import '../models/simulation_step.dart';
+
+/// Provides access to the highlight service associated with the active canvas.
+final canvasHighlightServiceProvider = Provider<SimulationHighlightService>((ref) {
+  return SimulationHighlightService();
+});
 
 /// Utility responsible for deriving and broadcasting simulation highlights.
 typedef SimulationHighlightDispatcher = void Function(
@@ -47,28 +54,9 @@ class SimulationHighlightService {
                 ? null
                 : FunctionSimulationHighlightChannel(dispatcher));
 
-  static SimulationHighlightChannel? _globalChannel;
-
   SimulationHighlightChannel? _channel;
 
-  /// Registers a global highlight channel consumed by all service instances
-  /// that don't override it locally.
-  static void registerGlobalChannel(SimulationHighlightChannel? channel) {
-    _globalChannel = channel;
-  }
-
-  /// Legacy helper kept for compatibility with older dispatcher-based flows.
-  static void registerGlobalDispatcher(
-    SimulationHighlightDispatcher? dispatcher,
-  ) {
-    registerGlobalChannel(
-      dispatcher == null
-          ? null
-          : FunctionSimulationHighlightChannel(dispatcher),
-    );
-  }
-
-  SimulationHighlightChannel? get channel => _channel ?? _globalChannel;
+  SimulationHighlightChannel? get channel => _channel;
 
   set channel(SimulationHighlightChannel? value) {
     _channel = value;

@@ -9,6 +9,7 @@ abstract class SettingsStorage {
   Future<bool> writeString(String key, String value);
   Future<bool> writeBool(String key, bool value);
   Future<bool> writeDouble(String key, double value);
+  Future<bool> remove(String key);
 }
 
 /// [SettingsStorage] backed by [SharedPreferences].
@@ -62,6 +63,12 @@ class SharedPreferencesSettingsStorage implements SettingsStorage {
     final prefs = await _getPreferences();
     return prefs.setDouble(key, value);
   }
+
+  @override
+  Future<bool> remove(String key) async {
+    final prefs = await _getPreferences();
+    return prefs.remove(key);
+  }
 }
 
 /// In-memory implementation of [SettingsStorage] used in tests.
@@ -97,5 +104,10 @@ class InMemorySettingsStorage implements SettingsStorage {
   Future<bool> writeDouble(String key, double value) async {
     _values[key] = value;
     return true;
+  }
+
+  @override
+  Future<bool> remove(String key) async {
+    return _values.remove(key) != null;
   }
 }

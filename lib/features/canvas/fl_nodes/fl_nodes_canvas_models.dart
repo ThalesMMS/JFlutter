@@ -128,6 +128,11 @@ class FlNodesCanvasEdge {
     this.writeSymbol,
     this.direction,
     this.tapeNumber,
+    this.popSymbol,
+    this.pushSymbol,
+    this.isLambdaInput,
+    this.isLambdaPop,
+    this.isLambdaPush,
   });
 
   final String id;
@@ -141,8 +146,27 @@ class FlNodesCanvasEdge {
   final String? writeSymbol;
   final TapeDirection? direction;
   final int? tapeNumber;
+  final String? popSymbol;
+  final String? pushSymbol;
+  final bool? isLambdaInput;
+  final bool? isLambdaPop;
+  final bool? isLambdaPush;
 
   String get label {
+    final hasPdaMetadata = popSymbol != null ||
+        pushSymbol != null ||
+        isLambdaInput != null ||
+        isLambdaPop != null ||
+        isLambdaPush != null;
+    if (hasPdaMetadata) {
+      final lambdaInput = isLambdaInput ?? (readSymbol == null || readSymbol!.isEmpty);
+      final lambdaPop = isLambdaPop ?? (popSymbol == null || popSymbol!.isEmpty);
+      final lambdaPush = isLambdaPush ?? (pushSymbol == null || pushSymbol!.isEmpty);
+      final read = lambdaInput ? 'λ' : (readSymbol ?? '');
+      final pop = lambdaPop ? 'λ' : (popSymbol ?? '');
+      final push = lambdaPush ? 'λ' : (pushSymbol ?? '');
+      return '$read, $pop/$push';
+    }
     if (lambdaSymbol != null && lambdaSymbol!.isNotEmpty) {
       return lambdaSymbol!;
     }
@@ -188,6 +212,11 @@ class FlNodesCanvasEdge {
       writeSymbol: writeSymbol ?? this.writeSymbol,
       direction: direction ?? this.direction,
       tapeNumber: tapeNumber ?? this.tapeNumber,
+      popSymbol: popSymbol ?? this.popSymbol,
+      pushSymbol: pushSymbol ?? this.pushSymbol,
+      isLambdaInput: isLambdaInput ?? this.isLambdaInput,
+      isLambdaPop: isLambdaPop ?? this.isLambdaPop,
+      isLambdaPush: isLambdaPush ?? this.isLambdaPush,
     );
   }
 
@@ -204,6 +233,11 @@ class FlNodesCanvasEdge {
       if (writeSymbol != null) 'writeSymbol': writeSymbol,
       if (direction != null) 'direction': direction!.name,
       if (tapeNumber != null) 'tapeNumber': tapeNumber,
+      if (popSymbol != null) 'popSymbol': popSymbol,
+      if (pushSymbol != null) 'pushSymbol': pushSymbol,
+      if (isLambdaInput != null) 'isLambdaInput': isLambdaInput,
+      if (isLambdaPop != null) 'isLambdaPop': isLambdaPop,
+      if (isLambdaPush != null) 'isLambdaPush': isLambdaPush,
     };
   }
 
@@ -231,6 +265,11 @@ class FlNodesCanvasEdge {
             )
           : null,
       tapeNumber: json['tapeNumber'] as int?,
+      popSymbol: json['popSymbol'] as String?,
+      pushSymbol: json['pushSymbol'] as String?,
+      isLambdaInput: json['isLambdaInput'] as bool?,
+      isLambdaPop: json['isLambdaPop'] as bool?,
+      isLambdaPush: json['isLambdaPush'] as bool?,
     );
   }
 }

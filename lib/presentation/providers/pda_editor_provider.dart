@@ -437,6 +437,11 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
     _updateStateWithPda(pda);
   }
 
+  /// Clears the editor state, removing any PDA currently rendered on the canvas.
+  void clear() {
+    state = const PDAEditorState();
+  }
+
   void _updateStateWithPda(PDA pda) {
     final transitions = pda.pdaTransitions;
     final nondeterministicTransitionIds = _findNondeterministicTransitions(

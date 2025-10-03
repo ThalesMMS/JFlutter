@@ -202,6 +202,50 @@ void main() {
       controller.dispose();
     });
 
+    test('viewport helpers adjust zoom and offset', () {
+      controller.resetView();
+      final initialZoom = controller.controller.viewportZoom;
+
+      controller.zoomIn();
+      expect(controller.controller.viewportZoom, greaterThan(initialZoom));
+
+      controller.zoomOut();
+      expect(
+        controller.controller.viewportZoom,
+        closeTo(initialZoom, 1e-6),
+      );
+
+      controller.controller.setViewportOffset(const Offset(12, -24));
+      controller.controller.setViewportZoom(1.5);
+
+      controller.resetView();
+      expect(controller.controller.viewportOffset, equals(Offset.zero));
+      expect(controller.controller.viewportZoom, closeTo(1.0, 1e-6));
+    });
+
+    test('fitToContent resets view when no nodes exist', () {
+      controller.controller.setViewportOffset(const Offset(-48, 32));
+      controller.controller.setViewportZoom(0.4);
+
+      controller.fitToContent();
+
+      expect(controller.controller.viewportOffset, equals(Offset.zero));
+      expect(controller.controller.viewportZoom, closeTo(1.0, 1e-6));
+    });
+
+    test('highlight helpers update notifier state', () {
+      const highlight = SimulationHighlight(transitionIds: {'t42'});
+
+      controller.applyHighlight(highlight);
+      expect(
+        controller.highlightNotifier.value.transitionIds,
+        contains('t42'),
+      );
+
+      controller.clearHighlight();
+      expect(controller.highlightNotifier.value.transitionIds, isEmpty);
+    });
+
     test('synchronize populates nodes and edges from automaton', () {
       final q0 = State(
         id: 'q0',

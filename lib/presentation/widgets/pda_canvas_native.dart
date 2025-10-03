@@ -237,6 +237,7 @@ class _PDACanvasNativeState extends ConsumerState<PDACanvasNative> {
                 isNondeterministic: isNondeterministic,
               );
 
+              final notifier = ref.read(pdaEditorProvider.notifier);
               return _PDANodeHeader(
                 label: label,
                 isInitial: isInitial,
@@ -245,6 +246,20 @@ class _PDACanvasNativeState extends ConsumerState<PDACanvasNative> {
                 isCollapsed: node.state.isCollapsed,
                 colors: colors,
                 onToggleCollapse: onToggleCollapse,
+                onToggleInitial: () {
+                  notifier.updateStateFlags(
+                    id: node.id,
+                    isInitial: !isInitial,
+                  );
+                },
+                onToggleAccepting: () {
+                  notifier.updateStateFlags(
+                    id: node.id,
+                    isAccepting: !isAccepting,
+                  );
+                },
+                initialToggleKey: Key('pda-node-${node.id}-initial-toggle'),
+                acceptingToggleKey: Key('pda-node-${node.id}-accepting-toggle'),
               );
             },
           ),
@@ -296,6 +311,10 @@ class _PDANodeHeader extends StatelessWidget {
     required this.isCollapsed,
     required this.colors,
     required this.onToggleCollapse,
+    required this.onToggleInitial,
+    required this.onToggleAccepting,
+    required this.initialToggleKey,
+    required this.acceptingToggleKey,
   });
 
   final String label;
@@ -305,6 +324,10 @@ class _PDANodeHeader extends StatelessWidget {
   final bool isCollapsed;
   final _HeaderColors colors;
   final VoidCallback onToggleCollapse;
+  final VoidCallback onToggleInitial;
+  final VoidCallback onToggleAccepting;
+  final Key initialToggleKey;
+  final Key acceptingToggleKey;
 
   @override
   Widget build(BuildContext context) {
@@ -326,15 +349,6 @@ class _PDANodeHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
         children: [
-          if (isInitial)
-            Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: Icon(
-                Icons.play_arrow_rounded,
-                size: 16,
-                color: colors.foreground,
-              ),
-            ),
           Expanded(
             child: Text(
               label,
@@ -343,34 +357,95 @@ class _PDANodeHeader extends StatelessWidget {
               style: textStyle,
             ),
           ),
-          if (isAccepting)
-            Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: Icon(
-                Icons.check_circle,
-                size: 16,
-                color: colors.foreground,
-              ),
-            ),
-          if (isNondeterministic)
-            Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: Icon(
-                Icons.warning_amber_rounded,
-                size: 16,
-                color: colors.foreground,
-              ),
-            ),
-          InkWell(
-            onTap: onToggleCollapse,
-            borderRadius: BorderRadius.circular(16),
-            child: Icon(
-              isCollapsed ? Icons.expand_more : Icons.expand_less,
+          const SizedBox(width: 8),
+          _HeaderActionButton(
+            buttonKey: initialToggleKey,
+            tooltip: isInitial ? 'Unset initial state' : 'Set as initial state',
+            icon: Icons.play_circle_outline,
+            activeIcon: Icons.play_circle,
+            isActive: isInitial,
+            color: colors.foreground,
+            onPressed: onToggleInitial,
+          ),
+          const SizedBox(width: 4),
+          _HeaderActionButton(
+            buttonKey: acceptingToggleKey,
+            tooltip:
+                isAccepting ? 'Unset accepting state' : 'Set as accepting state',
+            icon: Icons.check_circle_outline,
+            activeIcon: Icons.check_circle,
+            isActive: isAccepting,
+            color: colors.foreground,
+            onPressed: onToggleAccepting,
+          ),
+          if (isNondeterministic) ...[
+            const SizedBox(width: 4),
+            Icon(
+              Icons.warning_amber_rounded,
               size: 18,
               color: colors.foreground,
             ),
+          ],
+          const SizedBox(width: 4),
+          Tooltip(
+            message: isCollapsed ? 'Expand state' : 'Collapse state',
+            child: IconButton(
+              icon: Icon(
+                isCollapsed ? Icons.expand_more : Icons.expand_less,
+                size: 20,
+                color: colors.foreground.withOpacity(0.9),
+              ),
+              onPressed: onToggleCollapse,
+              padding: EdgeInsets.zero,
+              constraints:
+                  const BoxConstraints.tightFor(width: 32, height: 32),
+              splashRadius: 18,
+              visualDensity: VisualDensity.compact,
+            ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _HeaderActionButton extends StatelessWidget {
+  const _HeaderActionButton({
+    required this.tooltip,
+    required this.icon,
+    required this.activeIcon,
+    required this.isActive,
+    required this.color,
+    required this.onPressed,
+    this.buttonKey,
+  });
+
+  final String tooltip;
+  final IconData icon;
+  final IconData activeIcon;
+  final bool isActive;
+  final Color color;
+  final VoidCallback onPressed;
+  final Key? buttonKey;
+
+  @override
+  Widget build(BuildContext context) {
+    final resolvedIcon = Icon(
+      isActive ? activeIcon : icon,
+      size: 20,
+      color: isActive ? color : color.withOpacity(0.6),
+    );
+
+    return Tooltip(
+      message: tooltip,
+      child: IconButton(
+        key: buttonKey,
+        icon: resolvedIcon,
+        onPressed: onPressed,
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+        splashRadius: 18,
+        visualDensity: VisualDensity.compact,
       ),
     );
   }

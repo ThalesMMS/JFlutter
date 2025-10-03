@@ -120,7 +120,7 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
   void didUpdateWidget(covariant AutomatonCanvas oldWidget) {
     super.didUpdateWidget(oldWidget);
     final automatonChanged = !identical(oldWidget.automaton, widget.automaton);
-    if (automatonChanged) {
+    if (automatonChanged && _shouldSynchronize(widget.automaton)) {
       _canvasController.synchronize(widget.automaton);
       final currentLink = _selectedLinkId;
       if (currentLink != null &&
@@ -137,6 +137,78 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
         _applyDerivedState(_computeDerivedState());
       });
     }
+  }
+
+  bool _shouldSynchronize(FSA? automaton) {
+    if (automaton == null) {
+      return true;
+    }
+
+    final stateIds = {for (final state in automaton.states) state.id};
+    final nodeIds = {for (final node in _canvasController.nodes) node.id};
+    if (stateIds.length != nodeIds.length || !nodeIds.containsAll(stateIds)) {
+      return true;
+    }
+
+    for (final state in automaton.states) {
+      final node = _canvasController.nodeById(state.id);
+      if (node == null) {
+        return true;
+      }
+      if ((node.x - state.position.x).abs() > 0.5 ||
+          (node.y - state.position.y).abs() > 0.5) {
+        return true;
+      }
+      if (node.label.trim() != state.label.trim()) {
+        return true;
+      }
+    }
+
+    final transitionIds = {
+      for (final transition in automaton.fsaTransitions) transition.id
+    };
+    final edgeIds = {for (final edge in _canvasController.edges) edge.id};
+    if (transitionIds.length != edgeIds.length ||
+        !edgeIds.containsAll(transitionIds)) {
+      return true;
+    }
+
+    const symbolEquality = SetEquality<String>();
+    for (final transition in automaton.fsaTransitions) {
+      final edge = _canvasController.edgeById(transition.id);
+      if (edge == null) {
+        return true;
+      }
+      if (edge.fromStateId != transition.fromState.id ||
+          edge.toStateId != transition.toState.id) {
+        return true;
+      }
+      final controlPoint = transition.controlPoint;
+      final edgeX = edge.controlPointX ?? controlPoint.x;
+      final edgeY = edge.controlPointY ?? controlPoint.y;
+      if ((edgeX - controlPoint.x).abs() > 0.5 ||
+          (edgeY - controlPoint.y).abs() > 0.5) {
+        return true;
+      }
+      final edgeLambda = edge.lambdaSymbol?.trim();
+      final transitionLambda = transition.lambdaSymbol?.trim();
+      if (edgeLambda != transitionLambda) {
+        return true;
+      }
+      final edgeSymbols = edge.symbols
+          .map((symbol) => symbol.trim())
+          .where((symbol) => symbol.isNotEmpty)
+          .toSet();
+      final transitionSymbols = transition.inputSymbols
+          .map((symbol) => symbol.trim())
+          .where((symbol) => symbol.isNotEmpty)
+          .toSet();
+      if (!symbolEquality.equals(edgeSymbols, transitionSymbols)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   @override

@@ -13,6 +13,7 @@ import 'package:jflutter/core/models/state.dart';
 import 'package:jflutter/core/models/tm.dart';
 import 'package:jflutter/core/models/tm_transition.dart';
 import 'package:jflutter/core/models/simulation_highlight.dart';
+import 'package:jflutter/features/canvas/fl_nodes/base_fl_nodes_canvas_controller.dart';
 import 'package:jflutter/features/canvas/fl_nodes/fl_nodes_tm_canvas_controller.dart';
 import 'package:jflutter/presentation/providers/tm_editor_provider.dart';
 
@@ -153,6 +154,10 @@ void main() {
 
     tearDown(() {
       controller.dispose();
+    });
+
+    test('inherits from BaseFlNodesCanvasController', () {
+      expect(controller, isA<BaseFlNodesCanvasController>());
     });
 
     test('viewport helpers adjust zoom and offset', () {

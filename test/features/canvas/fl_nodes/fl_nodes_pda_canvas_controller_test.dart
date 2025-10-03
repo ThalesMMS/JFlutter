@@ -14,6 +14,7 @@ import 'package:jflutter/core/models/pda_transition.dart';
 import 'package:jflutter/core/models/simulation_highlight.dart';
 import 'package:jflutter/core/models/state.dart';
 import 'package:jflutter/core/models/transition.dart';
+import 'package:jflutter/features/canvas/fl_nodes/base_fl_nodes_canvas_controller.dart';
 import 'package:jflutter/features/canvas/fl_nodes/fl_nodes_pda_canvas_controller.dart';
 import 'package:jflutter/presentation/providers/pda_editor_provider.dart';
 
@@ -167,6 +168,10 @@ void main() {
 
     tearDown(() {
       controller.dispose();
+    });
+
+    test('inherits from BaseFlNodesCanvasController', () {
+      expect(controller, isA<BaseFlNodesCanvasController>());
     });
 
     test('viewport helpers adjust zoom and offset', () {

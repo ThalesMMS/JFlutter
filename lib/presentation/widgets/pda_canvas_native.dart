@@ -13,9 +13,11 @@ class PDACanvasNative extends ConsumerStatefulWidget {
   const PDACanvasNative({
     super.key,
     required this.onPdaModified,
+    this.controller,
   });
 
   final ValueChanged<PDA> onPdaModified;
+  final FlNodesPdaCanvasController? controller;
 
   @override
   ConsumerState<PDACanvasNative> createState() => _PDACanvasNativeState();
@@ -23,16 +25,25 @@ class PDACanvasNative extends ConsumerStatefulWidget {
 
 class _PDACanvasNativeState extends ConsumerState<PDACanvasNative> {
   late final FlNodesPdaCanvasController _canvasController;
+  late final bool _ownsController;
   FlNodeEditorStyle? _lastEditorStyle;
   ProviderSubscription<PDAEditorState>? _subscription;
   PDA? _lastDeliveredPda;
+  VoidCallback? _highlightListener;
 
   @override
   void initState() {
     super.initState();
-    _canvasController = FlNodesPdaCanvasController(
-      editorNotifier: ref.read(pdaEditorProvider.notifier),
-    );
+    final externalController = widget.controller;
+    if (externalController != null) {
+      _canvasController = externalController;
+      _ownsController = false;
+    } else {
+      _canvasController = FlNodesPdaCanvasController(
+        editorNotifier: ref.read(pdaEditorProvider.notifier),
+      );
+      _ownsController = true;
+    }
     final initialState = ref.read(pdaEditorProvider);
     _canvasController.synchronize(initialState.pda);
     _lastDeliveredPda = initialState.pda;
@@ -59,6 +70,12 @@ class _PDACanvasNativeState extends ConsumerState<PDACanvasNative> {
         }
       },
     );
+    _highlightListener = () {
+      if (mounted) {
+        setState(() {});
+      }
+    };
+    _canvasController.highlightNotifier.addListener(_highlightListener!);
   }
 
   bool _shouldSynchronize(PDAEditorState? previous, PDAEditorState next) {
@@ -143,7 +160,13 @@ class _PDACanvasNativeState extends ConsumerState<PDACanvasNative> {
   @override
   void dispose() {
     _subscription?.close();
-    _canvasController.dispose();
+    if (_highlightListener != null) {
+      _canvasController.highlightNotifier
+          .removeListener(_highlightListener!);
+    }
+    if (_ownsController) {
+      _canvasController.dispose();
+    }
     super.dispose();
   }
 
@@ -180,6 +203,7 @@ class _PDACanvasNativeState extends ConsumerState<PDACanvasNative> {
     final states = pda?.states.toList() ?? const <automaton_state.State>[];
     final transitions = pda?.pdaTransitions.toList() ?? const <PDATransition>[];
     final hasStates = states.isNotEmpty;
+    final highlight = _canvasController.highlightNotifier.value;
 
     final statesById = {for (final state in states) state.id: state};
     final initialStateId = pda?.initialState?.id;
@@ -203,9 +227,11 @@ class _PDACanvasNativeState extends ConsumerState<PDACanvasNative> {
               final isAccepting = acceptingIds.contains(node.id);
               final isNondeterministic =
                   nondeterministicStateIds.contains(node.id);
+              final isHighlighted = highlight.stateIds.contains(node.id);
 
               final colors = _resolveHeaderColors(
                 theme,
+                isHighlighted: isHighlighted,
                 isInitial: isInitial,
                 isAccepting: isAccepting,
                 isNondeterministic: isNondeterministic,
@@ -403,11 +429,18 @@ class _HeaderColors {
 
 _HeaderColors _resolveHeaderColors(
   ThemeData theme, {
+  required bool isHighlighted,
   required bool isInitial,
   required bool isAccepting,
   required bool isNondeterministic,
 }) {
   final colorScheme = theme.colorScheme;
+  if (isHighlighted) {
+    return _HeaderColors(
+      background: colorScheme.primary,
+      foreground: colorScheme.onPrimary,
+    );
+  }
   if (isNondeterministic) {
     return _HeaderColors(
       background: colorScheme.errorContainer,

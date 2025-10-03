@@ -8,13 +8,15 @@ class SimulationPanel extends StatefulWidget {
   final Function(String) onSimulate;
   final SimulationResult? simulationResult;
   final String? regexResult;
+  final SimulationHighlightService highlightService;
 
   const SimulationPanel({
     super.key,
     required this.onSimulate,
     this.simulationResult,
     this.regexResult,
-  });
+    SimulationHighlightService? highlightService,
+  }) : highlightService = highlightService ?? SimulationHighlightService();
 
   @override
   State<SimulationPanel> createState() => _SimulationPanelState();
@@ -22,8 +24,6 @@ class SimulationPanel extends StatefulWidget {
 
 class _SimulationPanelState extends State<SimulationPanel> {
   final TextEditingController _inputController = TextEditingController();
-  final SimulationHighlightService _highlightService =
-      SimulationHighlightService();
   bool _isSimulating = false;
   bool _isStepByStep = false;
   int _currentStepIndex = 0;
@@ -33,7 +33,7 @@ class _SimulationPanelState extends State<SimulationPanel> {
   @override
   void dispose() {
     _inputController.dispose();
-    _highlightService.clear();
+    widget.highlightService.clear();
     super.dispose();
   }
 
@@ -59,7 +59,7 @@ class _SimulationPanelState extends State<SimulationPanel> {
         _simulationSteps.clear();
       });
 
-      _highlightService.clear();
+      widget.highlightService.clear();
 
       widget.onSimulate(inputString);
 
@@ -81,7 +81,7 @@ class _SimulationPanelState extends State<SimulationPanel> {
         _currentStepIndex = 0;
         _isPlaying = false;
       });
-      _highlightService.clear();
+      widget.highlightService.clear();
       return;
     }
 
@@ -92,7 +92,7 @@ class _SimulationPanelState extends State<SimulationPanel> {
         _currentStepIndex = 0;
         _isPlaying = false;
       });
-      _highlightService.clear();
+      widget.highlightService.clear();
       return;
     }
 
@@ -675,6 +675,9 @@ class _SimulationPanelState extends State<SimulationPanel> {
       return;
     }
 
-    _highlightService.emitFromSteps(_simulationSteps, _currentStepIndex);
+    widget.highlightService.emitFromSteps(
+      _simulationSteps,
+      _currentStepIndex,
+    );
   }
 }

@@ -1,14 +1,32 @@
 import '../models/simulation_highlight.dart';
 import '../models/simulation_result.dart';
 import '../models/simulation_step.dart';
-import 'draw2d_bridge_service.dart';
 
 /// Utility responsible for deriving and broadcasting simulation highlights.
-class SimulationHighlightService {
-  SimulationHighlightService({Draw2DBridgeService? bridge})
-    : _bridge = bridge ?? Draw2DBridgeService();
+typedef SimulationHighlightDispatcher = void Function(
+  SimulationHighlight highlight,
+);
 
-  final Draw2DBridgeService _bridge;
+class SimulationHighlightService {
+  SimulationHighlightService({SimulationHighlightDispatcher? dispatcher})
+      : _dispatcher = dispatcher;
+
+  static SimulationHighlightDispatcher? _globalDispatcher;
+
+  SimulationHighlightDispatcher? _dispatcher;
+
+  static void registerGlobalDispatcher(
+    SimulationHighlightDispatcher? dispatcher,
+  ) {
+    _globalDispatcher = dispatcher;
+  }
+
+  SimulationHighlightDispatcher? get dispatcher =>
+      _dispatcher ?? _globalDispatcher;
+
+  set dispatcher(SimulationHighlightDispatcher? value) {
+    _dispatcher = value;
+  }
 
   /// Computes a highlight payload from a simulation result and step index.
   SimulationHighlight computeFromResult(
@@ -80,18 +98,11 @@ class SimulationHighlightService {
 
   /// Dispatches [highlight] to the Draw2D bridge.
   void dispatch(SimulationHighlight highlight) {
-    if (highlight.isEmpty) {
-      _bridge.clearHighlight();
-    } else {
-      _bridge.highlight(
-        states: highlight.stateIds,
-        transitions: highlight.transitionIds,
-      );
-    }
+    dispatcher?.call(highlight);
   }
 
   /// Sends a clear highlight event.
   void clear() {
-    _bridge.clearHighlight();
+    dispatcher?.call(SimulationHighlight.empty);
   }
 }

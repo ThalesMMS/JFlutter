@@ -6,10 +6,12 @@ import '../providers/algorithm_provider.dart';
 import '../providers/automaton_provider.dart';
 import '../widgets/algorithm_panel.dart';
 import '../widgets/automaton_canvas.dart';
-import '../widgets/draw2d_canvas_toolbar.dart';
+import '../widgets/fl_nodes_canvas_toolbar.dart';
 import '../widgets/simulation_panel.dart';
 import 'grammar_page.dart';
 import 'regex_page.dart';
+import '../../core/services/simulation_highlight_service.dart';
+import '../../features/canvas/fl_nodes/fl_nodes_canvas_controller.dart';
 
 /// Page for working with Finite State Automata
 class FSAPage extends ConsumerStatefulWidget {
@@ -21,6 +23,33 @@ class FSAPage extends ConsumerStatefulWidget {
 
 class _FSAPageState extends ConsumerState<FSAPage> {
   final GlobalKey _canvasKey = GlobalKey();
+  late final FlNodesCanvasController _canvasController;
+  late final SimulationHighlightService _highlightService;
+
+  @override
+  void initState() {
+    super.initState();
+    _canvasController = FlNodesCanvasController(
+      automatonProvider: ref.read(automatonProvider.notifier),
+    );
+    _canvasController.synchronize(
+      ref.read(automatonProvider).currentAutomaton,
+    );
+    _highlightService = SimulationHighlightService(
+      dispatcher: _canvasController.applyHighlight,
+    );
+    SimulationHighlightService.registerGlobalDispatcher(
+      _canvasController.applyHighlight,
+    );
+  }
+
+  @override
+  void dispose() {
+    _highlightService.clear();
+    SimulationHighlightService.registerGlobalDispatcher(null);
+    _canvasController.dispose();
+    super.dispose();
+  }
   void _showSnack(String message, {bool isError = false}) {
     final theme = Theme.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
@@ -333,6 +362,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
       return AutomatonCanvas(
         automaton: state.currentAutomaton,
         canvasKey: _canvasKey,
+        controller: _canvasController,
         simulationResult: state.simulationResult,
         showTrace: state.simulationResult != null,
       );
@@ -345,8 +375,14 @@ class _FSAPageState extends ConsumerState<FSAPage> {
           Positioned(
             top: 12,
             right: 12,
-            child: Draw2DCanvasToolbar(
-              onClear: () => ref.read(automatonProvider.notifier).clearAutomaton(),
+            child: FlNodesCanvasToolbar(
+              onAddState: _canvasController.addStateAtCenter,
+              onZoomIn: _canvasController.zoomIn,
+              onZoomOut: _canvasController.zoomOut,
+              onFitToContent: _canvasController.fitToContent,
+              onResetView: _canvasController.resetView,
+              onClear: () =>
+                  ref.read(automatonProvider.notifier).clearAutomaton(),
             ),
           ),
         ],
@@ -461,6 +497,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
                         .read(automatonProvider)
                         .simulationResult,
                     regexResult: ref.read(automatonProvider).regexResult,
+                    highlightService: _highlightService,
                   ),
                 ),
               );
@@ -498,6 +535,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
                 .simulateAutomaton(inputString),
             simulationResult: state.simulationResult,
             regexResult: state.regexResult,
+            highlightService: _highlightService,
           ),
         ),
       ],

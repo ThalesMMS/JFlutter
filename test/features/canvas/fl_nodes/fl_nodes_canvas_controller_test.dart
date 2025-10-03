@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:fl_nodes/fl_nodes.dart';
+// ignore: implementation_imports
+import 'package:fl_nodes/src/core/models/events.dart' show DragSelectionEndEvent;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vector_math/vector_math_64.dart';
@@ -57,6 +59,7 @@ class _RecordingAutomatonProvider extends AutomatonProvider {
   final List<Map<String, Object?>> addStateCalls = [];
   final List<Map<String, Object?>> updateLabelCalls = [];
   final List<Map<String, Object?>> transitionCalls = [];
+  final List<Map<String, Object?>> moveStateCalls = [];
 
   @override
   void addState({
@@ -96,7 +99,11 @@ class _RecordingAutomatonProvider extends AutomatonProvider {
     required double x,
     required double y,
   }) {
-    // Intentionally left blank for tests.
+    moveStateCalls.add({
+      'id': id,
+      'x': x,
+      'y': y,
+    });
   }
 
   @override
@@ -255,6 +262,40 @@ void main() {
       expect(automaton, isNotNull);
       expect(automaton!.initialState, isNotNull);
       expect(automaton.initialState!.id, equals('q2'));
+    });
+
+    test('ignores DragSelectionEndEvent when position does not change', () async {
+      final node = _buildNode(
+        controller,
+        id: 'q3',
+        label: 'idle',
+        offset: const Offset(10, 20),
+      );
+
+      controller.controller.eventBus.emit(
+        AddNodeEvent(node, id: 'seed-drag'),
+      );
+
+      await _flushEvents();
+
+      provider.moveStateCalls.clear();
+
+      final instance = controller.controller.nodes['q3']!;
+      controller.controller.eventBus.emit(
+        DragSelectionEndEvent(
+          instance.offset,
+          {'q3'},
+          id: 'drag-noop',
+        ),
+      );
+
+      await _flushEvents();
+
+      expect(provider.moveStateCalls, isEmpty);
+      final cached = controller.nodeById('q3');
+      expect(cached, isNotNull);
+      expect(cached!.x, equals(10.0));
+      expect(cached.y, equals(20.0));
     });
 
     test('updates labels on NodeFieldEvent submissions', () async {

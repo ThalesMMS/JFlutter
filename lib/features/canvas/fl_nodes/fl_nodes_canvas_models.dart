@@ -1,5 +1,7 @@
 import 'package:collection/collection.dart';
 
+import '../../../core/models/tm_transition.dart';
+
 /// Metadata describing the current automaton rendered in the canvas.
 class FlNodesAutomatonMetadata {
   const FlNodesAutomatonMetadata({
@@ -122,6 +124,10 @@ class FlNodesCanvasEdge {
     this.lambdaSymbol,
     this.controlPointX,
     this.controlPointY,
+    this.readSymbol,
+    this.writeSymbol,
+    this.direction,
+    this.tapeNumber,
   });
 
   final String id;
@@ -131,10 +137,27 @@ class FlNodesCanvasEdge {
   final String? lambdaSymbol;
   final double? controlPointX;
   final double? controlPointY;
+  final String? readSymbol;
+  final String? writeSymbol;
+  final TapeDirection? direction;
+  final int? tapeNumber;
 
   String get label {
     if (lambdaSymbol != null && lambdaSymbol!.isNotEmpty) {
       return lambdaSymbol!;
+    }
+    if (readSymbol != null || writeSymbol != null || direction != null) {
+      final read = (readSymbol ?? '').isEmpty ? '∅' : readSymbol!;
+      final write = (writeSymbol ?? '').isEmpty ? '∅' : writeSymbol!;
+      final resolvedDirection = direction;
+      final directionSymbol = switch (resolvedDirection) {
+        TapeDirection.left => 'L',
+        TapeDirection.right => 'R',
+        TapeDirection.stay => 'S',
+        null => '',
+      };
+      final suffix = directionSymbol.isEmpty ? '' : ',$directionSymbol';
+      return '$read/$write$suffix';
     }
     final filtered = symbols.where((symbol) => symbol.isNotEmpty).toList();
     return filtered.join(',');
@@ -148,6 +171,10 @@ class FlNodesCanvasEdge {
     String? lambdaSymbol,
     double? controlPointX,
     double? controlPointY,
+    String? readSymbol,
+    String? writeSymbol,
+    TapeDirection? direction,
+    int? tapeNumber,
   }) {
     return FlNodesCanvasEdge(
       id: id ?? this.id,
@@ -157,6 +184,10 @@ class FlNodesCanvasEdge {
       lambdaSymbol: lambdaSymbol ?? this.lambdaSymbol,
       controlPointX: controlPointX ?? this.controlPointX,
       controlPointY: controlPointY ?? this.controlPointY,
+      readSymbol: readSymbol ?? this.readSymbol,
+      writeSymbol: writeSymbol ?? this.writeSymbol,
+      direction: direction ?? this.direction,
+      tapeNumber: tapeNumber ?? this.tapeNumber,
     );
   }
 
@@ -169,6 +200,10 @@ class FlNodesCanvasEdge {
       if (lambdaSymbol != null) 'lambdaSymbol': lambdaSymbol,
       if (controlPointX != null) 'controlPointX': controlPointX,
       if (controlPointY != null) 'controlPointY': controlPointY,
+      if (readSymbol != null) 'readSymbol': readSymbol,
+      if (writeSymbol != null) 'writeSymbol': writeSymbol,
+      if (direction != null) 'direction': direction!.name,
+      if (tapeNumber != null) 'tapeNumber': tapeNumber,
     };
   }
 
@@ -187,6 +222,15 @@ class FlNodesCanvasEdge {
       lambdaSymbol: json['lambdaSymbol'] as String?,
       controlPointX: (json['controlPointX'] as num?)?.toDouble(),
       controlPointY: (json['controlPointY'] as num?)?.toDouble(),
+      readSymbol: json['readSymbol'] as String?,
+      writeSymbol: json['writeSymbol'] as String?,
+      direction: (json['direction'] as String?) != null
+          ? TapeDirection.values.firstWhere(
+              (value) => value.name == json['direction'],
+              orElse: () => TapeDirection.right,
+            )
+          : null,
+      tapeNumber: json['tapeNumber'] as int?,
     );
   }
 }

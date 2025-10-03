@@ -20,13 +20,15 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
   static const String _gridSizeKey = 'settings_grid_size';
   static const String _nodeSizeKey = 'settings_node_size';
   static const String _fontSizeKey = 'settings_font_size';
+  static const String _legacyUseDraw2dCanvasKey =
+      'settings_use_draw2d_canvas';
   final SettingsStorage _storage;
 
   @override
   Future<SettingsModel> loadSettings() async {
     const defaults = SettingsModel();
 
-    return SettingsModel(
+    final settings = SettingsModel(
       emptyStringSymbol:
           await _storage.readString(_emptyStringSymbolKey) ??
           defaults.emptyStringSymbol,
@@ -45,6 +47,8 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
       nodeSize: await _storage.readDouble(_nodeSizeKey) ?? defaults.nodeSize,
       fontSize: await _storage.readDouble(_fontSizeKey) ?? defaults.fontSize,
     );
+    await _removeLegacyCanvasPreference();
+    return settings;
   }
 
   @override
@@ -64,6 +68,15 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
 
     if (results.any((success) => !success)) {
       throw Exception('Failed to save settings');
+    }
+    await _removeLegacyCanvasPreference();
+  }
+
+  Future<void> _removeLegacyCanvasPreference() async {
+    try {
+      await _storage.remove(_legacyUseDraw2dCanvasKey);
+    } catch (_) {
+      // Ignore cleanup failures – they should not block settings operations.
     }
   }
 }

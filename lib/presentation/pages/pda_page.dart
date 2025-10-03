@@ -5,9 +5,11 @@ import '../../core/models/pda.dart';
 import '../providers/pda_editor_provider.dart';
 import '../widgets/fl_nodes_canvas_toolbar.dart';
 import '../widgets/pda_canvas_native.dart';
-import '../widgets/pda_simulation_panel.dart';
 import '../widgets/pda_algorithm_panel.dart';
+import '../widgets/pda_simulation_panel.dart';
 import '../../features/canvas/fl_nodes/fl_nodes_pda_canvas_controller.dart';
+import '../../core/services/simulation_highlight_service.dart';
+import '../../features/canvas/fl_nodes/fl_nodes_highlight_channel.dart';
 
 /// Page for working with Pushdown Automata
 class PDAPage extends ConsumerStatefulWidget {
@@ -24,6 +26,8 @@ class _PDAPageState extends ConsumerState<PDAPage> {
   bool _hasUnsavedChanges = false;
   ProviderSubscription<PDAEditorState>? _pdaEditorSub;
   late final FlNodesPdaCanvasController _canvasController;
+  late final FlNodesSimulationHighlightChannel _highlightChannel;
+  late final SimulationHighlightService _highlightService;
 
   @override
   void initState() {
@@ -32,6 +36,9 @@ class _PDAPageState extends ConsumerState<PDAPage> {
       editorNotifier: ref.read(pdaEditorProvider.notifier),
     );
     _canvasController.synchronize(ref.read(pdaEditorProvider).pda);
+    _highlightChannel = FlNodesSimulationHighlightChannel(_canvasController);
+    _highlightService = SimulationHighlightService(channel: _highlightChannel);
+    SimulationHighlightService.registerGlobalChannel(_highlightChannel);
     _pdaEditorSub = ref.listenManual<PDAEditorState>(
       pdaEditorProvider,
       (previous, next) {
@@ -51,6 +58,8 @@ class _PDAPageState extends ConsumerState<PDAPage> {
   @override
   void dispose() {
     _pdaEditorSub?.close();
+    _highlightService.clear();
+    SimulationHighlightService.registerGlobalChannel(null);
     _canvasController.dispose();
     super.dispose();
   }
@@ -110,7 +119,9 @@ class _PDAPageState extends ConsumerState<PDAPage> {
                       context: context,
                       title: 'PDA Simulation',
                       icon: Icons.play_arrow,
-                      child: const PDASimulationPanel(),
+                      child: PDASimulationPanel(
+                        highlightService: _highlightService,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -276,12 +287,12 @@ class _PDAPageState extends ConsumerState<PDAPage> {
           flex: 2,
           child: Container(
             margin: const EdgeInsets.all(8),
-        child: _buildCanvasWithToolbar(
-          PDACanvasNative(
-            controller: _canvasController,
-            onPdaModified: _handlePdaModified,
-          ),
-        ),
+            child: _buildCanvasWithToolbar(
+              PDACanvasNative(
+                controller: _canvasController,
+                onPdaModified: _handlePdaModified,
+              ),
+            ),
           ),
         ),
         const SizedBox(width: 16),
@@ -290,7 +301,9 @@ class _PDAPageState extends ConsumerState<PDAPage> {
           flex: 1,
           child: Container(
             margin: const EdgeInsets.all(8),
-            child: const PDASimulationPanel(),
+            child: PDASimulationPanel(
+              highlightService: _highlightService,
+            ),
           ),
         ),
         const SizedBox(width: 16),

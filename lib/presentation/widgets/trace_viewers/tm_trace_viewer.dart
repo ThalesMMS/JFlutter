@@ -3,17 +3,25 @@ import 'package:flutter/material.dart';
 import '../../../core/algorithms/tm_simulator.dart';
 import '../../../core/models/simulation_result.dart';
 import '../../../core/models/simulation_step.dart';
+import '../../../core/services/simulation_highlight_service.dart';
 import 'base_trace_viewer.dart';
 
 class TMTraceViewer extends StatelessWidget {
   final TMSimulationResult result;
-  const TMTraceViewer({super.key, required this.result});
+  final SimulationHighlightService? highlightService;
+
+  const TMTraceViewer({
+    super.key,
+    required this.result,
+    this.highlightService,
+  });
 
   @override
   Widget build(BuildContext context) {
     return BaseTraceViewer(
       result: _asSimulationResult(),
       title: 'TM Trace (${result.steps.length} steps)',
+      highlightService: highlightService,
       buildStepLine: (SimulationStep step, int index) {
         final tape = step.tapeContents.isEmpty ? '□' : step.tapeContents;
         final transition = step.usedTransition != null

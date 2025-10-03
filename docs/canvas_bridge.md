@@ -2,23 +2,23 @@
 
 The Draw2D workspace is rendered inside a `WebView` (`Draw2DCanvasView`) that
 loads `assets/draw2d/editor.html`. The HTML page bootstraps the Draw2D library
-and exposes a very small messaging layer so Flutter can keep the canvas in sync
-with the current automaton.
+and exposes a messaging layer so Flutter can keep the canvas in sync with the
+current automaton.
 
 ## Message Flow
 
 Communication happens through the `JFlutterBridge` JavaScript channel. Each
-message is a JSON object with two fields:
-
-```json
-{ "type": "state.add", "payload": { "id": "q0" } }
-```
+message is a JSON envelope with a `type` string and an optional `payload`
+object. The bridge performs a handshake (`editor_ready`) before Flutter starts
+sending data so the toolbar can surface the “Canvas not connected” hint until
+Draw2D is ready.
 
 ### Flutter → JavaScript
 
-Flutter pushes the full automaton snapshot whenever the provider changes by
-executing `window.draw2dBridge.loadModel(model)`. The payload matches the shape
-produced by `Draw2DAutomatonMapper.toJson`:
+Flutter keeps the WebView copy of the automaton in sync by executing
+`window.draw2dBridge.loadModel(model)` whenever the provider emits a new
+snapshot. The payload matches the structure returned by
+`Draw2DAutomatonMapper.toJson`:
 
 | Field            | Description                                            |
 | ---------------- | ------------------------------------------------------ |
@@ -29,24 +29,41 @@ produced by `Draw2DAutomatonMapper.toJson`:
 | `transitions`    | Array of transition objects (from, to, label, control).|
 | `initialStateId` | Draw2D identifier of the initial state (or `null`).    |
 
-The JavaScript bridge clears the canvas and recreates all figures whenever a
-new model arrives.
+Additional bridge commands mirror toolbar actions and simulator needs. All
+payloads are JSON-serialised before being injected:
+
+| Command                | Transport                          | Payload shape                         | Purpose |
+| ---------------------- | ---------------------------------- | ------------------------------------- | ------- |
+| `highlight`            | JS bridge method + `postMessage`   | `{ states: string[], transitions: string[] }` | Highlight states/transitions during simulations. |
+| `clear_highlight`      | JS bridge method + `postMessage`   | `{}`                                  | Remove active highlights. |
+| `zoom_in` / `zoom_out` | JS bridge method + `postMessage`   | `{}`                                  | Adjust canvas zoom level. |
+| `reset_view`           | JS bridge method + `postMessage`   | `{}`                                  | Restore the default pan/zoom. |
+| `fit_content`          | JS bridge method + `postMessage`   | `{}`                                  | Auto-frame the automaton. |
+| `add_state_center`     | JS bridge method + `postMessage`   | `{}`                                  | Insert a new state at the viewport centre. |
+| `load_automaton`       | `postMessage` (Flutter web builds) | Automaton snapshot + viewport & trace metadata | Initialise Draw2D in web builds. |
+| `clear_automaton`      | `postMessage` (Flutter web builds) | `{}`                                  | Remove the rendered automaton. |
 
 ### JavaScript → Flutter
 
-User interactions in Draw2D are forwarded back to Flutter through the
-`JFlutterBridge` channel. The following event types are supported:
+User interactions in Draw2D are forwarded back to Flutter through
+`JFlutterBridge`. The mobile WebView emits the following events:
 
-| `type`             | Payload fields                                                   | Effect                                             |
-| ------------------ | ---------------------------------------------------------------- | -------------------------------------------------- |
-| `state.add`        | `id`, `label`, `x`, `y`, `isInitial?`, `isAccepting?`            | Adds or replaces a state at the given coordinates. |
-| `state.move`       | `id`, `x`, `y`                                                   | Updates a state's position (batched every 60 ms).  |
-| `state.label`      | `id`, `label`                                                    | Renames a state.                                   |
-| `transition.add`   | `id`, `fromStateId`, `toStateId`, `label`                        | Creates or updates a transition.                   |
-| `transition.label` | `id`, `label`                                                    | Renames a transition and updates its symbols.      |
+| `type`                 | Payload fields                                                   | Effect |
+| ---------------------- | ---------------------------------------------------------------- | ------ |
+| `editor_ready`         | `{}`                                                             | Marks the bridge as ready and triggers the first sync. |
+| `log`                  | `level`, `message`, `details?`                                   | Surfaces runtime diagnostics in Flutter logs. |
+| `state.add`            | `id?`, `label?`, `x`, `y`, `isInitial?`, `isAccepting?`          | Adds or replaces a state at the requested coordinates. |
+| `state.move`           | `id`, `x`, `y`                                                   | Updates a state's position (debounced every 60 ms). |
+| `state.label`          | `id`, `label`                                                    | Renames a state. |
+| `state.updateFlags`    | `id`, `isInitial?`, `isAccepting?`                               | Toggles initial/accepting flags. |
+| `state.remove`         | `id`                                                             | Deletes a state. |
+| `transition.add`       | `id?`, `fromStateId`, `toStateId`, `label?`                      | Creates or updates a transition. |
+| `transition.label`     | `id`, `label`                                                    | Updates transition symbols. |
+| `transition.remove`    | `id`                                                             | Deletes a transition. |
 
-The provider normalises these events and merges them into the active `FSA`
-instance, ensuring the rest of the UI reacts immediately.
+Flutter web builds reuse the same event names via `postMessage` and add
+request/patch helpers (`request_automaton`, `patch`, `viewport_patch`) so the
+HTML editor can ask for the latest snapshot or send diff updates.
 
 ## Debugging Tips
 

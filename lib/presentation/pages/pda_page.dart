@@ -99,6 +99,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
                       controller: _canvasController,
                       onPdaModified: _handlePdaModified,
                     ),
+                    isMobile: true,
                   ),
                 ),
               ),
@@ -294,6 +295,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
                 controller: _canvasController,
                 onPdaModified: _handlePdaModified,
               ),
+              isMobile: false,
             ),
           ),
         ),
@@ -377,28 +379,30 @@ class _PDAPageState extends ConsumerState<PDAPage> {
     );
   }
 
-  Widget _buildCanvasWithToolbar(Widget canvas) {
+  Widget _buildCanvasWithToolbar(
+    Widget canvas, {
+    required bool isMobile,
+  }) {
     final editorState = ref.watch(pdaEditorProvider);
     final statusMessage = _buildToolbarStatusMessage(editorState);
 
     return Stack(
       children: [
         Positioned.fill(child: canvas),
-        Positioned(
-          top: 12,
-          right: 12,
-          child: FlNodesCanvasToolbar(
-            onAddState: _canvasController.addStateAtCenter,
-            onZoomIn: _canvasController.zoomIn,
-            onZoomOut: _canvasController.zoomOut,
-            onFitToContent: _canvasController.fitToContent,
-            onResetView: _canvasController.resetView,
-            onClear: () => ref.read(pdaEditorProvider.notifier).updateFromCanvas(
-                  states: const <automaton_state.State>[],
-                  transitions: const <PDATransition>[],
-                ),
-            statusMessage: statusMessage,
-          ),
+        FlNodesCanvasToolbar(
+          layout: isMobile
+              ? FlNodesCanvasToolbarLayout.mobile
+              : FlNodesCanvasToolbarLayout.desktop,
+          onAddState: _canvasController.addStateAtCenter,
+          onZoomIn: _canvasController.zoomIn,
+          onZoomOut: _canvasController.zoomOut,
+          onFitToContent: _canvasController.fitToContent,
+          onResetView: _canvasController.resetView,
+          onClear: () => ref.read(pdaEditorProvider.notifier).updateFromCanvas(
+                states: const <automaton_state.State>[],
+                transitions: const <PDATransition>[],
+              ),
+          statusMessage: statusMessage,
         ),
       ],
     );

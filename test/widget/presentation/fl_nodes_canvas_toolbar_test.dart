@@ -15,6 +15,7 @@ void main() {
             onFitToContent: _noop,
             onResetView: _noop,
             statusMessage: '3 states · 4 transitions',
+            layout: FlNodesCanvasToolbarLayout.desktop,
           ),
         ),
       ),
@@ -33,6 +34,7 @@ void main() {
             onZoomOut: _noop,
             onFitToContent: _noop,
             onResetView: _noop,
+            layout: FlNodesCanvasToolbarLayout.desktop,
           ),
         ),
       ),
@@ -40,6 +42,47 @@ void main() {
 
     expect(find.textContaining('states'), findsNothing);
     expect(find.textContaining('transitions'), findsNothing);
+  });
+
+  testWidgets('Desktop layout renders compact icon buttons', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: FlNodesCanvasToolbar(
+            onAddState: _noop,
+            onZoomIn: _noop,
+            onZoomOut: _noop,
+            onFitToContent: _noop,
+            onResetView: _noop,
+            layout: FlNodesCanvasToolbarLayout.desktop,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(IconButton), findsNWidgets(5));
+    expect(find.byType(FilledButton), findsNothing);
+  });
+
+  testWidgets('Mobile layout renders filled buttons with labels', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: FlNodesCanvasToolbar(
+            onAddState: _noop,
+            onZoomIn: _noop,
+            onZoomOut: _noop,
+            onFitToContent: _noop,
+            onResetView: _noop,
+            layout: FlNodesCanvasToolbarLayout.mobile,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(FilledButton), findsNWidgets(5));
+    expect(find.text('Add state'), findsOneWidget);
+    expect(find.text('Zoom in'), findsOneWidget);
   });
 }
 

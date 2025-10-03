@@ -1,1201 +1,231 @@
-import 'dart:math' as math;
+import 'package:fl_nodes/fl_nodes.dart';
 import 'package:flutter/material.dart';
-import 'package:vector_math/vector_math_64.dart' hide Colors;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/models/fsa.dart';
-import '../../core/models/state.dart' as automaton_state;
 import '../../core/models/fsa_transition.dart';
-import '../../core/models/transition.dart';
 import '../../core/models/simulation_result.dart';
-import '../../core/models/simulation_step.dart';
-import 'touch_gesture_handler.dart';
-import 'transition_geometry.dart';
-import '../../core/algorithms/common/throttling.dart';
+import '../../core/models/state.dart' as automaton_state;
+import '../../features/canvas/fl_nodes/fl_nodes_canvas_controller.dart';
+import '../providers/automaton_provider.dart';
 
-/// Interactive canvas for drawing and editing automata
-class AutomatonCanvas extends StatefulWidget {
-  final FSA? automaton;
-  final GlobalKey canvasKey;
-  final ValueChanged<FSA> onAutomatonChanged;
-  final SimulationResult? simulationResult;
-  final int? currentStepIndex;
-  final bool showTrace;
-
+/// Shared automaton canvas backed by the fl_nodes editor. This replaces the
+/// legacy CustomPaint implementation and delegates editing to
+/// [FlNodesCanvasController], keeping the Riverpod automaton state in sync with
+/// the visual representation.
+class AutomatonCanvas extends ConsumerStatefulWidget {
   const AutomatonCanvas({
     super.key,
     required this.automaton,
     required this.canvasKey,
-    required this.onAutomatonChanged,
+    @Deprecated('No longer used; the canvas writes directly to AutomatonProvider.')
+    ValueChanged<FSA>? onAutomatonChanged,
     this.simulationResult,
     this.currentStepIndex,
     this.showTrace = false,
-  });
+  }) : _deprecatedOnAutomatonChanged = onAutomatonChanged;
+
+  final FSA? automaton;
+  final GlobalKey canvasKey;
+
+  /// Legacy callback kept for compatibility while Draw2D bindings are phased
+  /// out. Mutations now happen directly through [AutomatonProvider].
+  // ignore: unused_field
+  @Deprecated('No longer used; the canvas writes directly to AutomatonProvider.')
+  final ValueChanged<FSA>? _deprecatedOnAutomatonChanged;
+
+  final SimulationResult? simulationResult;
+  final int? currentStepIndex;
+  final bool showTrace;
 
   @override
-  State<AutomatonCanvas> createState() => _AutomatonCanvasState();
+  ConsumerState<AutomatonCanvas> createState() => _AutomatonCanvasState();
 }
 
-class _AutomatonCanvasState extends State<AutomatonCanvas> {
-  final List<automaton_state.State> _states = [];
-  final List<FSATransition> _transitions = [];
-  automaton_state.State? _selectedState;
-  bool _isAddingState = false;
-  bool _isAddingTransition = false;
-  automaton_state.State? _transitionStart;
-  Offset? _transitionPreviewPosition;
-  final FrameThrottler _pointerThrottler = FrameThrottler();
-
-  CanvasInteractionMode get _interactionMode {
-    if (_isAddingTransition) {
-      return CanvasInteractionMode.addTransition;
-    }
-    if (_isAddingState) {
-      return CanvasInteractionMode.addState;
-    }
-    return CanvasInteractionMode.none;
-  }
+class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
+  late final FlNodesCanvasController _canvasController;
+  FlNodeEditorStyle? _lastEditorStyle;
+  Map<String, automaton_state.State> _statesById = const {};
+  Set<String> _nondeterministicStateIds = const {};
+  Set<String> _visitedStateIds = const {};
+  String? _currentStateId;
 
   @override
   void initState() {
     super.initState();
-    _loadAutomaton();
+    _canvasController = FlNodesCanvasController(
+      automatonProvider: ref.read(automatonProvider.notifier),
+    );
+    _canvasController.synchronize(widget.automaton);
+    _applyDerivedState(_computeDerivedState());
   }
 
   @override
-  void didUpdateWidget(AutomatonCanvas oldWidget) {
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _applyEditorStyle(Theme.of(context));
+  }
+
+  @override
+  void didUpdateWidget(covariant AutomatonCanvas oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.automaton != widget.automaton) {
-      _loadAutomaton();
+    final automatonChanged = !identical(oldWidget.automaton, widget.automaton);
+    if (automatonChanged) {
+      _canvasController.synchronize(widget.automaton);
     }
-  }
 
-  void _loadAutomaton() {
-    if (widget.automaton != null) {
+    if (automatonChanged ||
+        oldWidget.simulationResult != widget.simulationResult ||
+        oldWidget.currentStepIndex != widget.currentStepIndex ||
+        oldWidget.showTrace != widget.showTrace) {
       setState(() {
-        _states.clear();
-        _transitions.clear();
-        _states.addAll(widget.automaton!.states);
-        _transitions.addAll(
-          widget.automaton!.transitions.cast<FSATransition>(),
-        );
-      });
-    } else {
-      setState(() {
-        _states.clear();
-        _transitions.clear();
+        _applyDerivedState(_computeDerivedState());
       });
     }
   }
 
-  void _addStateAtCenter() {
-    // Add state at a reasonable position in the canvas
-    // Use a fixed center position that works for most screen sizes
-    const canvasCenter = Offset(200, 150);
-
-    // Check if there's already a state at this position and offset if needed
-    Offset position = canvasCenter;
-    int attempts = 0;
-    while (attempts < 10) {
-      bool hasConflict = false;
-      for (final state in _states) {
-        if ((Offset(state.position.x, state.position.y) - position).distance <
-            60) {
-          hasConflict = true;
-          break;
-        }
-      }
-
-      if (!hasConflict) break;
-
-      // Offset position in a spiral pattern
-      position = Offset(
-        canvasCenter.dx + (attempts * 30) * math.cos(attempts * 0.8),
-        canvasCenter.dy + (attempts * 30) * math.sin(attempts * 0.8),
-      );
-      attempts++;
-    }
-
-    _addState(position);
+  @override
+  void dispose() {
+    _canvasController.dispose();
+    super.dispose();
   }
 
-  void _enableTransitionAdding() {
-    setState(() {
-      _isAddingTransition = true;
-      _isAddingState = false;
-      _selectedState = null;
-      _transitionStart = null;
-      _transitionPreviewPosition = null;
-    });
-  }
-
-  void _addState(Offset position) {
-    final newState = automaton_state.State(
-      id: 'q${_states.length}',
-      label: 'q${_states.length}',
-      position: Vector2(position.dx, position.dy),
-      isInitial: _states.isEmpty,
-      isAccepting: false,
-    );
-
-    setState(() {
-      _states.add(newState);
-      _isAddingState = false;
-    });
-
-    _notifyAutomatonChanged();
-  }
-
-  Future<void> _addTransitionFromHandler(Transition transition) async {
-    final symbolInput = await _showSymbolDialog();
-    if (symbolInput == null) {
-      return;
-    }
-
-    final newTransition = FSATransition(
-      id: 't${_transitions.length + 1}',
-      fromState: transition.fromState,
-      toState: transition.toState,
-      label: symbolInput.label,
-      inputSymbols: symbolInput.inputSymbols,
-      lambdaSymbol: symbolInput.lambdaSymbol,
-    );
-
-    setState(() {
-      _transitions.add(newTransition);
-      _isAddingTransition = false;
-      _transitionStart = null;
-      _transitionPreviewPosition = null;
-    });
-    _notifyAutomatonChanged();
-  }
-
-  void _editState(automaton_state.State state) {
-    showDialog(
-      context: context,
-      builder: (context) => _StateEditDialog(
-        state: state,
-        onStateUpdated: (updatedState) {
-          setState(() {
-            final index = _states.indexWhere((s) => s.id == state.id);
-            if (index != -1) {
-              _states[index] = updatedState;
-            }
-          });
-          _notifyAutomatonChanged();
-        },
+  void _applyEditorStyle(ThemeData theme) {
+    final controller = _canvasController.controller;
+    final currentStyle = controller.style;
+    final colorScheme = theme.colorScheme;
+    final desiredStyle = currentStyle.copyWith(
+      decoration: BoxDecoration(color: colorScheme.surface),
+      gridStyle: currentStyle.gridStyle.copyWith(
+        lineColor: colorScheme.outlineVariant.withOpacity(0.35),
+        intersectionColor: colorScheme.outlineVariant.withOpacity(0.55),
+      ),
+      highlightAreaStyle: currentStyle.highlightAreaStyle.copyWith(
+        color: colorScheme.primary.withOpacity(0.12),
+        borderColor: colorScheme.primary.withOpacity(0.6),
       ),
     );
+
+    if (_lastEditorStyle == null || !_editorStylesEqual(_lastEditorStyle!, desiredStyle)) {
+      _lastEditorStyle = desiredStyle;
+      controller.setStyle(desiredStyle);
+    }
   }
 
-  void _updateTransitionPreview(Offset? position) {
-    if (_transitionStart == null) {
-      if (_transitionPreviewPosition != null) {
-        setState(() {
-          _transitionPreviewPosition = null;
-        });
-      }
-      return;
-    }
-
-    if (_transitionPreviewPosition == position) return;
-
-    _pointerThrottler.schedule(() {
-      if (!mounted) return;
-      setState(() {
-        _transitionPreviewPosition = position;
-      });
-    });
+  void _applyDerivedState(_DerivedState data) {
+    _statesById = data.statesById;
+    _nondeterministicStateIds = data.nondeterministicStateIds;
+    _visitedStateIds = data.visitedStates;
+    _currentStateId = data.currentStateId;
   }
 
-  void _handleTransitionPreview(TransitionDragPreview? preview) {
-    if (preview == null) {
-      if (_transitionStart != null || _transitionPreviewPosition != null) {
-        setState(() {
-          _transitionStart = null;
-          _transitionPreviewPosition = null;
-        });
-      }
-      return;
+  _DerivedState _computeDerivedState() {
+    final automaton = widget.automaton;
+    final statesById = <String, automaton_state.State>{};
+    var nondeterministicStateIds = <String>{};
+
+    if (automaton != null) {
+      statesById.addEntries(automaton.states.map(
+        (state) => MapEntry(state.id, state),
+      ));
+      final transitions = automaton.fsaTransitions.toList(growable: false);
+      final nondeterministicTransitions =
+          _identifyNondeterministicTransitions(transitions);
+      nondeterministicStateIds = _identifyNondeterministicStates(
+        transitions,
+        nondeterministicTransitions,
+      );
     }
 
-    if (_transitionStart != preview.fromState) {
-      setState(() {
-        _transitionStart = preview.fromState;
-        _transitionPreviewPosition = preview.currentPosition;
-      });
-      return;
-    }
-
-    if (_transitionPreviewPosition == preview.currentPosition) {
-      return;
-    }
-
-    _pointerThrottler.schedule(() {
-      if (!mounted) return;
-      setState(() {
-        _transitionPreviewPosition = preview.currentPosition;
-      });
-    });
-  }
-
-  void _handleInteractionModeHandled() {
-    if (!_isAddingState && !_isAddingTransition &&
-        _transitionStart == null &&
-        _transitionPreviewPosition == null) {
-      return;
-    }
-
-    setState(() {
-      _isAddingState = false;
-      _isAddingTransition = false;
-      _transitionStart = null;
-      _transitionPreviewPosition = null;
-    });
-  }
-
-  Future<_TransitionSymbolInput?> _showSymbolDialog({
-    FSATransition? transition,
-  }) async {
-    final existingSymbols = transition?.lambdaSymbol != null
-        ? 'ε'
-        : transition?.inputSymbols.join(', ') ?? '';
-    final controller = TextEditingController(text: existingSymbols);
-    final result = await showDialog<_TransitionSymbolInput>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(
-            transition == null ? 'Transition Symbols' : 'Edit Transition',
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Enter symbols separated by commas or ε for epsilon'),
-              const SizedBox(height: 12),
-              TextField(
-                controller: controller,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Symbols',
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                final parsed = _TransitionSymbolInput.parse(controller.text);
-                if (parsed == null) {
-                  Navigator.of(context).pop();
-                  return;
-                }
-                Navigator.of(context).pop(parsed);
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
+    final highlights = _computeHighlights(
+      widget.simulationResult,
+      widget.currentStepIndex,
+      widget.showTrace,
     );
 
-    return result;
-  }
-
-  Future<void> _editTransition(FSATransition transition) async {
-    final symbolInput = await _showSymbolDialog(transition: transition);
-    if (symbolInput == null) {
-      return;
-    }
-
-    setState(() {
-      final index = _transitions.indexWhere((t) => t.id == transition.id);
-      if (index != -1) {
-        _transitions[index] = transition.copyWith(
-          label: symbolInput.label,
-          inputSymbols: symbolInput.inputSymbols,
-          lambdaSymbol: symbolInput.lambdaSymbol,
-        );
-      }
-    });
-
-    _notifyAutomatonChanged();
-  }
-
-  void _notifyAutomatonChanged() {
-    _pointerThrottler.schedule(() {
-      setState(() {
-        if (widget.automaton != null) {
-          final updatedAutomaton = widget.automaton!.copyWith(
-            states: _states.toSet(),
-            transitions: _transitions.toSet(),
-          );
-          widget.onAutomatonChanged(updatedAutomaton);
-        }
-      });
-    });
+    return _DerivedState(
+      statesById: statesById,
+      nondeterministicStateIds: nondeterministicStateIds,
+      visitedStates: highlights.visitedStates,
+      currentStateId: highlights.currentStateId,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Stack(
-        children: [
-          TouchGestureHandler<FSATransition>(
-            states: _states,
-            transitions: _transitions,
-            selectedState: _selectedState,
-            onStateSelected: (state) {
-              setState(() {
-                _selectedState = state;
-              });
-            },
-            onStateMoved: (state) {
-              setState(() {
-                final index = _states.indexWhere((s) => s.id == state.id);
-                if (index != -1) {
-                  _states[index] = state;
-                }
-              });
-              _notifyAutomatonChanged();
-            },
-            onStateAdded: (position) {
-              _addState(position);
-            },
-            onTransitionAdded: (transition) {
-              _addTransitionFromHandler(transition);
-            },
-            onStateEdited: (state) {
-              _editState(state);
-            },
-            onStateDeleted: (state) {
-              setState(() {
-                _states.removeWhere((s) => s.id == state.id);
-                _transitions.removeWhere(
-                  (t) => t.fromState.id == state.id || t.toState.id == state.id,
+    final theme = Theme.of(context);
+    _applyEditorStyle(theme);
+
+    final automaton = widget.automaton;
+    final hasStates = automaton?.states.isNotEmpty ?? false;
+
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: KeyedSubtree(
+            key: widget.canvasKey,
+            child: FlNodeEditorWidget(
+              controller: _canvasController.controller,
+              overlay: () => const <FlOverlayData>[],
+              headerBuilder: (context, node, style, onToggleCollapse) {
+                final automatonState = _statesById[node.id];
+                final label = automatonState?.label ?? node.id;
+                final isInitial = automaton?.initialState?.id == node.id;
+                final isAccepting = automaton?.acceptingStates
+                        .any((candidate) => candidate.id == node.id) ??
+                    false;
+                final isVisited = widget.showTrace && _visitedStateIds.contains(node.id);
+                final isCurrent = widget.showTrace && _currentStateId == node.id;
+                final isNondeterministic =
+                    _nondeterministicStateIds.contains(node.id);
+
+                final colors = _resolveHeaderColors(
+                  theme,
+                  isCurrent: isCurrent,
+                  isVisited: isVisited,
+                  isNondeterministic: isNondeterministic,
                 );
-                if (_selectedState?.id == state.id) {
-                  _selectedState = null;
-                }
-              });
-              _notifyAutomatonChanged();
-            },
-            onTransitionDeleted: (transition) {
-              setState(() {
-                _transitions.removeWhere((t) => t.id == transition.id);
-              });
-              _notifyAutomatonChanged();
-            },
-            onTransitionEdited: (transition) {
-              _editTransition(transition);
-            },
-            interactionMode: _interactionMode,
-            onTransitionPreview: _handleTransitionPreview,
-            onInteractionModeHandled: _handleInteractionModeHandled,
-            child: MouseRegion(
-              onExit: (_) {
-                _updateTransitionPreview(null);
+
+                return _AutomatonNodeHeader(
+                  label: label,
+                  isInitial: isInitial,
+                  isAccepting: isAccepting,
+                  isCollapsed: node.state.isCollapsed,
+                  colors: colors,
+                  onToggleCollapse: onToggleCollapse,
+                );
               },
-              child: Listener(
-                onPointerHover: (event) =>
-                    _updateTransitionPreview(event.localPosition),
-                onPointerMove: (event) =>
-                    _updateTransitionPreview(event.localPosition),
-                onPointerDown: (event) =>
-                    _updateTransitionPreview(event.localPosition),
-                onPointerUp: (_) => _updateTransitionPreview(null),
-                onPointerCancel: (_) => _updateTransitionPreview(null),
-                child: CustomPaint(
-                  painter: AutomatonPainter(
-                    states: _states,
-                    transitions: _transitions,
-                    selectedState: _selectedState,
-                    transitionStart: _transitionStart,
-                    transitionPreviewPosition: _transitionPreviewPosition,
-                    simulationResult: widget.simulationResult,
-                    currentStepIndex: widget.currentStepIndex,
-                    showTrace: widget.showTrace,
-                    surfaceColor: Theme.of(context).colorScheme.surface,
-                  ),
-                  size: Size.infinite,
-                ),
-              ),
             ),
           ),
-          // Canvas controls
-          Positioned(top: 8, right: 8, child: _buildCanvasControls(context)),
-          // Empty state message
-          if (_states.isEmpty)
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.account_tree,
-                    size: 64,
-                    color: Colors.grey.shade400,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Empty Canvas',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Tap "Add State" to create your first state',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey.shade500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCanvasControls(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            onPressed: _addStateAtCenter,
-            icon: const Icon(Icons.add_circle),
-            tooltip: 'Add State',
-            color: _isAddingState
-                ? Theme.of(context).colorScheme.primary
-                : null,
-          ),
-          IconButton(
-            onPressed: _enableTransitionAdding,
-            icon: const Icon(Icons.arrow_forward),
-            tooltip: 'Add Transition',
-            color: _isAddingTransition
-                ? Theme.of(context).colorScheme.primary
-                : null,
-          ),
-          IconButton(
-            onPressed: () {
-              setState(() {
-                _isAddingState = false;
-                _isAddingTransition = false;
-                _selectedState = null;
-                _transitionStart = null;
-              });
-            },
-            icon: const Icon(Icons.cancel),
-            tooltip: 'Cancel',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Custom painter for drawing automata with trace visualization support
-class AutomatonPainter extends CustomPainter {
-  final List<automaton_state.State> states;
-  final List<FSATransition> transitions;
-  final automaton_state.State? selectedState;
-  final automaton_state.State? transitionStart;
-  final Offset? transitionPreviewPosition;
-  final SimulationResult? simulationResult;
-  final int? currentStepIndex;
-  final bool showTrace;
-  final Color surfaceColor;
-  final Set<String> _nondeterministicTransitionIds;
-  final Set<String> _epsilonTransitionIds;
-  final Set<String> _nondeterministicStateIds;
-  final Set<String> _visitedStates;
-  final Set<String> _usedTransitions;
-  final List<String> _tracePath;
-
-  AutomatonPainter({
-    required this.states,
-    required this.transitions,
-    this.selectedState,
-    this.transitionStart,
-    this.transitionPreviewPosition,
-    this.simulationResult,
-    this.currentStepIndex,
-    this.showTrace = false,
-    required this.surfaceColor,
-  }) : _nondeterministicTransitionIds = <String>{},
-       _epsilonTransitionIds = transitions
-           .where((t) => t.isEpsilonTransition)
-           .map((t) => t.id)
-           .toSet(),
-       _nondeterministicStateIds = <String>{},
-       _visitedStates = <String>{},
-       _usedTransitions = <String>{},
-       _tracePath = <String>[] {
-    _nondeterministicTransitionIds.addAll(
-      _identifyNondeterministicTransitions(transitions),
-    );
-    _nondeterministicStateIds.addAll(
-      _identifyNondeterministicStates(
-        transitions,
-        _nondeterministicTransitionIds,
-      ),
-    );
-
-    // Extract trace information for visualization
-    if (showTrace && simulationResult != null && currentStepIndex != null) {
-      _extractTraceInfo();
-    }
-  }
-
-  /// Extract trace information for visualization
-  void _extractTraceInfo() {
-    if (simulationResult == null || currentStepIndex == null) return;
-
-    final steps = simulationResult!.steps;
-    final stepCount = currentStepIndex! + 1;
-
-    // Get visited states up to current step
-    _visitedStates.clear();
-    _usedTransitions.clear();
-    _tracePath.clear();
-
-    for (int i = 0; i < stepCount && i < steps.length; i++) {
-      final step = steps[i];
-      _visitedStates.add(step.currentState);
-      _tracePath.add(step.currentState);
-      if (step.usedTransition != null) {
-        _usedTransitions.add(step.usedTransition!);
-      }
-    }
-  }
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-
-    // Performance optimization: Only draw visible elements with viewport culling
-    final visibleRect = Rect.fromLTWH(0, 0, size.width, size.height);
-    final lod = _getLevelOfDetail();
-
-    // Pre-calculate visible elements to avoid repeated checks
-    final visibleTransitions = transitions
-        .where((t) => _isTransitionVisible(t, visibleRect))
-        .toList();
-    final visibleStates = states
-        .where((s) => _isStateVisible(s, visibleRect))
-        .toList();
-
-    // Batch draw operations for better performance
-    _batchDrawTransitions(canvas, visibleTransitions, paint, lod);
-    _batchDrawStates(canvas, visibleStates, paint, lod);
-
-    // Draw trace path if showing trace (only if visible)
-    if (showTrace && _tracePath.isNotEmpty) {
-      _drawTracePath(canvas, paint);
-    }
-
-    // Draw transition preview if in progress
-    if (transitionStart != null) {
-      _drawTransitionPreview(canvas, transitionStart!, paint);
-    }
-  }
-
-  /// Check if a state is visible within the current viewport
-  bool _isStateVisible(automaton_state.State state, Rect visibleRect) {
-    const stateRadius = 30.0;
-    final stateRect = Rect.fromCircle(
-      center: Offset(state.position.x, state.position.y),
-      radius: stateRadius,
-    );
-    return visibleRect.overlaps(stateRect);
-  }
-
-  /// Check if a transition is visible within the current viewport
-  bool _isTransitionVisible(FSATransition transition, Rect visibleRect) {
-    final fromCenter = Offset(
-      transition.fromState.position.x,
-      transition.fromState.position.y,
-    );
-    final toCenter = Offset(
-      transition.toState.position.x,
-      transition.toState.position.y,
-    );
-
-    // For self-loops, check if the state is visible
-    if (transition.fromState.id == transition.toState.id) {
-      return _isStateVisible(transition.fromState, visibleRect);
-    }
-
-    // For regular transitions, check if the line intersects the visible area
-    final lineRect = Rect.fromPoints(fromCenter, toCenter);
-    return visibleRect.overlaps(lineRect);
-  }
-
-  void _drawState(
-    Canvas canvas,
-    automaton_state.State state,
-    Paint paint, [
-    int lod = 3,
-  ]) {
-    final center = state.position;
-    const radius = 30.0;
-    final isSelected = state == selectedState;
-    final isNondeterministic = _nondeterministicStateIds.contains(state.id);
-    final isVisited = showTrace && _visitedStates.contains(state.id);
-    final isCurrent =
-        showTrace &&
-        simulationResult != null &&
-        currentStepIndex != null &&
-        currentStepIndex! < simulationResult!.steps.length &&
-        simulationResult!.steps[currentStepIndex!].currentState == state.id;
-    final stateCenter = Offset(center.x, center.y);
-
-    // Performance optimization: Reuse paint objects and batch similar operations
-    final fillPaint = Paint()..style = PaintingStyle.fill;
-    final strokePaint = Paint()..style = PaintingStyle.stroke;
-
-    // Draw a solid background before applying highlights
-    fillPaint.color = surfaceColor;
-    canvas.drawCircle(stateCenter, radius, fillPaint);
-
-    // Draw background highlights (batch similar fills)
-    if (isNondeterministic) {
-      fillPaint.color = Colors.deepOrange.withOpacity(0.15);
-      canvas.drawCircle(stateCenter, radius, fillPaint);
-    }
-
-    if (isVisited) {
-      fillPaint.color = Colors.green.withOpacity(0.2);
-      canvas.drawCircle(stateCenter, radius, fillPaint);
-    }
-
-    if (isCurrent) {
-      fillPaint.color = Colors.blue.withOpacity(0.3);
-      canvas.drawCircle(stateCenter, radius, fillPaint);
-    }
-
-    // Draw border
-    strokePaint
-      ..strokeWidth = isSelected ? 3 : 2
-      ..color = isCurrent
-          ? Colors.blue
-          : isVisited
-          ? Colors.green
-          : isSelected
-          ? Colors.blue
-          : isNondeterministic
-          ? Colors.deepOrange
-          : Colors.black;
-    canvas.drawCircle(stateCenter, radius, strokePaint);
-
-    // Draw accepting state inner circle
-    if (state.isAccepting) {
-      strokePaint
-        ..strokeWidth = 2
-        ..color = strokePaint.color;
-      canvas.drawCircle(stateCenter, radius - 6, strokePaint);
-    }
-
-    // Draw initial arrow
-    if (state.isInitial) {
-      _drawInitialArrow(canvas, stateCenter, strokePaint);
-    }
-
-    // Only draw labels if LOD allows it and text rendering is enabled
-    if (_shouldRenderLabels(lod)) {
-      _drawStateLabel(canvas, stateCenter, state.name, lod);
-    }
-  }
-
-  /// Optimized state label drawing with cached text metrics
-  void _drawStateLabel(Canvas canvas, Offset center, String name, int lod) {
-    final fontSize = lod >= 3 ? 16.0 : (lod >= 2 ? 14.0 : 12.0);
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: name,
-        style: TextStyle(
-          color: Colors.black,
-          fontSize: fontSize,
-          fontWeight: FontWeight.bold,
         ),
-      ),
-      textDirection: TextDirection.ltr,
+        if (!hasStates) const _EmptyCanvasMessage(),
+      ],
     );
-    textPainter.layout();
-
-    // Center the text
-    final textOffset = Offset(
-      center.dx - textPainter.width / 2,
-      center.dy - textPainter.height / 2,
-    );
-    textPainter.paint(canvas, textOffset);
   }
 
-  void _drawTransition(
-    Canvas canvas,
-    FSATransition transition,
-    Paint paint, [
-    int lod = 3,
-  ]) {
-    final isUsed = showTrace && _usedTransitions.contains(transition.id);
-    final transitionColor = isUsed
-        ? Colors.green
-        : _epsilonTransitionIds.contains(transition.id)
-        ? Colors.purple
-        : _nondeterministicTransitionIds.contains(transition.id)
-        ? Colors.deepOrange
-        : Colors.black;
-
-    final strokePaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2
-      ..color = transitionColor;
-
-    if (transition.fromState.id == transition.toState.id) {
-      _drawSelfLoop(canvas, transition, strokePaint);
-    } else {
-      const stateRadius = 30.0;
-      const arrowLength = 12.0;
-      const arrowAngle = 0.5;
-
-      final curve = TransitionCurve.compute(
-        transitions,
-        transition,
-        stateRadius: stateRadius,
-        curvatureStrength: 45,
-        labelOffset: 16,
-      );
-
-      final path = Path()
-        ..moveTo(curve.start.dx, curve.start.dy)
-        ..quadraticBezierTo(
-          curve.control.dx,
-          curve.control.dy,
-          curve.end.dx,
-          curve.end.dy,
-        );
-      canvas.drawPath(path, strokePaint);
-
-      final angle = curve.tangentAngle;
-      final arrow1 = Offset(
-        curve.end.dx - arrowLength * math.cos(angle - arrowAngle),
-        curve.end.dy - arrowLength * math.sin(angle - arrowAngle),
-      );
-      final arrow2 = Offset(
-        curve.end.dx - arrowLength * math.cos(angle + arrowAngle),
-        curve.end.dy - arrowLength * math.sin(angle + arrowAngle),
-      );
-
-      canvas.drawLine(curve.end, arrow1, strokePaint);
-      canvas.drawLine(curve.end, arrow2, strokePaint);
-
-      // Only draw transition labels if LOD allows it
-      if (_shouldRenderLabels(lod)) {
-        _drawTransitionLabel(
-          canvas,
-          transition,
-          curve.labelPosition,
-          transitionColor,
-        );
-      }
-    }
-  }
-
-  void _drawSelfLoop(Canvas canvas, FSATransition transition, Paint paint) {
-    const loopRadius = 35.0;
-    const stateRadius = 30.0;
-    final center = Offset(
-      transition.fromState.position.x,
-      transition.fromState.position.y,
-    );
-
-    final loopRect = Rect.fromCircle(
-      center: Offset(center.dx, center.dy - stateRadius),
-      radius: loopRadius,
-    );
-
-    canvas.drawArc(loopRect, -math.pi / 2, 1.8 * math.pi, false, paint);
-
-    final arrowBase = Offset(
-      center.dx + loopRadius * math.cos(-math.pi / 6),
-      center.dy - stateRadius + loopRadius * math.sin(-math.pi / 6),
-    );
-    const arrowLength = 12.0;
-    const arrowAngle = 0.5;
-
-    final arrow1 = Offset(
-      arrowBase.dx - arrowLength * math.cos(-math.pi / 6 - arrowAngle),
-      arrowBase.dy - arrowLength * math.sin(-math.pi / 6 - arrowAngle),
-    );
-    final arrow2 = Offset(
-      arrowBase.dx - arrowLength * math.cos(-math.pi / 6 + arrowAngle),
-      arrowBase.dy - arrowLength * math.sin(-math.pi / 6 + arrowAngle),
-    );
-
-    canvas.drawLine(arrowBase, arrow1, paint);
-    canvas.drawLine(arrowBase, arrow2, paint);
-
-    final labelPosition = Offset(
-      center.dx,
-      center.dy - stateRadius - loopRadius - 12,
-    );
-
-    _drawTransitionLabel(canvas, transition, labelPosition, paint.color);
-  }
-
-  /// Draw the trace path as a highlighted line connecting visited states
-  void _drawTracePath(Canvas canvas, Paint paint) {
-    if (_tracePath.length < 2) return;
-
-    final tracePaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 4
-      ..color = Colors.green.withValues(alpha: 0.7);
-
-    // Performance optimization: Create a path for the entire trace
-    final tracePath = Path();
-    bool isFirst = true;
-
-    // Draw path connecting visited states with smooth curves
-    for (int i = 0; i < _tracePath.length - 1; i++) {
-      final fromStateId = _tracePath[i];
-      final toStateId = _tracePath[i + 1];
-
-      final fromState = states.firstWhere((s) => s.id == fromStateId);
-      final toState = states.firstWhere((s) => s.id == toStateId);
-
-      final fromCenter = Offset(fromState.position.x, fromState.position.y);
-      final toCenter = Offset(toState.position.x, toState.position.y);
-
-      if (isFirst) {
-        tracePath.moveTo(fromCenter.dx, fromCenter.dy);
-        isFirst = false;
-      }
-
-      // Add a smooth curve to the next state
-      final controlPoint = Offset(
-        (fromCenter.dx + toCenter.dx) / 2,
-        (fromCenter.dy + toCenter.dy) / 2 - 20,
-      );
-      tracePath.quadraticBezierTo(
-        controlPoint.dx,
-        controlPoint.dy,
-        toCenter.dx,
-        toCenter.dy,
-      );
-    }
-
-    // Draw the entire trace path at once for better performance
-    canvas.drawPath(tracePath, tracePaint);
-
-    // Draw trace step indicators
-    _drawTraceStepIndicators(canvas);
-  }
-
-  /// Draw step indicators along the trace path
-  void _drawTraceStepIndicators(Canvas canvas) {
-    if (currentStepIndex == null || currentStepIndex! < 0) return;
-
-    final stepPaint = Paint()
-      ..style = PaintingStyle.fill
-      ..color = Colors.blue.withValues(alpha: 0.8);
-
-    final textPaint = Paint()..color = Colors.white;
-
-    // Draw current step indicator
-    if (currentStepIndex! < _tracePath.length) {
-      final currentStateId = _tracePath[currentStepIndex!];
-      final currentState = states.firstWhere((s) => s.id == currentStateId);
-      final center = Offset(currentState.position.x, currentState.position.y);
-
-      // Draw a pulsing circle for current step
-      canvas.drawCircle(center, 35, stepPaint);
-
-      // Draw step number
-      final textPainter = TextPainter(
-        text: TextSpan(
-          text: '${currentStepIndex! + 1}',
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      );
-      textPainter.layout();
-      textPainter.paint(
-        canvas,
-        Offset(
-          center.dx - textPainter.width / 2,
-          center.dy - textPainter.height / 2,
-        ),
-      );
-    }
-  }
-
-  void _drawTransitionLabel(
-    Canvas canvas,
-    FSATransition transition,
-    Offset position,
-    Color color,
+  static _HighlightData _computeHighlights(
+    SimulationResult? result,
+    int? currentStepIndex,
+    bool showTrace,
   ) {
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: _formatTransitionLabel(transition),
-        style: TextStyle(
-          color: color,
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
+    if (!showTrace || result == null || result.steps.isEmpty) {
+      return const _HighlightData.empty();
+    }
+
+    final maxIndex = result.steps.length - 1;
+    final resolvedIndex = (currentStepIndex ?? maxIndex).clamp(0, maxIndex);
+    final visited = <String>{};
+
+    for (var index = 0; index <= resolvedIndex; index++) {
+      final step = result.steps[index];
+      visited.add(step.currentState);
+    }
+
+    final currentState = result.steps[resolvedIndex].currentState;
+    return _HighlightData(
+      visitedStates: visited,
+      currentStateId: currentState,
     );
-    textPainter.layout();
-    textPainter.paint(
-      canvas,
-      Offset(
-        position.dx - textPainter.width / 2,
-        position.dy - textPainter.height / 2,
-      ),
-    );
-  }
-
-  String _formatTransitionLabel(FSATransition transition) {
-    if (transition.isEpsilonTransition) {
-      return transition.lambdaSymbol ?? 'ε';
-    }
-    if (transition.inputSymbols.isEmpty) {
-      return transition.label;
-    }
-    if (transition.inputSymbols.length == 1) {
-      return transition.inputSymbols.first;
-    }
-    final symbols = transition.inputSymbols.toList()..sort();
-    return symbols.join(', ');
-  }
-
-  void _drawInitialArrow(Canvas canvas, Offset center, Paint paint) {
-    final arrowStart = Offset(center.dx - 50, center.dy);
-    final arrowEnd = Offset(center.dx - 30, center.dy);
-
-    paint.color = Colors.black;
-    paint.style = PaintingStyle.stroke;
-
-    canvas.drawLine(arrowStart, arrowEnd, paint);
-
-    // Arrowhead
-    final arrow1 = Offset(arrowEnd.dx - 10, arrowEnd.dy - 5);
-    final arrow2 = Offset(arrowEnd.dx - 10, arrowEnd.dy + 5);
-
-    canvas.drawLine(arrowEnd, arrow1, paint);
-    canvas.drawLine(arrowEnd, arrow2, paint);
-  }
-
-  void _drawTransitionPreview(
-    Canvas canvas,
-    automaton_state.State start,
-    Paint paint,
-  ) {
-    if (transitionPreviewPosition == null) {
-      return;
-    }
-
-    final previewPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2
-      ..color = Colors.black.withValues(alpha: 0.4);
-
-    final startCenter = Offset(start.position.x, start.position.y);
-    final pointer = transitionPreviewPosition!;
-    final delta = pointer - startCenter;
-
-    if (delta.distance < 1) {
-      return;
-    }
-
-    const stateRadius = 30.0;
-    const arrowLength = 12.0;
-    const arrowAngle = 0.5;
-
-    if (delta.distance < stateRadius * 0.8) {
-      final previewTransition = FSATransition(
-        id: '__preview_self__',
-        fromState: start,
-        toState: start,
-        label: '',
-        inputSymbols: const {},
-      );
-      _drawSelfLoop(canvas, previewTransition, previewPaint);
-      return;
-    }
-
-    final unit = Offset(delta.dx / delta.distance, delta.dy / delta.distance);
-    final startPoint = startCenter + unit * stateRadius;
-    final endPoint = pointer;
-    final midPoint = Offset(
-      (startPoint.dx + endPoint.dx) / 2,
-      (startPoint.dy + endPoint.dy) / 2,
-    );
-    final normal = Offset(-unit.dy, unit.dx);
-    final curvatureScale = math.min(1.0, 120 / delta.distance);
-    final control = midPoint + normal * 45 * curvatureScale;
-
-    final path = Path()
-      ..moveTo(startPoint.dx, startPoint.dy)
-      ..quadraticBezierTo(control.dx, control.dy, endPoint.dx, endPoint.dy);
-
-    canvas.drawPath(path, previewPaint);
-
-    final derivative = (endPoint - control) * 2;
-    final angle = math.atan2(derivative.dy, derivative.dx);
-    final arrow1 = Offset(
-      endPoint.dx - arrowLength * math.cos(angle - arrowAngle),
-      endPoint.dy - arrowLength * math.sin(angle - arrowAngle),
-    );
-    final arrow2 = Offset(
-      endPoint.dx - arrowLength * math.cos(angle + arrowAngle),
-      endPoint.dy - arrowLength * math.sin(angle + arrowAngle),
-    );
-
-    canvas.drawLine(endPoint, arrow1, previewPaint);
-    canvas.drawLine(endPoint, arrow2, previewPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    if (oldDelegate is! AutomatonPainter) return true;
-
-    // Performance optimization: Only repaint if significant changes
-    return oldDelegate.states != states ||
-        oldDelegate.transitions != transitions ||
-        oldDelegate.selectedState != selectedState ||
-        oldDelegate.transitionStart != transitionStart ||
-        oldDelegate.transitionPreviewPosition != transitionPreviewPosition ||
-        oldDelegate.simulationResult != simulationResult ||
-        oldDelegate.currentStepIndex != currentStepIndex ||
-        oldDelegate.showTrace != showTrace ||
-        oldDelegate.surfaceColor != surfaceColor;
-  }
-
-  /// Get the level of detail based on the number of elements
-  int _getLevelOfDetail() {
-    final totalElements = states.length + transitions.length;
-    if (totalElements <= 50) return 3; // High detail
-    if (totalElements <= 200) return 2; // Medium detail
-    if (totalElements <= 500) return 1; // Low detail
-    return 0; // Minimal detail
-  }
-
-  /// Check if we should render detailed elements based on LOD
-  bool _shouldRenderDetailed(int lod) {
-    return lod >= 2;
-  }
-
-  /// Check if we should render labels based on LOD
-  bool _shouldRenderLabels(int lod) {
-    return lod >= 1;
-  }
-
-  /// Batch draw transitions for better performance
-  void _batchDrawTransitions(
-    Canvas canvas,
-    List<FSATransition> visibleTransitions,
-    Paint paint,
-    int lod,
-  ) {
-    // Group transitions by type for efficient drawing
-    final regularTransitions = <FSATransition>[];
-    final selfLoops = <FSATransition>[];
-    final traceTransitions = <FSATransition>[];
-
-    for (final transition in visibleTransitions) {
-      if (showTrace && _usedTransitions.contains(transition.id)) {
-        traceTransitions.add(transition);
-      } else if (transition.fromState.id == transition.toState.id) {
-        selfLoops.add(transition);
-      } else {
-        regularTransitions.add(transition);
-      }
-    }
-
-    // Draw in order of complexity (regular first, then self-loops, then traces)
-    for (final transition in regularTransitions) {
-      _drawTransition(canvas, transition, paint, lod);
-    }
-    for (final transition in selfLoops) {
-      _drawTransition(canvas, transition, paint, lod);
-    }
-    for (final transition in traceTransitions) {
-      _drawTransition(canvas, transition, paint, lod);
-    }
-  }
-
-  /// Batch draw states for better performance
-  void _batchDrawStates(
-    Canvas canvas,
-    List<automaton_state.State> visibleStates,
-    Paint paint,
-    int lod,
-  ) {
-    // Group states by visual complexity
-    final regularStates = <automaton_state.State>[];
-    final traceStates = <automaton_state.State>[];
-    final specialStates = <automaton_state.State>[];
-
-    for (final state in visibleStates) {
-      final isVisited = showTrace && _visitedStates.contains(state.id);
-      final isCurrent =
-          showTrace &&
-          simulationResult != null &&
-          currentStepIndex != null &&
-          currentStepIndex! < simulationResult!.steps.length &&
-          simulationResult!.steps[currentStepIndex!].currentState == state.id;
-
-      if (isCurrent) {
-        specialStates.add(state);
-      } else if (isVisited) {
-        traceStates.add(state);
-      } else {
-        regularStates.add(state);
-      }
-    }
-
-    // Draw in order of visual importance (regular first, then traces, then current)
-    for (final state in regularStates) {
-      _drawState(canvas, state, paint, lod);
-    }
-    for (final state in traceStates) {
-      _drawState(canvas, state, paint, lod);
-    }
-    for (final state in specialStates) {
-      _drawState(canvas, state, paint, lod);
-    }
   }
 
   static Set<String> _identifyNondeterministicTransitions(
@@ -1212,8 +242,8 @@ class AutomatonPainter extends CustomPainter {
       final symbols = transition.isEpsilonTransition
           ? <String>{transition.lambdaSymbol ?? 'ε'}
           : transition.inputSymbols.isEmpty
-          ? {transition.label}
-          : transition.inputSymbols;
+              ? {transition.label}
+              : transition.inputSymbols;
 
       final symbolBuckets = outgoingByState.putIfAbsent(
         transition.fromState.id,
@@ -1256,138 +286,210 @@ class AutomatonPainter extends CustomPainter {
     }
     return stateIds;
   }
+
+  bool _editorStylesEqual(FlNodeEditorStyle a, FlNodeEditorStyle b) {
+    final aDecoration = a.decoration;
+    final bDecoration = b.decoration;
+    Color? aColor;
+    Color? bColor;
+    if (aDecoration is BoxDecoration) {
+      aColor = aDecoration.color;
+    }
+    if (bDecoration is BoxDecoration) {
+      bColor = bDecoration.color;
+    }
+
+    return aColor == bColor &&
+        a.gridStyle.lineColor == b.gridStyle.lineColor &&
+        a.gridStyle.intersectionColor == b.gridStyle.intersectionColor &&
+        a.highlightAreaStyle.color == b.highlightAreaStyle.color &&
+        a.highlightAreaStyle.borderColor == b.highlightAreaStyle.borderColor;
+  }
 }
 
-/// Dialog for editing state properties
-class _StateEditDialog extends StatefulWidget {
-  final automaton_state.State state;
-  final ValueChanged<automaton_state.State> onStateUpdated;
+class _DerivedState {
+  const _DerivedState({
+    required this.statesById,
+    required this.nondeterministicStateIds,
+    required this.visitedStates,
+    required this.currentStateId,
+  });
 
-  const _StateEditDialog({required this.state, required this.onStateUpdated});
-
-  @override
-  State<_StateEditDialog> createState() => _StateEditDialogState();
+  final Map<String, automaton_state.State> statesById;
+  final Set<String> nondeterministicStateIds;
+  final Set<String> visitedStates;
+  final String? currentStateId;
 }
 
-class _StateEditDialogState extends State<_StateEditDialog> {
-  late TextEditingController _labelController;
-  late bool _isInitial;
-  late bool _isAccepting;
+class _HighlightData {
+  const _HighlightData({
+    required this.visitedStates,
+    required this.currentStateId,
+  });
 
-  @override
-  void initState() {
-    super.initState();
-    _labelController = TextEditingController(text: widget.state.label);
-    _isInitial = widget.state.isInitial;
-    _isAccepting = widget.state.isAccepting;
-  }
+  const _HighlightData.empty()
+      : visitedStates = const <String>{},
+        currentStateId = null;
 
-  @override
-  void dispose() {
-    _labelController.dispose();
-    super.dispose();
+  final Set<String> visitedStates;
+  final String? currentStateId;
+}
+
+class _HeaderColors {
+  const _HeaderColors({
+    required this.background,
+    required this.foreground,
+  });
+
+  final Color background;
+  final Color foreground;
+}
+
+_HeaderColors _resolveHeaderColors(
+  ThemeData theme, {
+  required bool isCurrent,
+  required bool isVisited,
+  required bool isNondeterministic,
+}) {
+  final colorScheme = theme.colorScheme;
+  if (isCurrent) {
+    return _HeaderColors(
+      background: colorScheme.primary,
+      foreground: colorScheme.onPrimary,
+    );
   }
+  if (isVisited) {
+    return _HeaderColors(
+      background: colorScheme.secondaryContainer,
+      foreground: colorScheme.onSecondaryContainer,
+    );
+  }
+  if (isNondeterministic) {
+    return _HeaderColors(
+      background: colorScheme.tertiaryContainer,
+      foreground: colorScheme.onTertiaryContainer,
+    );
+  }
+  return _HeaderColors(
+    background: colorScheme.surfaceVariant,
+    foreground: colorScheme.onSurfaceVariant,
+  );
+}
+
+class _AutomatonNodeHeader extends StatelessWidget {
+  const _AutomatonNodeHeader({
+    required this.label,
+    required this.isInitial,
+    required this.isAccepting,
+    required this.isCollapsed,
+    required this.colors,
+    required this.onToggleCollapse,
+  });
+
+  final String label;
+  final bool isInitial;
+  final bool isAccepting;
+  final bool isCollapsed;
+  final _HeaderColors colors;
+  final VoidCallback onToggleCollapse;
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Edit State'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
+    final textStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
+          color: colors.foreground,
+          fontWeight: FontWeight.w600,
+          fontSize: 15,
+        ) ??
+        TextStyle(
+          color: colors.foreground,
+          fontWeight: FontWeight.w600,
+        );
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.background,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
         children: [
-          TextField(
-            controller: _labelController,
-            decoration: const InputDecoration(
-              labelText: 'State Label',
-              border: OutlineInputBorder(),
+          if (isInitial)
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: Icon(
+                Icons.play_arrow_rounded,
+                size: 16,
+                color: colors.foreground,
+              ),
+            ),
+          Expanded(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: textStyle,
             ),
           ),
-          const SizedBox(height: 16),
-          CheckboxListTile(
-            title: const Text('Initial State'),
-            value: _isInitial,
-            onChanged: (value) {
-              setState(() {
-                _isInitial = value ?? false;
-              });
-            },
-          ),
-          CheckboxListTile(
-            title: const Text('Accepting State'),
-            value: _isAccepting,
-            onChanged: (value) {
-              setState(() {
-                _isAccepting = value ?? false;
-              });
-            },
+          if (isAccepting)
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: Icon(
+                Icons.check_circle,
+                size: 16,
+                color: colors.foreground,
+              ),
+            ),
+          InkWell(
+            onTap: onToggleCollapse,
+            borderRadius: BorderRadius.circular(16),
+            child: Icon(
+              isCollapsed ? Icons.expand_more : Icons.expand_less,
+              size: 18,
+              color: colors.foreground,
+            ),
           ),
         ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            final updatedState = widget.state.copyWith(
-              label: _labelController.text,
-              isInitial: _isInitial,
-              isAccepting: _isAccepting,
-            );
-            widget.onStateUpdated(updatedState);
-            Navigator.of(context).pop();
-          },
-          child: const Text('Save'),
-        ),
-      ],
     );
   }
 }
 
-class _TransitionSymbolInput {
-  final Set<String> inputSymbols;
-  final String? lambdaSymbol;
-  final String label;
+class _EmptyCanvasMessage extends StatelessWidget {
+  const _EmptyCanvasMessage();
 
-  const _TransitionSymbolInput({
-    required this.inputSymbols,
-    required this.lambdaSymbol,
-    required this.label,
-  });
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
-  static _TransitionSymbolInput? parse(String value) {
-    final trimmed = value.trim();
-    if (trimmed.isEmpty) {
-      return null;
-    }
-
-    final parts = trimmed
-        .split(',')
-        .map((part) => part.trim())
-        .where((part) => part.isNotEmpty)
-        .toList();
-
-    if (parts.isEmpty) {
-      return null;
-    }
-
-    if (parts.length == 1 &&
-        (parts.first == 'ε' ||
-            parts.first.toLowerCase() == 'epsilon' ||
-            parts.first.toLowerCase() == 'lambda')) {
-      return const _TransitionSymbolInput(
-        inputSymbols: {},
-        lambdaSymbol: 'ε',
-        label: 'ε',
-      );
-    }
-
-    final symbols = parts.toSet();
-    return _TransitionSymbolInput(
-      inputSymbols: symbols,
-      lambdaSymbol: null,
-      label: symbols.join(', '),
+    return IgnorePointer(
+      ignoring: true,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.account_tree_outlined,
+              size: 64,
+              color: colorScheme.outline.withOpacity(0.45),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Empty canvas',
+              style: textTheme.titleLarge?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Use the toolbar to clear or add new states.',
+              style: textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant.withOpacity(0.8),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

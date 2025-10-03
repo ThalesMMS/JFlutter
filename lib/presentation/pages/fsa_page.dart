@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/entities/automaton_entity.dart';
 import '../../core/models/fsa.dart';
@@ -334,9 +333,6 @@ class _FSAPageState extends ConsumerState<FSAPage> {
       return AutomatonCanvas(
         automaton: state.currentAutomaton,
         canvasKey: _canvasKey,
-        onAutomatonChanged: (automaton) {
-          ref.read(automatonProvider.notifier).updateAutomaton(automaton);
-        },
         simulationResult: state.simulationResult,
         showTrace: state.simulationResult != null,
       );
@@ -355,10 +351,6 @@ class _FSAPageState extends ConsumerState<FSAPage> {
           ),
         ],
       );
-    }
-
-    if (kIsWeb) {
-      return buildCanvasWithToolbar(buildAutomatonCanvas());
     }
 
     return buildCanvasWithToolbar(buildAutomatonCanvas());

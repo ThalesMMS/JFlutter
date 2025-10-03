@@ -3,17 +3,25 @@ import 'package:flutter/material.dart';
 import '../../../core/algorithms/pda_simulator.dart';
 import '../../../core/models/simulation_result.dart';
 import '../../../core/models/simulation_step.dart';
+import '../../../core/services/simulation_highlight_service.dart';
 import 'base_trace_viewer.dart';
 
 class PDATraceViewer extends StatelessWidget {
   final PDASimulationResult result;
-  const PDATraceViewer({super.key, required this.result});
+  final SimulationHighlightService? highlightService;
+
+  const PDATraceViewer({
+    super.key,
+    required this.result,
+    this.highlightService,
+  });
 
   @override
   Widget build(BuildContext context) {
     return BaseTraceViewer(
       result: _asSimulationResult(),
       title: 'PDA Trace (${result.steps.length} steps)',
+      highlightService: highlightService,
       buildStepLine: (SimulationStep step, int index) {
         final remaining = step.remainingInput.isEmpty
             ? 'λ'

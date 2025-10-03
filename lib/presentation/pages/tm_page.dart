@@ -10,6 +10,8 @@ import '../widgets/tm_algorithm_panel.dart';
 import '../widgets/tm_simulation_panel.dart';
 import '../widgets/fl_nodes_canvas_toolbar.dart';
 import '../../features/canvas/fl_nodes/fl_nodes_tm_canvas_controller.dart';
+import '../../core/services/simulation_highlight_service.dart';
+import '../../features/canvas/fl_nodes/fl_nodes_highlight_channel.dart';
 
 /// Page for working with Turing Machines
 class TMPage extends ConsumerStatefulWidget {
@@ -30,6 +32,8 @@ class _TMPageState extends ConsumerState<TMPage> {
   bool _hasAcceptingState = false;
   ProviderSubscription<TMEditorState>? _tmEditorSub;
   late final FlNodesTmCanvasController _canvasController;
+  late final FlNodesSimulationHighlightChannel _highlightChannel;
+  late final SimulationHighlightService _highlightService;
 
   bool get _isMachineReady =>
       _currentTM != null && _hasInitialState && _hasAcceptingState;
@@ -43,6 +47,9 @@ class _TMPageState extends ConsumerState<TMPage> {
       editorNotifier: ref.read(tmEditorProvider.notifier),
     );
     _canvasController.synchronize(ref.read(tmEditorProvider).tm);
+    _highlightChannel = FlNodesSimulationHighlightChannel(_canvasController);
+    _highlightService = SimulationHighlightService(channel: _highlightChannel);
+    SimulationHighlightService.registerGlobalChannel(_highlightChannel);
     _tmEditorSub = ref.listenManual<TMEditorState>(
       tmEditorProvider,
       (previous, next) {
@@ -66,6 +73,8 @@ class _TMPageState extends ConsumerState<TMPage> {
   @override
   void dispose() {
     _tmEditorSub?.close();
+    _highlightService.clear();
+    SimulationHighlightService.registerGlobalChannel(null);
     _canvasController.dispose();
     super.dispose();
   }
@@ -147,7 +156,9 @@ class _TMPageState extends ConsumerState<TMPage> {
           flex: 1,
           child: Container(
             margin: const EdgeInsets.all(8),
-            child: const TMSimulationPanel(),
+            child: TMSimulationPanel(
+              highlightService: _highlightService,
+            ),
           ),
         ),
         const SizedBox(width: 16),
@@ -228,7 +239,11 @@ class _TMPageState extends ConsumerState<TMPage> {
         return ListView(
           controller: controller,
           padding: const EdgeInsets.all(16),
-          children: const [TMSimulationPanel()],
+          children: [
+            TMSimulationPanel(
+              highlightService: _highlightService,
+            ),
+          ],
         );
       },
       initialChildSize: 0.7,

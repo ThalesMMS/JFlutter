@@ -3,12 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/algorithms/tm_simulator.dart';
 import '../../core/models/simulation_step.dart';
+import '../../core/services/simulation_highlight_service.dart';
 import '../providers/tm_editor_provider.dart';
 import 'trace_viewers/tm_trace_viewer.dart';
 
 /// Panel for Turing Machine simulation and string testing
 class TMSimulationPanel extends ConsumerStatefulWidget {
-  const TMSimulationPanel({super.key});
+  final SimulationHighlightService highlightService;
+
+  const TMSimulationPanel({
+    super.key,
+    SimulationHighlightService? highlightService,
+  }) : highlightService = highlightService ?? SimulationHighlightService();
 
   @override
   ConsumerState<TMSimulationPanel> createState() => _TMSimulationPanelState();
@@ -20,13 +26,14 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
   bool _isSimulating = false;
   bool _hasSimulationResult = false;
   bool? _isAccepted;
-  String? _simulationResult;
-  List<String> _simulationSteps = [];
-  List<String> _tapeHistory = [];
+  String? _statusMessage;
+  List<SimulationStep> _simulationSteps = const [];
+  TMSimulationResult? _result;
 
   @override
   void dispose() {
     _inputController.dispose();
+    widget.highlightService.clear();
     super.dispose();
   }
 
@@ -200,7 +207,7 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                _simulationResult ?? 'Simulation error',
+                _statusMessage ?? 'Simulation error',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: colorScheme.onErrorContainer,
                   fontWeight: FontWeight.w600,
@@ -214,7 +221,7 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
 
     final isAccepted = _isAccepted!;
     final color = isAccepted ? Colors.green : Colors.red;
-    final message = _simulationResult ?? (isAccepted ? 'Accepted' : 'Rejected');
+    final message = _statusMessage ?? (isAccepted ? 'Accepted' : 'Rejected');
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -254,18 +261,10 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
-            if (_hasSimulationResult)
+            if (_hasSimulationResult && _result != null)
               TMTraceViewer(
-                result: TMSimulationResult.failure(
-                  inputString: '',
-                  steps: _buildSyntheticSteps(),
-                  errorMessage: _isAccepted == null
-                      ? (_simulationResult ?? 'Simulation error')
-                      : (_isAccepted == true
-                            ? ''
-                            : (_simulationResult ?? 'Rejected')),
-                  executionTime: const Duration(milliseconds: 0),
-                ),
+                result: _result!,
+                highlightService: widget.highlightService,
               ),
           ],
         ],
@@ -291,10 +290,12 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
       _isSimulating = true;
       _hasSimulationResult = false;
       _isAccepted = null;
-      _simulationResult = null;
-      _simulationSteps = [];
-      _tapeHistory = [];
+      _statusMessage = null;
+      _simulationSteps = const [];
+      _result = null;
     });
+
+    widget.highlightService.clear();
 
     final result = await Future(
       () => TMSimulator.simulate(tm, inputString, stepByStep: true),
@@ -310,64 +311,40 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
         _isSimulating = false;
         _hasSimulationResult = true;
         _isAccepted = null;
-        _simulationResult = message;
-        _simulationSteps = [];
-        _tapeHistory = [];
+        _statusMessage = message;
+        _simulationSteps = const [];
+        _result = null;
       });
+      widget.highlightService.clear();
       _showError(message);
       return;
     }
 
     final simulation = result.data!;
-    final steps = _describeSteps(simulation.steps);
-    final tapeHistory = simulation.steps
-        .map((step) => step.tapeContents)
-        .toList();
 
     setState(() {
       _isSimulating = false;
       _hasSimulationResult = true;
       _isAccepted = simulation.accepted;
-      _simulationResult = simulation.accepted
+      _statusMessage = simulation.accepted
           ? 'Accepted'
-          : simulation.errorMessage != null
-          ? 'Rejected: ${simulation.errorMessage}'
-          : 'Rejected';
-      _simulationSteps = steps;
-      _tapeHistory = tapeHistory;
+          : (simulation.errorMessage != null &&
+                  simulation.errorMessage!.isNotEmpty
+              ? 'Rejected: ${simulation.errorMessage}'
+              : 'Rejected');
+      _simulationSteps = simulation.steps;
+      _result = simulation;
     });
-  }
 
-  List<String> _describeSteps(List<SimulationStep> simulationSteps) {
-    final descriptions = <String>[];
-    for (var i = 0; i < simulationSteps.length; i++) {
-      final step = simulationSteps[i];
-      final buffer = StringBuffer('State ${step.currentState}');
-      if (step.tapeContents.isNotEmpty) {
-        buffer.write(' | Tape: ${step.tapeContents}');
-      }
-      if (step.usedTransition != null) {
-        buffer.write(' | Read: ${step.usedTransition}');
-      }
-      descriptions.add(buffer.toString());
+    if (simulation.steps.isNotEmpty) {
+      widget.highlightService.emitFromSteps(simulation.steps, 0);
+    } else {
+      widget.highlightService.clear();
     }
-    return descriptions;
-  }
-
-  List<SimulationStep> _buildSyntheticSteps() {
-    return _simulationSteps.asMap().entries.map((entry) {
-      final idx = entry.key;
-      final text = entry.value;
-      return SimulationStep(
-        currentState: 'q',
-        remainingInput: '',
-        tapeContents: text,
-        stepNumber: idx + 1,
-      );
-    }).toList();
   }
 
   void _showError(String message) {
+    widget.highlightService.clear();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),

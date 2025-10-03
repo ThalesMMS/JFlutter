@@ -374,7 +374,7 @@ class _SimulationPanelState extends State<SimulationPanel> {
                       _currentStepIndex = 0;
                       _isPlaying = false;
                       _simulationSteps.clear();
-                      _highlightService.clear();
+                      widget.highlightService.clear();
                     }
                   });
                   if (value) {
@@ -666,12 +666,12 @@ class _SimulationPanelState extends State<SimulationPanel> {
       _currentStepIndex = 0;
       _isPlaying = false;
     });
-    _highlightService.clear();
+    widget.highlightService.clear();
   }
 
   void _emitHighlightForCurrentStep() {
     if (!_isStepByStep || _simulationSteps.isEmpty) {
-      _highlightService.clear();
+      widget.highlightService.clear();
       return;
     }
 

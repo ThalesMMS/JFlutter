@@ -7,12 +7,13 @@ import '../../../core/models/pda.dart';
 import '../../../core/models/simulation_highlight.dart';
 import '../../../presentation/providers/pda_editor_provider.dart';
 import 'fl_nodes_canvas_models.dart';
+import 'fl_nodes_highlight_controller.dart';
 import 'fl_nodes_label_field_editor.dart';
 import 'fl_nodes_pda_mapper.dart';
 
 /// Controller responsible for synchronising the fl_nodes editor with the
 /// [PDAEditorNotifier].
-class FlNodesPdaCanvasController {
+class FlNodesPdaCanvasController implements FlNodesHighlightController {
   FlNodesPdaCanvasController({
     required PDAEditorNotifier editorNotifier,
     FlNodeEditorController? editorController,
@@ -171,10 +172,12 @@ class FlNodesPdaCanvasController {
     controller.addNode(_statePrototypeId, offset: center);
   }
 
+  @override
   void applyHighlight(SimulationHighlight highlight) {
     highlightNotifier.value = highlight;
   }
 
+  @override
   void clearHighlight() {
     highlightNotifier.value = SimulationHighlight.empty;
   }

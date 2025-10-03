@@ -8,12 +8,13 @@ import '../../../core/models/tm_transition.dart';
 import '../../../core/models/simulation_highlight.dart';
 import '../../../presentation/providers/tm_editor_provider.dart';
 import 'fl_nodes_canvas_models.dart';
+import 'fl_nodes_highlight_controller.dart';
 import 'fl_nodes_label_field_editor.dart';
 import 'fl_nodes_tm_mapper.dart';
 
 /// Controller responsible for synchronising the fl_nodes editor with the
 /// [TMEditorNotifier].
-class FlNodesTmCanvasController {
+class FlNodesTmCanvasController implements FlNodesHighlightController {
   FlNodesTmCanvasController({
     required TMEditorNotifier editorNotifier,
     FlNodeEditorController? editorController,
@@ -172,10 +173,12 @@ class FlNodesTmCanvasController {
     controller.addNode(_statePrototypeId, offset: center);
   }
 
+  @override
   void applyHighlight(SimulationHighlight highlight) {
     highlightNotifier.value = highlight;
   }
 
+  @override
   void clearHighlight() {
     highlightNotifier.value = SimulationHighlight.empty;
   }

@@ -12,6 +12,7 @@ import 'grammar_page.dart';
 import 'regex_page.dart';
 import '../../core/services/simulation_highlight_service.dart';
 import '../../features/canvas/fl_nodes/fl_nodes_canvas_controller.dart';
+import '../../features/canvas/fl_nodes/fl_nodes_highlight_channel.dart';
 
 /// Page for working with Finite State Automata
 class FSAPage extends ConsumerStatefulWidget {
@@ -24,6 +25,7 @@ class FSAPage extends ConsumerStatefulWidget {
 class _FSAPageState extends ConsumerState<FSAPage> {
   final GlobalKey _canvasKey = GlobalKey();
   late final FlNodesCanvasController _canvasController;
+  late final FlNodesSimulationHighlightChannel _highlightChannel;
   late final SimulationHighlightService _highlightService;
 
   @override
@@ -35,18 +37,15 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     _canvasController.synchronize(
       ref.read(automatonProvider).currentAutomaton,
     );
-    _highlightService = SimulationHighlightService(
-      dispatcher: _canvasController.applyHighlight,
-    );
-    SimulationHighlightService.registerGlobalDispatcher(
-      _canvasController.applyHighlight,
-    );
+    _highlightChannel = FlNodesSimulationHighlightChannel(_canvasController);
+    _highlightService = SimulationHighlightService(channel: _highlightChannel);
+    SimulationHighlightService.registerGlobalChannel(_highlightChannel);
   }
 
   @override
   void dispose() {
     _highlightService.clear();
-    SimulationHighlightService.registerGlobalDispatcher(null);
+    SimulationHighlightService.registerGlobalChannel(null);
     _canvasController.dispose();
     super.dispose();
   }

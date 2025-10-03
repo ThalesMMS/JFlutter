@@ -7,25 +7,71 @@ typedef SimulationHighlightDispatcher = void Function(
   SimulationHighlight highlight,
 );
 
+/// Destination that consumes highlight payloads emitted by the
+/// [SimulationHighlightService].
+abstract class SimulationHighlightChannel {
+  /// Sends the provided [highlight] to the underlying consumer.
+  void send(SimulationHighlight highlight);
+
+  /// Clears any pending highlight from the consumer.
+  void clear();
+}
+
+/// Adapter that forwards highlights to a legacy dispatcher callback.
+class FunctionSimulationHighlightChannel implements SimulationHighlightChannel {
+  FunctionSimulationHighlightChannel(this._dispatcher);
+
+  final SimulationHighlightDispatcher _dispatcher;
+
+  @override
+  void clear() {
+    _dispatcher(SimulationHighlight.empty);
+  }
+
+  @override
+  void send(SimulationHighlight highlight) {
+    _dispatcher(highlight);
+  }
+}
+
 class SimulationHighlightService {
-  SimulationHighlightService({SimulationHighlightDispatcher? dispatcher})
-      : _dispatcher = dispatcher;
+  SimulationHighlightService({
+    SimulationHighlightChannel? channel,
+    SimulationHighlightDispatcher? dispatcher,
+  })  : assert(
+          channel == null || dispatcher == null,
+          'Pass either a channel or a dispatcher, not both.',
+        ),
+        _channel = channel ??
+            (dispatcher == null
+                ? null
+                : FunctionSimulationHighlightChannel(dispatcher));
 
-  static SimulationHighlightDispatcher? _globalDispatcher;
+  static SimulationHighlightChannel? _globalChannel;
 
-  SimulationHighlightDispatcher? _dispatcher;
+  SimulationHighlightChannel? _channel;
 
+  /// Registers a global highlight channel consumed by all service instances
+  /// that don't override it locally.
+  static void registerGlobalChannel(SimulationHighlightChannel? channel) {
+    _globalChannel = channel;
+  }
+
+  /// Legacy helper kept for compatibility with older dispatcher-based flows.
   static void registerGlobalDispatcher(
     SimulationHighlightDispatcher? dispatcher,
   ) {
-    _globalDispatcher = dispatcher;
+    registerGlobalChannel(
+      dispatcher == null
+          ? null
+          : FunctionSimulationHighlightChannel(dispatcher),
+    );
   }
 
-  SimulationHighlightDispatcher? get dispatcher =>
-      _dispatcher ?? _globalDispatcher;
+  SimulationHighlightChannel? get channel => _channel ?? _globalChannel;
 
-  set dispatcher(SimulationHighlightDispatcher? value) {
-    _dispatcher = value;
+  set channel(SimulationHighlightChannel? value) {
+    _channel = value;
   }
 
   /// Computes a highlight payload from a simulation result and step index.
@@ -98,11 +144,11 @@ class SimulationHighlightService {
 
   /// Dispatches [highlight] to the Draw2D bridge.
   void dispatch(SimulationHighlight highlight) {
-    dispatcher?.call(highlight);
+    channel?.send(highlight);
   }
 
   /// Sends a clear highlight event.
   void clear() {
-    dispatcher?.call(SimulationHighlight.empty);
+    channel?.clear();
   }
 }

@@ -8,11 +8,12 @@ import '../../../core/models/simulation_highlight.dart';
 import '../../../presentation/providers/automaton_provider.dart';
 import 'fl_nodes_automaton_mapper.dart';
 import 'fl_nodes_canvas_models.dart';
+import 'fl_nodes_highlight_controller.dart';
 import 'fl_nodes_label_field_editor.dart';
 
 /// Controller that keeps the [FlNodeEditorController] in sync with the
 /// [AutomatonProvider].
-class FlNodesCanvasController {
+class FlNodesCanvasController implements FlNodesHighlightController {
   FlNodesCanvasController({
     required AutomatonProvider automatonProvider,
     FlNodeEditorController? editorController,
@@ -166,10 +167,12 @@ class FlNodesCanvasController {
     controller.addNode(_statePrototypeId, offset: center);
   }
 
+  @override
   void applyHighlight(SimulationHighlight highlight) {
     highlightNotifier.value = highlight;
   }
 
+  @override
   void clearHighlight() {
     highlightNotifier.value = SimulationHighlight.empty;
   }

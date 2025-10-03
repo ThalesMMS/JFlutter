@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/pda.dart';
+import '../../core/models/pda_transition.dart';
+import '../../core/models/state.dart' as automaton_state;
 import '../providers/pda_editor_provider.dart';
 import '../widgets/fl_nodes_canvas_toolbar.dart';
 import '../widgets/pda_canvas_native.dart';
@@ -376,6 +378,9 @@ class _PDAPageState extends ConsumerState<PDAPage> {
   }
 
   Widget _buildCanvasWithToolbar(Widget canvas) {
+    final editorState = ref.watch(pdaEditorProvider);
+    final statusMessage = _buildToolbarStatusMessage(editorState);
+
     return Stack(
       children: [
         Positioned.fill(child: canvas),
@@ -392,9 +397,51 @@ class _PDAPageState extends ConsumerState<PDAPage> {
                   states: const <automaton_state.State>[],
                   transitions: const <PDATransition>[],
                 ),
+            statusMessage: statusMessage,
           ),
         ),
       ],
     );
+  }
+
+  String _buildToolbarStatusMessage(PDAEditorState editorState) {
+    final pda = editorState.pda;
+    final hasPda = pda != null && pda.states.isNotEmpty;
+    final stateCount = pda?.states.length ?? 0;
+    final transitionCount = pda?.pdaTransitions.length ?? 0;
+
+    final messageParts = <String>[];
+
+    if (_hasUnsavedChanges) {
+      messageParts.add('Unsaved changes');
+    }
+
+    final warnings = <String>[];
+    if (editorState.nondeterministicTransitionIds.isNotEmpty) {
+      warnings.add('Nondeterministic transitions');
+    }
+    if (editorState.lambdaTransitionIds.isNotEmpty) {
+      warnings.add('λ-transitions present');
+    }
+
+    if (warnings.isNotEmpty) {
+      messageParts.add('⚠ ${warnings.join(' · ')}');
+    }
+
+    if (hasPda) {
+      messageParts.add(
+        '${_formatCount('state', 'states', stateCount)} · '
+        '${_formatCount('transition', 'transitions', transitionCount)}',
+      );
+    } else {
+      messageParts.add('No PDA loaded');
+    }
+
+    return messageParts.join(' · ');
+  }
+
+  String _formatCount(String singular, String plural, int count) {
+    final label = count == 1 ? singular : plural;
+    return '$count $label';
   }
 }

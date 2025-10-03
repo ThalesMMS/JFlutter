@@ -1,26 +1,46 @@
 JFlutter User Guide Supplement
 ==============================
 
-fl_nodes Canvas Overview
-------------------------
+Working with the fl_nodes Canvas
+--------------------------------
 
 * The automaton workspace now embeds the native fl_nodes canvas by default—no
-  extra toggles are required. Saving settings still persists grid, coordinate,
-  and sizing options through `SettingsModel` and the shared preferences-backed
-  repository.【F:lib/core/models/settings_model.dart†L3-L52】【F:lib/data/repositories/settings_repository_impl.dart†L9-L67】
-* The toolbar continues to expose zoom, fit, reset, and "add state" actions, but
-  each button now calls `FlNodesCanvasController` directly instead of routing
-  through a JavaScript bridge.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L48-L133】
+  feature toggle or iframe handshake is required. Saving settings still
+  persists grid, coordinate, and sizing options through `SettingsModel` and the
+  shared preferences-backed repository.【F:lib/core/models/settings_model.dart†L3-L52】【F:lib/data/repositories/settings_repository_impl.dart†L9-L67】
 * Riverpod remains the single source of truth: `AutomatonProvider` receives
   mutations from the controller for new states, drags, labels, and transitions,
-  so automata stay in sync across panels and simulations.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L236-L355】【F:lib/presentation/providers/automaton_provider.dart†L83-L260】
+  so automata stay in sync across panels, simulations, and exports.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L236-L355】【F:lib/presentation/providers/automaton_provider.dart†L83-L260】
+* The toolbar continues to drive the canvas, but every button now calls
+  `FlNodesCanvasController` directly, bypassing the deprecated Draw2D
+  JavaScript bridge.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L48-L133】
+
+### Core Actions
+
+The following shortcuts mirror the classic Draw2D behaviour while leveraging
+fl_nodes primitives:
+
+* **Zoom In/Out** – press the toolbar magnifier buttons or use the mouse wheel
+  while holding <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>. Both paths call `zoomIn`/`zoomOut`
+  on the controller, keeping the viewport centred around the pointer.
+* **Fit to Content / Reset View** – the toolbar buttons invoke
+  `fitToContent()` and `resetView()`, recomputing the camera bounds within the
+  canvas without reloading the editor.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L48-L133】
+* **Add State** – use the "Add state" toolbar button or double-click an empty
+  area. The controller receives either `addStateAtCenter()` or an
+  `AddNodeEvent`, then forwards the mutation to `AutomatonProvider` so the new
+  state appears across the app.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L236-L302】【F:lib/presentation/providers/automaton_provider.dart†L83-L166】
+* **Highlight Playback** – running a simulation pushes highlight payloads into
+  the controller via the `FlNodesHighlightController` interface. The canvas
+  updates instantly and clears highlights when the simulator stops.【F:lib/core/services/simulation_highlight_service.dart†L6-L74】【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L36-L45】
 
 Highlight & Simulation Flow
 ---------------------------
 
-* `SimulationHighlightService` still derives the visited states/transitions for
-  each simulator step, but the payload now feeds the controller notifier through
-  the `FlNodesHighlightController` contract instead of calling into Draw2D.【F:lib/core/services/simulation_highlight_service.dart†L6-L74】【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L36-L45】
+* `SimulationHighlightService` derives the visited states/transitions for each
+  simulator step and feeds them to the controller notifier through the
+  `FlNodesHighlightController` contract. No additional wiring is required when
+  writing new simulations—just publish highlight changes to the service.
 * The canvas paints visited states immediately because the notifier is observed
   inside `AutomatonCanvas`. There is no longer a "Canvas not connected" status
   gate—if highlights are missing, verify the notifier listener is attached when
@@ -33,8 +53,8 @@ Manual Verification Checklist
    Flutter canvas.
 2. Drag states, rename them, and draw transitions—each change should instantly
    propagate to the side panels driven by `AutomatonProvider`.
-3. Trigger toolbar actions (zoom, fit, reset, add state at centre) and confirm
-   the controller updates the viewport accordingly.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L48-L133】
+3. Trigger the zoom, fit, reset, and add-state actions (via toolbar buttons or
+   gestures) and confirm the controller updates the viewport accordingly.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L48-L133】
 4. Run a simulation and ensure highlights move with the active step while the
    notifier updates the overlay state.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L36-L45】
 5. Execute `flutter analyze` (and `flutter test` when suites exist) before
@@ -47,6 +67,7 @@ Troubleshooting
   (e.g., due to an exception while rebuilding nodes). If so, call
   `synchronize()` again after fixing the underlying data issue.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L96-L234】
 * **Labels not sticking**: ensure label edits trigger a submit event—pressing
-  `Escape` or cancelling keeps the previous value by design.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L304-L327】
+  <kbd>Enter</kbd> commits changes, whereas <kbd>Escape</kbd> cancels and keeps
+  the previous value by design.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L304-L327】
 * **Highlights not clearing**: verify the `SimulationHighlightService` channel
   is registered and that `clear()` is called after simulations complete.【F:lib/core/services/simulation_highlight_service.dart†L6-L74】

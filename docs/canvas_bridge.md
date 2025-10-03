@@ -40,6 +40,24 @@ Toolbar buttons (zoom, fit, reset, add state) now call directly into the
 controller instead of posting JavaScript messages. This keeps the ergonomics of
 the previous bridge while avoiding WebView plumbing.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L48-L133】
 
+### End-User Actions
+
+The fl_nodes editor preserves the most common Draw2D gestures while leaning on
+native Flutter affordances:
+
+* **Zoom controls** – toolbar magnifiers delegate to `zoomIn`/`zoomOut`, while
+  <kbd>Ctrl/Cmd</kbd> + scroll routes to `FlNodesCameraController` via the same
+  methods, ensuring desktop and touchpad zoom stay consistent.
+* **Viewport reset** – "Fit" and "Reset" invoke `fitToContent()` and
+  `resetView()`, re-aligning the camera without rebuilding the editor state.
+* **Adding states** – the "Add state" button emits `addStateAtCenter()`. Double
+  clicks are reported through `AddNodeEvent`, which is normalised into
+  `AutomatonProvider.addState` and persisted in the Riverpod store.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L236-L302】【F:lib/presentation/providers/automaton_provider.dart†L83-L166】
+* **Simulation highlights** – `SimulationHighlightService` forwards each step to
+  the controller notifier. The editor decorates nodes and transitions
+  immediately and clears them when `clear()` is dispatched at the end of a
+  run.【F:lib/core/services/simulation_highlight_service.dart†L6-L74】【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L36-L45】
+
 ## Highlight Channel
 
 Simulation playback relies on `SimulationHighlightService`, which now dispatches

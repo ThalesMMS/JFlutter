@@ -50,14 +50,13 @@ dependencies:
 
   # Clipboard support (built into Flutter)
 
-  # Embedded Draw2D workspace
-  webview_flutter: ^4.10.0
+  # Node-based canvas primitives
+  fl_nodes: ^0.4.0+1
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
 
-  # Embedded Draw2D canvas (WebView wrapper)
   # State management and dependency injection
   provider: ^6.1.2
   get_it: ^8.0.0
@@ -124,9 +123,6 @@ flutter:
     - jflutter_js/examples/apda_palindrome.json
     # Turing machine example
     - jflutter_js/examples/tm_binary_to_unary.json
-    # Draw2D prototype assets
-    - assets/draw2d/
-    - assets/draw2d/vendor/
 
 flutter_launcher_icons:
   image_path: "icon.PNG"

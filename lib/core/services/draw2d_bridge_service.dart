@@ -1,126 +1,60 @@
-import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
-import 'draw2d_bridge_platform_stub.dart'
-    if (dart.library.html) 'draw2d_bridge_platform_web.dart';
-
-/// Singleton facade responsible for communicating with the Draw2D runtime.
+/// Minimal bridge stub kept for compatibility while the Flutter canvas
+/// replaces the legacy Draw2D WebView integration. All operations are no-ops
+/// but debug logs are emitted so future hook-ups can observe usage.
 class Draw2DBridgeService extends ChangeNotifier {
-  Draw2DBridgeService._(this._platform);
+  Draw2DBridgeService._();
 
   factory Draw2DBridgeService() => _instance;
 
-  static final Draw2DBridgeService _instance = Draw2DBridgeService._(
-    createDraw2DBridgePlatform(),
-  );
+  static final Draw2DBridgeService _instance = Draw2DBridgeService._();
 
-  final Draw2DBridgePlatform _platform;
-  bool _isBridgeReady = false;
+  bool _isBridgeReady = true;
 
-  bool get hasRegisteredController => _platform.hasRegisteredController;
+  /// Whether the canvas bridge is ready to receive commands.
   bool get isBridgeReady => _isBridgeReady;
+
+  /// Alias kept for backwards compatibility with the toolbar animation.
   bool get hasActiveBridge => _isBridgeReady;
 
-  /// Registers the [controller] currently rendering the Draw2D canvas.
-  void registerWebViewController(WebViewController controller) {
-    debugPrint(
-      '[Draw2D][Flutter] register controller ${identityHashCode(controller)}',
-    );
-    _platform.registerWebViewController(controller);
-    _setBridgeReady(false);
-  }
-
-  /// Removes the [controller] registration when it is no longer active.
-  void unregisterWebViewController(WebViewController controller) {
-    debugPrint(
-      '[Draw2D][Flutter] unregister controller ${identityHashCode(controller)}',
-    );
-    _platform.unregisterWebViewController(controller);
-    _setBridgeReady(false);
-  }
-
-  /// Marks the bridge as ready after receiving the handshake from the WebView.
+  /// Marks the bridge as ready. With the Flutter canvas this is always true
+  /// but the notifier continues to fire so existing listeners remain stable.
   void markBridgeReady() {
     _setBridgeReady(true);
   }
 
-  /// Clears the ready flag when the editor disconnects or reloads.
+  /// Marks the bridge as disconnected.
   void markBridgeDisconnected() {
     _setBridgeReady(false);
   }
 
-  void runJavaScript(String script, {String? debugLabel}) {
-    if (!hasRegisteredController) {
-      debugPrint(
-        '[Draw2D][Flutter] Ignored JS invocation${debugLabel != null ? ' ($debugLabel)' : ''}: no controller registered',
-      );
-      return;
-    }
-    final labelSuffix = debugLabel != null ? ' ($debugLabel)' : '';
-    debugPrint('[Draw2D][Flutter] Executing JS$labelSuffix');
-    _platform.runJavaScript(script, debugLabel: debugLabel);
-  }
-
-  void _invokeBridgeMethod(String methodName, {String? argumentSource}) {
-    final invocation = argumentSource == null
-        ? 'b.$methodName();'
-        : 'b.$methodName($argumentSource);';
-    debugPrint('[Draw2D][Flutter] Invoking bridge method $methodName');
-    final script =
-        '(() => { try { const b = window.draw2dBridge; if (b && typeof b.$methodName === "function") { $invocation } } catch (error) { console.error(`[Draw2D][Flutter] $methodName failed`, error); } })();';
-    runJavaScript(script, debugLabel: methodName);
-  }
-
-  /// Dispatches a highlight event to the Draw2D runtime.
+  /// Highlights states and transitions. Currently a no-op.
   void highlight({
     required Set<String> states,
     required Set<String> transitions,
   }) {
-    final payload = <String, dynamic>{
-      'states': states.toList(),
-      'transitions': transitions.toList(),
-    };
-
-    final encoded = jsonEncode(payload);
-
-    _invokeBridgeMethod('highlight', argumentSource: encoded);
-
-    _platform.postMessage('highlight', payload);
+    debugPrint(
+      '[Draw2D][Bridge] highlight(states=$states, transitions=$transitions) ignored',
+    );
   }
 
-  /// Dispatches a request to clear all highlights.
+  /// Clears any previous highlight. Currently a no-op.
   void clearHighlight() {
-    _invokeBridgeMethod('clearHighlight');
-    _platform.postMessage('clear_highlight', const {});
+    debugPrint('[Draw2D][Bridge] clearHighlight ignored');
   }
 
-  // View operations
-  void zoomIn() {
-    _invokeBridgeMethod('zoomIn');
-    _platform.postMessage('zoom_in', const {});
-  }
+  /// Zoom controls and other view commands are no-ops for the Flutter canvas
+  /// until dedicated hooks are implemented.
+  void zoomIn() => _logUnsupported('zoomIn');
 
-  void zoomOut() {
-    _invokeBridgeMethod('zoomOut');
-    _platform.postMessage('zoom_out', const {});
-  }
+  void zoomOut() => _logUnsupported('zoomOut');
 
-  void fitToContent() {
-    _invokeBridgeMethod('fitToContent');
-    _platform.postMessage('fit_content', const {});
-  }
+  void fitToContent() => _logUnsupported('fitToContent');
 
-  void resetView() {
-    _invokeBridgeMethod('resetView');
-    _platform.postMessage('reset_view', const {});
-  }
+  void resetView() => _logUnsupported('resetView');
 
-  void addStateAtCenter() {
-    _invokeBridgeMethod('addStateAtCenter');
-    _platform.postMessage('add_state_center', const {});
-  }
+  void addStateAtCenter() => _logUnsupported('addStateAtCenter');
 
   void _setBridgeReady(bool value) {
     if (_isBridgeReady == value) {
@@ -128,5 +62,9 @@ class Draw2DBridgeService extends ChangeNotifier {
     }
     _isBridgeReady = value;
     notifyListeners();
+  }
+
+  void _logUnsupported(String method) {
+    debugPrint('[Draw2D][Bridge] $method ignored (Flutter canvas)');
   }
 }

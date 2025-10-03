@@ -5,7 +5,6 @@ import '../../core/models/tm.dart';
 import '../../core/models/tm_transition.dart';
 import '../providers/tm_editor_provider.dart';
 import '../widgets/draw2d_tm_canvas_view.dart';
-import '../widgets/draw2d_canvas_toolbar.dart';
 import '../widgets/tm_algorithm_panel.dart';
 import '../widgets/tm_simulation_panel.dart';
 
@@ -18,7 +17,6 @@ class TMPage extends ConsumerStatefulWidget {
 }
 
 class _TMPageState extends ConsumerState<TMPage> {
-  final GlobalKey _canvasKey = GlobalKey();
   TM? _currentTM;
   int _stateCount = 0;
   int _transitionCount = 0;
@@ -115,29 +113,7 @@ class _TMPageState extends ConsumerState<TMPage> {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(8),
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: Draw2DTMCanvasView(onTMModified: _handleTMUpdate),
-                  ),
-                  Positioned(
-                    top: 12,
-                    right: 12,
-                    child: Draw2DCanvasToolbar(
-                      onClear: () => setState(() {
-                        _currentTM = null;
-                        _stateCount = 0;
-                        _transitionCount = 0;
-                        _tapeSymbols = const <String>{};
-                        _moveDirections = const <String>{};
-                        _nondeterministicTransitionIds = const <String>{};
-                        _hasInitialState = false;
-                        _hasAcceptingState = false;
-                      }),
-                    ),
-                  ),
-                ],
-              ),
+              child: Draw2DTMCanvasView(onTMModified: _handleTMUpdate),
             ),
           ),
         ],
@@ -153,29 +129,7 @@ class _TMPageState extends ConsumerState<TMPage> {
           flex: 2,
           child: Container(
             margin: const EdgeInsets.all(8),
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: Draw2DTMCanvasView(onTMModified: _handleTMUpdate),
-                ),
-                Positioned(
-                  top: 12,
-                  right: 12,
-                  child: Draw2DCanvasToolbar(
-                    onClear: () => setState(() {
-                      _currentTM = null;
-                      _stateCount = 0;
-                      _transitionCount = 0;
-                      _tapeSymbols = const <String>{};
-                      _moveDirections = const <String>{};
-                      _nondeterministicTransitionIds = const <String>{};
-                      _hasInitialState = false;
-                      _hasAcceptingState = false;
-                    }),
-                  ),
-                ),
-              ],
-            ),
+            child: Draw2DTMCanvasView(onTMModified: _handleTMUpdate),
           ),
         ),
         const SizedBox(width: 16),

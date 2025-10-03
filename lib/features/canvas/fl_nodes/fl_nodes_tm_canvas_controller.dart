@@ -257,8 +257,8 @@ class FlNodesTmCanvasController implements FlNodesHighlightController {
       id: edge.id,
       fromTo: (
         from: edge.fromStateId,
-        to: _outPortId,
-        fromPort: edge.toStateId,
+        to: edge.toStateId,
+        fromPort: _outPortId,
         toPort: _inPortId,
       ),
       state: LinkState(),
@@ -346,7 +346,14 @@ class FlNodesTmCanvasController implements FlNodesHighlightController {
 
   void _handleLinkAdded(Link link) {
     final fromStateId = link.fromTo.from;
-    final toStateId = link.fromTo.fromPort;
+    final toStateId = link.fromTo.to;
+    final fromPortId = link.fromTo.fromPort;
+    final toPortId = link.fromTo.toPort;
+
+    if (fromPortId != _outPortId || toPortId != _inPortId) {
+      return;
+    }
+
     final edge = FlNodesCanvasEdge(
       id: link.id,
       fromStateId: fromStateId,
@@ -358,6 +365,9 @@ class FlNodesTmCanvasController implements FlNodesHighlightController {
       tapeNumber: 0,
     );
     _edges[edge.id] = edge;
+    if (_highlightedTransitionIds.contains(edge.id)) {
+      _updateLinkHighlights(_highlightedTransitionIds);
+    }
     _notifier.addOrUpdateTransition(
       id: edge.id,
       fromStateId: edge.fromStateId,

@@ -300,8 +300,8 @@ void main() {
         id: 't0',
         fromTo: (
           from: 'q0',
-          to: 'outgoing',
-          fromPort: 'q1',
+          to: 'q1',
+          fromPort: 'outgoing',
           toPort: 'incoming',
         ),
         state: LinkState(),
@@ -318,6 +318,10 @@ void main() {
       expect(call['id'], equals('t0'));
       expect(call['fromStateId'], equals('q0'));
       expect(call['toStateId'], equals('q1'));
+      final storedEdge = controller.edgeById('t0');
+      expect(storedEdge, isNotNull);
+      expect(storedEdge!.fromStateId, equals('q0'));
+      expect(storedEdge.toStateId, equals('q1'));
     });
 
     test('applyHighlight toggles link selection state without altering manual selection', () {

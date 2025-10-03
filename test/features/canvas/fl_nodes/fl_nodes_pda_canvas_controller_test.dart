@@ -303,8 +303,8 @@ void main() {
         id: 't0',
         fromTo: (
           from: 'q0',
-          to: 'outgoing',
-          fromPort: 'q1',
+          to: 'q1',
+          fromPort: 'outgoing',
           toPort: 'incoming',
         ),
         state: LinkState(),
@@ -327,6 +327,10 @@ void main() {
       expect(call['isLambdaInput'], isTrue);
       expect(call['isLambdaPop'], isTrue);
       expect(call['isLambdaPush'], isTrue);
+      final storedEdge = controller.edgeById('t0');
+      expect(storedEdge, isNotNull);
+      expect(storedEdge!.fromStateId, equals('q0'));
+      expect(storedEdge.toStateId, equals('q1'));
     });
 
     test('applyHighlight marks PDA transitions without mutating selection', () {

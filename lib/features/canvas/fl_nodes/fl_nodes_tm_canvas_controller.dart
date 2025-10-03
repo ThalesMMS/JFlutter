@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:fl_nodes/fl_nodes.dart';
+// ignore: implementation_imports
+import 'package:fl_nodes/src/core/models/events.dart'
+    show DragSelectionEndEvent;
 import 'package:flutter/material.dart';
 
 import '../../../core/models/tm.dart';
@@ -18,8 +21,8 @@ class FlNodesTmCanvasController implements FlNodesHighlightController {
   FlNodesTmCanvasController({
     required TMEditorNotifier editorNotifier,
     FlNodeEditorController? editorController,
-  })  : _notifier = editorNotifier,
-        controller = editorController ?? FlNodeEditorController() {
+  }) : _notifier = editorNotifier,
+       controller = editorController ?? FlNodeEditorController() {
     _registerPrototypes();
     _subscription = controller.eventBus.events.listen(_handleEvent);
   }
@@ -29,8 +32,9 @@ class FlNodesTmCanvasController implements FlNodesHighlightController {
 
   final Map<String, FlNodesCanvasNode> _nodes = {};
   final Map<String, FlNodesCanvasEdge> _edges = {};
-  final ValueNotifier<SimulationHighlight> highlightNotifier =
-      ValueNotifier(SimulationHighlight.empty);
+  final ValueNotifier<SimulationHighlight> highlightNotifier = ValueNotifier(
+    SimulationHighlight.empty,
+  );
   final Set<String> _highlightedTransitionIds = <String>{};
   StreamSubscription<NodeEditorEvent>? _subscription;
   bool _isSynchronizing = false;
@@ -49,15 +53,15 @@ class FlNodesTmCanvasController implements FlNodesHighlightController {
 
   late final ControlInputPortPrototype _inputPortPrototype =
       ControlInputPortPrototype(
-    idName: _inPortId,
-    displayName: (_) => 'Entrada',
-  );
+        idName: _inPortId,
+        displayName: (_) => 'Entrada',
+      );
 
   late final ControlOutputPortPrototype _outputPortPrototype =
       ControlOutputPortPrototype(
-    idName: _outPortId,
-    displayName: (_) => 'Saída',
-  );
+        idName: _outPortId,
+        displayName: (_) => 'Saída',
+      );
 
   late final FieldPrototype _labelFieldPrototype = FieldPrototype(
     idName: _labelFieldId,
@@ -75,12 +79,7 @@ class FlNodesTmCanvasController implements FlNodesHighlightController {
         ),
       );
     },
-    editorBuilder: (
-      context,
-      removeOverlay,
-      value,
-      setData,
-    ) {
+    editorBuilder: (context, removeOverlay, value, setData) {
       return FlNodesLabelFieldEditor(
         initialValue: (value as String?) ?? '',
         onSubmit: (label) {
@@ -101,13 +100,7 @@ class FlNodesTmCanvasController implements FlNodesHighlightController {
     description: (_) => 'Estado da Máquina de Turing',
     ports: [_inputPortPrototype, _outputPortPrototype],
     fields: [_labelFieldPrototype],
-    onExecute: (
-      ports,
-      fields,
-      execState,
-      forward,
-      put,
-    ) async {},
+    onExecute: (ports, fields, execState, forward, put) async {},
   );
 
   void dispose() {
@@ -160,11 +153,7 @@ class FlNodesTmCanvasController implements FlNodesHighlightController {
         isHandled: true,
       );
       for (final linkId in previousLinkSelection.skip(1)) {
-        controller.selectLinkById(
-          linkId,
-          holdSelection: true,
-          isHandled: true,
-        );
+        controller.selectLinkById(linkId, holdSelection: true, isHandled: true);
       }
     }
   }
@@ -202,17 +191,11 @@ class FlNodesTmCanvasController implements FlNodesHighlightController {
       ..addEntries(snapshot.edges.map((edge) => MapEntry(edge.id, edge)));
 
     for (final node in snapshot.nodes) {
-      controller.addNodeFromExisting(
-        _buildNodeInstance(node),
-        isHandled: true,
-      );
+      controller.addNodeFromExisting(_buildNodeInstance(node), isHandled: true);
     }
 
     for (final edge in snapshot.edges) {
-      controller.addLinkFromExisting(
-        _buildLink(edge),
-        isHandled: true,
-      );
+      controller.addLinkFromExisting(_buildLink(edge), isHandled: true);
     }
 
     if (_highlightedTransitionIds.isNotEmpty ||
@@ -398,10 +381,7 @@ class FlNodesTmCanvasController implements FlNodesHighlightController {
 
   void _updateLinkHighlights(Set<String> transitionIds) {
     final desiredIds = Set<String>.from(transitionIds);
-    final idsToVisit = <String>{
-      ..._highlightedTransitionIds,
-      ...desiredIds,
-    };
+    final idsToVisit = <String>{..._highlightedTransitionIds, ...desiredIds};
 
     final manualSelection = controller.selectedLinkIds.toSet();
     var hasChanged = false;

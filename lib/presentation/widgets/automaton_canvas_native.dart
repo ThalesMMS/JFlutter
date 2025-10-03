@@ -1,9 +1,11 @@
 import 'package:fl_nodes/fl_nodes.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/fsa.dart';
 import '../../core/models/fsa_transition.dart';
+import '../../core/models/simulation_highlight.dart';
 import '../../core/models/simulation_result.dart';
 import '../../core/models/state.dart' as automaton_state;
 import '../../features/canvas/fl_nodes/fl_nodes_canvas_controller.dart';
@@ -18,7 +20,9 @@ class AutomatonCanvas extends ConsumerStatefulWidget {
     super.key,
     required this.automaton,
     required this.canvasKey,
-    @Deprecated('No longer used; the canvas writes directly to AutomatonProvider.')
+    @Deprecated(
+      'No longer used; the canvas writes directly to AutomatonProvider.',
+    )
     ValueChanged<FSA>? onAutomatonChanged,
     this.simulationResult,
     this.currentStepIndex,
@@ -33,7 +37,9 @@ class AutomatonCanvas extends ConsumerStatefulWidget {
   /// Legacy callback kept for compatibility with pre-fl_nodes canvases. All
   /// mutations now happen directly through [AutomatonProvider].
   // ignore: unused_field
-  @Deprecated('No longer used; the canvas writes directly to AutomatonProvider.')
+  @Deprecated(
+    'No longer used; the canvas writes directly to AutomatonProvider.',
+  )
   final ValueChanged<FSA>? _deprecatedOnAutomatonChanged;
 
   final SimulationResult? simulationResult;
@@ -53,6 +59,7 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
   Set<String> _visitedStateIds = const {};
   String? _currentStateId;
   VoidCallback? _highlightListener;
+  SimulationHighlight? _lastHighlight;
 
   @override
   void initState() {
@@ -69,12 +76,18 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
     }
     _canvasController.synchronize(widget.automaton);
     _applyDerivedState(_computeDerivedState());
+    _lastHighlight = _canvasController.highlightNotifier.value;
     _highlightListener = () {
-      if (mounted) {
-        setState(() {});
-        final editor = _canvasController.controller;
-        editor.notifyListeners();
+      if (!mounted) {
+        return;
       }
+      final highlight = _canvasController.highlightNotifier.value;
+      final previous = _lastHighlight;
+      if (previous != null && _highlightsEqual(previous, highlight)) {
+        return;
+      }
+      _lastHighlight = highlight;
+      setState(() {});
     };
     _canvasController.highlightNotifier.addListener(_highlightListener!);
   }
@@ -106,8 +119,7 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
   @override
   void dispose() {
     if (_highlightListener != null) {
-      _canvasController.highlightNotifier
-          .removeListener(_highlightListener!);
+      _canvasController.highlightNotifier.removeListener(_highlightListener!);
     }
     if (_ownsController) {
       _canvasController.dispose();
@@ -131,7 +143,8 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
       ),
     );
 
-    if (_lastEditorStyle == null || !_editorStylesEqual(_lastEditorStyle!, desiredStyle)) {
+    if (_lastEditorStyle == null ||
+        !_editorStylesEqual(_lastEditorStyle!, desiredStyle)) {
       _lastEditorStyle = desiredStyle;
       controller.setStyle(desiredStyle);
     }
@@ -150,12 +163,13 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
     var nondeterministicStateIds = <String>{};
 
     if (automaton != null) {
-      statesById.addEntries(automaton.states.map(
-        (state) => MapEntry(state.id, state),
-      ));
+      statesById.addEntries(
+        automaton.states.map((state) => MapEntry(state.id, state)),
+      );
       final transitions = automaton.fsaTransitions.toList(growable: false);
-      final nondeterministicTransitions =
-          _identifyNondeterministicTransitions(transitions);
+      final nondeterministicTransitions = _identifyNondeterministicTransitions(
+        transitions,
+      );
       nondeterministicStateIds = _identifyNondeterministicStates(
         transitions,
         nondeterministicTransitions,
@@ -197,13 +211,18 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
                 final automatonState = _statesById[node.id];
                 final label = automatonState?.label ?? node.id;
                 final isInitial = automaton?.initialState?.id == node.id;
-                final isAccepting = automaton?.acceptingStates
-                        .any((candidate) => candidate.id == node.id) ??
+                final isAccepting =
+                    automaton?.acceptingStates.any(
+                      (candidate) => candidate.id == node.id,
+                    ) ??
                     false;
-                final isVisited = widget.showTrace && _visitedStateIds.contains(node.id);
-                final isCurrent = widget.showTrace && _currentStateId == node.id;
-                final isNondeterministic =
-                    _nondeterministicStateIds.contains(node.id);
+                final isVisited =
+                    widget.showTrace && _visitedStateIds.contains(node.id);
+                final isCurrent =
+                    widget.showTrace && _currentStateId == node.id;
+                final isNondeterministic = _nondeterministicStateIds.contains(
+                  node.id,
+                );
                 final isHighlighted = highlight.stateIds.contains(node.id);
 
                 final colors = _resolveHeaderColors(
@@ -250,10 +269,7 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
     }
 
     final currentState = result.steps[resolvedIndex].currentState;
-    return _HighlightData(
-      visitedStates: visited,
-      currentStateId: currentState,
-    );
+    return _HighlightData(visitedStates: visited, currentStateId: currentState);
   }
 
   static Set<String> _identifyNondeterministicTransitions(
@@ -270,8 +286,8 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
       final symbols = transition.isEpsilonTransition
           ? <String>{transition.lambdaSymbol ?? 'ε'}
           : transition.inputSymbols.isEmpty
-              ? {transition.label}
-              : transition.inputSymbols;
+          ? {transition.label}
+          : transition.inputSymbols;
 
       final symbolBuckets = outgoingByState.putIfAbsent(
         transition.fromState.id,
@@ -333,6 +349,11 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
         a.highlightAreaStyle.color == b.highlightAreaStyle.color &&
         a.highlightAreaStyle.borderColor == b.highlightAreaStyle.borderColor;
   }
+
+  bool _highlightsEqual(SimulationHighlight a, SimulationHighlight b) {
+    return setEquals(a.stateIds, b.stateIds) &&
+        setEquals(a.transitionIds, b.transitionIds);
+  }
 }
 
 class _DerivedState {
@@ -356,18 +377,15 @@ class _HighlightData {
   });
 
   const _HighlightData.empty()
-      : visitedStates = const <String>{},
-        currentStateId = null;
+    : visitedStates = const <String>{},
+      currentStateId = null;
 
   final Set<String> visitedStates;
   final String? currentStateId;
 }
 
 class _HeaderColors {
-  const _HeaderColors({
-    required this.background,
-    required this.foreground,
-  });
+  const _HeaderColors({required this.background, required this.foreground});
 
   final Color background;
   final Color foreground;
@@ -430,15 +448,13 @@ class _AutomatonNodeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
+    final textStyle =
+        Theme.of(context).textTheme.titleMedium?.copyWith(
           color: colors.foreground,
           fontWeight: FontWeight.w600,
           fontSize: 15,
         ) ??
-        TextStyle(
-          color: colors.foreground,
-          fontWeight: FontWeight.w600,
-        );
+        TextStyle(color: colors.foreground, fontWeight: FontWeight.w600);
 
     return Container(
       decoration: BoxDecoration(

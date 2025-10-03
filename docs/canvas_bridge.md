@@ -74,11 +74,12 @@ and remains compatible with existing Riverpod listeners.【F:lib/features/canvas
 
 ## Data Round-Tripping
 
-When the editor needs to persist changes (for example, after receiving a patch
-from collaborative tooling) it converts the latest snapshot back into a new
-`FSA` via `FlNodesAutomatonMapper.mergeIntoTemplate`. The mapper rebuilds
-states, transitions, and alphabet entries using the template as a base, so
-existing metadata such as simulation history remains intact.【F:lib/features/canvas/fl_nodes/fl_nodes_automaton_mapper.dart†L61-L108】
+When the editor needs to persist changes it converts the latest snapshot back
+into a new `FSA` via `FlNodesAutomatonMapper.mergeIntoTemplate`. The mapper
+rebuilds states, transitions, and alphabet entries using the template as a base,
+so existing metadata such as simulation history remains intact. The legacy
+JavaScript patch handler (`applyAutomatonPatch`) has been removed, meaning all
+synchronisation now flows through the snapshot merge path.【F:lib/features/canvas/fl_nodes/fl_nodes_automaton_mapper.dart†L61-L108】
 
 By keeping all synchronisation logic inside `FlNodesCanvasController`, the app
 no longer depends on HTML assets or platform-specific bridges, drastically

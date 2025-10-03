@@ -117,6 +117,10 @@ class FlNodesPdaCanvasController
     controller.addNode(_statePrototypeId, offset: center);
   }
 
+  void addStateAt(Offset worldPosition) {
+    controller.addNode(_statePrototypeId, offset: worldPosition);
+  }
+
   void _registerPrototypes() {
     controller.registerNodePrototype(_statePrototype);
   }

@@ -248,6 +248,70 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
     _eventSubscription = controller.eventBus.events.listen(_handleEditorEvent);
   }
 
+  void _handleCanvasInteraction(Offset globalPosition) {
+    final worldPosition = _globalToWorld(globalPosition);
+    if (worldPosition == null || !_isCanvasSpaceFree(worldPosition)) {
+      return;
+    }
+    _canvasController.addStateAt(worldPosition);
+  }
+
+  Offset? _globalToWorld(Offset globalPosition) {
+    final renderObject = widget.canvasKey.currentContext?.findRenderObject();
+    if (renderObject is! RenderBox) {
+      return null;
+    }
+    final size = renderObject.size;
+    if (size.isEmpty) {
+      return null;
+    }
+
+    final localPosition = renderObject.globalToLocal(globalPosition);
+    if (localPosition.dx < 0 ||
+        localPosition.dy < 0 ||
+        localPosition.dx > size.width ||
+        localPosition.dy > size.height) {
+      return null;
+    }
+
+    final controller = _canvasController.controller;
+    final offset = controller.viewportOffset;
+    final zoom = controller.viewportZoom;
+
+    final viewport = Rect.fromLTWH(
+      -size.width / 2 / zoom - offset.dx,
+      -size.height / 2 / zoom - offset.dy,
+      size.width / zoom,
+      size.height / zoom,
+    );
+
+    final dx = viewport.left + (localPosition.dx / size.width) * viewport.width;
+    final dy = viewport.top + (localPosition.dy / size.height) * viewport.height;
+    if (!dx.isFinite || !dy.isFinite) {
+      return null;
+    }
+
+    return Offset(dx, dy);
+  }
+
+  bool _isCanvasSpaceFree(Offset worldPosition) {
+    final spatialHash = _canvasController.controller.spatialHashGrid;
+    final cell = (
+      x: (worldPosition.dx / spatialHash.cellSize).floor(),
+      y: (worldPosition.dy / spatialHash.cellSize).floor(),
+    );
+    final nodes = spatialHash.grid[cell];
+    if (nodes == null) {
+      return true;
+    }
+    for (final node in nodes) {
+      if (node.rect.contains(worldPosition)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   void _applyEditorStyle(ThemeData theme) {
     final controller = _canvasController.controller;
     final currentStyle = controller.style;
@@ -406,28 +470,33 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
         Positioned.fill(
           child: KeyedSubtree(
             key: widget.canvasKey,
-            child: FlNodeEditorWidget(
-              controller: _canvasController.controller,
-              overlay: _buildOverlay,
-              headerBuilder: (context, node, style, onToggleCollapse) {
-                final automatonNotifier =
-                    ref.read(automatonProvider.notifier);
-                final automatonState = _statesById[node.id];
-                final label = automatonState?.label ?? node.id;
-                final isInitial = automaton?.initialState?.id == node.id;
-                final isAccepting =
-                    automaton?.acceptingStates.any(
-                      (candidate) => candidate.id == node.id,
-                    ) ??
-                    false;
-                final isVisited =
-                    widget.showTrace && _visitedStateIds.contains(node.id);
-                final isCurrent =
-                    widget.showTrace && _currentStateId == node.id;
-                final isNondeterministic = _nondeterministicStateIds.contains(
-                  node.id,
-                );
-                final isHighlighted = highlight.stateIds.contains(node.id);
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTapUp: (details) =>
+                  _handleCanvasInteraction(details.globalPosition),
+              onLongPressStart: (details) =>
+                  _handleCanvasInteraction(details.globalPosition),
+              child: FlNodeEditorWidget(
+                controller: _canvasController.controller,
+                overlay: _buildOverlay,
+                headerBuilder: (context, node, style, onToggleCollapse) {
+                  final automatonNotifier =
+                      ref.read(automatonProvider.notifier);
+                  final automatonState = _statesById[node.id];
+                  final label = automatonState?.label ?? node.id;
+                  final isInitial = automaton?.initialState?.id == node.id;
+                  final isAccepting =
+                      automaton?.acceptingStates.any(
+                        (candidate) => candidate.id == node.id,
+                      ) ??
+                      false;
+                  final isVisited =
+                      widget.showTrace && _visitedStateIds.contains(node.id);
+                  final isCurrent =
+                      widget.showTrace && _currentStateId == node.id;
+                  final isNondeterministic =
+                      _nondeterministicStateIds.contains(node.id);
+                  final isHighlighted = highlight.stateIds.contains(node.id);
 
                 final colors = _resolveHeaderColors(
                   theme,
@@ -464,6 +533,7 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
                       Key('automaton-node-${node.id}-accepting-toggle'),
                 );
               },
+              ),
             ),
           ),
         ),

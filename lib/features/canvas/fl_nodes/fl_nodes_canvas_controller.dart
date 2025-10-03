@@ -116,6 +116,10 @@ class FlNodesCanvasController
     controller.addNode(_statePrototypeId, offset: center);
   }
 
+  void addStateAt(Offset worldPosition) {
+    controller.addNode(_statePrototypeId, offset: worldPosition);
+  }
+
   @override
   Map<String, FlNodesCanvasNode> get nodesCache => _nodes;
 

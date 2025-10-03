@@ -30,9 +30,6 @@ class SettingsModel {
   /// Base font size in the interface.
   final double fontSize;
 
-  /// Whether to render automata using the experimental Draw2D canvas.
-  final bool useDraw2dCanvas;
-
   const SettingsModel({
     this.emptyStringSymbol = 'λ',
     this.epsilonSymbol = 'ε',
@@ -44,7 +41,6 @@ class SettingsModel {
     this.gridSize = 20.0,
     this.nodeSize = 30.0,
     this.fontSize = 14.0,
-    this.useDraw2dCanvas = false,
   });
 
   /// Creates a new [SettingsModel] with updated values.
@@ -59,7 +55,6 @@ class SettingsModel {
     double? gridSize,
     double? nodeSize,
     double? fontSize,
-    bool? useDraw2dCanvas,
   }) {
     return SettingsModel(
       emptyStringSymbol: emptyStringSymbol ?? this.emptyStringSymbol,
@@ -72,7 +67,6 @@ class SettingsModel {
       gridSize: gridSize ?? this.gridSize,
       nodeSize: nodeSize ?? this.nodeSize,
       fontSize: fontSize ?? this.fontSize,
-      useDraw2dCanvas: useDraw2dCanvas ?? this.useDraw2dCanvas,
     );
   }
 
@@ -90,8 +84,7 @@ class SettingsModel {
         other.showTooltips == showTooltips &&
         other.gridSize == gridSize &&
         other.nodeSize == nodeSize &&
-        other.fontSize == fontSize &&
-        other.useDraw2dCanvas == useDraw2dCanvas;
+        other.fontSize == fontSize;
   }
 
   @override
@@ -106,6 +99,5 @@ class SettingsModel {
     gridSize,
     nodeSize,
     fontSize,
-    useDraw2dCanvas,
   );
 }

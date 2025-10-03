@@ -91,7 +91,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
   }
 
   /// Adds a new state or updates an existing one using coordinates supplied by
-  /// the Draw2D canvas bridge.
+  /// the fl_nodes canvas controllers.
   void addState({
     required String id,
     required String label,

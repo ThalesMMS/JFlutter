@@ -30,8 +30,8 @@ class AutomatonCanvas extends ConsumerStatefulWidget {
   final GlobalKey canvasKey;
   final FlNodesCanvasController? controller;
 
-  /// Legacy callback kept for compatibility while Draw2D bindings are phased
-  /// out. Mutations now happen directly through [AutomatonProvider].
+  /// Legacy callback kept for compatibility with pre-fl_nodes canvases. All
+  /// mutations now happen directly through [AutomatonProvider].
   // ignore: unused_field
   @Deprecated('No longer used; the canvas writes directly to AutomatonProvider.')
   final ValueChanged<FSA>? _deprecatedOnAutomatonChanged;

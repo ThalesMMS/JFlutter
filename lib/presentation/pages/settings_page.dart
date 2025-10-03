@@ -258,18 +258,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildSwitchSetting(
-              'Use Draw2D Canvas',
-              'Enable the web-based Draw2D renderer (preview)',
-              _settings.useDraw2dCanvas,
-              (value) {
-                setState(() {
-                  _settings = _settings.copyWith(useDraw2dCanvas: value);
-                });
-              },
-              switchKey: const ValueKey('settings_use_draw2d_canvas_switch'),
-            ),
-            const SizedBox(height: 16),
-            _buildSwitchSetting(
               'Show Grid',
               'Display grid lines on canvas',
               _settings.showGrid,
@@ -306,7 +294,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               },
               sliderKey: const ValueKey('settings_grid_size_slider'),
             ),
-            const SizedBox(height: 16),
             _buildSliderSetting(
               'Node Size',
               'Size of automaton nodes',

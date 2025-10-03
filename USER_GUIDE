@@ -1,62 +1,52 @@
 JFlutter User Guide Supplement
 ==============================
 
-Draw2D Canvas Toggle
---------------------
-
-* Navigate to **Settings → Canvas**.
-* Enable **Use Draw2D Canvas** to switch the FSA editor to the WebView-powered renderer.
-* Tap **Save Settings**. The preference is persisted via `SharedPreferences` and propagated through Riverpod (`settingsProvider`).
-* Return to the automaton workspace. Supported platforms render the Draw2D canvas; unsupported targets display a warning placeholder.
-* The canvas toolbar shows “Canvas not connected” until the Draw2D bridge confirms the `editor_ready` handshake.
-
-Bridge Message Reference
+fl_nodes Canvas Overview
 ------------------------
 
-### Flutter → Draw2D
+* The automaton workspace now embeds the native fl_nodes canvas by default—no
+  extra toggles are required. Saving settings still persists grid, coordinate,
+  and sizing options through `SettingsModel` and the shared preferences-backed
+  repository.【F:lib/core/models/settings_model.dart†L3-L52】【F:lib/data/repositories/settings_repository_impl.dart†L9-L67】
+* The toolbar continues to expose zoom, fit, reset, and "add state" actions, but
+  each button now calls `FlNodesCanvasController` directly instead of routing
+  through a JavaScript bridge.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L48-L133】
+* Riverpod remains the single source of truth: `AutomatonProvider` receives
+  mutations from the controller for new states, drags, labels, and transitions,
+  so automata stay in sync across panels and simulations.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L236-L355】【F:lib/presentation/providers/automaton_provider.dart†L83-L260】
 
-| Command                | Payload summary                                                  | Notes |
-| ---------------------- | ---------------------------------------------------------------- | ----- |
-| `loadModel`            | Full automaton snapshot from `Draw2DAutomatonMapper.toJson`.      | Injected via `window.draw2dBridge.loadModel(...)` on mobile platforms. |
-| `load_automaton`       | Automaton snapshot + viewport + optional simulation trace.       | Posted to the iframe on Flutter web builds. |
-| `clear_automaton`      | `{}`                                                             | Clears the web canvas when no automaton is active. |
-| `highlight`            | `{ states: string[], transitions: string[] }`                    | Keeps simulator highlights in sync (also echoed through `postMessage`). |
-| `clear_highlight`      | `{}`                                                             | Removes simulator highlights. |
-| `zoom_in` / `zoom_out` | `{}`                                                             | Updates the viewport zoom. |
-| `reset_view`           | `{}`                                                             | Restores pan/zoom defaults. |
-| `fit_content`          | `{}`                                                             | Frames the full automaton. |
-| `add_state_center`     | `{}`                                                             | Adds a new state at the viewport centre. |
+Highlight & Simulation Flow
+---------------------------
 
-### Draw2D → Flutter
-
-| Event `type`           | Payload highlights                                               | Flutter behaviour |
-| ---------------------- | ---------------------------------------------------------------- | ----------------- |
-| `editor_ready`         | `{}`                                                             | Marks the bridge as ready and triggers an immediate automaton sync. |
-| `log`                  | `level`, `message`, optional `details`                           | Forwards diagnostics to Flutter logs. |
-| `state.add`            | `id?`, `label?`, `x`, `y`, `isInitial?`, `isAccepting?`          | Adds or replaces a state via the automaton provider. |
-| `state.move`           | `id`, `x`, `y`                                                   | Debounced to 60 ms batches before updating state positions. |
-| `state.label`          | `id`, `label`                                                    | Renames the state. |
-| `state.updateFlags`    | `id`, `isInitial?`, `isAccepting?`                               | Updates initial/accepting markers. |
-| `state.remove`         | `id`                                                             | Removes the state. |
-| `transition.add`       | `id?`, `fromStateId`, `toStateId`, `label?`                      | Creates or updates a transition. |
-| `transition.label`     | `id`, `label`                                                    | Updates transition symbols. |
-| `transition.remove`    | `id`                                                             | Removes the transition. |
-| `patch`                | Partial automaton diff (web only).                               | Applied to the current FSA via `applyAutomatonPatchToFsa`. |
-| `viewport_patch`       | `{ pan: {x, y}, zoom }` (web only).                               | Updates viewport metadata in Flutter state. |
-| `request_automaton`    | `{}` (web only).                                                  | Forces a fresh automaton snapshot to be posted back. |
+* `SimulationHighlightService` still derives the visited states/transitions for
+  each simulator step, but the payload now feeds the controller notifier through
+  the `FlNodesHighlightController` contract instead of calling into Draw2D.【F:lib/core/services/simulation_highlight_service.dart†L6-L74】【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L36-L45】
+* The canvas paints visited states immediately because the notifier is observed
+  inside `AutomatonCanvas`. There is no longer a "Canvas not connected" status
+  gate—if highlights are missing, verify the notifier listener is attached when
+  the widget initialises.【F:lib/presentation/widgets/automaton_canvas_native.dart†L49-L110】
 
 Manual Verification Checklist
 -----------------------------
 
-1. Enable the Draw2D toggle and save.
-2. Wait for the toolbar to drop the “Canvas not connected” label (verifies `editor_ready`).
-3. Inject `state.add`, `state.move`, and `transition.add` events from the browser console or integration harness and confirm the automaton list updates.
-4. Trigger toolbar commands (`zoom_in`, `fit_content`, `add_state_center`) and confirm they map to the expected Draw2D behaviour.
-5. Run `flutter analyze` (and `flutter test` once suites exist) before requesting review.
+1. Open the automaton workspace and confirm existing automata appear in the
+   Flutter canvas.
+2. Drag states, rename them, and draw transitions—each change should instantly
+   propagate to the side panels driven by `AutomatonProvider`.
+3. Trigger toolbar actions (zoom, fit, reset, add state at centre) and confirm
+   the controller updates the viewport accordingly.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L48-L133】
+4. Run a simulation and ensure highlights move with the active step while the
+   notifier updates the overlay state.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L36-L45】
+5. Execute `flutter analyze` (and `flutter test` when suites exist) before
+   requesting review.
 
 Troubleshooting
 ---------------
 
-* **WebView unavailable**: The widget falls back to an instructional placeholder when the platform lacks WebView support.
-* **Bridge not responding**: Check the console for malformed JSON. The bridge ignores invalid payloads by design.
-* **Settings not persisting**: Ensure the settings dialog **Save** action completes; the provider mirrors the persisted value after success.
+* **Canvas not updating**: check that `_isSynchronizing` isn't stuck to `true`
+  (e.g., due to an exception while rebuilding nodes). If so, call
+  `synchronize()` again after fixing the underlying data issue.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L96-L234】
+* **Labels not sticking**: ensure label edits trigger a submit event—pressing
+  `Escape` or cancelling keeps the previous value by design.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L304-L327】
+* **Highlights not clearing**: verify the `SimulationHighlightService` channel
+  is registered and that `clear()` is called after simulations complete.【F:lib/core/services/simulation_highlight_service.dart†L6-L74】

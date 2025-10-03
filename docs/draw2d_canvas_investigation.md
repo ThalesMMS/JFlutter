@@ -1,30 +1,34 @@
-# Draw2D Canvas Investigation
+# fl_nodes Canvas Notes
 
 ## Summary of Findings
 
-- The FSA page only embeds the Draw2D WebView on mobile/desktop targets. On web builds it still renders the legacy `AutomatonCanvas`, so the Draw2D toolbar cannot reach an active bridge instance. 【F:lib/presentation/pages/fsa_page.dart†L332-L379】
-- The `Draw2DCanvasView` used by the FSA page now loads the production `assets/draw2d/editor.html`, but earlier builds blocked the internal `flutter-asset://` navigation that bootstraps the editor. When the page load is cancelled, `window.draw2dBridge` never calls back and commands such as `addStateAtCenter` no-op. 【F:lib/presentation/widgets/draw2d_canvas_view.dart†L18-L118】【F:assets/draw2d/editor.js†L587-L1369】
-- The TM and PDA screens use `Draw2DTMCanvasView` / `Draw2DPdaCanvasView`, which rely on `editor.html` and `editor.js`. Those scripts do register `window.draw2dBridge.addStateAtCenter` and forward actions back to Flutter, so the tooling mismatch only affects the FSA screen. 【F:lib/presentation/widgets/draw2d_tm_canvas_view.dart†L1-L86】【F:lib/presentation/widgets/draw2d_pda_canvas_view.dart†L1-L78】【F:assets/draw2d/editor.js†L587-L1369】
-- The "Add state" button invokes `Draw2DBridgeService.addStateAtCenter()`, which simply posts through the bridge. Because the FSA canvas never registers the bridge object, the command is dropped, explaining why none of the canvases respond when tested from that page. 【F:lib/presentation/widgets/draw2d_canvas_toolbar.dart†L23-L47】【F:lib/core/services/draw2d_bridge_service.dart†L41-L68】
+- The FSA, TM, and PDA screens now share the same Flutter-based canvas thanks to
+  `AutomatonCanvas`, eliminating the WebView/iframe divergence that previously
+  plagued the Draw2D integration.【F:lib/presentation/widgets/automaton_canvas_native.dart†L13-L156】
+- `FlNodesCanvasController` registers the node prototype and listens to the
+  editor `eventBus` so that additions, removals, drags, and label edits feed
+  directly into `AutomatonProvider`. This keeps Riverpod state authoritative
+  without relying on JavaScript bridges.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L20-L45】【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L236-L327】
+- Toolbar actions now call the controller methods (`zoomIn`, `fitToContent`,
+  `addStateAtCenter`, etc.), so the status label can always reflect the canvas
+  readiness state—there is no asynchronous handshake to block the UI anymore.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L48-L133】
 
-## Expected behaviour
+## Expected Behaviour
 
-- All Draw2D-backed canvases (`Draw2DCanvasView`, `Draw2DTMCanvasView`, `Draw2DPdaCanvasView`) rely on the `editor_ready` message emitted by `editor.html` to unlock toolbar controls. The WebView must allow the internal `flutter-asset://` navigation triggered by `loadFlutterAsset`, otherwise the bridge never receives `editor_ready` and the UI stays in the "Canvas not connected" state. 【F:lib/presentation/widgets/draw2d_canvas_view.dart†L38-L118】【F:lib/presentation/widgets/draw2d_tm_canvas_view.dart†L32-L103】【F:lib/presentation/widgets/draw2d_pda_canvas_view.dart†L27-L96】
-
+- Synchronisation flows from Riverpod into fl_nodes by converting the automaton
+  into a snapshot before rebuilding the editor. The controller guards against
+  feedback loops by setting `_isSynchronizing` while replaying nodes and edges.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L96-L234】
+- User gestures must keep dispatching `addState`, `moveState`, `removeState`, and
+  `addOrUpdateTransition` so that simulations and persistence remain accurate.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L236-L355】【F:lib/presentation/providers/automaton_provider.dart†L83-L260】
 
 ## Suggested Follow-Up Tasks
 
-1. **Align FSA canvas with TM/PDA implementation**  
-   Replace the `minimal_editor.html` integration with the production `editor.html`/`editor.js` bundle and ensure the FSA view registers the same bridge contract as TM/PDA. This will restore the shared behaviour and allow `Draw2DBridgeService` commands to succeed.
-
-2. **Enable Draw2D on the web FSA page**  
-   Update `_buildCanvasArea` to render the Draw2D WebView (or a bridge-aware wrapper) instead of the legacy `AutomatonCanvas` when `kIsWeb` is true. Verify the toolbar buttons are conditionally hidden or fully functional in web builds.
-
-3. **Add readiness diagnostics**  
-   Extend the bridge service or toolbar to surface when no controller is registered so that pressing "Add state" gives immediate feedback. This will make future regressions easier to detect.
-
-4. **Regression tests / smoke checks**  
-   Introduce widget or integration tests that mock the `Draw2DBridgeService` and confirm toolbar actions dispatch the expected bridge calls, covering FSA, TM, and PDA pages.
-
-5. **Clean up diagnostic HTML**  
-   Either remove `minimal_editor.html` once the production bridge is stable or document its intended scope (e.g., internal debugging) to avoid accidental use in shipping views.
+1. **Web platform affordances** – audit browser-specific shortcuts (copy/paste,
+   undo) exposed by fl_nodes and decide whether they should be mirrored in the
+   toolbar or kept as hidden power-user features.
+2. **Snapshot diffing** – evaluate whether we still need partial patching when
+   collaborative editing lands. `FlNodesAutomatonMapper.mergeIntoTemplate` could
+   be extended with diff helpers similar to the legacy bridge if needed.【F:lib/features/canvas/fl_nodes/fl_nodes_automaton_mapper.dart†L61-L108】
+3. **Extended testing** – replace the deleted Draw2D bridge tests with focused
+   widget and controller tests that validate node creation, link wiring, and
+   highlight dispatch, ensuring the fl_nodes integration has automated coverage.

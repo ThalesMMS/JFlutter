@@ -1,14 +1,21 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:vector_math/vector_math_64.dart';
 import 'dart:math' as math;
+
+import 'package:fl_nodes/fl_nodes.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/fsa.dart';
-import 'package:jflutter/core/models/state.dart' as automaton_state;
 import 'package:jflutter/core/models/fsa_transition.dart';
+import 'package:jflutter/core/models/simulation_highlight.dart';
 import 'package:jflutter/core/models/simulation_result.dart';
 import 'package:jflutter/core/models/simulation_step.dart';
+import 'package:jflutter/core/models/state.dart' as automaton_state;
+import 'package:jflutter/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart';
+import 'package:jflutter/features/canvas/fl_nodes/fl_nodes_label_field_editor.dart';
+import 'package:jflutter/presentation/providers/automaton_provider.dart';
 import 'package:jflutter/presentation/widgets/automaton_canvas.dart';
 import 'package:jflutter/presentation/widgets/simulation_panel.dart';
+import 'package:vector_math/vector_math_64.dart';
 
 /// Widget/Golden Tests for Immutable Traces and Visualizations
 ///
@@ -22,92 +29,103 @@ import 'package:jflutter/presentation/widgets/simulation_panel.dart';
 /// 4. Golden file comparisons
 /// 5. Performance and responsiveness
 void main() {
-  group('Automaton Canvas Widget Tests', () {
-    testWidgets('AutomatonCanvas renders empty automaton correctly', (
-      tester,
-    ) async {
-      final canvasKey = GlobalKey();
-      FSA? capturedAutomaton;
+  group('AutomatonCanvas (fl_nodes) integration', () {
+    late ProviderContainer container;
+    late FlNodesCanvasController controller;
 
+    setUp(() {
+      container = ProviderContainer();
+      controller = FlNodesCanvasController(
+        automatonProvider: container.read(automatonProvider.notifier),
+      );
+    });
+
+    tearDown(() {
+      controller.dispose();
+      container.dispose();
+    });
+
+    Future<void> pumpCanvas(WidgetTester tester, FSA? automaton) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: AutomatonCanvas(
-              automaton: null,
-              canvasKey: canvasKey,
-              onAutomatonChanged: (automaton) {
-                capturedAutomaton = automaton;
-              },
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: Scaffold(
+              body: AutomatonCanvas(
+                automaton: automaton,
+                canvasKey: GlobalKey(),
+                onAutomatonChanged: (_) {},
+                controller: controller,
+              ),
             ),
           ),
         ),
       );
+      await tester.pump();
+    }
 
-      expect(find.byType(AutomatonCanvas), findsOneWidget);
-      expect(find.byType(CustomPaint), findsOneWidget);
+    testWidgets(
+      'synchronizes nodes and transitions with fl_nodes controller',
+      (tester) async {
+        final automaton = _createTestDFA();
 
-      // Verify empty canvas is rendered
-      final customPaint = tester.widget<CustomPaint>(find.byType(CustomPaint));
-      expect(customPaint.painter, isA<AutomatonPainter>());
-    });
+        await pumpCanvas(tester, automaton);
 
-    testWidgets('AutomatonCanvas renders DFA correctly', (tester) async {
-      final canvasKey = GlobalKey();
-      final testDFA = _createTestDFA();
-      FSA? capturedAutomaton;
+        expect(find.byType(AutomatonCanvas), findsOneWidget);
+        expect(find.byType(FlNodeEditorWidget), findsOneWidget);
+        expect(controller.nodeById('q0'), isNotNull);
+        expect(controller.nodeById('q1'), isNotNull);
+        expect(controller.edgeById('t1'), isNotNull);
+        expect(controller.controller.nodes.length, automaton.states.length);
+        expect(
+          controller.controller.linksById.length,
+          automaton.fsaTransitions.length,
+        );
+      },
+    );
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: AutomatonCanvas(
-              automaton: testDFA,
-              canvasKey: canvasKey,
-              onAutomatonChanged: (automaton) {
-                capturedAutomaton = automaton;
-              },
-            ),
-          ),
-        ),
-      );
+    testWidgets(
+      'renders transition label editor overlay when selecting a link',
+      (tester) async {
+        final automaton = _createTestDFA();
 
-      expect(find.byType(AutomatonCanvas), findsOneWidget);
-      expect(find.byType(CustomPaint), findsOneWidget);
+        await pumpCanvas(tester, automaton);
 
-      // Verify DFA is rendered
-      final customPaint = tester.widget<CustomPaint>(find.byType(CustomPaint));
-      final painter = customPaint.painter as AutomatonPainter;
-      expect(painter.states.length, equals(2));
-      expect(painter.transitions.length, equals(1));
-    });
+        controller.controller.selectLinkById('t1');
+        await tester.pump();
 
-    testWidgets('AutomatonCanvas renders NFA correctly', (tester) async {
-      final canvasKey = GlobalKey();
-      final testNFA = _createTestNFA();
-      FSA? capturedAutomaton;
+        expect(
+          find.byKey(const ValueKey('transition-editor-t1-a')),
+          findsOneWidget,
+        );
+        expect(find.byType(FlNodesLabelFieldEditor), findsOneWidget);
+      },
+    );
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: AutomatonCanvas(
-              automaton: testNFA,
-              canvasKey: canvasKey,
-              onAutomatonChanged: (automaton) {
-                capturedAutomaton = automaton;
-              },
-            ),
-          ),
-        ),
-      );
+    testWidgets(
+      'applies transition highlights through controller notifier',
+      (tester) async {
+        final automaton = _createTestDFA();
 
-      expect(find.byType(AutomatonCanvas), findsOneWidget);
-      expect(find.byType(CustomPaint), findsOneWidget);
+        await pumpCanvas(tester, automaton);
 
-      // Verify NFA is rendered
-      final customPaint = tester.widget<CustomPaint>(find.byType(CustomPaint));
-      final painter = customPaint.painter as AutomatonPainter;
-      expect(painter.states.length, equals(2));
-      expect(painter.transitions.length, equals(1));
-    });
+        controller.applyHighlight(
+          const SimulationHighlight(transitionIds: {'t1'}),
+        );
+        await tester.pump();
+
+        expect(controller.highlightNotifier.value.transitionIds, contains('t1'));
+        final link = controller.controller.linksById['t1'];
+        expect(link, isNotNull);
+        expect(link!.state.isSelected, isTrue);
+
+        controller.clearHighlight();
+        await tester.pump();
+
+        expect(controller.highlightNotifier.value.transitionIds, isEmpty);
+        expect(link.state.isSelected, isFalse);
+      },
+    );
   });
 
   group('Simulation Panel Widget Tests', () {
@@ -250,18 +268,30 @@ void main() {
     testWidgets('AutomatonCanvas handles large automatons efficiently', (
       tester,
     ) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      final controller = FlNodesCanvasController(
+        automatonProvider: container.read(automatonProvider.notifier),
+      );
+      addTearDown(controller.dispose);
+
       final canvasKey = GlobalKey();
       final largeDFA = _createLargeDFA();
 
       final stopwatch = Stopwatch()..start();
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: AutomatonCanvas(
-              automaton: largeDFA,
-              canvasKey: canvasKey,
-              onAutomatonChanged: (automaton) {},
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: Scaffold(
+              body: AutomatonCanvas(
+                automaton: largeDFA,
+                canvasKey: canvasKey,
+                onAutomatonChanged: (_) {},
+                controller: controller,
+              ),
             ),
           ),
         ),
@@ -277,7 +307,7 @@ void main() {
         reason: 'Large automaton should render within 1 second',
       );
 
-      expect(find.byType(AutomatonCanvas), findsOneWidget);
+      expect(find.byType(FlNodeEditorWidget), findsOneWidget);
     });
 
     testWidgets(
@@ -347,49 +377,6 @@ FSA _createTestDFA() {
   return FSA(
     id: 'test_dfa',
     name: 'Test DFA',
-    states: states,
-    transitions: transitions,
-    alphabet: {'0', '1'},
-    initialState: states.firstWhere((s) => s.id == 'q0'),
-    acceptingStates: {states.firstWhere((s) => s.id == 'q1')},
-    created: DateTime.now(),
-    modified: DateTime.now(),
-    bounds: const math.Rectangle(0, 0, 200, 100),
-    zoomLevel: 1.0,
-    panOffset: Vector2.zero(),
-  );
-}
-
-FSA _createTestNFA() {
-  final states = {
-    automaton_state.State(
-      id: 'q0',
-      label: 'q0',
-      position: Vector2(0, 0),
-      isInitial: true,
-      isAccepting: false,
-    ),
-    automaton_state.State(
-      id: 'q1',
-      label: 'q1',
-      position: Vector2(100, 0),
-      isInitial: false,
-      isAccepting: true,
-    ),
-  };
-
-  final transitions = {
-    FSATransition(
-      id: 't1',
-      fromState: states.firstWhere((s) => s.id == 'q0'),
-      toState: states.firstWhere((s) => s.id == 'q1'),
-      symbol: '1',
-    ),
-  };
-
-  return FSA(
-    id: 'test_nfa',
-    name: 'Test NFA',
     states: states,
     transitions: transitions,
     alphabet: {'0', '1'},

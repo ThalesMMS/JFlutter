@@ -32,27 +32,15 @@ class AutomatonCanvas extends ConsumerStatefulWidget {
     super.key,
     required this.automaton,
     required this.canvasKey,
-    @Deprecated(
-      'No longer used; the canvas writes directly to AutomatonProvider.',
-    )
-    ValueChanged<FSA>? onAutomatonChanged,
     this.simulationResult,
     this.currentStepIndex,
     this.showTrace = false,
     this.controller,
-  }) : _deprecatedOnAutomatonChanged = onAutomatonChanged;
+  });
 
   final FSA? automaton;
   final GlobalKey canvasKey;
   final FlNodesCanvasController? controller;
-
-  /// Legacy callback kept for compatibility with pre-fl_nodes canvases. All
-  /// mutations now happen directly through [AutomatonProvider].
-  // ignore: unused_field
-  @Deprecated(
-    'No longer used; the canvas writes directly to AutomatonProvider.',
-  )
-  final ValueChanged<FSA>? _deprecatedOnAutomatonChanged;
 
   final SimulationResult? simulationResult;
   final int? currentStepIndex;

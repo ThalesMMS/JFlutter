@@ -187,7 +187,6 @@ testGoldens('AutomatonCanvas empty state', (tester) async {
     AutomatonCanvas(
       automaton: null,  // Empty state
       canvasKey: GlobalKey(),
-      onAutomatonChanged: (_) {},
     ),
     wrapper: materialAppWrapper(
       theme: ThemeData.light(),

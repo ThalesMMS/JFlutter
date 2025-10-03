@@ -187,6 +187,70 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
     _eventSubscription = controller.eventBus.events.listen(_handleEditorEvent);
   }
 
+  void _handleCanvasInteraction(Offset globalPosition) {
+    final worldPosition = _globalToWorld(globalPosition);
+    if (worldPosition == null || !_isCanvasSpaceFree(worldPosition)) {
+      return;
+    }
+    _canvasController.addStateAt(worldPosition);
+  }
+
+  Offset? _globalToWorld(Offset globalPosition) {
+    final renderObject = _canvasKey.currentContext?.findRenderObject();
+    if (renderObject is! RenderBox) {
+      return null;
+    }
+    final size = renderObject.size;
+    if (size.isEmpty) {
+      return null;
+    }
+
+    final localPosition = renderObject.globalToLocal(globalPosition);
+    if (localPosition.dx < 0 ||
+        localPosition.dy < 0 ||
+        localPosition.dx > size.width ||
+        localPosition.dy > size.height) {
+      return null;
+    }
+
+    final controller = _canvasController.controller;
+    final offset = controller.viewportOffset;
+    final zoom = controller.viewportZoom;
+
+    final viewport = Rect.fromLTWH(
+      -size.width / 2 / zoom - offset.dx,
+      -size.height / 2 / zoom - offset.dy,
+      size.width / zoom,
+      size.height / zoom,
+    );
+
+    final dx = viewport.left + (localPosition.dx / size.width) * viewport.width;
+    final dy = viewport.top + (localPosition.dy / size.height) * viewport.height;
+    if (!dx.isFinite || !dy.isFinite) {
+      return null;
+    }
+
+    return Offset(dx, dy);
+  }
+
+  bool _isCanvasSpaceFree(Offset worldPosition) {
+    final spatialHash = _canvasController.controller.spatialHashGrid;
+    final cell = (
+      x: (worldPosition.dx / spatialHash.cellSize).floor(),
+      y: (worldPosition.dy / spatialHash.cellSize).floor(),
+    );
+    final nodes = spatialHash.grid[cell];
+    if (nodes == null) {
+      return true;
+    }
+    for (final node in nodes) {
+      if (node.rect.contains(worldPosition)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -212,49 +276,57 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
         Positioned.fill(
           child: KeyedSubtree(
             key: _canvasKey,
-            child: FlNodeEditorWidget(
-              controller: _canvasController.controller,
-              overlay: _buildOverlay,
-              headerBuilder: (context, node, style, onToggleCollapse) {
-                final state = statesById[node.id];
-                final label = state?.label ?? node.id;
-                final isInitial = initialStateId == node.id;
-                final isAccepting = acceptingIds.contains(node.id);
-                final isNondeterministic =
-                    nondeterministicStateIds.contains(node.id);
-                final isHighlighted = highlight.stateIds.contains(node.id);
-                final colors = _resolveHeaderColors(
-                  theme,
-                  isHighlighted: isHighlighted,
-                  isInitial: isInitial,
-                  isAccepting: isAccepting,
-                  isNondeterministic: isNondeterministic,
-                );
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTapUp: (details) =>
+                  _handleCanvasInteraction(details.globalPosition),
+              onLongPressStart: (details) =>
+                  _handleCanvasInteraction(details.globalPosition),
+              child: FlNodeEditorWidget(
+                controller: _canvasController.controller,
+                overlay: _buildOverlay,
+                headerBuilder: (context, node, style, onToggleCollapse) {
+                  final state = statesById[node.id];
+                  final label = state?.label ?? node.id;
+                  final isInitial = initialStateId == node.id;
+                  final isAccepting = acceptingIds.contains(node.id);
+                  final isNondeterministic =
+                      nondeterministicStateIds.contains(node.id);
+                  final isHighlighted = highlight.stateIds.contains(node.id);
+                  final colors = _resolveHeaderColors(
+                    theme,
+                    isHighlighted: isHighlighted,
+                    isInitial: isInitial,
+                    isAccepting: isAccepting,
+                    isNondeterministic: isNondeterministic,
+                  );
 
-                final notifier = ref.read(tmEditorProvider.notifier);
-                return _TMNodeHeader(
-                  label: label,
-                  isInitial: isInitial,
-                  isAccepting: isAccepting,
-                  isCollapsed: node.state.isCollapsed,
-                  colors: colors,
-                  onToggleCollapse: onToggleCollapse,
-                  onToggleInitial: () {
-                    notifier.updateStateFlags(
-                      id: node.id,
-                      isInitial: !isInitial,
-                    );
-                  },
-                  onToggleAccepting: () {
-                    notifier.updateStateFlags(
-                      id: node.id,
-                      isAccepting: !isAccepting,
-                    );
-                  },
-                  initialToggleKey: Key('tm-node-${node.id}-initial-toggle'),
-                  acceptingToggleKey: Key('tm-node-${node.id}-accepting-toggle'),
-                );
-              },
+                  final notifier = ref.read(tmEditorProvider.notifier);
+                  return _TMNodeHeader(
+                    label: label,
+                    isInitial: isInitial,
+                    isAccepting: isAccepting,
+                    isCollapsed: node.state.isCollapsed,
+                    colors: colors,
+                    onToggleCollapse: onToggleCollapse,
+                    onToggleInitial: () {
+                      notifier.updateStateFlags(
+                        id: node.id,
+                        isInitial: !isInitial,
+                      );
+                    },
+                    onToggleAccepting: () {
+                      notifier.updateStateFlags(
+                        id: node.id,
+                        isAccepting: !isAccepting,
+                      );
+                    },
+                    initialToggleKey: Key('tm-node-${node.id}-initial-toggle'),
+                    acceptingToggleKey: Key('tm-node-${node.id}-accepting-toggle'),
+                  );
+                },
+              ),
+            ),
           ),
         ),
         if (!hasStates) const _EmptyCanvasMessage(),

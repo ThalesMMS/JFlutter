@@ -40,7 +40,6 @@ class _PDAPageState extends ConsumerState<PDAPage> {
     _canvasController.synchronize(ref.read(pdaEditorProvider).pda);
     _highlightChannel = FlNodesSimulationHighlightChannel(_canvasController);
     _highlightService = SimulationHighlightService(channel: _highlightChannel);
-    SimulationHighlightService.registerGlobalChannel(_highlightChannel);
     _pdaEditorSub = ref.listenManual<PDAEditorState>(
       pdaEditorProvider,
       (previous, next) {
@@ -61,7 +60,6 @@ class _PDAPageState extends ConsumerState<PDAPage> {
   void dispose() {
     _pdaEditorSub?.close();
     _highlightService.clear();
-    SimulationHighlightService.registerGlobalChannel(null);
     _canvasController.dispose();
     super.dispose();
   }
@@ -80,8 +78,13 @@ class _PDAPageState extends ConsumerState<PDAPage> {
     final screenSize = MediaQuery.of(context).size;
     final isMobile = screenSize.width < 1024;
 
-    return Scaffold(
-      body: isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
+    return ProviderScope(
+      overrides: [
+        canvasHighlightServiceProvider.overrideWithValue(_highlightService),
+      ],
+      child: Scaffold(
+        body: isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
+      ),
     );
   }
 

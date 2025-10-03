@@ -49,7 +49,6 @@ class _TMPageState extends ConsumerState<TMPage> {
     _canvasController.synchronize(ref.read(tmEditorProvider).tm);
     _highlightChannel = FlNodesSimulationHighlightChannel(_canvasController);
     _highlightService = SimulationHighlightService(channel: _highlightChannel);
-    SimulationHighlightService.registerGlobalChannel(_highlightChannel);
     _tmEditorSub = ref.listenManual<TMEditorState>(
       tmEditorProvider,
       (previous, next) {
@@ -74,7 +73,6 @@ class _TMPageState extends ConsumerState<TMPage> {
   void dispose() {
     _tmEditorSub?.close();
     _highlightService.clear();
-    SimulationHighlightService.registerGlobalChannel(null);
     _canvasController.dispose();
     super.dispose();
   }
@@ -84,8 +82,13 @@ class _TMPageState extends ConsumerState<TMPage> {
     final screenSize = MediaQuery.of(context).size;
     final isMobile = screenSize.width < 1024;
 
-    return Scaffold(
-      body: isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
+    return ProviderScope(
+      overrides: [
+        canvasHighlightServiceProvider.overrideWithValue(_highlightService),
+      ],
+      child: Scaffold(
+        body: isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
+      ),
     );
   }
 

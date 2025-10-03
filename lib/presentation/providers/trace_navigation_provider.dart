@@ -119,10 +119,9 @@ class TraceNavigationNotifier extends StateNotifier<TraceNavigationState> {
   final SimulationHighlightService _highlightService;
 
   TraceNavigationNotifier(
-    this._navigationService, {
-    SimulationHighlightService? highlightService,
-  })  : _highlightService = highlightService ?? SimulationHighlightService(),
-        super(const TraceNavigationState()) {
+    this._navigationService,
+    this._highlightService,
+  ) : super(const TraceNavigationState()) {
     _initializeState();
   }
 
@@ -370,5 +369,6 @@ class TraceNavigationNotifier extends StateNotifier<TraceNavigationState> {
 final traceNavigationProvider =
     StateNotifierProvider<TraceNavigationNotifier, TraceNavigationState>((ref) {
       final navigationService = ref.watch(traceNavigationServiceProvider);
-      return TraceNavigationNotifier(navigationService);
+      final highlightService = ref.watch(canvasHighlightServiceProvider);
+      return TraceNavigationNotifier(navigationService, highlightService);
     });

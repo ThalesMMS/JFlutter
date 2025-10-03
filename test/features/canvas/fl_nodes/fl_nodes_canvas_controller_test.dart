@@ -17,6 +17,7 @@ import 'package:jflutter/core/models/simulation_highlight.dart';
 import 'package:jflutter/core/repositories/automaton_repository.dart';
 import 'package:jflutter/core/result.dart';
 import 'package:jflutter/data/services/automaton_service.dart';
+import 'package:jflutter/features/canvas/fl_nodes/base_fl_nodes_canvas_controller.dart';
 import 'package:jflutter/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart';
 import 'package:jflutter/presentation/providers/automaton_provider.dart';
 
@@ -200,6 +201,10 @@ void main() {
 
     tearDown(() {
       controller.dispose();
+    });
+
+    test('inherits from BaseFlNodesCanvasController', () {
+      expect(controller, isA<BaseFlNodesCanvasController>());
     });
 
     test('viewport helpers adjust zoom and offset', () {

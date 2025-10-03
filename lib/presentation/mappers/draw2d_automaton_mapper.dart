@@ -1,7 +1,8 @@
 import 'package:collection/collection.dart';
+
 import '../../core/models/fsa.dart';
-import '../../core/models/fsa_transition.dart';
-import '../../core/models/state.dart';
+import '../../features/canvas/fl_nodes/fl_nodes_automaton_mapper.dart';
+import '../../features/canvas/fl_nodes/fl_nodes_canvas_models.dart';
 
 /// Utility that converts [FSA] models into the structure expected by the
 /// Draw2D canvas.
@@ -13,64 +14,71 @@ class Draw2DAutomatonMapper {
 
   /// Converts the provided [automaton] into a Draw2D compatible JSON map.
   static Map<String, dynamic> toJson(FSA? automaton) {
-    if (automaton == null) {
+    final snapshot = FlNodesAutomatonMapper.toSnapshot(automaton);
+
+    if (snapshot.nodes.isEmpty) {
       return {
-        'id': null,
+        'id': snapshot.metadata.id,
         'type': 'fsa',
-        'name': null,
-        'alphabet': const <String>[],
+        'name': snapshot.metadata.name,
+        'alphabet': snapshot.metadata.alphabet.toList()..sort(),
         'states': const <Map<String, dynamic>>[],
         'transitions': const <Map<String, dynamic>>[],
         'initialStateId': null,
       };
     }
 
-    final sortedStates = automaton.states.toList()
+    final sortedNodes = snapshot.nodes.toList()
       ..sort((a, b) => a.id.compareTo(b.id));
-    final sortedTransitions = automaton.transitions
-        .whereType<FSATransition>()
-        .toList()
+    final sortedEdges = snapshot.edges.toList()
       ..sort((a, b) => a.id.compareTo(b.id));
 
     final Map<String, String> stateIdMap = {};
-    final statesJson = sortedStates.map((state) {
-      final draw2dId = _stableStateId(automaton.id, state.id);
-      stateIdMap[state.id] = draw2dId;
-      return _stateToJson(draw2dId, state);
+    final automatonId = snapshot.metadata.id ?? 'automaton';
+
+    final statesJson = sortedNodes.map((node) {
+      final draw2dId = _stableStateId(automatonId, node.id);
+      stateIdMap[node.id] = draw2dId;
+      return _stateToJson(draw2dId, node);
     }).toList(growable: false);
 
-    final transitionsJson = sortedTransitions.map((transition) {
-      final draw2dId = _stableTransitionId(automaton.id, transition.id);
-      final fromId = stateIdMap[transition.fromState.id];
-      final toId = stateIdMap[transition.toState.id];
-      return _transitionToJson(draw2dId, fromId, toId, transition);
+    final transitionsJson = sortedEdges.map((edge) {
+      final draw2dId = _stableTransitionId(automatonId, edge.id);
+      final fromId = stateIdMap[edge.fromStateId];
+      final toId = stateIdMap[edge.toStateId];
+      return _transitionToJson(draw2dId, fromId, toId, edge);
     }).whereNotNull().toList(growable: false);
 
-    final initialId = automaton.initialState != null
-        ? stateIdMap[automaton.initialState!.id]
-        : null;
+    String? initialId;
+    for (final node in sortedNodes) {
+      if (node.isInitial) {
+        initialId = stateIdMap[node.id];
+        break;
+      }
+    }
+
+    final alphabet = snapshot.metadata.alphabet.toList()..sort();
 
     return {
-      'id': automaton.id,
+      'id': snapshot.metadata.id,
       'type': 'fsa',
-      'name': automaton.name,
-      'alphabet': automaton.alphabet.toList()..sort(),
+      'name': snapshot.metadata.name,
+      'alphabet': alphabet,
       'states': statesJson,
       'transitions': transitionsJson,
       'initialStateId': initialId,
     };
   }
 
-  static Map<String, dynamic> _stateToJson(String id, State state) {
-    final position = state.position;
-    final x = position.x.isFinite ? position.x : 0.0;
-    final y = position.y.isFinite ? position.y : 0.0;
+  static Map<String, dynamic> _stateToJson(String id, FlNodesCanvasNode node) {
+    final x = node.x.isFinite ? node.x : 0.0;
+    final y = node.y.isFinite ? node.y : 0.0;
     return {
       'id': id,
-      'sourceId': state.id,
-      'label': state.label,
-      'isInitial': state.isInitial,
-      'isAccepting': state.isAccepting,
+      'sourceId': node.id,
+      'label': node.label,
+      'isInitial': node.isInitial,
+      'isAccepting': node.isAccepting,
       'position': {
         'x': x - _stateRadius,
         'y': y - _stateRadius,
@@ -82,25 +90,25 @@ class Draw2DAutomatonMapper {
     String draw2dId,
     String? fromId,
     String? toId,
-    FSATransition transition,
+    FlNodesCanvasEdge edge,
   ) {
     if (fromId == null || toId == null) {
       return null;
     }
 
-    final sortedSymbols = transition.inputSymbols.toList()..sort();
-    final label = transition.lambdaSymbol ?? sortedSymbols.join(',');
+    final label = edge.label;
 
-    final control = transition.controlPoint;
+    final controlX = edge.controlPointX ?? 0.0;
+    final controlY = edge.controlPointY ?? 0.0;
     return {
       'id': draw2dId,
-      'sourceId': transition.id,
+      'sourceId': edge.id,
       'from': fromId,
       'to': toId,
       'label': label,
       'controlPoint': {
-        'x': control.x.isFinite ? control.x : 0.0,
-        'y': control.y.isFinite ? control.y : 0.0,
+        'x': controlX.isFinite ? controlX : 0.0,
+        'y': controlY.isFinite ? controlY : 0.0,
       },
     };
   }

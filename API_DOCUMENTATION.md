@@ -213,7 +213,10 @@ Interactive canvas for drawing automata:
 class AutomatonCanvas extends StatefulWidget {
   final FSA? automaton;
   final GlobalKey canvasKey;
-  final ValueChanged<FSA> onAutomatonChanged;
+  final SimulationResult? simulationResult;
+  final int? currentStepIndex;
+  final bool showTrace;
+  final FlNodesCanvasController? controller;
 }
 ```
 

@@ -101,7 +101,6 @@ testWidgets('AutomatonCanvas renders DFA correctly', (tester) async {
         body: AutomatonCanvas(
           automaton: testDFA.toProductionModel(),
           canvasKey: canvasKey,
-          onAutomatonChanged: (_) {},
         ),
       ),
     ),
@@ -206,7 +205,6 @@ testWidgets('Canvas controls accessible on mobile', (tester) async {
         body: AutomatonCanvas(
           automaton: TestFixtures.simpleDFA.toProductionModel(),
           canvasKey: GlobalKey(),
-          onAutomatonChanged: (_) {},
         ),
       ),
     ),

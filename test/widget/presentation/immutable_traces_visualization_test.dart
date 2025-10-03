@@ -54,7 +54,6 @@ void main() {
               body: AutomatonCanvas(
                 automaton: automaton,
                 canvasKey: GlobalKey(),
-                onAutomatonChanged: (_) {},
                 controller: controller,
               ),
             ),
@@ -289,7 +288,6 @@ void main() {
               body: AutomatonCanvas(
                 automaton: largeDFA,
                 canvasKey: canvasKey,
-                onAutomatonChanged: (_) {},
                 controller: controller,
               ),
             ),

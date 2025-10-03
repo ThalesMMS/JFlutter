@@ -33,7 +33,6 @@ void main() {
             body: AutomatonCanvas(
               automaton: automaton,
               canvasKey: canvasKey,
-              onAutomatonChanged: (_) {},
               controller: controller,
             ),
           ),

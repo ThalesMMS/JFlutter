@@ -386,7 +386,6 @@ testWidgets('AutomatonCanvas renders and responds to tap', (tester) async {
       body: AutomatonCanvas(
         automaton: TestFixtures.simpleDFA.toProductionModel(),
         canvasKey: GlobalKey(),
-        onAutomatonChanged: (_) {},
       ),
     ),
   ));
@@ -407,7 +406,6 @@ testGoldens('AutomatonCanvas DFA rendering', (tester) async {
     AutomatonCanvas(
       automaton: TestFixtures.simpleDFA.toProductionModel(),
       canvasKey: GlobalKey(),
-      onAutomatonChanged: (_) {},
     ),
   );
   

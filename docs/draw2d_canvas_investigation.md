@@ -21,6 +21,18 @@
 - User gestures must keep dispatching `addState`, `moveState`, `removeState`, and
   `addOrUpdateTransition` so that simulations and persistence remain accurate.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L236-L355】【F:lib/presentation/providers/automaton_provider.dart†L83-L260】
 
+## Practical Usage Tips
+
+- Remind testers that zooming works with both the toolbar and the
+  <kbd>Ctrl/Cmd</kbd> + scroll shortcut—the controller debounces both paths to
+  avoid camera jitter.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L48-L133】
+- Encourage authors to double-click empty space when placing states; the
+  resulting `AddNodeEvent` keeps coordinates aligned with the pointer without
+  needing manual adjustments.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L236-L302】
+- During simulation walkthroughs, watch the highlight overlay rather than the
+  toolbar status. The notifier drives every colour change and clears automatically
+  when `SimulationHighlightService.clear()` runs.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L36-L45】【F:lib/core/services/simulation_highlight_service.dart†L6-L74】
+
 ## Suggested Follow-Up Tasks
 
 1. **Web platform affordances** – audit browser-specific shortcuts (copy/paste,

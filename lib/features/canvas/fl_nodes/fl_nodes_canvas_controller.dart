@@ -7,17 +7,19 @@ import 'package:fl_nodes/src/core/models/events.dart'
 import 'package:flutter/material.dart';
 
 import '../../../core/models/fsa.dart';
-import '../../../core/models/simulation_highlight.dart';
 import '../../../presentation/providers/automaton_provider.dart';
 import 'fl_nodes_automaton_mapper.dart';
 import 'fl_nodes_canvas_models.dart';
 import 'fl_nodes_highlight_controller.dart';
 import 'fl_nodes_label_field_editor.dart';
+import 'fl_nodes_viewport_highlight_mixin.dart';
 import 'link_geometry_event_utils.dart';
 
 /// Controller that keeps the [FlNodeEditorController] in sync with the
 /// [AutomatonProvider].
-class FlNodesCanvasController implements FlNodesHighlightController {
+class FlNodesCanvasController
+    with FlNodesViewportHighlightMixin
+    implements FlNodesHighlightController {
   FlNodesCanvasController({
     required AutomatonProvider automatonProvider,
     FlNodeEditorController? editorController,
@@ -34,10 +36,6 @@ class FlNodesCanvasController implements FlNodesHighlightController {
 
   final Map<String, FlNodesCanvasNode> _nodes = {};
   final Map<String, FlNodesCanvasEdge> _edges = {};
-  final ValueNotifier<SimulationHighlight> highlightNotifier = ValueNotifier(
-    SimulationHighlight.empty,
-  );
-  final Set<String> _highlightedTransitionIds = <String>{};
   StreamSubscription<NodeEditorEvent>? _subscription;
   bool _isSynchronizing = false;
 
@@ -109,57 +107,8 @@ class FlNodesCanvasController implements FlNodesHighlightController {
   /// Releases resources held by the controller.
   void dispose() {
     _subscription?.cancel();
-    highlightNotifier.dispose();
+    disposeViewportHighlight();
     controller.dispose();
-  }
-
-  void zoomIn() {
-    controller.setViewportZoom(
-      (controller.viewportZoom * 1.2).clamp(0.05, 10.0),
-    );
-  }
-
-  void zoomOut() {
-    controller.setViewportZoom(
-      (controller.viewportZoom / 1.2).clamp(0.05, 10.0),
-    );
-  }
-
-  void resetView() {
-    controller.setViewportOffset(Offset.zero, absolute: true);
-    controller.setViewportZoom(1.0);
-  }
-
-  void fitToContent() {
-    if (_nodes.isEmpty) {
-      resetView();
-      return;
-    }
-
-    final previousNodeSelection = controller.selectedNodeIds.toList();
-    final previousLinkSelection = controller.selectedLinkIds.toList();
-
-    controller.focusNodesById(_nodes.keys.toSet());
-    controller.clearSelection(isHandled: true);
-
-    if (previousNodeSelection.isNotEmpty) {
-      controller.selectNodesById(
-        previousNodeSelection.toSet(),
-        holdSelection: false,
-        isHandled: true,
-      );
-    }
-
-    if (previousLinkSelection.isNotEmpty) {
-      controller.selectLinkById(
-        previousLinkSelection.first,
-        holdSelection: false,
-        isHandled: true,
-      );
-      for (final linkId in previousLinkSelection.skip(1)) {
-        controller.selectLinkById(linkId, holdSelection: true, isHandled: true);
-      }
-    }
   }
 
   void addStateAtCenter() {
@@ -168,16 +117,7 @@ class FlNodesCanvasController implements FlNodesHighlightController {
   }
 
   @override
-  void applyHighlight(SimulationHighlight highlight) {
-    _updateLinkHighlights(highlight.transitionIds);
-    highlightNotifier.value = highlight;
-  }
-
-  @override
-  void clearHighlight() {
-    _updateLinkHighlights(const <String>{});
-    highlightNotifier.value = SimulationHighlight.empty;
-  }
+  Map<String, FlNodesCanvasNode> get nodesCache => _nodes;
 
   void _registerPrototypes() {
     controller.registerNodePrototype(_statePrototype);
@@ -203,9 +143,9 @@ class FlNodesCanvasController implements FlNodesHighlightController {
       controller.addLinkFromExisting(_buildLink(edge), isHandled: true);
     }
 
-    if (_highlightedTransitionIds.isNotEmpty ||
+    if (highlightedTransitionIds.isNotEmpty ||
         highlightNotifier.value.transitionIds.isNotEmpty) {
-      _updateLinkHighlights(_highlightedTransitionIds);
+      updateLinkHighlights(highlightedTransitionIds);
     }
 
     _isSynchronizing = false;
@@ -400,8 +340,8 @@ class FlNodesCanvasController implements FlNodesHighlightController {
       controlPointY: null,
     );
     _edges[edge.id] = edge;
-    if (_highlightedTransitionIds.contains(edge.id)) {
-      _updateLinkHighlights(_highlightedTransitionIds);
+    if (highlightedTransitionIds.contains(edge.id)) {
+      updateLinkHighlights(highlightedTransitionIds);
     }
     _provider.addOrUpdateTransition(
       id: edge.id,
@@ -425,33 +365,4 @@ class FlNodesCanvasController implements FlNodesHighlightController {
     return node.id;
   }
 
-  void _updateLinkHighlights(Set<String> transitionIds) {
-    final desiredIds = Set<String>.from(transitionIds);
-    final idsToVisit = <String>{..._highlightedTransitionIds, ...desiredIds};
-
-    final manualSelection = controller.selectedLinkIds.toSet();
-    var hasChanged = false;
-
-    for (final linkId in idsToVisit) {
-      final link = controller.linksById[linkId];
-      if (link == null) {
-        continue;
-      }
-      final shouldSelect =
-          desiredIds.contains(linkId) || manualSelection.contains(linkId);
-      if (link.state.isSelected != shouldSelect) {
-        link.state.isSelected = shouldSelect;
-        hasChanged = true;
-      }
-    }
-
-    if (hasChanged) {
-      controller.linksDataDirty = true;
-      controller.notifyListeners();
-    }
-
-    _highlightedTransitionIds
-      ..clear()
-      ..addAll(desiredIds);
-  }
 }

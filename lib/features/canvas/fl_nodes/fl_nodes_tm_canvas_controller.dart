@@ -9,17 +9,19 @@ import 'package:vector_math/vector_math_64.dart';
 
 import '../../../core/models/tm.dart';
 import '../../../core/models/tm_transition.dart';
-import '../../../core/models/simulation_highlight.dart';
 import '../../../presentation/providers/tm_editor_provider.dart';
 import 'fl_nodes_canvas_models.dart';
 import 'fl_nodes_highlight_controller.dart';
 import 'fl_nodes_label_field_editor.dart';
 import 'fl_nodes_tm_mapper.dart';
+import 'fl_nodes_viewport_highlight_mixin.dart';
 import 'link_geometry_event_utils.dart';
 
 /// Controller responsible for synchronising the fl_nodes editor with the
 /// [TMEditorNotifier].
-class FlNodesTmCanvasController implements FlNodesHighlightController {
+class FlNodesTmCanvasController
+    with FlNodesViewportHighlightMixin
+    implements FlNodesHighlightController {
   FlNodesTmCanvasController({
     required TMEditorNotifier editorNotifier,
     FlNodeEditorController? editorController,
@@ -34,10 +36,6 @@ class FlNodesTmCanvasController implements FlNodesHighlightController {
 
   final Map<String, FlNodesCanvasNode> _nodes = {};
   final Map<String, FlNodesCanvasEdge> _edges = {};
-  final ValueNotifier<SimulationHighlight> highlightNotifier = ValueNotifier(
-    SimulationHighlight.empty,
-  );
-  final Set<String> _highlightedTransitionIds = <String>{};
   StreamSubscription<NodeEditorEvent>? _subscription;
   bool _isSynchronizing = false;
 
@@ -47,6 +45,9 @@ class FlNodesTmCanvasController implements FlNodesHighlightController {
   Iterable<FlNodesCanvasEdge> get edges => _edges.values;
   FlNodesCanvasNode? nodeById(String id) => _nodes[id];
   FlNodesCanvasEdge? edgeById(String id) => _edges[id];
+
+  @override
+  Map<String, FlNodesCanvasNode> get nodesCache => _nodes;
 
   static const String _statePrototypeId = 'tm_state';
   static const String _inPortId = 'incoming';
@@ -108,74 +109,13 @@ class FlNodesTmCanvasController implements FlNodesHighlightController {
 
   void dispose() {
     _subscription?.cancel();
-    highlightNotifier.dispose();
+    disposeViewportHighlight();
     controller.dispose();
-  }
-
-  void zoomIn() {
-    controller.setViewportZoom(
-      (controller.viewportZoom * 1.2).clamp(0.05, 10.0),
-    );
-  }
-
-  void zoomOut() {
-    controller.setViewportZoom(
-      (controller.viewportZoom / 1.2).clamp(0.05, 10.0),
-    );
-  }
-
-  void resetView() {
-    controller.setViewportOffset(Offset.zero, absolute: true);
-    controller.setViewportZoom(1.0);
-  }
-
-  void fitToContent() {
-    if (_nodes.isEmpty) {
-      resetView();
-      return;
-    }
-
-    final previousNodeSelection = controller.selectedNodeIds.toList();
-    final previousLinkSelection = controller.selectedLinkIds.toList();
-
-    controller.focusNodesById(_nodes.keys.toSet());
-    controller.clearSelection(isHandled: true);
-
-    if (previousNodeSelection.isNotEmpty) {
-      controller.selectNodesById(
-        previousNodeSelection.toSet(),
-        holdSelection: false,
-        isHandled: true,
-      );
-    }
-
-    if (previousLinkSelection.isNotEmpty) {
-      controller.selectLinkById(
-        previousLinkSelection.first,
-        holdSelection: false,
-        isHandled: true,
-      );
-      for (final linkId in previousLinkSelection.skip(1)) {
-        controller.selectLinkById(linkId, holdSelection: true, isHandled: true);
-      }
-    }
   }
 
   void addStateAtCenter() {
     final center = -controller.viewportOffset;
     controller.addNode(_statePrototypeId, offset: center);
-  }
-
-  @override
-  void applyHighlight(SimulationHighlight highlight) {
-    _updateLinkHighlights(highlight.transitionIds);
-    highlightNotifier.value = highlight;
-  }
-
-  @override
-  void clearHighlight() {
-    _updateLinkHighlights(const <String>{});
-    highlightNotifier.value = SimulationHighlight.empty;
   }
 
   void _registerPrototypes() {
@@ -201,9 +141,9 @@ class FlNodesTmCanvasController implements FlNodesHighlightController {
       controller.addLinkFromExisting(_buildLink(edge), isHandled: true);
     }
 
-    if (_highlightedTransitionIds.isNotEmpty ||
+    if (highlightedTransitionIds.isNotEmpty ||
         highlightNotifier.value.transitionIds.isNotEmpty) {
-      _updateLinkHighlights(_highlightedTransitionIds);
+      updateLinkHighlights(highlightedTransitionIds);
     }
 
     _isSynchronizing = false;
@@ -399,8 +339,8 @@ class FlNodesTmCanvasController implements FlNodesHighlightController {
       tapeNumber: 0,
     );
     _edges[edge.id] = edge;
-    if (_highlightedTransitionIds.contains(edge.id)) {
-      _updateLinkHighlights(_highlightedTransitionIds);
+    if (highlightedTransitionIds.contains(edge.id)) {
+      updateLinkHighlights(highlightedTransitionIds);
     }
     _notifier.addOrUpdateTransition(
       id: edge.id,
@@ -417,10 +357,6 @@ class FlNodesTmCanvasController implements FlNodesHighlightController {
     _notifier.removeTransition(id: link.id);
   }
 
-  FlNodesCanvasNode? nodeById(String id) => _nodes[id];
-
-  FlNodesCanvasEdge? edgeById(String id) => _edges[id];
-
   String _resolveLabel(NodeInstance node) {
     final field = node.fields[_labelFieldId];
     final data = field?.data;
@@ -428,35 +364,5 @@ class FlNodesTmCanvasController implements FlNodesHighlightController {
       return data.trim();
     }
     return node.id;
-  }
-
-  void _updateLinkHighlights(Set<String> transitionIds) {
-    final desiredIds = Set<String>.from(transitionIds);
-    final idsToVisit = <String>{..._highlightedTransitionIds, ...desiredIds};
-
-    final manualSelection = controller.selectedLinkIds.toSet();
-    var hasChanged = false;
-
-    for (final linkId in idsToVisit) {
-      final link = controller.linksById[linkId];
-      if (link == null) {
-        continue;
-      }
-      final shouldSelect =
-          desiredIds.contains(linkId) || manualSelection.contains(linkId);
-      if (link.state.isSelected != shouldSelect) {
-        link.state.isSelected = shouldSelect;
-        hasChanged = true;
-      }
-    }
-
-    if (hasChanged) {
-      controller.linksDataDirty = true;
-      controller.notifyListeners();
-    }
-
-    _highlightedTransitionIds
-      ..clear()
-      ..addAll(desiredIds);
   }
 }

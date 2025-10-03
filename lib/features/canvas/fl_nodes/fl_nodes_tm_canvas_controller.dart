@@ -3,26 +3,26 @@ import 'dart:async';
 import 'package:fl_nodes/fl_nodes.dart';
 import 'package:flutter/material.dart';
 
-import '../../../core/models/fsa.dart';
-import '../../../presentation/providers/automaton_provider.dart';
-import 'fl_nodes_automaton_mapper.dart';
+import '../../../core/models/tm.dart';
+import '../../../core/models/tm_transition.dart';
+import '../../../presentation/providers/tm_editor_provider.dart';
 import 'fl_nodes_canvas_models.dart';
 import 'fl_nodes_label_field_editor.dart';
+import 'fl_nodes_tm_mapper.dart';
 
-/// Controller that keeps the [FlNodeEditorController] in sync with the
-/// [AutomatonProvider].
-class FlNodesCanvasController {
-  FlNodesCanvasController({
-    required AutomatonProvider automatonProvider,
+/// Controller responsible for synchronising the fl_nodes editor with the
+/// [TMEditorNotifier].
+class FlNodesTmCanvasController {
+  FlNodesTmCanvasController({
+    required TMEditorNotifier editorNotifier,
     FlNodeEditorController? editorController,
-  })  : _provider = automatonProvider,
+  })  : _notifier = editorNotifier,
         controller = editorController ?? FlNodeEditorController() {
     _registerPrototypes();
     _subscription = controller.eventBus.events.listen(_handleEvent);
   }
 
-  final AutomatonProvider _provider;
-  /// Underlying controller exposed to widgets embedding fl_nodes.
+  final TMEditorNotifier _notifier;
   final FlNodeEditorController controller;
 
   final Map<String, FlNodesCanvasNode> _nodes = {};
@@ -30,7 +30,14 @@ class FlNodesCanvasController {
   StreamSubscription<NodeEditorEvent>? _subscription;
   bool _isSynchronizing = false;
 
-  static const String _statePrototypeId = 'automaton_state';
+  int get nodeCount => _nodes.length;
+  int get edgeCount => _edges.length;
+  Iterable<FlNodesCanvasNode> get nodes => _nodes.values;
+  Iterable<FlNodesCanvasEdge> get edges => _edges.values;
+  FlNodesCanvasNode? nodeById(String id) => _nodes[id];
+  FlNodesCanvasEdge? edgeById(String id) => _edges[id];
+
+  static const String _statePrototypeId = 'tm_state';
   static const String _inPortId = 'incoming';
   static const String _outPortId = 'outgoing';
   static const String _labelFieldId = 'label';
@@ -86,7 +93,7 @@ class FlNodesCanvasController {
   late final NodePrototype _statePrototype = NodePrototype(
     idName: _statePrototypeId,
     displayName: (_) => 'Estado',
-    description: (_) => 'Estado do autômato finito',
+    description: (_) => 'Estado da Máquina de Turing',
     ports: [_inputPortPrototype, _outputPortPrototype],
     fields: [_labelFieldPrototype],
     onExecute: (
@@ -98,7 +105,6 @@ class FlNodesCanvasController {
     ) async {},
   );
 
-  /// Releases resources held by the controller.
   void dispose() {
     _subscription?.cancel();
     controller.dispose();
@@ -108,9 +114,8 @@ class FlNodesCanvasController {
     controller.registerNodePrototype(_statePrototype);
   }
 
-  /// Synchronises the fl_nodes controller with the latest [automaton].
-  void synchronize(FSA? automaton) {
-    final snapshot = FlNodesAutomatonMapper.toSnapshot(automaton);
+  void synchronize(TM? machine) {
+    final snapshot = FlNodesTmMapper.toSnapshot(machine);
     _isSynchronizing = true;
     controller.clear();
     _nodes
@@ -210,19 +215,17 @@ class FlNodesCanvasController {
       isAccepting: false,
     );
     _nodes[node.id] = canvasNode;
-    _provider.addState(
+    _notifier.upsertState(
       id: canvasNode.id,
       label: canvasNode.label,
       x: canvasNode.x,
       y: canvasNode.y,
-      isInitial: canvasNode.isInitial,
-      isAccepting: canvasNode.isAccepting,
     );
   }
 
   void _handleNodeRemoved(NodeInstance node) {
     _nodes.remove(node.id);
-    _provider.removeState(id: node.id);
+    _notifier.removeState(id: node.id);
   }
 
   void _handleSelectionDragged(Set<String> nodeIds) {
@@ -236,7 +239,7 @@ class FlNodesCanvasController {
       if (updatedNode != null) {
         _nodes[nodeId] = updatedNode;
       }
-      _provider.moveState(
+      _notifier.moveState(
         id: nodeId,
         x: instance.offset.dx,
         y: instance.offset.dy,
@@ -253,7 +256,7 @@ class FlNodesCanvasController {
     );
     if (updatedNode != null) {
       _nodes[event.nodeId] = updatedNode;
-      _provider.updateStateLabel(
+      _notifier.updateStateLabel(
         id: event.nodeId,
         label: updatedNode.label.isEmpty ? event.nodeId : updatedNode.label,
       );
@@ -268,22 +271,25 @@ class FlNodesCanvasController {
       fromStateId: fromStateId,
       toStateId: toStateId,
       symbols: const <String>[],
-      lambdaSymbol: null,
-      controlPointX: null,
-      controlPointY: null,
+      readSymbol: '',
+      writeSymbol: '',
+      direction: TapeDirection.right,
+      tapeNumber: 0,
     );
     _edges[edge.id] = edge;
-    _provider.addOrUpdateTransition(
+    _notifier.addOrUpdateTransition(
       id: edge.id,
       fromStateId: edge.fromStateId,
       toStateId: edge.toStateId,
-      label: edge.label,
+      readSymbol: edge.readSymbol,
+      writeSymbol: edge.writeSymbol,
+      direction: edge.direction,
     );
   }
 
   void _handleLinkRemoved(Link link) {
     _edges.remove(link.id);
-    _provider.removeTransition(id: link.id);
+    _notifier.removeTransition(id: link.id);
   }
 
   String _resolveLabel(NodeInstance node) {

@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/tm.dart';
 import '../../core/models/tm_transition.dart';
 import '../providers/tm_editor_provider.dart';
-import '../widgets/draw2d_tm_canvas_view.dart';
+import '../widgets/tm_canvas_native.dart';
 import '../widgets/tm_algorithm_panel.dart';
 import '../widgets/tm_simulation_panel.dart';
 
@@ -113,7 +113,7 @@ class _TMPageState extends ConsumerState<TMPage> {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(8),
-              child: Draw2DTMCanvasView(onTMModified: _handleTMUpdate),
+              child: TMCanvasNative(onTMModified: _handleTMUpdate),
             ),
           ),
         ],
@@ -129,7 +129,7 @@ class _TMPageState extends ConsumerState<TMPage> {
           flex: 2,
           child: Container(
             margin: const EdgeInsets.all(8),
-            child: Draw2DTMCanvasView(onTMModified: _handleTMUpdate),
+            child: TMCanvasNative(onTMModified: _handleTMUpdate),
           ),
         ),
         const SizedBox(width: 16),

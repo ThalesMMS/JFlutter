@@ -131,7 +131,7 @@ class _TMPageState extends ConsumerState<TMPage> {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(8),
-              child: _buildCanvasWithToolbar(),
+              child: _buildCanvasWithToolbar(isMobile: true),
             ),
           ),
         ],
@@ -147,7 +147,7 @@ class _TMPageState extends ConsumerState<TMPage> {
           flex: 2,
           child: Container(
             margin: const EdgeInsets.all(8),
-            child: _buildCanvasWithToolbar(),
+            child: _buildCanvasWithToolbar(isMobile: false),
           ),
         ),
         const SizedBox(width: 16),
@@ -181,7 +181,7 @@ class _TMPageState extends ConsumerState<TMPage> {
     );
   }
 
-  Widget _buildCanvasWithToolbar() {
+  Widget _buildCanvasWithToolbar({required bool isMobile}) {
     final editorState = ref.watch(tmEditorProvider);
     final statusMessage = _buildToolbarStatusMessage(editorState);
 
@@ -193,23 +193,22 @@ class _TMPageState extends ConsumerState<TMPage> {
             onTMModified: _handleTMUpdate,
           ),
         ),
-        Positioned(
-          top: 12,
-          right: 12,
-          child: FlNodesCanvasToolbar(
-            onAddState: _canvasController.addStateAtCenter,
-            onZoomIn: _canvasController.zoomIn,
-            onZoomOut: _canvasController.zoomOut,
-            onFitToContent: _canvasController.fitToContent,
-            onResetView: _canvasController.resetView,
-            onClear: () {
-              ref.read(tmEditorProvider.notifier).updateFromCanvas(
-                    states: const <automaton_state.State>[],
-                    transitions: const <TMTransition>[],
-                  );
-            },
-            statusMessage: statusMessage,
-          ),
+        FlNodesCanvasToolbar(
+          layout: isMobile
+              ? FlNodesCanvasToolbarLayout.mobile
+              : FlNodesCanvasToolbarLayout.desktop,
+          onAddState: _canvasController.addStateAtCenter,
+          onZoomIn: _canvasController.zoomIn,
+          onZoomOut: _canvasController.zoomOut,
+          onFitToContent: _canvasController.fitToContent,
+          onResetView: _canvasController.resetView,
+          onClear: () {
+            ref.read(tmEditorProvider.notifier).updateFromCanvas(
+                  states: const <automaton_state.State>[],
+                  transitions: const <TMTransition>[],
+                );
+          },
+          statusMessage: statusMessage,
         ),
       ],
     );

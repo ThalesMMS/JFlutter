@@ -373,19 +373,18 @@ class _FSAPageState extends ConsumerState<FSAPage> {
       return Stack(
         children: [
           Positioned.fill(child: child),
-          Positioned(
-            top: 12,
-            right: 12,
-            child: FlNodesCanvasToolbar(
-              onAddState: _canvasController.addStateAtCenter,
-              onZoomIn: _canvasController.zoomIn,
-              onZoomOut: _canvasController.zoomOut,
-              onFitToContent: _canvasController.fitToContent,
-              onResetView: _canvasController.resetView,
-              onClear: () =>
-                  ref.read(automatonProvider.notifier).clearAutomaton(),
-              statusMessage: statusMessage,
-            ),
+          FlNodesCanvasToolbar(
+            layout: isMobile
+                ? FlNodesCanvasToolbarLayout.mobile
+                : FlNodesCanvasToolbarLayout.desktop,
+            onAddState: _canvasController.addStateAtCenter,
+            onZoomIn: _canvasController.zoomIn,
+            onZoomOut: _canvasController.zoomOut,
+            onFitToContent: _canvasController.fitToContent,
+            onResetView: _canvasController.resetView,
+            onClear:
+                () => ref.read(automatonProvider.notifier).clearAutomaton(),
+            statusMessage: statusMessage,
           ),
         ],
       );

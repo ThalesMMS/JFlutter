@@ -40,6 +40,13 @@ class FlNodesCanvasController implements FlNodesHighlightController {
   StreamSubscription<NodeEditorEvent>? _subscription;
   bool _isSynchronizing = false;
 
+  int get nodeCount => _nodes.length;
+  int get edgeCount => _edges.length;
+  Iterable<FlNodesCanvasNode> get nodes => _nodes.values;
+  Iterable<FlNodesCanvasEdge> get edges => _edges.values;
+  FlNodesCanvasNode? nodeById(String id) => _nodes[id];
+  FlNodesCanvasEdge? edgeById(String id) => _edges[id];
+
   static const String _statePrototypeId = 'automaton_state';
   static const String _inPortId = 'incoming';
   static const String _outPortId = 'outgoing';
@@ -361,10 +368,6 @@ class FlNodesCanvasController implements FlNodesHighlightController {
     _edges.remove(link.id);
     _provider.removeTransition(id: link.id);
   }
-
-  FlNodesCanvasNode? nodeById(String id) => _nodes[id];
-
-  FlNodesCanvasEdge? edgeById(String id) => _edges[id];
 
   String _resolveLabel(NodeInstance node) {
     final field = node.fields[_labelFieldId];

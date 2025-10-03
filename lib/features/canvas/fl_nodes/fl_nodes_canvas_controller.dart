@@ -282,12 +282,13 @@ class FlNodesCanvasController implements FlNodesHighlightController {
 
   void _handleNodeAdded(NodeInstance node) {
     final label = _resolveLabel(node);
+    final isFirstState = _nodes.isEmpty;
     final canvasNode = FlNodesCanvasNode(
       id: node.id,
       label: label,
       x: node.offset.dx,
       y: node.offset.dy,
-      isInitial: false,
+      isInitial: isFirstState,
       isAccepting: false,
     );
     _nodes[node.id] = canvasNode;
@@ -296,7 +297,7 @@ class FlNodesCanvasController implements FlNodesHighlightController {
       label: canvasNode.label,
       x: canvasNode.x,
       y: canvasNode.y,
-      isInitial: canvasNode.isInitial,
+      isInitial: isFirstState ? true : null,
       isAccepting: canvasNode.isAccepting,
     );
   }

@@ -75,6 +75,14 @@ class _RecordingAutomatonProvider extends AutomatonProvider {
       'isInitial': isInitial,
       'isAccepting': isAccepting,
     });
+    super.addState(
+      id: id,
+      label: label,
+      x: x,
+      y: y,
+      isInitial: isInitial,
+      isAccepting: isAccepting,
+    );
   }
 
   @override
@@ -241,6 +249,12 @@ void main() {
       expect(call['label'], equals('S'));
       expect(call['x'], equals(42.0));
       expect(call['y'], equals(24.0));
+      expect(call['isInitial'], isTrue);
+
+      final automaton = provider.state.currentAutomaton;
+      expect(automaton, isNotNull);
+      expect(automaton!.initialState, isNotNull);
+      expect(automaton.initialState!.id, equals('q2'));
     });
 
     test('updates labels on NodeFieldEvent submissions', () async {

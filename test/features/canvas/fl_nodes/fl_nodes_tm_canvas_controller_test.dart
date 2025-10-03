@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:fl_nodes/fl_nodes.dart';
+// ignore: implementation_imports
+import 'package:fl_nodes/src/core/models/events.dart' show DragSelectionEndEvent;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vector_math/vector_math_64.dart';
@@ -17,6 +19,7 @@ class _RecordingTmEditorNotifier extends TMEditorNotifier {
   final List<Map<String, Object?>> upsertStateCalls = [];
   final List<Map<String, Object?>> updateStateLabelCalls = [];
   final List<Map<String, Object?>> transitionCalls = [];
+  final List<Map<String, Object?>> moveStateCalls = [];
 
   @override
   TM? upsertState({
@@ -44,6 +47,11 @@ class _RecordingTmEditorNotifier extends TMEditorNotifier {
     required double x,
     required double y,
   }) {
+    moveStateCalls.add({
+      'id': id,
+      'x': x,
+      'y': y,
+    });
     return null;
   }
 
@@ -215,6 +223,40 @@ void main() {
       expect(call['label'], equals('mid'));
       expect(call['x'], equals(30.0));
       expect(call['y'], equals(18.0));
+    });
+
+    test('skips moveState when drag ends at original offset', () async {
+      final node = _buildNode(
+        controller,
+        id: 'q3',
+        label: 'idle',
+        offset: const Offset(50, 60),
+      );
+
+      controller.controller.eventBus.emit(
+        AddNodeEvent(node, id: 'seed-static'),
+      );
+
+      await _flushEvents();
+
+      notifier.moveStateCalls.clear();
+
+      final instance = controller.controller.nodes['q3']!;
+      controller.controller.eventBus.emit(
+        DragSelectionEndEvent(
+          instance.offset,
+          {'q3'},
+          id: 'drag-static',
+        ),
+      );
+
+      await _flushEvents();
+
+      expect(notifier.moveStateCalls, isEmpty);
+      final cached = controller.nodeById('q3');
+      expect(cached, isNotNull);
+      expect(cached!.x, equals(50.0));
+      expect(cached.y, equals(60.0));
     });
 
     test('delegates label submissions through NodeFieldEvent', () async {

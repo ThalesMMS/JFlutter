@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:fl_nodes/fl_nodes.dart';
+// ignore: implementation_imports
+import 'package:fl_nodes/src/core/models/events.dart' show DragSelectionEndEvent;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vector_math/vector_math_64.dart';
@@ -240,6 +242,42 @@ void main() {
       expect(call['label'], equals('mid'));
       expect(call['x'], equals(12.0));
       expect(call['y'], equals(18.0));
+    });
+
+    test('does not call moveState when drag ends without movement', () async {
+      final node = _buildNode(
+        controller,
+        id: 'p0',
+        label: 'start',
+        offset: const Offset(30, 40),
+      );
+
+      controller.controller.eventBus.emit(
+        AddNodeEvent(node, id: 'seed-static'),
+      );
+
+      await _flushEvents();
+
+      final instance = controller.controller.nodes['p0']!;
+      controller.controller.eventBus.emit(
+        DragSelectionEndEvent(
+          instance.offset,
+          {'p0'},
+          id: 'drag-static',
+        ),
+      );
+
+      await _flushEvents();
+
+      final moveCalls = notifier.stateCalls
+          .where((call) => call['type'] == 'move')
+          .toList();
+      expect(moveCalls, isEmpty);
+
+      final cached = controller.nodeById('p0');
+      expect(cached, isNotNull);
+      expect(cached!.x, equals(30.0));
+      expect(cached.y, equals(40.0));
     });
 
     test('updates labels via NodeFieldEvent submissions', () async {

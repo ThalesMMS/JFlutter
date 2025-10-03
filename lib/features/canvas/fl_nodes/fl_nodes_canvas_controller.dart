@@ -51,6 +51,7 @@ class FlNodesCanvasController implements FlNodesHighlightController {
   static const String _inPortId = 'incoming';
   static const String _outPortId = 'outgoing';
   static const String _labelFieldId = 'label';
+  static const double _dragEpsilon = 0.001;
 
   late final ControlInputPortPrototype _inputPortPrototype =
       ControlInputPortPrototype(
@@ -301,18 +302,24 @@ class FlNodesCanvasController implements FlNodesHighlightController {
   void _handleSelectionDragged(Set<String> nodeIds) {
     for (final nodeId in nodeIds) {
       final instance = controller.nodes[nodeId];
-      if (instance == null) continue;
-      final updatedNode = _nodes[nodeId]?.copyWith(
+      final cachedNode = _nodes[nodeId];
+      if (instance == null || cachedNode == null) continue;
+
+      final deltaX = (instance.offset.dx - cachedNode.x).abs();
+      final deltaY = (instance.offset.dy - cachedNode.y).abs();
+      if (deltaX < _dragEpsilon && deltaY < _dragEpsilon) {
+        continue;
+      }
+
+      final updatedNode = cachedNode.copyWith(
         x: instance.offset.dx,
         y: instance.offset.dy,
       );
-      if (updatedNode != null) {
-        _nodes[nodeId] = updatedNode;
-      }
+      _nodes[nodeId] = updatedNode;
       _provider.moveState(
         id: nodeId,
-        x: instance.offset.dx,
-        y: instance.offset.dy,
+        x: updatedNode.x,
+        y: updatedNode.y,
       );
     }
   }

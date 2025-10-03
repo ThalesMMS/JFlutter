@@ -8,6 +8,7 @@ import 'package:vector_math/vector_math_64.dart';
 
 import 'package:jflutter/core/models/pda.dart';
 import 'package:jflutter/core/models/pda_transition.dart';
+import 'package:jflutter/core/models/simulation_highlight.dart';
 import 'package:jflutter/core/models/state.dart';
 import 'package:jflutter/core/models/transition.dart';
 import 'package:jflutter/features/canvas/fl_nodes/fl_nodes_pda_canvas_controller.dart';
@@ -326,6 +327,124 @@ void main() {
       expect(call['isLambdaInput'], isTrue);
       expect(call['isLambdaPop'], isTrue);
       expect(call['isLambdaPush'], isTrue);
+    });
+
+    test('applyHighlight marks PDA transitions without mutating selection', () {
+      final q0 = State(
+        id: 'q0',
+        label: 'start',
+        position: Vector2.zero(),
+        isInitial: true,
+      );
+      final q1 = State(
+        id: 'q1',
+        label: 'accept',
+        position: Vector2(120, 80),
+        isAccepting: true,
+      );
+      final transition = PDATransition(
+        id: 't0',
+        fromState: q0,
+        toState: q1,
+        label: 'a,Z/AZ',
+        controlPoint: Vector2(24, 32),
+        type: TransitionType.deterministic,
+        inputSymbol: 'a',
+        popSymbol: 'Z',
+        pushSymbol: 'AZ',
+        isLambdaInput: false,
+        isLambdaPop: false,
+        isLambdaPush: false,
+      );
+      final pda = PDA(
+        id: 'pda1',
+        name: 'Sample PDA',
+        states: {q0, q1},
+        transitions: {transition},
+        alphabet: {'a'},
+        initialState: q0,
+        acceptingStates: {q1},
+        created: DateTime.utc(2024, 1, 1),
+        modified: DateTime.utc(2024, 1, 1),
+        bounds: const math.Rectangle<double>(0, 0, 400, 300),
+        stackAlphabet: {'Z', 'A'},
+        initialStackSymbol: 'Z',
+        zoomLevel: 1,
+        panOffset: Vector2.zero(),
+      );
+
+      controller.synchronize(pda);
+      final editor = controller.controller;
+
+      controller.applyHighlight(
+        const SimulationHighlight(transitionIds: {'t0'}),
+      );
+
+      expect(editor.linksById['t0']!.state.isSelected, isTrue);
+      expect(editor.selectedLinkIds, isEmpty);
+
+      controller.synchronize(pda);
+      expect(editor.linksById['t0']!.state.isSelected, isTrue);
+
+      controller.clearHighlight();
+      expect(editor.linksById['t0']!.state.isSelected, isFalse);
+    });
+
+    test('clearHighlight keeps PDA selections intact', () {
+      final q0 = State(
+        id: 'q0',
+        label: 'start',
+        position: Vector2.zero(),
+        isInitial: true,
+      );
+      final q1 = State(
+        id: 'q1',
+        label: 'accept',
+        position: Vector2(120, 80),
+        isAccepting: true,
+      );
+      final transition = PDATransition(
+        id: 't0',
+        fromState: q0,
+        toState: q1,
+        label: 'a,Z/AZ',
+        controlPoint: Vector2(24, 32),
+        type: TransitionType.deterministic,
+        inputSymbol: 'a',
+        popSymbol: 'Z',
+        pushSymbol: 'AZ',
+        isLambdaInput: false,
+        isLambdaPop: false,
+        isLambdaPush: false,
+      );
+      final pda = PDA(
+        id: 'pda1',
+        name: 'Sample PDA',
+        states: {q0, q1},
+        transitions: {transition},
+        alphabet: {'a'},
+        initialState: q0,
+        acceptingStates: {q1},
+        created: DateTime.utc(2024, 1, 1),
+        modified: DateTime.utc(2024, 1, 1),
+        bounds: const math.Rectangle<double>(0, 0, 400, 300),
+        stackAlphabet: {'Z', 'A'},
+        initialStackSymbol: 'Z',
+        zoomLevel: 1,
+        panOffset: Vector2.zero(),
+      );
+
+      controller.synchronize(pda);
+      final editor = controller.controller;
+
+      editor.selectLinkById('t0');
+      controller.applyHighlight(
+        const SimulationHighlight(transitionIds: {'t0'}),
+      );
+      controller.clearHighlight();
+
+      expect(editor.selectedLinkIds, contains('t0'));
+      expect(editor.linksById['t0']!.state.isSelected, isTrue);
     });
   });
 }

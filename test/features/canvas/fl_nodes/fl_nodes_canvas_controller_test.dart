@@ -10,6 +10,7 @@ import 'package:jflutter/core/entities/automaton_entity.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/fsa_transition.dart';
 import 'package:jflutter/core/models/state.dart';
+import 'package:jflutter/core/models/simulation_highlight.dart';
 import 'package:jflutter/core/repositories/automaton_repository.dart';
 import 'package:jflutter/core/result.dart';
 import 'package:jflutter/data/services/automaton_service.dart';
@@ -317,6 +318,108 @@ void main() {
       expect(call['id'], equals('t0'));
       expect(call['fromStateId'], equals('q0'));
       expect(call['toStateId'], equals('q1'));
+    });
+
+    test('applyHighlight toggles link selection state without altering manual selection', () {
+      final q0 = State(
+        id: 'q0',
+        label: 'q0',
+        position: Vector2.zero(),
+        isInitial: true,
+      );
+      final q1 = State(
+        id: 'q1',
+        label: 'q1',
+        position: Vector2(120, 80),
+        isAccepting: true,
+      );
+      final transition = FSATransition(
+        id: 't0',
+        fromState: q0,
+        toState: q1,
+        inputSymbols: {'a'},
+        label: 'a',
+      );
+      final automaton = FSA(
+        id: 'auto',
+        name: 'Automaton',
+        states: {q0, q1},
+        transitions: {transition},
+        alphabet: {'a'},
+        initialState: q0,
+        acceptingStates: {q1},
+        created: DateTime.utc(2024, 1, 1),
+        modified: DateTime.utc(2024, 1, 2),
+        bounds: const math.Rectangle<double>(0, 0, 400, 300),
+        zoomLevel: 1,
+        panOffset: Vector2.zero(),
+      );
+
+      controller.synchronize(automaton);
+
+      final editor = controller.controller;
+      expect(editor.linksById['t0']!.state.isSelected, isFalse);
+
+      controller.applyHighlight(
+        const SimulationHighlight(transitionIds: {'t0'}),
+      );
+
+      expect(editor.linksById['t0']!.state.isSelected, isTrue);
+      expect(editor.selectedLinkIds, isEmpty);
+
+      controller.synchronize(automaton);
+      expect(editor.linksById['t0']!.state.isSelected, isTrue);
+
+      controller.clearHighlight();
+      expect(editor.linksById['t0']!.state.isSelected, isFalse);
+    });
+
+    test('clearHighlight preserves user-selected links', () {
+      final q0 = State(
+        id: 'q0',
+        label: 'q0',
+        position: Vector2.zero(),
+        isInitial: true,
+      );
+      final q1 = State(
+        id: 'q1',
+        label: 'q1',
+        position: Vector2(120, 80),
+        isAccepting: true,
+      );
+      final transition = FSATransition(
+        id: 't0',
+        fromState: q0,
+        toState: q1,
+        inputSymbols: {'a'},
+        label: 'a',
+      );
+      final automaton = FSA(
+        id: 'auto',
+        name: 'Automaton',
+        states: {q0, q1},
+        transitions: {transition},
+        alphabet: {'a'},
+        initialState: q0,
+        acceptingStates: {q1},
+        created: DateTime.utc(2024, 1, 1),
+        modified: DateTime.utc(2024, 1, 2),
+        bounds: const math.Rectangle<double>(0, 0, 400, 300),
+        zoomLevel: 1,
+        panOffset: Vector2.zero(),
+      );
+
+      controller.synchronize(automaton);
+      final editor = controller.controller;
+
+      editor.selectLinkById('t0');
+      controller.applyHighlight(
+        const SimulationHighlight(transitionIds: {'t0'}),
+      );
+      controller.clearHighlight();
+
+      expect(editor.selectedLinkIds, contains('t0'));
+      expect(editor.linksById['t0']!.state.isSelected, isTrue);
     });
   });
 }

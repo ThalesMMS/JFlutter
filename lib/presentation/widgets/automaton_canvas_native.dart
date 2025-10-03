@@ -527,6 +527,15 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
                       isAccepting: !isAccepting,
                     );
                   },
+                  onRename: (newLabel) {
+                    automatonNotifier.updateStateLabel(
+                      id: node.id,
+                      label: newLabel,
+                    );
+                  },
+                  onDelete: () {
+                    automatonNotifier.removeState(id: node.id);
+                  },
                   initialToggleKey:
                       Key('automaton-node-${node.id}-initial-toggle'),
                   acceptingToggleKey:
@@ -745,6 +754,8 @@ class _AutomatonNodeHeader extends StatelessWidget {
     required this.onToggleCollapse,
     required this.onToggleInitial,
     required this.onToggleAccepting,
+    required this.onRename,
+    required this.onDelete,
     required this.initialToggleKey,
     required this.acceptingToggleKey,
   });
@@ -757,20 +768,103 @@ class _AutomatonNodeHeader extends StatelessWidget {
   final VoidCallback onToggleCollapse;
   final VoidCallback onToggleInitial;
   final VoidCallback onToggleAccepting;
+  final ValueChanged<String> onRename;
+  final VoidCallback onDelete;
   final Key initialToggleKey;
   final Key acceptingToggleKey;
 
   @override
   Widget build(BuildContext context) {
-    final textStyle =
-        Theme.of(context).textTheme.titleMedium?.copyWith(
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.titleMedium?.copyWith(
           color: colors.foreground,
           fontWeight: FontWeight.w600,
           fontSize: 15,
         ) ??
         TextStyle(color: colors.foreground, fontWeight: FontWeight.w600);
+    final mediaQuery = MediaQuery.of(context);
+    final platform = theme.platform;
+    final isDesktopPlatform =
+        platform == TargetPlatform.macOS ||
+            platform == TargetPlatform.linux ||
+            platform == TargetPlatform.windows;
+    final bool useInlineActions =
+        isDesktopPlatform || mediaQuery.size.shortestSide >= 600;
 
-    return Container(
+    final collapseButton = Tooltip(
+      message: isCollapsed ? 'Expand state' : 'Collapse state',
+      child: IconButton(
+        icon: Icon(
+          isCollapsed ? Icons.expand_more : Icons.expand_less,
+          size: 20,
+          color: colors.foreground.withOpacity(0.9),
+        ),
+        onPressed: onToggleCollapse,
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+        splashRadius: 18,
+        visualDensity: VisualDensity.compact,
+      ),
+    );
+
+    Future<void> openMenu(BuildContext triggerContext) {
+      return _openMenu(
+        triggerContext: triggerContext,
+        rootContext: context,
+        useBottomSheet: !useInlineActions,
+      );
+    }
+
+    final overflowButton = Builder(
+      builder: (buttonContext) {
+        return Tooltip(
+          message: 'State actions',
+          child: IconButton(
+            icon: Icon(
+              Icons.more_vert,
+              size: 20,
+              color: colors.foreground.withOpacity(0.9),
+            ),
+            onPressed: () => openMenu(buttonContext),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+            splashRadius: 18,
+            visualDensity: VisualDensity.compact,
+          ),
+        );
+      },
+    );
+
+    final actionButtons = <Widget>[
+      _HeaderActionButton(
+        buttonKey: initialToggleKey,
+        tooltip: isInitial ? 'Unset initial state' : 'Set as initial state',
+        icon: Icons.play_circle_outline,
+        activeIcon: Icons.play_circle,
+        isActive: isInitial,
+        color: colors.foreground,
+        onPressed: onToggleInitial,
+      ),
+      const SizedBox(width: 4),
+      _HeaderActionButton(
+        buttonKey: acceptingToggleKey,
+        tooltip:
+            isAccepting ? 'Unset accepting state' : 'Set as accepting state',
+        icon: Icons.check_circle_outline,
+        activeIcon: Icons.check_circle,
+        isActive: isAccepting,
+        color: colors.foreground,
+        onPressed: onToggleAccepting,
+      ),
+      const SizedBox(width: 4),
+      collapseButton,
+    ];
+
+    final trailing = useInlineActions
+        ? <Widget>[...actionButtons, const SizedBox(width: 4), overflowButton]
+        : <Widget>[collapseButton, const SizedBox(width: 4), overflowButton];
+
+    Widget headerContent = Container(
       decoration: BoxDecoration(
         color: colors.background,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
@@ -787,47 +881,248 @@ class _AutomatonNodeHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          _HeaderActionButton(
-            buttonKey: initialToggleKey,
-            tooltip: isInitial ? 'Unset initial state' : 'Set as initial state',
-            icon: Icons.play_circle_outline,
-            activeIcon: Icons.play_circle,
-            isActive: isInitial,
-            color: colors.foreground,
-            onPressed: onToggleInitial,
-          ),
-          const SizedBox(width: 4),
-          _HeaderActionButton(
-            buttonKey: acceptingToggleKey,
-            tooltip:
-                isAccepting ? 'Unset accepting state' : 'Set as accepting state',
-            icon: Icons.check_circle_outline,
-            activeIcon: Icons.check_circle,
-            isActive: isAccepting,
-            color: colors.foreground,
-            onPressed: onToggleAccepting,
-          ),
-          const SizedBox(width: 4),
-          Tooltip(
-            message: isCollapsed ? 'Expand state' : 'Collapse state',
-            child: IconButton(
-              icon: Icon(
-                isCollapsed ? Icons.expand_more : Icons.expand_less,
-                size: 20,
-                color: colors.foreground.withOpacity(0.9),
-              ),
-              onPressed: onToggleCollapse,
-              padding: EdgeInsets.zero,
-              constraints:
-                  const BoxConstraints.tightFor(width: 32, height: 32),
-              splashRadius: 18,
-              visualDensity: VisualDensity.compact,
-            ),
-          ),
+          ...trailing,
         ],
       ),
     );
+
+    if (!useInlineActions) {
+      headerContent = GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onLongPress: () => openMenu(context),
+        child: headerContent,
+      );
+    }
+
+    return headerContent;
   }
+
+  Future<void> _openMenu({
+    required BuildContext triggerContext,
+    required BuildContext rootContext,
+    required bool useBottomSheet,
+  }) async {
+    _AutomatonNodeMenuAction? action;
+    if (useBottomSheet) {
+      Feedback.forLongPress(rootContext);
+      action = await _showBottomSheetMenu(rootContext);
+    } else {
+      action = await _showDesktopMenu(triggerContext, rootContext);
+    }
+
+    switch (action) {
+      case _AutomatonNodeMenuAction.rename:
+        await _handleRename(rootContext);
+        break;
+      case _AutomatonNodeMenuAction.delete:
+        onDelete();
+        break;
+      case _AutomatonNodeMenuAction.toggleInitial:
+        onToggleInitial();
+        break;
+      case _AutomatonNodeMenuAction.toggleAccepting:
+        onToggleAccepting();
+        break;
+      case null:
+        break;
+    }
+  }
+
+  Future<_AutomatonNodeMenuAction?> _showBottomSheetMenu(
+    BuildContext context,
+  ) async {
+    var localInitial = isInitial;
+    var localAccepting = isAccepting;
+    final action = await showModalBottomSheet<_AutomatonNodeMenuAction>(
+      context: context,
+      showDragHandle: true,
+      useSafeArea: true,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (statefulContext, setState) {
+            return Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.edit_outlined),
+                    title: const Text('Rename'),
+                    onTap: () {
+                      Navigator.of(statefulContext)
+                          .pop(_AutomatonNodeMenuAction.rename);
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(
+                      Icons.delete_outline,
+                      color: Theme.of(statefulContext).colorScheme.error,
+                    ),
+                    title: Text(
+                      'Delete',
+                      style: TextStyle(
+                        color: Theme.of(statefulContext)
+                            .colorScheme
+                            .error
+                            .withOpacity(0.9),
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.of(statefulContext)
+                          .pop(_AutomatonNodeMenuAction.delete);
+                    },
+                  ),
+                  const Divider(),
+                  SwitchListTile.adaptive(
+                    value: localInitial,
+                    secondary: const Icon(Icons.play_circle_outline),
+                    title: const Text('Initial state'),
+                    onChanged: (value) {
+                      if (value == localInitial) {
+                        return;
+                      }
+                      setState(() {
+                        localInitial = value;
+                      });
+                      onToggleInitial();
+                    },
+                  ),
+                  SwitchListTile.adaptive(
+                    value: localAccepting,
+                    secondary: const Icon(Icons.check_circle_outline),
+                    title: const Text('Accepting state'),
+                    onChanged: (value) {
+                      if (value == localAccepting) {
+                        return;
+                      }
+                      setState(() {
+                        localAccepting = value;
+                      });
+                      onToggleAccepting();
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+    return action;
+  }
+
+  Future<_AutomatonNodeMenuAction?> _showDesktopMenu(
+    BuildContext triggerContext,
+    BuildContext rootContext,
+  ) async {
+    final buttonBox = triggerContext.findRenderObject() as RenderBox?;
+    final overlay = Overlay.of(triggerContext)?.context.findRenderObject()
+        as RenderBox?;
+
+    if (buttonBox == null || overlay == null) {
+      return _showBottomSheetMenu(rootContext);
+    }
+
+    final position = RelativeRect.fromRect(
+      Rect.fromPoints(
+        buttonBox.localToGlobal(Offset.zero, ancestor: overlay),
+        buttonBox.localToGlobal(buttonBox.size.bottomRight(Offset.zero),
+            ancestor: overlay),
+      ),
+      Offset.zero & overlay.size,
+    );
+
+    final theme = Theme.of(rootContext);
+
+    return showMenu<_AutomatonNodeMenuAction>(
+      context: rootContext,
+      position: position,
+      items: [
+        const PopupMenuItem<_AutomatonNodeMenuAction>(
+          value: _AutomatonNodeMenuAction.rename,
+          child: Text('Rename'),
+        ),
+        PopupMenuItem<_AutomatonNodeMenuAction>(
+          value: _AutomatonNodeMenuAction.delete,
+          child: Text(
+            'Delete',
+            style: TextStyle(color: theme.colorScheme.error),
+          ),
+        ),
+        const PopupMenuDivider(),
+        CheckedPopupMenuItem<_AutomatonNodeMenuAction>(
+          value: _AutomatonNodeMenuAction.toggleInitial,
+          checked: isInitial,
+          child: const Text('Initial state'),
+        ),
+        CheckedPopupMenuItem<_AutomatonNodeMenuAction>(
+          value: _AutomatonNodeMenuAction.toggleAccepting,
+          checked: isAccepting,
+          child: const Text('Accepting state'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _handleRename(BuildContext context) async {
+    final controller = TextEditingController(text: label);
+    final focusNode = FocusNode();
+    final newLabel = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Rename state'),
+          content: TextField(
+            controller: controller,
+            focusNode: focusNode,
+            autofocus: true,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (value) {
+              Navigator.of(dialogContext).pop(value.trim());
+            },
+            decoration: const InputDecoration(
+              labelText: 'State label',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(controller.text.trim());
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+    controller.dispose();
+    focusNode.dispose();
+
+    if (newLabel == null) {
+      return;
+    }
+
+    final trimmed = newLabel.trim();
+    if (trimmed.isEmpty || trimmed == label) {
+      return;
+    }
+
+    onRename(trimmed);
+  }
+}
+
+enum _AutomatonNodeMenuAction {
+  rename,
+  delete,
+  toggleInitial,
+  toggleAccepting,
 }
 
 class _HeaderActionButton extends StatelessWidget {

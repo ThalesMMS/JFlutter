@@ -367,6 +367,8 @@ class _FSAPageState extends ConsumerState<FSAPage> {
       );
     }
 
+    final statusMessage = _buildToolbarStatusMessage(state);
+
     Widget buildCanvasWithToolbar(Widget child) {
       return Stack(
         children: [
@@ -382,6 +384,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
               onResetView: _canvasController.resetView,
               onClear: () =>
                   ref.read(automatonProvider.notifier).clearAutomaton(),
+              statusMessage: statusMessage,
             ),
           ),
         ],
@@ -389,6 +392,42 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     }
 
     return buildCanvasWithToolbar(buildAutomatonCanvas());
+  }
+
+  String _buildToolbarStatusMessage(AutomatonState state) {
+    final automaton = state.currentAutomaton;
+    if (automaton == null) {
+      return 'No automaton loaded';
+    }
+
+    final warnings = <String>[];
+    if (automaton.initialState == null) {
+      warnings.add('Missing start state');
+    }
+    if (automaton.acceptingStates.isEmpty) {
+      warnings.add('No accepting states');
+    }
+    if (!automaton.isDeterministic) {
+      warnings.add('Nondeterministic');
+    }
+    if (automaton.hasEpsilonTransitions) {
+      warnings.add('λ-transitions present');
+    }
+
+    final counts =
+        '${_formatCount('state', 'states', automaton.states.length)} · '
+        '${_formatCount('transition', 'transitions', automaton.transitions.length)}';
+
+    if (warnings.isEmpty) {
+      return counts;
+    }
+
+    return '⚠ ${warnings.join(' · ')} · $counts';
+  }
+
+  String _formatCount(String singular, String plural, int count) {
+    final label = count == 1 ? singular : plural;
+    return '$count $label';
   }
 
   @override

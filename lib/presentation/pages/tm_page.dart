@@ -182,6 +182,9 @@ class _TMPageState extends ConsumerState<TMPage> {
   }
 
   Widget _buildCanvasWithToolbar() {
+    final editorState = ref.watch(tmEditorProvider);
+    final statusMessage = _buildToolbarStatusMessage(editorState);
+
     return Stack(
       children: [
         Positioned.fill(
@@ -205,10 +208,50 @@ class _TMPageState extends ConsumerState<TMPage> {
                     transitions: const <TMTransition>[],
                   );
             },
+            statusMessage: statusMessage,
           ),
         ),
       ],
     );
+  }
+
+  String _buildToolbarStatusMessage(TMEditorState editorState) {
+    final tm = editorState.tm;
+    final stateCount = editorState.states.length;
+    final transitionCount = editorState.transitions.length;
+
+    final messageParts = <String>[];
+
+    final warnings = <String>[];
+    if (tm == null || tm.initialState == null) {
+      warnings.add('Missing start state');
+    }
+    if (tm == null || tm.acceptingStates.isEmpty) {
+      warnings.add('No accepting states');
+    }
+    if (editorState.nondeterministicTransitionIds.isNotEmpty) {
+      warnings.add('Nondeterministic transitions');
+    }
+
+    if (warnings.isNotEmpty) {
+      messageParts.add('⚠ ${warnings.join(' · ')}');
+    }
+
+    if (stateCount == 0 && transitionCount == 0) {
+      messageParts.add('No machine defined');
+    } else {
+      messageParts.add(
+        '${_formatCount('state', 'states', stateCount)} · '
+        '${_formatCount('transition', 'transitions', transitionCount)}',
+      );
+    }
+
+    return messageParts.join(' · ');
+  }
+
+  String _formatCount(String singular, String plural, int count) {
+    final label = count == 1 ? singular : plural;
+    return '$count $label';
   }
 
   void _handleTMUpdate(TM tm) {

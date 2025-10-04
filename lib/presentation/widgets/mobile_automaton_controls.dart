@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'automaton_canvas_tool.dart';
+
 /// Unified control surface for mobile automaton editors.
 ///
 /// The widget groups primary workspace actions (simulation, algorithms, metrics)
@@ -9,7 +11,11 @@ import 'package:flutter/material.dart';
 class MobileAutomatonControls extends StatelessWidget {
   const MobileAutomatonControls({
     super.key,
+    this.enableToolSelection = false,
+    this.activeTool = AutomatonCanvasTool.selection,
+    this.onSelectTool,
     required this.onAddState,
+    this.onAddTransition,
     required this.onZoomIn,
     required this.onZoomOut,
     required this.onFitToContent,
@@ -26,9 +32,20 @@ class MobileAutomatonControls extends StatelessWidget {
     this.isAlgorithmsEnabled = true,
     this.onMetrics,
     this.isMetricsEnabled = true,
-  });
+  })  : assert(
+          !enableToolSelection || onSelectTool != null,
+          'onSelectTool must be provided when tool selection is enabled.',
+        ),
+        assert(
+          !enableToolSelection || onAddTransition != null,
+          'onAddTransition must be provided when tool selection is enabled.',
+        );
 
+  final bool enableToolSelection;
+  final AutomatonCanvasTool activeTool;
+  final VoidCallback? onSelectTool;
   final VoidCallback onAddState;
+  final VoidCallback? onAddTransition;
   final VoidCallback onZoomIn;
   final VoidCallback onZoomOut;
   final VoidCallback onFitToContent;
@@ -86,11 +103,31 @@ class MobileAutomatonControls extends StatelessWidget {
           label: 'Redo',
           onPressed: canRedo ? onRedo : null,
         ),
+      if (enableToolSelection)
+        _ControlAction(
+          icon: Icons.pan_tool,
+          label: 'Select',
+          onPressed: onSelectTool,
+          isToggle: true,
+          isSelected: activeTool == AutomatonCanvasTool.selection,
+        ),
       _ControlAction(
         icon: Icons.add,
         label: 'Add state',
         onPressed: onAddState,
+        isToggle: enableToolSelection,
+        isSelected: enableToolSelection &&
+            activeTool == AutomatonCanvasTool.addState,
       ),
+      if (onAddTransition != null)
+        _ControlAction(
+          icon: Icons.arrow_right_alt,
+          label: 'Add transition',
+          onPressed: onAddTransition,
+          isToggle: enableToolSelection,
+          isSelected: enableToolSelection &&
+              activeTool == AutomatonCanvasTool.transition,
+        ),
       _ControlAction(
         icon: Icons.zoom_in,
         label: 'Zoom in',
@@ -192,11 +229,15 @@ class _ControlAction {
     required this.icon,
     required this.label,
     required this.onPressed,
+    this.isToggle = false,
+    this.isSelected = false,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback? onPressed;
+  final bool isToggle;
+  final bool isSelected;
 }
 
 class _MobileControlButton extends StatelessWidget {
@@ -212,7 +253,7 @@ class _MobileControlButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    final buttonStyle = switch (style) {
+    var buttonStyle = switch (style) {
       _ButtonStyleVariant.filled => FilledButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
@@ -222,6 +263,20 @@ class _MobileControlButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
     };
+
+    if (action.isToggle) {
+      final isSelected = action.isSelected && action.onPressed != null;
+      buttonStyle = buttonStyle.merge(
+        FilledButton.styleFrom(
+          backgroundColor: isSelected
+              ? colorScheme.secondaryContainer
+              : colorScheme.surfaceContainerHigh,
+          foregroundColor: isSelected
+              ? colorScheme.onSecondaryContainer
+              : colorScheme.onSurface,
+        ),
+      );
+    }
 
     return FilledButton.icon(
       style: buttonStyle,

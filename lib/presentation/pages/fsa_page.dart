@@ -6,6 +6,7 @@ import '../providers/algorithm_provider.dart';
 import '../providers/automaton_provider.dart';
 import '../widgets/algorithm_panel.dart';
 import '../widgets/automaton_canvas.dart';
+import '../widgets/automaton_canvas_tool.dart';
 import '../widgets/fl_nodes_canvas_toolbar.dart';
 import '../widgets/mobile_automaton_controls.dart';
 import '../widgets/simulation_panel.dart';
@@ -28,6 +29,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
   late final FlNodesCanvasController _canvasController;
   late final FlNodesSimulationHighlightChannel _highlightChannel;
   late final SimulationHighlightService _highlightService;
+  late final AutomatonCanvasToolController _toolController;
 
   @override
   void initState() {
@@ -40,13 +42,24 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     );
     _highlightChannel = FlNodesSimulationHighlightChannel(_canvasController);
     _highlightService = SimulationHighlightService(channel: _highlightChannel);
+    _toolController = AutomatonCanvasToolController();
   }
 
   @override
   void dispose() {
     _highlightService.clear();
     _canvasController.dispose();
+    _toolController.dispose();
     super.dispose();
+  }
+
+  void _toggleCanvasTool(AutomatonCanvasTool tool) {
+    final current = _toolController.activeTool;
+    if (current == tool) {
+      _toolController.setActiveTool(AutomatonCanvasTool.selection);
+    } else {
+      _toolController.setActiveTool(tool);
+    }
   }
   void _showSnack(String message, {bool isError = false}) {
     final theme = Theme.of(context);
@@ -361,6 +374,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
         automaton: state.currentAutomaton,
         canvasKey: _canvasKey,
         controller: _canvasController,
+        toolController: _toolController,
         simulationResult: state.simulationResult,
         showTrace: state.simulationResult != null,
       );
@@ -375,19 +389,31 @@ class _FSAPageState extends ConsumerState<FSAPage> {
         return Stack(
           children: [
             Positioned.fill(child: child),
-            MobileAutomatonControls(
-              onAddState: _canvasController.addStateAtCenter,
-              onZoomIn: _canvasController.zoomIn,
-              onZoomOut: _canvasController.zoomOut,
-              onFitToContent: _canvasController.fitToContent,
-              onResetView: _canvasController.resetView,
-              onClear: () =>
-                  ref.read(automatonProvider.notifier).clearAutomaton(),
-              onSimulate: _openSimulationSheet,
-              isSimulationEnabled: hasAutomaton,
-              onAlgorithms: _openAlgorithmSheet,
-              isAlgorithmsEnabled: hasAutomaton,
-              statusMessage: statusMessage,
+            AnimatedBuilder(
+              animation: _toolController,
+              builder: (context, _) {
+                return MobileAutomatonControls(
+                  enableToolSelection: true,
+                  activeTool: _toolController.activeTool,
+                  onSelectTool: () => _toolController
+                      .setActiveTool(AutomatonCanvasTool.selection),
+                  onAddState: () =>
+                      _toggleCanvasTool(AutomatonCanvasTool.addState),
+                  onAddTransition: () =>
+                      _toggleCanvasTool(AutomatonCanvasTool.transition),
+                  onZoomIn: _canvasController.zoomIn,
+                  onZoomOut: _canvasController.zoomOut,
+                  onFitToContent: _canvasController.fitToContent,
+                  onResetView: _canvasController.resetView,
+                  onClear: () =>
+                      ref.read(automatonProvider.notifier).clearAutomaton(),
+                  onSimulate: _openSimulationSheet,
+                  isSimulationEnabled: hasAutomaton,
+                  onAlgorithms: _openAlgorithmSheet,
+                  isAlgorithmsEnabled: hasAutomaton,
+                  statusMessage: statusMessage,
+                );
+              },
             ),
           ],
         );
@@ -396,16 +422,28 @@ class _FSAPageState extends ConsumerState<FSAPage> {
       return Stack(
         children: [
           Positioned.fill(child: child),
-          FlNodesCanvasToolbar(
-            layout: FlNodesCanvasToolbarLayout.desktop,
-            onAddState: _canvasController.addStateAtCenter,
-            onZoomIn: _canvasController.zoomIn,
-            onZoomOut: _canvasController.zoomOut,
-            onFitToContent: _canvasController.fitToContent,
-            onResetView: _canvasController.resetView,
-            onClear:
-                () => ref.read(automatonProvider.notifier).clearAutomaton(),
-            statusMessage: statusMessage,
+          AnimatedBuilder(
+            animation: _toolController,
+            builder: (context, _) {
+              return FlNodesCanvasToolbar(
+                layout: FlNodesCanvasToolbarLayout.desktop,
+                enableToolSelection: true,
+                activeTool: _toolController.activeTool,
+                onSelectTool: () => _toolController
+                    .setActiveTool(AutomatonCanvasTool.selection),
+                onAddState: () =>
+                    _toggleCanvasTool(AutomatonCanvasTool.addState),
+                onAddTransition: () =>
+                    _toggleCanvasTool(AutomatonCanvasTool.transition),
+                onZoomIn: _canvasController.zoomIn,
+                onZoomOut: _canvasController.zoomOut,
+                onFitToContent: _canvasController.fitToContent,
+                onResetView: _canvasController.resetView,
+                onClear: () =>
+                    ref.read(automatonProvider.notifier).clearAutomaton(),
+                statusMessage: statusMessage,
+              );
+            },
           ),
         ],
       );

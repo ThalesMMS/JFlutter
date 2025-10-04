@@ -13,6 +13,7 @@ import 'package:jflutter/core/models/state.dart';
 import 'package:jflutter/core/models/transition.dart';
 import 'package:jflutter/features/canvas/fl_nodes/base_fl_nodes_canvas_controller.dart';
 import 'package:jflutter/features/canvas/fl_nodes/fl_nodes_pda_canvas_controller.dart';
+import 'package:jflutter/features/canvas/fl_nodes/fl_nodes_canvas_models.dart';
 import 'package:jflutter/presentation/providers/pda_editor_provider.dart';
 
 class _RecordingPdaEditorNotifier extends PDAEditorNotifier {
@@ -625,6 +626,122 @@ void main() {
 
       expect(editor.selectedLinkIds, contains('t0'));
       expect(editor.linksById['t0']!.state.isSelected, isTrue);
+    });
+
+    test('undo/redo revert PDA state, stack metadata, and highlights', () async {
+      final pdaNotifier = PDAEditorNotifier();
+      final pdaController = FlNodesPdaCanvasController(
+        editorNotifier: pdaNotifier,
+        editorController: FlNodeEditorController(),
+      );
+      addTearDown(pdaController.dispose);
+
+      final q0 = State(
+        id: 'q0',
+        label: 'start',
+        position: Vector2.zero(),
+        isInitial: true,
+      );
+      final q1 = State(
+        id: 'q1',
+        label: 'accept',
+        position: Vector2(80, 60),
+        isAccepting: true,
+      );
+      final transition = PDATransition(
+        id: 't0',
+        fromState: q0,
+        toState: q1,
+        label: 'λ, Z/ZZ',
+        controlPoint: Vector2.zero(),
+        type: TransitionType.deterministic,
+        inputSymbol: '',
+        popSymbol: 'Z',
+        pushSymbol: 'ZZ',
+        isLambdaInput: true,
+        isLambdaPop: false,
+        isLambdaPush: false,
+      );
+      final pda = PDA(
+        id: 'pda-history',
+        name: 'Undo PDA',
+        states: {q0, q1},
+        transitions: {transition},
+        alphabet: {'a'},
+        initialState: q0,
+        acceptingStates: {q1},
+        created: DateTime.utc(2024, 1, 1),
+        modified: DateTime.utc(2024, 1, 1),
+        bounds: const math.Rectangle<double>(0, 0, 400, 300),
+        stackAlphabet: {'Z'},
+        initialStackSymbol: 'Z',
+        zoomLevel: 1,
+        panOffset: Vector2.zero(),
+      );
+
+      pdaNotifier.setPda(pda);
+      pdaController.synchronize(pdaNotifier.state.pda);
+      pdaController.applyHighlight(
+        const SimulationHighlight(transitionIds: {'t0'}),
+      );
+
+      final nodeInstance = pdaController.controller.nodes['q1'];
+      expect(nodeInstance, isNotNull);
+      nodeInstance!.offset = const Offset(140, 120);
+      pdaController.controller.eventBus.emit(
+        DragSelectionEndEvent(
+          const Offset(140, 120),
+          {'q1'},
+          id: 'drag-pda-q1',
+        ),
+      );
+      await _flushEvents();
+
+      final newEdge = FlNodesCanvasEdge(
+        id: 't1',
+        fromStateId: 'q1',
+        toStateId: 'q0',
+        symbols: const [],
+        readSymbol: 'b',
+        popSymbol: 'Z',
+        pushSymbol: 'Y',
+        isLambdaInput: false,
+        isLambdaPop: false,
+        isLambdaPush: false,
+        controlPointX: 32,
+        controlPointY: -20,
+      );
+      pdaController.onCanvasEdgeAdded(newEdge);
+
+      pdaController.applyHighlight(
+        const SimulationHighlight(transitionIds: {'t1'}),
+      );
+
+      final updatedPda = pdaNotifier.state.pda!;
+      expect(updatedPda.alphabet, containsAll({'a', 'b'}));
+      expect(updatedPda.stackAlphabet, contains('Y'));
+
+      expect(pdaController.undo(), isTrue);
+      final revertedAfterEdge = pdaNotifier.state.pda!;
+      expect(revertedAfterEdge.alphabet, equals({'a'}));
+      expect(revertedAfterEdge.stackAlphabet, isNot(contains('Y')));
+      expect(pdaController.highlightNotifier.value.transitionIds, equals({'t0'}));
+
+      expect(pdaController.undo(), isTrue);
+      final revertedState = pdaNotifier.state.pda!;
+      final revertedQ1 = revertedState.states.firstWhere((state) => state.id == 'q1');
+      expect(revertedQ1.position, equals(Vector2(80, 60)));
+
+      expect(pdaController.redo(), isTrue);
+      final movedState = pdaNotifier.state.pda!;
+      final movedQ1 = movedState.states.firstWhere((state) => state.id == 'q1');
+      expect(movedQ1.position, equals(Vector2(140, 120)));
+
+      expect(pdaController.redo(), isTrue);
+      final readded = pdaNotifier.state.pda!;
+      expect(readded.alphabet, containsAll({'a', 'b'}));
+      expect(readded.stackAlphabet, contains('Y'));
+      expect(pdaController.highlightNotifier.value.transitionIds, equals({'t1'}));
     });
   });
 }

@@ -338,6 +338,53 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
     return _rebuildState();
   }
 
+  /// Replaces the current TM with [tm], recalculating derived metadata.
+  void setTm(TM tm) {
+    final clonedStates = tm.states
+        .map(
+          (state) => state.copyWith(
+            position: state.position.clone(),
+          ),
+        )
+        .toList(growable: false);
+    _states
+      ..clear()
+      ..addAll(clonedStates);
+
+    final stateById = {for (final state in _states) state.id: state};
+
+    final clonedTransitions = tm.transitions.whereType<TMTransition>().map((transition) {
+      final fromState = stateById[transition.fromState.id] ?? transition.fromState;
+      final toState = stateById[transition.toState.id] ?? transition.toState;
+      return transition.copyWith(
+        fromState: fromState,
+        toState: toState,
+        controlPoint: transition.controlPoint.clone(),
+        readSymbol: transition.readSymbol,
+        writeSymbol: transition.writeSymbol,
+        direction: transition.direction,
+        tapeNumber: transition.tapeNumber,
+      );
+    }).toList(growable: false);
+
+    _transitions
+      ..clear()
+      ..addAll(clonedTransitions);
+
+    final transitionSet = _transitions.toSet();
+    final moveDirections = transitionSet.map((transition) => transition.direction.name).toSet();
+    final nondeterministicTransitionIds = _findNondeterministicTransitions(transitionSet);
+
+    state = state.copyWith(
+      tm: tm,
+      tapeSymbols: tm.tapeAlphabet,
+      moveDirections: moveDirections,
+      nondeterministicTransitionIds: nondeterministicTransitionIds,
+      states: List<State>.unmodifiable(_states),
+      transitions: List<TMTransition>.unmodifiable(_transitions),
+    );
+  }
+
   Set<String> _findNondeterministicTransitions(Set<TMTransition> transitions) {
     final grouped = <String, List<TMTransition>>{};
 

@@ -7,6 +7,7 @@ import 'package:vector_math/vector_math_64.dart';
 
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/fsa_transition.dart';
+import 'package:jflutter/core/models/simulation_highlight.dart';
 import 'package:jflutter/core/models/simulation_result.dart';
 import 'package:jflutter/core/models/simulation_step.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
@@ -94,6 +95,82 @@ void main() {
     await tester.pump();
 
     expect(controller.synchronizeCallCount, 2);
+  });
+
+  testWidgets(
+      'AutomatonCanvas preserves manual selections and highlights across provider updates',
+      (tester) async {
+    final notifier = AutomatonProvider(
+      automatonService: AutomatonService(),
+      layoutRepository: LayoutRepositoryImpl(),
+    );
+    addTearDown(notifier.dispose);
+
+    final controller =
+        _TrackingFlNodesCanvasController(automatonProvider: notifier);
+    addTearDown(controller.dispose);
+
+    final canvasKey = GlobalKey();
+    final automaton = _buildAutomaton();
+
+    notifier.state = AutomatonState(currentAutomaton: automaton);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          automatonProvider.overrideWith((ref) => notifier),
+        ],
+        child: MaterialApp(
+          home: Consumer(
+            builder: (context, ref, _) {
+              final state = ref.watch(automatonProvider);
+              return Scaffold(
+                body: SizedBox(
+                  width: 600,
+                  height: 400,
+                  child: AutomatonCanvas(
+                    automaton: state.currentAutomaton,
+                    canvasKey: canvasKey,
+                    controller: controller,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    controller.controller.selectNodesById(
+      {'q0'},
+      holdSelection: false,
+      isHandled: true,
+    );
+    controller.controller.selectLinkById(
+      't0',
+      holdSelection: true,
+      isHandled: true,
+    );
+    controller.applyHighlight(
+      SimulationHighlight(
+        stateIds: {'q1'},
+        transitionIds: {'t0'},
+      ),
+    );
+
+    final movedAutomaton = _buildAutomaton(q1Position: Vector2(180, 0));
+    notifier.state = notifier.state.copyWith(
+      currentAutomaton: movedAutomaton,
+    );
+
+    await tester.pump();
+
+    expect(controller.controller.selectedNodeIds, contains('q0'));
+    expect(controller.controller.selectedLinkIds, contains('t0'));
+    expect(controller.highlightNotifier.value.transitionIds, contains('t0'));
+    expect(controller.highlightNotifier.value.stateIds, contains('q1'));
   });
 
   testWidgets(

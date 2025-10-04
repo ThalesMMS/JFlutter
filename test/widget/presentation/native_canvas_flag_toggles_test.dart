@@ -97,6 +97,16 @@ void main() {
     expect(initialToggleFinder, findsOneWidget);
     expect(acceptingToggleFinder, findsOneWidget);
 
+    final automatonNodeTooltipFinder = find.byWidgetPredicate(
+      (widget) => widget is Tooltip && widget.message == 'q1',
+    );
+    final automatonNodeBodyFinder = find.descendant(
+      of: automatonNodeTooltipFinder,
+      matching: find.byType(AnimatedContainer),
+    );
+
+    final initialRect = tester.getRect(automatonNodeBodyFinder);
+
     final initialIconBefore = tester.widget<Icon>(
       find.descendant(
         of: initialToggleFinder,
@@ -124,6 +134,8 @@ void main() {
     await tester.tap(acceptingToggleFinder);
     await tester.pumpAndSettle();
 
+    final acceptingRect = tester.getRect(automatonNodeBodyFinder);
+
     final acceptingIcon = tester.widget<Icon>(
       find.descendant(
         of: acceptingToggleFinder,
@@ -136,6 +148,8 @@ void main() {
           .any((state) => state.id == 'q1'),
       isTrue,
     );
+    expect(acceptingRect.size, equals(initialRect.size));
+    expect(acceptingRect.topLeft, equals(initialRect.topLeft));
     expect(acceptingIcon.color!.opacity, closeTo(1, 0.01));
   });
 
@@ -187,6 +201,16 @@ void main() {
     expect(initialToggleFinder, findsOneWidget);
     expect(acceptingToggleFinder, findsOneWidget);
 
+    final tmNodeTooltipFinder = find.byWidgetPredicate(
+      (widget) => widget is Tooltip && widget.message == 'q1',
+    );
+    final tmNodeBodyFinder = find.descendant(
+      of: tmNodeTooltipFinder,
+      matching: find.byType(AnimatedContainer),
+    );
+
+    final tmInitialRect = tester.getRect(tmNodeBodyFinder);
+
     final initialIconBefore = tester.widget<Icon>(
       find.descendant(
         of: initialToggleFinder,
@@ -211,6 +235,8 @@ void main() {
     await tester.tap(acceptingToggleFinder);
     await tester.pumpAndSettle();
 
+    final tmAcceptingRect = tester.getRect(tmNodeBodyFinder);
+
     final acceptingIcon = tester.widget<Icon>(
       find.descendant(
         of: acceptingToggleFinder,
@@ -222,6 +248,8 @@ void main() {
       tmNotifier.state.tm?.acceptingStates.any((state) => state.id == 'q1'),
       isTrue,
     );
+    expect(tmAcceptingRect.size, equals(tmInitialRect.size));
+    expect(tmAcceptingRect.topLeft, equals(tmInitialRect.topLeft));
     expect(acceptingIcon.color!.opacity, closeTo(1, 0.01));
   });
 
@@ -273,6 +301,16 @@ void main() {
     expect(initialToggleFinder, findsOneWidget);
     expect(acceptingToggleFinder, findsOneWidget);
 
+    final pdaNodeTooltipFinder = find.byWidgetPredicate(
+      (widget) => widget is Tooltip && widget.message == 'q1',
+    );
+    final pdaNodeBodyFinder = find.descendant(
+      of: pdaNodeTooltipFinder,
+      matching: find.byType(AnimatedContainer),
+    );
+
+    final pdaInitialRect = tester.getRect(pdaNodeBodyFinder);
+
     final initialIconBefore = tester.widget<Icon>(
       find.descendant(
         of: initialToggleFinder,
@@ -297,6 +335,8 @@ void main() {
     await tester.tap(acceptingToggleFinder);
     await tester.pumpAndSettle();
 
+    final pdaAcceptingRect = tester.getRect(pdaNodeBodyFinder);
+
     final acceptingIcon = tester.widget<Icon>(
       find.descendant(
         of: acceptingToggleFinder,
@@ -309,6 +349,8 @@ void main() {
           .any((state) => state.id == 'q1'),
       isTrue,
     );
+    expect(pdaAcceptingRect.size, equals(pdaInitialRect.size));
+    expect(pdaAcceptingRect.topLeft, equals(pdaInitialRect.topLeft));
     expect(acceptingIcon.color!.opacity, closeTo(1, 0.01));
   });
 }

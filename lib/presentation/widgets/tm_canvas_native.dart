@@ -76,6 +76,14 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
     }
     final initialState = ref.read(tmEditorProvider);
     _canvasController.synchronize(initialState.tm);
+    if (initialState.tm?.states.isNotEmpty ?? false) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) {
+          return;
+        }
+        _canvasController.fitToContent();
+      });
+    }
     _lastDeliveredTM = initialState.tm;
     if (initialState.tm != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -94,7 +102,19 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
           widget.onTMModified(tm);
         }
         if (_shouldSynchronize(previous, next)) {
+          final hadNodes = _canvasController.nodes.isNotEmpty;
           _canvasController.synchronize(next.tm);
+          final hasNodesNow = _canvasController.nodes.isNotEmpty;
+          if (!hadNodes &&
+              hasNodesNow &&
+              (tm?.states.isNotEmpty ?? false)) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) {
+                return;
+              }
+              _canvasController.fitToContent();
+            });
+          }
           final currentLink = _selectedLinkId;
           if (currentLink != null &&
               _canvasController.edgeById(currentLink) == null) {

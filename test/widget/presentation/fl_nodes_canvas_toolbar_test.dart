@@ -84,6 +84,35 @@ void main() {
     expect(find.text('Add state'), findsOneWidget);
     expect(find.text('Zoom in'), findsOneWidget);
   });
+
+  testWidgets('renders undo and redo buttons with enabled state', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: FlNodesCanvasToolbar(
+            onAddState: _noop,
+            onZoomIn: _noop,
+            onZoomOut: _noop,
+            onFitToContent: _noop,
+            onResetView: _noop,
+            onUndo: _noop,
+            onRedo: _noop,
+            canUndo: false,
+            canRedo: true,
+            layout: FlNodesCanvasToolbarLayout.desktop,
+          ),
+        ),
+      ),
+    );
+
+    final undoButton =
+        tester.widget<IconButton>(find.widgetWithIcon(IconButton, Icons.undo));
+    final redoButton =
+        tester.widget<IconButton>(find.widgetWithIcon(IconButton, Icons.redo));
+
+    expect(undoButton.onPressed, isNull);
+    expect(redoButton.onPressed, isNotNull);
+  });
 }
 
 void _noop() {}

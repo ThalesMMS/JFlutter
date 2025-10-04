@@ -12,6 +12,7 @@ import 'package:jflutter/core/models/tm_transition.dart';
 import 'package:jflutter/core/models/simulation_highlight.dart';
 import 'package:jflutter/features/canvas/fl_nodes/base_fl_nodes_canvas_controller.dart';
 import 'package:jflutter/features/canvas/fl_nodes/fl_nodes_tm_canvas_controller.dart';
+import 'package:jflutter/features/canvas/fl_nodes/fl_nodes_canvas_models.dart';
 import 'package:jflutter/presentation/providers/tm_editor_provider.dart';
 
 class _RecordingTmEditorNotifier extends TMEditorNotifier {
@@ -590,6 +591,108 @@ void main() {
 
       expect(editor.selectedLinkIds, contains('t0'));
       expect(editor.linksById['t0']!.state.isSelected, isTrue);
+    });
+
+    test('undo/redo sync TM mutations and highlights', () async {
+      final tmNotifier = TMEditorNotifier();
+      final tmController = FlNodesTmCanvasController(
+        editorNotifier: tmNotifier,
+        editorController: FlNodeEditorController(),
+      );
+      addTearDown(tmController.dispose);
+
+      final q0 = State(
+        id: 'q0',
+        label: 'start',
+        position: Vector2.zero(),
+        isInitial: true,
+      );
+      final q1 = State(
+        id: 'q1',
+        label: 'accept',
+        position: Vector2(100, 60),
+        isAccepting: true,
+      );
+      final transition = TMTransition(
+        id: 't0',
+        fromState: q0,
+        toState: q1,
+        label: '0/0,R',
+        controlPoint: Vector2.zero(),
+        readSymbol: '0',
+        writeSymbol: '0',
+        direction: TapeDirection.right,
+      );
+      final tm = TM(
+        id: 'tm-test',
+        name: 'Undo TM',
+        states: {q0, q1},
+        transitions: {transition},
+        alphabet: {'0'},
+        initialState: q0,
+        acceptingStates: {q1},
+        created: DateTime.utc(2024, 1, 1),
+        modified: DateTime.utc(2024, 1, 1),
+        bounds: const math.Rectangle<double>(0, 0, 400, 300),
+        tapeAlphabet: {'0', 'B'},
+        blankSymbol: 'B',
+        tapeCount: 1,
+      );
+
+      tmNotifier.setTm(tm);
+      tmController.synchronize(tmNotifier.state.tm);
+      tmController.applyHighlight(
+        const SimulationHighlight(transitionIds: {'t0'}),
+      );
+
+      final nodeInstance = tmController.controller.nodes['q1'];
+      expect(nodeInstance, isNotNull);
+      nodeInstance!.offset = const Offset(160, 100);
+      tmController.controller.eventBus.emit(
+        DragSelectionEndEvent(
+          const Offset(160, 100),
+          {'q1'},
+          id: 'drag-tm-q1',
+        ),
+      );
+      await _flushEvents();
+
+      final newEdge = FlNodesCanvasEdge(
+        id: 't1',
+        fromStateId: 'q1',
+        toStateId: 'q0',
+        symbols: const ['1'],
+        readSymbol: '1',
+        writeSymbol: '1',
+        direction: TapeDirection.left,
+        controlPointX: 24,
+        controlPointY: -16,
+      );
+      tmController.onCanvasEdgeAdded(newEdge);
+
+      tmController.applyHighlight(
+        const SimulationHighlight(transitionIds: {'t1'}),
+      );
+
+      expect(tmNotifier.state.tm!.tapeAlphabet, contains('1'));
+
+      expect(tmController.undo(), isTrue);
+      expect(tmNotifier.state.tm!.tapeAlphabet, isNot(contains('1')));
+      expect(tmController.highlightNotifier.value.transitionIds, equals({'t0'}));
+
+      expect(tmController.undo(), isTrue);
+      final restoredState = tmNotifier.state.tm!;
+      final restoredQ1 = restoredState.states.firstWhere((state) => state.id == 'q1');
+      expect(restoredQ1.position, equals(Vector2(100, 60)));
+
+      expect(tmController.redo(), isTrue);
+      final movedState = tmNotifier.state.tm!;
+      final movedQ1 = movedState.states.firstWhere((state) => state.id == 'q1');
+      expect(movedQ1.position, equals(Vector2(160, 100)));
+
+      expect(tmController.redo(), isTrue);
+      expect(tmNotifier.state.tm!.tapeAlphabet, contains('1'));
+      expect(tmController.highlightNotifier.value.transitionIds, equals({'t1'}));
     });
   });
 }

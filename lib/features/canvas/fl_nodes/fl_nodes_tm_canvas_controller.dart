@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:fl_nodes/fl_nodes.dart';
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart';
@@ -22,6 +24,9 @@ class FlNodesTmCanvasController
         );
 
   TMEditorNotifier get _notifier => notifier;
+
+  @override
+  TM? get currentDomainData => _notifier.state.tm;
 
   @override
   String get statePrototypeId => 'tm_state';
@@ -49,36 +54,44 @@ class FlNodesTmCanvasController
 
   @override
   void onCanvasNodeAdded(FlNodesCanvasNode node) {
-    _notifier.upsertState(
-      id: node.id,
-      label: node.label,
-      x: node.x,
-      y: node.y,
-    );
+    performMutation(() {
+      _notifier.upsertState(
+        id: node.id,
+        label: node.label,
+        x: node.x,
+        y: node.y,
+      );
+    });
   }
 
   @override
   void onCanvasNodeRemoved(String nodeId) {
-    _notifier.removeState(id: nodeId);
+    performMutation(() {
+      _notifier.removeState(id: nodeId);
+    });
   }
 
   @override
   void onCanvasNodesMoved(Map<String, FlNodesCanvasNode> updatedNodes) {
-    for (final entry in updatedNodes.entries) {
-      _notifier.moveState(
-        id: entry.key,
-        x: entry.value.x,
-        y: entry.value.y,
-      );
-    }
+    performMutation(() {
+      for (final entry in updatedNodes.entries) {
+        _notifier.moveState(
+          id: entry.key,
+          x: entry.value.x,
+          y: entry.value.y,
+        );
+      }
+    });
   }
 
   @override
   void onCanvasNodeLabelUpdated(FlNodesCanvasNode node) {
-    _notifier.updateStateLabel(
-      id: node.id,
-      label: node.label.isEmpty ? node.id : node.label,
-    );
+    performMutation(() {
+      _notifier.updateStateLabel(
+        id: node.id,
+        label: node.label.isEmpty ? node.id : node.label,
+      );
+    });
   }
 
   @override
@@ -97,36 +110,78 @@ class FlNodesTmCanvasController
 
   @override
   void onCanvasEdgeAdded(FlNodesCanvasEdge edge) {
-    _notifier.addOrUpdateTransition(
-      id: edge.id,
-      fromStateId: edge.fromStateId,
-      toStateId: edge.toStateId,
-      readSymbol: edge.readSymbol,
-      writeSymbol: edge.writeSymbol,
-      direction: edge.direction,
-    );
+    performMutation(() {
+      _notifier.addOrUpdateTransition(
+        id: edge.id,
+        fromStateId: edge.fromStateId,
+        toStateId: edge.toStateId,
+        readSymbol: edge.readSymbol,
+        writeSymbol: edge.writeSymbol,
+        direction: edge.direction,
+      );
+    });
   }
 
   @override
   void onCanvasEdgeRemoved(String edgeId) {
-    _notifier.removeTransition(id: edgeId);
+    performMutation(() {
+      _notifier.removeTransition(id: edgeId);
+    });
   }
 
   @override
   void onCanvasEdgeGeometryUpdated(FlNodesCanvasEdge edge, Offset controlPoint) {
-    _notifier.addOrUpdateTransition(
-      id: edge.id,
-      fromStateId: edge.fromStateId,
-      toStateId: edge.toStateId,
-      readSymbol: edge.readSymbol,
-      writeSymbol: edge.writeSymbol,
-      direction: edge.direction,
-      controlPoint: Vector2(controlPoint.dx, controlPoint.dy),
-    );
+    performMutation(() {
+      _notifier.addOrUpdateTransition(
+        id: edge.id,
+        fromStateId: edge.fromStateId,
+        toStateId: edge.toStateId,
+        readSymbol: edge.readSymbol,
+        writeSymbol: edge.writeSymbol,
+        direction: edge.direction,
+        controlPoint: Vector2(controlPoint.dx, controlPoint.dy),
+      );
+    });
   }
 
   /// Synchronises the fl_nodes controller with the latest [machine].
   void synchronize(TM? machine) {
     synchronizeCanvas(machine);
+  }
+
+  @override
+  void applySnapshotToDomain(FlNodesAutomatonSnapshot snapshot) {
+    final template = _notifier.state.tm ??
+        TM(
+          id: snapshot.metadata.id ?? 'tm_${DateTime.now().microsecondsSinceEpoch}',
+          name: snapshot.metadata.name ?? 'Canvas TM',
+          states: const {},
+          transitions: const {},
+          alphabet: snapshot.metadata.alphabet.toSet(),
+          initialState: null,
+          acceptingStates: const {},
+          created: DateTime.now(),
+          modified: DateTime.now(),
+          bounds: const math.Rectangle<double>(0, 0, 800, 600),
+          tapeAlphabet: snapshot.metadata.alphabet.toSet().isEmpty
+              ? const {'B'}
+              : snapshot.metadata.alphabet.toSet(),
+          blankSymbol: 'B',
+          tapeCount: 1,
+          panOffset: Vector2.zero(),
+          zoomLevel: 1.0,
+        );
+
+    final merged = FlNodesTmMapper.mergeIntoTemplate(snapshot, template).copyWith(
+      id: snapshot.metadata.id ?? template.id,
+      name: snapshot.metadata.name ?? template.name,
+      tapeAlphabet: snapshot.metadata.alphabet.isNotEmpty
+          ? snapshot.metadata.alphabet.toSet()
+          : template.tapeAlphabet,
+      modified: DateTime.now(),
+    );
+
+    _notifier.setTm(merged);
+    synchronize(merged);
   }
 }

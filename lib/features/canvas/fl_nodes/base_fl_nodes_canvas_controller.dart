@@ -12,6 +12,16 @@ import 'fl_nodes_viewport_highlight_mixin.dart';
 import 'link_geometry_event_utils.dart';
 import 'node_editor_event_shims.dart';
 
+class _CanvasHistoryEntry {
+  const _CanvasHistoryEntry({
+    required this.snapshot,
+    required this.highlight,
+  });
+
+  final FlNodesAutomatonSnapshot snapshot;
+  final SimulationHighlight highlight;
+}
+
 /// Base controller that coordinates fl_nodes interactions with domain notifiers.
 abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
     with FlNodesViewportHighlightMixin
@@ -33,6 +43,9 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
 
   final Map<String, FlNodesCanvasNode> _nodes = {};
   final Map<String, FlNodesCanvasEdge> _edges = {};
+
+  final List<_CanvasHistoryEntry> _undoHistory = [];
+  final List<_CanvasHistoryEntry> _redoHistory = [];
 
   StreamSubscription<NodeEditorEvent>? _subscription;
   bool _isSynchronizing = false;
@@ -107,6 +120,15 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
   @protected
   FlNodesAutomatonSnapshot toSnapshot(TSnapshot? data);
 
+  /// Returns the current domain entity rendered on the canvas.
+  @protected
+  TSnapshot? get currentDomainData;
+
+  /// Applies a [snapshot] to the underlying domain notifier and synchronises
+  /// the canvas state accordingly.
+  @protected
+  void applySnapshotToDomain(FlNodesAutomatonSnapshot snapshot);
+
   /// Builds a canvas node representation from the emitted [NodeInstance].
   @protected
   FlNodesCanvasNode createCanvasNode(NodeInstance node);
@@ -162,6 +184,53 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
     _subscription?.cancel();
     disposeViewportHighlight();
     controller.dispose();
+  }
+
+  bool get canUndo => _undoHistory.isNotEmpty;
+
+  bool get canRedo => _redoHistory.isNotEmpty;
+
+  /// Records the current canvas state before invoking [mutation].
+  @protected
+  void performMutation(VoidCallback mutation) {
+    final entry = _captureHistoryEntry();
+    if (entry != null) {
+      _undoHistory.add(entry);
+      _redoHistory.clear();
+    }
+    mutation();
+  }
+
+  /// Restores the previous canvas snapshot if available.
+  bool undo() {
+    if (_undoHistory.isEmpty) {
+      return false;
+    }
+
+    final currentEntry = _captureHistoryEntry();
+    if (currentEntry != null) {
+      _redoHistory.add(currentEntry);
+    }
+
+    final entry = _undoHistory.removeLast();
+    _applyHistoryEntry(entry);
+    return true;
+  }
+
+  /// Reapplies the most recently undone canvas snapshot if available.
+  bool redo() {
+    if (_redoHistory.isEmpty) {
+      return false;
+    }
+
+    final currentEntry = _captureHistoryEntry();
+    if (currentEntry != null) {
+      _undoHistory.add(currentEntry);
+    }
+
+    final entry = _redoHistory.removeLast();
+    _applyHistoryEntry(entry);
+    return true;
   }
 
   /// Adds a new state centred in the current viewport.
@@ -418,5 +487,31 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
       return data.trim();
     }
     return node.id;
+  }
+
+  _CanvasHistoryEntry? _captureHistoryEntry() {
+    try {
+      final snapshot = toSnapshot(currentDomainData);
+      final encoded = FlNodesAutomatonSnapshot.fromJson(snapshot.toJson());
+      final highlight = SimulationHighlight(
+        stateIds: Set<String>.from(highlightNotifier.value.stateIds),
+        transitionIds: Set<String>.from(highlightNotifier.value.transitionIds),
+      );
+      return _CanvasHistoryEntry(snapshot: encoded, highlight: highlight);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void _applyHistoryEntry(_CanvasHistoryEntry entry) {
+    applySnapshotToDomain(entry.snapshot);
+
+    final highlight = SimulationHighlight(
+      stateIds: Set<String>.from(entry.highlight.stateIds),
+      transitionIds: Set<String>.from(entry.highlight.transitionIds),
+    );
+
+    updateLinkHighlights(highlight.transitionIds);
+    highlightNotifier.value = highlight;
   }
 }

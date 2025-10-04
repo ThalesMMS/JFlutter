@@ -10,6 +10,10 @@ class FlNodesCanvasToolbar extends StatelessWidget {
     required this.onFitToContent,
     required this.onResetView,
     this.onClear,
+    this.onUndo,
+    this.onRedo,
+    this.canUndo = false,
+    this.canRedo = false,
     this.statusMessage,
     this.layout = FlNodesCanvasToolbarLayout.desktop,
   });
@@ -20,13 +24,21 @@ class FlNodesCanvasToolbar extends StatelessWidget {
   final VoidCallback onFitToContent;
   final VoidCallback onResetView;
   final VoidCallback? onClear;
+  final VoidCallback? onUndo;
+  final VoidCallback? onRedo;
+  final bool canUndo;
+  final bool canRedo;
   final String? statusMessage;
   final FlNodesCanvasToolbarLayout layout;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final actions = <(_ToolbarAction action, VoidCallback handler)>[
+    final actions = <(_ToolbarAction action, VoidCallback? handler)>[
+      if (onUndo != null)
+        (_ToolbarAction.undo, canUndo ? onUndo : null),
+      if (onRedo != null)
+        (_ToolbarAction.redo, canRedo ? onRedo : null),
       (_ToolbarAction.addState, onAddState),
       (_ToolbarAction.zoomIn, onZoomIn),
       (_ToolbarAction.zoomOut, onZoomOut),
@@ -61,7 +73,7 @@ class _DesktopToolbar extends StatelessWidget {
     required this.theme,
   });
 
-  final List<(_ToolbarAction, VoidCallback)> actions;
+  final List<(_ToolbarAction, VoidCallback?)> actions;
   final String? statusMessage;
   final ThemeData theme;
 
@@ -137,7 +149,7 @@ class _MobileToolbar extends StatelessWidget {
     required this.theme,
   });
 
-  final List<(_ToolbarAction, VoidCallback)> actions;
+  final List<(_ToolbarAction, VoidCallback?)> actions;
   final String? statusMessage;
   final ThemeData theme;
 
@@ -202,7 +214,7 @@ class _MobileToolbarButton extends StatelessWidget {
   });
 
   final _ToolbarAction action;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -221,6 +233,8 @@ class _MobileToolbarButton extends StatelessWidget {
 }
 
 enum _ToolbarAction {
+  undo(Icons.undo, 'Undo'),
+  redo(Icons.redo, 'Redo'),
   addState(Icons.add, 'Add state'),
   zoomIn(Icons.zoom_in, 'Zoom in'),
   zoomOut(Icons.zoom_out, 'Zoom out'),

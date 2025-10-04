@@ -16,6 +16,7 @@ import 'package:jflutter/core/result.dart';
 import 'package:jflutter/data/services/automaton_service.dart';
 import 'package:jflutter/features/canvas/fl_nodes/base_fl_nodes_canvas_controller.dart';
 import 'package:jflutter/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart';
+import 'package:jflutter/features/canvas/fl_nodes/fl_nodes_canvas_models.dart';
 import 'package:jflutter/presentation/providers/automaton_provider.dart';
 
 class _FakeLayoutRepository implements LayoutRepository {
@@ -605,6 +606,95 @@ void main() {
 
       expect(editor.selectedLinkIds, contains('t0'));
       expect(editor.linksById['t0']!.state.isSelected, isTrue);
+    });
+
+    test('undo/redo round-trips nodes, edges, highlight, and metadata', () async {
+      final q0 = State(
+        id: 'q0',
+        label: 'q0',
+        position: Vector2.zero(),
+        isInitial: true,
+      );
+      final q1 = State(
+        id: 'q1',
+        label: 'q1',
+        position: Vector2(120, 80),
+        isAccepting: true,
+      );
+      final transition = FSATransition(
+        id: 't0',
+        fromState: q0,
+        toState: q1,
+        inputSymbols: {'a'},
+        label: 'a',
+      );
+      final automaton = FSA(
+        id: 'auto',
+        name: 'Automaton',
+        states: {q0, q1},
+        transitions: {transition},
+        alphabet: {'a'},
+        initialState: q0,
+        acceptingStates: {q1},
+        created: DateTime.utc(2024, 1, 1),
+        modified: DateTime.utc(2024, 1, 1),
+        bounds: const math.Rectangle<double>(0, 0, 400, 300),
+      );
+
+      provider.updateAutomaton(automaton);
+      controller.synchronize(automaton);
+      controller.applyHighlight(
+        const SimulationHighlight(transitionIds: {'t0'}),
+      );
+
+      // Move q1 to a new position (first history entry).
+      final q1Instance = controller.controller.nodes['q1'];
+      expect(q1Instance, isNotNull);
+      q1Instance!.offset = const Offset(180, 120);
+      controller.controller.eventBus.emit(
+        DragSelectionEndEvent(
+          const Offset(180, 120),
+          {'q1'},
+          id: 'drag-q1',
+        ),
+      );
+      await _flushEvents();
+
+      // Add a new transition with a different alphabet symbol.
+      final newEdge = FlNodesCanvasEdge(
+        id: 't1',
+        fromStateId: 'q1',
+        toStateId: 'q0',
+        symbols: const ['b'],
+        lambdaSymbol: null,
+        controlPointX: 48,
+        controlPointY: -32,
+      );
+      controller.onCanvasEdgeAdded(newEdge);
+
+      controller.applyHighlight(
+        const SimulationHighlight(transitionIds: {'t1'}),
+      );
+
+      expect(provider.state.currentAutomaton!.alphabet, containsAll({'a', 'b'}));
+
+      expect(controller.undo(), isTrue); // Revert edge addition.
+      expect(provider.state.currentAutomaton!.alphabet, equals({'a'}));
+      expect(controller.highlightNotifier.value.transitionIds, equals({'t0'}));
+
+      expect(controller.undo(), isTrue); // Revert node movement.
+      final revertedAutomaton = provider.state.currentAutomaton!;
+      final revertedQ1 = revertedAutomaton.states.firstWhere((state) => state.id == 'q1');
+      expect(revertedQ1.position, equals(Vector2(120, 80)));
+
+      expect(controller.redo(), isTrue); // Reapply node movement.
+      final movedAutomaton = provider.state.currentAutomaton!;
+      final movedQ1 = movedAutomaton.states.firstWhere((state) => state.id == 'q1');
+      expect(movedQ1.position, equals(Vector2(180, 120)));
+
+      expect(controller.redo(), isTrue); // Reapply edge addition.
+      expect(provider.state.currentAutomaton!.alphabet, containsAll({'a', 'b'}));
+      expect(controller.highlightNotifier.value.transitionIds, equals({'t1'}));
     });
   });
 }

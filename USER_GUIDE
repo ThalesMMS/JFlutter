@@ -26,6 +26,11 @@ fl_nodes primitives:
 * **Fit to Content / Reset View** – the toolbar buttons invoke
   `fitToContent()` and `resetView()`, recomputing the camera bounds within the
   canvas without reloading the editor.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L48-L133】
+* **Double-tap gestures** – double tap the canvas with one finger to reset the
+  viewport or with two fingers to focus the visible automaton. These shortcuts
+  call the same `resetView()`/`fitToContent()` helpers exposed by the toolbar,
+  so touch users receive identical behaviour without opening the actions
+  sheet.【F:lib/presentation/widgets/automaton_canvas_native.dart†L612-L646】【F:lib/presentation/widgets/pda_canvas_native.dart†L515-L549】【F:lib/presentation/widgets/tm_canvas_native.dart†L330-L364】
 * **Add State** – use the "Add state" toolbar button or double-click an empty
   area. The controller receives either `addStateAtCenter()` or an
   `AddNodeEvent`, then forwards the mutation to `AutomatonProvider` so the new

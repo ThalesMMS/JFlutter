@@ -72,6 +72,13 @@ class _TrackingTmCanvasController extends FlNodesTmCanvasController {
   }
 }
 
+Future<void> _doubleTap(WidgetTester tester, Finder target) async {
+  await tester.tap(target);
+  await tester.pump(const Duration(milliseconds: 50));
+  await tester.tap(target);
+  await tester.pump(const Duration(milliseconds: 100));
+}
+
 Future<void> _performTwoFingerDoubleTap(
   WidgetTester tester,
   Finder target,
@@ -137,7 +144,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final canvasFinder = find.byType(FlNodeEditorWidget);
-    await tester.doubleTap(canvasFinder);
+    await _doubleTap(tester, canvasFinder);
     await tester.pumpAndSettle();
 
     expect(controller.resetViewInvocations, 1);
@@ -222,7 +229,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final canvasFinder = find.byType(FlNodeEditorWidget);
-    await tester.doubleTap(canvasFinder);
+    await _doubleTap(tester, canvasFinder);
     await tester.pumpAndSettle();
 
     expect(controller.resetViewInvocations, 1);
@@ -301,7 +308,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final canvasFinder = find.byType(FlNodeEditorWidget);
-    await tester.doubleTap(canvasFinder);
+    await _doubleTap(tester, canvasFinder);
     await tester.pumpAndSettle();
 
     expect(controller.resetViewInvocations, 1);

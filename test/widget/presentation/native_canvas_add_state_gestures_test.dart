@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:fl_nodes/fl_nodes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,7 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:jflutter/core/models/pda.dart';
 import 'package:jflutter/core/models/tm.dart';
-import 'package:jflutter/data/services/automaton_service.dart';
+import 'package:jflutter/data/services/automaton_service.dart'
+    show AutomatonService;
 import 'package:jflutter/features/layout/layout_repository_impl.dart';
 import 'package:jflutter/presentation/providers/automaton_provider.dart';
 import 'package:jflutter/presentation/providers/pda_editor_provider.dart';
@@ -129,9 +132,9 @@ void main() {
             body: SizedBox(
               width: 600,
               height: 400,
-              child: PDACanvasNative(
-                onPDAModified: _noopOnPdaModified,
-              ),
+                child: PDACanvasNative(
+                  onPdaModified: _noopOnPdaModified,
+                ),
             ),
           ),
         ),
@@ -162,11 +165,11 @@ void _noopOnTMModified(TM _) {}
 
 void _noopOnPdaModified(PDA _) {}
 
-Offset _projectTapToWorld(Rect canvasRect, Offset globalPosition) {
+Offset _projectTapToWorld(ui.Rect canvasRect, Offset globalPosition) {
   final local = globalPosition - canvasRect.topLeft;
   final size = canvasRect.size;
 
-  final viewport = Rect.fromLTWH(
+  final viewport = ui.Rect.fromLTWH(
     -size.width / 2,
     -size.height / 2,
     size.width,

@@ -9,7 +9,7 @@ import 'package:jflutter/core/models/state.dart' as automaton_state;
 import 'package:jflutter/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart';
 import 'package:jflutter/presentation/providers/automaton_provider.dart';
 import 'package:jflutter/presentation/widgets/automaton_canvas.dart';
-import 'package:vector_math/vector_math_64.dart';
+import 'package:vector_math/vector_math_64.dart' show Vector2;
 
 void main() {
   testWidgets('applies controller highlight updates to rendered node headers',

@@ -3,14 +3,15 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vector_math/vector_math_64.dart';
+import 'package:vector_math/vector_math_64.dart' show Vector2;
 
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/fsa_transition.dart';
 import 'package:jflutter/core/models/simulation_highlight.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
 import 'package:jflutter/core/models/tm_transition.dart';
-import 'package:jflutter/data/services/automaton_service.dart';
+import 'package:jflutter/data/services/automaton_service.dart'
+    show AutomatonService;
 import 'package:jflutter/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart';
 import 'package:jflutter/features/canvas/fl_nodes/fl_nodes_pda_canvas_controller.dart';
 import 'package:jflutter/features/canvas/fl_nodes/fl_nodes_tm_canvas_controller.dart';
@@ -234,20 +235,19 @@ void main() {
     final pdaNotifier = PDAEditorNotifier();
     addTearDown(pdaNotifier.dispose);
 
-    pdaNotifier.upsertState(
+    pdaNotifier.addOrUpdateState(
       id: 'q0',
       label: 'q0',
       x: 0,
       y: 0,
-      isInitial: true,
     );
-    pdaNotifier.upsertState(
+    pdaNotifier.addOrUpdateState(
       id: 'q1',
       label: 'q1',
       x: 200,
       y: 0,
     );
-    pdaNotifier.addOrUpdateTransition(
+    pdaNotifier.upsertTransition(
       id: 't0',
       fromStateId: 'q0',
       toStateId: 'q1',

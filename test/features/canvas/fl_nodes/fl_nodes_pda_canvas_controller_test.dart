@@ -9,7 +9,7 @@ import 'package:vector_math/vector_math_64.dart';
 import 'package:jflutter/core/models/pda.dart';
 import 'package:jflutter/core/models/pda_transition.dart';
 import 'package:jflutter/core/models/simulation_highlight.dart';
-import 'package:jflutter/core/models/state.dart';
+import 'package:jflutter/core/models/state.dart' as automaton_state;
 import 'package:jflutter/core/models/transition.dart';
 import 'package:jflutter/features/canvas/fl_nodes/base_fl_nodes_canvas_controller.dart';
 import 'package:jflutter/features/canvas/fl_nodes/fl_nodes_pda_canvas_controller.dart';
@@ -106,7 +106,7 @@ class _RecordingPdaEditorNotifier extends PDAEditorNotifier {
   }
 }
 
-class _FakeLinkGeometryEvent extends NodeEditorEvent {
+base class _FakeLinkGeometryEvent extends NodeEditorEvent {
   _FakeLinkGeometryEvent({
     required this.linkId,
     required this.controlPoint,
@@ -116,7 +116,7 @@ class _FakeLinkGeometryEvent extends NodeEditorEvent {
   final Offset? controlPoint;
 }
 
-class DragSelectionEndEvent extends NodeEditorEvent {
+base class DragSelectionEndEvent extends NodeEditorEvent {
   DragSelectionEndEvent(
     this.position,
     this.nodeIds, {
@@ -228,13 +228,13 @@ void main() {
     });
 
     test('synchronize mirrors PDA data into controller state', () {
-      final q0 = State(
+      final q0 = automaton_state.State(
         id: 'q0',
         label: 'start',
         position: Vector2.zero(),
         isInitial: true,
       );
-      final q1 = State(
+      final q1 = automaton_state.State(
         id: 'q1',
         label: 'accept',
         position: Vector2(100, 80),
@@ -293,13 +293,13 @@ void main() {
     });
 
     test('captures control point updates for PDA transitions', () async {
-      final q0 = State(
+      final q0 = automaton_state.State(
         id: 'q0',
         label: 'q0',
         position: Vector2.zero(),
         isInitial: true,
       );
-      final q1 = State(
+      final q1 = automaton_state.State(
         id: 'q1',
         label: 'q1',
         position: Vector2(140, 80),
@@ -420,7 +420,7 @@ void main() {
     });
 
     test('updates labels via NodeFieldEvent submissions', () async {
-      final q0 = State(
+      final q0 = automaton_state.State(
         id: 'q0',
         label: 'start',
         position: Vector2.zero(),
@@ -511,13 +511,13 @@ void main() {
     });
 
     test('applyHighlight marks PDA transitions without mutating selection', () {
-      final q0 = State(
+      final q0 = automaton_state.State(
         id: 'q0',
         label: 'start',
         position: Vector2.zero(),
         isInitial: true,
       );
-      final q1 = State(
+      final q1 = automaton_state.State(
         id: 'q1',
         label: 'accept',
         position: Vector2(120, 80),
@@ -572,13 +572,13 @@ void main() {
     });
 
     test('clearHighlight keeps PDA selections intact', () {
-      final q0 = State(
+      final q0 = automaton_state.State(
         id: 'q0',
         label: 'start',
         position: Vector2.zero(),
         isInitial: true,
       );
-      final q1 = State(
+      final q1 = automaton_state.State(
         id: 'q1',
         label: 'accept',
         position: Vector2(120, 80),
@@ -636,13 +636,13 @@ void main() {
       );
       addTearDown(pdaController.dispose);
 
-      final q0 = State(
+      final q0 = automaton_state.State(
         id: 'q0',
         label: 'start',
         position: Vector2.zero(),
         isInitial: true,
       );
-      final q1 = State(
+      final q1 = automaton_state.State(
         id: 'q1',
         label: 'accept',
         position: Vector2(80, 60),

@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vector_math/vector_math_64.dart';
 
-import 'package:jflutter/core/models/state.dart';
+import 'package:jflutter/core/models/state.dart' as automaton_state;
 import 'package:jflutter/core/models/tm.dart';
 import 'package:jflutter/core/models/tm_transition.dart';
 import 'package:jflutter/core/models/simulation_highlight.dart';
@@ -92,7 +92,7 @@ class _RecordingTmEditorNotifier extends TMEditorNotifier {
   }
 }
 
-class _FakeLinkGeometryEvent extends NodeEditorEvent {
+base class _FakeLinkGeometryEvent extends NodeEditorEvent {
   _FakeLinkGeometryEvent({
     required this.linkId,
     required this.controlPoint,
@@ -102,7 +102,7 @@ class _FakeLinkGeometryEvent extends NodeEditorEvent {
   final Offset? controlPoint;
 }
 
-class DragSelectionEndEvent extends NodeEditorEvent {
+base class DragSelectionEndEvent extends NodeEditorEvent {
   DragSelectionEndEvent(
     this.position,
     this.nodeIds, {
@@ -214,13 +214,13 @@ void main() {
     });
 
     test('synchronize rebuilds controller state from TM', () {
-      final q0 = State(
+      final q0 = automaton_state.State(
         id: 'q0',
         label: 'q0',
         position: Vector2.zero(),
         isInitial: true,
       );
-      final q1 = State(
+      final q1 = automaton_state.State(
         id: 'q1',
         label: 'halt',
         position: Vector2(120, 80),
@@ -273,13 +273,13 @@ void main() {
     });
 
     test('captures control point drags for TM transitions', () async {
-      final q0 = State(
+      final q0 = automaton_state.State(
         id: 'q0',
         label: 'q0',
         position: Vector2.zero(),
         isInitial: true,
       );
-      final q1 = State(
+      final q1 = automaton_state.State(
         id: 'q1',
         label: 'halt',
         position: Vector2(160, 90),
@@ -394,7 +394,7 @@ void main() {
     });
 
     test('delegates label submissions through NodeFieldEvent', () async {
-      final q0 = State(
+      final q0 = automaton_state.State(
         id: 'q0',
         label: 'q0',
         position: Vector2.zero(),
@@ -482,13 +482,13 @@ void main() {
     });
 
     test('applyHighlight toggles TM transitions without changing selection', () {
-      final q0 = State(
+      final q0 = automaton_state.State(
         id: 'q0',
         label: 'q0',
         position: Vector2.zero(),
         isInitial: true,
       );
-      final q1 = State(
+      final q1 = automaton_state.State(
         id: 'q1',
         label: 'halt',
         position: Vector2(120, 80),
@@ -540,13 +540,13 @@ void main() {
     });
 
     test('clearHighlight retains TM manual selections', () {
-      final q0 = State(
+      final q0 = automaton_state.State(
         id: 'q0',
         label: 'q0',
         position: Vector2.zero(),
         isInitial: true,
       );
-      final q1 = State(
+      final q1 = automaton_state.State(
         id: 'q1',
         label: 'halt',
         position: Vector2(120, 80),
@@ -601,13 +601,13 @@ void main() {
       );
       addTearDown(tmController.dispose);
 
-      final q0 = State(
+      final q0 = automaton_state.State(
         id: 'q0',
         label: 'start',
         position: Vector2.zero(),
         isInitial: true,
       );
-      final q1 = State(
+      final q1 = automaton_state.State(
         id: 'q1',
         label: 'accept',
         position: Vector2(100, 60),

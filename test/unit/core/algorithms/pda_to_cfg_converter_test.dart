@@ -83,7 +83,7 @@ void main() {
 
       final result = PDAtoCFGConverter.convert(pda);
       expect(result, isA<Success<PdaToCfgConversion>>());
-      final conversion = (result as Success<PdaToCfgConversion>).value;
+      final conversion = (result as Success<PdaToCfgConversion>).data;
       final grammar = conversion.grammar;
 
       final productionStrings =
@@ -124,7 +124,7 @@ void main() {
 
       final result = PDAtoCFGConverter.convert(pda);
       expect(result, isA<Success<PdaToCfgConversion>>());
-      final conversion = (result as Success<PdaToCfgConversion>).value;
+      final conversion = (result as Success<PdaToCfgConversion>).data;
       final grammar = conversion.grammar;
 
       final productionStrings = grammar.productions
@@ -173,7 +173,7 @@ void main() {
 
       final result = PDAtoCFGConverter.convert(pda);
       expect(result, isA<Success<PdaToCfgConversion>>());
-      final conversion = (result as Success<PdaToCfgConversion>).value;
+      final conversion = (result as Success<PdaToCfgConversion>).data;
       final grammar = conversion.grammar;
 
       final productionStrings = grammar.productions
@@ -223,7 +223,7 @@ void main() {
 
       final result = PDAtoCFGConverter.convert(pda);
       expect(result, isA<Success<PdaToCfgConversion>>());
-      final conversion = (result as Success<PdaToCfgConversion>).value;
+      final conversion = (result as Success<PdaToCfgConversion>).data;
       final grammar = conversion.grammar;
 
       final productionStrings =

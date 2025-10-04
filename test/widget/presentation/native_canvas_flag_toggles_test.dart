@@ -221,7 +221,7 @@ void main() {
     await tester.tap(initialToggleFinder);
     await tester.pumpAndSettle();
 
-    expect(tmNotifier.state.tm?.initialState.id, equals('q1'));
+    expect(tmNotifier.state.tm?.initialState?.id, equals('q1'));
 
     final initialIconAfter = tester.widget<Icon>(
       find.descendant(

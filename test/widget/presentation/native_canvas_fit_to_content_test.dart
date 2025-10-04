@@ -1,10 +1,11 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:fl_nodes/fl_nodes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vector_math/vector_math_64.dart';
+import 'package:vector_math/vector_math_64.dart' show Vector2;
 
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/fsa_transition.dart';
@@ -13,7 +14,8 @@ import 'package:jflutter/core/models/pda_transition.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
 import 'package:jflutter/core/models/tm.dart';
 import 'package:jflutter/core/models/tm_transition.dart';
-import 'package:jflutter/data/services/automaton_service.dart';
+import 'package:jflutter/data/services/automaton_service.dart'
+    show AutomatonService;
 import 'package:jflutter/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart';
 import 'package:jflutter/features/canvas/fl_nodes/fl_nodes_pda_canvas_controller.dart';
 import 'package:jflutter/features/canvas/fl_nodes/fl_nodes_tm_canvas_controller.dart';
@@ -65,7 +67,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final size = tester.getSize(find.byType(FlNodeEditorWidget));
-    final viewport = _resolveViewport(controller.controller, size);
+    final ui.Rect viewport = _resolveViewport(controller.controller, size);
 
     for (final node in controller.nodes) {
       final worldPosition = Offset(node.x, node.y);
@@ -110,7 +112,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final size = tester.getSize(find.byType(FlNodeEditorWidget));
-    final viewport = _resolveViewport(controller.controller, size);
+    final ui.Rect viewport = _resolveViewport(controller.controller, size);
 
     for (final node in controller.nodes) {
       final worldPosition = Offset(node.x, node.y);
@@ -159,7 +161,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final size = tester.getSize(find.byType(FlNodeEditorWidget));
-    final viewport = _resolveViewport(controller.controller, size);
+    final ui.Rect viewport = _resolveViewport(controller.controller, size);
 
     for (final node in controller.nodes) {
       final worldPosition = Offset(node.x, node.y);
@@ -176,10 +178,10 @@ void _noopOnPdaModified(PDA _) {}
 
 void _noopOnTmModified(TM _) {}
 
-Rect _resolveViewport(FlNodeEditorController controller, Size size) {
+ui.Rect _resolveViewport(FlNodeEditorController controller, Size size) {
   final offset = controller.viewportOffset;
   final zoom = controller.viewportZoom;
-  return Rect.fromLTWH(
+  return ui.Rect.fromLTWH(
     -size.width / 2 / zoom - offset.dx,
     -size.height / 2 / zoom - offset.dy,
     size.width / zoom,
@@ -249,6 +251,7 @@ PDA _buildRemotePda() {
     id: 'tp0',
     fromState: q0,
     toState: q1,
+    label: 'a, Z -> ZZ',
     inputSymbol: 'a',
     popSymbol: 'Z',
     pushSymbol: 'ZZ',

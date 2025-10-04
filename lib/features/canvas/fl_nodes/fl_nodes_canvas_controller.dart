@@ -67,7 +67,8 @@ class FlNodesCanvasController extends BaseFlNodesCanvasController<AutomatonProvi
   @override
   FlNodesCanvasNode createCanvasNode(NodeInstance node) {
     final label = _nextAvailableStateLabel();
-    final labelField = node.fields[labelFieldId];
+    final labelField =
+        node.fields[BaseFlNodesCanvasController.labelFieldId];
     if (labelField != null) {
       labelField.data = label;
     }

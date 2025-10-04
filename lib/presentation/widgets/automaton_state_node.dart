@@ -275,12 +275,6 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
     if (!_isLinking || _tempLink == null) {
       return;
     }
-  void _updatePortOffsets() {
-    final radius = AutomatonStateNode.nodeDiameter / 2;
-    final center = Offset(radius, radius);
-    final collapsed = widget.node.state.isCollapsed;
-    final effectiveRadius = collapsed ? radius * 0.6 : radius;
-
     final locator = _isNearPort(position);
     if (locator != null) {
       _onTmpLinkEnd(locator);
@@ -936,86 +930,6 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
     }
   }
 
-class _RenameStateDialog extends StatefulWidget {
-  const _RenameStateDialog({
-    required this.initialLabel,
-  });
-
-  final String initialLabel;
-
-  @override
-  State<_RenameStateDialog> createState() => _RenameStateDialogState();
-}
-
-class _RenameStateDialogState extends State<_RenameStateDialog> {
-  late final TextEditingController _controller;
-  late final FocusNode _focusNode;
-  bool _isValid = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.initialLabel);
-    _focusNode = FocusNode();
-    _isValid = _controller.text.trim().isNotEmpty;
-    _controller.addListener(_handleControllerChanged);
-  }
-
-  @override
-  void dispose() {
-    _controller.removeListener(_handleControllerChanged);
-    _controller.dispose();
-    _focusNode.dispose();
-    super.dispose();
-  }
-
-  void _handleControllerChanged() {
-    final isValid = _controller.text.trim().isNotEmpty;
-    if (isValid != _isValid) {
-      setState(() {
-        _isValid = isValid;
-      });
-    }
-  }
-
-  void _submit() {
-    final trimmed = _controller.text.trim();
-    if (trimmed.isEmpty) {
-      return;
-    }
-    Navigator.of(context).pop(trimmed);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Rename state'),
-      content: TextField(
-        controller: _controller,
-        focusNode: _focusNode,
-        autofocus: true,
-        textInputAction: TextInputAction.done,
-        onSubmitted: (_) => _submit(),
-        decoration: const InputDecoration(
-          labelText: 'State label',
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: _isValid ? _submit : null,
-          child: const Text('Save'),
-        ),
-      ],
-    );
-  }
-}
-
   _NodeColors _resolveNodeColors(ThemeData theme) {
     final colorScheme = theme.colorScheme;
     if (widget.isHighlighted || widget.isCurrent) {
@@ -1201,6 +1115,84 @@ class _FloatingCircleButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _RenameStateDialog extends StatefulWidget {
+  const _RenameStateDialog({
+    required this.initialLabel,
+  });
+
+  final String initialLabel;
+
+  @override
+  State<_RenameStateDialog> createState() => _RenameStateDialogState();
+}
+
+class _RenameStateDialogState extends State<_RenameStateDialog> {
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
+  bool _isValid = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialLabel);
+    _focusNode = FocusNode();
+    _isValid = _controller.text.trim().isNotEmpty;
+    _controller.addListener(_handleControllerChanged);
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_handleControllerChanged);
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _handleControllerChanged() {
+    final isValid = _controller.text.trim().isNotEmpty;
+    if (isValid != _isValid) {
+      setState(() {
+        _isValid = isValid;
+      });
+    }
+  }
+
+  void _submit() {
+    final trimmed = _controller.text.trim();
+    if (trimmed.isEmpty) {
+      return;
+    }
+    Navigator.of(context).pop(trimmed);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Rename state'),
+      content: TextField(
+        controller: _controller,
+        focusNode: _focusNode,
+        autofocus: true,
+        textInputAction: TextInputAction.done,
+        onSubmitted: (_) => _submit(),
+        decoration: const InputDecoration(
+          labelText: 'State label',
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _isValid ? _submit : null,
+          child: const Text('Save'),
+        ),
+      ],
     );
   }
 }

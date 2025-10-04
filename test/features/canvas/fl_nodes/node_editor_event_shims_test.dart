@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:jflutter/features/canvas/fl_nodes/node_editor_event_shims.dart';
 
-class DragSelectionEndEvent extends fl.NodeEditorEvent {
+base class DragSelectionEndEvent extends fl.NodeEditorEvent {
   DragSelectionEndEvent(
     this.position,
     this.nodeIds, {
@@ -16,7 +16,7 @@ class DragSelectionEndEvent extends fl.NodeEditorEvent {
   final Set<String> nodeIds;
 }
 
-class LinkSelectionEvent extends fl.NodeEditorEvent {
+base class LinkSelectionEvent extends fl.NodeEditorEvent {
   LinkSelectionEvent(
     this.linkIds, {
     required super.id,
@@ -25,7 +25,7 @@ class LinkSelectionEvent extends fl.NodeEditorEvent {
   final Set<String> linkIds;
 }
 
-class LinkDeselectionEvent extends fl.NodeEditorEvent {
+base class LinkDeselectionEvent extends fl.NodeEditorEvent {
   LinkDeselectionEvent(
     this.linkIds, {
     required super.id,
@@ -34,7 +34,7 @@ class LinkDeselectionEvent extends fl.NodeEditorEvent {
   final Set<String> linkIds;
 }
 
-class RemoveLinkEvent extends fl.NodeEditorEvent {
+base class RemoveLinkEvent extends fl.NodeEditorEvent {
   RemoveLinkEvent(
     this.link, {
     required super.id,
@@ -43,7 +43,7 @@ class RemoveLinkEvent extends fl.NodeEditorEvent {
   final fl.Link link;
 }
 
-class _UnrelatedEvent extends fl.NodeEditorEvent {
+base class _UnrelatedEvent extends fl.NodeEditorEvent {
   const _UnrelatedEvent() : super(id: 'other');
 }
 

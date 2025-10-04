@@ -9,7 +9,7 @@ import 'package:vector_math/vector_math_64.dart';
 import 'package:jflutter/core/entities/automaton_entity.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/fsa_transition.dart';
-import 'package:jflutter/core/models/state.dart';
+import 'package:jflutter/core/models/state.dart' as automaton_state;
 import 'package:jflutter/core/models/simulation_highlight.dart';
 import 'package:jflutter/core/repositories/automaton_repository.dart';
 import 'package:jflutter/core/result.dart';
@@ -140,7 +140,7 @@ class _RecordingAutomatonProvider extends AutomatonProvider {
   }
 }
 
-class _FakeLinkGeometryEvent extends NodeEditorEvent {
+base class _FakeLinkGeometryEvent extends NodeEditorEvent {
   _FakeLinkGeometryEvent({
     required this.linkId,
     required this.controlPoint,
@@ -150,7 +150,7 @@ class _FakeLinkGeometryEvent extends NodeEditorEvent {
   final Offset? controlPoint;
 }
 
-class DragSelectionEndEvent extends NodeEditorEvent {
+base class DragSelectionEndEvent extends NodeEditorEvent {
   DragSelectionEndEvent(
     this.position,
     this.nodeIds, {
@@ -262,13 +262,13 @@ void main() {
     });
 
     test('synchronize populates nodes and edges from automaton', () {
-      final q0 = State(
+      final q0 = automaton_state.State(
         id: 'q0',
         label: 'q0',
         position: Vector2.zero(),
         isInitial: true,
       );
-      final q1 = State(
+      final q1 = automaton_state.State(
         id: 'q1',
         label: 'q1',
         position: Vector2(120, 80),
@@ -311,13 +311,13 @@ void main() {
     });
 
     test('updates control points when link geometry changes', () async {
-      final q0 = State(
+      final q0 = automaton_state.State(
         id: 'q0',
         label: 'q0',
         position: Vector2.zero(),
         isInitial: true,
       );
-      final q1 = State(
+      final q1 = automaton_state.State(
         id: 'q1',
         label: 'q1',
         position: Vector2(120, 60),
@@ -505,7 +505,7 @@ void main() {
     });
 
     test('updates labels on NodeFieldEvent submissions', () async {
-      final q0 = State(
+      final q0 = automaton_state.State(
         id: 'q0',
         label: 'q0',
         position: Vector2.zero(),
@@ -586,13 +586,13 @@ void main() {
     });
 
     test('applyHighlight toggles link selection state without altering manual selection', () {
-      final q0 = State(
+      final q0 = automaton_state.State(
         id: 'q0',
         label: 'q0',
         position: Vector2.zero(),
         isInitial: true,
       );
-      final q1 = State(
+      final q1 = automaton_state.State(
         id: 'q1',
         label: 'q1',
         position: Vector2(120, 80),
@@ -640,13 +640,13 @@ void main() {
     });
 
     test('clearHighlight preserves user-selected links', () {
-      final q0 = State(
+      final q0 = automaton_state.State(
         id: 'q0',
         label: 'q0',
         position: Vector2.zero(),
         isInitial: true,
       );
-      final q1 = State(
+      final q1 = automaton_state.State(
         id: 'q1',
         label: 'q1',
         position: Vector2(120, 80),
@@ -688,13 +688,13 @@ void main() {
     });
 
     test('undo/redo round-trips nodes, edges, highlight, and metadata', () async {
-      final q0 = State(
+      final q0 = automaton_state.State(
         id: 'q0',
         label: 'q0',
         position: Vector2.zero(),
         isInitial: true,
       );
-      final q1 = State(
+      final q1 = automaton_state.State(
         id: 'q1',
         label: 'q1',
         position: Vector2(120, 80),

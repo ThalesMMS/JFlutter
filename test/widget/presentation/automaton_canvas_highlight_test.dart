@@ -19,7 +19,7 @@ import 'package:jflutter/presentation/providers/tm_editor_provider.dart';
 import 'package:jflutter/presentation/widgets/automaton_canvas_native.dart';
 import 'package:jflutter/presentation/widgets/pda_canvas_native.dart';
 import 'package:jflutter/presentation/widgets/tm_canvas_native.dart';
-import 'package:vector_math/vector_math_64.dart';
+import 'package:vector_math/vector_math_64.dart' show Vector2;
 
 void main() {
   testWidgets(

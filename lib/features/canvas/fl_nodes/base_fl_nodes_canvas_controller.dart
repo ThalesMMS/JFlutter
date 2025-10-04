@@ -12,6 +12,17 @@ import 'fl_nodes_viewport_highlight_mixin.dart';
 import 'link_geometry_event_utils.dart';
 import 'node_editor_event_shims.dart';
 
+class CenterPortPrototype extends PortPrototype {
+  CenterPortPrototype({
+    required super.idName,
+    required super.displayName,
+    super.styleBuilder,
+  }) : super(direction: PortDirection.input, type: PortType.control);
+
+  @override
+  bool compatibleWith(PortPrototype other) => other is CenterPortPrototype;
+}
+
 class _CanvasHistoryEntry {
   const _CanvasHistoryEntry({
     required this.snapshot,
@@ -43,28 +54,35 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
   final Map<String, FlNodesCanvasNode> _nodes = {};
   final Map<String, FlNodesCanvasEdge> _edges = {};
 
+  final ValueNotifier<int> linkGeometryRevision = ValueNotifier<int>(0);
+
   final List<_CanvasHistoryEntry> _undoHistory = [];
   final List<_CanvasHistoryEntry> _redoHistory = [];
 
   StreamSubscription<NodeEditorEvent>? _subscription;
   bool _isSynchronizing = false;
 
-  static const String inPortId = 'incoming';
-  static const String outPortId = 'outgoing';
+  static const String centerPortId = 'center';
   static const String labelFieldId = 'label';
   static const double dragEpsilon = 0.001;
 
-  late final ControlInputPortPrototype inputPortPrototype =
-      ControlInputPortPrototype(
-        idName: inPortId,
-        displayName: (_) => 'Entrada',
-      );
+  FlPortStyle _buildCenterPortStyle(PortState state) {
+    final base = defaultPortStyle(state);
+    return base.copyWith(
+      linkStyleBuilder: (_) => const FlLinkStyle(
+        color: Colors.transparent,
+        lineWidth: 0.0,
+        drawMode: FlLineDrawMode.solid,
+        curveType: FlLinkCurveType.bezier,
+      ),
+    );
+  }
 
-  late final ControlOutputPortPrototype outputPortPrototype =
-      ControlOutputPortPrototype(
-        idName: outPortId,
-        displayName: (_) => 'Saída',
-      );
+  late final CenterPortPrototype centerPortPrototype = CenterPortPrototype(
+    idName: centerPortId,
+    displayName: (_) => 'Conector',
+    styleBuilder: (state) => _buildCenterPortStyle(state),
+  );
 
   late final FieldPrototype labelFieldPrototype = FieldPrototype(
     idName: labelFieldId,
@@ -101,7 +119,7 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
     idName: statePrototypeId,
     displayName: (_) => stateDisplayName,
     description: (_) => stateDescription,
-    ports: [inputPortPrototype, outputPortPrototype],
+    ports: [centerPortPrototype],
     fields: [labelFieldPrototype],
     onExecute: (ports, fields, execState, forward, put) async {},
   );
@@ -183,6 +201,7 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
     _subscription?.cancel();
     disposeViewportHighlight();
     controller.dispose();
+    linkGeometryRevision.dispose();
   }
 
   bool get canUndo => _undoHistory.isNotEmpty;
@@ -406,6 +425,7 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
 
       if (nodesDirty || edgesDirty) {
         controller.notifyListeners();
+        linkGeometryRevision.value++;
       }
     } finally {
       _isSynchronizing = false;
@@ -414,12 +434,8 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
 
   NodeInstance _buildNodeInstance(FlNodesCanvasNode node) {
     final ports = {
-      inPortId: PortInstance(
-        prototype: inputPortPrototype,
-        state: PortState(),
-      ),
-      outPortId: PortInstance(
-        prototype: outputPortPrototype,
+      centerPortId: PortInstance(
+        prototype: centerPortPrototype,
         state: PortState(),
       ),
     };
@@ -447,8 +463,8 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
       fromTo: (
         from: edge.fromStateId,
         to: edge.toStateId,
-        fromPort: outPortId,
-        toPort: inPortId,
+        fromPort: centerPortId,
+        toPort: centerPortId,
       ),
       state: LinkState(),
     );
@@ -505,17 +521,20 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
     _edges[payload.linkId] = updatedEdge;
 
     onCanvasEdgeGeometryUpdated(updatedEdge, Offset(updatedX, updatedY));
+    linkGeometryRevision.value++;
   }
 
   void _handleNodeAdded(NodeInstance node) {
     final canvasNode = createCanvasNode(node);
     _nodes[node.id] = canvasNode;
     onCanvasNodeAdded(canvasNode);
+    linkGeometryRevision.value++;
   }
 
   void _handleNodeRemoved(NodeInstance node) {
     _nodes.remove(node.id);
     onCanvasNodeRemoved(node.id);
+    linkGeometryRevision.value++;
   }
 
   void _handleSelectionDragged(Set<String> nodeIds) {
@@ -544,6 +563,7 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
 
     if (updatedNodes.isNotEmpty) {
       onCanvasNodesMoved(updatedNodes);
+      linkGeometryRevision.value++;
     }
   }
 
@@ -566,7 +586,7 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
     final fromPortId = link.fromTo.fromPort;
     final toPortId = link.fromTo.toPort;
 
-    if (fromPortId != outPortId || toPortId != inPortId) {
+    if (fromPortId != centerPortId || toPortId != centerPortId) {
       return;
     }
 
@@ -580,12 +600,14 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
       updateLinkHighlights(highlightedTransitionIds);
     }
     onCanvasEdgeAdded(edge);
+    linkGeometryRevision.value++;
   }
 
   void _handleLinkRemoved(Link link) {
     _edges.remove(link.id);
     pruneLinkHighlight(link.id);
     onCanvasEdgeRemoved(link.id);
+    linkGeometryRevision.value++;
   }
 
   @visibleForTesting

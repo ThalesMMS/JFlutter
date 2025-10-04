@@ -164,6 +164,34 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
       }
     }
 
+    for (final transition in next.transitions) {
+      final edge = _canvasController.edgeById(transition.id);
+      if (edge == null) {
+        return true;
+      }
+      if (edge.fromStateId != transition.fromState.id ||
+          edge.toStateId != transition.toState.id) {
+        return true;
+      }
+      final controlPoint = transition.controlPoint;
+      final edgeX = edge.controlPointX ?? controlPoint.x;
+      final edgeY = edge.controlPointY ?? controlPoint.y;
+      if ((edgeX - controlPoint.x).abs() > 0.5 ||
+          (edgeY - controlPoint.y).abs() > 0.5) {
+        return true;
+      }
+      final read = transition.readSymbol.trim();
+      final write = transition.writeSymbol.trim();
+      final edgeRead = (edge.readSymbol ?? '').trim();
+      final edgeWrite = (edge.writeSymbol ?? '').trim();
+      if (edgeRead != read || edgeWrite != write) {
+        return true;
+      }
+      if (edge.direction != transition.direction) {
+        return true;
+      }
+    }
+
     return false;
   }
 

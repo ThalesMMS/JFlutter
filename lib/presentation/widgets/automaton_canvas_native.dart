@@ -22,6 +22,7 @@ import '../../features/canvas/fl_nodes/fl_nodes_canvas_controller.dart';
 import '../../features/canvas/fl_nodes/fl_nodes_label_field_editor.dart';
 import '../../features/canvas/fl_nodes/link_overlay_utils.dart';
 import '../providers/automaton_provider.dart';
+import 'transition_editors/transition_label_editor.dart';
 
 /// Shared automaton canvas backed by the fl_nodes editor. This replaces the
 /// legacy CustomPaint implementation and delegates editing to
@@ -64,6 +65,8 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
   VoidCallback? _viewportOffsetListener;
   VoidCallback? _viewportZoomListener;
   String? _selectedLinkId;
+  bool _isLabelSheetOpen = false;
+  String? _activeLabelSheetLinkId;
   SimulationHighlight? _lastHighlight;
 
   @override
@@ -381,6 +384,17 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
       return const <FlOverlayData>[];
     }
 
+    final transition = widget.automaton?.fsaTransitions
+        .firstWhereOrNull((candidate) => candidate.id == linkId);
+    final label = transition?.label ??
+        _canvasController.edgeById(linkId)?.label ??
+        '';
+
+    if (!_shouldUseInlineLabelEditor(context)) {
+      _scheduleLabelSheet(linkId: linkId, initialLabel: label);
+      return const <FlOverlayData>[];
+    }
+
     final controller = _canvasController.controller;
     final anchor = resolveLinkAnchorWorld(
       controller,
@@ -399,12 +413,6 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
     if (position == null) {
       return const <FlOverlayData>[];
     }
-
-    final transition = widget.automaton?.fsaTransitions
-        .firstWhereOrNull((candidate) => candidate.id == linkId);
-    final label = transition?.label ??
-        _canvasController.edgeById(linkId)?.label ??
-        '';
 
     return [
       FlOverlayData(
@@ -426,6 +434,99 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
         ),
       ),
     ];
+  }
+
+  bool _shouldUseInlineLabelEditor(BuildContext context) {
+    final mediaQuery = MediaQuery.maybeOf(context);
+    if (mediaQuery == null) {
+      return true;
+    }
+
+    final platform = Theme.of(context).platform;
+    final isDesktopPlatform = platform == TargetPlatform.macOS ||
+        platform == TargetPlatform.linux ||
+        platform == TargetPlatform.windows;
+    if (isDesktopPlatform) {
+      return true;
+    }
+
+    return mediaQuery.size.shortestSide >= 600;
+  }
+
+  void _scheduleLabelSheet({
+    required String linkId,
+    required String initialLabel,
+  }) {
+    if (_isLabelSheetOpen && _activeLabelSheetLinkId == linkId) {
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted || _selectedLinkId != linkId || _isLabelSheetOpen) {
+        return;
+      }
+
+      _isLabelSheetOpen = true;
+      _activeLabelSheetLinkId = linkId;
+
+      try {
+        final submittedLabel = await _showTransitionLabelSheet(
+          initialLabel: initialLabel,
+        );
+        if (mounted && submittedLabel != null) {
+          ref.read(automatonProvider.notifier).updateTransitionLabel(
+                id: linkId,
+                label: submittedLabel,
+              );
+        }
+      } finally {
+        if (mounted) {
+          _isLabelSheetOpen = false;
+          _activeLabelSheetLinkId = null;
+          final hadSelection = _selectedLinkId != null;
+          _canvasController.controller.clearSelection();
+          if (hadSelection) {
+            setState(() {
+              _selectedLinkId = null;
+            });
+          }
+        } else {
+          _isLabelSheetOpen = false;
+          _activeLabelSheetLinkId = null;
+        }
+      }
+    });
+  }
+
+  Future<String?> _showTransitionLabelSheet({
+    required String initialLabel,
+  }) async {
+    final label = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      useSafeArea: true,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        final viewInsets = MediaQuery.of(sheetContext).viewInsets;
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 16,
+            bottom: viewInsets.bottom + 24,
+          ),
+          child: TransitionLabelEditorForm(
+            initialValue: initialLabel,
+            autofocus: true,
+            touchOptimized: true,
+            onCancel: () => Navigator.of(sheetContext).pop(),
+            onSubmit: (value) => Navigator.of(sheetContext).pop(value),
+          ),
+        );
+      },
+    );
+
+    return label;
   }
 
   void _handleEditorEvent(NodeEditorEvent event) {

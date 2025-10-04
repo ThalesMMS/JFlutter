@@ -944,7 +944,7 @@ _HeaderColors _resolveHeaderColors(
     );
   }
   return _HeaderColors(
-    background: colorScheme.surfaceVariant,
-    foreground: colorScheme.onSurfaceVariant,
+    background: colorScheme.primaryContainer,
+    foreground: colorScheme.onPrimaryContainer,
   );
 }

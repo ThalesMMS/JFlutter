@@ -123,6 +123,8 @@ flutter:
     - jflutter_js/examples/apda_palindrome.json
     # Turing machine example
     - jflutter_js/examples/tm_binary_to_unary.json
+  shaders:
+    - packages/fl_nodes/shaders/grid.frag
 
 flutter_launcher_icons:
   image_path: "icon.PNG"

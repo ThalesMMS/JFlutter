@@ -264,6 +264,7 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
     _isSynchronizing = true;
 
     var nodesDirty = false;
+    var edgesDirty = false;
 
     try {
       final removedNodeIds =
@@ -271,6 +272,7 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
       for (final nodeId in removedNodeIds) {
         _nodes.remove(nodeId);
         controller.removeNodeById(nodeId, isHandled: true);
+        nodesDirty = true;
       }
 
       final removedEdgeIds =
@@ -279,6 +281,7 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
         _edges.remove(edgeId);
         controller.removeLinkById(edgeId, isHandled: true);
         pruneLinkHighlight(edgeId);
+        edgesDirty = true;
       }
 
       for (final entry in incomingNodes.entries) {
@@ -292,6 +295,7 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
             _buildNodeInstance(incomingNode),
             isHandled: true,
           );
+          nodesDirty = true;
           continue;
         }
 
@@ -343,14 +347,21 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
             _buildLink(incomingEdge),
             isHandled: true,
           );
+          edgesDirty = true;
           continue;
         }
 
-        _edges[edgeId] = incomingEdge;
+        if (existingEdge != incomingEdge) {
+          _edges[edgeId] = incomingEdge;
+          edgesDirty = true;
+        }
       }
 
       if (nodesDirty) {
         controller.nodesDataDirty = true;
+      }
+      if (edgesDirty) {
+        controller.linksDataDirty = true;
       }
 
       final validNodeSelection =
@@ -393,7 +404,7 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
       updateLinkHighlights(sanitizedHighlight.transitionIds);
       highlightNotifier.value = sanitizedHighlight;
 
-      if (nodesDirty) {
+      if (nodesDirty || edgesDirty) {
         controller.notifyListeners();
       }
     } finally {

@@ -49,9 +49,9 @@ desktop and mobile layouts:
   the controller via the `FlNodesHighlightController` interface. The canvas
   updates instantly and clears highlights when the simulator stops.【F:lib/core/services/simulation_highlight_service.dart†L6-L74】【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L36-L45】
 
-Touch-first layouts reuse the same toolbar actions through
-`FlNodesCanvasToolbarLayout.mobile`, presenting labelled buttons along the safe
-area instead of the retired floating control sheet.【F:lib/presentation/widgets/fl_nodes_canvas_toolbar.dart†L69-L134】
+Touch-first layouts now present the same canvas actions plus simulation
+shortcuts inside `MobileAutomatonControls`, a bottom control tray that keeps the
+viewport clear while remaining thumb-accessible.【F:lib/presentation/widgets/mobile_automaton_controls.dart†L1-L132】
 
 Highlight & Simulation Flow
 ---------------------------

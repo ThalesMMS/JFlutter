@@ -75,7 +75,7 @@ expect(painter.transitions.length, equals(1));
 
 ```dart
 // Find by semantic label
-expect(find.bySemanticsLabel('Add State'), findsOneWidget);
+expect(find.bySemanticsLabel('Add state'), findsOneWidget);
 expect(find.bySemanticsLabel('Retry operation'), findsOneWidget);
 
 // Verify semantic properties
@@ -211,7 +211,7 @@ testWidgets('Canvas controls accessible on mobile', (tester) async {
   );
   
   // Verify buttons not blocked
-  final addStateButton = find.text('Add State');
+  final addStateButton = find.text('Add state');
   expect(addStateButton, findsOneWidget);
   
   final buttonPosition = tester.getTopLeft(addStateButton);

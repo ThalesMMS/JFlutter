@@ -9,6 +9,7 @@ import '../widgets/tm_canvas_native.dart';
 import '../widgets/tm_algorithm_panel.dart';
 import '../widgets/tm_simulation_panel.dart';
 import '../widgets/fl_nodes_canvas_toolbar.dart';
+import '../widgets/mobile_automaton_controls.dart';
 import '../../features/canvas/fl_nodes/fl_nodes_tm_canvas_controller.dart';
 import '../../core/services/simulation_highlight_service.dart';
 import '../../features/canvas/fl_nodes/fl_nodes_highlight_channel.dart';
@@ -96,40 +97,6 @@ class _TMPageState extends ConsumerState<TMPage> {
     return SafeArea(
       child: Column(
         children: [
-          // Mobile action buttons for additional panels
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _buildActionButton(
-                    icon: Icons.play_arrow,
-                    label: 'Simulate',
-                    onPressed: _openSimulationSheet,
-                    isEnabled: _isMachineReady,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildActionButton(
-                    icon: Icons.auto_awesome,
-                    label: 'Algorithms',
-                    onPressed: _openAlgorithmSheet,
-                    isEnabled: _hasMachine,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildActionButton(
-                    icon: Icons.bar_chart,
-                    label: 'Metrics',
-                    onPressed: _openMetricsSheet,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
           // Canvas occupies the remaining viewport height
           Expanded(
             child: Padding(
@@ -187,6 +154,39 @@ class _TMPageState extends ConsumerState<TMPage> {
   Widget _buildCanvasWithToolbar({required bool isMobile}) {
     final editorState = ref.watch(tmEditorProvider);
     final statusMessage = _buildToolbarStatusMessage(editorState);
+    final hasMachine = _hasMachine;
+
+    if (isMobile) {
+      return Stack(
+        children: [
+          Positioned.fill(
+            child: TMCanvasNative(
+              controller: _canvasController,
+              onTMModified: _handleTMUpdate,
+            ),
+          ),
+          MobileAutomatonControls(
+            onAddState: _canvasController.addStateAtCenter,
+            onZoomIn: _canvasController.zoomIn,
+            onZoomOut: _canvasController.zoomOut,
+            onFitToContent: _canvasController.fitToContent,
+            onResetView: _canvasController.resetView,
+            onClear: () {
+              ref.read(tmEditorProvider.notifier).updateFromCanvas(
+                    states: const <automaton_state.State>[],
+                    transitions: const <TMTransition>[],
+                  );
+            },
+            onSimulate: _openSimulationSheet,
+            isSimulationEnabled: _isMachineReady,
+            onAlgorithms: _openAlgorithmSheet,
+            isAlgorithmsEnabled: hasMachine,
+            onMetrics: _openMetricsSheet,
+            statusMessage: statusMessage,
+          ),
+        ],
+      );
+    }
 
     return Stack(
       children: [
@@ -197,9 +197,7 @@ class _TMPageState extends ConsumerState<TMPage> {
           ),
         ),
         FlNodesCanvasToolbar(
-          layout: isMobile
-              ? FlNodesCanvasToolbarLayout.mobile
-              : FlNodesCanvasToolbarLayout.desktop,
+          layout: FlNodesCanvasToolbarLayout.desktop,
           onAddState: _canvasController.addStateAtCenter,
           onZoomIn: _canvasController.zoomIn,
           onZoomOut: _canvasController.zoomOut,
@@ -464,20 +462,4 @@ class _TMPageState extends ConsumerState<TMPage> {
         .toSet();
   }
 
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onPressed,
-    bool isEnabled = true,
-  }) {
-    return ElevatedButton.icon(
-      onPressed: isEnabled ? onPressed : null,
-      icon: Icon(icon, size: 16),
-      label: Text(label, style: const TextStyle(fontSize: 11)),
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-        minimumSize: Size.zero,
-      ),
-    );
-  }
 }

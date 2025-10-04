@@ -6,6 +6,7 @@ import '../../core/models/pda_transition.dart';
 import '../../core/models/state.dart' as automaton_state;
 import '../providers/pda_editor_provider.dart';
 import '../widgets/fl_nodes_canvas_toolbar.dart';
+import '../widgets/mobile_automaton_controls.dart';
 import '../widgets/pda_canvas_native.dart';
 import '../widgets/pda_algorithm_panel.dart';
 import '../widgets/pda_simulation_panel.dart';
@@ -108,43 +109,6 @@ class _PDAPageState extends ConsumerState<PDAPage> {
               ),
               _buildMobileInfoPanel(context),
             ],
-          ),
-          Align(
-            alignment: Alignment.bottomRight,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  FloatingActionButton.extended(
-                    heroTag: 'simulate_pda',
-                    icon: const Icon(Icons.play_arrow),
-                    label: const Text('Simulate'),
-                    onPressed: () => _showPanelSheet(
-                      context: context,
-                      title: 'PDA Simulation',
-                      icon: Icons.play_arrow,
-                      child: PDASimulationPanel(
-                        highlightService: _highlightService,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  FloatingActionButton.extended(
-                    heroTag: 'pda_algorithms',
-                    icon: const Icon(Icons.auto_awesome),
-                    label: const Text('Algorithms'),
-                    onPressed: () => _showPanelSheet(
-                      context: context,
-                      title: 'PDA Algorithms',
-                      icon: Icons.auto_awesome,
-                      child: const PDAAlgorithmPanel(),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ),
         ],
       ),
@@ -388,14 +352,50 @@ class _PDAPageState extends ConsumerState<PDAPage> {
   }) {
     final editorState = ref.watch(pdaEditorProvider);
     final statusMessage = _buildToolbarStatusMessage(editorState);
+    final hasPda = editorState.pda != null && editorState.pda!.states.isNotEmpty;
+
+    if (isMobile) {
+      return Stack(
+        children: [
+          Positioned.fill(child: canvas),
+          MobileAutomatonControls(
+            onAddState: _canvasController.addStateAtCenter,
+            onZoomIn: _canvasController.zoomIn,
+            onZoomOut: _canvasController.zoomOut,
+            onFitToContent: _canvasController.fitToContent,
+            onResetView: _canvasController.resetView,
+            onClear: () =>
+                ref.read(pdaEditorProvider.notifier).updateFromCanvas(
+                      states: const <automaton_state.State>[],
+                      transitions: const <PDATransition>[],
+                    ),
+            onSimulate: () => _showPanelSheet(
+              context: context,
+              title: 'PDA Simulation',
+              icon: Icons.play_arrow,
+              child: PDASimulationPanel(
+                highlightService: _highlightService,
+              ),
+            ),
+            isSimulationEnabled: hasPda,
+            onAlgorithms: () => _showPanelSheet(
+              context: context,
+              title: 'PDA Algorithms',
+              icon: Icons.auto_awesome,
+              child: const PDAAlgorithmPanel(),
+            ),
+            isAlgorithmsEnabled: hasPda,
+            statusMessage: statusMessage,
+          ),
+        ],
+      );
+    }
 
     return Stack(
       children: [
         Positioned.fill(child: canvas),
         FlNodesCanvasToolbar(
-          layout: isMobile
-              ? FlNodesCanvasToolbarLayout.mobile
-              : FlNodesCanvasToolbarLayout.desktop,
+          layout: FlNodesCanvasToolbarLayout.desktop,
           onAddState: _canvasController.addStateAtCenter,
           onZoomIn: _canvasController.zoomIn,
           onZoomOut: _canvasController.zoomOut,

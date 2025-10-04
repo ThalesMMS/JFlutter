@@ -11,14 +11,14 @@ Working with the fl_nodes Canvas
 * Riverpod remains the single source of truth: `AutomatonProvider` receives
   mutations from the controller for new states, drags, labels, and transitions,
   so automata stay in sync across panels, simulations, and exports.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L236-L355】【F:lib/presentation/providers/automaton_provider.dart†L83-L260】
-* The toolbar continues to drive the canvas, but every button now calls
-  `FlNodesCanvasController` directly, bypassing the deprecated Draw2D
-  JavaScript bridge.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L48-L133】
+* The toolbar—rendered as a compact column on desktop and a bottom action tray
+  on mobile—routes every command straight to
+  `FlNodesCanvasController`, bypassing the legacy web bridge.【F:lib/presentation/widgets/fl_nodes_canvas_toolbar.dart†L5-L135】【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L48-L133】
 
 ### Core Actions
 
-The following shortcuts mirror the classic Draw2D behaviour while leveraging
-fl_nodes primitives:
+The unified `FlNodesCanvasToolbar` exposes the following shortcuts across
+desktop and mobile layouts:
 
 * **Zoom In/Out** – press the toolbar magnifier buttons or use the mouse wheel
   while holding <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>. Both paths call `zoomIn`/`zoomOut`
@@ -48,6 +48,10 @@ fl_nodes primitives:
 * **Highlight Playback** – running a simulation pushes highlight payloads into
   the controller via the `FlNodesHighlightController` interface. The canvas
   updates instantly and clears highlights when the simulator stops.【F:lib/core/services/simulation_highlight_service.dart†L6-L74】【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L36-L45】
+
+Touch-first layouts reuse the same toolbar actions through
+`FlNodesCanvasToolbarLayout.mobile`, presenting labelled buttons along the safe
+area instead of the retired floating control sheet.【F:lib/presentation/widgets/fl_nodes_canvas_toolbar.dart†L69-L134】
 
 Highlight & Simulation Flow
 ---------------------------

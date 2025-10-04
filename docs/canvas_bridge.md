@@ -42,7 +42,7 @@ the previous bridge while avoiding WebView plumbing.【F:lib/features/canvas/fl_
 
 ### End-User Actions
 
-The fl_nodes editor preserves the most common Draw2D gestures while leaning on
+The fl_nodes editor preserves the most common canvas gestures while leaning on
 native Flutter affordances:
 
 * **Zoom controls** – toolbar magnifiers delegate to `zoomIn`/`zoomOut`, while
@@ -64,6 +64,10 @@ native Flutter affordances:
   the controller notifier. The editor decorates nodes and transitions
   immediately and clears them when `clear()` is dispatched at the end of a
   run.【F:lib/core/services/simulation_highlight_service.dart†L6-L74】【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L36-L45】
+
+On touch devices the same actions surface through the mobile toolbar layout,
+which anchors labelled buttons to the safe area instead of the deprecated
+floating controls widget.【F:lib/presentation/widgets/fl_nodes_canvas_toolbar.dart†L69-L134】
 
 ## Highlight Channel
 

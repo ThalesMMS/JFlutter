@@ -15,7 +15,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/pda.dart';
 import '../../core/models/pda_transition.dart';
 import '../../core/models/state.dart' as automaton_state;
+import '../../core/services/simulation_highlight_service.dart';
 import '../../features/canvas/fl_nodes/fl_nodes_pda_canvas_controller.dart';
+import '../../features/canvas/fl_nodes/fl_nodes_highlight_channel.dart';
 import '../../features/canvas/fl_nodes/link_overlay_utils.dart';
 import 'transition_editors/pda_transition_editor.dart';
 import '../providers/pda_editor_provider.dart';
@@ -48,6 +50,9 @@ class _PDACanvasNativeState extends ConsumerState<PDACanvasNative> {
   VoidCallback? _viewportZoomListener;
   String? _selectedLinkId;
   final GlobalKey _canvasKey = GlobalKey();
+  SimulationHighlightService? _highlightService;
+  SimulationHighlightChannel? _previousHighlightChannel;
+  FlNodesSimulationHighlightChannel? _highlightChannel;
 
   @override
   void initState() {
@@ -61,6 +66,13 @@ class _PDACanvasNativeState extends ConsumerState<PDACanvasNative> {
         editorNotifier: ref.read(pdaEditorProvider.notifier),
       );
       _ownsController = true;
+      final highlightService = ref.read(canvasHighlightServiceProvider);
+      _highlightService = highlightService;
+      _previousHighlightChannel = highlightService.channel;
+      final highlightChannel =
+          FlNodesSimulationHighlightChannel(_canvasController);
+      _highlightChannel = highlightChannel;
+      highlightService.channel = highlightChannel;
     }
     final initialState = ref.read(pdaEditorProvider);
     _canvasController.synchronize(initialState.pda);
@@ -201,6 +213,16 @@ class _PDACanvasNativeState extends ConsumerState<PDACanvasNative> {
           .removeListener(_viewportZoomListener!);
     }
     if (_ownsController) {
+      final highlightService = _highlightService;
+      final highlightChannel = _highlightChannel;
+      if (highlightService != null && highlightChannel != null) {
+        if (identical(highlightService.channel, highlightChannel)) {
+          highlightService.channel = _previousHighlightChannel;
+        }
+        _highlightChannel = null;
+        _highlightService = null;
+        _previousHighlightChannel = null;
+      }
       _canvasController.dispose();
     }
     super.dispose();

@@ -7,6 +7,8 @@ import 'package:vector_math/vector_math_64.dart';
 
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/fsa_transition.dart';
+import 'package:jflutter/core/models/simulation_result.dart';
+import 'package:jflutter/core/models/simulation_step.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
 import 'package:jflutter/data/services/automaton_service.dart';
 import 'package:jflutter/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart';
@@ -93,6 +95,86 @@ void main() {
 
     expect(controller.synchronizeCallCount, 2);
   });
+
+  testWidgets(
+      'AutomatonCanvas avoids rebuilding highlights when derived data is unchanged',
+      (tester) async {
+    final notifier = AutomatonProvider(
+      automatonService: AutomatonService(),
+      layoutRepository: LayoutRepositoryImpl(),
+    );
+    addTearDown(notifier.dispose);
+
+    final controller =
+        _TrackingFlNodesCanvasController(automatonProvider: notifier);
+    addTearDown(controller.dispose);
+
+    final canvasKey = GlobalKey();
+    final automaton = _buildAutomaton();
+
+    notifier.state = AutomatonState(currentAutomaton: automaton);
+
+    SimulationResult? simulationResult;
+    int? currentStepIndex;
+    late StateSetter harnessSetState;
+    var derivedStateApplications = 0;
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          automatonProvider.overrideWith((ref) => notifier),
+        ],
+        child: MaterialApp(
+          home: StatefulBuilder(
+            builder: (context, setState) {
+              harnessSetState = setState;
+              return Scaffold(
+                body: SizedBox(
+                  width: 600,
+                  height: 400,
+                  child: AutomatonCanvas(
+                    automaton: automaton,
+                    canvasKey: canvasKey,
+                    controller: controller,
+                    simulationResult: simulationResult,
+                    currentStepIndex: currentStepIndex,
+                    showTrace: true,
+                    onDerivedStateChanged: () {
+                      derivedStateApplications += 1;
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(derivedStateApplications, 1);
+
+    final firstResult = _buildSimulationResult();
+    harnessSetState(() {
+      simulationResult = firstResult;
+      currentStepIndex = firstResult.steps.length - 1;
+    });
+
+    await tester.pump();
+
+    expect(derivedStateApplications, 2);
+
+    final equivalentResult = _buildSimulationResult();
+    harnessSetState(() {
+      simulationResult = equivalentResult;
+      currentStepIndex = equivalentResult.steps.length - 1;
+    });
+
+    await tester.pump();
+
+    expect(derivedStateApplications, 2);
+  });
 }
 
 FSA _buildAutomaton({
@@ -138,5 +220,26 @@ FSA _buildAutomaton({
     bounds: math.Rectangle<double>(0, 0, 400, 400),
     zoomLevel: 1,
     panOffset: Vector2.zero(),
+  );
+}
+
+SimulationResult _buildSimulationResult() {
+  final steps = <SimulationStep>[
+    const SimulationStep(
+      currentState: 'q0',
+      remainingInput: 'a',
+      stepNumber: 0,
+    ),
+    const SimulationStep(
+      currentState: 'q1',
+      remainingInput: '',
+      stepNumber: 1,
+    ),
+  ];
+
+  return SimulationResult.success(
+    inputString: 'a',
+    steps: steps,
+    executionTime: const Duration(milliseconds: 5),
   );
 }

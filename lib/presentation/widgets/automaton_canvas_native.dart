@@ -12,6 +12,7 @@ import 'package:fl_nodes/src/core/models/events.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:meta/meta.dart';
 
 import '../../core/models/fsa.dart';
 import '../../core/models/fsa_transition.dart';
@@ -40,11 +41,15 @@ class AutomatonCanvas extends ConsumerStatefulWidget {
     this.currentStepIndex,
     this.showTrace = false,
     this.controller,
+    this.onDerivedStateChanged,
   });
 
   final FSA? automaton;
   final GlobalKey canvasKey;
   final FlNodesCanvasController? controller;
+
+  @visibleForTesting
+  final VoidCallback? onDerivedStateChanged;
 
   final SimulationResult? simulationResult;
   final int? currentStepIndex;
@@ -58,6 +63,7 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
   late final FlNodesCanvasController _canvasController;
   late final bool _ownsController;
   FlNodeEditorStyle? _lastEditorStyle;
+  _DerivedState _derivedState = const _DerivedState.empty();
   Map<String, automaton_state.State> _statesById = const {};
   Set<String> _nondeterministicStateIds = const {};
   Set<String> _visitedStateIds = const {};
@@ -144,9 +150,12 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
         oldWidget.simulationResult != widget.simulationResult ||
         oldWidget.currentStepIndex != widget.currentStepIndex ||
         oldWidget.showTrace != widget.showTrace) {
-      setState(() {
-        _applyDerivedState(_computeDerivedState());
-      });
+      final nextDerivedState = _computeDerivedState();
+      if (!_derivedState.isEquivalentTo(nextDerivedState)) {
+        setState(() {
+          _applyDerivedState(nextDerivedState);
+        });
+      }
     }
   }
 
@@ -424,10 +433,15 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
   }
 
   void _applyDerivedState(_DerivedState data) {
+    if (_derivedState.isEquivalentTo(data)) {
+      return;
+    }
+    _derivedState = data;
     _statesById = data.statesById;
     _nondeterministicStateIds = data.nondeterministicStateIds;
     _visitedStateIds = data.visitedStates;
     _currentStateId = data.currentStateId;
+    widget.onDerivedStateChanged?.call();
   }
 
   _DerivedState _computeDerivedState() {
@@ -867,6 +881,27 @@ class _DerivedState {
     required this.visitedStates,
     required this.currentStateId,
   });
+
+  const _DerivedState.empty()
+      : statesById = const <String, automaton_state.State>{},
+        nondeterministicStateIds = const <String>{},
+        visitedStates = const <String>{},
+        currentStateId = null;
+
+  static const SetEquality<String> _setEquality = SetEquality<String>();
+  static final MapEquality<String, automaton_state.State> _mapEquality =
+      MapEquality<String, automaton_state.State>();
+
+  bool isEquivalentTo(_DerivedState other) {
+    if (identical(this, other)) {
+      return true;
+    }
+
+    return _mapEquality.equals(statesById, other.statesById) &&
+        _setEquality.equals(nondeterministicStateIds, other.nondeterministicStateIds) &&
+        _setEquality.equals(visitedStates, other.visitedStates) &&
+        currentStateId == other.currentStateId;
+  }
 
   final Map<String, automaton_state.State> statesById;
   final Set<String> nondeterministicStateIds;

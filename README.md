@@ -8,6 +8,8 @@ JFlutter is a complete port of the classic JFLAP educational tool, rebuilt from 
 
 **Status:** Work in Progress
 
+_Nota: migração em andamento._
+
 Development is ongoing as we continue refining the application and expanding coverage across platforms, tests, and documentation. Recent focus areas from the latest milestone include:
 - ✅ **Performance Optimization** - Canvas optimized for large automata with LOD rendering and viewport culling
 - ✅ **Trace Persistence** - Immutable trace navigation between simulators with unified state management

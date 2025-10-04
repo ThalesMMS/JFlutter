@@ -2,10 +2,11 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:fl_nodes/fl_nodes.dart';
+import 'package:fl_nodes/src/constants.dart';
 import 'package:fl_nodes/src/core/localization/delegate.dart';
+import 'package:fl_nodes/src/core/models/entities.dart' show PortDirection;
 import 'package:fl_nodes/src/core/models/events.dart';
 import 'package:fl_nodes/src/core/utils/rendering/renderbox.dart';
-import 'package:fl_nodes/src/widgets/constants.dart';
 import 'package:fl_nodes/src/widgets/context_menu.dart';
 import 'package:fl_nodes/src/widgets/improved_listener.dart';
 import 'package:flutter/foundation.dart';
@@ -119,7 +120,11 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
           _updatePortOffsets();
         }
       });
-    } else if (event is NodeSelectionEvent || event is NodeDeselectionEvent) {
+    } else if (event is NodeSelectionEvent) {
+      if (event.nodeIds.contains(widget.node.id)) {
+        setState(() {});
+      }
+    } else if (event is NodeDeselectionEvent) {
       if (event.nodeIds.contains(widget.node.id)) {
         setState(() {});
       }

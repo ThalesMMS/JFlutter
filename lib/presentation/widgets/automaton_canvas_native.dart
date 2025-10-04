@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:collection/collection.dart';
 import 'package:fl_nodes/fl_nodes.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meta/meta.dart';
 
@@ -1042,39 +1043,6 @@ class _HighlightData {
 
   final Set<String> visitedStates;
   final String? currentStateId;
-}
-
-
-
-  final String tooltip;
-  final IconData icon;
-  final IconData activeIcon;
-  final bool isActive;
-  final Color color;
-  final VoidCallback onPressed;
-  final Key? buttonKey;
-
-  @override
-  Widget build(BuildContext context) {
-    final resolvedIcon = Icon(
-      isActive ? activeIcon : icon,
-      size: 20,
-      color: isActive ? color : color.withOpacity(0.6),
-    );
-
-    return Tooltip(
-      message: tooltip,
-      child: IconButton(
-        key: buttonKey,
-        icon: resolvedIcon,
-        onPressed: onPressed,
-        padding: EdgeInsets.zero,
-        constraints: const BoxConstraints.tightFor(width: 32, height: 32),
-        splashRadius: 18,
-        visualDensity: VisualDensity.compact,
-      ),
-    );
-  }
 }
 
 class _EmptyCanvasMessage extends StatelessWidget {

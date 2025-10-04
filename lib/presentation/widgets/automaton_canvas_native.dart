@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:collection/collection.dart';
 import 'package:fl_nodes/fl_nodes.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -52,6 +54,255 @@ class AutomatonCanvas extends ConsumerStatefulWidget {
 
   @override
   ConsumerState<AutomatonCanvas> createState() => _AutomatonCanvasState();
+}
+
+class _LinkArrowPainter extends CustomPainter {
+  _LinkArrowPainter({
+    required this.controller,
+    required this.edges,
+    required this.nodes,
+    required this.highlighted,
+    required this.selected,
+    required this.theme,
+  });
+
+  final FlNodeEditorController controller;
+  final List<FlNodesCanvasEdge> edges;
+  final Map<String, NodeInstance> nodes;
+  final Set<String> highlighted;
+  final Set<String> selected;
+  final ThemeData theme;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (edges.isEmpty) {
+      return;
+    }
+
+    final zoom = controller.viewportZoom;
+    final offset = controller.viewportOffset;
+
+    final viewport = Rect.fromLTWH(
+      -size.width / 2 / zoom - offset.dx,
+      -size.height / 2 / zoom - offset.dy,
+      size.width / zoom,
+      size.height / zoom,
+    );
+
+    Offset? worldToScreen(Offset world) {
+      final dx = ((world.dx - viewport.left) / viewport.width) * size.width;
+      final dy = ((world.dy - viewport.top) / viewport.height) * size.height;
+      if (dx.isNaN || dy.isNaN || !dx.isFinite || !dy.isFinite) {
+        return null;
+      }
+      return Offset(dx, dy);
+    }
+
+    for (final edge in edges) {
+      final fromNode = nodes[edge.fromStateId];
+      final toNode = nodes[edge.toStateId];
+      if (fromNode == null || toNode == null) {
+        continue;
+      }
+
+      final fromCenter = resolveNodeCenter(fromNode);
+      final toCenter = resolveNodeCenter(toNode);
+      if (fromCenter == null || toCenter == null) {
+        continue;
+      }
+
+      final controlWorld = (edge.controlPointX != null &&
+              edge.controlPointY != null)
+          ? Offset(edge.controlPointX!, edge.controlPointY!)
+          : null;
+
+      final color = _resolveColor(edge.id);
+      final strokeWidth = selected.contains(edge.id) ? 3.0 : 2.0;
+      final paint = Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round;
+
+      if (edge.fromStateId == edge.toStateId) {
+        final radius = resolveNodeRadius(fromNode);
+        final anchor = controlWorld ?? fromCenter.translate(0, -radius * 2);
+        final loopData = _buildLoopPath(
+          center: fromCenter,
+          anchor: anchor,
+          radius: radius,
+          project: worldToScreen,
+        );
+        if (loopData == null) {
+          continue;
+        }
+        final (path, tip, direction) = loopData;
+        canvas.drawPath(path, paint);
+        _drawArrowHead(canvas, tip, direction, color);
+        continue;
+      }
+
+      final startRadius = resolveNodeRadius(fromNode);
+      final endRadius = resolveNodeRadius(toNode);
+
+      final startWorld = _projectFromCenter(
+        fromCenter,
+        controlWorld ?? toCenter,
+        startRadius,
+      );
+      final endWorld = _projectFromCenter(
+        toCenter,
+        controlWorld ?? fromCenter,
+        endRadius,
+      );
+
+      final startScreen = worldToScreen(startWorld);
+      final endScreen = worldToScreen(endWorld);
+      if (startScreen == null || endScreen == null) {
+        continue;
+      }
+
+      Path path = Path()..moveTo(startScreen.dx, startScreen.dy);
+      Offset arrowVector;
+
+      if (controlWorld != null) {
+        final controlScreen = worldToScreen(controlWorld);
+        if (controlScreen == null) {
+          continue;
+        }
+        path = path
+          ..quadraticBezierTo(
+            controlScreen.dx,
+            controlScreen.dy,
+            endScreen.dx,
+            endScreen.dy,
+          );
+        arrowVector = endScreen - controlScreen;
+      } else {
+        path = path..lineTo(endScreen.dx, endScreen.dy);
+        arrowVector = endScreen - startScreen;
+      }
+
+      canvas.drawPath(path, paint);
+      _drawArrowHead(canvas, endScreen, arrowVector, color);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _LinkArrowPainter oldDelegate) {
+    const listEquality = ListEquality<FlNodesCanvasEdge>();
+    const setEquality = SetEquality<String>();
+    return !listEquality.equals(oldDelegate.edges, edges) ||
+        !setEquality.equals(oldDelegate.highlighted, highlighted) ||
+        !setEquality.equals(oldDelegate.selected, selected) ||
+        oldDelegate.theme != theme ||
+        oldDelegate.controller.viewportOffset != controller.viewportOffset ||
+        oldDelegate.controller.viewportZoom != controller.viewportZoom;
+  }
+
+  Color _resolveColor(String edgeId) {
+    final colorScheme = theme.colorScheme;
+    if (selected.contains(edgeId)) {
+      return colorScheme.primary;
+    }
+    if (highlighted.contains(edgeId)) {
+      return colorScheme.primary;
+    }
+    return colorScheme.onSurfaceVariant.withOpacity(0.85);
+  }
+
+  (Path, Offset, Offset)? _buildLoopPath({
+    required Offset center,
+    required Offset anchor,
+    required double radius,
+    required Offset? Function(Offset world) project,
+  }) {
+    var radial = anchor - center;
+    if (radial.distanceSquared == 0) {
+      radial = const Offset(0, -1);
+    }
+    final radialUnit = _normalise(radial);
+    final startDirection = _rotate(radialUnit, -math.pi / 3);
+    final endDirection = _rotate(radialUnit, math.pi / 3);
+
+    final startWorld = center + startDirection * radius;
+    final endWorld = center + endDirection * radius;
+
+    final controlDistance = math.max(radial.distance, radius * 1.2);
+    final offsetVector = radialUnit * controlDistance;
+    final cp1World = center + startDirection * radius + offsetVector;
+    final cp2World = center + endDirection * radius + offsetVector;
+
+    final startScreen = project(startWorld);
+    final cp1Screen = project(cp1World);
+    final cp2Screen = project(cp2World);
+    final endScreen = project(endWorld);
+    if (startScreen == null ||
+        cp1Screen == null ||
+        cp2Screen == null ||
+        endScreen == null) {
+      return null;
+    }
+
+    final path = Path()
+      ..moveTo(startScreen.dx, startScreen.dy)
+      ..cubicTo(
+        cp1Screen.dx,
+        cp1Screen.dy,
+        cp2Screen.dx,
+        cp2Screen.dy,
+        endScreen.dx,
+        endScreen.dy,
+      );
+
+    final arrowVector = endScreen - cp2Screen;
+    return (path, endScreen, arrowVector);
+  }
+
+  Offset _projectFromCenter(Offset center, Offset target, double radius) {
+    final direction = target - center;
+    if (direction.distance == 0) {
+      return center;
+    }
+    return center + _normalise(direction) * radius;
+  }
+
+  Offset _rotate(Offset vector, double angle) {
+    final cosAngle = math.cos(angle);
+    final sinAngle = math.sin(angle);
+    return Offset(
+      vector.dx * cosAngle - vector.dy * sinAngle,
+      vector.dx * sinAngle + vector.dy * cosAngle,
+    );
+  }
+
+  Offset _normalise(Offset vector) {
+    final length = vector.distance;
+    if (length == 0) {
+      return Offset.zero;
+    }
+    return vector / length;
+  }
+
+  void _drawArrowHead(Canvas canvas, Offset tip, Offset direction, Color color) {
+    if (direction.distanceSquared == 0) {
+      return;
+    }
+    final unit = _normalise(direction);
+    const arrowLength = 12.0;
+    const arrowWidth = 6.0;
+    final base = tip - unit * arrowLength;
+    final orthogonal = Offset(-unit.dy, unit.dx) * (arrowWidth / 2);
+
+    final path = Path()
+      ..moveTo(tip.dx, tip.dy)
+      ..lineTo(base.dx + orthogonal.dx, base.dy + orthogonal.dy)
+      ..lineTo(base.dx - orthogonal.dx, base.dy - orthogonal.dy)
+      ..close();
+
+    final paint = Paint()..color = color;
+    canvas.drawPath(path, paint);
+  }
 }
 
 class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
@@ -590,7 +841,42 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
   }
 
   List<FlOverlayData> _buildOverlay() {
+    final overlayListenable = Listenable.merge([
+      _canvasController.controller,
+      _canvasController.controller.viewportOffsetNotifier,
+      _canvasController.controller.viewportZoomNotifier,
+      _canvasController.linkGeometryRevision,
+      _canvasController.highlightNotifier,
+    ]);
+
     return [
+      FlOverlayData(
+        left: 0,
+        top: 0,
+        child: AnimatedBuilder(
+          animation: overlayListenable,
+          builder: (context, _) {
+            return IgnorePointer(
+              child: CustomPaint(
+                size: Size.infinite,
+                painter: _LinkArrowPainter(
+                  controller: _canvasController.controller,
+                  edges: _canvasController.edges.toList(growable: false),
+                  nodes: Map<String, NodeInstance>.from(
+                    _canvasController.controller.nodes,
+                  ),
+                  highlighted: Set<String>.from(
+                    _canvasController.highlightNotifier.value.transitionIds,
+                  ),
+                  selected:
+                      _canvasController.controller.selectedLinkIds.toSet(),
+                  theme: Theme.of(context),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
       FlOverlayData(
         left: 0,
         top: 0,

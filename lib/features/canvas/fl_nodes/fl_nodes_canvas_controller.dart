@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 import '../../../core/models/fsa.dart';
+import '../../../core/constants/automaton_canvas.dart';
 import '../../../presentation/providers/automaton_provider.dart';
 import 'base_fl_nodes_canvas_controller.dart';
 import 'fl_nodes_automaton_mapper.dart';
@@ -130,14 +131,39 @@ class FlNodesCanvasController extends BaseFlNodesCanvasController<AutomatonProvi
 
   @override
   FlNodesCanvasEdge? createEdgeForLink(Link link) {
+    final fromStateId = link.fromTo.from;
+    final toStateId = link.fromTo.to;
+
+    final fromNode = nodeById(fromStateId);
+    final toNode = nodeById(toStateId);
+
+    Offset? controlPoint;
+    if (fromNode != null && toNode != null) {
+      final existingParallel = edgesCache.values.where(
+        (edge) =>
+            edge.fromStateId == fromStateId && edge.toStateId == toStateId,
+      );
+      final index = existingParallel.length;
+
+      if (fromStateId == toStateId) {
+        controlPoint = _computeLoopControlPoint(fromNode, index);
+      } else {
+        controlPoint = _computeParallelControlPoint(
+          fromNode,
+          toNode,
+          index,
+        );
+      }
+    }
+
     return FlNodesCanvasEdge(
       id: link.id,
-      fromStateId: link.fromTo.from,
-      toStateId: link.fromTo.to,
+      fromStateId: fromStateId,
+      toStateId: toStateId,
       symbols: const <String>[],
       lambdaSymbol: null,
-      controlPointX: null,
-      controlPointY: null,
+      controlPointX: controlPoint?.dx,
+      controlPointY: controlPoint?.dy,
     );
   }
 
@@ -174,6 +200,74 @@ class FlNodesCanvasController extends BaseFlNodesCanvasController<AutomatonProvi
         controlPointY: controlPoint.dy,
       );
     });
+  }
+
+  Offset _nodeCenter(FlNodesCanvasNode node) {
+    const radius = kAutomatonStateDiameter / 2;
+    return Offset(node.x + radius, node.y + radius);
+  }
+
+  Offset _computeLoopControlPoint(FlNodesCanvasNode node, int index) {
+    final center = _nodeCenter(node);
+    final radius = kAutomatonStateDiameter / 2;
+    const double angleStep = math.pi / 8;
+    const double baseAngle = -math.pi / 2;
+
+    double angle;
+    if (index == 0) {
+      angle = baseAngle;
+    } else {
+      final tier = (index + 1) ~/ 2;
+      final sign = index.isOdd ? 1 : -1;
+      angle = baseAngle + sign * angleStep * tier;
+    }
+
+    final distance = radius * 2.2 + 24 * ((index + 1) ~/ 2);
+    return center + Offset(math.cos(angle), math.sin(angle)) * distance;
+  }
+
+  Offset? _computeParallelControlPoint(
+    FlNodesCanvasNode fromNode,
+    FlNodesCanvasNode toNode,
+    int index,
+  ) {
+    if (index == 0) {
+      return null;
+    }
+
+    final start = _nodeCenter(fromNode);
+    final end = _nodeCenter(toNode);
+    final direction = end - start;
+    if (direction.distanceSquared == 0) {
+      return _computeLoopControlPoint(fromNode, index);
+    }
+
+    final normal = Offset(-direction.dy, direction.dx);
+    final normalised = _normalise(normal);
+    if (normalised == Offset.zero) {
+      return null;
+    }
+
+    final midPoint = Offset(
+      (start.dx + end.dx) / 2,
+      (start.dy + end.dy) / 2,
+    );
+
+    final tier = (index + 1) ~/ 2;
+    final sign = index.isOdd ? 1 : -1;
+    final distance = direction.distance;
+    final baseOffset = ((distance / 3).clamp(48.0, 160.0)) as double;
+    final magnitude = baseOffset * tier * sign;
+
+    return midPoint + normalised * magnitude;
+  }
+
+  Offset _normalise(Offset vector) {
+    final length = vector.distance;
+    if (length == 0) {
+      return Offset.zero;
+    }
+    return vector / length;
   }
 
   /// Synchronises the fl_nodes controller with the latest [automaton].

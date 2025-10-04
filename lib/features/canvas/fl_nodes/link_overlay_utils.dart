@@ -1,8 +1,7 @@
-import 'dart:math' as math;
-
 import 'package:fl_nodes/fl_nodes.dart';
 import 'package:flutter/widgets.dart';
 
+import '../../../core/constants/automaton_canvas.dart';
 import 'fl_nodes_canvas_models.dart';
 
 Offset? resolveLinkAnchorWorld(
@@ -21,9 +20,9 @@ Offset? resolveLinkAnchorWorld(
     return null;
   }
 
-  final fromPort = fromNode.ports[link.fromTo.fromPort];
-  final toPort = toNode.ports[link.fromTo.toPort];
-  if (fromPort == null || toPort == null) {
+  final fromCenter = resolveNodeCenter(fromNode);
+  final toCenter = resolveNodeCenter(toNode);
+  if (fromCenter == null || toCenter == null) {
     return null;
   }
 
@@ -31,15 +30,14 @@ Offset? resolveLinkAnchorWorld(
     return Offset(edge!.controlPointX!, edge.controlPointY!);
   }
 
-  final start = fromNode.offset + fromPort.offset;
-  final end = toNode.offset + toPort.offset;
-
   if (link.fromTo.from == link.fromTo.to) {
-    final loopAnchor = _resolveLoopAnchor(fromNode);
-    return loopAnchor ?? Offset((start.dx + end.dx) / 2, (start.dy + end.dy) / 2);
+    return _resolveLoopAnchor(fromNode, edge) ?? fromCenter;
   }
 
-  return Offset((start.dx + end.dx) / 2, (start.dy + end.dy) / 2);
+  return Offset(
+    (fromCenter.dx + toCenter.dx) / 2,
+    (fromCenter.dy + toCenter.dy) / 2,
+  );
 }
 
 Offset? projectCanvasPointToOverlay({
@@ -77,20 +75,35 @@ Offset? projectCanvasPointToOverlay({
   return Offset(dx, dy);
 }
 
-Offset? _resolveLoopAnchor(NodeInstance node) {
+Offset? resolveNodeCenter(NodeInstance node) {
   final renderObject = node.key.currentContext?.findRenderObject();
   Size? nodeSize;
-  if (renderObject is RenderBox) {
+  if (renderObject is RenderBox && renderObject.hasSize) {
     nodeSize = renderObject.size;
   }
 
-  final width = nodeSize?.width ?? 120;
-  final height = nodeSize?.height ?? 60;
-  final center = Offset(
-    node.offset.dx + width / 2,
-    node.offset.dy + height / 2,
-  );
+  final width = nodeSize?.width ?? kAutomatonStateDiameter;
+  final height = nodeSize?.height ?? kAutomatonStateDiameter;
+  return node.offset + Offset(width / 2, height / 2);
+}
 
-  final radius = math.sqrt(width * width + height * height) / 2;
-  return center.translate(0, -(radius + 40));
+double resolveNodeRadius(NodeInstance node) {
+  final renderObject = node.key.currentContext?.findRenderObject();
+  if (renderObject is RenderBox && renderObject.hasSize) {
+    return renderObject.size.shortestSide / 2;
+  }
+  return kAutomatonStateDiameter / 2;
+}
+
+Offset? _resolveLoopAnchor(NodeInstance node, FlNodesCanvasEdge? edge) {
+  if (edge?.controlPointX != null && edge?.controlPointY != null) {
+    return Offset(edge!.controlPointX!, edge.controlPointY!);
+  }
+
+  final center = resolveNodeCenter(node);
+  if (center == null) {
+    return null;
+  }
+  final radius = resolveNodeRadius(node);
+  return center.translate(0, -(radius * 2));
 }

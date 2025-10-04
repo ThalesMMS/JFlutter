@@ -4,7 +4,6 @@ import 'dart:math' as math;
 import 'package:fl_nodes/fl_nodes.dart';
 import 'package:fl_nodes/src/constants.dart';
 import 'package:fl_nodes/src/core/localization/delegate.dart';
-import 'package:fl_nodes/src/core/models/entities.dart' show PortDirection;
 import 'package:fl_nodes/src/core/models/events.dart';
 import 'package:fl_nodes/src/core/utils/rendering/renderbox.dart';
 import 'package:fl_nodes/src/widgets/context_menu.dart';
@@ -16,6 +15,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_context_menu/flutter_context_menu.dart';
 
+import '../../core/constants/automaton_canvas.dart';
 
 typedef _TempLink = ({String nodeId, String portId});
 
@@ -44,6 +44,7 @@ class AutomatonStateNode extends StatefulWidget {
     required this.onDelete,
     required this.initialToggleKey,
     required this.acceptingToggleKey,
+    this.isTransitionToolEnabled = true,
   });
 
   final FlNodeEditorController controller;
@@ -61,8 +62,9 @@ class AutomatonStateNode extends StatefulWidget {
   final VoidCallback onDelete;
   final Key initialToggleKey;
   final Key acceptingToggleKey;
+  final bool isTransitionToolEnabled;
 
-  static const double nodeDiameter = 96;
+  static const double nodeDiameter = kAutomatonStateDiameter;
 
   @override
   State<AutomatonStateNode> createState() => _AutomatonStateNodeState();
@@ -77,6 +79,49 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
 
   double get _viewportZoom => widget.controller.viewportZoom;
   Offset get _viewportOffset => widget.controller.viewportOffset;
+
+  bool get _canLinkFromCenter =>
+      widget.isTransitionToolEnabled &&
+      widget.node.ports.isNotEmpty &&
+      !widget.node.state.isCollapsed;
+
+  _TempLink? get _centerLocatorOrNull {
+    if (widget.node.ports.isEmpty) {
+      return null;
+    }
+    final portId = widget.node.ports.values.first.prototype.idName;
+    return (nodeId: widget.node.id, portId: portId);
+  }
+
+  Offset _resolveLocalCenter() {
+    final renderObject = widget.node.key.currentContext?.findRenderObject();
+    Size? size;
+    if (renderObject is RenderBox && renderObject.hasSize) {
+      size = renderObject.size;
+    }
+    final width = size?.width ?? AutomatonStateNode.nodeDiameter;
+    final height = size?.height ?? AutomatonStateNode.nodeDiameter;
+    return Offset(width / 2, height / 2);
+  }
+
+  bool _isWithinCircle(Offset globalPosition) {
+    final renderObject = widget.node.key.currentContext?.findRenderObject();
+    if (renderObject is! RenderBox || !renderObject.hasSize) {
+      return false;
+    }
+    final localPosition = renderObject.globalToLocal(globalPosition);
+    final size = renderObject.size;
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.shortestSide / 2;
+    return (localPosition - center).distance <= radius;
+  }
+
+  bool _shouldBeginTransition(Offset globalPosition) {
+    if (!_canLinkFromCenter) {
+      return false;
+    }
+    return _isWithinCircle(globalPosition);
+  }
 
   @override
   void initState() {
@@ -205,31 +250,6 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
     return null;
   }
 
-  Offset _calculatePortOffset(PortDirection direction) {
-    final padding = widget.isAccepting ? 4.0 : 0.0;
-    final radius = AutomatonStateNode.nodeDiameter / 2;
-    final center = Offset(radius + padding, radius + padding);
-    final collapsed = widget.node.state.isCollapsed;
-    final effectiveRadius = collapsed ? radius * 0.6 : radius;
-
-    double angle;
-    switch (direction) {
-      case PortDirection.input:
-        angle = math.pi;
-        break;
-      case PortDirection.output:
-        angle = 0;
-        break;
-    }
-
-    final offset = Offset(
-      math.cos(angle) * effectiveRadius,
-      math.sin(angle) * effectiveRadius,
-    );
-
-    return center + offset;
-  }
-
   void _onTmpLinkStart(_TempLink locator) {
     _tempLink = locator;
     _isLinking = true;
@@ -290,8 +310,9 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
   }
 
   void _updatePortOffsets() {
+    final centerOffset = _resolveLocalCenter();
     for (final port in widget.node.ports.values) {
-      port.offset = _calculatePortOffset(port.prototype.direction);
+      port.offset = centerOffset;
     }
   }
 
@@ -440,8 +461,6 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
           : 'Collapse state',
     );
 
-    final portHandles = _buildPortHandles(colors);
-
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -452,7 +471,8 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
             child: decoratedCircle,
           ),
         ),
-        ...portHandles,
+        if (widget.isTransitionToolEnabled)
+          _buildLinkAnchorIndicator(colors),
         if (widget.isInitial)
           Positioned(
             left: -(AutomatonStateNode.nodeDiameter * 0.35),
@@ -474,6 +494,31 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
           child: menuButton,
         ),
       ],
+    );
+  }
+
+  Widget _buildLinkAnchorIndicator(_NodeColors colors) {
+    final targetOpacity = widget.isTransitionToolEnabled
+        ? (_isLinking ? 1.0 : 0.6)
+        : 0.0;
+
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: AnimatedOpacity(
+          opacity: targetOpacity,
+          duration: const Duration(milliseconds: 180),
+          child: Center(
+            child: Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: colors.foreground.withOpacity(0.75),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -499,13 +544,16 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
             },
             onLongPressStart: (details) async {
               final position = details.globalPosition;
-              final locator = _isNearPort(position);
+              final locator =
+                  _canLinkFromCenter && _isWithinCircle(position)
+                      ? _centerLocatorOrNull
+                      : null;
 
               if (!widget.node.state.isSelected) {
                 widget.controller.selectNodesById({widget.node.id});
               }
 
-              if (locator != null && !widget.node.state.isCollapsed) {
+              if (locator != null) {
                 createAndShowContextMenu(
                   context,
                   entries: _portContextMenuEntries(position, locator: locator),
@@ -530,13 +578,14 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
               _isLinking = false;
               _tempLink = null;
 
-              final locator = _isNearPort(position);
-              if (locator != null) {
-                _onTmpLinkStart(locator);
-              } else {
-                if (!widget.node.state.isSelected) {
-                  widget.controller.selectNodesById({widget.node.id});
+              if (_shouldBeginTransition(position)) {
+                final locator = _centerLocatorOrNull;
+                if (locator != null) {
+                  _onTmpLinkStart(locator);
+                  _onTmpLinkUpdate(position);
                 }
+              } else if (!widget.node.state.isSelected) {
+                widget.controller.selectNodesById({widget.node.id});
               }
             },
             onPanUpdate: (details) {
@@ -568,14 +617,15 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
               _isLinking = false;
               _tempLink = null;
 
-              final locator = _isNearPort(event.position);
+              final shouldLink = _shouldBeginTransition(event.position);
+              final locator = shouldLink ? _centerLocatorOrNull : null;
 
               if (event.buttons == kSecondaryMouseButton) {
                 if (!widget.node.state.isSelected) {
                   widget.controller.selectNodesById({widget.node.id});
                 }
 
-                if (locator != null && !widget.node.state.isCollapsed) {
+                if (locator != null) {
                   createAndShowContextMenu(
                     context,
                     entries: _portContextMenuEntries(
@@ -593,6 +643,7 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
               } else if (event.buttons == kPrimaryMouseButton) {
                 if (locator != null && !_isLinking && _tempLink == null) {
                   _onTmpLinkStart(locator);
+                  _onTmpLinkUpdate(event.position);
                 } else if (!widget.node.state.isSelected) {
                   widget.controller.selectNodesById(
                     {widget.node.id},
@@ -618,64 +669,6 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
             },
             child: child,
           );
-  }
-
-  List<Widget> _buildPortHandles(_NodeColors colors) {
-    if (widget.node.ports.isEmpty) {
-      return const [];
-    }
-
-    final theme = Theme.of(context);
-    final handleDiameter = AutomatonStateNode.nodeDiameter * 0.18;
-    final handleRadius = handleDiameter / 2;
-    final handleColor = colors.foreground.withOpacity(0.9);
-    final borderColor = theme.colorScheme.surface;
-
-    return widget.node.ports.values.map((port) {
-      final center = port.offset == Offset.zero
-          ? _calculatePortOffset(port.prototype.direction)
-          : port.offset;
-      final locator = (
-        nodeId: widget.node.id,
-        portId: port.prototype.idName,
-      );
-
-      return Positioned(
-        left: center.dx - handleRadius,
-        top: center.dy - handleRadius,
-        child: _PortHandle(
-          size: handleDiameter,
-          color: handleColor,
-          borderColor: borderColor,
-          onPanStart: (details) {
-            _lastPanPosition = details.globalPosition;
-            if (!_isLinking) {
-              _onTmpLinkStart(locator);
-            }
-          },
-          onPanUpdate: (details) {
-            _lastPanPosition = details.globalPosition;
-            if (!_isLinking) {
-              _onTmpLinkStart(locator);
-            }
-            if (_isLinking) {
-              _onTmpLinkUpdate(details.globalPosition);
-            }
-          },
-          onPanEnd: (details) {
-            if (_isLinking) {
-              final lastPosition = _lastPanPosition ?? Offset.zero;
-              _finishLinkGesture(lastPosition);
-            }
-          },
-          onPanCancel: () {
-            if (_isLinking) {
-              _onTmpLinkCancel();
-            }
-          },
-        ),
-      );
-    }).toList();
   }
 
   List<ContextMenuEntry> _portContextMenuEntries(
@@ -953,61 +946,6 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
     return _NodeColors(
       background: colorScheme.surface,
       foreground: colorScheme.onSurface,
-    );
-  }
-}
-
-class _PortHandle extends StatelessWidget {
-  const _PortHandle({
-    required this.size,
-    required this.color,
-    required this.borderColor,
-    required this.onPanStart,
-    required this.onPanUpdate,
-    required this.onPanEnd,
-    required this.onPanCancel,
-  });
-
-  final double size;
-  final Color color;
-  final Color borderColor;
-  final GestureDragStartCallback onPanStart;
-  final GestureDragUpdateCallback onPanUpdate;
-  final GestureDragEndCallback onPanEnd;
-  final VoidCallback onPanCancel;
-
-  @override
-  Widget build(BuildContext context) {
-    final handle = Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: borderColor.withOpacity(0.9),
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.25),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-    );
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onPanStart: onPanStart,
-        onPanUpdate: onPanUpdate,
-        onPanEnd: onPanEnd,
-        onPanCancel: onPanCancel,
-        child: handle,
-      ),
     );
   }
 }

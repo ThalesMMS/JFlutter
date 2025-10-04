@@ -9,7 +9,6 @@ import 'package:fl_nodes/src/core/models/events.dart'
         LinkSelectionEvent,
         NodeEditorEvent,
         RemoveLinkEvent;
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -63,7 +62,6 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
   Set<String> _nondeterministicStateIds = const {};
   Set<String> _visitedStateIds = const {};
   String? _currentStateId;
-  VoidCallback? _highlightListener;
   StreamSubscription<NodeEditorEvent>? _eventSubscription;
   VoidCallback? _controllerListener;
   VoidCallback? _viewportOffsetListener;
@@ -71,7 +69,6 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
   String? _selectedLinkId;
   bool _isLabelSheetOpen = false;
   String? _activeLabelSheetLinkId;
-  SimulationHighlight? _lastHighlight;
   SimulationHighlightService? _highlightService;
   SimulationHighlightChannel? _previousHighlightChannel;
   FlNodesSimulationHighlightChannel? _highlightChannel;
@@ -106,20 +103,6 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
       });
     }
     _applyDerivedState(_computeDerivedState());
-    _lastHighlight = _canvasController.highlightNotifier.value;
-    _highlightListener = () {
-      if (!mounted) {
-        return;
-      }
-      final highlight = _canvasController.highlightNotifier.value;
-      final previous = _lastHighlight;
-      if (previous != null && _highlightsEqual(previous, highlight)) {
-        return;
-      }
-      _lastHighlight = highlight;
-      setState(() {});
-    };
-    _canvasController.highlightNotifier.addListener(_highlightListener!);
     _initialiseOverlayListeners();
   }
 
@@ -238,9 +221,6 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
 
   @override
   void dispose() {
-    if (_highlightListener != null) {
-      _canvasController.highlightNotifier.removeListener(_highlightListener!);
-    }
     _eventSubscription?.cancel();
     if (_controllerListener != null) {
       _canvasController.controller.removeListener(_controllerListener!);
@@ -630,7 +610,6 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
 
     final automaton = widget.automaton;
     final hasStates = automaton?.states.isNotEmpty ?? false;
-    final highlight = _canvasController.highlightNotifier.value;
 
     return Stack(
       children: [
@@ -664,52 +643,59 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
                       widget.showTrace && _currentStateId == node.id;
                   final isNondeterministic =
                       _nondeterministicStateIds.contains(node.id);
-                  final isHighlighted = highlight.stateIds.contains(node.id);
 
-                final colors = _resolveHeaderColors(
-                  theme,
-                  isHighlighted: isHighlighted,
-                  isCurrent: isCurrent,
-                  isVisited: isVisited,
-                  isNondeterministic: isNondeterministic,
-                  isInitial: isInitial,
-                  isAccepting: isAccepting,
-                );
+                  return ValueListenableBuilder<SimulationHighlight>(
+                    valueListenable: _canvasController.highlightNotifier,
+                    builder: (context, highlight, _) {
+                      final isHighlighted =
+                          highlight.stateIds.contains(node.id);
 
-                return _AutomatonNodeHeader(
-                  label: label,
-                  isInitial: isInitial,
-                  isAccepting: isAccepting,
-                  isCollapsed: node.state.isCollapsed,
-                  colors: colors,
-                  onToggleCollapse: onToggleCollapse,
-                  onToggleInitial: () {
-                    automatonNotifier.updateStateFlags(
-                      id: node.id,
-                      isInitial: !isInitial,
-                    );
-                  },
-                  onToggleAccepting: () {
-                    automatonNotifier.updateStateFlags(
-                      id: node.id,
-                      isAccepting: !isAccepting,
-                    );
-                  },
-                  onRename: (newLabel) {
-                    automatonNotifier.updateStateLabel(
-                      id: node.id,
-                      label: newLabel,
-                    );
-                  },
-                  onDelete: () {
-                    automatonNotifier.removeState(id: node.id);
-                  },
-                  initialToggleKey:
-                      Key('automaton-node-${node.id}-initial-toggle'),
-                  acceptingToggleKey:
-                      Key('automaton-node-${node.id}-accepting-toggle'),
-                );
-              },
+                      final colors = _resolveHeaderColors(
+                        theme,
+                        isHighlighted: isHighlighted,
+                        isCurrent: isCurrent,
+                        isVisited: isVisited,
+                        isNondeterministic: isNondeterministic,
+                        isInitial: isInitial,
+                        isAccepting: isAccepting,
+                      );
+
+                      return _AutomatonNodeHeader(
+                        label: label,
+                        isInitial: isInitial,
+                        isAccepting: isAccepting,
+                        isCollapsed: node.state.isCollapsed,
+                        colors: colors,
+                        onToggleCollapse: onToggleCollapse,
+                        onToggleInitial: () {
+                          automatonNotifier.updateStateFlags(
+                            id: node.id,
+                            isInitial: !isInitial,
+                          );
+                        },
+                        onToggleAccepting: () {
+                          automatonNotifier.updateStateFlags(
+                            id: node.id,
+                            isAccepting: !isAccepting,
+                          );
+                        },
+                        onRename: (newLabel) {
+                          automatonNotifier.updateStateLabel(
+                            id: node.id,
+                            label: newLabel,
+                          );
+                        },
+                        onDelete: () {
+                          automatonNotifier.removeState(id: node.id);
+                        },
+                        initialToggleKey:
+                            Key('automaton-node-${node.id}-initial-toggle'),
+                        acceptingToggleKey:
+                            Key('automaton-node-${node.id}-accepting-toggle'),
+                      );
+                    },
+                  );
+                },
               ),
             ),
           ),
@@ -817,11 +803,6 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
         a.gridStyle.intersectionColor == b.gridStyle.intersectionColor &&
         a.highlightAreaStyle.color == b.highlightAreaStyle.color &&
         a.highlightAreaStyle.borderColor == b.highlightAreaStyle.borderColor;
-  }
-
-  bool _highlightsEqual(SimulationHighlight a, SimulationHighlight b) {
-    return setEquals(a.stateIds, b.stateIds) &&
-        setEquals(a.transitionIds, b.transitionIds);
   }
 }
 

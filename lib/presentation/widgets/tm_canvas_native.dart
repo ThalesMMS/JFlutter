@@ -15,6 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/tm.dart';
 import '../../core/models/tm_transition.dart';
+import '../../core/models/simulation_highlight.dart';
 import '../../core/services/simulation_highlight_service.dart';
 import '../../features/canvas/fl_nodes/fl_nodes_tm_canvas_controller.dart';
 import '../../features/canvas/fl_nodes/fl_nodes_highlight_channel.dart';
@@ -43,7 +44,6 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
   FlNodeEditorStyle? _lastEditorStyle;
   ProviderSubscription<TMEditorState>? _subscription;
   TM? _lastDeliveredTM;
-  VoidCallback? _highlightListener;
   StreamSubscription<NodeEditorEvent>? _eventSubscription;
   VoidCallback? _controllerListener;
   VoidCallback? _viewportOffsetListener;
@@ -123,12 +123,6 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
         }
       },
     );
-    _highlightListener = () {
-      if (mounted) {
-        setState(() {});
-      }
-    };
-    _canvasController.highlightNotifier.addListener(_highlightListener!);
     _initialiseOverlayListeners();
   }
 
@@ -173,10 +167,6 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
   @override
   void dispose() {
     _subscription?.close();
-    if (_highlightListener != null) {
-      _canvasController.highlightNotifier
-          .removeListener(_highlightListener!);
-    }
     _eventSubscription?.cancel();
     if (_controllerListener != null) {
       _canvasController.controller.removeListener(_controllerListener!);
@@ -327,7 +317,6 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
     final states = editorState.states;
     final transitions = editorState.transitions;
     final hasStates = states.isNotEmpty;
-    final highlight = _canvasController.highlightNotifier.value;
 
     final statesById = {for (final state in states) state.id: state};
     final initialStateId = tm?.initialState?.id;
@@ -359,37 +348,46 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
                   final isAccepting = acceptingIds.contains(node.id);
                   final isNondeterministic =
                       nondeterministicStateIds.contains(node.id);
-                  final isHighlighted = highlight.stateIds.contains(node.id);
-                  final colors = _resolveHeaderColors(
-                    theme,
-                    isHighlighted: isHighlighted,
-                    isInitial: isInitial,
-                    isAccepting: isAccepting,
-                    isNondeterministic: isNondeterministic,
-                  );
-
                   final notifier = ref.read(tmEditorProvider.notifier);
-                  return _TMNodeHeader(
-                    label: label,
-                    isInitial: isInitial,
-                    isAccepting: isAccepting,
-                    isCollapsed: node.state.isCollapsed,
-                    colors: colors,
-                    onToggleCollapse: onToggleCollapse,
-                    onToggleInitial: () {
-                      notifier.updateStateFlags(
-                        id: node.id,
-                        isInitial: !isInitial,
+
+                  return ValueListenableBuilder<SimulationHighlight>(
+                    valueListenable: _canvasController.highlightNotifier,
+                    builder: (context, highlight, _) {
+                      final isHighlighted =
+                          highlight.stateIds.contains(node.id);
+                      final colors = _resolveHeaderColors(
+                        theme,
+                        isHighlighted: isHighlighted,
+                        isInitial: isInitial,
+                        isAccepting: isAccepting,
+                        isNondeterministic: isNondeterministic,
+                      );
+
+                      return _TMNodeHeader(
+                        label: label,
+                        isInitial: isInitial,
+                        isAccepting: isAccepting,
+                        isCollapsed: node.state.isCollapsed,
+                        colors: colors,
+                        onToggleCollapse: onToggleCollapse,
+                        onToggleInitial: () {
+                          notifier.updateStateFlags(
+                            id: node.id,
+                            isInitial: !isInitial,
+                          );
+                        },
+                        onToggleAccepting: () {
+                          notifier.updateStateFlags(
+                            id: node.id,
+                            isAccepting: !isAccepting,
+                          );
+                        },
+                        initialToggleKey:
+                            Key('tm-node-${node.id}-initial-toggle'),
+                        acceptingToggleKey:
+                            Key('tm-node-${node.id}-accepting-toggle'),
                       );
                     },
-                    onToggleAccepting: () {
-                      notifier.updateStateFlags(
-                        id: node.id,
-                        isAccepting: !isAccepting,
-                      );
-                    },
-                    initialToggleKey: Key('tm-node-${node.id}-initial-toggle'),
-                    acceptingToggleKey: Key('tm-node-${node.id}-accepting-toggle'),
                   );
                 },
               ),

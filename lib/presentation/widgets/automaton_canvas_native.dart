@@ -16,6 +16,7 @@ import '../../core/models/simulation_result.dart';
 import '../../core/models/state.dart' as automaton_state;
 import '../../core/services/simulation_highlight_service.dart';
 import '../../features/canvas/fl_nodes/fl_nodes_canvas_controller.dart';
+import '../../features/canvas/fl_nodes/fl_nodes_canvas_models.dart';
 import '../../features/canvas/fl_nodes/fl_nodes_highlight_channel.dart';
 import '../../features/canvas/fl_nodes/fl_nodes_label_field_editor.dart';
 import '../../features/canvas/fl_nodes/link_overlay_utils.dart';
@@ -114,8 +115,8 @@ class _LinkArrowPainter extends CustomPainter {
         continue;
       }
 
-      final controlWorld = (edge.controlPointX != null &&
-              edge.controlPointY != null)
+      final controlWorld =
+          (edge.controlPointX != null && edge.controlPointY != null)
           ? Offset(edge.controlPointX!, edge.controlPointY!)
           : null;
 
@@ -287,7 +288,12 @@ class _LinkArrowPainter extends CustomPainter {
     return vector / length;
   }
 
-  void _drawArrowHead(Canvas canvas, Offset tip, Offset direction, Color color) {
+  void _drawArrowHead(
+    Canvas canvas,
+    Offset tip,
+    Offset direction,
+    Color color,
+  ) {
     if (direction.distanceSquared == 0) {
       return;
     }
@@ -320,8 +326,7 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
   Set<String> _nondeterministicStateIds = const {};
   Set<String> _visitedStateIds = const {};
   String? _currentStateId;
-  late final ValueNotifier<_TransitionOverlayState?>
-      _transitionOverlayNotifier;
+  late final ValueNotifier<_TransitionOverlayState?> _transitionOverlayNotifier;
   StreamSubscription<NodeEditorEvent>? _eventSubscription;
   VoidCallback? _controllerListener;
   VoidCallback? _viewportOffsetListener;
@@ -338,8 +343,7 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
   bool _isPanningCanvas = false;
   Offset? _canvasPanStartGlobalPosition;
 
-  bool get _isAddStateToolActive =>
-      _activeTool == AutomatonCanvasTool.addState;
+  bool get _isAddStateToolActive => _activeTool == AutomatonCanvasTool.addState;
 
   @override
   void initState() {
@@ -367,8 +371,9 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
       final highlightService = ref.read(canvasHighlightServiceProvider);
       _highlightService = highlightService;
       _previousHighlightChannel = highlightService.channel;
-      final highlightChannel =
-          FlNodesSimulationHighlightChannel(_canvasController);
+      final highlightChannel = FlNodesSimulationHighlightChannel(
+        _canvasController,
+      );
       _highlightChannel = highlightChannel;
       highlightService.channel = highlightChannel;
     }
@@ -485,7 +490,7 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
     }
 
     final transitionIds = {
-      for (final transition in automaton.fsaTransitions) transition.id
+      for (final transition in automaton.fsaTransitions) transition.id,
     };
     final edgeIds = {for (final edge in _canvasController.edges) edge.id};
     if (transitionIds.length != edgeIds.length ||
@@ -538,12 +543,14 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
       _canvasController.controller.removeListener(_controllerListener!);
     }
     if (_viewportOffsetListener != null) {
-      _canvasController.controller.viewportOffsetNotifier
-          .removeListener(_viewportOffsetListener!);
+      _canvasController.controller.viewportOffsetNotifier.removeListener(
+        _viewportOffsetListener!,
+      );
     }
     if (_viewportZoomListener != null) {
-      _canvasController.controller.viewportZoomNotifier
-          .removeListener(_viewportZoomListener!);
+      _canvasController.controller.viewportZoomNotifier.removeListener(
+        _viewportZoomListener!,
+      );
     }
     _toolController.removeListener(_handleActiveToolChanged);
     if (_ownsToolController) {
@@ -615,11 +622,11 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
       return;
     }
 
-    final transition = widget.automaton?.fsaTransitions
-        .firstWhereOrNull((candidate) => candidate.id == linkId);
-    final label = transition?.label ??
-        _canvasController.edgeById(linkId)?.label ??
-        '';
+    final transition = widget.automaton?.fsaTransitions.firstWhereOrNull(
+      (candidate) => candidate.id == linkId,
+    );
+    final label =
+        transition?.label ?? _canvasController.edgeById(linkId)?.label ?? '';
 
     if (!_shouldUseInlineLabelEditor(context)) {
       _transitionOverlayNotifier.value = null;
@@ -679,7 +686,8 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
     if (!mounted) {
       return;
     }
-    final canAddState = _isAddStateToolActive &&
+    final canAddState =
+        _isAddStateToolActive &&
         worldPosition != null &&
         _isCanvasSpaceFree(worldPosition);
 
@@ -707,8 +715,9 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
   void _handleCanvasPointerUp(PointerEvent event) {
     _activePointerIds.remove(event.pointer);
     if (_activePointerIds.isEmpty) {
-      _doubleTapPointerCount =
-          _currentTapMaxPointerCount == 0 ? 1 : _currentTapMaxPointerCount;
+      _doubleTapPointerCount = _currentTapMaxPointerCount == 0
+          ? 1
+          : _currentTapMaxPointerCount;
       _currentTapMaxPointerCount = 0;
     }
   }
@@ -716,8 +725,9 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
   void _handleCanvasPointerCancel(PointerCancelEvent event) {
     _activePointerIds.remove(event.pointer);
     if (_activePointerIds.isEmpty) {
-      _doubleTapPointerCount =
-          _currentTapMaxPointerCount == 0 ? 1 : _currentTapMaxPointerCount;
+      _doubleTapPointerCount = _currentTapMaxPointerCount == 0
+          ? 1
+          : _currentTapMaxPointerCount;
       _currentTapMaxPointerCount = 0;
     }
   }
@@ -807,7 +817,8 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
     );
 
     final dx = viewport.left + (localPosition.dx / size.width) * viewport.width;
-    final dy = viewport.top + (localPosition.dy / size.height) * viewport.height;
+    final dy =
+        viewport.top + (localPosition.dy / size.height) * viewport.height;
     if (!dx.isFinite || !dy.isFinite) {
       return null;
     }
@@ -914,24 +925,27 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
       FlOverlayData(
         left: 0,
         top: 0,
+        right: 0,
+        bottom: 0,
         child: AnimatedBuilder(
           animation: overlayListenable,
           builder: (context, _) {
             return IgnorePointer(
-              child: CustomPaint(
-                size: Size.infinite,
-                painter: _LinkArrowPainter(
-                  controller: _canvasController.controller,
-                  edges: _canvasController.edges.toList(growable: false),
-                  nodes: Map<String, NodeInstance>.from(
-                    _canvasController.controller.nodes,
+              child: SizedBox.expand(
+                child: CustomPaint(
+                  painter: _LinkArrowPainter(
+                    controller: _canvasController.controller,
+                    edges: _canvasController.edges.toList(growable: false),
+                    nodes: Map<String, NodeInstance>.from(
+                      _canvasController.controller.nodes,
+                    ),
+                    highlighted: Set<String>.from(
+                      _canvasController.highlightNotifier.value.transitionIds,
+                    ),
+                    selected: _canvasController.controller.selectedLinkIds
+                        .toSet(),
+                    theme: Theme.of(context),
                   ),
-                  highlighted: Set<String>.from(
-                    _canvasController.highlightNotifier.value.transitionIds,
-                  ),
-                  selected:
-                      _canvasController.controller.selectedLinkIds.toSet(),
-                  theme: Theme.of(context),
                 ),
               ),
             );
@@ -958,13 +972,11 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
                   ),
                   initialValue: state.label,
                   onSubmit: (value) {
-                    ref.read(automatonProvider.notifier).updateTransitionLabel(
-                          id: state.linkId,
-                          label: value,
-                        );
+                    ref
+                        .read(automatonProvider.notifier)
+                        .updateTransitionLabel(id: state.linkId, label: value);
                   },
-                  onCancel: () =>
-                      _canvasController.controller.clearSelection(),
+                  onCancel: () => _canvasController.controller.clearSelection(),
                 ),
               ),
             );
@@ -981,7 +993,8 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
     }
 
     final platform = Theme.of(context).platform;
-    final isDesktopPlatform = platform == TargetPlatform.macOS ||
+    final isDesktopPlatform =
+        platform == TargetPlatform.macOS ||
         platform == TargetPlatform.linux ||
         platform == TargetPlatform.windows;
     if (isDesktopPlatform) {
@@ -1012,10 +1025,9 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
           initialLabel: initialLabel,
         );
         if (mounted && submittedLabel != null) {
-          ref.read(automatonProvider.notifier).updateTransitionLabel(
-                id: linkId,
-                label: submittedLabel,
-              );
+          ref
+              .read(automatonProvider.notifier)
+              .updateTransitionLabel(id: linkId, label: submittedLabel);
         }
       } finally {
         if (mounted) {
@@ -1122,11 +1134,9 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
               onPointerCancel: _handleCanvasPointerCancel,
               child: GestureDetector(
                 behavior: HitTestBehavior.translucent,
-                onTapUp: (details) =>
-                    _handleCanvasTap(details.globalPosition),
-                onLongPressStart: (details) => unawaited(
-                  _handleCanvasLongPress(details.globalPosition),
-                ),
+                onTapUp: (details) => _handleCanvasTap(details.globalPosition),
+                onLongPressStart: (details) =>
+                    unawaited(_handleCanvasLongPress(details.globalPosition)),
                 onPanStart: _handleCanvasPanStart,
                 onPanUpdate: _handleCanvasPanUpdate,
                 onPanEnd: _handleCanvasPanEnd,
@@ -1145,8 +1155,9 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
                   controller: _canvasController.controller,
                   overlay: _buildOverlay,
                   nodeBuilder: (context, node) {
-                    final automatonNotifier =
-                        ref.read(automatonProvider.notifier);
+                    final automatonNotifier = ref.read(
+                      automatonProvider.notifier,
+                    );
                     final automatonState = _statesById[node.id];
                     final label = automatonState?.label ?? node.id;
                     final isInitial = automaton?.initialState?.id == node.id;
@@ -1159,14 +1170,15 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
                         widget.showTrace && _visitedStateIds.contains(node.id);
                     final isCurrent =
                         widget.showTrace && _currentStateId == node.id;
-                    final isNondeterministic =
-                        _nondeterministicStateIds.contains(node.id);
+                    final isNondeterministic = _nondeterministicStateIds
+                        .contains(node.id);
 
                     return ValueListenableBuilder<SimulationHighlight>(
                       valueListenable: _canvasController.highlightNotifier,
                       builder: (context, highlight, _) {
-                        final isHighlighted =
-                            highlight.stateIds.contains(node.id);
+                        final isHighlighted = highlight.stateIds.contains(
+                          node.id,
+                        );
                         return AutomatonStateNode(
                           controller: _canvasController.controller,
                           node: node,
@@ -1199,10 +1211,12 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
                           onDelete: () {
                             automatonNotifier.removeState(id: node.id);
                           },
-                          initialToggleKey:
-                              Key('automaton-node-${node.id}-initial-toggle'),
-                          acceptingToggleKey:
-                              Key('automaton-node-${node.id}-accepting-toggle'),
+                          initialToggleKey: Key(
+                            'automaton-node-${node.id}-initial-toggle',
+                          ),
+                          acceptingToggleKey: Key(
+                            'automaton-node-${node.id}-accepting-toggle',
+                          ),
                         );
                       },
                     );
@@ -1353,10 +1367,10 @@ class _DerivedState {
   });
 
   const _DerivedState.empty()
-      : statesById = const <String, automaton_state.State>{},
-        nondeterministicStateIds = const <String>{},
-        visitedStates = const <String>{},
-        currentStateId = null;
+    : statesById = const <String, automaton_state.State>{},
+      nondeterministicStateIds = const <String>{},
+      visitedStates = const <String>{},
+      currentStateId = null;
 
   static const SetEquality<String> _setEquality = SetEquality<String>();
   static final MapEquality<String, automaton_state.State> _mapEquality =
@@ -1368,7 +1382,10 @@ class _DerivedState {
     }
 
     return _mapEquality.equals(statesById, other.statesById) &&
-        _setEquality.equals(nondeterministicStateIds, other.nondeterministicStateIds) &&
+        _setEquality.equals(
+          nondeterministicStateIds,
+          other.nondeterministicStateIds,
+        ) &&
         _setEquality.equals(visitedStates, other.visitedStates) &&
         currentStateId == other.currentStateId;
   }

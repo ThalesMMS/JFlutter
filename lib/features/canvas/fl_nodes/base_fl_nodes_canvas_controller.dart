@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:fl_nodes/fl_nodes.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:fl_nodes/src/core/models/entities.dart'
+    show PortDirection, PortType;
 
 import '../../../core/models/simulation_highlight.dart';
 import 'fl_nodes_canvas_models.dart';
@@ -24,10 +26,7 @@ class CenterPortPrototype extends PortPrototype {
 }
 
 class _CanvasHistoryEntry {
-  const _CanvasHistoryEntry({
-    required this.snapshot,
-    required this.highlight,
-  });
+  const _CanvasHistoryEntry({required this.snapshot, required this.highlight});
 
   final FlNodesAutomatonSnapshot snapshot;
   final SimulationHighlight highlight;
@@ -35,12 +34,13 @@ class _CanvasHistoryEntry {
 
 /// Base controller that coordinates fl_nodes interactions with domain notifiers.
 abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
-    extends FlNodesHighlightController with FlNodesViewportHighlightMixin {
+    extends FlNodesHighlightController
+    with FlNodesViewportHighlightMixin {
   BaseFlNodesCanvasController({
     required TNotifier notifier,
     FlNodeEditorController? editorController,
-  })  : notifier = notifier,
-        controller = editorController ?? FlNodeEditorController() {
+  }) : notifier = notifier,
+       controller = editorController ?? FlNodeEditorController() {
     controller.registerNodePrototype(statePrototype);
     _subscription = controller.eventBus.events.listen(_handleEvent);
   }
@@ -266,15 +266,15 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
   @protected
   void synchronizeCanvas(TSnapshot? data) {
     final snapshot = toSnapshot(data);
-    final incomingNodes = {
-      for (final node in snapshot.nodes) node.id: node,
-    };
-    final incomingEdges = {
-      for (final edge in snapshot.edges) edge.id: edge,
-    };
+    final incomingNodes = {for (final node in snapshot.nodes) node.id: node};
+    final incomingEdges = {for (final edge in snapshot.edges) edge.id: edge};
 
-    final previousNodeSelection = controller.selectedNodeIds.toList(growable: false);
-    final previousLinkSelection = controller.selectedLinkIds.toList(growable: false);
+    final previousNodeSelection = controller.selectedNodeIds.toList(
+      growable: false,
+    );
+    final previousLinkSelection = controller.selectedLinkIds.toList(
+      growable: false,
+    );
     final previousHighlight = SimulationHighlight(
       stateIds: Set<String>.from(highlightNotifier.value.stateIds),
       transitionIds: Set<String>.from(highlightNotifier.value.transitionIds),
@@ -286,16 +286,18 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
     var edgesDirty = false;
 
     try {
-      final removedNodeIds =
-          _nodes.keys.where((id) => !incomingNodes.containsKey(id)).toList();
+      final removedNodeIds = _nodes.keys
+          .where((id) => !incomingNodes.containsKey(id))
+          .toList();
       for (final nodeId in removedNodeIds) {
         _nodes.remove(nodeId);
         controller.removeNodeById(nodeId, isHandled: true);
         nodesDirty = true;
       }
 
-      final removedEdgeIds =
-          _edges.keys.where((id) => !incomingEdges.containsKey(id)).toList();
+      final removedEdgeIds = _edges.keys
+          .where((id) => !incomingEdges.containsKey(id))
+          .toList();
       for (final edgeId in removedEdgeIds) {
         _edges.remove(edgeId);
         controller.removeLinkById(edgeId, isHandled: true);
@@ -319,9 +321,11 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
         }
 
         final hasPositionChanged =
-            existingNode.x != incomingNode.x || existingNode.y != incomingNode.y;
+            existingNode.x != incomingNode.x ||
+            existingNode.y != incomingNode.y;
         final hasLabelChanged = existingNode.label != incomingNode.label;
-        final hasInitialChanged = existingNode.isInitial != incomingNode.isInitial;
+        final hasInitialChanged =
+            existingNode.isInitial != incomingNode.isInitial;
         final hasAcceptingChanged =
             existingNode.isAccepting != incomingNode.isAccepting;
 
@@ -383,12 +387,15 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
         controller.linksDataDirty = true;
       }
 
-      final validNodeSelection =
-          previousNodeSelection.where((id) => _nodes.containsKey(id)).toSet();
-      final validLinkSelection =
-          previousLinkSelection.where((id) => _edges.containsKey(id)).toList();
+      final validNodeSelection = previousNodeSelection
+          .where((id) => _nodes.containsKey(id))
+          .toSet();
+      final validLinkSelection = previousLinkSelection
+          .where((id) => _edges.containsKey(id))
+          .toList();
 
-      if (previousNodeSelection.isNotEmpty || previousLinkSelection.isNotEmpty) {
+      if (previousNodeSelection.isNotEmpty ||
+          previousLinkSelection.isNotEmpty) {
         controller.clearSelection(isHandled: true);
       }
 
@@ -407,7 +414,11 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
           isHandled: true,
         );
         for (final linkId in validLinkSelection.skip(1)) {
-          controller.selectLinkById(linkId, holdSelection: true, isHandled: true);
+          controller.selectLinkById(
+            linkId,
+            holdSelection: true,
+            isHandled: true,
+          );
         }
       }
 
@@ -622,15 +633,16 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
 
     final currentHighlight = highlightNotifier.value;
     if (currentHighlight.transitionIds.contains(linkId)) {
-      final remainingTransitionIds =
-          Set<String>.from(currentHighlight.transitionIds)..remove(linkId);
+      final remainingTransitionIds = Set<String>.from(
+        currentHighlight.transitionIds,
+      )..remove(linkId);
 
-      if (remainingTransitionIds.isEmpty &&
-          currentHighlight.stateIds.isEmpty) {
+      if (remainingTransitionIds.isEmpty && currentHighlight.stateIds.isEmpty) {
         highlightNotifier.value = SimulationHighlight.empty;
       } else {
-        highlightNotifier.value =
-            currentHighlight.copyWith(transitionIds: remainingTransitionIds);
+        highlightNotifier.value = currentHighlight.copyWith(
+          transitionIds: remainingTransitionIds,
+        );
       }
     } else if (updatedHighlighted.isEmpty &&
         currentHighlight.transitionIds.isEmpty &&

@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:fl_nodes/fl_nodes.dart';
 import 'package:fl_nodes/src/constants.dart';
 import 'package:fl_nodes/src/core/localization/delegate.dart';
+import 'package:fl_nodes/src/core/models/entities.dart' show PortDirection;
 import 'package:fl_nodes/src/core/models/events.dart';
 import 'package:fl_nodes/src/core/utils/rendering/renderbox.dart';
 import 'package:fl_nodes/src/widgets/context_menu.dart';
@@ -18,15 +19,9 @@ import 'package:flutter_context_menu/flutter_context_menu.dart';
 import '../../core/constants/automaton_canvas.dart';
 import 'automaton_canvas_tool.dart';
 
-
 typedef _TempLink = ({String nodeId, String portId});
 
-enum _AutomatonNodeMenuAction {
-  rename,
-  delete,
-  toggleInitial,
-  toggleAccepting,
-}
+enum _AutomatonNodeMenuAction { rename, delete, toggleInitial, toggleAccepting }
 
 class AutomatonStateNode extends StatefulWidget {
   const AutomatonStateNode({
@@ -111,6 +106,16 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
     return Offset(width / 2, height / 2);
   }
 
+  Offset _calculatePortOffset(PortDirection direction) {
+    final center = _resolveLocalCenter();
+    // Fallback to the node center until the controller emits the actual port offset.
+    switch (direction) {
+      case PortDirection.input:
+      case PortDirection.output:
+        return center;
+    }
+  }
+
   bool _isWithinCircle(Offset globalPosition) {
     final renderObject = widget.node.key.currentContext?.findRenderObject();
     if (renderObject is! RenderBox || !renderObject.hasSize) {
@@ -133,8 +138,9 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
   @override
   void initState() {
     super.initState();
-    _eventSubscription =
-        widget.controller.eventBus.events.listen(_handleControllerEvent);
+    _eventSubscription = widget.controller.eventBus.events.listen(
+      _handleControllerEvent,
+    );
     SchedulerBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _updatePortOffsets();
@@ -235,8 +241,11 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
   }
 
   _TempLink? _isNearPort(Offset position) {
-    final worldPosition =
-        screenToWorld(position, _viewportOffset, _viewportZoom);
+    final worldPosition = screenToWorld(
+      position,
+      _viewportOffset,
+      _viewportZoom,
+    );
     if (worldPosition == null) return null;
 
     final near = Rect.fromCenter(
@@ -271,8 +280,11 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
   }
 
   void _onTmpLinkUpdate(Offset position) {
-    final worldPosition =
-        screenToWorld(position, _viewportOffset, _viewportZoom);
+    final worldPosition = screenToWorld(
+      position,
+      _viewportOffset,
+      _viewportZoom,
+    );
     if (worldPosition == null) {
       return;
     }
@@ -376,14 +388,12 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
   Widget _buildNodeBody(BuildContext context) {
     final theme = Theme.of(context);
     final colors = _resolveNodeColors(theme);
-    final textStyle = theme.textTheme.titleMedium?.copyWith(
+    final textStyle =
+        theme.textTheme.titleMedium?.copyWith(
           color: colors.foreground,
           fontWeight: FontWeight.w600,
         ) ??
-        TextStyle(
-          color: colors.foreground,
-          fontWeight: FontWeight.w600,
-        );
+        TextStyle(color: colors.foreground, fontWeight: FontWeight.w600);
 
     final arrowColor = colors.foreground.withOpacity(0.9);
 
@@ -426,10 +436,7 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: colors.background,
-        border: Border.all(
-          color: borderColor,
-          width: 2,
-        ),
+        border: Border.all(color: borderColor, width: 2),
         boxShadow: boxShadows,
       ),
       child: Center(
@@ -488,33 +495,17 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
       children: [
         Container(
           key: widget.node.key,
-          child: Tooltip(
-            message: widget.label,
-            child: decoratedCircle,
-          ),
+          child: Tooltip(message: widget.label, child: decoratedCircle),
         ),
-        if (widget.isTransitionToolEnabled)
-          _buildLinkAnchorIndicator(colors),
+        if (widget.isTransitionToolEnabled) _buildLinkAnchorIndicator(colors),
         if (widget.isInitial)
           Positioned(
             left: -(AutomatonStateNode.nodeDiameter * 0.35),
             top: AutomatonStateNode.nodeDiameter / 2 - 12,
-            child: Icon(
-              Icons.play_arrow,
-              color: arrowColor,
-              size: 24,
-            ),
+            child: Icon(Icons.play_arrow, color: arrowColor, size: 24),
           ),
-        Positioned(
-          top: 4,
-          right: 4,
-          child: collapseButton,
-        ),
-        Positioned(
-          bottom: 4,
-          right: 4,
-          child: menuButton,
-        ),
+        Positioned(top: 4, right: 4, child: collapseButton),
+        Positioned(bottom: 4, right: 4, child: menuButton),
       ],
     );
   }
@@ -548,7 +539,8 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
     final theme = Theme.of(context);
     final mediaQuery = MediaQuery.of(context);
     final platform = theme.platform;
-    final isDesktopPlatform = platform == TargetPlatform.macOS ||
+    final isDesktopPlatform =
+        platform == TargetPlatform.macOS ||
         platform == TargetPlatform.linux ||
         platform == TargetPlatform.windows;
     return isDesktopPlatform || mediaQuery.size.shortestSide >= 600;
@@ -566,10 +558,9 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
             },
             onLongPressStart: (details) async {
               final position = details.globalPosition;
-              final locator =
-                  _canLinkFromCenter && _isWithinCircle(position)
-                      ? _centerLocatorOrNull
-                      : null;
+              final locator = _canLinkFromCenter && _isWithinCircle(position)
+                  ? _centerLocatorOrNull
+                  : null;
 
               if (!widget.node.state.isSelected) {
                 widget.controller.selectNodesById({widget.node.id});
@@ -583,9 +574,7 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
                 );
               } else {
                 Feedback.forLongPress(context);
-                await _showNodeMenu(
-                  useBottomSheet: true,
-                );
+                await _showNodeMenu(useBottomSheet: true);
               }
             },
             onPanDown: (details) {
@@ -667,10 +656,9 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
                   _onTmpLinkStart(locator);
                   _onTmpLinkUpdate(event.position);
                 } else if (!widget.node.state.isSelected) {
-                  widget.controller.selectNodesById(
-                    {widget.node.id},
-                    holdSelection: HardwareKeyboard.instance.isControlPressed,
-                  );
+                  widget.controller.selectNodesById({
+                    widget.node.id,
+                  }, holdSelection: HardwareKeyboard.instance.isControlPressed);
                 }
               }
             },
@@ -711,10 +699,7 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
       final center = port.offset == Offset.zero
           ? _calculatePortOffset(port.prototype.direction)
           : port.offset;
-      final locator = (
-        nodeId: widget.node.id,
-        portId: port.prototype.idName,
-      );
+      final locator = (nodeId: widget.node.id, portId: port.prototype.idName);
 
       return Positioned(
         left: center.dx - handleRadius,
@@ -786,8 +771,8 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
       });
     } else {
       widget.controller.nodePrototypes.forEach(
-            (key, value) => compatiblePrototypes.add(MapEntry(key, value)),
-          );
+        (key, value) => compatiblePrototypes.add(MapEntry(key, value)),
+      );
     }
 
     final worldPosition =
@@ -798,14 +783,13 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
         label: entry.value.displayName(context),
         icon: Icons.widgets,
         onSelected: () {
-          widget.controller.addNode(
-            entry.key,
-            offset: worldPosition,
-          );
+          widget.controller.addNode(entry.key, offset: worldPosition);
           if (fromLink) {
             final addedNode = widget.controller.nodes.values.last;
             final startPort = widget
-                .controller.nodes[_tempLink!.nodeId]!.ports[_tempLink!.portId]!;
+                .controller
+                .nodes[_tempLink!.nodeId]!
+                .ports[_tempLink!.portId]!;
             widget.controller.addLink(
               _tempLink!.nodeId,
               _tempLink!.portId,
@@ -833,8 +817,8 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
       action = await _showBottomSheetMenu(context);
     } else if (triggerContext != null) {
       final buttonBox = triggerContext.findRenderObject() as RenderBox?;
-      final overlay = Overlay.of(triggerContext)?.context.findRenderObject()
-          as RenderBox?;
+      final overlay =
+          Overlay.of(triggerContext)?.context.findRenderObject() as RenderBox?;
       if (buttonBox != null && overlay != null) {
         final position = RelativeRect.fromRect(
           Rect.fromPoints(
@@ -893,8 +877,9 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
                     leading: const Icon(Icons.edit),
                     title: const Text('Rename'),
                     onTap: () {
-                      Navigator.of(sheetContext)
-                          .pop(_AutomatonNodeMenuAction.rename);
+                      Navigator.of(
+                        sheetContext,
+                      ).pop(_AutomatonNodeMenuAction.rename);
                     },
                   ),
                   ListTile(
@@ -903,8 +888,9 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
                     textColor: Theme.of(context).colorScheme.error,
                     iconColor: Theme.of(context).colorScheme.error,
                     onTap: () {
-                      Navigator.of(sheetContext)
-                          .pop(_AutomatonNodeMenuAction.delete);
+                      Navigator.of(
+                        sheetContext,
+                      ).pop(_AutomatonNodeMenuAction.delete);
                     },
                   ),
                   const Divider(),
@@ -947,7 +933,8 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
   }
 
   Future<_AutomatonNodeMenuAction?> _showPointerMenu(Offset position) {
-    final overlay = Overlay.of(context)?.context.findRenderObject() as RenderBox?;
+    final overlay =
+        Overlay.of(context)?.context.findRenderObject() as RenderBox?;
     if (overlay == null) {
       return Future.value(null);
     }
@@ -1033,6 +1020,51 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
   }
 }
 
+class _PortHandle extends StatelessWidget {
+  const _PortHandle({
+    required this.size,
+    required this.color,
+    required this.borderColor,
+    this.onPanStart,
+    this.onPanUpdate,
+    this.onPanEnd,
+    this.onPanCancel,
+  });
+
+  final double size;
+  final Color color;
+  final Color borderColor;
+  final GestureDragStartCallback? onPanStart;
+  final GestureDragUpdateCallback? onPanUpdate;
+  final GestureDragEndCallback? onPanEnd;
+  final VoidCallback? onPanCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final handle = Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        border: Border.all(color: borderColor, width: 2),
+      ),
+    );
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.precise,
+      child: GestureDetector(
+        onPanStart: onPanStart,
+        onPanUpdate: onPanUpdate,
+        onPanEnd: onPanEnd,
+        onPanCancel: onPanCancel,
+        behavior: HitTestBehavior.opaque,
+        child: handle,
+      ),
+    );
+  }
+}
+
 class _NodeColors {
   const _NodeColors({required this.background, required this.foreground});
 
@@ -1078,9 +1110,7 @@ class _StateToggleButton extends StatelessWidget {
 }
 
 class _AcceptingRingPainter extends CustomPainter {
-  const _AcceptingRingPainter({
-    required this.color,
-  });
+  const _AcceptingRingPainter({required this.color});
 
   final Color color;
   static const double _ringPadding = 4;
@@ -1141,9 +1171,7 @@ class _FloatingCircleButton extends StatelessWidget {
 }
 
 class _RenameStateDialog extends StatefulWidget {
-  const _RenameStateDialog({
-    required this.initialLabel,
-  });
+  const _RenameStateDialog({required this.initialLabel});
 
   final String initialLabel;
 
@@ -1200,9 +1228,7 @@ class _RenameStateDialogState extends State<_RenameStateDialog> {
         autofocus: true,
         textInputAction: TextInputAction.done,
         onSubmitted: (_) => _submit(),
-        decoration: const InputDecoration(
-          labelText: 'State label',
-        ),
+        decoration: const InputDecoration(labelText: 'State label'),
       ),
       actions: [
         TextButton(

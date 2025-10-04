@@ -830,50 +830,98 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
   }
 
   Future<void> _handleRename(BuildContext context) async {
-    final controller = TextEditingController(text: widget.label);
-    final focusNode = FocusNode();
     final newLabel = await showDialog<String>(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Rename state'),
-          content: TextField(
-            controller: controller,
-            focusNode: focusNode,
-            autofocus: true,
-            textInputAction: TextInputAction.done,
-            onSubmitted: (value) {
-              Navigator.of(dialogContext).pop(value.trim());
-            },
-            decoration: const InputDecoration(
-              labelText: 'State label',
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop(controller.text.trim());
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        );
+        return _RenameStateDialog(initialLabel: widget.label);
       },
     );
 
-    if (newLabel != null && newLabel.isNotEmpty) {
-      widget.onRename(newLabel);
+    final trimmedLabel = newLabel?.trim();
+    if (trimmedLabel != null && trimmedLabel.isNotEmpty) {
+      widget.onRename(trimmedLabel);
     }
-
-    controller.dispose();
-    focusNode.dispose();
   }
+
+class _RenameStateDialog extends StatefulWidget {
+  const _RenameStateDialog({
+    required this.initialLabel,
+  });
+
+  final String initialLabel;
+
+  @override
+  State<_RenameStateDialog> createState() => _RenameStateDialogState();
+}
+
+class _RenameStateDialogState extends State<_RenameStateDialog> {
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
+  bool _isValid = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialLabel);
+    _focusNode = FocusNode();
+    _isValid = _controller.text.trim().isNotEmpty;
+    _controller.addListener(_handleControllerChanged);
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_handleControllerChanged);
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _handleControllerChanged() {
+    final isValid = _controller.text.trim().isNotEmpty;
+    if (isValid != _isValid) {
+      setState(() {
+        _isValid = isValid;
+      });
+    }
+  }
+
+  void _submit() {
+    final trimmed = _controller.text.trim();
+    if (trimmed.isEmpty) {
+      return;
+    }
+    Navigator.of(context).pop(trimmed);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Rename state'),
+      content: TextField(
+        controller: _controller,
+        focusNode: _focusNode,
+        autofocus: true,
+        textInputAction: TextInputAction.done,
+        onSubmitted: (_) => _submit(),
+        decoration: const InputDecoration(
+          labelText: 'State label',
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _isValid ? _submit : null,
+          child: const Text('Save'),
+        ),
+      ],
+    );
+  }
+}
 
   _NodeColors _resolveNodeColors(ThemeData theme) {
     final colorScheme = theme.colorScheme;

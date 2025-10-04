@@ -56,19 +56,19 @@ class MobileAutomatonControls extends StatelessWidget {
       if (onSimulate != null)
         _ControlAction(
           icon: Icons.play_arrow,
-          label: 'Simulate',
+          tooltip: 'Simulate',
           onPressed: isSimulationEnabled ? onSimulate : null,
         ),
       if (onAlgorithms != null)
         _ControlAction(
           icon: Icons.auto_awesome,
-          label: 'Algorithms',
+          tooltip: 'Algorithms',
           onPressed: isAlgorithmsEnabled ? onAlgorithms : null,
         ),
       if (onMetrics != null)
         _ControlAction(
           icon: Icons.bar_chart,
-          label: 'Metrics',
+          tooltip: 'Metrics',
           onPressed: isMetricsEnabled ? onMetrics : null,
         ),
     ];
@@ -77,44 +77,44 @@ class MobileAutomatonControls extends StatelessWidget {
       if (onUndo != null)
         _ControlAction(
           icon: Icons.undo,
-          label: 'Undo',
+          tooltip: 'Undo',
           onPressed: canUndo ? onUndo : null,
         ),
       if (onRedo != null)
         _ControlAction(
           icon: Icons.redo,
-          label: 'Redo',
+          tooltip: 'Redo',
           onPressed: canRedo ? onRedo : null,
         ),
       _ControlAction(
         icon: Icons.add,
-        label: 'Add state',
+        tooltip: 'Add state',
         onPressed: onAddState,
       ),
       _ControlAction(
         icon: Icons.zoom_in,
-        label: 'Zoom in',
+        tooltip: 'Zoom in',
         onPressed: onZoomIn,
       ),
       _ControlAction(
         icon: Icons.zoom_out,
-        label: 'Zoom out',
+        tooltip: 'Zoom out',
         onPressed: onZoomOut,
       ),
       _ControlAction(
         icon: Icons.fit_screen,
-        label: 'Fit to content',
+        tooltip: 'Fit to content',
         onPressed: onFitToContent,
       ),
       _ControlAction(
         icon: Icons.center_focus_strong,
-        label: 'Reset view',
+        tooltip: 'Reset view',
         onPressed: onResetView,
       ),
       if (onClear != null)
         _ControlAction(
           icon: Icons.delete_outline,
-          label: 'Clear canvas',
+          tooltip: 'Clear canvas',
           onPressed: onClear,
         ),
     ];
@@ -122,23 +122,24 @@ class MobileAutomatonControls extends StatelessWidget {
     return Align(
       alignment: Alignment.bottomCenter,
       child: SafeArea(
-        minimum: const EdgeInsets.all(12),
+        minimum: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 560),
           child: Material(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(20),
             color: colorScheme.surface,
             elevation: 10,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   if (primaryActions.isNotEmpty)
                     Wrap(
                       alignment: WrapAlignment.center,
-                      spacing: 12,
-                      runSpacing: 12,
+                      spacing: 8,
+                      runSpacing: 8,
                       children: primaryActions
                           .map(
                             (action) => _MobileControlButton(
@@ -149,12 +150,12 @@ class MobileAutomatonControls extends StatelessWidget {
                           .toList(),
                     ),
                   if (primaryActions.isNotEmpty && canvasActions.isNotEmpty)
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                   if (canvasActions.isNotEmpty)
                     Wrap(
                       alignment: WrapAlignment.center,
-                      spacing: 12,
-                      runSpacing: 12,
+                      spacing: 8,
+                      runSpacing: 8,
                       children: canvasActions
                           .map(
                             (action) => _MobileControlButton(
@@ -166,7 +167,7 @@ class MobileAutomatonControls extends StatelessWidget {
                     ),
                   if (statusMessage != null && statusMessage!.isNotEmpty)
                     Padding(
-                      padding: const EdgeInsets.only(top: 12),
+                      padding: const EdgeInsets.only(top: 10),
                       child: Text(
                         statusMessage!,
                         style: textTheme.bodySmall?.copyWith(
@@ -190,12 +191,12 @@ enum _ButtonStyleVariant { filled, tonal }
 class _ControlAction {
   const _ControlAction({
     required this.icon,
-    required this.label,
+    required this.tooltip,
     required this.onPressed,
   });
 
   final IconData icon;
-  final String label;
+  final String tooltip;
   final VoidCallback? onPressed;
 }
 
@@ -210,24 +211,34 @@ class _MobileControlButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final ButtonStyle buttonStyle = IconButton.styleFrom(
+      padding: const EdgeInsets.all(8),
+      visualDensity: VisualDensity.compact,
+      minimumSize: const Size.square(40),
+      shape: const CircleBorder(),
+    );
 
-    final buttonStyle = switch (style) {
-      _ButtonStyleVariant.filled => FilledButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    final Widget button = switch (style) {
+      _ButtonStyleVariant.filled => IconButton.filled(
+          onPressed: action.onPressed,
+          style: buttonStyle,
+          icon: Icon(action.icon),
         ),
-      _ButtonStyleVariant.tonal => FilledButton.styleFrom(
-          backgroundColor: colorScheme.surfaceContainerHigh,
-          foregroundColor: colorScheme.onSurface,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      _ButtonStyleVariant.tonal => IconButton.filledTonal(
+          onPressed: action.onPressed,
+          style: buttonStyle,
+          icon: Icon(action.icon),
         ),
     };
 
-    return FilledButton.icon(
-      style: buttonStyle,
-      onPressed: action.onPressed,
-      icon: Icon(action.icon),
-      label: Text(action.label),
+    return Tooltip(
+      message: action.tooltip,
+      child: Semantics(
+        label: action.tooltip,
+        button: true,
+        enabled: action.onPressed != null,
+        child: button,
+      ),
     );
   }
 }

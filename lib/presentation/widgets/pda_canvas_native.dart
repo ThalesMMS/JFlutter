@@ -15,6 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/pda.dart';
 import '../../core/models/pda_transition.dart';
+import '../../core/models/simulation_highlight.dart';
 import '../../core/models/state.dart' as automaton_state;
 import '../../core/services/simulation_highlight_service.dart';
 import '../../features/canvas/fl_nodes/fl_nodes_pda_canvas_controller.dart';
@@ -45,7 +46,6 @@ class _PDACanvasNativeState extends ConsumerState<PDACanvasNative> {
   FlNodeEditorStyle? _lastEditorStyle;
   ProviderSubscription<PDAEditorState>? _subscription;
   PDA? _lastDeliveredPda;
-  VoidCallback? _highlightListener;
   StreamSubscription<NodeEditorEvent>? _eventSubscription;
   VoidCallback? _controllerListener;
   VoidCallback? _viewportOffsetListener;
@@ -127,12 +127,6 @@ class _PDACanvasNativeState extends ConsumerState<PDACanvasNative> {
         }
       },
     );
-    _highlightListener = () {
-      if (mounted) {
-        setState(() {});
-      }
-    };
-    _canvasController.highlightNotifier.addListener(_highlightListener!);
     _initialiseOverlayListeners();
   }
 
@@ -218,10 +212,6 @@ class _PDACanvasNativeState extends ConsumerState<PDACanvasNative> {
   @override
   void dispose() {
     _subscription?.close();
-    if (_highlightListener != null) {
-      _canvasController.highlightNotifier
-          .removeListener(_highlightListener!);
-    }
     _eventSubscription?.cancel();
     if (_controllerListener != null) {
       _canvasController.controller.removeListener(_controllerListener!);
@@ -501,7 +491,6 @@ class _PDACanvasNativeState extends ConsumerState<PDACanvasNative> {
     final states = pda?.states.toList() ?? const <automaton_state.State>[];
     final transitions = pda?.pdaTransitions.toList() ?? const <PDATransition>[];
     final hasStates = states.isNotEmpty;
-    final highlight = _canvasController.highlightNotifier.value;
 
     final statesById = {for (final state in states) state.id: state};
     final initialStateId = pda?.initialState?.id;
@@ -534,39 +523,48 @@ class _PDACanvasNativeState extends ConsumerState<PDACanvasNative> {
                   final isAccepting = acceptingIds.contains(node.id);
                   final isNondeterministic =
                       nondeterministicStateIds.contains(node.id);
-                  final isHighlighted = highlight.stateIds.contains(node.id);
-
-                  final colors = _resolveHeaderColors(
-                    theme,
-                    isHighlighted: isHighlighted,
-                    isInitial: isInitial,
-                    isAccepting: isAccepting,
-                    isNondeterministic: isNondeterministic,
-                  );
 
                   final notifier = ref.read(pdaEditorProvider.notifier);
-                  return _PDANodeHeader(
-                    label: label,
-                    isInitial: isInitial,
-                    isAccepting: isAccepting,
-                    isNondeterministic: isNondeterministic,
-                    isCollapsed: node.state.isCollapsed,
-                    colors: colors,
-                    onToggleCollapse: onToggleCollapse,
-                    onToggleInitial: () {
-                      notifier.updateStateFlags(
-                        id: node.id,
-                        isInitial: !isInitial,
+                  return ValueListenableBuilder<SimulationHighlight>(
+                    valueListenable: _canvasController.highlightNotifier,
+                    builder: (context, highlight, _) {
+                      final isHighlighted =
+                          highlight.stateIds.contains(node.id);
+
+                      final colors = _resolveHeaderColors(
+                        theme,
+                        isHighlighted: isHighlighted,
+                        isInitial: isInitial,
+                        isAccepting: isAccepting,
+                        isNondeterministic: isNondeterministic,
+                      );
+
+                      return _PDANodeHeader(
+                        label: label,
+                        isInitial: isInitial,
+                        isAccepting: isAccepting,
+                        isNondeterministic: isNondeterministic,
+                        isCollapsed: node.state.isCollapsed,
+                        colors: colors,
+                        onToggleCollapse: onToggleCollapse,
+                        onToggleInitial: () {
+                          notifier.updateStateFlags(
+                            id: node.id,
+                            isInitial: !isInitial,
+                          );
+                        },
+                        onToggleAccepting: () {
+                          notifier.updateStateFlags(
+                            id: node.id,
+                            isAccepting: !isAccepting,
+                          );
+                        },
+                        initialToggleKey:
+                            Key('pda-node-${node.id}-initial-toggle'),
+                        acceptingToggleKey:
+                            Key('pda-node-${node.id}-accepting-toggle'),
                       );
                     },
-                    onToggleAccepting: () {
-                      notifier.updateStateFlags(
-                        id: node.id,
-                        isAccepting: !isAccepting,
-                      );
-                    },
-                    initialToggleKey: Key('pda-node-${node.id}-initial-toggle'),
-                    acceptingToggleKey: Key('pda-node-${node.id}-accepting-toggle'),
                   );
                 },
               ),

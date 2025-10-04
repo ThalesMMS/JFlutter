@@ -2,13 +2,6 @@ import 'dart:async';
 
 import 'package:collection/collection.dart';
 import 'package:fl_nodes/fl_nodes.dart';
-import 'package:fl_nodes/src/core/models/events.dart'
-    show
-        DragSelectionEndEvent,
-        LinkDeselectionEvent,
-        LinkSelectionEvent,
-        NodeEditorEvent,
-        RemoveLinkEvent;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,6 +14,7 @@ import '../../core/services/simulation_highlight_service.dart';
 import '../../features/canvas/fl_nodes/fl_nodes_pda_canvas_controller.dart';
 import '../../features/canvas/fl_nodes/fl_nodes_highlight_channel.dart';
 import '../../features/canvas/fl_nodes/link_overlay_utils.dart';
+import '../../features/canvas/fl_nodes/node_editor_event_shims.dart';
 import 'canvas_actions_sheet.dart';
 import 'transition_editors/pda_transition_editor.dart';
 import '../providers/pda_editor_provider.dart';
@@ -496,27 +490,39 @@ class _PDACanvasNativeState extends ConsumerState<PDACanvasNative> {
     if (!mounted) {
       return;
     }
-    if (event is LinkSelectionEvent) {
-      final ids = event.linkIds;
+
+    final linkSelection = parseLinkSelectionEvent(event);
+    if (linkSelection != null) {
+      final ids = linkSelection.linkIds;
       setState(() {
         _selectedLinkId = ids.length == 1 ? ids.first : null;
       });
-    } else if (event is LinkDeselectionEvent) {
+      return;
+    }
+
+    final linkDeselection = parseLinkDeselectionEvent(event);
+    if (linkDeselection != null) {
       if (_selectedLinkId != null) {
         setState(() {
           _selectedLinkId = null;
         });
       }
-    } else if (event is RemoveLinkEvent) {
-      if (_selectedLinkId == event.link.id) {
+      return;
+    }
+
+    final removeLinkPayload = parseRemoveLinkEvent(event);
+    if (removeLinkPayload != null) {
+      if (_selectedLinkId == removeLinkPayload.link.id) {
         setState(() {
           _selectedLinkId = null;
         });
       }
-    } else if (event is DragSelectionEndEvent) {
-      if (_selectedLinkId != null) {
-        setState(() {});
-      }
+      return;
+    }
+
+    final dragSelection = parseDragSelectionEndEvent(event);
+    if (dragSelection != null && _selectedLinkId != null) {
+      setState(() {});
     }
   }
 

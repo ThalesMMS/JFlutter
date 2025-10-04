@@ -2,9 +2,6 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:fl_nodes/fl_nodes.dart';
-// ignore: implementation_imports
-import 'package:fl_nodes/src/core/models/events.dart'
-    show DragSelectionEndEvent, NodeEditorEvent;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vector_math/vector_math_64.dart';
@@ -102,6 +99,17 @@ class _FakeLinkGeometryEvent extends NodeEditorEvent {
 
   final String linkId;
   final Offset? controlPoint;
+}
+
+class DragSelectionEndEvent extends NodeEditorEvent {
+  DragSelectionEndEvent(
+    this.position,
+    this.nodeIds, {
+    required super.id,
+  });
+
+  final Offset position;
+  final Set<String> nodeIds;
 }
 
 Future<void> _flushEvents() async {

@@ -67,6 +67,51 @@ void main() {
   );
 
   testWidgets(
+    'Canvas controller clears transition highlight when highlighted link is removed',
+    (tester) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      final controller = FlNodesCanvasController(
+        automatonProvider: container.read(automatonProvider.notifier),
+      );
+      addTearDown(controller.dispose);
+
+      final highlightService = SimulationHighlightService(
+        channel: FlNodesSimulationHighlightChannel(controller),
+      );
+      addTearDown(highlightService.clear);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: Scaffold(body: _HighlightProbe(controller: controller)),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      highlightService.dispatch(
+        const SimulationHighlight(transitionIds: {'t1'}),
+      );
+      await tester.pump();
+
+      expect(controller.highlightedTransitionIds, contains('t1'));
+      expect(
+        controller.highlightNotifier.value.transitionIds,
+        contains('t1'),
+      );
+
+      controller.pruneLinkHighlight('t1');
+      await tester.pump();
+
+      expect(controller.highlightedTransitionIds, isEmpty);
+      expect(controller.highlightNotifier.value, SimulationHighlight.empty);
+    },
+  );
+
+  testWidgets(
     'AutomatonCanvas attaches highlight channel to the owned controller',
     (tester) async {
       final container = ProviderContainer();

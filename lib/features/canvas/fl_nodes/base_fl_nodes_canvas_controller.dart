@@ -6,6 +6,7 @@ import 'package:fl_nodes/src/core/models/events.dart' show DragSelectionEndEvent
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/models/simulation_highlight.dart';
 import 'fl_nodes_canvas_models.dart';
 import 'fl_nodes_highlight_controller.dart';
 import 'fl_nodes_label_field_editor.dart';
@@ -372,7 +373,37 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
 
   void _handleLinkRemoved(Link link) {
     _edges.remove(link.id);
+    pruneLinkHighlight(link.id);
     onCanvasEdgeRemoved(link.id);
+  }
+
+  @visibleForTesting
+  void pruneLinkHighlight(String linkId) {
+    if (!highlightedTransitionIds.contains(linkId)) {
+      return;
+    }
+
+    final updatedHighlighted = Set<String>.from(highlightedTransitionIds)
+      ..remove(linkId);
+    updateLinkHighlights(updatedHighlighted);
+
+    final currentHighlight = highlightNotifier.value;
+    if (currentHighlight.transitionIds.contains(linkId)) {
+      final remainingTransitionIds =
+          Set<String>.from(currentHighlight.transitionIds)..remove(linkId);
+
+      if (remainingTransitionIds.isEmpty &&
+          currentHighlight.stateIds.isEmpty) {
+        highlightNotifier.value = SimulationHighlight.empty;
+      } else {
+        highlightNotifier.value =
+            currentHighlight.copyWith(transitionIds: remainingTransitionIds);
+      }
+    } else if (updatedHighlighted.isEmpty &&
+        currentHighlight.transitionIds.isEmpty &&
+        currentHighlight.stateIds.isEmpty) {
+      highlightNotifier.value = SimulationHighlight.empty;
+    }
   }
 
   /// Resolves the display label for the provided [node] instance.

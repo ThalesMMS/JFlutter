@@ -248,29 +248,158 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
   @protected
   void synchronizeCanvas(TSnapshot? data) {
     final snapshot = toSnapshot(data);
+    final incomingNodes = {
+      for (final node in snapshot.nodes) node.id: node,
+    };
+    final incomingEdges = {
+      for (final edge in snapshot.edges) edge.id: edge,
+    };
+
+    final previousNodeSelection = controller.selectedNodeIds.toList(growable: false);
+    final previousLinkSelection = controller.selectedLinkIds.toList(growable: false);
+    final previousHighlight = SimulationHighlight(
+      stateIds: Set<String>.from(highlightNotifier.value.stateIds),
+      transitionIds: Set<String>.from(highlightNotifier.value.transitionIds),
+    );
+
     _isSynchronizing = true;
-    controller.clear();
-    _nodes
-      ..clear()
-      ..addEntries(snapshot.nodes.map((node) => MapEntry(node.id, node)));
-    _edges
-      ..clear()
-      ..addEntries(snapshot.edges.map((edge) => MapEntry(edge.id, edge)));
 
-    for (final node in snapshot.nodes) {
-      controller.addNodeFromExisting(_buildNodeInstance(node), isHandled: true);
+    var nodesDirty = false;
+
+    try {
+      final removedNodeIds =
+          _nodes.keys.where((id) => !incomingNodes.containsKey(id)).toList();
+      for (final nodeId in removedNodeIds) {
+        _nodes.remove(nodeId);
+        controller.removeNodeById(nodeId, isHandled: true);
+      }
+
+      final removedEdgeIds =
+          _edges.keys.where((id) => !incomingEdges.containsKey(id)).toList();
+      for (final edgeId in removedEdgeIds) {
+        _edges.remove(edgeId);
+        controller.removeLinkById(edgeId, isHandled: true);
+        pruneLinkHighlight(edgeId);
+      }
+
+      for (final entry in incomingNodes.entries) {
+        final nodeId = entry.key;
+        final incomingNode = entry.value;
+        final existingNode = _nodes[nodeId];
+
+        if (existingNode == null) {
+          _nodes[nodeId] = incomingNode;
+          controller.addNodeFromExisting(
+            _buildNodeInstance(incomingNode),
+            isHandled: true,
+          );
+          continue;
+        }
+
+        final hasPositionChanged =
+            existingNode.x != incomingNode.x || existingNode.y != incomingNode.y;
+        final hasLabelChanged = existingNode.label != incomingNode.label;
+        final hasInitialChanged = existingNode.isInitial != incomingNode.isInitial;
+        final hasAcceptingChanged =
+            existingNode.isAccepting != incomingNode.isAccepting;
+
+        if (hasPositionChanged ||
+            hasLabelChanged ||
+            hasInitialChanged ||
+            hasAcceptingChanged) {
+          _nodes[nodeId] = incomingNode;
+
+          final instance = controller.nodes[nodeId];
+          if (instance != null) {
+            if (hasPositionChanged) {
+              instance.offset = Offset(incomingNode.x, incomingNode.y);
+              nodesDirty = true;
+            }
+
+            if (hasLabelChanged) {
+              final field = instance.fields[labelFieldId];
+              if (field != null) {
+                field.data = incomingNode.label;
+                nodesDirty = true;
+              }
+            }
+          }
+
+          if (hasInitialChanged || hasAcceptingChanged) {
+            nodesDirty = true;
+          }
+        } else {
+          _nodes[nodeId] = incomingNode;
+        }
+      }
+
+      for (final entry in incomingEdges.entries) {
+        final edgeId = entry.key;
+        final incomingEdge = entry.value;
+        final existingEdge = _edges[edgeId];
+
+        if (existingEdge == null) {
+          _edges[edgeId] = incomingEdge;
+          controller.addLinkFromExisting(
+            _buildLink(incomingEdge),
+            isHandled: true,
+          );
+          continue;
+        }
+
+        _edges[edgeId] = incomingEdge;
+      }
+
+      if (nodesDirty) {
+        controller.nodesDataDirty = true;
+      }
+
+      final validNodeSelection =
+          previousNodeSelection.where((id) => _nodes.containsKey(id)).toSet();
+      final validLinkSelection =
+          previousLinkSelection.where((id) => _edges.containsKey(id)).toList();
+
+      if (previousNodeSelection.isNotEmpty || previousLinkSelection.isNotEmpty) {
+        controller.clearSelection(isHandled: true);
+      }
+
+      if (validNodeSelection.isNotEmpty) {
+        controller.selectNodesById(
+          validNodeSelection,
+          holdSelection: false,
+          isHandled: true,
+        );
+      }
+
+      if (validLinkSelection.isNotEmpty) {
+        controller.selectLinkById(
+          validLinkSelection.first,
+          holdSelection: validNodeSelection.isNotEmpty,
+          isHandled: true,
+        );
+        for (final linkId in validLinkSelection.skip(1)) {
+          controller.selectLinkById(linkId, holdSelection: true, isHandled: true);
+        }
+      }
+
+      final sanitizedHighlight = SimulationHighlight(
+        stateIds: previousHighlight.stateIds
+            .where((id) => _nodes.containsKey(id))
+            .toSet(),
+        transitionIds: previousHighlight.transitionIds
+            .where((id) => _edges.containsKey(id))
+            .toSet(),
+      );
+
+      updateLinkHighlights(sanitizedHighlight.transitionIds);
+      highlightNotifier.value = sanitizedHighlight;
+
+      if (nodesDirty) {
+        controller.notifyListeners();
+      }
+    } finally {
+      _isSynchronizing = false;
     }
-
-    for (final edge in snapshot.edges) {
-      controller.addLinkFromExisting(_buildLink(edge), isHandled: true);
-    }
-
-    if (highlightedTransitionIds.isNotEmpty ||
-        highlightNotifier.value.transitionIds.isNotEmpty) {
-      updateLinkHighlights(highlightedTransitionIds);
-    }
-
-    _isSynchronizing = false;
   }
 
   NodeInstance _buildNodeInstance(FlNodesCanvasNode node) {

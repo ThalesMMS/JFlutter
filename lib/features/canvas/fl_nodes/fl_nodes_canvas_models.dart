@@ -201,6 +201,11 @@ class FlNodesCanvasEdge {
     String? writeSymbol,
     TapeDirection? direction,
     int? tapeNumber,
+    String? popSymbol,
+    String? pushSymbol,
+    bool? isLambdaInput,
+    bool? isLambdaPop,
+    bool? isLambdaPush,
   }) {
     return FlNodesCanvasEdge(
       id: id ?? this.id,

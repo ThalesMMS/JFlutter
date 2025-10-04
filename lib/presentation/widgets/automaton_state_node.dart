@@ -383,6 +383,21 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
       return colorScheme.outlineVariant;
     }();
 
+    final shouldGlow = widget.isHighlighted || widget.isCurrent;
+    final boxShadows = <BoxShadow>[
+      BoxShadow(
+        color: theme.colorScheme.shadow.withOpacity(0.18),
+        blurRadius: 12,
+        offset: const Offset(0, 4),
+      ),
+      if (shouldGlow)
+        BoxShadow(
+          color: theme.colorScheme.primary.withOpacity(0.35),
+          blurRadius: 16,
+          spreadRadius: 2,
+        ),
+    ];
+
     final circle = AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       width: AutomatonStateNode.nodeDiameter,
@@ -394,15 +409,7 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
           color: borderColor,
           width: 2,
         ),
-        boxShadow: widget.isHighlighted || widget.isCurrent
-            ? [
-                BoxShadow(
-                  color: theme.colorScheme.primary.withOpacity(0.35),
-                  blurRadius: 16,
-                  spreadRadius: 2,
-                ),
-              ]
-            : const [],
+        boxShadow: boxShadows,
       ),
       child: Center(
         child: Padding(
@@ -969,7 +976,7 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
       );
     }
     return _NodeColors(
-      background: colorScheme.surface,
+      background: Colors.transparent,
       foreground: colorScheme.onSurface,
     );
   }

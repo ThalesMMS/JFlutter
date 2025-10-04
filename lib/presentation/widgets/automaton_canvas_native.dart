@@ -495,8 +495,12 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
       return;
     }
 
+    final currentOffset = controller.viewportOffset;
     controller.setViewportOffset(
-      Offset(-delta.dx / zoom, -delta.dy / zoom),
+      Offset(
+        currentOffset.dx + (delta.dx / zoom),
+        currentOffset.dy + (delta.dy / zoom),
+      ),
       animate: false,
     );
     _canvasPanStartGlobalPosition = details.globalPosition;

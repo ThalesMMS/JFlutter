@@ -43,7 +43,7 @@ Future<void> setupDependencyInjection() async {
 
   getIt.registerLazySingleton<ConversionService>(() => ConversionService());
 
-  // Core trace persistence service (for AutomatonProvider, TraceNavigationProvider)
+  // Core trace persistence service (used by AutomatonProvider and legacy trace flows)
   getIt.registerLazySingleton<TracePersistenceService>(
     () => TracePersistenceService(),
   );

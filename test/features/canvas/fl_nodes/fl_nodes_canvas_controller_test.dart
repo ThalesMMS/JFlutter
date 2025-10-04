@@ -112,6 +112,7 @@ class _RecordingAutomatonProvider extends AutomatonProvider {
     required String label,
   }) {
     updateLabelCalls.add({'id': id, 'label': label});
+    super.updateStateLabel(id: id, label: label);
   }
 
   @override
@@ -361,6 +362,84 @@ void main() {
       final lastCall = provider.transitionCalls.last;
       expect(lastCall['controlPointX'], closeTo(48, 1e-6));
       expect(lastCall['controlPointY'], closeTo(16, 1e-6));
+    });
+
+    test('createCanvasNode assigns sequential state labels', () {
+      final firstInstance = _buildNode(
+        controller,
+        id: 'node-0',
+        label: '',
+        offset: const Offset(0, 0),
+      );
+      final firstNode = controller.createCanvasNode(firstInstance);
+
+      expect(firstNode.label, equals('q0'));
+      expect(firstInstance.fields['label']?.data, equals('q0'));
+
+      controller.nodesCache[firstNode.id] = firstNode;
+      controller.onCanvasNodeAdded(firstNode);
+
+      final secondInstance = _buildNode(
+        controller,
+        id: 'node-1',
+        label: '',
+        offset: const Offset(24, 0),
+      );
+      final secondNode = controller.createCanvasNode(secondInstance);
+
+      expect(secondNode.label, equals('q1'));
+      expect(secondInstance.fields['label']?.data, equals('q1'));
+
+      controller.nodesCache[secondNode.id] = secondNode;
+      controller.onCanvasNodeAdded(secondNode);
+
+      expect(provider.addStateCalls.map((call) => call['label']).toList(), equals(['q0', 'q1']));
+    });
+
+    test('new nodes reuse the next free q label after manual rename', () {
+      final firstInstance = _buildNode(
+        controller,
+        id: 'node-0',
+        label: '',
+        offset: const Offset(0, 0),
+      );
+      final firstNode = controller.createCanvasNode(firstInstance);
+      controller.nodesCache[firstNode.id] = firstNode;
+      controller.onCanvasNodeAdded(firstNode);
+
+      final secondInstance = _buildNode(
+        controller,
+        id: 'node-1',
+        label: '',
+        offset: const Offset(48, 0),
+      );
+      final secondNode = controller.createCanvasNode(secondInstance);
+      controller.nodesCache[secondNode.id] = secondNode;
+      controller.onCanvasNodeAdded(secondNode);
+
+      final renamedSecond = secondNode.copyWith(label: 'q0');
+      controller.nodesCache[renamedSecond.id] = renamedSecond;
+      controller.onCanvasNodeLabelUpdated(renamedSecond);
+
+      final thirdInstance = _buildNode(
+        controller,
+        id: 'node-2',
+        label: '',
+        offset: const Offset(96, 0),
+      );
+      final thirdNode = controller.createCanvasNode(thirdInstance);
+
+      expect(thirdNode.label, equals('q1'));
+      expect(thirdInstance.fields['label']?.data, equals('q1'));
+
+      controller.nodesCache[thirdNode.id] = thirdNode;
+      controller.onCanvasNodeAdded(thirdNode);
+
+      expect(provider.addStateCalls.last['label'], equals('q1'));
+      final automaton = provider.state.currentAutomaton;
+      expect(automaton, isNotNull);
+      final labels = automaton!.states.map((state) => state.label).toSet();
+      expect(labels, contains('q1'));
     });
 
     test('propagates AddNodeEvent payload to provider', () async {

@@ -27,14 +27,24 @@ Riverpod state (`AutomatonProvider`) perfectly aligned.
 `FlNodesCanvasController` listens to the editor `eventBus` and forwards user
 edits back to `AutomatonProvider`:
 
-* `AddNodeEvent`, `RemoveNodeEvent`, and `DragSelectionEndEvent` translate into
-  `addState`, `removeState`, and `moveState` calls, keeping coordinates and
-  labels aligned with the automaton model.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L236-L302】【F:lib/presentation/providers/automaton_provider.dart†L83-L166】
+* `AddNodeEvent`, `RemoveNodeEvent`, and drag-selection end notifications
+  translate into `addState`, `removeState`, and `moveState` calls, keeping
+  coordinates and labels aligned with the automaton
+  model.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L236-L302】【F:lib/presentation/providers/automaton_provider.dart†L83-L166】
 * Node label edits invoke `updateStateLabel`, normalising blank labels to the
   node identifier so existing transitions remain consistent.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L304-L327】【F:lib/presentation/providers/automaton_provider.dart†L168-L214】
 * Link creation and deletion map to `addOrUpdateTransition` and
   `removeTransition`, ensuring the Riverpod graph stays in sync with the visual
   wiring.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L329-L355】【F:lib/presentation/providers/automaton_provider.dart†L216-L260】
+
+### Compatibility Layer
+
+Some canvas events (`DragSelectionEndEvent`, `LinkSelectionEvent`,
+`LinkDeselectionEvent`, and `RemoveLinkEvent`) still surface through private
+`fl_nodes` classes. The bridge now exposes local shims that pattern-match the
+runtime payload and forward typed data to the controller and widgets. This keeps
+the integration on the public package surface while remaining resilient to
+upstream refactors.【F:lib/features/canvas/fl_nodes/node_editor_event_shims.dart†L1-L178】【F:lib/features/canvas/fl_nodes/base_fl_nodes_canvas_controller.dart†L248-L282】【F:lib/presentation/widgets/automaton_canvas_native.dart†L600-L641】
 
 Toolbar buttons (zoom, fit, reset, add state) now call directly into the
 controller instead of posting JavaScript messages. This keeps the ergonomics of

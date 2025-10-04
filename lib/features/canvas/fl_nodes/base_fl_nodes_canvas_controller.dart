@@ -1,8 +1,6 @@
 import 'dart:async';
 
 import 'package:fl_nodes/fl_nodes.dart';
-// ignore: implementation_imports
-import 'package:fl_nodes/src/core/models/events.dart' show DragSelectionEndEvent;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -12,6 +10,7 @@ import 'fl_nodes_highlight_controller.dart';
 import 'fl_nodes_label_field_editor.dart';
 import 'fl_nodes_viewport_highlight_mixin.dart';
 import 'link_geometry_event_utils.dart';
+import 'node_editor_event_shims.dart';
 
 /// Base controller that coordinates fl_nodes interactions with domain notifiers.
 abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
@@ -258,12 +257,16 @@ abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
       return;
     }
 
+    final dragSelectionPayload = parseDragSelectionEndEvent(event);
+    if (dragSelectionPayload != null) {
+      _handleSelectionDragged(dragSelectionPayload.nodeIds);
+      return;
+    }
+
     if (event is AddNodeEvent) {
       _handleNodeAdded(event.node);
     } else if (event is RemoveNodeEvent) {
       _handleNodeRemoved(event.node);
-    } else if (event is DragSelectionEndEvent) {
-      _handleSelectionDragged(event.nodeIds);
     } else if (event is NodeFieldEvent) {
       _handleNodeField(event);
     } else if (event is AddLinkEvent) {

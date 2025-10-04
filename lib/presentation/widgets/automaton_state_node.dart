@@ -321,6 +321,23 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
 
     final arrowColor = colors.foreground.withOpacity(0.9);
 
+    final colorScheme = theme.colorScheme;
+    final borderColor = () {
+      if (widget.node.state.isSelected) {
+        return colorScheme.primary;
+      }
+      if (widget.isHighlighted || widget.isCurrent) {
+        return colorScheme.primary;
+      }
+      if (widget.isVisited) {
+        return colorScheme.secondary;
+      }
+      if (widget.isNondeterministic) {
+        return colorScheme.tertiary;
+      }
+      return colorScheme.outlineVariant;
+    }();
+
     final circle = AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       width: AutomatonStateNode.nodeDiameter,
@@ -329,9 +346,7 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
         shape: BoxShape.circle,
         color: colors.background,
         border: Border.all(
-          color: widget.node.state.isSelected
-              ? theme.colorScheme.primary
-              : colors.foreground.withOpacity(0.8),
+          color: borderColor,
           width: 2,
         ),
         boxShadow: widget.isHighlighted || widget.isCurrent
@@ -879,8 +894,8 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
     final colorScheme = theme.colorScheme;
     if (widget.isHighlighted || widget.isCurrent) {
       return _NodeColors(
-        background: colorScheme.primary,
-        foreground: colorScheme.onPrimary,
+        background: colorScheme.primaryContainer,
+        foreground: colorScheme.onPrimaryContainer,
       );
     }
     if (widget.isVisited) {
@@ -895,21 +910,9 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
         foreground: colorScheme.onTertiaryContainer,
       );
     }
-    if (widget.isAccepting) {
-      return _NodeColors(
-        background: colorScheme.secondaryContainer,
-        foreground: colorScheme.onSecondaryContainer,
-      );
-    }
-    if (widget.isInitial) {
-      return _NodeColors(
-        background: colorScheme.primaryContainer,
-        foreground: colorScheme.onPrimaryContainer,
-      );
-    }
     return _NodeColors(
-      background: colorScheme.surfaceVariant,
-      foreground: colorScheme.onSurfaceVariant,
+      background: colorScheme.surface,
+      foreground: colorScheme.onSurface,
     );
   }
 }

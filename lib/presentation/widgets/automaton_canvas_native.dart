@@ -338,6 +338,9 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
   SimulationHighlightChannel? _previousHighlightChannel;
   FlNodesSimulationHighlightChannel? _highlightChannel;
   final Set<int> _activePointerIds = <int>{};
+  final Map<int, Offset> _pointerDownPositions = <int, Offset>{};
+  final Set<int> _draggedPointerIds = <int>{};
+  static const double _tapMovementTolerance = 6;
   int _doubleTapPointerCount = 1;
   int _currentTapMaxPointerCount = 0;
   bool _isPanningCanvas = false;
@@ -706,13 +709,29 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
 
   void _handleCanvasPointerDown(PointerDownEvent event) {
     _activePointerIds.add(event.pointer);
+    _pointerDownPositions[event.pointer] = event.position;
+    _draggedPointerIds.remove(event.pointer);
     final activeCount = _activePointerIds.length;
     if (activeCount > _currentTapMaxPointerCount) {
       _currentTapMaxPointerCount = activeCount;
     }
   }
 
+  void _handleCanvasPointerMove(PointerMoveEvent event) {
+    final start = _pointerDownPositions[event.pointer];
+    if (start == null || _draggedPointerIds.contains(event.pointer)) {
+      return;
+    }
+    final displacement = event.position - start;
+    if (displacement.distanceSquared >
+        _tapMovementTolerance * _tapMovementTolerance) {
+      _draggedPointerIds.add(event.pointer);
+    }
+  }
+
   void _handleCanvasPointerUp(PointerEvent event) {
+    final wasDragged = _draggedPointerIds.remove(event.pointer);
+    final start = _pointerDownPositions.remove(event.pointer);
     _activePointerIds.remove(event.pointer);
     if (_activePointerIds.isEmpty) {
       _doubleTapPointerCount = _currentTapMaxPointerCount == 0
@@ -720,10 +739,19 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
           : _currentTapMaxPointerCount;
       _currentTapMaxPointerCount = 0;
     }
+
+    if (_isAddStateToolActive &&
+        !wasDragged &&
+        start != null &&
+        _currentTapMaxPointerCount <= 1) {
+      _handleCanvasTap(event.position);
+    }
   }
 
   void _handleCanvasPointerCancel(PointerCancelEvent event) {
     _activePointerIds.remove(event.pointer);
+    _pointerDownPositions.remove(event.pointer);
+    _draggedPointerIds.remove(event.pointer);
     if (_activePointerIds.isEmpty) {
       _doubleTapPointerCount = _currentTapMaxPointerCount == 0
           ? 1
@@ -1130,11 +1158,11 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
             child: Listener(
               behavior: HitTestBehavior.translucent,
               onPointerDown: _handleCanvasPointerDown,
+              onPointerMove: _handleCanvasPointerMove,
               onPointerUp: _handleCanvasPointerUp,
               onPointerCancel: _handleCanvasPointerCancel,
               child: GestureDetector(
                 behavior: HitTestBehavior.translucent,
-                onTapUp: (details) => _handleCanvasTap(details.globalPosition),
                 onLongPressStart: (details) =>
                     unawaited(_handleCanvasLongPress(details.globalPosition)),
                 onPanStart: _handleCanvasPanStart,

@@ -10,12 +10,14 @@ import 'package:fl_nodes/src/core/models/events.dart'
         NodeEditorEvent,
         RemoveLinkEvent;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/tm.dart';
 import '../../core/models/tm_transition.dart';
 import '../../features/canvas/fl_nodes/fl_nodes_tm_canvas_controller.dart';
 import '../../features/canvas/fl_nodes/link_overlay_utils.dart';
+import 'canvas_actions_sheet.dart';
 import 'transition_editors/tm_transition_operations_editor.dart';
 import '../providers/tm_editor_provider.dart';
 
@@ -187,12 +189,34 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
     _eventSubscription = controller.eventBus.events.listen(_handleEditorEvent);
   }
 
-  void _handleCanvasInteraction(Offset globalPosition) {
+  void _handleCanvasTap(Offset globalPosition) {
     final worldPosition = _globalToWorld(globalPosition);
     if (worldPosition == null || !_isCanvasSpaceFree(worldPosition)) {
       return;
     }
+    HapticFeedback.selectionClick();
     _canvasController.addStateAt(worldPosition);
+  }
+
+  Future<void> _handleCanvasLongPress(Offset globalPosition) async {
+    final worldPosition = _globalToWorld(globalPosition);
+    if (!mounted) {
+      return;
+    }
+    final canAddState =
+        worldPosition != null && _isCanvasSpaceFree(worldPosition);
+
+    await showCanvasContextActions(
+      context: context,
+      canAddState: canAddState,
+      onAddState: () {
+        if (worldPosition != null && canAddState) {
+          _canvasController.addStateAt(worldPosition);
+        }
+      },
+      onFitToContent: _canvasController.fitToContent,
+      onResetView: _canvasController.resetView,
+    );
   }
 
   Offset? _globalToWorld(Offset globalPosition) {
@@ -279,9 +303,10 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
             child: GestureDetector(
               behavior: HitTestBehavior.translucent,
               onTapUp: (details) =>
-                  _handleCanvasInteraction(details.globalPosition),
-              onLongPressStart: (details) =>
-                  _handleCanvasInteraction(details.globalPosition),
+                  _handleCanvasTap(details.globalPosition),
+              onLongPressStart: (details) => unawaited(
+                _handleCanvasLongPress(details.globalPosition),
+              ),
               child: FlNodeEditorWidget(
                 controller: _canvasController.controller,
                 overlay: _buildOverlay,

@@ -24,8 +24,7 @@ class _CanvasHistoryEntry {
 
 /// Base controller that coordinates fl_nodes interactions with domain notifiers.
 abstract class BaseFlNodesCanvasController<TNotifier, TSnapshot>
-    with FlNodesViewportHighlightMixin
-    implements FlNodesHighlightController {
+    extends FlNodesHighlightController with FlNodesViewportHighlightMixin {
   BaseFlNodesCanvasController({
     required TNotifier notifier,
     FlNodeEditorController? editorController,

@@ -11,7 +11,7 @@ import 'trace_viewers/pda_trace_viewer.dart';
 class PDASimulationPanel extends ConsumerStatefulWidget {
   final SimulationHighlightService highlightService;
 
-  const PDASimulationPanel({
+  PDASimulationPanel({
     super.key,
     SimulationHighlightService? highlightService,
   }) : highlightService = highlightService ?? SimulationHighlightService();

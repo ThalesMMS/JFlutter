@@ -11,7 +11,7 @@ import 'trace_viewers/tm_trace_viewer.dart';
 class TMSimulationPanel extends ConsumerStatefulWidget {
   final SimulationHighlightService highlightService;
 
-  const TMSimulationPanel({
+  TMSimulationPanel({
     super.key,
     SimulationHighlightService? highlightService,
   }) : highlightService = highlightService ?? SimulationHighlightService();

@@ -491,54 +491,55 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
                   controller: _canvasController.controller,
                   overlay: _buildOverlay,
                   headerBuilder: (context, node, style, onToggleCollapse) {
-                  final state = statesById[node.id];
-                  final label = state?.label ?? node.id;
-                  final isInitial = initialStateId == node.id;
-                  final isAccepting = acceptingIds.contains(node.id);
-                  final isNondeterministic =
-                      nondeterministicStateIds.contains(node.id);
-                  final notifier = ref.read(tmEditorProvider.notifier);
+                    final state = statesById[node.id];
+                    final label = state?.label ?? node.id;
+                    final isInitial = initialStateId == node.id;
+                    final isAccepting = acceptingIds.contains(node.id);
+                    final isNondeterministic =
+                        nondeterministicStateIds.contains(node.id);
+                    final notifier = ref.read(tmEditorProvider.notifier);
 
-                  return ValueListenableBuilder<SimulationHighlight>(
-                    valueListenable: _canvasController.highlightNotifier,
-                    builder: (context, highlight, _) {
-                      final isHighlighted =
-                          highlight.stateIds.contains(node.id);
-                      final colors = _resolveHeaderColors(
-                        theme,
-                        isHighlighted: isHighlighted,
-                        isInitial: isInitial,
-                        isAccepting: isAccepting,
-                        isNondeterministic: isNondeterministic,
-                      );
+                    return ValueListenableBuilder<SimulationHighlight>(
+                      valueListenable: _canvasController.highlightNotifier,
+                      builder: (context, highlight, _) {
+                        final isHighlighted =
+                            highlight.stateIds.contains(node.id);
+                        final colors = _resolveHeaderColors(
+                          theme,
+                          isHighlighted: isHighlighted,
+                          isInitial: isInitial,
+                          isAccepting: isAccepting,
+                          isNondeterministic: isNondeterministic,
+                        );
 
-                      return _TMNodeHeader(
-                        label: label,
-                        isInitial: isInitial,
-                        isAccepting: isAccepting,
-                        isCollapsed: node.state.isCollapsed,
-                        colors: colors,
-                        onToggleCollapse: onToggleCollapse,
-                        onToggleInitial: () {
-                          notifier.updateStateFlags(
-                            id: node.id,
-                            isInitial: !isInitial,
-                          );
-                        },
-                        onToggleAccepting: () {
-                          notifier.updateStateFlags(
-                            id: node.id,
-                            isAccepting: !isAccepting,
-                          );
-                        },
-                        initialToggleKey:
-                            Key('tm-node-${node.id}-initial-toggle'),
-                        acceptingToggleKey:
-                            Key('tm-node-${node.id}-accepting-toggle'),
-                      );
-                    },
-                  );
-                },
+                        return _TMNodeHeader(
+                          label: label,
+                          isInitial: isInitial,
+                          isAccepting: isAccepting,
+                          isCollapsed: node.state.isCollapsed,
+                          colors: colors,
+                          onToggleCollapse: onToggleCollapse,
+                          onToggleInitial: () {
+                            notifier.updateStateFlags(
+                              id: node.id,
+                              isInitial: !isInitial,
+                            );
+                          },
+                          onToggleAccepting: () {
+                            notifier.updateStateFlags(
+                              id: node.id,
+                              isAccepting: !isAccepting,
+                            );
+                          },
+                          initialToggleKey:
+                              Key('tm-node-${node.id}-initial-toggle'),
+                          acceptingToggleKey:
+                              Key('tm-node-${node.id}-accepting-toggle'),
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
             ),
           ),

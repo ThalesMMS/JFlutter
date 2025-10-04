@@ -750,75 +750,76 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
                   controller: _canvasController.controller,
                   overlay: _buildOverlay,
                   headerBuilder: (context, node, style, onToggleCollapse) {
-                  final automatonNotifier =
-                      ref.read(automatonProvider.notifier);
-                  final automatonState = _statesById[node.id];
-                  final label = automatonState?.label ?? node.id;
-                  final isInitial = automaton?.initialState?.id == node.id;
-                  final isAccepting =
-                      automaton?.acceptingStates.any(
-                        (candidate) => candidate.id == node.id,
-                      ) ??
-                      false;
-                  final isVisited =
-                      widget.showTrace && _visitedStateIds.contains(node.id);
-                  final isCurrent =
-                      widget.showTrace && _currentStateId == node.id;
-                  final isNondeterministic =
-                      _nondeterministicStateIds.contains(node.id);
+                    final automatonNotifier =
+                        ref.read(automatonProvider.notifier);
+                    final automatonState = _statesById[node.id];
+                    final label = automatonState?.label ?? node.id;
+                    final isInitial = automaton?.initialState?.id == node.id;
+                    final isAccepting =
+                        automaton?.acceptingStates.any(
+                          (candidate) => candidate.id == node.id,
+                        ) ??
+                        false;
+                    final isVisited =
+                        widget.showTrace && _visitedStateIds.contains(node.id);
+                    final isCurrent =
+                        widget.showTrace && _currentStateId == node.id;
+                    final isNondeterministic =
+                        _nondeterministicStateIds.contains(node.id);
 
-                  return ValueListenableBuilder<SimulationHighlight>(
-                    valueListenable: _canvasController.highlightNotifier,
-                    builder: (context, highlight, _) {
-                      final isHighlighted =
-                          highlight.stateIds.contains(node.id);
+                    return ValueListenableBuilder<SimulationHighlight>(
+                      valueListenable: _canvasController.highlightNotifier,
+                      builder: (context, highlight, _) {
+                        final isHighlighted =
+                            highlight.stateIds.contains(node.id);
 
-                      final colors = _resolveHeaderColors(
-                        theme,
-                        isHighlighted: isHighlighted,
-                        isCurrent: isCurrent,
-                        isVisited: isVisited,
-                        isNondeterministic: isNondeterministic,
-                        isInitial: isInitial,
-                        isAccepting: isAccepting,
-                      );
+                        final colors = _resolveHeaderColors(
+                          theme,
+                          isHighlighted: isHighlighted,
+                          isCurrent: isCurrent,
+                          isVisited: isVisited,
+                          isNondeterministic: isNondeterministic,
+                          isInitial: isInitial,
+                          isAccepting: isAccepting,
+                        );
 
-                      return _AutomatonNodeHeader(
-                        label: label,
-                        isInitial: isInitial,
-                        isAccepting: isAccepting,
-                        isCollapsed: node.state.isCollapsed,
-                        colors: colors,
-                        onToggleCollapse: onToggleCollapse,
-                        onToggleInitial: () {
-                          automatonNotifier.updateStateFlags(
-                            id: node.id,
-                            isInitial: !isInitial,
-                          );
-                        },
-                        onToggleAccepting: () {
-                          automatonNotifier.updateStateFlags(
-                            id: node.id,
-                            isAccepting: !isAccepting,
-                          );
-                        },
-                        onRename: (newLabel) {
-                          automatonNotifier.updateStateLabel(
-                            id: node.id,
-                            label: newLabel,
-                          );
-                        },
-                        onDelete: () {
-                          automatonNotifier.removeState(id: node.id);
-                        },
-                        initialToggleKey:
-                            Key('automaton-node-${node.id}-initial-toggle'),
-                        acceptingToggleKey:
-                            Key('automaton-node-${node.id}-accepting-toggle'),
-                      );
-                    },
-                  );
-                },
+                        return _AutomatonNodeHeader(
+                          label: label,
+                          isInitial: isInitial,
+                          isAccepting: isAccepting,
+                          isCollapsed: node.state.isCollapsed,
+                          colors: colors,
+                          onToggleCollapse: onToggleCollapse,
+                          onToggleInitial: () {
+                            automatonNotifier.updateStateFlags(
+                              id: node.id,
+                              isInitial: !isInitial,
+                            );
+                          },
+                          onToggleAccepting: () {
+                            automatonNotifier.updateStateFlags(
+                              id: node.id,
+                              isAccepting: !isAccepting,
+                            );
+                          },
+                          onRename: (newLabel) {
+                            automatonNotifier.updateStateLabel(
+                              id: node.id,
+                              label: newLabel,
+                            );
+                          },
+                          onDelete: () {
+                            automatonNotifier.removeState(id: node.id);
+                          },
+                          initialToggleKey:
+                              Key('automaton-node-${node.id}-initial-toggle'),
+                          acceptingToggleKey:
+                              Key('automaton-node-${node.id}-accepting-toggle'),
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
             ),
           ),

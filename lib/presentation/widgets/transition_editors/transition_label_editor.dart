@@ -61,15 +61,15 @@ class _TransitionLabelEditorFormState
       shortcuts: shortcuts,
       child: Actions(
         actions: {
-          _SubmitIntent: CallbackAction<_SubmitIntent>((intent) {
+          _SubmitIntent: CallbackAction<_SubmitIntent>(onInvoke: (intent) {
             _handleSubmit();
             return null;
           }),
-          _CancelIntent: CallbackAction<_CancelIntent>((intent) {
+          _CancelIntent: CallbackAction<_CancelIntent>(onInvoke: (intent) {
             _handleCancel();
             return null;
           }),
-          DismissIntent: CallbackAction<DismissIntent>((intent) {
+          DismissIntent: CallbackAction<DismissIntent>(onInvoke: (intent) {
             _handleCancel();
             return null;
           }),

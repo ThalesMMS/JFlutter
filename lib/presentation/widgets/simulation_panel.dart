@@ -10,7 +10,7 @@ class SimulationPanel extends StatefulWidget {
   final String? regexResult;
   final SimulationHighlightService highlightService;
 
-  const SimulationPanel({
+  SimulationPanel({
     super.key,
     required this.onSimulate,
     this.simulationResult,

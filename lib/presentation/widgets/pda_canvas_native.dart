@@ -315,7 +315,7 @@ class _PDACanvasNativeState extends ConsumerState<PDACanvasNative> {
     }
 
     final editorState = ref.read(pdaEditorProvider);
-    final transition = editorState.transitions
+    final transition = editorState.pda?.pdaTransitions
         .firstWhereOrNull((candidate) => candidate.id == linkId);
     final edge = _canvasController.edgeById(linkId);
 
@@ -629,56 +629,57 @@ class _PDACanvasNativeState extends ConsumerState<PDACanvasNative> {
                   controller: _canvasController.controller,
                   overlay: _buildOverlay,
                   headerBuilder: (context, node, style, onToggleCollapse) {
-                  final state = statesById[node.id];
-                  final label = state?.label ?? node.id;
-                  final isInitial = initialStateId == node.id;
-                  final isAccepting = acceptingIds.contains(node.id);
-                  final isNondeterministic =
-                      nondeterministicStateIds.contains(node.id);
+                    final state = statesById[node.id];
+                    final label = state?.label ?? node.id;
+                    final isInitial = initialStateId == node.id;
+                    final isAccepting = acceptingIds.contains(node.id);
+                    final isNondeterministic =
+                        nondeterministicStateIds.contains(node.id);
+                    final notifier = ref.read(pdaEditorProvider.notifier);
 
-                  final notifier = ref.read(pdaEditorProvider.notifier);
-                  return ValueListenableBuilder<SimulationHighlight>(
-                    valueListenable: _canvasController.highlightNotifier,
-                    builder: (context, highlight, _) {
-                      final isHighlighted =
-                          highlight.stateIds.contains(node.id);
+                    return ValueListenableBuilder<SimulationHighlight>(
+                      valueListenable: _canvasController.highlightNotifier,
+                      builder: (context, highlight, _) {
+                        final isHighlighted =
+                            highlight.stateIds.contains(node.id);
 
-                      final colors = _resolveHeaderColors(
-                        theme,
-                        isHighlighted: isHighlighted,
-                        isInitial: isInitial,
-                        isAccepting: isAccepting,
-                        isNondeterministic: isNondeterministic,
-                      );
+                        final colors = _resolveHeaderColors(
+                          theme,
+                          isHighlighted: isHighlighted,
+                          isInitial: isInitial,
+                          isAccepting: isAccepting,
+                          isNondeterministic: isNondeterministic,
+                        );
 
-                      return _PDANodeHeader(
-                        label: label,
-                        isInitial: isInitial,
-                        isAccepting: isAccepting,
-                        isNondeterministic: isNondeterministic,
-                        isCollapsed: node.state.isCollapsed,
-                        colors: colors,
-                        onToggleCollapse: onToggleCollapse,
-                        onToggleInitial: () {
-                          notifier.updateStateFlags(
-                            id: node.id,
-                            isInitial: !isInitial,
-                          );
-                        },
-                        onToggleAccepting: () {
-                          notifier.updateStateFlags(
-                            id: node.id,
-                            isAccepting: !isAccepting,
-                          );
-                        },
-                        initialToggleKey:
-                            Key('pda-node-${node.id}-initial-toggle'),
-                        acceptingToggleKey:
-                            Key('pda-node-${node.id}-accepting-toggle'),
-                      );
-                    },
-                  );
-                },
+                        return _PDANodeHeader(
+                          label: label,
+                          isInitial: isInitial,
+                          isAccepting: isAccepting,
+                          isNondeterministic: isNondeterministic,
+                          isCollapsed: node.state.isCollapsed,
+                          colors: colors,
+                          onToggleCollapse: onToggleCollapse,
+                          onToggleInitial: () {
+                            notifier.updateStateFlags(
+                              id: node.id,
+                              isInitial: !isInitial,
+                            );
+                          },
+                          onToggleAccepting: () {
+                            notifier.updateStateFlags(
+                              id: node.id,
+                              isAccepting: !isAccepting,
+                            );
+                          },
+                          initialToggleKey:
+                              Key('pda-node-${node.id}-initial-toggle'),
+                          acceptingToggleKey:
+                              Key('pda-node-${node.id}-accepting-toggle'),
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
             ),
           ),

@@ -97,6 +97,14 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
       highlightService.channel = highlightChannel;
     }
     _canvasController.synchronize(widget.automaton);
+    if (widget.automaton?.states.isNotEmpty ?? false) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) {
+          return;
+        }
+        _canvasController.fitToContent();
+      });
+    }
     _applyDerivedState(_computeDerivedState());
     _lastHighlight = _canvasController.highlightNotifier.value;
     _highlightListener = () {
@@ -126,7 +134,19 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
     super.didUpdateWidget(oldWidget);
     final automatonChanged = !identical(oldWidget.automaton, widget.automaton);
     if (automatonChanged && _shouldSynchronize(widget.automaton)) {
+      final hadNodes = _canvasController.nodes.isNotEmpty;
       _canvasController.synchronize(widget.automaton);
+      final hasNodesNow = _canvasController.nodes.isNotEmpty;
+      if (!hadNodes &&
+          hasNodesNow &&
+          (widget.automaton?.states.isNotEmpty ?? false)) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) {
+            return;
+          }
+          _canvasController.fitToContent();
+        });
+      }
       final currentLink = _selectedLinkId;
       if (currentLink != null &&
           _canvasController.edgeById(currentLink) == null) {

@@ -78,6 +78,14 @@ class _PDACanvasNativeState extends ConsumerState<PDACanvasNative> {
     }
     final initialState = ref.read(pdaEditorProvider);
     _canvasController.synchronize(initialState.pda);
+    if (initialState.pda?.states.isNotEmpty ?? false) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) {
+          return;
+        }
+        _canvasController.fitToContent();
+      });
+    }
     _lastDeliveredPda = initialState.pda;
     if (initialState.pda != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -98,7 +106,19 @@ class _PDACanvasNativeState extends ConsumerState<PDACanvasNative> {
           _lastDeliveredPda = null;
         }
         if (_shouldSynchronize(previous, next)) {
+          final hadNodes = _canvasController.nodes.isNotEmpty;
           _canvasController.synchronize(pda);
+          final hasNodesNow = _canvasController.nodes.isNotEmpty;
+          if (!hadNodes &&
+              hasNodesNow &&
+              (pda?.states.isNotEmpty ?? false)) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) {
+                return;
+              }
+              _canvasController.fitToContent();
+            });
+          }
           final currentLink = _selectedLinkId;
           if (currentLink != null &&
               _canvasController.edgeById(currentLink) == null) {

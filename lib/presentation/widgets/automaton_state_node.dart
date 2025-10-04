@@ -16,6 +16,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_context_menu/flutter_context_menu.dart';
 
 import '../../core/constants/automaton_canvas.dart';
+import 'automaton_canvas_tool.dart';
+
 
 typedef _TempLink = ({String nodeId, String portId});
 
@@ -38,6 +40,7 @@ class AutomatonStateNode extends StatefulWidget {
     required this.isCurrent,
     required this.isVisited,
     required this.isNondeterministic,
+    required this.activeTool,
     required this.onToggleInitial,
     required this.onToggleAccepting,
     required this.onRename,
@@ -56,6 +59,7 @@ class AutomatonStateNode extends StatefulWidget {
   final bool isCurrent;
   final bool isVisited;
   final bool isNondeterministic;
+  final AutomatonCanvasTool activeTool;
   final VoidCallback onToggleInitial;
   final VoidCallback onToggleAccepting;
   final ValueChanged<String> onRename;
@@ -76,6 +80,9 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
   Offset? _lastPanPosition;
   Timer? _edgeTimer;
   StreamSubscription<NodeEditorEvent>? _eventSubscription;
+
+  bool get _isTransitionToolActive =>
+      widget.activeTool == AutomatonCanvasTool.transition;
 
   double get _viewportZoom => widget.controller.viewportZoom;
   Offset get _viewportOffset => widget.controller.viewportOffset;
@@ -137,6 +144,11 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
   @override
   void didUpdateWidget(covariant AutomatonStateNode oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.activeTool != widget.activeTool &&
+        widget.activeTool != AutomatonCanvasTool.transition &&
+        _isLinking) {
+      _onTmpLinkCancel();
+    }
     if (oldWidget.node.key != widget.node.key ||
         oldWidget.node.offset != widget.node.offset ||
         oldWidget.node.state.isCollapsed != widget.node.state.isCollapsed ||
@@ -251,6 +263,9 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
   }
 
   void _onTmpLinkStart(_TempLink locator) {
+    if (!_isTransitionToolActive || widget.node.state.isCollapsed) {
+      return;
+    }
     _tempLink = locator;
     _isLinking = true;
   }
@@ -389,6 +404,21 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
       return colorScheme.outlineVariant;
     }();
 
+    final shouldGlow = widget.isHighlighted || widget.isCurrent;
+    final boxShadows = <BoxShadow>[
+      BoxShadow(
+        color: theme.colorScheme.shadow.withOpacity(0.18),
+        blurRadius: 12,
+        offset: const Offset(0, 4),
+      ),
+      if (shouldGlow)
+        BoxShadow(
+          color: theme.colorScheme.primary.withOpacity(0.35),
+          blurRadius: 16,
+          spreadRadius: 2,
+        ),
+    ];
+
     final circle = AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       width: AutomatonStateNode.nodeDiameter,
@@ -400,15 +430,7 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
           color: borderColor,
           width: 2,
         ),
-        boxShadow: widget.isHighlighted || widget.isCurrent
-            ? [
-                BoxShadow(
-                  color: theme.colorScheme.primary.withOpacity(0.35),
-                  blurRadius: 16,
-                  spreadRadius: 2,
-                ),
-              ]
-            : const [],
+        boxShadow: boxShadows,
       ),
       child: Center(
         child: Padding(
@@ -669,6 +691,67 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
             },
             child: child,
           );
+  }
+
+  List<Widget> _buildPortHandles(_NodeColors colors) {
+    if (widget.node.ports.isEmpty) {
+      return const [];
+    }
+    if (!_isTransitionToolActive || widget.node.state.isCollapsed) {
+      return const [];
+    }
+
+    final theme = Theme.of(context);
+    final handleDiameter = AutomatonStateNode.nodeDiameter * 0.18;
+    final handleRadius = handleDiameter / 2;
+    final handleColor = colors.foreground.withOpacity(0.9);
+    final borderColor = theme.colorScheme.surface;
+
+    return widget.node.ports.values.map((port) {
+      final center = port.offset == Offset.zero
+          ? _calculatePortOffset(port.prototype.direction)
+          : port.offset;
+      final locator = (
+        nodeId: widget.node.id,
+        portId: port.prototype.idName,
+      );
+
+      return Positioned(
+        left: center.dx - handleRadius,
+        top: center.dy - handleRadius,
+        child: _PortHandle(
+          size: handleDiameter,
+          color: handleColor,
+          borderColor: borderColor,
+          onPanStart: (details) {
+            _lastPanPosition = details.globalPosition;
+            if (!_isLinking) {
+              _onTmpLinkStart(locator);
+            }
+          },
+          onPanUpdate: (details) {
+            _lastPanPosition = details.globalPosition;
+            if (!_isLinking) {
+              _onTmpLinkStart(locator);
+            }
+            if (_isLinking) {
+              _onTmpLinkUpdate(details.globalPosition);
+            }
+          },
+          onPanEnd: (details) {
+            if (_isLinking) {
+              final lastPosition = _lastPanPosition ?? Offset.zero;
+              _finishLinkGesture(lastPosition);
+            }
+          },
+          onPanCancel: () {
+            if (_isLinking) {
+              _onTmpLinkCancel();
+            }
+          },
+        ),
+      );
+    }).toList();
   }
 
   List<ContextMenuEntry> _portContextMenuEntries(
@@ -944,7 +1027,7 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
       );
     }
     return _NodeColors(
-      background: colorScheme.surface,
+      background: Colors.transparent,
       foreground: colorScheme.onSurface,
     );
   }

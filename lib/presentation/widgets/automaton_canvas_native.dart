@@ -24,6 +24,7 @@ import '../providers/automaton_provider.dart';
 import 'automaton_state_node.dart';
 import 'canvas_actions_sheet.dart';
 import 'transition_editors/transition_label_editor.dart';
+import 'automaton_canvas_tool.dart';
 
 /// Shared automaton canvas backed by the fl_nodes editor. This replaces the
 /// legacy CustomPaint implementation and delegates editing to
@@ -38,12 +39,14 @@ class AutomatonCanvas extends ConsumerStatefulWidget {
     this.currentStepIndex,
     this.showTrace = false,
     this.controller,
+    this.toolController,
     this.onDerivedStateChanged,
   });
 
   final FSA? automaton;
   final GlobalKey canvasKey;
   final FlNodesCanvasController? controller;
+  final AutomatonCanvasToolController? toolController;
 
   @visibleForTesting
   final VoidCallback? onDerivedStateChanged;
@@ -308,6 +311,9 @@ class _LinkArrowPainter extends CustomPainter {
 class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
   late final FlNodesCanvasController _canvasController;
   late final bool _ownsController;
+  late AutomatonCanvasToolController _toolController;
+  late bool _ownsToolController;
+  AutomatonCanvasTool _activeTool = AutomatonCanvasTool.selection;
   FlNodeEditorStyle? _lastEditorStyle;
   _DerivedState _derivedState = const _DerivedState.empty();
   Map<String, automaton_state.State> _statesById = const {};
@@ -332,10 +338,23 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
   bool _isPanningCanvas = false;
   Offset? _canvasPanStartGlobalPosition;
 
+  bool get _isAddStateToolActive =>
+      _activeTool == AutomatonCanvasTool.addState;
+
   @override
   void initState() {
     super.initState();
     _transitionOverlayNotifier = ValueNotifier<_TransitionOverlayState?>(null);
+    final externalToolController = widget.toolController;
+    if (externalToolController != null) {
+      _toolController = externalToolController;
+      _ownsToolController = false;
+    } else {
+      _toolController = AutomatonCanvasToolController();
+      _ownsToolController = true;
+    }
+    _activeTool = _toolController.activeTool;
+    _toolController.addListener(_handleActiveToolChanged);
     final externalController = widget.controller;
     if (externalController != null) {
       _canvasController = externalController;
@@ -366,6 +385,20 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
     _initialiseOverlayListeners();
   }
 
+  void _handleActiveToolChanged() {
+    final nextTool = _toolController.activeTool;
+    if (nextTool == _activeTool) {
+      return;
+    }
+    if (!mounted) {
+      _activeTool = nextTool;
+      return;
+    }
+    setState(() {
+      _activeTool = nextTool;
+    });
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -375,6 +408,22 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
   @override
   void didUpdateWidget(covariant AutomatonCanvas oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.toolController != widget.toolController) {
+      _toolController.removeListener(_handleActiveToolChanged);
+      if (_ownsToolController) {
+        _toolController.dispose();
+      }
+      final externalToolController = widget.toolController;
+      if (externalToolController != null) {
+        _toolController = externalToolController;
+        _ownsToolController = false;
+      } else {
+        _toolController = AutomatonCanvasToolController();
+        _ownsToolController = true;
+      }
+      _activeTool = _toolController.activeTool;
+      _toolController.addListener(_handleActiveToolChanged);
+    }
     final automatonChanged = !identical(oldWidget.automaton, widget.automaton);
     if (automatonChanged && _shouldSynchronize(widget.automaton)) {
       final hadNodes = _canvasController.nodes.isNotEmpty;
@@ -496,6 +545,10 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
       _canvasController.controller.viewportZoomNotifier
           .removeListener(_viewportZoomListener!);
     }
+    _toolController.removeListener(_handleActiveToolChanged);
+    if (_ownsToolController) {
+      _toolController.dispose();
+    }
     if (_ownsController) {
       final highlightService = _highlightService;
       final highlightChannel = _highlightChannel;
@@ -610,6 +663,9 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
   }
 
   void _handleCanvasTap(Offset globalPosition) {
+    if (!_isAddStateToolActive) {
+      return;
+    }
     final worldPosition = _globalToWorld(globalPosition);
     if (worldPosition == null || !_isCanvasSpaceFree(worldPosition)) {
       return;
@@ -623,8 +679,9 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
     if (!mounted) {
       return;
     }
-    final canAddState =
-        worldPosition != null && _isCanvasSpaceFree(worldPosition);
+    final canAddState = _isAddStateToolActive &&
+        worldPosition != null &&
+        _isCanvasSpaceFree(worldPosition);
 
     await showCanvasContextActions(
       context: context,
@@ -689,8 +746,12 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
       return;
     }
 
+    final currentOffset = controller.viewportOffset;
     controller.setViewportOffset(
-      Offset(-delta.dx / zoom, -delta.dy / zoom),
+      Offset(
+        currentOffset.dx + (delta.dx / zoom),
+        currentOffset.dy + (delta.dy / zoom),
+      ),
       animate: false,
     );
     _canvasPanStartGlobalPosition = details.globalPosition;
@@ -1116,6 +1177,7 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
                           isCurrent: isCurrent,
                           isVisited: isVisited,
                           isNondeterministic: isNondeterministic,
+                          activeTool: _activeTool,
                           onToggleInitial: () {
                             automatonNotifier.updateStateFlags(
                               id: node.id,

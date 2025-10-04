@@ -37,9 +37,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     _canvasController = FlNodesCanvasController(
       automatonProvider: ref.read(automatonProvider.notifier),
     );
-    _canvasController.synchronize(
-      ref.read(automatonProvider).currentAutomaton,
-    );
+    _canvasController.synchronize(ref.read(automatonProvider).currentAutomaton);
     _highlightChannel = FlNodesSimulationHighlightChannel(_canvasController);
     _highlightService = SimulationHighlightService(channel: _highlightChannel);
     _toolController = AutomatonCanvasToolController();
@@ -61,6 +59,14 @@ class _FSAPageState extends ConsumerState<FSAPage> {
       _toolController.setActiveTool(tool);
     }
   }
+
+  void _handleAddStatePressed() {
+    if (_toolController.activeTool != AutomatonCanvasTool.addState) {
+      _toolController.setActiveTool(AutomatonCanvasTool.addState);
+    }
+    _canvasController.addStateAtCenter();
+  }
+
   void _showSnack(String message, {bool isError = false}) {
     final theme = Theme.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
@@ -395,10 +401,10 @@ class _FSAPageState extends ConsumerState<FSAPage> {
                 return MobileAutomatonControls(
                   enableToolSelection: true,
                   activeTool: _toolController.activeTool,
-                  onSelectTool: () => _toolController
-                      .setActiveTool(AutomatonCanvasTool.selection),
-                  onAddState: () =>
-                      _toggleCanvasTool(AutomatonCanvasTool.addState),
+                  onSelectTool: () => _toolController.setActiveTool(
+                    AutomatonCanvasTool.selection,
+                  ),
+                  onAddState: _handleAddStatePressed,
                   onAddTransition: () =>
                       _toggleCanvasTool(AutomatonCanvasTool.transition),
                   onZoomIn: _canvasController.zoomIn,
@@ -429,10 +435,10 @@ class _FSAPageState extends ConsumerState<FSAPage> {
                 layout: FlNodesCanvasToolbarLayout.desktop,
                 enableToolSelection: true,
                 activeTool: _toolController.activeTool,
-                onSelectTool: () => _toolController
-                    .setActiveTool(AutomatonCanvasTool.selection),
-                onAddState: () =>
-                    _toggleCanvasTool(AutomatonCanvasTool.addState),
+                onSelectTool: () => _toolController.setActiveTool(
+                  AutomatonCanvasTool.selection,
+                ),
+                onAddState: _handleAddStatePressed,
                 onAddTransition: () =>
                     _toggleCanvasTool(AutomatonCanvasTool.transition),
                 onZoomIn: _canvasController.zoomIn,
@@ -499,9 +505,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
         canvasHighlightServiceProvider.overrideWithValue(_highlightService),
       ],
       child: Scaffold(
-        body: isMobile
-            ? _buildMobileLayout(state)
-            : _buildDesktopLayout(state),
+        body: isMobile ? _buildMobileLayout(state) : _buildDesktopLayout(state),
       ),
     );
   }
@@ -512,10 +516,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
         Expanded(
           child: Container(
             margin: const EdgeInsets.all(8),
-            child: _buildCanvasArea(
-              state: state,
-              isMobile: true,
-            ),
+            child: _buildCanvasArea(state: state, isMobile: true),
           ),
         ),
       ],
@@ -600,10 +601,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
         // Center panel - Canvas
         Expanded(
           flex: 3,
-          child: _buildCanvasArea(
-            state: state,
-            isMobile: false,
-          ),
+          child: _buildCanvasArea(state: state, isMobile: false),
         ),
         const SizedBox(width: 16),
         // Right panel - Simulation
@@ -621,5 +619,4 @@ class _FSAPageState extends ConsumerState<FSAPage> {
       ],
     );
   }
-
 }

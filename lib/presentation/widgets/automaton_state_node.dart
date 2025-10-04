@@ -493,10 +493,7 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        Container(
-          key: widget.node.key,
-          child: Tooltip(message: widget.label, child: decoratedCircle),
-        ),
+        Tooltip(message: widget.label, child: decoratedCircle),
         if (widget.isTransitionToolEnabled) _buildLinkAnchorIndicator(colors),
         if (widget.isInitial)
           Positioned(

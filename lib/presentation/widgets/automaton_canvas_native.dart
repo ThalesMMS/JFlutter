@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:collection/collection.dart';
 import 'package:fl_nodes/fl_nodes.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -338,13 +339,13 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
   SimulationHighlightChannel? _previousHighlightChannel;
   FlNodesSimulationHighlightChannel? _highlightChannel;
   final Set<int> _activePointerIds = <int>{};
-  final Map<int, Offset> _pointerDownPositions = <int, Offset>{};
-  final Set<int> _draggedPointerIds = <int>{};
-  static const double _tapMovementTolerance = 6;
+  static const double _panActivationSlop = 4;
   int _doubleTapPointerCount = 1;
   int _currentTapMaxPointerCount = 0;
-  bool _isPanningCanvas = false;
-  Offset? _canvasPanStartGlobalPosition;
+  int? _pendingPanPointerId;
+  Offset? _pendingPanStartPosition;
+  int? _panningPointerId;
+  Offset? _lastPanGlobalPosition;
 
   bool get _isAddStateToolActive => _activeTool == AutomatonCanvasTool.addState;
 
@@ -709,29 +710,61 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
 
   void _handleCanvasPointerDown(PointerDownEvent event) {
     _activePointerIds.add(event.pointer);
-    _pointerDownPositions[event.pointer] = event.position;
-    _draggedPointerIds.remove(event.pointer);
     final activeCount = _activePointerIds.length;
     if (activeCount > _currentTapMaxPointerCount) {
       _currentTapMaxPointerCount = activeCount;
     }
+
+    if (activeCount > 1) {
+      _pendingPanPointerId = null;
+      _pendingPanStartPosition = null;
+      return;
+    }
+
+    final worldPosition = _globalToWorld(event.position);
+    final canAttemptPan =
+        event.buttons == kPrimaryMouseButton &&
+        worldPosition != null &&
+        _isCanvasSpaceFree(worldPosition);
+
+    if (canAttemptPan) {
+      _pendingPanPointerId = event.pointer;
+      _pendingPanStartPosition = event.position;
+    } else {
+      _pendingPanPointerId = null;
+      _pendingPanStartPosition = null;
+    }
   }
 
   void _handleCanvasPointerMove(PointerMoveEvent event) {
-    final start = _pointerDownPositions[event.pointer];
-    if (start == null || _draggedPointerIds.contains(event.pointer)) {
+    if (_activePointerIds.length > 1 && _panningPointerId == null) {
+      _pendingPanPointerId = null;
+      _pendingPanStartPosition = null;
       return;
     }
-    final displacement = event.position - start;
-    if (displacement.distanceSquared >
-        _tapMovementTolerance * _tapMovementTolerance) {
-      _draggedPointerIds.add(event.pointer);
+
+    if (_panningPointerId == event.pointer && _lastPanGlobalPosition != null) {
+      final delta = event.position - _lastPanGlobalPosition!;
+      _applyPanDelta(delta);
+      _lastPanGlobalPosition = event.position;
+      return;
+    }
+
+    if (_pendingPanPointerId == event.pointer &&
+        _pendingPanStartPosition != null) {
+      final displacement = event.position - _pendingPanStartPosition!;
+      if (displacement.distanceSquared >=
+          _panActivationSlop * _panActivationSlop) {
+        _panningPointerId = event.pointer;
+        _lastPanGlobalPosition = event.position;
+        _pendingPanPointerId = null;
+        _pendingPanStartPosition = null;
+        _applyPanDelta(displacement);
+      }
     }
   }
 
   void _handleCanvasPointerUp(PointerEvent event) {
-    final wasDragged = _draggedPointerIds.remove(event.pointer);
-    final start = _pointerDownPositions.remove(event.pointer);
     _activePointerIds.remove(event.pointer);
     if (_activePointerIds.isEmpty) {
       _doubleTapPointerCount = _currentTapMaxPointerCount == 0
@@ -740,69 +773,52 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
       _currentTapMaxPointerCount = 0;
     }
 
-    if (_isAddStateToolActive &&
-        !wasDragged &&
-        start != null &&
-        _currentTapMaxPointerCount <= 1) {
-      _handleCanvasTap(event.position);
+    if (_panningPointerId == event.pointer) {
+      _panningPointerId = null;
+      _lastPanGlobalPosition = null;
+    }
+
+    if (_pendingPanPointerId == event.pointer) {
+      _pendingPanPointerId = null;
+      _pendingPanStartPosition = null;
     }
   }
 
   void _handleCanvasPointerCancel(PointerCancelEvent event) {
     _activePointerIds.remove(event.pointer);
-    _pointerDownPositions.remove(event.pointer);
-    _draggedPointerIds.remove(event.pointer);
     if (_activePointerIds.isEmpty) {
       _doubleTapPointerCount = _currentTapMaxPointerCount == 0
           ? 1
           : _currentTapMaxPointerCount;
       _currentTapMaxPointerCount = 0;
     }
-  }
 
-  void _handleCanvasPanStart(DragStartDetails details) {
-    final worldPosition = _globalToWorld(details.globalPosition);
-    if (worldPosition == null || !_isCanvasSpaceFree(worldPosition)) {
-      _isPanningCanvas = false;
-      _canvasPanStartGlobalPosition = null;
-      return;
+    if (_panningPointerId == event.pointer) {
+      _panningPointerId = null;
+      _lastPanGlobalPosition = null;
     }
 
-    _isPanningCanvas = true;
-    _canvasPanStartGlobalPosition = details.globalPosition;
+    if (_pendingPanPointerId == event.pointer) {
+      _pendingPanPointerId = null;
+      _pendingPanStartPosition = null;
+    }
   }
 
-  void _handleCanvasPanUpdate(DragUpdateDetails details) {
-    if (!_isPanningCanvas || _canvasPanStartGlobalPosition == null) {
+  void _applyPanDelta(Offset globalDelta) {
+    if (globalDelta == Offset.zero) {
       return;
     }
 
     final controller = _canvasController.controller;
     final zoom = controller.viewportZoom;
-    final delta = details.delta;
-    if (delta == Offset.zero) {
-      return;
-    }
-
     final currentOffset = controller.viewportOffset;
     controller.setViewportOffset(
       Offset(
-        currentOffset.dx + (delta.dx / zoom),
-        currentOffset.dy + (delta.dy / zoom),
+        currentOffset.dx + (globalDelta.dx / zoom),
+        currentOffset.dy + (globalDelta.dy / zoom),
       ),
       animate: false,
     );
-    _canvasPanStartGlobalPosition = details.globalPosition;
-  }
-
-  void _handleCanvasPanEnd(DragEndDetails details) {
-    _isPanningCanvas = false;
-    _canvasPanStartGlobalPosition = null;
-  }
-
-  void _handleCanvasPanCancel() {
-    _isPanningCanvas = false;
-    _canvasPanStartGlobalPosition = null;
   }
 
   void _handleCanvasDoubleTap() {
@@ -1163,12 +1179,9 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
               onPointerCancel: _handleCanvasPointerCancel,
               child: GestureDetector(
                 behavior: HitTestBehavior.translucent,
+                onTapUp: (details) => _handleCanvasTap(details.globalPosition),
                 onLongPressStart: (details) =>
                     unawaited(_handleCanvasLongPress(details.globalPosition)),
-                onPanStart: _handleCanvasPanStart,
-                onPanUpdate: _handleCanvasPanUpdate,
-                onPanEnd: _handleCanvasPanEnd,
-                onPanCancel: _handleCanvasPanCancel,
                 onDoubleTapDown: (_) {
                   if (_currentTapMaxPointerCount > 0) {
                     _doubleTapPointerCount = _currentTapMaxPointerCount;
@@ -1207,43 +1220,46 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
                         final isHighlighted = highlight.stateIds.contains(
                           node.id,
                         );
-                        return AutomatonStateNode(
-                          controller: _canvasController.controller,
-                          node: node,
-                          label: label,
-                          isInitial: isInitial,
-                          isAccepting: isAccepting,
-                          isHighlighted: isHighlighted,
-                          isCurrent: isCurrent,
-                          isVisited: isVisited,
-                          isNondeterministic: isNondeterministic,
-                          activeTool: _activeTool,
-                          onToggleInitial: () {
-                            automatonNotifier.updateStateFlags(
-                              id: node.id,
-                              isInitial: !isInitial,
-                            );
-                          },
-                          onToggleAccepting: () {
-                            automatonNotifier.updateStateFlags(
-                              id: node.id,
-                              isAccepting: !isAccepting,
-                            );
-                          },
-                          onRename: (newLabel) {
-                            automatonNotifier.updateStateLabel(
-                              id: node.id,
-                              label: newLabel,
-                            );
-                          },
-                          onDelete: () {
-                            automatonNotifier.removeState(id: node.id);
-                          },
-                          initialToggleKey: Key(
-                            'automaton-node-${node.id}-initial-toggle',
-                          ),
-                          acceptingToggleKey: Key(
-                            'automaton-node-${node.id}-accepting-toggle',
+                        return Container(
+                          key: node.key,
+                          child: AutomatonStateNode(
+                            controller: _canvasController.controller,
+                            node: node,
+                            label: label,
+                            isInitial: isInitial,
+                            isAccepting: isAccepting,
+                            isHighlighted: isHighlighted,
+                            isCurrent: isCurrent,
+                            isVisited: isVisited,
+                            isNondeterministic: isNondeterministic,
+                            activeTool: _activeTool,
+                            onToggleInitial: () {
+                              automatonNotifier.updateStateFlags(
+                                id: node.id,
+                                isInitial: !isInitial,
+                              );
+                            },
+                            onToggleAccepting: () {
+                              automatonNotifier.updateStateFlags(
+                                id: node.id,
+                                isAccepting: !isAccepting,
+                              );
+                            },
+                            onRename: (newLabel) {
+                              automatonNotifier.updateStateLabel(
+                                id: node.id,
+                                label: newLabel,
+                              );
+                            },
+                            onDelete: () {
+                              automatonNotifier.removeState(id: node.id);
+                            },
+                            initialToggleKey: Key(
+                              'automaton-node-${node.id}-initial-toggle',
+                            ),
+                            acceptingToggleKey: Key(
+                              'automaton-node-${node.id}-accepting-toggle',
+                            ),
                           ),
                         );
                       },

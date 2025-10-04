@@ -2,10 +2,11 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:fl_nodes/fl_nodes.dart';
+import 'package:fl_nodes/src/constants.dart';
 import 'package:fl_nodes/src/core/localization/delegate.dart';
+import 'package:fl_nodes/src/core/models/entities.dart' show PortDirection;
 import 'package:fl_nodes/src/core/models/events.dart';
 import 'package:fl_nodes/src/core/utils/rendering/renderbox.dart';
-import 'package:fl_nodes/src/widgets/constants.dart';
 import 'package:fl_nodes/src/widgets/context_menu.dart';
 import 'package:fl_nodes/src/widgets/improved_listener.dart';
 import 'package:flutter/foundation.dart';
@@ -119,7 +120,11 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
           _updatePortOffsets();
         }
       });
-    } else if (event is NodeSelectionEvent || event is NodeDeselectionEvent) {
+    } else if (event is NodeSelectionEvent) {
+      if (event.nodeIds.contains(widget.node.id)) {
+        setState(() {});
+      }
+    } else if (event is NodeDeselectionEvent) {
       if (event.nodeIds.contains(widget.node.id)) {
         setState(() {});
       }
@@ -270,6 +275,11 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
     if (!_isLinking || _tempLink == null) {
       return;
     }
+  void _updatePortOffsets() {
+    final radius = AutomatonStateNode.nodeDiameter / 2;
+    final center = Offset(radius, radius);
+    final collapsed = widget.node.state.isCollapsed;
+    final effectiveRadius = collapsed ? radius * 0.6 : radius;
 
     final locator = _isNearPort(position);
     if (locator != null) {
@@ -347,6 +357,23 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
 
     final arrowColor = colors.foreground.withOpacity(0.9);
 
+    final colorScheme = theme.colorScheme;
+    final borderColor = () {
+      if (widget.node.state.isSelected) {
+        return colorScheme.primary;
+      }
+      if (widget.isHighlighted || widget.isCurrent) {
+        return colorScheme.primary;
+      }
+      if (widget.isVisited) {
+        return colorScheme.secondary;
+      }
+      if (widget.isNondeterministic) {
+        return colorScheme.tertiary;
+      }
+      return colorScheme.outlineVariant;
+    }();
+
     final circle = AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       width: AutomatonStateNode.nodeDiameter,
@@ -355,9 +382,7 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
         shape: BoxShape.circle,
         color: colors.background,
         border: Border.all(
-          color: widget.node.state.isSelected
-              ? theme.colorScheme.primary
-              : colors.foreground.withOpacity(0.8),
+          color: borderColor,
           width: 2,
         ),
         boxShadow: widget.isHighlighted || widget.isCurrent
@@ -386,14 +411,9 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
 
     Widget decoratedCircle = circle;
     if (widget.isAccepting) {
-      decoratedCircle = Container(
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: colors.foreground.withOpacity(0.9),
-            width: 2,
-          ),
+      decoratedCircle = CustomPaint(
+        painter: _AcceptingRingPainter(
+          color: colors.foreground.withOpacity(0.9),
         ),
         child: circle,
       );
@@ -433,7 +453,6 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
       children: [
         Container(
           key: widget.node.key,
-          padding: EdgeInsets.all(widget.isAccepting ? 4 : 0),
           child: Tooltip(
             message: widget.label,
             child: decoratedCircle,
@@ -904,57 +923,105 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
   }
 
   Future<void> _handleRename(BuildContext context) async {
-    final controller = TextEditingController(text: widget.label);
-    final focusNode = FocusNode();
     final newLabel = await showDialog<String>(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Rename state'),
-          content: TextField(
-            controller: controller,
-            focusNode: focusNode,
-            autofocus: true,
-            textInputAction: TextInputAction.done,
-            onSubmitted: (value) {
-              Navigator.of(dialogContext).pop(value.trim());
-            },
-            decoration: const InputDecoration(
-              labelText: 'State label',
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop(controller.text.trim());
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        );
+        return _RenameStateDialog(initialLabel: widget.label);
       },
     );
 
-    if (newLabel != null && newLabel.isNotEmpty) {
-      widget.onRename(newLabel);
+    final trimmedLabel = newLabel?.trim();
+    if (trimmedLabel != null && trimmedLabel.isNotEmpty) {
+      widget.onRename(trimmedLabel);
     }
-
-    controller.dispose();
-    focusNode.dispose();
   }
+
+class _RenameStateDialog extends StatefulWidget {
+  const _RenameStateDialog({
+    required this.initialLabel,
+  });
+
+  final String initialLabel;
+
+  @override
+  State<_RenameStateDialog> createState() => _RenameStateDialogState();
+}
+
+class _RenameStateDialogState extends State<_RenameStateDialog> {
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
+  bool _isValid = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialLabel);
+    _focusNode = FocusNode();
+    _isValid = _controller.text.trim().isNotEmpty;
+    _controller.addListener(_handleControllerChanged);
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_handleControllerChanged);
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _handleControllerChanged() {
+    final isValid = _controller.text.trim().isNotEmpty;
+    if (isValid != _isValid) {
+      setState(() {
+        _isValid = isValid;
+      });
+    }
+  }
+
+  void _submit() {
+    final trimmed = _controller.text.trim();
+    if (trimmed.isEmpty) {
+      return;
+    }
+    Navigator.of(context).pop(trimmed);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Rename state'),
+      content: TextField(
+        controller: _controller,
+        focusNode: _focusNode,
+        autofocus: true,
+        textInputAction: TextInputAction.done,
+        onSubmitted: (_) => _submit(),
+        decoration: const InputDecoration(
+          labelText: 'State label',
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _isValid ? _submit : null,
+          child: const Text('Save'),
+        ),
+      ],
+    );
+  }
+}
 
   _NodeColors _resolveNodeColors(ThemeData theme) {
     final colorScheme = theme.colorScheme;
     if (widget.isHighlighted || widget.isCurrent) {
       return _NodeColors(
-        background: colorScheme.primary,
-        foreground: colorScheme.onPrimary,
+        background: colorScheme.primaryContainer,
+        foreground: colorScheme.onPrimaryContainer,
       );
     }
     if (widget.isVisited) {
@@ -969,21 +1036,9 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
         foreground: colorScheme.onTertiaryContainer,
       );
     }
-    if (widget.isAccepting) {
-      return _NodeColors(
-        background: colorScheme.secondaryContainer,
-        foreground: colorScheme.onSecondaryContainer,
-      );
-    }
-    if (widget.isInitial) {
-      return _NodeColors(
-        background: colorScheme.primaryContainer,
-        foreground: colorScheme.onPrimaryContainer,
-      );
-    }
     return _NodeColors(
-      background: colorScheme.surfaceVariant,
-      foreground: colorScheme.onSurfaceVariant,
+      background: colorScheme.surface,
+      foreground: colorScheme.onSurface,
     );
   }
 }
@@ -1084,6 +1139,33 @@ class _StateToggleButton extends StatelessWidget {
         splashRadius: 18,
       ),
     );
+  }
+}
+
+class _AcceptingRingPainter extends CustomPainter {
+  const _AcceptingRingPainter({
+    required this.color,
+  });
+
+  final Color color;
+  static const double _ringPadding = 4;
+  static const double _strokeWidth = 2;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final radius = size.shortestSide / 2;
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = _strokeWidth;
+
+    final center = Offset(size.width / 2, size.height / 2);
+    canvas.drawCircle(center, radius + _ringPadding, paint);
+  }
+
+  @override
+  bool shouldRepaint(_AcceptingRingPainter oldDelegate) {
+    return oldDelegate.color != color;
   }
 }
 

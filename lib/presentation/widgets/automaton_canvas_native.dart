@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:collection/collection.dart';
 import 'package:fl_nodes/fl_nodes.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meta/meta.dart';
 
@@ -77,6 +78,8 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
   final Set<int> _activePointerIds = <int>{};
   int _doubleTapPointerCount = 1;
   int _currentTapMaxPointerCount = 0;
+  bool _isPanningCanvas = false;
+  Offset? _canvasPanStartGlobalPosition;
 
   @override
   void initState() {
@@ -411,6 +414,47 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
     }
   }
 
+  void _handleCanvasPanStart(DragStartDetails details) {
+    final worldPosition = _globalToWorld(details.globalPosition);
+    if (worldPosition == null || !_isCanvasSpaceFree(worldPosition)) {
+      _isPanningCanvas = false;
+      _canvasPanStartGlobalPosition = null;
+      return;
+    }
+
+    _isPanningCanvas = true;
+    _canvasPanStartGlobalPosition = details.globalPosition;
+  }
+
+  void _handleCanvasPanUpdate(DragUpdateDetails details) {
+    if (!_isPanningCanvas || _canvasPanStartGlobalPosition == null) {
+      return;
+    }
+
+    final controller = _canvasController.controller;
+    final zoom = controller.viewportZoom;
+    final delta = details.delta;
+    if (delta == Offset.zero) {
+      return;
+    }
+
+    controller.setViewportOffset(
+      Offset(-delta.dx / zoom, -delta.dy / zoom),
+      animate: false,
+    );
+    _canvasPanStartGlobalPosition = details.globalPosition;
+  }
+
+  void _handleCanvasPanEnd(DragEndDetails details) {
+    _isPanningCanvas = false;
+    _canvasPanStartGlobalPosition = null;
+  }
+
+  void _handleCanvasPanCancel() {
+    _isPanningCanvas = false;
+    _canvasPanStartGlobalPosition = null;
+  }
+
   void _handleCanvasDoubleTap() {
     final pointerCount = _doubleTapPointerCount;
     _doubleTapPointerCount = 1;
@@ -736,6 +780,10 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
                 onLongPressStart: (details) => unawaited(
                   _handleCanvasLongPress(details.globalPosition),
                 ),
+                onPanStart: _handleCanvasPanStart,
+                onPanUpdate: _handleCanvasPanUpdate,
+                onPanEnd: _handleCanvasPanEnd,
+                onPanCancel: _handleCanvasPanCancel,
                 onDoubleTapDown: (_) {
                   if (_currentTapMaxPointerCount > 0) {
                     _doubleTapPointerCount = _currentTapMaxPointerCount;
@@ -995,39 +1043,6 @@ class _HighlightData {
 
   final Set<String> visitedStates;
   final String? currentStateId;
-}
-
-
-
-  final String tooltip;
-  final IconData icon;
-  final IconData activeIcon;
-  final bool isActive;
-  final Color color;
-  final VoidCallback onPressed;
-  final Key? buttonKey;
-
-  @override
-  Widget build(BuildContext context) {
-    final resolvedIcon = Icon(
-      isActive ? activeIcon : icon,
-      size: 20,
-      color: isActive ? color : color.withOpacity(0.6),
-    );
-
-    return Tooltip(
-      message: tooltip,
-      child: IconButton(
-        key: buttonKey,
-        icon: resolvedIcon,
-        onPressed: onPressed,
-        padding: EdgeInsets.zero,
-        constraints: const BoxConstraints.tightFor(width: 32, height: 32),
-        splashRadius: 18,
-        visualDensity: VisualDensity.compact,
-      ),
-    );
-  }
 }
 
 class _EmptyCanvasMessage extends StatelessWidget {

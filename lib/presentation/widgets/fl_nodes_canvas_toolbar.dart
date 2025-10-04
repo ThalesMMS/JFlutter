@@ -174,17 +174,20 @@ class _MobileToolbar extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Wrap(
-                    alignment: WrapAlignment.center,
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: [
-                      for (final entry in actions)
-                        _MobileToolbarButton(
-                          action: entry.$1,
-                          onPressed: entry.$2,
-                        ),
-                    ],
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final entry in actions)
+                          _MobileToolbarButton(
+                            action: entry.$1,
+                            onPressed: entry.$2,
+                          ),
+                      ],
+                    ),
                   ),
                   if (statusMessage != null && statusMessage!.isNotEmpty)
                     Padding(
@@ -219,15 +222,16 @@ class _MobileToolbarButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return FilledButton.icon(
-      style: FilledButton.styleFrom(
-        backgroundColor: colorScheme.surfaceContainerHigh,
-        foregroundColor: colorScheme.onSurface,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    return Tooltip(
+      message: action.label,
+      child: IconButton.filledTonal(
+        onPressed: onPressed,
+        icon: Icon(action.icon),
+        style: IconButton.styleFrom(
+          foregroundColor: colorScheme.onSecondaryContainer,
+          backgroundColor: colorScheme.secondaryContainer,
+        ),
       ),
-      onPressed: onPressed,
-      icon: Icon(action.icon),
-      label: Text(action.label),
     );
   }
 }

@@ -37,13 +37,45 @@ class FlNodesCanvasController extends BaseFlNodesCanvasController<AutomatonProvi
     return FlNodesAutomatonMapper.toSnapshot(automaton);
   }
 
+  String _nextAvailableStateLabel() {
+    final reservedLabels = <String>{};
+
+    final automaton = _provider.state.currentAutomaton;
+    if (automaton != null) {
+      for (final state in automaton.states) {
+        final label = state.label.trim();
+        if (label.isNotEmpty) {
+          reservedLabels.add(label);
+        }
+      }
+    }
+
+    for (final node in nodesCache.values) {
+      final label = node.label.trim();
+      if (label.isNotEmpty) {
+        reservedLabels.add(label);
+      }
+    }
+
+    var index = 0;
+    while (reservedLabels.contains('q$index')) {
+      index++;
+    }
+    return 'q$index';
+  }
+
   @override
   FlNodesCanvasNode createCanvasNode(NodeInstance node) {
-    final label = resolveLabel(node);
+    final label = _nextAvailableStateLabel();
+    final labelField = node.fields[labelFieldId];
+    if (labelField != null) {
+      labelField.data = label;
+    }
+    final resolvedLabel = resolveLabel(node);
     final isFirstState = nodesCache.isEmpty;
     return FlNodesCanvasNode(
       id: node.id,
-      label: label,
+      label: resolvedLabel,
       x: node.offset.dx,
       y: node.offset.dy,
       isInitial: isFirstState,

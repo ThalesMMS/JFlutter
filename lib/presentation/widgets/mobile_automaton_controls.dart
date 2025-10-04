@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'automaton_canvas_tool.dart';
+
 /// Unified control surface for mobile automaton editors.
 ///
 /// The widget groups primary workspace actions (simulation, algorithms, metrics)
@@ -9,7 +11,11 @@ import 'package:flutter/material.dart';
 class MobileAutomatonControls extends StatelessWidget {
   const MobileAutomatonControls({
     super.key,
+    this.enableToolSelection = false,
+    this.activeTool = AutomatonCanvasTool.selection,
+    this.onSelectTool,
     required this.onAddState,
+    this.onAddTransition,
     required this.onZoomIn,
     required this.onZoomOut,
     required this.onFitToContent,
@@ -26,9 +32,20 @@ class MobileAutomatonControls extends StatelessWidget {
     this.isAlgorithmsEnabled = true,
     this.onMetrics,
     this.isMetricsEnabled = true,
-  });
+  })  : assert(
+          !enableToolSelection || onSelectTool != null,
+          'onSelectTool must be provided when tool selection is enabled.',
+        ),
+        assert(
+          !enableToolSelection || onAddTransition != null,
+          'onAddTransition must be provided when tool selection is enabled.',
+        );
 
+  final bool enableToolSelection;
+  final AutomatonCanvasTool activeTool;
+  final VoidCallback? onSelectTool;
   final VoidCallback onAddState;
+  final VoidCallback? onAddTransition;
   final VoidCallback onZoomIn;
   final VoidCallback onZoomOut;
   final VoidCallback onFitToContent;
@@ -86,11 +103,31 @@ class MobileAutomatonControls extends StatelessWidget {
           tooltip: 'Redo',
           onPressed: canRedo ? onRedo : null,
         ),
+      if (enableToolSelection)
+        _ControlAction(
+          icon: Icons.pan_tool,
+          label: 'Select',
+          onPressed: onSelectTool,
+          isToggle: true,
+          isSelected: activeTool == AutomatonCanvasTool.selection,
+        ),
       _ControlAction(
         icon: Icons.add,
         tooltip: 'Add state',
         onPressed: onAddState,
+        isToggle: enableToolSelection,
+        isSelected: enableToolSelection &&
+            activeTool == AutomatonCanvasTool.addState,
       ),
+      if (onAddTransition != null)
+        _ControlAction(
+          icon: Icons.arrow_right_alt,
+          label: 'Add transition',
+          onPressed: onAddTransition,
+          isToggle: enableToolSelection,
+          isSelected: enableToolSelection &&
+              activeTool == AutomatonCanvasTool.transition,
+        ),
       _ControlAction(
         icon: Icons.zoom_in,
         tooltip: 'Zoom in',
@@ -191,13 +228,29 @@ enum _ButtonStyleVariant { filled, tonal }
 class _ControlAction {
   const _ControlAction({
     required this.icon,
-    required this.tooltip,
+    this.tooltip,
+    this.label,
     required this.onPressed,
+    this.isToggle = false,
+    this.isSelected = false,
   });
 
   final IconData icon;
-  final String tooltip;
+
+  /// Texto mostrado no Tooltip. Se não vier, caímos para [label] (se houver).
+  final String? tooltip;
+
+  /// Rótulo opcional pensado pelo branch "codex". Hoje é usado apenas para
+  /// acessibilidade/tooltip fallback (mantém compatibilidade sem quebrar UI).
+  final String? label;
+
   final VoidCallback? onPressed;
+  final bool isToggle;
+  final bool isSelected;
+
+  String get effectiveTooltip => (tooltip?.trim().isNotEmpty == true)
+      ? tooltip!
+      : (label ?? '');
 }
 
 class _MobileControlButton extends StatelessWidget {
@@ -211,32 +264,55 @@ class _MobileControlButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ButtonStyle buttonStyle = IconButton.styleFrom(
+    final colorScheme = Theme.of(context).colorScheme;
+
+    // Base para todos os ícones (circular, compacto).
+    final baseStyle = IconButton.styleFrom(
       padding: const EdgeInsets.all(8),
       visualDensity: VisualDensity.compact,
       minimumSize: const Size.square(40),
       shape: const CircleBorder(),
     );
 
+    // Aplica cores de "toggle selecionado" quando aplicável.
+    final bool canPress = action.onPressed != null;
+    final bool selected = action.isToggle && action.isSelected && canPress;
+
+    // Cores para estado selecionado vs normal (herda do tema).
+    final ButtonStyle effectiveStyle = baseStyle.merge(
+      IconButton.styleFrom(
+        backgroundColor: selected
+            ? colorScheme.secondaryContainer
+            : null, // deixa default quando não selecionado
+        foregroundColor: selected
+            ? colorScheme.onSecondaryContainer
+            : null,
+      ),
+    );
+
     final Widget button = switch (style) {
       _ButtonStyleVariant.filled => IconButton.filled(
           onPressed: action.onPressed,
-          style: buttonStyle,
+          style: effectiveStyle,
           icon: Icon(action.icon),
         ),
       _ButtonStyleVariant.tonal => IconButton.filledTonal(
           onPressed: action.onPressed,
-          style: buttonStyle,
+          style: effectiveStyle,
           icon: Icon(action.icon),
         ),
     };
 
+    // Mantém acessibilidade e tooltip (fallback para label se tooltip não vier).
+    final String tip = action.effectiveTooltip;
+
     return Tooltip(
-      message: action.tooltip,
+      message: tip,
       child: Semantics(
-        label: action.tooltip,
+        label: tip.isNotEmpty ? tip : null,
         button: true,
-        enabled: action.onPressed != null,
+        enabled: canPress,
+        toggled: action.isToggle ? selected : null,
         child: button,
       ),
     );

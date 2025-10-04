@@ -16,6 +16,8 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_context_menu/flutter_context_menu.dart';
 
+import 'automaton_canvas_tool.dart';
+
 
 typedef _TempLink = ({String nodeId, String portId});
 
@@ -38,6 +40,7 @@ class AutomatonStateNode extends StatefulWidget {
     required this.isCurrent,
     required this.isVisited,
     required this.isNondeterministic,
+    required this.activeTool,
     required this.onToggleInitial,
     required this.onToggleAccepting,
     required this.onRename,
@@ -55,6 +58,7 @@ class AutomatonStateNode extends StatefulWidget {
   final bool isCurrent;
   final bool isVisited;
   final bool isNondeterministic;
+  final AutomatonCanvasTool activeTool;
   final VoidCallback onToggleInitial;
   final VoidCallback onToggleAccepting;
   final ValueChanged<String> onRename;
@@ -75,6 +79,9 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
   Timer? _edgeTimer;
   StreamSubscription<NodeEditorEvent>? _eventSubscription;
 
+  bool get _isTransitionToolActive =>
+      widget.activeTool == AutomatonCanvasTool.transition;
+
   double get _viewportZoom => widget.controller.viewportZoom;
   Offset get _viewportOffset => widget.controller.viewportOffset;
 
@@ -92,6 +99,11 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
   @override
   void didUpdateWidget(covariant AutomatonStateNode oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.activeTool != widget.activeTool &&
+        widget.activeTool != AutomatonCanvasTool.transition &&
+        _isLinking) {
+      _onTmpLinkCancel();
+    }
     if (oldWidget.node.key != widget.node.key ||
         oldWidget.node.offset != widget.node.offset ||
         oldWidget.node.state.isCollapsed != widget.node.state.isCollapsed ||
@@ -231,6 +243,9 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
   }
 
   void _onTmpLinkStart(_TempLink locator) {
+    if (!_isTransitionToolActive || widget.node.state.isCollapsed) {
+      return;
+    }
     _tempLink = locator;
     _isLinking = true;
   }
@@ -629,6 +644,9 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
 
   List<Widget> _buildPortHandles(_NodeColors colors) {
     if (widget.node.ports.isEmpty) {
+      return const [];
+    }
+    if (!_isTransitionToolActive || widget.node.state.isCollapsed) {
       return const [];
     }
 

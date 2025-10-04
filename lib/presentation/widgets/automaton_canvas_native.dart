@@ -77,6 +77,8 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
   final Set<int> _activePointerIds = <int>{};
   int _doubleTapPointerCount = 1;
   int _currentTapMaxPointerCount = 0;
+  bool _isPanningCanvas = false;
+  Offset? _canvasPanStartGlobalPosition;
 
   @override
   void initState() {
@@ -411,6 +413,47 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
     }
   }
 
+  void _handleCanvasPanStart(DragStartDetails details) {
+    final worldPosition = _globalToWorld(details.globalPosition);
+    if (worldPosition == null || !_isCanvasSpaceFree(worldPosition)) {
+      _isPanningCanvas = false;
+      _canvasPanStartGlobalPosition = null;
+      return;
+    }
+
+    _isPanningCanvas = true;
+    _canvasPanStartGlobalPosition = details.globalPosition;
+  }
+
+  void _handleCanvasPanUpdate(DragUpdateDetails details) {
+    if (!_isPanningCanvas || _canvasPanStartGlobalPosition == null) {
+      return;
+    }
+
+    final controller = _canvasController.controller;
+    final zoom = controller.viewportZoom;
+    final delta = details.delta;
+    if (delta == Offset.zero) {
+      return;
+    }
+
+    controller.setViewportOffset(
+      Offset(-delta.dx / zoom, -delta.dy / zoom),
+      animate: false,
+    );
+    _canvasPanStartGlobalPosition = details.globalPosition;
+  }
+
+  void _handleCanvasPanEnd(DragEndDetails details) {
+    _isPanningCanvas = false;
+    _canvasPanStartGlobalPosition = null;
+  }
+
+  void _handleCanvasPanCancel() {
+    _isPanningCanvas = false;
+    _canvasPanStartGlobalPosition = null;
+  }
+
   void _handleCanvasDoubleTap() {
     final pointerCount = _doubleTapPointerCount;
     _doubleTapPointerCount = 1;
@@ -736,6 +779,10 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
                 onLongPressStart: (details) => unawaited(
                   _handleCanvasLongPress(details.globalPosition),
                 ),
+                onPanStart: _handleCanvasPanStart,
+                onPanUpdate: _handleCanvasPanUpdate,
+                onPanEnd: _handleCanvasPanEnd,
+                onPanCancel: _handleCanvasPanCancel,
                 onDoubleTapDown: (_) {
                   if (_currentTapMaxPointerCount > 0) {
                     _doubleTapPointerCount = _currentTapMaxPointerCount;

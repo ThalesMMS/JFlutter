@@ -53,6 +53,9 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
   SimulationHighlightService? _highlightService;
   SimulationHighlightChannel? _previousHighlightChannel;
   FlNodesSimulationHighlightChannel? _highlightChannel;
+  final Set<int> _activePointerIds = <int>{};
+  int _doubleTapPointerCount = 1;
+  int _currentTapMaxPointerCount = 0;
 
   @override
   void initState() {
@@ -251,6 +254,42 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
     );
   }
 
+  void _handleCanvasPointerDown(PointerDownEvent event) {
+    _activePointerIds.add(event.pointer);
+    final activeCount = _activePointerIds.length;
+    if (activeCount > _currentTapMaxPointerCount) {
+      _currentTapMaxPointerCount = activeCount;
+    }
+  }
+
+  void _handleCanvasPointerUp(PointerEvent event) {
+    _activePointerIds.remove(event.pointer);
+    if (_activePointerIds.isEmpty) {
+      _doubleTapPointerCount =
+          _currentTapMaxPointerCount == 0 ? 1 : _currentTapMaxPointerCount;
+      _currentTapMaxPointerCount = 0;
+    }
+  }
+
+  void _handleCanvasPointerCancel(PointerCancelEvent event) {
+    _activePointerIds.remove(event.pointer);
+    if (_activePointerIds.isEmpty) {
+      _doubleTapPointerCount =
+          _currentTapMaxPointerCount == 0 ? 1 : _currentTapMaxPointerCount;
+      _currentTapMaxPointerCount = 0;
+    }
+  }
+
+  void _handleCanvasDoubleTap() {
+    final pointerCount = _doubleTapPointerCount;
+    _doubleTapPointerCount = 1;
+    if (pointerCount >= 2) {
+      _canvasController.fitToContent();
+    } else {
+      _canvasController.resetView();
+    }
+  }
+
   Offset? _globalToWorld(Offset globalPosition) {
     final renderObject = _canvasKey.currentContext?.findRenderObject();
     if (renderObject is! RenderBox) {
@@ -331,17 +370,32 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
         Positioned.fill(
           child: KeyedSubtree(
             key: _canvasKey,
-            child: GestureDetector(
+            child: Listener(
               behavior: HitTestBehavior.translucent,
-              onTapUp: (details) =>
-                  _handleCanvasTap(details.globalPosition),
-              onLongPressStart: (details) => unawaited(
-                _handleCanvasLongPress(details.globalPosition),
-              ),
-              child: FlNodeEditorWidget(
-                controller: _canvasController.controller,
-                overlay: _buildOverlay,
-                headerBuilder: (context, node, style, onToggleCollapse) {
+              onPointerDown: _handleCanvasPointerDown,
+              onPointerUp: _handleCanvasPointerUp,
+              onPointerCancel: _handleCanvasPointerCancel,
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTapUp: (details) =>
+                    _handleCanvasTap(details.globalPosition),
+                onLongPressStart: (details) => unawaited(
+                  _handleCanvasLongPress(details.globalPosition),
+                ),
+                onDoubleTapDown: (_) {
+                  if (_currentTapMaxPointerCount > 0) {
+                    _doubleTapPointerCount = _currentTapMaxPointerCount;
+                  } else if (_activePointerIds.isNotEmpty) {
+                    _doubleTapPointerCount = _activePointerIds.length;
+                  } else {
+                    _doubleTapPointerCount = 1;
+                  }
+                },
+                onDoubleTap: _handleCanvasDoubleTap,
+                child: FlNodeEditorWidget(
+                  controller: _canvasController.controller,
+                  overlay: _buildOverlay,
+                  headerBuilder: (context, node, style, onToggleCollapse) {
                   final state = statesById[node.id];
                   final label = state?.label ?? node.id;
                   final isInitial = initialStateId == node.id;

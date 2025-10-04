@@ -240,9 +240,8 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
   }
 
   void _updatePortOffsets() {
-    final padding = widget.isAccepting ? 4.0 : 0.0;
     final radius = AutomatonStateNode.nodeDiameter / 2;
-    final center = Offset(radius + padding, radius + padding);
+    final center = Offset(radius, radius);
     final collapsed = widget.node.state.isCollapsed;
     final effectiveRadius = collapsed ? radius * 0.6 : radius;
 
@@ -360,14 +359,9 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
 
     Widget decoratedCircle = circle;
     if (widget.isAccepting) {
-      decoratedCircle = Container(
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: colors.foreground.withOpacity(0.9),
-            width: 2,
-          ),
+      decoratedCircle = CustomPaint(
+        painter: _AcceptingRingPainter(
+          color: colors.foreground.withOpacity(0.9),
         ),
         child: circle,
       );
@@ -405,7 +399,6 @@ class _AutomatonStateNodeState extends State<AutomatonStateNode> {
       children: [
         Container(
           key: widget.node.key,
-          padding: EdgeInsets.all(widget.isAccepting ? 4 : 0),
           child: Tooltip(
             message: widget.label,
             child: decoratedCircle,
@@ -955,6 +948,33 @@ class _StateToggleButton extends StatelessWidget {
         splashRadius: 18,
       ),
     );
+  }
+}
+
+class _AcceptingRingPainter extends CustomPainter {
+  const _AcceptingRingPainter({
+    required this.color,
+  });
+
+  final Color color;
+  static const double _ringPadding = 4;
+  static const double _strokeWidth = 2;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final radius = size.shortestSide / 2;
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = _strokeWidth;
+
+    final center = Offset(size.width / 2, size.height / 2);
+    canvas.drawCircle(center, radius + _ringPadding, paint);
+  }
+
+  @override
+  bool shouldRepaint(_AcceptingRingPainter oldDelegate) {
+    return oldDelegate.color != color;
   }
 }
 

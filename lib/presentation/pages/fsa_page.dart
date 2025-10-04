@@ -7,6 +7,7 @@ import '../providers/automaton_provider.dart';
 import '../widgets/algorithm_panel.dart';
 import '../widgets/automaton_canvas.dart';
 import '../widgets/fl_nodes_canvas_toolbar.dart';
+import '../widgets/mobile_automaton_controls.dart';
 import '../widgets/simulation_panel.dart';
 import 'grammar_page.dart';
 import 'regex_page.dart';
@@ -368,13 +369,35 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     final statusMessage = _buildToolbarStatusMessage(state);
 
     Widget buildCanvasWithToolbar(Widget child) {
+      final hasAutomaton = state.currentAutomaton != null;
+
+      if (isMobile) {
+        return Stack(
+          children: [
+            Positioned.fill(child: child),
+            MobileAutomatonControls(
+              onAddState: _canvasController.addStateAtCenter,
+              onZoomIn: _canvasController.zoomIn,
+              onZoomOut: _canvasController.zoomOut,
+              onFitToContent: _canvasController.fitToContent,
+              onResetView: _canvasController.resetView,
+              onClear: () =>
+                  ref.read(automatonProvider.notifier).clearAutomaton(),
+              onSimulate: _openSimulationSheet,
+              isSimulationEnabled: hasAutomaton,
+              onAlgorithms: _openAlgorithmSheet,
+              isAlgorithmsEnabled: hasAutomaton,
+              statusMessage: statusMessage,
+            ),
+          ],
+        );
+      }
+
       return Stack(
         children: [
           Positioned.fill(child: child),
           FlNodesCanvasToolbar(
-            layout: isMobile
-                ? FlNodesCanvasToolbarLayout.mobile
-                : FlNodesCanvasToolbarLayout.desktop,
+            layout: FlNodesCanvasToolbarLayout.desktop,
             onAddState: _canvasController.addStateAtCenter,
             onZoomIn: _canvasController.zoomIn,
             onZoomOut: _canvasController.zoomOut,
@@ -448,27 +471,6 @@ class _FSAPageState extends ConsumerState<FSAPage> {
   Widget _buildMobileLayout(AutomatonState state) {
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              IconButton(
-                tooltip: 'Show controls',
-                icon: const Icon(Icons.tune),
-                onPressed: _openAlgorithmSheet,
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                tooltip: 'Run simulation',
-                icon: const Icon(Icons.play_arrow),
-                onPressed: _openSimulationSheet,
-              ),
-            ],
-          ),
-        ),
-
-        // Canvas - gets maximum available space
         Expanded(
           child: Container(
             margin: const EdgeInsets.all(8),

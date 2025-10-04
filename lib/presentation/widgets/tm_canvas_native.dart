@@ -43,6 +43,7 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
   VoidCallback? _viewportOffsetListener;
   VoidCallback? _viewportZoomListener;
   String? _selectedLinkId;
+  late final ValueNotifier<_TmOverlayState?> _transitionOverlayNotifier;
   final GlobalKey _canvasKey = GlobalKey();
   SimulationHighlightService? _highlightService;
   SimulationHighlightChannel? _previousHighlightChannel;
@@ -54,6 +55,7 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
   @override
   void initState() {
     super.initState();
+    _transitionOverlayNotifier = ValueNotifier<_TmOverlayState?>(null);
     final externalController = widget.controller;
     if (externalController != null) {
       _canvasController = externalController;
@@ -217,6 +219,7 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
       }
       _canvasController.dispose();
     }
+    _transitionOverlayNotifier.dispose();
     super.dispose();
   }
 
@@ -225,25 +228,95 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
     _selectedLinkId = controller.selectedLinkIds.isNotEmpty
         ? controller.selectedLinkIds.first
         : null;
+    _updateTransitionOverlay();
     _controllerListener = () {
-      if (mounted) {
-        setState(() {});
+      if (!mounted) {
+        return;
+      }
+      final ids = controller.selectedLinkIds;
+      final nextSelected = ids.length == 1 ? ids.first : null;
+      final selectionChanged = nextSelected != _selectedLinkId;
+      _selectedLinkId = nextSelected;
+      if (selectionChanged || _selectedLinkId != null) {
+        _updateTransitionOverlay();
       }
     };
     controller.addListener(_controllerListener!);
     _viewportOffsetListener = () {
-      if (mounted) {
-        setState(() {});
+      if (!mounted || _selectedLinkId == null) {
+        return;
       }
+      _updateTransitionOverlay();
     };
     controller.viewportOffsetNotifier.addListener(_viewportOffsetListener!);
     _viewportZoomListener = () {
-      if (mounted) {
-        setState(() {});
+      if (!mounted || _selectedLinkId == null) {
+        return;
       }
+      _updateTransitionOverlay();
     };
     controller.viewportZoomNotifier.addListener(_viewportZoomListener!);
     _eventSubscription = controller.eventBus.events.listen(_handleEditorEvent);
+  }
+
+  void _updateTransitionOverlay() {
+    if (!mounted) {
+      return;
+    }
+
+    final linkId = _selectedLinkId;
+    if (linkId == null) {
+      if (_transitionOverlayNotifier.value != null) {
+        _transitionOverlayNotifier.value = null;
+      }
+      return;
+    }
+
+    final controller = _canvasController.controller;
+    final anchor = resolveLinkAnchorWorld(
+      controller,
+      linkId,
+      _canvasController.edgeById(linkId),
+    );
+    if (anchor == null) {
+      if (_transitionOverlayNotifier.value != null) {
+        _transitionOverlayNotifier.value = null;
+      }
+      return;
+    }
+
+    final position = projectCanvasPointToOverlay(
+      controller: controller,
+      canvasKey: _canvasKey,
+      worldOffset: anchor,
+    );
+    if (position == null) {
+      if (_transitionOverlayNotifier.value != null) {
+        _transitionOverlayNotifier.value = null;
+      }
+      return;
+    }
+
+    final editorState = ref.read(tmEditorProvider);
+    final transition = editorState.transitions
+        .firstWhereOrNull((candidate) => candidate.id == linkId);
+    final edge = _canvasController.edgeById(linkId);
+    final initialRead = transition?.readSymbol ?? edge?.readSymbol ?? '';
+    final initialWrite = transition?.writeSymbol ?? edge?.writeSymbol ?? '';
+    final direction = transition?.direction ??
+        edge?.direction ??
+        TapeDirection.right;
+
+    final nextState = _TmOverlayState(
+      linkId: linkId,
+      position: position,
+      readSymbol: initialRead,
+      writeSymbol: initialWrite,
+      direction: direction,
+    );
+    if (_transitionOverlayNotifier.value != nextState) {
+      _transitionOverlayNotifier.value = nextState;
+    }
   }
 
   void _handleCanvasTap(Offset globalPosition) {
@@ -499,65 +572,46 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
   }
 
   List<FlOverlayData> _buildOverlay() {
-    final linkId = _selectedLinkId;
-    if (linkId == null) {
-      return const <FlOverlayData>[];
-    }
-
-    final controller = _canvasController.controller;
-    final anchor = resolveLinkAnchorWorld(
-      controller,
-      linkId,
-      _canvasController.edgeById(linkId),
-    );
-    if (anchor == null) {
-      return const <FlOverlayData>[];
-    }
-
-    final position = projectCanvasPointToOverlay(
-      controller: controller,
-      canvasKey: _canvasKey,
-      worldOffset: anchor,
-    );
-    if (position == null) {
-      return const <FlOverlayData>[];
-    }
-
-    final editorState = ref.read(tmEditorProvider);
-    final transition = editorState.transitions
-        .firstWhereOrNull((candidate) => candidate.id == linkId);
-    final edge = _canvasController.edgeById(linkId);
-    final initialRead = transition?.readSymbol ?? edge?.readSymbol ?? '';
-    final initialWrite = transition?.writeSymbol ?? edge?.writeSymbol ?? '';
-    final direction = transition?.direction ??
-        edge?.direction ??
-        TapeDirection.right;
-
     return [
       FlOverlayData(
-        left: position.dx,
-        top: position.dy,
-        child: FractionalTranslation(
-          translation: const Offset(-0.5, -1.0),
-          child: TmTransitionOperationsEditor(
-            key: ValueKey('tm-transition-editor-$linkId-$initialRead-$initialWrite-${direction.name}'),
-            initialRead: initialRead,
-            initialWrite: initialWrite,
-            initialDirection: direction,
-            onSubmit: ({
-              required String readSymbol,
-              required String writeSymbol,
-              required TapeDirection direction,
-            }) {
-              ref.read(tmEditorProvider.notifier).updateTransitionOperations(
-                    id: linkId,
-                    readSymbol: readSymbol,
-                    writeSymbol: writeSymbol,
-                    direction: direction,
-                  );
-            },
-            onCancel: () => controller.clearSelection(),
-          ),
+        left: 0,
+        top: 0,
+        child: AnimatedBuilder(
+          animation: _transitionOverlayNotifier,
+          builder: (context, _) {
+            final state = _transitionOverlayNotifier.value;
+            if (state == null) {
+              return const SizedBox.shrink();
+            }
+            return Transform.translate(
+              offset: state.position,
+              child: FractionalTranslation(
+                translation: const Offset(-0.5, -1.0),
+                child: TmTransitionOperationsEditor(
+                  key: ValueKey(
+                    'tm-transition-editor-${state.linkId}-${state.readSymbol}-${state.writeSymbol}-${state.direction.name}',
+                  ),
+                  initialRead: state.readSymbol,
+                  initialWrite: state.writeSymbol,
+                  initialDirection: state.direction,
+                  onSubmit: ({
+                    required String readSymbol,
+                    required String writeSymbol,
+                    required TapeDirection direction,
+                  }) {
+                    ref.read(tmEditorProvider.notifier).updateTransitionOperations(
+                          id: state.linkId,
+                          readSymbol: readSymbol,
+                          writeSymbol: writeSymbol,
+                          direction: direction,
+                        );
+                  },
+                  onCancel: () =>
+                      _canvasController.controller.clearSelection(),
+                ),
+              ),
+            );
+          },
         ),
       ),
     ];
@@ -571,18 +625,16 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
     final linkSelection = parseLinkSelectionEvent(event);
     if (linkSelection != null) {
       final ids = linkSelection.linkIds;
-      setState(() {
-        _selectedLinkId = ids.length == 1 ? ids.first : null;
-      });
+      _selectedLinkId = ids.length == 1 ? ids.first : null;
+      _updateTransitionOverlay();
       return;
     }
 
     final linkDeselection = parseLinkDeselectionEvent(event);
     if (linkDeselection != null) {
       if (_selectedLinkId != null) {
-        setState(() {
-          _selectedLinkId = null;
-        });
+        _selectedLinkId = null;
+        _transitionOverlayNotifier.value = null;
       }
       return;
     }
@@ -590,16 +642,15 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
     final removeLinkPayload = parseRemoveLinkEvent(event);
     if (removeLinkPayload != null) {
       if (_selectedLinkId == removeLinkPayload.link.id) {
-        setState(() {
-          _selectedLinkId = null;
-        });
+        _selectedLinkId = null;
+        _transitionOverlayNotifier.value = null;
       }
       return;
     }
 
     final dragSelection = parseDragSelectionEndEvent(event);
     if (dragSelection != null && _selectedLinkId != null) {
-      setState(() {});
+      _updateTransitionOverlay();
     }
   }
 
@@ -634,6 +685,39 @@ class _TMCanvasNativeState extends ConsumerState<TMCanvasNative> {
         a.highlightAreaStyle.color == b.highlightAreaStyle.color &&
         a.highlightAreaStyle.borderColor == b.highlightAreaStyle.borderColor;
   }
+}
+
+class _TmOverlayState {
+  const _TmOverlayState({
+    required this.linkId,
+    required this.position,
+    required this.readSymbol,
+    required this.writeSymbol,
+    required this.direction,
+  });
+
+  final String linkId;
+  final Offset position;
+  final String readSymbol;
+  final String writeSymbol;
+  final TapeDirection direction;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    return other is _TmOverlayState &&
+        other.linkId == linkId &&
+        other.position == position &&
+        other.readSymbol == readSymbol &&
+        other.writeSymbol == writeSymbol &&
+        other.direction == direction;
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(linkId, position, readSymbol, writeSymbol, direction);
 }
 
 class _TMNodeHeader extends StatelessWidget {

@@ -62,6 +62,8 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
   Set<String> _nondeterministicStateIds = const {};
   Set<String> _visitedStateIds = const {};
   String? _currentStateId;
+  late final ValueNotifier<_TransitionOverlayState?>
+      _transitionOverlayNotifier;
   StreamSubscription<NodeEditorEvent>? _eventSubscription;
   VoidCallback? _controllerListener;
   VoidCallback? _viewportOffsetListener;
@@ -79,6 +81,7 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
   @override
   void initState() {
     super.initState();
+    _transitionOverlayNotifier = ValueNotifier<_TransitionOverlayState?>(null);
     final externalController = widget.controller;
     if (externalController != null) {
       _canvasController = externalController;
@@ -252,6 +255,7 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
       }
       _canvasController.dispose();
     }
+    _transitionOverlayNotifier.dispose();
     super.dispose();
   }
 
@@ -260,25 +264,95 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
     _selectedLinkId = controller.selectedLinkIds.isNotEmpty
         ? controller.selectedLinkIds.first
         : null;
+    _updateTransitionOverlay();
     _controllerListener = () {
-      if (mounted) {
-        setState(() {});
+      if (!mounted) {
+        return;
+      }
+      final ids = controller.selectedLinkIds;
+      final nextSelected = ids.length == 1 ? ids.first : null;
+      final selectionChanged = nextSelected != _selectedLinkId;
+      _selectedLinkId = nextSelected;
+      if (selectionChanged || _selectedLinkId != null) {
+        _updateTransitionOverlay();
       }
     };
     controller.addListener(_controllerListener!);
     _viewportOffsetListener = () {
-      if (mounted) {
-        setState(() {});
+      if (!mounted || _selectedLinkId == null) {
+        return;
       }
+      _updateTransitionOverlay();
     };
     controller.viewportOffsetNotifier.addListener(_viewportOffsetListener!);
     _viewportZoomListener = () {
-      if (mounted) {
-        setState(() {});
+      if (!mounted || _selectedLinkId == null) {
+        return;
       }
+      _updateTransitionOverlay();
     };
     controller.viewportZoomNotifier.addListener(_viewportZoomListener!);
     _eventSubscription = controller.eventBus.events.listen(_handleEditorEvent);
+  }
+
+  void _updateTransitionOverlay() {
+    if (!mounted) {
+      return;
+    }
+
+    final linkId = _selectedLinkId;
+    if (linkId == null) {
+      if (_transitionOverlayNotifier.value != null) {
+        _transitionOverlayNotifier.value = null;
+      }
+      return;
+    }
+
+    final transition = widget.automaton?.fsaTransitions
+        .firstWhereOrNull((candidate) => candidate.id == linkId);
+    final label = transition?.label ??
+        _canvasController.edgeById(linkId)?.label ??
+        '';
+
+    if (!_shouldUseInlineLabelEditor(context)) {
+      _transitionOverlayNotifier.value = null;
+      _scheduleLabelSheet(linkId: linkId, initialLabel: label);
+      return;
+    }
+
+    final controller = _canvasController.controller;
+    final anchor = resolveLinkAnchorWorld(
+      controller,
+      linkId,
+      _canvasController.edgeById(linkId),
+    );
+    if (anchor == null) {
+      if (_transitionOverlayNotifier.value != null) {
+        _transitionOverlayNotifier.value = null;
+      }
+      return;
+    }
+
+    final position = projectCanvasPointToOverlay(
+      controller: controller,
+      canvasKey: widget.canvasKey,
+      worldOffset: anchor,
+    );
+    if (position == null) {
+      if (_transitionOverlayNotifier.value != null) {
+        _transitionOverlayNotifier.value = null;
+      }
+      return;
+    }
+
+    final nextState = _TransitionOverlayState(
+      linkId: linkId,
+      label: label,
+      position: position,
+    );
+    if (_transitionOverlayNotifier.value != nextState) {
+      _transitionOverlayNotifier.value = nextState;
+    }
   }
 
   void _handleCanvasTap(Offset globalPosition) {
@@ -472,58 +546,38 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
   }
 
   List<FlOverlayData> _buildOverlay() {
-    final linkId = _selectedLinkId;
-    if (linkId == null) {
-      return const <FlOverlayData>[];
-    }
-
-    final transition = widget.automaton?.fsaTransitions
-        .firstWhereOrNull((candidate) => candidate.id == linkId);
-    final label = transition?.label ??
-        _canvasController.edgeById(linkId)?.label ??
-        '';
-
-    if (!_shouldUseInlineLabelEditor(context)) {
-      _scheduleLabelSheet(linkId: linkId, initialLabel: label);
-      return const <FlOverlayData>[];
-    }
-
-    final controller = _canvasController.controller;
-    final anchor = resolveLinkAnchorWorld(
-      controller,
-      linkId,
-      _canvasController.edgeById(linkId),
-    );
-    if (anchor == null) {
-      return const <FlOverlayData>[];
-    }
-
-    final position = projectCanvasPointToOverlay(
-      controller: controller,
-      canvasKey: widget.canvasKey,
-      worldOffset: anchor,
-    );
-    if (position == null) {
-      return const <FlOverlayData>[];
-    }
-
     return [
       FlOverlayData(
-        left: position.dx,
-        top: position.dy,
-        child: FractionalTranslation(
-          translation: const Offset(-0.5, -1.0),
-          child: FlNodesLabelFieldEditor(
-            key: ValueKey('transition-editor-$linkId-$label'),
-            initialValue: label,
-            onSubmit: (value) {
-              ref.read(automatonProvider.notifier).updateTransitionLabel(
-                    id: linkId,
-                    label: value,
-                  );
-            },
-            onCancel: () => controller.clearSelection(),
-          ),
+        left: 0,
+        top: 0,
+        child: AnimatedBuilder(
+          animation: _transitionOverlayNotifier,
+          builder: (context, _) {
+            final state = _transitionOverlayNotifier.value;
+            if (state == null) {
+              return const SizedBox.shrink();
+            }
+            return Transform.translate(
+              offset: state.position,
+              child: FractionalTranslation(
+                translation: const Offset(-0.5, -1.0),
+                child: FlNodesLabelFieldEditor(
+                  key: ValueKey(
+                    'transition-editor-${state.linkId}-${state.label}',
+                  ),
+                  initialValue: state.label,
+                  onSubmit: (value) {
+                    ref.read(automatonProvider.notifier).updateTransitionLabel(
+                          id: state.linkId,
+                          label: value,
+                        );
+                  },
+                  onCancel: () =>
+                      _canvasController.controller.clearSelection(),
+                ),
+              ),
+            );
+          },
         ),
       ),
     ];
@@ -579,9 +633,8 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
           final hadSelection = _selectedLinkId != null;
           _canvasController.controller.clearSelection();
           if (hadSelection) {
-            setState(() {
-              _selectedLinkId = null;
-            });
+            _selectedLinkId = null;
+            _transitionOverlayNotifier.value = null;
           }
         } else {
           _isLabelSheetOpen = false;
@@ -629,18 +682,16 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
     final linkSelection = parseLinkSelectionEvent(event);
     if (linkSelection != null) {
       final ids = linkSelection.linkIds;
-      setState(() {
-        _selectedLinkId = ids.length == 1 ? ids.first : null;
-      });
+      _selectedLinkId = ids.length == 1 ? ids.first : null;
+      _updateTransitionOverlay();
       return;
     }
 
     final linkDeselection = parseLinkDeselectionEvent(event);
     if (linkDeselection != null) {
       if (_selectedLinkId != null) {
-        setState(() {
-          _selectedLinkId = null;
-        });
+        _selectedLinkId = null;
+        _transitionOverlayNotifier.value = null;
       }
       return;
     }
@@ -648,16 +699,15 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
     final removeLinkPayload = parseRemoveLinkEvent(event);
     if (removeLinkPayload != null) {
       if (_selectedLinkId == removeLinkPayload.link.id) {
-        setState(() {
-          _selectedLinkId = null;
-        });
+        _selectedLinkId = null;
+        _transitionOverlayNotifier.value = null;
       }
       return;
     }
 
     final dragSelection = parseDragSelectionEndEvent(event);
     if (dragSelection != null && _selectedLinkId != null) {
-      setState(() {});
+      _updateTransitionOverlay();
     }
   }
 
@@ -877,6 +927,32 @@ class _AutomatonCanvasState extends ConsumerState<AutomatonCanvas> {
         a.highlightAreaStyle.color == b.highlightAreaStyle.color &&
         a.highlightAreaStyle.borderColor == b.highlightAreaStyle.borderColor;
   }
+}
+
+class _TransitionOverlayState {
+  const _TransitionOverlayState({
+    required this.linkId,
+    required this.label,
+    required this.position,
+  });
+
+  final String linkId;
+  final String label;
+  final Offset position;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    return other is _TransitionOverlayState &&
+        other.linkId == linkId &&
+        other.label == label &&
+        other.position == position;
+  }
+
+  @override
+  int get hashCode => Object.hash(linkId, label, position);
 }
 
 class _DerivedState {

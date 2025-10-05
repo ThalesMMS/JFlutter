@@ -257,14 +257,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.1"
-  fl_nodes:
-    dependency: "direct main"
-    description:
-      name: fl_nodes
-      sha256: "1d3593b8d235504ae85bc5766a91c283ef437dd842ffb09b02cbea221529e6df"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.4.0+1"
   graphview:
     dependency: "direct main"
     description:

@@ -24,6 +24,19 @@ All Phase 2 objectives have been successfully completed, delivering enhanced per
 - Memory usage optimized for mobile devices
 - Smooth trace visualization with step indicators
 
+### ✅ Canvas Migration to GraphView
+**Objective**: Replace the legacy native node-editor integration with the unified GraphView canvas
+
+**Implementation**:
+- Replaced the previous node-editor widgets with `AutomatonGraphViewCanvas`, `TMCanvasGraphView`, and `PDACanvasGraphView`, wiring highlight playback and overlays directly in Flutter.【F:lib/presentation/widgets/automaton_graphview_canvas.dart†L26-L626】【F:lib/presentation/widgets/tm_canvas_graphview.dart†L5-L210】【F:lib/presentation/widgets/pda_canvas_graphview.dart†L5-L204】
+- Adopted GraphView controllers/mappers to keep Riverpod as the single source of truth while supporting undo/redo, viewport controls, and PDA/TM metadata.【F:lib/features/canvas/graphview/graphview_canvas_controller.dart†L13-L219】【F:lib/features/canvas/graphview/graphview_tm_canvas_controller.dart†L4-L166】【F:lib/features/canvas/graphview/graphview_pda_canvas_controller.dart†L4-L184】
+- Cleaned dependencies and assets, dropping the third-party node-editor package and shader references from the build configuration.【F:pubspec.yaml†L53-L101】
+
+**Results**:
+- Single GraphView implementation shared across web, desktop, and mobile canvases
+- Streamlined highlight pipeline through `GraphViewSimulationHighlightChannel` and `SimulationHighlightService`
+- Simplified dependency graph by removing the obsolete node-editor package entirely
+
 ### ✅ T035: Trace Persistence and Navigation
 **Objective**: Ensure persistence and navigation of immutable `Trace` between simulators
 

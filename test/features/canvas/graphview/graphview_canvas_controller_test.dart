@@ -295,5 +295,62 @@ void main() {
       expect(cachedEdge.controlPointX, closeTo(120, 0.0001));
       expect(cachedEdge.controlPointY, closeTo(40, 0.0001));
     });
+
+    test('external synchronize clears undo history and notifies listeners', () {
+      final stateA = automaton_state.State(
+        id: 'qa',
+        label: 'qa',
+        position: Vector2(0, 0),
+        isInitial: true,
+        isAccepting: false,
+      );
+      final automatonA = FSA(
+        id: 'auto_a',
+        name: 'Automaton A',
+        states: {stateA},
+        transitions: const {},
+        alphabet: const {'a'},
+        initialState: stateA,
+        acceptingStates: const {},
+        created: DateTime.utc(2024, 1, 1),
+        modified: DateTime.utc(2024, 1, 1),
+        bounds: const math.Rectangle<double>(0, 0, 400, 300),
+      );
+
+      provider.updateAutomaton(automatonA);
+      controller.synchronize(automatonA);
+
+      controller.addStateAt(const Offset(120, 80));
+      expect(controller.canUndo, isTrue);
+
+      final stateB = automaton_state.State(
+        id: 'qb',
+        label: 'qb',
+        position: Vector2(200, 0),
+        isInitial: true,
+        isAccepting: false,
+      );
+      final automatonB = FSA(
+        id: 'auto_b',
+        name: 'Automaton B',
+        states: {stateB},
+        transitions: const {},
+        alphabet: const {'b'},
+        initialState: stateB,
+        acceptingStates: const {},
+        created: DateTime.utc(2024, 2, 1),
+        modified: DateTime.utc(2024, 2, 1),
+        bounds: const math.Rectangle<double>(0, 0, 400, 300),
+      );
+
+      provider.updateAutomaton(automatonB);
+      final revisionBeforeExternalSync = controller.graphRevision.value;
+      controller.synchronize(automatonB);
+
+      expect(controller.canUndo, isFalse);
+      expect(controller.undo(), isFalse);
+      expect(provider.state.currentAutomaton?.id, equals('auto_b'));
+      expect(controller.graphRevision.value, greaterThan(revisionBeforeExternalSync));
+    });
   });
 }

@@ -203,7 +203,7 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
 
     mutation();
     _logGraphViewBase('Mutation executed, synchronizing graph with domain data');
-    synchronizeGraph(currentDomainData);
+    synchronizeGraph(currentDomainData, fromMutation: true);
   }
 
   /// Restores the previous canvas snapshot if available.
@@ -248,7 +248,18 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
 
   /// Synchronises the canvas with the provided domain [data].
   @protected
-  void synchronizeGraph(TSnapshot? data) {
+  void synchronizeGraph(TSnapshot? data, {bool fromMutation = false}) {
+    final isExternalSync = !fromMutation;
+    if (isExternalSync &&
+        (_undoHistory.isNotEmpty || _redoHistory.isNotEmpty)) {
+      _undoHistory.clear();
+      _redoHistory.clear();
+      graphRevision.value++;
+      _logGraphViewBase(
+        'History cleared due to external synchronization (revision=${graphRevision.value})',
+      );
+    }
+
     final snapshot = toSnapshot(data);
     final incomingNodes = {for (final node in snapshot.nodes) node.id: node};
     final incomingEdges = {for (final edge in snapshot.edges) edge.id: edge};

@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -342,27 +343,48 @@ class _AutomatonGraphViewCanvasState
     _showTransitionEditor(sourceId, nodeId);
   }
 
-  GraphViewCanvasEdge? _findExistingEdge(String fromId, String toId) {
-    for (final edge in _controller.edges) {
-      if (edge.fromStateId == fromId && edge.toStateId == toId) {
-        return edge;
-      }
-    }
-    return null;
+  List<GraphViewCanvasEdge> _findExistingEdges(String fromId, String toId) {
+    return _controller.edges
+        .where((edge) => edge.fromStateId == fromId && edge.toStateId == toId)
+        .toList(growable: false);
   }
 
   Future<void> _showTransitionEditor(String fromId, String toId) async {
-    final existing = _findExistingEdge(fromId, toId);
+    final existingEdges = _findExistingEdges(fromId, toId);
+    GraphViewCanvasEdge? existing;
+    var createNew = existingEdges.isEmpty;
+
+    if (!createNew) {
+      existing = existingEdges.firstWhereOrNull(
+        (edge) => _selectedTransitions.contains(edge.id),
+      );
+
+      if (existing == null) {
+        final selection = await _promptTransitionEditChoice(existingEdges);
+        if (!mounted || selection == null) {
+          return;
+        }
+        if (selection.createNew) {
+          createNew = true;
+        } else {
+          existing = selection.edge;
+          if (existing == null) {
+            createNew = true;
+          }
+        }
+      }
+    }
+
     final initialValue = existing?.label ?? '';
-    final worldAnchor = existing != null
+    final worldAnchor = !createNew && existing != null
         ? resolveLinkAnchorWorld(_controller, existing) ??
-              Offset(existing.controlPointX ?? 0, existing.controlPointY ?? 0)
+            Offset(existing.controlPointX ?? 0, existing.controlPointY ?? 0)
         : _deriveControlPoint(fromId, toId);
 
     final overlayDisplayed = _showTransitionOverlay(
       fromStateId: fromId,
       toStateId: toId,
-      transitionId: existing?.id,
+      transitionId: createNew ? null : existing?.id,
       initialValue: initialValue,
       worldAnchor: worldAnchor,
     );
@@ -370,7 +392,7 @@ class _AutomatonGraphViewCanvasState
     if (overlayDisplayed) {
       setState(() {
         _selectedTransitions..clear();
-        if (existing?.id != null) {
+        if (!createNew && existing?.id != null) {
           _selectedTransitions.add(existing!.id);
         }
       });
@@ -400,9 +422,60 @@ class _AutomatonGraphViewCanvasState
       fromStateId: fromId,
       toStateId: toId,
       label: label,
-      transitionId: existing?.id,
+      transitionId: createNew ? null : existing?.id,
       controlPointX: worldAnchor.dx,
       controlPointY: worldAnchor.dy,
+    );
+  }
+
+  Future<_TransitionEditChoice?> _promptTransitionEditChoice(
+    List<GraphViewCanvasEdge> edges,
+  ) {
+    return showDialog<_TransitionEditChoice>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Selecione a transição'),
+          content: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 360),
+            child: SingleChildScrollView(
+              child: ListBody(
+                children: [
+                  for (final edge in edges)
+                    ListTile(
+                      key: ValueKey('automaton-transition-choice-${edge.id}'),
+                      leading: const Icon(Icons.edit_outlined),
+                      title: Text(
+                        edge.label.isEmpty ? edge.id : edge.label,
+                      ),
+                      subtitle:
+                          Text('${edge.fromStateId} → ${edge.toStateId}'),
+                      onTap: () => Navigator.of(context).pop(
+                        _TransitionEditChoice.edit(edge),
+                      ),
+                    ),
+                  ListTile(
+                    key: const ValueKey(
+                      'automaton-transition-choice-create-new',
+                    ),
+                    leading: const Icon(Icons.add_outlined),
+                    title: const Text('Criar nova transição'),
+                    onTap: () => Navigator.of(context).pop(
+                      const _TransitionEditChoice.createNew(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancelar'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -431,9 +504,7 @@ class _AutomatonGraphViewCanvasState
     if (normal.distanceSquared == 0) {
       normal = const Offset(0, -1);
     }
-    final existing = _controller.edges.where((edge) {
-      return edge.fromStateId == fromId && edge.toStateId == toId;
-    }).length;
+    final existing = _findExistingEdges(fromId, toId).length;
     final direction = existing.isEven ? 1.0 : -1.0;
     final magnitude = (_kNodeDiameter * 0.8) + existing * 12;
     final normalized = normal / normal.distance * magnitude * direction;
@@ -740,6 +811,21 @@ class _AutomatonGraphViewCanvasState
       ),
     );
   }
+}
+
+class _TransitionEditChoice {
+  const _TransitionEditChoice._({
+    required this.createNew,
+    this.edge,
+  });
+
+  const _TransitionEditChoice.edit(GraphViewCanvasEdge edge)
+      : this._(createNew: false, edge: edge);
+
+  const _TransitionEditChoice.createNew() : this._(createNew: true);
+
+  final bool createNew;
+  final GraphViewCanvasEdge? edge;
 }
 
 class _GraphViewTransitionOverlayState {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../features/canvas/graphview/graphview_canvas_controller.dart';
+import '../../features/canvas/graphview/base_graphview_canvas_controller.dart';
 import 'automaton_canvas_tool.dart';
 
 /// Toolbar exposing viewport commands for the GraphView canvas.
@@ -17,15 +17,15 @@ class GraphViewCanvasToolbar extends StatefulWidget {
     this.statusMessage,
     this.layout = GraphViewCanvasToolbarLayout.desktop,
   }) : assert(
-          !enableToolSelection || onSelectTool != null,
-          'onSelectTool must be provided when tool selection is enabled.',
-        ),
-        assert(
-          !enableToolSelection || onAddTransition != null,
-          'onAddTransition must be provided when tool selection is enabled.',
-        );
+         !enableToolSelection || onSelectTool != null,
+         'onSelectTool must be provided when tool selection is enabled.',
+       ),
+       assert(
+         !enableToolSelection || onAddTransition != null,
+         'onAddTransition must be provided when tool selection is enabled.',
+       );
 
-  final GraphViewCanvasController controller;
+  final BaseGraphViewCanvasController<dynamic, dynamic> controller;
   final bool enableToolSelection;
   final AutomatonCanvasTool activeTool;
   final VoidCallback? onSelectTool;
@@ -36,8 +36,7 @@ class GraphViewCanvasToolbar extends StatefulWidget {
   final GraphViewCanvasToolbarLayout layout;
 
   @override
-  State<GraphViewCanvasToolbar> createState() =>
-      _GraphViewCanvasToolbarState();
+  State<GraphViewCanvasToolbar> createState() => _GraphViewCanvasToolbarState();
 }
 
 class _GraphViewCanvasToolbarState extends State<GraphViewCanvasToolbar> {
@@ -51,7 +50,9 @@ class _GraphViewCanvasToolbarState extends State<GraphViewCanvasToolbar> {
   void didUpdateWidget(covariant GraphViewCanvasToolbar oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.controller != widget.controller) {
-      oldWidget.controller.graphRevision.removeListener(_handleControllerChanged);
+      oldWidget.controller.graphRevision.removeListener(
+        _handleControllerChanged,
+      );
       widget.controller.graphRevision.addListener(_handleControllerChanged);
     }
   }
@@ -87,14 +88,15 @@ class _GraphViewCanvasToolbarState extends State<GraphViewCanvasToolbar> {
         isToggle: widget.enableToolSelection,
         isSelected:
             widget.enableToolSelection &&
-                widget.activeTool == AutomatonCanvasTool.addState,
+            widget.activeTool == AutomatonCanvasTool.addState,
       ),
       if (widget.onAddTransition != null)
         _ToolbarButtonConfig(
           action: _ToolbarAction.transition,
           handler: widget.onAddTransition,
           isToggle: widget.enableToolSelection,
-          isSelected: widget.enableToolSelection &&
+          isSelected:
+              widget.enableToolSelection &&
               widget.activeTool == AutomatonCanvasTool.transition,
         ),
       _ToolbarButtonConfig(
@@ -196,8 +198,9 @@ class _DesktopToolbar extends StatelessWidget {
                           ? IconButton.styleFrom(
                               backgroundColor: entry.isSelected
                                   ? colorScheme.secondaryContainer
-                                  : colorScheme.surfaceVariant
-                                      .withOpacity(0.15),
+                                  : colorScheme.surfaceVariant.withOpacity(
+                                      0.15,
+                                    ),
                               foregroundColor: entry.isSelected
                                   ? colorScheme.onSecondaryContainer
                                   : colorScheme.onSurfaceVariant,
@@ -209,8 +212,7 @@ class _DesktopToolbar extends StatelessWidget {
                         width: 1,
                         height: 24,
                         margin: const EdgeInsets.symmetric(horizontal: 4),
-                        color:
-                            colorScheme.outlineVariant.withOpacity(0.35),
+                        color: colorScheme.outlineVariant.withOpacity(0.35),
                       ),
                   ],
                 ],
@@ -219,10 +221,7 @@ class _DesktopToolbar extends StatelessWidget {
             if (statusMessage != null && statusMessage!.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                  statusMessage!,
-                  style: textTheme.bodySmall,
-                ),
+                child: Text(statusMessage!, style: textTheme.bodySmall),
               ),
           ],
         ),
@@ -257,10 +256,7 @@ class _MobileToolbar extends StatelessWidget {
             if (statusMessage != null && statusMessage!.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
-                child: Text(
-                  statusMessage!,
-                  style: textTheme.bodyMedium,
-                ),
+                child: Text(statusMessage!, style: textTheme.bodyMedium),
               ),
             Material(
               elevation: 6,

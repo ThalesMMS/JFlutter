@@ -3,6 +3,7 @@ import 'package:vector_math/vector_math_64.dart';
 import '../../../core/models/fsa.dart';
 import '../../../core/models/fsa_transition.dart';
 import '../../../core/models/state.dart';
+import '../../../core/models/transition.dart';
 import 'graphview_canvas_models.dart';
 
 /// Utility helpers to convert between [FSA] instances and GraphView snapshots.
@@ -110,8 +111,9 @@ class GraphViewAutomatonMapper {
       for (final edge in snapshot.edges) ...edge.symbols,
     }..removeWhere((symbol) => symbol.isEmpty);
 
-    final initialState =
-        initialNode != null ? stateMap[initialNode.id] : template.initialState;
+    final initialState = initialNode != null
+        ? stateMap[initialNode.id]
+        : template.initialState;
 
     return template.copyWith(
       states: states,

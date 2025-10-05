@@ -5,14 +5,14 @@ import '../../core/models/pda.dart';
 import '../../core/models/pda_transition.dart';
 import '../../core/models/state.dart' as automaton_state;
 import '../providers/pda_editor_provider.dart';
-import '../widgets/fl_nodes_canvas_toolbar.dart';
+import '../widgets/graphview_canvas_toolbar.dart';
 import '../widgets/mobile_automaton_controls.dart';
-import '../widgets/pda_canvas_native.dart';
+import '../widgets/pda_canvas_graphview.dart';
 import '../widgets/pda_algorithm_panel.dart';
 import '../widgets/pda_simulation_panel.dart';
-import '../../features/canvas/fl_nodes/fl_nodes_pda_canvas_controller.dart';
 import '../../core/services/simulation_highlight_service.dart';
-import '../../features/canvas/fl_nodes/fl_nodes_highlight_channel.dart';
+import '../../features/canvas/graphview/graphview_highlight_channel.dart';
+import '../../features/canvas/graphview/graphview_pda_canvas_controller.dart';
 
 /// Page for working with Pushdown Automata
 class PDAPage extends ConsumerStatefulWidget {
@@ -28,33 +28,33 @@ class _PDAPageState extends ConsumerState<PDAPage> {
   int _transitionCount = 0;
   bool _hasUnsavedChanges = false;
   ProviderSubscription<PDAEditorState>? _pdaEditorSub;
-  late final FlNodesPdaCanvasController _canvasController;
-  late final FlNodesSimulationHighlightChannel _highlightChannel;
+  late final GraphViewPdaCanvasController _canvasController;
+  late final GraphViewSimulationHighlightChannel _highlightChannel;
   late final SimulationHighlightService _highlightService;
 
   @override
   void initState() {
     super.initState();
-    _canvasController = FlNodesPdaCanvasController(
+    _canvasController = GraphViewPdaCanvasController(
       editorNotifier: ref.read(pdaEditorProvider.notifier),
     );
     _canvasController.synchronize(ref.read(pdaEditorProvider).pda);
-    _highlightChannel = FlNodesSimulationHighlightChannel(_canvasController);
+    _highlightChannel = GraphViewSimulationHighlightChannel(_canvasController);
     _highlightService = SimulationHighlightService(channel: _highlightChannel);
-    _pdaEditorSub = ref.listenManual<PDAEditorState>(
-      pdaEditorProvider,
-      (previous, next) {
-        if (!mounted) return;
-        if (next.pda == null && _latestPda != null) {
-          setState(() {
-            _latestPda = null;
-            _stateCount = 0;
-            _transitionCount = 0;
-            _hasUnsavedChanges = false;
-          });
-        }
-      },
-    );
+    _pdaEditorSub = ref.listenManual<PDAEditorState>(pdaEditorProvider, (
+      previous,
+      next,
+    ) {
+      if (!mounted) return;
+      if (next.pda == null && _latestPda != null) {
+        setState(() {
+          _latestPda = null;
+          _stateCount = 0;
+          _transitionCount = 0;
+          _hasUnsavedChanges = false;
+        });
+      }
+    });
   }
 
   @override
@@ -99,7 +99,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
                 child: Container(
                   margin: const EdgeInsets.all(8),
                   child: _buildCanvasWithToolbar(
-                    PDACanvasNative(
+                    PDACanvasGraphView(
                       controller: _canvasController,
                       onPdaModified: _handlePdaModified,
                     ),
@@ -258,7 +258,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
           child: Container(
             margin: const EdgeInsets.all(8),
             child: _buildCanvasWithToolbar(
-              PDACanvasNative(
+              PDACanvasGraphView(
                 controller: _canvasController,
                 onPdaModified: _handlePdaModified,
               ),
@@ -272,9 +272,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
           flex: 1,
           child: Container(
             margin: const EdgeInsets.all(8),
-            child: PDASimulationPanel(
-              highlightService: _highlightService,
-            ),
+            child: PDASimulationPanel(highlightService: _highlightService),
           ),
         ),
         const SizedBox(width: 16),
@@ -346,46 +344,60 @@ class _PDAPageState extends ConsumerState<PDAPage> {
     );
   }
 
-  Widget _buildCanvasWithToolbar(
-    Widget canvas, {
-    required bool isMobile,
-  }) {
+  Widget _buildCanvasWithToolbar(Widget canvas, {required bool isMobile}) {
     final editorState = ref.watch(pdaEditorProvider);
     final statusMessage = _buildToolbarStatusMessage(editorState);
-    final hasPda = editorState.pda != null && editorState.pda!.states.isNotEmpty;
+    final hasPda =
+        editorState.pda != null && editorState.pda!.states.isNotEmpty;
+
+    final combinedListenable = _canvasController.graphRevision;
 
     if (isMobile) {
       return Stack(
         children: [
           Positioned.fill(child: canvas),
-          MobileAutomatonControls(
-            onAddState: _canvasController.addStateAtCenter,
-            onZoomIn: _canvasController.zoomIn,
-            onZoomOut: _canvasController.zoomOut,
-            onFitToContent: _canvasController.fitToContent,
-            onResetView: _canvasController.resetView,
-            onClear: () =>
-                ref.read(pdaEditorProvider.notifier).updateFromCanvas(
+          AnimatedBuilder(
+            animation: combinedListenable,
+            builder: (context, _) {
+              return MobileAutomatonControls(
+                onAddState: _canvasController.addStateAtCenter,
+                onZoomIn: _canvasController.zoomIn,
+                onZoomOut: _canvasController.zoomOut,
+                onFitToContent: _canvasController.fitToContent,
+                onResetView: _canvasController.resetView,
+                onClear: () => ref
+                    .read(pdaEditorProvider.notifier)
+                    .updateFromCanvas(
                       states: const <automaton_state.State>[],
                       transitions: const <PDATransition>[],
                     ),
-            onSimulate: () => _showPanelSheet(
-              context: context,
-              title: 'PDA Simulation',
-              icon: Icons.play_arrow,
-              child: PDASimulationPanel(
-                highlightService: _highlightService,
-              ),
-            ),
-            isSimulationEnabled: hasPda,
-            onAlgorithms: () => _showPanelSheet(
-              context: context,
-              title: 'PDA Algorithms',
-              icon: Icons.auto_awesome,
-              child: const PDAAlgorithmPanel(),
-            ),
-            isAlgorithmsEnabled: hasPda,
-            statusMessage: statusMessage,
+                onUndo: _canvasController.canUndo
+                    ? () => _canvasController.undo()
+                    : null,
+                onRedo: _canvasController.canRedo
+                    ? () => _canvasController.redo()
+                    : null,
+                canUndo: _canvasController.canUndo,
+                canRedo: _canvasController.canRedo,
+                onSimulate: () => _showPanelSheet(
+                  context: context,
+                  title: 'PDA Simulation',
+                  icon: Icons.play_arrow,
+                  child: PDASimulationPanel(
+                    highlightService: _highlightService,
+                  ),
+                ),
+                isSimulationEnabled: hasPda,
+                onAlgorithms: () => _showPanelSheet(
+                  context: context,
+                  title: 'PDA Algorithms',
+                  icon: Icons.auto_awesome,
+                  child: const PDAAlgorithmPanel(),
+                ),
+                isAlgorithmsEnabled: hasPda,
+                statusMessage: statusMessage,
+              );
+            },
           ),
         ],
       );
@@ -394,18 +406,22 @@ class _PDAPageState extends ConsumerState<PDAPage> {
     return Stack(
       children: [
         Positioned.fill(child: canvas),
-        FlNodesCanvasToolbar(
-          layout: FlNodesCanvasToolbarLayout.desktop,
-          onAddState: _canvasController.addStateAtCenter,
-          onZoomIn: _canvasController.zoomIn,
-          onZoomOut: _canvasController.zoomOut,
-          onFitToContent: _canvasController.fitToContent,
-          onResetView: _canvasController.resetView,
-          onClear: () => ref.read(pdaEditorProvider.notifier).updateFromCanvas(
-                states: const <automaton_state.State>[],
-                transitions: const <PDATransition>[],
-              ),
-          statusMessage: statusMessage,
+        AnimatedBuilder(
+          animation: combinedListenable,
+          builder: (context, _) {
+            return GraphViewCanvasToolbar(
+              layout: GraphViewCanvasToolbarLayout.desktop,
+              controller: _canvasController,
+              onAddState: _canvasController.addStateAtCenter,
+              onClear: () => ref
+                  .read(pdaEditorProvider.notifier)
+                  .updateFromCanvas(
+                    states: const <automaton_state.State>[],
+                    transitions: const <PDATransition>[],
+                  ),
+              statusMessage: statusMessage,
+            );
+          },
         ),
       ],
     );

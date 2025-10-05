@@ -5,14 +5,14 @@ import '../../core/models/state.dart' as automaton_state;
 import '../../core/models/tm.dart';
 import '../../core/models/tm_transition.dart';
 import '../providers/tm_editor_provider.dart';
-import '../widgets/tm_canvas_native.dart';
+import '../widgets/tm_canvas_graphview.dart';
 import '../widgets/tm_algorithm_panel.dart';
 import '../widgets/tm_simulation_panel.dart';
-import '../widgets/fl_nodes_canvas_toolbar.dart';
+import '../widgets/graphview_canvas_toolbar.dart';
 import '../widgets/mobile_automaton_controls.dart';
-import '../../features/canvas/fl_nodes/fl_nodes_tm_canvas_controller.dart';
 import '../../core/services/simulation_highlight_service.dart';
-import '../../features/canvas/fl_nodes/fl_nodes_highlight_channel.dart';
+import '../../features/canvas/graphview/graphview_highlight_channel.dart';
+import '../../features/canvas/graphview/graphview_tm_canvas_controller.dart';
 
 /// Page for working with Turing Machines
 class TMPage extends ConsumerStatefulWidget {
@@ -32,8 +32,8 @@ class _TMPageState extends ConsumerState<TMPage> {
   bool _hasInitialState = false;
   bool _hasAcceptingState = false;
   ProviderSubscription<TMEditorState>? _tmEditorSub;
-  late final FlNodesTmCanvasController _canvasController;
-  late final FlNodesSimulationHighlightChannel _highlightChannel;
+  late final GraphViewTmCanvasController _canvasController;
+  late final GraphViewSimulationHighlightChannel _highlightChannel;
   late final SimulationHighlightService _highlightService;
 
   bool get _isMachineReady =>
@@ -44,30 +44,30 @@ class _TMPageState extends ConsumerState<TMPage> {
   @override
   void initState() {
     super.initState();
-    _canvasController = FlNodesTmCanvasController(
+    _canvasController = GraphViewTmCanvasController(
       editorNotifier: ref.read(tmEditorProvider.notifier),
     );
     _canvasController.synchronize(ref.read(tmEditorProvider).tm);
-    _highlightChannel = FlNodesSimulationHighlightChannel(_canvasController);
+    _highlightChannel = GraphViewSimulationHighlightChannel(_canvasController);
     _highlightService = SimulationHighlightService(channel: _highlightChannel);
-    _tmEditorSub = ref.listenManual<TMEditorState>(
-      tmEditorProvider,
-      (previous, next) {
-        if (!mounted) return;
-        if (next.tm == null && _currentTM != null) {
-          setState(() {
-            _currentTM = null;
-            _stateCount = 0;
-            _transitionCount = 0;
-            _tapeSymbols = const <String>{};
-            _moveDirections = const <String>{};
-            _nondeterministicTransitionIds = const <String>{};
-            _hasInitialState = false;
-            _hasAcceptingState = false;
-          });
-        }
-      },
-    );
+    _tmEditorSub = ref.listenManual<TMEditorState>(tmEditorProvider, (
+      previous,
+      next,
+    ) {
+      if (!mounted) return;
+      if (next.tm == null && _currentTM != null) {
+        setState(() {
+          _currentTM = null;
+          _stateCount = 0;
+          _transitionCount = 0;
+          _tapeSymbols = const <String>{};
+          _moveDirections = const <String>{};
+          _nondeterministicTransitionIds = const <String>{};
+          _hasInitialState = false;
+          _hasAcceptingState = false;
+        });
+      }
+    });
   }
 
   @override
@@ -126,9 +126,7 @@ class _TMPageState extends ConsumerState<TMPage> {
           flex: 1,
           child: Container(
             margin: const EdgeInsets.all(8),
-            child: TMSimulationPanel(
-              highlightService: _highlightService,
-            ),
+            child: TMSimulationPanel(highlightService: _highlightService),
           ),
         ),
         const SizedBox(width: 16),
@@ -155,34 +153,49 @@ class _TMPageState extends ConsumerState<TMPage> {
     final editorState = ref.watch(tmEditorProvider);
     final statusMessage = _buildToolbarStatusMessage(editorState);
     final hasMachine = _hasMachine;
+    final canvas = TMCanvasGraphView(
+      controller: _canvasController,
+      onTmModified: _handleTMUpdate,
+    );
+    final combinedListenable = _canvasController.graphRevision;
 
     if (isMobile) {
       return Stack(
         children: [
-          Positioned.fill(
-            child: TMCanvasNative(
-              controller: _canvasController,
-              onTMModified: _handleTMUpdate,
-            ),
-          ),
-          MobileAutomatonControls(
-            onAddState: _canvasController.addStateAtCenter,
-            onZoomIn: _canvasController.zoomIn,
-            onZoomOut: _canvasController.zoomOut,
-            onFitToContent: _canvasController.fitToContent,
-            onResetView: _canvasController.resetView,
-            onClear: () {
-              ref.read(tmEditorProvider.notifier).updateFromCanvas(
-                    states: const <automaton_state.State>[],
-                    transitions: const <TMTransition>[],
-                  );
+          Positioned.fill(child: canvas),
+          AnimatedBuilder(
+            animation: combinedListenable,
+            builder: (context, _) {
+              return MobileAutomatonControls(
+                onAddState: _canvasController.addStateAtCenter,
+                onZoomIn: _canvasController.zoomIn,
+                onZoomOut: _canvasController.zoomOut,
+                onFitToContent: _canvasController.fitToContent,
+                onResetView: _canvasController.resetView,
+                onClear: () {
+                  ref
+                      .read(tmEditorProvider.notifier)
+                      .updateFromCanvas(
+                        states: const <automaton_state.State>[],
+                        transitions: const <TMTransition>[],
+                      );
+                },
+                onUndo: _canvasController.canUndo
+                    ? () => _canvasController.undo()
+                    : null,
+                onRedo: _canvasController.canRedo
+                    ? () => _canvasController.redo()
+                    : null,
+                canUndo: _canvasController.canUndo,
+                canRedo: _canvasController.canRedo,
+                onSimulate: _openSimulationSheet,
+                isSimulationEnabled: _isMachineReady,
+                onAlgorithms: _openAlgorithmSheet,
+                isAlgorithmsEnabled: hasMachine,
+                onMetrics: _openMetricsSheet,
+                statusMessage: statusMessage,
+              );
             },
-            onSimulate: _openSimulationSheet,
-            isSimulationEnabled: _isMachineReady,
-            onAlgorithms: _openAlgorithmSheet,
-            isAlgorithmsEnabled: hasMachine,
-            onMetrics: _openMetricsSheet,
-            statusMessage: statusMessage,
           ),
         ],
       );
@@ -190,26 +203,25 @@ class _TMPageState extends ConsumerState<TMPage> {
 
     return Stack(
       children: [
-        Positioned.fill(
-          child: TMCanvasNative(
-            controller: _canvasController,
-            onTMModified: _handleTMUpdate,
-          ),
-        ),
-        FlNodesCanvasToolbar(
-          layout: FlNodesCanvasToolbarLayout.desktop,
-          onAddState: _canvasController.addStateAtCenter,
-          onZoomIn: _canvasController.zoomIn,
-          onZoomOut: _canvasController.zoomOut,
-          onFitToContent: _canvasController.fitToContent,
-          onResetView: _canvasController.resetView,
-          onClear: () {
-            ref.read(tmEditorProvider.notifier).updateFromCanvas(
-                  states: const <automaton_state.State>[],
-                  transitions: const <TMTransition>[],
-                );
+        Positioned.fill(child: canvas),
+        AnimatedBuilder(
+          animation: combinedListenable,
+          builder: (context, _) {
+            return GraphViewCanvasToolbar(
+              layout: GraphViewCanvasToolbarLayout.desktop,
+              controller: _canvasController,
+              onAddState: _canvasController.addStateAtCenter,
+              onClear: () {
+                ref
+                    .read(tmEditorProvider.notifier)
+                    .updateFromCanvas(
+                      states: const <automaton_state.State>[],
+                      transitions: const <TMTransition>[],
+                    );
+              },
+              statusMessage: statusMessage,
+            );
           },
-          statusMessage: statusMessage,
         ),
       ],
     );
@@ -282,11 +294,7 @@ class _TMPageState extends ConsumerState<TMPage> {
         return ListView(
           controller: controller,
           padding: const EdgeInsets.all(16),
-          children: [
-            TMSimulationPanel(
-              highlightService: _highlightService,
-            ),
-          ],
+          children: [TMSimulationPanel(highlightService: _highlightService)],
         );
       },
       initialChildSize: 0.7,
@@ -461,5 +469,4 @@ class _TMPageState extends ConsumerState<TMPage> {
         .expand((list) => list.map((transition) => transition.id))
         .toSet();
   }
-
 }

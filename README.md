@@ -61,7 +61,7 @@ Development is ongoing as we continue refining the application and expanding cov
 - **Import/Export Validation** - Robust validation for JFLAP XML, JSON, and SVG formats
 - **Error Handling** - User-friendly error messages with technical diagnostics
 - **Cross-Format Compatibility** - Ensures data integrity across different file formats
-- **fl_nodes Canvas** - Native Flutter editor with synchronized Riverpod state and highlight channels
+- **GraphView Canvas** - Native Flutter graph editor with synchronized Riverpod state and highlight channels
 
 ### Examples v1 - Offline Examples Library
 
@@ -557,7 +557,7 @@ This project is distributed under a dual license structure:
 - **Flutter Team** - For the excellent mobile framework
 - **Dart Team** - For the programming language
 - **Riverpod Team** - For state management solutions
-- **fl_nodes Contributors** - For the node-editor toolkit powering the native
+- **GraphView Contributors** - For the graph rendering toolkit powering the native
   automaton canvas
 - **Material Design Team** - For design system and components
 - **Open Source Community** - For inspiration and support

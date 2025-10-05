@@ -1,100 +1,30 @@
-# fl_nodes Canvas Architecture
+# GraphView Canvas Architecture
 
-The Draw2D bridge has been removed in favour of a fully native canvas powered
-by [`fl_nodes`](https://pub.dev/packages/fl_nodes). The Flutter widget tree
-embeds a [`FlNodeEditorWidget`](https://pub.dev/documentation/fl_nodes/latest/fl_nodes/FlNodeEditorWidget-class.html)
-managed by `FlNodesCanvasController`, which keeps the visual editor and the
-Riverpod state (`AutomatonProvider`) perfectly aligned.
+JFlutter now renders automatons using a native GraphView-based canvas. The Flutter widget tree embeds `AutomatonGraphViewCanvas`, which wires provider state, highlight playback, and viewport controls without relying on any WebView or iframe bridge.【F:lib/presentation/widgets/automaton_graphview_canvas.dart†L26-L118】
 
 ## Rendering Pipeline
 
-* `AutomatonCanvas` owns a [`FlNodesCanvasController`](../lib/presentation/widgets/automaton_canvas_native.dart)
-  and synchronises it with the active `FSA` whenever the provider emits a new
-  automaton. The controller instantiates a `FlNodeEditorController`, registers
-  the node prototype used to represent automaton states, and exposes a
-  `ValueNotifier` with the current highlight payload.【F:lib/presentation/widgets/automaton_canvas_native.dart†L13-L92】【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L14-L88】
-* The controller converts Riverpod data into `FlNodesAutomatonSnapshot`
-  instances through `FlNodesAutomatonMapper.toSnapshot`. Each state becomes a
-  `FlNodesCanvasNode` and each transition becomes a `FlNodesCanvasEdge`,
-  preserving metadata such as control points and accepting flags.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L96-L166】【F:lib/features/canvas/fl_nodes/fl_nodes_automaton_mapper.dart†L8-L59】
-* Snapshot data is replayed into the editor by creating concrete `NodeInstance`
-  and `Link` objects. During this phase the controller temporarily marks itself
-  as synchronising so that the inbound event listener ignores the synthetic
-  add/remove notifications fired by fl_nodes while the canvas is rebuilt.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L168-L234】
+* `AutomatonGraphViewCanvas` owns a `GraphViewCanvasController` and synchronises it with the active automaton emitted by Riverpod. The controller creates the Graph/`GraphViewController` pair, attaches highlight channels, and performs an initial fit-to-content when data is available.【F:lib/presentation/widgets/automaton_graphview_canvas.dart†L52-L178】
+* `GraphViewCanvasController` converts `AutomatonProvider` state into `GraphViewAutomatonSnapshot` instances and rebuilds the Graph when `synchronize` is invoked. Node and edge caches track layout information so diffing and undo/redo remain fast.【F:lib/features/canvas/graphview/graphview_canvas_controller.dart†L13-L188】【F:lib/features/canvas/graphview/base_graphview_canvas_controller.dart†L17-L220】
+* Snapshots merge back into domain models through `GraphViewAutomatonMapper`, ensuring IDs, labels, alphabet entries, and metadata such as bounds and zoom level stay in sync with Riverpod state.【F:lib/features/canvas/graphview/graphview_canvas_controller.dart†L188-L219】【F:lib/features/canvas/graphview/graphview_automaton_mapper.dart†L7-L130】
 
 ## Editing Flow
 
-`FlNodesCanvasController` listens to the editor `eventBus` and forwards user
-edits back to `AutomatonProvider`:
+`GraphViewCanvasController` exposes high-level mutation helpers that relay interactions back to `AutomatonProvider`:
 
-* `AddNodeEvent`, `RemoveNodeEvent`, and drag-selection end notifications
-  translate into `addState`, `removeState`, and `moveState` calls, keeping
-  coordinates and labels aligned with the automaton
-  model.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L236-L302】【F:lib/presentation/providers/automaton_provider.dart†L83-L166】
-* Node label edits invoke `updateStateLabel`, normalising blank labels to the
-  node identifier so existing transitions remain consistent.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L304-L327】【F:lib/presentation/providers/automaton_provider.dart†L168-L214】
-* Link creation and deletion map to `addOrUpdateTransition` and
-  `removeTransition`, ensuring the Riverpod graph stays in sync with the visual
-  wiring.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L329-L355】【F:lib/presentation/providers/automaton_provider.dart†L216-L260】
+* `addStateAt` assigns deterministic IDs and labels, marking the first node as initial when appropriate.【F:lib/features/canvas/graphview/graphview_canvas_controller.dart†L106-L129】
+* `moveState` normalises drag deltas, forwarding updated coordinates while preserving the undo history.【F:lib/features/canvas/graphview/graphview_canvas_controller.dart†L130-L139】【F:lib/presentation/widgets/automaton_graphview_canvas.dart†L304-L332】
+* `addOrUpdateTransition` and `removeTransition` keep edge metadata aligned with the provider, including control points for curved links.【F:lib/features/canvas/graphview/graphview_canvas_controller.dart†L160-L186】【F:lib/presentation/widgets/automaton_graphview_canvas.dart†L333-L494】
+* Node and edge selection state drives overlay editors rendered by the canvas itself, allowing inline label updates without leaving the widget tree.【F:lib/presentation/widgets/automaton_graphview_canvas.dart†L333-L626】
 
-### Compatibility Layer
+## Toolbar & Gestures
 
-Some canvas events (`DragSelectionEndEvent`, `LinkSelectionEvent`,
-`LinkDeselectionEvent`, and `RemoveLinkEvent`) still surface through private
-`fl_nodes` classes. The bridge now exposes local shims that pattern-match the
-runtime payload and forward typed data to the controller and widgets. This keeps
-the integration on the public package surface while remaining resilient to
-upstream refactors.【F:lib/features/canvas/fl_nodes/node_editor_event_shims.dart†L1-L178】【F:lib/features/canvas/fl_nodes/base_fl_nodes_canvas_controller.dart†L248-L282】【F:lib/presentation/widgets/automaton_canvas_native.dart†L600-L641】
-
-Toolbar buttons (zoom, fit, reset, add state) now call directly into the
-controller instead of posting JavaScript messages. This keeps the ergonomics of
-the previous bridge while avoiding WebView plumbing.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L48-L133】
-
-### End-User Actions
-
-The fl_nodes editor preserves the most common canvas gestures while leaning on
-native Flutter affordances:
-
-* **Zoom controls** – toolbar magnifiers delegate to `zoomIn`/`zoomOut`, while
-  <kbd>Ctrl/Cmd</kbd> + scroll routes to `FlNodesCameraController` via the same
-  methods, ensuring desktop and touchpad zoom stay consistent.
-* **Viewport reset** – "Fit" and "Reset" invoke `fitToContent()` and
-  `resetView()`, re-aligning the camera without rebuilding the editor state.
-* **Adding states** – the "Add state" button emits `addStateAtCenter()`. Double
-  clicks are reported through `AddNodeEvent`, which is normalised into
-  `AutomatonProvider.addState` and persisted in the Riverpod store.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L236-L302】【F:lib/presentation/providers/automaton_provider.dart†L83-L166】
-* **Editing transitions** – selecting a link spawns the inline overlay wired to
-  the appropriate notifier. FSAs expose the label editor, while TMs and PDAs
-  surface tape and stack controls respectively. Saving routes through
-  `AutomatonProvider.updateTransitionLabel`,
-  `TMEditorNotifier.updateTransitionOperations`, or
-  `PDAEditorNotifier.upsertTransition`, ensuring metadata, alphabets, and traces
-  stay in sync.【F:lib/presentation/widgets/automaton_canvas_native.dart†L227-L269】【F:lib/presentation/widgets/tm_canvas_native.dart†L207-L259】【F:lib/presentation/widgets/pda_canvas_native.dart†L274-L336】
-* **Simulation highlights** – `SimulationHighlightService` forwards each step to
-  the controller notifier. The editor decorates nodes and transitions
-  immediately and clears them when `clear()` is dispatched at the end of a
-  run.【F:lib/core/services/simulation_highlight_service.dart†L6-L74】【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L36-L45】
-
-On touch devices the same actions surface through the mobile toolbar layout,
-which anchors labelled buttons to the safe area instead of the deprecated
-floating controls widget.【F:lib/presentation/widgets/fl_nodes_canvas_toolbar.dart†L69-L134】
+The `GraphViewCanvasToolbar` widget centralises viewport actions, undo/redo, and optional drawing tools. Desktop and mobile layouts reuse the same controller callbacks so gestures and button presses behave identically across platforms.【F:lib/presentation/widgets/graphview_canvas_toolbar.dart†L6-L138】 Touch-centric controls remain available through `MobileAutomatonControls`, which exposes simulator shortcuts and canvas commands in a bottom-aligned tray.【F:lib/presentation/widgets/mobile_automaton_controls.dart†L1-L132】
 
 ## Highlight Channel
 
-Simulation playback relies on `SimulationHighlightService`, which now dispatches
-highlights through the `FlNodesHighlightController` interface implemented by the
-canvas controller. The notifier exposed by the controller drives visual overlays
-and remains compatible with existing Riverpod listeners.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L36-L45】【F:lib/core/services/simulation_highlight_service.dart†L6-L74】
+`AutomatonGraphViewCanvas` installs a `GraphViewSimulationHighlightChannel` when it owns the controller, bridging `SimulationHighlightService` payloads to the canvas highlight notifier. Highlights update immediately during playback and are cleared when simulations finish.【F:lib/presentation/widgets/automaton_graphview_canvas.dart†L59-L118】【F:lib/features/canvas/graphview/graphview_highlight_channel.dart†L5-L19】【F:lib/core/services/simulation_highlight_service.dart†L8-L101】
 
 ## Data Round-Tripping
 
-When the editor needs to persist changes it converts the latest snapshot back
-into a new `FSA` via `FlNodesAutomatonMapper.mergeIntoTemplate`. The mapper
-rebuilds states, transitions, and alphabet entries using the template as a base,
-so existing metadata such as simulation history remains intact. The legacy
-JavaScript patch handler (`applyAutomatonPatch`) has been removed, meaning all
-synchronisation now flows through the snapshot merge path.【F:lib/features/canvas/fl_nodes/fl_nodes_automaton_mapper.dart†L61-L108】
-
-By keeping all synchronisation logic inside `FlNodesCanvasController`, the app
-no longer depends on HTML assets or platform-specific bridges, drastically
-simplifying deployment and reducing the sources of runtime failure.
+When the user edits the canvas, the controller merges the Graph snapshot into the existing automaton template and republishes it through `AutomatonProvider`. This keeps inspector panels, persistence layers, and simulators aligned with the visual representation while avoiding manual diff logic.【F:lib/features/canvas/graphview/graphview_canvas_controller.dart†L188-L219】【F:lib/presentation/providers/automaton_provider.dart†L25-L219】

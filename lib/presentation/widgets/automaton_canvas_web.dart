@@ -1,2 +1,2 @@
-/// Web now shares the Flutter-based automaton canvas implementation.
-export 'automaton_canvas_native.dart';
+/// Web now shares the GraphView-based automaton canvas implementation.
+export 'automaton_graphview_canvas.dart';

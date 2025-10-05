@@ -1,46 +1,24 @@
-# fl_nodes Canvas Notes
+# GraphView Canvas Notes
 
 ## Summary of Findings
 
-- The FSA, TM, and PDA screens now share the same Flutter-based canvas thanks to
-  `AutomatonCanvas`, eliminating the WebView/iframe divergence that previously
-  plagued the Draw2D integration.【F:lib/presentation/widgets/automaton_canvas_native.dart†L13-L156】
-- `FlNodesCanvasController` registers the node prototype and listens to the
-  editor `eventBus` so that additions, removals, drags, and label edits feed
-  directly into `AutomatonProvider`. This keeps Riverpod state authoritative
-  without relying on JavaScript bridges.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L20-L45】【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L236-L327】
-- Toolbar actions now call the controller methods (`zoomIn`, `fitToContent`,
-  `addStateAtCenter`, etc.), so the status label can always reflect the canvas
-  readiness state—there is no asynchronous handshake to block the UI anymore.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L48-L133】
+- The FSA, TM, and PDA screens now share the GraphView-based `AutomatonCanvas`, eliminating the legacy Draw2D and native node-editor bridges while keeping the entire workflow inside Flutter.【F:lib/presentation/widgets/automaton_graphview_canvas.dart†L26-L178】【F:lib/presentation/widgets/pda_canvas_graphview.dart†L5-L126】【F:lib/presentation/widgets/tm_canvas_graphview.dart†L5-L134】
+- `GraphViewCanvasController` registers undo/redo checkpoints, manages node/edge caches, and forwards interactions to `AutomatonProvider`, keeping Riverpod as the authoritative source of truth.【F:lib/features/canvas/graphview/base_graphview_canvas_controller.dart†L17-L220】【F:lib/features/canvas/graphview/graphview_canvas_controller.dart†L106-L214】
+- Toolbar actions and gestures now call controller methods directly (`zoomIn`, `fitToContent`, `addStateAt`), so viewport status updates synchronously without asynchronous bridge handshakes.【F:lib/presentation/widgets/graphview_canvas_toolbar.dart†L33-L138】【F:lib/features/canvas/graphview/graphview_canvas_controller.dart†L106-L186】
 
 ## Expected Behaviour
 
-- Synchronisation flows from Riverpod into fl_nodes by converting the automaton
-  into a snapshot before rebuilding the editor. The controller guards against
-  feedback loops by setting `_isSynchronizing` while replaying nodes and edges.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L96-L234】
-- User gestures must keep dispatching `addState`, `moveState`, `removeState`, and
-  `addOrUpdateTransition` so that simulations and persistence remain accurate.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L236-L355】【F:lib/presentation/providers/automaton_provider.dart†L83-L260】
+- Synchronisation flows from Riverpod into GraphView through snapshot rebuilds guarded by the base controller, preventing feedback loops while nodes and edges are replayed.【F:lib/features/canvas/graphview/base_graphview_canvas_controller.dart†L57-L166】
+- User gestures must keep dispatching `addState`, `moveState`, `removeState`, and `addOrUpdateTransition` so that simulations and persistence remain accurate across editors.【F:lib/features/canvas/graphview/graphview_canvas_controller.dart†L106-L214】【F:lib/presentation/providers/automaton_provider.dart†L25-L219】
 
 ## Practical Usage Tips
 
-- Remind testers that zooming works with both the toolbar and the
-  <kbd>Ctrl/Cmd</kbd> + scroll shortcut—the controller debounces both paths to
-  avoid camera jitter.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L48-L133】
-- Encourage authors to double-click empty space when placing states; the
-  resulting `AddNodeEvent` keeps coordinates aligned with the pointer without
-  needing manual adjustments.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L236-L302】
-- During simulation walkthroughs, watch the highlight overlay rather than the
-  toolbar status. The notifier drives every colour change and clears automatically
-  when `SimulationHighlightService.clear()` runs.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L36-L45】【F:lib/core/services/simulation_highlight_service.dart†L6-L74】
+- Remind testers that zooming works with the toolbar or platform shortcuts—the controller debounces both paths to avoid camera jitter while maintaining undo snapshots.【F:lib/presentation/widgets/graphview_canvas_toolbar.dart†L33-L138】【F:lib/features/canvas/graphview/base_graphview_canvas_controller.dart†L107-L220】
+- Encourage authors to tap empty space while the Add State tool is active; the controller converts the tap into world coordinates and assigns deterministic IDs/labels automatically.【F:lib/presentation/widgets/automaton_graphview_canvas.dart†L254-L303】
+- During simulation walkthroughs, watch the highlight overlay rather than status labels; the notifier updates instantly and clears when `SimulationHighlightService.clear()` runs.【F:lib/presentation/widgets/automaton_graphview_canvas.dart†L41-L84】【F:lib/core/services/simulation_highlight_service.dart†L57-L101】
 
 ## Suggested Follow-Up Tasks
 
-1. **Web platform affordances** – audit browser-specific shortcuts (copy/paste,
-   undo) exposed by fl_nodes and decide whether they should be mirrored in the
-   toolbar or kept as hidden power-user features.
-2. **Snapshot diffing** – evaluate whether we still need partial patching when
-   collaborative editing lands. `FlNodesAutomatonMapper.mergeIntoTemplate` could
-   be extended with diff helpers similar to the legacy bridge if needed.【F:lib/features/canvas/fl_nodes/fl_nodes_automaton_mapper.dart†L61-L108】
-3. **Extended testing** – replace the deleted Draw2D bridge tests with focused
-   widget and controller tests that validate node creation, link wiring, and
-   highlight dispatch, ensuring the fl_nodes integration has automated coverage.
+1. **Web platform affordances** – audit browser-specific shortcuts (copy/paste, undo) exposed by GraphView or Flutter and decide whether they should surface in the toolbar or remain hidden power-user features.
+2. **Snapshot diffing** – evaluate whether partial patching is needed for future collaborative editing. `GraphViewAutomatonMapper.mergeIntoTemplate` can be extended with diff helpers if required.【F:lib/features/canvas/graphview/graphview_automaton_mapper.dart†L7-L130】
+3. **Extended testing** – replace the deleted Draw2D and native node-editor suites with focused widget/controller tests that validate node creation, link wiring, undo/redo, and highlight dispatch for the GraphView integration.

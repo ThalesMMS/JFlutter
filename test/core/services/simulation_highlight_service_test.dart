@@ -2,10 +2,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/simulation_highlight.dart';
 import 'package:jflutter/core/models/simulation_step.dart';
 import 'package:jflutter/core/services/simulation_highlight_service.dart';
-import 'package:jflutter/features/canvas/fl_nodes/fl_nodes_highlight_channel.dart';
-import 'package:jflutter/features/canvas/fl_nodes/fl_nodes_highlight_controller.dart';
+import 'package:jflutter/features/canvas/graphview/graphview_highlight_channel.dart';
+import 'package:jflutter/features/canvas/graphview/graphview_highlight_controller.dart';
 
-class _FakeHighlightController implements FlNodesHighlightController {
+class _FakeHighlightController implements GraphViewHighlightController {
   SimulationHighlight? lastHighlight;
   int clearCount = 0;
 
@@ -22,9 +22,9 @@ class _FakeHighlightController implements FlNodesHighlightController {
 
 void main() {
   group('SimulationHighlightService', () {
-    test('emits highlight payload to fl_nodes controller', () {
+    test('emits highlight payload to GraphView controller', () {
       final controller = _FakeHighlightController();
-      final channel = FlNodesSimulationHighlightChannel(controller);
+      final channel = GraphViewSimulationHighlightChannel(controller);
       final service = SimulationHighlightService(channel: channel);
 
       final steps = [
@@ -53,7 +53,7 @@ void main() {
 
     test('falls back to subsequent step when nextState is missing', () {
       final controller = _FakeHighlightController();
-      final channel = FlNodesSimulationHighlightChannel(controller);
+      final channel = GraphViewSimulationHighlightChannel(controller);
       final service = SimulationHighlightService(channel: channel);
 
       final steps = [
@@ -81,7 +81,7 @@ void main() {
 
     test('clear delegates to the channel controller', () {
       final controller = _FakeHighlightController();
-      final channel = FlNodesSimulationHighlightChannel(controller);
+      final channel = GraphViewSimulationHighlightChannel(controller);
       final service = SimulationHighlightService(channel: channel);
 
       service.clear();

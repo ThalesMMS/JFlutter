@@ -3,93 +3,34 @@ JFlutter User Guide Supplement
 
 _Nota: migração em andamento._
 
-Working with the fl_nodes Canvas
---------------------------------
+Working with the GraphView Canvas
+---------------------------------
 
-* The automaton workspace now embeds the native fl_nodes canvas by default—no
-  feature toggle or iframe handshake is required. Saving settings still
-  persists grid, coordinate, and sizing options through `SettingsModel` and the
-  shared preferences-backed repository.【F:lib/core/models/settings_model.dart†L3-L52】【F:lib/data/repositories/settings_repository_impl.dart†L9-L67】
-* Riverpod remains the single source of truth: `AutomatonProvider` receives
-  mutations from the controller for new states, drags, labels, and transitions,
-  so automata stay in sync across panels, simulations, and exports.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L236-L355】【F:lib/presentation/providers/automaton_provider.dart†L83-L260】
-* The toolbar—rendered as a compact column on desktop and a bottom action tray
-  on mobile—routes every command straight to
-  `FlNodesCanvasController`, bypassing the legacy web bridge.【F:lib/presentation/widgets/fl_nodes_canvas_toolbar.dart†L5-L135】【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L48-L133】
+* The automaton workspace now embeds the GraphView-based canvas by default, wiring highlight playback and toolbar state directly to the Flutter widget tree—no feature toggle or iframe bridge is required.【F:lib/presentation/widgets/automaton_graphview_canvas.dart†L23-L116】
+* Riverpod remains the single source of truth: `GraphViewCanvasController` converts provider state into GraphView snapshots and replays user interactions (creation, drag, rename, deletion) back into the notifiers so the entire UI stays synchronised.【F:lib/features/canvas/graphview/graphview_canvas_controller.dart†L14-L156】【F:lib/presentation/providers/automaton_provider.dart†L25-L219】
+* The GraphView toolbar exposes viewport controls, undo/redo, and optional drawing tools for both desktop and mobile layouts, keeping the canvas commands consistent across platforms.【F:lib/presentation/widgets/graphview_canvas_toolbar.dart†L6-L138】
+* Touch-first layouts present the same actions plus simulator shortcuts inside `MobileAutomatonControls`, a bottom tray that preserves screen real estate while remaining thumb-accessible.【F:lib/presentation/widgets/mobile_automaton_controls.dart†L1-L132】
 
 ### Core Actions
 
-The unified `FlNodesCanvasToolbar` exposes the following shortcuts across
-desktop and mobile layouts:
-
-* **Zoom In/Out** – press the toolbar magnifier buttons or use the mouse wheel
-  while holding <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>. Both paths call `zoomIn`/`zoomOut`
-  on the controller, keeping the viewport centred around the pointer.
-* **Fit to Content / Reset View** – the toolbar buttons invoke
-  `fitToContent()` and `resetView()`, recomputing the camera bounds within the
-  canvas without reloading the editor.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L48-L133】
-* **Double-tap gestures** – double tap the canvas with one finger to reset the
-  viewport or with two fingers to focus the visible automaton. These shortcuts
-  call the same `resetView()`/`fitToContent()` helpers exposed by the toolbar,
-  so touch users receive identical behaviour without opening the actions
-  sheet.【F:lib/presentation/widgets/automaton_canvas_native.dart†L612-L646】【F:lib/presentation/widgets/pda_canvas_native.dart†L515-L549】【F:lib/presentation/widgets/tm_canvas_native.dart†L330-L364】
-* **Add State** – use the "Add state" toolbar button or double-click an empty
-  area. The controller receives either `addStateAtCenter()` or an
-  `AddNodeEvent`, then forwards the mutation to `AutomatonProvider` so the new
-  state appears across the app.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L236-L302】【F:lib/presentation/providers/automaton_provider.dart†L83-L166】
-* **Edit transitions** – select a link to reveal the inline editor anchored to
-  that edge. FSAs expose a label field, while TMs and PDAs surface tape or stack
-  controls. Saving commits the change through the respective notifiers
-  (`AutomatonProvider`, `TMEditorNotifier`, `PDAEditorNotifier`), keeping the
-  transition list, alphabets, and metadata synchronised.【F:lib/presentation/widgets/automaton_canvas_native.dart†L227-L269】【F:lib/presentation/widgets/tm_canvas_native.dart†L207-L259】【F:lib/presentation/widgets/pda_canvas_native.dart†L274-L336】
-* **Toggle initial/accepting flags** – tap the play/check icons in a state's
-  header to mark it as initial or accepting. The canvases call the respective
-  Riverpod notifiers (`AutomatonProvider`, `TMEditorNotifier`,
-  `PDAEditorNotifier`), so the change is reflected instantly across the
-  workspace.【F:lib/presentation/widgets/automaton_canvas_native.dart†L212-L308】【F:lib/presentation/widgets/tm_canvas_native.dart†L170-L306】【F:lib/presentation/widgets/pda_canvas_native.dart†L240-L360】
-* **Highlight Playback** – running a simulation pushes highlight payloads into
-  the controller via the `FlNodesHighlightController` interface. The canvas
-  updates instantly and clears highlights when the simulator stops.【F:lib/core/services/simulation_highlight_service.dart†L6-L74】【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L36-L45】
-
-Touch-first layouts now present the same canvas actions plus simulation
-shortcuts inside `MobileAutomatonControls`, a bottom control tray that keeps the
-viewport clear while remaining thumb-accessible.【F:lib/presentation/widgets/mobile_automaton_controls.dart†L1-L132】
-
-Highlight & Simulation Flow
----------------------------
-
-* `SimulationHighlightService` derives the visited states/transitions for each
-  simulator step and feeds them to the controller notifier through the
-  `FlNodesHighlightController` contract. No additional wiring is required when
-  writing new simulations—just publish highlight changes to the service.
-* The canvas paints visited states immediately because the notifier is observed
-  inside `AutomatonCanvas`. There is no longer a "Canvas not connected" status
-  gate—if highlights are missing, verify the notifier listener is attached when
-  the widget initialises.【F:lib/presentation/widgets/automaton_canvas_native.dart†L49-L110】
+* **Add State** – Enable the Add State tool (or trigger the callback) and tap the canvas to drop a node at the tapped world coordinates. The controller assigns unique IDs/labels and marks the first state as initial automatically.【F:lib/presentation/widgets/automaton_graphview_canvas.dart†L254-L303】【F:lib/features/canvas/graphview/graphview_canvas_controller.dart†L60-L119】
+* **Move State** – Drag a node to reposition it; the controller normalises the delta according to the current zoom level before persisting the new coordinates via `AutomatonProvider`.【F:lib/presentation/widgets/automaton_graphview_canvas.dart†L304-L332】【F:lib/features/canvas/graphview/graphview_canvas_controller.dart†L121-L150】
+* **Add or Edit Transition** – Select a source and destination node while the Transition tool is active to open the inline editor. Saving updates the edge snapshot and forwards the mutation to the provider, ensuring tape/stack metadata stays aligned for advanced automata.【F:lib/presentation/widgets/automaton_graphview_canvas.dart†L333-L494】【F:lib/features/canvas/graphview/graphview_canvas_controller.dart†L152-L214】
+* **Viewport Controls** – Use the toolbar (or keyboard shortcuts) to zoom, fit to content, reset the view, and traverse undo/redo history; every command proxies to the shared controller so desktop and mobile gestures stay in sync.【F:lib/presentation/widgets/graphview_canvas_toolbar.dart†L33-L138】【F:lib/features/canvas/graphview/base_graphview_canvas_controller.dart†L17-L220】
+* **Highlight Playback** – Running a simulation pushes highlight payloads into `GraphViewSimulationHighlightChannel`, which drives the canvas highlight notifier and clears it automatically after playback ends.【F:lib/presentation/widgets/automaton_graphview_canvas.dart†L41-L84】【F:lib/features/canvas/graphview/graphview_highlight_channel.dart†L5-L19】【F:lib/core/services/simulation_highlight_service.dart†L8-L101】
 
 Manual Verification Checklist
 -----------------------------
 
-1. Open the automaton workspace and confirm existing automata appear in the
-   Flutter canvas.
-2. Drag states, rename them, and draw transitions—each change should instantly
-   propagate to the side panels driven by `AutomatonProvider`.
-3. Trigger the zoom, fit, reset, and add-state actions (via toolbar buttons or
-   gestures) and confirm the controller updates the viewport accordingly.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L48-L133】
-4. Run a simulation and ensure highlights move with the active step while the
-   notifier updates the overlay state.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L36-L45】
-5. Execute `flutter analyze` (and `flutter test` when suites exist) before
-   requesting review.
+1. Open the automaton workspace and confirm existing automatons render inside the GraphView canvas with overlays active.【F:lib/presentation/widgets/automaton_graphview_canvas.dart†L187-L236】
+2. Add, drag, rename, and delete states/transitions; every change should propagate to the inspector panels maintained by `AutomatonProvider` and related notifiers.【F:lib/features/canvas/graphview/graphview_canvas_controller.dart†L60-L214】【F:lib/presentation/providers/automaton_provider.dart†L25-L219】
+3. Trigger zoom, fit, reset, undo, redo, and add-state actions via the toolbar and gesture targets, confirming the controller updates the viewport accordingly.【F:lib/presentation/widgets/graphview_canvas_toolbar.dart†L33-L138】【F:lib/features/canvas/graphview/base_graphview_canvas_controller.dart†L17-L220】
+4. Run a simulation and ensure highlights follow the active step while clearing when playback stops.【F:lib/features/canvas/graphview/graphview_highlight_channel.dart†L5-L19】【F:lib/core/services/simulation_highlight_service.dart†L57-L101】
+5. Execute `flutter analyze` (and `flutter test` when suites exist) before requesting review.
 
 Troubleshooting
 ---------------
 
-* **Canvas not updating**: check that `_isSynchronizing` isn't stuck to `true`
-  (e.g., due to an exception while rebuilding nodes). If so, call
-  `synchronize()` again after fixing the underlying data issue.【F:lib/features/canvas/fl_nodes/fl_nodes_canvas_controller.dart†L96-L234】
-* **Transition edits not sticking**: use the inline editor's **Save** button
-  (or <kbd>Enter</kbd> inside the field) to submit changes. Selecting another
-  edge or pressing **Cancel** dismisses the overlay without persisting
-  updates.【F:lib/presentation/widgets/automaton_canvas_native.dart†L247-L265】【F:lib/presentation/widgets/tm_canvas_native.dart†L233-L257】【F:lib/presentation/widgets/pda_canvas_native.dart†L309-L333】
-* **Highlights not clearing**: verify the `SimulationHighlightService` channel
-  is registered and that `clear()` is called after simulations complete.【F:lib/core/services/simulation_highlight_service.dart†L6-L74】
+* **Canvas not updating** – Verify the controller is still attached and that `synchronize` is invoked after mutating automata outside the canvas scope; stale listeners or an outdated snapshot can prevent GraphView from rebuilding.【F:lib/features/canvas/graphview/base_graphview_canvas_controller.dart†L57-L166】
+* **Transition edits not sticking** – Ensure the inline overlay is saved; dismissing it cancels the mutation. Confirm the mapper rebuilds the automaton snapshot so provider state matches the canvas representation.【F:lib/presentation/widgets/automaton_graphview_canvas.dart†L333-L494】【F:lib/features/canvas/graphview/graphview_automaton_mapper.dart†L7-L130】
+* **Highlights not clearing** – Check that `SimulationHighlightService` is pointing to the GraphView channel and that `clear()` is invoked when simulators finish processing.【F:lib/presentation/widgets/automaton_graphview_canvas.dart†L41-L84】【F:lib/core/services/simulation_highlight_service.dart†L57-L101】

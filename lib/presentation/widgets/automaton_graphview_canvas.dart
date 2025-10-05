@@ -14,6 +14,7 @@ import '../../core/services/simulation_highlight_service.dart';
 import '../../features/canvas/graphview/graphview_canvas_controller.dart';
 import '../../features/canvas/graphview/graphview_canvas_models.dart';
 import '../../features/canvas/graphview/graphview_highlight_channel.dart';
+import '../../features/canvas/graphview/graphview_all_nodes_builder.dart';
 import '../../features/canvas/graphview/graphview_label_field_editor.dart';
 import '../../features/canvas/graphview/graphview_link_overlay_utils.dart';
 import '../providers/automaton_provider.dart';
@@ -681,7 +682,7 @@ class _AutomatonGraphViewCanvasState
                         if (viewport.width.isFinite && viewport.height.isFinite) {
                           _controller.updateViewportSize(viewport);
                         }
-                        return GraphView.builder(
+                        return GraphViewAllNodes.builder(
                           graph: _controller.graph,
                           controller: _controller.graphController,
                           algorithm: _algorithm,

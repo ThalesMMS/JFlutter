@@ -67,6 +67,8 @@ class _AutomatonGraphViewCanvasState
   _transitionOverlayState = ValueNotifier<_GraphViewTransitionOverlayState?>(
     null,
   );
+  FSA? _pendingSyncAutomaton;
+  bool _syncScheduled = false;
 
   TransformationController? get _transformationController =>
       _controller.graphController.transformationController;
@@ -105,8 +107,7 @@ class _AutomatonGraphViewCanvasState
       controller: _controller,
       configuration: _buildConfiguration(),
     );
-
-    _controller.synchronize(widget.automaton);
+    _scheduleControllerSync(widget.automaton);
     _controller.graphRevision.addListener(_handleGraphRevisionChanged);
     _transformationController?.addListener(_onTransformationChanged);
 
@@ -168,13 +169,18 @@ class _AutomatonGraphViewCanvasState
         configuration: _buildConfiguration(),
       );
       _transformationController?.addListener(_onTransformationChanged);
-      _controller.synchronize(widget.automaton);
+      _scheduleControllerSync(widget.automaton);
       _controller.graphRevision.addListener(_handleGraphRevisionChanged);
       _hideTransitionOverlay();
     } else if (oldWidget.automaton != widget.automaton) {
-      _controller.synchronize(widget.automaton);
-      _refreshTransitionOverlayFromGraph();
-      _updateTransitionOverlayPosition();
+      _scheduleControllerSync(widget.automaton);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) {
+          return;
+        }
+        _refreshTransitionOverlayFromGraph();
+        _updateTransitionOverlayPosition();
+      });
     }
   }
 
@@ -218,6 +224,24 @@ class _AutomatonGraphViewCanvasState
   void _onTransformationChanged() {
     _updateTransitionOverlayPosition();
     setState(() {});
+  }
+
+  void _scheduleControllerSync(FSA? automaton) {
+    _pendingSyncAutomaton = automaton;
+    if (_syncScheduled) {
+      return;
+    }
+    _syncScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _syncScheduled = false;
+      if (!mounted) {
+        _pendingSyncAutomaton = null;
+        return;
+      }
+      final target = _pendingSyncAutomaton;
+      _pendingSyncAutomaton = null;
+      _controller.synchronize(target);
+    });
   }
 
   SugiyamaConfiguration _buildConfiguration() {
@@ -752,11 +776,11 @@ class _AutomatonGraphSugiyamaAlgorithm extends SugiyamaAlgorithm {
 
   @override
   Size run(Graph? graph, double shiftX, double shiftY) {
-    final size = super.run(graph, shiftX, shiftY);
-    if (graph == null) {
-      return size;
+    if (graph == null || graph.nodes.isEmpty) {
+      // GraphView's Sugiyama implementation crashes when no nodes exist.
+      return Size.zero;
     }
-
+    final size = super.run(graph, shiftX, shiftY);
     for (final node in graph.nodes) {
       final nodeId = node.key?.value?.toString();
       if (nodeId == null) {

@@ -257,27 +257,11 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.1"
-  graphview:
-    dependency: "direct main"
-    description:
-      name: graphview
-      sha256: "371fc1718cb99a12238e8e759457085619026b38b7e90bc5f9d9916e70b10899"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.5.0"
   flutter:
     dependency: "direct main"
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_context_menu:
-    dependency: transitive
-    description:
-      name: flutter_context_menu
-      sha256: "31fd331e1ca2c0136940294ac26f641e4377aa4413ad823d198719feaebc9b83"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.2.5"
   flutter_launcher_icons:
     dependency: "direct dev"
     description:
@@ -310,14 +294,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.6.1"
-  flutter_shaders:
-    dependency: transitive
-    description:
-      name: flutter_shaders
-      sha256: "34794acadd8275d971e02df03afee3dee0f98dbfb8c4837082ad0034f612a3e2"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.1.3"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -384,6 +360,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.2"
+  graphview:
+    dependency: "direct main"
+    description:
+      name: graphview
+      sha256: "371fc1718cb99a12238e8e759457085619026b38b7e90bc5f9d9916e70b10899"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.5.0"
   http_multi_server:
     dependency: transitive
     description:

@@ -20,8 +20,7 @@ class GraphViewLabelFieldEditor extends StatefulWidget {
       _GraphViewLabelFieldEditorState();
 }
 
-class _GraphViewLabelFieldEditorState
-    extends State<GraphViewLabelFieldEditor> {
+class _GraphViewLabelFieldEditorState extends State<GraphViewLabelFieldEditor> {
   late final FocusScopeNode _focusScopeNode;
   late final FocusNode _focusNode;
 
@@ -62,7 +61,7 @@ class _GraphViewLabelFieldEditorState
           elevation: 4,
           borderRadius: BorderRadius.circular(8),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(minWidth: 200),
+            constraints: const BoxConstraints(minWidth: 200, maxWidth: 320),
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: TransitionLabelEditorForm(

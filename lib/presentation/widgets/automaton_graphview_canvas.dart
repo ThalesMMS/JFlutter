@@ -353,27 +353,6 @@ class _AutomatonGraphViewCanvasState
     return closest;
   }
 
-  void _handleCanvasPointerDown(Offset globalPosition) {
-    if (_activeTool == AutomatonCanvasTool.transition) {
-      final renderBox =
-          widget.canvasKey.currentContext?.findRenderObject() as RenderBox?;
-      final local = renderBox?.globalToLocal(globalPosition) ?? globalPosition;
-      final node = _hitTestNode(local);
-      if (node != null) {
-        debugPrint(
-          '[AutomatonGraphViewCanvas] PointerDown -> node '
-          '${node.id} forwarding to tap handler',
-        );
-        _handleNodeTap(node.id);
-      } else {
-        debugPrint(
-          '[AutomatonGraphViewCanvas] PointerDown miss '
-          'global=$globalPosition local=$local',
-        );
-      }
-    }
-  }
-
   void _beginNodeDrag(GraphViewCanvasNode node, Offset localPosition) {
     debugPrint('[AutomatonGraphViewCanvas] Begin drag for ${node.id}');
     _hideTransitionOverlay();
@@ -947,14 +926,17 @@ class _AutomatonGraphViewCanvasState
                                   highlight,
                                 );
                                 return Listener(
+                                  behavior: HitTestBehavior.opaque,
                                   onPointerDown: (event) {
                                     debugPrint(
                                       '[AutomatonGraphViewCanvas] Listener pointer down '
                                       'node=$nodeId tool=${_activeTool.name}',
                                     );
-                                    _handleCanvasPointerDown(event.position);
+                                    if (_activeTool ==
+                                        AutomatonCanvasTool.transition) {
+                                      _handleNodeTap(nodeId);
+                                    }
                                   },
-                                  behavior: HitTestBehavior.opaque,
                                   child: _AutomatonGraphNode(
                                     label: canvasNode.label,
                                     isInitial: canvasNode.isInitial,
@@ -989,7 +971,7 @@ class _AutomatonGraphViewCanvasState
   }
 
   Map<Type, GestureRecognizerFactory> _buildGestureRecognizers() {
-    return <Type, GestureRecognizerFactory>{
+    final gestures = <Type, GestureRecognizerFactory>{
       _NodePanGestureRecognizer:
           GestureRecognizerFactoryWithHandlers<_NodePanGestureRecognizer>(
             () => _NodePanGestureRecognizer(
@@ -1005,7 +987,10 @@ class _AutomatonGraphViewCanvasState
                 ..dragStartBehavior = DragStartBehavior.down;
             },
           ),
-      _NodeTapGestureRecognizer:
+    };
+
+    if (_activeTool != AutomatonCanvasTool.transition) {
+      gestures[_NodeTapGestureRecognizer] =
           GestureRecognizerFactoryWithHandlers<_NodeTapGestureRecognizer>(
             () => _NodeTapGestureRecognizer(
               hitTester: _hitTestNode,
@@ -1014,8 +999,10 @@ class _AutomatonGraphViewCanvasState
             (recognizer) {
               recognizer.onNodeTap = (node) => _handleNodeTap(node.id);
             },
-          ),
-    };
+          );
+    }
+
+    return gestures;
   }
 }
 

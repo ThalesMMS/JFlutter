@@ -22,6 +22,7 @@ import '../../data/services/automaton_service.dart';
 import '../../core/repositories/automaton_repository.dart';
 import '../../core/services/trace_persistence_service.dart';
 import '../../features/layout/layout_repository_impl.dart';
+import '../../features/canvas/graphview/graphview_canvas_controller.dart';
 
 /// Provider for automaton state management
 class AutomatonProvider extends StateNotifier<AutomatonState> {
@@ -1138,3 +1139,15 @@ final automatonProvider =
         layoutRepository: LayoutRepositoryImpl(),
       );
     });
+
+/// Provides a lazily constructed GraphView canvas controller for automata.
+final graphViewCanvasControllerProvider =
+    Provider<GraphViewCanvasController>((ref) {
+  final automatonNotifier = ref.read(automatonProvider.notifier);
+  final controller = GraphViewCanvasController(
+    automatonProvider: automatonNotifier,
+  );
+  ref.onDispose(controller.dispose);
+  controller.synchronize(automatonNotifier.state.currentAutomaton);
+  return controller;
+});

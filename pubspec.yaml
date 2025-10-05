@@ -52,6 +52,7 @@ dependencies:
 
   # Node-based canvas primitives
   fl_nodes: ^0.4.0+1
+  graphview: ^1.5.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

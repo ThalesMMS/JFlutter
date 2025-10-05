@@ -218,6 +218,8 @@ class _AutomatonGraphViewCanvasState
         _transitionSourceId = null;
       }
     });
+    debugPrint('[AutomatonGraphViewCanvas] Active tool set to '
+        '${nextTool.name}');
     if (nextTool != AutomatonCanvasTool.transition) {
       _hideTransitionOverlay();
     }
@@ -297,6 +299,8 @@ class _AutomatonGraphViewCanvasState
   }
 
   Future<void> _handleCanvasTap(TapUpDetails details) async {
+    debugPrint('[AutomatonGraphViewCanvas] Canvas tapped with '
+        'active tool ${_activeTool.name}');
     if (_activeTool != AutomatonCanvasTool.addState) {
       return;
     }

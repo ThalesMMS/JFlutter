@@ -218,6 +218,8 @@ class _AutomatonGraphViewCanvasState
         _transitionSourceId = null;
       }
     });
+    debugPrint('[AutomatonGraphViewCanvas] Active tool set to '
+        '${nextTool.name}');
     if (nextTool != AutomatonCanvasTool.transition) {
       _hideTransitionOverlay();
     }
@@ -297,6 +299,8 @@ class _AutomatonGraphViewCanvasState
   }
 
   Future<void> _handleCanvasTap(TapUpDetails details) async {
+    debugPrint('[AutomatonGraphViewCanvas] Canvas tapped with '
+        'active tool ${_activeTool.name}');
     if (_activeTool != AutomatonCanvasTool.addState) {
       return;
     }
@@ -325,11 +329,15 @@ class _AutomatonGraphViewCanvasState
   }
 
   void _handleNodeTap(String nodeId) {
+    debugPrint('[AutomatonGraphViewCanvas] Node tapped $nodeId with '
+        'active tool ${_activeTool.name}');
     if (_activeTool != AutomatonCanvasTool.transition) {
       return;
     }
 
     if (_transitionSourceId == null) {
+      debugPrint('[AutomatonGraphViewCanvas] Transition source selected '
+          '-> $nodeId');
       setState(() {
         _transitionSourceId = nodeId;
       });
@@ -340,6 +348,8 @@ class _AutomatonGraphViewCanvasState
     setState(() {
       _transitionSourceId = null;
     });
+    debugPrint('[AutomatonGraphViewCanvas] Transition target selected '
+        '-> $nodeId (source: $sourceId)');
     _showTransitionEditor(sourceId, nodeId);
   }
 
@@ -390,6 +400,8 @@ class _AutomatonGraphViewCanvasState
     );
 
     if (overlayDisplayed) {
+      debugPrint('[AutomatonGraphViewCanvas] Showing transition editor '
+          'for $fromId → $toId (transitionId: ${existing?.id})');
       setState(() {
         _selectedTransitions..clear();
         if (!createNew && existing?.id != null) {
@@ -417,6 +429,9 @@ class _AutomatonGraphViewCanvasState
     if (!mounted || label == null) {
       return;
     }
+
+    debugPrint('[AutomatonGraphViewCanvas] Persisting transition '
+        'for $fromId → $toId (transitionId: ${existing?.id})');
 
     _controller.addOrUpdateTransition(
       fromStateId: fromId,
@@ -661,6 +676,9 @@ class _AutomatonGraphViewCanvasState
     _GraphViewTransitionOverlayState state,
     String label,
   ) {
+    debugPrint('[AutomatonGraphViewCanvas] Persisting transition '
+        'for ${state.fromStateId} → ${state.toStateId} '
+        '(transitionId: ${state.transitionId})');
     _controller.addOrUpdateTransition(
       fromStateId: state.fromStateId,
       toStateId: state.toStateId,
@@ -730,10 +748,14 @@ class _AutomatonGraphViewCanvasState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final consumePanGestures =
+        _activeTool != AutomatonCanvasTool.selection;
     return GestureDetector(
       key: widget.canvasKey,
       behavior: HitTestBehavior.translucent,
       onTapUp: _handleCanvasTap,
+      onPanStart: consumePanGestures ? (_) {} : null,
+      onPanUpdate: consumePanGestures ? (_) {} : null,
       child: ValueListenableBuilder<int>(
         valueListenable: _controller.graphRevision,
         builder: (context, _, __) {
@@ -776,16 +798,26 @@ class _AutomatonGraphViewCanvasState
                               canvasNode,
                               highlight,
                             );
+                            final allowDragging =
+                                _activeTool == AutomatonCanvasTool.selection;
                             return _AutomatonGraphNode(
                               label: canvasNode.label,
                               isInitial: canvasNode.isInitial,
                               isAccepting: canvasNode.isAccepting,
                               isHighlighted: isHighlighted,
                               onTap: () => _handleNodeTap(canvasNode.id),
-                              onPanStart: (details) =>
-                                  _handleNodePanStart(canvasNode.id, details),
-                              onPanUpdate: (details) =>
-                                  _handleNodePanUpdate(canvasNode.id, details),
+                              onPanStart: allowDragging
+                                  ? (details) => _handleNodePanStart(
+                                        canvasNode.id,
+                                        details,
+                                      )
+                                  : null,
+                              onPanUpdate: allowDragging
+                                  ? (details) => _handleNodePanUpdate(
+                                        canvasNode.id,
+                                        details,
+                                      )
+                                  : null,
                             );
                           },
                         );
@@ -894,8 +926,8 @@ class _AutomatonGraphNode extends StatelessWidget {
     required this.isAccepting,
     required this.isHighlighted,
     required this.onTap,
-    required this.onPanStart,
-    required this.onPanUpdate,
+    this.onPanStart,
+    this.onPanUpdate,
   });
 
   final String label;
@@ -903,8 +935,8 @@ class _AutomatonGraphNode extends StatelessWidget {
   final bool isAccepting;
   final bool isHighlighted;
   final GestureTapCallback onTap;
-  final GestureDragStartCallback onPanStart;
-  final GestureDragUpdateCallback onPanUpdate;
+  final GestureDragStartCallback? onPanStart;
+  final GestureDragUpdateCallback? onPanUpdate;
 
   @override
   Widget build(BuildContext context) {

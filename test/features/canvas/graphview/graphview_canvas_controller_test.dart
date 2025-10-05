@@ -174,6 +174,30 @@ void main() {
       expect(call['isInitial'], isTrue);
     });
 
+    test('addStateAtCenter converts viewport centre into world coordinates', () {
+      final transformation = controller.graphController.transformationController;
+      expect(transformation, isNotNull);
+      controller.updateViewportSize(const Size(800, 600));
+
+      transformation!.value = Matrix4.identity();
+      controller.addStateAtCenter();
+
+      expect(provider.addStateCalls, hasLength(1));
+      final firstCall = provider.addStateCalls.first;
+      expect(firstCall['x'], closeTo(400, 0.0001));
+      expect(firstCall['y'], closeTo(300, 0.0001));
+
+      transformation.value = Matrix4.identity()
+        ..translate(150.0, -50.0)
+        ..scale(1.5);
+      controller.addStateAtCenter();
+
+      expect(provider.addStateCalls, hasLength(2));
+      final secondCall = provider.addStateCalls.last;
+      expect(secondCall['x'], closeTo((400 - 150) / 1.5, 0.0001));
+      expect(secondCall['y'], closeTo((300 - (-50)) / 1.5, 0.0001));
+    });
+
     test('moveState forwards coordinates to provider', () {
       controller.addStateAt(const Offset(0, 0));
       final id = provider.addStateCalls.first['id'] as String;

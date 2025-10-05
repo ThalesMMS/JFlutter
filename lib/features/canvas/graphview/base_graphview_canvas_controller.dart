@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:graphview/GraphView.dart';
+import 'package:vector_math/vector_math_64.dart' as vmath;
 
 import '../../../core/models/simulation_highlight.dart';
 import 'graphview_canvas_models.dart';
@@ -59,6 +60,8 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
   final List<_GraphHistoryEntry> _undoHistory = [];
   final List<_GraphHistoryEntry> _redoHistory = [];
 
+  Size? _viewportSize;
+
   @protected
   Map<String, Node> get graphNodes => _graphNodes;
 
@@ -83,6 +86,62 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
 
   bool get canUndo => _undoHistory.isNotEmpty;
   bool get canRedo => _redoHistory.isNotEmpty;
+
+  /// Returns the last viewport size observed by the controller.
+  @visibleForTesting
+  Size? get viewportSize => _viewportSize;
+
+  /// Updates the cached viewport [size] used when translating screen
+  /// coordinates into world coordinates.
+  void updateViewportSize(Size size) {
+    if (!size.width.isFinite || !size.height.isFinite) {
+      return;
+    }
+    if (_viewportSize == size) {
+      return;
+    }
+    _viewportSize = size;
+    _logGraphViewBase(
+      'Viewport size updated (${size.width.toStringAsFixed(1)} x ${size.height.toStringAsFixed(1)})',
+    );
+  }
+
+  /// Converts the provided [viewportOffset] from viewport space into world
+  /// coordinates based on the current transformation matrix.
+  @protected
+  Offset toWorldOffset(Offset viewportOffset) {
+    final transformation = graphController.transformationController;
+    if (transformation == null) {
+      return viewportOffset;
+    }
+
+    final matrix = Matrix4.copy(transformation.value);
+    final determinant = matrix.invert();
+    if (determinant == 0) {
+      return viewportOffset;
+    }
+
+    final vector = matrix.transform3(
+      vmath.Vector3(viewportOffset.dx, viewportOffset.dy, 0),
+    );
+    return Offset(vector.x, vector.y);
+  }
+
+  /// Returns the world-space coordinates corresponding to the visual centre of
+  /// the viewport. When the viewport dimensions are unknown the origin is
+  /// returned.
+  @protected
+  Offset resolveViewportCenterWorld() {
+    final size = _viewportSize;
+    final viewportCenter = size != null
+        ? Offset(size.width / 2, size.height / 2)
+        : Offset.zero;
+    final world = toWorldOffset(viewportCenter);
+    _logGraphViewBase(
+      'Viewport centre resolved to (${world.dx.toStringAsFixed(2)}, ${world.dy.toStringAsFixed(2)})',
+    );
+    return world;
+  }
 
   /// Releases the resources owned by the controller.
   void dispose() {

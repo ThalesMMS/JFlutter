@@ -675,40 +675,48 @@ class _AutomatonGraphViewCanvasState
               return Stack(
                 children: [
                   Positioned.fill(
-                    child: GraphView.builder(
-                      graph: _controller.graph,
-                      controller: _controller.graphController,
-                      algorithm: _algorithm,
-                      paint: Paint()..color = Colors.transparent,
-                      builder: (node) {
-                        final nodeId = node.key?.value?.toString();
-                        if (nodeId == null) {
-                          return const SizedBox.shrink();
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final viewport = constraints.biggest;
+                        if (viewport.width.isFinite && viewport.height.isFinite) {
+                          _controller.updateViewportSize(viewport);
                         }
-                        final canvasNode =
-                            _controller.nodeById(nodeId) ??
-                            GraphViewCanvasNode(
-                              id: nodeId,
-                              label: nodeId,
-                              x: node.position.dx,
-                              y: node.position.dy,
-                              isInitial: false,
-                              isAccepting: false,
+                        return GraphView.builder(
+                          graph: _controller.graph,
+                          controller: _controller.graphController,
+                          algorithm: _algorithm,
+                          paint: Paint()..color = Colors.transparent,
+                          builder: (node) {
+                            final nodeId = node.key?.value?.toString();
+                            if (nodeId == null) {
+                              return const SizedBox.shrink();
+                            }
+                            final canvasNode =
+                                _controller.nodeById(nodeId) ??
+                                GraphViewCanvasNode(
+                                  id: nodeId,
+                                  label: nodeId,
+                                  x: node.position.dx,
+                                  y: node.position.dy,
+                                  isInitial: false,
+                                  isAccepting: false,
+                                );
+                            final isHighlighted = _isNodeHighlighted(
+                              canvasNode,
+                              highlight,
                             );
-                        final isHighlighted = _isNodeHighlighted(
-                          canvasNode,
-                          highlight,
-                        );
-                        return _AutomatonGraphNode(
-                          label: canvasNode.label,
-                          isInitial: canvasNode.isInitial,
-                          isAccepting: canvasNode.isAccepting,
-                          isHighlighted: isHighlighted,
-                          onTap: () => _handleNodeTap(canvasNode.id),
-                          onPanStart: (details) =>
-                              _handleNodePanStart(canvasNode.id, details),
-                          onPanUpdate: (details) =>
-                              _handleNodePanUpdate(canvasNode.id, details),
+                            return _AutomatonGraphNode(
+                              label: canvasNode.label,
+                              isInitial: canvasNode.isInitial,
+                              isAccepting: canvasNode.isAccepting,
+                              isHighlighted: isHighlighted,
+                              onTap: () => _handleNodeTap(canvasNode.id),
+                              onPanStart: (details) =>
+                                  _handleNodePanStart(canvasNode.id, details),
+                              onPanUpdate: (details) =>
+                                  _handleNodePanUpdate(canvasNode.id, details),
+                            );
+                          },
                         );
                       },
                     ),

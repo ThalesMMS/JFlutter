@@ -115,7 +115,8 @@ class GraphViewPdaCanvasController
   /// Adds a new state centred in the current viewport.
   void addStateAtCenter() {
     _logPdaCanvas('addStateAtCenter requested');
-    addStateAt(Offset.zero);
+    final worldCenter = resolveViewportCenterWorld();
+    addStateAt(worldCenter);
   }
 
   /// Adds a new state at the provided [worldPosition].

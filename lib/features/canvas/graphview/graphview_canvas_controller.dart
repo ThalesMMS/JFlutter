@@ -116,7 +116,8 @@ class GraphViewCanvasController
   /// Adds a new state centred in the current viewport.
   void addStateAtCenter() {
     _logAutomatonCanvas('addStateAtCenter requested');
-    addStateAt(Offset.zero);
+    final worldCenter = resolveViewportCenterWorld();
+    addStateAt(worldCenter);
   }
 
   /// Adds a new state at the provided [worldPosition].

@@ -227,27 +227,35 @@ class _TMCanvasGraphViewState extends ConsumerState<TMCanvasGraphView> {
                 builder: (context, highlight, __) {
                   return Stack(
                     children: [
-                      GraphView.builder(
-                        graph: _canvasController.graph,
-                        controller: _canvasController.graphController,
-                        algorithm: _algorithm,
-                        builder: (node) {
-                          final nodeId = node.key?.value?.toString();
-                          if (nodeId == null) {
-                            return const SizedBox.shrink();
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final viewport = constraints.biggest;
+                          if (viewport.width.isFinite && viewport.height.isFinite) {
+                            _canvasController.updateViewportSize(viewport);
                           }
-                          final canvasNode =
-                              _canvasController.nodeById(nodeId);
-                          if (canvasNode == null) {
-                            return const SizedBox.shrink();
-                          }
-                          final isHighlighted =
-                              highlight.stateIds.contains(canvasNode.id);
-                          return _GraphNodeWidget(
-                            label: canvasNode.label,
-                            isInitial: canvasNode.isInitial,
-                            isAccepting: canvasNode.isAccepting,
-                            isHighlighted: isHighlighted,
+                          return GraphView.builder(
+                            graph: _canvasController.graph,
+                            controller: _canvasController.graphController,
+                            algorithm: _algorithm,
+                            builder: (node) {
+                              final nodeId = node.key?.value?.toString();
+                              if (nodeId == null) {
+                                return const SizedBox.shrink();
+                              }
+                              final canvasNode =
+                                  _canvasController.nodeById(nodeId);
+                              if (canvasNode == null) {
+                                return const SizedBox.shrink();
+                              }
+                              final isHighlighted =
+                                  highlight.stateIds.contains(canvasNode.id);
+                              return _GraphNodeWidget(
+                                label: canvasNode.label,
+                                isInitial: canvasNode.isInitial,
+                                isAccepting: canvasNode.isAccepting,
+                                isHighlighted: isHighlighted,
+                              );
+                            },
                           );
                         },
                       ),

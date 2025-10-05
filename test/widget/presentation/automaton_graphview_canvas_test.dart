@@ -12,6 +12,7 @@ import 'package:jflutter/core/repositories/automaton_repository.dart';
 import 'package:jflutter/core/result.dart';
 import 'package:jflutter/data/services/automaton_service.dart';
 import 'package:jflutter/features/canvas/graphview/graphview_canvas_controller.dart';
+import 'package:jflutter/features/canvas/graphview/graphview_label_field_editor.dart';
 import 'package:jflutter/presentation/providers/automaton_provider.dart';
 import 'package:jflutter/presentation/widgets/automaton_canvas_tool.dart';
 import 'package:jflutter/presentation/widgets/automaton_graphview_canvas.dart';
@@ -312,6 +313,32 @@ void main() {
       );
       await tester.pumpAndSettle();
     }
+
+    testWidgets(
+      'shows transition editor after jittery taps when transition tool is active',
+      (tester) async {
+        final automaton = _buildAutomaton({});
+
+        await _pumpCanvas(tester, automaton);
+
+        final sourceGesture =
+            await tester.startGesture(tester.getCenter(find.text('A')));
+        await sourceGesture.moveBy(const Offset(1, 1));
+        await sourceGesture.up();
+        await tester.pump();
+
+        final targetGesture =
+            await tester.startGesture(tester.getCenter(find.text('B')));
+        await targetGesture.moveBy(const Offset(1, -1));
+        await targetGesture.up();
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byType(GraphViewLabelFieldEditor),
+          findsOneWidget,
+        );
+      },
+    );
 
     testWidgets('allows creating a new edge when one already exists', (
       tester,

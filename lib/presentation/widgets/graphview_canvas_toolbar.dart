@@ -190,22 +190,40 @@ class _DesktopToolbar extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   for (final entry in actions) ...[
-                    IconButton(
-                      tooltip: entry.action.label,
-                      icon: Icon(entry.action.icon),
-                      onPressed: entry.handler,
-                      style: entry.isToggle
-                          ? IconButton.styleFrom(
-                              backgroundColor: entry.isSelected
-                                  ? colorScheme.secondaryContainer
-                                  : colorScheme.surfaceVariant.withOpacity(
-                                      0.15,
-                                    ),
-                              foregroundColor: entry.isSelected
-                                  ? colorScheme.onSecondaryContainer
-                                  : colorScheme.onSurfaceVariant,
-                            )
-                          : null,
+                    Builder(
+                      builder: (context) {
+                        final isToggle = entry.isToggle;
+                        final isSelected = entry.isSelected;
+                        final iconStyle = IconButton.styleFrom(
+                          backgroundColor: isToggle
+                              ? (isSelected
+                                    ? colorScheme.primaryContainer
+                                    : colorScheme.surfaceVariant.withOpacity(
+                                        0.18,
+                                      ))
+                              : null,
+                          foregroundColor: isToggle
+                              ? (isSelected
+                                    ? colorScheme.onPrimaryContainer
+                                    : colorScheme.onSurfaceVariant)
+                              : null,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            side: isToggle && !isSelected
+                                ? BorderSide(
+                                    color: colorScheme.outlineVariant
+                                        .withOpacity(0.55),
+                                  )
+                                : BorderSide.none,
+                          ),
+                        );
+                        return IconButton(
+                          tooltip: entry.action.label,
+                          icon: Icon(entry.action.icon),
+                          onPressed: entry.handler,
+                          style: iconStyle,
+                        );
+                      },
                     ),
                     if (entry != actions.last)
                       Container(
@@ -277,11 +295,15 @@ class _MobileToolbar extends StatelessWidget {
                             horizontal: 16,
                             vertical: 12,
                           ),
-                          backgroundColor: entry.isSelected
-                              ? colorScheme.secondaryContainer
+                          backgroundColor: entry.isToggle && entry.isSelected
+                              ? colorScheme.primary
+                              : entry.isToggle
+                              ? colorScheme.surfaceVariant
                               : null,
-                          foregroundColor: entry.isSelected
-                              ? colorScheme.onSecondaryContainer
+                          foregroundColor: entry.isToggle && entry.isSelected
+                              ? colorScheme.onPrimary
+                              : entry.isToggle
+                              ? colorScheme.onSurfaceVariant
                               : null,
                         ),
                         icon: Icon(entry.action.icon),

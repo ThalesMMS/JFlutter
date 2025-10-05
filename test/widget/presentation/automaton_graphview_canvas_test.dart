@@ -88,11 +88,22 @@ class _RecordingGraphViewCanvasController extends GraphViewCanvasController {
 
   int addStateAtCallCount = 0;
   Offset? lastAddStateWorldOffset;
+  int moveStateCallCount = 0;
+  String? lastMoveStateId;
+  Offset? lastMoveStatePosition;
 
   @override
   void addStateAt(Offset worldPosition) {
     addStateAtCallCount++;
     lastAddStateWorldOffset = worldPosition;
+  }
+
+  @override
+  void moveState(String id, Offset position) {
+    moveStateCallCount++;
+    lastMoveStateId = id;
+    lastMoveStatePosition = position;
+    super.moveState(id, position);
   }
 }
 
@@ -162,6 +173,75 @@ void main() {
         expect(controller.lastAddStateWorldOffset, isNotNull);
       },
     );
+
+    for (final tool in [
+      AutomatonCanvasTool.addState,
+      AutomatonCanvasTool.transition,
+    ])
+      testWidgets(
+        "ignores drag gestures when ${tool.toString().split('.').last} tool is active",
+        (tester) async {
+          toolController.setActiveTool(tool);
+          final state = automaton_state.State(
+            id: 'A',
+            label: 'A',
+            position: Vector2(40, 40),
+            isInitial: true,
+          );
+          final automaton = FSA(
+            id: 'drag',
+            name: 'Automaton',
+            states: {state},
+            transitions: const <FSATransition>{},
+            alphabet: const <String>{'a'},
+            initialState: state,
+            acceptingStates: <automaton_state.State>{},
+            created: DateTime.utc(2024, 1, 1),
+            modified: DateTime.utc(2024, 1, 1),
+            bounds: const math.Rectangle<double>(0, 0, 400, 300),
+            zoomLevel: 1,
+            panOffset: Vector2.zero(),
+          );
+
+          provider.updateAutomaton(automaton);
+          controller.synchronize(automaton);
+
+          final canvasKey = GlobalKey();
+          await tester.pumpWidget(
+            MaterialApp(
+              home: Scaffold(
+                body: AutomatonGraphViewCanvas(
+                  automaton: automaton,
+                  canvasKey: canvasKey,
+                  controller: controller,
+                  toolController: toolController,
+                ),
+              ),
+            ),
+          );
+
+          await tester.pumpAndSettle();
+
+          final transformation =
+              controller.graphController.transformationController;
+          expect(transformation, isNotNull);
+          final initialMatrix =
+              List<double>.from(transformation!.value.storage);
+
+          await tester.drag(find.text('A'), const Offset(32, 0));
+          await tester.pump();
+
+          await tester.drag(find.byKey(canvasKey), const Offset(48, -16));
+          await tester.pump();
+
+          expect(controller.moveStateCallCount, equals(0));
+          expect(controller.lastMoveStateId, isNull);
+          expect(
+            List<double>.from(transformation.value.storage),
+            equals(initialMatrix),
+          );
+        },
+      );
   });
 
   group('AutomatonGraphViewCanvas', () {

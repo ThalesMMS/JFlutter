@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:graphview/GraphView.dart';
 import 'package:vector_math/vector_math_64.dart';
@@ -10,6 +11,12 @@ import '../../../presentation/providers/tm_editor_provider.dart';
 import 'base_graphview_canvas_controller.dart';
 import 'graphview_canvas_models.dart';
 import 'graphview_tm_mapper.dart';
+
+void _logTmCanvas(String message) {
+  if (kDebugMode) {
+    debugPrint('[GraphViewTmCanvasController] $message');
+  }
+}
 
 /// Controller responsible for synchronising GraphView with the
 /// [TMEditorNotifier].
@@ -39,6 +46,9 @@ class GraphViewTmCanvasController
 
   /// Synchronises the GraphView controller with the latest [machine].
   void synchronize(TM? machine) {
+    _logTmCanvas(
+      'Synchronizing TM canvas (states=${machine?.states.length ?? 0}, transitions=${machine?.tmTransitions.length ?? 0})',
+    );
     synchronizeGraph(machine);
   }
 
@@ -105,6 +115,7 @@ class GraphViewTmCanvasController
 
   /// Adds a new state centred in the current viewport.
   void addStateAtCenter() {
+    _logTmCanvas('addStateAtCenter requested');
     addStateAt(Offset.zero);
   }
 
@@ -112,6 +123,9 @@ class GraphViewTmCanvasController
   void addStateAt(Offset worldPosition) {
     final nodeId = _generateNodeId();
     final label = _nextAvailableStateLabel();
+    _logTmCanvas(
+      'addStateAt -> id=$nodeId label=$label position=(${worldPosition.dx.toStringAsFixed(2)}, ${worldPosition.dy.toStringAsFixed(2)})',
+    );
     performMutation(() {
       _notifier.upsertState(
         id: nodeId,
@@ -124,6 +138,9 @@ class GraphViewTmCanvasController
 
   /// Moves an existing state to a new [position].
   void moveState(String id, Offset position) {
+    _logTmCanvas(
+      'moveState -> id=$id position=(${position.dx.toStringAsFixed(2)}, ${position.dy.toStringAsFixed(2)})',
+    );
     performMutation(() {
       _notifier.moveState(
         id: id,
@@ -136,6 +153,7 @@ class GraphViewTmCanvasController
   /// Updates the label displayed for the state identified by [id].
   void updateStateLabel(String id, String label) {
     final resolvedLabel = label.isEmpty ? id : label;
+    _logTmCanvas('updateStateLabel -> id=$id label=$resolvedLabel');
     performMutation(() {
       _notifier.updateStateLabel(
         id: id,
@@ -146,6 +164,9 @@ class GraphViewTmCanvasController
 
   /// Updates the flag metadata for the state identified by [id].
   void updateStateFlags(String id, {bool? isInitial, bool? isAccepting}) {
+    _logTmCanvas(
+      'updateStateFlags -> id=$id isInitial=$isInitial isAccepting=$isAccepting',
+    );
     performMutation(() {
       _notifier.updateStateFlags(
         id: id,
@@ -157,6 +178,7 @@ class GraphViewTmCanvasController
 
   /// Removes the state identified by [id] from the machine.
   void removeState(String id) {
+    _logTmCanvas('removeState -> id=$id');
     performMutation(() {
       _notifier.removeState(id: id);
     });
@@ -177,6 +199,9 @@ class GraphViewTmCanvasController
     final controlPoint = (controlPointX != null && controlPointY != null)
         ? Vector2(controlPointX, controlPointY)
         : null;
+    _logTmCanvas(
+      'addOrUpdateTransition -> id=$edgeId from=$fromStateId to=$toStateId read=$readSymbol write=$writeSymbol dir=$direction cp=${controlPoint?.toString()}',
+    );
     performMutation(() {
       _notifier.addOrUpdateTransition(
         id: edgeId,
@@ -198,9 +223,13 @@ class GraphViewTmCanvasController
   ) {
     final edge = edgeById(id);
     if (edge == null) {
+      _logTmCanvas('updateTransitionControlPoint skipped -> id=$id (edge not found)');
       return;
     }
 
+    _logTmCanvas(
+      'updateTransitionControlPoint -> id=$id cp=(${controlPointX.toStringAsFixed(2)}, ${controlPointY.toStringAsFixed(2)})',
+    );
     addOrUpdateTransition(
       fromStateId: edge.fromStateId,
       toStateId: edge.toStateId,
@@ -215,6 +244,7 @@ class GraphViewTmCanvasController
 
   /// Removes the transition identified by [id] from the machine.
   void removeTransition(String id) {
+    _logTmCanvas('removeTransition -> id=$id');
     performMutation(() {
       _notifier.removeTransition(id: id);
     });
@@ -254,6 +284,9 @@ class GraphViewTmCanvasController
       modified: DateTime.now(),
     );
 
+    _logTmCanvas(
+      'applySnapshotToDomain -> states=${merged.states.length} transitions=${merged.tmTransitions.length}',
+    );
     _notifier.setTm(merged);
     synchronize(merged);
   }

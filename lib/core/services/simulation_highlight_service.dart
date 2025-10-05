@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/simulation_highlight.dart';
@@ -41,6 +42,12 @@ class FunctionSimulationHighlightChannel implements SimulationHighlightChannel {
   }
 }
 
+void _logHighlightEvent(String message) {
+  if (kDebugMode) {
+    debugPrint('[SimulationHighlightService] $message');
+  }
+}
+
 class SimulationHighlightService {
   SimulationHighlightService({
     SimulationHighlightChannel? channel,
@@ -55,6 +62,8 @@ class SimulationHighlightService {
                 : FunctionSimulationHighlightChannel(dispatcher));
 
   SimulationHighlightChannel? _channel;
+  int _dispatchCount = 0;
+  SimulationHighlight? _lastHighlight;
 
   SimulationHighlightChannel? get channel => _channel;
 
@@ -62,12 +71,21 @@ class SimulationHighlightService {
     _channel = value;
   }
 
+  /// Number of highlight payloads dispatched since the service was created.
+  int get dispatchCount => _dispatchCount;
+
+  /// Last highlight payload emitted by the service, if any.
+  SimulationHighlight? get lastHighlight => _lastHighlight;
+
   /// Computes a highlight payload from a simulation result and step index.
   SimulationHighlight computeFromResult(
     SimulationResult? result,
     int stepIndex,
   ) {
-    if (result == null) return SimulationHighlight.empty;
+    if (result == null) {
+      _logHighlightEvent('Skipping highlight computation: no simulation result');
+      return SimulationHighlight.empty;
+    }
     return computeFromSteps(result.steps, stepIndex);
   }
 
@@ -77,6 +95,9 @@ class SimulationHighlightService {
     int stepIndex,
   ) {
     if (steps.isEmpty || stepIndex < 0 || stepIndex >= steps.length) {
+      _logHighlightEvent(
+        'Ignoring highlight request for step $stepIndex (available: ${steps.length})',
+      );
       return SimulationHighlight.empty;
     }
 
@@ -116,6 +137,9 @@ class SimulationHighlightService {
     int stepIndex,
   ) {
     final highlight = computeFromResult(result, stepIndex);
+    _logHighlightEvent(
+      'Computed highlight from result at step $stepIndex (states: ${highlight.stateIds.length}, transitions: ${highlight.transitionIds.length})',
+    );
     dispatch(highlight);
     return highlight;
   }
@@ -126,17 +150,29 @@ class SimulationHighlightService {
     int stepIndex,
   ) {
     final highlight = computeFromSteps(steps, stepIndex);
+    _logHighlightEvent(
+      'Computed highlight from steps at index $stepIndex (states: ${highlight.stateIds.length}, transitions: ${highlight.transitionIds.length})',
+    );
     dispatch(highlight);
     return highlight;
   }
 
   /// Dispatches [highlight] to the active canvas highlight channel.
   void dispatch(SimulationHighlight highlight) {
+    _dispatchCount++;
+    _lastHighlight = highlight;
+    _logHighlightEvent(
+      'Dispatch #$_dispatchCount (states: ${highlight.stateIds.length}, transitions: ${highlight.transitionIds.length})',
+    );
     channel?.send(highlight);
   }
 
   /// Sends a clear highlight event.
   void clear() {
+    if (_dispatchCount > 0 || _lastHighlight != null) {
+      _logHighlightEvent('Clearing highlight after $_dispatchCount dispatches');
+    }
+    _lastHighlight = null;
     channel?.clear();
   }
 }

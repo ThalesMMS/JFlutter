@@ -115,6 +115,8 @@ entities/
 - `algo_log.dart` - Centralized algorithm logging
 - `error_handler.dart` - Global error handling
 - `result.dart` - Result pattern for error handling
+- `services/simulation_highlight_service.dart` - Emits highlights and now tracks
+  dispatch metrics plus debug logs for GraphView troubleshooting
 
 ## Data Layer (`lib/data/`)
 
@@ -202,6 +204,19 @@ State management using Riverpod:
 providers/
 └── automaton_provider.dart        # Automaton state management
 ```
+
+### GraphView Canvas (`lib/features/canvas/graphview/`)
+
+GraphView-powered canvas controllers, mixins, and mappers live here. The base
+controller keeps caches of `GraphViewCanvasNode/Edge`, synchronises with the
+domain providers, and now emits structured debug logs (guarded by `kDebugMode`)
+for every mutation, undo/redo operation, and highlight update to aid runtime
+inspection. Specialised controllers (`graphview_canvas_controller.dart`,
+`graphview_tm_canvas_controller.dart`, `graphview_pda_canvas_controller.dart`)
+layer on automaton-specific instrumentation, while
+`graphview_viewport_highlight_mixin.dart` centralises viewport metrics and
+highlight change notifications. When integrating new canvas capabilities, wire
+them through these controllers so the logging/metrics remain consistent.
 
 ### Theme (`lib/presentation/theme/`)
 

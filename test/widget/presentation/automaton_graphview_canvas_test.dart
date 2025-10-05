@@ -34,9 +34,7 @@ class _FakeLayoutRepository implements LayoutRepository {
       _unsupported();
 
   @override
-  Future<AutomatonResult> applyHierarchicalLayout(
-    AutomatonEntity automaton,
-  ) =>
+  Future<AutomatonResult> applyHierarchicalLayout(AutomatonEntity automaton) =>
       _unsupported();
 
   @override
@@ -50,10 +48,10 @@ class _FakeLayoutRepository implements LayoutRepository {
 
 class _RecordingAutomatonProvider extends AutomatonProvider {
   _RecordingAutomatonProvider()
-      : super(
-          automatonService: AutomatonService(),
-          layoutRepository: _FakeLayoutRepository(),
-        );
+    : super(
+        automatonService: AutomatonService(),
+        layoutRepository: _FakeLayoutRepository(),
+      );
 
   final List<Map<String, Object?>> transitionCalls = [];
 
@@ -85,8 +83,86 @@ class _RecordingAutomatonProvider extends AutomatonProvider {
   }
 }
 
+class _RecordingGraphViewCanvasController extends GraphViewCanvasController {
+  _RecordingGraphViewCanvasController({required super.automatonProvider});
+
+  int addStateAtCallCount = 0;
+  Offset? lastAddStateWorldOffset;
+
+  @override
+  void addStateAt(Offset worldPosition) {
+    addStateAtCallCount++;
+    lastAddStateWorldOffset = worldPosition;
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  group('AutomatonGraphViewCanvas gestures', () {
+    late _RecordingAutomatonProvider provider;
+    late _RecordingGraphViewCanvasController controller;
+    late AutomatonCanvasToolController toolController;
+
+    setUp(() {
+      provider = _RecordingAutomatonProvider();
+      controller = _RecordingGraphViewCanvasController(
+        automatonProvider: provider,
+      );
+      toolController = AutomatonCanvasToolController(
+        AutomatonCanvasTool.addState,
+      );
+    });
+
+    tearDown(() {
+      controller.dispose();
+      toolController.dispose();
+    });
+
+    testWidgets(
+      'delegates taps on empty background to controller when add-state tool is active',
+      (tester) async {
+        final automaton = FSA(
+          id: 'empty',
+          name: 'Empty Automaton',
+          states: <automaton_state.State>{},
+          transitions: const <FSATransition>{},
+          alphabet: const <String>{},
+          initialState: null,
+          acceptingStates: <automaton_state.State>{},
+          created: DateTime.utc(2024, 1, 1),
+          modified: DateTime.utc(2024, 1, 1),
+          bounds: const math.Rectangle<double>(0, 0, 400, 300),
+          zoomLevel: 1,
+          panOffset: Vector2.zero(),
+        );
+
+        provider.updateAutomaton(automaton);
+        controller.synchronize(automaton);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: AutomatonGraphViewCanvas(
+                automaton: automaton,
+                canvasKey: GlobalKey(),
+                controller: controller,
+                toolController: toolController,
+              ),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byType(AutomatonGraphViewCanvas));
+        await tester.pump();
+
+        expect(controller.addStateAtCallCount, equals(1));
+        expect(controller.lastAddStateWorldOffset, isNotNull);
+      },
+    );
+  });
 
   group('AutomatonGraphViewCanvas', () {
     late _RecordingAutomatonProvider provider;
@@ -98,8 +174,9 @@ void main() {
     setUp(() {
       provider = _RecordingAutomatonProvider();
       controller = GraphViewCanvasController(automatonProvider: provider);
-      toolController =
-          AutomatonCanvasToolController(AutomatonCanvasTool.transition);
+      toolController = AutomatonCanvasToolController(
+        AutomatonCanvasTool.transition,
+      );
 
       stateA = automaton_state.State(
         id: 'A',
@@ -140,10 +217,7 @@ void main() {
       return automaton;
     }
 
-    Future<void> _pumpCanvas(
-      WidgetTester tester,
-      FSA automaton,
-    ) async {
+    Future<void> _pumpCanvas(WidgetTester tester, FSA automaton) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -159,8 +233,9 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('allows creating a new edge when one already exists',
-        (tester) async {
+    testWidgets('allows creating a new edge when one already exists', (
+      tester,
+    ) async {
       const existingId = 'transition_existing';
       final transition = FSATransition(
         id: existingId,
@@ -201,8 +276,9 @@ void main() {
       expect(call['label'], equals('b'));
     });
 
-    testWidgets('edits an existing transition selected from the dialog',
-        (tester) async {
+    testWidgets('edits an existing transition selected from the dialog', (
+      tester,
+    ) async {
       const existingId = 'transition_existing';
       final transition = FSATransition(
         id: existingId,

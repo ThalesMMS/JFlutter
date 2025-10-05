@@ -378,7 +378,7 @@ class _AutomatonGraphViewCanvasState
     final initialValue = existing?.label ?? '';
     final worldAnchor = !createNew && existing != null
         ? resolveLinkAnchorWorld(_controller, existing) ??
-            Offset(existing.controlPointX ?? 0, existing.controlPointY ?? 0)
+              Offset(existing.controlPointX ?? 0, existing.controlPointY ?? 0)
         : _deriveControlPoint(fromId, toId);
 
     final overlayDisplayed = _showTransitionOverlay(
@@ -445,14 +445,11 @@ class _AutomatonGraphViewCanvasState
                     ListTile(
                       key: ValueKey('automaton-transition-choice-${edge.id}'),
                       leading: const Icon(Icons.edit_outlined),
-                      title: Text(
-                        edge.label.isEmpty ? edge.id : edge.label,
-                      ),
-                      subtitle:
-                          Text('${edge.fromStateId} → ${edge.toStateId}'),
-                      onTap: () => Navigator.of(context).pop(
-                        _TransitionEditChoice.edit(edge),
-                      ),
+                      title: Text(edge.label.isEmpty ? edge.id : edge.label),
+                      subtitle: Text('${edge.fromStateId} → ${edge.toStateId}'),
+                      onTap: () => Navigator.of(
+                        context,
+                      ).pop(_TransitionEditChoice.edit(edge)),
                     ),
                   ListTile(
                     key: const ValueKey(
@@ -460,9 +457,9 @@ class _AutomatonGraphViewCanvasState
                     ),
                     leading: const Icon(Icons.add_outlined),
                     title: const Text('Criar nova transição'),
-                    onTap: () => Navigator.of(context).pop(
-                      const _TransitionEditChoice.createNew(),
-                    ),
+                    onTap: () => Navigator.of(
+                      context,
+                    ).pop(const _TransitionEditChoice.createNew()),
                   ),
                 ],
               ),
@@ -735,6 +732,7 @@ class _AutomatonGraphViewCanvasState
     final theme = Theme.of(context);
     return GestureDetector(
       key: widget.canvasKey,
+      behavior: HitTestBehavior.translucent,
       onTapUp: _handleCanvasTap,
       child: ValueListenableBuilder<int>(
         valueListenable: _controller.graphRevision,
@@ -750,7 +748,8 @@ class _AutomatonGraphViewCanvasState
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         final viewport = constraints.biggest;
-                        if (viewport.width.isFinite && viewport.height.isFinite) {
+                        if (viewport.width.isFinite &&
+                            viewport.height.isFinite) {
                           _controller.updateViewportSize(viewport);
                         }
                         return GraphViewAllNodes.builder(
@@ -814,13 +813,10 @@ class _AutomatonGraphViewCanvasState
 }
 
 class _TransitionEditChoice {
-  const _TransitionEditChoice._({
-    required this.createNew,
-    this.edge,
-  });
+  const _TransitionEditChoice._({required this.createNew, this.edge});
 
   const _TransitionEditChoice.edit(GraphViewCanvasEdge edge)
-      : this._(createNew: false, edge: edge);
+    : this._(createNew: false, edge: edge);
 
   const _TransitionEditChoice.createNew() : this._(createNew: true);
 

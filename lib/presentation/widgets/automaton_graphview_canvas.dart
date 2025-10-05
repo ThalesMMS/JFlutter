@@ -310,10 +310,16 @@ class _AutomatonGraphViewCanvasState
   }
 
   void _handleNodePanStart(String nodeId, DragStartDetails details) {
+    if (_activeTool != AutomatonCanvasTool.selection) {
+      return;
+    }
     _hideTransitionOverlay();
   }
 
   void _handleNodePanUpdate(String nodeId, DragUpdateDetails details) {
+    if (_activeTool != AutomatonCanvasTool.selection) {
+      return;
+    }
     final scale = _currentScale();
     final delta = details.delta / scale;
     final node = _controller.nodeById(nodeId);
@@ -730,10 +736,14 @@ class _AutomatonGraphViewCanvasState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final consumePanGestures =
+        _activeTool != AutomatonCanvasTool.selection;
     return GestureDetector(
       key: widget.canvasKey,
       behavior: HitTestBehavior.translucent,
       onTapUp: _handleCanvasTap,
+      onPanStart: consumePanGestures ? (_) {} : null,
+      onPanUpdate: consumePanGestures ? (_) {} : null,
       child: ValueListenableBuilder<int>(
         valueListenable: _controller.graphRevision,
         builder: (context, _, __) {

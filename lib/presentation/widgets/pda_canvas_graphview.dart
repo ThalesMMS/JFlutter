@@ -7,6 +7,7 @@ import 'package:graphview/GraphView.dart';
 import '../../core/models/pda.dart';
 import '../../core/models/simulation_highlight.dart';
 import '../../core/services/simulation_highlight_service.dart';
+import '../../features/canvas/graphview/graphview_all_nodes_builder.dart';
 import '../../features/canvas/graphview/graphview_pda_canvas_controller.dart';
 import '../../features/canvas/graphview/graphview_canvas_models.dart';
 import '../../features/canvas/graphview/graphview_highlight_channel.dart';
@@ -243,7 +244,7 @@ class _PDACanvasGraphViewState extends ConsumerState<PDACanvasGraphView> {
                           if (viewport.width.isFinite && viewport.height.isFinite) {
                             _canvasController.updateViewportSize(viewport);
                           }
-                          return GraphView.builder(
+                          return GraphViewAllNodes.builder(
                             graph: _canvasController.graph,
                             controller: _canvasController.graphController,
                             algorithm: _algorithm,

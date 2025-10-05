@@ -335,11 +335,15 @@ class _AutomatonGraphViewCanvasState
   }
 
   void _handleNodeTap(String nodeId) {
+    debugPrint('[AutomatonGraphViewCanvas] Node tapped $nodeId with '
+        'active tool ${_activeTool.name}');
     if (_activeTool != AutomatonCanvasTool.transition) {
       return;
     }
 
     if (_transitionSourceId == null) {
+      debugPrint('[AutomatonGraphViewCanvas] Transition source selected '
+          '-> $nodeId');
       setState(() {
         _transitionSourceId = nodeId;
       });
@@ -350,6 +354,8 @@ class _AutomatonGraphViewCanvasState
     setState(() {
       _transitionSourceId = null;
     });
+    debugPrint('[AutomatonGraphViewCanvas] Transition target selected '
+        '-> $nodeId (source: $sourceId)');
     _showTransitionEditor(sourceId, nodeId);
   }
 
@@ -400,6 +406,8 @@ class _AutomatonGraphViewCanvasState
     );
 
     if (overlayDisplayed) {
+      debugPrint('[AutomatonGraphViewCanvas] Showing transition editor '
+          'for $fromId → $toId (transitionId: ${existing?.id})');
       setState(() {
         _selectedTransitions..clear();
         if (!createNew && existing?.id != null) {
@@ -427,6 +435,9 @@ class _AutomatonGraphViewCanvasState
     if (!mounted || label == null) {
       return;
     }
+
+    debugPrint('[AutomatonGraphViewCanvas] Persisting transition '
+        'for $fromId → $toId (transitionId: ${existing?.id})');
 
     _controller.addOrUpdateTransition(
       fromStateId: fromId,
@@ -671,6 +682,9 @@ class _AutomatonGraphViewCanvasState
     _GraphViewTransitionOverlayState state,
     String label,
   ) {
+    debugPrint('[AutomatonGraphViewCanvas] Persisting transition '
+        'for ${state.fromStateId} → ${state.toStateId} '
+        '(transitionId: ${state.transitionId})');
     _controller.addOrUpdateTransition(
       fromStateId: state.fromStateId,
       toStateId: state.toStateId,
@@ -790,16 +804,26 @@ class _AutomatonGraphViewCanvasState
                               canvasNode,
                               highlight,
                             );
+                            final allowDragging =
+                                _activeTool == AutomatonCanvasTool.selection;
                             return _AutomatonGraphNode(
                               label: canvasNode.label,
                               isInitial: canvasNode.isInitial,
                               isAccepting: canvasNode.isAccepting,
                               isHighlighted: isHighlighted,
                               onTap: () => _handleNodeTap(canvasNode.id),
-                              onPanStart: (details) =>
-                                  _handleNodePanStart(canvasNode.id, details),
-                              onPanUpdate: (details) =>
-                                  _handleNodePanUpdate(canvasNode.id, details),
+                              onPanStart: allowDragging
+                                  ? (details) => _handleNodePanStart(
+                                        canvasNode.id,
+                                        details,
+                                      )
+                                  : null,
+                              onPanUpdate: allowDragging
+                                  ? (details) => _handleNodePanUpdate(
+                                        canvasNode.id,
+                                        details,
+                                      )
+                                  : null,
                             );
                           },
                         );
@@ -908,8 +932,8 @@ class _AutomatonGraphNode extends StatelessWidget {
     required this.isAccepting,
     required this.isHighlighted,
     required this.onTap,
-    required this.onPanStart,
-    required this.onPanUpdate,
+    this.onPanStart,
+    this.onPanUpdate,
   });
 
   final String label;
@@ -917,8 +941,8 @@ class _AutomatonGraphNode extends StatelessWidget {
   final bool isAccepting;
   final bool isHighlighted;
   final GestureTapCallback onTap;
-  final GestureDragStartCallback onPanStart;
-  final GestureDragUpdateCallback onPanUpdate;
+  final GestureDragStartCallback? onPanStart;
+  final GestureDragUpdateCallback? onPanUpdate;
 
   @override
   Widget build(BuildContext context) {

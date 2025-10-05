@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:graphview/GraphView.dart';
 import 'package:vector_math/vector_math_64.dart';
@@ -9,6 +10,12 @@ import '../../../presentation/providers/pda_editor_provider.dart';
 import 'base_graphview_canvas_controller.dart';
 import 'graphview_canvas_models.dart';
 import 'graphview_pda_mapper.dart';
+
+void _logPdaCanvas(String message) {
+  if (kDebugMode) {
+    debugPrint('[GraphViewPdaCanvasController] $message');
+  }
+}
 
 /// Controller responsible for synchronising GraphView with the
 /// [PDAEditorNotifier].
@@ -38,6 +45,9 @@ class GraphViewPdaCanvasController
 
   /// Synchronises the GraphView controller with the latest [automaton].
   void synchronize(PDA? automaton) {
+    _logPdaCanvas(
+      'Synchronizing PDA canvas (states=${automaton?.states.length ?? 0}, transitions=${automaton?.pdaTransitions.length ?? 0})',
+    );
     synchronizeGraph(automaton);
   }
 
@@ -104,6 +114,7 @@ class GraphViewPdaCanvasController
 
   /// Adds a new state centred in the current viewport.
   void addStateAtCenter() {
+    _logPdaCanvas('addStateAtCenter requested');
     addStateAt(Offset.zero);
   }
 
@@ -111,6 +122,9 @@ class GraphViewPdaCanvasController
   void addStateAt(Offset worldPosition) {
     final nodeId = _generateNodeId();
     final label = _nextAvailableStateLabel();
+    _logPdaCanvas(
+      'addStateAt -> id=$nodeId label=$label position=(${worldPosition.dx.toStringAsFixed(2)}, ${worldPosition.dy.toStringAsFixed(2)})',
+    );
     performMutation(() {
       _notifier.addOrUpdateState(
         id: nodeId,
@@ -123,6 +137,9 @@ class GraphViewPdaCanvasController
 
   /// Moves an existing state to a new [position].
   void moveState(String id, Offset position) {
+    _logPdaCanvas(
+      'moveState -> id=$id position=(${position.dx.toStringAsFixed(2)}, ${position.dy.toStringAsFixed(2)})',
+    );
     performMutation(() {
       _notifier.moveState(
         id: id,
@@ -135,6 +152,7 @@ class GraphViewPdaCanvasController
   /// Updates the label displayed for the state identified by [id].
   void updateStateLabel(String id, String label) {
     final resolvedLabel = label.isEmpty ? id : label;
+    _logPdaCanvas('updateStateLabel -> id=$id label=$resolvedLabel');
     performMutation(() {
       _notifier.updateStateLabel(
         id: id,
@@ -145,6 +163,9 @@ class GraphViewPdaCanvasController
 
   /// Updates the flag metadata for the state identified by [id].
   void updateStateFlags(String id, {bool? isInitial, bool? isAccepting}) {
+    _logPdaCanvas(
+      'updateStateFlags -> id=$id isInitial=$isInitial isAccepting=$isAccepting',
+    );
     performMutation(() {
       _notifier.updateStateFlags(
         id: id,
@@ -156,6 +177,7 @@ class GraphViewPdaCanvasController
 
   /// Removes the state identified by [id] from the automaton.
   void removeState(String id) {
+    _logPdaCanvas('removeState -> id=$id');
     performMutation(() {
       _notifier.removeState(id: id);
     });
@@ -179,6 +201,9 @@ class GraphViewPdaCanvasController
     final controlPoint = (controlPointX != null && controlPointY != null)
         ? Vector2(controlPointX, controlPointY)
         : null;
+    _logPdaCanvas(
+      'addOrUpdateTransition -> id=$edgeId from=$fromStateId to=$toStateId read=$readSymbol pop=$popSymbol push=$pushSymbol cp=${controlPoint?.toString()}',
+    );
     performMutation(() {
       _notifier.upsertTransition(
         id: edgeId,
@@ -201,6 +226,9 @@ class GraphViewPdaCanvasController
     double controlPointX,
     double controlPointY,
   ) {
+    _logPdaCanvas(
+      'updateTransitionControlPoint -> id=$id cp=(${controlPointX.toStringAsFixed(2)}, ${controlPointY.toStringAsFixed(2)})',
+    );
     performMutation(() {
       _notifier.upsertTransition(
         id: id,
@@ -211,6 +239,7 @@ class GraphViewPdaCanvasController
 
   /// Removes the transition identified by [id] from the automaton.
   void removeTransition(String id) {
+    _logPdaCanvas('removeTransition -> id=$id');
     performMutation(() {
       _notifier.removeTransition(id: id);
     });
@@ -247,6 +276,9 @@ class GraphViewPdaCanvasController
       modified: DateTime.now(),
     );
 
+    _logPdaCanvas(
+      'applySnapshotToDomain -> states=${merged.states.length} transitions=${merged.pdaTransitions.length}',
+    );
     _notifier.setPda(merged);
     synchronize(merged);
   }

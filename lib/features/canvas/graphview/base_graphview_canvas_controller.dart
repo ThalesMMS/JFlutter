@@ -7,6 +7,12 @@ import 'graphview_canvas_models.dart';
 import 'graphview_highlight_controller.dart';
 import 'graphview_viewport_highlight_mixin.dart';
 
+void _logGraphViewBase(String message) {
+  if (kDebugMode) {
+    debugPrint('[GraphViewBase] $message');
+  }
+}
+
 class _GraphHistoryEntry {
   const _GraphHistoryEntry({required this.snapshot, required this.highlight});
 
@@ -80,6 +86,9 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
 
   /// Releases the resources owned by the controller.
   void dispose() {
+    _logGraphViewBase(
+      'Disposing controller (ownsTransformation=$_ownsTransformationController)',
+    );
     disposeViewportHighlight();
     if (_ownsTransformationController) {
       graphController.transformationController?.dispose();
@@ -117,6 +126,7 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
   @protected
   void performMutation(VoidCallback mutation) {
     if (_isSynchronizing) {
+      _logGraphViewBase('performMutation invoked during synchronization');
       mutation();
       return;
     }
@@ -125,15 +135,22 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
     if (entry != null) {
       _undoHistory.add(entry);
       _redoHistory.clear();
+      _logGraphViewBase(
+        'History snapshot captured (#undo=${_undoHistory.length}, #redo=${_redoHistory.length})',
+      );
+    } else {
+      _logGraphViewBase('History snapshot skipped (serialization failed)');
     }
 
     mutation();
+    _logGraphViewBase('Mutation executed, synchronizing graph with domain data');
     synchronizeGraph(currentDomainData);
   }
 
   /// Restores the previous canvas snapshot if available.
   bool undo() {
     if (_undoHistory.isEmpty) {
+      _logGraphViewBase('Undo requested with empty history');
       return false;
     }
 
@@ -144,12 +161,16 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
 
     final entry = _undoHistory.removeLast();
     _applyHistoryEntry(entry);
+    _logGraphViewBase(
+      'Undo applied (#undo=${_undoHistory.length}, #redo=${_redoHistory.length})',
+    );
     return true;
   }
 
   /// Reapplies the most recently undone canvas snapshot if available.
   bool redo() {
     if (_redoHistory.isEmpty) {
+      _logGraphViewBase('Redo requested with empty history');
       return false;
     }
 
@@ -160,6 +181,9 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
 
     final entry = _redoHistory.removeLast();
     _applyHistoryEntry(entry);
+    _logGraphViewBase(
+      'Redo applied (#undo=${_undoHistory.length}, #redo=${_redoHistory.length})',
+    );
     return true;
   }
 
@@ -169,6 +193,9 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
     final snapshot = toSnapshot(data);
     final incomingNodes = {for (final node in snapshot.nodes) node.id: node};
     final incomingEdges = {for (final edge in snapshot.edges) edge.id: edge};
+    _logGraphViewBase(
+      'Synchronizing graph (incomingNodes=${incomingNodes.length}, incomingEdges=${incomingEdges.length})',
+    );
 
     final previousHighlight = SimulationHighlight(
       stateIds: Set<String>.from(highlightNotifier.value.stateIds),
@@ -285,10 +312,18 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
 
       updateLinkHighlights(sanitizedHighlight.transitionIds);
       highlightNotifier.value = sanitizedHighlight;
+      _logGraphViewBase(
+        'Highlight updated (states=${sanitizedHighlight.stateIds.length}, transitions=${sanitizedHighlight.transitionIds.length})',
+      );
 
       if (nodesDirty || edgesDirty) {
         graph.notifyGraphObserver();
         graphRevision.value++;
+        _logGraphViewBase(
+          'Graph refreshed (nodes=${_nodes.length}, edges=${_edges.length}, revision=${graphRevision.value})',
+        );
+      } else {
+        _logGraphViewBase('Graph synchronization completed without structural changes');
       }
     } finally {
       _isSynchronizing = false;
@@ -301,6 +336,7 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
       return;
     }
 
+    _logGraphViewBase('Pruning highlight for $edgeId');
     final updatedHighlighted = Set<String>.from(highlightedTransitionIds)
       ..remove(edgeId);
     updateLinkHighlights(updatedHighlighted);
@@ -348,5 +384,8 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
 
     updateLinkHighlights(highlight.transitionIds);
     highlightNotifier.value = highlight;
+    _logGraphViewBase(
+      'History entry applied (states=${highlight.stateIds.length}, transitions=${highlight.transitionIds.length})',
+    );
   }
 }

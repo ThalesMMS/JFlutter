@@ -8,6 +8,12 @@ import '../../../core/models/simulation_highlight.dart';
 import 'graphview_canvas_models.dart';
 import 'graphview_highlight_controller.dart';
 
+void _logViewportEvent(String message) {
+  if (kDebugMode) {
+    debugPrint('[GraphViewViewport] $message');
+  }
+}
+
 /// Shared viewport and highlight helpers for GraphView canvas controllers.
 mixin GraphViewViewportHighlightMixin on GraphViewHighlightController {
   /// Exposes the underlying graph structure managed by the controller.
@@ -67,6 +73,7 @@ mixin GraphViewViewportHighlightMixin on GraphViewHighlightController {
   void _applyScale(double factor) {
     final transformation = graphController.transformationController;
     if (transformation == null) {
+      _logViewportEvent('Ignored scale request (no transformation controller)');
       return;
     }
 
@@ -77,15 +84,18 @@ mixin GraphViewViewportHighlightMixin on GraphViewHighlightController {
     final relativeScale = targetScale / safeCurrent;
     matrix.scale(relativeScale);
     transformation.value = matrix;
+    _logViewportEvent('Applied scale factor $relativeScale (target=$targetScale)');
   }
 
   /// Increases the viewport zoom while respecting reasonable bounds.
   void zoomIn() {
+    _logViewportEvent('zoomIn requested');
     _applyScale(1.2);
   }
 
   /// Decreases the viewport zoom while respecting reasonable bounds.
   void zoomOut() {
+    _logViewportEvent('zoomOut requested');
     _applyScale(1 / 1.2);
   }
 
@@ -94,33 +104,41 @@ mixin GraphViewViewportHighlightMixin on GraphViewHighlightController {
     final transformation = graphController.transformationController;
     transformation?.value = Matrix4.identity();
     graphController.resetView();
+    _logViewportEvent('Viewport reset');
   }
 
   /// Adjusts the viewport to focus on the available nodes.
   void fitToContent() {
     if (graph.nodes.isEmpty) {
+      _logViewportEvent('fitToContent requested with empty graph, resetting view');
       resetView();
       return;
     }
     graphController.zoomToFit();
+    _logViewportEvent('fitToContent applied');
   }
 
   @override
   void applyHighlight(SimulationHighlight highlight) {
     updateLinkHighlights(highlight.transitionIds);
     highlightNotifier.value = highlight;
+    _logViewportEvent(
+      'Highlight applied (states=${highlight.stateIds.length}, transitions=${highlight.transitionIds.length})',
+    );
   }
 
   @override
   void clearHighlight() {
     updateLinkHighlights(const <String>{});
     highlightNotifier.value = SimulationHighlight.empty;
+    _logViewportEvent('Highlight cleared');
   }
 
   /// Updates the edge highlight set to match the provided ids.
   void updateLinkHighlights(Set<String> transitionIds) {
     final desiredIds = Set<String>.from(transitionIds);
     if (setEquals(desiredIds, highlightedTransitionIds)) {
+      _logViewportEvent('Skipped highlight update (no changes)');
       return;
     }
 
@@ -130,5 +148,8 @@ mixin GraphViewViewportHighlightMixin on GraphViewHighlightController {
 
     onHighlightedTransitionsChanged(highlightedTransitionIds);
     graphRevision.value++;
+    _logViewportEvent(
+      'Highlight set updated (transitions=${highlightedTransitionIds.length}, revision=${graphRevision.value})',
+    );
   }
 }

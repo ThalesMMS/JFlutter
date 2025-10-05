@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:graphview/GraphView.dart';
 import 'package:vector_math/vector_math_64.dart';
@@ -9,6 +10,12 @@ import '../../../presentation/providers/automaton_provider.dart';
 import 'base_graphview_canvas_controller.dart';
 import 'graphview_automaton_mapper.dart';
 import 'graphview_canvas_models.dart';
+
+void _logAutomatonCanvas(String message) {
+  if (kDebugMode) {
+    debugPrint('[GraphViewCanvasController] $message');
+  }
+}
 
 /// Controller that keeps the [Graph] in sync with the [AutomatonProvider].
 class GraphViewCanvasController
@@ -37,6 +44,9 @@ class GraphViewCanvasController
 
   /// Synchronises the GraphView controller with the latest [automaton].
   void synchronize(FSA? automaton) {
+    _logAutomatonCanvas(
+      'Synchronizing canvas with automaton id=${automaton?.id} states=${automaton?.states.length ?? 0} transitions=${automaton?.transitions.length ?? 0}',
+    );
     synchronizeGraph(automaton);
   }
 
@@ -105,6 +115,7 @@ class GraphViewCanvasController
 
   /// Adds a new state centred in the current viewport.
   void addStateAtCenter() {
+    _logAutomatonCanvas('addStateAtCenter requested');
     addStateAt(Offset.zero);
   }
 
@@ -115,6 +126,9 @@ class GraphViewCanvasController
     final isFirstState = nodesCache.isEmpty &&
         (_provider.state.currentAutomaton?.states.isEmpty ?? true);
 
+    _logAutomatonCanvas(
+      'addStateAt -> id=$nodeId label=$label position=(${worldPosition.dx.toStringAsFixed(2)}, ${worldPosition.dy.toStringAsFixed(2)}) isFirstState=$isFirstState',
+    );
     performMutation(() {
       _provider.addState(
         id: nodeId,
@@ -129,6 +143,9 @@ class GraphViewCanvasController
 
   /// Moves an existing state to a new [position].
   void moveState(String id, Offset position) {
+    _logAutomatonCanvas(
+      'moveState -> id=$id position=(${position.dx.toStringAsFixed(2)}, ${position.dy.toStringAsFixed(2)})',
+    );
     performMutation(() {
       _provider.moveState(
         id: id,
@@ -141,6 +158,7 @@ class GraphViewCanvasController
   /// Updates the label displayed for the state identified by [id].
   void updateStateLabel(String id, String label) {
     final resolvedLabel = label.isEmpty ? id : label;
+    _logAutomatonCanvas('updateStateLabel -> id=$id label=$resolvedLabel');
     performMutation(() {
       _provider.updateStateLabel(
         id: id,
@@ -151,6 +169,7 @@ class GraphViewCanvasController
 
   /// Removes the state identified by [id] from the automaton.
   void removeState(String id) {
+    _logAutomatonCanvas('removeState -> id=$id');
     performMutation(() {
       _provider.removeState(id: id);
     });
@@ -166,6 +185,9 @@ class GraphViewCanvasController
     double? controlPointY,
   }) {
     final edgeId = transitionId ?? _generateEdgeId();
+    _logAutomatonCanvas(
+      'addOrUpdateTransition -> id=$edgeId from=$fromStateId to=$toStateId label=$label cp=(${controlPointX?.toStringAsFixed(2)}, ${controlPointY?.toStringAsFixed(2)})',
+    );
     performMutation(() {
       _provider.addOrUpdateTransition(
         id: edgeId,
@@ -180,6 +202,7 @@ class GraphViewCanvasController
 
   /// Removes the transition identified by [id] from the automaton.
   void removeTransition(String id) {
+    _logAutomatonCanvas('removeTransition -> id=$id');
     performMutation(() {
       _provider.removeTransition(id: id);
     });
@@ -214,6 +237,9 @@ class GraphViewCanvasController
       modified: DateTime.now(),
     );
 
+    _logAutomatonCanvas(
+      'applySnapshotToDomain -> states=${merged.states.length} transitions=${merged.transitions.length}',
+    );
     _provider.updateAutomaton(merged);
     synchronize(merged);
   }

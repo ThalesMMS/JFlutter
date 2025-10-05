@@ -29,6 +29,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
   final AutomatonService _automatonService;
   final LayoutRepository _layoutRepository;
   final TracePersistenceService? _tracePersistenceService;
+  int _graphViewMutationCounter = 0;
 
   AutomatonProvider({
     required AutomatonService automatonService,
@@ -38,6 +39,22 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
        _layoutRepository = layoutRepository,
        _tracePersistenceService = tracePersistenceService,
        super(const AutomatonState());
+
+  void _traceGraphView(String operation, [Map<String, Object?>? metadata]) {
+    if (!kDebugMode) {
+      return;
+    }
+
+    final buffer = StringBuffer('[AutomatonProvider] $operation');
+    if (metadata != null && metadata.isNotEmpty) {
+      final formatted = metadata.entries
+          .map((entry) => '${entry.key}=${entry.value}')
+          .join(', ');
+      buffer.write(' {$formatted}');
+    }
+
+    debugPrint(buffer.toString());
+  }
 
   /// Creates a new automaton
   Future<void> createAutomaton({
@@ -100,6 +117,14 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     bool? isInitial,
     bool? isAccepting,
   }) {
+    _traceGraphView('addState', {
+      'id': id,
+      'label': label,
+      'x': x.toStringAsFixed(2),
+      'y': y.toStringAsFixed(2),
+      'initial': isInitial,
+      'accepting': isAccepting,
+    });
     _mutateAutomaton((current) {
       final List<State> updatedStates = [];
       bool found = false;
@@ -184,6 +209,11 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
 
   /// Moves a state to a new position on the canvas.
   void moveState({required String id, required double x, required double y}) {
+    _traceGraphView('moveState', {
+      'id': id,
+      'x': x.toStringAsFixed(2),
+      'y': y.toStringAsFixed(2),
+    });
     _mutateAutomaton((current) {
       final updatedStates = current.states
           .map(
@@ -217,8 +247,10 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
 
   /// Removes the state identified by [id] along with connected transitions.
   void removeState({required String id}) {
+    _traceGraphView('removeState', {'id': id});
     _mutateAutomaton((current) {
       if (current.states.every((state) => state.id != id)) {
+        _traceGraphView('removeState skipped', {'id': id, 'reason': 'not-found'});
         return current;
       }
 
@@ -299,11 +331,24 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     double? controlPointX,
     double? controlPointY,
   }) {
+    _traceGraphView('addOrUpdateTransition', {
+      'id': id,
+      'from': fromStateId,
+      'to': toStateId,
+      'label': label,
+      'cpX': controlPointX?.toStringAsFixed(2),
+      'cpY': controlPointY?.toStringAsFixed(2),
+    });
     _mutateAutomaton((current) {
       final statesById = {for (final state in current.states) state.id: state};
       final fromState = statesById[fromStateId];
       final toState = statesById[toStateId];
       if (fromState == null || toState == null) {
+        _traceGraphView('addOrUpdateTransition skipped', {
+          'id': id,
+          'missingFrom': fromState == null,
+          'missingTo': toState == null,
+        });
         return current;
       }
 
@@ -358,12 +403,17 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
 
   /// Removes the transition identified by [id] from the automaton.
   void removeTransition({required String id}) {
+    _traceGraphView('removeTransition', {'id': id});
     _mutateAutomaton((current) {
       final transitions = current.transitions
           .whereType<FSATransition>()
           .toList();
       final index = transitions.indexWhere((transition) => transition.id == id);
       if (index < 0) {
+        _traceGraphView('removeTransition skipped', {
+          'id': id,
+          'reason': 'not-found',
+        });
         return current;
       }
 
@@ -378,6 +428,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
 
   /// Updates the label of an existing state.
   void updateStateLabel({required String id, required String label}) {
+    _traceGraphView('updateStateLabel', {'id': id, 'label': label});
     _mutateAutomaton((current) {
       final updatedStates = current.states
           .map((state) => state.id == id ? state.copyWith(label: label) : state)
@@ -415,8 +466,17 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       return;
     }
 
+    _traceGraphView('updateStateFlags', {
+      'id': id,
+      'isInitial': isInitial,
+      'isAccepting': isAccepting,
+    });
     _mutateAutomaton((current) {
       if (current.states.every((state) => state.id != id)) {
+        _traceGraphView('updateStateFlags skipped', {
+          'id': id,
+          'reason': 'not-found',
+        });
         return current;
       }
 
@@ -464,12 +524,17 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
 
   /// Updates the label (and symbol set) of an existing transition.
   void updateTransitionLabel({required String id, required String label}) {
+    _traceGraphView('updateTransitionLabel', {'id': id, 'label': label});
     _mutateAutomaton((current) {
       final transitions = current.transitions
           .whereType<FSATransition>()
           .toList();
       final index = transitions.indexWhere((transition) => transition.id == id);
       if (index < 0) {
+        _traceGraphView('updateTransitionLabel skipped', {
+          'id': id,
+          'reason': 'not-found',
+        });
         return current;
       }
 
@@ -498,8 +563,19 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     final current = state.currentAutomaton ?? _createEmptyAutomaton();
     final updated = transform(current);
     if (identical(updated, state.currentAutomaton)) {
+      _traceGraphView('mutation skipped', {'reason': 'identical-snapshot'});
       return;
     }
+
+    _graphViewMutationCounter++;
+    _traceGraphView('mutation applied', {
+      'seq': _graphViewMutationCounter,
+      'states': updated.states.length,
+      'transitions': updated.transitions.length,
+      'initial': updated.initialState?.id,
+      'accepting': updated.acceptingStates.length,
+      'alphabet': updated.alphabet.length,
+    });
 
     state = state.copyWith(
       currentAutomaton: updated,

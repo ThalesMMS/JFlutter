@@ -29,3 +29,11 @@
 - Expandir a suíte de testes cobrindo controladores GraphView, incluindo undo/redo, sincronização de destaques e projeção de overlays.
 - Avaliar algoritmos de layout alternativos para grafos densos e suportar hints de posicionamento manual persistentes.
 - Documentar atalhos de teclado/gestos padronizados e revisar acessibilidade em dispositivos móveis e web.
+
+## 5. Follow-up tickets
+
+| ID | Descrição | Status | Observações |
+| --- | --- | --- | --- |
+| GV-FU-01 | Investigar troca dinâmica de algoritmos de layout (Sugiyama ↔ Fruchterman-Reingold) exposta na toolbar para grafos densos. | Aberto | Instrumentação recém-adicionada em `GraphViewCanvasController` e `BaseGraphViewCanvasController` facilita medir tempos de sincronização por layout.【F:lib/features/canvas/graphview/graphview_canvas_controller.dart†L14-L214】【F:lib/features/canvas/graphview/base_graphview_canvas_controller.dart†L17-L290】 |
+| GV-FU-02 | Cachear projeções de `GraphViewCanvasEdge`/`Node` para reduzir recomputações em drag contínuo. | Aberto | Utilizar contadores `_graphViewMutationCounter` em `AutomatonProvider` para validar ganhos e detectar regressões de sincronização.【F:lib/presentation/providers/automaton_provider.dart†L25-L377】 |
+| GV-FU-03 | Adicionar coleta opcional de métricas (por exemplo, duração de `dispatch` de destaques e número de iterações) ao painel de diagnósticos. | Aberto | `SimulationHighlightService` expõe `dispatchCount`/`lastHighlight`, servindo como fonte para futuros painéis ou eventos telemetry.【F:lib/core/services/simulation_highlight_service.dart†L8-L126】 |

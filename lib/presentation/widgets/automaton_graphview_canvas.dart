@@ -66,11 +66,12 @@ class _AutomatonGraphViewCanvasState
   String? _transitionSourceId;
   OverlayEntry? _transitionOverlayEntry;
   final ValueNotifier<_GraphViewTransitionOverlayState?>
-  _transitionOverlayState = ValueNotifier<_GraphViewTransitionOverlayState?>(
+      _transitionOverlayState = ValueNotifier<_GraphViewTransitionOverlayState?>(
     null,
   );
   FSA? _pendingSyncAutomaton;
   bool _syncScheduled = false;
+  Matrix4? _frozenTransformationMatrix;
 
   TransformationController? get _transformationController =>
       _controller.graphController.transformationController;
@@ -112,6 +113,13 @@ class _AutomatonGraphViewCanvasState
     _scheduleControllerSync(widget.automaton);
     _controller.graphRevision.addListener(_handleGraphRevisionChanged);
     _transformationController?.addListener(_onTransformationChanged);
+
+    if (_activeTool != AutomatonCanvasTool.selection) {
+      final transformation = _transformationController;
+      if (transformation != null) {
+        _frozenTransformationMatrix = Matrix4.copy(transformation.value);
+      }
+    }
 
     if ((widget.automaton?.states.isNotEmpty ?? false)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -171,6 +179,12 @@ class _AutomatonGraphViewCanvasState
         configuration: _buildConfiguration(),
       );
       _transformationController?.addListener(_onTransformationChanged);
+      if (_activeTool != AutomatonCanvasTool.selection) {
+        final transformation = _transformationController;
+        if (transformation != null) {
+          _frozenTransformationMatrix = Matrix4.copy(transformation.value);
+        }
+      }
       _scheduleControllerSync(widget.automaton);
       _controller.graphRevision.addListener(_handleGraphRevisionChanged);
       _hideTransitionOverlay();
@@ -212,6 +226,23 @@ class _AutomatonGraphViewCanvasState
     if (nextTool == _activeTool) {
       return;
     }
+    final previousTool = _activeTool;
+    if (previousTool == AutomatonCanvasTool.selection &&
+        nextTool != AutomatonCanvasTool.selection) {
+      final transformation = _transformationController;
+      if (transformation != null) {
+        _frozenTransformationMatrix = Matrix4.copy(transformation.value);
+      } else {
+        _frozenTransformationMatrix = null;
+      }
+    } else if (nextTool == AutomatonCanvasTool.selection) {
+      _frozenTransformationMatrix = null;
+    } else if (_frozenTransformationMatrix == null) {
+      final transformation = _transformationController;
+      if (transformation != null) {
+        _frozenTransformationMatrix = Matrix4.copy(transformation.value);
+      }
+    }
     setState(() {
       _activeTool = nextTool;
       if (_activeTool != AutomatonCanvasTool.transition) {
@@ -226,6 +257,23 @@ class _AutomatonGraphViewCanvasState
   }
 
   void _onTransformationChanged() {
+    final transformation = _transformationController;
+    var resetTransformation = false;
+    if (_activeTool != AutomatonCanvasTool.selection) {
+      final frozen = _frozenTransformationMatrix;
+      if (transformation != null && frozen != null) {
+        if (!listEquals(
+          transformation.value.storage,
+          frozen.storage,
+        )) {
+          transformation.value = Matrix4.copy(frozen);
+          resetTransformation = true;
+        }
+      }
+    }
+    if (resetTransformation) {
+      return;
+    }
     _updateTransitionOverlayPosition();
     setState(() {});
   }
@@ -754,14 +802,12 @@ class _AutomatonGraphViewCanvasState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final consumePanGestures =
-        _activeTool != AutomatonCanvasTool.selection;
     return GestureDetector(
       key: widget.canvasKey,
       behavior: HitTestBehavior.translucent,
-      onTapUp: _handleCanvasTap,
-      onPanStart: consumePanGestures ? (_) {} : null,
-      onPanUpdate: consumePanGestures ? (_) {} : null,
+      onTapUp: _activeTool == AutomatonCanvasTool.addState
+          ? _handleCanvasTap
+          : null,
       child: ValueListenableBuilder<int>(
         valueListenable: _controller.graphRevision,
         builder: (context, _, __) {

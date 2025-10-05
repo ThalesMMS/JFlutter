@@ -98,6 +98,35 @@ void main() {
       expect(state.position.y, closeTo(24, 0.0001));
     });
 
+    test('addStateAtCenter resolves world position from viewport centre', () {
+      final transformation = controller.graphController.transformationController;
+      expect(transformation, isNotNull);
+      controller.updateViewportSize(const Size(600, 400));
+
+      transformation!.value = Matrix4.identity();
+      controller.addStateAtCenter();
+
+      var tm = notifier.state.tm;
+      expect(tm, isNotNull);
+      var states = tm!.states.toList(growable: false);
+      expect(states, hasLength(1));
+      expect(states.first.position.x, closeTo(300, 0.0001));
+      expect(states.first.position.y, closeTo(200, 0.0001));
+
+      transformation.value = Matrix4.identity()
+        ..translate(-120.0, 80.0)
+        ..scale(0.8);
+      controller.addStateAtCenter();
+
+      tm = notifier.state.tm;
+      expect(tm, isNotNull);
+      states = tm!.states.toList(growable: false);
+      expect(states, hasLength(2));
+      final latest = states.last;
+      expect(latest.position.x, closeTo((300 - (-120)) / 0.8, 0.0001));
+      expect(latest.position.y, closeTo((200 - 80) / 0.8, 0.0001));
+    });
+
     test('addOrUpdateTransition stores TM transition data', () {
       controller.addStateAt(const Offset(0, 0));
       controller.addStateAt(const Offset(160, 100));

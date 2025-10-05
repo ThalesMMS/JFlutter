@@ -100,6 +100,35 @@ void main() {
       expect(state.label, isNotEmpty);
     });
 
+    test('addStateAtCenter maps viewport centre to PDA world coordinates', () {
+      final transformation = controller.graphController.transformationController;
+      expect(transformation, isNotNull);
+      controller.updateViewportSize(const Size(700, 500));
+
+      transformation!.value = Matrix4.identity();
+      controller.addStateAtCenter();
+
+      var pda = notifier.state.pda;
+      expect(pda, isNotNull);
+      var states = pda!.states.toList(growable: false);
+      expect(states, hasLength(1));
+      expect(states.first.position.x, closeTo(350, 0.0001));
+      expect(states.first.position.y, closeTo(250, 0.0001));
+
+      transformation.value = Matrix4.identity()
+        ..translate(60.0, 140.0)
+        ..scale(1.2);
+      controller.addStateAtCenter();
+
+      pda = notifier.state.pda;
+      expect(pda, isNotNull);
+      states = pda!.states.toList(growable: false);
+      expect(states, hasLength(2));
+      final newest = states.last;
+      expect(newest.position.x, closeTo((350 - 60) / 1.2, 0.0001));
+      expect(newest.position.y, closeTo((250 - 140) / 1.2, 0.0001));
+    });
+
     test('addOrUpdateTransition writes transition metadata', () {
       controller.addStateAt(const Offset(0, 0));
       controller.addStateAt(const Offset(120, 80));

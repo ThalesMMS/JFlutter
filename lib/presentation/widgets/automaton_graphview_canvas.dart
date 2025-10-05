@@ -14,6 +14,8 @@ import '../../core/services/simulation_highlight_service.dart';
 import '../../features/canvas/graphview/graphview_canvas_controller.dart';
 import '../../features/canvas/graphview/graphview_canvas_models.dart';
 import '../../features/canvas/graphview/graphview_highlight_channel.dart';
+import '../../features/canvas/graphview/graphview_label_field_editor.dart';
+import '../../features/canvas/graphview/graphview_link_overlay_utils.dart';
 import '../providers/automaton_provider.dart';
 import 'automaton_canvas_tool.dart';
 import 'transition_editors/transition_label_editor.dart';
@@ -60,6 +62,10 @@ class _AutomatonGraphViewCanvasState
   late _AutomatonGraphSugiyamaAlgorithm _algorithm;
   final Set<String> _selectedTransitions = <String>{};
   String? _transitionSourceId;
+  OverlayEntry? _transitionOverlayEntry;
+  final ValueNotifier<_GraphViewTransitionOverlayState?>
+      _transitionOverlayState =
+      ValueNotifier<_GraphViewTransitionOverlayState?>(null);
 
   TransformationController? get _transformationController =>
       _controller.graphController.transformationController;
@@ -100,6 +106,7 @@ class _AutomatonGraphViewCanvasState
     );
 
     _controller.synchronize(widget.automaton);
+    _controller.graphRevision.addListener(_handleGraphRevisionChanged);
     _transformationController?.addListener(_onTransformationChanged);
 
     if ((widget.automaton?.states.isNotEmpty ?? false)) {
@@ -126,6 +133,7 @@ class _AutomatonGraphViewCanvasState
     }
 
     if (oldWidget.controller != widget.controller) {
+      _controller.graphRevision.removeListener(_handleGraphRevisionChanged);
       _transformationController?.removeListener(_onTransformationChanged);
       if (_ownsController) {
         if (_highlightService != null) {
@@ -157,13 +165,18 @@ class _AutomatonGraphViewCanvasState
       );
       _transformationController?.addListener(_onTransformationChanged);
       _controller.synchronize(widget.automaton);
+      _controller.graphRevision.addListener(_handleGraphRevisionChanged);
+      _hideTransitionOverlay();
     } else if (oldWidget.automaton != widget.automaton) {
       _controller.synchronize(widget.automaton);
+      _refreshTransitionOverlayFromGraph();
+      _updateTransitionOverlayPosition();
     }
   }
 
   @override
   void dispose() {
+    _controller.graphRevision.removeListener(_handleGraphRevisionChanged);
     _transformationController?.removeListener(_onTransformationChanged);
     _toolController.removeListener(_handleActiveToolChanged);
     if (_ownsToolController) {
@@ -176,6 +189,9 @@ class _AutomatonGraphViewCanvasState
       _highlightService!.channel = _previousHighlightChannel;
       _highlightChannel = null;
     }
+    _transitionOverlayEntry?.remove();
+    _transitionOverlayEntry = null;
+    _transitionOverlayState.dispose();
     super.dispose();
   }
 
@@ -190,9 +206,13 @@ class _AutomatonGraphViewCanvasState
         _transitionSourceId = null;
       }
     });
+    if (nextTool != AutomatonCanvasTool.transition) {
+      _hideTransitionOverlay();
+    }
   }
 
   void _onTransformationChanged() {
+    _updateTransitionOverlayPosition();
     setState(() {});
   }
 
@@ -258,7 +278,7 @@ class _AutomatonGraphViewCanvasState
   }
 
   void _handleNodePanStart(String nodeId, DragStartDetails details) {
-    _selectedTransitions.clear();
+    _hideTransitionOverlay();
   }
 
   void _handleNodePanUpdate(String nodeId, DragUpdateDetails details) {
@@ -303,12 +323,32 @@ class _AutomatonGraphViewCanvasState
   Future<void> _showTransitionEditor(String fromId, String toId) async {
     final existing = _findExistingEdge(fromId, toId);
     final initialValue = existing?.label ?? '';
-    final controlPoint = existing != null
-        ? Offset(
-            existing.controlPointX ?? 0,
-            existing.controlPointY ?? 0,
-          )
+    final worldAnchor = existing != null
+        ? resolveLinkAnchorWorld(_controller, existing) ??
+            Offset(
+              existing.controlPointX ?? 0,
+              existing.controlPointY ?? 0,
+            )
         : _deriveControlPoint(fromId, toId);
+
+    final overlayDisplayed = _showTransitionOverlay(
+      fromStateId: fromId,
+      toStateId: toId,
+      transitionId: existing?.id,
+      initialValue: initialValue,
+      worldAnchor: worldAnchor,
+    );
+
+    if (overlayDisplayed) {
+      setState(() {
+        _selectedTransitions
+          ..clear();
+        if (existing?.id != null) {
+          _selectedTransitions.add(existing!.id);
+        }
+      });
+      return;
+    }
 
     final label = await showDialog<String?>(
       context: context,
@@ -334,8 +374,8 @@ class _AutomatonGraphViewCanvasState
       toStateId: toId,
       label: label,
       transitionId: existing?.id,
-      controlPointX: controlPoint.dx,
-      controlPointY: controlPoint.dy,
+      controlPointX: worldAnchor.dx,
+      controlPointY: worldAnchor.dy,
     );
   }
 
@@ -371,6 +411,189 @@ class _AutomatonGraphViewCanvasState
     final magnitude = (_kNodeDiameter * 0.8) + existing * 12;
     final normalized = normal / normal.distance * magnitude * direction;
     return midpoint + normalized;
+  }
+
+  void _handleGraphRevisionChanged() {
+    if (!mounted) {
+      return;
+    }
+    _refreshTransitionOverlayFromGraph();
+    _updateTransitionOverlayPosition();
+  }
+
+  void _refreshTransitionOverlayFromGraph() {
+    final state = _transitionOverlayState.value;
+    if (state == null) {
+      return;
+    }
+
+    final transitionId = state.transitionId;
+    if (transitionId != null) {
+      final edge = _controller.edgeById(transitionId);
+      if (edge == null) {
+        _hideTransitionOverlay();
+        return;
+      }
+      final anchor =
+          resolveLinkAnchorWorld(_controller, edge) ?? state.worldAnchor;
+      _transitionOverlayState.value = state.copyWith(
+        initialValue: edge.label,
+        worldAnchor: anchor,
+      );
+      final shouldUpdateSelection =
+          _selectedTransitions.length != 1 ||
+              !_selectedTransitions.contains(transitionId);
+      if (shouldUpdateSelection) {
+        setState(() {
+          _selectedTransitions
+            ..clear()
+            ..add(transitionId);
+        });
+      }
+    } else {
+      final anchor =
+          _deriveControlPoint(state.fromStateId, state.toStateId);
+      _transitionOverlayState.value =
+          state.copyWith(worldAnchor: anchor);
+    }
+  }
+
+  void _updateTransitionOverlayPosition() {
+    final state = _transitionOverlayState.value;
+    if (state == null) {
+      return;
+    }
+    final transformation = _transformationController;
+    final overlay = Overlay.maybeOf(context);
+    if (transformation == null || overlay == null) {
+      return;
+    }
+    final overlayBox = overlay.context.findRenderObject() as RenderBox?;
+    if (overlayBox == null || !overlayBox.hasSize) {
+      return;
+    }
+    final global = projectWorldPointToOverlay(
+      canvasKey: widget.canvasKey,
+      transformationController: transformation,
+      worldOffset: state.worldAnchor,
+    );
+    if (global == null) {
+      return;
+    }
+    final overlayPosition = overlayBox.globalToLocal(global);
+    if ((overlayPosition - state.overlayPosition).distance <= 0.5) {
+      return;
+    }
+    _transitionOverlayState.value =
+        state.copyWith(overlayPosition: overlayPosition);
+  }
+
+  bool _showTransitionOverlay({
+    required String fromStateId,
+    required String toStateId,
+    required String initialValue,
+    required Offset worldAnchor,
+    String? transitionId,
+  }) {
+    final overlayState = Overlay.maybeOf(context);
+    final transformation = _transformationController;
+    if (overlayState == null || transformation == null) {
+      return false;
+    }
+    final overlayBox = overlayState.context.findRenderObject() as RenderBox?;
+    if (overlayBox == null || !overlayBox.hasSize) {
+      return false;
+    }
+    final global = projectWorldPointToOverlay(
+      canvasKey: widget.canvasKey,
+      transformationController: transformation,
+      worldOffset: worldAnchor,
+    );
+    if (global == null) {
+      return false;
+    }
+    final overlayPosition = overlayBox.globalToLocal(global);
+    _ensureTransitionOverlay(overlayState);
+    _transitionOverlayState.value = _GraphViewTransitionOverlayState(
+      fromStateId: fromStateId,
+      toStateId: toStateId,
+      initialValue: initialValue,
+      worldAnchor: worldAnchor,
+      overlayPosition: overlayPosition,
+      transitionId: transitionId,
+    );
+    return true;
+  }
+
+  void _ensureTransitionOverlay(OverlayState overlayState) {
+    if (_transitionOverlayEntry != null) {
+      return;
+    }
+    _transitionOverlayEntry = OverlayEntry(
+      builder: (context) {
+        return Material(
+          type: MaterialType.transparency,
+          child: ValueListenableBuilder<
+              _GraphViewTransitionOverlayState?>(
+            valueListenable: _transitionOverlayState,
+            builder: (context, state, _) {
+              if (state == null) {
+                return const SizedBox.shrink();
+              }
+              return Stack(
+                children: [
+                  Positioned(
+                    left: state.overlayPosition.dx,
+                    top: state.overlayPosition.dy,
+                    child: FractionalTranslation(
+                      translation: const Offset(-0.5, -1.0),
+                      child: GraphViewLabelFieldEditor(
+                        initialValue: state.initialValue,
+                        onSubmit: (value) =>
+                            _handleOverlaySubmit(state, value),
+                        onCancel: _hideTransitionOverlay,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+    overlayState.insert(_transitionOverlayEntry!);
+  }
+
+  void _handleOverlaySubmit(
+    _GraphViewTransitionOverlayState state,
+    String label,
+  ) {
+    _controller.addOrUpdateTransition(
+      fromStateId: state.fromStateId,
+      toStateId: state.toStateId,
+      label: label,
+      transitionId: state.transitionId,
+      controlPointX: state.worldAnchor.dx,
+      controlPointY: state.worldAnchor.dy,
+    );
+    _hideTransitionOverlay();
+  }
+
+  void _hideTransitionOverlay() {
+    final hadOverlay = _transitionOverlayState.value != null;
+    final hadSelection = _selectedTransitions.isNotEmpty;
+    if (hadOverlay) {
+      _transitionOverlayState.value = null;
+    }
+    if (hadOverlay || hadSelection) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _selectedTransitions.clear();
+      });
+    }
   }
 
   bool _isNodeHighlighted(
@@ -481,6 +704,39 @@ class _AutomatonGraphViewCanvasState
           );
         },
       ),
+    );
+  }
+}
+
+class _GraphViewTransitionOverlayState {
+  const _GraphViewTransitionOverlayState({
+    required this.fromStateId,
+    required this.toStateId,
+    required this.initialValue,
+    required this.worldAnchor,
+    required this.overlayPosition,
+    this.transitionId,
+  });
+
+  final String fromStateId;
+  final String toStateId;
+  final String initialValue;
+  final Offset worldAnchor;
+  final Offset overlayPosition;
+  final String? transitionId;
+
+  _GraphViewTransitionOverlayState copyWith({
+    String? initialValue,
+    Offset? worldAnchor,
+    Offset? overlayPosition,
+  }) {
+    return _GraphViewTransitionOverlayState(
+      fromStateId: fromStateId,
+      toStateId: toStateId,
+      initialValue: initialValue ?? this.initialValue,
+      worldAnchor: worldAnchor ?? this.worldAnchor,
+      overlayPosition: overlayPosition ?? this.overlayPosition,
+      transitionId: transitionId,
     );
   }
 }

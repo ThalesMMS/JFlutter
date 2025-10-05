@@ -5,8 +5,9 @@ import 'package:jflutter/presentation/widgets/mobile_automaton_controls.dart';
 import 'package:jflutter/presentation/widgets/automaton_canvas_tool.dart';
 
 void main() {
-  testWidgets('MobileAutomatonControls surfaces canvas and workspace actions',
-      (tester) async {
+  testWidgets('MobileAutomatonControls surfaces canvas and workspace actions', (
+    tester,
+  ) async {
     var simulateInvoked = false;
     var algorithmInvoked = false;
     var metricsInvoked = false;
@@ -18,8 +19,6 @@ void main() {
         home: Scaffold(
           body: MobileAutomatonControls(
             onAddState: () => addStateInvoked = true,
-            onZoomIn: () {},
-            onZoomOut: () {},
             onFitToContent: () {},
             onResetView: () {},
             onClear: () => clearInvoked = true,
@@ -63,8 +62,6 @@ void main() {
         home: Scaffold(
           body: MobileAutomatonControls(
             onAddState: () {},
-            onZoomIn: () {},
-            onZoomOut: () {},
             onFitToContent: () {},
             onResetView: () {},
             onSimulate: () {},
@@ -102,8 +99,6 @@ void main() {
             onSelectTool: () => selectionInvoked = true,
             onAddState: () => addStateInvoked = true,
             onAddTransition: () => transitionInvoked = true,
-            onZoomIn: () {},
-            onZoomOut: () {},
             onFitToContent: () {},
             onResetView: () {},
           ),

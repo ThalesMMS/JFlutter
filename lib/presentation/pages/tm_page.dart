@@ -168,8 +168,6 @@ class _TMPageState extends ConsumerState<TMPage> {
             builder: (context, _) {
               return MobileAutomatonControls(
                 onAddState: _canvasController.addStateAtCenter,
-                onZoomIn: _canvasController.zoomIn,
-                onZoomOut: _canvasController.zoomOut,
                 onFitToContent: _canvasController.fitToContent,
                 onResetView: _canvasController.resetView,
                 onClear: () {

@@ -16,8 +16,6 @@ class MobileAutomatonControls extends StatelessWidget {
     this.onSelectTool,
     required this.onAddState,
     this.onAddTransition,
-    required this.onZoomIn,
-    required this.onZoomOut,
     required this.onFitToContent,
     required this.onResetView,
     this.onClear,
@@ -32,22 +30,20 @@ class MobileAutomatonControls extends StatelessWidget {
     this.isAlgorithmsEnabled = true,
     this.onMetrics,
     this.isMetricsEnabled = true,
-  })  : assert(
-          !enableToolSelection || onSelectTool != null,
-          'onSelectTool must be provided when tool selection is enabled.',
-        ),
-        assert(
-          !enableToolSelection || onAddTransition != null,
-          'onAddTransition must be provided when tool selection is enabled.',
-        );
+  }) : assert(
+         !enableToolSelection || onSelectTool != null,
+         'onSelectTool must be provided when tool selection is enabled.',
+       ),
+       assert(
+         !enableToolSelection || onAddTransition != null,
+         'onAddTransition must be provided when tool selection is enabled.',
+       );
 
   final bool enableToolSelection;
   final AutomatonCanvasTool activeTool;
   final VoidCallback? onSelectTool;
   final VoidCallback onAddState;
   final VoidCallback? onAddTransition;
-  final VoidCallback onZoomIn;
-  final VoidCallback onZoomOut;
   final VoidCallback onFitToContent;
   final VoidCallback onResetView;
   final VoidCallback? onClear;
@@ -91,12 +87,6 @@ class MobileAutomatonControls extends StatelessWidget {
     ];
 
     final canvasActions = <_ControlAction>[
-      if (onUndo != null)
-        _ControlAction(
-          icon: Icons.undo,
-          tooltip: 'Undo',
-          onPressed: canUndo ? onUndo : null,
-        ),
       if (onRedo != null)
         _ControlAction(
           icon: Icons.redo,
@@ -116,8 +106,8 @@ class MobileAutomatonControls extends StatelessWidget {
         tooltip: 'Add state',
         onPressed: onAddState,
         isToggle: enableToolSelection,
-        isSelected: enableToolSelection &&
-            activeTool == AutomatonCanvasTool.addState,
+        isSelected:
+            enableToolSelection && activeTool == AutomatonCanvasTool.addState,
       ),
       if (onAddTransition != null)
         _ControlAction(
@@ -125,19 +115,10 @@ class MobileAutomatonControls extends StatelessWidget {
           label: 'Add transition',
           onPressed: onAddTransition,
           isToggle: enableToolSelection,
-          isSelected: enableToolSelection &&
+          isSelected:
+              enableToolSelection &&
               activeTool == AutomatonCanvasTool.transition,
         ),
-      _ControlAction(
-        icon: Icons.zoom_in,
-        tooltip: 'Zoom in',
-        onPressed: onZoomIn,
-      ),
-      _ControlAction(
-        icon: Icons.zoom_out,
-        tooltip: 'Zoom out',
-        onPressed: onZoomOut,
-      ),
       _ControlAction(
         icon: Icons.fit_screen,
         tooltip: 'Fit to content',
@@ -153,6 +134,12 @@ class MobileAutomatonControls extends StatelessWidget {
           icon: Icons.delete_outline,
           tooltip: 'Clear canvas',
           onPressed: onClear,
+        ),
+      if (onUndo != null)
+        _ControlAction(
+          icon: Icons.undo,
+          tooltip: 'Undo',
+          onPressed: canUndo ? onUndo : null,
         ),
     ];
 
@@ -248,9 +235,8 @@ class _ControlAction {
   final bool isToggle;
   final bool isSelected;
 
-  String get effectiveTooltip => (tooltip?.trim().isNotEmpty == true)
-      ? tooltip!
-      : (label ?? '');
+  String get effectiveTooltip =>
+      (tooltip?.trim().isNotEmpty == true) ? tooltip! : (label ?? '');
 }
 
 class _MobileControlButton extends StatelessWidget {
@@ -284,23 +270,21 @@ class _MobileControlButton extends StatelessWidget {
         backgroundColor: selected
             ? colorScheme.secondaryContainer
             : null, // deixa default quando não selecionado
-        foregroundColor: selected
-            ? colorScheme.onSecondaryContainer
-            : null,
+        foregroundColor: selected ? colorScheme.onSecondaryContainer : null,
       ),
     );
 
     final Widget button = switch (style) {
       _ButtonStyleVariant.filled => IconButton.filled(
-          onPressed: action.onPressed,
-          style: effectiveStyle,
-          icon: Icon(action.icon),
-        ),
+        onPressed: action.onPressed,
+        style: effectiveStyle,
+        icon: Icon(action.icon),
+      ),
       _ButtonStyleVariant.tonal => IconButton.filledTonal(
-          onPressed: action.onPressed,
-          style: effectiveStyle,
-          icon: Icon(action.icon),
-        ),
+        onPressed: action.onPressed,
+        style: effectiveStyle,
+        icon: Icon(action.icon),
+      ),
     };
 
     // Mantém acessibilidade e tooltip (fallback para label se tooltip não vier).

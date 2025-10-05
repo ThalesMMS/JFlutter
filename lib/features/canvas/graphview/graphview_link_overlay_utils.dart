@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 
 import '../../../core/constants/automaton_canvas.dart';
 import 'graphview_canvas_controller.dart';
@@ -34,27 +33,6 @@ Offset? resolveLinkAnchorWorld(
     (fromCenter.dx + toCenter.dx) / 2,
     (fromCenter.dy + toCenter.dy) / 2,
   );
-}
-
-/// Converts a world [offset] into a screen-space position relative to the
-/// overlay associated with [canvasKey].
-Offset? projectWorldPointToOverlay({
-  required GlobalKey canvasKey,
-  required TransformationController transformationController,
-  required Offset worldOffset,
-}) {
-  final renderObject = canvasKey.currentContext?.findRenderObject();
-  if (renderObject is! RenderBox || !renderObject.hasSize) {
-    return null;
-  }
-
-  final matrix = transformationController.value;
-  final projected = MatrixUtils.transformPoint(matrix, worldOffset);
-  if (!projected.dx.isFinite || !projected.dy.isFinite) {
-    return null;
-  }
-
-  return renderObject.localToGlobal(projected);
 }
 
 /// Returns the node center in world coordinates.

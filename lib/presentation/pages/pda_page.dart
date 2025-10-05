@@ -361,8 +361,6 @@ class _PDAPageState extends ConsumerState<PDAPage> {
             builder: (context, _) {
               return MobileAutomatonControls(
                 onAddState: _canvasController.addStateAtCenter,
-                onZoomIn: _canvasController.zoomIn,
-                onZoomOut: _canvasController.zoomOut,
                 onFitToContent: _canvasController.fitToContent,
                 onResetView: _canvasController.resetView,
                 onClear: () => ref

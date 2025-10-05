@@ -412,8 +412,6 @@ class _FSAPageState extends ConsumerState<FSAPage> {
                   onAddState: _handleAddStatePressed,
                   onAddTransition: () =>
                       _toggleCanvasTool(AutomatonCanvasTool.transition),
-                  onZoomIn: _canvasController.zoomIn,
-                  onZoomOut: _canvasController.zoomOut,
                   onFitToContent: _canvasController.fitToContent,
                   onResetView: _canvasController.resetView,
                   onClear: () =>

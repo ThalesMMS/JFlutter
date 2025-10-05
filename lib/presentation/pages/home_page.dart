@@ -98,7 +98,8 @@ class _HomePageState extends ConsumerState<HomePage> {
     final currentIndex = ref.watch(homeNavigationProvider);
     final isMobile =
         screenSize.width < 1024; // Better breakpoint for modern devices
-    final hasCanvasHighlight = currentIndex == 0 || currentIndex == 2 || currentIndex == 3;
+    final hasCanvasHighlight =
+        currentIndex == 0 || currentIndex == 2 || currentIndex == 3;
 
     // Handle navigation changes
     if (_lastNavigationIndex != currentIndex) {
@@ -107,7 +108,8 @@ class _HomePageState extends ConsumerState<HomePage> {
           return;
         }
 
-        final currentPage = _pageController.page?.round() ?? _pageController.initialPage;
+        final currentPage =
+            _pageController.page?.round() ?? _pageController.initialPage;
         if (currentPage == currentIndex) {
           return;
         }
@@ -198,12 +200,8 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget? _buildFloatingActionButton(BuildContext context, int currentIndex) {
     // Show different FABs based on current page
     switch (currentIndex) {
-      case 0: // FSA
-        return FloatingActionButton(
-          onPressed: () => _createNewAutomaton(context),
-          tooltip: 'Create New Automaton',
-          child: const Icon(Icons.add),
-        );
+      case 0: // FSA – redundant, handled via canvas toolbar
+        return null;
       case 1: // Grammar
         return FloatingActionButton(
           onPressed: () => _createNewGrammar(context),

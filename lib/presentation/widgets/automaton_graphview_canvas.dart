@@ -25,6 +25,7 @@ import 'transition_editors/transition_label_editor.dart';
 
 const double _kNodeDiameter = kAutomatonStateDiameter;
 const double _kNodeRadius = _kNodeDiameter / 2;
+const Size _kInitialArrowSize = Size(24, 12);
 
 /// GraphView-based canvas used to render and edit automatons.
 class AutomatonGraphViewCanvas extends ConsumerStatefulWidget {
@@ -510,6 +511,100 @@ class _AutomatonGraphViewCanvasState
     _showTransitionEditor(sourceId, nodeId);
   }
 
+  void _handleNodeLongPress(String nodeId) {
+    if (_activeTool != AutomatonCanvasTool.selection) {
+      return;
+    }
+    final node = _controller.nodeById(nodeId);
+    if (node == null) {
+      return;
+    }
+    _showStateOptions(node);
+  }
+
+  Future<void> _showStateOptions(GraphViewCanvasNode node) async {
+    final labelController = TextEditingController(text: node.label);
+    var isInitial = node.isInitial;
+    var isAccepting = node.isAccepting;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        final theme = Theme.of(context);
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
+          child: StatefulBuilder(
+            builder: (context, setModalState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    node.label.isEmpty ? node.id : node.label,
+                    style: theme.textTheme.titleMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: labelController,
+                    decoration: const InputDecoration(labelText: 'State label'),
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (value) {
+                      final resolved = value.trim();
+                      if (resolved != node.label) {
+                        _controller.updateStateLabel(node.id, resolved);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  SwitchListTile.adaptive(
+                    value: isInitial,
+                    title: const Text('Initial state'),
+                    onChanged: (value) {
+                      setModalState(() => isInitial = value);
+                      _controller.updateStateFlags(node.id, isInitial: value);
+                    },
+                  ),
+                  SwitchListTile.adaptive(
+                    value: isAccepting,
+                    title: const Text('Final state'),
+                    onChanged: (value) {
+                      setModalState(() => isAccepting = value);
+                      _controller.updateStateFlags(node.id, isAccepting: value);
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: () {
+                      final resolved = labelController.text.trim();
+                      if (resolved != node.label) {
+                        _controller.updateStateLabel(node.id, resolved);
+                      }
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Save changes'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Close'),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+
+    labelController.dispose();
+  }
+
   List<GraphViewCanvasEdge> _findExistingEdges(String fromId, String toId) {
     return _controller.edges
         .where((edge) => edge.fromStateId == fromId && edge.toStateId == toId)
@@ -744,24 +839,15 @@ class _AutomatonGraphViewCanvasState
     if (state == null) {
       return;
     }
-    final transformation = _transformationController;
     final overlay = Overlay.maybeOf(context);
-    if (transformation == null || overlay == null) {
+    if (overlay == null) {
       return;
     }
     final overlayBox = overlay.context.findRenderObject() as RenderBox?;
     if (overlayBox == null || !overlayBox.hasSize) {
       return;
     }
-    final global = projectWorldPointToOverlay(
-      canvasKey: widget.canvasKey,
-      transformationController: transformation,
-      worldOffset: state.worldAnchor,
-    );
-    if (global == null) {
-      return;
-    }
-    final overlayPosition = overlayBox.globalToLocal(global);
+    final overlayPosition = overlayBox.size.center(Offset.zero);
     if ((overlayPosition - state.overlayPosition).distance <= 0.5) {
       return;
     }
@@ -778,23 +864,14 @@ class _AutomatonGraphViewCanvasState
     String? transitionId,
   }) {
     final overlayState = Overlay.maybeOf(context);
-    final transformation = _transformationController;
-    if (overlayState == null || transformation == null) {
+    if (overlayState == null) {
       return false;
     }
     final overlayBox = overlayState.context.findRenderObject() as RenderBox?;
     if (overlayBox == null || !overlayBox.hasSize) {
       return false;
     }
-    final global = projectWorldPointToOverlay(
-      canvasKey: widget.canvasKey,
-      transformationController: transformation,
-      worldOffset: worldAnchor,
-    );
-    if (global == null) {
-      return false;
-    }
-    final overlayPosition = overlayBox.globalToLocal(global);
+    final overlayPosition = overlayBox.size.center(Offset.zero);
     _ensureTransitionOverlay(overlayState);
     _transitionOverlayState.value = _GraphViewTransitionOverlayState(
       fromStateId: fromStateId,
@@ -827,7 +904,7 @@ class _AutomatonGraphViewCanvasState
                     left: state.overlayPosition.dx,
                     top: state.overlayPosition.dy,
                     child: FractionalTranslation(
-                      translation: const Offset(-0.5, -1.0),
+                      translation: const Offset(-0.5, -0.5),
                       child: GraphViewLabelFieldEditor(
                         initialValue: state.initialValue,
                         onSubmit: (value) => _handleOverlaySubmit(state, value),
@@ -1048,6 +1125,23 @@ class _AutomatonGraphViewCanvasState
           },
         );
 
+    gestures[_NodeLongPressGestureRecognizer] =
+        GestureRecognizerFactoryWithHandlers<_NodeLongPressGestureRecognizer>(
+          () => _NodeLongPressGestureRecognizer(
+            hitTester: (global) =>
+                _hitTestNode(_globalToCanvasLocal(global), logDetails: false),
+            toolResolver: () => _activeTool,
+            onPointerDown: (global) => _logCanvasTapFromGlobal(
+              source: 'long-press-pointer',
+              globalPosition: global,
+            ),
+          ),
+          (recognizer) {
+            recognizer.onNodeLongPress = (node) =>
+                _handleNodeLongPress(node.id);
+          },
+        );
+
     return gestures;
   }
 }
@@ -1176,10 +1270,10 @@ class _AutomatonGraphNode extends StatelessWidget {
           ),
           if (isInitial)
             Positioned(
-              left: -16,
-              top: _kNodeRadius - 6,
+              left: -_kInitialArrowSize.width + 1,
+              top: _kNodeRadius - (_kInitialArrowSize.height / 2),
               child: CustomPaint(
-                size: const Size(24, 12),
+                size: _kInitialArrowSize,
                 painter: _InitialStateArrowPainter(color: borderColor),
               ),
             ),
@@ -1213,9 +1307,9 @@ class _InitialStateArrowPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     final path = Path()
-      ..moveTo(size.width, 0)
-      ..lineTo(0, size.height / 2)
-      ..lineTo(size.width, size.height)
+      ..moveTo(0, 0)
+      ..lineTo(size.width, size.height / 2)
+      ..lineTo(0, size.height)
       ..close();
     canvas.drawPath(path, paint);
   }
@@ -1563,5 +1657,55 @@ class _NodeTapGestureRecognizer extends TapGestureRecognizer {
   void rejectGesture(int pointer) {
     _downNode = null;
     super.rejectGesture(pointer);
+  }
+}
+
+class _NodeLongPressGestureRecognizer extends LongPressGestureRecognizer {
+  _NodeLongPressGestureRecognizer({
+    required this.hitTester,
+    required this.toolResolver,
+    this.onPointerDown,
+  }) {
+    super.onLongPress = _invokeNodeLongPress;
+  }
+
+  final _NodeHitTester hitTester;
+  final _ToolResolver toolResolver;
+  final ValueChanged<Offset>? onPointerDown;
+
+  ValueChanged<GraphViewCanvasNode>? onNodeLongPress;
+  GraphViewCanvasNode? _candidate;
+
+  @override
+  void addAllowedPointer(PointerDownEvent event) {
+    onPointerDown?.call(event.position);
+    if (toolResolver() != AutomatonCanvasTool.selection) {
+      return;
+    }
+    final node = hitTester(event.position);
+    if (node == null) {
+      return;
+    }
+    _candidate = node;
+    super.addAllowedPointer(event);
+  }
+
+  @override
+  void rejectGesture(int pointer) {
+    _candidate = null;
+    super.rejectGesture(pointer);
+  }
+
+  @override
+  void didStopTrackingLastPointer(int pointer) {
+    _candidate = null;
+    super.didStopTrackingLastPointer(pointer);
+  }
+
+  void _invokeNodeLongPress() {
+    final node = _candidate;
+    if (node != null) {
+      onNodeLongPress?.call(node);
+    }
   }
 }

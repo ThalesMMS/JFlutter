@@ -26,11 +26,11 @@ class GraphViewCanvasController
     GraphViewController? viewController,
     TransformationController? transformationController,
   }) : super(
-          notifier: automatonProvider,
-          graph: graph,
-          viewController: viewController,
-          transformationController: transformationController,
-        );
+         notifier: automatonProvider,
+         graph: graph,
+         viewController: viewController,
+         transformationController: transformationController,
+       );
 
   AutomatonProvider get _provider => notifier;
 
@@ -124,7 +124,8 @@ class GraphViewCanvasController
   void addStateAt(Offset worldPosition) {
     final nodeId = _generateNodeId();
     final label = _nextAvailableStateLabel();
-    final isFirstState = nodesCache.isEmpty &&
+    final isFirstState =
+        nodesCache.isEmpty &&
         (_provider.state.currentAutomaton?.states.isEmpty ?? true);
 
     _logAutomatonCanvas(
@@ -148,11 +149,7 @@ class GraphViewCanvasController
       'moveState -> id=$id position=(${position.dx.toStringAsFixed(2)}, ${position.dy.toStringAsFixed(2)})',
     );
     performMutation(() {
-      _provider.moveState(
-        id: id,
-        x: position.dx,
-        y: position.dy,
-      );
+      _provider.moveState(id: id, x: position.dx, y: position.dy);
     });
   }
 
@@ -161,10 +158,7 @@ class GraphViewCanvasController
     final resolvedLabel = label.isEmpty ? id : label;
     _logAutomatonCanvas('updateStateLabel -> id=$id label=$resolvedLabel');
     performMutation(() {
-      _provider.updateStateLabel(
-        id: id,
-        label: resolvedLabel,
-      );
+      _provider.updateStateLabel(id: id, label: resolvedLabel);
     });
   }
 
@@ -173,6 +167,23 @@ class GraphViewCanvasController
     _logAutomatonCanvas('removeState -> id=$id');
     performMutation(() {
       _provider.removeState(id: id);
+    });
+  }
+
+  /// Updates the initial/final flags associated with the state [id].
+  void updateStateFlags(String id, {bool? isInitial, bool? isAccepting}) {
+    _logAutomatonCanvas(
+      'updateStateFlags -> id=$id isInitial=$isInitial isAccepting=$isAccepting',
+    );
+    if (isInitial == null && isAccepting == null) {
+      return;
+    }
+    performMutation(() {
+      _provider.updateStateFlags(
+        id: id,
+        isInitial: isInitial,
+        isAccepting: isAccepting,
+      );
     });
   }
 
@@ -211,9 +222,11 @@ class GraphViewCanvasController
 
   @override
   void applySnapshotToDomain(GraphViewAutomatonSnapshot snapshot) {
-    final template = _provider.state.currentAutomaton ??
+    final template =
+        _provider.state.currentAutomaton ??
         FSA(
-          id: snapshot.metadata.id ??
+          id:
+              snapshot.metadata.id ??
               'automaton_${DateTime.now().microsecondsSinceEpoch}',
           name: snapshot.metadata.name ?? 'Untitled Automaton',
           states: const {},
@@ -228,15 +241,15 @@ class GraphViewCanvasController
           zoomLevel: 1.0,
         );
 
-    final merged = GraphViewAutomatonMapper.mergeIntoTemplate(snapshot, template)
-        .copyWith(
-      id: snapshot.metadata.id ?? template.id,
-      name: snapshot.metadata.name ?? template.name,
-      alphabet: snapshot.metadata.alphabet.isNotEmpty
-          ? snapshot.metadata.alphabet.toSet()
-          : template.alphabet,
-      modified: DateTime.now(),
-    );
+    final merged =
+        GraphViewAutomatonMapper.mergeIntoTemplate(snapshot, template).copyWith(
+          id: snapshot.metadata.id ?? template.id,
+          name: snapshot.metadata.name ?? template.name,
+          alphabet: snapshot.metadata.alphabet.isNotEmpty
+              ? snapshot.metadata.alphabet.toSet()
+              : template.alphabet,
+          modified: DateTime.now(),
+        );
 
     _logAutomatonCanvas(
       'applySnapshotToDomain -> states=${merged.states.length} transitions=${merged.transitions.length}',

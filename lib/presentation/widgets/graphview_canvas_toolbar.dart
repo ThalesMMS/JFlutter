@@ -100,20 +100,8 @@ class _GraphViewCanvasToolbarState extends State<GraphViewCanvasToolbar> {
               widget.activeTool == AutomatonCanvasTool.transition,
         ),
       _ToolbarButtonConfig(
-        action: _ToolbarAction.undo,
-        handler: controller.canUndo ? () => controller.undo() : null,
-      ),
-      _ToolbarButtonConfig(
         action: _ToolbarAction.redo,
         handler: controller.canRedo ? () => controller.redo() : null,
-      ),
-      _ToolbarButtonConfig(
-        action: _ToolbarAction.zoomIn,
-        handler: controller.zoomIn,
-      ),
-      _ToolbarButtonConfig(
-        action: _ToolbarAction.zoomOut,
-        handler: controller.zoomOut,
       ),
       _ToolbarButtonConfig(
         action: _ToolbarAction.fitContent,
@@ -128,6 +116,10 @@ class _GraphViewCanvasToolbarState extends State<GraphViewCanvasToolbar> {
           action: _ToolbarAction.clear,
           handler: widget.onClear!,
         ),
+      _ToolbarButtonConfig(
+        action: _ToolbarAction.undo,
+        handler: controller.canUndo ? () => controller.undo() : null,
+      ),
     ];
 
     switch (widget.layout) {
@@ -340,8 +332,6 @@ enum _ToolbarAction {
   transition(icon: Icons.arrow_right_alt, label: 'Add transition'),
   undo(icon: Icons.undo, label: 'Undo'),
   redo(icon: Icons.redo, label: 'Redo'),
-  zoomIn(icon: Icons.zoom_in, label: 'Zoom in'),
-  zoomOut(icon: Icons.zoom_out, label: 'Zoom out'),
   fitContent(icon: Icons.fit_screen, label: 'Fit to content'),
   resetView(icon: Icons.center_focus_strong, label: 'Reset view'),
   clear(icon: Icons.delete_outline, label: 'Clear canvas');

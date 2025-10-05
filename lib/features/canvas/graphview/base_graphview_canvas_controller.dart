@@ -71,6 +71,10 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
   GraphViewCanvasNode? nodeById(String id) => _nodes[id];
   GraphViewCanvasEdge? edgeById(String id) => _edges[id];
 
+  /// Returns the world position of the graph node with the provided [id].
+  @visibleForTesting
+  Offset? nodePosition(String id) => _graphNodes[id]?.position;
+
   bool get canUndo => _undoHistory.isNotEmpty;
   bool get canRedo => _redoHistory.isNotEmpty;
 

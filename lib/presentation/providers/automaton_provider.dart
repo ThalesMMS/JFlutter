@@ -15,6 +15,7 @@ import '../../core/models/fsa.dart';
 import '../../core/models/fsa_transition.dart';
 import '../../core/models/state.dart';
 import '../../core/models/transition.dart';
+import '../../core/constants/automaton_canvas.dart';
 import '../../core/models/grammar.dart';
 import '../../core/models/simulation_result.dart' as sim_result;
 import '../../core/entities/automaton_entity.dart';
@@ -250,7 +251,10 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     _traceGraphView('removeState', {'id': id});
     _mutateAutomaton((current) {
       if (current.states.every((state) => state.id != id)) {
-        _traceGraphView('removeState skipped', {'id': id, 'reason': 'not-found'});
+        _traceGraphView('removeState skipped', {
+          'id': id,
+          'reason': 'not-found',
+        });
         return current;
       }
 
@@ -353,6 +357,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       }
 
       final parsedLabel = _parseTransitionLabel(label);
+      final resolvedLabel = _formatTransitionLabel(label, parsedLabel);
       final transitions = current.transitions
           .whereType<FSATransition>()
           .toList();
@@ -360,17 +365,28 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
         (transition) => transition.id == id,
       );
 
-      final controlPoint = controlPointX != null && controlPointY != null
-          ? Vector2(controlPointX, controlPointY)
-          : null;
+      Vector2? controlPoint;
+      if (controlPointX != null && controlPointY != null) {
+        controlPoint = Vector2(controlPointX, controlPointY);
+      }
+
+      final isSelfLoop = fromState.id == toState.id;
+      if (controlPoint == null && isSelfLoop) {
+        controlPoint = _defaultLoopControlPoint(fromState);
+      }
 
       if (existingIndex >= 0) {
         final existing = transitions[existingIndex];
+        final existingControl = controlPoint ?? existing.controlPoint;
+        final resolvedControlPoint =
+            isSelfLoop && _isZeroVector(existingControl)
+            ? _defaultLoopControlPoint(fromState)
+            : existingControl;
         transitions[existingIndex] = existing.copyWith(
           fromState: fromState,
           toState: toState,
-          label: label,
-          controlPoint: controlPoint ?? existing.controlPoint,
+          label: resolvedLabel,
+          controlPoint: resolvedControlPoint,
           inputSymbols: parsedLabel.symbols,
           lambdaSymbol: parsedLabel.lambdaSymbol,
         );
@@ -380,7 +396,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
             id: id,
             fromState: fromState,
             toState: toState,
-            label: label,
+            label: resolvedLabel,
             controlPoint: controlPoint,
             inputSymbols: parsedLabel.symbols,
             lambdaSymbol: parsedLabel.lambdaSymbol,
@@ -539,11 +555,18 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       }
 
       final parsedLabel = _parseTransitionLabel(label);
+      final resolvedLabel = _formatTransitionLabel(label, parsedLabel);
       final existing = transitions[index];
+      final isSelfLoop = existing.fromState.id == existing.toState.id;
+      final resolvedControlPoint =
+          isSelfLoop && _isZeroVector(existing.controlPoint)
+          ? _defaultLoopControlPoint(existing.fromState)
+          : existing.controlPoint;
       transitions[index] = existing.copyWith(
-        label: label,
+        label: resolvedLabel,
         inputSymbols: parsedLabel.symbols,
         lambdaSymbol: parsedLabel.lambdaSymbol,
+        controlPoint: resolvedControlPoint,
       );
 
       final updatedAlphabet = _mergeAlphabet(
@@ -608,7 +631,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
   ) {
     final trimmed = label.trim();
     if (trimmed.isEmpty) {
-      return (symbols: <String>{}, lambdaSymbol: null);
+      return (symbols: <String>{}, lambdaSymbol: 'ε');
     }
 
     final normalized = trimmed.replaceAll(RegExp(r'\s+'), '');
@@ -623,6 +646,36 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
         .where((symbol) => symbol.isNotEmpty)
         .toSet();
     return (symbols: parts, lambdaSymbol: null);
+  }
+
+  String _formatTransitionLabel(
+    String rawLabel,
+    ({Set<String> symbols, String? lambdaSymbol}) metadata,
+  ) {
+    if (metadata.lambdaSymbol != null) {
+      return 'ε';
+    }
+
+    final collapsed = rawLabel.trim().replaceAll(RegExp(r'\s+'), '');
+    if (collapsed.isNotEmpty) {
+      return collapsed;
+    }
+
+    if (metadata.symbols.isNotEmpty) {
+      return metadata.symbols.join(',');
+    }
+
+    return 'ε';
+  }
+
+  Vector2 _defaultLoopControlPoint(State state) {
+    const radius = kAutomatonStateDiameter / 2;
+    return Vector2(state.position.x + radius, state.position.y - radius);
+  }
+
+  bool _isZeroVector(Vector2 vector) {
+    const epsilon = 1e-3;
+    return vector.x.abs() < epsilon && vector.y.abs() < epsilon;
   }
 
   Set<String> _mergeAlphabet(Set<String> alphabet, Set<String> additions) {

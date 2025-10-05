@@ -672,10 +672,7 @@ class _AutomatonGraphViewCanvasState
       fromNode.x + _kNodeRadius,
       fromNode.y + _kNodeRadius,
     );
-    final toCenter = Offset(
-      toNode.x + _kNodeRadius,
-      toNode.y + _kNodeRadius,
-    );
+    final toCenter = Offset(toNode.x + _kNodeRadius, toNode.y + _kNodeRadius);
 
     if (fromId == toId) {
       return fromCenter.translate(0, -_kNodeDiameter);
@@ -1015,43 +1012,41 @@ class _AutomatonGraphViewCanvasState
     final gestures = <Type, GestureRecognizerFactory>{
       _NodePanGestureRecognizer:
           GestureRecognizerFactoryWithHandlers<_NodePanGestureRecognizer>(
-        () => _NodePanGestureRecognizer(
-          hitTester: (global) =>
-              _hitTestNode(_globalToCanvasLocal(global), logDetails: false),
-          toolResolver: () => _activeTool,
-          onPointerDown: (global) => _logCanvasTapFromGlobal(
-            source: 'pan-pointer',
-            globalPosition: global,
+            () => _NodePanGestureRecognizer(
+              hitTester: (global) =>
+                  _hitTestNode(_globalToCanvasLocal(global), logDetails: false),
+              toolResolver: () => _activeTool,
+              onPointerDown: (global) => _logCanvasTapFromGlobal(
+                source: 'pan-pointer',
+                globalPosition: global,
+              ),
+            ),
+            (recognizer) {
+              recognizer
+                ..onStart = _handleNodePanStart
+                ..onUpdate = _handleNodePanUpdate
+                ..onEnd = _handleNodePanEnd
+                ..onCancel = _handleNodePanCancel
+                ..dragStartBehavior = DragStartBehavior.down;
+            },
           ),
-        ),
-        (recognizer) {
-          recognizer
-            ..onStart = _handleNodePanStart
-            ..onUpdate = _handleNodePanUpdate
-            ..onEnd = _handleNodePanEnd
-            ..onCancel = _handleNodePanCancel
-            ..dragStartBehavior = DragStartBehavior.down;
-        },
-      ),
     };
 
-    if (_activeTool != AutomatonCanvasTool.transition) {
-      gestures[_NodeTapGestureRecognizer] =
-          GestureRecognizerFactoryWithHandlers<_NodeTapGestureRecognizer>(
-        () => _NodeTapGestureRecognizer(
-          hitTester: (global) =>
-              _hitTestNode(_globalToCanvasLocal(global), logDetails: false),
-          toolResolver: () => _activeTool,
-          onPointerDown: (global) => _logCanvasTapFromGlobal(
-            source: 'tap-pointer',
-            globalPosition: global,
+    gestures[_NodeTapGestureRecognizer] =
+        GestureRecognizerFactoryWithHandlers<_NodeTapGestureRecognizer>(
+          () => _NodeTapGestureRecognizer(
+            hitTester: (global) =>
+                _hitTestNode(_globalToCanvasLocal(global), logDetails: false),
+            toolResolver: () => _activeTool,
+            onPointerDown: (global) => _logCanvasTapFromGlobal(
+              source: 'tap-pointer',
+              globalPosition: global,
+            ),
           ),
-        ),
-        (recognizer) {
-          recognizer.onNodeTap = (node) => _handleNodeTap(node.id);
-        },
-      );
-    }
+          (recognizer) {
+            recognizer.onNodeTap = (node) => _handleNodeTap(node.id);
+          },
+        );
 
     return gestures;
   }
@@ -1269,8 +1264,7 @@ class _GraphViewEdgePainter extends CustomPainter {
 
       final fromCenter = Offset(from.x + _kNodeRadius, from.y + _kNodeRadius);
       final toCenter = Offset(to.x + _kNodeRadius, to.y + _kNodeRadius);
-      final controlPoint =
-          _resolveControlPoint(edge, fromCenter, toCenter);
+      final controlPoint = _resolveControlPoint(edge, fromCenter, toCenter);
 
       final isHighlighted = highlightedTransitions.contains(edge.id);
       final isSelected = selectedTransitions.contains(edge.id);
@@ -1320,10 +1314,9 @@ class _GraphViewEdgePainter extends CustomPainter {
       canvas.drawPath(path, paint);
       _drawArrowHead(canvas, end, direction, color);
 
-      final labelAnchor = controlPoint ?? Offset(
-        (start.dx + end.dx) / 2,
-        (start.dy + end.dy) / 2,
-      );
+      final labelAnchor =
+          controlPoint ??
+          Offset((start.dx + end.dx) / 2, (start.dy + end.dy) / 2);
       _drawEdgeLabel(canvas, labelAnchor, edge.label, color);
     }
   }

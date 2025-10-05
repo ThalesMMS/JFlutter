@@ -91,7 +91,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
   }
 
   /// Adds a new state or updates an existing one using coordinates supplied by
-  /// the fl_nodes canvas controllers.
+  /// the GraphView canvas controllers.
   void addState({
     required String id,
     required String label,
@@ -144,14 +144,15 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       } else if (isInitial == false) {
         normalizedStates = updatedStates
             .map(
-              (state) => state.id == id
-                  ? state.copyWith(isInitial: false)
-                  : state,
+              (state) =>
+                  state.id == id ? state.copyWith(isInitial: false) : state,
             )
             .toList();
       }
 
-      final statesById = {for (final state in normalizedStates) state.id: state};
+      final statesById = {
+        for (final state in normalizedStates) state.id: state,
+      };
       final updatedTransitions = _rebindTransitions(
         current.transitions.whereType<FSATransition>(),
         statesById,
@@ -160,9 +161,12 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       final initialStateId = isInitial == true
           ? id
           : current.initialState?.id ??
-              normalizedStates.firstWhereOrNull((state) => state.isInitial)?.id;
-      final initialState =
-          initialStateId != null ? statesById[initialStateId] : null;
+                normalizedStates
+                    .firstWhereOrNull((state) => state.isInitial)
+                    ?.id;
+      final initialState = initialStateId != null
+          ? statesById[initialStateId]
+          : null;
 
       final acceptingStates = statesById.values
           .where((state) => state.isAccepting)
@@ -179,11 +183,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
   }
 
   /// Moves a state to a new position on the canvas.
-  void moveState({
-    required String id,
-    required double x,
-    required double y,
-  }) {
+  void moveState({required String id, required double x, required double y}) {
     _mutateAutomaton((current) {
       final updatedStates = current.states
           .map(
@@ -206,8 +206,9 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       return current.copyWith(
         states: statesById.values.toSet(),
         transitions: updatedTransitions.map<Transition>((t) => t).toSet(),
-        initialState:
-            initialStateId != null ? statesById[initialStateId] : null,
+        initialState: initialStateId != null
+            ? statesById[initialStateId]
+            : null,
         acceptingStates: acceptingStates,
         modified: DateTime.now(),
       );
@@ -221,8 +222,9 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
         return current;
       }
 
-      final remainingStates =
-          current.states.where((state) => state.id != id).toList(growable: false);
+      final remainingStates = current.states
+          .where((state) => state.id != id)
+          .toList(growable: false);
 
       if (remainingStates.isEmpty) {
         return current.copyWith(
@@ -234,29 +236,34 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
         );
       }
 
-      final initialCandidate = remainingStates
-          .firstWhereOrNull((state) => state.id == current.initialState?.id);
+      final initialCandidate = remainingStates.firstWhereOrNull(
+        (state) => state.id == current.initialState?.id,
+      );
       final resolvedInitial = initialCandidate ?? remainingStates.first;
 
       final normalizedStates = remainingStates
           .map(
             (state) => state.copyWith(
               isInitial: state.id == resolvedInitial.id,
-              isAccepting: current.acceptingStates
-                  .any((accepting) => accepting.id == state.id),
+              isAccepting: current.acceptingStates.any(
+                (accepting) => accepting.id == state.id,
+              ),
             ),
           )
           .toList();
 
-      State? updatedInitial =
-          normalizedStates.firstWhereOrNull((state) => state.isInitial);
+      State? updatedInitial = normalizedStates.firstWhereOrNull(
+        (state) => state.isInitial,
+      );
       if (updatedInitial == null && normalizedStates.isNotEmpty) {
         final fallback = normalizedStates.first.copyWith(isInitial: true);
         normalizedStates[0] = fallback;
         updatedInitial = fallback;
       }
 
-      final statesById = {for (final state in normalizedStates) state.id: state};
+      final statesById = {
+        for (final state in normalizedStates) state.id: state,
+      };
       final filteredTransitions = current.transitions
           .whereType<FSATransition>()
           .where(
@@ -265,10 +272,13 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
           )
           .toList();
 
-      final reboundTransitions =
-          _rebindTransitions(filteredTransitions, statesById);
-      final acceptingStates =
-          statesById.values.where((state) => state.isAccepting).toSet();
+      final reboundTransitions = _rebindTransitions(
+        filteredTransitions,
+        statesById,
+      );
+      final acceptingStates = statesById.values
+          .where((state) => state.isAccepting)
+          .toSet();
 
       return current.copyWith(
         states: statesById.values.toSet(),
@@ -290,9 +300,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     double? controlPointY,
   }) {
     _mutateAutomaton((current) {
-      final statesById = {
-        for (final state in current.states) state.id: state,
-      };
+      final statesById = {for (final state in current.states) state.id: state};
       final fromState = statesById[fromStateId];
       final toState = statesById[toStateId];
       if (fromState == null || toState == null) {
@@ -300,9 +308,12 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       }
 
       final parsedLabel = _parseTransitionLabel(label);
-      final transitions = current.transitions.whereType<FSATransition>().toList();
-      final existingIndex =
-          transitions.indexWhere((transition) => transition.id == id);
+      final transitions = current.transitions
+          .whereType<FSATransition>()
+          .toList();
+      final existingIndex = transitions.indexWhere(
+        (transition) => transition.id == id,
+      );
 
       final controlPoint = controlPointX != null && controlPointY != null
           ? Vector2(controlPointX, controlPointY)
@@ -348,7 +359,9 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
   /// Removes the transition identified by [id] from the automaton.
   void removeTransition({required String id}) {
     _mutateAutomaton((current) {
-      final transitions = current.transitions.whereType<FSATransition>().toList();
+      final transitions = current.transitions
+          .whereType<FSATransition>()
+          .toList();
       final index = transitions.indexWhere((transition) => transition.id == id);
       if (index < 0) {
         return current;
@@ -364,17 +377,10 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
   }
 
   /// Updates the label of an existing state.
-  void updateStateLabel({
-    required String id,
-    required String label,
-  }) {
+  void updateStateLabel({required String id, required String label}) {
     _mutateAutomaton((current) {
       final updatedStates = current.states
-          .map(
-            (state) => state.id == id
-                ? state.copyWith(label: label)
-                : state,
-          )
+          .map((state) => state.id == id ? state.copyWith(label: label) : state)
           .toList();
       final statesById = {for (final state in updatedStates) state.id: state};
       final updatedTransitions = _rebindTransitions(
@@ -390,8 +396,9 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       return current.copyWith(
         states: statesById.values.toSet(),
         transitions: updatedTransitions.map<Transition>((t) => t).toSet(),
-        initialState:
-            initialStateId != null ? statesById[initialStateId] : null,
+        initialState: initialStateId != null
+            ? statesById[initialStateId]
+            : null,
         acceptingStates: acceptingStates,
         modified: DateTime.now(),
       );
@@ -413,24 +420,19 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
         return current;
       }
 
-      final updatedStates = current.states
-          .map((state) {
-            var newInitial = state.isInitial;
-            var newAccepting = state.isAccepting;
+      final updatedStates = current.states.map((state) {
+        var newInitial = state.isInitial;
+        var newAccepting = state.isAccepting;
 
-            if (state.id == id) {
-              newInitial = isInitial ?? state.isInitial;
-              newAccepting = isAccepting ?? state.isAccepting;
-            } else if (isInitial == true) {
-              newInitial = false;
-            }
+        if (state.id == id) {
+          newInitial = isInitial ?? state.isInitial;
+          newAccepting = isAccepting ?? state.isAccepting;
+        } else if (isInitial == true) {
+          newInitial = false;
+        }
 
-            return state.copyWith(
-              isInitial: newInitial,
-              isAccepting: newAccepting,
-            );
-          })
-          .toList();
+        return state.copyWith(isInitial: newInitial, isAccepting: newAccepting);
+      }).toList();
 
       if (!updatedStates.any((state) => state.isInitial) &&
           updatedStates.isNotEmpty) {
@@ -443,10 +445,12 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
         statesById,
       );
 
-      final initialState =
-          updatedStates.firstWhereOrNull((state) => state.isInitial);
-      final acceptingStates =
-          statesById.values.where((state) => state.isAccepting).toSet();
+      final initialState = updatedStates.firstWhereOrNull(
+        (state) => state.isInitial,
+      );
+      final acceptingStates = statesById.values
+          .where((state) => state.isAccepting)
+          .toSet();
 
       return current.copyWith(
         states: statesById.values.toSet(),
@@ -459,12 +463,11 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
   }
 
   /// Updates the label (and symbol set) of an existing transition.
-  void updateTransitionLabel({
-    required String id,
-    required String label,
-  }) {
+  void updateTransitionLabel({required String id, required String label}) {
     _mutateAutomaton((current) {
-      final transitions = current.transitions.whereType<FSATransition>().toList();
+      final transitions = current.transitions
+          .whereType<FSATransition>()
+          .toList();
       final index = transitions.indexWhere((transition) => transition.id == id);
       if (index < 0) {
         return current;
@@ -1141,8 +1144,9 @@ final automatonProvider =
     });
 
 /// Provides a lazily constructed GraphView canvas controller for automata.
-final graphViewCanvasControllerProvider =
-    Provider<GraphViewCanvasController>((ref) {
+final graphViewCanvasControllerProvider = Provider<GraphViewCanvasController>((
+  ref,
+) {
   final automatonNotifier = ref.read(automatonProvider.notifier);
   final controller = GraphViewCanvasController(
     automatonProvider: automatonNotifier,

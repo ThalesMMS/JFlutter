@@ -64,8 +64,9 @@ class _AutomatonGraphViewCanvasState
   String? _transitionSourceId;
   OverlayEntry? _transitionOverlayEntry;
   final ValueNotifier<_GraphViewTransitionOverlayState?>
-      _transitionOverlayState =
-      ValueNotifier<_GraphViewTransitionOverlayState?>(null);
+  _transitionOverlayState = ValueNotifier<_GraphViewTransitionOverlayState?>(
+    null,
+  );
 
   TransformationController? get _transformationController =>
       _controller.graphController.transformationController;
@@ -125,7 +126,8 @@ class _AutomatonGraphViewCanvasState
       if (_ownsToolController) {
         _toolController.dispose();
       }
-      final nextController = widget.toolController ?? AutomatonCanvasToolController();
+      final nextController =
+          widget.toolController ?? AutomatonCanvasToolController();
       _toolController = nextController;
       _ownsToolController = widget.toolController == null;
       _toolController.addListener(_handleActiveToolChanged);
@@ -155,7 +157,9 @@ class _AutomatonGraphViewCanvasState
         final highlightService = ref.read(canvasHighlightServiceProvider);
         _highlightService = highlightService;
         _previousHighlightChannel = highlightService.channel;
-        final highlightChannel = GraphViewSimulationHighlightChannel(_controller);
+        final highlightChannel = GraphViewSimulationHighlightChannel(
+          _controller,
+        );
         _highlightChannel = highlightChannel;
         highlightService.channel = highlightChannel;
       }
@@ -228,12 +232,16 @@ class _AutomatonGraphViewCanvasState
   double _currentScale() {
     final matrix = _transformationController?.value ?? Matrix4.identity();
     final storage = matrix.storage;
-    final scaleX = math.sqrt(storage[0] * storage[0] +
-        storage[1] * storage[1] +
-        storage[2] * storage[2]);
-    final scaleY = math.sqrt(storage[4] * storage[4] +
-        storage[5] * storage[5] +
-        storage[6] * storage[6]);
+    final scaleX = math.sqrt(
+      storage[0] * storage[0] +
+          storage[1] * storage[1] +
+          storage[2] * storage[2],
+    );
+    final scaleY = math.sqrt(
+      storage[4] * storage[4] +
+          storage[5] * storage[5] +
+          storage[6] * storage[6],
+    );
     if (scaleX == 0 && scaleY == 0) {
       return 1.0;
     }
@@ -256,11 +264,9 @@ class _AutomatonGraphViewCanvasState
     if (determinant == 0) {
       return localPosition;
     }
-    final vector = matrix.transform3(vmath.Vector3(
-      localPosition.dx,
-      localPosition.dy,
-      0,
-    ));
+    final vector = matrix.transform3(
+      vmath.Vector3(localPosition.dx, localPosition.dy, 0),
+    );
     return Offset(vector.x, vector.y);
   }
 
@@ -325,10 +331,7 @@ class _AutomatonGraphViewCanvasState
     final initialValue = existing?.label ?? '';
     final worldAnchor = existing != null
         ? resolveLinkAnchorWorld(_controller, existing) ??
-            Offset(
-              existing.controlPointX ?? 0,
-              existing.controlPointY ?? 0,
-            )
+              Offset(existing.controlPointX ?? 0, existing.controlPointY ?? 0)
         : _deriveControlPoint(fromId, toId);
 
     final overlayDisplayed = _showTransitionOverlay(
@@ -341,8 +344,7 @@ class _AutomatonGraphViewCanvasState
 
     if (overlayDisplayed) {
       setState(() {
-        _selectedTransitions
-          ..clear();
+        _selectedTransitions..clear();
         if (existing?.id != null) {
           _selectedTransitions.add(existing!.id);
         }
@@ -407,7 +409,7 @@ class _AutomatonGraphViewCanvasState
     final existing = _controller.edges.where((edge) {
       return edge.fromStateId == fromId && edge.toStateId == toId;
     }).length;
-    final direction = existing.isEven ? 1 : -1;
+    final direction = existing.isEven ? 1.0 : -1.0;
     final magnitude = (_kNodeDiameter * 0.8) + existing * 12;
     final normalized = normal / normal.distance * magnitude * direction;
     return midpoint + normalized;
@@ -442,7 +444,7 @@ class _AutomatonGraphViewCanvasState
       );
       final shouldUpdateSelection =
           _selectedTransitions.length != 1 ||
-              !_selectedTransitions.contains(transitionId);
+          !_selectedTransitions.contains(transitionId);
       if (shouldUpdateSelection) {
         setState(() {
           _selectedTransitions
@@ -451,10 +453,8 @@ class _AutomatonGraphViewCanvasState
         });
       }
     } else {
-      final anchor =
-          _deriveControlPoint(state.fromStateId, state.toStateId);
-      _transitionOverlayState.value =
-          state.copyWith(worldAnchor: anchor);
+      final anchor = _deriveControlPoint(state.fromStateId, state.toStateId);
+      _transitionOverlayState.value = state.copyWith(worldAnchor: anchor);
     }
   }
 
@@ -484,8 +484,9 @@ class _AutomatonGraphViewCanvasState
     if ((overlayPosition - state.overlayPosition).distance <= 0.5) {
       return;
     }
-    _transitionOverlayState.value =
-        state.copyWith(overlayPosition: overlayPosition);
+    _transitionOverlayState.value = state.copyWith(
+      overlayPosition: overlayPosition,
+    );
   }
 
   bool _showTransitionOverlay({
@@ -533,8 +534,7 @@ class _AutomatonGraphViewCanvasState
       builder: (context) {
         return Material(
           type: MaterialType.transparency,
-          child: ValueListenableBuilder<
-              _GraphViewTransitionOverlayState?>(
+          child: ValueListenableBuilder<_GraphViewTransitionOverlayState?>(
             valueListenable: _transitionOverlayState,
             builder: (context, state, _) {
               if (state == null) {
@@ -549,8 +549,7 @@ class _AutomatonGraphViewCanvasState
                       translation: const Offset(-0.5, -1.0),
                       child: GraphViewLabelFieldEditor(
                         initialValue: state.initialValue,
-                        onSubmit: (value) =>
-                            _handleOverlaySubmit(state, value),
+                        onSubmit: (value) => _handleOverlaySubmit(state, value),
                         onCancel: _hideTransitionOverlay,
                       ),
                     ),
@@ -664,16 +663,18 @@ class _AutomatonGraphViewCanvasState
                         }
                         final canvasNode =
                             _controller.nodeById(nodeId) ??
-                                GraphViewCanvasNode(
-                                  id: nodeId,
-                                  label: nodeId,
-                                  x: node.position.dx,
-                                  y: node.position.dy,
-                                  isInitial: false,
-                                  isAccepting: false,
-                                );
-                        final isHighlighted =
-                            _isNodeHighlighted(canvasNode, highlight);
+                            GraphViewCanvasNode(
+                              id: nodeId,
+                              label: nodeId,
+                              x: node.position.dx,
+                              y: node.position.dy,
+                              isInitial: false,
+                              isAccepting: false,
+                            );
+                        final isHighlighted = _isNodeHighlighted(
+                          canvasNode,
+                          highlight,
+                        );
                         return _AutomatonGraphNode(
                           label: canvasNode.label,
                           isInitial: canvasNode.isInitial,
@@ -919,8 +920,8 @@ class _GraphViewEdgePainter extends CustomPainter {
 
       final fromCenter = Offset(from.x, from.y);
       final toCenter = Offset(to.x, to.y);
-      final controlPoint = (edge.controlPointX != null &&
-              edge.controlPointY != null)
+      final controlPoint =
+          (edge.controlPointX != null && edge.controlPointY != null)
           ? Offset(edge.controlPointX!, edge.controlPointY!)
           : null;
 
@@ -935,16 +936,11 @@ class _GraphViewEdgePainter extends CustomPainter {
         ..strokeCap = StrokeCap.round;
 
       if (edge.fromStateId == edge.toStateId) {
-        final loopPoint = controlPoint ??
-            fromCenter.translate(0, -_kNodeDiameter);
+        final loopPoint =
+            controlPoint ?? fromCenter.translate(0, -_kNodeDiameter);
         final loopPath = _buildLoopPath(fromCenter, loopPoint);
         canvas.drawPath(loopPath.path, paint);
-        _drawArrowHead(
-          canvas,
-          loopPath.tip,
-          loopPath.direction,
-          color,
-        );
+        _drawArrowHead(canvas, loopPath.tip, loopPath.direction, color);
         _drawEdgeLabel(canvas, loopPath.labelAnchor, edge.label, color);
         continue;
       }
@@ -977,18 +973,15 @@ class _GraphViewEdgePainter extends CustomPainter {
       canvas.drawPath(path, paint);
       _drawArrowHead(canvas, end, direction, color);
 
-      final labelAnchor = controlPoint ?? Offset(
-        (start.dx + end.dx) / 2,
-        (start.dy + end.dy) / 2,
-      );
+      final labelAnchor =
+          controlPoint ??
+          Offset((start.dx + end.dx) / 2, (start.dy + end.dy) / 2);
       _drawEdgeLabel(canvas, labelAnchor, edge.label, color);
     }
   }
 
-  ({Path path, Offset tip, Offset direction, Offset labelAnchor}) _buildLoopPath(
-    Offset center,
-    Offset anchor,
-  ) {
+  ({Path path, Offset tip, Offset direction, Offset labelAnchor})
+  _buildLoopPath(Offset center, Offset anchor) {
     final path = Path();
     final start = center + Offset(0, -_kNodeRadius);
     final end = center + Offset(_kNodeRadius * 0.7, -_kNodeRadius * 0.2);
@@ -1052,15 +1045,12 @@ class _GraphViewEdgePainter extends CustomPainter {
     final textPainter = TextPainter(
       text: TextSpan(
         text: label,
-        style: TextStyle(
-          color: color,
-          fontSize: 14,
-        ),
+        style: TextStyle(color: color, fontSize: 14),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
-    final offset = position -
-        Offset(textPainter.width / 2, textPainter.height / 2 + 4);
+    final offset =
+        position - Offset(textPainter.width / 2, textPainter.height / 2 + 4);
     textPainter.paint(canvas, offset);
   }
 

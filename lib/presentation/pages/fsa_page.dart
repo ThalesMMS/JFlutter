@@ -7,14 +7,14 @@ import '../providers/automaton_provider.dart';
 import '../widgets/algorithm_panel.dart';
 import '../widgets/automaton_canvas.dart';
 import '../widgets/automaton_canvas_tool.dart';
-import '../widgets/fl_nodes_canvas_toolbar.dart';
+import '../widgets/graphview_canvas_toolbar.dart';
 import '../widgets/mobile_automaton_controls.dart';
 import '../widgets/simulation_panel.dart';
 import 'grammar_page.dart';
 import 'regex_page.dart';
 import '../../core/services/simulation_highlight_service.dart';
-import '../../features/canvas/fl_nodes/fl_nodes_canvas_controller.dart';
-import '../../features/canvas/fl_nodes/fl_nodes_highlight_channel.dart';
+import '../../features/canvas/graphview/graphview_canvas_controller.dart';
+import '../../features/canvas/graphview/graphview_highlight_channel.dart';
 
 /// Page for working with Finite State Automata
 class FSAPage extends ConsumerStatefulWidget {
@@ -26,19 +26,19 @@ class FSAPage extends ConsumerStatefulWidget {
 
 class _FSAPageState extends ConsumerState<FSAPage> {
   final GlobalKey _canvasKey = GlobalKey();
-  late final FlNodesCanvasController _canvasController;
-  late final FlNodesSimulationHighlightChannel _highlightChannel;
+  late final GraphViewCanvasController _canvasController;
+  late final GraphViewSimulationHighlightChannel _highlightChannel;
   late final SimulationHighlightService _highlightService;
   late final AutomatonCanvasToolController _toolController;
 
   @override
   void initState() {
     super.initState();
-    _canvasController = FlNodesCanvasController(
+    _canvasController = GraphViewCanvasController(
       automatonProvider: ref.read(automatonProvider.notifier),
     );
     _canvasController.synchronize(ref.read(automatonProvider).currentAutomaton);
-    _highlightChannel = FlNodesSimulationHighlightChannel(_canvasController);
+    _highlightChannel = GraphViewSimulationHighlightChannel(_canvasController);
     _highlightService = SimulationHighlightService(channel: _highlightChannel);
     _toolController = AutomatonCanvasToolController();
   }
@@ -391,12 +391,17 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     Widget buildCanvasWithToolbar(Widget child) {
       final hasAutomaton = state.currentAutomaton != null;
 
+      final combinedListenable = Listenable.merge([
+        _toolController,
+        _canvasController.graphRevision,
+      ]);
+
       if (isMobile) {
         return Stack(
           children: [
             Positioned.fill(child: child),
             AnimatedBuilder(
-              animation: _toolController,
+              animation: combinedListenable,
               builder: (context, _) {
                 return MobileAutomatonControls(
                   enableToolSelection: true,
@@ -413,6 +418,14 @@ class _FSAPageState extends ConsumerState<FSAPage> {
                   onResetView: _canvasController.resetView,
                   onClear: () =>
                       ref.read(automatonProvider.notifier).clearAutomaton(),
+                  onUndo: _canvasController.canUndo
+                      ? () => _canvasController.undo()
+                      : null,
+                  onRedo: _canvasController.canRedo
+                      ? () => _canvasController.redo()
+                      : null,
+                  canUndo: _canvasController.canUndo,
+                  canRedo: _canvasController.canRedo,
                   onSimulate: _openSimulationSheet,
                   isSimulationEnabled: hasAutomaton,
                   onAlgorithms: _openAlgorithmSheet,
@@ -429,10 +442,11 @@ class _FSAPageState extends ConsumerState<FSAPage> {
         children: [
           Positioned.fill(child: child),
           AnimatedBuilder(
-            animation: _toolController,
+            animation: combinedListenable,
             builder: (context, _) {
-              return FlNodesCanvasToolbar(
-                layout: FlNodesCanvasToolbarLayout.desktop,
+              return GraphViewCanvasToolbar(
+                layout: GraphViewCanvasToolbarLayout.desktop,
+                controller: _canvasController,
                 enableToolSelection: true,
                 activeTool: _toolController.activeTool,
                 onSelectTool: () => _toolController.setActiveTool(
@@ -441,10 +455,6 @@ class _FSAPageState extends ConsumerState<FSAPage> {
                 onAddState: _handleAddStatePressed,
                 onAddTransition: () =>
                     _toggleCanvasTool(AutomatonCanvasTool.transition),
-                onZoomIn: _canvasController.zoomIn,
-                onZoomOut: _canvasController.zoomOut,
-                onFitToContent: _canvasController.fitToContent,
-                onResetView: _canvasController.resetView,
                 onClear: () =>
                     ref.read(automatonProvider.notifier).clearAutomaton(),
                 statusMessage: statusMessage,

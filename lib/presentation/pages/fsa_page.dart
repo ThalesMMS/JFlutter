@@ -400,6 +400,24 @@ class _FSAPageState extends ConsumerState<FSAPage> {
         return Stack(
           children: [
             Positioned.fill(child: child),
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: SafeArea(
+                minimum: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: _CanvasPrimaryActions(
+                    onSimulate: hasAutomaton ? _openSimulationSheet : null,
+                    onAlgorithms: hasAutomaton ? _openAlgorithmSheet : null,
+                  ),
+                ),
+              ),
+            ),
             AnimatedBuilder(
               animation: combinedListenable,
               builder: (context, _) {
@@ -424,10 +442,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
                       : null,
                   canUndo: _canvasController.canUndo,
                   canRedo: _canvasController.canRedo,
-                  onSimulate: _openSimulationSheet,
-                  isSimulationEnabled: hasAutomaton,
-                  onAlgorithms: _openAlgorithmSheet,
-                  isAlgorithmsEnabled: hasAutomaton,
+                  showPrimaryActions: false,
                   statusMessage: statusMessage,
                 );
               },
@@ -625,6 +640,57 @@ class _FSAPageState extends ConsumerState<FSAPage> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _CanvasPrimaryActions extends StatelessWidget {
+  const _CanvasPrimaryActions({
+    required this.onSimulate,
+    required this.onAlgorithms,
+  });
+
+  final VoidCallback? onSimulate;
+  final VoidCallback? onAlgorithms;
+
+  @override
+  Widget build(BuildContext context) {
+    if (onSimulate == null && onAlgorithms == null) {
+      return const SizedBox.shrink();
+    }
+
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Material(
+      borderRadius: BorderRadius.circular(32),
+      color: colorScheme.surface.withOpacity(0.92),
+      elevation: 6,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (onSimulate != null)
+              Tooltip(
+                message: 'Simulate',
+                child: IconButton.filled(
+                  icon: const Icon(Icons.play_arrow),
+                  onPressed: onSimulate,
+                ),
+              ),
+            if (onSimulate != null && onAlgorithms != null)
+              const SizedBox(width: 8),
+            if (onAlgorithms != null)
+              Tooltip(
+                message: 'Algorithms',
+                child: IconButton.filledTonal(
+                  icon: const Icon(Icons.auto_awesome),
+                  onPressed: onAlgorithms,
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -403,14 +403,10 @@ class _FSAPageState extends ConsumerState<FSAPage> {
             Positioned(
               top: 0,
               left: 0,
-              right: 0,
               child: SafeArea(
-                minimum: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
+                minimum: const EdgeInsets.only(left: 16, top: 12, right: 16),
                 child: Align(
-                  alignment: Alignment.topCenter,
+                  alignment: Alignment.topLeft,
                   child: _CanvasPrimaryActions(
                     onSimulate: hasAutomaton ? _openSimulationSheet : null,
                     onAlgorithms: hasAutomaton ? _openAlgorithmSheet : null,

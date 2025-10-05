@@ -668,20 +668,26 @@ class _AutomatonGraphViewCanvasState
       return Offset.zero;
     }
 
-    final fromOffset = Offset(fromNode.x, fromNode.y);
-    final toOffset = Offset(toNode.x, toNode.y);
+    final fromCenter = Offset(
+      fromNode.x + _kNodeRadius,
+      fromNode.y + _kNodeRadius,
+    );
+    final toCenter = Offset(
+      toNode.x + _kNodeRadius,
+      toNode.y + _kNodeRadius,
+    );
 
     if (fromId == toId) {
-      return fromOffset.translate(0, -_kNodeDiameter);
+      return fromCenter.translate(0, -_kNodeDiameter);
     }
 
     final midpoint = Offset(
-      (fromOffset.dx + toOffset.dx) / 2,
-      (fromOffset.dy + toOffset.dy) / 2,
+      (fromCenter.dx + toCenter.dx) / 2,
+      (fromCenter.dy + toCenter.dy) / 2,
     );
 
-    final dx = toOffset.dx - fromOffset.dx;
-    final dy = toOffset.dy - fromOffset.dy;
+    final dx = toCenter.dx - fromCenter.dx;
+    final dy = toCenter.dy - fromCenter.dy;
     var normal = Offset(-dy, dx);
     if (normal.distanceSquared == 0) {
       normal = const Offset(0, -1);
@@ -1261,12 +1267,10 @@ class _GraphViewEdgePainter extends CustomPainter {
         continue;
       }
 
-      final fromCenter = Offset(from.x, from.y);
-      final toCenter = Offset(to.x, to.y);
+      final fromCenter = Offset(from.x + _kNodeRadius, from.y + _kNodeRadius);
+      final toCenter = Offset(to.x + _kNodeRadius, to.y + _kNodeRadius);
       final controlPoint =
-          (edge.controlPointX != null && edge.controlPointY != null)
-          ? Offset(edge.controlPointX!, edge.controlPointY!)
-          : null;
+          _resolveControlPoint(edge, fromCenter, toCenter);
 
       final isHighlighted = highlightedTransitions.contains(edge.id);
       final isSelected = selectedTransitions.contains(edge.id);
@@ -1316,9 +1320,10 @@ class _GraphViewEdgePainter extends CustomPainter {
       canvas.drawPath(path, paint);
       _drawArrowHead(canvas, end, direction, color);
 
-      final labelAnchor =
-          controlPoint ??
-          Offset((start.dx + end.dx) / 2, (start.dy + end.dy) / 2);
+      final labelAnchor = controlPoint ?? Offset(
+        (start.dx + end.dx) / 2,
+        (start.dy + end.dy) / 2,
+      );
       _drawEdgeLabel(canvas, labelAnchor, edge.label, color);
     }
   }
@@ -1349,6 +1354,32 @@ class _GraphViewEdgePainter extends CustomPainter {
     }
     final normalized = vector / vector.distance;
     return center + normalized * radius;
+  }
+
+  Offset? _resolveControlPoint(
+    GraphViewCanvasEdge edge,
+    Offset fromCenter,
+    Offset toCenter,
+  ) {
+    final rawX = edge.controlPointX;
+    final rawY = edge.controlPointY;
+    if (rawX == null || rawY == null) {
+      return null;
+    }
+
+    final raw = Offset(rawX, rawY);
+    final averageCenter = Offset(
+      (fromCenter.dx + toCenter.dx) / 2,
+      (fromCenter.dy + toCenter.dy) / 2,
+    );
+
+    const legacyOffset = Offset(_kNodeRadius, _kNodeRadius);
+    final legacyCandidate = raw + legacyOffset;
+
+    final rawDistance = (raw - averageCenter).distance;
+    final legacyDistance = (legacyCandidate - averageCenter).distance;
+
+    return legacyDistance < rawDistance ? legacyCandidate : raw;
   }
 
   void _drawArrowHead(

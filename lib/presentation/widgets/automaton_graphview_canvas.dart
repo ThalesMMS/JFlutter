@@ -511,7 +511,7 @@ class _AutomatonGraphViewCanvasState
     _showTransitionEditor(sourceId, nodeId);
   }
 
-  void _handleNodeLongPress(String nodeId) {
+  void _handleNodeContextTap(String nodeId) {
     if (_activeTool != AutomatonCanvasTool.selection) {
       return;
     }
@@ -1125,20 +1125,20 @@ class _AutomatonGraphViewCanvasState
           },
         );
 
-    gestures[_NodeLongPressGestureRecognizer] =
-        GestureRecognizerFactoryWithHandlers<_NodeLongPressGestureRecognizer>(
-          () => _NodeLongPressGestureRecognizer(
+    gestures[_NodeDoubleTapGestureRecognizer] =
+        GestureRecognizerFactoryWithHandlers<_NodeDoubleTapGestureRecognizer>(
+          () => _NodeDoubleTapGestureRecognizer(
             hitTester: (global) =>
                 _hitTestNode(_globalToCanvasLocal(global), logDetails: false),
             toolResolver: () => _activeTool,
             onPointerDown: (global) => _logCanvasTapFromGlobal(
-              source: 'long-press-pointer',
+              source: 'double-tap-pointer',
               globalPosition: global,
             ),
           ),
           (recognizer) {
-            recognizer.onNodeLongPress = (node) =>
-                _handleNodeLongPress(node.id);
+            recognizer.onNodeDoubleTap = (node) =>
+                _handleNodeContextTap(node.id);
           },
         );
 
@@ -1430,22 +1430,34 @@ class _GraphViewEdgePainter extends CustomPainter {
 
   ({Path path, Offset tip, Offset direction, Offset labelAnchor})
   _buildSelfLoopPath(Offset center) {
+    // Shape loosely inspired by References/nfa_2_dfa-main loop rendering.
     const arrowLength = 12.0;
-    final loopRadius = _kNodeRadius * 1.1;
-    final arcCenter = center.translate(0, -loopRadius - _kNodeRadius * 0.15);
-    const startAngle = math.pi * 1.05;
-    const sweepAngle = math.pi * 1.35;
-    final rect = Rect.fromCircle(center: arcCenter, radius: loopRadius);
+    final nodeRadius = _kNodeRadius;
+    final loopRadius = nodeRadius * 1.05;
+    final verticalOffset = nodeRadius * 1.55;
+    final horizontalOffset = nodeRadius * 0.1;
+    final loopCenter = center.translate(horizontalOffset, -verticalOffset);
+    const startAngle = math.pi * 0.35;
+    const sweepAngle = math.pi * 1.55;
+    final rect = Rect.fromCircle(center: loopCenter, radius: loopRadius);
 
-    final path = Path()..addArc(rect, startAngle, sweepAngle);
-
-    final metrics = path.computeMetrics().toList(growable: false);
+    final rawPath = Path()..addArc(rect, startAngle, sweepAngle);
+    final metrics = rawPath.computeMetrics().toList(growable: false);
     if (metrics.isEmpty) {
+      final terminalAngle = startAngle + sweepAngle;
+      final fallbackTip = Offset(
+        loopCenter.dx + loopRadius * math.cos(terminalAngle),
+        loopCenter.dy + loopRadius * math.sin(terminalAngle),
+      );
+      final fallbackDirection = Offset(
+        -math.sin(terminalAngle),
+        math.cos(terminalAngle),
+      );
       return (
-        path: path,
-        tip: center,
-        direction: const Offset(0, -1),
-        labelAnchor: arcCenter.translate(0, -loopRadius * 0.6),
+        path: rawPath,
+        tip: fallbackTip,
+        direction: fallbackDirection,
+        labelAnchor: loopCenter.translate(0, -loopRadius * 1.1),
       );
     }
 
@@ -1457,15 +1469,21 @@ class _GraphViewEdgePainter extends CustomPainter {
 
     final arrowBase =
         metric.getTangentForOffset(trimmedLength)?.position ?? center;
+    final terminalAngle = startAngle + sweepAngle;
+    final computedTip = Offset(
+      loopCenter.dx + loopRadius * math.cos(terminalAngle),
+      loopCenter.dy + loopRadius * math.sin(terminalAngle),
+    );
     final arrowTip =
-        metric.getTangentForOffset(totalLength)?.position ?? center;
-    final bounds = trimmedPath.getBounds();
+        metric.getTangentForOffset(totalLength)?.position ?? computedTip;
+    final direction = arrowTip - arrowBase;
+    final labelAnchor = loopCenter.translate(0, -loopRadius * 1.15);
 
     return (
       path: trimmedPath,
       tip: arrowTip,
-      direction: arrowTip - arrowBase,
-      labelAnchor: Offset(bounds.center.dx, bounds.top - 10),
+      direction: direction,
+      labelAnchor: labelAnchor,
     );
   }
 
@@ -1714,20 +1732,22 @@ class _NodeTapGestureRecognizer extends TapGestureRecognizer {
   }
 }
 
-class _NodeLongPressGestureRecognizer extends LongPressGestureRecognizer {
-  _NodeLongPressGestureRecognizer({
+class _NodeDoubleTapGestureRecognizer extends DoubleTapGestureRecognizer {
+  _NodeDoubleTapGestureRecognizer({
     required this.hitTester,
     required this.toolResolver,
     this.onPointerDown,
   }) {
-    super.onLongPress = _invokeNodeLongPress;
+    onDoubleTapDown = _handleDoubleTapDown;
+    onDoubleTap = _invokeNodeDoubleTap;
+    onDoubleTapCancel = _resetCandidate;
   }
 
   final _NodeHitTester hitTester;
   final _ToolResolver toolResolver;
   final ValueChanged<Offset>? onPointerDown;
 
-  ValueChanged<GraphViewCanvasNode>? onNodeLongPress;
+  ValueChanged<GraphViewCanvasNode>? onNodeDoubleTap;
   GraphViewCanvasNode? _candidate;
 
   @override
@@ -1736,32 +1756,42 @@ class _NodeLongPressGestureRecognizer extends LongPressGestureRecognizer {
     if (toolResolver() != AutomatonCanvasTool.selection) {
       return;
     }
-    final node = hitTester(event.position);
-    if (node == null) {
+    if (hitTester(event.position) == null) {
       return;
     }
-    _candidate = node;
     super.addAllowedPointer(event);
+  }
+
+  void _handleDoubleTapDown(TapDownDetails details) {
+    if (toolResolver() != AutomatonCanvasTool.selection) {
+      _candidate = null;
+      return;
+    }
+    _candidate = hitTester(details.globalPosition);
+    if (_candidate != null) {
+      debugPrint(
+        '[NodeDoubleTapRecognizer] double tap down -> ${_candidate!.id}',
+      );
+    }
+  }
+
+  void _invokeNodeDoubleTap() {
+    final node = _candidate;
+    if (node != null) {
+      debugPrint('[NodeDoubleTapRecognizer] double tap -> ${node.id}');
+      onNodeDoubleTap?.call(node);
+    }
+    _candidate = null;
+  }
+
+  void _resetCandidate() {
+    _candidate = null;
   }
 
   @override
   void rejectGesture(int pointer) {
-    _candidate = null;
+    _resetCandidate();
     super.rejectGesture(pointer);
   }
 
-  @override
-  void didStopTrackingLastPointer(int pointer) {
-    _candidate = null;
-    super.didStopTrackingLastPointer(pointer);
-  }
-
-  void _invokeNodeLongPress() {
-    final node = _candidate;
-    if (node != null) {
-      debugPrint('[NodeLongPressRecognizer] long press -> ${node.id}');
-      onNodeLongPress?.call(node);
-    }
-    _candidate = null;
-  }
 }

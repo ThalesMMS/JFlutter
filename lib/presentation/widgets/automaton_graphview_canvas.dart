@@ -29,6 +29,7 @@ const Size _kInitialArrowSize = Size(24, 12);
 const double _kLoopWidthFactor = 1.2;
 const double _kLoopHeightFactor = 1.75;
 const double _kLoopTightness = 0.9;
+const double _kLoopLabelPositionFactor = 0.5;
 
 /// GraphView-based canvas used to render and edit automatons.
 class AutomatonGraphViewCanvas extends ConsumerStatefulWidget {
@@ -1564,7 +1565,9 @@ class _GraphViewEdgePainter extends CustomPainter {
 /// Builds the geometry for a self-loop rendered around [center].
 ///
 /// The curve is approximated using cubic segments so its width, height and
-/// tightness can be tuned independently for stylistic adjustments.
+/// tightness can be tuned independently for stylistic adjustments. The
+/// `labelPositionFactor` allows shifting the label along the path while keeping
+/// it aligned with the loop tangent.
 @visibleForTesting
 ({Path path, Offset tip, Offset direction, Offset labelAnchor})
     buildSelfLoopGeometry({
@@ -1573,6 +1576,7 @@ class _GraphViewEdgePainter extends CustomPainter {
   double loopWidthFactor = _kLoopWidthFactor,
   double loopHeightFactor = _kLoopHeightFactor,
   double loopTightness = _kLoopTightness,
+  double labelPositionFactor = _kLoopLabelPositionFactor,
 }) {
   const arrowLength = 12.0;
   final horizontalOffset = nodeRadius * 0.1;
@@ -1652,16 +1656,25 @@ class _GraphViewEdgePainter extends CustomPainter {
       ..addPath(metric.extractPath(0, trimmedLength), Offset.zero);
   }
 
-  final arrowBaseTangent = metric.getTangentForOffset(trimmedLength);
+  final arrowBaseTangent =
+      trimmedLength > 0 ? metric.getTangentForOffset(trimmedLength) : null;
   final arrowTipTangent = metric.getTangentForOffset(totalLength);
   final arrowBase = arrowBaseTangent?.position ?? endPoint;
   final arrowTip = arrowTipTangent?.position ?? endPoint;
-  final rawDirection = arrowTip - arrowBase;
+  final tangentVector = arrowTipTangent?.vector;
+  final hasTangent =
+      tangentVector != null && tangentVector.distanceSquared != 0.0;
+  final Offset rawDirection =
+      hasTangent ? tangentVector! : arrowTip - arrowBase;
   final direction = rawDirection.distance == 0
       ? fallbackDirection()
       : rawDirection;
 
-  final labelTangent = metric.getTangentForOffset(totalLength * 0.5);
+  final clampedLabelFactor =
+      labelPositionFactor.clamp(0.0, 1.0).toDouble();
+  final labelTangent = metric.getTangentForOffset(
+    totalLength * clampedLabelFactor,
+  );
   final labelAnchor =
       labelTangent?.position ?? pointOnEllipse(startAngle + sweepAngle / 2);
 

@@ -515,4 +515,26 @@ void main() {
         normalizedDirection.dy * tangent.vector.dy;
     expect(dot, closeTo(1, 0.1));
   });
+
+  test('self-loop geometry label anchor responds to factor', () {
+    const center = Offset(72, 64);
+    const nodeRadius = 26.0;
+
+    final early = buildSelfLoopGeometry(
+      center: center,
+      nodeRadius: nodeRadius,
+      labelPositionFactor: 0.25,
+    );
+
+    final late = buildSelfLoopGeometry(
+      center: center,
+      nodeRadius: nodeRadius,
+      labelPositionFactor: 0.75,
+    );
+
+    expect(early.labelAnchor, isNot(equals(late.labelAnchor)));
+    final earlyDistance = (early.tip - early.labelAnchor).distance;
+    final lateDistance = (late.tip - late.labelAnchor).distance;
+    expect(lateDistance, lessThan(earlyDistance));
+  });
 }

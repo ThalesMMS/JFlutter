@@ -515,4 +515,41 @@ void main() {
         normalizedDirection.dy * tangent.vector.dy;
     expect(dot, closeTo(1, 0.1));
   });
+
+  test('self-loop geometry follows a provided control point anchor', () {
+    const center = Offset(160, 140);
+    const nodeRadius = 28.0;
+    final anchor = center + const Offset(-72, -48);
+
+    final baseline = buildSelfLoopGeometry(
+      center: center,
+      nodeRadius: nodeRadius,
+    );
+
+    final anchored = buildSelfLoopGeometry(
+      center: center,
+      nodeRadius: nodeRadius,
+      anchor: anchor,
+    );
+
+    expect((anchored.tip - baseline.tip).distance, greaterThan(8));
+
+    final anchorVector = anchor - center;
+    final tipVector = anchored.tip - center;
+    final labelVector = anchored.labelAnchor - center;
+
+    final tipAlignment = anchorVector.dx * tipVector.dx +
+        anchorVector.dy * tipVector.dy;
+    final labelAlignment = anchorVector.dx * labelVector.dx +
+        anchorVector.dy * labelVector.dy;
+
+    expect(tipAlignment, greaterThan(0));
+    expect(labelAlignment, greaterThan(0));
+
+    final baselineLabelDistance =
+        (baseline.labelAnchor - anchor).distance;
+    final anchoredLabelDistance =
+        (anchored.labelAnchor - anchor).distance;
+    expect(anchoredLabelDistance, lessThan(baselineLabelDistance));
+  });
 }

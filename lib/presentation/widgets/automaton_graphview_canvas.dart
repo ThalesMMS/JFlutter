@@ -29,6 +29,9 @@ const Size _kInitialArrowSize = Size(24, 12);
 const double _kLoopWidthFactor = 1.2;
 const double _kLoopHeightFactor = 1.75;
 const double _kLoopTightness = 0.9;
+const double _kLoopCenterHorizontalOffsetFactor = 0.1;
+const double _kLoopCenterVerticalOffsetFactor = 1.55;
+const double _kLoopArrowLength = 12.0;
 
 /// GraphView-based canvas used to render and edit automatons.
 class AutomatonGraphViewCanvas extends ConsumerStatefulWidget {
@@ -1394,7 +1397,10 @@ class _GraphViewEdgePainter extends CustomPainter {
         ..strokeCap = StrokeCap.round;
 
       if (edge.fromStateId == edge.toStateId) {
-        final loopGeometry = _buildSelfLoopPath(fromCenter);
+        final loopGeometry = _buildSelfLoopPath(
+          fromCenter,
+          controlPoint: controlPoint,
+        );
         canvas.drawPath(loopGeometry.path, paint);
         _drawArrowHead(canvas, loopGeometry.tip, loopGeometry.direction, color);
         _drawEdgeLabel(canvas, loopGeometry.labelAnchor, edge.label, color);
@@ -1437,10 +1443,14 @@ class _GraphViewEdgePainter extends CustomPainter {
   }
 
   ({Path path, Offset tip, Offset direction, Offset labelAnchor})
-  _buildSelfLoopPath(Offset center) {
+  _buildSelfLoopPath(
+    Offset center, {
+    Offset? controlPoint,
+  }) {
     return buildSelfLoopGeometry(
       center: center,
       nodeRadius: _kNodeRadius,
+      anchor: controlPoint,
       loopWidthFactor: _kLoopWidthFactor,
       loopHeightFactor: _kLoopHeightFactor,
       loopTightness: _kLoopTightness,
@@ -1564,19 +1574,58 @@ class _GraphViewEdgePainter extends CustomPainter {
 /// Builds the geometry for a self-loop rendered around [center].
 ///
 /// The curve is approximated using cubic segments so its width, height and
-/// tightness can be tuned independently for stylistic adjustments.
+/// tightness can be tuned independently for stylistic adjustments. When
+/// [anchor] is provided the canonical loop is rotated and scaled so the
+/// computed center aligns with that control point, matching user-driven loop
+/// adjustments while maintaining consistent styling.
 @visibleForTesting
 ({Path path, Offset tip, Offset direction, Offset labelAnchor})
     buildSelfLoopGeometry({
   required Offset center,
   required double nodeRadius,
+  Offset? anchor,
   double loopWidthFactor = _kLoopWidthFactor,
   double loopHeightFactor = _kLoopHeightFactor,
   double loopTightness = _kLoopTightness,
 }) {
-  const arrowLength = 12.0;
-  final horizontalOffset = nodeRadius * 0.1;
-  final verticalOffset = nodeRadius * 1.55;
+  final rawGeometry = _buildSelfLoopRawGeometry(
+    center: center,
+    nodeRadius: nodeRadius,
+    loopWidthFactor: loopWidthFactor,
+    loopHeightFactor: loopHeightFactor,
+    loopTightness: loopTightness,
+  );
+
+  final geometryWithAnchor = anchor == null
+      ? rawGeometry
+      : _transformSelfLoopRawGeometry(
+          rawGeometry: rawGeometry,
+          center: center,
+          anchor: anchor,
+        );
+
+  return _finalizeSelfLoopGeometry(geometryWithAnchor);
+}
+
+typedef _SelfLoopRawGeometry = ({
+  Path path,
+  Offset endPoint,
+  Offset lastControl,
+  Offset fallbackLabel,
+  Offset loopCenter,
+});
+
+_SelfLoopRawGeometry _buildSelfLoopRawGeometry({
+  required Offset center,
+  required double nodeRadius,
+  required double loopWidthFactor,
+  required double loopHeightFactor,
+  required double loopTightness,
+}) {
+  final horizontalOffset =
+      nodeRadius * _kLoopCenterHorizontalOffsetFactor;
+  final verticalOffset =
+      nodeRadius * _kLoopCenterVerticalOffsetFactor;
   final loopCenter = center.translate(horizontalOffset, -verticalOffset);
   final radiusX = nodeRadius * loopWidthFactor;
   final radiusY = nodeRadius * loopHeightFactor;
@@ -1622,27 +1671,82 @@ class _GraphViewEdgePainter extends CustomPainter {
     endPoint = p3;
   }
 
-  final rawPath = path;
+  final fallbackLabel = pointOnEllipse(startAngle + sweepAngle / 2);
+
+  return (
+    path: path,
+    endPoint: endPoint,
+    lastControl: lastControl,
+    fallbackLabel: fallbackLabel,
+    loopCenter: loopCenter,
+  );
+}
+
+_SelfLoopRawGeometry _transformSelfLoopRawGeometry({
+  required _SelfLoopRawGeometry rawGeometry,
+  required Offset center,
+  required Offset anchor,
+}) {
+  final targetVector = anchor - center;
+  final canonicalVector = rawGeometry.loopCenter - center;
+  final canonicalDistance = canonicalVector.distance;
+  final targetDistance = targetVector.distance;
+  const epsilon = 1e-3;
+
+  if (targetDistance < epsilon || canonicalDistance < epsilon) {
+    return rawGeometry;
+  }
+
+  final rotation = math.atan2(targetVector.dy, targetVector.dx) -
+      math.atan2(canonicalVector.dy, canonicalVector.dx);
+  final scale = targetDistance / canonicalDistance;
+
+  if (!scale.isFinite || scale <= epsilon) {
+    return rawGeometry;
+  }
+
+  final matrix = vmath.Matrix4.identity()
+    ..translate(center.dx, center.dy)
+    ..rotateZ(rotation)
+    ..scale(scale, scale, 1)
+    ..translate(-center.dx, -center.dy);
+
+  Offset transformPoint(Offset point) => _transformOffset(point, matrix);
+
+  final transformedPath = Path.from(rawGeometry.path)
+    ..transform(matrix.storage);
+
+  return (
+    path: transformedPath,
+    endPoint: transformPoint(rawGeometry.endPoint),
+    lastControl: transformPoint(rawGeometry.lastControl),
+    fallbackLabel: transformPoint(rawGeometry.fallbackLabel),
+    loopCenter: transformPoint(rawGeometry.loopCenter),
+  );
+}
+
+({Path path, Offset tip, Offset direction, Offset labelAnchor})
+    _finalizeSelfLoopGeometry(_SelfLoopRawGeometry rawGeometry) {
+  final rawPath = rawGeometry.path;
   final metrics = rawPath.computeMetrics().toList(growable: false);
 
   Offset fallbackDirection() {
-    final candidate = endPoint - lastControl;
+    final candidate = rawGeometry.endPoint - rawGeometry.lastControl;
     return candidate.distance == 0 ? const Offset(1, 0) : candidate;
   }
 
   if (metrics.isEmpty) {
-    final labelPoint = pointOnEllipse(startAngle + sweepAngle / 2);
     return (
       path: rawPath,
-      tip: endPoint,
+      tip: rawGeometry.endPoint,
       direction: fallbackDirection(),
-      labelAnchor: labelPoint,
+      labelAnchor: rawGeometry.fallbackLabel,
     );
   }
 
   final metric = metrics.first;
   final totalLength = metric.length;
-  final trimmedLength = math.max(0.0, totalLength - arrowLength);
+  final trimmedLength = math.max(0.0, totalLength - _kLoopArrowLength);
 
   final Path trimmedPath;
   if (trimmedLength <= 0) {
@@ -1654,8 +1758,8 @@ class _GraphViewEdgePainter extends CustomPainter {
 
   final arrowBaseTangent = metric.getTangentForOffset(trimmedLength);
   final arrowTipTangent = metric.getTangentForOffset(totalLength);
-  final arrowBase = arrowBaseTangent?.position ?? endPoint;
-  final arrowTip = arrowTipTangent?.position ?? endPoint;
+  final arrowBase = arrowBaseTangent?.position ?? rawGeometry.endPoint;
+  final arrowTip = arrowTipTangent?.position ?? rawGeometry.endPoint;
   final rawDirection = arrowTip - arrowBase;
   final direction = rawDirection.distance == 0
       ? fallbackDirection()
@@ -1663,7 +1767,7 @@ class _GraphViewEdgePainter extends CustomPainter {
 
   final labelTangent = metric.getTangentForOffset(totalLength * 0.5);
   final labelAnchor =
-      labelTangent?.position ?? pointOnEllipse(startAngle + sweepAngle / 2);
+      labelTangent?.position ?? rawGeometry.fallbackLabel;
 
   return (
     path: trimmedPath,
@@ -1671,6 +1775,11 @@ class _GraphViewEdgePainter extends CustomPainter {
     direction: direction,
     labelAnchor: labelAnchor,
   );
+}
+
+Offset _transformOffset(Offset point, vmath.Matrix4 matrix) {
+  final vector = matrix.transform3(vmath.Vector3(point.dx, point.dy, 0));
+  return Offset(vector.x, vector.y);
 }
 
 typedef _NodeHitTester = GraphViewCanvasNode? Function(Offset globalPosition);

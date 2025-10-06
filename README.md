@@ -1,14 +1,14 @@
-# JFlutter
+# JFlutter (Work in progress)
 
 A modern, mobile-first Flutter application for learning formal language theory and automata
 
-JFlutter is a complete port of the classic JFLAP educational tool, rebuilt from the ground up with Flutter for modern mobile devices. It provides an interactive, touch-optimized interface for creating, editing, and simulating finite automata, context-free grammars, and other formal language constructs.
+JFlutter is a port of the classic JFLAP educational tool, rebuilt from the ground up with Flutter for modern mobile devices. It provides an interactive, touch-optimized interface for creating, editing, and simulating finite automata, context-free grammars, and other formal language constructs.
 
 <p align="center">
   <img src="./screenshots/screenshot1.png" alt="Automaton canvas screenshot" width="300" />
   <img src="./screenshots/screenshot2.png" alt="Regex module screenshot" width="300" />
   <img src="./screenshots/screenshot3.png" alt="Grammar editor screenshot" width="300" />
-  <img src="./screenshots/screenshot4.png" alt="PDA editor screenshot" width="300" />
+  <img src="./screenshots/screenshot4.png" alt="Pumping Lemma Game screenshot" width="300" />
 </p>
 
 ## Project Status

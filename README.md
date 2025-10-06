@@ -8,7 +8,7 @@ JFlutter is a complete port of the classic JFLAP educational tool, rebuilt from 
   <img src="./screenshots/screenshot1.png" alt="Automaton canvas screenshot" width="300" />
   <img src="./screenshots/screenshot2.png" alt="Regex module screenshot" width="300" />
   <img src="./screenshots/screenshot3.png" alt="Grammar editor screenshot" width="300" />
-  <img src="./screenshots/screenshot4.png" alt="PDA editor screenshot" width="300" />
+  <img src="./screenshots/screenshot4.png" alt="Pumping Lemma Game screenshot" width="300" />
 </p>
 
 ## Project Status

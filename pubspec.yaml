@@ -51,7 +51,10 @@ dependencies:
   # Clipboard support (built into Flutter)
 
   # Graph-based canvas primitives
-  graphview: ^1.5.0
+  graphview:
+    git:
+      url: https://github.com/ThalesMMS/graphview.git
+      ref: loop-edge-renderer
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

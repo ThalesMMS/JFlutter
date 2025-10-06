@@ -363,10 +363,11 @@ packages:
   graphview:
     dependency: "direct main"
     description:
-      name: graphview
-      sha256: "371fc1718cb99a12238e8e759457085619026b38b7e90bc5f9d9916e70b10899"
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: loop-edge-renderer
+      resolved-ref: be2f835d2705b46b6cd1eada9e35e15fb095420b
+      url: "https://github.com/ThalesMMS/graphview.git"
+    source: git
     version: "1.5.0"
   http_multi_server:
     dependency: transitive

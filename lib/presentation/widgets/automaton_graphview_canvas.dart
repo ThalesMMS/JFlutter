@@ -1575,14 +1575,33 @@ class _GraphViewEdgePainter extends CustomPainter {
   double loopTightness = _kLoopTightness,
 }) {
   const arrowLength = 12.0;
+  const baseVerticalFactor = 1.55;
+  const minRadiusFactor = 0.6;
+  final margin = math.max(4.0, nodeRadius * 0.15);
+  final constraint = nodeRadius + margin;
+
   final horizontalOffset = nodeRadius * 0.1;
-  final verticalOffset = nodeRadius * 1.55;
+  var verticalOffset = nodeRadius * baseVerticalFactor;
+  var radiusY = nodeRadius * loopHeightFactor;
+
+  if (verticalOffset - radiusY < constraint) {
+    final delta = (constraint - (verticalOffset - radiusY)) / 2;
+    final minRadiusY = nodeRadius * minRadiusFactor;
+    if (radiusY - delta < minRadiusY) {
+      radiusY = minRadiusY;
+      verticalOffset = radiusY + constraint;
+    } else {
+      radiusY -= delta;
+      verticalOffset += delta;
+    }
+  }
+
   final loopCenter = center.translate(horizontalOffset, -verticalOffset);
   final radiusX = nodeRadius * loopWidthFactor;
-  final radiusY = nodeRadius * loopHeightFactor;
 
   const startAngle = math.pi * 0.35;
   const sweepAngle = math.pi * 1.55;
+  const labelAngle = -math.pi / 2;
 
   Offset pointOnEllipse(double angle) {
     return Offset(
@@ -1631,39 +1650,41 @@ class _GraphViewEdgePainter extends CustomPainter {
   }
 
   if (metrics.isEmpty) {
-    final labelPoint = pointOnEllipse(startAngle + sweepAngle / 2);
+    final labelPoint = pointOnEllipse(labelAngle);
+    final labelAnchor =
+        labelPoint - Offset(0, math.max(12.0, nodeRadius * 0.35));
     return (
       path: rawPath,
       tip: endPoint,
       direction: fallbackDirection(),
-      labelAnchor: labelPoint,
+      labelAnchor: labelAnchor,
     );
   }
 
   final metric = metrics.first;
   final totalLength = metric.length;
-  final trimmedLength = math.max(0.0, totalLength - arrowLength);
+  final arrowBaseLength = math.max(0.0, totalLength - arrowLength);
 
   final Path trimmedPath;
-  if (trimmedLength <= 0) {
+  if (arrowBaseLength <= 0) {
     trimmedPath = rawPath;
   } else {
     trimmedPath = Path()
-      ..addPath(metric.extractPath(0, trimmedLength), Offset.zero);
+      ..addPath(metric.extractPath(0, arrowBaseLength), Offset.zero);
   }
 
-  final arrowBaseTangent = metric.getTangentForOffset(trimmedLength);
-  final arrowTipTangent = metric.getTangentForOffset(totalLength);
+  final arrowBaseTangent = metric.getTangentForOffset(arrowBaseLength);
   final arrowBase = arrowBaseTangent?.position ?? endPoint;
-  final arrowTip = arrowTipTangent?.position ?? endPoint;
-  final rawDirection = arrowTip - arrowBase;
-  final direction = rawDirection.distance == 0
-      ? fallbackDirection()
-      : rawDirection;
+  final tangentVector = arrowBaseTangent?.vector ?? fallbackDirection();
+  final fallbackVector = fallbackDirection();
+  final normalizedTangent = tangentVector.distance == 0
+      ? fallbackVector / fallbackVector.distance
+      : tangentVector / tangentVector.distance;
+  final arrowTip = arrowBase + normalizedTangent * arrowLength;
+  final direction = arrowTip - arrowBase;
 
-  final labelTangent = metric.getTangentForOffset(totalLength * 0.5);
-  final labelAnchor =
-      labelTangent?.position ?? pointOnEllipse(startAngle + sweepAngle / 2);
+  final labelPoint = pointOnEllipse(labelAngle);
+  final labelAnchor = labelPoint - Offset(0, math.max(12.0, nodeRadius * 0.35));
 
   return (
     path: trimmedPath,

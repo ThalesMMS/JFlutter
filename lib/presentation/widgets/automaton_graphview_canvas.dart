@@ -26,9 +26,6 @@ import 'transition_editors/transition_label_editor.dart';
 const double _kNodeDiameter = kAutomatonStateDiameter;
 const double _kNodeRadius = _kNodeDiameter / 2;
 const Size _kInitialArrowSize = Size(24, 12);
-const double _kLoopWidthFactor = 1.2;
-const double _kLoopHeightFactor = 1.75;
-const double _kLoopTightness = 0.9;
 
 /// GraphView-based canvas used to render and edit automatons.
 class AutomatonGraphViewCanvas extends ConsumerStatefulWidget {
@@ -1089,8 +1086,6 @@ class _AutomatonGraphViewCanvasState
   }
 
   Map<Type, GestureRecognizerFactory> _buildGestureRecognizers() {
-    final team = GestureArenaTeam();
-
     final gestures = <Type, GestureRecognizerFactory>{
       _NodePanGestureRecognizer:
           GestureRecognizerFactoryWithHandlers<_NodePanGestureRecognizer>(
@@ -1105,12 +1100,11 @@ class _AutomatonGraphViewCanvasState
             ),
             (recognizer) {
               recognizer
-                ..team = team
                 ..onStart = _handleNodePanStart
                 ..onUpdate = _handleNodePanUpdate
                 ..onEnd = _handleNodePanEnd
                 ..onCancel = _handleNodePanCancel
-                ..dragStartBehavior = DragStartBehavior.start;
+                ..dragStartBehavior = DragStartBehavior.down;
             },
           ),
     };
@@ -1127,7 +1121,6 @@ class _AutomatonGraphViewCanvasState
             ),
           ),
           (recognizer) {
-            recognizer.team = team;
             recognizer.onNodeTap = (node) => _handleNodeTap(node.id);
           },
         );
@@ -1144,7 +1137,6 @@ class _AutomatonGraphViewCanvasState
             ),
           ),
           (recognizer) {
-            recognizer.team = team;
             recognizer.onNodeDoubleTap = (node) =>
                 _handleNodeContextTap(node.id);
           },
@@ -1438,15 +1430,62 @@ class _GraphViewEdgePainter extends CustomPainter {
 
   ({Path path, Offset tip, Offset direction, Offset labelAnchor})
   _buildSelfLoopPath(Offset center) {
-    return buildSelfLoopGeometry(
-      center: center,
-      nodeRadius: _kNodeRadius,
-      loopWidthFactor: _kLoopWidthFactor,
-      loopHeightFactor: _kLoopHeightFactor,
-      loopTightness: _kLoopTightness,
+    // Shape loosely inspired by References/nfa_2_dfa-main loop rendering.
+    const arrowLength = 12.0;
+    final nodeRadius = _kNodeRadius;
+    final loopRadius = nodeRadius * 1.05;
+    final verticalOffset = nodeRadius * 1.55;
+    final horizontalOffset = nodeRadius * 0.1;
+    final loopCenter = center.translate(horizontalOffset, -verticalOffset);
+    const startAngle = math.pi * 0.35;
+    const sweepAngle = math.pi * 1.55;
+    final rect = Rect.fromCircle(center: loopCenter, radius: loopRadius);
+
+    final rawPath = Path()..addArc(rect, startAngle, sweepAngle);
+    final metrics = rawPath.computeMetrics().toList(growable: false);
+    if (metrics.isEmpty) {
+      final terminalAngle = startAngle + sweepAngle;
+      final fallbackTip = Offset(
+        loopCenter.dx + loopRadius * math.cos(terminalAngle),
+        loopCenter.dy + loopRadius * math.sin(terminalAngle),
+      );
+      final fallbackDirection = Offset(
+        -math.sin(terminalAngle),
+        math.cos(terminalAngle),
+      );
+      return (
+        path: rawPath,
+        tip: fallbackTip,
+        direction: fallbackDirection,
+        labelAnchor: loopCenter.translate(0, -loopRadius * 1.1),
+      );
+    }
+
+    final metric = metrics.first;
+    final totalLength = metric.length;
+    final trimmedLength = math.max(0.0, totalLength - arrowLength);
+    final trimmedPath = Path()
+      ..addPath(metric.extractPath(0, trimmedLength), Offset.zero);
+
+    final arrowBase =
+        metric.getTangentForOffset(trimmedLength)?.position ?? center;
+    final terminalAngle = startAngle + sweepAngle;
+    final computedTip = Offset(
+      loopCenter.dx + loopRadius * math.cos(terminalAngle),
+      loopCenter.dy + loopRadius * math.sin(terminalAngle),
+    );
+    final arrowTip =
+        metric.getTangentForOffset(totalLength)?.position ?? computedTip;
+    final direction = arrowTip - arrowBase;
+    final labelAnchor = loopCenter.translate(0, -loopRadius * 1.15);
+
+    return (
+      path: trimmedPath,
+      tip: arrowTip,
+      direction: direction,
+      labelAnchor: labelAnchor,
     );
   }
-
 
   ({Path path, Offset tip, Offset direction, Offset labelAnchor})
   _buildLoopPath(Offset center, Offset anchor) {
@@ -1729,6 +1768,7 @@ class _NodePanGestureRecognizer extends PanGestureRecognizer {
     );
     _activePointer = event.pointer;
     super.addAllowedPointer(event);
+    resolvePointer(event.pointer, GestureDisposition.accepted);
   }
 
   @override
@@ -1784,6 +1824,7 @@ class _NodeTapGestureRecognizer extends TapGestureRecognizer {
       'down on ${node.id} tool=${toolResolver().name}',
     );
     super.addAllowedPointer(event);
+    resolvePointer(event.pointer, GestureDisposition.accepted);
   }
 
   @override

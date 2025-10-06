@@ -2,6 +2,8 @@
 
 JFlutter now renders automatons using a native GraphView-based canvas. The Flutter widget tree embeds `AutomatonGraphViewCanvas`, which wires provider state, highlight playback, and viewport controls without relying on any WebView or iframe bridge.【F:lib/presentation/widgets/automaton_graphview_canvas.dart†L26-L118】
 
+> **Note:** The project depends on a fork of GraphView that adds deterministic loop-edge rendering and related fixes: https://github.com/ThalesMMS/graphview/tree/loop-edge-renderer. The fork is consumed via a path dependency in `pubspec.yaml`, so keep it in sync when updating the canvas plumbing.
+
 ## Rendering Pipeline
 
 * `AutomatonGraphViewCanvas` owns a `GraphViewCanvasController` and synchronises it with the active automaton emitted by Riverpod. The controller creates the Graph/`GraphViewController` pair, attaches highlight channels, and performs an initial fit-to-content when data is available.【F:lib/presentation/widgets/automaton_graphview_canvas.dart†L52-L178】

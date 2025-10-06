@@ -28,12 +28,12 @@ AutomatonCanvas (StatefulWidget)
         │           └── CustomPaint (rendering layer)
         │               ├── painter: AutomatonPainter
         │               └── size: Size.infinite
-        ├── Positioned (top-right: canvas controls)
-        │   └── Container (control panel)
-        │       └── Row
-        │           ├── IconButton (Add State)
-        │           ├── IconButton (Add Transition)
-        │           └── IconButton (Clear)
+        ├── if (isMobile)
+        │   └── Align (bottomCenter)
+        │       └── MobileAutomatonControls (add state, zoom, fit, reset, clear, simulate, algorithms, metrics)
+        ├── if (!isMobile)
+        │   └── Align (topRight)
+        │       └── FlNodesCanvasToolbar (icon button cluster)
         └── Center (conditional: empty state message)
             └── Column
                 ├── Icon (account_tree, 64px)
@@ -300,7 +300,7 @@ class AutomatonPainter extends CustomPainter {
 - On state: Select state
 - On transition: Select transition
 - On canvas: Deselect (if no add mode active)
-- If "Add State" mode: Create state at tap position
+- If "Add state" mode: Create state at tap position
 
 **Long Press**:
 - On state: Open edit dialog
@@ -386,7 +386,6 @@ testWidgets('AutomatonCanvas renders and responds to tap', (tester) async {
       body: AutomatonCanvas(
         automaton: TestFixtures.simpleDFA.toProductionModel(),
         canvasKey: GlobalKey(),
-        onAutomatonChanged: (_) {},
       ),
     ),
   ));
@@ -407,7 +406,6 @@ testGoldens('AutomatonCanvas DFA rendering', (tester) async {
     AutomatonCanvas(
       automaton: TestFixtures.simpleDFA.toProductionModel(),
       canvasKey: GlobalKey(),
-      onAutomatonChanged: (_) {},
     ),
   );
   

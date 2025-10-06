@@ -20,15 +20,15 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
   static const String _gridSizeKey = 'settings_grid_size';
   static const String _nodeSizeKey = 'settings_node_size';
   static const String _fontSizeKey = 'settings_font_size';
-  static const String _useDraw2dCanvasKey = 'settings_use_draw2d_canvas';
-
+  static const String _legacyUseDraw2dCanvasKey =
+      'settings_use_draw2d_canvas';
   final SettingsStorage _storage;
 
   @override
   Future<SettingsModel> loadSettings() async {
     const defaults = SettingsModel();
 
-    return SettingsModel(
+    final settings = SettingsModel(
       emptyStringSymbol:
           await _storage.readString(_emptyStringSymbolKey) ??
           defaults.emptyStringSymbol,
@@ -46,10 +46,9 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
       gridSize: await _storage.readDouble(_gridSizeKey) ?? defaults.gridSize,
       nodeSize: await _storage.readDouble(_nodeSizeKey) ?? defaults.nodeSize,
       fontSize: await _storage.readDouble(_fontSizeKey) ?? defaults.fontSize,
-      useDraw2dCanvas:
-          await _storage.readBool(_useDraw2dCanvasKey) ??
-          defaults.useDraw2dCanvas,
     );
+    await _removeLegacyCanvasPreference();
+    return settings;
   }
 
   @override
@@ -65,11 +64,19 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
       _storage.writeDouble(_gridSizeKey, settings.gridSize),
       _storage.writeDouble(_nodeSizeKey, settings.nodeSize),
       _storage.writeDouble(_fontSizeKey, settings.fontSize),
-      _storage.writeBool(_useDraw2dCanvasKey, settings.useDraw2dCanvas),
     ]);
 
     if (results.any((success) => !success)) {
       throw Exception('Failed to save settings');
+    }
+    await _removeLegacyCanvasPreference();
+  }
+
+  Future<void> _removeLegacyCanvasPreference() async {
+    try {
+      await _storage.remove(_legacyUseDraw2dCanvasKey);
+    } catch (_) {
+      // Ignore cleanup failures – they should not block settings operations.
     }
   }
 }

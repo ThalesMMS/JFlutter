@@ -162,7 +162,7 @@
 - [ ] T014 Fix layout blocking issues at small screen sizes
   - Audit all canvas files for responsive layout issues
   - Test at breakpoints: 375px (mobile), 320px (minimum), 768px (tablet)
-  - Ensure canvas controls (Add State, Add Transition, etc.) not blocked
+  - Ensure canvas controls (Add state, Add transition, etc.) not blocked
   - Implement collapsible panels for mobile (<600px)
   - Verify all buttons accessible, no overlaps
   - Manual test using quickstart Section 5 (Responsive Layouts)
@@ -213,7 +213,7 @@
 
 - [ ] T019 [P] Validate Flutter accessibility guidelines compliance
   - Audit all interactive widgets for accessibility:
-    - Canvas controls (Add State, Add Transition, etc.)
+    - Canvas controls (Add state, Add transition, etc.)
     - Error widgets (ErrorBanner, ImportErrorDialog, RetryButton)
     - Simulation controls
   - Add semantic labels to widgets missing them

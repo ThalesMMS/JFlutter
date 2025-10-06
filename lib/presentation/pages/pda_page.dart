@@ -2,11 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/pda.dart';
+import '../../core/models/pda_transition.dart';
+import '../../core/models/state.dart' as automaton_state;
 import '../providers/pda_editor_provider.dart';
-import '../widgets/draw2d_pda_canvas_view.dart';
-import '../widgets/pda_simulation_panel.dart';
+import '../widgets/graphview_canvas_toolbar.dart';
+import '../widgets/mobile_automaton_controls.dart';
+import '../widgets/pda_canvas_graphview.dart';
 import '../widgets/pda_algorithm_panel.dart';
-import '../widgets/draw2d_canvas_toolbar.dart';
+import '../widgets/pda_simulation_panel.dart';
+import '../../core/services/simulation_highlight_service.dart';
+import '../../features/canvas/graphview/graphview_highlight_channel.dart';
+import '../../features/canvas/graphview/graphview_pda_canvas_controller.dart';
 
 /// Page for working with Pushdown Automata
 class PDAPage extends ConsumerStatefulWidget {
@@ -17,11 +23,47 @@ class PDAPage extends ConsumerStatefulWidget {
 }
 
 class _PDAPageState extends ConsumerState<PDAPage> {
-  final GlobalKey _canvasKey = GlobalKey();
   PDA? _latestPda;
   int _stateCount = 0;
   int _transitionCount = 0;
   bool _hasUnsavedChanges = false;
+  ProviderSubscription<PDAEditorState>? _pdaEditorSub;
+  late final GraphViewPdaCanvasController _canvasController;
+  late final GraphViewSimulationHighlightChannel _highlightChannel;
+  late final SimulationHighlightService _highlightService;
+
+  @override
+  void initState() {
+    super.initState();
+    _canvasController = GraphViewPdaCanvasController(
+      editorNotifier: ref.read(pdaEditorProvider.notifier),
+    );
+    _canvasController.synchronize(ref.read(pdaEditorProvider).pda);
+    _highlightChannel = GraphViewSimulationHighlightChannel(_canvasController);
+    _highlightService = SimulationHighlightService(channel: _highlightChannel);
+    _pdaEditorSub = ref.listenManual<PDAEditorState>(pdaEditorProvider, (
+      previous,
+      next,
+    ) {
+      if (!mounted) return;
+      if (next.pda == null && _latestPda != null) {
+        setState(() {
+          _latestPda = null;
+          _stateCount = 0;
+          _transitionCount = 0;
+          _hasUnsavedChanges = false;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _pdaEditorSub?.close();
+    _highlightService.clear();
+    _canvasController.dispose();
+    super.dispose();
+  }
 
   void _handlePdaModified(PDA pda) {
     setState(() {
@@ -30,8 +72,6 @@ class _PDAPageState extends ConsumerState<PDAPage> {
       _transitionCount = pda.pdaTransitions.length;
       _hasUnsavedChanges = true;
     });
-
-    ref.read(pdaEditorProvider.notifier).setPda(pda);
   }
 
   @override
@@ -39,8 +79,13 @@ class _PDAPageState extends ConsumerState<PDAPage> {
     final screenSize = MediaQuery.of(context).size;
     final isMobile = screenSize.width < 1024;
 
-    return Scaffold(
-      body: isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
+    return ProviderScope(
+      overrides: [
+        canvasHighlightServiceProvider.overrideWithValue(_highlightService),
+      ],
+      child: Scaffold(
+        body: isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
+      ),
     );
   }
 
@@ -53,70 +98,17 @@ class _PDAPageState extends ConsumerState<PDAPage> {
               Expanded(
                 child: Container(
                   margin: const EdgeInsets.all(8),
-                  child: Stack(
-                    children: [
-                      Positioned.fill(
-                        child: Draw2DPdaCanvasView(
-                          onPdaModified: _handlePdaModified,
-                        ),
-                      ),
-                      Positioned(
-                        top: 12,
-                        right: 12,
-                        child: Draw2DCanvasToolbar(
-                          onClear: () => setState(() {
-                            _latestPda = null;
-                            _stateCount = 0;
-                            _transitionCount = 0;
-                            _hasUnsavedChanges = true;
-                            ref.read(pdaEditorProvider.notifier).updateFromCanvas(
-                              states: const [],
-                              transitions: const [],
-                            );
-                          }),
-                        ),
-                      ),
-                    ],
+                  child: _buildCanvasWithToolbar(
+                    PDACanvasGraphView(
+                      controller: _canvasController,
+                      onPdaModified: _handlePdaModified,
+                    ),
+                    isMobile: true,
                   ),
                 ),
               ),
               _buildMobileInfoPanel(context),
             ],
-          ),
-          Align(
-            alignment: Alignment.bottomRight,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  FloatingActionButton.extended(
-                    heroTag: 'simulate_pda',
-                    icon: const Icon(Icons.play_arrow),
-                    label: const Text('Simulate'),
-                    onPressed: () => _showPanelSheet(
-                      context: context,
-                      title: 'PDA Simulation',
-                      icon: Icons.play_arrow,
-                      child: const PDASimulationPanel(),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  FloatingActionButton.extended(
-                    heroTag: 'pda_algorithms',
-                    icon: const Icon(Icons.auto_awesome),
-                    label: const Text('Algorithms'),
-                    onPressed: () => _showPanelSheet(
-                      context: context,
-                      title: 'PDA Algorithms',
-                      icon: Icons.auto_awesome,
-                      child: const PDAAlgorithmPanel(),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ),
         ],
       ),
@@ -265,30 +257,12 @@ class _PDAPageState extends ConsumerState<PDAPage> {
           flex: 2,
           child: Container(
             margin: const EdgeInsets.all(8),
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: Draw2DPdaCanvasView(
-                    onPdaModified: _handlePdaModified,
-                  ),
-                ),
-                Positioned(
-                  top: 12,
-                  right: 12,
-                  child: Draw2DCanvasToolbar(
-                    onClear: () => setState(() {
-                      _latestPda = null;
-                      _stateCount = 0;
-                      _transitionCount = 0;
-                      _hasUnsavedChanges = true;
-                      ref.read(pdaEditorProvider.notifier).updateFromCanvas(
-                        states: const [],
-                        transitions: const [],
-                      );
-                    }),
-                  ),
-                ),
-              ],
+            child: _buildCanvasWithToolbar(
+              PDACanvasGraphView(
+                controller: _canvasController,
+                onPdaModified: _handlePdaModified,
+              ),
+              isMobile: false,
             ),
           ),
         ),
@@ -298,7 +272,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
           flex: 1,
           child: Container(
             margin: const EdgeInsets.all(8),
-            child: const PDASimulationPanel(),
+            child: PDASimulationPanel(highlightService: _highlightService),
           ),
         ),
         const SizedBox(width: 16),
@@ -368,5 +342,127 @@ class _PDAPageState extends ConsumerState<PDAPage> {
       label: Text('$label: $value'),
       backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
     );
+  }
+
+  Widget _buildCanvasWithToolbar(Widget canvas, {required bool isMobile}) {
+    final editorState = ref.watch(pdaEditorProvider);
+    final statusMessage = _buildToolbarStatusMessage(editorState);
+    final hasPda =
+        editorState.pda != null && editorState.pda!.states.isNotEmpty;
+
+    final combinedListenable = _canvasController.graphRevision;
+
+    if (isMobile) {
+      return Stack(
+        children: [
+          Positioned.fill(child: canvas),
+          AnimatedBuilder(
+            animation: combinedListenable,
+            builder: (context, _) {
+              return MobileAutomatonControls(
+                onAddState: _canvasController.addStateAtCenter,
+                onFitToContent: _canvasController.fitToContent,
+                onResetView: _canvasController.resetView,
+                onClear: () => ref
+                    .read(pdaEditorProvider.notifier)
+                    .updateFromCanvas(
+                      states: const <automaton_state.State>[],
+                      transitions: const <PDATransition>[],
+                    ),
+                onUndo: _canvasController.canUndo
+                    ? () => _canvasController.undo()
+                    : null,
+                onRedo: _canvasController.canRedo
+                    ? () => _canvasController.redo()
+                    : null,
+                canUndo: _canvasController.canUndo,
+                canRedo: _canvasController.canRedo,
+                onSimulate: () => _showPanelSheet(
+                  context: context,
+                  title: 'PDA Simulation',
+                  icon: Icons.play_arrow,
+                  child: PDASimulationPanel(
+                    highlightService: _highlightService,
+                  ),
+                ),
+                isSimulationEnabled: hasPda,
+                onAlgorithms: () => _showPanelSheet(
+                  context: context,
+                  title: 'PDA Algorithms',
+                  icon: Icons.auto_awesome,
+                  child: const PDAAlgorithmPanel(),
+                ),
+                isAlgorithmsEnabled: hasPda,
+                statusMessage: statusMessage,
+              );
+            },
+          ),
+        ],
+      );
+    }
+
+    return Stack(
+      children: [
+        Positioned.fill(child: canvas),
+        AnimatedBuilder(
+          animation: combinedListenable,
+          builder: (context, _) {
+            return GraphViewCanvasToolbar(
+              layout: GraphViewCanvasToolbarLayout.desktop,
+              controller: _canvasController,
+              onAddState: _canvasController.addStateAtCenter,
+              onClear: () => ref
+                  .read(pdaEditorProvider.notifier)
+                  .updateFromCanvas(
+                    states: const <automaton_state.State>[],
+                    transitions: const <PDATransition>[],
+                  ),
+              statusMessage: statusMessage,
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  String _buildToolbarStatusMessage(PDAEditorState editorState) {
+    final pda = editorState.pda;
+    final hasPda = pda != null && pda.states.isNotEmpty;
+    final stateCount = pda?.states.length ?? 0;
+    final transitionCount = pda?.pdaTransitions.length ?? 0;
+
+    final messageParts = <String>[];
+
+    if (_hasUnsavedChanges) {
+      messageParts.add('Unsaved changes');
+    }
+
+    final warnings = <String>[];
+    if (editorState.nondeterministicTransitionIds.isNotEmpty) {
+      warnings.add('Nondeterministic transitions');
+    }
+    if (editorState.lambdaTransitionIds.isNotEmpty) {
+      warnings.add('λ-transitions present');
+    }
+
+    if (warnings.isNotEmpty) {
+      messageParts.add('⚠ ${warnings.join(' · ')}');
+    }
+
+    if (hasPda) {
+      messageParts.add(
+        '${_formatCount('state', 'states', stateCount)} · '
+        '${_formatCount('transition', 'transitions', transitionCount)}',
+      );
+    } else {
+      messageParts.add('No PDA loaded');
+    }
+
+    return messageParts.join(' · ');
+  }
+
+  String _formatCount(String singular, String plural, int count) {
+    final label = count == 1 ? singular : plural;
+    return '$count $label';
   }
 }

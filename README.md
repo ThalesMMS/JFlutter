@@ -4,18 +4,15 @@ A modern, mobile-first Flutter application for learning formal language theory a
 
 JFlutter is a complete port of the classic JFLAP educational tool, rebuilt from the ground up with Flutter for modern mobile devices. It provides an interactive, touch-optimized interface for creating, editing, and simulating finite automata, context-free grammars, and other formal language constructs.
 
+<p align="center">
+  <img src="./screenshots/screenshot1.png" alt="Automaton canvas screenshot" width="300" />
+  <img src="./screenshots/screenshot2.png" alt="Regex module screenshot" width="300" />
+  <img src="./screenshots/screenshot3.png" alt="Grammar editor screenshot" width="300" />
+</p>
+
 ## Project Status
 
 **Status:** Work in Progress
-
-Development is ongoing as we continue refining the application and expanding coverage across platforms, tests, and documentation. Recent focus areas from the latest milestone include:
-- ✅ **Performance Optimization** - Canvas optimized for large automata with LOD rendering and viewport culling
-- ✅ **Trace Persistence** - Immutable trace navigation between simulators with unified state management
-- ✅ **Import/Export Validation** - Comprehensive validation for .jff, JSON, and SVG formats
-- ✅ **Enhanced Diagnostics** - Detailed error messages and automaton validation with user-friendly suggestions
-- ✅ **Code Quality** - Static analysis clean, formatting standardized, test suites updated
-- ✅ **Quickstart Verified** - Application successfully builds and runs on macOS with evidence captured
-- ✅ **Documentation Updated** - README and reference deviations documented
 
 ## Key Features
 
@@ -59,7 +56,7 @@ Development is ongoing as we continue refining the application and expanding cov
 - **Import/Export Validation** - Robust validation for JFLAP XML, JSON, and SVG formats
 - **Error Handling** - User-friendly error messages with technical diagnostics
 - **Cross-Format Compatibility** - Ensures data integrity across different file formats
-- **Draw2D Canvas Bridge** - Optional WebView renderer with Riverpod-managed toggle and JS bridge protocol
+- **GraphView Canvas** - Native Flutter graph editor with synchronized Riverpod state and highlight channels
 
 ### Examples v1 - Offline Examples Library
 
@@ -80,13 +77,6 @@ Development is ongoing as we continue refining the application and expanding cov
 
 #### **Turing Machines (TM)**
 - `tm_binary_to_unary.json` - TM converting binary to unary representation
-
-**Features**:
-- ✅ **100% Offline** - No internet required after installation
-- ✅ **Educational Metadata** - Each example includes learning objectives and difficulty levels
-- ✅ **Reference Validation** - Examples validated against authoritative implementations
-- ✅ **Progressive Learning** - Examples ordered from basic to advanced concepts
-- ✅ **Quickstart Integration** - Seamless integration with the quickstart workflow
 
 Assets are bundled in `jflutter_js/examples/` via `pubspec.yaml`, ensuring offline access per the "Examples v1" contract.
 
@@ -138,13 +128,6 @@ lib/
 ```
 
 ## Getting Started
-
-### Quickstart Guide
-For a comprehensive hands-on tutorial, see our **[Quickstart Guide](specs/001-projeto-jflutter-refor/quickstart.md)** which covers:
-- Complete offline workflow (Import → Simulate → Convert → Validate)
-- Examples v1 library usage
-- Educational integration strategies
-- Troubleshooting and performance optimization
 
 ### Prerequisites
 - Flutter SDK 3.16+ 
@@ -555,6 +538,8 @@ This project is distributed under a dual license structure:
 - **Flutter Team** - For the excellent mobile framework
 - **Dart Team** - For the programming language
 - **Riverpod Team** - For state management solutions
+- **GraphView Contributors** - For the graph rendering toolkit powering the native
+  automaton canvas
 - **Material Design Team** - For design system and components
 - **Open Source Community** - For inspiration and support
 

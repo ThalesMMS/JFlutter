@@ -245,6 +245,7 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
     bool? isLambdaInput,
     bool? isLambdaPop,
     bool? isLambdaPush,
+    Vector2? controlPoint,
   }) {
     return _mutatePda((current) {
       final statesById = {
@@ -270,7 +271,7 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
           fromState: fromState,
           toState: toState,
           label: '',
-          controlPoint: Vector2.zero(),
+          controlPoint: (controlPoint ?? Vector2.zero()).clone(),
           type: TransitionType.deterministic,
           inputSymbol: '',
           popSymbol: '',
@@ -306,6 +307,7 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
         isLambdaInput: lambdaInput,
         isLambdaPop: lambdaPop,
         isLambdaPush: lambdaPush,
+        controlPoint: (controlPoint ?? base.controlPoint).clone(),
       );
 
       final resolvedLabel = label ?? _formatTransitionLabel(updatedTransition);
@@ -435,6 +437,11 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
   /// Replaces the current PDA with a new instance, recalculating metadata.
   void setPda(PDA pda) {
     _updateStateWithPda(pda);
+  }
+
+  /// Clears the editor state, removing any PDA currently rendered on the canvas.
+  void clear() {
+    state = const PDAEditorState();
   }
 
   void _updateStateWithPda(PDA pda) {

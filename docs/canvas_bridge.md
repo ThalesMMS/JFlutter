@@ -1,65 +1,32 @@
-# Draw2D Canvas Bridge
+# GraphView Canvas Architecture
 
-The Draw2D workspace is rendered inside a `WebView` (`Draw2DCanvasView`) that
-loads `assets/draw2d/editor.html`. The HTML page bootstraps the Draw2D library
-and exposes a very small messaging layer so Flutter can keep the canvas in sync
-with the current automaton.
+JFlutter now renders automatons using a native GraphView-based canvas. The Flutter widget tree embeds `AutomatonGraphViewCanvas`, which wires provider state, highlight playback, and viewport controls without relying on any WebView or iframe bridge.【F:lib/presentation/widgets/automaton_graphview_canvas.dart†L26-L118】
 
-## Message Flow
+> **Note:** The project depends on a fork of GraphView that adds deterministic loop-edge rendering and related fixes: https://github.com/ThalesMMS/graphview/tree/loop-edge-renderer. The fork is pulled directly through a git dependency in `pubspec.yaml`, so keep the revision aligned when updating the canvas plumbing.
 
-Communication happens through the `JFlutterBridge` JavaScript channel. Each
-message is a JSON object with two fields:
+## Rendering Pipeline
 
-```json
-{ "type": "state.add", "payload": { "id": "q0" } }
-```
+* `AutomatonGraphViewCanvas` owns a `GraphViewCanvasController` and synchronises it with the active automaton emitted by Riverpod. The controller creates the Graph/`GraphViewController` pair, attaches highlight channels, and performs an initial fit-to-content when data is available.【F:lib/presentation/widgets/automaton_graphview_canvas.dart†L52-L178】
+* `GraphViewCanvasController` converts `AutomatonProvider` state into `GraphViewAutomatonSnapshot` instances and rebuilds the Graph when `synchronize` is invoked. Node and edge caches track layout information so diffing and undo/redo remain fast.【F:lib/features/canvas/graphview/graphview_canvas_controller.dart†L13-L188】【F:lib/features/canvas/graphview/base_graphview_canvas_controller.dart†L17-L220】
+* Snapshots merge back into domain models through `GraphViewAutomatonMapper`, ensuring IDs, labels, alphabet entries, and metadata such as bounds and zoom level stay in sync with Riverpod state.【F:lib/features/canvas/graphview/graphview_canvas_controller.dart†L188-L219】【F:lib/features/canvas/graphview/graphview_automaton_mapper.dart†L7-L130】
 
-### Flutter → JavaScript
+## Editing Flow
 
-Flutter pushes the full automaton snapshot whenever the provider changes by
-executing `window.draw2dBridge.loadModel(model)`. The payload matches the shape
-produced by `Draw2DAutomatonMapper.toJson`:
+`GraphViewCanvasController` exposes high-level mutation helpers that relay interactions back to `AutomatonProvider`:
 
-| Field            | Description                                            |
-| ---------------- | ------------------------------------------------------ |
-| `id`             | Automaton identifier used to derive stable node IDs.   |
-| `name`           | Human readable automaton name.                         |
-| `alphabet`       | Sorted list of input symbols.                          |
-| `states`         | Array of state objects (id, label, position, flags…).  |
-| `transitions`    | Array of transition objects (from, to, label, control).|
-| `initialStateId` | Draw2D identifier of the initial state (or `null`).    |
+* `addStateAt` assigns deterministic IDs and labels, marking the first node as initial when appropriate.【F:lib/features/canvas/graphview/graphview_canvas_controller.dart†L106-L129】
+* `moveState` normalises drag deltas, forwarding updated coordinates while preserving the undo history.【F:lib/features/canvas/graphview/graphview_canvas_controller.dart†L130-L139】【F:lib/presentation/widgets/automaton_graphview_canvas.dart†L304-L332】
+* `addOrUpdateTransition` and `removeTransition` keep edge metadata aligned with the provider, including control points for curved links.【F:lib/features/canvas/graphview/graphview_canvas_controller.dart†L160-L186】【F:lib/presentation/widgets/automaton_graphview_canvas.dart†L333-L494】
+* Node and edge selection state drives overlay editors rendered by the canvas itself, allowing inline label updates without leaving the widget tree.【F:lib/presentation/widgets/automaton_graphview_canvas.dart†L333-L626】
 
-The JavaScript bridge clears the canvas and recreates all figures whenever a
-new model arrives.
+## Toolbar & Gestures
 
-### JavaScript → Flutter
+The `GraphViewCanvasToolbar` widget centralises viewport actions, undo/redo, and optional drawing tools. Desktop and mobile layouts reuse the same controller callbacks so gestures and button presses behave identically across platforms.【F:lib/presentation/widgets/graphview_canvas_toolbar.dart†L6-L138】 Touch-centric controls remain available through `MobileAutomatonControls`, which exposes simulator shortcuts and canvas commands in a bottom-aligned tray.【F:lib/presentation/widgets/mobile_automaton_controls.dart†L1-L132】
 
-User interactions in Draw2D are forwarded back to Flutter through the
-`JFlutterBridge` channel. The following event types are supported:
+## Highlight Channel
 
-| `type`             | Payload fields                                                   | Effect                                             |
-| ------------------ | ---------------------------------------------------------------- | -------------------------------------------------- |
-| `state.add`        | `id`, `label`, `x`, `y`, `isInitial?`, `isAccepting?`            | Adds or replaces a state at the given coordinates. |
-| `state.move`       | `id`, `x`, `y`                                                   | Updates a state's position (batched every 60 ms).  |
-| `state.label`      | `id`, `label`                                                    | Renames a state.                                   |
-| `transition.add`   | `id`, `fromStateId`, `toStateId`, `label`                        | Creates or updates a transition.                   |
-| `transition.label` | `id`, `label`                                                    | Renames a transition and updates its symbols.      |
+`AutomatonGraphViewCanvas` installs a `GraphViewSimulationHighlightChannel` when it owns the controller, bridging `SimulationHighlightService` payloads to the canvas highlight notifier. Highlights update immediately during playback and are cleared when simulations finish.【F:lib/presentation/widgets/automaton_graphview_canvas.dart†L59-L118】【F:lib/features/canvas/graphview/graphview_highlight_channel.dart†L5-L19】【F:lib/core/services/simulation_highlight_service.dart†L8-L101】
 
-The provider normalises these events and merges them into the active `FSA`
-instance, ensuring the rest of the UI reacts immediately.
+## Data Round-Tripping
 
-## Debugging Tips
-
-* Enable the "Use Draw2D Canvas" toggle in Settings to render the WebView
-  instead of the legacy Flutter canvas.
-* Open the WebView's developer tools (when available) to inspect console logs.
-  Every inbound/outbound message is printed with a `[Draw2D]` prefix.
-* The toolbar now shows "Canvas not connected" until the Draw2D bridge reports
-  readiness. If the message persists, inspect the console for bridge errors.
-
-## Web Highlight Bridge
-
-For Flutter Web builds a lightweight bridge lives in
-`web/assets/draw2d/editor.js`. It listens for `postMessage` calls with the
-`type` values `highlight` and `clear_highlight` so the simulation view can
-highlight states and transitions during playback.
+When the user edits the canvas, the controller merges the Graph snapshot into the existing automaton template and republishes it through `AutomatonProvider`. This keeps inspector panels, persistence layers, and simulators aligned with the visual representation while avoiding manual diff logic.【F:lib/features/canvas/graphview/graphview_canvas_controller.dart†L188-L219】【F:lib/presentation/providers/automaton_provider.dart†L25-L219】

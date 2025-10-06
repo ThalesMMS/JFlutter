@@ -3,12 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/algorithms/pda_simulator.dart';
 import '../../core/result.dart';
+import '../../core/services/simulation_highlight_service.dart';
 import '../providers/pda_editor_provider.dart';
 import 'trace_viewers/pda_trace_viewer.dart';
 
 /// Panel for PDA simulation and string testing
 class PDASimulationPanel extends ConsumerStatefulWidget {
-  const PDASimulationPanel({super.key});
+  final SimulationHighlightService highlightService;
+
+  PDASimulationPanel({
+    super.key,
+    SimulationHighlightService? highlightService,
+  }) : highlightService = highlightService ?? SimulationHighlightService();
 
   @override
   ConsumerState<PDASimulationPanel> createState() => _PDASimulationPanelState();
@@ -29,6 +35,7 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
   void dispose() {
     _inputController.dispose();
     _initialStackController.dispose();
+    widget.highlightService.clear();
     super.dispose();
   }
 
@@ -111,6 +118,14 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
               setState(() {
                 _stepByStep = value;
               });
+              if (!value) {
+                widget.highlightService.clear();
+              } else if (_simulationResult?.steps.isNotEmpty == true) {
+                widget.highlightService.emitFromSteps(
+                  _simulationResult!.steps,
+                  0,
+                );
+              }
             },
           ),
           const SizedBox(height: 8),
@@ -269,7 +284,10 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
-            PDATraceViewer(result: simulationResult),
+            PDATraceViewer(
+              result: simulationResult,
+              highlightService: widget.highlightService,
+            ),
           ],
         ],
       ),
@@ -304,6 +322,8 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
       _errorMessage = null;
     });
 
+    widget.highlightService.clear();
+
     final stackAlphabet = {...currentPda.stackAlphabet};
     stackAlphabet.add(initialStack);
 
@@ -324,6 +344,7 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
     }
 
     if (result.isSuccess) {
+      final simulation = result.data;
       setState(() {
         _isSimulating = false;
         _simulationResult = result.data;
@@ -331,12 +352,18 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
             ? result.data!.errorMessage
             : null;
       });
+      if (simulation != null && simulation.steps.isNotEmpty) {
+        widget.highlightService.emitFromSteps(simulation.steps, 0);
+      } else {
+        widget.highlightService.clear();
+      }
     } else {
       setState(() {
         _isSimulating = false;
         _simulationResult = null;
         _errorMessage = result.error;
       });
+      widget.highlightService.clear();
     }
   }
 
@@ -345,6 +372,7 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
       _errorMessage = message;
       _simulationResult = null;
     });
+    widget.highlightService.clear();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),

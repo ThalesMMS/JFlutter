@@ -75,7 +75,7 @@ expect(painter.transitions.length, equals(1));
 
 ```dart
 // Find by semantic label
-expect(find.bySemanticsLabel('Add State'), findsOneWidget);
+expect(find.bySemanticsLabel('Add state'), findsOneWidget);
 expect(find.bySemanticsLabel('Retry operation'), findsOneWidget);
 
 // Verify semantic properties
@@ -101,7 +101,6 @@ testWidgets('AutomatonCanvas renders DFA correctly', (tester) async {
         body: AutomatonCanvas(
           automaton: testDFA.toProductionModel(),
           canvasKey: canvasKey,
-          onAutomatonChanged: (_) {},
         ),
       ),
     ),
@@ -206,14 +205,13 @@ testWidgets('Canvas controls accessible on mobile', (tester) async {
         body: AutomatonCanvas(
           automaton: TestFixtures.simpleDFA.toProductionModel(),
           canvasKey: GlobalKey(),
-          onAutomatonChanged: (_) {},
         ),
       ),
     ),
   );
   
   // Verify buttons not blocked
-  final addStateButton = find.text('Add State');
+  final addStateButton = find.text('Add state');
   expect(addStateButton, findsOneWidget);
   
   final buttonPosition = tester.getTopLeft(addStateButton);

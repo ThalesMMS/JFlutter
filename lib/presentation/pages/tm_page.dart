@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/models/state.dart' as automaton_state;
 import '../../core/models/tm.dart';
 import '../../core/models/tm_transition.dart';
 import '../providers/tm_editor_provider.dart';
-import '../widgets/draw2d_tm_canvas_view.dart';
-import '../widgets/draw2d_canvas_toolbar.dart';
+import '../widgets/tm_canvas_graphview.dart';
 import '../widgets/tm_algorithm_panel.dart';
 import '../widgets/tm_simulation_panel.dart';
+import '../widgets/graphview_canvas_toolbar.dart';
+import '../widgets/mobile_automaton_controls.dart';
+import '../../core/services/simulation_highlight_service.dart';
+import '../../features/canvas/graphview/graphview_highlight_channel.dart';
+import '../../features/canvas/graphview/graphview_tm_canvas_controller.dart';
 
 /// Page for working with Turing Machines
 class TMPage extends ConsumerStatefulWidget {
@@ -18,7 +23,6 @@ class TMPage extends ConsumerStatefulWidget {
 }
 
 class _TMPageState extends ConsumerState<TMPage> {
-  final GlobalKey _canvasKey = GlobalKey();
   TM? _currentTM;
   int _stateCount = 0;
   int _transitionCount = 0;
@@ -28,6 +32,9 @@ class _TMPageState extends ConsumerState<TMPage> {
   bool _hasInitialState = false;
   bool _hasAcceptingState = false;
   ProviderSubscription<TMEditorState>? _tmEditorSub;
+  late final GraphViewTmCanvasController _canvasController;
+  late final GraphViewSimulationHighlightChannel _highlightChannel;
+  late final SimulationHighlightService _highlightService;
 
   bool get _isMachineReady =>
       _currentTM != null && _hasInitialState && _hasAcceptingState;
@@ -37,29 +44,37 @@ class _TMPageState extends ConsumerState<TMPage> {
   @override
   void initState() {
     super.initState();
-    _tmEditorSub = ref.listenManual<TMEditorState>(
-      tmEditorProvider,
-      (previous, next) {
-        if (!mounted) return;
-        if (next.tm == null && _currentTM != null) {
-          setState(() {
-            _currentTM = null;
-            _stateCount = 0;
-            _transitionCount = 0;
-            _tapeSymbols = const <String>{};
-            _moveDirections = const <String>{};
-            _nondeterministicTransitionIds = const <String>{};
-            _hasInitialState = false;
-            _hasAcceptingState = false;
-          });
-        }
-      },
+    _canvasController = GraphViewTmCanvasController(
+      editorNotifier: ref.read(tmEditorProvider.notifier),
     );
+    _canvasController.synchronize(ref.read(tmEditorProvider).tm);
+    _highlightChannel = GraphViewSimulationHighlightChannel(_canvasController);
+    _highlightService = SimulationHighlightService(channel: _highlightChannel);
+    _tmEditorSub = ref.listenManual<TMEditorState>(tmEditorProvider, (
+      previous,
+      next,
+    ) {
+      if (!mounted) return;
+      if (next.tm == null && _currentTM != null) {
+        setState(() {
+          _currentTM = null;
+          _stateCount = 0;
+          _transitionCount = 0;
+          _tapeSymbols = const <String>{};
+          _moveDirections = const <String>{};
+          _nondeterministicTransitionIds = const <String>{};
+          _hasInitialState = false;
+          _hasAcceptingState = false;
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
     _tmEditorSub?.close();
+    _highlightService.clear();
+    _canvasController.dispose();
     super.dispose();
   }
 
@@ -68,8 +83,13 @@ class _TMPageState extends ConsumerState<TMPage> {
     final screenSize = MediaQuery.of(context).size;
     final isMobile = screenSize.width < 1024;
 
-    return Scaffold(
-      body: isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
+    return ProviderScope(
+      overrides: [
+        canvasHighlightServiceProvider.overrideWithValue(_highlightService),
+      ],
+      child: Scaffold(
+        body: isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
+      ),
     );
   }
 
@@ -77,67 +97,11 @@ class _TMPageState extends ConsumerState<TMPage> {
     return SafeArea(
       child: Column(
         children: [
-          // Mobile action buttons for additional panels
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _buildActionButton(
-                    icon: Icons.play_arrow,
-                    label: 'Simulate',
-                    onPressed: _openSimulationSheet,
-                    isEnabled: _isMachineReady,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildActionButton(
-                    icon: Icons.auto_awesome,
-                    label: 'Algorithms',
-                    onPressed: _openAlgorithmSheet,
-                    isEnabled: _hasMachine,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildActionButton(
-                    icon: Icons.bar_chart,
-                    label: 'Metrics',
-                    onPressed: _openMetricsSheet,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
           // Canvas occupies the remaining viewport height
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(8),
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: Draw2DTMCanvasView(onTMModified: _handleTMUpdate),
-                  ),
-                  Positioned(
-                    top: 12,
-                    right: 12,
-                    child: Draw2DCanvasToolbar(
-                      onClear: () => setState(() {
-                        _currentTM = null;
-                        _stateCount = 0;
-                        _transitionCount = 0;
-                        _tapeSymbols = const <String>{};
-                        _moveDirections = const <String>{};
-                        _nondeterministicTransitionIds = const <String>{};
-                        _hasInitialState = false;
-                        _hasAcceptingState = false;
-                      }),
-                    ),
-                  ),
-                ],
-              ),
+              child: _buildCanvasWithToolbar(isMobile: true),
             ),
           ),
         ],
@@ -153,29 +117,7 @@ class _TMPageState extends ConsumerState<TMPage> {
           flex: 2,
           child: Container(
             margin: const EdgeInsets.all(8),
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: Draw2DTMCanvasView(onTMModified: _handleTMUpdate),
-                ),
-                Positioned(
-                  top: 12,
-                  right: 12,
-                  child: Draw2DCanvasToolbar(
-                    onClear: () => setState(() {
-                      _currentTM = null;
-                      _stateCount = 0;
-                      _transitionCount = 0;
-                      _tapeSymbols = const <String>{};
-                      _moveDirections = const <String>{};
-                      _nondeterministicTransitionIds = const <String>{};
-                      _hasInitialState = false;
-                      _hasAcceptingState = false;
-                    }),
-                  ),
-                ),
-              ],
-            ),
+            child: _buildCanvasWithToolbar(isMobile: false),
           ),
         ),
         const SizedBox(width: 16),
@@ -184,7 +126,7 @@ class _TMPageState extends ConsumerState<TMPage> {
           flex: 1,
           child: Container(
             margin: const EdgeInsets.all(8),
-            child: const TMSimulationPanel(),
+            child: TMSimulationPanel(highlightService: _highlightService),
           ),
         ),
         const SizedBox(width: 16),
@@ -205,6 +147,121 @@ class _TMPageState extends ConsumerState<TMPage> {
         ),
       ],
     );
+  }
+
+  Widget _buildCanvasWithToolbar({required bool isMobile}) {
+    final editorState = ref.watch(tmEditorProvider);
+    final statusMessage = _buildToolbarStatusMessage(editorState);
+    final hasMachine = _hasMachine;
+    final canvas = TMCanvasGraphView(
+      controller: _canvasController,
+      onTmModified: _handleTMUpdate,
+    );
+    final combinedListenable = _canvasController.graphRevision;
+
+    if (isMobile) {
+      return Stack(
+        children: [
+          Positioned.fill(child: canvas),
+          AnimatedBuilder(
+            animation: combinedListenable,
+            builder: (context, _) {
+              return MobileAutomatonControls(
+                onAddState: _canvasController.addStateAtCenter,
+                onFitToContent: _canvasController.fitToContent,
+                onResetView: _canvasController.resetView,
+                onClear: () {
+                  ref
+                      .read(tmEditorProvider.notifier)
+                      .updateFromCanvas(
+                        states: const <automaton_state.State>[],
+                        transitions: const <TMTransition>[],
+                      );
+                },
+                onUndo: _canvasController.canUndo
+                    ? () => _canvasController.undo()
+                    : null,
+                onRedo: _canvasController.canRedo
+                    ? () => _canvasController.redo()
+                    : null,
+                canUndo: _canvasController.canUndo,
+                canRedo: _canvasController.canRedo,
+                onSimulate: _openSimulationSheet,
+                isSimulationEnabled: _isMachineReady,
+                onAlgorithms: _openAlgorithmSheet,
+                isAlgorithmsEnabled: hasMachine,
+                onMetrics: _openMetricsSheet,
+                statusMessage: statusMessage,
+              );
+            },
+          ),
+        ],
+      );
+    }
+
+    return Stack(
+      children: [
+        Positioned.fill(child: canvas),
+        AnimatedBuilder(
+          animation: combinedListenable,
+          builder: (context, _) {
+            return GraphViewCanvasToolbar(
+              layout: GraphViewCanvasToolbarLayout.desktop,
+              controller: _canvasController,
+              onAddState: _canvasController.addStateAtCenter,
+              onClear: () {
+                ref
+                    .read(tmEditorProvider.notifier)
+                    .updateFromCanvas(
+                      states: const <automaton_state.State>[],
+                      transitions: const <TMTransition>[],
+                    );
+              },
+              statusMessage: statusMessage,
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  String _buildToolbarStatusMessage(TMEditorState editorState) {
+    final tm = editorState.tm;
+    final stateCount = editorState.states.length;
+    final transitionCount = editorState.transitions.length;
+
+    final messageParts = <String>[];
+
+    final warnings = <String>[];
+    if (tm == null || tm.initialState == null) {
+      warnings.add('Missing start state');
+    }
+    if (tm == null || tm.acceptingStates.isEmpty) {
+      warnings.add('No accepting states');
+    }
+    if (editorState.nondeterministicTransitionIds.isNotEmpty) {
+      warnings.add('Nondeterministic transitions');
+    }
+
+    if (warnings.isNotEmpty) {
+      messageParts.add('⚠ ${warnings.join(' · ')}');
+    }
+
+    if (stateCount == 0 && transitionCount == 0) {
+      messageParts.add('No machine defined');
+    } else {
+      messageParts.add(
+        '${_formatCount('state', 'states', stateCount)} · '
+        '${_formatCount('transition', 'transitions', transitionCount)}',
+      );
+    }
+
+    return messageParts.join(' · ');
+  }
+
+  String _formatCount(String singular, String plural, int count) {
+    final label = count == 1 ? singular : plural;
+    return '$count $label';
   }
 
   void _handleTMUpdate(TM tm) {
@@ -235,7 +292,7 @@ class _TMPageState extends ConsumerState<TMPage> {
         return ListView(
           controller: controller,
           padding: const EdgeInsets.all(16),
-          children: const [TMSimulationPanel()],
+          children: [TMSimulationPanel(highlightService: _highlightService)],
         );
       },
       initialChildSize: 0.7,
@@ -409,22 +466,5 @@ class _TMPageState extends ConsumerState<TMPage> {
         .where((list) => list.length > 1)
         .expand((list) => list.map((transition) => transition.id))
         .toSet();
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onPressed,
-    bool isEnabled = true,
-  }) {
-    return ElevatedButton.icon(
-      onPressed: isEnabled ? onPressed : null,
-      icon: Icon(icon, size: 16),
-      label: Text(label, style: const TextStyle(fontSize: 11)),
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-        minimumSize: Size.zero,
-      ),
-    );
   }
 }

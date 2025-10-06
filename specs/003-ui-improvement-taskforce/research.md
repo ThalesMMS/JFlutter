@@ -249,7 +249,6 @@ testGoldens('AutomatonCanvas renders DFA correctly', (tester) async {
     AutomatonCanvas(
       automaton: createTestDFA(),
       canvasKey: GlobalKey(),
-      onAutomatonChanged: (_) {},
     ),
   );
 

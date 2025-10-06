@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/entities/automaton_entity.dart';
 import '../../core/models/fsa.dart';
 import '../providers/algorithm_provider.dart';
 import '../providers/automaton_provider.dart';
-import '../providers/settings_provider.dart';
 import '../widgets/algorithm_panel.dart';
 import '../widgets/automaton_canvas.dart';
-import '../widgets/draw2d_canvas_view.dart';
-import '../widgets/draw2d_canvas_toolbar.dart';
-import '../widgets/draw2d_platform_support.dart';
+import '../widgets/automaton_canvas_tool.dart';
+import '../widgets/graphview_canvas_toolbar.dart';
+import '../widgets/mobile_automaton_controls.dart';
 import '../widgets/simulation_panel.dart';
 import 'grammar_page.dart';
 import 'regex_page.dart';
+import '../../core/services/simulation_highlight_service.dart';
+import '../../features/canvas/graphview/graphview_canvas_controller.dart';
+import '../../features/canvas/graphview/graphview_highlight_channel.dart';
 
 /// Page for working with Finite State Automata
 class FSAPage extends ConsumerStatefulWidget {
@@ -25,6 +26,47 @@ class FSAPage extends ConsumerStatefulWidget {
 
 class _FSAPageState extends ConsumerState<FSAPage> {
   final GlobalKey _canvasKey = GlobalKey();
+  late final GraphViewCanvasController _canvasController;
+  late final GraphViewSimulationHighlightChannel _highlightChannel;
+  late final SimulationHighlightService _highlightService;
+  late final AutomatonCanvasToolController _toolController;
+
+  @override
+  void initState() {
+    super.initState();
+    _canvasController = GraphViewCanvasController(
+      automatonProvider: ref.read(automatonProvider.notifier),
+    );
+    _canvasController.synchronize(ref.read(automatonProvider).currentAutomaton);
+    _highlightChannel = GraphViewSimulationHighlightChannel(_canvasController);
+    _highlightService = SimulationHighlightService(channel: _highlightChannel);
+    _toolController = AutomatonCanvasToolController();
+  }
+
+  @override
+  void dispose() {
+    _highlightService.clear();
+    _canvasController.dispose();
+    _toolController.dispose();
+    super.dispose();
+  }
+
+  void _toggleCanvasTool(AutomatonCanvasTool tool) {
+    final current = _toolController.activeTool;
+    if (current == tool) {
+      _toolController.setActiveTool(AutomatonCanvasTool.selection);
+    } else {
+      _toolController.setActiveTool(tool);
+    }
+  }
+
+  void _handleAddStatePressed() {
+    if (_toolController.activeTool != AutomatonCanvasTool.addState) {
+      _toolController.setActiveTool(AutomatonCanvasTool.addState);
+    }
+    _canvasController.addStateAtCenter();
+  }
+
   void _showSnack(String message, {bool isError = false}) {
     final theme = Theme.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
@@ -337,42 +379,138 @@ class _FSAPageState extends ConsumerState<FSAPage> {
       return AutomatonCanvas(
         automaton: state.currentAutomaton,
         canvasKey: _canvasKey,
-        onAutomatonChanged: (automaton) {
-          ref.read(automatonProvider.notifier).updateAutomaton(automaton);
-        },
+        controller: _canvasController,
+        toolController: _toolController,
         simulationResult: state.simulationResult,
         showTrace: state.simulationResult != null,
       );
     }
 
+    final statusMessage = _buildToolbarStatusMessage(state);
+
     Widget buildCanvasWithToolbar(Widget child) {
+      final hasAutomaton = state.currentAutomaton != null;
+      final onSimulate = hasAutomaton ? _openSimulationSheet : null;
+      final onAlgorithms = hasAutomaton ? _openAlgorithmSheet : null;
+
+      final combinedListenable = Listenable.merge([
+        _toolController,
+        _canvasController.graphRevision,
+      ]);
+
+      if (isMobile) {
+        return Stack(
+          children: [
+            Positioned.fill(child: child),
+            if (onSimulate != null || onAlgorithms != null)
+              Positioned(
+                top: 16,
+                left: 16,
+                child: _CanvasQuickActions(
+                  onSimulate: onSimulate,
+                  onAlgorithms: onAlgorithms,
+                ),
+              ),
+            AnimatedBuilder(
+              animation: combinedListenable,
+              builder: (context, _) {
+                return MobileAutomatonControls(
+                  enableToolSelection: true,
+                  activeTool: _toolController.activeTool,
+                  onSelectTool: () => _toolController.setActiveTool(
+                    AutomatonCanvasTool.selection,
+                  ),
+                  onAddState: _handleAddStatePressed,
+                  onAddTransition: () =>
+                      _toggleCanvasTool(AutomatonCanvasTool.transition),
+                  onFitToContent: _canvasController.fitToContent,
+                  onResetView: _canvasController.resetView,
+                  onClear: () =>
+                      ref.read(automatonProvider.notifier).clearAutomaton(),
+                  onUndo: _canvasController.canUndo
+                      ? () => _canvasController.undo()
+                      : null,
+                  onRedo: _canvasController.canRedo
+                      ? () => _canvasController.redo()
+                      : null,
+                  canUndo: _canvasController.canUndo,
+                  canRedo: _canvasController.canRedo,
+                  onSimulate: null,
+                  isSimulationEnabled: false,
+                  onAlgorithms: null,
+                  isAlgorithmsEnabled: false,
+                  statusMessage: statusMessage,
+                );
+              },
+            ),
+          ],
+        );
+      }
+
       return Stack(
         children: [
           Positioned.fill(child: child),
-          Positioned(
-            top: 12,
-            right: 12,
-            child: Draw2DCanvasToolbar(
-              onClear: () => ref.read(automatonProvider.notifier).clearAutomaton(),
-            ),
+          AnimatedBuilder(
+            animation: combinedListenable,
+            builder: (context, _) {
+              return GraphViewCanvasToolbar(
+                layout: GraphViewCanvasToolbarLayout.desktop,
+                controller: _canvasController,
+                enableToolSelection: true,
+                activeTool: _toolController.activeTool,
+                onSelectTool: () => _toolController.setActiveTool(
+                  AutomatonCanvasTool.selection,
+                ),
+                onAddState: _handleAddStatePressed,
+                onAddTransition: () =>
+                    _toggleCanvasTool(AutomatonCanvasTool.transition),
+                onClear: () =>
+                    ref.read(automatonProvider.notifier).clearAutomaton(),
+                statusMessage: statusMessage,
+              );
+            },
           ),
         ],
       );
     }
 
-    if (kIsWeb) {
-      return buildCanvasWithToolbar(buildAutomatonCanvas());
-    }
-
-    final settings = ref.watch(settingsProvider);
-    final useDraw2dCanvas =
-        settings.useDraw2dCanvas && isDraw2dWebViewSupported();
-
-    if (useDraw2dCanvas) {
-      return buildCanvasWithToolbar(const Draw2DCanvasView());
-    }
-
     return buildCanvasWithToolbar(buildAutomatonCanvas());
+  }
+
+  String _buildToolbarStatusMessage(AutomatonState state) {
+    final automaton = state.currentAutomaton;
+    if (automaton == null) {
+      return 'No automaton loaded';
+    }
+
+    final warnings = <String>[];
+    if (automaton.initialState == null) {
+      warnings.add('Missing start state');
+    }
+    if (automaton.acceptingStates.isEmpty) {
+      warnings.add('No accepting states');
+    }
+    if (!automaton.isDeterministic) {
+      warnings.add('Nondeterministic');
+    }
+    if (automaton.hasEpsilonTransitions) {
+      warnings.add('λ-transitions present');
+    }
+
+    final counts =
+        '${_formatCount('state', 'states', automaton.states.length)} · '
+        '${_formatCount('transition', 'transitions', automaton.transitions.length)}';
+
+    if (warnings.isEmpty) {
+      return counts;
+    }
+
+    return '⚠ ${warnings.join(' · ')} · $counts';
+  }
+
+  String _formatCount(String singular, String plural, int count) {
+    final label = count == 1 ? singular : plural;
+    return '$count $label';
   }
 
   @override
@@ -381,44 +519,23 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     final screenSize = MediaQuery.of(context).size;
     final isMobile = screenSize.width < 1024;
 
-    return Scaffold(
-      body: isMobile
-          ? _buildMobileLayout(state)
-          : _buildDesktopLayout(state),
+    return ProviderScope(
+      overrides: [
+        canvasHighlightServiceProvider.overrideWithValue(_highlightService),
+      ],
+      child: Scaffold(
+        body: isMobile ? _buildMobileLayout(state) : _buildDesktopLayout(state),
+      ),
     );
   }
 
   Widget _buildMobileLayout(AutomatonState state) {
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              IconButton(
-                tooltip: 'Show controls',
-                icon: const Icon(Icons.tune),
-                onPressed: _openAlgorithmSheet,
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                tooltip: 'Run simulation',
-                icon: const Icon(Icons.play_arrow),
-                onPressed: _openSimulationSheet,
-              ),
-            ],
-          ),
-        ),
-
-        // Canvas - gets maximum available space
         Expanded(
           child: Container(
             margin: const EdgeInsets.all(8),
-            child: _buildCanvasArea(
-              state: state,
-              isMobile: true,
-            ),
+            child: _buildCanvasArea(state: state, isMobile: true),
           ),
         ),
       ],
@@ -480,6 +597,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
                         .read(automatonProvider)
                         .simulationResult,
                     regexResult: ref.read(automatonProvider).regexResult,
+                    highlightService: _highlightService,
                   ),
                 ),
               );
@@ -502,10 +620,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
         // Center panel - Canvas
         Expanded(
           flex: 3,
-          child: _buildCanvasArea(
-            state: state,
-            isMobile: false,
-          ),
+          child: _buildCanvasArea(state: state, isMobile: false),
         ),
         const SizedBox(width: 16),
         // Right panel - Simulation
@@ -517,10 +632,51 @@ class _FSAPageState extends ConsumerState<FSAPage> {
                 .simulateAutomaton(inputString),
             simulationResult: state.simulationResult,
             regexResult: state.regexResult,
+            highlightService: _highlightService,
           ),
         ),
       ],
     );
   }
+}
 
+class _CanvasQuickActions extends StatelessWidget {
+  const _CanvasQuickActions({this.onSimulate, this.onAlgorithms});
+
+  final VoidCallback? onSimulate;
+  final VoidCallback? onAlgorithms;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Material(
+      elevation: 6,
+      borderRadius: BorderRadius.circular(32),
+      color: colorScheme.surface.withOpacity(0.92),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (onSimulate != null)
+              IconButton(
+                tooltip: 'Simulate',
+                icon: const Icon(Icons.play_arrow),
+                onPressed: onSimulate,
+              ),
+            if (onSimulate != null && onAlgorithms != null)
+              const SizedBox(width: 4),
+            if (onAlgorithms != null)
+              IconButton(
+                tooltip: 'Algorithms',
+                icon: const Icon(Icons.auto_awesome),
+                onPressed: onAlgorithms,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }

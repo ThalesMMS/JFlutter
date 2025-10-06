@@ -15,20 +15,22 @@ import '../../core/models/fsa.dart';
 import '../../core/models/fsa_transition.dart';
 import '../../core/models/state.dart';
 import '../../core/models/transition.dart';
+import '../../core/constants/automaton_canvas.dart';
 import '../../core/models/grammar.dart';
 import '../../core/models/simulation_result.dart' as sim_result;
 import '../../core/entities/automaton_entity.dart';
 import '../../data/services/automaton_service.dart';
 import '../../core/repositories/automaton_repository.dart';
 import '../../core/services/trace_persistence_service.dart';
-import '../../core/utils/automaton_patch.dart';
 import '../../features/layout/layout_repository_impl.dart';
+import '../../features/canvas/graphview/graphview_canvas_controller.dart';
 
 /// Provider for automaton state management
 class AutomatonProvider extends StateNotifier<AutomatonState> {
   final AutomatonService _automatonService;
   final LayoutRepository _layoutRepository;
   final TracePersistenceService? _tracePersistenceService;
+  int _graphViewMutationCounter = 0;
 
   AutomatonProvider({
     required AutomatonService automatonService,
@@ -38,6 +40,22 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
        _layoutRepository = layoutRepository,
        _tracePersistenceService = tracePersistenceService,
        super(const AutomatonState());
+
+  void _traceGraphView(String operation, [Map<String, Object?>? metadata]) {
+    if (!kDebugMode) {
+      return;
+    }
+
+    final buffer = StringBuffer('[AutomatonProvider] $operation');
+    if (metadata != null && metadata.isNotEmpty) {
+      final formatted = metadata.entries
+          .map((entry) => '${entry.key}=${entry.value}')
+          .join(', ');
+      buffer.write(' {$formatted}');
+    }
+
+    debugPrint(buffer.toString());
+  }
 
   /// Creates a new automaton
   Future<void> createAutomaton({
@@ -91,7 +109,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
   }
 
   /// Adds a new state or updates an existing one using coordinates supplied by
-  /// the Draw2D canvas bridge.
+  /// the GraphView canvas controllers.
   void addState({
     required String id,
     required String label,
@@ -100,6 +118,14 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     bool? isInitial,
     bool? isAccepting,
   }) {
+    _traceGraphView('addState', {
+      'id': id,
+      'label': label,
+      'x': x.toStringAsFixed(2),
+      'y': y.toStringAsFixed(2),
+      'initial': isInitial,
+      'accepting': isAccepting,
+    });
     _mutateAutomaton((current) {
       final List<State> updatedStates = [];
       bool found = false;
@@ -144,14 +170,15 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       } else if (isInitial == false) {
         normalizedStates = updatedStates
             .map(
-              (state) => state.id == id
-                  ? state.copyWith(isInitial: false)
-                  : state,
+              (state) =>
+                  state.id == id ? state.copyWith(isInitial: false) : state,
             )
             .toList();
       }
 
-      final statesById = {for (final state in normalizedStates) state.id: state};
+      final statesById = {
+        for (final state in normalizedStates) state.id: state,
+      };
       final updatedTransitions = _rebindTransitions(
         current.transitions.whereType<FSATransition>(),
         statesById,
@@ -160,9 +187,12 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       final initialStateId = isInitial == true
           ? id
           : current.initialState?.id ??
-              normalizedStates.firstWhereOrNull((state) => state.isInitial)?.id;
-      final initialState =
-          initialStateId != null ? statesById[initialStateId] : null;
+                normalizedStates
+                    .firstWhereOrNull((state) => state.isInitial)
+                    ?.id;
+      final initialState = initialStateId != null
+          ? statesById[initialStateId]
+          : null;
 
       final acceptingStates = statesById.values
           .where((state) => state.isAccepting)
@@ -179,11 +209,12 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
   }
 
   /// Moves a state to a new position on the canvas.
-  void moveState({
-    required String id,
-    required double x,
-    required double y,
-  }) {
+  void moveState({required String id, required double x, required double y}) {
+    _traceGraphView('moveState', {
+      'id': id,
+      'x': x.toStringAsFixed(2),
+      'y': y.toStringAsFixed(2),
+    });
     _mutateAutomaton((current) {
       final updatedStates = current.states
           .map(
@@ -206,8 +237,9 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       return current.copyWith(
         states: statesById.values.toSet(),
         transitions: updatedTransitions.map<Transition>((t) => t).toSet(),
-        initialState:
-            initialStateId != null ? statesById[initialStateId] : null,
+        initialState: initialStateId != null
+            ? statesById[initialStateId]
+            : null,
         acceptingStates: acceptingStates,
         modified: DateTime.now(),
       );
@@ -216,13 +248,19 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
 
   /// Removes the state identified by [id] along with connected transitions.
   void removeState({required String id}) {
+    _traceGraphView('removeState', {'id': id});
     _mutateAutomaton((current) {
       if (current.states.every((state) => state.id != id)) {
+        _traceGraphView('removeState skipped', {
+          'id': id,
+          'reason': 'not-found',
+        });
         return current;
       }
 
-      final remainingStates =
-          current.states.where((state) => state.id != id).toList(growable: false);
+      final remainingStates = current.states
+          .where((state) => state.id != id)
+          .toList(growable: false);
 
       if (remainingStates.isEmpty) {
         return current.copyWith(
@@ -234,29 +272,34 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
         );
       }
 
-      final initialCandidate = remainingStates
-          .firstWhereOrNull((state) => state.id == current.initialState?.id);
+      final initialCandidate = remainingStates.firstWhereOrNull(
+        (state) => state.id == current.initialState?.id,
+      );
       final resolvedInitial = initialCandidate ?? remainingStates.first;
 
       final normalizedStates = remainingStates
           .map(
             (state) => state.copyWith(
               isInitial: state.id == resolvedInitial.id,
-              isAccepting: current.acceptingStates
-                  .any((accepting) => accepting.id == state.id),
+              isAccepting: current.acceptingStates.any(
+                (accepting) => accepting.id == state.id,
+              ),
             ),
           )
           .toList();
 
-      State? updatedInitial =
-          normalizedStates.firstWhereOrNull((state) => state.isInitial);
+      State? updatedInitial = normalizedStates.firstWhereOrNull(
+        (state) => state.isInitial,
+      );
       if (updatedInitial == null && normalizedStates.isNotEmpty) {
         final fallback = normalizedStates.first.copyWith(isInitial: true);
         normalizedStates[0] = fallback;
         updatedInitial = fallback;
       }
 
-      final statesById = {for (final state in normalizedStates) state.id: state};
+      final statesById = {
+        for (final state in normalizedStates) state.id: state,
+      };
       final filteredTransitions = current.transitions
           .whereType<FSATransition>()
           .where(
@@ -265,10 +308,13 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
           )
           .toList();
 
-      final reboundTransitions =
-          _rebindTransitions(filteredTransitions, statesById);
-      final acceptingStates =
-          statesById.values.where((state) => state.isAccepting).toSet();
+      final reboundTransitions = _rebindTransitions(
+        filteredTransitions,
+        statesById,
+      );
+      final acceptingStates = statesById.values
+          .where((state) => state.isAccepting)
+          .toSet();
 
       return current.copyWith(
         states: statesById.values.toSet(),
@@ -289,32 +335,58 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     double? controlPointX,
     double? controlPointY,
   }) {
+    _traceGraphView('addOrUpdateTransition', {
+      'id': id,
+      'from': fromStateId,
+      'to': toStateId,
+      'label': label,
+      'cpX': controlPointX?.toStringAsFixed(2),
+      'cpY': controlPointY?.toStringAsFixed(2),
+    });
     _mutateAutomaton((current) {
-      final statesById = {
-        for (final state in current.states) state.id: state,
-      };
+      final statesById = {for (final state in current.states) state.id: state};
       final fromState = statesById[fromStateId];
       final toState = statesById[toStateId];
       if (fromState == null || toState == null) {
+        _traceGraphView('addOrUpdateTransition skipped', {
+          'id': id,
+          'missingFrom': fromState == null,
+          'missingTo': toState == null,
+        });
         return current;
       }
 
       final parsedLabel = _parseTransitionLabel(label);
-      final transitions = current.transitions.whereType<FSATransition>().toList();
-      final existingIndex =
-          transitions.indexWhere((transition) => transition.id == id);
+      final resolvedLabel = _formatTransitionLabel(label, parsedLabel);
+      final transitions = current.transitions
+          .whereType<FSATransition>()
+          .toList();
+      final existingIndex = transitions.indexWhere(
+        (transition) => transition.id == id,
+      );
 
-      final controlPoint = controlPointX != null && controlPointY != null
-          ? Vector2(controlPointX, controlPointY)
-          : null;
+      Vector2? controlPoint;
+      if (controlPointX != null && controlPointY != null) {
+        controlPoint = Vector2(controlPointX, controlPointY);
+      }
+
+      final isSelfLoop = fromState.id == toState.id;
+      if (controlPoint == null && isSelfLoop) {
+        controlPoint = _defaultLoopControlPoint(fromState);
+      }
 
       if (existingIndex >= 0) {
         final existing = transitions[existingIndex];
+        final existingControl = controlPoint ?? existing.controlPoint;
+        final resolvedControlPoint =
+            isSelfLoop && _isZeroVector(existingControl)
+            ? _defaultLoopControlPoint(fromState)
+            : existingControl;
         transitions[existingIndex] = existing.copyWith(
           fromState: fromState,
           toState: toState,
-          label: label,
-          controlPoint: controlPoint ?? existing.controlPoint,
+          label: resolvedLabel,
+          controlPoint: resolvedControlPoint,
           inputSymbols: parsedLabel.symbols,
           lambdaSymbol: parsedLabel.lambdaSymbol,
         );
@@ -324,7 +396,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
             id: id,
             fromState: fromState,
             toState: toState,
-            label: label,
+            label: resolvedLabel,
             controlPoint: controlPoint,
             inputSymbols: parsedLabel.symbols,
             lambdaSymbol: parsedLabel.lambdaSymbol,
@@ -347,10 +419,17 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
 
   /// Removes the transition identified by [id] from the automaton.
   void removeTransition({required String id}) {
+    _traceGraphView('removeTransition', {'id': id});
     _mutateAutomaton((current) {
-      final transitions = current.transitions.whereType<FSATransition>().toList();
+      final transitions = current.transitions
+          .whereType<FSATransition>()
+          .toList();
       final index = transitions.indexWhere((transition) => transition.id == id);
       if (index < 0) {
+        _traceGraphView('removeTransition skipped', {
+          'id': id,
+          'reason': 'not-found',
+        });
         return current;
       }
 
@@ -364,17 +443,11 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
   }
 
   /// Updates the label of an existing state.
-  void updateStateLabel({
-    required String id,
-    required String label,
-  }) {
+  void updateStateLabel({required String id, required String label}) {
+    _traceGraphView('updateStateLabel', {'id': id, 'label': label});
     _mutateAutomaton((current) {
       final updatedStates = current.states
-          .map(
-            (state) => state.id == id
-                ? state.copyWith(label: label)
-                : state,
-          )
+          .map((state) => state.id == id ? state.copyWith(label: label) : state)
           .toList();
       final statesById = {for (final state in updatedStates) state.id: state};
       final updatedTransitions = _rebindTransitions(
@@ -390,8 +463,9 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       return current.copyWith(
         states: statesById.values.toSet(),
         transitions: updatedTransitions.map<Transition>((t) => t).toSet(),
-        initialState:
-            initialStateId != null ? statesById[initialStateId] : null,
+        initialState: initialStateId != null
+            ? statesById[initialStateId]
+            : null,
         acceptingStates: acceptingStates,
         modified: DateTime.now(),
       );
@@ -408,29 +482,33 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       return;
     }
 
+    _traceGraphView('updateStateFlags', {
+      'id': id,
+      'isInitial': isInitial,
+      'isAccepting': isAccepting,
+    });
     _mutateAutomaton((current) {
       if (current.states.every((state) => state.id != id)) {
+        _traceGraphView('updateStateFlags skipped', {
+          'id': id,
+          'reason': 'not-found',
+        });
         return current;
       }
 
-      final updatedStates = current.states
-          .map((state) {
-            var newInitial = state.isInitial;
-            var newAccepting = state.isAccepting;
+      final updatedStates = current.states.map((state) {
+        var newInitial = state.isInitial;
+        var newAccepting = state.isAccepting;
 
-            if (state.id == id) {
-              newInitial = isInitial ?? state.isInitial;
-              newAccepting = isAccepting ?? state.isAccepting;
-            } else if (isInitial == true) {
-              newInitial = false;
-            }
+        if (state.id == id) {
+          newInitial = isInitial ?? state.isInitial;
+          newAccepting = isAccepting ?? state.isAccepting;
+        } else if (isInitial == true) {
+          newInitial = false;
+        }
 
-            return state.copyWith(
-              isInitial: newInitial,
-              isAccepting: newAccepting,
-            );
-          })
-          .toList();
+        return state.copyWith(isInitial: newInitial, isAccepting: newAccepting);
+      }).toList();
 
       if (!updatedStates.any((state) => state.isInitial) &&
           updatedStates.isNotEmpty) {
@@ -443,10 +521,12 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
         statesById,
       );
 
-      final initialState =
-          updatedStates.firstWhereOrNull((state) => state.isInitial);
-      final acceptingStates =
-          statesById.values.where((state) => state.isAccepting).toSet();
+      final initialState = updatedStates.firstWhereOrNull(
+        (state) => state.isInitial,
+      );
+      final acceptingStates = statesById.values
+          .where((state) => state.isAccepting)
+          .toSet();
 
       return current.copyWith(
         states: statesById.values.toSet(),
@@ -459,23 +539,34 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
   }
 
   /// Updates the label (and symbol set) of an existing transition.
-  void updateTransitionLabel({
-    required String id,
-    required String label,
-  }) {
+  void updateTransitionLabel({required String id, required String label}) {
+    _traceGraphView('updateTransitionLabel', {'id': id, 'label': label});
     _mutateAutomaton((current) {
-      final transitions = current.transitions.whereType<FSATransition>().toList();
+      final transitions = current.transitions
+          .whereType<FSATransition>()
+          .toList();
       final index = transitions.indexWhere((transition) => transition.id == id);
       if (index < 0) {
+        _traceGraphView('updateTransitionLabel skipped', {
+          'id': id,
+          'reason': 'not-found',
+        });
         return current;
       }
 
       final parsedLabel = _parseTransitionLabel(label);
+      final resolvedLabel = _formatTransitionLabel(label, parsedLabel);
       final existing = transitions[index];
+      final isSelfLoop = existing.fromState.id == existing.toState.id;
+      final resolvedControlPoint =
+          isSelfLoop && _isZeroVector(existing.controlPoint)
+          ? _defaultLoopControlPoint(existing.fromState)
+          : existing.controlPoint;
       transitions[index] = existing.copyWith(
-        label: label,
+        label: resolvedLabel,
         inputSymbols: parsedLabel.symbols,
         lambdaSymbol: parsedLabel.lambdaSymbol,
+        controlPoint: resolvedControlPoint,
       );
 
       final updatedAlphabet = _mergeAlphabet(
@@ -495,8 +586,19 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     final current = state.currentAutomaton ?? _createEmptyAutomaton();
     final updated = transform(current);
     if (identical(updated, state.currentAutomaton)) {
+      _traceGraphView('mutation skipped', {'reason': 'identical-snapshot'});
       return;
     }
+
+    _graphViewMutationCounter++;
+    _traceGraphView('mutation applied', {
+      'seq': _graphViewMutationCounter,
+      'states': updated.states.length,
+      'transitions': updated.transitions.length,
+      'initial': updated.initialState?.id,
+      'accepting': updated.acceptingStates.length,
+      'alphabet': updated.alphabet.length,
+    });
 
     state = state.copyWith(
       currentAutomaton: updated,
@@ -529,7 +631,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
   ) {
     final trimmed = label.trim();
     if (trimmed.isEmpty) {
-      return (symbols: <String>{}, lambdaSymbol: null);
+      return (symbols: <String>{}, lambdaSymbol: 'ε');
     }
 
     final normalized = trimmed.replaceAll(RegExp(r'\s+'), '');
@@ -544,6 +646,36 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
         .where((symbol) => symbol.isNotEmpty)
         .toSet();
     return (symbols: parts, lambdaSymbol: null);
+  }
+
+  String _formatTransitionLabel(
+    String rawLabel,
+    ({Set<String> symbols, String? lambdaSymbol}) metadata,
+  ) {
+    if (metadata.lambdaSymbol != null) {
+      return 'ε';
+    }
+
+    final collapsed = rawLabel.trim().replaceAll(RegExp(r'\s+'), '');
+    if (collapsed.isNotEmpty) {
+      return collapsed;
+    }
+
+    if (metadata.symbols.isNotEmpty) {
+      return metadata.symbols.join(',');
+    }
+
+    return 'ε';
+  }
+
+  Vector2 _defaultLoopControlPoint(State state) {
+    const radius = kAutomatonStateDiameter / 2;
+    return Vector2(state.position.x + radius, state.position.y - radius);
+  }
+
+  bool _isZeroVector(Vector2 vector) {
+    const epsilon = 1e-3;
+    return vector.x.abs() < epsilon && vector.y.abs() < epsilon;
   }
 
   Set<String> _mergeAlphabet(Set<String> alphabet, Set<String> additions) {
@@ -576,23 +708,6 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       panOffset: Vector2.zero(),
       zoomLevel: 1.0,
     );
-  }
-
-  /// Applies an incremental patch produced by the web editor without forcing
-  /// a full automaton reload. The patch uses the same schema defined for the
-  /// JavaScript bridge.
-  void applyAutomatonPatch(Map<String, dynamic> patch) {
-    final current = state.currentAutomaton;
-    if (current == null) {
-      return;
-    }
-    try {
-      final updated = applyAutomatonPatchToFsa(current, patch);
-      updateAutomaton(updated);
-    } catch (error, stackTrace) {
-      debugPrint('Failed to apply automaton patch: $error');
-      debugPrint('$stackTrace');
-    }
   }
 
   /// Simulates the current automaton with input string
@@ -1156,3 +1271,16 @@ final automatonProvider =
         layoutRepository: LayoutRepositoryImpl(),
       );
     });
+
+/// Provides a lazily constructed GraphView canvas controller for automata.
+final graphViewCanvasControllerProvider = Provider<GraphViewCanvasController>((
+  ref,
+) {
+  final automatonNotifier = ref.read(automatonProvider.notifier);
+  final controller = GraphViewCanvasController(
+    automatonProvider: automatonNotifier,
+  );
+  ref.onDispose(controller.dispose);
+  controller.synchronize(automatonNotifier.state.currentAutomaton);
+  return controller;
+});

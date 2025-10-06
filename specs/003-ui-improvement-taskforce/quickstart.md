@@ -49,11 +49,11 @@ flutter run -d chrome
 - [ ] Verify empty canvas shows:
   - Gray background with border
   - "Empty Canvas" message with icon (centered)
-  - "Add State" button visible (top-right or floating)
+  - "Add state" action visible in the toolbar (desktop) or mobile control tray (bottom)
 - [ ] Canvas controls not blocked by layout
 
 #### 1.2 State Creation
-- [ ] Tap "Add State" button
+- [ ] Tap "Add state" action
 - [ ] Tap on canvas at position (200, 150)
 - [ ] Verify state appears:
   - Circle (30px radius)
@@ -229,9 +229,9 @@ flutter run -d chrome
 
 #### 5.4 Blocked Buttons Check
 - [ ] For each layout (mobile, tablet, desktop):
-  - [ ] Add State button visible and tappable
-  - [ ] Add Transition button visible and tappable
-  - [ ] Simulate button visible and tappable
+  - [ ] Add state action visible and tappable (toolbar or mobile tray)
+  - [ ] Add transition workflow reachable (context menu or toolbar)
+  - [ ] Simulate action visible and tappable
   - [ ] Save button visible and tappable
   - [ ] No buttons hidden behind panels or overlays
 
@@ -245,7 +245,7 @@ flutter run -d chrome
   - "Automaton canvas, double tap state to edit, drag to move, pinch to zoom"
   - For state: "State q0, initial"
   - For transition: "Transition from q0 to q1, symbol: 1"
-  - For buttons: "Add State, button", "Simulate, button"
+  - For controls: "Add state, button", "Simulate, button"
 
 #### 6.2 Screen Reader (Android TalkBack)
 - [ ] Enable TalkBack (Settings → Accessibility → TalkBack)
@@ -254,10 +254,10 @@ flutter run -d chrome
 
 #### 6.3 Touch Targets
 - [ ] Measure button sizes (use Flutter DevTools)
-- [ ] Verify all buttons ≥44x44 logical pixels:
-  - Add State button
-  - Add Transition button
-  - Simulate button
+- [ ] Verify all controls ≥44x44 logical pixels:
+  - Add state action
+  - Add transition affordance
+  - Simulate action
   - Retry button
   - State/transition tap targets
 

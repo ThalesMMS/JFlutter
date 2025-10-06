@@ -80,9 +80,7 @@ lib/
 │   │   ├── simulation_panel.dart          # Simulation UI (update structure)
 │   │   ├── error_banner.dart              # NEW: Inline error banner
 │   │   ├── import_error_dialog.dart       # NEW: Import error dialog
-│   │   ├── retry_button.dart              # NEW: Retry button widget
-│   │   ├── touch_gesture_handler.dart     # Gesture coordination
-│   │   └── transition_geometry.dart       # Rendering utilities
+│   │   └── retry_button.dart              # NEW: Retry button widget
 │   └── providers/
 │       ├── fsa_provider.dart              # FSA state management
 │       ├── pda_provider.dart              # PDA state management

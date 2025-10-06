@@ -30,14 +30,15 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
     Graph? graph,
     GraphViewController? viewController,
     TransformationController? transformationController,
-  })  : graph = graph ?? Graph(),
-        graphController = viewController ??
-            GraphViewController(
-              transformationController:
-                  transformationController ?? TransformationController(),
-            ),
-        _ownsTransformationController =
-            viewController == null && transformationController == null;
+  }) : graph = graph ?? Graph(),
+       graphController =
+           viewController ??
+           GraphViewController(
+             transformationController:
+                 transformationController ?? TransformationController(),
+           ),
+       _ownsTransformationController =
+           viewController == null && transformationController == null;
 
   @protected
   final TNotifier notifier;
@@ -73,6 +74,9 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
 
   @override
   Map<String, GraphViewCanvasEdge> get edgesCache => _edges;
+
+  @override
+  Size? get currentViewportSize => _viewportSize;
 
   Iterable<GraphViewCanvasNode> get nodes => _nodes.values;
   Iterable<GraphViewCanvasEdge> get edges => _edges.values;
@@ -203,7 +207,9 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
     }
 
     mutation();
-    _logGraphViewBase('Mutation executed, synchronizing graph with domain data');
+    _logGraphViewBase(
+      'Mutation executed, synchronizing graph with domain data',
+    );
     synchronizeGraph(currentDomainData, fromMutation: true);
   }
 
@@ -279,8 +285,9 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
     var edgesDirty = false;
 
     try {
-      final removedNodeIds =
-          _nodes.keys.where((id) => !incomingNodes.containsKey(id)).toList();
+      final removedNodeIds = _nodes.keys
+          .where((id) => !incomingNodes.containsKey(id))
+          .toList();
       for (final nodeId in removedNodeIds) {
         _nodes.remove(nodeId);
         final nodeInstance = _graphNodes.remove(nodeId);
@@ -290,8 +297,9 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
         }
 
         final affectedEdges = _edges.values
-            .where((edge) =>
-                edge.fromStateId == nodeId || edge.toStateId == nodeId)
+            .where(
+              (edge) => edge.fromStateId == nodeId || edge.toStateId == nodeId,
+            )
             .map((edge) => edge.id)
             .toList();
         for (final edgeId in affectedEdges) {
@@ -305,8 +313,9 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
         }
       }
 
-      final removedEdgeIds =
-          _edges.keys.where((id) => !incomingEdges.containsKey(id)).toList();
+      final removedEdgeIds = _edges.keys
+          .where((id) => !incomingEdges.containsKey(id))
+          .toList();
       for (final edgeId in removedEdgeIds) {
         _edges.remove(edgeId);
         final edgeInstance = _graphEdges.remove(edgeId);
@@ -333,8 +342,10 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
         }
 
         final hasPositionChanged =
-            existingNode.x != incomingNode.x || existingNode.y != incomingNode.y;
-        final hasMetadataChanged = existingNode.label != incomingNode.label ||
+            existingNode.x != incomingNode.x ||
+            existingNode.y != incomingNode.y;
+        final hasMetadataChanged =
+            existingNode.label != incomingNode.label ||
             existingNode.isInitial != incomingNode.isInitial ||
             existingNode.isAccepting != incomingNode.isAccepting;
 
@@ -394,7 +405,9 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
           'Graph refreshed (nodes=${_nodes.length}, edges=${_edges.length}, revision=${graphRevision.value})',
         );
       } else {
-        _logGraphViewBase('Graph synchronization completed without structural changes');
+        _logGraphViewBase(
+          'Graph synchronization completed without structural changes',
+        );
       }
     } finally {
       _isSynchronizing = false;
@@ -433,8 +446,7 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
   _GraphHistoryEntry? _captureHistoryEntry() {
     try {
       final snapshot = toSnapshot(currentDomainData);
-      final encoded =
-          GraphViewAutomatonSnapshot.fromJson(snapshot.toJson());
+      final encoded = GraphViewAutomatonSnapshot.fromJson(snapshot.toJson());
       final highlight = SimulationHighlight(
         stateIds: Set<String>.from(highlightNotifier.value.stateIds),
         transitionIds: Set<String>.from(highlightNotifier.value.transitionIds),

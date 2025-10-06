@@ -14,6 +14,9 @@ void _logViewportEvent(String message) {
   }
 }
 
+const double _kFitToContentMaxScale = 1.75;
+const double _kFitToContentFallbackExtent = 160.0;
+
 /// Shared viewport and highlight helpers for GraphView canvas controllers.
 mixin GraphViewViewportHighlightMixin on GraphViewHighlightController {
   /// Exposes the underlying graph structure managed by the controller.
@@ -28,6 +31,10 @@ mixin GraphViewViewportHighlightMixin on GraphViewHighlightController {
 
   /// Provides access to the cached canvas edges.
   Map<String, GraphViewCanvasEdge> get edgesCache;
+
+  /// Returns the most recent viewport size reported by the hosting widget.
+  @protected
+  Size? get currentViewportSize;
 
   /// Notifier used to broadcast highlight updates to listeners.
   final ValueNotifier<SimulationHighlight> highlightNotifier = ValueNotifier(
@@ -52,12 +59,16 @@ mixin GraphViewViewportHighlightMixin on GraphViewHighlightController {
 
   double _extractScale(Matrix4 matrix) {
     final storage = matrix.storage;
-    final scaleX = math.sqrt(storage[0] * storage[0] +
-        storage[1] * storage[1] +
-        storage[2] * storage[2]);
-    final scaleY = math.sqrt(storage[4] * storage[4] +
-        storage[5] * storage[5] +
-        storage[6] * storage[6]);
+    final scaleX = math.sqrt(
+      storage[0] * storage[0] +
+          storage[1] * storage[1] +
+          storage[2] * storage[2],
+    );
+    final scaleY = math.sqrt(
+      storage[4] * storage[4] +
+          storage[5] * storage[5] +
+          storage[6] * storage[6],
+    );
     if (scaleX == 0 && scaleY == 0) {
       return 1.0;
     }
@@ -84,7 +95,9 @@ mixin GraphViewViewportHighlightMixin on GraphViewHighlightController {
     final relativeScale = targetScale / safeCurrent;
     matrix.scale(relativeScale);
     transformation.value = matrix;
-    _logViewportEvent('Applied scale factor $relativeScale (target=$targetScale)');
+    _logViewportEvent(
+      'Applied scale factor $relativeScale (target=$targetScale)',
+    );
   }
 
   /// Increases the viewport zoom while respecting reasonable bounds.
@@ -110,12 +123,45 @@ mixin GraphViewViewportHighlightMixin on GraphViewHighlightController {
   /// Adjusts the viewport to focus on the available nodes.
   void fitToContent() {
     if (graph.nodes.isEmpty) {
-      _logViewportEvent('fitToContent requested with empty graph, resetting view');
+      _logViewportEvent(
+        'fitToContent requested with empty graph, resetting view',
+      );
       resetView();
       return;
     }
-    graphController.zoomToFit();
-    _logViewportEvent('fitToContent applied');
+    final transformation = graphController.transformationController;
+    final viewport = currentViewportSize;
+    if (viewport == null || transformation == null) {
+      graphController.zoomToFit();
+      _logViewportEvent('fitToContent fell back to GraphView implementation');
+      return;
+    }
+
+    final bounds = graph.calculateGraphBounds();
+    final contentWidth = math.max(bounds.width, _kFitToContentFallbackExtent);
+    final contentHeight = math.max(bounds.height, _kFitToContentFallbackExtent);
+
+    final scaleX = viewport.width / contentWidth;
+    final scaleY = viewport.height / contentHeight;
+    final rawScale = math.min(scaleX, scaleY) * 0.9;
+    final targetScale = rawScale.clamp(0.05, _kFitToContentMaxScale);
+
+    final contentCenterX = bounds.left + bounds.width / 2;
+    final contentCenterY = bounds.top + bounds.height / 2;
+    final targetCenterX = viewport.width / 2;
+    final targetCenterY = viewport.height / 2;
+
+    final matrix = Matrix4.identity()
+      ..translate(
+        targetCenterX - contentCenterX * targetScale,
+        targetCenterY - contentCenterY * targetScale,
+      )
+      ..scale(targetScale);
+
+    transformation.value = matrix;
+    _logViewportEvent(
+      'fitToContent applied (scale=${targetScale.toStringAsFixed(2)}, content=${contentWidth.toStringAsFixed(1)}x${contentHeight.toStringAsFixed(1)})',
+    );
   }
 
   @override

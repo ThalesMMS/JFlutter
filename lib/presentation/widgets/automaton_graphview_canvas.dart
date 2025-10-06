@@ -1144,6 +1144,9 @@ class _AutomatonGraphViewCanvasState
             ),
           ),
           (recognizer) {
+            if (recognizer.team == null) {
+              recognizer.team = _gestureArenaTeam;
+            }
             recognizer.onNodeDoubleTap = (node) =>
                 _handleNodeContextTap(node.id);
           },

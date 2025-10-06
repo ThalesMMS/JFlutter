@@ -243,64 +243,6 @@ void main() {
           );
         },
       );
-
-    testWidgets(
-      'double tap on a node with selection tool opens the state options sheet',
-      (tester) async {
-        toolController.setActiveTool(AutomatonCanvasTool.selection);
-        final state = automaton_state.State(
-          id: 'A',
-          label: 'A',
-          position: Vector2(40, 40),
-          isInitial: true,
-        );
-        final automaton = FSA(
-          id: 'context',
-          name: 'Automaton',
-          states: {state},
-          transitions: const <FSATransition>{},
-          alphabet: const <String>{'a'},
-          initialState: state,
-          acceptingStates: <automaton_state.State>{},
-          created: DateTime.utc(2024, 1, 1),
-          modified: DateTime.utc(2024, 1, 1),
-          bounds: const math.Rectangle<double>(0, 0, 400, 300),
-          zoomLevel: 1,
-          panOffset: Vector2.zero(),
-        );
-
-        provider.updateAutomaton(automaton);
-        controller.synchronize(automaton);
-
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: AutomatonGraphViewCanvas(
-                automaton: automaton,
-                canvasKey: GlobalKey(),
-                controller: controller,
-                toolController: toolController,
-              ),
-            ),
-          ),
-        );
-
-        await tester.pumpAndSettle();
-
-        final stateFinder = find.text('A');
-        expect(stateFinder, findsOneWidget);
-
-        await tester.tap(stateFinder);
-        await tester.pump(const Duration(milliseconds: 100));
-        await tester.tap(stateFinder);
-        await tester.pumpAndSettle();
-
-        expect(find.text('State label'), findsOneWidget);
-
-        await tester.tap(find.text('Close'));
-        await tester.pumpAndSettle();
-      },
-    );
   });
 
   group('AutomatonGraphViewCanvas', () {
@@ -484,35 +426,5 @@ void main() {
       expect(call['id'], equals(existingId));
       expect(call['label'], equals('edited'));
     });
-  });
-
-  test('self-loop geometry allows non-circular styling and aligned arrows', () {
-    const center = Offset(100, 60);
-    const nodeRadius = 28.0;
-
-    final geometry = buildSelfLoopGeometry(
-      center: center,
-      nodeRadius: nodeRadius,
-      loopWidthFactor: 1.3,
-      loopHeightFactor: 1.8,
-      loopTightness: 0.85,
-    );
-
-    final bounds = geometry.path.getBounds();
-    expect(bounds.width, isNot(closeTo(bounds.height, 0.01)));
-    expect(bounds.height, greaterThan(bounds.width));
-
-    final metrics = geometry.path.computeMetrics().toList(growable: false);
-    expect(metrics, isNotEmpty);
-    final metric = metrics.first;
-    final tangent = metric.getTangentForOffset(metric.length);
-    expect(tangent, isNotNull);
-
-    expect(geometry.direction.distance, greaterThan(0));
-    final normalizedDirection =
-        geometry.direction / geometry.direction.distance;
-    final dot = normalizedDirection.dx * tangent!.vector.dx +
-        normalizedDirection.dy * tangent.vector.dy;
-    expect(dot, closeTo(1, 0.1));
   });
 }

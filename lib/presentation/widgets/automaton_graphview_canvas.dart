@@ -1086,8 +1086,6 @@ class _AutomatonGraphViewCanvasState
   }
 
   Map<Type, GestureRecognizerFactory> _buildGestureRecognizers() {
-    final team = GestureArenaTeam();
-
     final gestures = <Type, GestureRecognizerFactory>{
       _NodePanGestureRecognizer:
           GestureRecognizerFactoryWithHandlers<_NodePanGestureRecognizer>(
@@ -1102,12 +1100,11 @@ class _AutomatonGraphViewCanvasState
             ),
             (recognizer) {
               recognizer
-                ..team = team
                 ..onStart = _handleNodePanStart
                 ..onUpdate = _handleNodePanUpdate
                 ..onEnd = _handleNodePanEnd
                 ..onCancel = _handleNodePanCancel
-                ..dragStartBehavior = DragStartBehavior.start;
+                ..dragStartBehavior = DragStartBehavior.down;
             },
           ),
     };
@@ -1124,7 +1121,6 @@ class _AutomatonGraphViewCanvasState
             ),
           ),
           (recognizer) {
-            recognizer.team = team;
             recognizer.onNodeTap = (node) => _handleNodeTap(node.id);
           },
         );
@@ -1141,7 +1137,6 @@ class _AutomatonGraphViewCanvasState
             ),
           ),
           (recognizer) {
-            recognizer.team = team;
             recognizer.onNodeDoubleTap = (node) =>
                 _handleNodeContextTap(node.id);
           },
@@ -1640,6 +1635,7 @@ class _NodePanGestureRecognizer extends PanGestureRecognizer {
     );
     _activePointer = event.pointer;
     super.addAllowedPointer(event);
+    resolvePointer(event.pointer, GestureDisposition.accepted);
   }
 
   @override
@@ -1695,6 +1691,7 @@ class _NodeTapGestureRecognizer extends TapGestureRecognizer {
       'down on ${node.id} tool=${toolResolver().name}',
     );
     super.addAllowedPointer(event);
+    resolvePointer(event.pointer, GestureDisposition.accepted);
   }
 
   @override

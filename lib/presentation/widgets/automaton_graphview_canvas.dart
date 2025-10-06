@@ -749,7 +749,7 @@ class _AutomatonGraphViewCanvasState
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancelar'),
+              child: const Text('Cancel'),
             ),
           ],
         );

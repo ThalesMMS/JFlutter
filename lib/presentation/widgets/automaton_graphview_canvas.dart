@@ -26,9 +26,6 @@ import 'transition_editors/transition_label_editor.dart';
 const double _kNodeDiameter = kAutomatonStateDiameter;
 const double _kNodeRadius = _kNodeDiameter / 2;
 const Size _kInitialArrowSize = Size(24, 12);
-const double _kLoopWidthFactor = 1.2;
-const double _kLoopHeightFactor = 1.75;
-const double _kLoopTightness = 0.9;
 
 /// GraphView-based canvas used to render and edit automatons.
 class AutomatonGraphViewCanvas extends ConsumerStatefulWidget {
@@ -1438,15 +1435,62 @@ class _GraphViewEdgePainter extends CustomPainter {
 
   ({Path path, Offset tip, Offset direction, Offset labelAnchor})
   _buildSelfLoopPath(Offset center) {
-    return buildSelfLoopGeometry(
-      center: center,
-      nodeRadius: _kNodeRadius,
-      loopWidthFactor: _kLoopWidthFactor,
-      loopHeightFactor: _kLoopHeightFactor,
-      loopTightness: _kLoopTightness,
+    // Shape loosely inspired by References/nfa_2_dfa-main loop rendering.
+    const arrowLength = 12.0;
+    final nodeRadius = _kNodeRadius;
+    final loopRadius = nodeRadius * 1.05;
+    final verticalOffset = nodeRadius * 1.55;
+    final horizontalOffset = nodeRadius * 0.1;
+    final loopCenter = center.translate(horizontalOffset, -verticalOffset);
+    const startAngle = math.pi * 0.35;
+    const sweepAngle = math.pi * 1.55;
+    final rect = Rect.fromCircle(center: loopCenter, radius: loopRadius);
+
+    final rawPath = Path()..addArc(rect, startAngle, sweepAngle);
+    final metrics = rawPath.computeMetrics().toList(growable: false);
+    if (metrics.isEmpty) {
+      final terminalAngle = startAngle + sweepAngle;
+      final fallbackTip = Offset(
+        loopCenter.dx + loopRadius * math.cos(terminalAngle),
+        loopCenter.dy + loopRadius * math.sin(terminalAngle),
+      );
+      final fallbackDirection = Offset(
+        -math.sin(terminalAngle),
+        math.cos(terminalAngle),
+      );
+      return (
+        path: rawPath,
+        tip: fallbackTip,
+        direction: fallbackDirection,
+        labelAnchor: loopCenter.translate(0, -loopRadius * 1.1),
+      );
+    }
+
+    final metric = metrics.first;
+    final totalLength = metric.length;
+    final trimmedLength = math.max(0.0, totalLength - arrowLength);
+    final trimmedPath = Path()
+      ..addPath(metric.extractPath(0, trimmedLength), Offset.zero);
+
+    final arrowBase =
+        metric.getTangentForOffset(trimmedLength)?.position ?? center;
+    final terminalAngle = startAngle + sweepAngle;
+    final computedTip = Offset(
+      loopCenter.dx + loopRadius * math.cos(terminalAngle),
+      loopCenter.dy + loopRadius * math.sin(terminalAngle),
+    );
+    final arrowTip =
+        metric.getTangentForOffset(totalLength)?.position ?? computedTip;
+    final direction = arrowTip - arrowBase;
+    final labelAnchor = loopCenter.translate(0, -loopRadius * 1.15);
+
+    return (
+      path: trimmedPath,
+      tip: arrowTip,
+      direction: direction,
+      labelAnchor: labelAnchor,
     );
   }
-
 
   ({Path path, Offset tip, Offset direction, Offset labelAnchor})
   _buildLoopPath(Offset center, Offset anchor) {
@@ -1559,118 +1603,6 @@ class _GraphViewEdgePainter extends CustomPainter {
         !setEquals(oldDelegate.selectedTransitions, selectedTransitions) ||
         oldDelegate.theme != theme;
   }
-}
-
-/// Builds the geometry for a self-loop rendered around [center].
-///
-/// The curve is approximated using cubic segments so its width, height and
-/// tightness can be tuned independently for stylistic adjustments.
-@visibleForTesting
-({Path path, Offset tip, Offset direction, Offset labelAnchor})
-    buildSelfLoopGeometry({
-  required Offset center,
-  required double nodeRadius,
-  double loopWidthFactor = _kLoopWidthFactor,
-  double loopHeightFactor = _kLoopHeightFactor,
-  double loopTightness = _kLoopTightness,
-}) {
-  const arrowLength = 12.0;
-  final horizontalOffset = nodeRadius * 0.1;
-  final verticalOffset = nodeRadius * 1.55;
-  final loopCenter = center.translate(horizontalOffset, -verticalOffset);
-  final radiusX = nodeRadius * loopWidthFactor;
-  final radiusY = nodeRadius * loopHeightFactor;
-
-  const startAngle = math.pi * 0.35;
-  const sweepAngle = math.pi * 1.55;
-
-  Offset pointOnEllipse(double angle) {
-    return Offset(
-      loopCenter.dx + radiusX * math.cos(angle),
-      loopCenter.dy + radiusY * math.sin(angle),
-    );
-  }
-
-  final segments = math.max(1, (sweepAngle.abs() / (math.pi / 2)).ceil());
-  final segmentSweep = sweepAngle / segments;
-
-  final path = Path();
-  final startPoint = pointOnEllipse(startAngle);
-  path.moveTo(startPoint.dx, startPoint.dy);
-
-  Offset endPoint = startPoint;
-  Offset lastControl = startPoint;
-
-  for (var i = 0; i < segments; i++) {
-    final angle0 = startAngle + segmentSweep * i;
-    final angle1 = angle0 + segmentSweep;
-    final p0 = i == 0 ? startPoint : pointOnEllipse(angle0);
-    final p3 = pointOnEllipse(angle1);
-
-    final k = loopTightness * (4 / 3) * math.tan(segmentSweep / 4);
-    final derivative0 =
-        Offset(-radiusX * math.sin(angle0), radiusY * math.cos(angle0));
-    final derivative1 =
-        Offset(-radiusX * math.sin(angle1), radiusY * math.cos(angle1));
-
-    final c1 = p0 + derivative0 * k;
-    final c2 = p3 - derivative1 * k;
-
-    path.cubicTo(c1.dx, c1.dy, c2.dx, c2.dy, p3.dx, p3.dy);
-
-    lastControl = c2;
-    endPoint = p3;
-  }
-
-  final rawPath = path;
-  final metrics = rawPath.computeMetrics().toList(growable: false);
-
-  Offset fallbackDirection() {
-    final candidate = endPoint - lastControl;
-    return candidate.distance == 0 ? const Offset(1, 0) : candidate;
-  }
-
-  if (metrics.isEmpty) {
-    final labelPoint = pointOnEllipse(startAngle + sweepAngle / 2);
-    return (
-      path: rawPath,
-      tip: endPoint,
-      direction: fallbackDirection(),
-      labelAnchor: labelPoint,
-    );
-  }
-
-  final metric = metrics.first;
-  final totalLength = metric.length;
-  final trimmedLength = math.max(0.0, totalLength - arrowLength);
-
-  final Path trimmedPath;
-  if (trimmedLength <= 0) {
-    trimmedPath = rawPath;
-  } else {
-    trimmedPath = Path()
-      ..addPath(metric.extractPath(0, trimmedLength), Offset.zero);
-  }
-
-  final arrowBaseTangent = metric.getTangentForOffset(trimmedLength);
-  final arrowTipTangent = metric.getTangentForOffset(totalLength);
-  final arrowBase = arrowBaseTangent?.position ?? endPoint;
-  final arrowTip = arrowTipTangent?.position ?? endPoint;
-  final rawDirection = arrowTip - arrowBase;
-  final direction = rawDirection.distance == 0
-      ? fallbackDirection()
-      : rawDirection;
-
-  final labelTangent = metric.getTangentForOffset(totalLength * 0.5);
-  final labelAnchor =
-      labelTangent?.position ?? pointOnEllipse(startAngle + sweepAngle / 2);
-
-  return (
-    path: trimmedPath,
-    tip: arrowTip,
-    direction: direction,
-    labelAnchor: labelAnchor,
-  );
 }
 
 typedef _NodeHitTester = GraphViewCanvasNode? Function(Offset globalPosition);

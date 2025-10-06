@@ -737,7 +737,7 @@ class _AutomatonGraphViewCanvasState
                       'automaton-transition-choice-create-new',
                     ),
                     leading: const Icon(Icons.add_outlined),
-                    title: const Text('Criar nova transição'),
+                    title: const Text('Create new transition'),
                     onTap: () => Navigator.of(
                       context,
                     ).pop(const _TransitionEditChoice.createNew()),
@@ -749,7 +749,7 @@ class _AutomatonGraphViewCanvasState
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancelar'),
+              child: const Text('Cancel'),
             ),
           ],
         );

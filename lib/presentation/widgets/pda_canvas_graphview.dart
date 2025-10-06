@@ -630,13 +630,17 @@ class _PDACanvasGraphViewState extends ConsumerState<PDACanvasGraphView> {
                       ],
                     ),
                     const SizedBox(height: 12),
+                    // Determine lambda defaults based on automaton state or configuration
+                    final defaultIsLambdaInput = nodes.isNotEmpty ? false : true;
+                    final defaultIsLambdaPop = nodes.isNotEmpty ? false : true;
+                    final defaultIsLambdaPush = nodes.isNotEmpty ? false : true;
                     PdaTransitionEditor(
                       initialRead: '',
                       initialPop: '',
                       initialPush: '',
-                      isLambdaInput: true,
-                      isLambdaPop: true,
-                      isLambdaPush: true,
+                      isLambdaInput: defaultIsLambdaInput,
+                      isLambdaPop: defaultIsLambdaPop,
+                      isLambdaPush: defaultIsLambdaPush,
                       onSubmit: ({
                         required String readSymbol,
                         required String popSymbol,

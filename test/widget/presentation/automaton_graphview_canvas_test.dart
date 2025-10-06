@@ -485,4 +485,34 @@ void main() {
       expect(call['label'], equals('edited'));
     });
   });
+
+  test('self-loop geometry allows non-circular styling and aligned arrows', () {
+    const center = Offset(100, 60);
+    const nodeRadius = 28.0;
+
+    final geometry = buildSelfLoopGeometry(
+      center: center,
+      nodeRadius: nodeRadius,
+      loopWidthFactor: 1.3,
+      loopHeightFactor: 1.8,
+      loopTightness: 0.85,
+    );
+
+    final bounds = geometry.path.getBounds();
+    expect(bounds.width, isNot(closeTo(bounds.height, 0.01)));
+    expect(bounds.height, greaterThan(bounds.width));
+
+    final metrics = geometry.path.computeMetrics().toList(growable: false);
+    expect(metrics, isNotEmpty);
+    final metric = metrics.first;
+    final tangent = metric.getTangentForOffset(metric.length);
+    expect(tangent, isNotNull);
+
+    expect(geometry.direction.distance, greaterThan(0));
+    final normalizedDirection =
+        geometry.direction / geometry.direction.distance;
+    final dot = normalizedDirection.dx * tangent!.vector.dx +
+        normalizedDirection.dy * tangent.vector.dy;
+    expect(dot, closeTo(1, 0.1));
+  });
 }

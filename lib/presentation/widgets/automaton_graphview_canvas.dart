@@ -1092,8 +1092,6 @@ class _AutomatonGraphViewCanvasState
   }
 
   Map<Type, GestureRecognizerFactory> _buildGestureRecognizers() {
-    final team = GestureArenaTeam();
-
     final gestures = <Type, GestureRecognizerFactory>{
       _NodePanGestureRecognizer:
           GestureRecognizerFactoryWithHandlers<_NodePanGestureRecognizer>(
@@ -1108,12 +1106,11 @@ class _AutomatonGraphViewCanvasState
             ),
             (recognizer) {
               recognizer
-                ..team = team
                 ..onStart = _handleNodePanStart
                 ..onUpdate = _handleNodePanUpdate
                 ..onEnd = _handleNodePanEnd
                 ..onCancel = _handleNodePanCancel
-                ..dragStartBehavior = DragStartBehavior.start;
+                ..dragStartBehavior = DragStartBehavior.down;
             },
           ),
     };
@@ -1130,7 +1127,6 @@ class _AutomatonGraphViewCanvasState
             ),
           ),
           (recognizer) {
-            recognizer.team = team;
             recognizer.onNodeTap = (node) => _handleNodeTap(node.id);
           },
         );
@@ -1147,7 +1143,6 @@ class _AutomatonGraphViewCanvasState
             ),
           ),
           (recognizer) {
-            recognizer.team = team;
             recognizer.onNodeDoubleTap = (node) =>
                 _handleNodeContextTap(node.id);
           },
@@ -1455,8 +1450,18 @@ class _GraphViewEdgePainter extends CustomPainter {
       loopHeightFactor: _kLoopHeightFactor,
       loopTightness: _kLoopTightness,
     );
-  }
+    final arrowTip =
+        metric.getTangentForOffset(totalLength)?.position ?? computedTip;
+    final direction = arrowTip - arrowBase;
+    final labelAnchor = loopCenter.translate(0, -loopRadius * 1.15);
 
+    return (
+      path: trimmedPath,
+      tip: arrowTip,
+      direction: direction,
+      labelAnchor: labelAnchor,
+    );
+  }
 
   ({Path path, Offset tip, Offset direction, Offset labelAnchor})
   _buildLoopPath(Offset center, Offset anchor) {
@@ -1817,6 +1822,7 @@ class _NodePanGestureRecognizer extends PanGestureRecognizer {
     );
     _activePointer = event.pointer;
     super.addAllowedPointer(event);
+    resolvePointer(event.pointer, GestureDisposition.accepted);
   }
 
   @override
@@ -1872,6 +1878,7 @@ class _NodeTapGestureRecognizer extends TapGestureRecognizer {
       'down on ${node.id} tool=${toolResolver().name}',
     );
     super.addAllowedPointer(event);
+    resolvePointer(event.pointer, GestureDisposition.accepted);
   }
 
   @override

@@ -30,7 +30,6 @@ class MobileAutomatonControls extends StatelessWidget {
     this.isAlgorithmsEnabled = true,
     this.onMetrics,
     this.isMetricsEnabled = true,
-    this.showPrimaryActions = true,
   }) : assert(
          !enableToolSelection || onSelectTool != null,
          'onSelectTool must be provided when tool selection is enabled.',
@@ -59,7 +58,6 @@ class MobileAutomatonControls extends StatelessWidget {
   final bool isAlgorithmsEnabled;
   final VoidCallback? onMetrics;
   final bool isMetricsEnabled;
-  final bool showPrimaryActions;
 
   @override
   Widget build(BuildContext context) {
@@ -161,7 +159,7 @@ class MobileAutomatonControls extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (showPrimaryActions && primaryActions.isNotEmpty)
+                  if (primaryActions.isNotEmpty)
                     Wrap(
                       alignment: WrapAlignment.center,
                       spacing: 8,
@@ -175,9 +173,7 @@ class MobileAutomatonControls extends StatelessWidget {
                           )
                           .toList(),
                     ),
-                  if (showPrimaryActions &&
-                      primaryActions.isNotEmpty &&
-                      canvasActions.isNotEmpty)
+                  if (primaryActions.isNotEmpty && canvasActions.isNotEmpty)
                     const SizedBox(height: 8),
                   if (canvasActions.isNotEmpty)
                     Wrap(

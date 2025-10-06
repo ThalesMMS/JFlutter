@@ -149,9 +149,10 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
       'Disposing controller (ownsTransformation=$_ownsTransformationController)',
     );
     disposeViewportHighlight();
-    if (_ownsTransformationController) {
-      graphController.transformationController?.dispose();
-    }
+    // GraphView internally disposes the transformation controller when the
+    // widget is removed from the tree. Disposing it here causes the controller
+    // to be accessed after disposal during widget teardown, so we intentionally
+    // skip manual disposal even when we created it.
   }
 
   /// Converts domain state into a snapshot consumed by the canvas.

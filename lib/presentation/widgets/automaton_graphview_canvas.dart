@@ -1563,6 +1563,7 @@ class _NodePanGestureRecognizer extends PanGestureRecognizer {
     );
     _activePointer = event.pointer;
     super.addAllowedPointer(event);
+    resolvePointer(event.pointer, GestureDisposition.accepted);
   }
 
   @override

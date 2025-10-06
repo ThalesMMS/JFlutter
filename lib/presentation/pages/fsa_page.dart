@@ -390,6 +390,8 @@ class _FSAPageState extends ConsumerState<FSAPage> {
 
     Widget buildCanvasWithToolbar(Widget child) {
       final hasAutomaton = state.currentAutomaton != null;
+      final onSimulate = hasAutomaton ? _openSimulationSheet : null;
+      final onAlgorithms = hasAutomaton ? _openAlgorithmSheet : null;
 
       final combinedListenable = Listenable.merge([
         _toolController,
@@ -400,20 +402,15 @@ class _FSAPageState extends ConsumerState<FSAPage> {
         return Stack(
           children: [
             Positioned.fill(child: child),
-            Positioned(
-              top: 0,
-              left: 0,
-              child: SafeArea(
-                minimum: const EdgeInsets.only(left: 16, top: 12, right: 16),
-                child: Align(
-                  alignment: Alignment.topLeft,
-                  child: _CanvasPrimaryActions(
-                    onSimulate: hasAutomaton ? _openSimulationSheet : null,
-                    onAlgorithms: hasAutomaton ? _openAlgorithmSheet : null,
-                  ),
+            if (onSimulate != null || onAlgorithms != null)
+              Positioned(
+                top: 16,
+                left: 16,
+                child: _CanvasQuickActions(
+                  onSimulate: onSimulate,
+                  onAlgorithms: onAlgorithms,
                 ),
               ),
-            ),
             AnimatedBuilder(
               animation: combinedListenable,
               builder: (context, _) {
@@ -438,7 +435,10 @@ class _FSAPageState extends ConsumerState<FSAPage> {
                       : null,
                   canUndo: _canvasController.canUndo,
                   canRedo: _canvasController.canRedo,
-                  showPrimaryActions: false,
+                  onSimulate: null,
+                  isSimulationEnabled: false,
+                  onAlgorithms: null,
+                  isAlgorithmsEnabled: false,
                   statusMessage: statusMessage,
                 );
               },
@@ -640,49 +640,39 @@ class _FSAPageState extends ConsumerState<FSAPage> {
   }
 }
 
-class _CanvasPrimaryActions extends StatelessWidget {
-  const _CanvasPrimaryActions({
-    required this.onSimulate,
-    required this.onAlgorithms,
-  });
+class _CanvasQuickActions extends StatelessWidget {
+  const _CanvasQuickActions({this.onSimulate, this.onAlgorithms});
 
   final VoidCallback? onSimulate;
   final VoidCallback? onAlgorithms;
 
   @override
   Widget build(BuildContext context) {
-    if (onSimulate == null && onAlgorithms == null) {
-      return const SizedBox.shrink();
-    }
-
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Material(
+      elevation: 6,
       borderRadius: BorderRadius.circular(32),
       color: colorScheme.surface.withOpacity(0.92),
-      elevation: 6,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (onSimulate != null)
-              Tooltip(
-                message: 'Simulate',
-                child: IconButton.filled(
-                  icon: const Icon(Icons.play_arrow),
-                  onPressed: onSimulate,
-                ),
+              IconButton(
+                tooltip: 'Simulate',
+                icon: const Icon(Icons.play_arrow),
+                onPressed: onSimulate,
               ),
             if (onSimulate != null && onAlgorithms != null)
-              const SizedBox(width: 8),
+              const SizedBox(width: 4),
             if (onAlgorithms != null)
-              Tooltip(
-                message: 'Algorithms',
-                child: IconButton.filledTonal(
-                  icon: const Icon(Icons.auto_awesome),
-                  onPressed: onAlgorithms,
-                ),
+              IconButton(
+                tooltip: 'Algorithms',
+                icon: const Icon(Icons.auto_awesome),
+                onPressed: onAlgorithms,
               ),
           ],
         ),

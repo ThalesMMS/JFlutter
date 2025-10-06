@@ -1431,10 +1431,10 @@ class _GraphViewEdgePainter extends CustomPainter {
   ({Path path, Offset tip, Offset direction, Offset labelAnchor})
   _buildSelfLoopPath(Offset center) {
     const arrowLength = 12.0;
-    final loopRadius = _kNodeRadius * 1.55;
-    final arcCenter = center.translate(0, -loopRadius + _kNodeRadius * 0.25);
-    const startAngle = math.pi * 1.15;
-    const sweepAngle = math.pi * 1.55;
+    final loopRadius = _kNodeRadius * 1.1;
+    final arcCenter = center.translate(0, -loopRadius - _kNodeRadius * 0.15);
+    const startAngle = math.pi * 1.05;
+    const sweepAngle = math.pi * 1.35;
     final rect = Rect.fromCircle(center: arcCenter, radius: loopRadius);
 
     final path = Path()..addArc(rect, startAngle, sweepAngle);
@@ -1465,7 +1465,7 @@ class _GraphViewEdgePainter extends CustomPainter {
       path: trimmedPath,
       tip: arrowTip,
       direction: arrowTip - arrowBase,
-      labelAnchor: Offset(bounds.center.dx, bounds.top - 12),
+      labelAnchor: Offset(bounds.center.dx, bounds.top - 10),
     );
   }
 

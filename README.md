@@ -14,17 +14,6 @@ JFlutter is a complete port of the classic JFLAP educational tool, rebuilt from 
 
 **Status:** Work in Progress
 
-_Nota: migração em andamento._
-
-Development is ongoing as we continue refining the application and expanding coverage across platforms, tests, and documentation. Recent focus areas from the latest milestone include:
-- ✅ **Performance Optimization** - Canvas optimized for large automata with LOD rendering and viewport culling
-- ✅ **Trace Persistence** - Immutable trace navigation between simulators with unified state management
-- ✅ **Import/Export Validation** - Comprehensive validation for .jff, JSON, and SVG formats
-- ✅ **Enhanced Diagnostics** - Detailed error messages and automaton validation with user-friendly suggestions
-- ✅ **Code Quality** - Static analysis clean, formatting standardized, test suites updated
-- ✅ **Quickstart Verified** - Application successfully builds and runs on macOS with evidence captured
-- ✅ **Documentation Updated** - README and reference deviations documented
-
 ## Key Features
 
 ### Core Functionality
@@ -89,13 +78,6 @@ Development is ongoing as we continue refining the application and expanding cov
 #### **Turing Machines (TM)**
 - `tm_binary_to_unary.json` - TM converting binary to unary representation
 
-**Features**:
-- ✅ **100% Offline** - No internet required after installation
-- ✅ **Educational Metadata** - Each example includes learning objectives and difficulty levels
-- ✅ **Reference Validation** - Examples validated against authoritative implementations
-- ✅ **Progressive Learning** - Examples ordered from basic to advanced concepts
-- ✅ **Quickstart Integration** - Seamless integration with the quickstart workflow
-
 Assets are bundled in `jflutter_js/examples/` via `pubspec.yaml`, ensuring offline access per the "Examples v1" contract.
 
 ## Architecture
@@ -146,13 +128,6 @@ lib/
 ```
 
 ## Getting Started
-
-### Quickstart Guide
-For a comprehensive hands-on tutorial, see our **[Quickstart Guide](specs/001-projeto-jflutter-refor/quickstart.md)** which covers:
-- Complete offline workflow (Import → Simulate → Convert → Validate)
-- Examples v1 library usage
-- Educational integration strategies
-- Troubleshooting and performance optimization
 
 ### Prerequisites
 - Flutter SDK 3.16+ 

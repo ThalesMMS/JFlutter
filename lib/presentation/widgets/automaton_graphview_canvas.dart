@@ -1104,8 +1104,10 @@ class _AutomatonGraphViewCanvasState
               ),
             ),
             (recognizer) {
+              if (recognizer.team == null) {
+                recognizer.team = team;
+              }
               recognizer
-                ..team = team
                 ..onStart = _handleNodePanStart
                 ..onUpdate = _handleNodePanUpdate
                 ..onEnd = _handleNodePanEnd
@@ -1127,7 +1129,9 @@ class _AutomatonGraphViewCanvasState
             ),
           ),
           (recognizer) {
-            recognizer.team = team;
+            if (recognizer.team == null) {
+              recognizer.team = team;
+            }
             recognizer.onNodeTap = (node) => _handleNodeTap(node.id);
           },
         );
@@ -1144,7 +1148,6 @@ class _AutomatonGraphViewCanvasState
             ),
           ),
           (recognizer) {
-            recognizer.team = team;
             recognizer.onNodeDoubleTap = (node) =>
                 _handleNodeContextTap(node.id);
           },

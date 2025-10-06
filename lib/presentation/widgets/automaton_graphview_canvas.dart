@@ -77,6 +77,7 @@ class _AutomatonGraphViewCanvasState
   String? _draggingNodeId;
   Offset? _dragStartWorldPosition;
   Offset? _dragStartNodeCenter;
+  final GestureArenaTeam _gestureArenaTeam = GestureArenaTeam();
 
   TransformationController? get _transformationController =>
       _controller.graphController.transformationController;
@@ -1100,7 +1101,7 @@ class _AutomatonGraphViewCanvasState
             ),
             (recognizer) {
               if (recognizer.team == null) {
-                recognizer.team = team;
+                recognizer.team = _gestureArenaTeam;
               }
               recognizer
                 ..onStart = _handleNodePanStart
@@ -1125,7 +1126,7 @@ class _AutomatonGraphViewCanvasState
           ),
           (recognizer) {
             if (recognizer.team == null) {
-              recognizer.team = team;
+              recognizer.team = _gestureArenaTeam;
             }
             recognizer.onNodeTap = (node) => _handleNodeTap(node.id);
           },

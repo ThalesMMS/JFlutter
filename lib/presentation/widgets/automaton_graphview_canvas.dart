@@ -1450,17 +1450,6 @@ class _GraphViewEdgePainter extends CustomPainter {
       loopHeightFactor: _kLoopHeightFactor,
       loopTightness: _kLoopTightness,
     );
-    final arrowTip =
-        metric.getTangentForOffset(totalLength)?.position ?? computedTip;
-    final direction = arrowTip - arrowBase;
-    final labelAnchor = loopCenter.translate(0, -loopRadius * 1.15);
-
-    return (
-      path: trimmedPath,
-      tip: arrowTip,
-      direction: direction,
-      labelAnchor: labelAnchor,
-    );
   }
 
   ({Path path, Offset tip, Offset direction, Offset labelAnchor})

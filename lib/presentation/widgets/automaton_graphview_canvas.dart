@@ -1688,11 +1688,12 @@ class _NodePanGestureRecognizer extends PanGestureRecognizer {
   final ValueChanged<Offset>? onPointerDown;
 
   int? _activePointer;
+  int? _pendingPointer;
 
   @override
   void addAllowedPointer(PointerDownEvent event) {
     onPointerDown?.call(event.position);
-    if (_activePointer != null) {
+    if (_activePointer != null || _pendingPointer != null) {
       return;
     }
     if (toolResolver() != AutomatonCanvasTool.selection) {
@@ -1703,17 +1704,30 @@ class _NodePanGestureRecognizer extends PanGestureRecognizer {
       return;
     }
     debugPrint(
-      '[NodePanRecognizer] accepting pointer ${event.pointer} '
+      '[NodePanRecognizer] tracking pointer ${event.pointer} '
       'for node ${node.id}',
     );
-    _activePointer = event.pointer;
+    _pendingPointer = event.pointer;
     super.addAllowedPointer(event);
+  }
+
+  @override
+  void acceptGesture(int pointer) {
+    if (pointer == _pendingPointer) {
+      debugPrint('[NodePanRecognizer] accepting pointer $pointer');
+      _activePointer = pointer;
+      _pendingPointer = null;
+    }
+    super.acceptGesture(pointer);
   }
 
   @override
   void rejectGesture(int pointer) {
     if (pointer == _activePointer) {
       _activePointer = null;
+    }
+    if (pointer == _pendingPointer) {
+      _pendingPointer = null;
     }
     super.rejectGesture(pointer);
   }
@@ -1722,6 +1736,9 @@ class _NodePanGestureRecognizer extends PanGestureRecognizer {
   void didStopTrackingLastPointer(int pointer) {
     if (pointer == _activePointer) {
       _activePointer = null;
+    }
+    if (pointer == _pendingPointer) {
+      _pendingPointer = null;
     }
     super.didStopTrackingLastPointer(pointer);
   }

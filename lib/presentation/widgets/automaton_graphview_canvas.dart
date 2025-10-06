@@ -1702,11 +1702,11 @@ class _NodePanGestureRecognizer extends PanGestureRecognizer {
     if (node == null) {
       return;
     }
+    _activePointer = event.pointer;
     debugPrint(
-      '[NodePanRecognizer] accepting pointer ${event.pointer} '
+      '[NodePanRecognizer] tracking pointer ${event.pointer} '
       'for node ${node.id}',
     );
-    _activePointer = event.pointer;
     super.addAllowedPointer(event);
   }
 
@@ -1741,16 +1741,10 @@ class _NodeTapGestureRecognizer extends TapGestureRecognizer {
   ValueChanged<GraphViewCanvasNode>? onNodeTap;
   GraphViewCanvasNode? _downNode;
 
-  bool get _toolEnabled {
-    final tool = toolResolver();
-    return tool == AutomatonCanvasTool.transition ||
-        tool == AutomatonCanvasTool.selection;
-  }
-
   @override
   void addAllowedPointer(PointerDownEvent event) {
     onPointerDown?.call(event.position);
-    if (!_toolEnabled) {
+    if (toolResolver() != AutomatonCanvasTool.transition) {
       return;
     }
     final node = hitTester(event.position);

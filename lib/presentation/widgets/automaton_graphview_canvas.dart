@@ -457,6 +457,10 @@ class _AutomatonGraphViewCanvasState
     if (node == null) {
       return;
     }
+    debugPrint(
+      '[AutomatonGraphViewCanvas] pan start gesture -> ${node.id} '
+      'local=${details.localPosition}',
+    );
     _beginNodeDrag(node, details.localPosition);
   }
 
@@ -464,6 +468,7 @@ class _AutomatonGraphViewCanvasState
     if (_activeTool != AutomatonCanvasTool.selection) {
       return;
     }
+    debugPrint('[AutomatonGraphViewCanvas] pan update delta=${details.delta}');
     _updateNodeDrag(details.localPosition);
   }
 
@@ -471,6 +476,9 @@ class _AutomatonGraphViewCanvasState
     if (_activeTool != AutomatonCanvasTool.selection) {
       return;
     }
+    debugPrint(
+      '[AutomatonGraphViewCanvas] pan end velocity=${details.velocity}',
+    );
     _endNodeDrag();
   }
 
@@ -478,6 +486,7 @@ class _AutomatonGraphViewCanvasState
     if (_activeTool != AutomatonCanvasTool.selection) {
       return;
     }
+    debugPrint('[AutomatonGraphViewCanvas] pan cancel');
     _endNodeDrag();
   }
 
@@ -520,6 +529,7 @@ class _AutomatonGraphViewCanvasState
     if (node == null) {
       return;
     }
+    debugPrint('[AutomatonGraphViewCanvas] opening state options for $nodeId');
     _showStateOptions(node);
   }
 
@@ -1108,7 +1118,7 @@ class _AutomatonGraphViewCanvasState
                 ..onUpdate = _handleNodePanUpdate
                 ..onEnd = _handleNodePanEnd
                 ..onCancel = _handleNodePanCancel
-                ..dragStartBehavior = DragStartBehavior.down;
+                ..dragStartBehavior = DragStartBehavior.start;
             },
           ),
     };
@@ -1144,9 +1154,6 @@ class _AutomatonGraphViewCanvasState
             ),
           ),
           (recognizer) {
-            if (recognizer.team == null) {
-              recognizer.team = _gestureArenaTeam;
-            }
             recognizer.onNodeDoubleTap = (node) =>
                 _handleNodeContextTap(node.id);
           },
@@ -1577,15 +1584,23 @@ class _NodePanGestureRecognizer extends PanGestureRecognizer {
 
   @override
   void addAllowedPointer(PointerDownEvent event) {
+    debugPrint(
+      '[NodePanRecognizer] addAllowedPointer pointer ${event.pointer} '
+      'tool=${toolResolver().name} active=$_activePointer '
+      'position=${event.position} dragStart=$dragStartBehavior',
+    );
     onPointerDown?.call(event.position);
     if (_activePointer != null) {
+      debugPrint('[NodePanRecognizer] pointer already active -> ignore');
       return;
     }
     if (toolResolver() != AutomatonCanvasTool.selection) {
+      debugPrint('[NodePanRecognizer] tool not selection -> ignore');
       return;
     }
     final node = hitTester(event.position);
     if (node == null) {
+      debugPrint('[NodePanRecognizer] no node hit -> ignore');
       return;
     }
     _activePointer = event.pointer;
@@ -1594,11 +1609,11 @@ class _NodePanGestureRecognizer extends PanGestureRecognizer {
       'for node ${node.id}',
     );
     super.addAllowedPointer(event);
-    resolvePointer(event.pointer, GestureDisposition.accepted);
   }
 
   @override
   void rejectGesture(int pointer) {
+    debugPrint('[NodePanRecognizer] rejectGesture pointer=$pointer');
     if (pointer == _activePointer) {
       _activePointer = null;
     }
@@ -1607,6 +1622,7 @@ class _NodePanGestureRecognizer extends PanGestureRecognizer {
 
   @override
   void didStopTrackingLastPointer(int pointer) {
+    debugPrint('[NodePanRecognizer] didStopTracking pointer=$pointer');
     if (pointer == _activePointer) {
       _activePointer = null;
     }
@@ -1630,6 +1646,10 @@ class _NodeTapGestureRecognizer extends TapGestureRecognizer {
 
   @override
   void addAllowedPointer(PointerDownEvent event) {
+    debugPrint(
+      '[NodeTapRecognizer] addAllowedPointer pointer ${event.pointer} '
+      'tool=${toolResolver().name} position=${event.position}',
+    );
     onPointerDown?.call(event.position);
     if (toolResolver() != AutomatonCanvasTool.transition) {
       return;
@@ -1705,6 +1725,10 @@ class _NodeDoubleTapGestureRecognizer extends DoubleTapGestureRecognizer {
 
   @override
   void addAllowedPointer(PointerDownEvent event) {
+    debugPrint(
+      '[NodeDoubleTapRecognizer] addAllowedPointer pointer=${event.pointer} '
+      'tool=${toolResolver().name} position=${event.position}',
+    );
     onPointerDown?.call(event.position);
     if (toolResolver() != AutomatonCanvasTool.selection) {
       return;
@@ -1725,6 +1749,8 @@ class _NodeDoubleTapGestureRecognizer extends DoubleTapGestureRecognizer {
       debugPrint(
         '[NodeDoubleTapRecognizer] double tap down -> ${_candidate!.id}',
       );
+    } else {
+      debugPrint('[NodeDoubleTapRecognizer] double tap down -> no node hit');
     }
   }
 
@@ -1734,10 +1760,14 @@ class _NodeDoubleTapGestureRecognizer extends DoubleTapGestureRecognizer {
       debugPrint('[NodeDoubleTapRecognizer] double tap -> ${node.id}');
       onNodeDoubleTap?.call(node);
     }
+    debugPrint('[NodeDoubleTapRecognizer] clearing candidate (success=$node)');
     _candidate = null;
   }
 
   void _resetCandidate() {
+    if (_candidate != null) {
+      debugPrint('[NodeDoubleTapRecognizer] cancel -> ${_candidate!.id}');
+    }
     _candidate = null;
   }
 

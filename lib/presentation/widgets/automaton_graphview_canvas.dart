@@ -1351,6 +1351,8 @@ class _GraphViewEdgePainter extends CustomPainter {
     required this.theme,
   });
 
+  static final ArrowEdgeRenderer _loopRenderer = ArrowEdgeRenderer();
+
   final List<GraphViewCanvasEdge> edges;
   final List<GraphViewCanvasNode> nodes;
   final Set<String> highlightedTransitions;
@@ -1393,9 +1395,11 @@ class _GraphViewEdgePainter extends CustomPainter {
         ..strokeCap = StrokeCap.round;
 
       if (edge.fromStateId == edge.toStateId) {
-        final loopGeometry = _buildSelfLoopPath(fromCenter);
-        canvas.drawPath(loopGeometry.path, paint);
-        _drawArrowHead(canvas, loopGeometry.tip, loopGeometry.direction, color);
+        final loopGeometry = _buildGraphViewSelfLoop(edge, from);
+        if (loopGeometry == null) {
+          continue;
+        }
+        _loopRenderer.renderEdge(canvas, loopGeometry.edge, paint);
         _drawEdgeLabel(canvas, loopGeometry.labelAnchor, edge.label, color);
         continue;
       }
@@ -1435,82 +1439,27 @@ class _GraphViewEdgePainter extends CustomPainter {
     }
   }
 
-  ({Path path, Offset tip, Offset direction, Offset labelAnchor})
-  _buildSelfLoopPath(Offset center) {
-    // Shape loosely inspired by References/nfa_2_dfa-main loop rendering.
-    const arrowLength = 12.0;
-    final nodeRadius = _kNodeRadius;
-    final loopRadius = nodeRadius * 1.05;
-    final verticalOffset = nodeRadius * 1.55;
-    final horizontalOffset = nodeRadius * 0.1;
-    final loopCenter = center.translate(horizontalOffset, -verticalOffset);
-    const startAngle = math.pi * 0.35;
-    const sweepAngle = math.pi * 1.55;
-    final rect = Rect.fromCircle(center: loopCenter, radius: loopRadius);
+  ({Edge edge, Offset labelAnchor})? _buildGraphViewSelfLoop(
+    GraphViewCanvasEdge edge,
+    GraphViewCanvasNode node,
+  ) {
+    final graphNode = Node.Id(node.id)
+      ..size = const Size(_kNodeDiameter, _kNodeDiameter)
+      ..position = Offset(node.x, node.y);
+    final graphEdge = Edge(graphNode, graphNode);
 
-    final rawPath = Path()..addArc(rect, startAngle, sweepAngle);
-    final metrics = rawPath.computeMetrics().toList(growable: false);
-    if (metrics.isEmpty) {
-      final terminalAngle = startAngle + sweepAngle;
-      final fallbackTip = Offset(
-        loopCenter.dx + loopRadius * math.cos(terminalAngle),
-        loopCenter.dy + loopRadius * math.sin(terminalAngle),
-      );
-      final fallbackDirection = Offset(
-        -math.sin(terminalAngle),
-        math.cos(terminalAngle),
-      );
-      return (
-        path: rawPath,
-        tip: fallbackTip,
-        direction: fallbackDirection,
-        labelAnchor: loopCenter.translate(0, -loopRadius * 1.1),
-      );
+    final loop = _loopRenderer.buildSelfLoopPath(
+      graphEdge,
+      arrowLength: ARROW_LENGTH,
+    );
+    if (loop == null) {
+      return null;
     }
 
-    final metric = metrics.first;
-    final totalLength = metric.length;
-    final trimmedLength = math.max(0.0, totalLength - arrowLength);
-    final trimmedPath = Path()
-      ..addPath(metric.extractPath(0, trimmedLength), Offset.zero);
+    final bounds = loop.path.getBounds();
+    final labelAnchor = Offset(bounds.center.dx, bounds.top - 12);
 
-    final arrowBase =
-        metric.getTangentForOffset(trimmedLength)?.position ?? center;
-    final terminalAngle = startAngle + sweepAngle;
-    final computedTip = Offset(
-      loopCenter.dx + loopRadius * math.cos(terminalAngle),
-      loopCenter.dy + loopRadius * math.sin(terminalAngle),
-    );
-    final arrowTip =
-        metric.getTangentForOffset(totalLength)?.position ?? computedTip;
-    final direction = arrowTip - arrowBase;
-    final labelAnchor = loopCenter.translate(0, -loopRadius * 1.15);
-
-    return (
-      path: trimmedPath,
-      tip: arrowTip,
-      direction: direction,
-      labelAnchor: labelAnchor,
-    );
-  }
-
-  ({Path path, Offset tip, Offset direction, Offset labelAnchor})
-  _buildLoopPath(Offset center, Offset anchor) {
-    final path = Path();
-    final start = center + Offset(0, -_kNodeRadius);
-    final end = center + Offset(_kNodeRadius * 0.7, -_kNodeRadius * 0.2);
-    path.moveTo(start.dx, start.dy);
-    path.quadraticBezierTo(anchor.dx, anchor.dy, end.dx, end.dy);
-    final labelAnchor = Offset(
-      (start.dx + anchor.dx) / 2,
-      math.min(start.dy, anchor.dy) - 12,
-    );
-    return (
-      path: path,
-      tip: end,
-      direction: end - anchor,
-      labelAnchor: labelAnchor,
-    );
+    return (edge: graphEdge, labelAnchor: labelAnchor);
   }
 
   Offset _projectFromCenter(Offset center, Offset target, double radius) {
@@ -1794,5 +1743,4 @@ class _NodeDoubleTapGestureRecognizer extends DoubleTapGestureRecognizer {
     _resetCandidate();
     super.rejectGesture(pointer);
   }
-
 }

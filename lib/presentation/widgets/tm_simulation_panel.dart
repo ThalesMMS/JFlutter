@@ -328,8 +328,7 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
       _isAccepted = simulation.accepted;
       _statusMessage = simulation.accepted
           ? 'Accepted'
-          : (simulation.errorMessage != null &&
-                  simulation.errorMessage!.isNotEmpty
+          : (simulation.errorMessage?.isNotEmpty ?? false
               ? 'Rejected: ${simulation.errorMessage}'
               : 'Rejected');
       _simulationSteps = simulation.steps;

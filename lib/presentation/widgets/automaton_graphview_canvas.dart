@@ -1099,6 +1099,9 @@ class _AutomatonGraphViewCanvasState
               ),
             ),
             (recognizer) {
+              if (recognizer.team == null) {
+                recognizer.team = team;
+              }
               recognizer
                 ..onStart = _handleNodePanStart
                 ..onUpdate = _handleNodePanUpdate
@@ -1121,6 +1124,9 @@ class _AutomatonGraphViewCanvasState
             ),
           ),
           (recognizer) {
+            if (recognizer.team == null) {
+              recognizer.team = team;
+            }
             recognizer.onNodeTap = (node) => _handleNodeTap(node.id);
           },
         );
@@ -1629,11 +1635,11 @@ class _NodePanGestureRecognizer extends PanGestureRecognizer {
     if (node == null) {
       return;
     }
+    _activePointer = event.pointer;
     debugPrint(
-      '[NodePanRecognizer] accepting pointer ${event.pointer} '
+      '[NodePanRecognizer] tracking pointer ${event.pointer} '
       'for node ${node.id}',
     );
-    _activePointer = event.pointer;
     super.addAllowedPointer(event);
     resolvePointer(event.pointer, GestureDisposition.accepted);
   }
@@ -1669,16 +1675,10 @@ class _NodeTapGestureRecognizer extends TapGestureRecognizer {
   ValueChanged<GraphViewCanvasNode>? onNodeTap;
   GraphViewCanvasNode? _downNode;
 
-  bool get _toolEnabled {
-    final tool = toolResolver();
-    return tool == AutomatonCanvasTool.transition ||
-        tool == AutomatonCanvasTool.selection;
-  }
-
   @override
   void addAllowedPointer(PointerDownEvent event) {
     onPointerDown?.call(event.position);
-    if (!_toolEnabled) {
+    if (toolResolver() != AutomatonCanvasTool.transition) {
       return;
     }
     final node = hitTester(event.position);

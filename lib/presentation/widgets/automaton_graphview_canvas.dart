@@ -1202,22 +1202,37 @@ class _AutomatonGraphSugiyamaAlgorithm extends SugiyamaAlgorithm {
   @override
   Size run(Graph? graph, double shiftX, double shiftY) {
     if (graph == null || graph.nodes.isEmpty) {
-      // GraphView's Sugiyama implementation crashes when no nodes exist.
       return Size.zero;
     }
-    final size = super.run(graph, shiftX, shiftY);
+
+    var minX = double.infinity;
+    var minY = double.infinity;
+    var maxX = double.negativeInfinity;
+    var maxY = double.negativeInfinity;
+
     for (final node in graph.nodes) {
       final nodeId = node.key?.value?.toString();
-      if (nodeId == null) {
-        continue;
-      }
-      final cached = controller.nodeById(nodeId);
-      if (cached == null) {
-        continue;
-      }
-      node.position = Offset(cached.x, cached.y);
+      final cached = nodeId != null ? controller.nodeById(nodeId) : null;
+      final position = cached != null
+          ? Offset(cached.x, cached.y)
+          : node.position;
+
+      node.position = position;
+
+      minX = math.min(minX, position.dx);
+      minY = math.min(minY, position.dy);
+      maxX = math.max(maxX, position.dx + node.width);
+      maxY = math.max(maxY, position.dy + node.height);
     }
-    return size;
+
+    if (minX == double.infinity || minY == double.infinity) {
+      return Size.zero;
+    }
+
+    final width = (maxX - minX).clamp(0.0, double.infinity) + _kNodeDiameter;
+    final height = (maxY - minY).clamp(0.0, double.infinity) + _kNodeDiameter;
+
+    return Size(width, height);
   }
 }
 
@@ -1371,12 +1386,10 @@ class _GraphViewEdgePainter extends CustomPainter {
         ..strokeCap = StrokeCap.round;
 
       if (edge.fromStateId == edge.toStateId) {
-        final loopPoint =
-            controlPoint ?? fromCenter.translate(0, -_kNodeDiameter);
-        final loopPath = _buildLoopPath(fromCenter, loopPoint);
-        canvas.drawPath(loopPath.path, paint);
-        _drawArrowHead(canvas, loopPath.tip, loopPath.direction, color);
-        _drawEdgeLabel(canvas, loopPath.labelAnchor, edge.label, color);
+        final loopGeometry = _buildSelfLoopPath(fromCenter);
+        canvas.drawPath(loopGeometry.path, paint);
+        _drawArrowHead(canvas, loopGeometry.tip, loopGeometry.direction, color);
+        _drawEdgeLabel(canvas, loopGeometry.labelAnchor, edge.label, color);
         continue;
       }
 
@@ -1413,6 +1426,47 @@ class _GraphViewEdgePainter extends CustomPainter {
           Offset((start.dx + end.dx) / 2, (start.dy + end.dy) / 2);
       _drawEdgeLabel(canvas, labelAnchor, edge.label, color);
     }
+  }
+
+  ({Path path, Offset tip, Offset direction, Offset labelAnchor})
+  _buildSelfLoopPath(Offset center) {
+    const arrowLength = 12.0;
+    final loopRadius = _kNodeRadius * 1.55;
+    final arcCenter = center.translate(0, -loopRadius + _kNodeRadius * 0.25);
+    const startAngle = math.pi * 1.15;
+    const sweepAngle = math.pi * 1.55;
+    final rect = Rect.fromCircle(center: arcCenter, radius: loopRadius);
+
+    final path = Path()..addArc(rect, startAngle, sweepAngle);
+
+    final metrics = path.computeMetrics().toList(growable: false);
+    if (metrics.isEmpty) {
+      return (
+        path: path,
+        tip: center,
+        direction: const Offset(0, -1),
+        labelAnchor: arcCenter.translate(0, -loopRadius * 0.6),
+      );
+    }
+
+    final metric = metrics.first;
+    final totalLength = metric.length;
+    final trimmedLength = math.max(0.0, totalLength - arrowLength);
+    final trimmedPath = Path()
+      ..addPath(metric.extractPath(0, trimmedLength), Offset.zero);
+
+    final arrowBase =
+        metric.getTangentForOffset(trimmedLength)?.position ?? center;
+    final arrowTip =
+        metric.getTangentForOffset(totalLength)?.position ?? center;
+    final bounds = trimmedPath.getBounds();
+
+    return (
+      path: trimmedPath,
+      tip: arrowTip,
+      direction: arrowTip - arrowBase,
+      labelAnchor: Offset(bounds.center.dx, bounds.top - 12),
+    );
   }
 
   ({Path path, Offset tip, Offset direction, Offset labelAnchor})
@@ -1563,7 +1617,6 @@ class _NodePanGestureRecognizer extends PanGestureRecognizer {
     );
     _activePointer = event.pointer;
     super.addAllowedPointer(event);
-    resolvePointer(event.pointer, GestureDisposition.accepted);
   }
 
   @override
@@ -1705,6 +1758,7 @@ class _NodeLongPressGestureRecognizer extends LongPressGestureRecognizer {
   void _invokeNodeLongPress() {
     final node = _candidate;
     if (node != null) {
+      debugPrint('[NodeLongPressRecognizer] long press -> ${node.id}');
       onNodeLongPress?.call(node);
     }
     _candidate = null;

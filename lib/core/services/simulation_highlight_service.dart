@@ -1,3 +1,14 @@
+//
+//  simulation_highlight_service.dart
+//  JFlutter
+//
+//  Orquestra a emissão de destaques de simulação com suporte a canais plugáveis e
+//  dispatchers legados, oferecendo provedores Riverpod para integração com o canvas.
+//  Constrói conjuntos de estados e transições relevantes por passo, registra eventos
+//  em modo debug e disponibiliza utilidades para reemitir ou limpar seleções.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

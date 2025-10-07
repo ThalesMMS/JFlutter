@@ -2,10 +2,11 @@
 //  algo_log.dart
 //  JFlutter
 //
-//  Mantém utilitários estáticos para registrar passos de execução de
-//  algoritmos, expondo ValueNotifiers que notificam interfaces sobre novas
-//  mensagens ou estados destacados. Fornece operações para adicionar linhas,
-//  limpar registros e acompanhar destaques durante simulações interativas.
+//  Centraliza logs de execução de algoritmos com notifiers reativos para linhas e
+//  destaques, permitindo adicionar entradas, limpar estado e sincronizar interfaces
+//  que acompanham o passo a passo das simulações.
+//  A classe também expõe instantâneos atuais para consumo direto de widgets e testes,
+//  facilitando painéis que respondem a mudanças em tempo real.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

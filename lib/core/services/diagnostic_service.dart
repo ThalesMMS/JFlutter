@@ -1,3 +1,14 @@
+//
+//  diagnostic_service.dart
+//  JFlutter
+//
+//  Implementa análise avançada de autômatos produzindo issues, avisos e sugestões em
+//  múltiplas dimensões estruturais, semânticas, de desempenho e usabilidade.
+//  Calcula severidade agregada, identifica padrões problemáticos e recomenda ações
+//  corretivas detalhadas através de modelos de resultado especializados.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import '../models/fsa.dart';
 import '../models/state.dart' as automaton_state;
 import '../models/fsa_transition.dart';

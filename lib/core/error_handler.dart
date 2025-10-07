@@ -2,10 +2,10 @@
 //  error_handler.dart
 //  JFlutter
 //
-//  Reúne rotinas centralizadas de tratamento de erros e mensagens de feedback,
-//  expondo métodos estáticos para exibir SnackBars, diálogos de confirmação e
-//  registrar falhas no console. Atua como ponto único para padronizar a
-//  comunicação com o usuário e simplificar fluxos que consomem objetos Result.
+//  Provedor central de tratamento de erros que apresenta mensagens nas interfaces via
+//  SnackBars, diálogos de confirmação e utilidades de log para depuração controlada.
+//  Inclui rotinas para traduzir Result em feedback contextual e uma extensão que
+//  simplifica o consumo direto desses fluxos dentro de widgets e fluxos assíncronos.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

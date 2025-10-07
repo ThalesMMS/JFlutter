@@ -1,3 +1,14 @@
+//
+//  tm_transition.dart
+//  JFlutter
+//
+//  Modela transições de máquinas de Turing, controlando símbolos lidos e
+//  escritos, direção do cabeçote e número da fita. Fornece cópia, serialização e
+//  validações utilizadas por simuladores e ferramentas de edição orientadas a
+//  ensino.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:vector_math/vector_math_64.dart';
 import 'state.dart';
 import 'transition.dart';

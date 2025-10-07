@@ -1,3 +1,15 @@
+//
+//  grammar_parser_petit.dart
+//  JFlutter
+//
+//  Constrói analisadores de gramáticas livres de contexto usando combinadores
+//  PetitParser, traduzindo produções em derivações passo a passo e validando
+//  símbolos antes da execução. Controla tempo de processamento, fornece logs
+//  descritivos e retorna resultados estruturados compatíveis com a camada de
+//  algoritmos do aplicativo.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:petitparser/petitparser.dart';
 
 import '../models/grammar.dart';

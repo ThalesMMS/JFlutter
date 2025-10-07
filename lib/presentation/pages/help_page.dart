@@ -1,11 +1,13 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/pages/help_page.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Reúne conteúdo de ajuda interativo e tutoriais organizados por módulos como FSA, PDA e MT. Oferece navegação tabulada e exemplos passo a passo para guiar estudantes dentro do aplicativo.
-/// Contexto: Inspirado na documentação do JFLAP original, adapta tópicos para a experiência Flutter com componentes responsivos. Combina explicações textuais, listas e fluxos orientados para facilitar o aprendizado progressivo.
-/// Observações: Usa PageView e controladores de estado para alternar seções mantendo estado consistente entre abas. Facilita extensão com novos capítulos adicionando itens à lista de HelpSection.
-/// ---------------------------------------------------------------------------
+//
+//  help_page.dart
+//  JFlutter
+//
+//  Reúne a documentação interativa com seções temáticas controladas por
+//  PageView e filtros, oferecendo tutoriais guiados para cada módulo de
+//  autômatos, gramáticas e ferramentas presentes no aplicativo.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

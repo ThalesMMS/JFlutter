@@ -1,11 +1,14 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/pages/pda_page.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Disponibiliza ambiente completo para criação, simulação e análise de Autômatos de Pilha. Integra canvas GraphView, painéis de algoritmos e controles adaptados a diferentes formatos de tela.
-/// Contexto: Coordena provedores de edição, serviços de destaque e controladores para manter o estado do PDA sincronizado entre componentes. Exibe métricas e controla indicadores de alterações pendentes para orientar ações do usuário.
-/// Observações: Gerencia inscrições Riverpod no ciclo de vida garantindo limpeza de recursos. Estrutura pronta para incorporar novos módulos como exportação ou diagnósticos adicionais mantendo fluxo atual.
-/// ---------------------------------------------------------------------------
+//
+//  pda_page.dart
+//  JFlutter
+//
+//  Administra a página de Autômatos de Pilha integrando canvas GraphView,
+//  painéis de simulação e algoritmos, monitorando métricas e mudanças para
+//  manter o estado sincronizado entre controladores, provedores e dispositivos
+//  móveis ou desktop.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

@@ -1,11 +1,14 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/theme/app_theme.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Define paleta e configurações principais do tema Material 3 utilizado pelo aplicativo. Fornece acesso a esquema de cores, estilos de botões e elementos padrão para manter consistência visual.
-/// Contexto: Centraliza ajustes como cores primárias, temas de AppBar e botões elevados garantindo identidade compartilhada entre plataformas. Facilita evolução da linguagem visual sem necessidade de alterar widgets individuais.
-/// Observações: Estrutura métodos para tema claro podendo ser expandido com variações escuras ou de alto contraste. Serve como ponto de referência para componentes que precisam alinhar-se ao design oficial do projeto.
-/// ---------------------------------------------------------------------------
+//
+//  app_theme.dart
+//  JFlutter
+//
+//  Declara os temas claro e escuro do aplicativo com paleta Material 3,
+//  centralizando cores, estilos de botões, barras e campos para manter
+//  aparência consistente entre plataformas e facilitar ajustes de identidade
+//  visual futuros.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/material.dart';
 
 /// Modern app theme for JFlutter

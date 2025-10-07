@@ -1,11 +1,14 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/pages/settings_page.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Exibe e permite configurar preferências globais da aplicação como aparência e comportamento padrão. Carrega dados persistidos e sincroniza alterações com o repositório de configurações.
-/// Contexto: Utiliza Riverpod e repositórios baseados em SharedPreferences para fornecer experiência consistente entre plataformas. Organiza controles em cartões e seções que refletem o SettingsModel vigente.
-/// Observações: Gerencia estados de carregamento e persistência assegurando feedback ao usuário durante operações assíncronas. Flexível para incorporar novas categorias de configuração mantendo arquitetura existente.
-/// ---------------------------------------------------------------------------
+//
+//  settings_page.dart
+//  JFlutter
+//
+//  Gera a página de configurações carregando preferências persistidas,
+//  exibindo formulários de aparência, símbolos e controles gerais enquanto
+//  salva alterações via repositório compartilhado com feedback responsivo ao
+//  usuário.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

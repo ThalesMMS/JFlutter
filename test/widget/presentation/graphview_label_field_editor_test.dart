@@ -9,6 +9,7 @@
 //  contrato do componente.
 //
 //  Thales Matheus Mendonça Santos - October 2025
+//
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

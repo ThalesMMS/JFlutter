@@ -10,6 +10,7 @@
 //  autômato.
 //
 //  Thales Matheus Mendonça Santos - October 2025
+//
 
 import 'dart:math' as math;
 

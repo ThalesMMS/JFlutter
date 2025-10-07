@@ -103,11 +103,15 @@ lib/
 ├── app.dart                        # Root widget and global configuration
 ├── core/                           # Core business logic
 │   ├── algorithms/                 # Automata algorithms and utilities
+│   ├── constants/                  # Shared constants and definitions
 │   ├── entities/                   # Domain entities shared across layers
 │   ├── models/                     # Immutable data models and value objects
 │   ├── parsers/                    # File/grammar parsing helpers
+│   ├── regex/                      # Regex helpers and transformation pipeline
 │   ├── repositories/               # Repository contracts
+│   ├── services/                   # Core services (diagnostics, trace, etc.)
 │   ├── use_cases/                  # Application-specific business rules
+│   ├── validators/                 # Input and semantic validators
 │   ├── algo_log.dart               # Algorithm execution logging
 │   ├── error_handler.dart          # Error handling helpers
 │   └── result.dart                 # Result/Either pattern implementation
@@ -115,7 +119,8 @@ lib/
 │   ├── data_sources/               # Concrete data sources (e.g., file system)
 │   ├── models/                     # DTOs and serialization helpers
 │   ├── repositories/               # Repository implementations
-│   └── services/                   # High-level services used by the app
+│   ├── services/                   # High-level services used by the app
+│   └── storage/                    # Persistent storage adapters (e.g., SharedPreferences)
 ├── features/                       # Cross-cutting feature modules
 │   ├── canvas/                     # Canvas orchestration layers
 │   │   └── graphview/              # GraphView controllers, mappers, and highlight channels

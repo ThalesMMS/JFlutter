@@ -2,11 +2,12 @@
 //  pda_simulator.dart
 //  JFlutter
 //
-//  Contém o motor completo de simulação para autômatos com pilha, cobrindo
-//  variações determinísticas e não determinísticas com movimentos épsilon,
-//  registros passo a passo e múltiplos modos de aceitação. Implementa
-//  validações, tratamento de timeout e geração de relatórios detalhados para a
-//  experiência de aprendizagem no aplicativo.
+//  Reúne o motor de simulação de autômatos de pilha, suportando modos
+//  determinísticos e não determinísticos, aceitação por estado final, pilha
+//  vazia ou ambos.
+//  Executa validações, rastreia passos para visualização, administra timeout e
+//  oferece estruturas de resultado detalhadas para consumo em interfaces e
+//  testes.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

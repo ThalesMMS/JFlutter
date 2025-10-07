@@ -2,10 +2,10 @@
 //  parse_action.dart
 //  JFlutter
 //
-//  Define o modelo de ação utilizada nas tabelas de parsing LR, reunindo tipos
-//  como shift, reduce, accept e error com dados auxiliares. Garante criação
-//  controlada através de fábricas nomeadas e fornece comparações, hashing e
-//  representações textuais para depuração das execuções.
+//  Define ações de análise sintática empregadas por algoritmos LR e tabela de
+//  parsing, abrangendo deslocamentos, reduções, aceitação e erros.
+//  Fornece fábricas utilitárias, comparações e representação textual para
+//  facilitar depuração e geração de relatórios durante execuções.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

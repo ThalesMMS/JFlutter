@@ -2,10 +2,10 @@
 //  nfa_to_dfa_converter.dart
 //  JFlutter
 //
-//  Implementa o algoritmo de construção de subconjuntos com tratamento
-//  abrangente de transições épsilon, convertendo NFAs em DFAs prontos para o
-//  canvas interativo. Inclui validações, normalização de símbolos e utilidades
-//  para gerar estados derivados com posições e metadados coerentes.
+//  Implementa a conversão de autômatos finitos não determinísticos em
+//  determinísticos utilizando construção por subconjuntos com fechos-ε.
+//  Inclui rotinas de validação, limpeza de transições lambda e criação das
+//  estruturas determinísticas preservando estados, símbolos e aceitação.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

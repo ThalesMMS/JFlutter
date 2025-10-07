@@ -2,10 +2,11 @@
 //  pda_simulator_facade.dart
 //  JFlutter
 //
-//  Oferece uma fachada simplificada para a simulação de PDAs, repassando
-//  parâmetros de modo de aceitação, execução passo a passo e limites de tempo
-//  para o mecanismo completo. Centraliza o contrato público usado pela camada
-//  de apresentação ao acionar simulações interativas.
+//  Expõe uma fachada de alto nível para simulação de PDAs, delegando ao motor
+//  não determinístico interno e controlando modos de aceitação e execução passo
+//  a passo.
+//  Simplifica o consumo da API de simulação ao normalizar parâmetros, tempos de
+//  execução e retornos para outras camadas do aplicativo.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

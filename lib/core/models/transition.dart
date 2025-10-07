@@ -2,10 +2,10 @@
 //  transition.dart
 //  JFlutter
 //
-//  Define a classe base abstrata para transições de todos os autômatos do
-//  sistema, fornecendo comportamento comum de serialização, validação,
-//  geometria e fábrica para subtipos. Serve como ponto de extensão para os
-//  modelos específicos de FSA, PDA e TM.
+//  Fornece a abstração base para transições de autômatos, centralizando campos
+//  comuns, operações de clonagem e utilidades de serialização dinâmica.
+//  Também agrega validações geométricas e auxiliares de cálculo utilizados por
+//  renderizadores e algoritmos que manipulam arcos no canvas.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

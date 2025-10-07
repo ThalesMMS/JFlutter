@@ -7,6 +7,7 @@
 /// Observações: Gerencia inscrições Riverpod no ciclo de vida garantindo limpeza de recursos. Estrutura pronta para incorporar novos módulos como exportação ou diagnósticos adicionais mantendo fluxo atual.
 /// ---------------------------------------------------------------------------
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/pda.dart';
@@ -18,6 +19,7 @@ import '../widgets/mobile_automaton_controls.dart';
 import '../widgets/pda_canvas_graphview.dart';
 import '../widgets/pda_algorithm_panel.dart';
 import '../widgets/pda_simulation_panel.dart';
+import '../widgets/automaton_canvas_tool.dart';
 import '../../core/services/simulation_highlight_service.dart';
 import '../../features/canvas/graphview/graphview_highlight_channel.dart';
 import '../../features/canvas/graphview/graphview_pda_canvas_controller.dart';
@@ -39,10 +41,12 @@ class _PDAPageState extends ConsumerState<PDAPage> {
   late final GraphViewPdaCanvasController _canvasController;
   late final GraphViewSimulationHighlightChannel _highlightChannel;
   late final SimulationHighlightService _highlightService;
+  late final AutomatonCanvasToolController _toolController;
 
   @override
   void initState() {
     super.initState();
+    _toolController = AutomatonCanvasToolController();
     _canvasController = GraphViewPdaCanvasController(
       editorNotifier: ref.read(pdaEditorProvider.notifier),
     );
@@ -70,6 +74,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
     _pdaEditorSub?.close();
     _highlightService.clear();
     _canvasController.dispose();
+    _toolController.dispose();
     super.dispose();
   }
 
@@ -110,6 +115,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
                     PDACanvasGraphView(
                       controller: _canvasController,
                       onPdaModified: _handlePdaModified,
+                      toolController: _toolController,
                     ),
                     isMobile: true,
                   ),
@@ -269,6 +275,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
               PDACanvasGraphView(
                 controller: _canvasController,
                 onPdaModified: _handlePdaModified,
+                toolController: _toolController,
               ),
               isMobile: false,
             ),
@@ -352,13 +359,20 @@ class _PDAPageState extends ConsumerState<PDAPage> {
     );
   }
 
+  void _setActiveTool(AutomatonCanvasTool tool) {
+    _toolController.setActiveTool(tool);
+  }
+
   Widget _buildCanvasWithToolbar(Widget canvas, {required bool isMobile}) {
     final editorState = ref.watch(pdaEditorProvider);
     final statusMessage = _buildToolbarStatusMessage(editorState);
     final hasPda =
         editorState.pda != null && editorState.pda!.states.isNotEmpty;
 
-    final combinedListenable = _canvasController.graphRevision;
+    final combinedListenable = Listenable.merge([
+      _canvasController.graphRevision,
+      _toolController,
+    ]);
 
     if (isMobile) {
       return Stack(
@@ -368,7 +382,14 @@ class _PDAPageState extends ConsumerState<PDAPage> {
             animation: combinedListenable,
             builder: (context, _) {
               return MobileAutomatonControls(
-                onAddState: _canvasController.addStateAtCenter,
+                enableToolSelection: true,
+                showSelectionTool: true,
+                activeTool: _toolController.activeTool,
+                onSelectTool: () =>
+                    _setActiveTool(AutomatonCanvasTool.selection),
+                onAddState: () => _setActiveTool(AutomatonCanvasTool.addState),
+                onAddTransition: () =>
+                    _setActiveTool(AutomatonCanvasTool.transition),
                 onFitToContent: _canvasController.fitToContent,
                 onResetView: _canvasController.resetView,
                 onClear: () => ref
@@ -418,7 +439,13 @@ class _PDAPageState extends ConsumerState<PDAPage> {
             return GraphViewCanvasToolbar(
               layout: GraphViewCanvasToolbarLayout.desktop,
               controller: _canvasController,
-              onAddState: _canvasController.addStateAtCenter,
+              enableToolSelection: true,
+              showSelectionTool: true,
+              activeTool: _toolController.activeTool,
+              onSelectTool: () => _setActiveTool(AutomatonCanvasTool.selection),
+              onAddState: () => _setActiveTool(AutomatonCanvasTool.addState),
+              onAddTransition: () =>
+                  _setActiveTool(AutomatonCanvasTool.transition),
               onClear: () => ref
                   .read(pdaEditorProvider.notifier)
                   .updateFromCanvas(

@@ -2,9 +2,9 @@
 /// Projeto: JFlutter
 /// Arquivo: lib/presentation/widgets/pda_canvas_graphview.dart
 /// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Renderiza o canvas de autômatos de pilha usando GraphView, sincronizando estados e transições com o provedor de edição. Lida com destaques de simulação, algoritmos de layout e propagação de mudanças para ouvintes externos.
-/// Contexto: Integra controladores especializados para atualizar nós, gerenciar canal de destaques e ajustar a visualização conforme o conteúdo. Inscreve-se manualmente no PDAEditorProvider para detectar mutações relevantes e aplicar sincronização eficiente.
-/// Observações: Oferece opção de reutilizar controlador externo preservando recursos e evitando substituição de canais existentes. Quando proprietário, configura automaticamente o serviço de destaque e aplica fit-to-content em inicializações apropriadas.
+/// Descrição: Renderiza o canvas de autômatos de pilha usando GraphView, sincronizando estados e transições com o provedor de edição.
+/// Contexto: Integra controladores especializados para atualizar nós, gerenciar canal de destaques e ajustar a visualização conforme o conteúdo.
+/// Observações: Oferece opção de reutilizar controlador externo preservando recursos e evitando substituição de canais existentes.
 /// ---------------------------------------------------------------------------
 import 'dart:async';
 
@@ -15,11 +15,12 @@ import 'package:graphview/GraphView.dart';
 import '../../core/models/pda.dart';
 import '../../core/models/simulation_highlight.dart';
 import '../../core/services/simulation_highlight_service.dart';
-import '../../features/canvas/graphview/graphview_all_nodes_builder.dart';
-import '../../features/canvas/graphview/graphview_pda_canvas_controller.dart';
 import '../../features/canvas/graphview/graphview_canvas_models.dart';
 import '../../features/canvas/graphview/graphview_highlight_channel.dart';
+import '../../features/canvas/graphview/graphview_pda_canvas_controller.dart';
 import '../providers/pda_editor_provider.dart';
+import 'automaton_canvas_tool.dart';
+import 'graphview_interactive_canvas.dart';
 import 'transition_editors/pda_transition_editor.dart';
 
 class PDACanvasGraphView extends ConsumerStatefulWidget {
@@ -27,63 +28,66 @@ class PDACanvasGraphView extends ConsumerStatefulWidget {
     super.key,
     required this.onPdaModified,
     this.controller,
+    this.toolController,
   });
 
   final ValueChanged<PDA> onPdaModified;
   final GraphViewPdaCanvasController? controller;
+  final AutomatonCanvasToolController? toolController;
 
   @override
   ConsumerState<PDACanvasGraphView> createState() => _PDACanvasGraphViewState();
 }
 
 class _PDACanvasGraphViewState extends ConsumerState<PDACanvasGraphView> {
-  late GraphViewPdaCanvasController _canvasController;
+  late GraphViewPdaCanvasController _controller;
   late bool _ownsController;
-  late SugiyamaAlgorithm _algorithm;
-  ProviderSubscription<PDAEditorState>? _subscription;
-  PDA? _lastDeliveredPda;
+  late AutomatonCanvasToolController _toolController;
+  late bool _ownsToolController;
   SimulationHighlightService? _highlightService;
   SimulationHighlightChannel? _previousHighlightChannel;
   GraphViewSimulationHighlightChannel? _highlightChannel;
+  ProviderSubscription<PDAEditorState>? _subscription;
+  PDA? _lastDeliveredPda;
   final GlobalKey _canvasKey = GlobalKey();
 
-  GraphViewPdaCanvasController get controller => _canvasController;
+  GraphViewPdaCanvasController get controller => _controller;
 
   @override
   void initState() {
     super.initState();
+    final externalToolController = widget.toolController;
+    if (externalToolController != null) {
+      _toolController = externalToolController;
+      _ownsToolController = false;
+    } else {
+      _toolController = AutomatonCanvasToolController();
+      _ownsToolController = true;
+    }
+
     final externalController = widget.controller;
     if (externalController != null) {
-      _canvasController = externalController;
+      _controller = externalController;
       _ownsController = false;
     } else {
-      _canvasController = GraphViewPdaCanvasController(
+      _controller = GraphViewPdaCanvasController(
         editorNotifier: ref.read(pdaEditorProvider.notifier),
       );
       _ownsController = true;
       final highlightService = ref.read(canvasHighlightServiceProvider);
       _highlightService = highlightService;
       _previousHighlightChannel = highlightService.channel;
-      final highlightChannel = GraphViewSimulationHighlightChannel(
-        _canvasController,
-      );
+      final highlightChannel = GraphViewSimulationHighlightChannel(_controller);
       _highlightChannel = highlightChannel;
       highlightService.channel = highlightChannel;
     }
 
-    _algorithm = SugiyamaAlgorithm(
-      SugiyamaConfiguration()
-        ..nodeSeparation = 160
-        ..levelSeparation = 160
-        ..orientation = SugiyamaConfiguration.ORIENTATION_TOP_BOTTOM,
-    );
-
     final initialState = ref.read(pdaEditorProvider);
-    _canvasController.synchronize(initialState.pda);
+    _controller.synchronize(initialState.pda);
     if (initialState.pda?.states.isNotEmpty ?? false) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        _canvasController.fitToContent();
+        _controller.fitToContent();
       });
     }
 
@@ -108,16 +112,78 @@ class _PDACanvasGraphViewState extends ConsumerState<PDACanvasGraphView> {
         _lastDeliveredPda = null;
       }
       if (_shouldSynchronize(previous, next)) {
-        final hadNodes = _canvasController.nodes.isNotEmpty;
-        _canvasController.synchronize(pda);
+        final hadNodes = _controller.nodes.isNotEmpty;
+        _controller.synchronize(pda);
         if (!hadNodes && (pda?.states.isNotEmpty ?? false)) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!mounted) return;
-            _canvasController.fitToContent();
+            _controller.fitToContent();
           });
         }
       }
     });
+  }
+
+  @override
+  void didUpdateWidget(covariant PDACanvasGraphView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.toolController != widget.toolController) {
+      if (_ownsToolController) {
+        _toolController.dispose();
+      }
+      final nextController =
+          widget.toolController ?? AutomatonCanvasToolController();
+      _toolController = nextController;
+      _ownsToolController = widget.toolController == null;
+    }
+
+    if (oldWidget.controller != widget.controller) {
+      if (_ownsController) {
+        if (_highlightService != null) {
+          _highlightService!.channel = _previousHighlightChannel;
+          _highlightChannel = null;
+        }
+        _controller.dispose();
+      }
+      final externalController = widget.controller;
+      if (externalController != null) {
+        _controller = externalController;
+        _ownsController = false;
+        _highlightService = null;
+        _previousHighlightChannel = null;
+      } else {
+        _controller = GraphViewPdaCanvasController(
+          editorNotifier: ref.read(pdaEditorProvider.notifier),
+        );
+        _ownsController = true;
+        final highlightService = ref.read(canvasHighlightServiceProvider);
+        _highlightService = highlightService;
+        _previousHighlightChannel = highlightService.channel;
+        final highlightChannel = GraphViewSimulationHighlightChannel(
+          _controller,
+        );
+        _highlightChannel = highlightChannel;
+        highlightService.channel = highlightChannel;
+      }
+      final current = ref.read(pdaEditorProvider).pda;
+      _controller.synchronize(current);
+    }
+  }
+
+  @override
+  void dispose() {
+    _subscription?.close();
+    if (_ownsToolController) {
+      _toolController.dispose();
+    }
+    if (_ownsController) {
+      _controller.dispose();
+    }
+    if (_highlightService != null) {
+      _highlightService!.channel = _previousHighlightChannel;
+      _highlightChannel = null;
+    }
+    super.dispose();
   }
 
   bool _shouldSynchronize(PDAEditorState? previous, PDAEditorState next) {
@@ -129,13 +195,13 @@ class _PDACanvasGraphViewState extends ConsumerState<PDACanvasGraphView> {
       return true;
     }
 
-    final nodeIds = {for (final node in _canvasController.nodes) node.id};
+    final nodeIds = {for (final node in _controller.nodes) node.id};
     final stateIds = {for (final state in pda.states) state.id};
     if (nodeIds.length != stateIds.length || !nodeIds.containsAll(stateIds)) {
       return true;
     }
 
-    final edgeIds = {for (final edge in _canvasController.edges) edge.id};
+    final edgeIds = {for (final edge in _controller.edges) edge.id};
     final transitionIds = {
       for (final transition in pda.pdaTransitions) transition.id,
     };
@@ -145,7 +211,7 @@ class _PDACanvasGraphViewState extends ConsumerState<PDACanvasGraphView> {
     }
 
     for (final state in pda.states) {
-      final node = _canvasController.nodeById(state.id);
+      final node = _controller.nodeById(state.id);
       if (node == null) {
         return true;
       }
@@ -159,7 +225,7 @@ class _PDACanvasGraphViewState extends ConsumerState<PDACanvasGraphView> {
     }
 
     for (final transition in pda.pdaTransitions) {
-      final edge = _canvasController.edgeById(transition.id);
+      final edge = _controller.edgeById(transition.id);
       if (edge == null) {
         return true;
       }
@@ -195,523 +261,191 @@ class _PDACanvasGraphViewState extends ConsumerState<PDACanvasGraphView> {
     return false;
   }
 
-  @override
-  void dispose() {
-    _subscription?.close();
-    if (_ownsController) {
-      _canvasController.dispose();
-    }
-    if (_highlightService != null) {
-      _highlightService!.channel = _previousHighlightChannel;
-      _highlightChannel = null;
-    }
-    super.dispose();
+  SugiyamaAlgorithm _buildAlgorithm(
+    BaseGraphViewCanvasController<dynamic, dynamic> controller,
+  ) {
+    return SugiyamaAlgorithm(
+      SugiyamaConfiguration()
+        ..nodeSeparation = 160
+        ..levelSeparation = 160
+        ..orientation = SugiyamaConfiguration.ORIENTATION_TOP_BOTTOM,
+    );
+  }
+
+  GraphViewTransitionDelegate<_PdaTransitionEditorValue>
+  _buildTransitionDelegate() {
+    return GraphViewTransitionDelegate<_PdaTransitionEditorValue>(
+      buildDefaultData: (_, __) => const _PdaTransitionEditorValue(),
+      dataFromEdge: (edge) => _PdaTransitionEditorValue(
+        readSymbol: edge.readSymbol ?? '',
+        popSymbol: edge.popSymbol ?? '',
+        pushSymbol: edge.pushSymbol ?? '',
+        lambdaInput: edge.isLambdaInput ?? false,
+        lambdaPop: edge.isLambdaPop ?? false,
+        lambdaPush: edge.isLambdaPush ?? false,
+      ),
+      commit: (fromStateId, toStateId, worldAnchor, value, transitionId) {
+        _controller.addOrUpdateTransition(
+          fromStateId: fromStateId,
+          toStateId: toStateId,
+          readSymbol: value.readSymbol,
+          popSymbol: value.popSymbol,
+          pushSymbol: value.pushSymbol,
+          isLambdaInput: value.lambdaInput,
+          isLambdaPop: value.lambdaPop,
+          isLambdaPush: value.lambdaPush,
+          transitionId: transitionId,
+          controlPointX: worldAnchor.dx,
+          controlPointY: worldAnchor.dy,
+        );
+      },
+      buildOverlay: (context, state, onSubmit, onCancel) {
+        return Card(
+          elevation: 8,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 320),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: PdaTransitionEditor(
+                initialRead: state.data.readSymbol,
+                initialPop: state.data.popSymbol,
+                initialPush: state.data.pushSymbol,
+                isLambdaInput: state.data.lambdaInput,
+                isLambdaPop: state.data.lambdaPop,
+                isLambdaPush: state.data.lambdaPush,
+                onSubmit:
+                    ({
+                      required String readSymbol,
+                      required String popSymbol,
+                      required String pushSymbol,
+                      required bool lambdaInput,
+                      required bool lambdaPop,
+                      required bool lambdaPush,
+                    }) {
+                      onSubmit(
+                        _PdaTransitionEditorValue(
+                          readSymbol: readSymbol,
+                          popSymbol: popSymbol,
+                          pushSymbol: pushSymbol,
+                          lambdaInput: lambdaInput,
+                          lambdaPop: lambdaPop,
+                          lambdaPush: lambdaPush,
+                        ),
+                      );
+                    },
+                onCancel: onCancel,
+              ),
+            ),
+          ),
+        );
+      },
+      selectionPrompt: (context, edges) =>
+          _promptTransitionSelection(context, edges),
+    );
+  }
+
+  Future<GraphViewTransitionSelection> _promptTransitionSelection(
+    BuildContext context,
+    List<GraphViewCanvasEdge> edges,
+  ) async {
+    final choice = await showDialog<GraphViewTransitionSelection?>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Selecione a transição'),
+          content: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final edge in edges)
+                    ListTile(
+                      key: ValueKey('pda-transition-choice-${edge.id}'),
+                      leading: const Icon(Icons.edit_outlined),
+                      title: Text('${edge.fromStateId} → ${edge.toStateId}'),
+                      subtitle: Text(edge.label),
+                      onTap: () => Navigator.of(
+                        context,
+                      ).pop(GraphViewTransitionSelection.edit(edge)),
+                    ),
+                  ListTile(
+                    key: const ValueKey('pda-transition-choice-create-new'),
+                    leading: const Icon(Icons.add_outlined),
+                    title: const Text('Create new transition'),
+                    onTap: () => Navigator.of(
+                      context,
+                    ).pop(const GraphViewTransitionSelection.createNew()),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+
+    return choice ?? const GraphViewTransitionSelection.createNew();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Expanded(child: _buildCanvas(context)),
-        const SizedBox(height: 12),
-        SizedBox(height: 240, child: _buildInspector(context)),
-      ],
-    );
-  }
-
-  Widget _buildCanvas(BuildContext context) {
-    final theme = Theme.of(context);
-    return GestureDetector(
-      key: _canvasKey,
-      onDoubleTap: _handleAddStateAtCenter,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceVariant.withOpacity(0.4),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: ValueListenableBuilder<int>(
-            valueListenable: _canvasController.graphRevision,
-            builder: (context, _, __) {
-              final nodes = _canvasController.nodes.toList(growable: false);
-              final edges = _canvasController.edges.toList(growable: false);
-              return ValueListenableBuilder(
-                valueListenable: _canvasController.highlightNotifier,
-                builder: (context, highlight, __) {
-                  return Stack(
-                    children: [
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          final viewport = constraints.biggest;
-                          if (viewport.width.isFinite &&
-                              viewport.height.isFinite) {
-                            _canvasController.updateViewportSize(viewport);
-                          }
-                          return GraphViewAllNodes.builder(
-                            graph: _canvasController.graph,
-                            controller: _canvasController.graphController,
-                            algorithm: _algorithm,
-                            builder: (node) {
-                              final nodeId = node.key?.value?.toString();
-                              if (nodeId == null) {
-                                return const SizedBox.shrink();
-                              }
-                              final canvasNode = _canvasController.nodeById(
-                                nodeId,
-                              );
-                              if (canvasNode == null) {
-                                return const SizedBox.shrink();
-                              }
-                              final isHighlighted = highlight.stateIds.contains(
-                                canvasNode.id,
-                              );
-                              return _GraphNodeWidget(
-                                label: canvasNode.label,
-                                isInitial: canvasNode.isInitial,
-                                isAccepting: canvasNode.isAccepting,
-                                isHighlighted: isHighlighted,
-                              );
-                            },
-                          );
-                        },
-                      ),
-                      Positioned.fill(
-                        child: IgnorePointer(
-                          child: CustomPaint(
-                            painter: _GraphEdgePainter(
-                              edges: edges,
-                              nodes: nodes,
-                              highlight: highlight,
-                              theme: theme,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              );
-            },
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _handleAddStateAtCenter() {
-    controller.addStateAtCenter();
-  }
-
-  Widget _buildInspector(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      elevation: 0,
-      color: theme.colorScheme.surface,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: ValueListenableBuilder<int>(
-          valueListenable: _canvasController.graphRevision,
-          builder: (context, _, __) {
-            final nodes = _canvasController.nodes.toList(growable: false);
-            final edges = _canvasController.edges.toList(growable: false);
-            return ListView(
-              children: [
-                Row(
-                  children: [
-                    Text('States', style: theme.textTheme.titleMedium),
-                    const Spacer(),
-                    FilledButton.icon(
-                      onPressed: () => _handleCreateState(context),
-                      icon: const Icon(Icons.add),
-                      label: const Text('Add state'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                if (nodes.isEmpty)
-                  Text(
-                    'No states yet. Double tap on the canvas or use the button above to add one.',
-                    style: theme.textTheme.bodyMedium,
-                  )
-                else
-                  ...nodes.map((node) => _buildStateTile(context, node)),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Text('Transitions', style: theme.textTheme.titleMedium),
-                    const Spacer(),
-                    FilledButton.icon(
-                      onPressed: nodes.isEmpty
-                          ? null
-                          : () => _handleCreateTransition(context, nodes),
-                      icon: const Icon(Icons.add),
-                      label: const Text('Add transition'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                if (edges.isEmpty)
-                  Text(
-                    'Create transitions to define stack behaviour.',
-                    style: theme.textTheme.bodyMedium,
-                  )
-                else
-                  ...edges.map((edge) => _buildTransitionTile(context, edge)),
-              ],
+    return GraphViewInteractiveCanvas<_PdaTransitionEditorValue>(
+      canvasKey: _canvasKey,
+      controller: _controller,
+      algorithmBuilder: _buildAlgorithm,
+      toolController: _toolController,
+      transitionDelegate: _buildTransitionDelegate(),
+      nodeBuilder: (context, node, highlight, isHighlighted) {
+        return _GraphNodeWidget(
+          label: node.label,
+          isInitial: node.isInitial,
+          isAccepting: node.isAccepting,
+          isHighlighted: isHighlighted,
+        );
+      },
+      edgePainterBuilder:
+          ({
+            required edges,
+            required nodes,
+            required highlight,
+            required theme,
+            required selectedTransitions,
+          }) {
+            return _GraphEdgePainter(
+              edges: edges,
+              nodes: nodes,
+              highlight: highlight,
+              theme: theme,
             );
           },
-        ),
-      ),
-    );
-  }
-
-  void _handleCreateState(BuildContext context) {
-    controller.addStateAt(const Offset(0, 0));
-  }
-
-  Widget _buildStateTile(BuildContext context, GraphViewCanvasNode node) {
-    final theme = Theme.of(context);
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    node.label.isEmpty ? node.id : node.label,
-                    style: theme.textTheme.titleMedium,
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.edit),
-                  tooltip: 'Rename state',
-                  onPressed: () => _handleRenameState(context, node),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  tooltip: 'Remove state',
-                  onPressed: () => controller.removeState(node.id),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 12,
-              runSpacing: 8,
-              children: [
-                FilterChip(
-                  label: const Text('Initial'),
-                  selected: node.isInitial,
-                  onSelected: (value) =>
-                      controller.updateStateFlags(node.id, isInitial: value),
-                ),
-                FilterChip(
-                  label: const Text('Accepting'),
-                  selected: node.isAccepting,
-                  onSelected: (value) =>
-                      controller.updateStateFlags(node.id, isAccepting: value),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _handleRenameState(
-    BuildContext context,
-    GraphViewCanvasNode node,
-  ) async {
-    final labelController = TextEditingController(text: node.label);
-    final result = await showDialog<String?>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Rename state'),
-          content: TextField(
-            controller: labelController,
-            decoration: const InputDecoration(labelText: 'State label'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(null),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () =>
-                  Navigator.of(context).pop(labelController.text.trim()),
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-    if (result != null) {
-      controller.updateStateLabel(node.id, result);
-    }
-  }
-
-  Widget _buildTransitionTile(BuildContext context, GraphViewCanvasEdge edge) {
-    final theme = Theme.of(context);
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      child: ListTile(
-        title: Text('${edge.fromStateId} → ${edge.toStateId}'),
-        subtitle: Text(edge.label),
-        trailing: Wrap(
-          spacing: 8,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.edit),
-              tooltip: 'Edit transition',
-              onPressed: () => _handleEditTransition(context, edge),
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete_outline),
-              tooltip: 'Remove transition',
-              onPressed: () => controller.removeTransition(edge.id),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _handleEditTransition(
-    BuildContext context,
-    GraphViewCanvasEdge edge,
-  ) async {
-    final result = await showDialog<_PdaTransitionResult?>(
-      context: context,
-      builder: (context) {
-        return Dialog(
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: PdaTransitionEditor(
-              initialRead: edge.readSymbol ?? '',
-              initialPop: edge.popSymbol ?? '',
-              initialPush: edge.pushSymbol ?? '',
-              isLambdaInput: edge.isLambdaInput ?? false,
-              isLambdaPop: edge.isLambdaPop ?? false,
-              isLambdaPush: edge.isLambdaPush ?? false,
-              onSubmit:
-                  ({
-                    required String readSymbol,
-                    required String popSymbol,
-                    required String pushSymbol,
-                    required bool lambdaInput,
-                    required bool lambdaPop,
-                    required bool lambdaPush,
-                  }) {
-                    Navigator.of(context).pop(
-                      _PdaTransitionResult(
-                        fromStateId: edge.fromStateId,
-                        toStateId: edge.toStateId,
-                        readSymbol: readSymbol,
-                        popSymbol: popSymbol,
-                        pushSymbol: pushSymbol,
-                        lambdaInput: lambdaInput,
-                        lambdaPop: lambdaPop,
-                        lambdaPush: lambdaPush,
-                        transitionId: edge.id,
-                        controlPointX: edge.controlPointX,
-                        controlPointY: edge.controlPointY,
-                      ),
-                    );
-                  },
-              onCancel: () => Navigator.of(context).pop(null),
-            ),
-          ),
-        );
-      },
-    );
-
-    if (result == null) {
-      return;
-    }
-
-    controller.addOrUpdateTransition(
-      fromStateId: result.fromStateId,
-      toStateId: result.toStateId,
-      readSymbol: result.readSymbol,
-      popSymbol: result.popSymbol,
-      pushSymbol: result.pushSymbol,
-      isLambdaInput: result.lambdaInput,
-      isLambdaPop: result.lambdaPop,
-      isLambdaPush: result.lambdaPush,
-      transitionId: result.transitionId,
-      controlPointX: result.controlPointX,
-      controlPointY: result.controlPointY,
-    );
-  }
-
-  Future<void> _handleCreateTransition(
-    BuildContext context,
-    List<GraphViewCanvasNode> nodes,
-  ) async {
-    if (nodes.isEmpty) {
-      return;
-    }
-
-    String fromStateId = nodes.first.id;
-    String toStateId = nodes.first.id;
-
-    final result = await showDialog<_PdaTransitionResult?>(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            final hasNodes = nodes.isNotEmpty;
-            final defaultIsLambdaInput = !hasNodes;
-            final defaultIsLambdaPop = !hasNodes;
-            final defaultIsLambdaPush = !hasNodes;
-
-            return Dialog(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            value: fromStateId,
-                            decoration: const InputDecoration(
-                              labelText: 'From',
-                            ),
-                            items: nodes
-                                .map(
-                                  (node) => DropdownMenuItem(
-                                    value: node.id,
-                                    child: Text(
-                                      node.label.isEmpty ? node.id : node.label,
-                                    ),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (value) {
-                              if (value != null) {
-                                setState(() => fromStateId = value);
-                              }
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            value: toStateId,
-                            decoration: const InputDecoration(labelText: 'To'),
-                            items: nodes
-                                .map(
-                                  (node) => DropdownMenuItem(
-                                    value: node.id,
-                                    child: Text(
-                                      node.label.isEmpty ? node.id : node.label,
-                                    ),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (value) {
-                              if (value != null) {
-                                setState(() => toStateId = value);
-                              }
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    PdaTransitionEditor(
-                      initialRead: '',
-                      initialPop: '',
-                      initialPush: '',
-                      isLambdaInput: defaultIsLambdaInput,
-                      isLambdaPop: defaultIsLambdaPop,
-                      isLambdaPush: defaultIsLambdaPush,
-                      onSubmit:
-                          ({
-                            required String readSymbol,
-                            required String popSymbol,
-                            required String pushSymbol,
-                            required bool lambdaInput,
-                            required bool lambdaPop,
-                            required bool lambdaPush,
-                          }) {
-                            Navigator.of(context).pop(
-                              _PdaTransitionResult(
-                                fromStateId: fromStateId,
-                                toStateId: toStateId,
-                                readSymbol: readSymbol,
-                                popSymbol: popSymbol,
-                                pushSymbol: pushSymbol,
-                                lambdaInput: lambdaInput,
-                                lambdaPop: lambdaPop,
-                                lambdaPush: lambdaPush,
-                              ),
-                            );
-                          },
-                      onCancel: () => Navigator.of(context).pop(null),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-
-    if (result == null) {
-      return;
-    }
-
-    controller.addOrUpdateTransition(
-      fromStateId: result.fromStateId,
-      toStateId: result.toStateId,
-      readSymbol: result.readSymbol,
-      popSymbol: result.popSymbol,
-      pushSymbol: result.pushSymbol,
-      isLambdaInput: result.lambdaInput,
-      isLambdaPop: result.lambdaPop,
-      isLambdaPush: result.lambdaPush,
+      transitionToolLabel: 'Add transition…',
     );
   }
 }
 
-class _PdaTransitionResult {
-  _PdaTransitionResult({
-    required this.fromStateId,
-    required this.toStateId,
-    required this.readSymbol,
-    required this.popSymbol,
-    required this.pushSymbol,
-    required this.lambdaInput,
-    required this.lambdaPop,
-    required this.lambdaPush,
-    this.transitionId,
-    this.controlPointX,
-    this.controlPointY,
+class _PdaTransitionEditorValue {
+  const _PdaTransitionEditorValue({
+    this.readSymbol = '',
+    this.popSymbol = '',
+    this.pushSymbol = '',
+    this.lambdaInput = false,
+    this.lambdaPop = false,
+    this.lambdaPush = false,
   });
 
-  final String fromStateId;
-  final String toStateId;
   final String readSymbol;
   final String popSymbol;
   final String pushSymbol;
   final bool lambdaInput;
   final bool lambdaPop;
   final bool lambdaPush;
-  final String? transitionId;
-  final double? controlPointX;
-  final double? controlPointY;
 }
 
 class _GraphNodeWidget extends StatelessWidget {
@@ -804,49 +538,69 @@ class _GraphEdgePainter extends CustomPainter {
       if (from == null || to == null) {
         continue;
       }
-      final path = Path();
-      final fromOffset = Offset(from.x, from.y);
-      final toOffset = Offset(to.x, to.y);
-      final control = edge.controlPointX != null && edge.controlPointY != null
-          ? Offset(edge.controlPointX!, edge.controlPointY!)
-          : Offset(
-              (fromOffset.dx + toOffset.dx) / 2,
-              (fromOffset.dy + toOffset.dy) / 2,
-            );
 
-      path.moveTo(fromOffset.dx, fromOffset.dy);
-      path.quadraticBezierTo(control.dx, control.dy, toOffset.dx, toOffset.dy);
-
-      paint.color = highlight.transitionIds.contains(edge.id)
-          ? theme.colorScheme.tertiary
+      final isHighlighted = highlight.transitionIds.contains(edge.id);
+      final color = isHighlighted
+          ? theme.colorScheme.secondary
           : theme.colorScheme.onSurfaceVariant;
+
+      paint
+        ..color = color
+        ..strokeWidth = isHighlighted ? 3 : 2;
+
+      final start = Offset(from.x + 40, from.y + 40);
+      final end = Offset(to.x + 40, to.y + 40);
+      final controlPoint =
+          edge.controlPointX != null && edge.controlPointY != null
+          ? Offset(edge.controlPointX!, edge.controlPointY!)
+          : Offset((start.dx + end.dx) / 2, (start.dy + end.dy) / 2 - 60);
+
+      final path = Path()
+        ..moveTo(start.dx, start.dy)
+        ..quadraticBezierTo(controlPoint.dx, controlPoint.dy, end.dx, end.dy);
+
       canvas.drawPath(path, paint);
 
-      final metrics = path.computeMetrics();
-      for (final metric in metrics) {
-        final tangent = metric.getTangentForOffset(metric.length * 0.5);
-        if (tangent == null) {
-          continue;
-        }
-        textPainter.text = TextSpan(
-          text: edge.label,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurface,
-          ),
-        );
-        textPainter.layout();
-        final offset =
-            tangent.position -
-            Offset(textPainter.width / 2, textPainter.height / 2);
-        textPainter.paint(canvas, offset);
+      final arrowSize = 10.0;
+      final metric = path.computeMetrics().first;
+      final tangent = metric.getTangentForOffset(metric.length);
+      if (tangent != null) {
+        final arrowPosition = tangent.position;
+        final angle = tangent.vector.direction;
+        final arrowPath = Path()
+          ..moveTo(arrowPosition.dx, arrowPosition.dy)
+          ..relativeLineTo(
+            -arrowSize * math.cos(angle - math.pi / 6),
+            -arrowSize * math.sin(angle - math.pi / 6),
+          )
+          ..moveTo(arrowPosition.dx, arrowPosition.dy)
+          ..relativeLineTo(
+            -arrowSize * math.cos(angle + math.pi / 6),
+            -arrowSize * math.sin(angle + math.pi / 6),
+          );
+        canvas.drawPath(arrowPath, paint);
       }
+
+      final label = edge.label;
+      textPainter.text = TextSpan(
+        text: label.isEmpty
+            ? '${edge.readSymbol ?? ''}/${edge.popSymbol ?? ''};${edge.pushSymbol ?? ''}'
+            : label,
+        style: TextStyle(color: color, fontSize: 14),
+      );
+      textPainter.layout();
+      final offset =
+          controlPoint -
+          Offset(textPainter.width / 2, textPainter.height / 2 + 4);
+      textPainter.paint(canvas, offset);
     }
   }
 
   @override
   bool shouldRepaint(covariant _GraphEdgePainter oldDelegate) {
-    return oldDelegate.edges != edges ||
-        oldDelegate.nodes != nodes ||
-        oldDelegate.highlight != highlight;
+    return !listEquals(oldDelegate.edges, edges) ||
+        !listEquals(oldDelegate.nodes, nodes) ||
+        oldDelegate.highlight != highlight ||
+        oldDelegate.theme != theme;
   }
 }

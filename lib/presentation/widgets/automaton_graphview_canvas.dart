@@ -10,11 +10,9 @@ import 'dart:math' as math;
 
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphview/GraphView.dart';
-import 'package:vector_math/vector_math_64.dart' as vmath;
 
 import '../../core/constants/automaton_canvas.dart';
 import '../../core/models/fsa.dart';
@@ -29,6 +27,7 @@ import '../../features/canvas/graphview/graphview_label_field_editor.dart';
 import '../../features/canvas/graphview/graphview_link_overlay_utils.dart';
 import '../providers/automaton_provider.dart';
 import 'automaton_canvas_tool.dart';
+import 'graphview_interactive_canvas.dart';
 import 'transition_editors/transition_label_editor.dart';
 
 const double _kNodeDiameter = kAutomatonStateDiameter;
@@ -67,49 +66,11 @@ class _AutomatonGraphViewCanvasState
   late bool _ownsController;
   late AutomatonCanvasToolController _toolController;
   late bool _ownsToolController;
-  AutomatonCanvasTool _activeTool = AutomatonCanvasTool.selection;
   SimulationHighlightService? _highlightService;
   SimulationHighlightChannel? _previousHighlightChannel;
   GraphViewSimulationHighlightChannel? _highlightChannel;
-  late _AutomatonGraphSugiyamaAlgorithm _algorithm;
-  final Set<String> _selectedTransitions = <String>{};
-  String? _transitionSourceId;
-  OverlayEntry? _transitionOverlayEntry;
-  final ValueNotifier<_GraphViewTransitionOverlayState?>
-  _transitionOverlayState = ValueNotifier<_GraphViewTransitionOverlayState?>(
-    null,
-  );
   FSA? _pendingSyncAutomaton;
   bool _syncScheduled = false;
-  String? _draggingNodeId;
-  Offset? _dragStartWorldPosition;
-  Offset? _dragStartNodeCenter;
-  final GestureArenaTeam _gestureArenaTeam = GestureArenaTeam();
-  bool _suppressCanvasPan = false;
-  String? _lastTapNodeId;
-  DateTime? _lastTapTimestamp;
-  bool _isDraggingNode = false;
-  bool _didMoveDraggedNode = false;
-
-  void _setCanvasPanSuppressed(bool value, {String reason = ''}) {
-    if (!mounted) {
-      return;
-    }
-    if (_suppressCanvasPan == value) {
-      return;
-    }
-    if (kDebugMode) {
-      debugPrint(
-        '[AutomatonGraphViewCanvas] suppressPan=$value reason=$reason',
-      );
-    }
-    setState(() {
-      _suppressCanvasPan = value;
-    });
-  }
-
-  TransformationController? get _transformationController =>
-      _controller.graphController.transformationController;
 
   @override
   void initState() {
@@ -122,8 +83,6 @@ class _AutomatonGraphViewCanvasState
       _toolController = AutomatonCanvasToolController();
       _ownsToolController = true;
     }
-    _activeTool = _toolController.activeTool;
-    _toolController.addListener(_handleActiveToolChanged);
 
     final externalController = widget.controller;
     if (externalController != null) {
@@ -141,13 +100,7 @@ class _AutomatonGraphViewCanvasState
       highlightService.channel = highlightChannel;
     }
 
-    _algorithm = _AutomatonGraphSugiyamaAlgorithm(
-      controller: _controller,
-      configuration: _buildConfiguration(),
-    );
     _scheduleControllerSync(widget.automaton);
-    _controller.graphRevision.addListener(_handleGraphRevisionChanged);
-    _transformationController?.addListener(_onTransformationChanged);
 
     if ((widget.automaton?.states.isNotEmpty ?? false)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -161,7 +114,6 @@ class _AutomatonGraphViewCanvasState
   void didUpdateWidget(covariant AutomatonGraphViewCanvas oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.toolController != widget.toolController) {
-      _toolController.removeListener(_handleActiveToolChanged);
       if (_ownsToolController) {
         _toolController.dispose();
       }
@@ -169,13 +121,9 @@ class _AutomatonGraphViewCanvasState
           widget.toolController ?? AutomatonCanvasToolController();
       _toolController = nextController;
       _ownsToolController = widget.toolController == null;
-      _toolController.addListener(_handleActiveToolChanged);
-      _activeTool = _toolController.activeTool;
     }
 
     if (oldWidget.controller != widget.controller) {
-      _controller.graphRevision.removeListener(_handleGraphRevisionChanged);
-      _transformationController?.removeListener(_onTransformationChanged);
       if (_ownsController) {
         if (_highlightService != null) {
           _highlightService!.channel = _previousHighlightChannel;
@@ -202,31 +150,14 @@ class _AutomatonGraphViewCanvasState
         _highlightChannel = highlightChannel;
         highlightService.channel = highlightChannel;
       }
-      _algorithm = _AutomatonGraphSugiyamaAlgorithm(
-        controller: _controller,
-        configuration: _buildConfiguration(),
-      );
-      _transformationController?.addListener(_onTransformationChanged);
       _scheduleControllerSync(widget.automaton);
-      _controller.graphRevision.addListener(_handleGraphRevisionChanged);
-      _hideTransitionOverlay();
     } else if (oldWidget.automaton != widget.automaton) {
       _scheduleControllerSync(widget.automaton);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) {
-          return;
-        }
-        _refreshTransitionOverlayFromGraph();
-        _updateTransitionOverlayPosition();
-      });
     }
   }
 
   @override
   void dispose() {
-    _controller.graphRevision.removeListener(_handleGraphRevisionChanged);
-    _transformationController?.removeListener(_onTransformationChanged);
-    _toolController.removeListener(_handleActiveToolChanged);
     if (_ownsToolController) {
       _toolController.dispose();
     }
@@ -237,39 +168,7 @@ class _AutomatonGraphViewCanvasState
       _highlightService!.channel = _previousHighlightChannel;
       _highlightChannel = null;
     }
-    _transitionOverlayEntry?.remove();
-    _transitionOverlayEntry = null;
-    _transitionOverlayState.dispose();
     super.dispose();
-  }
-
-  void _handleActiveToolChanged() {
-    final nextTool = _toolController.activeTool;
-    if (nextTool == _activeTool) {
-      return;
-    }
-    setState(() {
-      _activeTool = nextTool;
-      if (_activeTool != AutomatonCanvasTool.transition) {
-        _transitionSourceId = null;
-      }
-      if (_activeTool != AutomatonCanvasTool.selection) {
-        _lastTapNodeId = null;
-        _lastTapTimestamp = null;
-      }
-    });
-    debugPrint(
-      '[AutomatonGraphViewCanvas] Active tool set to '
-      '${nextTool.name}',
-    );
-    if (nextTool != AutomatonCanvasTool.transition) {
-      _hideTransitionOverlay();
-    }
-  }
-
-  void _onTransformationChanged() {
-    _updateTransitionOverlayPosition();
-    setState(() {});
   }
 
   void _scheduleControllerSync(FSA? automaton) {
@@ -299,459 +198,54 @@ class _AutomatonGraphViewCanvasState
     return configuration;
   }
 
-  Offset _screenToWorld(Offset localPosition) {
-    final controller = _transformationController;
-    if (controller == null) {
-      return localPosition;
-    }
-    final matrix = Matrix4.copy(controller.value);
-    final determinant = matrix.invert();
-    if (determinant == 0) {
-      return localPosition;
-    }
-    final vector = matrix.transform3(
-      vmath.Vector3(localPosition.dx, localPosition.dy, 0),
-    );
-    return Offset(vector.x, vector.y);
-  }
-
-  GraphViewCanvasNode? _hitTestNode(
-    Offset localPosition, {
-    bool logDetails = true,
-  }) {
-    final world = _screenToWorld(localPosition);
-    GraphViewCanvasNode? closest;
-    var closestDistance = double.infinity;
-    for (final node in _controller.nodes) {
-      final center = Offset(node.x + _kNodeRadius, node.y + _kNodeRadius);
-      final dx = world.dx - center.dx;
-      final dy = world.dy - center.dy;
-      final distanceSquared = dx * dx + dy * dy;
-      if (distanceSquared <= _kNodeRadius * _kNodeRadius &&
-          distanceSquared < closestDistance) {
-        closest = node;
-        closestDistance = distanceSquared;
-      }
-    }
-    if (logDetails) {
-      if (closest != null) {
-        debugPrint(
-          '[AutomatonGraphViewCanvas] Hit node ${closest.id} '
-          '(tool=${_activeTool.name}) local=$localPosition world=$world',
-        );
-      } else if (_activeTool == AutomatonCanvasTool.transition) {
-        debugPrint(
-          '[AutomatonGraphViewCanvas] Transition tool miss '
-          'local=$localPosition world=$world',
-        );
-      }
-    }
-    return closest;
-  }
-
-  Offset _globalToCanvasLocal(Offset globalPosition) {
-    final renderBox =
-        widget.canvasKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox == null) {
-      return globalPosition;
-    }
-    return renderBox.globalToLocal(globalPosition);
-  }
-
-  void _logCanvasTapFromLocal({
-    required String source,
-    required Offset localPosition,
-  }) {
-    final node = _hitTestNode(localPosition, logDetails: false);
-    final world = _screenToWorld(localPosition);
-    final target = node?.id ?? 'canvas-background';
-    debugPrint(
-      '[AutomatonGraphViewCanvas] Tap source=$source target=$target '
-      'tool=${_activeTool.name} local=$localPosition world=$world',
-    );
-  }
-
-  void _logCanvasTapFromGlobal({
-    required String source,
-    required Offset globalPosition,
-  }) {
-    final local = _globalToCanvasLocal(globalPosition);
-    _logCanvasTapFromLocal(source: source, localPosition: local);
-  }
-
-  void _handleCanvasTapDown(TapDownDetails details) {
-    final global = details.globalPosition;
-    final local = _globalToCanvasLocal(global);
-    _logCanvasTapFromLocal(source: 'tap-down', localPosition: local);
-  }
-
-  void _beginNodeDrag(GraphViewCanvasNode node, Offset localPosition) {
-    debugPrint('[AutomatonGraphViewCanvas] Begin drag for ${node.id}');
-    _hideTransitionOverlay();
-    _draggingNodeId = node.id;
-    _dragStartWorldPosition = _screenToWorld(localPosition);
-    final current = _controller.nodeById(node.id) ?? node;
-    _dragStartNodeCenter = Offset(current.x, current.y);
-    _isDraggingNode = true;
-    _didMoveDraggedNode = false;
-  }
-
-  void _updateNodeDrag(Offset localPosition) {
-    final nodeId = _draggingNodeId;
-    final dragStartWorld = _dragStartWorldPosition;
-    final dragStartNodeCenter = _dragStartNodeCenter;
-    if (nodeId == null ||
-        dragStartWorld == null ||
-        dragStartNodeCenter == null) {
-      return;
-    }
-    final currentWorld = _screenToWorld(localPosition);
-    final delta = currentWorld - dragStartWorld;
-    final nextPosition = dragStartNodeCenter + delta;
-    _controller.moveState(nodeId, nextPosition);
-    _didMoveDraggedNode = true;
-  }
-
-  void _endNodeDrag() {
-    _draggingNodeId = null;
-    _dragStartWorldPosition = null;
-    _dragStartNodeCenter = null;
-    _setCanvasPanSuppressed(false, reason: 'drag ended');
-    _isDraggingNode = false;
-    _didMoveDraggedNode = false;
-  }
-
-  Future<void> _handleCanvasTapUp(TapUpDetails details) async {
-    final global = details.globalPosition;
-    final local = _globalToCanvasLocal(global);
-    debugPrint(
-      '[AutomatonGraphViewCanvas] Tap up with active tool ${_activeTool.name} '
-      'local=$local',
-    );
-    final node = _hitTestNode(local, logDetails: false);
-
-    if (_activeTool == AutomatonCanvasTool.addState) {
-      if (_isDraggingNode || _didMoveDraggedNode || node != null) {
-        return;
-      }
-      final world = _screenToWorld(local);
-      _controller.addStateAt(world);
-      return;
-    }
-
-    if (_activeTool == AutomatonCanvasTool.transition) {
-      if (node != null) {
-        _handleNodeTap(node.id);
-      }
-      return;
-    }
-
-    if (_activeTool != AutomatonCanvasTool.selection) {
-      return;
-    }
-
-    if (_isDraggingNode || _didMoveDraggedNode) {
-      _lastTapNodeId = null;
-      _lastTapTimestamp = null;
-      return;
-    }
-
-    if (node == null) {
-      _lastTapNodeId = null;
-      _lastTapTimestamp = null;
-      return;
-    }
-
-    _registerNodeTap(node.id);
-  }
-
-  void _handleNodePanStart(DragStartDetails details) {
-    final node = _hitTestNode(details.localPosition);
-    if (node == null) {
-      return;
-    }
-    debugPrint(
-      '[AutomatonGraphViewCanvas] pan start gesture -> ${node.id} '
-      'local=${details.localPosition}',
-    );
-    _setCanvasPanSuppressed(true, reason: 'node drag start ${node.id}');
-    _beginNodeDrag(node, details.localPosition);
-  }
-
-  void _handleNodePanUpdate(DragUpdateDetails details) {
-    debugPrint('[AutomatonGraphViewCanvas] pan update delta=${details.delta}');
-    _updateNodeDrag(details.localPosition);
-  }
-
-  void _handleNodePanEnd(DragEndDetails details) {
-    final nodeId = _draggingNodeId;
-    final didMove = _didMoveDraggedNode;
-    debugPrint(
-      '[AutomatonGraphViewCanvas] pan end velocity=${details.velocity}',
-    );
-    _endNodeDrag();
-    if (!didMove &&
-        nodeId != null &&
-        _activeTool != AutomatonCanvasTool.transition) {
-      _handleNodeTapFromPan(nodeId);
-    }
-  }
-
-  void _handleNodePanCancel() {
-    debugPrint('[AutomatonGraphViewCanvas] pan cancel');
-    _endNodeDrag();
-  }
-
-  void _handleNodeTap(String nodeId) {
-    debugPrint(
-      '[AutomatonGraphViewCanvas] Node tapped $nodeId with '
-      'active tool ${_activeTool.name}',
-    );
-    if (_activeTool != AutomatonCanvasTool.transition) {
-      return;
-    }
-
-    if (_transitionSourceId == null) {
-      debugPrint(
-        '[AutomatonGraphViewCanvas] Transition source selected '
-        '-> $nodeId',
-      );
-      setState(() {
-        _transitionSourceId = nodeId;
-      });
-      return;
-    }
-
-    final sourceId = _transitionSourceId!;
-    setState(() {
-      _transitionSourceId = null;
-    });
-    debugPrint(
-      '[AutomatonGraphViewCanvas] Transition target selected '
-      '-> $nodeId (source: $sourceId)',
-    );
-    _showTransitionEditor(sourceId, nodeId);
-  }
-
-  void _handleNodeContextTap(String nodeId) {
-    final node = _controller.nodeById(nodeId);
-    if (node == null) {
-      return;
-    }
-    debugPrint('[AutomatonGraphViewCanvas] opening state options for $nodeId');
-    _showStateOptions(node);
-  }
-
-  void _handleNodeTapFromPan(String nodeId) {
-    _registerNodeTap(nodeId);
-  }
-
-  void _registerNodeTap(String nodeId) {
-    const doubleTapTimeout = Duration(milliseconds: 300);
-    final now = DateTime.now();
-    if (_lastTapNodeId == nodeId &&
-        _lastTapTimestamp != null &&
-        now.difference(_lastTapTimestamp!) <= doubleTapTimeout) {
-      debugPrint('[AutomatonGraphViewCanvas] Detected double tap on $nodeId');
-      _handleNodeContextTap(nodeId);
-      _lastTapNodeId = null;
-      _lastTapTimestamp = null;
-    } else {
-      _lastTapNodeId = nodeId;
-      _lastTapTimestamp = now;
-    }
-  }
-
-  Future<void> _showStateOptions(GraphViewCanvasNode node) async {
-    final labelController = TextEditingController(text: node.label);
-    var isInitial = node.isInitial;
-    var isAccepting = node.isAccepting;
-
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) {
-        final theme = Theme.of(context);
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 24,
-            right: 24,
-            top: 24,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-          ),
-          child: StatefulBuilder(
-            builder: (context, setModalState) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    node.label.isEmpty ? node.id : node.label,
-                    style: theme.textTheme.titleMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: labelController,
-                    decoration: const InputDecoration(labelText: 'State label'),
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (value) {
-                      final resolved = value.trim();
-                      if (resolved != node.label) {
-                        _controller.updateStateLabel(node.id, resolved);
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  SwitchListTile.adaptive(
-                    value: isInitial,
-                    title: const Text('Initial state'),
-                    onChanged: (value) {
-                      setModalState(() => isInitial = value);
-                      _controller.updateStateFlags(node.id, isInitial: value);
-                    },
-                  ),
-                  SwitchListTile.adaptive(
-                    value: isAccepting,
-                    title: const Text('Final state'),
-                    onChanged: (value) {
-                      setModalState(() => isAccepting = value);
-                      _controller.updateStateFlags(node.id, isAccepting: value);
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  FilledButton(
-                    onPressed: () {
-                      final resolved = labelController.text.trim();
-                      if (resolved != node.label) {
-                        _controller.updateStateLabel(node.id, resolved);
-                      }
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text('Save changes'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Close'),
-                  ),
-                ],
-              );
-            },
-          ),
+  GraphViewTransitionDelegate<String> _buildTransitionDelegate() {
+    return GraphViewTransitionDelegate<String>(
+      buildDefaultData: (_, __) => '',
+      dataFromEdge: (edge) => edge.label,
+      commit: (fromStateId, toStateId, worldAnchor, label, transitionId) {
+        _controller.addOrUpdateTransition(
+          fromStateId: fromStateId,
+          toStateId: toStateId,
+          label: label,
+          transitionId: transitionId,
+          controlPointX: worldAnchor.dx,
+          controlPointY: worldAnchor.dy,
         );
       },
-    );
-
-    labelController.dispose();
-  }
-
-  List<GraphViewCanvasEdge> _findExistingEdges(String fromId, String toId) {
-    return _controller.edges
-        .where((edge) => edge.fromStateId == fromId && edge.toStateId == toId)
-        .toList(growable: false);
-  }
-
-  Future<void> _showTransitionEditor(String fromId, String toId) async {
-    final existingEdges = _findExistingEdges(fromId, toId);
-    debugPrint(
-      '[AutomatonGraphViewCanvas] Preparing transition editor '
-      'from=$fromId to=$toId existing=${existingEdges.length}',
-    );
-    GraphViewCanvasEdge? existing;
-    var createNew = existingEdges.isEmpty;
-
-    if (!createNew) {
-      existing = existingEdges.firstWhereOrNull(
-        (edge) => _selectedTransitions.contains(edge.id),
-      );
-
-      if (existing == null) {
-        final selection = await _promptTransitionEditChoice(existingEdges);
-        if (!mounted || selection == null) {
-          return;
-        }
-        if (selection.createNew) {
-          createNew = true;
-        } else {
-          existing = selection.edge;
-          if (existing == null) {
-            createNew = true;
-          }
-        }
-      }
-    }
-
-    final initialValue = existing?.label ?? '';
-    final worldAnchor = !createNew && existing != null
-        ? resolveLinkAnchorWorld(_controller, existing) ??
-              Offset(existing.controlPointX ?? 0, existing.controlPointY ?? 0)
-        : _deriveControlPoint(fromId, toId);
-
-    final overlayDisplayed = _showTransitionOverlay(
-      fromStateId: fromId,
-      toStateId: toId,
-      transitionId: createNew ? null : existing?.id,
-      initialValue: initialValue,
-      worldAnchor: worldAnchor,
-    );
-
-    if (overlayDisplayed) {
-      debugPrint(
-        '[AutomatonGraphViewCanvas] Showing transition editor '
-        'for $fromId → $toId (transitionId: ${existing?.id})',
-      );
-      setState(() {
-        _selectedTransitions..clear();
-        if (!createNew && existing?.id != null) {
-          _selectedTransitions.add(existing!.id);
-        }
-      });
-      return;
-    }
-
-    debugPrint(
-      '[AutomatonGraphViewCanvas] Fallback modal for '
-      '$fromId → $toId (existing=${existing?.id})',
-    );
-
-    final label = await showDialog<String?>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          content: TransitionLabelEditorForm(
-            initialValue: initialValue,
-            autofocus: true,
-            touchOptimized: true,
-            onSubmit: (value) => Navigator.of(context).pop(value),
-            onCancel: () => Navigator.of(context).pop(null),
-          ),
+      buildOverlay: (context, state, onSubmit, onCancel) {
+        return GraphViewLabelFieldEditor(
+          initialValue: state.data,
+          onSubmit: onSubmit,
+          onCancel: onCancel,
         );
       },
-    );
-
-    if (!mounted || label == null) {
-      return;
-    }
-
-    debugPrint(
-      '[AutomatonGraphViewCanvas] Persisting transition '
-      'for $fromId → $toId (transitionId: ${existing?.id})',
-    );
-
-    _controller.addOrUpdateTransition(
-      fromStateId: fromId,
-      toStateId: toId,
-      label: label,
-      transitionId: createNew ? null : existing?.id,
-      controlPointX: worldAnchor.dx,
-      controlPointY: worldAnchor.dy,
+      buildFallbackEditor: (context, state) async {
+        final result = await showDialog<String?>(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              content: TransitionLabelEditorForm(
+                initialValue: state.data,
+                autofocus: true,
+                touchOptimized: true,
+                onSubmit: (value) => Navigator.of(context).pop(value),
+                onCancel: () => Navigator.of(context).pop(null),
+              ),
+            );
+          },
+        );
+        return result;
+      },
+      selectionPrompt: (context, edges) =>
+          _promptTransitionEditChoice(context, edges),
     );
   }
 
-  Future<_TransitionEditChoice?> _promptTransitionEditChoice(
+  Future<GraphViewTransitionSelection> _promptTransitionEditChoice(
+    BuildContext context,
     List<GraphViewCanvasEdge> edges,
-  ) {
-    return showDialog<_TransitionEditChoice>(
+  ) async {
+    final choice = await showDialog<_TransitionEditChoice?>(
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -794,414 +288,50 @@ class _AutomatonGraphViewCanvasState
         );
       },
     );
-  }
 
-  Offset _deriveControlPoint(String fromId, String toId) {
-    final fromNode = _controller.nodeById(fromId);
-    final toNode = _controller.nodeById(toId);
-    if (fromNode == null || toNode == null) {
-      return Offset.zero;
+    if (choice == null || choice.createNew) {
+      return const GraphViewTransitionSelection.createNew();
     }
-
-    final fromCenter = Offset(
-      fromNode.x + _kNodeRadius,
-      fromNode.y + _kNodeRadius,
-    );
-    final toCenter = Offset(toNode.x + _kNodeRadius, toNode.y + _kNodeRadius);
-
-    if (fromId == toId) {
-      return fromCenter.translate(0, -_kNodeDiameter);
-    }
-
-    final midpoint = Offset(
-      (fromCenter.dx + toCenter.dx) / 2,
-      (fromCenter.dy + toCenter.dy) / 2,
-    );
-
-    final dx = toCenter.dx - fromCenter.dx;
-    final dy = toCenter.dy - fromCenter.dy;
-    var normal = Offset(-dy, dx);
-    if (normal.distanceSquared == 0) {
-      normal = const Offset(0, -1);
-    }
-    final existing = _findExistingEdges(fromId, toId).length;
-    final direction = existing.isEven ? 1.0 : -1.0;
-    final magnitude = (_kNodeDiameter * 0.8) + existing * 12;
-    final normalized = normal / normal.distance * magnitude * direction;
-    return midpoint + normalized;
-  }
-
-  void _handleGraphRevisionChanged() {
-    if (!mounted) {
-      return;
-    }
-    _refreshTransitionOverlayFromGraph();
-    _updateTransitionOverlayPosition();
-  }
-
-  void _refreshTransitionOverlayFromGraph() {
-    final state = _transitionOverlayState.value;
-    if (state == null) {
-      return;
-    }
-
-    final transitionId = state.transitionId;
-    if (transitionId != null) {
-      final edge = _controller.edgeById(transitionId);
-      if (edge == null) {
-        _hideTransitionOverlay();
-        return;
-      }
-      final anchor =
-          resolveLinkAnchorWorld(_controller, edge) ?? state.worldAnchor;
-      _transitionOverlayState.value = state.copyWith(
-        initialValue: edge.label,
-        worldAnchor: anchor,
-      );
-      final shouldUpdateSelection =
-          _selectedTransitions.length != 1 ||
-          !_selectedTransitions.contains(transitionId);
-      if (shouldUpdateSelection) {
-        setState(() {
-          _selectedTransitions
-            ..clear()
-            ..add(transitionId);
-        });
-      }
-    } else {
-      final anchor = _deriveControlPoint(state.fromStateId, state.toStateId);
-      _transitionOverlayState.value = state.copyWith(worldAnchor: anchor);
-    }
-  }
-
-  void _updateTransitionOverlayPosition() {
-    final state = _transitionOverlayState.value;
-    if (state == null) {
-      return;
-    }
-    final overlay = Overlay.maybeOf(context);
-    if (overlay == null) {
-      return;
-    }
-    final overlayBox = overlay.context.findRenderObject() as RenderBox?;
-    if (overlayBox == null || !overlayBox.hasSize) {
-      return;
-    }
-    final overlayPosition = overlayBox.size.center(Offset.zero);
-    if ((overlayPosition - state.overlayPosition).distance <= 0.5) {
-      return;
-    }
-    _transitionOverlayState.value = state.copyWith(
-      overlayPosition: overlayPosition,
-    );
-  }
-
-  bool _showTransitionOverlay({
-    required String fromStateId,
-    required String toStateId,
-    required String initialValue,
-    required Offset worldAnchor,
-    String? transitionId,
-  }) {
-    final overlayState = Overlay.maybeOf(context);
-    if (overlayState == null) {
-      return false;
-    }
-    final overlayBox = overlayState.context.findRenderObject() as RenderBox?;
-    if (overlayBox == null || !overlayBox.hasSize) {
-      return false;
-    }
-    final overlayPosition = overlayBox.size.center(Offset.zero);
-    _ensureTransitionOverlay(overlayState);
-    _transitionOverlayState.value = _GraphViewTransitionOverlayState(
-      fromStateId: fromStateId,
-      toStateId: toStateId,
-      initialValue: initialValue,
-      worldAnchor: worldAnchor,
-      overlayPosition: overlayPosition,
-      transitionId: transitionId,
-    );
-    return true;
-  }
-
-  void _ensureTransitionOverlay(OverlayState overlayState) {
-    if (_transitionOverlayEntry != null) {
-      return;
-    }
-    _transitionOverlayEntry = OverlayEntry(
-      builder: (context) {
-        return Material(
-          type: MaterialType.transparency,
-          child: ValueListenableBuilder<_GraphViewTransitionOverlayState?>(
-            valueListenable: _transitionOverlayState,
-            builder: (context, state, _) {
-              if (state == null) {
-                return const SizedBox.shrink();
-              }
-              return Stack(
-                children: [
-                  Positioned(
-                    left: state.overlayPosition.dx,
-                    top: state.overlayPosition.dy,
-                    child: FractionalTranslation(
-                      translation: const Offset(-0.5, -0.5),
-                      child: GraphViewLabelFieldEditor(
-                        initialValue: state.initialValue,
-                        onSubmit: (value) => _handleOverlaySubmit(state, value),
-                        onCancel: _hideTransitionOverlay,
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        );
-      },
-    );
-    overlayState.insert(_transitionOverlayEntry!);
-  }
-
-  void _handleOverlaySubmit(
-    _GraphViewTransitionOverlayState state,
-    String label,
-  ) {
-    debugPrint(
-      '[AutomatonGraphViewCanvas] Persisting transition '
-      'for ${state.fromStateId} → ${state.toStateId} '
-      '(transitionId: ${state.transitionId})',
-    );
-    _controller.addOrUpdateTransition(
-      fromStateId: state.fromStateId,
-      toStateId: state.toStateId,
-      label: label,
-      transitionId: state.transitionId,
-      controlPointX: state.worldAnchor.dx,
-      controlPointY: state.worldAnchor.dy,
-    );
-    _hideTransitionOverlay();
-  }
-
-  void _hideTransitionOverlay() {
-    final hadOverlay = _transitionOverlayState.value != null;
-    final hadSelection = _selectedTransitions.isNotEmpty;
-    if (hadOverlay) {
-      _transitionOverlayState.value = null;
-    }
-    if (hadOverlay || hadSelection) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _selectedTransitions.clear();
-      });
-    }
-  }
-
-  bool _isNodeHighlighted(
-    GraphViewCanvasNode node,
-    SimulationHighlight highlight,
-  ) {
-    return highlight.stateIds.contains(node.id) ||
-        node.id == _transitionSourceId;
-  }
-
-  Widget _buildEdgeLayer({
-    required List<GraphViewCanvasEdge> edges,
-    required List<GraphViewCanvasNode> nodes,
-    required SimulationHighlight highlight,
-    required ThemeData theme,
-  }) {
-    final painter = _GraphViewEdgePainter(
-      edges: edges,
-      nodes: nodes,
-      highlightedTransitions: highlight.transitionIds,
-      selectedTransitions: _selectedTransitions,
-      theme: theme,
-    );
-
-    final transformation = _transformationController;
-    if (transformation == null) {
-      return CustomPaint(painter: painter);
-    }
-
-    return AnimatedBuilder(
-      animation: transformation,
-      builder: (context, _) {
-        return Transform(
-          alignment: Alignment.topLeft,
-          transform: transformation.value,
-          child: CustomPaint(painter: painter),
-        );
-      },
-    );
+    return GraphViewTransitionSelection.edit(choice.edge!);
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return RawGestureDetector(
-      key: widget.canvasKey,
-      behavior: HitTestBehavior.translucent,
-      gestures: _buildGestureRecognizers(),
-      child: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTapDown: _handleCanvasTapDown,
-        onTapUp: _handleCanvasTapUp,
-        child: ValueListenableBuilder<int>(
-          valueListenable: _controller.graphRevision,
-          builder: (context, _, __) {
-            final nodes = _controller.nodes.toList(growable: false);
-            final edges = _controller.edges.toList(growable: false);
-            return ValueListenableBuilder<SimulationHighlight>(
-              valueListenable: _controller.highlightNotifier,
-              builder: (context, highlight, __) {
-                return Stack(
-                  children: [
-                    Positioned.fill(
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          final viewport = constraints.biggest;
-                          if (viewport.width.isFinite &&
-                              viewport.height.isFinite) {
-                            _controller.updateViewportSize(viewport);
-                          }
-                          return RepaintBoundary(
-                            child: AbsorbPointer(
-                              absorbing: _suppressCanvasPan,
-                              child: GraphViewAllNodes.builder(
-                                graph: _controller.graph,
-                                controller: _controller.graphController,
-                                algorithm: _algorithm,
-                                paint: Paint()..color = Colors.transparent,
-                                builder: (node) {
-                                  final nodeId = node.key?.value?.toString();
-                                  if (nodeId == null) {
-                                    return const SizedBox.shrink();
-                                  }
-                                  final canvasNode =
-                                      _controller.nodeById(nodeId) ??
-                                      GraphViewCanvasNode(
-                                        id: nodeId,
-                                        label: nodeId,
-                                        x: node.position.dx,
-                                        y: node.position.dy,
-                                        isInitial: false,
-                                        isAccepting: false,
-                                      );
-                                  final isHighlighted = _isNodeHighlighted(
-                                    canvasNode,
-                                    highlight,
-                                  );
-                                  return _AutomatonGraphNode(
-                                    label: canvasNode.label,
-                                    isInitial: canvasNode.isInitial,
-                                    isAccepting: canvasNode.isAccepting,
-                                    isHighlighted: isHighlighted,
-                                  );
-                                },
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    Positioned.fill(
-                      child: IgnorePointer(
-                        child: _buildEdgeLayer(
-                          edges: edges,
-                          nodes: nodes,
-                          highlight: highlight,
-                          theme: theme,
-                        ),
-                      ),
-                    ),
-                    if (_activeTool == AutomatonCanvasTool.transition)
-                      Positioned(
-                        top: 16,
-                        right: 16,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surface.withValues(
-                              alpha: 0.9,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: theme.colorScheme.primary,
-                              width: 1.5,
-                            ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.link,
-                                  size: 16,
-                                  color: theme.colorScheme.primary,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Add transition…',
-                                  style: theme.textTheme.labelMedium?.copyWith(
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                );
-              },
+    return GraphViewInteractiveCanvas<String>(
+      canvasKey: widget.canvasKey,
+      controller: _controller,
+      algorithmBuilder: (controller) => _AutomatonGraphSugiyamaAlgorithm(
+        controller: controller as GraphViewCanvasController,
+        configuration: _buildConfiguration(),
+      ),
+      toolController: _toolController,
+      transitionDelegate: _buildTransitionDelegate(),
+      nodeBuilder: (context, node, highlight, isHighlighted) {
+        return _AutomatonGraphNode(
+          label: node.label,
+          isInitial: node.isInitial,
+          isAccepting: node.isAccepting,
+          isHighlighted: isHighlighted,
+        );
+      },
+      edgePainterBuilder:
+          ({
+            required edges,
+            required nodes,
+            required highlight,
+            required theme,
+            required selectedTransitions,
+          }) {
+            return _GraphViewEdgePainter(
+              edges: edges,
+              nodes: nodes,
+              highlightedTransitions: highlight.transitionIds,
+              selectedTransitions: selectedTransitions,
+              theme: theme,
             );
           },
-        ),
-      ),
+      transitionToolLabel: 'Add transition…',
     );
-  }
-
-  Map<Type, GestureRecognizerFactory> _buildGestureRecognizers() {
-    final gestures = <Type, GestureRecognizerFactory>{
-      _NodePanGestureRecognizer:
-          GestureRecognizerFactoryWithHandlers<_NodePanGestureRecognizer>(
-            () => _NodePanGestureRecognizer(
-              hitTester: (global) =>
-                  _hitTestNode(_globalToCanvasLocal(global), logDetails: false),
-              toolResolver: () => _activeTool,
-              onPointerDown: (global) => _logCanvasTapFromGlobal(
-                source: 'pan-pointer',
-                globalPosition: global,
-              ),
-              onDragAccepted: () => _setCanvasPanSuppressed(
-                true,
-                reason: 'node pointer accepted',
-              ),
-              onDragReleased: () => _setCanvasPanSuppressed(
-                false,
-                reason: 'node pointer released',
-              ),
-            ),
-            (recognizer) {
-              if (recognizer.team == null) {
-                recognizer.team = _gestureArenaTeam;
-              }
-              recognizer
-                ..onStart = _handleNodePanStart
-                ..onUpdate = _handleNodePanUpdate
-                ..onEnd = _handleNodePanEnd
-                ..onCancel = _handleNodePanCancel
-                ..dragStartBehavior = DragStartBehavior.start;
-            },
-          ),
-    };
-
-    return gestures;
   }
 }
 
@@ -1605,78 +735,5 @@ class _GraphViewEdgePainter extends CustomPainter {
         ) ||
         !setEquals(oldDelegate.selectedTransitions, selectedTransitions) ||
         oldDelegate.theme != theme;
-  }
-}
-
-typedef _NodeHitTester = GraphViewCanvasNode? Function(Offset globalPosition);
-typedef _ToolResolver = AutomatonCanvasTool Function();
-
-class _NodePanGestureRecognizer extends PanGestureRecognizer {
-  _NodePanGestureRecognizer({
-    required this.hitTester,
-    required this.toolResolver,
-    this.onPointerDown,
-    this.onDragAccepted,
-    this.onDragReleased,
-  });
-
-  final _NodeHitTester hitTester;
-  final _ToolResolver toolResolver;
-  final ValueChanged<Offset>? onPointerDown;
-  final VoidCallback? onDragAccepted;
-  final VoidCallback? onDragReleased;
-
-  int? _activePointer;
-
-  @override
-  void addAllowedPointer(PointerDownEvent event) {
-    debugPrint(
-      '[NodePanRecognizer] addAllowedPointer pointer ${event.pointer} '
-      'tool=${toolResolver().name} active=$_activePointer '
-      'position=${event.position} dragStart=$dragStartBehavior',
-    );
-    onPointerDown?.call(event.position);
-    if (_activePointer != null) {
-      debugPrint('[NodePanRecognizer] pointer already active -> ignore');
-      return;
-    }
-    final tool = toolResolver();
-    if (tool == AutomatonCanvasTool.transition) {
-      debugPrint('[NodePanRecognizer] tool transition -> ignore');
-      return;
-    }
-    final node = hitTester(event.position);
-    if (node == null) {
-      debugPrint('[NodePanRecognizer] no node hit -> ignore');
-      return;
-    }
-    _activePointer = event.pointer;
-    debugPrint(
-      '[NodePanRecognizer] tracking pointer ${event.pointer} '
-      'for node ${node.id}',
-    );
-    onDragAccepted?.call();
-    super.addAllowedPointer(event);
-    resolvePointer(event.pointer, GestureDisposition.accepted);
-  }
-
-  @override
-  void rejectGesture(int pointer) {
-    debugPrint('[NodePanRecognizer] rejectGesture pointer=$pointer');
-    if (pointer == _activePointer) {
-      _activePointer = null;
-      onDragReleased?.call();
-    }
-    super.rejectGesture(pointer);
-  }
-
-  @override
-  void didStopTrackingLastPointer(int pointer) {
-    debugPrint('[NodePanRecognizer] didStopTracking pointer=$pointer');
-    if (pointer == _activePointer) {
-      _activePointer = null;
-      onDragReleased?.call();
-    }
-    super.didStopTrackingLastPointer(pointer);
   }
 }

@@ -1,3 +1,15 @@
+//
+//  automaton_use_cases.dart
+//  JFlutter
+//
+//  Conjunto de casos de uso que encapsula operações de ciclo de vida e edição
+//  de autômatos, delegando persistência ao AutomatonRepository. Define fluxos
+//  para criar, carregar, salvar, excluir, importar e exportar estruturas.
+//  Também organiza comandos para gerenciar estados e transições garantindo
+//  consistência dos dados.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import '../entities/automaton_entity.dart';
 import '../result.dart';
 import '../repositories/automaton_repository.dart';

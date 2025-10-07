@@ -2,10 +2,11 @@
 //  tm.dart
 //  JFlutter
 //
-//  Representa máquinas de Turing de fita única, controlando alfabetos de fita,
-//  símbolo branco, quantidade de fitas e serialização completa. Sustenta os
-//  analisadores e simuladores ao garantir validações coerentes e dados geométricos
-//  integrados ao editor visual.
+//  Representação de máquinas de Turing que herda Automaton para manter estados,
+//  transições e configuração de canvas, acrescentando alfabeto de fita,
+//  símbolo branco e contagem de fitas. Oferece serialização completa, cópias
+//  imutáveis e validações específicas que protegem a integridade de símbolos e
+//  transições durante importações e simulações.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

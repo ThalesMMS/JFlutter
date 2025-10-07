@@ -1,11 +1,17 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/widgets/automaton_graphview_canvas.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Implementa canvas interativo baseado em GraphView para edição e visualização de autômatos finitos. Administra ferramentas, destaques de simulação e sincronização com provedores Riverpod garantindo experiência fluida.
-/// Contexto: Coordena controladores internos e externos para manipular nós, transições e overlays de rótulos, além de emitir atualizações para o AutomatonProvider. Incorpora algoritmos de layout e integrações com serviços de destaque para acompanhar execuções.
-/// Observações: Gerencia gestos complexos, estados de arrasto e atualizações diferidas para manter desempenho em autômatos grandes. Estrutura lógica extensível permitindo adicionar novas ferramentas ou interações sem refatorações profundas.
-/// ---------------------------------------------------------------------------
+//
+//  automaton_graphview_canvas.dart
+//  JFlutter
+//
+//  Implementa o canvas interativo baseado em GraphView responsável por editar e
+//  visualizar autômatos nos diferentes modos do aplicativo, coordenando
+//  ferramentas, arrastos de estados, criação de transições e emissão de destaques
+//  durante simulações.
+//  Orquestra controladores especializados para FSA, PDA e TM, integra editores de
+//  rótulos, sobreposições contextuais e sincronização com providers Riverpod para
+//  manter o modelo consistente mesmo em autômatos de grande porte.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:math' as math;
 
 import 'package:collection/collection.dart';

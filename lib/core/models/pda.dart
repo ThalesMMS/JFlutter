@@ -2,10 +2,11 @@
 //  pda.dart
 //  JFlutter
 //
-//  Representa autômatos com pilha dentro do domínio da aplicação, gerenciando
-//  alfabetos, símbolo inicial da pilha, serialização e validações
-//  especializadas. Dá suporte direto aos conversores e simuladores ao manter
-//  dados coerentes sobre estados, transições e geometria do canvas.
+//  Implementação de autômatos com pilha que amplia Automaton com alfabeto da
+//  pilha e símbolo inicial, expondo cópias, serialização e validações
+//  específicas. Fornece utilitários para filtrar transições por tipo e garante
+//  que símbolos utilizados estejam sincronizados com a pilha, evitando erros em
+//  simulações e exportações.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

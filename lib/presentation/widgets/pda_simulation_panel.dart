@@ -1,11 +1,16 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/widgets/pda_simulation_panel.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Widget que executa simulações de autômatos de pilha permitindo configurar entrada, símbolo inicial da pilha e modo passo a passo. Exibe resultados, mensagens de erro e traços detalhados para estudo.
-/// Contexto: Trabalha em conjunto com o PDAEditorProvider e serviços de destaque para manter sincronização visual com o canvas. Organiza controles em cartões materiais de fácil leitura adequados a diversos tamanhos de tela.
-/// Observações: Administra controladores de texto e estado local para preservar interações do usuário entre execuções. Invoca o simulador central garantindo que os mesmos modelos do domínio sejam utilizados em toda a aplicação.
-/// ---------------------------------------------------------------------------
+//
+//  pda_simulation_panel.dart
+//  JFlutter
+//
+//  Responsável pela simulação de autômatos de pilha no aplicativo, permitindo
+//  configurar cadeia de entrada, símbolo inicial da pilha, gravação de traço e
+//  visualizar resultados aceitos ou rejeitados com mensagens de erro.
+//  Integra-se ao PDAEditorProvider e ao serviço de destaque para sincronizar o
+//  canvas, administrando controladores e estado local a fim de preservar
+//  interações entre execuções.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

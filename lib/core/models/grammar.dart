@@ -2,10 +2,11 @@
 //  grammar.dart
 //  JFlutter
 //
-//  Define a estrutura de gramáticas utilizadas nos algoritmos, armazenando
-//  conjuntos de terminais, não-terminais, produções e metadados temporais.
-//  Disponibiliza cópias imutáveis, serialização JSON e validações que garantem
-//  consistência antes de análises ou conversões entre modelos.
+//  Estrutura de dados que modela gramáticas formais com conjuntos de símbolos,
+//  produções e metadados temporais, oferecendo cópias imutáveis e suporte a
+//  serialização. O tipo de gramática é preservado e validado para garantir
+//  consistência dos algoritmos de parsing, enquanto regras são verificadas
+//  contra símbolos declarados.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

@@ -2,10 +2,11 @@
 //  fsa.dart
 //  JFlutter
 //
-//  Define o modelo de Autômato Finito do aplicativo, incluindo operações de
-//  cópia imutável, serialização JSON e validações de transições determinísticas.
-//  Sustenta ferramentas de análise ao expor utilitários para estados, limites
-//  geométricos e compatibilidade com o sistema de logs do canvas interativo.
+//  Modelo que representa autômatos finitos determinísticos ou não, estendendo
+//  a classe base Automaton com serialização completa, cópias imutáveis e
+//  verificações estruturais. Consolida lógica para converter transições,
+//  coordenadas do canvas e metadados em JSON, garantindo consistência na
+//  camada de domínio.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

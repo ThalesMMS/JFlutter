@@ -1,3 +1,15 @@
+//
+//  dfa_minimizer.dart
+//  JFlutter
+//
+//  Reúne a implementação completa da minimização de autômatos finitos
+//  determinísticos via algoritmo de Hopcroft, incluindo validações, remoção de
+//  estados inalcançáveis e reconstrução geométrica para preservar metadados.
+//  Fornece operações auxiliares para tratar símbolos epsilon e gerar respostas
+//  encapsuladas em objetos `Result` com mensagens claras de erro.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:vector_math/vector_math_64.dart';
 import '../models/fsa.dart';
 import '../models/state.dart';

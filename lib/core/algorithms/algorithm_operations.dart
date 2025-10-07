@@ -1,3 +1,16 @@
+//
+//  algorithm_operations.dart
+//  JFlutter
+//
+//  Reúne pontos de entrada de alto nível para os algoritmos de conversão,
+//  análise e simulação do projeto, encapsulando chamadas para conversores de
+//  autômatos, avaliadores de gramáticas, simuladores assíncronos e rotinas do
+//  lema do bombeamento. Fornece tratamento de erros uniforme e tempos limite
+//  configuráveis para cada operação, permitindo que a camada de apresentação
+//  invoque funcionalidades complexas com uma interface coesa.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import '../models/fsa.dart';
 import '../models/pda.dart';
 import '../models/tm.dart';

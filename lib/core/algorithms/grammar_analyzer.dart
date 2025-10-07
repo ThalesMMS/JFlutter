@@ -1,3 +1,15 @@
+//
+//  grammar_analyzer.dart
+//  JFlutter
+//
+//  Oferece rotinas avançadas para analisar e transformar gramáticas, incluindo
+//  remoção de recursão à esquerda, fatoração à esquerda e construção de
+//  relatórios ricos com notas, derivações e conflitos. Estruturas auxiliares
+//  encapsulam tabelas LL(1) e resultados tipados, permitindo futuras extensões
+//  de análise.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import '../models/grammar.dart';
 import '../models/production.dart';
 import '../result.dart';

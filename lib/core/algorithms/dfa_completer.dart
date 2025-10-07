@@ -1,3 +1,14 @@
+//
+//  dfa_completer.dart
+//  JFlutter
+//
+//  Fornece rotina para completar autômatos finitos determinísticos, garantindo
+//  transições definidas para todo símbolo do alfabeto a partir de cada estado.
+//  Cria estado armadilha quando necessário e copia metadados relevantes, mantendo
+//  coerência visual e temporal ao gerar um DFA plenamente definido.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:vector_math/vector_math_64.dart';
 import '../models/fsa.dart';
 import '../models/state.dart';

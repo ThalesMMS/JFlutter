@@ -1,3 +1,15 @@
+//
+//  throttling.dart
+//  JFlutter
+//
+//  Define utilitários de controle de frequência para rotinas ligadas à UI,
+//  incluindo agendamento sincronizado com frames Flutter, debounce, throttle e
+//  processamento em lotes. Complementa com heurística de orçamento temporal para
+//  estimar iterações viáveis, permitindo que algoritmos intensivos mantenham a
+//  fluidez da interface.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/scheduler.dart';

@@ -1,3 +1,14 @@
+//
+//  grammar_parser.dart
+//  JFlutter
+//
+//  Coordena estratégias de parsing para gramáticas livres de contexto, incluindo
+//  heurísticas rápidas para gramáticas de Dyck, reconhecimento geral via Earley
+//  e derivação com análise recursiva. Realiza validações de entrada, seleciona
+//  abordagens conforme dicas e encapsula resultados ricos em `ParseResult`.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import '../models/grammar.dart';
 import '../models/production.dart';
 import '../models/parse_table.dart';

@@ -1,3 +1,11 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/presentation/widgets/diagnostics_panel.dart
+/// Autoria: Equipe de Engenharia JFlutter
+/// Descrição: Apresenta mensagens de diagnóstico sobre autômatos com ações de atualização e feedback visual. Fornece resumo quando não há problemas e detalha sugestões acionáveis quando disponíveis.
+/// Contexto: Consome instâncias de DiagnosticMessage geradas pelo domínio para auxiliar estudantes na correção de modelos. Estrutura uma lista expansível que evidencia severidade e orienta correções passo a passo.
+/// Observações: Permite incorporar controle de recarregamento opcional com indicador de progresso embutido. Pode ser reutilizado em diferentes páginas mantendo consistência na comunicação de erros e alertas.
+/// ---------------------------------------------------------------------------
 import 'package:flutter/material.dart';
 import '../../core/services/diagnostics_service.dart';
 

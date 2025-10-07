@@ -1,3 +1,11 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/presentation/providers/settings_provider.dart
+/// Autoria: Equipe de Engenharia JFlutter
+/// Descrição: Disponibiliza configurações persistidas para a árvore de widgets por meio de um StateNotifier Riverpod. Realiza leitura inicial e sincronizações subsequentes com a fonte de dados padrão baseada em SharedPreferences.
+/// Contexto: Encapsula o repositório de configurações para abstrair detalhes de persistência e facilitar substituições em testes. Garante que alterações de modelo sejam gravadas com tratamento de erros e preservação de ciclo de vida.
+/// Observações: Oferece métodos para atualização, recarregamento e restauração dos valores padrão do SettingsModel. Controla descarte seguro para evitar escrituras após a liberação do provedor.
+/// ---------------------------------------------------------------------------
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

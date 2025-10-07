@@ -1,3 +1,11 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/presentation/providers/automaton_provider.dart
+/// Autoria: Equipe de Engenharia JFlutter
+/// Descrição: Orquestra a criação, edição e persistência de autômatos no editor visual. Expõe estado reativo com informações de layout, dados de transições e indicadores de carregamento para a interface.
+/// Contexto: Encapsula integrações com serviços de automaton, algoritmos de conversão e o repositório de layout para manter consistência entre domínio e canvas. Coordena operações de simulação, conversão e minimização respeitando a infraestrutura de GraphView.
+/// Observações: Registra mutações relevantes para depuração e alimenta históricos de traços quando persistência está habilitada. Fornece métodos para atualizar estados, transições e propriedades estruturais sincronizando widgets e provedores auxiliares.
+/// ---------------------------------------------------------------------------
 import 'dart:math';
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';

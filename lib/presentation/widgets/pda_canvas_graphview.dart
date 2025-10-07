@@ -1,3 +1,11 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/presentation/widgets/pda_canvas_graphview.dart
+/// Autoria: Equipe de Engenharia JFlutter
+/// Descrição: Renderiza o canvas de autômatos de pilha usando GraphView, sincronizando estados e transições com o provedor de edição. Lida com destaques de simulação, algoritmos de layout e propagação de mudanças para ouvintes externos.
+/// Contexto: Integra controladores especializados para atualizar nós, gerenciar canal de destaques e ajustar a visualização conforme o conteúdo. Inscreve-se manualmente no PDAEditorProvider para detectar mutações relevantes e aplicar sincronização eficiente.
+/// Observações: Oferece opção de reutilizar controlador externo preservando recursos e evitando substituição de canais existentes. Quando proprietário, configura automaticamente o serviço de destaque e aplica fit-to-content em inicializações apropriadas.
+/// ---------------------------------------------------------------------------
 import 'dart:async';
 
 import 'package:flutter/material.dart';

@@ -1,3 +1,11 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/presentation/widgets/pda_algorithm_panel.dart
+/// Autoria: Equipe de Engenharia JFlutter
+/// Descrição: Agrupa atalhos para algoritmos de análise de autômatos de pilha, oferecendo conversões e diagnósticos como determinismo e alcance de estados. Exibe resultados textuais para orientar correções do estudante.
+/// Contexto: Comunica-se com o PDAEditorProvider e serviços de conversão para gerar gramáticas equivalentes ou relatórios. Organiza botões temáticos com descrições claras, funcionando como hub de ferramentas dentro do workspace.
+/// Observações: Mantém estado local de carregamento e armazena última gramática convertida para uso posterior. Pode ser ampliado com novos algoritmos mantendo a estrutura de cartões e seções já estabelecida.
+/// ---------------------------------------------------------------------------
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

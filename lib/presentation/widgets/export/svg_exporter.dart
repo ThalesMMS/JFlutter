@@ -1,3 +1,11 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/presentation/widgets/export/svg_exporter.dart
+/// Autoria: Equipe de Engenharia JFlutter
+/// Descrição: Implementa gerador de SVGs para autômatos, gramáticas e máquinas de Turing convertendo modelos em diagramas vetoriais. Fornece opções de personalização e estilos padrão alinhados à identidade visual do projeto.
+/// Contexto: Atua como utilitário compartilhado entre widgets de exportação permitindo distribuir representações em arquivos externos. Realiza conversões auxiliares para reuso de layouts e simplifica renderizações ao aplicar algoritmos básicos de posicionamento.
+/// Observações: Estrutura saída com cabeçalhos SVG, definições de marcadores e máscaras para estados de aceitação. Serve de base para extensões futuras como suporte a estilos adicionais ou integração com exportadores específicos de plataforma.
+/// ---------------------------------------------------------------------------
 import 'dart:math' as math;
 import 'package:flutter/material.dart' hide Colors;
 import 'package:vector_math/vector_math_64.dart';

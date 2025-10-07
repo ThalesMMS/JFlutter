@@ -1,3 +1,11 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/presentation/providers/fa_trace_provider.dart
+/// Autoria: Equipe de Engenharia JFlutter
+/// Descrição: Controla o estado imutável das simulações de autômatos finitos determinísticos e não determinísticos. Centraliza a seleção do autômato ativo, o progresso da execução e os resultados em memória.
+/// Contexto: Expõe uma StateNotifier do Riverpod que dispara execuções via SimulationService e atualiza histórico de traços. Fornece operações para alternar modos, executar simulações passo a passo e armazenar falhas de forma apresentável.
+/// Observações: Inclui utilitários de navegação entre passos para sincronizar os painéis de visualização. Mantém histórico de execuções para que telas e widgets possam reabrir traços anteriores.
+/// ---------------------------------------------------------------------------
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/fsa.dart';
 import '../../core/models/simulation_result.dart';

@@ -1,3 +1,11 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/presentation/widgets/tm_canvas_graphview.dart
+/// Autoria: Equipe de Engenharia JFlutter
+/// Descrição: Renderiza o canvas de Máquinas de Turing utilizando GraphView e mantém sincronização com o provedor de edição. Ajusta layouts, monitora destaques de simulação e encaminha alterações para consumidores externos.
+/// Contexto: Configura controladores dedicados, assinaturas Riverpod e canais de destaque para alinhar o canvas com o estado global. Oferece suporte a edição de transições via sobreposições contextuais adaptando-se ao fluxo de trabalho do editor.
+/// Observações: Permite reutilizar controladores existentes ou criar novos, garantindo limpeza apropriada de recursos. Executa ajustes automáticos de enquadramento quando estados são adicionados para melhorar a experiência de navegação.
+/// ---------------------------------------------------------------------------
 import 'dart:async';
 
 import 'package:flutter/material.dart';

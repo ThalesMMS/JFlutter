@@ -1,3 +1,11 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/presentation/providers/unified_trace_provider.dart
+/// Autoria: Equipe de Engenharia JFlutter
+/// Descrição: Consolida o gerenciamento de traços de simulação para todos os tipos de autômatos em uma interface única. Controla o contexto ativo, histórico persistido e estatísticas agregadas para compartilhamento entre módulos.
+/// Contexto: Opera como StateNotifier que integra serviços de persistência, carregamento lazily e navegação por passos de execução. Permite resgatar execuções anteriores com base em identificadores e tipos registrados.
+/// Observações: Trata erros de I/O exibindo mensagens amigáveis e mantém coerência entre preferências e dados carregados. Automatiza salvamentos após novas simulações garantindo continuidade entre sessões.
+/// ---------------------------------------------------------------------------
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get_it/get_it.dart';

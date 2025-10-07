@@ -1,3 +1,11 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/presentation/widgets/trace_viewers/base_trace_viewer.dart
+/// Autoria: Equipe de Engenharia JFlutter
+/// Descrição: Fornece componente base para visualização de traços reutilizado por FA, PDA e TM. Gerencia colapso de listas longas, seleção de passos e integração opcional com destaques do canvas.
+/// Contexto: Recebe um SimulationResult genérico e um construtor de linhas para especializações, garantindo comportamento comum entre diferentes automatos. Administra estado interno para dobragem e seleção respeitando as necessidades de acessibilidade.
+/// Observações: Emite eventos para SimulationHighlightService quando habilitado, permitindo sincronização imediata com visualizações gráficas. Flexível o bastante para suportar novos tipos de traço sem alteração estrutural significativa.
+/// ---------------------------------------------------------------------------
 import 'package:flutter/material.dart';
 
 import '../../../core/models/simulation_result.dart';

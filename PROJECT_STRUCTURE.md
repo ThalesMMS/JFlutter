@@ -29,10 +29,12 @@ jflutter/
 │   │   ├── widgets/               # Reusable UI components
 │   │   ├── providers/             # State management
 │   │   └── theme/                 # App theming
+│   ├── features/                  # Feature-specific modules
+│   │   └── canvas/graphview/      # GraphView-powered canvas controllers
 │   ├── injection/                 # Dependency injection
 │   ├── app.dart                   # App configuration
 │   └── main.dart                  # Application entry point
-├── test/                          # (Temporarily removed during algorithm migration)
+├── test/                          # Automated tests (unit, widget, integration, feature, core)
 ├── specs/                         # Project specifications
 ├── android/                       # Android-specific files
 ├── ios/                           # iOS-specific files
@@ -44,8 +46,8 @@ jflutter/
 ├── analysis_options.yaml          # Static analysis configuration
 ├── README.md                      # Project documentation
 ├── API_DOCUMENTATION.md           # API reference
-├── USER_GUIDE.md                  # User instructions
-├── CHANGELOG.md                   # Change history
+├── USER_GUIDE                     # User instructions
+├── PHASE2_COMPLETION_SUMMARY.md   # Milestone change summary
 ├── PROJECT_STRUCTURE.md           # This file
 ├── References/                    # Implementações de referência (Dart + Python) usadas como base na migração
 └── LICENSE.txt                    # License information
@@ -238,7 +240,16 @@ injection/
 
 ## Test Structure (`test/`)
 
-The historic automated test suites have been removed while the core algorithms are rewritten. A new hierarchy of unit, integration, and property-based tests will be introduced alongside the migration. Until then the `test/` directory is intentionally empty.
+The test suite is split into focused directories that mirror the production architecture:
+
+``` 
+test/
+├── core/                # Low-level unit tests for algorithms and entities
+├── features/            # Feature-focused widget/controller tests
+├── integration/         # End-to-end flows exercising multiple layers
+├── unit/                # UI-agnostic unit tests for shared utilities
+└── widget/              # Widget tests targeting rendering and interactions
+```
 
 ## Platform-Specific Directories
 
@@ -297,8 +308,8 @@ web/
 ### Documentation
 
 - `API_DOCUMENTATION.md` - Comprehensive API reference
-- `USER_GUIDE.md` - User instructions and tutorials
-- `CHANGELOG.md` - Detailed change history
+- `USER_GUIDE` - User instructions and tutorials
+- `PHASE2_COMPLETION_SUMMARY.md` - Snapshot of the latest milestone deliverables
 - `PROJECT_STRUCTURE.md` - This file
 
 ### Specifications

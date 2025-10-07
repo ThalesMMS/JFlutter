@@ -87,7 +87,6 @@ class _TMPageState extends ConsumerState<TMPage> {
     });
   }
 
-
   void _handleToolChanged() {
     if (!mounted) {
       return;
@@ -188,11 +187,24 @@ class _TMPageState extends ConsumerState<TMPage> {
       onTmModified: _handleTMUpdate,
     );
     final combinedListenable = _canvasController.graphRevision;
+    final onSimulate = _isMachineReady ? _openSimulationSheet : null;
+    final onAlgorithms = hasMachine ? _openAlgorithmSheet : null;
+    final onMetrics = hasMachine ? _openMetricsSheet : null;
 
     if (isMobile) {
       return Stack(
         children: [
           Positioned.fill(child: canvas),
+          if (onSimulate != null || onAlgorithms != null || onMetrics != null)
+            Positioned(
+              top: 16,
+              left: 16,
+              child: _TmCanvasQuickActions(
+                onSimulate: onSimulate,
+                onAlgorithms: onAlgorithms,
+                onMetrics: onMetrics,
+              ),
+            ),
           AnimatedBuilder(
             animation: combinedListenable,
             builder: (context, _) {
@@ -216,11 +228,11 @@ class _TMPageState extends ConsumerState<TMPage> {
                     : null,
                 canUndo: _canvasController.canUndo,
                 canRedo: _canvasController.canRedo,
-                onSimulate: _openSimulationSheet,
-                isSimulationEnabled: _isMachineReady,
-                onAlgorithms: _openAlgorithmSheet,
-                isAlgorithmsEnabled: hasMachine,
-                onMetrics: _openMetricsSheet,
+                onSimulate: null,
+                isSimulationEnabled: false,
+                onAlgorithms: null,
+                isAlgorithmsEnabled: false,
+                onMetrics: null,
                 statusMessage: statusMessage,
               );
             },
@@ -245,8 +257,8 @@ class _TMPageState extends ConsumerState<TMPage> {
                   _toolController.setActiveTool(AutomatonCanvasTool.selection),
               onAddState: () =>
                   _toolController.setActiveTool(AutomatonCanvasTool.addState),
-              onAddTransition: () => _toolController
-                  .setActiveTool(AutomatonCanvasTool.transition),
+              onAddTransition: () =>
+                  _toolController.setActiveTool(AutomatonCanvasTool.transition),
               onClear: () {
                 ref
                     .read(tmEditorProvider.notifier)
@@ -504,5 +516,60 @@ class _TMPageState extends ConsumerState<TMPage> {
         .where((list) => list.length > 1)
         .expand((list) => list.map((transition) => transition.id))
         .toSet();
+  }
+}
+
+class _TmCanvasQuickActions extends StatelessWidget {
+  const _TmCanvasQuickActions({
+    this.onSimulate,
+    this.onAlgorithms,
+    this.onMetrics,
+  });
+
+  final VoidCallback? onSimulate;
+  final VoidCallback? onAlgorithms;
+  final VoidCallback? onMetrics;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Material(
+      elevation: 6,
+      borderRadius: BorderRadius.circular(32),
+      color: colorScheme.surface.withOpacity(0.92),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (onSimulate != null)
+              IconButton(
+                tooltip: 'Simulate',
+                icon: const Icon(Icons.play_arrow),
+                onPressed: onSimulate,
+              ),
+            if ((onSimulate != null && onAlgorithms != null) ||
+                (onSimulate != null && onMetrics != null))
+              const SizedBox(width: 4),
+            if (onAlgorithms != null)
+              IconButton(
+                tooltip: 'Algorithms',
+                icon: const Icon(Icons.auto_awesome),
+                onPressed: onAlgorithms,
+              ),
+            if (onAlgorithms != null && onMetrics != null)
+              const SizedBox(width: 4),
+            if (onMetrics != null)
+              IconButton(
+                tooltip: 'Metrics',
+                icon: const Icon(Icons.bar_chart),
+                onPressed: onMetrics,
+              ),
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -321,10 +321,36 @@ class _PDAPageState extends ConsumerState<PDAPage> {
 
     final combinedListenable = _canvasController.graphRevision;
 
+    final onSimulate = hasPda
+        ? () => _showPanelSheet(
+            context: context,
+            title: 'PDA Simulation',
+            icon: Icons.play_arrow,
+            child: PDASimulationPanel(highlightService: _highlightService),
+          )
+        : null;
+    final onAlgorithms = hasPda
+        ? () => _showPanelSheet(
+            context: context,
+            title: 'PDA Algorithms',
+            icon: Icons.auto_awesome,
+            child: const PDAAlgorithmPanel(),
+          )
+        : null;
+
     if (isMobile) {
       return Stack(
         children: [
           Positioned.fill(child: canvas),
+          if (onSimulate != null || onAlgorithms != null)
+            Positioned(
+              top: 16,
+              left: 16,
+              child: _PdaCanvasQuickActions(
+                onSimulate: onSimulate,
+                onAlgorithms: onAlgorithms,
+              ),
+            ),
           AnimatedBuilder(
             animation: combinedListenable,
             builder: (context, _) {
@@ -355,22 +381,10 @@ class _PDAPageState extends ConsumerState<PDAPage> {
                     : null,
                 canUndo: _canvasController.canUndo,
                 canRedo: _canvasController.canRedo,
-                onSimulate: () => _showPanelSheet(
-                  context: context,
-                  title: 'PDA Simulation',
-                  icon: Icons.play_arrow,
-                  child: PDASimulationPanel(
-                    highlightService: _highlightService,
-                  ),
-                ),
-                isSimulationEnabled: hasPda,
-                onAlgorithms: () => _showPanelSheet(
-                  context: context,
-                  title: 'PDA Algorithms',
-                  icon: Icons.auto_awesome,
-                  child: const PDAAlgorithmPanel(),
-                ),
-                isAlgorithmsEnabled: hasPda,
+                onSimulate: null,
+                isSimulationEnabled: false,
+                onAlgorithms: null,
+                isAlgorithmsEnabled: false,
                 statusMessage: statusMessage,
               );
             },
@@ -449,5 +463,46 @@ class _PDAPageState extends ConsumerState<PDAPage> {
   String _formatCount(String singular, String plural, int count) {
     final label = count == 1 ? singular : plural;
     return '$count $label';
+  }
+}
+
+class _PdaCanvasQuickActions extends StatelessWidget {
+  const _PdaCanvasQuickActions({this.onSimulate, this.onAlgorithms});
+
+  final VoidCallback? onSimulate;
+  final VoidCallback? onAlgorithms;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Material(
+      elevation: 6,
+      borderRadius: BorderRadius.circular(32),
+      color: colorScheme.surface.withOpacity(0.92),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (onSimulate != null)
+              IconButton(
+                tooltip: 'Simulate',
+                icon: const Icon(Icons.play_arrow),
+                onPressed: onSimulate,
+              ),
+            if (onSimulate != null && onAlgorithms != null)
+              const SizedBox(width: 4),
+            if (onAlgorithms != null)
+              IconButton(
+                tooltip: 'Algorithms',
+                icon: const Icon(Icons.auto_awesome),
+                onPressed: onAlgorithms,
+              ),
+          ],
+        ),
+      ),
+    );
   }
 }

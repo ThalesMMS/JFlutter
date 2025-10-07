@@ -1,3 +1,12 @@
+//
+//  simulation_highlight.dart
+//  JFlutter
+//
+//  Descreve de forma imutável quais estados e transições devem ser destacados em uma simulação de autômato. Garante comparações simples e construção de cópias para que serviços de destaque atualizem a interface sem efeitos colaterais.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
+
 /// Immutable payload describing which canvas elements should be highlighted.
 class SimulationHighlight {
   /// Set of state identifiers to highlight.

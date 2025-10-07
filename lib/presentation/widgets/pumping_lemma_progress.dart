@@ -1,11 +1,12 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/widgets/pumping_lemma_progress.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Exibe painel de progresso do jogo do Lema do Bombeamento consolidando métricas como desafios concluídos, pontuação e histórico. Oferece visualizações com barras de progresso e listas para acompanhamento pedagógico.
-/// Contexto: Observa o PumpingLemmaProgressProvider para refletir atualizações em tempo real conforme os jogadores avançam. Estrutura cartões temáticos que podem ser incorporados a dashboards ou páginas dedicadas.
-/// Observações: Calcula porcentagens e acurácia localmente evitando requisições adicionais. Facilita a análise de desempenho ao destacar últimas interações diretamente na interface.
-/// ---------------------------------------------------------------------------
+//
+//  pumping_lemma_progress.dart
+//  JFlutter
+//
+//  Renderiza painel de acompanhamento do jogo do Lema do Bombeamento com métricas agregadas e histórico recente. Observa o provider dedicado, calcula percentuais localmente e apresenta cartões e listas que facilitam a leitura pedagógica.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

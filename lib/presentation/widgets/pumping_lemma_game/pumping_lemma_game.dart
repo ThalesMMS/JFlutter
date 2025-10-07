@@ -1,11 +1,12 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/widgets/pumping_lemma_game/pumping_lemma_game.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Implementa o jogo interativo do Lema do Bombeamento com níveis progressivos, feedback imediato e registro de pontuação. Oferece desafios que alternam entre linguagens regulares e não regulares com explicações detalhadas.
-/// Contexto: Consome o PumpingLemmaProgressProvider para sincronizar histórico e métricas enquanto gerencia estado local de rodada. Renderiza instruções, dicas, exemplos e avaliações para reforçar conceitos de forma lúdica dentro da interface educacional.
-/// Observações: Organiza listas extensas de desafios e respostas para suportar múltiplas dificuldades sem depender de serviços externos. Pode ser expandido com novas fases utilizando o mesmo esquema de dados e lógica de progresso.
-/// ---------------------------------------------------------------------------
+//
+//  pumping_lemma_game.dart
+//  JFlutter
+//
+//  Entrega o jogo interativo do Lema do Bombeamento com níveis, pontuação e feedback imediato aos estudantes. Orquestra desafios locais, controla estados de rodada e conversa com o provedor de progresso para persistir conquistas e estatísticas.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

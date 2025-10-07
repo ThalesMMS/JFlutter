@@ -1,3 +1,12 @@
+//
+//  automaton_analyzer.dart
+//  JFlutter
+//
+//  Define objetos de análise que sintetizam estatísticas de estados, transições e alcançabilidade dos autômatos para alimentar diagnósticos. As estruturas calculam contagens e bandeiras de propriedades, facilitando relatórios sobre determinismo, estados inalcançáveis e cobertura de caminhos.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
+
 /// Analysis classes for automaton properties and characteristics
 library;
 

@@ -1,3 +1,17 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/injection/dependency_injection.dart
+/// Autoria: Equipe de Engenharia JFlutter
+/// Descrição: Configura o contêiner GetIt registrando data sources, serviços,
+///             repositórios e providers necessários para o funcionamento da
+///             aplicação.
+/// Contexto: Centraliza a infraestrutura de injeção de dependências permitindo
+///           inicialização preguiçosa, reutilização de instâncias e fácil
+///           manutenção das ligações entre camadas.
+/// Observações: Prepara SharedPreferences para persistência de traços e
+///               registra implementações concretas mantendo o código preparado
+///               para testes e extensões futuras.
+/// ---------------------------------------------------------------------------
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/repositories/automaton_repository.dart';

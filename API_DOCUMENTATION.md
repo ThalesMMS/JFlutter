@@ -160,71 +160,92 @@ class Failure<T> extends Result<T> {
 
 ### AutomatonProvider
 
-State management using Riverpod:
+Riverpod `StateNotifier<AutomatonState>` responsible for orchestrating
+automaton editing, GraphView synchronisation, and algorithm execution.
 
-```dart
-class AutomatonProvider extends StateNotifier<AutomatonState> {
-  // Create new automaton
-  Future<void> createAutomaton({
-    required String name,
-    String? description,
-    required List<String> alphabet,
-  });
-  
-  // Update current automaton
-  void updateAutomaton(FSA automaton);
-  
-  // Simulate automaton
-  Future<void> simulateAutomaton(String inputString);
-  
-  // Convert NFA to DFA
-  Future<void> convertNfaToDfa();
-  
-  // Minimize DFA
-  Future<void> minimizeDfa();
-  
-  // Convert regex to NFA
-  Future<void> convertRegexToNfa(String regex);
-  
-  // Convert FA to regex
-  Future<void> convertFaToRegex();
-}
-```
+**Constructor dependencies**
+
+- `AutomatonService automatonService` – persistence and CRUD bridge for
+  FSAs.
+- `LayoutRepository layoutRepository` – supplies layout helpers for the
+  GraphView canvas.
+- `TracePersistenceService? tracePersistenceService` – optional storage for
+  simulation traces.
+
+**Key responsibilities**
+
+- **Automaton lifecycle** – `createAutomaton`, `updateAutomaton`,
+  `replaceCurrentAutomaton`, `clearAutomaton`, and `clearAll` keep the active
+  machine and metadata consistent.
+- **GraphView canvas mutations** – `addState`, `moveState`, `removeState`,
+  `addOrUpdateTransition`, `removeTransition`, `updateStateLabel`,
+  `updateStateFlags`, `updateTransitionLabel`, and `_mutateAutomaton` integrate
+  GraphView edits with the persisted automaton model.
+- **Algorithm workflows** – methods such as `simulateAutomaton`,
+  `convertNfaToDfa`, `minimizeDfa`, `completeDfa`, `convertRegexToNfa`,
+  `convertFaToRegex`, `convertFsaToGrammar`, and `compareEquivalence` execute
+  domain algorithms while updating state and histories.
+- **History & tracing** – maintains `automatonHistory` and
+  `simulationHistory`, persists traces via `_addSimulationToHistory`, and
+  exposes accessors like `getAutomatonFromHistory` and
+  `getSimulationFromHistory`.
+- **Canvas utilities** – `applyAutoLayout` and the
+  `graphViewCanvasControllerProvider` helper ensure GraphView controllers stay
+  synchronised with `AutomatonState`.
 
 ### AutomatonState
 
-```dart
-class AutomatonState {
-  final FSA? currentAutomaton;
-  final SimulationResult? simulationResult;
-  final String? regexResult;
-  final bool isLoading;
-  final String? error;
-}
-```
+Immutable snapshot of the automaton workspace.
+
+**Fields**
+
+- `FSA? currentAutomaton` – active machine rendered on the canvas.
+- `SimulationResult? simulationResult` – latest simulation outcome.
+- `String? regexResult` – most recent FA→regex conversion output.
+- `Grammar? grammarResult` – cached grammar generated from the current FSA.
+- `bool? equivalenceResult` / `String? equivalenceDetails` – result and
+  description from the equivalence checker.
+- `bool isLoading` – true while asynchronous work is executing.
+- `String? error` – user-visible error message.
+- `List<FSA> automatonHistory` – snapshots of previous automatons.
+- `List<SimulationResult> simulationHistory` – persisted simulation traces.
+
+**Helpers**
+
+- `copyWith(...)` – selective updates used by the provider.
+- `clear()` – resets the entire state back to its initial values.
+- `clearError()` – removes the current error message.
+- `clearSimulation()` – drops simulation output and history.
+- `clearAlgorithmResults()` – clears regex, grammar, and equivalence data.
 
 ## UI Components
 
-### AutomatonCanvas
+### AutomatonGraphViewCanvas
 
-Interactive canvas for drawing automata:
+GraphView-driven canvas widget used to render and edit automatons while keeping
+the provider state in sync.
 
-```dart
-class AutomatonCanvas extends StatefulWidget {
-  final FSA? automaton;
-  final GlobalKey canvasKey;
-  final SimulationResult? simulationResult;
-  final int? currentStepIndex;
-  final bool showTrace;
-  final FlNodesCanvasController? controller;
-}
-```
+**Parameters**
 
-**Features:**
-- Touch-optimized state creation
-- Interactive transition drawing
-- Visual feedback for selections
-- Empty state guidance
+- `FSA? automaton` – machine to render.
+- `GlobalKey canvasKey` – used for layout and overlay anchoring.
+- `GraphViewCanvasController? controller` – optional external controller; the
+  widget will create and own one if omitted.
+- `AutomatonCanvasToolController? toolController` – manages current editing
+  tool (selection, state creation, transitions, etc.).
+- `SimulationResult? simulationResult` – supplies simulation highlights.
+- `int? currentStepIndex` – active simulation step for trace playback.
+- `bool showTrace` – toggles visibility of the highlight trace.
+
+**Controller lifecycle & highlight integration**
+
+- When the widget owns the controller, it wires it to the
+  `automatonProvider` through a `GraphViewCanvasController` instance.
+- Connects to `SimulationHighlightService` via a
+  `GraphViewSimulationHighlightChannel`, ensuring canvas highlights mirror
+  simulation progress.
+- Responds to GraphView revision notifications to keep transition overlays and
+  gesture state consistent.
 
 ### AlgorithmPanel
 
@@ -256,43 +277,54 @@ class SimulationPanel extends StatefulWidget {
 
 ### AutomatonService
 
-CRUD operations for automata:
+In-memory CRUD and import/export helpers for FSAs.
 
-```dart
-class AutomatonService {
-  Result<FSA> createAutomaton(CreateAutomatonRequest request);
-  Result<FSA> getAutomaton(String id);
-  Result<FSA> updateAutomaton(String id, CreateAutomatonRequest request);
-  Result<void> deleteAutomaton(String id);
-  Result<List<FSA>> listAutomata();
-}
-```
+- `Result<FSA> createAutomaton(CreateAutomatonRequest request)` – build a new
+  automaton snapshot from the provided request.
+- `Result<FSA> getAutomaton(String id)` / `Result<List<FSA>> listAutomata()` –
+  retrieve stored automatons.
+- `Result<FSA> updateAutomaton(String id, CreateAutomatonRequest request)` and
+  `Result<FSA> saveAutomaton(String id, CreateAutomatonRequest request)` –
+  update existing automatons, preserving timestamps when possible.
+- `Result<void> deleteAutomaton(String id)` / `Result<void> clearAutomata()` –
+  remove automatons.
+- `Result<String> exportAutomaton(FSA automaton)` and
+  `Result<FSA> importAutomaton(String jsonString)` – convert between JSON and
+  runtime models.
+- `Result<bool> validateAutomaton(FSA automaton)` – run structural validation
+  checks.
 
 ### SimulationService
 
-Simulation operations:
+Asynchronous helpers around `AutomatonSimulator`.
 
-```dart
-class SimulationService {
-  Result<SimulationResult> simulate(SimulationRequest request);
-  Result<bool> accepts(SimulationRequest request);
-  Result<bool> rejects(SimulationRequest request);
-  Result<Set<String>> findAcceptedStrings(SimulationRequest request);
-}
-```
+- `Future<Result<SimulationResult>> simulate(SimulationRequest request)` –
+  default simulation path with optional step-by-step execution.
+- `Future<Result<SimulationResult>> simulateDFA(...)` and
+  `simulateNFA(...)` – type-specific simulation entry points.
+- `Future<Result<bool>> accepts(...)` / `rejects(...)` – quick acceptance
+  checks.
+- `Future<Result<Set<String>>> findAcceptedStrings(...)` and
+  `findRejectedStrings(...)` – enumerate sample strings up to configurable
+  limits.
+
+`SimulationRequest` packages the automaton, input string, optional timeouts,
+and enumeration bounds used by the helpers.
 
 ### ConversionService
 
-Algorithm conversion operations:
+Wraps the suite of conversion algorithms exposed in `core/algorithms`.
 
-```dart
-class ConversionService {
-  Result<FSA> convertNfaToDfa(ConversionRequest request);
-  Result<FSA> minimizeDfa(ConversionRequest request);
-  Result<FSA> convertRegexToNfa(ConversionRequest request);
-  Result<String> convertFaToRegex(ConversionRequest request);
-}
-```
+- Automaton-focused: `convertNfaToDfa`, `minimizeDfa`, `convertRegexToNfa`,
+  `convertFaToRegex`.
+- Grammar/PDA integrations: `convertFsaToGrammar`, `convertGrammarToFsa`,
+  `convertGrammarToPda`, `convertGrammarToPdaStandard`,
+  `convertGrammarToPdaGreibach`, and `convertPdaToCfg` (via
+  `ConversionType`-specific request routing).
+
+Each method expects a `ConversionRequest` describing the source artefact and
+desired `ConversionType`, returning a `Result` that mirrors success/error
+states from the underlying algorithm.
 
 ## Integration Patterns
 
@@ -310,6 +342,21 @@ await provider.simulateAutomaton("abab");
 
 // Convert regex to NFA
 await provider.convertRegexToNfa("(a|b)*");
+```
+
+### GraphView Canvas Integration
+
+```dart
+// Obtain a GraphView controller scoped to the current provider
+final graphController = ref.watch(graphViewCanvasControllerProvider);
+
+// Trigger a fit-to-content after a state mutation
+ref.listen<AutomatonState>(automatonProvider, (previous, next) {
+  if (previous?.currentAutomaton != next.currentAutomaton) {
+    graphController.synchronize(next.currentAutomaton);
+    graphController.fitToContent();
+  }
+});
 ```
 
 ### Error Handling

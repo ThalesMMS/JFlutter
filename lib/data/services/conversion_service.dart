@@ -1,3 +1,11 @@
+//
+//  conversion_service.dart
+//  JFlutter
+//
+//  Encapsula as conversões entre autômatos, gramáticas e expressões regulares, validando entradas e delegando para os algoritmos especializados de transformação.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import '../../core/models/fsa.dart';
 import '../../core/models/grammar.dart';
 import '../../core/models/pda.dart';

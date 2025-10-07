@@ -1,3 +1,11 @@
+//
+//  settings_repository_impl.dart
+//  JFlutter
+//
+//  Persiste preferências de interface e símbolos no SharedPreferences por meio de uma camada de repositório que aplica padrões e sincroniza o modelo de configurações.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:shared_preferences/shared_preferences.dart'
     show SharedPreferences;
 

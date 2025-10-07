@@ -1,3 +1,11 @@
+//
+//  examples_repository_impl.dart
+//  JFlutter
+//
+//  Reúne o carregamento e as consultas estendidas da biblioteca de exemplos ao compor o data source de assets com caching e métricas fornecidos pelo serviço especializado.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import '../../core/result.dart';
 import '../../core/repositories/automaton_repository.dart';
 import '../data_sources/examples_asset_data_source.dart';

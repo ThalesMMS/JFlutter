@@ -1,3 +1,11 @@
+//
+//  automaton_repository_impl.dart
+//  JFlutter
+//
+//  Implementa o repositório de autômatos traduzindo entidades para o serviço interno, cobrindo persistência, operações de exportação e validações com conversões de modelo.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:math' as math;
 
 import 'package:vector_math/vector_math_64.dart';

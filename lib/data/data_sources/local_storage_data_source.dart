@@ -1,3 +1,11 @@
+//
+//  local_storage_data_source.dart
+//  JFlutter
+//
+//  Controla o armazenamento local de autômatos com SharedPreferences, cuidando de salvar, listar, remover, exportar e importar registros em JSON.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/automaton_model.dart';

@@ -1,3 +1,11 @@
+//
+//  examples_service.dart
+//  JFlutter
+//
+//  Orquestra o carregamento, cache e filtragem da biblioteca de exemplos, oferecendo buscas, recomendações e estatísticas por categoria, dificuldade e trilhas de aprendizado.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import '../../core/result.dart';
 import '../../core/repositories/automaton_repository.dart';
 import '../data_sources/examples_asset_data_source.dart';

@@ -1,11 +1,16 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/providers/home_navigation_provider.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Define o estado de navegação entre os espaços de trabalho principais exibidos na página inicial. Mapeia índices simbólicos para cada módulo de teoria de autômatos disponível na aplicação.
-/// Contexto: Utiliza um StateNotifier simples para permitir que widgets mudem a aba ativa de forma reativa. Centraliza constantes de navegação garantindo consistência entre botões, menus e rotas internas.
-/// Observações: Oferece atalhos legíveis para alternar rapidamente entre editores específicos. Pode ser estendido com novos índices sem impactar consumidores que apenas observam o estado inteiro.
-/// ---------------------------------------------------------------------------
+//
+//  home_navigation_provider.dart
+//  JFlutter
+//
+//  Controla a navegação principal da HomePage utilizando um StateNotifier que
+//  mapeia índices simbólicos para os espaços de trabalho de autômatos,
+//  gramáticas, PDAs, máquinas de Turing, expressões regulares e o jogo do Lema
+//  do Bombeamento, permitindo alternância reativa entre módulos.
+//  Centraliza constantes de índices e expõe helpers de troca para que widgets
+//  mudem o workspace ativo de forma consistente em toda a interface.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Controls navigation between the major workspaces displayed on the home page.

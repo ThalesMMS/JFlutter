@@ -1,15 +1,14 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/integration/io/examples_roundtrip_test.dart
-// Objetivo: Exercitar round-trips de exemplos canônicos passando por assets,
-// serviços de serialização e exportação.
-// Cenários cobertos:
-// - Conversão de autômatos, gramáticas e MTs entre entidades e arquivos.
-// - Exportação SVG e validação de estruturas serializadas.
-// - Verificação de consistência dos metadados da biblioteca Examples.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
+//
+//  examples_roundtrip_test.dart
+//  JFlutter
+//
+//  Esta suíte de integração valida o fluxo completo de ida e volta dos exemplos
+//  embarcados, atravessando carregamento de assets, serialização, exportação e
+//  leitura de arquivos para garantir consistência entre entidades, metadados e
+//  representações gráficas em SVG.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 
 import 'package:flutter_test/flutter_test.dart';
 import 'dart:convert';

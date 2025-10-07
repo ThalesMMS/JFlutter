@@ -8,7 +8,7 @@
 //  garantir que a lacuna permaneça visível na matriz de testes.
 //
 //  Thales Matheus Mendonça Santos - October 2025
-
+//
 import 'package:flutter_test/flutter_test.dart';
 
 // Placeholder failing widget/golden tests para Phase 3.2 T010.

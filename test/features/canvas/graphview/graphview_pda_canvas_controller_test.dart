@@ -1,15 +1,14 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/features/canvas/graphview/graphview_pda_canvas_controller_test.dart
-// Objetivo: Validar o controlador GraphView específico de PDA, assegurando
-// sincronização com o provider e manipulação da pilha.
-// Cenários cobertos:
-// - Construção de grafos a partir de PDAs com transições de push/pop.
-// - Seleção e atualização de transições refletidas no editor.
-// - Descarte adequado do controlador após o uso.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
+//
+//  graphview_pda_canvas_controller_test.dart
+//  JFlutter
+//
+//  Este arquivo agrupa testes que garantem o comportamento do controlador de
+//  canvas para PDAs no GraphView, verificando a criação de grafos com transições
+//  push/pop, a integração com provedores e serviços simulados, além do descarte
+//  apropriado de recursos após o uso.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 
 import 'dart:math' as math;
 

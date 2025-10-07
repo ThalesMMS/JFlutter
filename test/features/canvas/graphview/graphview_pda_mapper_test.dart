@@ -8,7 +8,7 @@
 //  e a atualização do grafo resultante ao sincronizar múltiplas transições.
 //
 //  Thales Matheus Mendonça Santos - October 2025
-
+//
 import 'dart:math' as math;
 
 import 'package:test/test.dart';

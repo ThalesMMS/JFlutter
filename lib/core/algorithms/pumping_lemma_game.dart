@@ -1,3 +1,16 @@
+//
+//  pumping_lemma_game.dart
+//  JFlutter
+//
+//  Implementa o jogo interativo do lema do bombeamento para linguagens
+//  regulares, cuidando de validações, geração de desafios e acompanhamento de
+//  tentativas dos usuários. Coordena cálculos de comprimento de bombeamento,
+//  simulações de cadeias e pontuação para guiar a experiência educativa no
+//  aplicativo.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
+
 import '../models/fsa.dart';
 import '../models/state.dart';
 import '../models/pumping_lemma_game.dart' as models;

@@ -1,3 +1,15 @@
+//
+//  grammar_parser_simple_recursive.dart
+//  JFlutter
+//
+//  Fornece um analisador sintático recursivo simples para gramáticas livres de
+//  contexto, validando entradas e produzindo derivações passo a passo quando a
+//  palavra pertence à linguagem. Complementa outros parsers ao oferecer uma
+//  opção mais direta para testes e demonstrações.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
+
 import '../models/grammar.dart';
 import '../models/production.dart';
 import '../result.dart' as jflutter_result;

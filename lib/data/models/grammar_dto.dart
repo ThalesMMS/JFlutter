@@ -1,16 +1,14 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/data/models/grammar_dto.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Define os DTOs das gramáticas e estruturas JFLAP responsáveis
-///             por serializar símbolos, produções e metadados associados.
-/// Contexto: Suporta importação e exportação de gramáticas entre o domínio e
-///           formatos JSON/JFLAP, assegurando compatibilidade com o ecossistema
-///           da aplicação e ferramentas externas.
-/// Observações: Construtores imutáveis e fábricas dedicadas simplificam a
-///               reconstrução das gramáticas mantendo a fidelidade dos dados
-///               originais.
-/// ---------------------------------------------------------------------------
+//
+//  grammar_dto.dart
+//  JFlutter
+//
+//  Define os objetos de transferência de dados que representam gramáticas e
+//  suas variantes em formato JFLAP, convertendo símbolos, produções e metadados
+//  entre JSON e estruturas imutáveis para garantir compatibilidade com a camada
+//  de domínio, importações externas e ferramentas legadas.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 class GrammarDto {
   final String id;
   final String name;

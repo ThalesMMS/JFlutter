@@ -1,17 +1,14 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/data/models/automaton_dto.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Define os DTOs responsáveis por serializar autômatos, estados e
-///             estruturas JFLAP garantindo compatibilidade com armazenamento e
-///             troca de dados.
-/// Contexto: Serve como camada de transporte entre entidades do domínio,
-///           arquivos JSON e representações legadas do JFLAP, permitindo
-///           importar e exportar configurações completas de autômatos.
-/// Observações: Mantém coleções imutáveis para preservar integridade dos
-///               dados serializados e expõe fábricas de conversão para
-///               facilitar a reconstrução dos objetos.
-/// ---------------------------------------------------------------------------
+//
+//  automaton_dto.dart
+//  JFlutter
+//
+//  Reúne os DTOs responsáveis por serializar autômatos, estados e estruturas
+//  compatíveis com o JFLAP, oferecendo conversões imutáveis para JSON e mapas
+//  aninhados que preservam transições, estados e metadados durante importações
+//  e exportações entre o aplicativo e formatos legados.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 class AutomatonDto {
   final String id;
   final String name;

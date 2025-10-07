@@ -1,11 +1,14 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/providers/pda_trace_provider.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Administra o estado das simulações de autômatos de pilha, incluindo histórico persistente e navegação por passos. Fornece feedback sobre execuções bem-sucedidas e falhas para os painéis de visualização.
-/// Contexto: Utiliza o PDASimulatorFacade do domínio para executar cadeias e traduzir respostas em objetos Riverpod reativos. Mantém indicadores de carregamento, modo passo a passo e última entrada processada para sincronizar controles interativos.
-/// Observações: Disponibiliza utilitários de navegação para avançar, retroceder ou saltar a passos específicos da simulação. Registra erros como resultados estruturados permitindo tratamento uniforme em widgets consumidores.
-/// ---------------------------------------------------------------------------
+//
+//  pda_trace_provider.dart
+//  JFlutter
+//
+//  Controla as simulações de autômatos de pilha, armazenando histórico, modo
+//  passo a passo e resultados estruturados enquanto coordena execuções via
+//  PDASimulatorFacade e fornece feedback consistente para os widgets de
+//  visualização e navegação entre etapas.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/pda.dart';
 import '../../core/models/simulation_step.dart';

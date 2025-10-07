@@ -1,3 +1,14 @@
+//
+//  pda_to_cfg_converter.dart
+//  JFlutter
+//
+//  Implementa a transformação clássica de PDA para gramática livre de contexto
+//  gerando variáveis estruturadas, produções e descrições textuais. Inclui
+//  verificações de pré-condições do autômato, construção de não-terminais
+//  especiais e retorno de um relatório pronto para visualização didática.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import '../models/grammar.dart';
 import '../models/pda.dart';
 import '../models/production.dart';

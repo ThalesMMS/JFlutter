@@ -1,3 +1,14 @@
+//
+//  pda.dart
+//  JFlutter
+//
+//  Representa autômatos com pilha dentro do domínio da aplicação, gerenciando
+//  alfabetos, símbolo inicial da pilha, serialização e validações
+//  especializadas. Dá suporte direto aos conversores e simuladores ao manter
+//  dados coerentes sobre estados, transições e geometria do canvas.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';
 import 'state.dart';

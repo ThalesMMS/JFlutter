@@ -1,3 +1,14 @@
+//
+//  layout_settings.dart
+//  JFlutter
+//
+//  Encapsula preferências visuais do canvas, como raios de nós, espessuras de
+//  arestas, esquema de cores e grade, permitindo persistência e clonagem
+//  imutável. Serve de base para personalizar experiências entre plataformas e
+//  sincronizar o layout entre sessões do usuário.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart';
 

@@ -1,3 +1,14 @@
+//
+//  grammar.dart
+//  JFlutter
+//
+//  Define a estrutura de gramáticas utilizadas nos algoritmos, armazenando
+//  conjuntos de terminais, não-terminais, produções e metadados temporais.
+//  Disponibiliza cópias imutáveis, serialização JSON e validações que garantem
+//  consistência antes de análises ou conversões entre modelos.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'production.dart';
 
 /// Grammar model for formal language theory

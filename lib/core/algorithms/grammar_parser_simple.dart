@@ -1,3 +1,15 @@
+//
+//  grammar_parser_simple.dart
+//  JFlutter
+//
+//  Implementa um analisador recursivo simples para gramáticas livres de
+//  contexto, cobrindo validações de símbolos, derivações passo a passo e
+//  tratamento de tempo limite. É usado como alternativa leve às versões mais
+//  sofisticadas, fornecendo resultados compatíveis com a infraestrutura de
+//  parsing do projeto.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import '../models/grammar.dart';
 import '../models/production.dart';
 import '../models/parse_table.dart';

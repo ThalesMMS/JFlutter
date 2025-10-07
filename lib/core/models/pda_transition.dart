@@ -1,3 +1,14 @@
+//
+//  pda_transition.dart
+//  JFlutter
+//
+//  Estrutura as transições de PDAs com campos específicos para leitura, pop e
+//  push, além de sinalizadores épsilon. Disponibiliza métodos de cópia,
+//  serialização e validação que fundamentam simulações, conversões e edições no
+//  canvas de autômatos com pilha.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:vector_math/vector_math_64.dart';
 import 'state.dart';
 import 'transition.dart';

@@ -1,3 +1,14 @@
+//
+//  fsa_transition.dart
+//  JFlutter
+//
+//  Modela transições de autômatos finitos com suporte a múltiplos símbolos e
+//  representações épsilon, oferecendo cópia imutável, serialização JSON e
+//  validações específicas. Alimenta algoritmos de simulação e conversão ao
+//  padronizar rótulos, tipos e metadados geométricos.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:vector_math/vector_math_64.dart';
 import 'state.dart';
 import 'transition.dart';

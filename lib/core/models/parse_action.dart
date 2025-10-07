@@ -1,3 +1,14 @@
+//
+//  parse_action.dart
+//  JFlutter
+//
+//  Descreve ações de parsing utilizadas por algoritmos LR/LL do projeto,
+//  agrupando informações de deslocamento, redução, aceitação e erro em uma
+//  estrutura imutável. Facilita o rastreamento de estados, produções aplicadas
+//  e geração de mensagens explicativas durante simulações.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'production.dart';
 
 /// Represents a parsing action in grammar parsing algorithms

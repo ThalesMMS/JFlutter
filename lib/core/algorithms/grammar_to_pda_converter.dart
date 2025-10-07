@@ -1,3 +1,14 @@
+//
+//  grammar_to_pda_converter.dart
+//  JFlutter
+//
+//  Reúne utilidades para analisar gramáticas livres de contexto e convertê-las
+//  em autômatos com pilha, aplicando validações, estimativas de complexidade e
+//  a construção padrão CFG→PDA. Também gera estados, transições e relatórios de
+//  diagnóstico usados pela interface de ensino de autômatos.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';
 import '../models/grammar.dart';

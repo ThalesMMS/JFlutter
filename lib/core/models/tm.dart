@@ -1,3 +1,14 @@
+//
+//  tm.dart
+//  JFlutter
+//
+//  Representa máquinas de Turing de fita única, controlando alfabetos de fita,
+//  símbolo branco, quantidade de fitas e serialização completa. Sustenta os
+//  analisadores e simuladores ao garantir validações coerentes e dados geométricos
+//  integrados ao editor visual.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';
 import 'state.dart';

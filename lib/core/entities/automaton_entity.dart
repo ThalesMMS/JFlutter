@@ -1,3 +1,15 @@
+//
+//  automaton_entity.dart
+//  JFlutter
+//
+//  Define a entidade de domínio que representa autômatos no núcleo, descrevendo
+//  estados, transições, alfabeto e metadados utilizados em operações
+//  persistentes e de simulação. Inclui estruturas auxiliares como estados e
+//  enumeradores de tipos para garantir consistência entre camadas.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
+
 /// Core domain entity representing an automaton
 /// This is the central business entity that all other layers depend on
 class AutomatonEntity {

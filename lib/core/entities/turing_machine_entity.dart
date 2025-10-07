@@ -1,3 +1,15 @@
+//
+//  turing_machine_entity.dart
+//  JFlutter
+//
+//  Modela a entidade de domínio para máquinas de Turing, abrangendo alfabetos,
+//  estados, transições e atributos de aceitação necessários para análises
+//  formais. Fornece coleções e utilidades de acesso que sustentam simuladores e
+//  repositórios especializados.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
+
 /// Core domain entity representing a Turing machine
 class TuringMachineEntity {
   final String id;

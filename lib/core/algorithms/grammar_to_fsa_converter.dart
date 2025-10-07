@@ -1,3 +1,15 @@
+//
+//  grammar_to_fsa_converter.dart
+//  JFlutter
+//
+//  Converte gramáticas lineares à direita em autômatos finitos equivalentes,
+//  validando restrições das produções e gerando estados com posicionamento
+//  calculado. Cria transições consistentes, estados finais quando necessário e
+//  retorna resultados padronizados com mensagens de erro amigáveis.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
+
 import 'dart:math' as math;
 
 import 'package:vector_math/vector_math_64.dart';

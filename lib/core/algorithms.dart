@@ -1,3 +1,15 @@
+//
+//  algorithms.dart
+//  JFlutter
+//
+//  Agrupa em um único ponto todas as operações algorítmicas disponíveis no
+//  núcleo, indo de simuladores a conversores e minimizadores utilizados pelas
+//  funcionalidades principais. Simplifica os imports para camadas externas que
+//  precisam acessar a suíte completa de algoritmos formais.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
+
 // Re-export all algorithm operations
 export 'algorithms/algorithm_operations.dart';
 export 'algorithms/automaton_simulator.dart';

@@ -303,7 +303,7 @@ class UnifiedTraceNotifier extends StateNotifier<UnifiedTraceState> {
 /// Provider for trace persistence service (data layer version)
 final dataTracePersistenceServiceProvider =
     Provider<data_trace.TracePersistenceService>((ref) {
-      throw UnimplementedError('TracePersistenceService must be initialized');
+      return getIt<data_trace.TracePersistenceService>();
     });
 
 /// Provider for unified trace state

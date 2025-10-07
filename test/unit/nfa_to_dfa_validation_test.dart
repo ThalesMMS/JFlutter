@@ -1,17 +1,12 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/unit/nfa_to_dfa_validation_test.dart
-// Objetivo: Confirmar que a conversão de AFN para AFD mantém a linguagem e
-// reproduz os resultados da implementação de referência.
-// Cenários cobertos:
-// - Casos simples e complexos de conversão com múltiplos estados.
-// - Tratamento de transições λ, inclusive a partir do estado inicial.
-// - Verificação de equivalência entre o AFN original e o AFD convertido.
-// Autoria: Equipe de Qualidade JFlutter — baseado em
-// References/automata-main/tests/test_dfa.py.
-// ============================================================================
-
+//
+//  nfa_to_dfa_validation_test.dart
+//  JFlutter
+//
+//  Testes focados na conversão de AFNs para DFAs garantindo que a linguagem e os diagnósticos permaneçam equivalentes após o processo.
+//  Abrange exemplos com transições lambda e epsilon, construções complexas e validação dos autômatos resultantes por simulação.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/state.dart';

@@ -1,17 +1,12 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/unit/regex_validation_test.dart
-// Objetivo: Confrontar os conversores regex↔autômato do JFlutter com o
-// comportamento da implementação de referência.
-// Cenários cobertos:
-// - Conversão Regex→AFN via construção de Thompson.
-// - Conversão AF→Regex por eliminação de estados e verificação de equivalência.
-// - Manipulação de operadores avançados (união, concatenação, estrela, opcional).
-// Autoria: Equipe de Qualidade JFlutter — baseado em
-// References/automata-main/tests/test_regex.py.
-// ============================================================================
-
+//
+//  regex_validation_test.dart
+//  JFlutter
+//
+//  Suite que verifica as conversões entre expressões regulares e autômatos finitos cobrindo ida e volta no pipeline de linguagem formal.
+//  Os casos exercitam operadores avançados, simulam os autômatos gerados e confirmam consistência com a implementação de referência.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/state.dart';

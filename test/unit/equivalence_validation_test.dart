@@ -1,17 +1,12 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/unit/equivalence_validation_test.dart
-// Objetivo: Verificar o comparador de equivalência de autômatos frente à
-// implementação de referência da pasta automata-main.
-// Cenários cobertos:
-// - Equivalência entre DFAs e NFAs com construções distintas.
-// - Diferenciação de autômatos não equivalentes com diagnósticos.
-// - Tratamento de casos extremos e entradas malformadas.
-// Autoria: Equipe de Qualidade JFlutter — baseado em
-// References/automata-main/tests/test_dfa.py.
-// ============================================================================
-
+//
+//  equivalence_validation_test.dart
+//  JFlutter
+//
+//  Conjunto de testes que valida o EquivalenceChecker para DFAs e NFAs, cobrindo cenários equivalentes, não equivalentes e comparações cruzadas entre autômatos construídos de maneiras distintas.
+//  O arquivo monta máquinas de exemplo para assegurar diagnósticos coerentes e resultados consistentes mesmo em casos extremos e entradas malformadas.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/state.dart';

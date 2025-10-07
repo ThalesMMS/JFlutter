@@ -343,52 +343,82 @@ class _FSAHelpContent extends StatelessWidget {
           const SizedBox(height: 24),
           _buildSectionTitle('Creating an FSA'),
           const SizedBox(height: 16),
-          _buildStepCard('1', 'Add States', 'Tap the canvas to add states'),
+          _buildStepCard(
+            '1',
+            'Add States',
+            'Use the Add State toolbar action (circle icon) and tap the canvas to '
+                'place new states.',
+          ),
           _buildStepCard(
             '2',
-            'Set Initial State',
-            'Double-tap a state to make it initial',
+            'Configure State Properties',
+            'Double-tap a state to open its editor. Toggle the Initial and Final '
+                'switches, adjust the label, and confirm to apply.',
           ),
           _buildStepCard(
             '3',
-            'Set Final States',
-            'Long-press states to mark as final',
+            'Create Transitions',
+            'Select the Add Transition tool, tap the source state, tap the target '
+                'state, and provide the transition label in the dialog.',
           ),
           _buildStepCard(
             '4',
-            'Add Transitions',
-            'Drag between states to create transitions',
-          ),
-          _buildStepCard(
-            '5',
-            'Label Transitions',
-            'Tap transitions to add input symbols',
+            'Refine Labels',
+            'Use the transition dialog to enter one or more symbols (comma '
+                'separated). Repeat the source/target selection to add more arcs.',
           ),
           const SizedBox(height: 24),
           _buildSectionTitle('Simulation'),
           const SizedBox(height: 16),
           const Text(
             'To test your FSA:\n'
-            '1. Enter an input string in the simulation panel\n'
-            '2. Tap "Step" to see each transition\n'
-            '3. Tap "Run" to see the complete simulation\n'
-            '4. Check if the string is accepted or rejected',
+            '1. Enter an input string in the simulation panel and tap "Simulate".\n'
+            '2. Enable Step-by-Step Mode with the toggle to load the execution '
+            'timeline.\n'
+            '3. Use the playback controls (play/pause, previous, next, reset) to '
+            'navigate through the highlighted steps.\n'
+            '4. Check the result banner to confirm acceptance or rejection.',
           ),
           const SizedBox(height: 24),
           _buildSectionTitle('Algorithms'),
           const SizedBox(height: 16),
           _buildAlgorithmCard(
+            'Regex to NFA',
+            'Provide a regular expression and send it to the Regex → NFA converter.'
+                ' Use the text field and arrow button to submit.',
+          ),
+          _buildAlgorithmCard(
             'NFA to DFA',
-            'Convert non-deterministic to deterministic',
+            'Run the dedicated button to determinize the active automaton.',
           ),
           _buildAlgorithmCard(
-            'DFA Minimization',
-            'Reduce the number of states',
+            'Remove λ-transitions',
+            'Eliminate epsilon transitions before further conversions or '
+                'minimization.',
           ),
           _buildAlgorithmCard(
-            'Equality Test',
-            'Check if two FSAs are equivalent',
+            'Minimize DFA',
+            'Press "Minimize DFA" to compute the reduced automaton.',
           ),
+          _buildAlgorithmCard(
+            'Complete & Complement',
+            'Use "Complete DFA" to add the sink state and "Complement DFA" to flip '
+                'acceptance.',
+          ),
+          _buildAlgorithmCard(
+            'Product Operations',
+            'Union, Intersection, and Difference open a file picker for the second '
+                'DFA before computing the combined machine.',
+          ),
+          _buildAlgorithmCard(
+            'Compare Equivalence',
+            'Trigger "Compare Equivalence" to load another DFA from file and check '
+                'language equality.',
+          ),
+          _buildAlgorithmCard(
+            'Conversions & Layout',
+            'Buttons for FA → Regex, FSA → Grammar, Prefix/Suffix closure, and Auto '
+                'Layout are available in the same panel.',
         ],
       ),
     );

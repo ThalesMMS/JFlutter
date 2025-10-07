@@ -2,12 +2,11 @@
 //  result.dart
 //  JFlutter
 //
-//  Padroniza os retornos das camadas de domínio com um tipo selado que
-//  diferencia sucesso e falha, expondo acesso direto aos dados ou às mensagens
-//  de erro sem depender de exceções. Disponibiliza operações de mapeamento e
-//  encadeamento para tratar fluxos de processamento de forma funcional e
-//  extensões utilitárias para criar instâncias específicas de autômatos e
-//  gramáticas.
+//  Define o tipo Result selado com variantes Success e Failure para padronizar fluxos de
+//  retorno e mensagens de erro na aplicação, expondo utilitários de mapeamento e
+//  callbacks para manipular sucessos ou falhas de forma composável.
+//  Também adiciona extensões, apelidos tipados e fábricas estáticas que simplificam
+//  coleções de resultados e conversões frequentes entre entidades e mensagens.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

@@ -2,14 +2,13 @@
 //  graphview_tm_canvas_controller_test.dart
 //  JFlutter
 //
-//  Testes unitários que exercitam o GraphViewTmCanvasController, garantindo a
-//  sincronização de estados, transições e seleção com o TMEditorNotifier durante
-//  operações típicas de edição de máquinas de Turing. Os cenários cobrem
-//  construção inicial do grafo, atualizações reativas e descarte seguro dos
-//  recursos associados ao controlador.
+//  Verifica o GraphViewTmCanvasController na orquestração do editor de máquinas de Turing,
+//  garantindo que o grafo responda a interações e eventos emitidos pelo provider. Analisa seleção
+//  de estados, atualização de transições e ciclo de vida do controlador.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
+
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';

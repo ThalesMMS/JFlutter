@@ -2,10 +2,9 @@
 //  graphview_pda_canvas_controller_test.dart
 //  JFlutter
 //
-//  Este arquivo agrupa testes que garantem o comportamento do controlador de
-//  canvas para PDAs no GraphView, verificando a criação de grafos com transições
-//  push/pop, a integração com provedores e serviços simulados, além do descarte
-//  apropriado de recursos após o uso.
+//  Avalia o GraphViewPdaCanvasController na mediação entre o editor de PDA e o canvas, garantindo
+//  sincronia das transições com a pilha. Exercita construção do grafo, seleção de elementos e
+//  descarte seguro dos recursos associados.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

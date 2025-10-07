@@ -2,14 +2,13 @@
 //  graphview_canvas_controller_test.dart
 //  JFlutter
 //
-//  Testes unitários focados no GraphViewCanvasController, assegurando que a
-//  integração com AutomatonProvider, serviço de autômatos e repositório de
-//  layout falso cubra operações de zoom, seleção e atualização de transições.
-//  A suíte também confirma o disparo correto dos métodos de layout para manter o
-//  estado gráfico sincronizado.
+//  Testa o controlador base do canvas GraphView para autômatos, coordenando providers, repositórios
+//  de layout e atualizações de seleção. Inspeciona comandos de layout, zoom e sincronização de
+//  transições para garantir que o estado visual reflita o modelo lógico.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
+
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';

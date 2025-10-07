@@ -2,12 +2,10 @@
 //  algorithm_use_cases.dart
 //  JFlutter
 //
-//  Coleção de casos de uso responsáveis por invocar algoritmos clássicos sobre
-//  autômatos e expressões regulares através do AlgorithmRepository.
-//  Contempla conversões, operações de conjunto e variações de fechamento que
-//  alimentam a camada de apresentação com resultados consistentes.
-//  Também oferece simulações e verificações, propagando resultados ricos em
-//  passos quando aplicável.
+//  Coleção de casos de uso que delegam ao repositório de algoritmos operações de
+//  conversão, minimização e análise sobre autômatos, expressões regulares e gramáticas.
+//  Cada classe encapsula um fluxo assíncrono específico, expondo métodos execute
+//  para reutilização em camadas de apresentação e orquestração da aplicação.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

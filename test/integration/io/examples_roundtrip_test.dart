@@ -2,10 +2,9 @@
 //  examples_roundtrip_test.dart
 //  JFlutter
 //
-//  Testes de integração que percorrem os exemplos oficiais do projeto, passando
-//  pelos assets, serviços de serialização e exportação para validar round-trips
-//  completos de autômatos, gramáticas e máquinas de Turing, inclusive conferindo
-//  metadados publicados pela biblioteca Examples.
+//  Realiza testes de integração de round-trip para os exemplos embarcados, percorrendo leitura de
+//  assets, serviços de serialização e exportação gráfica. Valida autômatos, gramáticas e máquinas
+//  de Turing para garantir consistência entre entidades e artefatos gerados.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

@@ -2,10 +2,9 @@
 //  graphview_automaton_mapper_test.dart
 //  JFlutter
 //
-//  Este arquivo reúne testes que asseguram a tradução de autômatos finitos em
-//  estruturas de nós e arestas compreendidas pelo GraphView, cobrindo cenários
-//  com estados iniciais, finais, transições múltiplas e sincronizações
-//  subsequentes do mapper com o canvas.
+//  Confere o GraphViewAutomatonMapper na tradução de autômatos finitos para nós e arestas, cobrindo
+//  casos com loops, transições múltiplas e estados especiais. Verifica se os cálculos de geometria
+//  e agrupamento resultam em modelos consistentes para o canvas interativo.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

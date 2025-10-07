@@ -2,12 +2,11 @@
 //  diagnostics_service.dart
 //  JFlutter
 //
-//  Reúne verificações inteligentes para autômatos finitos, analisando estados,
-//  transições e componentes desconectados para produzir mensagens de erro,
-//  aviso e informação contextualizadas. Fornece diagnósticos para falhas de
-//  simulação, sugerindo correções práticas e identificando símbolos inválidos ou
-//  comportamentos não determinísticos. Também normaliza coleções para facilitar
-//  comparações consistentes entre estruturas equivalentes.
+//  Serviço estático que avalia autômatos finitos e produz diagnósticos detalhados,
+//  cobrindo estados iniciais, alcançabilidade, transições, componentes e padrões de
+//  epsilon ou não determinismo.
+//  Também interpreta falhas de simulação para gerar mensagens específicas e sugestões
+//  acionáveis, promovendo orientações para correção dentro da interface.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

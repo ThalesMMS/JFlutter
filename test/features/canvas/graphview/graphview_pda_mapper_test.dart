@@ -2,13 +2,13 @@
 //  graphview_pda_mapper_test.dart
 //  JFlutter
 //
-//  Suíte de testes que avalia o GraphViewPdaMapper responsável por converter
-//  autômatos de pilha em modelos de canvas. Os cenários conferem o mapeamento de
-//  estados iniciais e de aceitação, traduções de símbolos de pilha (incluindo λ)
-//  e a atualização do grafo resultante ao sincronizar múltiplas transições.
+//  Valida o GraphViewPdaMapper ao converter autômatos de pilha em estruturas de grafo, assegurando
+//  que estados, transições e metadados de pilha sejam preservados. Exercita cenários com múltiplos
+//  símbolos e ajustes geométricos para garantir compatibilidade com a renderização do canvas.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
+
 import 'dart:math' as math;
 
 import 'package:test/test.dart';

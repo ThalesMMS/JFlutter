@@ -2,12 +2,10 @@
 //  simulation_highlight_service.dart
 //  JFlutter
 //
-//  Coordena o cálculo e a difusão de destaques visuais para simulações,
-//  convertendo resultados e passos em conjuntos imutáveis de estados e
-//  transições relevantes. Disponibiliza provedores Riverpod, canais de
-//  comunicação e adaptadores para callbacks legados, além de registrar eventos
-//  durante o despacho. Permite limpar, acompanhar e reaproveitar o último
-//  destaque emitido pela interface interativa.
+//  Orquestra a emissão de destaques de simulação com suporte a canais plugáveis e
+//  dispatchers legados, oferecendo provedores Riverpod para integração com o canvas.
+//  Constrói conjuntos de estados e transições relevantes por passo, registra eventos
+//  em modo debug e disponibiliza utilidades para reemitir ou limpar seleções.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

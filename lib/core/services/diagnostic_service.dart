@@ -2,12 +2,10 @@
 //  diagnostic_service.dart
 //  JFlutter
 //
-//  Oferece uma análise aprofundada de autômatos finitos, classificando problemas
-//  estruturais, semânticos, de desempenho e usabilidade em listas de issues,
-//  avisos e sugestões acionáveis. Implementa rotinas auxiliares para detectar
-//  estados inacessíveis, transições inválidas, comportamentos não
-//  determinísticos e gargalos potenciais, atribuindo severidade consolidada às
-//  descobertas para orientar correções prioritárias.
+//  Implementa análise avançada de autômatos produzindo issues, avisos e sugestões em
+//  múltiplas dimensões estruturais, semânticas, de desempenho e usabilidade.
+//  Calcula severidade agregada, identifica padrões problemáticos e recomenda ações
+//  corretivas detalhadas através de modelos de resultado especializados.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

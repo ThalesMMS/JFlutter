@@ -2,11 +2,10 @@
 //  error_handler.dart
 //  JFlutter
 //
-//  Concentra utilitários de feedback visual para erros, avisos, sucessos e
-//  confirmações na interface Flutter, garantindo mensagens consistentes em toda
-//  a aplicação. Expõe uma chave global para o ScaffoldMessenger e integra-se ao
-//  tipo Result para apresentar respostas adequadas às operações. Também oferece
-//  diálogos modais e registro simplificado de falhas para apoiar a depuração.
+//  Provedor central de tratamento de erros que apresenta mensagens nas interfaces via
+//  SnackBars, diálogos de confirmação e utilidades de log para depuração controlada.
+//  Inclui rotinas para traduzir Result em feedback contextual e uma extensão que
+//  simplifica o consumo direto desses fluxos dentro de widgets e fluxos assíncronos.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

@@ -2,11 +2,10 @@
 //  grammar_entity.dart
 //  JFlutter
 //
-//  Define as estruturas imutáveis que representam gramáticas formais dentro do
-//  núcleo, incluindo identificadores, conjuntos de terminais e não terminais,
-//  símbolo inicial e produções completas. Estabelece também o modelo de cada
-//  produção, permitindo que algoritmos de análise, transformação e conversão
-//  manipulem dados consistentes em toda a plataforma.
+//  Estruturas imutáveis que representam gramáticas formais com identificador,
+//  conjuntos terminais e não terminais, símbolo inicial e produções associadas.
+//  As produções encapsulam lados esquerdo e direito como listas ordenadas, facilitando
+//  a integração com conversões de autômatos e renderização de editores especializados.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

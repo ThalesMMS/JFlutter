@@ -2,13 +2,12 @@
 //  automaton.dart
 //  JFlutter
 //
-//  Oferece uma fachada mínima que reexporta o modelo de autômato central,
-//  permitindo que módulos externos criem e manipulem autômatos sem navegar pela
-//  estrutura detalhada de arquivos. Ajuda a manter o encapsulamento da camada
-//  de modelos do núcleo.
+//  Expõe o modelo de autômato consolidado do núcleo para que camadas externas
+//  importem estruturas e utilitários de estados, transições e alfabetos a
+//  partir de um único arquivo, promovendo coesão entre representações da
+//  aplicação.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
-
 // Re-export the automaton model
 export 'models/automaton.dart';

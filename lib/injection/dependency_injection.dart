@@ -2,11 +2,11 @@
 //  dependency_injection.dart
 //  JFlutter
 //
-//  Configura o contêiner GetIt registrando data sources, serviços,
-//  repositórios, provedores e auxiliares necessários para inicializar o
-//  aplicativo. Padroniza a criação de dependências, habilita instâncias
-//  preguiçosas e prepara integrações como SharedPreferences e serviços de
-//  simulação para consumo pelas camadas de apresentação e domínio.
+//  Configura o contêiner de injeção de dependências com GetIt, registrando
+//  fontes de dados, serviços, repositórios e providers para manter o
+//  aplicativo desacoplado e com inicialização preguiçosa. Também prepara as
+//  instâncias de SharedPreferences utilizadas na persistência de traços para
+//  que camadas distintas compartilhem integrações consistentes.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

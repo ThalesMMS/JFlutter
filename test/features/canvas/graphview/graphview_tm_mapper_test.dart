@@ -2,10 +2,9 @@
 //  graphview_tm_mapper_test.dart
 //  JFlutter
 //
-//  Este conjunto de testes garante que máquinas de Turing sejam convertidas em
-//  estruturas do GraphView com estados, transições, direções de fita e múltiplas
-//  fitas corretamente interpretadas para o canvas, incluindo ajustes de curvas e
-//  posicionamento para manter a legibilidade visual.
+//  Avalia o GraphViewTmMapper na geração de grafos de máquinas de Turing, incluindo estados,
+//  transições e direções de fita. Simula múltiplas fitas e anotações para assegurar que os dados
+//  renderizados representem fielmente as operações do simulador.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

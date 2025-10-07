@@ -2,13 +2,13 @@
 //  graphview_canvas_models_test.dart
 //  JFlutter
 //
-//  Testes unitários que asseguram a imutabilidade e os utilitários de cópia dos
-//  modelos de canvas empregados pelo GraphView. Os casos verificam atualização
-//  de metadados específicos de PDAs por meio de copyWith, garantindo coerência
-//  entre símbolos de pilha e indicadores de transições λ.
+//  Verifica os modelos de dados utilizados pelo canvas GraphView, confirmando a imutabilidade e a
+//  correta propagação de metadados de transições. Exercita métodos utilitários como copyWith para
+//  garantir que updates mantenham integridade do grafo.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
+
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:jflutter/features/canvas/graphview/graphview_canvas_models.dart';

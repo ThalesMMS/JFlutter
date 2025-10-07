@@ -1,11 +1,15 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/widgets/grammar_editor.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Disponibiliza editor completo de gramáticas com suporte a criação, edição e listagem de produções. Integra campos reativos, ações rápidas e validações para facilitar a modelagem de linguagens formais.
-/// Contexto: Conecta-se ao GrammarProvider para refletir alterações de estado e executar comandos como limpar regras ou iniciar conversões. Estrutura layouts responsivos adaptados a telas móveis e desktops mantendo a usabilidade.
-/// Observações: Gerencia controladores de texto e seleção de produções garantindo consistência ao alternar entre modos de edição. Pode ser combinado com painéis de conversão e simulação graças à sua comunicação via Riverpod.
-/// ---------------------------------------------------------------------------
+//
+//  grammar_editor.dart
+//  JFlutter
+//
+//  Editor visual de gramáticas que combina campos reativos, lista de produções
+//  e ações rápidas para criar, atualizar ou remover regras. Integra-se ao
+//  GrammarProvider para sincronizar estado global, disponibilizando fluxos de
+//  limpeza, importação e alteração do símbolo inicial com layout adaptável a
+//  diferentes tamanhos de tela.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/production.dart';

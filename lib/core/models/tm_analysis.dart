@@ -1,3 +1,15 @@
+//
+//  tm_analysis.dart
+//  JFlutter
+//
+//  Estruturas imutáveis que armazenam métricas de análises sobre máquinas de
+//  Turing, separando estatísticas de estados, transições, operações de fita e
+//  alcançabilidade. O conjunto serve de retorno padronizado para rotinas de
+//  diagnóstico, mantendo duração de execução e conjuntos calculados prontos
+//  para visualização.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'state.dart';
 
 /// Analysis result of a TM

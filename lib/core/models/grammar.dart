@@ -1,3 +1,15 @@
+//
+//  grammar.dart
+//  JFlutter
+//
+//  Estrutura de dados que modela gramáticas formais com conjuntos de símbolos,
+//  produções e metadados temporais, oferecendo cópias imutáveis e suporte a
+//  serialização. O tipo de gramática é preservado e validado para garantir
+//  consistência dos algoritmos de parsing, enquanto regras são verificadas
+//  contra símbolos declarados.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'production.dart';
 
 /// Grammar model for formal language theory

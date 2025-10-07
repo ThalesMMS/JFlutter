@@ -1,11 +1,15 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/widgets/trace_viewers/tm_trace_viewer.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Responsável por exibir traços de simulação de Máquinas de Turing em formato legível, destacando passos, fita e transições utilizadas. Normaliza o resultado para reutilizar componentes compartilhados de visualização.
-/// Contexto: Converte resultados específicos do simulador de TM em SimulationResult genérico para consumo pelo BaseTraceViewer. Permite integração com serviços de destaque para sincronização com o canvas correspondente.
-/// Observações: Realiza tratamento especial para cenários de timeout, laço infinito e rejeição garantindo mensagens adequadas. Pode ser reutilizado em qualquer página que precise apresentar execuções de TM de maneira consistente.
-/// ---------------------------------------------------------------------------
+//
+//  tm_trace_viewer.dart
+//  JFlutter
+//
+//  Visualizador dos passos de simulação de máquinas de Turing que adapta
+//  TMSimulationResult para o formato utilizado pelo BaseTraceViewer. Exibe
+//  estado atual, conteúdo da fita e transições acionadas, lidando com cenários
+//  de aceitação, rejeição, timeout e laços ao produzir mensagens claras e
+//  opcionais destaques no canvas.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/material.dart';
 
 import '../../../core/algorithms/tm_simulator.dart';

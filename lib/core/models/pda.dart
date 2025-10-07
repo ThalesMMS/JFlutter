@@ -1,3 +1,14 @@
+//
+//  pda.dart
+//  JFlutter
+//
+//  Estrutura o modelo de autômato de pilha com alfabeto de entrada, pilha,
+//  estados e metadados herdados, mantendo coleções imutáveis e configuráveis.
+//  Implementa serialização detalhada, cópias seguras e validações que exigem
+//  símbolos iniciais coerentes, garantindo compatibilidade com simuladores.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';
 import 'state.dart';

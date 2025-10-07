@@ -1,3 +1,14 @@
+//
+//  layout_settings.dart
+//  JFlutter
+//
+//  Agrupa preferências visuais do canvas de autômatos, como tamanhos, espessuras
+//  e esquema de cores, otimizadas para interfaces móveis.
+//  Possibilita clonagem configurável, serialização para armazenamento e leitura
+//  segura de paletas através de valores numéricos.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart';
 

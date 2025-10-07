@@ -1,3 +1,14 @@
+//
+//  nfa_to_dfa_converter.dart
+//  JFlutter
+//
+//  Implementa a conversão de autômatos finitos não determinísticos em
+//  determinísticos utilizando construção por subconjuntos com fechos-ε.
+//  Inclui rotinas de validação, limpeza de transições lambda e criação das
+//  estruturas determinísticas preservando estados, símbolos e aceitação.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:vector_math/vector_math_64.dart';
 import '../models/fsa.dart';
 import '../models/state.dart';

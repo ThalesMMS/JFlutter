@@ -1,3 +1,15 @@
+//
+//  fsa.dart
+//  JFlutter
+//
+//  Define o modelo de Autômato Finito, herdando da infraestrutura genérica e
+//  adicionando serialização, cópias e validações específicas de transições e
+//  determinismo.
+//  Facilita a persistência, importação e análise de máquinas ao padronizar
+//  formatos JSON, parâmetros de layout e integrações com simuladores.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';
 import 'state.dart';

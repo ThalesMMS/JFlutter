@@ -1,3 +1,14 @@
+//
+//  pumping_lemma_prover.dart
+//  JFlutter
+//
+//  Implementa heurísticas para provar o lema do bombeamento em linguagens
+//  regulares, avaliando autômatos finitos e sugerindo cadeias bombeáveis.
+//  Controla validações, geração limitada de palavras e captura métricas de
+//  execução para relatar sucesso ou falha da tentativa de prova.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import '../models/fsa.dart';
 import '../models/state.dart';
 import '../result.dart';

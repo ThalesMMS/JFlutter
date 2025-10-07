@@ -1,3 +1,14 @@
+//
+//  regex_pipeline.dart
+//  JFlutter
+//
+//  Implementa o pipeline de expressões regulares que constrói um AST com
+//  PetitParser e converte o resultado em um NFA via construção de Thompson.
+//  Trata erros de sintaxe, oferece mensagens amigáveis e adapta o autômato final
+//  para integração com simuladores e visualizadores do aplicativo.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:math' as math;
 
 import 'package:petitparser/petitparser.dart' as pp;

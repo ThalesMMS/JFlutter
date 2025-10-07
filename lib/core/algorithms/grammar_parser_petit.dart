@@ -1,3 +1,15 @@
+//
+//  grammar_parser_petit.dart
+//  JFlutter
+//
+//  Implementa um analisador de gramáticas baseado no PetitParser, criando
+//  combinadores preguiçosos para cada não terminal e tratando produções
+//  terminais, não terminais e vazias dentro da mesma arquitetura.
+//  Expõe utilitários de validação, construção do parser e execução com
+//  relatórios de depuração, controle de tempo e padronização das respostas.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:petitparser/petitparser.dart';
 
 import '../models/grammar.dart';

@@ -1,3 +1,14 @@
+//
+//  tm.dart
+//  JFlutter
+//
+//  Descreve o modelo de Máquina de Turing de fita única, preservando alfabeto,
+//  símbolo branco, transições e parâmetros gráficos herdados do autômato base.
+//  Oferece cópias, serialização e validações para tapes, estados e transições,
+//  habilitando simulações e conversões consistentes.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';
 import 'state.dart';

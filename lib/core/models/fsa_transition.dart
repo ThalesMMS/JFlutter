@@ -1,3 +1,15 @@
+//
+//  fsa_transition.dart
+//  JFlutter
+//
+//  Modela transições de autômatos finitos com suporte a conjuntos de símbolos,
+//  marcações lambda e dedução automática do tipo determinístico ou não
+//  determinístico.
+//  Provê cópias imutáveis, serialização bidirecional e validações que garantem
+//  consistência entre rótulos, símbolos e estados envolvidos.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:vector_math/vector_math_64.dart';
 import 'state.dart';
 import 'transition.dart';

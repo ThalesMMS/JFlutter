@@ -1,3 +1,14 @@
+//
+//  grammar.dart
+//  JFlutter
+//
+//  Representa gramáticas formais com terminais, não terminais, produções e
+//  metadados temporais, oferecendo operações de cópia e serialização.
+//  Inclui rotinas de validação para garantir símbolos válidos, produções bem
+//  formadas e coerência com os algoritmos de análise e conversão.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'production.dart';
 
 /// Grammar model for formal language theory

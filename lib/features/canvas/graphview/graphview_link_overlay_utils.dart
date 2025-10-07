@@ -7,7 +7,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/automaton_canvas.dart';
-import 'graphview_canvas_controller.dart';
+import 'base_graphview_canvas_controller.dart';
 import 'graphview_canvas_models.dart';
 
 const double _kNodeDiameter = kAutomatonStateDiameter;
@@ -15,7 +15,7 @@ const double _kNodeRadius = _kNodeDiameter / 2;
 
 /// Computes the preferred world anchor for the provided [edge].
 Offset? resolveLinkAnchorWorld(
-  GraphViewCanvasController controller,
+  BaseGraphViewCanvasController<dynamic, dynamic> controller,
   GraphViewCanvasEdge edge,
 ) {
   final from = controller.nodeById(edge.fromStateId);

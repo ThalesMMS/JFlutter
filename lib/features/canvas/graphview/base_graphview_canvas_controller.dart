@@ -90,6 +90,21 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
   GraphViewCanvasNode? nodeById(String id) => _nodes[id];
   GraphViewCanvasEdge? edgeById(String id) => _edges[id];
 
+  /// Adds a new state at the provided [worldPosition].
+  void addStateAt(Offset worldPosition);
+
+  /// Moves an existing state to a new [position].
+  void moveState(String id, Offset position);
+
+  /// Updates the human-readable label associated with the state [id].
+  void updateStateLabel(String id, String label);
+
+  /// Updates the state flags for [id], such as initial/final markers.
+  void updateStateFlags(String id, {bool? isInitial, bool? isAccepting});
+
+  /// Removes the state identified by [id] from the canvas/domain.
+  void removeState(String id);
+
   /// Returns the world position of the graph node with the provided [id].
   @visibleForTesting
   Offset? nodePosition(String id) => _graphNodes[id]?.position;

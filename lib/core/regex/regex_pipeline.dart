@@ -2,10 +2,11 @@
 //  regex_pipeline.dart
 //  JFlutter
 //
-//  Implementa o pipeline de expressões regulares que constrói um AST com
-//  PetitParser e converte o resultado em um NFA via construção de Thompson.
-//  Trata erros de sintaxe, oferece mensagens amigáveis e adapta o autômato final
-//  para integração com simuladores e visualizadores do aplicativo.
+//  Pipeline que interpreta expressões regulares com PetitParser, gera uma
+//  árvore sintática intermediária e a converte em autômatos finitos via
+//  construção de Thompson. Centraliza validações, mensagens de erro e
+//  mapeamento de operadores, disponibilizando resultados ricos para as camadas
+//  superiores.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

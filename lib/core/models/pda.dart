@@ -2,10 +2,11 @@
 //  pda.dart
 //  JFlutter
 //
-//  Estrutura o modelo de autômato de pilha com alfabeto de entrada, pilha,
-//  estados e metadados herdados, mantendo coleções imutáveis e configuráveis.
-//  Implementa serialização detalhada, cópias seguras e validações que exigem
-//  símbolos iniciais coerentes, garantindo compatibilidade com simuladores.
+//  Implementação de autômatos com pilha que amplia Automaton com alfabeto da
+//  pilha e símbolo inicial, expondo cópias, serialização e validações
+//  específicas. Fornece utilitários para filtrar transições por tipo e garante
+//  que símbolos utilizados estejam sincronizados com a pilha, evitando erros em
+//  simulações e exportações.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

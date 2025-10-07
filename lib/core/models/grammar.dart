@@ -2,10 +2,11 @@
 //  grammar.dart
 //  JFlutter
 //
-//  Representa gramáticas formais com terminais, não terminais, produções e
-//  metadados temporais, oferecendo operações de cópia e serialização.
-//  Inclui rotinas de validação para garantir símbolos válidos, produções bem
-//  formadas e coerência com os algoritmos de análise e conversão.
+//  Estrutura de dados que modela gramáticas formais com conjuntos de símbolos,
+//  produções e metadados temporais, oferecendo cópias imutáveis e suporte a
+//  serialização. O tipo de gramática é preservado e validado para garantir
+//  consistência dos algoritmos de parsing, enquanto regras são verificadas
+//  contra símbolos declarados.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

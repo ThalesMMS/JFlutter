@@ -1,20 +1,23 @@
+// ============================================================================
+// JFlutter - Suite de Testes
+// ----------------------------------------------------------------------------
+// Arquivo: test/unit/grammar_to_pda_validation_test.dart
+// Objetivo: Validar a conversão de gramáticas livres de contexto em autômatos
+// de pilha, garantindo equivalência de linguagem entre o artefato original e o
+// PDA resultante.
+// Cenários cobertos:
+// - Conversão de gramática simples com produções básicas e aceitação esperada.
+// - Suporte a produções lambda/ε preservando a linguagem reconhecida.
+// - Estruturas complexas com múltiplas produções e tratamento de erros.
+// Autoria: Equipe de Qualidade JFlutter.
+// ============================================================================
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/grammar.dart';
 import 'package:jflutter/core/models/production.dart';
 import 'package:jflutter/core/algorithms/grammar_to_pda_converter.dart';
 import 'package:jflutter/core/algorithms/pda_simulator.dart';
 import 'package:jflutter/core/result.dart';
-
-/// Grammar to PDA Conversion Validation Tests
-///
-/// This test suite validates the CFG-to-PDA conversion algorithm to ensure
-/// that the converted PDA accepts the same language as the original grammar.
-///
-/// Test cases cover:
-/// 1. Simple grammars with basic productions
-/// 2. Grammars with lambda productions (A → ε)
-/// 3. Complex grammars with multiple productions
-/// 4. Edge cases and error handling
 void main() {
   group('Grammar to PDA Conversion Tests', () {
     late Grammar simpleGrammar;

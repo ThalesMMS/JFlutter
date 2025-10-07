@@ -1,3 +1,18 @@
+// ============================================================================
+// JFlutter - Suite de Testes
+// ----------------------------------------------------------------------------
+// Arquivo: test/unit/tm_validation_test.dart
+// Objetivo: Comparar o simulador de máquinas de Turing do JFlutter com a
+// implementação de referência para garantir equivalência de resultados e
+// diagnósticos.
+// Cenários cobertos:
+// - Cadeias aceitas e rejeitadas com diferentes configurações de fita.
+// - Detecção de laços infinitos e validação de limites da fita.
+// - Transformações de fita e comportamentos com autômatos triviais.
+// Autoria: Equipe de Qualidade JFlutter — baseado em
+// References/automata-main/tests/test_tm.py.
+// ============================================================================
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/tm.dart';
 import 'package:jflutter/core/models/state.dart';
@@ -6,18 +21,6 @@ import 'package:jflutter/core/algorithms/tm_simulator.dart';
 import 'package:jflutter/core/result.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'dart:math' as math;
-
-/// TM (Turing Machine) Validation Tests against References/automata-main
-///
-/// This test suite validates TM algorithms against the Python reference implementation
-/// from References/automata-main/tests/test_tm.py to ensure behavioral equivalence.
-///
-/// Test cases cover:
-/// 1. Acceptance scenarios (strings that should be accepted)
-/// 2. Rejection scenarios (strings that should be rejected)
-/// 3. Loop detection (infinite loops and halting)
-/// 4. Transformation scenarios (tape modifications)
-/// 5. Tape limits (boundary conditions)
 void main() {
   group('TM Validation Tests', () {
     late TM binaryToUnaryTM;

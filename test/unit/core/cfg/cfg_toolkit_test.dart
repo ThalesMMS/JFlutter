@@ -1,17 +1,21 @@
+// ============================================================================
+// JFlutter - Suite de Testes
+// ----------------------------------------------------------------------------
+// Arquivo: test/unit/core/cfg/cfg_toolkit_test.dart
+// Objetivo: Validar o toolkit de GLC do JFlutter cobrindo normalizações e
+// verificações estruturais essenciais.
+// Cenários cobertos:
+// - Remoção de produções ε, unitárias e símbolos inúteis.
+// - Conversão para Forma Normal de Chomsky e checagem de validade.
+// - Garantia de preservação da linguagem ao aplicar transformações sucessivas.
+// Autoria: Equipe de Qualidade JFlutter.
+// ============================================================================
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/algorithms/cfg/cfg_toolkit.dart';
 import 'package:jflutter/core/models/grammar.dart';
 import 'package:jflutter/core/models/production.dart';
 import 'package:jflutter/core/result.dart';
-
-/// CFG Toolkit Validation Tests
-///
-/// This test suite validates CFG toolkit algorithms for:
-/// 1. ε-removal (lambda production elimination)
-/// 2. Unit production elimination
-/// 3. Useless symbol removal
-/// 4. CNF conversion
-/// 5. CNF validation
 void main() {
   group('CFG toolkit (CNF and cleanups)', () {
     late Grammar simpleGrammar;

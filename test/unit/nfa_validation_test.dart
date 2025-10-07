@@ -1,3 +1,17 @@
+// ============================================================================
+// JFlutter - Suite de Testes
+// ----------------------------------------------------------------------------
+// Arquivo: test/unit/nfa_validation_test.dart
+// Objetivo: Validar o simulador de AFN e a conversão AFN→AFD garantindo
+// alinhamento com a implementação canônica da pasta References.
+// Cenários cobertos:
+// - Caminhos não determinísticos e transições múltiplas por símbolo.
+// - Processamento de transições λ e construção de fecho-epsilon.
+// - Aceitação, rejeição e símbolos fora do alfabeto esperado.
+// Autoria: Equipe de Qualidade JFlutter — baseado em
+// References/automata-main/tests/test_nfa.py.
+// ============================================================================
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/state.dart';
@@ -7,18 +21,6 @@ import 'package:jflutter/core/algorithms/nfa_to_dfa_converter.dart';
 import 'package:jflutter/core/result.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'dart:math' as math;
-
-/// NFA Validation Tests against References/automata-main
-///
-/// This test suite validates NFA algorithms against the Python reference implementation
-/// from References/automata-main/tests/test_nfa.py to ensure behavioral equivalence.
-///
-/// Test cases cover:
-/// 1. Nondeterminism (multiple transitions from same state on same symbol)
-/// 2. Epsilon transitions (λ-transitions)
-/// 3. Acceptance scenarios (strings that should be accepted)
-/// 4. Rejection scenarios (strings that should be rejected)
-/// 5. Alphabet edge cases (symbols not in alphabet)
 void main() {
   group('NFA Validation Tests', () {
     late FSA lambdaAOrABNFA;

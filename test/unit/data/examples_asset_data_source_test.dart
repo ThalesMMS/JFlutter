@@ -1,3 +1,17 @@
+// ============================================================================
+// JFlutter - Suite de Testes
+// ----------------------------------------------------------------------------
+// Arquivo: test/unit/data/examples_asset_data_source_test.dart
+// Objetivo: Garantir a integridade das fixtures JSON de "Examples v1" ao
+// validar metadados, estruturas e round-trips necessários para o consumo no
+// aplicativo.
+// Cenários cobertos:
+// - Carregamento de arquivos de exemplo e validação do formato JSON esperado.
+// - Garantia de metadados obrigatórios para categorias, dificuldade e tags.
+// - Verificação de consistência entre metadados declarados e conteúdo serializado.
+// Autoria: Equipe de Qualidade JFlutter.
+// ============================================================================
+
 import 'dart:convert';
 import 'dart:io';
 

@@ -1,21 +1,23 @@
+// ============================================================================
+// JFlutter - Suite de Testes
+// ----------------------------------------------------------------------------
+// Arquivo: test/unit/glc_validation_test.dart
+// Objetivo: Validar o parser de gramáticas livres de contexto e operações
+// associadas comparando com a implementação de referência.
+// Cenários cobertos:
+// - Derivações válidas e inválidas para gramáticas representativas.
+// - Detecção de recursão à esquerda, ambiguidades e normalização para CNF/CYK.
+// - Integração com exemplos de `jflutter_js` e cobertura de casos limite.
+// Autoria: Equipe de Qualidade JFlutter — baseado na suíte teórica de
+// References/automata-main.
+// ============================================================================
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/grammar.dart';
 import 'package:jflutter/core/models/production.dart';
 import 'package:jflutter/core/algorithms/grammar_parser.dart';
 import 'package:jflutter/core/result.dart';
 import 'dart:math' as math;
-
-/// GLC (Context-Free Grammar) Validation Tests against References/automata-main
-///
-/// This test suite validates CFG algorithms against the Python reference implementation
-/// from References/automata-main/tests/test_cfg.py to ensure behavioral equivalence.
-///
-/// Test cases cover:
-/// 1. Valid derivation (strings that can be derived from the grammar)
-/// 2. Invalid derivation (strings that cannot be derived)
-/// 3. CNF/CYK parsing (Chomsky Normal Form and CYK algorithm)
-/// 4. Left recursion detection and handling
-/// 5. Ambiguity detection and handling
 void main() {
   group('GLC Validation Tests', () {
     late Grammar balancedParenthesesGrammar;

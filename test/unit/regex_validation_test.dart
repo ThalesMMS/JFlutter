@@ -1,3 +1,17 @@
+// ============================================================================
+// JFlutter - Suite de Testes
+// ----------------------------------------------------------------------------
+// Arquivo: test/unit/regex_validation_test.dart
+// Objetivo: Confrontar os conversores regex↔autômato do JFlutter com o
+// comportamento da implementação de referência.
+// Cenários cobertos:
+// - Conversão Regex→AFN via construção de Thompson.
+// - Conversão AF→Regex por eliminação de estados e verificação de equivalência.
+// - Manipulação de operadores avançados (união, concatenação, estrela, opcional).
+// Autoria: Equipe de Qualidade JFlutter — baseado em
+// References/automata-main/tests/test_regex.py.
+// ============================================================================
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/state.dart';
@@ -9,18 +23,6 @@ import 'package:jflutter/core/algorithms/nfa_to_dfa_converter.dart';
 import 'package:jflutter/core/result.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'dart:math' as math;
-
-/// REGEX Validation Tests against References/automata-main
-///
-/// This test suite validates regex algorithms against the Python reference implementation
-/// from References/automata-main/tests/test_regex.py to ensure behavioral equivalence.
-///
-/// Test cases cover:
-/// 1. Regex to NFA conversion (Thompson's construction)
-/// 2. FA to regex conversion (state elimination)
-/// 3. Regex equivalence testing
-/// 4. Regex validation and parsing
-/// 5. Complex regex operations (union, concatenation, Kleene star)
 void main() {
   group('REGEX Validation Tests', () {
     group('Regex to NFA Conversion Tests', () {

@@ -1,3 +1,16 @@
+// ============================================================================
+// JFlutter - Suite de Testes
+// ----------------------------------------------------------------------------
+// Arquivo: test/unit/pumping_lemma_validation_test.dart
+// Objetivo: Avaliar o provador do lema do bombeamento, confirmando cenários de
+// prova, refutação e cálculo do comprimento mínimo de bombeamento.
+// Cenários cobertos:
+// - Linguagens regulares com decomposição válida e strings bombeáveis.
+// - Linguagens não regulares com detecção de violações.
+// - Determinação de regularidade e cálculo de limites de bombeamento.
+// Autoria: Equipe de Qualidade JFlutter.
+// ============================================================================
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/state.dart';
@@ -6,18 +19,6 @@ import 'package:jflutter/core/algorithms/pumping_lemma_prover.dart';
 import 'package:jflutter/core/result.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'dart:math' as math;
-
-/// Pumping Lemma Validation Tests against References/automata-main
-///
-/// This test suite validates pumping lemma algorithms against theoretical expectations
-/// and reference implementations to ensure behavioral equivalence.
-///
-/// Test cases cover:
-/// 1. Proof scenarios (regular languages that satisfy pumping lemma)
-/// 2. Disproof scenarios (non-regular languages that violate pumping lemma)
-/// 3. Regularity testing (determining if a language is regular)
-/// 4. Pumping length calculation
-/// 5. String decomposition and pumping
 void main() {
   group('Pumping Lemma Validation Tests', () {
     late FSA regularDFA;

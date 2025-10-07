@@ -1,3 +1,16 @@
+// ============================================================================
+// JFlutter - Suite de Testes
+// ----------------------------------------------------------------------------
+// Arquivo: test/features/canvas/graphview/graphview_tm_mapper_test.dart
+// Objetivo: Validar mapeamento de máquinas de Turing para estruturas GraphView
+// utilizadas no canvas.
+// Cenários cobertos:
+// - Conversão de estados, transições e direções de fita em modelos visuais.
+// - Suporte a múltiplas fitas e símbolos de leitura/escrita.
+// - Ajuste de nós e controle de curvas em representações gráficas.
+// Autoria: Equipe de Qualidade JFlutter.
+// ============================================================================
+
 import 'dart:math' as math;
 
 import 'package:test/test.dart';

@@ -1,3 +1,17 @@
+// ============================================================================
+// JFlutter - Suite de Testes
+// ----------------------------------------------------------------------------
+// Arquivo: test/unit/nfa_to_dfa_validation_test.dart
+// Objetivo: Confirmar que a conversão de AFN para AFD mantém a linguagem e
+// reproduz os resultados da implementação de referência.
+// Cenários cobertos:
+// - Casos simples e complexos de conversão com múltiplos estados.
+// - Tratamento de transições λ, inclusive a partir do estado inicial.
+// - Verificação de equivalência entre o AFN original e o AFD convertido.
+// Autoria: Equipe de Qualidade JFlutter — baseado em
+// References/automata-main/tests/test_dfa.py.
+// ============================================================================
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/state.dart';
@@ -7,18 +21,6 @@ import 'package:jflutter/core/algorithms/automaton_simulator.dart';
 import 'package:jflutter/core/result.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'dart:math' as math;
-
-/// NFA to DFA Conversion Validation Tests against References/automata-main
-///
-/// This test suite validates NFA to DFA conversion implementation against
-/// reference implementations to ensure behavioral equivalence.
-///
-/// Test cases cover:
-/// 1. Simple NFA to DFA conversion
-/// 2. Complex NFA to DFA conversion
-/// 3. NFA with lambda transitions to DFA
-/// 4. NFA with lambda transitions from initial state
-/// 5. Equivalence testing between NFA and converted DFA
 void main() {
   group('NFA to DFA Conversion Validation Tests', () {
     late FSA simpleNFA;

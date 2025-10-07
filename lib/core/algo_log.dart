@@ -1,3 +1,15 @@
+//
+//  algo_log.dart
+//  JFlutter
+//
+//  Mantém um registro centralizado das mensagens produzidas durante a execução
+//  de algoritmos, expondo coleções reativas para linhas de log e destaques de
+//  estados. Permite adicionar lotes de eventos, limpar o histórico e controlar
+//  os identificadores destacados, servindo como fonte única para widgets que
+//  acompanham o passo a passo das simulações.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/foundation.dart';
 
 /// Centralized logging for algorithm execution steps

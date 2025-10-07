@@ -1,3 +1,16 @@
+//
+//  diagnostics_service.dart
+//  JFlutter
+//
+//  Reúne verificações inteligentes para autômatos finitos, analisando estados,
+//  transições e componentes desconectados para produzir mensagens de erro,
+//  aviso e informação contextualizadas. Fornece diagnósticos para falhas de
+//  simulação, sugerindo correções práticas e identificando símbolos inválidos ou
+//  comportamentos não determinísticos. Também normaliza coleções para facilitar
+//  comparações consistentes entre estruturas equivalentes.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import '../models/fsa.dart';
 import '../models/fsa_transition.dart';
 import '../models/state.dart' as automaton_state;

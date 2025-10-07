@@ -1,3 +1,16 @@
+//
+//  diagnostic_service.dart
+//  JFlutter
+//
+//  Oferece uma análise aprofundada de autômatos finitos, classificando problemas
+//  estruturais, semânticos, de desempenho e usabilidade em listas de issues,
+//  avisos e sugestões acionáveis. Implementa rotinas auxiliares para detectar
+//  estados inacessíveis, transições inválidas, comportamentos não
+//  determinísticos e gargalos potenciais, atribuindo severidade consolidada às
+//  descobertas para orientar correções prioritárias.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import '../models/fsa.dart';
 import '../models/state.dart' as automaton_state;
 import '../models/fsa_transition.dart';

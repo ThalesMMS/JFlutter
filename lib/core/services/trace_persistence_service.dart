@@ -1,3 +1,16 @@
+//
+//  trace_persistence_service.dart
+//  JFlutter
+//
+//  Administra o salvamento, carregamento e exportação de rastros de simulação,
+//  combinando SharedPreferences e arquivos locais para preservar histórico entre
+//  sessões. Controla limites de armazenamento, gera identificadores exclusivos
+//  para cada execução e oferece utilitários para buscar, excluir e limpar
+//  registros. Define ainda modelos auxiliares e exceções que padronizam erros de
+//  persistência expostos à interface.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:convert';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';

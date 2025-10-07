@@ -1,15 +1,15 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/widget/presentation/graphview_canvas_toolbar_test.dart
-// Objetivo: Verificar o toolbar do canvas GraphView garantindo que ações de
-// zoom, ajuste e undo/redo disparem o controlador.
-// Cenários cobertos:
-// - Execução de zoom in/out, fit e reset view.
-// - Ações de desfazer/refazer invocando o controlador especializado.
-// - Exposição de ferramentas adicionais (adicionar estado/transição).
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
+//
+//  graphview_canvas_toolbar_test.dart
+//  JFlutter
+//
+//  Conjunto de testes de widget que exercita o GraphViewCanvasToolbar,
+//  validando exibição de mensagens de status e disparo dos callbacks de zoom,
+//  enquadramento, reset e histórico no controlador falso durante interações.
+//  Os cenários confirmam que botões opcionais e ferramentas adicionais aparecem
+//  apenas quando fornecidos, mantendo o contrato da interface responsiva.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

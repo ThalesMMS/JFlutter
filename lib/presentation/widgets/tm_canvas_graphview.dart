@@ -1,16 +1,15 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/widgets/tm_canvas_graphview.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Renderiza o canvas de Máquinas de Turing utilizando o arcabouço
-///            unificado de automatos, delegando gestos, destaques e edições de
-///            transições para `AutomatonGraphViewCanvas`.
-/// Contexto: Integra o controlador GraphView específico de TM com provedores
-///           Riverpod e editores de transições em fita, oferecendo experiência
-///           consistente com os demais editores de autômatos.
-/// Observações: Centraliza sincronização e listeners, expondo customização de
-///              ferramentas e formulários inline para operações de fita.
-/// ---------------------------------------------------------------------------
+//
+//  tm_canvas_graphview.dart
+//  JFlutter
+//
+//  Widget que encapsula o canvas de Máquinas de Turing sobre a infraestrutura
+//  compartilhada de automatos, delegando gestos, destaques e edições de
+//  transições ao AutomatonGraphViewCanvas. A classe conecta o controlador
+//  específico de TM aos provedores Riverpod, expõe ganchos para personalizar
+//  ferramentas e habilita formulários inline para operações de fita.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

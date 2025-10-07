@@ -1,11 +1,16 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/widgets/pumping_lemma_help.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Fornece painel de apoio teórico ao jogo do Lema do Bombeamento com abas de teoria, passos e exemplos. Ajuda estudantes a revisar conceitos-chave enquanto experimentam o minigame.
-/// Contexto: Utiliza estrutura de abas controlada localmente para alternar conteúdos estáticos e orientativos. Pode ser renderizado ao lado do jogo principal oferecendo referência rápida em uma interface coesa.
-/// Observações: Mantém estado interno simples apenas para alternância de abas, evitando dependências externas. O conteúdo pode ser expandido com novas seções mantendo a mesma organização visual e pedagógica.
-/// ---------------------------------------------------------------------------
+//
+//  pumping_lemma_help.dart
+//  JFlutter
+//
+//  Constrói o painel de apoio teórico exibido ao lado do jogo do Lema do
+//  Bombeamento, reunindo conteúdos de teoria, passos guiados e exemplos em uma
+//  navegação por abas controlada localmente.
+//  Fornece referências pedagógicas em português e inglês com estilo Material,
+//  permitindo que estudantes alternem rapidamente entre explicações sem depender
+//  de estado global ou serviços adicionais.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -24,10 +29,12 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
   Widget build(BuildContext context) {
     return Card(
       child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildHeader(context),
           _buildTabBar(context),
-          Flexible(child: _buildTabContent(context)),
+          _buildTabContent(context),
         ],
       ),
     );

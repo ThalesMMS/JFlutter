@@ -1,11 +1,12 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/widgets/transition_editors/transition_label_editor.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Componente reutilizável para editar rótulos de transições com suporte a teclado, acessibilidade e otimizações para toque. Encapsula lógica de submissão, cancelamento e feedback sem exigir dependências externas.
-/// Contexto: Utilizado por diferentes editores de autômatos para permitir ajustes rápidos em transições diretamente no canvas. Integra atalhos de teclado padrão e semântica configurável para melhorar a experiência do usuário.
-/// Observações: Ajusta layout para contextos desktop e mobile oferecendo botões dimensionados conforme necessidade. Pode ser estendido com validações adicionais ou máscaras mantendo a mesma estrutura de formulário.
-/// ---------------------------------------------------------------------------
+//
+//  transition_label_editor.dart
+//  JFlutter
+//
+//  Cria formulário acessível para ajustar rótulos de transições com suporte a teclado, botões táteis e atalhos padrão. Encapsula lógica de submissão, cancelamento e semântica de acessibilidade para ser reutilizado em diversos fluxos de edição.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

@@ -1,3 +1,12 @@
+//
+//  simulation_step.dart
+//  JFlutter
+//
+//  Registra cada passo de simulação com estado atual, entradas restantes e artefatos específicos de PDA ou TM. Oferece cópia, serialização e campos auxiliares que documentam consumo de símbolos e aceitação para rastreamento detalhado.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
+
 /// Single step in an automaton simulation
 class SimulationStep {
   /// Current state in this step

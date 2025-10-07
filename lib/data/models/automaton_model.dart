@@ -1,16 +1,14 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/data/models/automaton_model.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Implementa o modelo de dados de autômatos utilizado para
-///             persistência, incluindo conversões entre entidades e estruturas
-///             serializáveis.
-/// Contexto: Atende a camada de dados facilitando o mapeamento bidirecional
-///           entre o domínio e o armazenamento local, garantindo consistência
-///           das coleções e metadados do autômato.
-/// Observações: Construtores aplicam coleções imutáveis e fábricas dedicadas,
-///               reduzindo risco de mutações acidentais em estados compartilhados.
-/// ---------------------------------------------------------------------------
+//
+//  automaton_model.dart
+//  JFlutter
+//
+//  Modelo de dados responsável por persistir autômatos com coleções imutáveis
+//  e mapeamentos completos de estados, transições, alfabetos e metadados.
+//  Fornece fábricas bidirecionais para converter entre entidades de domínio,
+//  estruturas serializáveis e representações JSON utilizadas pelo armazenamento.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import '../../core/entities/automaton_entity.dart';
 
 /// Data model for automaton persistence

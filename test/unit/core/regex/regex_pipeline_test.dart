@@ -1,15 +1,14 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/unit/core/regex/regex_pipeline_test.dart
-// Objetivo: Validar o pipeline Regex→AST→AFN (Thompson) assegurando geração e
-// simulação coerentes com operações do automato.
-// Cenários cobertos:
-// - Construção de AFNs para literais, concatenação, união e estrela de Kleene.
-// - Agrupamentos, operadores opcionais e precedência correta na árvore sintática.
-// - Rejeição de expressões inválidas e propagação de erros do parser.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
+//
+//  regex_pipeline_test.dart
+//  JFlutter
+//
+//  Testes que validam o pipeline de expressões regulares até a construção de
+//  autômatos finitos não determinísticos, avaliando literais, concatenação,
+//  união, estrela de Kleene e operadores opcionais, além de assegurar o
+//  tratamento adequado de entradas inválidas pelo parser.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/algorithms/algorithm_operations.dart';

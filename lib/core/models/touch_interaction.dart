@@ -1,3 +1,14 @@
+//
+//  touch_interaction.dart
+//  JFlutter
+//
+//  Representa interações táteis capturadas na interface móvel, armazenando
+//  tipo de gesto, posição, seleções e carimbo temporal para reagir a ações do
+//  usuário no canvas. Inclui utilidades de serialização, fábricas para gestos
+//  comuns e métricas que orientam feedback visual e lógica de seleção.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:vector_math/vector_math_64.dart';
 
 /// Touch interaction model for mobile UI

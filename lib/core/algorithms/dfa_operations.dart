@@ -1,3 +1,15 @@
+//
+//  dfa_operations.dart
+//  JFlutter
+//
+//  Consolida operações de alto nível sobre autômatos determinísticos, cobrindo
+//  complementação, construções de produto para união/interseção/diferença e
+//  fechamentos por prefixos e sufixos. Inclui validações detalhadas, normaliza
+//  alfabetos via completude e delega determinização quando necessário para
+//  preservar corretude formal dos resultados retornados.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:collection';
 
 import 'package:vector_math/vector_math_64.dart';

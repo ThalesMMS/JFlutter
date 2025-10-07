@@ -1,15 +1,15 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/widget/presentation/graphview_label_field_editor_test.dart
-// Objetivo: Validar interações do editor inline de rótulos do GraphView,
-// assegurando submissão e cancelamento corretos.
-// Cenários cobertos:
-// - Envio do novo valor ao pressionar Enter.
-// - Cancelamento via tecla Escape mantendo o valor original.
-// - Invocação de callbacks de confirmação e cancelamento.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
+//
+//  graphview_label_field_editor_test.dart
+//  JFlutter
+//
+//  Testes de widget que avaliam o editor inline de rótulos do GraphView,
+//  garantindo que submissões por teclado e cancelamentos preservem os valores
+//  esperados. As provas verificam interação com mudança de foco, teclas Enter e
+//  Escape, além de assegurar que callbacks fornecidos sejam acionados conforme o
+//  contrato do componente.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

@@ -1,3 +1,15 @@
+//
+//  regex_pipeline.dart
+//  JFlutter
+//
+//  Pipeline que interpreta expressões regulares com PetitParser, gera uma
+//  árvore sintática intermediária e a converte em autômatos finitos via
+//  construção de Thompson. Centraliza validações, mensagens de erro e
+//  mapeamento de operadores, disponibilizando resultados ricos para as camadas
+//  superiores.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:math' as math;
 
 import 'package:petitparser/petitparser.dart' as pp;

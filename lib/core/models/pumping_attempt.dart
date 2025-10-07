@@ -1,3 +1,12 @@
+//
+//  pumping_attempt.dart
+//  JFlutter
+//
+//  Representa uma tentativa no jogo do Lema do Bombeamento, controlando decomposição x,y,z, feedback e datação. Expõe fábricas para tentativas corretas ou incorretas, validações e utilitários para reconstruir cadeias bombeadas durante a experiência interativa.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
+
 /// Represents a pumping attempt in the pumping lemma game
 class PumpingAttempt {
   final String? x;

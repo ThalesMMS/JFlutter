@@ -1,3 +1,14 @@
+//
+//  pumping_lemma_game.dart
+//  JFlutter
+//
+//  Estrutura de domínio que modela o minigame do lema do bombeamento,
+//  relacionando autômatos finitos, tentativas do usuário, pontuação e estados
+//  de progresso. Fornece fábricas para iniciar desafios, métodos para registrar
+//  tentativas e utilidades que calculam métricas, status e igualdade profunda.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'fsa.dart';
 import 'pumping_attempt.dart';
 import 'dart:math' as math;

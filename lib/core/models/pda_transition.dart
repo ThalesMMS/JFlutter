@@ -1,3 +1,14 @@
+//
+//  pda_transition.dart
+//  JFlutter
+//
+//  Representa transições de PDAs, controlando símbolos de leitura, operações de
+//  pilha e marcadores lambda para suportar comportamentos não determinísticos.
+//  Disponibiliza clonagem, serialização completa e validações rigorosas sobre
+//  consistência de símbolos e estados ligados à transição.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:vector_math/vector_math_64.dart';
 import 'state.dart';
 import 'transition.dart';

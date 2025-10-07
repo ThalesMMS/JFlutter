@@ -1,3 +1,16 @@
+//
+//  grammar_parser_simple.dart
+//  JFlutter
+//
+//  Fornece um analisador recursivo descentralizado para gramáticas livres de
+//  contexto, cobrindo validação de entrada, derivações vazias e controle de
+//  tempo durante a busca.
+//  A rotina percorre produções, deriva símbolos recursivamente e encapsula o
+//  resultado em estruturas de ParseResult compatíveis com o restante da
+//  plataforma.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import '../models/grammar.dart';
 import '../models/production.dart';
 import '../models/parse_table.dart';

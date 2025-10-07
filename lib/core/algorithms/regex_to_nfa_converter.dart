@@ -1,3 +1,15 @@
+//
+//  regex_to_nfa_converter.dart
+//  JFlutter
+//
+//  Converte expressões regulares em autômatos finitos não determinísticos
+//  aplicando construções de Thompson, validações e geração de identificadores
+//  únicos. Expõe utilitários para analisar a expressão, criar estados e
+//  transições e relatar erros detalhados quando a entrada é inválida.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
+
 import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';
 import '../models/fsa.dart';

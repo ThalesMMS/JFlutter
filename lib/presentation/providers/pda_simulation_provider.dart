@@ -1,11 +1,14 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/providers/pda_simulation_provider.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Controla execuções de autômatos de pilha expondo estado e resultados para a interface. Permite alternar entre modos de aceitação e executar simulações passo a passo.
-/// Contexto: Reutiliza a fachada de simulação do domínio para encapsular regras de aceitação por estado final ou pilha vazia. Atua como camada intermediária entre os widgets e os modelos de PDA mantendo o último insumo processado.
-/// Observações: Propaga falhas como resultados estruturados garantindo feedback consistente em painéis. Pode ser combinado com outros provedores de edição para atualizar o autômato monitorado em tempo real.
-/// ---------------------------------------------------------------------------
+//
+//  pda_simulation_provider.dart
+//  JFlutter
+//
+//  Orquestra simulações de autômatos de pilha na interface, permitindo alternar
+//  entre modos de aceitação, executar passos incrementais e publicar resultados
+//  estruturados obtidos da fachada de simulação do domínio para feedback
+//  consistente entre widgets e painéis.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/pda.dart';
 import '../../core/algorithms/pda/pda_simulator_facade.dart' as pda;

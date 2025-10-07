@@ -1,3 +1,16 @@
+//
+//  fa_algorithms.dart
+//  JFlutter
+//
+//  Oferece uma fachada simplificada para algoritmos relacionados a autômatos
+//  finitos determinísticos e não determinísticos, expondo conversão NFA→DFA,
+//  minimização com rastreamento de passos, operações de linguagem e verificações
+//  de propriedades como finitude e equivalência. Centraliza dependências de
+//  módulos especializados para que camadas superiores acessem rotinas robustas
+//  com chamadas diretas e documentadas.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import '../../models/fsa.dart';
 import '../../result.dart';
 import '../dfa_minimizer.dart';

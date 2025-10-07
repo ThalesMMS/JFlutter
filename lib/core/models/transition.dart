@@ -1,3 +1,14 @@
+//
+//  transition.dart
+//  JFlutter
+//
+//  Fornece a abstração base para transições de autômatos, centralizando campos
+//  comuns, operações de clonagem e utilidades de serialização dinâmica.
+//  Também agrega validações geométricas e auxiliares de cálculo utilizados por
+//  renderizadores e algoritmos que manipulam arcos no canvas.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';
 import 'state.dart';

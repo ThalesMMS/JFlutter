@@ -1,3 +1,14 @@
+//
+//  parse_action.dart
+//  JFlutter
+//
+//  Define ações de análise sintática empregadas por algoritmos LR e tabela de
+//  parsing, abrangendo deslocamentos, reduções, aceitação e erros.
+//  Fornece fábricas utilitárias, comparações e representação textual para
+//  facilitar depuração e geração de relatórios durante execuções.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'production.dart';
 
 /// Represents a parsing action in grammar parsing algorithms

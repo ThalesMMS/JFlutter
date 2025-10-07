@@ -1,11 +1,14 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/providers/tm_editor_provider.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Garante a construção consistente das Máquinas de Turing manipuladas no canvas, acompanhando estados, transições e símbolos de fita. Traduz interações do usuário em modelos imutáveis consumidos por simuladores e exportadores.
-/// Contexto: Mantém caches mutáveis internos para aplicar transformações incrementais e gerar uma TM consolidada sempre que o editor sofre alterações. Fornece metadados úteis como direções de movimento e transições não determinísticas para destacar regras específicas.
-/// Observações: Oferece métodos abrangentes para adicionar, mover e renomear estados ou transições preservando integridade de ligações. Atualiza o estado Riverpod com coleções clonadas para evitar efeitos colaterais em widgets observadores.
-/// ---------------------------------------------------------------------------
+//
+//  tm_editor_provider.dart
+//  JFlutter
+//
+//  Gerencia o estado do editor de máquinas de Turing no canvas, convertendo
+//  interações do usuário em estruturas imutáveis que preservam estados,
+//  transições, símbolos de fita e direções de movimento enquanto fornece
+//  metadados auxiliares para simuladores, exportadores e destaques visuais.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:math' as math;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';

@@ -1,3 +1,15 @@
+//
+//  cfg_toolkit.dart
+//  JFlutter
+//
+//  Agrupa utilitários para manipulação de gramáticas livres de contexto,
+//  oferecendo redução estrutural, conversão para Forma Normal de Chomsky e
+//  verificações rápidas dessa normalização. Reaproveita operações privadas para
+//  eliminar produções lambda e unitárias, além de remover símbolos inúteis,
+//  produzindo gramáticas equivalentes mais enxutas para análises subsequentes.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import '../../models/grammar.dart';
 import '../../models/production.dart';
 import '../../result.dart';

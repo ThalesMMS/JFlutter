@@ -1,3 +1,9 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/features/canvas/graphview/graphview_all_nodes_builder.dart
+/// Descrição: Estende o GraphView padrão para renderizar todos os nós do
+///            canvas, respeitando animações e ajustes de zoom personalizados.
+/// ---------------------------------------------------------------------------
 import 'package:flutter/widgets.dart';
 import 'package:graphview/GraphView.dart';
 

@@ -1,3 +1,9 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/features/canvas/graphview/base_graphview_canvas_controller.dart
+/// Descrição: Implementa o controlador base do GraphView, lidando com histórico
+///            de snapshots, animações de camera e integrações de destaque.
+/// ---------------------------------------------------------------------------
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:graphview/GraphView.dart';

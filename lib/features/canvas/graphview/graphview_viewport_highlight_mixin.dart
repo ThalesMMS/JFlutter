@@ -1,3 +1,9 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/features/canvas/graphview/graphview_viewport_highlight_mixin.dart
+/// Descrição: Reúne utilidades de viewport e destaque para controladores
+///            GraphView, incluindo enquadramento automático e animações de foco.
+/// ---------------------------------------------------------------------------
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';

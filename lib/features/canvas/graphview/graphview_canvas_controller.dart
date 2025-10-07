@@ -1,3 +1,9 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/features/canvas/graphview/graphview_canvas_controller.dart
+/// Descrição: Gerencia o canvas GraphView para autômatos finitos, sincronizando
+///            o grafo renderizado com o provedor e eventos de interação.
+/// ---------------------------------------------------------------------------
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';

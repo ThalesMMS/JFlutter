@@ -1,3 +1,9 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/features/canvas/graphview/graphview_highlight_channel.dart
+/// Descrição: Encaminha realces do serviço de simulação para controladores
+///            GraphView, mantendo o canvas alinhado com o estado da execução.
+/// ---------------------------------------------------------------------------
 import '../../../core/models/simulation_highlight.dart';
 import '../../../core/services/simulation_highlight_service.dart';
 import 'graphview_highlight_controller.dart';

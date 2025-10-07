@@ -197,15 +197,20 @@ class _HelpPageState extends ConsumerState<HelpPage> {
               Text('1. Use the bottom navigation bar to choose a module'),
               Text('2. Create or load an automaton/grammar'),
               Text(
-                  '3. Use the editor to modify your structure (double-tap a state for quick actions)'),
+                '3. Use the editor to modify your structure (double-tap a state for quick actions)',
+              ),
               Text('4. Run simulations to test your work'),
               Text('5. Use algorithms to transform structures'),
               SizedBox(height: 16),
               Text('Tips:', style: TextStyle(fontWeight: FontWeight.bold)),
-              Text('• Use the bottom navigation to switch between modules quickly'),
+              Text(
+                '• Use the bottom navigation to switch between modules quickly',
+              ),
               Text('• Double-tap a state to open its quick action menu'),
               Text('• Pinch to zoom on canvas'),
-              Text('• Tap the Quick Start icon in the app bar whenever you need a refresher'),
+              Text(
+                '• Tap the Quick Start icon in the app bar whenever you need a refresher',
+              ),
             ],
           ),
         ),
@@ -420,6 +425,7 @@ class _FSAHelpContent extends StatelessWidget {
             'Conversions & Layout',
             'Buttons for FA → Regex, FSA → Grammar, Prefix/Suffix closure, and Auto '
                 'Layout are available in the same panel.',
+          ),
         ],
       ),
     );

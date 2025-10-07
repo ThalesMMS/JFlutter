@@ -1,17 +1,14 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/data/storage/settings_storage.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Define o contrato de armazenamento de preferências e a
-///             implementação baseada em SharedPreferences para persistir
-///             configurações do usuário.
-/// Contexto: Fornece abstração reutilizável para o repositório de configurações
-///           isolando detalhes da API de chave-valor e permitindo injeção em
-///           testes e camadas superiores.
-/// Observações: Suporta provedores customizados de SharedPreferences,
-///               facilitando mocks em testes e configurações específicas de
-///               plataforma.
-/// ---------------------------------------------------------------------------
+//
+//  settings_storage.dart
+//  JFlutter
+//
+//  Define a abstração SettingsStorage e suas implementações baseada em
+//  SharedPreferences e em memória, permitindo que o repositório de
+//  configurações leia e persista preferências do usuário sem acoplar detalhes
+//  de plataforma, além de facilitar testes com provedores customizados.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Key-value storage interface used by the settings repository.

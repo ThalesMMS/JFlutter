@@ -2,10 +2,11 @@
 //  settings_storage.dart
 //  JFlutter
 //
-//  Define a abstração SettingsStorage e suas implementações baseada em
-//  SharedPreferences e em memória, permitindo que o repositório de
-//  configurações leia e persista preferências do usuário sem acoplar detalhes
-//  de plataforma, além de facilitar testes com provedores customizados.
+//  Declara a interface de armazenamento de preferências da aplicação e
+//  implementações concretas com SharedPreferences e mapas em memória para
+//  persistir símbolos, temas e demais ajustes controlados pelo usuário.
+//  A abstração permite injeção de dependências, facilita testes unitários e
+//  esconde detalhes específicos da plataforma ao manipular chave-valor.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

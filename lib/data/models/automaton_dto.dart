@@ -2,10 +2,11 @@
 //  automaton_dto.dart
 //  JFlutter
 //
-//  Reúne os DTOs responsáveis por serializar autômatos, estados e estruturas
-//  compatíveis com o JFLAP, oferecendo conversões imutáveis para JSON e mapas
-//  aninhados que preservam transições, estados e metadados durante importações
-//  e exportações entre o aplicativo e formatos legados.
+//  Define DTOs de autômatos, estados e estruturas JFLAP que encapsulam
+//  alfabetos, transições e metadados necessários para transportar configurações
+//  completas entre camadas de dados e arquivos externos.
+//  As fábricas convertem de e para JSON ou XML do JFLAP preservando
+//  imutabilidade e compatibilidade com importações e exportações do aplicativo.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

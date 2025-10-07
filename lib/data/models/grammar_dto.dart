@@ -2,10 +2,11 @@
 //  grammar_dto.dart
 //  JFlutter
 //
-//  Define os objetos de transferência de dados que representam gramáticas e
-//  suas variantes em formato JFLAP, convertendo símbolos, produções e metadados
-//  entre JSON e estruturas imutáveis para garantir compatibilidade com a camada
-//  de domínio, importações externas e ferramentas legadas.
+//  Conjunto de DTOs que representam gramáticas e produções no formato JFLAP,
+//  oferecendo fábricas e serialização para importar e exportar símbolos,
+//  regras e estruturas associadas às gramáticas dentro do aplicativo.
+//  As classes também garantem coleções imutáveis para preservar consistência
+//  dos dados ao trafegar entre armazenamento local e formatos externos.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

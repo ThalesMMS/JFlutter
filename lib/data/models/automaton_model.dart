@@ -2,10 +2,10 @@
 //  automaton_model.dart
 //  JFlutter
 //
-//  Estrutura o modelo de dados de autômatos persistidos, oferecendo
-//  construtores imutáveis e fábricas para converter entre entidades de domínio,
-//  JSON e coleções especializadas, mantendo estados, transições e metadados
-//  coerentes durante importação, edição e salvamento.
+//  Modelo de dados responsável por persistir autômatos com coleções imutáveis
+//  e mapeamentos completos de estados, transições, alfabetos e metadados.
+//  Fornece fábricas bidirecionais para converter entre entidades de domínio,
+//  estruturas serializáveis e representações JSON utilizadas pelo armazenamento.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

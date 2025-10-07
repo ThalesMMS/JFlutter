@@ -1,3 +1,14 @@
+//
+//  state.dart
+//  JFlutter
+//
+//  Define o modelo imutável de estados de autômatos com coordenadas, marcadores
+//  de inicialização, aceitação e propriedades adicionais para cada tipo de
+//  máquina. Inclui rotinas de serialização, validação e utilitários voltados a
+//  interações no canvas móvel, garantindo consistência nas simulações.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:vector_math/vector_math_64.dart';
 
 /// Represents a state in an automaton

@@ -2,10 +2,11 @@
 //  turing_machine_dto.dart
 //  JFlutter
 //
-//  Este arquivo define as estruturas imutáveis TuringMachineDto e
-//  TuringTransitionDto, responsáveis por traduzir máquinas de Turing entre o
-//  domínio e representações JSON, preservando alfabetos, estados e transições
-//  aninhadas para importação e persistência confiáveis.
+//  Estruturas de transporte que descrevem máquinas de Turing completas,
+//  incluindo alfabetos, estados, transições aninhadas e símbolos especiais para
+//  serialização confiável em JSON ou formatos derivados do JFLAP.
+//  Utiliza coleções imutáveis, igualdade profunda e fábricas de conversão para
+//  garantir consistência durante importações, exportações e persistência local.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

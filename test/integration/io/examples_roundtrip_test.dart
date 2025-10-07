@@ -2,10 +2,10 @@
 //  examples_roundtrip_test.dart
 //  JFlutter
 //
-//  Esta suíte de integração valida o fluxo completo de ida e volta dos exemplos
-//  embarcados, atravessando carregamento de assets, serialização, exportação e
-//  leitura de arquivos para garantir consistência entre entidades, metadados e
-//  representações gráficas em SVG.
+//  Testes de integração que percorrem os exemplos oficiais do projeto, passando
+//  pelos assets, serviços de serialização e exportação para validar round-trips
+//  completos de autômatos, gramáticas e máquinas de Turing, inclusive conferindo
+//  metadados publicados pela biblioteca Examples.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

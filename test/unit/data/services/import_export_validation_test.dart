@@ -1,16 +1,14 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/unit/data/services/import_export_validation_test.dart
-// Objetivo: Assegurar que o serviço de validação de importação/exportação
-// identifique inconsistências estruturais e rejeite autômatos inválidos antes
-// da serialização.
-// Cenários cobertos:
-// - Construção de autômato válido com estados e transições consistentes.
-// - Detecção de laços, símbolos ausentes e estados inválidos durante a validação.
-// - Consolidação de relatórios de erro para múltiplas violações.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
+//
+//  import_export_validation_test.dart
+//  JFlutter
+//
+//  Suite de testes que exercita o ImportExportValidationService, garantindo que
+//  autômatos válidos sejam aceitos, que inconsistências estruturais sejam
+//  identificadas antes da serialização e que relatórios de erro agreguem todas
+//  as violações detectadas em diferentes cenários.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 
 import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';

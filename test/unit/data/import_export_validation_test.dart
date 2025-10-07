@@ -1,15 +1,14 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/unit/data/import_export_validation_test.dart
-// Objetivo: Validar os fluxos de importação e exportação garantindo round-trip
-// consistente entre o modelo interno de AFD e os formatos JFLAP/JSON/SVG.
-// Cenários cobertos:
-// - Reconstrução fiel de autômatos após serialização JFLAP.
-// - Conversão JSON preservando estados, transições e alfabetos.
-// - Exportação SVG com feedback de sucesso e métricas de estrutura.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
+//
+//  import_export_validation_test.dart
+//  JFlutter
+//
+//  Conjunto de testes que valida os fluxos de importação e exportação do
+//  serviço dedicado, garantindo round-trip consistente entre o modelo interno
+//  de autômatos e os formatos JFLAP e JSON, além de verificar a geração de SVG
+//  e o tratamento adequado de cenários de erro.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vector_math/vector_math_64.dart';

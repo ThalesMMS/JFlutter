@@ -2,10 +2,9 @@
 //  simulation_highlight_service_test.dart
 //  JFlutter
 //
-//  Conjunto de testes dedicado ao serviço de destaques de simulação, validando
-//  a coordenação com o GraphViewHighlightController para emitir, atualizar e
-//  limpar destaques durante execuções passo a passo e reinicializações de
-//  simulações.
+//  Testes que exercitam o SimulationHighlightService, certificando a emissão de
+//  destaques durante a simulação passo a passo e a limpeza adequada por meio do
+//  canal GraphView ao finalizar ou reiniciar execuções no canvas.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

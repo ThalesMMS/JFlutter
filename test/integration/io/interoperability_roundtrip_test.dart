@@ -2,10 +2,10 @@
 //  interoperability_roundtrip_test.dart
 //  JFlutter
 //
-//  Os testes aqui descritos asseguram a interoperabilidade entre arquivos JFLAP
-//  (`.jff`), representações JSON e exportações SVG, cobrindo conversões de ida e
-//  volta para autômatos, gramáticas e máquinas de Turing sem perda de
-//  informações ou metadados relevantes.
+//  Testes de integração que verificam a interoperabilidade entre os formatos
+//  JFLAP (.jff), JSON e SVG, assegurando round-trip completo dos modelos de
+//  autômatos, gramáticas e máquinas de Turing, com foco em integridade de dados
+//  e preservação visual na exportação.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

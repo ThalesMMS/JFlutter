@@ -1,11 +1,16 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/widgets/canvas_actions_sheet.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Exibe folha de ações contextuais para o canvas permitindo criar estados e ajustar enquadramento rapidamente. Aplica feedback háptico e navegação consistente ao interagir com as opções.
-/// Contexto: Foi projetado para ser chamado por gestos no canvas, oferecendo atalhos para adicionar nós, ajustar zoom ao conteúdo e resetar a visão. Utiliza ModalBottomSheet para manter linguagem visual do Material Design.
-/// Observações: Ajusta habilitação de ações conforme a área selecionada evitando duplicidades no grafo. Pode ser estendido com novos itens preservando a estrutura existente de callbacks e feedbacks.
-/// ---------------------------------------------------------------------------
+//
+//  canvas_actions_sheet.dart
+//  JFlutter
+//
+//  Exibe a folha de ações contextuais do canvas de autômatos, oferecendo atalhos
+//  para adicionar estados, ajustar o enquadramento ao conteúdo e redefinir a
+//  visualização com feedback háptico consistente.
+//  Projetado para ser acionado por gestos de contexto, utiliza
+//  showModalBottomSheet para preservar a linguagem Material e habilita opções de
+//  forma dinâmica conforme a posição escolhida no grafo.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

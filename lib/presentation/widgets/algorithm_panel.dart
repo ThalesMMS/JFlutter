@@ -1,11 +1,16 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/widgets/algorithm_panel.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Consolida comandos de algoritmos para autômatos finitos como conversões, operações de linguagem e equivalência. Integra entradas de expressão regular, seleção de automatos externos e feedback passo a passo.
-/// Contexto: Utiliza serviços de arquivos para importar modelos adicionais e chama callbacks fornecidos pelos provedores para executar os algoritmos. Apresenta controles agrupados e indicadores de progresso para acompanhar execuções longas.
-/// Observações: Gerencia estado interno de execução incluindo mensagens e etapas registradas pelo AlgorithmOperations. Estrutura modular facilita a ativação seletiva de funcionalidades conforme cada página precisa.
-/// ---------------------------------------------------------------------------
+//
+//  algorithm_panel.dart
+//  JFlutter
+//
+//  Consolida os comandos de algoritmos aplicáveis aos autômatos finitos,
+//  reunindo conversões NFA→DFA, minimização, complementação, operações de
+//  linguagem e transformações com expressões regulares em um painel único.
+//  Controla progresso, feedback textual e carregamento de autômatos externos via
+//  FilePicker, executando callbacks fornecidos pela camada de apresentação para
+//  orquestrar AlgorithmOperations.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import '../../core/models/fsa.dart';

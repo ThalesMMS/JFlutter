@@ -1,11 +1,16 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/widgets/tm_simulation_panel.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Componente de interface que executa simulações de Máquinas de Turing a partir do autômato ativo. Exibe campos de entrada, botões de controle e resultados para orientar o usuário durante a análise.
-/// Contexto: Interage com o TMEditorProvider para obter configurações atuais e utiliza serviços de destaque para sincronizar o canvas. Organiza visualizações como histórico de passos e mensagens de aceitação dentro de um painel responsivo.
-/// Observações: Gerencia ciclo de vida de controladores locais e limpa realces quando desmontado para evitar estados residuais. Pode ser embutido em páginas maiores compartilhando a instância de SimulationHighlightService entre widgets.
-/// ---------------------------------------------------------------------------
+//
+//  tm_simulation_panel.dart
+//  JFlutter
+//
+//  Realiza a simulação de Máquinas de Turing para o autômato ativo, oferecendo
+//  campos de entrada, controles de execução e apresentação de resultados com
+//  histórico de passos e mensagens de aceitação.
+//  Dialoga com o TMEditorProvider e com o SimulationHighlightService para manter
+//  sincronização com o canvas, limpando controladores e destaques conforme o
+//  ciclo de vida do widget.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

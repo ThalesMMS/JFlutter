@@ -1,3 +1,12 @@
+//
+//  production.dart
+//  JFlutter
+//
+//  Modela regras de produção de gramáticas armazenando lados esquerdo e direito, flags de lambda e ordem de exibição. Inclui utilitários de cópia, serialização e comparação que suportam editores e algoritmos que manipulam gramáticas no aplicativo.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
+
 /// Production rule for grammars
 class Production {
   /// Unique identifier for the production within the grammar

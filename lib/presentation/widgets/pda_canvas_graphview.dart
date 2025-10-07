@@ -1,17 +1,12 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/widgets/pda_canvas_graphview.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Renderiza o canvas de autômatos de pilha utilizando a infraestrutura
-///            unificada de `AutomatonGraphViewCanvas`, habilitando edição inline
-///            de transições e ferramentas compartilhadas.
-/// Contexto: Integra o controlador específico de PDA com provedores Riverpod e
-///           serviços de destaque reutilizando gestos, overlays e toolbars do
-///           canvas genérico de autômatos.
-/// Observações: Quando controla o ciclo de vida dos recursos, garante limpeza de
-///              canais de destaque e sincronização inicial. Emite callbacks ao
-///              hospedar sempre que o PDA é modificado.
-/// ---------------------------------------------------------------------------
+//
+//  pda_canvas_graphview.dart
+//  JFlutter
+//
+//  Implementa o canvas especializado de PDA sobre a infraestrutura GraphView compartilhada, sincronizando provedores e destaques. Controla ciclo de vida do controlador, integra canal de highlight e emite callbacks sempre que o autômato é alterado.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

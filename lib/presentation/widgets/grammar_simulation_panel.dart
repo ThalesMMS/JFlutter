@@ -1,11 +1,12 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/widgets/grammar_simulation_panel.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Disponibiliza painel para testar cadeias em gramáticas utilizando diferentes algoritmos de parsing. Reúne seleção de estratégia, entrada de cadeia e visualização dos passos gerados.
-/// Contexto: Consome dados do GrammarProvider e algoritmos do domínio como CYK, LL e LR para validar derivabilidades. Estrutura controles e resultados em cartões responsivos alinhados ao restante da interface.
-/// Observações: Armazena estado local de execução, incluindo tempos e passos, permitindo análise detalhada após cada simulação. Pode ser ampliado com novos algoritmos mantendo o fluxo de interação existente.
-/// ---------------------------------------------------------------------------
+//
+//  grammar_simulation_panel.dart
+//  JFlutter
+//
+//  Constrói painel interativo para testar cadeias em gramáticas aplicando algoritmos como CYK, LL e LR. Gerencia seleção de estratégia, entradas do usuário, execução assíncrona e apresentação de resultados com métricas de tempo e passos.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

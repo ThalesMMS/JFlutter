@@ -1,11 +1,12 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/widgets/transition_editors/tm_transition_operations_editor.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Permite editar operações de transições de Máquina de Turing, incluindo símbolos de leitura/escrita e direção da cabeça. Apresenta formulário compacto ideal para popovers ou diálogos rápidos.
-/// Contexto: Alimenta provedores e canvas ao coletar dados atualizados de transições diretamente do usuário. Utiliza controles Material padrão e valida submissões com retorno estruturado para o chamador.
-/// Observações: Mantém estado local mínimo, simplificando extensões como validações customizadas ou rótulos internacionalizados. Pode ser integrado a fluxos de edição inline sem exigir reestruturações na interface principal.
-/// ---------------------------------------------------------------------------
+//
+//  tm_transition_operations_editor.dart
+//  JFlutter
+//
+//  Fornece formulário compacto para editar leituras, escritas e direção de transições de Máquina de Turing. Mantém estado mínimo dos campos, valida submissões e entrega o resultado por callback para integração com editores contextuais.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
+
 import 'package:flutter/material.dart';
 
 import '../../../core/models/tm_transition.dart';

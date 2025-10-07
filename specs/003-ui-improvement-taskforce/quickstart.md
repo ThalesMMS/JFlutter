@@ -25,7 +25,7 @@ Manual UI validation workflow for QA and developers to verify UI improvements ar
 
 ### Build and Run
 ```bash
-cd /Users/thales/Documents/GitHub/jflutter
+cd <jflutter-repo-root>
 
 # Run on iOS simulator
 flutter run -d ios

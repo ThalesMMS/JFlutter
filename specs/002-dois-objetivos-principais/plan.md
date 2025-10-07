@@ -1,8 +1,8 @@
 
 # Implementation Plan: Auditoria de algoritmos vs referências e validação de UI
 
-**Branch**: `002-dois-objetivos-principais` | **Date**: 2025-09-29 | **Spec**: `/Users/thales/Documents/GitHub/jflutter/specs/002-dois-objetivos-principais/spec.md`
-**Input**: Feature specification from `/specs/002-dois-objetivos-principais/spec.md`
+**Branch**: `002-dois-objetivos-principais` | **Date**: 2025-09-29 | **Spec**: [`specs/002-dois-objetivos-principais/spec.md`](./spec.md)
+**Input**: Feature specification from [`specs/002-dois-objetivos-principais/spec.md`](./spec.md)
 
 ## Execution Flow (/plan command scope)
 ```

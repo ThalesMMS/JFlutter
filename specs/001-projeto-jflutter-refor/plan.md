@@ -1,8 +1,8 @@
 
 # Implementation Plan: JFlutter Core Reinforcement Initiative
 
-**Branch**: `001-projeto-jflutter-refor` | **Date**: 2025-09-25 | **Spec**: [/Users/thales/Documents/GitHub/jflutter/specs/001-projeto-jflutter-refor/spec.md](/Users/thales/Documents/GitHub/jflutter/specs/001-projeto-jflutter-refor/spec.md)
-**Input**: Feature specification from `/specs/001-projeto-jflutter-refor/spec.md`
+**Branch**: `001-projeto-jflutter-refor` | **Date**: 2025-09-25 | **Spec**: [`specs/001-projeto-jflutter-refor/spec.md`](./spec.md)
+**Input**: Feature specification from [`specs/001-projeto-jflutter-refor/spec.md`](./spec.md)
 
 ## Execution Flow (/plan command scope)
 ```
@@ -102,7 +102,7 @@ lib/
 4. Documentar implicações de licença (Apache-2.0 + JFLAP 7.1) e restrições de distribuição de exemplos.
 5. **Entregar rapidamente** o documento `research.md` consolidando decisões para habilitar as fases seguintes.
 
-**Output**: `/Users/thales/Documents/GitHub/jflutter/specs/001-projeto-jflutter-refor/research.md`
+**Output**: [`specs/001-projeto-jflutter-refor/research.md`](./research.md)
 
 ## Phase 1: Design & Contracts
 *Prerequisites: research.md complete*
@@ -114,7 +114,7 @@ lib/
 5. Rodar `.specify/scripts/bash/update-agent-context.sh cursor` se novas dependências forem adicionadas.
 6. **Tratar a criação de `data-model.md`, `contracts/` e `quickstart.md` como tarefas prioritárias antes de iniciar implementação.**
 
-**Output**: `/Users/thales/Documents/GitHub/jflutter/specs/001-projeto-jflutter-refor/data-model.md`, `/Users/thales/Documents/GitHub/jflutter/specs/001-projeto-jflutter-refor/contracts/`, `/Users/thales/Documents/GitHub/jflutter/specs/001-projeto-jflutter-refor/quickstart.md`
+**Output**: [`specs/001-projeto-jflutter-refor/data-model.md`](./data-model.md), [`specs/001-projeto-jflutter-refor/contracts/`](./contracts/), [`specs/001-projeto-jflutter-refor/quickstart.md`](./quickstart.md)
 
 ## Phase 2: Task Planning Approach
 *This section describes what the /tasks command will do - DO NOT execute during /plan*

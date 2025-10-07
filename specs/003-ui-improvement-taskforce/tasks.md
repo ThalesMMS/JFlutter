@@ -1,6 +1,6 @@
 # Tasks: UI Improvement Taskforce
 
-**Input**: Design documents from `/Users/thales/Documents/GitHub/jflutter/specs/003-ui-improvement-taskforce/`
+**Input**: Design documents from [`specs/003-ui-improvement-taskforce/`](./)
 **Prerequisites**: plan.md (required), research.md, data-model.md, contracts/, quickstart.md
 
 ## Execution Flow (main)

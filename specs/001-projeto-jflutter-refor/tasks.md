@@ -61,8 +61,8 @@
 
 ## Phase 3.5: QA & Documentation
 - [X] T027 [P] Rodar `flutter analyze`, `dart format`, e toda suíte de testes garantindo determinismo — Obs.: antes de implementar, estudar as implementações em `References/`
-- [X] T028 [P] Documentar quickstart offline em `/Users/thales/Documents/GitHub/jflutter/specs/001-projeto-jflutter-refor/quickstart.md` e atualizar README com "Examples v1" e novo escopo
-- [X] T029 [P] Registrar resultados de regressão e desvios das referências em `/docs/reference-deviations.md`
+- [X] T028 [P] Documentar quickstart offline em [`specs/001-projeto-jflutter-refor/quickstart.md`](./quickstart.md) e atualizar README com "Examples v1" e novo escopo
+- [X] T029 [P] Registrar resultados de regressão e desvios das referências em [`docs/reference-deviations.md`](../../docs/reference-deviations.md)
 
 ## Dependencies
 - T001 → T002 → T003 (Setup antes dos testes)

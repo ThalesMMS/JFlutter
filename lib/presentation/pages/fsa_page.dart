@@ -417,9 +417,6 @@ class _FSAPageState extends ConsumerState<FSAPage> {
                 return MobileAutomatonControls(
                   enableToolSelection: true,
                   activeTool: _toolController.activeTool,
-                  onSelectTool: () => _toolController.setActiveTool(
-                    AutomatonCanvasTool.selection,
-                  ),
                   onAddState: _handleAddStatePressed,
                   onAddTransition: () =>
                       _toggleCanvasTool(AutomatonCanvasTool.transition),
@@ -458,9 +455,6 @@ class _FSAPageState extends ConsumerState<FSAPage> {
                 controller: _canvasController,
                 enableToolSelection: true,
                 activeTool: _toolController.activeTool,
-                onSelectTool: () => _toolController.setActiveTool(
-                  AutomatonCanvasTool.selection,
-                ),
                 onAddState: _handleAddStatePressed,
                 onAddTransition: () =>
                     _toggleCanvasTool(AutomatonCanvasTool.transition),

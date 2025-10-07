@@ -12,6 +12,7 @@ class MobileAutomatonControls extends StatelessWidget {
   const MobileAutomatonControls({
     super.key,
     this.enableToolSelection = false,
+    this.showSelectionTool = false,
     this.activeTool = AutomatonCanvasTool.selection,
     this.onSelectTool,
     required this.onAddState,
@@ -31,8 +32,8 @@ class MobileAutomatonControls extends StatelessWidget {
     this.onMetrics,
     this.isMetricsEnabled = true,
   }) : assert(
-         !enableToolSelection || onSelectTool != null,
-         'onSelectTool must be provided when tool selection is enabled.',
+         !(enableToolSelection && showSelectionTool) || onSelectTool != null,
+         'onSelectTool must be provided when the selection tool is visible.',
        ),
        assert(
          !enableToolSelection || onAddTransition != null,
@@ -40,6 +41,7 @@ class MobileAutomatonControls extends StatelessWidget {
        );
 
   final bool enableToolSelection;
+  final bool showSelectionTool;
   final AutomatonCanvasTool activeTool;
   final VoidCallback? onSelectTool;
   final VoidCallback onAddState;
@@ -93,7 +95,7 @@ class MobileAutomatonControls extends StatelessWidget {
           tooltip: 'Redo',
           onPressed: canRedo ? onRedo : null,
         ),
-      if (enableToolSelection)
+      if (enableToolSelection && showSelectionTool)
         _ControlAction(
           icon: Icons.pan_tool,
           label: 'Select',

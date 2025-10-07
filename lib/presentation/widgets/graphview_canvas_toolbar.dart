@@ -9,6 +9,7 @@ class GraphViewCanvasToolbar extends StatefulWidget {
     super.key,
     required this.controller,
     this.enableToolSelection = false,
+    this.showSelectionTool = false,
     this.activeTool = AutomatonCanvasTool.selection,
     this.onSelectTool,
     required this.onAddState,
@@ -17,8 +18,8 @@ class GraphViewCanvasToolbar extends StatefulWidget {
     this.statusMessage,
     this.layout = GraphViewCanvasToolbarLayout.desktop,
   }) : assert(
-         !enableToolSelection || onSelectTool != null,
-         'onSelectTool must be provided when tool selection is enabled.',
+         !(enableToolSelection && showSelectionTool) || onSelectTool != null,
+         'onSelectTool must be provided when the selection tool is visible.',
        ),
        assert(
          !enableToolSelection || onAddTransition != null,
@@ -27,6 +28,7 @@ class GraphViewCanvasToolbar extends StatefulWidget {
 
   final BaseGraphViewCanvasController<dynamic, dynamic> controller;
   final bool enableToolSelection;
+  final bool showSelectionTool;
   final AutomatonCanvasTool activeTool;
   final VoidCallback? onSelectTool;
   final VoidCallback onAddState;
@@ -75,7 +77,7 @@ class _GraphViewCanvasToolbarState extends State<GraphViewCanvasToolbar> {
     final theme = Theme.of(context);
     final controller = widget.controller;
     final actions = <_ToolbarButtonConfig>[
-      if (widget.enableToolSelection)
+      if (widget.enableToolSelection && widget.showSelectionTool)
         _ToolbarButtonConfig(
           action: _ToolbarAction.selection,
           handler: widget.onSelectTool,

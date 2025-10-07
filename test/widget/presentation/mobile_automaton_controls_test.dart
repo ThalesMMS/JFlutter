@@ -86,7 +86,6 @@ void main() {
   });
 
   testWidgets('shows canvas tool toggles when enabled', (tester) async {
-    var selectionInvoked = false;
     var addStateInvoked = false;
     var transitionInvoked = false;
 
@@ -96,7 +95,6 @@ void main() {
           body: MobileAutomatonControls(
             enableToolSelection: true,
             activeTool: AutomatonCanvasTool.addState,
-            onSelectTool: () => selectionInvoked = true,
             onAddState: () => addStateInvoked = true,
             onAddTransition: () => transitionInvoked = true,
             onFitToContent: () {},
@@ -106,17 +104,14 @@ void main() {
       ),
     );
 
-    expect(find.text('Select'), findsOneWidget);
+    expect(find.text('Select'), findsNothing);
     expect(find.text('Add transition'), findsOneWidget);
 
-    await tester.tap(find.text('Select'));
-    await tester.pump();
     await tester.tap(find.text('Add state'));
     await tester.pump();
     await tester.tap(find.text('Add transition'));
     await tester.pump();
 
-    expect(selectionInvoked, isTrue);
     expect(addStateInvoked, isTrue);
     expect(transitionInvoked, isTrue);
   });

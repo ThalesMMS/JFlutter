@@ -73,7 +73,6 @@ class _AutomatonGraphViewCanvasState
   );
   FSA? _pendingSyncAutomaton;
   bool _syncScheduled = false;
-  Matrix4? _frozenTransformationMatrix;
   String? _draggingNodeId;
   Offset? _dragStartWorldPosition;
   Offset? _dragStartNodeCenter;
@@ -142,13 +141,6 @@ class _AutomatonGraphViewCanvasState
     _controller.graphRevision.addListener(_handleGraphRevisionChanged);
     _transformationController?.addListener(_onTransformationChanged);
 
-    if (_activeTool != AutomatonCanvasTool.selection) {
-      final transformation = _transformationController;
-      if (transformation != null) {
-        _frozenTransformationMatrix = Matrix4.copy(transformation.value);
-      }
-    }
-
     if ((widget.automaton?.states.isNotEmpty ?? false)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
@@ -207,12 +199,6 @@ class _AutomatonGraphViewCanvasState
         configuration: _buildConfiguration(),
       );
       _transformationController?.addListener(_onTransformationChanged);
-      if (_activeTool != AutomatonCanvasTool.selection) {
-        final transformation = _transformationController;
-        if (transformation != null) {
-          _frozenTransformationMatrix = Matrix4.copy(transformation.value);
-        }
-      }
       _scheduleControllerSync(widget.automaton);
       _controller.graphRevision.addListener(_handleGraphRevisionChanged);
       _hideTransitionOverlay();
@@ -254,23 +240,6 @@ class _AutomatonGraphViewCanvasState
     if (nextTool == _activeTool) {
       return;
     }
-    final previousTool = _activeTool;
-    if (previousTool == AutomatonCanvasTool.selection &&
-        nextTool != AutomatonCanvasTool.selection) {
-      final transformation = _transformationController;
-      if (transformation != null) {
-        _frozenTransformationMatrix = Matrix4.copy(transformation.value);
-      } else {
-        _frozenTransformationMatrix = null;
-      }
-    } else if (nextTool == AutomatonCanvasTool.selection) {
-      _frozenTransformationMatrix = null;
-    } else if (_frozenTransformationMatrix == null) {
-      final transformation = _transformationController;
-      if (transformation != null) {
-        _frozenTransformationMatrix = Matrix4.copy(transformation.value);
-      }
-    }
     setState(() {
       _activeTool = nextTool;
       if (_activeTool != AutomatonCanvasTool.transition) {
@@ -291,20 +260,6 @@ class _AutomatonGraphViewCanvasState
   }
 
   void _onTransformationChanged() {
-    final transformation = _transformationController;
-    var resetTransformation = false;
-    if (_activeTool != AutomatonCanvasTool.selection) {
-      final frozen = _frozenTransformationMatrix;
-      if (transformation != null && frozen != null) {
-        if (!listEquals(transformation.value.storage, frozen.storage)) {
-          transformation.value = Matrix4.copy(frozen);
-          resetTransformation = true;
-        }
-      }
-    }
-    if (resetTransformation) {
-      return;
-    }
     _updateTransitionOverlayPosition();
     setState(() {});
   }
@@ -420,12 +375,6 @@ class _AutomatonGraphViewCanvasState
     final global = details.globalPosition;
     final local = _globalToCanvasLocal(global);
     _logCanvasTapFromLocal(source: 'tap-down', localPosition: local);
-    if (_activeTool == AutomatonCanvasTool.transition) {
-      final node = _hitTestNode(local, logDetails: false);
-      if (node != null) {
-        _handleNodeTap(node.id);
-      }
-    }
   }
 
   void _beginNodeDrag(GraphViewCanvasNode node, Offset localPosition) {
@@ -471,10 +420,10 @@ class _AutomatonGraphViewCanvasState
       '[AutomatonGraphViewCanvas] Tap up with active tool ${_activeTool.name} '
       'local=$local',
     );
+    final node = _hitTestNode(local, logDetails: false);
 
     if (_activeTool == AutomatonCanvasTool.addState) {
-      final box = context.findRenderObject() as RenderBox?;
-      if (box == null) {
+      if (_isDraggingNode || _didMoveDraggedNode || node != null) {
         return;
       }
       final world = _screenToWorld(local);
@@ -492,7 +441,6 @@ class _AutomatonGraphViewCanvasState
       return;
     }
 
-    final node = _hitTestNode(local, logDetails: false);
     if (node == null) {
       _lastTapNodeId = null;
       _lastTapTimestamp = null;
@@ -518,7 +466,7 @@ class _AutomatonGraphViewCanvasState
 
   void _handleNodePanStart(DragStartDetails details) {
     final node = _hitTestNode(details.localPosition);
-    if (node == null || _activeTool == AutomatonCanvasTool.transition) {
+    if (node == null) {
       return;
     }
     debugPrint(
@@ -530,17 +478,11 @@ class _AutomatonGraphViewCanvasState
   }
 
   void _handleNodePanUpdate(DragUpdateDetails details) {
-    if (_activeTool == AutomatonCanvasTool.transition) {
-      return;
-    }
     debugPrint('[AutomatonGraphViewCanvas] pan update delta=${details.delta}');
     _updateNodeDrag(details.localPosition);
   }
 
   void _handleNodePanEnd(DragEndDetails details) {
-    if (_activeTool == AutomatonCanvasTool.transition) {
-      return;
-    }
     debugPrint(
       '[AutomatonGraphViewCanvas] pan end velocity=${details.velocity}',
     );
@@ -548,9 +490,6 @@ class _AutomatonGraphViewCanvasState
   }
 
   void _handleNodePanCancel() {
-    if (_activeTool == AutomatonCanvasTool.transition) {
-      return;
-    }
     debugPrint('[AutomatonGraphViewCanvas] pan cancel');
     _endNodeDrag();
   }
@@ -1695,11 +1634,6 @@ class _NodePanGestureRecognizer extends PanGestureRecognizer {
       debugPrint('[NodePanRecognizer] pointer already active -> ignore');
       return;
     }
-    final tool = toolResolver();
-    if (tool == AutomatonCanvasTool.transition) {
-      debugPrint('[NodePanRecognizer] tool transition -> ignore');
-      return;
-    }
     final node = hitTester(event.position);
     if (node == null) {
       debugPrint('[NodePanRecognizer] no node hit -> ignore');
@@ -1769,7 +1703,6 @@ class _NodeTapGestureRecognizer extends TapGestureRecognizer {
       'down on ${node.id} tool=${toolResolver().name}',
     );
     super.addAllowedPointer(event);
-    resolvePointer(event.pointer, GestureDisposition.accepted);
   }
 
   @override

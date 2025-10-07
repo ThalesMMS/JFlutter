@@ -10,7 +10,7 @@ import 'package:jflutter/features/canvas/graphview/graphview_canvas_controller.d
 
 class _TestGraphViewCanvasController extends GraphViewCanvasController {
   _TestGraphViewCanvasController({required AutomatonProvider automatonProvider})
-      : super(automatonProvider: automatonProvider);
+    : super(automatonProvider: automatonProvider);
 
   int zoomInCount = 0;
   int zoomOutCount = 0;
@@ -65,17 +65,17 @@ void main() {
       automatonService: AutomatonService(),
       layoutRepository: LayoutRepositoryImpl(),
     );
-    controller = _TestGraphViewCanvasController(
-      automatonProvider: provider,
-    )..synchronize(provider.state.currentAutomaton);
+    controller = _TestGraphViewCanvasController(automatonProvider: provider)
+      ..synchronize(provider.state.currentAutomaton);
   });
 
   tearDown(() {
     controller.dispose();
   });
 
-  testWidgets('GraphViewCanvasToolbar renders provided status message',
-      (tester) async {
+  testWidgets('GraphViewCanvasToolbar renders provided status message', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -92,8 +92,9 @@ void main() {
     expect(find.text('2 states · 1 transition'), findsOneWidget);
   });
 
-  testWidgets('GraphViewCanvasToolbar hides status message when absent',
-      (tester) async {
+  testWidgets('GraphViewCanvasToolbar hides status message when absent', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -125,7 +126,7 @@ void main() {
       ),
     );
 
-    expect(find.byType(IconButton), findsNWidgets(7));
+    expect(find.byType(IconButton), findsNWidgets(5));
 
     await tester.tap(find.widgetWithIcon(IconButton, Icons.add));
     await tester.pump();
@@ -133,7 +134,9 @@ void main() {
     expect(addStateInvoked, isTrue);
   });
 
-  testWidgets('Mobile layout renders filled buttons with labels', (tester) async {
+  testWidgets('Mobile layout renders filled buttons with labels', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -146,13 +149,15 @@ void main() {
       ),
     );
 
-    expect(find.byType(FilledButton), findsNWidgets(7));
+    expect(find.byType(FilledButton), findsNWidgets(5));
     expect(find.text('Add state'), findsOneWidget);
-    expect(find.text('Zoom in'), findsOneWidget);
+    expect(find.text('Fit to content'), findsOneWidget);
+    expect(find.text('Reset view'), findsOneWidget);
   });
 
-  testWidgets('invokes controller commands when action buttons pressed',
-      (tester) async {
+  testWidgets('invokes controller commands when action buttons pressed', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -165,20 +170,19 @@ void main() {
       ),
     );
 
-    await tester.tap(find.widgetWithIcon(IconButton, Icons.zoom_in));
-    await tester.tap(find.widgetWithIcon(IconButton, Icons.zoom_out));
     await tester.tap(find.widgetWithIcon(IconButton, Icons.fit_screen));
-    await tester.tap(find.widgetWithIcon(IconButton, Icons.center_focus_strong));
+    await tester.tap(
+      find.widgetWithIcon(IconButton, Icons.center_focus_strong),
+    );
     await tester.pump();
 
-    expect(controller.zoomInCount, 1);
-    expect(controller.zoomOutCount, 1);
     expect(controller.fitCount, 1);
     expect(controller.resetCount, 1);
   });
 
-  testWidgets('renders undo and redo buttons respecting history state',
-      (tester) async {
+  testWidgets('renders undo and redo buttons respecting history state', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -191,39 +195,25 @@ void main() {
       ),
     );
 
-    final undoFinder =
-        find.widgetWithIcon(IconButton, Icons.undo);
-    final redoFinder =
-        find.widgetWithIcon(IconButton, Icons.redo);
+    final undoFinder = find.widgetWithIcon(IconButton, Icons.undo);
+    final redoFinder = find.widgetWithIcon(IconButton, Icons.redo);
 
-    expect(
-      tester.widget<IconButton>(undoFinder).onPressed,
-      isNull,
-    );
-    expect(
-      tester.widget<IconButton>(redoFinder).onPressed,
-      isNull,
-    );
+    expect(tester.widget<IconButton>(undoFinder).onPressed, isNull);
+    expect(tester.widget<IconButton>(redoFinder).onPressed, isNull);
 
     controller.addStateAtCenter();
     await tester.pump();
 
-    expect(
-      tester.widget<IconButton>(undoFinder).onPressed,
-      isNotNull,
-    );
+    expect(tester.widget<IconButton>(undoFinder).onPressed, isNotNull);
 
     controller.undo();
     await tester.pump();
 
-    expect(
-      tester.widget<IconButton>(redoFinder).onPressed,
-      isNotNull,
-    );
+    expect(tester.widget<IconButton>(redoFinder).onPressed, isNotNull);
   });
 
   testWidgets('renders editing tool toggles when enabled', (tester) async {
-    bool selectionInvoked = false;
+    bool addStateInvoked = false;
     bool transitionInvoked = false;
 
     await tester.pumpWidget(
@@ -233,8 +223,7 @@ void main() {
             controller: controller,
             enableToolSelection: true,
             activeTool: AutomatonCanvasTool.transition,
-            onSelectTool: () => selectionInvoked = true,
-            onAddState: () {},
+            onAddState: () => addStateInvoked = true,
             onAddTransition: () => transitionInvoked = true,
             layout: GraphViewCanvasToolbarLayout.desktop,
           ),
@@ -242,11 +231,12 @@ void main() {
       ),
     );
 
-    await tester.tap(find.widgetWithIcon(IconButton, Icons.pan_tool));
+    expect(find.widgetWithIcon(IconButton, Icons.pan_tool), findsNothing);
+    await tester.tap(find.widgetWithIcon(IconButton, Icons.add));
     await tester.tap(find.widgetWithIcon(IconButton, Icons.arrow_right_alt));
     await tester.pump();
 
-    expect(selectionInvoked, isTrue);
+    expect(addStateInvoked, isTrue);
     expect(transitionInvoked, isTrue);
   });
 }

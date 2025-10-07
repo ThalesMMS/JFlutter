@@ -75,13 +75,41 @@ class SvgExporter {
     double height = _defaultHeight,
     SvgExportOptions? options,
   }) {
-    final automaton = _turingMachineToAutomaton(tm);
-    return exportAutomatonToSvg(
-      automaton,
-      width: width,
-      height: height,
-      options: options,
-    );
+    final opts = options ?? const SvgExportOptions();
+    final buffer = StringBuffer();
+    final scaledWidth = width * opts.scale;
+    final scaledHeight = height * opts.scale;
+
+    buffer.writeln('<?xml version="1.0" encoding="UTF-8" standalone="no"?>');
+    buffer.writeln('<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"');
+    buffer.writeln('  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">');
+    buffer.writeln('<svg width="${scaledWidth}px" height="${scaledHeight}px"');
+    buffer.writeln('  viewBox="0 0 $width $height"');
+    buffer.writeln('  xmlns="http://www.w3.org/2000/svg"');
+    buffer.writeln('  xmlns:xlink="http://www.w3.org/1999/xlink">');
+
+    _addSvgStyles(buffer);
+
+    buffer.writeln('  <g>');
+
+    final tapeLayout = _buildTapeCells(buffer, tm, width, height, opts);
+    _drawHeadIndicator(buffer, tapeLayout, opts);
+
+    final statePositions = _layoutStatesForTm(tm.states, width, height);
+    _drawTuringTransitions(buffer, tm, statePositions, opts);
+    _drawTuringStates(buffer, tm, statePositions, opts);
+
+    if (opts.includeLegend) {
+      _drawTuringLegend(buffer, width, height, opts);
+    }
+
+    if (opts.includeTitle) {
+      _addTitle(buffer, tm.name, width, height);
+    }
+
+    buffer.writeln('  </g>');
+    buffer.writeln('</svg>');
+    return buffer.toString();
   }
 
   static void _addSvgStyles(StringBuffer buffer) {
@@ -112,10 +140,279 @@ class SvgExporter {
       '  .transition { font-family: $_fontFamily; font-size: 12px; text-anchor: middle; }',
     );
     buffer.writeln('  .tape { font-family: monospace; font-size: 16px; }');
-    buffer.writeln('  .head { font-weight: bold; fill: red; }');
+    buffer.writeln(
+      '  .tape-cell { fill: #f5f5f5; stroke: #424242; stroke-width: 1; }',
+    );
+    buffer.writeln(
+      '  .tape-symbol { font-family: monospace; font-size: 16px; text-anchor: middle; dominant-baseline: middle; }',
+    );
+    buffer.writeln('  .head { fill: #d32f2f; }');
+    buffer.writeln('  .legend { font-family: $_fontFamily; font-size: 12px; fill: #424242; }');
     buffer.writeln('</style>');
   }
 
+  static _TapeLayout _buildTapeCells(
+    StringBuffer buffer,
+    TuringMachineEntity tm,
+    double width,
+    double height,
+    SvgExportOptions options,
+  ) {
+    const tapeHeight = 60.0;
+    const minCellWidth = 60.0;
+    final tapeTop = math.max(40.0, height * 0.12);
+    final availableWidth = width * 0.8;
+    final cellsCount = math.max(7, (availableWidth / minCellWidth).floor());
+    final cellWidth = cellsCount > 0 ? availableWidth / cellsCount : minCellWidth;
+    final tapeStartX = (width - cellWidth * cellsCount) / 2;
+
+    final colorScheme = options.colorScheme;
+    final tapeFill = colorScheme?.surfaceVariant ?? const Color(0xFFF5F5F5);
+    final tapeStroke = colorScheme?.outlineVariant ??
+        colorScheme?.outline ??
+        const Color(0xFF424242);
+    final textColor = colorScheme?.onSurface ?? const Color(0xFF000000);
+
+    final blankSymbol = tm.blankSymbol.isEmpty ? '□' : tm.blankSymbol;
+    final alphabet = tm.inputAlphabet.toList()..sort();
+
+    buffer.writeln('    <g class="tape">');
+    for (var i = 0; i < cellsCount; i++) {
+      final x = tapeStartX + i * cellWidth;
+      final symbolIndex = alphabet.isEmpty ? 0 : i % alphabet.length;
+      final symbol = i == cellsCount ~/ 2
+          ? blankSymbol
+          : (alphabet.isEmpty ? blankSymbol : alphabet[symbolIndex]);
+
+      buffer.writeln(
+        '      <rect class="tape-cell" x="$x" y="$tapeTop" width="$cellWidth" height="$tapeHeight"',
+      );
+      buffer.writeln(
+        '        fill="${_colorToHex(tapeFill)}" stroke="${_colorToHex(tapeStroke)}"/>',
+      );
+      buffer.writeln(
+        '      <text x="${x + cellWidth / 2}" y="${tapeTop + tapeHeight / 2}"',
+      );
+      buffer.writeln(
+        '        class="tape-symbol" fill="${_colorToHex(textColor)}">$symbol</text>',
+      );
+    }
+    buffer.writeln('    </g>');
+
+    final headCellX = tapeStartX + (cellsCount ~/ 2) * cellWidth;
+    return _TapeLayout(
+      top: tapeTop,
+      height: tapeHeight,
+      cellWidth: cellWidth,
+      headCellX: headCellX,
+    );
+  }
+
+  static void _drawHeadIndicator(
+    StringBuffer buffer,
+    _TapeLayout layout,
+    SvgExportOptions options,
+  ) {
+    final colorScheme = options.colorScheme;
+    final headColor = colorScheme?.primary ?? const Color(0xFFD32F2F);
+    final headTipX = layout.headCellX + layout.cellWidth / 2;
+    final headTipY = layout.top - 18;
+    final baseLeftX = headTipX - 12;
+    final baseRightX = headTipX + 12;
+    final baseY = layout.top - 2;
+
+    buffer.writeln(
+      '    <polygon class="head" points="$baseLeftX $baseY, $baseRightX $baseY, $headTipX $headTipY" fill="${_colorToHex(headColor)}"/>',
+    );
+  }
+
+  static Map<String, Vector2> _layoutStatesForTm(
+    List<TuringStateEntity> states,
+    double width,
+    double height,
+  ) {
+    final positions = <String, Vector2>{};
+    if (states.isEmpty) {
+      return positions;
+    }
+
+    if (states.length == 1) {
+      positions[states.first.id] = Vector2(width / 2, height * 0.6);
+      return positions;
+    }
+
+    final radius = math.min(width, height) * 0.3;
+    final centerY = height * 0.62;
+    final centerX = width / 2;
+
+    for (var i = 0; i < states.length; i++) {
+      final angle = (2 * math.pi * i) / states.length;
+      final x = centerX + radius * math.cos(angle);
+      final y = centerY + radius * math.sin(angle);
+      positions[states[i].id] = Vector2(x, y);
+    }
+
+    return positions;
+  }
+
+  static void _drawTuringStates(
+    StringBuffer buffer,
+    TuringMachineEntity tm,
+    Map<String, Vector2> positions,
+    SvgExportOptions options,
+  ) {
+    final colorScheme = options.colorScheme;
+    final baseFill = colorScheme?.surface ?? const Color(0xFFFFFFFF);
+    final baseStroke = colorScheme?.outline ?? const Color(0xFF424242);
+    final acceptingStroke = colorScheme?.tertiary ?? const Color(0xFF2E7D32);
+    final rejectingStroke = colorScheme?.error ?? const Color(0xFFD32F2F);
+    final initialFill = colorScheme?.primaryContainer ?? baseFill;
+    final textColor = colorScheme?.onSurface ?? const Color(0xFF000000);
+
+    for (final state in tm.states) {
+      final position = positions[state.id];
+      if (position == null) {
+        continue;
+      }
+
+      final strokeColor = state.isRejecting
+          ? rejectingStroke
+          : (state.isAccepting ? acceptingStroke : baseStroke);
+      final fillColor = state.isInitial ? initialFill : baseFill;
+
+      buffer.writeln('    <g class="state">');
+
+      if (state.isAccepting) {
+        buffer.writeln(
+          '      <circle cx="${position.x}" cy="${position.y}" r="${_stateRadius + 5}"',
+        );
+        buffer.writeln(
+          '        fill="none" stroke="${_colorToHex(strokeColor)}" stroke-width="3"/>',
+        );
+      }
+
+      buffer.writeln(
+        '      <circle cx="${position.x}" cy="${position.y}" r="$_stateRadius"',
+      );
+      buffer.writeln(
+        '        fill="${_colorToHex(fillColor)}" stroke="${_colorToHex(strokeColor)}" stroke-width="$_strokeWidth"/>',
+      );
+
+      if (state.isRejecting) {
+        final lineOffset = _stateRadius * 0.6;
+        buffer.writeln(
+          '      <line x1="${position.x - lineOffset}" y1="${position.y - lineOffset}" x2="${position.x + lineOffset}" y2="${position.y + lineOffset}" stroke="${_colorToHex(strokeColor)}" stroke-width="1.5"/>',
+        );
+        buffer.writeln(
+          '      <line x1="${position.x - lineOffset}" y1="${position.y + lineOffset}" x2="${position.x + lineOffset}" y2="${position.y - lineOffset}" stroke="${_colorToHex(strokeColor)}" stroke-width="1.5"/>',
+        );
+      }
+
+      buffer.writeln(
+        '      <text x="${position.x}" y="${position.y + 5}" class="state" fill="${_colorToHex(textColor)}">${state.name}</text>',
+      );
+
+      if (state.isInitial) {
+        _addInitialArrow(buffer, position);
+      }
+
+      buffer.writeln('    </g>');
+    }
+  }
+
+  static void _drawTuringTransitions(
+    StringBuffer buffer,
+    TuringMachineEntity tm,
+    Map<String, Vector2> positions,
+    SvgExportOptions options,
+  ) {
+    final colorScheme = options.colorScheme;
+    final strokeColor = colorScheme?.outline ?? const Color(0xFF424242);
+    final textColor = colorScheme?.onSurface ?? const Color(0xFF000000);
+
+    for (final transition in tm.transitions) {
+      final from = positions[transition.fromStateId];
+      final to = positions[transition.toStateId];
+      if (from == null || to == null) {
+        continue;
+      }
+
+      final label = '${transition.readSymbol}/${transition.writeSymbol}, '
+          '${_directionLabel(transition.moveDirection)}';
+
+      if (from == to) {
+        final loopRadius = _stateRadius + 20;
+        final startX = from.x;
+        final startY = from.y - _stateRadius;
+        final controlOffset = loopRadius * 1.2;
+
+        buffer.writeln('    <g class="transition">');
+        buffer.writeln(
+          '      <path d="M $startX $startY C ${startX + controlOffset} ${startY - controlOffset}, ${startX - controlOffset} ${startY - controlOffset}, $startX $startY"',
+        );
+        buffer.writeln(
+          '        fill="none" stroke="${_colorToHex(strokeColor)}" stroke-width="$_strokeWidth" marker-end="url(#arrowhead)"/>',
+        );
+        buffer.writeln(
+          '      <text x="$startX" y="${startY - loopRadius}" class="transition" fill="${_colorToHex(textColor)}">$label</text>',
+        );
+        buffer.writeln('    </g>');
+        continue;
+      }
+
+      final midX = (from.x + to.x) / 2;
+      final midY = (from.y + to.y) / 2;
+
+      buffer.writeln('    <g class="transition">');
+      buffer.writeln(
+        '      <line x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}" stroke="${_colorToHex(strokeColor)}" stroke-width="$_strokeWidth" marker-end="url(#arrowhead)"/>',
+      );
+      buffer.writeln(
+        '      <text x="$midX" y="$midY" class="transition" fill="${_colorToHex(textColor)}">$label</text>',
+      );
+      buffer.writeln('    </g>');
+    }
+  }
+
+  static void _drawTuringLegend(
+    StringBuffer buffer,
+    double width,
+    double height,
+    SvgExportOptions options,
+  ) {
+    final colorScheme = options.colorScheme;
+    final textColor = colorScheme?.onSurfaceVariant ??
+        colorScheme?.onSurface ??
+        const Color(0xFF424242);
+    final legendY = height - 30;
+
+    buffer.writeln('    <g class="legend">');
+    buffer.writeln(
+      '      <text x="${width / 2}" y="$legendY" text-anchor="middle" fill="${_colorToHex(textColor)}">',
+    );
+    buffer.writeln(
+      '        δ(q, s) = (q′, w, d) — leitura/escrita/movimento',
+    );
+    buffer.writeln('      </text>');
+    buffer.writeln('    </g>');
+  }
+
+  static String _directionLabel(TuringMoveDirection direction) {
+    switch (direction) {
+      case TuringMoveDirection.left:
+        return 'L';
+      case TuringMoveDirection.right:
+        return 'R';
+      case TuringMoveDirection.stay:
+        return 'S';
+    }
+  }
+
+  static String _colorToHex(Color color) {
+    final value = color.value & 0x00FFFFFF;
+    return '#${value.toRadixString(16).padLeft(6, '0')}';
+  }
+  
   static void _addAutomatonContent(
     StringBuffer buffer,
     AutomatonEntity automaton,
@@ -278,38 +575,6 @@ class SvgExporter {
     buffer.writeln('  </g>');
   }
 
-  static AutomatonEntity _turingMachineToAutomaton(TuringMachineEntity tm) {
-    final states = tm.states
-        .map(
-          (state) => StateEntity(
-            id: state.id,
-            name: state.name,
-            x: 0.0,
-            y: 0.0,
-            isInitial: state.isInitial,
-            isFinal: state.isAccepting,
-          ),
-        )
-        .toList();
-
-    final transitions = <String, List<String>>{};
-    for (final transition in tm.transitions) {
-      transitions.putIfAbsent(transition.fromStateId, () => <String>[]);
-      transitions[transition.fromStateId]!.add(transition.toStateId);
-    }
-
-    return AutomatonEntity(
-      id: 'tm_${tm.id}',
-      name: '${tm.name} (Visualization)',
-      alphabet: tm.inputAlphabet,
-      states: states,
-      transitions: transitions,
-      initialId: tm.initialStateId,
-      nextId: tm.nextStateIndex,
-      type: AutomatonType.dfa,
-    );
-  }
-
   /// Converts grammar to automaton for visualization (simplified)
   static AutomatonEntity _grammarToAutomaton(GrammarEntity grammar) {
     // This is a simplified conversion for visualization purposes
@@ -357,6 +622,20 @@ class SvgExporter {
       type: AutomatonType.dfa,
     );
   }
+}
+
+class _TapeLayout {
+  final double top;
+  final double height;
+  final double cellWidth;
+  final double headCellX;
+
+  const _TapeLayout({
+    required this.top,
+    required this.height,
+    required this.cellWidth,
+    required this.headCellX,
+  });
 }
 
 /// Configuration options for SVG export

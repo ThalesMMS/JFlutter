@@ -1,3 +1,14 @@
+//
+//  error_handler.dart
+//  JFlutter
+//
+//  Reúne rotinas centralizadas de tratamento de erros e mensagens de feedback,
+//  expondo métodos estáticos para exibir SnackBars, diálogos de confirmação e
+//  registrar falhas no console. Atua como ponto único para padronizar a
+//  comunicação com o usuário e simplificar fluxos que consomem objetos Result.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'result.dart';

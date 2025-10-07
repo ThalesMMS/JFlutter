@@ -1,3 +1,14 @@
+//
+//  algo_log.dart
+//  JFlutter
+//
+//  Mantém utilitários estáticos para registrar passos de execução de
+//  algoritmos, expondo ValueNotifiers que notificam interfaces sobre novas
+//  mensagens ou estados destacados. Fornece operações para adicionar linhas,
+//  limpar registros e acompanhar destaques durante simulações interativas.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/foundation.dart';
 
 /// Centralized logging for algorithm execution steps

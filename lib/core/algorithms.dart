@@ -1,3 +1,14 @@
+//
+//  algorithms.dart
+//  JFlutter
+//
+//  Agrega exportações de algoritmos centrais do projeto, incluindo simuladores
+//  de autômatos e máquinas de Turing, conversores entre representações e
+//  ferramentas para gramáticas e lema do bombeamento. Facilita o consumo
+//  modular dessas rotinas pelas camadas de apresentação e casos de uso.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 // Re-export all algorithm operations
 export 'algorithms/algorithm_operations.dart';
 export 'algorithms/automaton_simulator.dart';

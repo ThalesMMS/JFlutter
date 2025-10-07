@@ -1,15 +1,13 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/features/canvas/graphview/graphview_automaton_mapper_test.dart
-// Objetivo: Validar o mapeamento de autômatos para modelos GraphView usados no
-// canvas.
-// Cenários cobertos:
-// - Conversão de estados e transições em nós e arestas com posição.
-// - Tratamento de loops, transições múltiplas e estados iniciais/aceitadores.
-// - Atualização de dados ao sincronizar com GraphViewAutomatonMapper.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
+//
+//  graphview_automaton_mapper_test.dart
+//  JFlutter
+//
+//  Confere o GraphViewAutomatonMapper na tradução de autômatos finitos para nós e arestas, cobrindo
+//  casos com loops, transições múltiplas e estados especiais. Verifica se os cálculos de geometria
+//  e agrupamento resultam em modelos consistentes para o canvas interativo.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 
 import 'dart:math' as math;
 

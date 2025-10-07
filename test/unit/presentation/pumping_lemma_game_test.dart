@@ -1,15 +1,13 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/unit/presentation/pumping_lemma_game_test.dart
-// Objetivo: Validar o fluxo do modo jogo do lema do bombeamento, garantindo
-// progressão linear e registro de pontuação.
-// Cenários cobertos:
-// - Estado inicial sem desafios e contadores zerados.
-// - Registro de respostas corretas/incorretas com atualização de métricas.
-// - Reinício de jogo e descarte de recursos do provider.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
+//
+//  pumping_lemma_game_test.dart
+//  JFlutter
+//
+//  Testes do modo jogo do lema do bombeamento, garantindo inicialização limpa,
+//  progressão linear pelos desafios, registro de respostas corretas e incorretas
+//  com atualização de pontuação e a liberação adequada de recursos ao reiniciar.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';

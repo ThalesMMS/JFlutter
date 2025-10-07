@@ -1,14 +1,13 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/unit/data/services/examples_library_stats_test.dart
-// Objetivo: Verificar a formatação segura de `ExamplesLibraryStats` garantindo
-// descrições coerentes mesmo com coleções vazias ou parciais.
-// Cenários cobertos:
-// - Representação textual de estatísticas vazias sem lançar exceções.
-// - Agregação de totais e rótulos quando apenas parte dos mapas está preenchida.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
+//
+//  examples_library_stats_test.dart
+//  JFlutter
+//
+//  Testes unitários que verificam a formatação segura de ExamplesLibraryStats,
+//  assegurando descrições consistentes para coleções vazias ou parciais, bem
+//  como a agregação correta de totais, categorias e etiquetas mais frequentes.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/data/data_sources/examples_asset_data_source.dart';

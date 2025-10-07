@@ -1,15 +1,14 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/unit/presentation/transition_label_updates_test.dart
-// Objetivo: Garantir que provedores de edição atualizem rótulos de transições
-// de forma consistente entre autômatos finitos, PDAs e MTs.
-// Cenários cobertos:
-// - Atualização de rótulo e conjunto de símbolos em autômatos finitos.
-// - Sincronização de campos de pilha em transições de PDA.
-// - Ajustes de leitura, escrita e direção em transições de MT.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
+//
+//  transition_label_updates_test.dart
+//  JFlutter
+//
+//  Testes voltados aos providers de edição de transições, assegurando que
+//  autômatos finitos, PDAs e máquinas de Turing recebam atualizações consistentes
+//  de rótulos, símbolos e parâmetros específicos de cada modelo durante as
+//  operações de edição em tempo real.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 
 import 'dart:math' as math;
 

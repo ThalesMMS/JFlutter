@@ -1,14 +1,13 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/core/services/simulation_highlight_service_test.dart
-// Objetivo: Verificar a comunicação do serviço de destaque de simulação com o
-// controlador GraphView.
-// Cenários cobertos:
-// - Emissão de destaques durante a simulação passo a passo.
-// - Limpeza de destaques ao encerrar ou reiniciar.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
+//
+//  simulation_highlight_service_test.dart
+//  JFlutter
+//
+//  Testes que exercitam o SimulationHighlightService, certificando a emissão de
+//  destaques durante a simulação passo a passo e a limpeza adequada por meio do
+//  canal GraphView ao finalizar ou reiniciar execuções no canvas.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/simulation_highlight.dart';

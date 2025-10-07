@@ -1,15 +1,14 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/unit/core/pda/pda_simulator_test.dart
-// Objetivo: Avaliar o simulador interno de autômatos de pilha com variações de
-// critérios de aceitação e manipulação de pilha em diferentes linguagens.
-// Cenários cobertos:
-// - Aceitação por estado final e por pilha vazia com símbolos iniciais.
-// - Balanceamento de parênteses e controle de contagem através de push/pop.
-// - Rejeições em entradas inválidas e caminhos não determinísticos.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
+//
+//  pda_simulator_test.dart
+//  JFlutter
+//
+//  Testes que avaliam o simulador de autômatos de pilha, cobrindo aceitação por
+//  estado final e por pilha vazia, manipulação de símbolos iniciais e uso de
+//  operações push/pop para balanceamento de linguagens clássicas, além do
+//  tratamento de rejeições e ramos não determinísticos.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/algorithms/pda_simulator.dart';

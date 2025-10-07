@@ -1,3 +1,16 @@
+//
+//  simulation_highlight_service.dart
+//  JFlutter
+//
+//  Coordena o cálculo e a difusão de destaques visuais para simulações,
+//  convertendo resultados e passos em conjuntos imutáveis de estados e
+//  transições relevantes. Disponibiliza provedores Riverpod, canais de
+//  comunicação e adaptadores para callbacks legados, além de registrar eventos
+//  durante o despacho. Permite limpar, acompanhar e reaproveitar o último
+//  destaque emitido pela interface interativa.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

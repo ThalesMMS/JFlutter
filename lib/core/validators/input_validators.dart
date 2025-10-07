@@ -1,3 +1,16 @@
+//
+//  input_validators.dart
+//  JFlutter
+//
+//  Centraliza verificações estáticas para autômatos finitos, de pilha, máquinas
+//  de Turing e gramáticas, garantindo que estruturas carregadas respeitem
+//  restrições básicas antes de serem simuladas ou convertidas. Inspeciona
+//  alfabetos, estados, transições e símbolos iniciais, reportando códigos de
+//  problema descritivos para cada inconsistência encontrada. Serve como camada
+//  de defesa que orienta correções na modelagem dos objetos acadêmicos.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import '../models/fsa.dart';
 import '../models/fsa_transition.dart';
 import '../models/pda.dart';

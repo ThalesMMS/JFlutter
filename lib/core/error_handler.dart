@@ -1,3 +1,15 @@
+//
+//  error_handler.dart
+//  JFlutter
+//
+//  Concentra utilitários de feedback visual para erros, avisos, sucessos e
+//  confirmações na interface Flutter, garantindo mensagens consistentes em toda
+//  a aplicação. Expõe uma chave global para o ScaffoldMessenger e integra-se ao
+//  tipo Result para apresentar respostas adequadas às operações. Também oferece
+//  diálogos modais e registro simplificado de falhas para apoiar a depuração.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'result.dart';

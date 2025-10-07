@@ -1,3 +1,16 @@
+//
+//  result.dart
+//  JFlutter
+//
+//  Padroniza os retornos das camadas de domínio com um tipo selado que
+//  diferencia sucesso e falha, expondo acesso direto aos dados ou às mensagens
+//  de erro sem depender de exceções. Disponibiliza operações de mapeamento e
+//  encadeamento para tratar fluxos de processamento de forma funcional e
+//  extensões utilitárias para criar instâncias específicas de autômatos e
+//  gramáticas.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'entities/automaton_entity.dart';
 import 'entities/grammar_entity.dart';
 

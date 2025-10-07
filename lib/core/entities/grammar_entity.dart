@@ -1,3 +1,15 @@
+//
+//  grammar_entity.dart
+//  JFlutter
+//
+//  Define as estruturas imutáveis que representam gramáticas formais dentro do
+//  núcleo, incluindo identificadores, conjuntos de terminais e não terminais,
+//  símbolo inicial e produções completas. Estabelece também o modelo de cada
+//  produção, permitindo que algoritmos de análise, transformação e conversão
+//  manipulem dados consistentes em toda a plataforma.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 class GrammarEntity {
   final String id;
   final String name;

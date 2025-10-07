@@ -1,32 +1,46 @@
 # Repository Guidelines
 
-## Project Structure & Module Organization
-- `lib/` hosts production code. Core logic lives in `lib/core/`, while UI and state management sit in `lib/presentation/`. Services and repositories reside in `lib/data/`.  
-- `References/` contains the authoritative implementations (Dart and Python) used to validate every algorithm during the migration—consult them before modifying core behaviour.  
-- Platform-specific folders (`android/`, `ios/`, `web/`, `windows/`, `linux/`, `macos/`) keep native configuration. Auxiliary documentation stays in the repo root (README, API docs, specs).
+## Project Snapshot
+- JFlutter is a mobile-first Flutter rebuild of the classic JFLAP tooling, currently **work in progress** but feature-complete for core automata workflows.
+- Focus areas: interactive automaton canvas, real-time simulations, 13 validated algorithms, offline examples in `jflutter_js/examples/`, and Material 3 UI with responsive layouts.
+- Target platforms: Android, iOS, Web, Windows, macOS, and Linux (touch-optimized where applicable).
 
-## Build, Test, and Development Commands
-- `flutter pub get` – install dependencies.  
-- `flutter run -d <device>` – launch the app on a simulator or connected device (e.g., `flutter run -d macos`).  
-- `flutter build <platform>` – produce release artifacts (`flutter build apk`, `flutter build macos`).  
-- `flutter analyze` – lint the entire project. Use this as the default verification step until the new test suite is reinstated.
+## Source Layout & Ownership
+- `lib/` contains production code following clean architecture:
+  - `lib/core/` algorithms, entities, models, use cases, logging, and error handling.
+  - `lib/data/` data sources, DTOs, repositories, and services.
+  - `lib/presentation/` pages, widgets, providers, theming, plus supporting features in `lib/features/` and dependency setup in `lib/injection/`.
+- `References/` hosts the authoritative Dart and Python implementations that back every algorithm; consult them before altering logic.
+- Platform folders (`android/`, `ios/`, `web/`, `windows/`, `linux/`, `macos/`) contain native config. Docs, specs, and screenshots live at the repo root.
 
-## Coding Style & Naming Conventions
-- Follow Dart best practices: 2‑space indentation, `lowerCamelCase` variables, `UpperCamelCase` types, `SCREAMING_SNAKE_CASE` constants.  
-- Keep one top-level declaration per file and prefer descriptive filenames (`automaton_service.dart`, `tm_canvas.dart`).  
-- Run `dart format .` before committing. Riverpod providers should remain immutable and favour explicit state models.
+## Build & Tooling
+- `flutter pub get` – install dependencies.
+- `flutter run -d <device>` – start the app (e.g., `flutter run -d macos`).
+- `flutter build <platform>` – create release artifacts (`apk`, `macos`, etc.).
+- `flutter analyze` – default static analysis gate before review.
+- Android signing uses `android/scripts/create_key_properties.sh` fed by `JFLUTTER_KEYSTORE_*` env vars; see README for the release workflow.
 
-## Testing Guidelines
-- Historical tests were removed for the algorithm migration. New modules must reintroduce targeted tests under a rebuilt `test/` tree mirroring `lib/`.  
-- Use `flutter test` once new suites exist and document any coverage thresholds in the related PR.  
-- Until then, rely on manual verification plus `flutter analyze` and note tested flows in pull requests.
+## Testing Status & Expectations
+- Current suite: **264 / 283 tests passing (93.3% overall)**; core algorithm coverage is 242 / 242 (**100%**).
+- Known failures you should not regress:
+  - **Import/Export integration tests** – 19 failures tied to JFF epsilon serialization and SVG formatting (viewBox precision, empty automata).
+  - **Widget tests** – 11 failures due to missing widgets (`error_banner.dart`, `import_error_dialog.dart`, `retry_button.dart`), outdated finders, and absent golden infra.
+- Recommended commands:
+  - `flutter test` – full suite (expect the failures above).
+  - `flutter test test/unit/` – core algorithms (all passing).
+  - `flutter analyze` – always run when touching Dart code.
+- Document any additional deviations; avoid introducing new failures within the passing suites.
 
-## Commit & Pull Request Guidelines
-- Commit messages typically follow `<scope>: <summary>` (e.g., `core: add dfa minimizer`); mention the origin reference when porting logic.  
-- Pull requests should: describe the change, cite the reference implementation (path + repo inside `References/`), list verification steps, and attach UI captures when relevant.  
-- Keep branches rebased on `main` and ensure `flutter analyze` passes before requesting review.
+## Coding Style & Naming
+- Follow Dart idioms: 2-space indentation, `lowerCamelCase` variables, `UpperCamelCase` types, `SCREAMING_SNAKE_CASE` constants.
+- Prefer one top-level declaration per file with descriptive filenames (`automaton_service.dart`, `tm_canvas.dart`).
+- Keep Riverpod providers immutable and model-driven; run `dart format .` before committing.
 
-## Reference Implementation Workflow
-- Every algorithm or structure modification must be cross‑checked against the corresponding project in `References/` (for example, `References/dart-petitparser-examples-main/` or `References/automata-main/`).  
-- Record deviations from the reference in code comments or PR notes, explaining platform constraints or optimizations.  
-- Update documentation when a reference is superseded or deemed insufficient.
+## Contribution Workflow
+- Commits: `<scope>: <summary>` (e.g., `core: add dfa minimizer`). Cite the source repo/path from `References/` when porting logic.
+- PRs should summarize changes, list reference touchpoints, call out test/analysis runs, and include UI captures when relevant. Keep branches rebased on `main` and lint-clean.
+
+## Reference Implementation Process
+- For any algorithm/data-structure change: cross-check against the paired project in `References/` (`automata-main`, `dart-petitparser-examples`, `AutomataTheory`, `nfa_2_dfa`, `turing-machine-generator`, etc.).
+- Validate outputs against reference expectations, benchmark when performance-sensitive, and log intentional deviations in code comments or `docs/reference-deviations.md`.
+- Update documentation if a reference is replaced or no longer authoritative.

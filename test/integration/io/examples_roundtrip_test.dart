@@ -547,21 +547,58 @@ void main() {
         expect(svg, contains('<style>'));
       });
 
-      test('Turing machine SVG export produces valid structure', () {
+      test('Turing machine SVG export produces detailed TM diagram', () {
         final svg = SvgExporter.exportTuringMachineToSvg(
-          // Mock TM entity for testing
           _buildSimpleTuringMachine(),
+          options: const SvgExportOptions(includeLegend: true),
         );
 
-        // Verify SVG structure
+        // Structural scaffolding
         expect(svg, contains('<?xml'));
         expect(svg, contains('<svg'));
         expect(svg, contains('</svg>'));
+        expect(svg, contains('viewBox="0 0 800.0 600.0"'));
 
-        // Verify TM-specific content (placeholder implementation)
-        expect(svg, contains('<rect')); // Tape cells
-        expect(svg, contains('<polygon')); // Tape head
-        expect(svg, contains('class="tape"')); // Tape styling
+        // Tape layout
+        expect(svg, contains('<g class="tape">'));
+        expect(svg, contains('<rect class="tape-cell"'));
+        expect(
+          svg,
+          contains(
+            '<text x="112.0" y="102.0" class="tape-symbol" fill="#000000">a</text>',
+          ),
+        );
+        expect(
+          svg,
+          contains(
+            '<text x="432.0" y="102.0" class="tape-symbol" fill="#000000">_</text>',
+          ),
+        );
+
+        // Head indicator pointing to the central tape cell
+        expect(svg, contains('<polygon class="head"'));
+        expect(
+          svg,
+          contains(
+            'points="420.0 70.0, 444.0 70.0, 432.0 54.0"',
+          ),
+        );
+
+        // State layout and labelling
+        expect(svg, contains('<g class="state">'));
+        expect(svg, contains('>q0<'));
+        expect(svg, contains('>qAccept<'));
+        expect(svg, contains('marker-end="url(#arrowhead)"'));
+
+        // Transition labelling and legend description
+        expect(svg, contains('a/a, R'));
+        expect(svg, contains('<g class="legend">'));
+        expect(
+          svg,
+          contains(
+            'δ(q, s) = (q′, w, d) — leitura/escrita/movimento',
+          ),
+        );
       });
 
       test('Grammar SVG export produces valid structure', () {

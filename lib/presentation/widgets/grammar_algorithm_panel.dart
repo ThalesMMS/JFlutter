@@ -1,11 +1,15 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/widgets/grammar_algorithm_panel.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Concentra botões e fluxos de algoritmos relacionados a gramáticas como conversões, fatoração e análise LL. Fornece feedback textual sobre execuções para orientar ajustes e próximas ações.
-/// Contexto: Interage com diversos provedores para disparar conversões para AF, AP e atualizações de navegabilidade entre espaços de trabalho. Exibe resultados produzidos pelos serviços do domínio garantindo continuidade entre edições e simulações.
-/// Observações: Controla estado interno simples de carregamento e resultado para evitar bloqueio do restante da interface. Pode ser expandido com novos algoritmos mantendo a estrutura modular de seções e descrições.
-/// ---------------------------------------------------------------------------
+//
+//  grammar_algorithm_panel.dart
+//  JFlutter
+//
+//  Painel que centraliza algoritmos de gramáticas, oferecendo botões para
+//  conversões, remoção de recursão à esquerda, fatoração e cálculos de FIRST e
+//  FOLLOW, além da construção de tabelas de análise. O widget integra múltiplos
+//  providers para disparar operações, gerencia estados de carregamento e exibe
+//  resultados textuais que orientam a próxima ação do usuário.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

@@ -1,9 +1,14 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/features/canvas/graphview/graphview_link_overlay_utils.dart
-/// Descrição: Calcula âncoras e posições de sobreposição para arestas no
-///            GraphView, garantindo alinhamento visual consistente no canvas.
-/// ---------------------------------------------------------------------------
+//
+//  graphview_link_overlay_utils.dart
+//  JFlutter
+//
+//  Conjunto de utilitários que calcula âncoras e posições para sobreposições de
+//  arestas no GraphView, normalizando pontos de controle e loops para manter o
+//  alinhamento visual do canvas. As funções auxiliam widgets a posicionar
+//  indicadores e editores diretamente sobre as ligações renderizadas.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/automaton_canvas.dart';

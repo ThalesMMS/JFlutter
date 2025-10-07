@@ -1,9 +1,14 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/features/canvas/graphview/graphview_canvas_models.dart
-/// Descrição: Define modelos imutáveis usados pelo canvas GraphView para
-///            representar metadados, nós e transições durante a renderização.
-/// ---------------------------------------------------------------------------
+//
+//  graphview_canvas_models.dart
+//  JFlutter
+//
+//  Declara os modelos imutáveis utilizados pelo canvas GraphView para
+//  transportar metadados do autômato, nós e arestas renderizadas, além de
+//  serializações auxiliares. Essas estruturas intermediam a comunicação entre o
+//  domínio e a camada de apresentação durante snapshots e exportações.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:collection/collection.dart';
 
 import '../../../core/models/tm_transition.dart';

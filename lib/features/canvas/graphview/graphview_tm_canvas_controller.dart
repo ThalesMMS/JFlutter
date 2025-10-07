@@ -1,9 +1,15 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/features/canvas/graphview/graphview_tm_canvas_controller.dart
-/// Descrição: Administra o canvas GraphView para Turing Machines, mantendo
-///            sincronismo entre o grafo, o provedor e interações de edição.
-/// ---------------------------------------------------------------------------
+//
+//  graphview_tm_canvas_controller.dart
+//  JFlutter
+//
+//  Controlador que mantém o canvas GraphView alinhado ao estado de edição de
+//  máquinas de Turing, sincronizando nós e transições com o TMEditorNotifier e
+//  oferecendo operações de criação, movimentação, rótulo e flags. Também cuida
+//  da geração de identificadores estáveis, da aplicação de snapshots vindos do
+//  domínio e do registro de telemetria útil durante mutações do grafo.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';

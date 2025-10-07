@@ -1,3 +1,15 @@
+//
+//  jflap_xml_parser.dart
+//  JFlutter
+//
+//  Parser dedicado a arquivos JFLAP em XML que valida a estrutura, identifica o tipo
+//  de autômato e instancia entidades internas a partir de estados, transições e
+//  alfabetos extraídos do documento.
+//  Atualmente cobre autômatos finitos, convertendo dados em AutomatonEntity e
+//  retornando Result para sinalizar erros de leitura ou formatos não suportados.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:xml/xml.dart';
 import '../entities/automaton_entity.dart';
 import '../result.dart';

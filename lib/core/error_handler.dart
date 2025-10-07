@@ -1,3 +1,14 @@
+//
+//  error_handler.dart
+//  JFlutter
+//
+//  Provedor central de tratamento de erros que apresenta mensagens nas interfaces via
+//  SnackBars, diálogos de confirmação e utilidades de log para depuração controlada.
+//  Inclui rotinas para traduzir Result em feedback contextual e uma extensão que
+//  simplifica o consumo direto desses fluxos dentro de widgets e fluxos assíncronos.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'result.dart';

@@ -1,3 +1,14 @@
+//
+//  trace_persistence_service.dart
+//  JFlutter
+//
+//  Gerencia persistência de rastros de simulação com SharedPreferences e sistema de
+//  arquivos, mantendo histórico, exportação e importação de execuções monitoradas.
+//  Fornece operações de limpeza, limites configuráveis e tratamento de erros com
+//  exceções dedicadas para garantir resiliência entre sessões do usuário.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:convert';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';

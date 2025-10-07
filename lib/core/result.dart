@@ -1,3 +1,15 @@
+//
+//  result.dart
+//  JFlutter
+//
+//  Define o tipo Result selado com variantes Success e Failure para padronizar fluxos de
+//  retorno e mensagens de erro na aplicação, expondo utilitários de mapeamento e
+//  callbacks para manipular sucessos ou falhas de forma composável.
+//  Também adiciona extensões, apelidos tipados e fábricas estáticas que simplificam
+//  coleções de resultados e conversões frequentes entre entidades e mensagens.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'entities/automaton_entity.dart';
 import 'entities/grammar_entity.dart';
 

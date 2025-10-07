@@ -1,3 +1,15 @@
+//
+//  diagnostics_service.dart
+//  JFlutter
+//
+//  Serviço estático que avalia autômatos finitos e produz diagnósticos detalhados,
+//  cobrindo estados iniciais, alcançabilidade, transições, componentes e padrões de
+//  epsilon ou não determinismo.
+//  Também interpreta falhas de simulação para gerar mensagens específicas e sugestões
+//  acionáveis, promovendo orientações para correção dentro da interface.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import '../models/fsa.dart';
 import '../models/fsa_transition.dart';
 import '../models/state.dart' as automaton_state;

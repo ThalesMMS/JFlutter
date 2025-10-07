@@ -1,3 +1,14 @@
+//
+//  algorithm_use_cases.dart
+//  JFlutter
+//
+//  Coleção de casos de uso que delegam ao repositório de algoritmos operações de
+//  conversão, minimização e análise sobre autômatos, expressões regulares e gramáticas.
+//  Cada classe encapsula um fluxo assíncrono específico, expondo métodos execute
+//  para reutilização em camadas de apresentação e orquestração da aplicação.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import '../entities/automaton_entity.dart';
 import '../result.dart';
 import '../repositories/automaton_repository.dart';

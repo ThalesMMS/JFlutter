@@ -14,6 +14,7 @@ import '../../core/models/pda_transition.dart';
 import '../../core/models/state.dart' as automaton_state;
 import '../providers/pda_editor_provider.dart';
 import '../widgets/graphview_canvas_toolbar.dart';
+import '../widgets/automaton_canvas_tool.dart';
 import '../widgets/mobile_automaton_controls.dart';
 import '../widgets/pda_canvas_graphview.dart';
 import '../widgets/pda_algorithm_panel.dart';
@@ -39,6 +40,8 @@ class _PDAPageState extends ConsumerState<PDAPage> {
   late final GraphViewPdaCanvasController _canvasController;
   late final GraphViewSimulationHighlightChannel _highlightChannel;
   late final SimulationHighlightService _highlightService;
+  late final AutomatonCanvasToolController _toolController;
+  AutomatonCanvasTool _activeTool = AutomatonCanvasTool.selection;
 
   @override
   void initState() {
@@ -49,6 +52,8 @@ class _PDAPageState extends ConsumerState<PDAPage> {
     _canvasController.synchronize(ref.read(pdaEditorProvider).pda);
     _highlightChannel = GraphViewSimulationHighlightChannel(_canvasController);
     _highlightService = SimulationHighlightService(channel: _highlightChannel);
+    _toolController = AutomatonCanvasToolController();
+    _toolController.addListener(_handleToolChanged);
     _pdaEditorSub = ref.listenManual<PDAEditorState>(pdaEditorProvider, (
       previous,
       next,
@@ -65,9 +70,20 @@ class _PDAPageState extends ConsumerState<PDAPage> {
     });
   }
 
+  void _handleToolChanged() {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _activeTool = _toolController.activeTool;
+    });
+  }
+
   @override
   void dispose() {
     _pdaEditorSub?.close();
+    _toolController.removeListener(_handleToolChanged);
+    _toolController.dispose();
     _highlightService.clear();
     _canvasController.dispose();
     super.dispose();
@@ -106,13 +122,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
               Expanded(
                 child: Container(
                   margin: const EdgeInsets.all(8),
-                  child: _buildCanvasWithToolbar(
-                    PDACanvasGraphView(
-                      controller: _canvasController,
-                      onPdaModified: _handlePdaModified,
-                    ),
-                    isMobile: true,
-                  ),
+                  child: _buildCanvasWithToolbar(isMobile: true),
                 ),
               ),
               _buildMobileInfoPanel(context),
@@ -265,13 +275,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
           flex: 2,
           child: Container(
             margin: const EdgeInsets.all(8),
-            child: _buildCanvasWithToolbar(
-              PDACanvasGraphView(
-                controller: _canvasController,
-                onPdaModified: _handlePdaModified,
-              ),
-              isMobile: false,
-            ),
+            child: _buildCanvasWithToolbar(isMobile: false),
           ),
         ),
         const SizedBox(width: 16),
@@ -352,11 +356,16 @@ class _PDAPageState extends ConsumerState<PDAPage> {
     );
   }
 
-  Widget _buildCanvasWithToolbar(Widget canvas, {required bool isMobile}) {
+  Widget _buildCanvasWithToolbar({required bool isMobile}) {
     final editorState = ref.watch(pdaEditorProvider);
     final statusMessage = _buildToolbarStatusMessage(editorState);
     final hasPda =
         editorState.pda != null && editorState.pda!.states.isNotEmpty;
+    final canvas = PDACanvasGraphView(
+      controller: _canvasController,
+      toolController: _toolController,
+      onPdaModified: _handlePdaModified,
+    );
 
     final combinedListenable = _canvasController.graphRevision;
 
@@ -368,7 +377,15 @@ class _PDAPageState extends ConsumerState<PDAPage> {
             animation: combinedListenable,
             builder: (context, _) {
               return MobileAutomatonControls(
-                onAddState: _canvasController.addStateAtCenter,
+                enableToolSelection: true,
+                showSelectionTool: true,
+                activeTool: _activeTool,
+                onSelectTool: () =>
+                    _toolController.setActiveTool(AutomatonCanvasTool.selection),
+                onAddState: () =>
+                    _toolController.setActiveTool(AutomatonCanvasTool.addState),
+                onAddTransition: () => _toolController
+                    .setActiveTool(AutomatonCanvasTool.transition),
                 onFitToContent: _canvasController.fitToContent,
                 onResetView: _canvasController.resetView,
                 onClear: () => ref
@@ -418,7 +435,15 @@ class _PDAPageState extends ConsumerState<PDAPage> {
             return GraphViewCanvasToolbar(
               layout: GraphViewCanvasToolbarLayout.desktop,
               controller: _canvasController,
-              onAddState: _canvasController.addStateAtCenter,
+              enableToolSelection: true,
+              showSelectionTool: true,
+              activeTool: _activeTool,
+              onSelectTool: () =>
+                  _toolController.setActiveTool(AutomatonCanvasTool.selection),
+              onAddState: () =>
+                  _toolController.setActiveTool(AutomatonCanvasTool.addState),
+              onAddTransition: () => _toolController
+                  .setActiveTool(AutomatonCanvasTool.transition),
               onClear: () => ref
                   .read(pdaEditorProvider.notifier)
                   .updateFromCanvas(

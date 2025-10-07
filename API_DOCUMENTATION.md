@@ -2,25 +2,38 @@
 
 ## Overview
 
-JFlutter provides a comprehensive API for working with formal language theory concepts including finite automata, context-free grammars, and various algorithms. This documentation covers the core APIs, data models, and integration patterns.
+JFlutter provides a comprehensive API for working with formal language theory
+concepts including finite automata, context-free grammars, and various
+algorithms. This documentation covers the core APIs, data models, and
+integration patterns.
 
-> **Nota importante**: durante a reescrita dos algoritmos, cada contrato descrito aqui é conferido contra os projetos que vivem em `References/` (principalmente as bases em Dart e o repositório Python `automata-main`). Essas referências balizam as alterações até que novos testes automatizados estejam disponíveis.
+> **Nota importante**: durante a reescrita dos algoritmos, cada contrato
+> descrito aqui é conferido contra os projetos que vivem em `References/`
+> (principalmente as bases em Dart e o repositório Python `automata-main`).
+> Essas referências balizam as alterações até que novos testes automatizados
+> estejam disponíveis.
 
 ## Core Architecture
 
 ### Clean Architecture Layers
 
-```
-┌─────────────────────────────────────┐
-│        Presentation Layer           │
-│  (UI Components, Pages, Providers)  │
-├─────────────────────────────────────┤
-│         Core Layer                  │
-│  (Algorithms, Models, Business)     │
-├─────────────────────────────────────┤
-│          Data Layer                 │
-│  (Services, Repositories, Storage)  │
-└─────────────────────────────────────┘
+```text
+┌──────────────────────────────────────────────┐
+│            Presentation Layer                │
+│  (UI Components, Pages, Providers            │
+│   e.g., AutomatonProvider,                   │
+│         UnifiedTraceNotifier)                │
+├──────────────────────────────────────────────┤
+│               Core Layer                     │
+│  (Algorithms, Models, Business Rules,        │
+│   Repositories e.g., LayoutRepository,       │
+│   Services e.g., TracePersistenceService)    │
+├──────────────────────────────────────────────┤
+│                Data Layer                    │
+│  (Services, Persistence, Storage             │
+│   e.g., TracePersistenceService data,        │
+│   SharedPreferences adapters)                │
+└──────────────────────────────────────────────┘
 ```
 
 ## Core Models
@@ -40,7 +53,8 @@ class FSA extends Automaton {
 }
 ```
 
-**Key Methods:**
+#### Key methods
+
 - `copyWith()` - Create a copy with modified properties
 - `isValid()` - Validate automaton structure
 - `getStateById()` - Find state by ID
@@ -163,7 +177,7 @@ class Failure<T> extends Result<T> {
 Riverpod `StateNotifier<AutomatonState>` responsible for orchestrating
 automaton editing, GraphView synchronisation, and algorithm execution.
 
-**Constructor dependencies**
+#### Constructor dependencies
 
 - `AutomatonService automatonService` – persistence and CRUD bridge for
   FSAs.
@@ -172,7 +186,7 @@ automaton editing, GraphView synchronisation, and algorithm execution.
 - `TracePersistenceService? tracePersistenceService` – optional storage for
   simulation traces.
 
-**Key responsibilities**
+#### Key responsibilities
 
 - **Automaton lifecycle** – `createAutomaton`, `updateAutomaton`,
   `replaceCurrentAutomaton`, `clearAutomaton`, and `clearAll` keep the active
@@ -193,11 +207,72 @@ automaton editing, GraphView synchronisation, and algorithm execution.
   `graphViewCanvasControllerProvider` helper ensure GraphView controllers stay
   synchronised with `AutomatonState`.
 
+### UnifiedTraceNotifier
+
+StateNotifier responsável por unificar o ciclo de vida dos traços de simulação
+vindos de qualquer simulador disponível (AFD, AFN, gramáticas, PDA, etc.). O
+notificador mantém histórico, estado atual e estatísticas persistidas em
+`SharedPreferences`, expondo provedores Riverpod e integrações via GetIt para
+uso fora da árvore de widgets.
+
+#### Responsabilidades centrais
+
+- **Contexto ativo** – `setAutomatonContext` fixa tipo e identificador do
+  autômato em edição antes de consultar históricos segmentados.
+- **Navegação de traço** – métodos como `navigateToStep`, `nextStep`,
+  `previousStep`, `firstStep` e `lastStep` atualizam o passo atual e disparam o
+  salvamento incremental.
+- **Persistência transparente** – `setTrace`, `saveCurrentTraceToHistory` e
+  `clearCurrentTrace` orquestram salvamentos no serviço de dados sem bloquear a
+  UI.
+- **Gestão de histórico e métricas** – `_loadTraceHistory`,
+  `_loadTraceStatistics` e `refreshTraceStatistics` mantêm listas e agregados
+  prontos para painéis analíticos.
+- **Importação/exportação** – `exportTraceHistory` e `importTraceHistory`
+  permitem compartilhar execuções entre dispositivos ou sessões.
+
+#### Métodos e fluxos chave
+
+- `loadTraceFromHistory(traceId)` – restaura uma simulação previamente salva,
+  ressincronizando o passo corrente com destaque imediato no canvas.
+- `saveCurrentTraceToHistory()` – captura o resultado mais recente da
+  simulação e armazena metadados como tipo de autômato e identificador opcional
+  para consultas futuras.
+- `clearAllTraces()` – limpa histórico global e estado ativo, útil ao alternar
+  de contas ou redefinir o laboratório.
+
+#### Exemplo prático – salvar um traço após simular
+
+```dart
+final notifier = ref.read(unifiedTraceProvider.notifier);
+
+await provider.simulateAutomaton('abba');
+notifier.setAutomatonContext(automatonType: 'dfa', automatonId: 'dfa_001');
+
+final simulation = ref.read(automatonProvider).simulationResult;
+if (simulation != null) {
+  notifier.setTrace(simulation);
+  await notifier.saveCurrentTraceToHistory();
+}
+```
+
+#### Exemplo prático – retomar um traço salvo
+
+```dart
+final notifier = ref.read(unifiedTraceProvider.notifier);
+await notifier.loadTraceFromHistory(selectedTraceId);
+
+final step = ref.read(unifiedTraceProvider).currentStep;
+if (step != null) {
+  highlightCanvas(step);
+}
+```
+
 ### AutomatonState
 
 Immutable snapshot of the automaton workspace.
 
-**Fields**
+#### Fields
 
 - `FSA? currentAutomaton` – active machine rendered on the canvas.
 - `SimulationResult? simulationResult` – latest simulation outcome.
@@ -210,7 +285,7 @@ Immutable snapshot of the automaton workspace.
 - `List<FSA> automatonHistory` – snapshots of previous automatons.
 - `List<SimulationResult> simulationHistory` – persisted simulation traces.
 
-**Helpers**
+#### Helpers
 
 - `copyWith(...)` – selective updates used by the provider.
 - `clear()` – resets the entire state back to its initial values.
@@ -225,7 +300,7 @@ Immutable snapshot of the automaton workspace.
 GraphView-driven canvas widget used to render and edit automatons while keeping
 the provider state in sync.
 
-**Parameters**
+#### Parameters
 
 - `FSA? automaton` – machine to render.
 - `GlobalKey canvasKey` – used for layout and overlay anchoring.
@@ -237,7 +312,7 @@ the provider state in sync.
 - `int? currentStepIndex` – active simulation step for trace playback.
 - `bool showTrace` – toggles visibility of the highlight trace.
 
-**Controller lifecycle & highlight integration**
+#### Controller lifecycle & highlight integration
 
 - When the widget owns the controller, it wires it to the
   `automatonProvider` through a `GraphViewCanvasController` instance.
@@ -326,6 +401,46 @@ Each method expects a `ConversionRequest` describing the source artefact and
 desired `ConversionType`, returning a `Result` that mirrors success/error
 states from the underlying algorithm.
 
+### TracePersistenceService (Data Layer)
+
+Serviço de dados voltado a `SharedPreferences` que grava histórico e metadados
+de traços segmentados por tipo e identificador de autômato. Complementa o
+notificador unificado oferecendo serialização resiliente e operações de
+importação/exportação.
+
+#### Responsabilidades na camada de dados
+
+- **Histórico segmentado** – `getTraceHistory`, `getTracesForType` e
+  `getTracesForAutomaton` retornam subconjuntos filtrados para dashboards e
+  replays.
+- **Traço atual** – `saveCurrentTrace` e `getCurrentTrace` preservam posição do
+  passo ativo para retomadas instantâneas no modo passo a passo.
+- **Metadados e estatísticas** – `saveTraceMetadata` e
+  `getTraceStatistics` sintetizam contagens de execuções aceitas/rejeitadas e
+  distribuição por tipo de simulador.
+- **Portabilidade** – `exportTraceHistory` e `importTraceHistory` geram JSON
+  autocontido com histórico e metadados para backup ou suporte.
+
+#### Métodos principais da camada de dados
+
+- `saveTraceToHistory(trace, automatonType: ..., automatonId: ...)` – adiciona o
+  traço ao histórico respeitando o limite máximo de itens.
+- `getTraceById(traceId)` – localiza o traço solicitado com metadados completos
+  para hidratar o estado do `UnifiedTraceNotifier`.
+- `clearAllTraces()` – remove histórico, traço atual e metadados armazenados.
+
+#### Exemplo prático – compilar estatísticas para o painel
+
+```dart
+final persistence = ref.read(dataTracePersistenceServiceProvider);
+final stats = await persistence.getTraceStatistics();
+
+setState(() {
+  totalExecutions = stats['totalTraces'] as int;
+  acceptedRatio = stats['acceptedTraces'] / totalExecutions;
+});
+```
+
 ## Integration Patterns
 
 ### Using Algorithms in UI
@@ -359,6 +474,22 @@ ref.listen<AutomatonState>(automatonProvider, (previous, next) {
 });
 ```
 
+### Aplicando layouts automáticos com LayoutRepository
+
+```dart
+final layoutRepository = getIt<LayoutRepository>();
+final automaton = ref.read(automatonProvider).currentAutomaton;
+
+if (automaton != null) {
+  final result = await layoutRepository.applyHierarchicalLayout(automaton);
+  result.when(
+    success: (updated) =>
+        ref.read(automatonProvider.notifier).replaceCurrentAutomaton(updated),
+    failure: (error) => showError(context, error.message),
+  );
+}
+```
+
 ### Error Handling
 
 ```dart
@@ -373,14 +504,16 @@ if (result.isSuccess) {
 }
 ```
 
-### State Management
+### State Management Guidelines
 
 ```dart
 // Watch state changes
 final state = ref.watch(automatonProvider);
 
 // Listen to specific properties
-final automaton = ref.watch(automatonProvider.select((s) => s.currentAutomaton));
+final automaton = ref.watch(
+  automatonProvider.select((s) => s.currentAutomaton),
+);
 final isLoading = ref.watch(automatonProvider.select((s) => s.isLoading));
 ```
 
@@ -486,7 +619,8 @@ testWidgets('Complete FSA workflow', (tester) async {
 
 - Use `flutter analyze` for static analysis
 - Use Flutter DevTools for performance profiling
-- Automated test coverage is temporarily unavailable during the algorithm migration; run `flutter analyze` instead until the new suites land.
+- Automated test coverage is temporarily unavailable during the algorithm
+  migration; run `flutter analyze` instead until the new suites land.
 - Use debug prints for algorithm step tracking
 
 ## Future Extensions
@@ -505,3 +639,95 @@ testWidgets('Complete FSA workflow', (tester) async {
 - Educational content integration
 - Collaborative features
 - Advanced visualizations
+
+## Core Services
+
+### TracePersistenceService (Core Layer)
+
+Serviço de domínio focado em persistir execuções de simulação com tratamento de
+erros explícito e suporte a exportação/importação por arquivo. É utilizado por
+camadas que necessitam de maior controle sobre limites de histórico e
+reaproveitamento de traços em dispositivos fora de `SharedPreferences`.
+
+#### Responsabilidades na camada de domínio
+
+- **Persistência local** – `saveTrace` mantém histórico circular e traço atual,
+  garantindo limpeza automática via `_cleanupHistory`.
+- **Recuperação robusta** – `loadCurrentTrace`, `loadTraceHistory` e
+  `loadTraceById` retornam objetos `SimulationResult` completos com tratamento
+  de exceções dedicadas (`TracePersistenceException`,
+  `TraceNotFoundException`).
+- **Portabilidade por arquivo** – `exportTraceToFile` cria JSON em diretório de
+  documentos e `importTraceFromFile` reidrata traços compartilhados manualmente.
+- **Configuração de políticas** – `setMaxHistorySize` expõe ajuste de retenção
+  por perfil de uso avançado.
+
+#### Métodos principais na camada de domínio
+
+- `deleteTrace(traceId)` – remove entradas específicas preservando consistência
+  do JSON serializado.
+- `clearHistory()` – zera histórico e traço atual em uma única chamada.
+- `getMaxHistorySize()` – retorna o limite configurado, usando
+  `_defaultMaxHistory` como fallback resiliente.
+
+#### Exemplo prático – exportar traço aceito para suporte
+
+```dart
+final coreTraceService = TracePersistenceService();
+final trace = await coreTraceService.loadCurrentTrace();
+
+if (trace != null && trace.accepted) {
+  final path = await coreTraceService.exportTraceToFile(trace);
+  await shareTraceFile(path);
+}
+```
+
+## Core Repositories
+
+### LayoutRepository
+
+Interface do domínio responsável por aplicar heurísticas de posicionamento ao
+autômato em edição, sempre retornando `AutomatonResult` para manter tratamento
+de sucesso/erro unificado.
+
+#### Responsabilidades de layout
+
+- **Heurísticas variadas** – métodos `applyCompactLayout`,
+  `applyBalancedLayout`, `applySpreadLayout` e `applyAutoLayout` organizam os
+  estados conforme padrões radial, grade balanceada, anéis concêntricos ou
+  espiral dourada.
+- **Layout hierárquico** – `applyHierarchicalLayout` percorre o grafo em largura
+  a partir do estado inicial para alinhar camadas, útil para máquinas com fluxo
+  direcional claro.
+- **Centragem geométrica** – `centerAutomaton` reposiciona o autômato sem
+  alterar distâncias relativas, preparando o canvas para exportações.
+
+#### Fluxos de uso
+
+- **Aplicação automática** – `applyAutoLayout` é acionado quando o usuário
+  seleciona o botão de auto-organização no canvas, atualizando o provider com o
+  resultado retornado.
+- **Layout hierárquico explícito** – usado em autômatos derivados de gramáticas
+  ou PDA para evidenciar níveis de derivação. Após a conversão, o provider chama
+  `applyHierarchicalLayout` antes de renderizar.
+- **Recentralização** – `centerAutomaton` é empregado após operações de
+  importação que trazem coordenadas deslocadas, garantindo visualização dentro
+  dos limites do canvas.
+
+#### Exemplo prático – reforçar hierarquia antes de exportar
+
+```dart
+final layoutRepository = getIt<LayoutRepository>();
+final automaton = ref.read(automatonProvider).currentAutomaton;
+
+if (automaton != null) {
+  final layoutResult =
+      await layoutRepository.applyHierarchicalLayout(automaton);
+  layoutResult.when(
+    success: (updated) async {
+      await exportAutomaton(updated);
+    },
+    failure: (error) => showError(context, error.message),
+  );
+}
+```

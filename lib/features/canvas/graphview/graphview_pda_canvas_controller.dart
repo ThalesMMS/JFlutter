@@ -1,9 +1,15 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/features/canvas/graphview/graphview_pda_canvas_controller.dart
-/// Descrição: Coordena o canvas GraphView para autômatos de pilha, gerenciando
-///            sincronização, seleção e manipulação visual das estruturas PDA.
-/// ---------------------------------------------------------------------------
+//
+//  graphview_pda_canvas_controller.dart
+//  JFlutter
+//
+//  Controlador dedicado aos autômatos de pilha que sincroniza o GraphView com o
+//  estado do PDAEditorNotifier, lidando com criação, movimentação e rótulos dos
+//  nós, além de manter transições configuradas com símbolos de pilha. Também
+//  orquestra snapshots vindos do domínio e registra logs úteis durante
+//  mutações do grafo.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';

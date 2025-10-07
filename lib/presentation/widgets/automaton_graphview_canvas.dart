@@ -27,8 +27,10 @@ import '../../features/canvas/graphview/graphview_highlight_channel.dart';
 import '../../features/canvas/graphview/graphview_all_nodes_builder.dart';
 import '../../features/canvas/graphview/graphview_label_field_editor.dart';
 import '../../features/canvas/graphview/graphview_link_overlay_utils.dart';
+import '../../features/canvas/graphview/graphview_pda_canvas_controller.dart';
 import '../providers/automaton_provider.dart';
 import 'automaton_canvas_tool.dart';
+import 'transition_editors/pda_transition_editor.dart';
 import 'transition_editors/transition_label_editor.dart';
 
 typedef AutomatonTransitionOverlayBuilder = Widget Function(
@@ -61,6 +63,25 @@ class AutomatonTmTransitionPayload extends AutomatonTransitionPayload {
   final String readSymbol;
   final String writeSymbol;
   final TapeDirection direction;
+}
+
+/// Payload describing PDA stack operations (read/pop/push and λ flags).
+class AutomatonPdaTransitionPayload extends AutomatonTransitionPayload {
+  const AutomatonPdaTransitionPayload({
+    required this.readSymbol,
+    required this.popSymbol,
+    required this.pushSymbol,
+    required this.isLambdaInput,
+    required this.isLambdaPop,
+    required this.isLambdaPush,
+  });
+
+  final String readSymbol;
+  final String popSymbol;
+  final String pushSymbol;
+  final bool isLambdaInput;
+  final bool isLambdaPop;
+  final bool isLambdaPush;
 }
 
 /// Immutable description of the current transition overlay request.
@@ -187,6 +208,79 @@ class AutomatonGraphViewCanvasCustomization {
               fromStateId: request.fromStateId,
               toStateId: request.toStateId,
               label: payload.label,
+              transitionId: request.transitionId,
+              controlPointX: request.worldAnchor.dx,
+              controlPointY: request.worldAnchor.dy,
+            );
+          },
+        );
+      },
+    );
+  }
+
+  factory AutomatonGraphViewCanvasCustomization.pda() {
+    return AutomatonGraphViewCanvasCustomization(
+      enableToolSelection: true,
+      transitionConfigBuilder: (controller) {
+        return AutomatonGraphViewTransitionConfig(
+          initialPayloadBuilder: (edge) {
+            final read = edge?.readSymbol ?? '';
+            final pop = edge?.popSymbol ?? '';
+            final push = edge?.pushSymbol ?? '';
+            return AutomatonPdaTransitionPayload(
+              readSymbol: read,
+              popSymbol: pop,
+              pushSymbol: push,
+              isLambdaInput: edge?.isLambdaInput ?? false,
+              isLambdaPop: edge?.isLambdaPop ?? false,
+              isLambdaPush: edge?.isLambdaPush ?? false,
+            );
+          },
+          overlayBuilder: (context, data, overlayController) {
+            final payload = data.payload as AutomatonPdaTransitionPayload;
+            return PdaTransitionEditor(
+              initialRead: payload.readSymbol,
+              initialPop: payload.popSymbol,
+              initialPush: payload.pushSymbol,
+              isLambdaInput: payload.isLambdaInput,
+              isLambdaPop: payload.isLambdaPop,
+              isLambdaPush: payload.isLambdaPush,
+              onSubmit: ({
+                required String readSymbol,
+                required String popSymbol,
+                required String pushSymbol,
+                required bool lambdaInput,
+                required bool lambdaPop,
+                required bool lambdaPush,
+              }) {
+                overlayController.submit(
+                  AutomatonPdaTransitionPayload(
+                    readSymbol: readSymbol,
+                    popSymbol: popSymbol,
+                    pushSymbol: pushSymbol,
+                    isLambdaInput: lambdaInput,
+                    isLambdaPop: lambdaPop,
+                    isLambdaPush: lambdaPush,
+                  ),
+                );
+              },
+              onCancel: overlayController.cancel,
+            );
+          },
+          persistTransition: (request) {
+            final payload =
+                request.payload as AutomatonPdaTransitionPayload;
+            final pdaController =
+                request.controller as GraphViewPdaCanvasController;
+            pdaController.addOrUpdateTransition(
+              fromStateId: request.fromStateId,
+              toStateId: request.toStateId,
+              readSymbol: payload.readSymbol,
+              popSymbol: payload.popSymbol,
+              pushSymbol: payload.pushSymbol,
+              isLambdaInput: payload.isLambdaInput,
+              isLambdaPop: payload.isLambdaPop,
+              isLambdaPush: payload.isLambdaPush,
               transitionId: request.transitionId,
               controlPointX: request.worldAnchor.dx,
               controlPointY: request.worldAnchor.dy,

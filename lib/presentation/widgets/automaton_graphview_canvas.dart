@@ -447,21 +447,7 @@ class _AutomatonGraphViewCanvasState
       return;
     }
 
-    const doubleTapTimeout = Duration(milliseconds: 300);
-    final now = DateTime.now();
-    if (_lastTapNodeId == node.id &&
-        _lastTapTimestamp != null &&
-        now.difference(_lastTapTimestamp!) <= doubleTapTimeout) {
-      debugPrint(
-        '[AutomatonGraphViewCanvas] Detected double tap on ${node.id}',
-      );
-      _handleNodeContextTap(node.id);
-      _lastTapNodeId = null;
-      _lastTapTimestamp = null;
-    } else {
-      _lastTapNodeId = node.id;
-      _lastTapTimestamp = now;
-    }
+    _registerNodeTap(node.id);
   }
 
   void _handleNodePanStart(DragStartDetails details) {
@@ -483,10 +469,17 @@ class _AutomatonGraphViewCanvasState
   }
 
   void _handleNodePanEnd(DragEndDetails details) {
+    final nodeId = _draggingNodeId;
+    final didMove = _didMoveDraggedNode;
     debugPrint(
       '[AutomatonGraphViewCanvas] pan end velocity=${details.velocity}',
     );
     _endNodeDrag();
+    if (!didMove &&
+        nodeId != null &&
+        _activeTool != AutomatonCanvasTool.transition) {
+      _handleNodeTapFromPan(nodeId);
+    }
   }
 
   void _handleNodePanCancel() {
@@ -526,15 +519,32 @@ class _AutomatonGraphViewCanvasState
   }
 
   void _handleNodeContextTap(String nodeId) {
-    if (_activeTool != AutomatonCanvasTool.selection) {
-      return;
-    }
     final node = _controller.nodeById(nodeId);
     if (node == null) {
       return;
     }
     debugPrint('[AutomatonGraphViewCanvas] opening state options for $nodeId');
     _showStateOptions(node);
+  }
+
+  void _handleNodeTapFromPan(String nodeId) {
+    _registerNodeTap(nodeId);
+  }
+
+  void _registerNodeTap(String nodeId) {
+    const doubleTapTimeout = Duration(milliseconds: 300);
+    final now = DateTime.now();
+    if (_lastTapNodeId == nodeId &&
+        _lastTapTimestamp != null &&
+        now.difference(_lastTapTimestamp!) <= doubleTapTimeout) {
+      debugPrint('[AutomatonGraphViewCanvas] Detected double tap on $nodeId');
+      _handleNodeContextTap(nodeId);
+      _lastTapNodeId = null;
+      _lastTapTimestamp = null;
+    } else {
+      _lastTapNodeId = nodeId;
+      _lastTapTimestamp = now;
+    }
   }
 
   Future<void> _showStateOptions(GraphViewCanvasNode node) async {
@@ -1709,6 +1719,7 @@ class _NodeTapGestureRecognizer extends TapGestureRecognizer {
       'down on ${node.id} tool=${toolResolver().name}',
     );
     super.addAllowedPointer(event);
+    resolvePointer(event.pointer, GestureDisposition.accepted);
   }
 
   @override

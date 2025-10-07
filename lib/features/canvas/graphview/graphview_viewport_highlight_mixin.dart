@@ -44,6 +44,10 @@ mixin GraphViewViewportHighlightMixin on GraphViewHighlightController {
   /// Provides access to the cached canvas edges.
   Map<String, GraphViewCanvasEdge> get edgesCache;
 
+  /// Maximum zoom applied when fitting the viewport to the current content.
+  @protected
+  double get fitToContentMaxScale => _kFitToContentMaxScale;
+
   /// Returns the most recent viewport size reported by the hosting widget.
   @protected
   Size? get currentViewportSize;
@@ -156,7 +160,7 @@ mixin GraphViewViewportHighlightMixin on GraphViewHighlightController {
     final scaleX = viewport.width / contentWidth;
     final scaleY = viewport.height / contentHeight;
     final rawScale = math.min(scaleX, scaleY) * 0.9;
-    final targetScale = rawScale.clamp(0.05, _kFitToContentMaxScale);
+    final targetScale = rawScale.clamp(0.05, fitToContentMaxScale);
 
     final contentCenterX = bounds.left + bounds.width / 2;
     final contentCenterY = bounds.top + bounds.height / 2;

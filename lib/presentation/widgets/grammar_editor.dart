@@ -76,58 +76,40 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen =
         screenWidth < 600; // Increased breakpoint for better mobile support
+    final theme = Theme.of(context);
+    final clearButton = ElevatedButton.icon(
+      onPressed: _clearGrammar,
+      icon: const Icon(Icons.clear, size: 16),
+      label: const Text('Clear'),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: theme.colorScheme.error,
+        foregroundColor: theme.colorScheme.onError,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      ),
+    );
 
     if (isSmallScreen) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Icon(
                 Icons.text_fields,
-                color: Theme.of(context).colorScheme.primary,
+                color: theme.colorScheme.primary,
                 size: 20,
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Grammar Editor',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 4,
-            children: [
-              ElevatedButton.icon(
-                onPressed: _addProduction,
-                icon: const Icon(Icons.add, size: 16),
-                label: const Text('Add Rule'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                ),
-              ),
-              ElevatedButton.icon(
-                onPressed: _clearGrammar,
-                icon: const Icon(Icons.clear, size: 16),
-                label: const Text('Clear'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.error,
-                  foregroundColor: Theme.of(context).colorScheme.onError,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                ),
-              ),
+              clearButton,
             ],
           ),
         ],
@@ -136,36 +118,18 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
 
     return Row(
       children: [
-        Icon(Icons.text_fields, color: Theme.of(context).colorScheme.primary),
+        Icon(Icons.text_fields, color: theme.colorScheme.primary),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             'Grammar Editor',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         const SizedBox(width: 8),
-        ElevatedButton.icon(
-          onPressed: _addProduction,
-          icon: const Icon(Icons.add, size: 18),
-          label: const Text('Add Rule'),
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          ),
-        ),
-        const SizedBox(width: 8),
-        ElevatedButton.icon(
-          onPressed: _clearGrammar,
-          icon: const Icon(Icons.clear, size: 18),
-          label: const Text('Clear'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.error,
-            foregroundColor: Theme.of(context).colorScheme.onError,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          ),
-        ),
+        clearButton,
       ],
     );
   }

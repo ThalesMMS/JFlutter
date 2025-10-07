@@ -82,6 +82,13 @@ class _PDAPageState extends ConsumerState<PDAPage> {
     });
   }
 
+  void _handleAddStatePressed() {
+    if (_toolController.activeTool != AutomatonCanvasTool.addState) {
+      _toolController.setActiveTool(AutomatonCanvasTool.addState);
+    }
+    _canvasController.addStateAtCenter();
+  }
+
   @override
   void dispose() {
     _pdaEditorSub?.close();
@@ -118,67 +125,9 @@ class _PDAPageState extends ConsumerState<PDAPage> {
 
   Widget _buildMobileLayout() {
     return SafeArea(
-      child: Stack(
-        children: [
-          Column(
-            children: [
-              Expanded(
-                child: Container(
-                  margin: const EdgeInsets.all(8),
-                  child: _buildCanvasWithToolbar(isMobile: true),
-                ),
-              ),
-              _buildMobileInfoPanel(context),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMobileInfoPanel(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Pushdown Automata Editor',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Create states, transitions with stack operations, and test strings. PDAs can recognize context-free languages.',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          const SizedBox(height: 16),
-          _buildPdaInfoMetrics(context),
-          if (_hasUnsavedChanges) ...[
-            const SizedBox(height: 12),
-            Row(
-              key: const ValueKey('pda_info_unsaved_changes'),
-              children: [
-                Icon(
-                  Icons.warning_amber_rounded,
-                  color: Theme.of(context).colorScheme.tertiary,
-                  size: 18,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Unsaved changes',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ],
-            ),
-          ],
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: _buildCanvasWithToolbar(isMobile: true),
       ),
     );
   }
@@ -383,12 +332,13 @@ class _PDAPageState extends ConsumerState<PDAPage> {
                 enableToolSelection: true,
                 showSelectionTool: true,
                 activeTool: _activeTool,
-                onSelectTool: () =>
-                    _toolController.setActiveTool(AutomatonCanvasTool.selection),
-                onAddState: () =>
-                    _toolController.setActiveTool(AutomatonCanvasTool.addState),
-                onAddTransition: () => _toolController
-                    .setActiveTool(AutomatonCanvasTool.transition),
+                onSelectTool: () => _toolController.setActiveTool(
+                  AutomatonCanvasTool.selection,
+                ),
+                onAddState: _handleAddStatePressed,
+                onAddTransition: () => _toolController.setActiveTool(
+                  AutomatonCanvasTool.transition,
+                ),
                 onFitToContent: _canvasController.fitToContent,
                 onResetView: _canvasController.resetView,
                 onClear: () => ref
@@ -443,10 +393,9 @@ class _PDAPageState extends ConsumerState<PDAPage> {
               activeTool: _activeTool,
               onSelectTool: () =>
                   _toolController.setActiveTool(AutomatonCanvasTool.selection),
-              onAddState: () =>
-                  _toolController.setActiveTool(AutomatonCanvasTool.addState),
-              onAddTransition: () => _toolController
-                  .setActiveTool(AutomatonCanvasTool.transition),
+              onAddState: _handleAddStatePressed,
+              onAddTransition: () =>
+                  _toolController.setActiveTool(AutomatonCanvasTool.transition),
               onClear: () => ref
                   .read(pdaEditorProvider.notifier)
                   .updateFromCanvas(

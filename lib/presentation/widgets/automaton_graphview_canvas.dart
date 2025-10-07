@@ -431,6 +431,13 @@ class _AutomatonGraphViewCanvasState
       return;
     }
 
+    if (_activeTool == AutomatonCanvasTool.transition) {
+      if (node != null) {
+        _handleNodeTap(node.id);
+      }
+      return;
+    }
+
     if (_activeTool != AutomatonCanvasTool.selection) {
       return;
     }
@@ -1186,25 +1193,6 @@ class _AutomatonGraphViewCanvasState
           ),
     };
 
-    gestures[_NodeTapGestureRecognizer] =
-        GestureRecognizerFactoryWithHandlers<_NodeTapGestureRecognizer>(
-          () => _NodeTapGestureRecognizer(
-            hitTester: (global) =>
-                _hitTestNode(_globalToCanvasLocal(global), logDetails: false),
-            toolResolver: () => _activeTool,
-            onPointerDown: (global) => _logCanvasTapFromGlobal(
-              source: 'tap-pointer',
-              globalPosition: global,
-            ),
-          ),
-          (recognizer) {
-            if (recognizer.team == null) {
-              recognizer.team = _gestureArenaTeam;
-            }
-            recognizer.onNodeTap = (node) => _handleNodeTap(node.id);
-          },
-        );
-
     return gestures;
   }
 }
@@ -1682,80 +1670,5 @@ class _NodePanGestureRecognizer extends PanGestureRecognizer {
       onDragReleased?.call();
     }
     super.didStopTrackingLastPointer(pointer);
-  }
-}
-
-class _NodeTapGestureRecognizer extends TapGestureRecognizer {
-  _NodeTapGestureRecognizer({
-    required this.hitTester,
-    required this.toolResolver,
-    this.onPointerDown,
-  });
-
-  final _NodeHitTester hitTester;
-  final _ToolResolver toolResolver;
-  final ValueChanged<Offset>? onPointerDown;
-
-  ValueChanged<GraphViewCanvasNode>? onNodeTap;
-  GraphViewCanvasNode? _downNode;
-
-  @override
-  void addAllowedPointer(PointerDownEvent event) {
-    debugPrint(
-      '[NodeTapRecognizer] addAllowedPointer pointer ${event.pointer} '
-      'tool=${toolResolver().name} position=${event.position}',
-    );
-    onPointerDown?.call(event.position);
-    if (toolResolver() != AutomatonCanvasTool.transition) {
-      return;
-    }
-    final node = hitTester(event.position);
-    if (node == null) {
-      return;
-    }
-    _downNode = node;
-    debugPrint(
-      '[NodeTapRecognizer] pointer ${event.pointer} '
-      'down on ${node.id} tool=${toolResolver().name}',
-    );
-    super.addAllowedPointer(event);
-    resolvePointer(event.pointer, GestureDisposition.accepted);
-  }
-
-  @override
-  void handleTapUp({
-    required PointerDownEvent down,
-    required PointerUpEvent up,
-  }) {
-    final node = _downNode ?? hitTester(up.position);
-    debugPrint(
-      '[NodeTapRecognizer] tap up pointer ${up.pointer} '
-      'node=${node?.id}',
-    );
-    if (node != null) {
-      onNodeTap?.call(node);
-    }
-    _downNode = null;
-    super.handleTapUp(down: down, up: up);
-  }
-
-  @override
-  void handleTapCancel({
-    required PointerDownEvent down,
-    PointerCancelEvent? cancel,
-    required String reason,
-  }) {
-    debugPrint(
-      '[NodeTapRecognizer] tap cancel pointer ${down.pointer} '
-      'reason=$reason',
-    );
-    _downNode = null;
-    super.handleTapCancel(down: down, cancel: cancel, reason: reason);
-  }
-
-  @override
-  void rejectGesture(int pointer) {
-    _downNode = null;
-    super.rejectGesture(pointer);
   }
 }

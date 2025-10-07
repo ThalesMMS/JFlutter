@@ -1,3 +1,15 @@
+//
+//  fa_simulator.dart
+//  JFlutter
+//
+//  Disponibiliza uma fachada específica para simulação de autômatos finitos,
+//  escolhendo dinamicamente entre execuções determinísticas e não
+//  determinísticas fornecidas por `AutomatonSimulator`. Simplifica o acesso a
+//  resultados completos de simulação e à verificação booleana de aceitação,
+//  respeitando configurações de passo a passo e limites de tempo.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import '../../models/fsa.dart';
 import '../../models/simulation_result.dart';
 import '../../result.dart';

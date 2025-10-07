@@ -1,3 +1,16 @@
+//
+//  automaton_simulator.dart
+//  JFlutter
+//
+//  Implementa o motor central de simulação para autômatos finitos, cobrindo
+//  execuções determinísticas e não determinísticas com suporte a rastreamento
+//  passo a passo. Realiza validações estruturais, controla tempo limite,
+//  compila listas de etapas e produz resultados ricos que incluem estatísticas
+//  de execução. Serve como base para fachadas de nível superior no domínio de
+//  autômatos.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import '../models/fsa.dart';
 import '../models/state.dart';
 import '../models/fsa_transition.dart';

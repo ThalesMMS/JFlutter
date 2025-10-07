@@ -1,3 +1,14 @@
+//
+//  fsa_to_grammar_converter.dart
+//  JFlutter
+//
+//  Responsável por transformar autômatos finitos em gramáticas regulares,
+//  atribuindo não terminais a estados, gerando produções rotuladas pelas
+//  transições e adicionando regras lambda para estados de aceitação. Retorna
+//  objeto `Grammar` pronto para consumo em módulos de análise e conversão.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import '../models/fsa.dart';
 import '../models/grammar.dart';
 import '../models/production.dart';

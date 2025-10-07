@@ -1,3 +1,15 @@
+//
+//  fa_to_regex_converter.dart
+//  JFlutter
+//
+//  Implementa o método de eliminação de estados para converter autômatos
+//  finitos em expressões regulares equivalentes. Normaliza a estrutura para
+//  possuir estados iniciais e finais únicos, valida integridade do autômato e
+//  aplica manipulações iterativas de transições para gerar a expressão
+//  resultante encapsulada em `Result`.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:vector_math/vector_math_64.dart';
 import '../models/fsa.dart';
 import '../models/state.dart';

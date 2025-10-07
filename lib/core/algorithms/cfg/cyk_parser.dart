@@ -1,3 +1,15 @@
+//
+//  cyk_parser.dart
+//  JFlutter
+//
+//  Implementa o algoritmo CYK para gramáticas em Forma Normal de Chomsky,
+//  incluindo a preparação da gramática em CNF, construção de tabela dinâmica e
+//  reconstrução opcional da derivação. Trata o caso da palavra vazia, registra
+//  apontadores de retrocesso e retorna resultados estruturados com árvore de
+//  derivação quando a sentença é aceita.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import '../../models/grammar.dart';
 import '../../models/production.dart';
 import '../../result.dart';

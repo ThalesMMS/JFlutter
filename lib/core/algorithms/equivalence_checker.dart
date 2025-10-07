@@ -1,3 +1,15 @@
+//
+//  equivalence_checker.dart
+//  JFlutter
+//
+//  Implementa verificação de equivalência entre dois autômatos finitos,
+//  normalizando alfabetos, convertendo NFAs para DFAs e completando transições
+//  antes de percorrer o produto cartesiano. Utiliza busca em largura para
+//  detectar divergências de aceitação e retorna rapidamente quando linguagens
+//  diferem.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import '../models/fsa.dart';
 import '../models/state.dart';
 import 'dfa_completer.dart';

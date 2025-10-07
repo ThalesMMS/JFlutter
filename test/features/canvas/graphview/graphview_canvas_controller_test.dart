@@ -1,15 +1,13 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/features/canvas/graphview/graphview_canvas_controller_test.dart
-// Objetivo: Verificar o controlador base GraphView de autômatos garantindo
-// interação com o provider e repositório de layout fake.
-// Cenários cobertos:
-// - Aplicação de layouts (auto, balanced, compact, hierarchical, spread).
-// - Manipulação de zoom, seleção e atualizações de transição.
-// - Uso de serviço de autômato para sincronização com o estado interno.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
+//
+//  graphview_canvas_controller_test.dart
+//  JFlutter
+//
+//  Testa o controlador base do canvas GraphView para autômatos, coordenando providers, repositórios
+//  de layout e atualizações de seleção. Inspeciona comandos de layout, zoom e sincronização de
+//  transições para garantir que o estado visual reflita o modelo lógico.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 
 import 'dart:math' as math;
 

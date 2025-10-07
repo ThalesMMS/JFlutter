@@ -1,11 +1,14 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/pages/regex_page.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Página dedicada a expressões regulares permitindo testá-las, convertê-las em autômatos e comparar equivalências. Integra controles de simulação e algoritmos para fornecer ciclo completo de validação.
-/// Contexto: Aproveita provedores de autômatos e casos de uso para executar conversões NFA↔DFA e verificações de aceitação. Organiza formulários e resultados em cartões para oferecer feedback claro sobre erros e coincidências.
-/// Observações: Gerencia controladores de texto e estado local de validação para atualizar indicadores conforme o usuário digita. Pode ser expandida com novas ferramentas analíticas preservando a estrutura já estabelecida.
-/// ---------------------------------------------------------------------------
+//
+//  regex_page.dart
+//  JFlutter
+//
+//  Centraliza as ferramentas de expressões regulares permitindo validar,
+//  simular e converter padrões em autômatos, reutilizando algoritmos do núcleo
+//  para checar equivalência, aceitação de cadeias e sincronizar resultados com
+//  o provedor de autômatos ativo.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/algorithms/automaton_simulator.dart';

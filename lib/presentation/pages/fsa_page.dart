@@ -1,11 +1,13 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/pages/fsa_page.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Agrega ferramentas de edição, simulação e algoritmos para Autômatos Finitos em layout integrado. Coordena canvas GraphView, painel de algoritmos e controles móveis oferecendo ambiente completo de experimentação.
-/// Contexto: Interage com provedores de automato e algoritmos para executar operações como minimização, conversões e simulações. Sincroniza serviços de destaque e controladores para garantir visualização consistente em todo o workspace.
-/// Observações: Inicializa controladores compartilhados no initState e garante descarte adequado no ciclo de vida do widget. Estrutura modular permite incorporar novas funcionalidades como exportação ou análises adicionais com mínimo acoplamento.
-/// ---------------------------------------------------------------------------
+//
+//  fsa_page.dart
+//  JFlutter
+//
+//  Configura o ambiente de Autômatos Finitos com canvas GraphView, painéis de
+//  simulação e algoritmos, coordenando controladores, destaques e ferramentas
+//  para oferecer fluxo completo de edição e experimentação responsiva.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/entities/automaton_entity.dart';

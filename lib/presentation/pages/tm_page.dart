@@ -1,11 +1,14 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/pages/tm_page.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Centraliza ferramentas de edição, simulação e análise de Máquinas de Turing em layout responsivo. Integra canvas GraphView, painéis de algoritmos e controles móveis para oferecer ambiente completo de estudo.
-/// Contexto: Coordena provedores e serviços de destaque para manter sincronização entre editor, simulador e métricas. Acompanha métricas como quantidade de estados, transições e símbolos garantindo feedback sobre a configuração da máquina.
-/// Observações: Gerencia ciclo de vida de controladores e assinaturas Riverpod evitando vazamentos e estados inconsistentes. Pode ser personalizado com novos painéis mantendo a arquitetura modular existente.
-/// ---------------------------------------------------------------------------
+//
+//  tm_page.dart
+//  JFlutter
+//
+//  Garante o workspace de Máquinas de Turing com canvas GraphView, painéis de
+//  simulação e algoritmos, acompanhando métricas, ferramentas e destaques para
+//  preservar a coerência da máquina entre edições, simulações e layouts
+//  responsivos.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

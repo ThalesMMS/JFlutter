@@ -1,11 +1,13 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/pages/home_page.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Página inicial que organiza todos os módulos do aplicativo com navegação responsiva e foco mobile-first. Integra páginas de autômatos, gramáticas, expressões regulares, lema do bombeamento e configurações em um hub unificado.
-/// Contexto: Utiliza Riverpod para sincronizar índice de navegação e provedores principais, além de PageView para transições suaves entre seções. Fornece navegação inferior para dispositivos móveis e mantém serviços de destaque compartilhados quando necessário.
-/// Observações: Mantém registro do último índice para coordenar animações e reutiliza um serviço de destaque padrão quando módulos específicos não fornecem um. Estrutura pronta para adicionar novos itens simplesmente estendendo a lista de NavigationItem.
-/// ---------------------------------------------------------------------------
+//
+//  home_page.dart
+//  JFlutter
+//
+//  Orquestra a página inicial com navegação por PageView e bottom navigation
+//  responsiva, integrando provedores de autômatos, gramáticas e destaques para
+//  coordenar os módulos centrais do aplicativo em todas as plataformas.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/automaton_provider.dart';

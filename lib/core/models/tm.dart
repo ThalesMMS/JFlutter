@@ -1,3 +1,15 @@
+//
+//  tm.dart
+//  JFlutter
+//
+//  Representação de máquinas de Turing que herda Automaton para manter estados,
+//  transições e configuração de canvas, acrescentando alfabeto de fita,
+//  símbolo branco e contagem de fitas. Oferece serialização completa, cópias
+//  imutáveis e validações específicas que protegem a integridade de símbolos e
+//  transições durante importações e simulações.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';
 import 'state.dart';

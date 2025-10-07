@@ -1,3 +1,15 @@
+//
+//  pda.dart
+//  JFlutter
+//
+//  Implementação de autômatos com pilha que amplia Automaton com alfabeto da
+//  pilha e símbolo inicial, expondo cópias, serialização e validações
+//  específicas. Fornece utilitários para filtrar transições por tipo e garante
+//  que símbolos utilizados estejam sincronizados com a pilha, evitando erros em
+//  simulações e exportações.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';
 import 'state.dart';

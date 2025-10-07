@@ -1,3 +1,14 @@
+//
+//  parse_action.dart
+//  JFlutter
+//
+//  Define o modelo de ação utilizada nas tabelas de parsing LR, reunindo tipos
+//  como shift, reduce, accept e error com dados auxiliares. Garante criação
+//  controlada através de fábricas nomeadas e fornece comparações, hashing e
+//  representações textuais para depuração das execuções.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'production.dart';
 
 /// Represents a parsing action in grammar parsing algorithms

@@ -1,3 +1,15 @@
+//
+//  result.dart
+//  JFlutter
+//
+//  Define uma hierarquia selada Result usada em toda a aplicação para
+//  padronizar retornos de sucesso e falha, oferecendo utilitários para mapear
+//  dados, reagir a callbacks e trabalhar com coleções de resultados.
+//  Fornece extensões convenientes e fábricas nomeadas que simplificam a
+//  construção de respostas consistentes entre camadas de domínio e UI.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'entities/automaton_entity.dart';
 import 'entities/grammar_entity.dart';
 

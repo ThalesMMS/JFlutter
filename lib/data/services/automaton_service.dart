@@ -1,3 +1,11 @@
+//
+//  automaton_service.dart
+//  JFlutter
+//
+//  Mantém um armazenamento em memória de autômatos, fornecendo CRUD, geração de identificadores, importação e exportação em JSON e validações estruturais com ajustes de layout.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';

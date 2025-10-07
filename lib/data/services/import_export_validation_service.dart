@@ -1,3 +1,11 @@
+//
+//  import_export_validation_service.dart
+//  JFlutter
+//
+//  Valida ciclos de importação e exportação ao comparar XML, JSON e representações gráficas, aferindo integridade estrutural, contagens e mensagens de erro previstas.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:ui';
 import 'dart:math';
 import 'package:vector_math/vector_math_64.dart';

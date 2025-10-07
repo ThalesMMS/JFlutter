@@ -1,3 +1,11 @@
+//
+//  examples_data_source.dart
+//  JFlutter
+//
+//  Carrega exemplos básicos do pacote de assets, convertendo JSON em modelos de autômato, descrevendo cada item e agrupando-os por categorias simples.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:convert';
 import 'package:flutter/foundation.dart' as foundation;
 import 'package:flutter/services.dart';

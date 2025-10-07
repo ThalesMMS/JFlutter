@@ -1,3 +1,11 @@
+//
+//  simulation_service.dart
+//  JFlutter
+//
+//  Expõe operações de simulação para autômatos finitos determinísticos e não determinísticos, validando parâmetros e retornando resultados uniformizados do simulador central.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import '../../core/models/fsa.dart';
 import '../../core/models/simulation_result.dart';
 import '../../core/result.dart';

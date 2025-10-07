@@ -1,3 +1,11 @@
+//
+//  algorithm_repository_impl.dart
+//  JFlutter
+//
+//  Expõe operações de algoritmos sobre autômatos e gramáticas, convertendo entidades para os modelos do núcleo antes de orquestrar transformações, análises e simulações complexas.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:math' as math;
 import 'package:collection/collection.dart';
 import 'package:vector_math/vector_math_64.dart';

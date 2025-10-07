@@ -1,3 +1,11 @@
+//
+//  serialization_service.dart
+//  JFlutter
+//
+//  Implementa serialização e desserialização de autômatos entre estruturas internas e XML JFLAP, tratando estados, transições e mapeamento seguro de dados.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:convert';
 import 'package:xml/xml.dart';
 import '../../core/result.dart';

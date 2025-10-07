@@ -1,3 +1,11 @@
+//
+//  examples_asset_data_source.dart
+//  JFlutter
+//
+//  Disponibiliza exemplos enriquecidos a partir de assets, combinando metadados de categoria com validação por tipo de máquina para montar AutomatonModel coerentes.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';

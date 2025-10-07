@@ -1,3 +1,11 @@
+//
+//  file_operations_service.dart
+//  JFlutter
+//
+//  Centraliza a leitura e escrita de autômatos e gramáticas nos formatos JFLAP, além de gerar exportações em PNG e SVG desenhando o canvas com ajustes visuais consistentes.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui;

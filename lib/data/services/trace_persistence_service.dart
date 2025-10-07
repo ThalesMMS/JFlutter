@@ -1,3 +1,11 @@
+//
+//  trace_persistence_service.dart
+//  JFlutter
+//
+//  Gerencia o armazenamento de históricos de simulação via SharedPreferences, preservando metadados, seleção atual e consultas segmentadas por autômato ou tipo.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/models/simulation_result.dart';

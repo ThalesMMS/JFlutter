@@ -1,11 +1,14 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/widgets/automaton_canvas_tool.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Define os modos de edição disponíveis no canvas de autômatos e fornece controlador observável para alterná-los. Facilita integração com toolbars e componentes que precisam reagir a mudanças de ferramenta.
-/// Contexto: Utiliza ChangeNotifier para propagar eventos de seleção permitindo múltiplos ouvintes sincronizados. Mantém estado simples com valor padrão focado na ferramenta de seleção para edições comuns.
-/// Observações: Pode ser expandido com novos modos sem alterar contratos existentes. Ideal para coordenação entre painéis e gestos do canvas que dependem da ferramenta ativa.
-/// ---------------------------------------------------------------------------
+//
+//  automaton_canvas_tool.dart
+//  JFlutter
+//
+//  Definição dos modos de edição disponíveis no canvas de autômatos e de um
+//  controlador baseado em ChangeNotifier que propaga alterações da ferramenta
+//  ativa. O módulo oferece integração simples com toolbars e componentes que
+//  reagem às trocas de modo, mantendo estado enxuto e extensível para futuros
+//  tipos de interação.
+//
+//  Thales Matheus Mendonça Santos - October 2025
 import 'package:flutter/foundation.dart';
 
 /// Editing tools supported by the automaton canvas.

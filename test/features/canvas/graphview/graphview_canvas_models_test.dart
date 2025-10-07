@@ -1,13 +1,13 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/features/canvas/graphview/graphview_canvas_models_test.dart
-// Objetivo: Avaliar modelos de canvas usados pelo GraphView garantindo
-// imutabilidade e helpers consistentes.
-// Cenários cobertos:
-// - Atualização de metadados de arestas via `copyWith`.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
+//
+//  graphview_canvas_models_test.dart
+//  JFlutter
+//
+//  Testes unitários que asseguram a imutabilidade e os utilitários de cópia dos
+//  modelos de canvas empregados pelo GraphView. Os casos verificam atualização
+//  de metadados específicos de PDAs por meio de copyWith, garantindo coerência
+//  entre símbolos de pilha e indicadores de transições λ.
+//
+//  Thales Matheus Mendonça Santos - October 2025
 
 import 'package:flutter_test/flutter_test.dart';
 

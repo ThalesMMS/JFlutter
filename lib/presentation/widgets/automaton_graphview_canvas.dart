@@ -176,7 +176,7 @@ class AutomatonGraphViewCanvasCustomization {
   const AutomatonGraphViewCanvasCustomization({
     required this.transitionConfigBuilder,
     this.enableStateDrag = true,
-    this.enableToolSelection = false,
+    this.enableToolSelection = true,
   });
 
   final AutomatonGraphViewTransitionConfig Function(

@@ -9,7 +9,7 @@
 //  que o estado visual reaja às interações do usuário em sequências completas.
 //
 //  Thales Matheus Mendonça Santos - October 2025
-
+//
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 void main() {

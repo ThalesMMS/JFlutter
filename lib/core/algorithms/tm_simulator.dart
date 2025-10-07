@@ -1,3 +1,15 @@
+//
+//  tm_simulator.dart
+//  JFlutter
+//
+//  Entrega a lógica de simulação para máquinas de Turing determinísticas e não
+//  determinísticas, abrangendo validações, execução passo a passo e métricas de
+//  análise. Gerencia configurações exploradas, movimentação de fita e detecção
+//  de condições de aceitação ou rejeição.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
+
 import '../models/fsa_transition.dart';
 import '../models/simulation_step.dart';
 import '../models/state.dart';

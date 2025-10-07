@@ -1,3 +1,15 @@
+//
+//  automaton_repository.dart
+//  JFlutter
+//
+//  Declara contratos de repositório responsáveis por persistir autômatos,
+//  executar algoritmos formais e distribuir exemplos utilizados pela aplicação.
+//  Estrutura também interfaces de layout e entidades auxiliares que orientam
+//  implementações concretas nas camadas de dados.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
+
 import '../entities/automaton_entity.dart';
 import '../result.dart';
 import '../models/simulation_result.dart';

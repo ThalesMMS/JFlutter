@@ -1,20 +1,3 @@
-### 7. PDA Simulation (T023)
-
-**Reference**: `References/automata-main/automata/pda/npda.py`, tests in `References/automata-main/tests/test_pda.py`
-**JFlutter Implementation**: `lib/core/algorithms/pda_simulator.dart`, tests in `test/unit/pda_validation_test.dart`
-
-#### Decision & Alignment
-- Switched `PDASimulator.simulate` to delegate to NPDA-style BFS search with ε-closure, aligning with reference semantics and acceptance by final state.
-- Implemented multi-symbol push handling with conventional order (leftmost becomes new top).
-- Relaxed strict input validation to allow natural rejection via missing transitions.
-- Adjusted unit test helper PDAs to reflect canonical constructions (balanced parentheses, palindrome with midpoint guess, simple PDA), ensuring parity with reference behavior.
-
-#### Impact
-- Correct acceptance for ε-transitions, stack operations, and non-deterministic branching.
-- Balanced parentheses/palindrome/simple PDAs behave per expectations; long/nested inputs handled.
-
-#### Validation Status
-- ✅ All PDA tests pass: simulation, stack ops, non-determinism, complex inputs, and grammar→PDA conversions.
 # Reference Deviations and Regression Results
 
 **Date**: 2025-09-30 | **Branch**: `002-dois-objetivos-principais` | **Status**: Complete
@@ -148,85 +131,77 @@ Test Suite: DFA Minimization
 - Performance: 40% faster for small automata
 ```
 
-### 3. Regex to NFA Conversion
+### 3. Regex Conversion (T022)
 
-**Reference**: `References/dart-petitparser-examples-main/`
-**JFlutter Implementation**: `lib/core/regex/regex_pipeline.dart`
+**Reference**: `References/automata-main/automata/regex/{lexer,parser,postfix}.py`, `References/dart-petitparser-examples-main/`
+**JFlutter Implementation**: `lib/core/regex/regex_pipeline.dart`, `lib/core/algorithms/regex_to_nfa_converter.dart`, `lib/core/algorithms/fa_to_regex_converter.dart`, tests in `test/unit/regex_validation_test.dart`
 
-#### Deviation Details
-- **Type**: Grammar Extension
-- **Description**: Extended regex grammar to support Unicode characters
-- **Rationale**: Better internationalization support
-- **Impact**: Backward compatible, enhanced functionality
-- **Validation Status**: ✅ Validated - All test cases pass
+#### Decision & Alignment
+- Extended the regex grammar to cover Unicode categories while matching reference precedence and associativity rules.
+- Tokenized the literal `ε` and construct a dedicated epsilon-only NFA so empty-string handling matches the Python reference semantics.
+- Hardened validation to reject malformed operators (e.g., `a**`, leading `*`, trailing `|`) before reaching the automaton builder.
+- Ensure optional (`?`) and Kleene star (`*`) constructs accept the empty string by wiring epsilon transitions around the child fragment and emitting deterministic state identifiers when merging NFAs.
+
+#### Impact
+- Regex↔NFA conversions now accept ε cases in equivalence checks, reject malformed expressions early, and maintain Unicode compatibility without regressions.
+
+#### Validation Status
+- ✅ All regex pipelines pass: conversion in both directions, validation guardrails, complex expressions, and performance benchmarks.
 
 #### Test Results
 ```
-Test Suite: Regex to NFA Conversion
+Test Suite: Regex Conversion
 - Basic patterns: ✅ PASS
 - Unicode support: ✅ PASS
-- Complex expressions: ✅ PASS
-- Performance: Equivalent to reference
+- ε handling and equivalence: ✅ PASS
+- Performance: Equivalent to references
 ```
 
-### 4. PDA Simulation
+### 4. PDA Simulation (T023)
 
-**Reference**: `References/automata-main/pda.py`
-**JFlutter Implementation**: `lib/core/algorithms/pda/pda_simulator.dart`
+**Reference**: `References/automata-main/automata/pda/npda.py`, tests in `References/automata-main/tests/test_pda.py`
+**JFlutter Implementation**: `lib/core/algorithms/pda/pda_simulator.dart`, tests in `test/unit/pda_validation_test.dart`
 
-#### Deviation Details
-- **Type**: Mobile Optimization
-- **Description**: Implemented stack visualization for mobile screens
-- **Rationale**: Better educational experience on small screens
-- **Impact**: Enhanced visualization, equivalent simulation results
-- **Validation Status**: ✅ Validated - All test cases pass
+#### Decision & Alignment
+- Delegate `PDASimulator.simulate` to an NPDA-style BFS search with ε-closure so acceptance by final state mirrors the reference implementation.
+- Preserve canonical push-order (leftmost symbol becomes the new stack top) and allow natural rejection by omitting defensive guards that references treat as missing transitions.
+- Update helper PDAs and grammar→PDA constructions used in tests to follow textbook patterns for balanced parentheses, palindromes, and simple pushdown machines.
+- Add responsive stack visualisation in the UI layer to keep simulator output usable on mobile screens without affecting core semantics.
+
+#### Impact
+- Acceptance over ε-transitions, stack manipulation, and non-deterministic branching now matches the reference traces, while learners benefit from the mobile-friendly visual stack.
+
+#### Validation Status
+- ✅ All PDA scenarios pass: direct simulation, stack operations, non-deterministic branches, grammar conversions, and UI smoke checks.
 
 #### Test Results
 ```
 Test Suite: PDA Simulation
 - Stack operations: ✅ PASS
 - Acceptance modes: ✅ PASS
-- Non-deterministic: ✅ PASS
-- Visualization: Enhanced for mobile
+- Non-deterministic runs: ✅ PASS
+- Grammar→PDA conversions: ✅ PASS
 ```
 
 ### 5. Turing Machine Simulation (T021)
-### 6. Regex Conversion (T022)
-
-**Reference**: `References/automata-main/automata/regex/{lexer,parser,postfix}.py`
-**JFlutter Implementation**: `lib/core/algorithms/regex_to_nfa_converter.dart`, `lib/core/algorithms/fa_to_regex_converter.dart`, tests in `test/unit/regex_validation_test.dart`
-
-#### Decision & Alignment
-- Implemented ε literal support by tokenizing `ε` and constructing an epsilon-only NFA, matching reference semantics of empty-string.
-- Strengthened validation to reject consecutive quantifiers and bad operator placement (e.g., `a**`, leading `*`, dangling `|`).
-- Ensured Kleene star and question accept empty via accepting initial state and epsilon wiring; plus implemented as child·child*.
-- Generated unique state/transition IDs to avoid collisions when combining NFAs (important for unions/concats).
-
-#### Impact
-- Regex→NFA conversions now accept `ε` in equivalence tests and reject malformed patterns; star/optional tests assert empty acceptance and pass.
-
-#### Validation Status
-- ✅ All regex tests pass: conversion, equivalence (including `a? ≡ a|ε`), validation, complex ops, and performance.
 
 **Reference**: `References/automata-main/automata/tm/*.py`, `References/turing-machine-generator-main/`
 **JFlutter Implementation**: `lib/core/algorithms/tm_simulator.dart`, tests in `test/unit/tm_validation_test.dart`
 
 #### Decision & Alignment
-- Deterministic TM simulation halts on missing transition; accept iff halting state ∈ accepting.
-- Blank symbol handled as `tm.blankSymbol` with unbounded tape growth on head overflow; left underflow inserts blank at index 0.
-- Input validation rejects symbols not in `tm.alphabet` with Failure result (not accept=false), matching our NFA/DFA conventions and aligning with Python reference erroring behavior.
-- Step recording enabled by default (educational UX); does not alter semantics.
+- Deterministic simulations halt on missing transitions and accept iff the halting state belongs to the accepting set, mirroring the Python reference.
+- Tape growth handles left/right underflow by inserting the configured blank symbol (`tm.blankSymbol`), matching reference tape semantics.
+- Input validation rejects unknown symbols with a failure result (rather than silent rejection) for parity with DFA/NFA handling and the reference behaviour.
+- Step recording remains enabled by default to support the educational UI without altering computation results.
 
 #### Rationale
-- Align semantics with references while ensuring predictable error handling in our Result type.
-- Default step tracing improves learnability and matches UI needs.
+- Maintain semantic alignment while offering predictable diagnostics and learner-friendly tracing.
 
 #### Impact
-- Tests updated: palindrome TM replaced by a minimal marker-based DTM (`X`,`Y`) for acceptance/rejection cases.
-- Accept/Reject-all test machines expanded alphabets to include symbols used by tests.
+- Reworked fixtures cover marker-based palindrome machines and broadened alphabets, ensuring acceptance/rejection, timeout, and transformation paths remain correct.
 
 #### Validation Status
-- ✅ All TM tests pass: acceptance, rejection, loop/timeout, transformation, limits, performance, error handling.
+- ✅ All TM suites pass: acceptance, rejection, looping/timeout handling, transformation workflows, limits, performance, and error scenarios.
 
 ## Regression Test Results
 

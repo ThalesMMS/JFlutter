@@ -10,6 +10,7 @@
 //  da página hospedeira.
 //
 //  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/material.dart';
 
 import 'automaton_canvas_tool.dart';

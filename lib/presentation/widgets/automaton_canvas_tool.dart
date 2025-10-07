@@ -9,6 +9,7 @@
 //  tipos de interação.
 //
 //  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/foundation.dart';
 
 /// Editing tools supported by the automaton canvas.

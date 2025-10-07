@@ -3,6 +3,15 @@ JFlutter User Guide Supplement
 
 _Nota: migração em andamento._
 
+Table of Contents
+-----------------
+
+* [Working with the GraphView Canvas](#working-with-the-graphview-canvas)
+* [Unified Trace Management](#unified-trace-management)
+* [Manual Verification Checklist](#manual-verification-checklist)
+* [Troubleshooting](#troubleshooting)
+* [Maintenance & Extensibility Notes](#maintenance--extensibility-notes)
+
 Working with the GraphView Canvas
 ---------------------------------
 
@@ -18,6 +27,38 @@ Working with the GraphView Canvas
 * **Add or Edit Transition** – Select a source and destination node while the Transition tool is active to open the inline editor. Saving updates the edge snapshot and forwards the mutation to the provider, ensuring tape/stack metadata stays aligned for advanced automata.【F:lib/presentation/widgets/automaton_graphview_canvas.dart†L333-L494】【F:lib/features/canvas/graphview/graphview_canvas_controller.dart†L152-L214】
 * **Viewport Controls** – Use the toolbar (or keyboard shortcuts) to zoom, fit to content, reset the view, and traverse undo/redo history; every command proxies to the shared controller so desktop and mobile gestures stay in sync.【F:lib/presentation/widgets/graphview_canvas_toolbar.dart†L33-L138】【F:lib/features/canvas/graphview/base_graphview_canvas_controller.dart†L17-L220】
 * **Highlight Playback** – Running a simulation pushes highlight payloads into `GraphViewSimulationHighlightChannel`, which drives the canvas highlight notifier and clears it automatically after playback ends.【F:lib/presentation/widgets/automaton_graphview_canvas.dart†L41-L84】【F:lib/features/canvas/graphview/graphview_highlight_channel.dart†L5-L19】【F:lib/core/services/simulation_highlight_service.dart†L8-L101】
+
+Unified Trace Management
+------------------------
+
+### Overview
+
+* `UnifiedTraceNotifier` centralises trace persistence for every simulator, loading history and statistics as soon as an automaton context (type and optional ID) is set, and keeping SharedPreferences-backed storage in sync with UI state.【F:lib/presentation/providers/unified_trace_provider.dart†L135-L213】【F:lib/presentation/providers/unified_trace_provider.dart†L281-L309】【F:lib/data/services/trace_persistence_service.dart†L16-L86】
+* History is capped at 50 runs to preserve storage on mobile targets; older entries are pruned automatically when new traces are added.【F:lib/data/services/trace_persistence_service.dart†L17-L49】
+
+### Saving and Restoring Traces
+
+* Run a simulation via the **Simulation › Simulate** button in the side panel; every successful run pushes a `SimulationResult` into the notifier, which immediately saves the trace, associates automaton metadata, and refreshes any history widgets bound to the provider.【F:lib/presentation/widgets/simulation_panel.dart†L92-L154】【F:lib/presentation/providers/unified_trace_provider.dart†L204-L214】【F:lib/data/services/trace_persistence_service.dart†L23-L49】
+* Connect your Trace History command (drawer entry, sheet, or overflow action) to `loadTraceFromHistory(traceId)`; the notifier rehydrates the immutable trace, resets the viewer to the first step, and exposes filtered lists for type- or automaton-specific menus.【F:lib/presentation/providers/unified_trace_provider.dart†L117-L176】【F:lib/presentation/providers/unified_trace_provider.dart†L330-L344】
+* Metadata such as acceptance verdict, automaton identifiers, and execution time are preserved so future UI surfaces can filter by model or input string without recomputing the simulation.【F:lib/data/services/trace_persistence_service.dart†L60-L118】
+
+### Navigating Steps
+
+* Enable **Step-by-Step Mode** using the toggle in the Simulation panel; this binds the trace viewer to `UnifiedTraceState.currentStepIndex` and emits highlights into the canvas.【F:lib/presentation/widgets/simulation_panel.dart†L351-L412】【F:lib/presentation/providers/unified_trace_provider.dart†L18-L112】
+* Use the transport controls (Previous/Play–Pause/Next/Reset) to move through configurations. Each interaction calls the notifier navigation helpers, persists the new cursor position, and keeps highlights synchronised.【F:lib/presentation/widgets/simulation_panel.dart†L520-L616】【F:lib/presentation/providers/unified_trace_provider.dart†L113-L149】【F:lib/data/services/trace_persistence_service.dart†L86-L115】
+* Large traces can be folded inside the viewer; expand collapsed sections to skim hundreds of steps without losing selection state.【F:lib/presentation/widgets/trace_viewers/base_trace_viewer.dart†L31-L108】
+
+### Cleaning History and Handling Errors
+
+* Clear the in-memory trace using the **Reset** icon in the Step-by-Step controls, which resets the cursor and clears highlights before the notifier drops the persisted snapshot.【F:lib/presentation/widgets/simulation_panel.dart†L520-L616】【F:lib/presentation/providers/unified_trace_provider.dart†L221-L236】
+* Surface a **Clear All Traces** action in the same menu where you list saved runs; wiring it to `clearAllTraces()` removes saved simulations, current selections, and cached metadata from SharedPreferences.【F:lib/presentation/providers/unified_trace_provider.dart†L237-L252】【F:lib/data/services/trace_persistence_service.dart†L118-L140】
+* Any I/O failure surfaces a toast/banner sourced from `errorMessage`; check device storage quotas if saves/imports begin to fail.【F:lib/presentation/providers/unified_trace_provider.dart†L155-L176】【F:lib/presentation/providers/unified_trace_provider.dart†L248-L272】
+
+### Exporting and Importing
+
+* Offer an **Export JSON** command alongside history management actions; `exportTraceHistory()` bundles traces, metadata, and timestamps into a portable payload for backups.【F:lib/presentation/providers/unified_trace_provider.dart†L253-L266】【F:lib/data/services/trace_persistence_service.dart†L140-L189】
+* Pair an **Import JSON** option with `importTraceHistory(json)`, which merges stored traces, refreshes statistics, and updates any bound history lists; duplicates are overwritten by trace ID, so segment exports per cohort when sharing between devices.【F:lib/presentation/providers/unified_trace_provider.dart†L264-L309】【F:lib/data/services/trace_persistence_service.dart†L140-L213】
+* Statistics (total runs, acceptance ratio, per-type counts) are recalculated after each import/export cycle and can drive dashboards or educator analytics modules.【F:lib/presentation/providers/unified_trace_provider.dart†L273-L309】【F:lib/data/services/trace_persistence_service.dart†L189-L213】
 
 Manual Verification Checklist
 -----------------------------

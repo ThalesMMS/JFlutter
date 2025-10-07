@@ -20,6 +20,7 @@ import '../../core/constants/automaton_canvas.dart';
 import '../../core/models/simulation_highlight.dart';
 import '../../core/models/simulation_result.dart';
 import '../../core/services/simulation_highlight_service.dart';
+import '../../core/models/tm_transition.dart' show TapeDirection;
 import '../../features/canvas/graphview/base_graphview_canvas_controller.dart';
 import '../../features/canvas/graphview/graphview_canvas_controller.dart';
 import '../../features/canvas/graphview/graphview_canvas_models.dart';
@@ -33,11 +34,12 @@ import 'automaton_canvas_tool.dart';
 import 'transition_editors/pda_transition_editor.dart';
 import 'transition_editors/transition_label_editor.dart';
 
-typedef AutomatonTransitionOverlayBuilder = Widget Function(
-  BuildContext context,
-  AutomatonTransitionOverlayData data,
-  AutomatonTransitionOverlayController controller,
-);
+typedef AutomatonTransitionOverlayBuilder =
+    Widget Function(
+      BuildContext context,
+      AutomatonTransitionOverlayData data,
+      AutomatonTransitionOverlayController controller,
+    );
 
 /// Payload used by the transition overlay to communicate user edits back to
 /// the canvas.
@@ -163,10 +165,10 @@ class AutomatonGraphViewTransitionConfig {
   });
 
   final AutomatonTransitionPayload Function(GraphViewCanvasEdge? edge)
-      initialPayloadBuilder;
+  initialPayloadBuilder;
   final AutomatonTransitionOverlayBuilder overlayBuilder;
   final void Function(AutomatonTransitionPersistRequest request)
-      persistTransition;
+  persistTransition;
 }
 
 /// Customisation options applied to the graph canvas behaviour.
@@ -174,12 +176,13 @@ class AutomatonGraphViewCanvasCustomization {
   const AutomatonGraphViewCanvasCustomization({
     required this.transitionConfigBuilder,
     this.enableStateDrag = true,
-    this.enableToolSelection = false,
+    this.enableToolSelection = true,
   });
 
   final AutomatonGraphViewTransitionConfig Function(
     BaseGraphViewCanvasController<dynamic, dynamic> controller,
-  ) transitionConfigBuilder;
+  )
+  transitionConfigBuilder;
 
   final bool enableStateDrag;
   final bool enableToolSelection;
@@ -202,8 +205,7 @@ class AutomatonGraphViewCanvasCustomization {
           },
           persistTransition: (request) {
             final payload = request.payload as AutomatonLabelTransitionPayload;
-            final controller =
-                request.controller as GraphViewCanvasController;
+            final controller = request.controller as GraphViewCanvasController;
             controller.addOrUpdateTransition(
               fromStateId: request.fromStateId,
               toStateId: request.toStateId,
@@ -245,31 +247,31 @@ class AutomatonGraphViewCanvasCustomization {
               isLambdaInput: payload.isLambdaInput,
               isLambdaPop: payload.isLambdaPop,
               isLambdaPush: payload.isLambdaPush,
-              onSubmit: ({
-                required String readSymbol,
-                required String popSymbol,
-                required String pushSymbol,
-                required bool lambdaInput,
-                required bool lambdaPop,
-                required bool lambdaPush,
-              }) {
-                overlayController.submit(
-                  AutomatonPdaTransitionPayload(
-                    readSymbol: readSymbol,
-                    popSymbol: popSymbol,
-                    pushSymbol: pushSymbol,
-                    isLambdaInput: lambdaInput,
-                    isLambdaPop: lambdaPop,
-                    isLambdaPush: lambdaPush,
-                  ),
-                );
-              },
+              onSubmit:
+                  ({
+                    required String readSymbol,
+                    required String popSymbol,
+                    required String pushSymbol,
+                    required bool lambdaInput,
+                    required bool lambdaPop,
+                    required bool lambdaPush,
+                  }) {
+                    overlayController.submit(
+                      AutomatonPdaTransitionPayload(
+                        readSymbol: readSymbol,
+                        popSymbol: popSymbol,
+                        pushSymbol: pushSymbol,
+                        isLambdaInput: lambdaInput,
+                        isLambdaPop: lambdaPop,
+                        isLambdaPush: lambdaPush,
+                      ),
+                    );
+                  },
               onCancel: overlayController.cancel,
             );
           },
           persistTransition: (request) {
-            final payload =
-                request.payload as AutomatonPdaTransitionPayload;
+            final payload = request.payload as AutomatonPdaTransitionPayload;
             final pdaController =
                 request.controller as GraphViewPdaCanvasController;
             pdaController.addOrUpdateTransition(
@@ -339,8 +341,9 @@ class _AutomatonGraphViewCanvasState
   String? _transitionSourceId;
   OverlayEntry? _transitionOverlayEntry;
   final ValueNotifier<_GraphViewTransitionOverlayState?>
-      _transitionOverlayState =
-      ValueNotifier<_GraphViewTransitionOverlayState?>(null);
+  _transitionOverlayState = ValueNotifier<_GraphViewTransitionOverlayState?>(
+    null,
+  );
   Object? _pendingSyncAutomaton;
   bool _syncScheduled = false;
   String? _draggingNodeId;
@@ -494,7 +497,6 @@ class _AutomatonGraphViewCanvasState
       _applyCustomization(widget.customization);
     }
   }
-
 
   @override
   void dispose() {
@@ -1172,11 +1174,7 @@ class _AutomatonGraphViewCanvasState
           resolveLinkAnchorWorld(_controller, edge) ?? data.worldAnchor;
       final payload = _transitionConfig.initialPayloadBuilder(edge);
       _transitionOverlayState.value = state.copyWith(
-        data: data.copyWith(
-          payload: payload,
-          worldAnchor: anchor,
-          edge: edge,
-        ),
+        data: data.copyWith(payload: payload, worldAnchor: anchor, edge: edge),
       );
       final shouldUpdateSelection =
           _selectedTransitions.length != 1 ||
@@ -1189,8 +1187,7 @@ class _AutomatonGraphViewCanvasState
         });
       }
     } else {
-      final anchor =
-          _deriveControlPoint(data.fromStateId, data.toStateId);
+      final anchor = _deriveControlPoint(data.fromStateId, data.toStateId);
       _transitionOverlayState.value = state.copyWith(
         data: data.copyWith(worldAnchor: anchor),
       );

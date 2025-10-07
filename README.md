@@ -117,6 +117,8 @@ lib/
 │   ├── repositories/               # Repository implementations
 │   └── services/                   # High-level services used by the app
 ├── features/                       # Cross-cutting feature modules
+│   ├── canvas/                     # Canvas orchestration layers
+│   │   └── graphview/              # GraphView controllers, mappers, and highlight channels
 │   └── layout/                     # Layout helpers and view-specific configs
 ├── injection/                      # Dependency injection setup
 │   └── dependency_injection.dart   # Service registration and bootstrap
@@ -131,8 +133,8 @@ lib/
 ## Getting Started
 
 ### Prerequisites
-- Flutter SDK 3.16+ 
-- Dart SDK 3.0+
+- Flutter SDK 3.24.0+
+- Dart SDK 3.8.0+
 - Android Studio / VS Code (recommended)
 
 ### Installation
@@ -212,59 +214,20 @@ export JFLUTTER_KEY_PASSWORD="$JFLUTTER_KEY_PASSWORD"
 
 ## Testing
 
-### Test Suite Status
+### Test Suite Overview
 
-The project has comprehensive test coverage with **264 out of 283 tests passing (93.3%)**.
+Run the automated suites with `flutter test` (requires Flutter 3.24.0+ and Dart 3.8.0+). The repository is split into targeted groups that mirror the product architecture:
 
-#### Core Algorithm Tests (100% Passing)
+- **Algorithm validation** – `test/unit/` covers DFA/NFA conversions, grammar analysis, and other core engines (for example `test/unit/dfa_validation_test.dart`, `test/unit/regex_validation_test.dart`).
+- **Core services** – `test/core/services/simulation_highlight_service_test.dart` exercises the highlight broadcasting service that powers the simulator overlays.
+- **Canvas GraphView features** – `test/features/canvas/graphview/` validates controllers, mappers, and models for the interactive canvas (`graphview_canvas_controller_test.dart`, `graphview_pda_canvas_controller_test.dart`, etc.).
+- **Integration suites** – `test/integration/io/interoperability_roundtrip_test.dart` and `test/integration/io/examples_roundtrip_test.dart` assert round-trip parity across JFLAP XML, JSON, SVG, and the offline examples bundle.
+- **Widget harnesses** – `test/widget/presentation/` focuses on UI integration. GraphView toolbars, canvas widgets, and mobile controls are exercised in files such as `graphview_canvas_toolbar_test.dart`, `automaton_graphview_canvas_test.dart`, and `mobile_automaton_controls_test.dart`. The UX error-handling harness (`ux_error_handling_test.dart`) ships with inline mock implementations of the banner/dialog/retry widgets until the production versions land.
 
-All core algorithm validation tests pass with 100% coverage:
+### Placeholder and Pending Work
 
-```bash
-# Run all core algorithm tests
-flutter test test/unit/dfa_validation_test.dart          # 12/12 ✅
-flutter test test/unit/nfa_validation_test.dart          # 15/15 ✅
-flutter test test/unit/glc_validation_test.dart          # 16/16 ✅
-flutter test test/unit/tm_validation_test.dart           # 16/16 ✅
-flutter test test/unit/pda_validation_test.dart          # 22/22 ✅
-flutter test test/unit/regex_validation_test.dart        # 17/17 ✅
-flutter test test/unit/nfa_to_dfa_validation_test.dart   # 19/19 ✅
-flutter test test/unit/dfa_minimization_validation_test.dart  # 16/16 ✅
-flutter test test/unit/equivalence_validation_test.dart  # 11/11 ✅
-flutter test test/unit/cyk_validation_test.dart          # 19/19 ✅
-flutter test test/unit/pumping_lemma_validation_test.dart # 22/22 ✅
-flutter test test/unit/grammar_to_pda_validation_test.dart # 9/9 ✅
-flutter test test/unit/core/                             # 48/48 ✅
-```
-
-**Total Core Algorithm Tests: 242/242 (100%)** ✅
-
-#### Known Test Failures (Non-Critical)
-
-**Import/Export Tests** (12/31 passing, 39%):
-- **JFF (JFLAP) Format Issues** (4 failures):
-  - Epsilon transition serialization format differences
-  - Complex automaton structure parsing edge cases
-  - Cross-format JFF↔JSON conversion challenges
-- **SVG Export Format** (3 failures):
-  - Test expects integer viewBox format: `viewBox="0 0 400 300"`
-  - Implementation generates double format: `viewBox="0 0 400.0 300.0"`
-  - **Impact**: Cosmetic only - SVG files render correctly
-- **Examples Library SVG** (2 failures):
-  - Similar viewBox format expectations
-  - Missing transitions in empty automaton exports
-
-**Widget Tests** (2/13 passing, 15%):
-- **Missing Widget Files** (1 failure):
-  - `lib/presentation/widgets/error_banner.dart`
-  - `lib/presentation/widgets/import_error_dialog.dart`
-  - `lib/presentation/widgets/retry_button.dart`
-- **Test Setup Issues** (10 failures):
-  - CustomPaint widget finder expects single instance, finds multiple
-  - SimulationPanel widget structure mismatch
-  - Golden test infrastructure not implemented
-
-**Impact Assessment**: These failures are in **edge case file format handling** and **UI test infrastructure**. They do not affect the application's core functionality, algorithm correctness, or user experience.
+- `test/widget/presentation/visualizations_test.dart` intentionally fails (`expect(false, isTrue)`) to track the pending golden-test pipeline for advanced visualizations.
+- The inline `ErrorBanner`, `ImportErrorDialog`, and `RetryButton` classes embedded in `test/widget/presentation/ux_error_handling_test.dart` act as placeholders. Replace them with the production widgets once the design system components are implemented.
 
 #### Running Tests
 
@@ -273,9 +236,10 @@ flutter test test/unit/core/                             # 48/48 ✅
 flutter test
 
 # Run specific test suites
-flutter test test/unit/                    # Core algorithm tests
+flutter test test/unit/                    # Core algorithm suites
+flutter test test/features/                # Feature-level canvas suites
 flutter test test/integration/             # Integration tests
-flutter test test/widget/                  # Widget tests
+flutter test test/widget/                  # Widget harnesses
 
 # Run with code coverage
 flutter test --coverage
@@ -284,77 +248,6 @@ lcov --list coverage/lcov.info
 # Static analysis
 flutter analyze
 ```
-
-### Test Coverage Summary
-
-| Category | Coverage | Status |
-|----------|----------|--------|
-| **Core Algorithms** | 100% | ✅ All passing |
-| **Validation Suites** | 100% | ✅ All passing |
-| **Conversion Algorithms** | 100% | ✅ All passing |
-| **Import/Export** | 39% | ⚠️ Known JFF/SVG issues |
-| **Widget Tests** | 15% | ⚠️ Test infrastructure |
-| **Overall** | 93.3% | ✅ Production ready |
-
-### Detailed Test Breakdown
-
-#### **Failing Tests by Category**
-
-**Integration Tests - Import/Export (19 failures):**
-```
-test/integration/io/interoperability_roundtrip_test.dart:
-  - JFF round-trip preserves automaton structure [FAIL]
-  - JFF handles complex automatons correctly [FAIL]
-  - JFF handles NFA with epsilon transitions [FAIL]
-    Issue: Expects 'ε' in XML, gets empty <read></read> tag
-  - JFF validates required structure elements [FAIL]
-  - SVG export handles different sizes [FAIL]
-    Issue: viewBox="0 0 400.0 300.0" vs expected "0 0 400 300"
-  - JFF to JSON conversion preserves data [FAIL]
-  - JSON to JFF conversion preserves data [FAIL]
-  - Round-trip through all formats preserves data [FAIL]
-
-test/integration/io/examples_roundtrip_test.dart:
-  - Turing machine SVG export produces valid structure [FAIL]
-    Issue: Missing class="tape" in simplified TM visualization
-  - SVG export handles different sizes correctly [FAIL]
-  - SVG export handles complex automata correctly [FAIL]
-    Issue: Empty automata don't generate <line> elements
-  - SVG export validates input parameters [FAIL]
-```
-
-**Widget Tests (11 failures):**
-```
-test/widget/presentation/ux_error_handling_test.dart:
-  - Cannot load due to missing widget files [FAIL]
-    Missing: error_banner.dart, import_error_dialog.dart, retry_button.dart
-
-test/widget/presentation/immutable_traces_visualization_test.dart:
-  - AutomatonCanvas renders empty automaton correctly [FAIL]
-  - AutomatonCanvas renders DFA correctly [FAIL]
-  - AutomatonCanvas renders NFA correctly [FAIL]
-    Issue: Multiple CustomPaint widgets found (expects exactly one)
-  - SimulationPanel renders correctly without simulation result [FAIL]
-  - SimulationPanel renders with successful simulation result [FAIL]
-  - SimulationPanel renders with failed simulation result [FAIL]
-    Issue: Widget structure changed, selectors need updating
-  - Simulation steps render correctly [FAIL]
-  - AutomatonCanvas handles large automatons efficiently [FAIL]
-    Issue: Test helper function error
-
-test/widget/presentation/visualizations_test.dart:
-  - Visualizations render and export correctly (goldens) [FAIL]
-    Issue: Golden test infrastructure not implemented
-```
-
-### Future Test Improvements
-
-1. **Fix JFF Format Compatibility** - Align epsilon transition serialization with JFLAP spec
-2. **Update SVG Test Expectations** - Accept both integer and double viewBox formats  
-3. **Implement Missing Widgets** - Create error_banner.dart, import_error_dialog.dart, retry_button.dart
-4. **Enhance Widget Tests** - Update widget finders for new component structure
-5. **Implement Golden Tests** - Set up golden test infrastructure for visual regression
-6. **Add E2E Tests** - End-to-end user flow testing
 
 ## Reference Implementation Methodology
 
@@ -371,11 +264,12 @@ The `References/` directory contains authoritative implementations used as the s
 5. **Documentation** - Record any deviations with rationale in `docs/reference-deviations.md`
 
 ### Quality Assurance
-- **93.3% Test Coverage** - 264/283 tests passing (100% core algorithms, 39% import/export, 15% widget tests)
-- **Core Algorithms** - 242/242 tests passing, fully validated against references
-- **Performance Monitoring** - Regular benchmarking against reference implementations
-- **Deviation Tracking** - All deviations documented with impact assessment
-- **Continuous Validation** - Ongoing comparison with reference implementations
+- **Algorithm Coverage** - Deterministic automata, grammar, and regex suites in `test/unit/` back the domain layer.
+- **Integration Guardrails** - Serialization and examples are validated through the IO round-trip suites in `test/integration/io/`.
+- **UI Exercisers** - Canvas and control widgets are kept regression-safe via the harnesses in `test/widget/presentation/`, with golden coverage tracked by the pending `visualizations_test.dart` placeholder.
+- **Performance Monitoring** - Regular benchmarking against reference implementations.
+- **Deviation Tracking** - All deviations documented with impact assessment and cross-checked with references.
+- **Continuous Validation** - Ongoing comparison with reference implementations.
 
 ### Reference Maintenance
 - **Version Control** - References maintained in separate directories

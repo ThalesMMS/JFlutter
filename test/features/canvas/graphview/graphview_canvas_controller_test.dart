@@ -9,7 +9,7 @@
 //  estado gráfico sincronizado.
 //
 //  Thales Matheus Mendonça Santos - October 2025
-
+//
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';

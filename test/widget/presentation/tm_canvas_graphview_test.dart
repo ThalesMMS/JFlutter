@@ -9,7 +9,7 @@
 //  descarte apropriado do controlador ao término de cada cenário.
 //
 //  Thales Matheus Mendonça Santos - October 2025
-
+//
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

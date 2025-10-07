@@ -8,7 +8,7 @@
 //  entre símbolos de pilha e indicadores de transições λ.
 //
 //  Thales Matheus Mendonça Santos - October 2025
-
+//
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:jflutter/features/canvas/graphview/graphview_canvas_models.dart';

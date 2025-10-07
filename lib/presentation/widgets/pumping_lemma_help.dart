@@ -24,10 +24,12 @@ class _PumpingLemmaHelpState extends ConsumerState<PumpingLemmaHelp> {
   Widget build(BuildContext context) {
     return Card(
       child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildHeader(context),
           _buildTabBar(context),
-          Flexible(child: _buildTabContent(context)),
+          _buildTabContent(context),
         ],
       ),
     );

@@ -1,11 +1,14 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/providers/pda_editor_provider.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Administra o autômato de pilha editado no canvas e metadados derivados como transições lambda ou não determinísticas. Garante que alterações interativas sejam refletidas em modelos consistentes com o domínio.
-/// Contexto: Utiliza um StateNotifier para consolidar mutações de estados, transições e configurações básicas do PDA. Serve de ponte entre eventos de interface e os objetos imutáveis usados por simuladores e exportadores.
-/// Observações: Fornece operações utilitárias para criação, movimentação e remoção de elementos mantendo integridade referencial. Atualiza conjuntos auxiliares que alimentam destaques visuais e diagnósticos pedagógicos.
-/// ---------------------------------------------------------------------------
+//
+//  pda_editor_provider.dart
+//  JFlutter
+//
+//  Declara o estado e o StateNotifier responsáveis por controlar o autômato de
+//  pilha editado no canvas, mantendo transições lambda, escolhas
+//  não determinísticas e sincronizando as mutações de estados com estruturas
+//  imutáveis usadas por simuladores, exportadores e destaques visuais.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:math' as math;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';

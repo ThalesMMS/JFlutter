@@ -1,3 +1,17 @@
+// ============================================================================
+// JFlutter - Suite de Testes
+// ----------------------------------------------------------------------------
+// Arquivo: test/unit/pda_validation_test.dart
+// Objetivo: Validar o simulador de autômatos de pilha e o conversor de
+// gramáticas, garantindo paridade com a implementação de referência.
+// Cenários cobertos:
+// - Aceitação e rejeição em PDAs determinísticos e não determinísticos.
+// - Conversão de gramáticas livres de contexto para PDAs equivalentes.
+// - Manipulação da pilha (push, pop e transições λ) em cenários complexos.
+// Autoria: Equipe de Qualidade JFlutter — baseado em
+// References/automata-main/tests/test_pda.py.
+// ============================================================================
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/pda.dart';
 import 'package:jflutter/core/models/state.dart';
@@ -9,18 +23,6 @@ import 'package:jflutter/core/models/production.dart';
 import 'package:jflutter/core/result.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'dart:math' as math;
-
-/// PDA (Pushdown Automaton) Validation Tests against References/automata-main
-///
-/// This test suite validates PDA algorithms against the Python reference implementation
-/// from References/automata-main/tests/test_pda.py to ensure behavioral equivalence.
-///
-/// Test cases cover:
-/// 1. PDA simulation (acceptance and rejection)
-/// 2. Grammar to PDA conversion
-/// 3. Stack operations (push, pop, lambda operations)
-/// 4. Non-deterministic behavior
-/// 5. Complex language recognition
 void main() {
   group('PDA Validation Tests', () {
     late PDA balancedParenthesesPDA;

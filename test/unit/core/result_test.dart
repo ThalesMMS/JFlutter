@@ -1,3 +1,14 @@
+// ============================================================================
+// JFlutter - Suite de Testes
+// ----------------------------------------------------------------------------
+// Arquivo: test/unit/core/result_test.dart
+// Objetivo: Garantir o comportamento das extensões de `Result`, especialmente
+// a transformação segura entre sucesso e falha.
+// Cenários cobertos:
+// - Preservação de mensagens de erro ao aplicar `mapOrElse`.
+// Autoria: Equipe de Qualidade JFlutter.
+// ============================================================================
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/result.dart';
 

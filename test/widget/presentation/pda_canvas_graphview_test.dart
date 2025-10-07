@@ -1,3 +1,16 @@
+// ============================================================================
+// JFlutter - Suite de Testes
+// ----------------------------------------------------------------------------
+// Arquivo: test/widget/presentation/pda_canvas_graphview_test.dart
+// Objetivo: Validar a renderização do canvas de PDA com GraphView garantindo
+// sincronização entre provider e controlador.
+// Cenários cobertos:
+// - Desenho de estados e transições enviados pelo controlador.
+// - Reatividade do provider ao modificar o autômato de pilha.
+// - Liberação de recursos do controlador ao término do teste.
+// Autoria: Equipe de Qualidade JFlutter.
+// ============================================================================
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

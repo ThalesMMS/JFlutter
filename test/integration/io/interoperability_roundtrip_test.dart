@@ -1,3 +1,16 @@
+// ============================================================================
+// JFlutter - Suite de Testes
+// ----------------------------------------------------------------------------
+// Arquivo: test/integration/io/interoperability_roundtrip_test.dart
+// Objetivo: Validar interoperabilidade entre formatos `.jff`, JSON e SVG,
+// garantindo round-trip sem perda.
+// Cenários cobertos:
+// - Conversões JFLAP↔modelos internos usando parser XML dedicado.
+// - Serialização JSON de autômatos, gramáticas e MTs.
+// - Exportação SVG para visualização preservando elementos-chave.
+// Autoria: Equipe de Qualidade JFlutter.
+// ============================================================================
+
 import 'package:flutter_test/flutter_test.dart';
 import 'dart:convert';
 import 'package:jflutter/core/entities/automaton_entity.dart';
@@ -9,15 +22,6 @@ import 'package:jflutter/core/parsers/jflap_xml_parser.dart';
 import 'package:jflutter/data/data_sources/local_storage_data_source.dart';
 import 'package:jflutter/data/models/automaton_model.dart';
 import 'package:flutter/material.dart';
-
-/// Interoperability and Round-trip Tests for .jff/JSON/SVG formats
-///
-/// This test suite validates the complete interoperability between different
-/// file formats and ensures data integrity through round-trip conversions.
-///
-/// Test cases cover:
-/// 1. JFF (JFLAP) format round-trip testing
-/// 2. JSON format round-trip testing
 /// 3. SVG export/import testing
 /// 4. Cross-format conversion testing
 /// 5. Data integrity validation

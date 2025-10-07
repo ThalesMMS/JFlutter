@@ -1,3 +1,17 @@
+// ============================================================================
+// JFlutter - Suite de Testes
+// ----------------------------------------------------------------------------
+// Arquivo: test/unit/dfa_validation_test.dart
+// Objetivo: Validar o simulador e a minimização de AFDs comparando com a base
+// de referência em Python.
+// Cenários cobertos:
+// - Aceitação, rejeição e tratamento da cadeia vazia.
+// - Detecção de ciclos e consistência em complementação.
+// - Equivalência pós-minimização em relação ao autômato original.
+// Autoria: Equipe de Qualidade JFlutter — baseado em
+// References/automata-main/tests/test_dfa.py.
+// ============================================================================
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/state.dart';
@@ -7,18 +21,6 @@ import 'package:jflutter/core/algorithms/dfa_minimizer.dart';
 import 'package:jflutter/core/result.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'dart:math' as math;
-
-/// DFA Validation Tests against References/automata-main
-///
-/// This test suite validates DFA algorithms against the Python reference implementation
-/// from References/automata-main/tests/test_dfa.py to ensure behavioral equivalence.
-///
-/// Test cases cover:
-/// 1. Acceptance scenarios (strings that should be accepted)
-/// 2. Rejection scenarios (strings that should be rejected)
-/// 3. Empty string handling
-/// 4. Cycle detection and handling
-/// 5. Complementation operations
 void main() {
   group('DFA Validation Tests', () {
     late FSA binaryDivisibleBy3DFA;

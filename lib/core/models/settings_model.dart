@@ -1,3 +1,14 @@
+//
+//  settings_model.dart
+//  JFlutter
+//
+//  Estrutura leve que representa as preferências persistidas do aplicativo,
+//  controlando símbolos especiais, preferências de interface e tamanhos de
+//  elementos. Garante valores padrão coesos, permite cópias imutáveis e facilita
+//  comparações para atualizar provedores de configuração.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 /// Model representing persisted application settings.
 class SettingsModel {
   /// Symbol used to represent the empty string.

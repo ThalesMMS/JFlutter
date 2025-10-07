@@ -1,17 +1,15 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/data/models/turing_machine_dto.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Estruturas DTO responsáveis por serializar máquinas de Turing,
-///             transições e símbolos, mantendo compatibilidade com armazenamento
-///             local e formatos externos.
-/// Contexto: Faz a ponte entre entidades de domínio e representações JSON,
-///           permitindo importar, persistir e compartilhar configurações de
-///           máquinas de Turing completas.
-/// Observações: Usa conversões imutáveis e helpers para mapear transições
-///               aninhadas, garantindo consistência mesmo em estruturas
-///               complexas.
-/// ---------------------------------------------------------------------------
+//
+//  turing_machine_dto.dart
+//  JFlutter
+//
+//  Estruturas de transporte que descrevem máquinas de Turing completas,
+//  incluindo alfabetos, estados, transições aninhadas e símbolos especiais para
+//  serialização confiável em JSON ou formatos derivados do JFLAP.
+//  Utiliza coleções imutáveis, igualdade profunda e fábricas de conversão para
+//  garantir consistência durante importações, exportações e persistência local.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:collection/collection.dart';
 
 class TuringMachineDto {

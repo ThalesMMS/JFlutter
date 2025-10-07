@@ -1,3 +1,14 @@
+//
+//  parse_table.dart
+//  JFlutter
+//
+//  Representa tabelas de análise sintática para algoritmos LL e LR, mantendo
+//  ações, movimentos goto e referência à gramática associada. Disponibiliza
+//  operações de cópia, serialização e inspeção que suportam verificações de
+//  conflitos e navegação em simuladores de parsing.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'grammar.dart';
 import 'production.dart';
 

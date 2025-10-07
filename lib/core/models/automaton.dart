@@ -1,3 +1,15 @@
+//
+//  automaton.dart
+//  JFlutter
+//
+//  Classe base abstrata que representa autômatos no domínio do aplicativo,
+//  mantendo coleções imutáveis de estados, transições, alfabetos e metadados de
+//  visualização. Define contratos de clonagem, serialização e validação comum
+//  para FSA, PDA e TM, além de oferecer fábricas que instanciam tipos concretos
+//  a partir de descrições JSON.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';
 import 'state.dart';

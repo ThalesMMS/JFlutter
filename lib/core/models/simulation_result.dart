@@ -1,3 +1,14 @@
+//
+//  simulation_result.dart
+//  JFlutter
+//
+//  Modela o resultado das simulações de autômatos, armazenando entrada,
+//  aceitação, passos detalhados, mensagens de erro e métricas de execução.
+//  Oferece fábricas para diferentes cenários (sucesso, falha, timeout ou laço)
+//  além de utilidades de serialização e análises auxiliares usadas em painéis.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'simulation_step.dart';
 
 class SimulationResult {

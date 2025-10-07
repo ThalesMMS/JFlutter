@@ -422,6 +422,7 @@ The `References/` directory contains authoritative implementations used as the s
 3. Follow the coding standards
 4. Add tests for new features
 5. Submit a pull request
+Try to maintain compatibility. Avoid changing core automata/grammar/pda/turing machine algorithms without discussing it first.
 
 ### Development Guidelines
 - Optimize for **mobile devices**
@@ -513,4 +514,4 @@ This project is distributed under a dual license structure:
 
 ### Community & Contributors
 - **Prof. Zenilton Kleber Gonçalves do Patrocínio Júnior** - For educational guidance and feedback
-- **[@Gaok1](https://github.com/Gaok1)** - Luis Phillip Lemos Martins - For inspiring this Flutter port project
+- **[@Gaok1](https://github.com/Gaok1)** - Luis Phillip Lemos Martins - For inspiring this Flutter project

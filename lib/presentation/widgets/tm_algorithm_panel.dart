@@ -2,11 +2,12 @@
 //  tm_algorithm_panel.dart
 //  JFlutter
 //
-//  Painel dedicado a executar diagnósticos sobre máquinas de Turing,
-//  oferecendo botões para análises de decidibilidade, alcançabilidade e
-//  métricas de fita. Sincroniza com o TMEditorProvider para operar sobre o
-//  autômato atual e organiza seções de resultados que destacam problemas,
-//  tempos e estados relevantes ao usuário.
+//  Disponibiliza o painel de análises para Máquinas de Turing, reunindo botões
+//  para verificações de decidibilidade, alcançabilidade, linguagem, operações de
+//  fita e métricas temporais e espaciais com resultados estruturados.
+//  Conecta-se ao TMEditorProvider e aos AlgorithmOperations para executar
+//  diagnósticos, mantendo estado local de foco e evitando recomputações
+//  desnecessárias entre execuções.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

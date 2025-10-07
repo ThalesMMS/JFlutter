@@ -2,11 +2,12 @@
 //  diagnostics_panel.dart
 //  JFlutter
 //
-//  Widget que exibe mensagens de diagnóstico de autômatos com suporte a
-//  atualização manual, estados de carregamento e visualização em lista. Consome
-//  DiagnosticMessage gerados pelo domínio para orientar correções, apresentando
-//  resumos positivos quando não há alertas e detalhes acionáveis para cada
-//  problema encontrado.
+//  Materializa o painel de diagnósticos dos autômatos exibindo mensagens,
+//  severidades e sugestões acionáveis em cartões expansíveis com opção de
+//  recarregar análises.
+//  Consome DiagnosticMessage gerados pelo núcleo para orientar estudantes na
+//  correção de modelos, diferenciando estados sem problemas de listas de alertas
+//  com indicadores visuais claros.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

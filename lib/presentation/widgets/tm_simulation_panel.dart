@@ -2,11 +2,12 @@
 //  tm_simulation_panel.dart
 //  JFlutter
 //
-//  Painel de simulação de máquinas de Turing que reúne entrada de cadeia,
-//  botões de execução e apresentação de resultados em cartões informativos.
-//  Consulta o TMEditorProvider e utiliza SimulationHighlightService para
-//  sincronizar o canvas com o passo atual, permitindo acompanhar aceitação,
-//  rejeição e rastros detalhados.
+//  Realiza a simulação de Máquinas de Turing para o autômato ativo, oferecendo
+//  campos de entrada, controles de execução e apresentação de resultados com
+//  histórico de passos e mensagens de aceitação.
+//  Dialoga com o TMEditorProvider e com o SimulationHighlightService para manter
+//  sincronização com o canvas, limpando controladores e destaques conforme o
+//  ciclo de vida do widget.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

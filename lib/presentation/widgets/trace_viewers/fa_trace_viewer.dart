@@ -2,11 +2,11 @@
 //  fa_trace_viewer.dart
 //  JFlutter
 //
-//  Visualizador de traços para simulações de autômatos finitos que destaca
-//  estado corrente, entrada remanescente e transição consumida a cada passo.
-//  Reaproveita a infraestrutura do BaseTraceViewer para manter consistência e
-//  reforça notações clássicas como ε para cadeias vazias, servindo painéis de
-//  simulação e depuração.
+//  Exibe os traços de simulação de autômatos finitos reutilizando o
+//  BaseTraceViewer para mostrar estado atual, entrada restante e transições
+//  consumidas, utilizando convenções clássicas como ε para indicar cadeia vazia.
+//  Funciona com resultados de DFAs e NFAs de forma uniforme, fornecendo uma
+//  visualização cronológica que pode ser estendida com metadados adicionais.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

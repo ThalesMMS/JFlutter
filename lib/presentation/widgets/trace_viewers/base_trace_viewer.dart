@@ -2,11 +2,13 @@
 //  base_trace_viewer.dart
 //  JFlutter
 //
-//  Componente base reutilizado por visualizadores de traços de FSA, PDA e TM,
-//  responsável por colapsar listas extensas, permitir seleção de passos e
-//  interagir com o SimulationHighlightService. Recebe um SimulationResult
-//  genérico e um construtor de linhas especializado, garantindo consistência de
-//  comportamento e acessibilidade entre diferentes automatos.
+//  Provê widget base reutilizado pelos visualizadores de traços de FA, PDA e
+//  TM, tratando colapso de listas extensas, seleção de passos e integração
+//  opcional com o SimulationHighlightService para sincronizar destaques no
+//  canvas.
+//  Aceita um SimulationResult genérico e um builder de linhas especializado,
+//  garantindo comportamento consistente e acessível para qualquer algoritmo que
+//  produza sequências de passos.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

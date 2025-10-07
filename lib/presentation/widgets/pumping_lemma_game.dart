@@ -1,11 +1,16 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/widgets/pumping_lemma_game.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Implementa versão compacta do jogo do Lema do Bombeamento com seleção de desafios e feedback imediato. Sincroniza pontuação e progresso com o provedor dedicado para acompanhar o desempenho do usuário.
-/// Contexto: Utiliza Riverpod para armazenar histórico global enquanto mantém estados locais para fluxo de jogo e seleção de respostas. Apresenta interface baseada em cartões com instruções e resultado ao final de cada rodada.
-/// Observações: Lista conjunto inicial de desafios que pode ser expandido conforme necessário. Cuida da inicialização do provedor ao montar para garantir contagem correta de desafios disponíveis.
-/// ---------------------------------------------------------------------------
+//
+//  pumping_lemma_game.dart
+//  JFlutter
+//
+//  Implementa a experiência interativa do jogo do Lema do Bombeamento,
+//  apresentando desafios guiados, fluxo de perguntas e feedback imediato sobre
+//  regularidade de linguagens em um layout baseado em cartões.
+//  Integra-se ao provider de progresso para registrar pontuações, reinícios e
+//  histórico, enquanto coordena estados locais para seleção de respostas e
+//  avanço entre níveis.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

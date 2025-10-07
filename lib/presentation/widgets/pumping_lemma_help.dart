@@ -2,10 +2,12 @@
 //  pumping_lemma_help.dart
 //  JFlutter
 //
-//  Painel de apoio teórico ao jogo do Lema do Bombeamento que organiza teoria,
-//  passos práticos e exemplos em abas navegáveis. Fornece referência rápida
-//  para estudantes revisarem conceitos enquanto interagem com o minigame,
-//  utilizando estado local simples para alternância de conteúdo.
+//  Constrói o painel de apoio teórico exibido ao lado do jogo do Lema do
+//  Bombeamento, reunindo conteúdos de teoria, passos guiados e exemplos em uma
+//  navegação por abas controlada localmente.
+//  Fornece referências pedagógicas em português e inglês com estilo Material,
+//  permitindo que estudantes alternem rapidamente entre explicações sem depender
+//  de estado global ou serviços adicionais.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

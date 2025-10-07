@@ -2,11 +2,12 @@
 //  grammar_editor.dart
 //  JFlutter
 //
-//  Editor visual de gramáticas que combina campos reativos, lista de produções
-//  e ações rápidas para criar, atualizar ou remover regras. Integra-se ao
-//  GrammarProvider para sincronizar estado global, disponibilizando fluxos de
-//  limpeza, importação e alteração do símbolo inicial com layout adaptável a
-//  diferentes tamanhos de tela.
+//  Disponibiliza o editor completo de gramáticas formais com formulários para
+//  símbolos iniciais, produções e metadados, oferecendo validações rápidas e
+//  ações de limpeza para acelerar a modelagem de linguagens.
+//  Sincroniza-se com o GrammarProvider via Riverpod para refletir atualizações em
+//  tempo real e ajustar layouts responsivos que atendem tanto a telas móveis
+//  quanto desktops.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

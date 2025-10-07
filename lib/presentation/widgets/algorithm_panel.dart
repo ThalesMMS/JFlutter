@@ -2,11 +2,12 @@
 //  algorithm_panel.dart
 //  JFlutter
 //
-//  Painel que centraliza a execução de algoritmos sobre autômatos finitos,
-//  oferecendo botões para conversões, operações de linguagem e checagens de
-//  equivalência. Combina entrada de expressões regulares, seleção de arquivos
-//  externos e acompanhamento de progresso para orientar o usuário durante
-//  rotinas longas.
+//  Consolida os comandos de algoritmos aplicáveis aos autômatos finitos,
+//  reunindo conversões NFA→DFA, minimização, complementação, operações de
+//  linguagem e transformações com expressões regulares em um painel único.
+//  Controla progresso, feedback textual e carregamento de autômatos externos via
+//  FilePicker, executando callbacks fornecidos pela camada de apresentação para
+//  orquestrar AlgorithmOperations.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

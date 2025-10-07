@@ -2,11 +2,13 @@
 //  pda_trace_viewer.dart
 //  JFlutter
 //
-//  Visualizador de traços para simulações de autômatos com pilha que adapta o
-//  PDASimulationResult ao formato genérico utilizado pelo BaseTraceViewer. Exibe
-//  estado, entrada remanescente, conteúdo da pilha e transições aplicadas,
-//  possibilitando sincronia com destaques no canvas por meio do
-//  SimulationHighlightService.
+//  Apresenta os traços de simulação de autômatos de pilha traduzindo os dados
+//  retornados pelo PDASimulator em SimulationResult genérico para reutilizar o
+//  BaseTraceViewer, com destaque para entrada remanescente, conteúdo da pilha e
+//  transições utilizadas.
+//  Harmoniza mensagens de aceitação e rejeição, integra-se ao serviço de
+//  destaque do canvas e reforça convenções teóricas como λ para representar
+//  cadeia vazia e pilhas descarregadas.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

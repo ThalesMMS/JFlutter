@@ -1,11 +1,15 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/presentation/widgets/mobile_navigation.dart
-/// Autoria: Equipe de Engenharia JFlutter
-/// Descrição: Fornece barra de navegação inferior otimizada para dispositivos móveis com itens personalizáveis. Ajusta visual e feedback para acomodar múltiplos módulos do aplicativo em telas reduzidas.
-/// Contexto: Recebe lista de NavigationItem que descreve rótulos, ícones e descrições permitindo integração com ferramentas de acessibilidade. Mantém estilo consistente com Material 3 incluindo sombras e SafeArea.
-/// Observações: Destaca item ativo com cor primária e tipografia reforçada melhorando a orientação do usuário. Estrutura flexível facilita adição ou remoção de seções sem alterar o widget principal.
-/// ---------------------------------------------------------------------------
+//
+//  mobile_navigation.dart
+//  JFlutter
+//
+//  Fornece a barra inferior de navegação otimizada para dispositivos móveis,
+//  apresentando itens configuráveis com ícones, rótulos e descrições para
+//  suportar múltiplos módulos do aplicativo em telas compactas.
+//  Aplica estética Material 3 com SafeArea, sombras sutis e destaque do item
+//  ativo, garantindo acessibilidade e facilidade na expansão do menu.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter/material.dart';
 
 /// Mobile-optimized bottom navigation widget

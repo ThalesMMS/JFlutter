@@ -387,29 +387,53 @@ class _RegexPageState extends ConsumerState<RegexPage> {
 
             // Validation status
             const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(
-                  _isValid ? Icons.check_circle : Icons.error,
-                  color: _isValid ? Colors.green : Colors.red,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    _isValid
-                        ? 'Valid regex'
-                        : (_errorMessage.isNotEmpty
-                              ? _errorMessage
-                              : 'Invalid regex'),
-                    style: TextStyle(
-                      color: _isValid ? Colors.green : Colors.red,
-                      fontSize: 14,
+            if (_currentRegex.isEmpty)
+              Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurfaceVariant.withOpacity(0.6),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Enter a regular expression to validate.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurfaceVariant.withOpacity(0.8),
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              )
+            else
+              Row(
+                children: [
+                  Icon(
+                    _isValid ? Icons.check_circle : Icons.error,
+                    color: _isValid ? Colors.green : Colors.red,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _isValid
+                          ? 'Valid regex'
+                          : (_errorMessage.isNotEmpty
+                                ? _errorMessage
+                                : 'Invalid regex'),
+                      style: TextStyle(
+                        color: _isValid ? Colors.green : Colors.red,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
 
             const SizedBox(height: 24),
 
@@ -499,8 +523,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
               ),
             ),
             const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerRight,
+            Center(
               child: ElevatedButton.icon(
                 onPressed: _compareRegexEquivalence,
                 icon: const Icon(Icons.compare_arrows),
@@ -542,30 +565,32 @@ class _RegexPageState extends ConsumerState<RegexPage> {
             const SizedBox(height: 24),
 
             // Help section
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Regex Help',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+            SizedBox(
+              width: double.infinity,
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Regex Help',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Common patterns:\n'
-                      '• a* - zero or more a\'s\n'
-                      '• a+ - one or more a\'s\n'
-                      '• a? - zero or one a\n'
-                      '• a|b - a or b\n'
-                      '• (ab)* - zero or more ab\'s\n'
-                      '• [abc] - any of a, b, or c',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Common patterns:\n'
+                        '• a* - zero or more a\'s\n'
+                        '• a+ - one or more a\'s\n'
+                        '• a? - zero or one a\n'
+                        '• a|b - a or b\n'
+                        '• (ab)* - zero or more ab\'s\n'
+                        '• [abc] - any of a, b, or c',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -627,27 +652,55 @@ class _RegexPageState extends ConsumerState<RegexPage> {
 
                     // Validation status
                     const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(
-                          _isValid ? Icons.check_circle : Icons.error,
-                          color: _isValid ? Colors.green : Colors.red,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          _isValid
-                              ? 'Valid regex'
-                              : (_errorMessage.isNotEmpty
-                                    ? _errorMessage
-                                    : 'Invalid regex'),
-                          style: TextStyle(
-                            color: _isValid ? Colors.green : Colors.red,
-                            fontSize: 14,
+                    if (_currentRegex.isEmpty)
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant.withOpacity(0.6),
+                            size: 20,
                           ),
-                        ),
-                      ],
-                    ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Enter a regular expression to validate.',
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant
+                                        .withOpacity(0.8),
+                                  ),
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      Row(
+                        children: [
+                          Icon(
+                            _isValid ? Icons.check_circle : Icons.error,
+                            color: _isValid ? Colors.green : Colors.red,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _isValid
+                                  ? 'Valid regex'
+                                  : (_errorMessage.isNotEmpty
+                                        ? _errorMessage
+                                        : 'Invalid regex'),
+                              style: TextStyle(
+                                color: _isValid ? Colors.green : Colors.red,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
 
                     const SizedBox(height: 24),
 
@@ -737,8 +790,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Align(
-                      alignment: Alignment.centerRight,
+                    Center(
                       child: ElevatedButton.icon(
                         onPressed: _compareRegexEquivalence,
                         icon: const Icon(Icons.compare_arrows),
@@ -780,29 +832,32 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                     const SizedBox(height: 24),
 
                     // Help section
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Regex Help',
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 8),
-                            const Text(
-                              'Common patterns:\n'
-                              '• a* - zero or more a\'s\n'
-                              '• a+ - one or more a\'s\n'
-                              '• a? - zero or one a\n'
-                              '• a|b - a or b\n'
-                              '• (ab)* - zero or more ab\'s\n'
-                              '• [abc] - any of a, b, or c',
-                              style: TextStyle(fontSize: 12),
-                            ),
-                          ],
+                    SizedBox(
+                      width: double.infinity,
+                      child: Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Regex Help',
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Common patterns:\n'
+                                '• a* - zero or more a\'s\n'
+                                '• a+ - one or more a\'s\n'
+                                '• a? - zero or one a\n'
+                                '• a|b - a or b\n'
+                                '• (ab)* - zero or more ab\'s\n'
+                                '• [abc] - any of a, b, or c',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),

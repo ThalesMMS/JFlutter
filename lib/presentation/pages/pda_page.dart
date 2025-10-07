@@ -82,6 +82,13 @@ class _PDAPageState extends ConsumerState<PDAPage> {
     });
   }
 
+  void _handleAddStatePressed() {
+    if (_toolController.activeTool != AutomatonCanvasTool.addState) {
+      _toolController.setActiveTool(AutomatonCanvasTool.addState);
+    }
+    _canvasController.addStateAtCenter();
+  }
+
   @override
   void dispose() {
     _pdaEditorSub?.close();
@@ -118,67 +125,9 @@ class _PDAPageState extends ConsumerState<PDAPage> {
 
   Widget _buildMobileLayout() {
     return SafeArea(
-      child: Stack(
-        children: [
-          Column(
-            children: [
-              Expanded(
-                child: Container(
-                  margin: const EdgeInsets.all(8),
-                  child: _buildCanvasWithToolbar(isMobile: true),
-                ),
-              ),
-              _buildMobileInfoPanel(context),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMobileInfoPanel(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Pushdown Automata Editor',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Create states, transitions with stack operations, and test strings. PDAs can recognize context-free languages.',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          const SizedBox(height: 16),
-          _buildPdaInfoMetrics(context),
-          if (_hasUnsavedChanges) ...[
-            const SizedBox(height: 12),
-            Row(
-              key: const ValueKey('pda_info_unsaved_changes'),
-              children: [
-                Icon(
-                  Icons.warning_amber_rounded,
-                  color: Theme.of(context).colorScheme.tertiary,
-                  size: 18,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Unsaved changes',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ],
-            ),
-          ],
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: _buildCanvasWithToolbar(isMobile: true),
       ),
     );
   }
@@ -372,10 +321,36 @@ class _PDAPageState extends ConsumerState<PDAPage> {
 
     final combinedListenable = _canvasController.graphRevision;
 
+    final onSimulate = hasPda
+        ? () => _showPanelSheet(
+            context: context,
+            title: 'PDA Simulation',
+            icon: Icons.play_arrow,
+            child: PDASimulationPanel(highlightService: _highlightService),
+          )
+        : null;
+    final onAlgorithms = hasPda
+        ? () => _showPanelSheet(
+            context: context,
+            title: 'PDA Algorithms',
+            icon: Icons.auto_awesome,
+            child: const PDAAlgorithmPanel(),
+          )
+        : null;
+
     if (isMobile) {
       return Stack(
         children: [
           Positioned.fill(child: canvas),
+          if (onSimulate != null || onAlgorithms != null)
+            Positioned(
+              top: 16,
+              left: 16,
+              child: _PdaCanvasQuickActions(
+                onSimulate: onSimulate,
+                onAlgorithms: onAlgorithms,
+              ),
+            ),
           AnimatedBuilder(
             animation: combinedListenable,
             builder: (context, _) {
@@ -383,12 +358,13 @@ class _PDAPageState extends ConsumerState<PDAPage> {
                 enableToolSelection: true,
                 showSelectionTool: true,
                 activeTool: _activeTool,
-                onSelectTool: () =>
-                    _toolController.setActiveTool(AutomatonCanvasTool.selection),
-                onAddState: () =>
-                    _toolController.setActiveTool(AutomatonCanvasTool.addState),
-                onAddTransition: () => _toolController
-                    .setActiveTool(AutomatonCanvasTool.transition),
+                onSelectTool: () => _toolController.setActiveTool(
+                  AutomatonCanvasTool.selection,
+                ),
+                onAddState: _handleAddStatePressed,
+                onAddTransition: () => _toolController.setActiveTool(
+                  AutomatonCanvasTool.transition,
+                ),
                 onFitToContent: _canvasController.fitToContent,
                 onResetView: _canvasController.resetView,
                 onClear: () => ref
@@ -405,22 +381,10 @@ class _PDAPageState extends ConsumerState<PDAPage> {
                     : null,
                 canUndo: _canvasController.canUndo,
                 canRedo: _canvasController.canRedo,
-                onSimulate: () => _showPanelSheet(
-                  context: context,
-                  title: 'PDA Simulation',
-                  icon: Icons.play_arrow,
-                  child: PDASimulationPanel(
-                    highlightService: _highlightService,
-                  ),
-                ),
-                isSimulationEnabled: hasPda,
-                onAlgorithms: () => _showPanelSheet(
-                  context: context,
-                  title: 'PDA Algorithms',
-                  icon: Icons.auto_awesome,
-                  child: const PDAAlgorithmPanel(),
-                ),
-                isAlgorithmsEnabled: hasPda,
+                onSimulate: null,
+                isSimulationEnabled: false,
+                onAlgorithms: null,
+                isAlgorithmsEnabled: false,
                 statusMessage: statusMessage,
               );
             },
@@ -443,10 +407,9 @@ class _PDAPageState extends ConsumerState<PDAPage> {
               activeTool: _activeTool,
               onSelectTool: () =>
                   _toolController.setActiveTool(AutomatonCanvasTool.selection),
-              onAddState: () =>
-                  _toolController.setActiveTool(AutomatonCanvasTool.addState),
-              onAddTransition: () => _toolController
-                  .setActiveTool(AutomatonCanvasTool.transition),
+              onAddState: _handleAddStatePressed,
+              onAddTransition: () =>
+                  _toolController.setActiveTool(AutomatonCanvasTool.transition),
               onClear: () => ref
                   .read(pdaEditorProvider.notifier)
                   .updateFromCanvas(
@@ -500,5 +463,46 @@ class _PDAPageState extends ConsumerState<PDAPage> {
   String _formatCount(String singular, String plural, int count) {
     final label = count == 1 ? singular : plural;
     return '$count $label';
+  }
+}
+
+class _PdaCanvasQuickActions extends StatelessWidget {
+  const _PdaCanvasQuickActions({this.onSimulate, this.onAlgorithms});
+
+  final VoidCallback? onSimulate;
+  final VoidCallback? onAlgorithms;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Material(
+      elevation: 6,
+      borderRadius: BorderRadius.circular(32),
+      color: colorScheme.surface.withOpacity(0.92),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (onSimulate != null)
+              IconButton(
+                tooltip: 'Simulate',
+                icon: const Icon(Icons.play_arrow),
+                onPressed: onSimulate,
+              ),
+            if (onSimulate != null && onAlgorithms != null)
+              const SizedBox(width: 4),
+            if (onAlgorithms != null)
+              IconButton(
+                tooltip: 'Algorithms',
+                icon: const Icon(Icons.auto_awesome),
+                onPressed: onAlgorithms,
+              ),
+          ],
+        ),
+      ),
+    );
   }
 }

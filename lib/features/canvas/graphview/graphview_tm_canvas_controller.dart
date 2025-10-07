@@ -30,6 +30,8 @@ void _logTmCanvas(String message) {
   }
 }
 
+const double _kTmFitToContentMaxScale = 1.35;
+
 /// Controller responsible for synchronising GraphView with the
 /// [TMEditorNotifier].
 class GraphViewTmCanvasController
@@ -40,13 +42,16 @@ class GraphViewTmCanvasController
     GraphViewController? viewController,
     TransformationController? transformationController,
   }) : super(
-          notifier: editorNotifier,
-          graph: graph,
-          viewController: viewController,
-          transformationController: transformationController,
-        );
+         notifier: editorNotifier,
+         graph: graph,
+         viewController: viewController,
+         transformationController: transformationController,
+       );
 
   TMEditorNotifier get _notifier => notifier;
+
+  @override
+  double get fitToContentMaxScale => _kTmFitToContentMaxScale;
 
   @override
   TM? get currentDomainData => _notifier.state.tm;
@@ -155,11 +160,7 @@ class GraphViewTmCanvasController
       'moveState -> id=$id position=(${position.dx.toStringAsFixed(2)}, ${position.dy.toStringAsFixed(2)})',
     );
     performMutation(() {
-      _notifier.moveState(
-        id: id,
-        x: position.dx,
-        y: position.dy,
-      );
+      _notifier.moveState(id: id, x: position.dx, y: position.dy);
     });
   }
 
@@ -168,10 +169,7 @@ class GraphViewTmCanvasController
     final resolvedLabel = label.isEmpty ? id : label;
     _logTmCanvas('updateStateLabel -> id=$id label=$resolvedLabel');
     performMutation(() {
-      _notifier.updateStateLabel(
-        id: id,
-        label: resolvedLabel,
-      );
+      _notifier.updateStateLabel(id: id, label: resolvedLabel);
     });
   }
 
@@ -236,7 +234,9 @@ class GraphViewTmCanvasController
   ) {
     final edge = edgeById(id);
     if (edge == null) {
-      _logTmCanvas('updateTransitionControlPoint skipped -> id=$id (edge not found)');
+      _logTmCanvas(
+        'updateTransitionControlPoint skipped -> id=$id (edge not found)',
+      );
       return;
     }
 
@@ -265,9 +265,11 @@ class GraphViewTmCanvasController
 
   @override
   void applySnapshotToDomain(GraphViewAutomatonSnapshot snapshot) {
-    final template = _notifier.state.tm ??
+    final template =
+        _notifier.state.tm ??
         TM(
-          id: snapshot.metadata.id ??
+          id:
+              snapshot.metadata.id ??
               'tm_${DateTime.now().microsecondsSinceEpoch}',
           name: snapshot.metadata.name ?? 'Canvas TM',
           states: const {},
@@ -289,13 +291,13 @@ class GraphViewTmCanvasController
 
     final merged = GraphViewTmMapper.mergeIntoTemplate(snapshot, template)
         .copyWith(
-      id: snapshot.metadata.id ?? template.id,
-      name: snapshot.metadata.name ?? template.name,
-      tapeAlphabet: snapshot.metadata.alphabet.isNotEmpty
-          ? snapshot.metadata.alphabet.toSet()
-          : template.tapeAlphabet,
-      modified: DateTime.now(),
-    );
+          id: snapshot.metadata.id ?? template.id,
+          name: snapshot.metadata.name ?? template.name,
+          tapeAlphabet: snapshot.metadata.alphabet.isNotEmpty
+              ? snapshot.metadata.alphabet.toSet()
+              : template.tapeAlphabet,
+          modified: DateTime.now(),
+        );
 
     _logTmCanvas(
       'applySnapshotToDomain -> states=${merged.states.length} transitions=${merged.tmTransitions.length}',

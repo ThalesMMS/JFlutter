@@ -92,34 +92,8 @@ class _GrammarPageState extends ConsumerState<GrammarPage> {
                       margin: const EdgeInsets.symmetric(horizontal: 8),
                       child: _buildPanelsColumn(),
                     ),
-                  ],
-
-                  // Info panel (always visible)
-                  Container(
-                    margin: const EdgeInsets.all(8),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Context-Free Grammar Editor',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Create production rules, test strings, and analyze grammars. Use the panels above to edit, simulate, and apply algorithms.',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ],
-                    ),
-                  ),
+                  ] else
+                    const SizedBox(height: 8),
                 ],
               ),
             ),

@@ -11,7 +11,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/automaton_provider.dart';
-import '../providers/grammar_provider.dart';
 import '../providers/home_navigation_provider.dart';
 import '../widgets/mobile_navigation.dart';
 import '../../core/services/simulation_highlight_service.dart';
@@ -124,16 +123,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           return;
         }
 
-        final pageDistance = (currentIndex - currentPage).abs();
-        if (pageDistance <= 1) {
-          _pageController.animateToPage(
-            currentIndex,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-          );
-        } else {
-          _pageController.jumpToPage(currentIndex);
-        }
+        _pageController.jumpToPage(currentIndex);
       });
       _lastNavigationIndex = currentIndex;
     }
@@ -212,12 +202,6 @@ class _HomePageState extends ConsumerState<HomePage> {
     switch (currentIndex) {
       case 0: // FSA – redundant, handled via canvas toolbar
         return null;
-      case 1: // Grammar
-        return FloatingActionButton(
-          onPressed: () => _createNewGrammar(context),
-          tooltip: 'Create New Grammar',
-          child: const Icon(Icons.add),
-        );
       default:
         return null;
     }
@@ -242,13 +226,6 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
 
     ref.read(homeNavigationProvider.notifier).goToFsa();
-  }
-
-  void _createNewGrammar(BuildContext context) {
-    ref.read(grammarProvider.notifier).createNewGrammar();
-    ref
-        .read(homeNavigationProvider.notifier)
-        .setIndex(HomeNavigationNotifier.grammarIndex);
   }
 
   void _showHelpDialog(BuildContext context) {

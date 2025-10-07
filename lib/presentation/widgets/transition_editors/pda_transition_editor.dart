@@ -34,7 +34,8 @@ class PdaTransitionEditor extends StatefulWidget {
     required bool lambdaInput,
     required bool lambdaPop,
     required bool lambdaPush,
-  }) onSubmit;
+  })
+  onSubmit;
   final VoidCallback onCancel;
 
   @override
@@ -42,12 +43,15 @@ class PdaTransitionEditor extends StatefulWidget {
 }
 
 class _PdaTransitionEditorState extends State<PdaTransitionEditor> {
-  late final TextEditingController _readController =
-      TextEditingController(text: widget.initialRead);
-  late final TextEditingController _popController =
-      TextEditingController(text: widget.initialPop);
-  late final TextEditingController _pushController =
-      TextEditingController(text: widget.initialPush);
+  late final TextEditingController _readController = TextEditingController(
+    text: widget.initialRead,
+  );
+  late final TextEditingController _popController = TextEditingController(
+    text: widget.initialPop,
+  );
+  late final TextEditingController _pushController = TextEditingController(
+    text: widget.initialPush,
+  );
   late bool _lambdaInput = widget.isLambdaInput;
   late bool _lambdaPop = widget.isLambdaPop;
   late bool _lambdaPush = widget.isLambdaPush;
@@ -94,7 +98,7 @@ class _PdaTransitionEditorState extends State<PdaTransitionEditor> {
       elevation: 4,
       borderRadius: BorderRadius.circular(8),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(minWidth: 280),
+        constraints: const BoxConstraints(minWidth: 280, maxWidth: 360),
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Column(

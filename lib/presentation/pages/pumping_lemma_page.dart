@@ -92,7 +92,6 @@ class _PumpingLemmaPageState extends ConsumerState<PumpingLemmaPage> {
           if (_showGame) ...[
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 8),
-              constraints: const BoxConstraints(minHeight: 300, maxHeight: 500),
               child: const PumpingLemmaGame(),
             ),
             const SizedBox(height: 8),
@@ -102,7 +101,6 @@ class _PumpingLemmaPageState extends ConsumerState<PumpingLemmaPage> {
           if (_showHelp) ...[
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 8),
-              constraints: const BoxConstraints(minHeight: 200, maxHeight: 400),
               child: const PumpingLemmaHelp(),
             ),
             const SizedBox(height: 8),
@@ -112,37 +110,10 @@ class _PumpingLemmaPageState extends ConsumerState<PumpingLemmaPage> {
           if (_showProgress) ...[
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 8),
-              constraints: const BoxConstraints(minHeight: 150, maxHeight: 300),
               child: const PumpingLemmaProgress(),
             ),
             const SizedBox(height: 8),
           ],
-
-          // Info panel (always visible)
-          Container(
-            margin: const EdgeInsets.all(8),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Pumping Lemma Game',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Learn the pumping lemma through interactive challenges. Prove or disprove whether languages are regular using the pumping lemma technique.',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );

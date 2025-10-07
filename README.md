@@ -149,12 +149,6 @@ flutter pub get
 flutter run
 ```
 
-### First Launch Experience
-1. **Startup**: App loads in < 3 seconds with Examples v1 library ready
-2. **Offline Ready**: All examples and algorithms work without internet
-3. **Touch Optimized**: Canvas responds to gestures at 60fps
-4. **Educational Focus**: Progressive learning path from basic to advanced concepts
-
 ### Android release signing
 
 Android release builds are signed with the `dev.jflutter.app` application ID. The Gradle script loads release keystore
@@ -183,10 +177,10 @@ export JFLUTTER_KEY_PASSWORD="$JFLUTTER_KEY_PASSWORD"
 ```
 
 ### Platform Support
-- ✅ **Android** - Full support with touch optimization
-- ✅ **iOS** - Full support with native feel (tested on iPhone 17 Pro Max)
-- ✅ **Web** - Responsive web interface
-- ✅ **Desktop** - Windows, macOS, Linux support
+- **Android** - Full support with touch optimization
+- **iOS** - Full support with native feel (tested on iPhone 17 Pro Max)
+- **Web** - Responsive web interface
+- **Desktop** - Windows, macOS, Linux support
 
 ## How to Use
 
@@ -194,7 +188,7 @@ export JFLUTTER_KEY_PASSWORD="$JFLUTTER_KEY_PASSWORD"
 1. Open the **FSA** tab
 2. Tap the **"+"** button to add states
 3. Tap the **arrow** button to add transitions
-4. Tap on states to mark them as initial/final
+4. Double tap on states to edit them or mark them as initial/final
 5. Use the **algorithms panel** to convert or minimize
 
 ### Testing Strings
@@ -405,20 +399,12 @@ The `References/` directory contains authoritative implementations used as the s
 - **Pumping Lemma Game** - Interactive educational game
 - **Settings Screen** - Comprehensive configuration options
 
-### Phase 2 Objectives (Completed)
-- **Performance Optimization** - Canvas optimized for large automata with LOD rendering
-- **Trace Persistence** - Unified trace management across all simulator types
-- **Import/Export Validation** - Comprehensive validation for multiple file formats
-- **Enhanced Diagnostics** - Detailed error messages and automaton validation
-- **Code Quality** - Clean static analysis and standardized formatting
-- **Quickstart Verification** - Application builds and runs successfully on all platforms
-
 ### Future Enhancements
 - **Advanced Visualizations** - More sophisticated algorithm step visualization
 - **Enhanced Export Options** - Additional file format support
 - **Tutorial System** - Guided learning experience
 - **Advanced Grammar Features** - More grammar analysis tools
-- **PDA Canvas** - Pushdown automata visualization improvements
+- **PDA and Turing Machine Canvas** - Pushdown automata visualization improvements
 
 ## Development
 
@@ -438,12 +424,9 @@ The `References/` directory contains authoritative implementations used as the s
 5. Submit a pull request
 
 ### Development Guidelines
-- Use **Riverpod** for state management
-- Follow **Material 3** design principles
 - Optimize for **mobile devices**
 - Write **comprehensive tests**
-- Document **public APIs**
-- Ensure **responsive design** for all screen sizes
+- Write **documentation**
 
 ## Educational Value
 
@@ -453,26 +436,11 @@ JFlutter is designed for:
 - **Researchers** - Prototyping automata
 - **Developers** - Understanding regular expressions
 
-### Learning Path
-1. **Start with FSA** - Learn finite state automata basics
-2. **Explore Algorithms** - Understand conversions and minimization
-3. **Practice Simulation** - Test strings and see execution
-4. **Advanced Topics** - Move to grammars and parsing
-5. **Interactive Games** - Use pumping lemma for deeper understanding
-
-## Performance
-
-- **Optimized Rendering** - Custom painters for smooth canvas
-- **Efficient State** - Minimal rebuilds with Riverpod
-- **Memory Management** - Proper resource disposal
-- **Mobile Performance** - 60fps on modern devices
-- **Responsive UI** - Smooth adaptation to different screen sizes
-
 ## License
 
 This project is distributed under a dual license structure:
 
-### Port to Flutter
+### JFlutter
 - **License**: Apache License 2.0
 - **Copyright**: 2025–present JFlutter contributors (see [Contributors](#community--contributors))
 - **Contact**: thalesmmsradio@gmail.com
@@ -490,8 +458,8 @@ This project is distributed under a dual license structure:
 
 ## Acknowledgments & References
 
-### Port Development
-- **Thales Matheus Mendonça Santos** - Complete Flutter port development
+### Development
+- **Thales Matheus Mendonça Santos** - Complete JFlutter development until 2025-10-07, graphview fork optimization for loop transitions rendering
 - **Email**: thalesmmsradio@gmail.com
 - **Year**: 2025
 
@@ -539,22 +507,10 @@ This project is distributed under a dual license structure:
 - **Flutter Team** - For the excellent mobile framework
 - **Dart Team** - For the programming language
 - **Riverpod Team** - For state management solutions
-- **GraphView Contributors** - For the graph rendering toolkit powering the native
-  automaton canvas
+- **GraphView Contributors** - For the graph rendering toolkit powering the native automaton canvas
 - **Material Design Team** - For design system and components
 - **Open Source Community** - For inspiration and support
 
 ### Community & Contributors
 - **Prof. Zenilton Kleber Gonçalves do Patrocínio Júnior** - For educational guidance and feedback
 - **[@Gaok1](https://github.com/Gaok1)** - Luis Phillip Lemos Martins - For inspiring this Flutter port project
-- **Open Source Contributors** - For various libraries and tools used
-
-### Academic References
-- **Introduction to Automata Theory, Languages, and Computation** - Hopcroft, Motwani, Ullman
-- **Introduction to the Theory of Computation** - Michael Sipser
-- **Formal Languages and Automata Theory** - Various academic sources
-- **Computer Science Education Research** - For pedagogical approaches
-
----
-
-JFlutter continua evoluindo para tornar o estudo de linguagens formais acessível em dispositivos modernos.

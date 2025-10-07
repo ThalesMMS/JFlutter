@@ -1,9 +1,14 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/features/canvas/graphview/graphview_node_editor_event_shims.dart
-/// Descrição: Define payloads leves para eventos do editor GraphView, como
-///            seleção por arrasto e destaques de links durante edições.
-/// ---------------------------------------------------------------------------
+//
+//  graphview_node_editor_event_shims.dart
+//  JFlutter
+//
+//  Coleção de payloads e ajudantes que padronizam eventos emitidos pelos
+//  editores GraphView, como seleção por arrasto, destaque de ligações e remoção
+//  de transições. As funções convertem coleções brutas em estruturas
+//  imutáveis consumidas pelos widgets da camada de apresentação.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:ui';
 
 /// Lightweight payload describing the result of a drag-selection gesture within

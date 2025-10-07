@@ -1,9 +1,14 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/features/canvas/graphview/graphview_highlight_channel.dart
-/// Descrição: Encaminha realces do serviço de simulação para controladores
-///            GraphView, mantendo o canvas alinhado com o estado da execução.
-/// ---------------------------------------------------------------------------
+//
+//  graphview_highlight_channel.dart
+//  JFlutter
+//
+//  Canal que recebe realces do SimulationHighlightService e os encaminha para o
+//  controlador GraphView responsável pelo canvas, garantindo que o estado
+//  visual acompanhe cada etapa da simulação e permitindo limpar o destaque
+//  ativo quando necessário.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import '../../../core/models/simulation_highlight.dart';
 import '../../../core/services/simulation_highlight_service.dart';
 import 'graphview_highlight_controller.dart';

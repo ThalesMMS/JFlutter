@@ -1,15 +1,14 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/widget/presentation/tm_canvas_graphview_test.dart
-// Objetivo: Validar a renderização do canvas de MT com GraphView, assegurando
-// integração com o provider e controle de transições.
-// Cenários cobertos:
-// - Exibição de estados e transições provenientes do controlador.
-// - Reatividade a modificações do editor de MT.
-// - Descarte correto do controlador após o teste.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
+//
+//  tm_canvas_graphview_test.dart
+//  JFlutter
+//
+//  Bateria de testes de widget que verifica o TMCanvasGraphView, assegurando
+//  que o controlador GraphView de máquinas de Turing sincronize estados e
+//  transições com o provider Riverpod durante interações típicas de edição.
+//  As verificações incluem criação dinâmica de nós, adição de transições e
+//  descarte apropriado do controlador ao término de cada cenário.
+//
+//  Thales Matheus Mendonça Santos - October 2025
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

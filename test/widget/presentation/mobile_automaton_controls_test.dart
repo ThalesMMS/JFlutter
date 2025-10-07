@@ -1,15 +1,15 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/widget/presentation/mobile_automaton_controls_test.dart
-// Objetivo: Garantir que os controles móveis do canvas exponham ações e
-// callbacks de simulação, algoritmos e edição.
-// Cenários cobertos:
-// - Renderização de botões de ações principais.
-// - Disparo dos callbacks associados a cada ação.
-// - Exibição de mensagens de status na interface.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
+//
+//  mobile_automaton_controls_test.dart
+//  JFlutter
+//
+//  Conjunto de testes de widget que confirma o comportamento do
+//  MobileAutomatonControls, cobrindo renderização dos botões principais e
+//  habilitação condicional de simulação, algoritmos, métricas e ferramentas do
+//  canvas. As verificações monitoram callbacks disparados e mensagens de status
+//  para assegurar que o painel móvel responda corretamente a diferentes
+//  configurações.
+//
+//  Thales Matheus Mendonça Santos - October 2025
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

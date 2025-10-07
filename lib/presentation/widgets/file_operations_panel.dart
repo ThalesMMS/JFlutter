@@ -1,3 +1,11 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/presentation/widgets/file_operations_panel.dart
+/// Autoria: Equipe de Engenharia JFlutter
+/// Descrição: Centraliza ações de salvar, carregar e exportar autômatos ou gramáticas em formatos suportados, incluindo JFLAP e SVG. Fornece botões agrupados por tipo de estrutura para facilitar o fluxo do usuário.
+/// Contexto: Utiliza FileOperationsService e FilePicker para manipular arquivos locais, atualizando provedores através de callbacks. Apresenta indicadores de carregamento para sinalizar operações assíncronas em andamento.
+/// Observações: Organização modular permite habilitar seções de acordo com os dados disponíveis, evitando opções inválidas. Ideal para ser incorporado a painéis laterais ou janelas de diálogo mantendo coesão visual com o restante da aplicação.
+/// ---------------------------------------------------------------------------
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../core/models/fsa.dart';

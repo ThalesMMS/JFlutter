@@ -1,3 +1,11 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/presentation/providers/pumping_lemma_progress_provider.dart
+/// Autoria: Equipe de Engenharia JFlutter
+/// Descrição: Mantém o histórico de desafios e estatísticas do jogo do Lema do Bombeamento. Modela tentativas, replays e pontuação para alimentar os painéis pedagógicos.
+/// Contexto: Implementa um StateNotifier imutável que registra interações relevantes como respostas e reinícios. Facilita a sincronização entre widgets do jogo fornecendo métricas agregadas e logs cronológicos.
+/// Observações: Expõe fábricas de entrada para simplificar a criação de registros e operações de reset. Permite que componentes verifiquem conquistas e progresso sem acessar diretamente fontes externas.
+/// ---------------------------------------------------------------------------
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

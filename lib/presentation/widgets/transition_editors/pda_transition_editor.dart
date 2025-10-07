@@ -1,3 +1,11 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/presentation/widgets/transition_editors/pda_transition_editor.dart
+/// Autoria: Equipe de Engenharia JFlutter
+/// Descrição: Fornece formulário interativo para configurar transições de autômatos de pilha com suporte a símbolos λ. Permite editar leitura, pop e push além de alternar rapidamente o uso de operações vazias.
+/// Contexto: Utilizado pelos editores de PDA para captar ajustes detalhados das regras de transição diretamente do usuário. Combina campos de texto, interruptores adaptativos e botões alinhados ao Material Design.
+/// Observações: Garante limpeza dos campos quando modos λ são ativados evitando inconsistências de entrada. Pode ser reutilizado em diálogos ou menus contextuais mantendo integração simples com callbacks do chamador.
+/// ---------------------------------------------------------------------------
 import 'package:flutter/material.dart';
 
 class PdaTransitionEditor extends StatefulWidget {

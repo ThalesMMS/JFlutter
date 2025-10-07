@@ -1,3 +1,11 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/presentation/pages/grammar_page.dart
+/// Autoria: Equipe de Engenharia JFlutter
+/// Descrição: Organiza ferramentas para edição, simulação e análise de gramáticas livres de contexto em layouts responsivos. Permite alternar painéis conforme o espaço disponível oferecendo experiência personalizada em desktop e mobile.
+/// Contexto: Agrupa widgets como GrammarEditor, GrammarSimulationPanel e GrammarAlgorithmPanel para cobrir todo o ciclo de estudo. Inclui controles para mostrar ou ocultar seções e adaptar a interface a diferentes tamanhos de tela.
+/// Observações: Mantém estado local simples indicando quais módulos estão visíveis, facilitando futuras expansões. Estrutura scaffold neutro que pode receber barras ou menus adicionais sem grande esforço.
+/// ---------------------------------------------------------------------------
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/grammar_editor.dart';

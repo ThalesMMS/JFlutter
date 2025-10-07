@@ -1,3 +1,11 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/presentation/widgets/mobile_automaton_controls.dart
+/// Autoria: Equipe de Engenharia JFlutter
+/// Descrição: Agrupa os principais controles do editor de autômatos em uma superfície otimizada para toque. Combina ações de simulação, algoritmos, métricas e ferramentas de canvas em um único painel configurável.
+/// Contexto: Facilita o uso em dispositivos móveis ao substituir botões flutuantes dispersos por uma barra organizada com ícones e rótulos. Integra-se ao AutomatonCanvasToolController para refletir a ferramenta ativa e habilitar alternâncias.
+/// Observações: Aceita callbacks opcionais permitindo adaptar o conjunto de ações às capacidades da página hospedeira. Oferece feedback visual sobre disponibilidade e seleção para orientar usuários durante a edição.
+/// ---------------------------------------------------------------------------
 import 'package:flutter/material.dart';
 
 import 'automaton_canvas_tool.dart';

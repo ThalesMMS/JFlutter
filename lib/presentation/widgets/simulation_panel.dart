@@ -1,3 +1,11 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/presentation/widgets/simulation_panel.dart
+/// Autoria: Equipe de Engenharia JFlutter
+/// Descrição: Gerencia interface de simulação para autômatos com controles de entrada, execução e visualização passo a passo. Integra destaque de transições e reprodução automática para auxiliar no entendimento do processo.
+/// Contexto: Utiliza SimulationHighlightService e resultados centralizados para sincronizar canvas e relatórios textuais. Oferece funcionalidades como modo passo a passo, reprodução contínua e exibição de mensagens de aceitação ou rejeição.
+/// Observações: Controla ciclo de vida de controladores e timers garantindo limpeza adequada ao atualizar widgets. Design modular permite adaptar a painel lateral ou seções independentes em páginas diversas.
+/// ---------------------------------------------------------------------------
 import 'package:flutter/material.dart';
 import '../../core/models/simulation_result.dart';
 import '../../core/models/simulation_step.dart';

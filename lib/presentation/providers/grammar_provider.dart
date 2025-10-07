@@ -1,3 +1,11 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/presentation/providers/grammar_provider.dart
+/// Autoria: Equipe de Engenharia JFlutter
+/// Descrição: Controla a edição de gramáticas formais e as conversões disponíveis no workspace dedicado. Mantém estado com produções, símbolo inicial, tipo selecionado e resultados recentes de transformações para automatos.
+/// Contexto: Usa um StateNotifier que integra o ConversionService para executar pipelines como Gramática→AF e Gramática→AP. Organiza identificadores e ordem das produções garantindo edição previsível para componentes visuais.
+/// Observações: Expõe métodos para adicionar, atualizar, excluir e limpar produções além de lidar com feedback de erros. Permite rastrear conversões ativas e resultados de PDA para que widgets exibam progresso e mensagens de sucesso ou falha.
+/// ---------------------------------------------------------------------------
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/fsa.dart';

@@ -1,3 +1,11 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/presentation/widgets/graphview_canvas_toolbar.dart
+/// Autoria: Equipe de Engenharia JFlutter
+/// Descrição: Implementa a barra de ferramentas que controla o canvas baseado em GraphView, fornecendo atalhos de edição e navegação. Permite selecionar ferramentas, adicionar elementos e ajustar a visualização do grafo.
+/// Contexto: Comunica-se diretamente com o controlador do canvas para executar ações como desfazer, refit e reset de viewport. Expõe ganchos opcionais para botões de transição, limpeza e mensagens de status adaptando-se a layouts desktop ou mobile.
+/// Observações: Gerencia escuta de alterações do controlador para manter o estado visual atualizado. Pode ser configurada para funcionar como conjunto de toggles quando ferramentas exclusivas precisam permanecer ativas.
+/// ---------------------------------------------------------------------------
 import 'package:flutter/material.dart';
 
 import '../../features/canvas/graphview/base_graphview_canvas_controller.dart';

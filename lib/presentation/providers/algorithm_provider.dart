@@ -1,3 +1,11 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/presentation/providers/algorithm_provider.dart
+/// Autoria: Equipe de Engenharia JFlutter
+/// Descrição: Centraliza a chamada dos casos de uso de algoritmos formais expostos na interface. Garante que operações de conversão, minimização e equivalência emitam estados coerentes para feedback ao usuário.
+/// Contexto: Implementa um StateNotifier Riverpod que encadeia repositórios e casos de uso definidos no domínio. Padroniza os ciclos de carregamento e propagação de erros para componentes de UI que consomem resultados de algoritmos.
+/// Observações: Mantém o último resultado ou falha para reutilização em painéis subsequentes. Facilita a extensão futura adicionando novos casos de uso sem alterar a superfície pública dos widgets.
+/// ---------------------------------------------------------------------------
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/use_cases/algorithm_use_cases.dart';
 import '../../core/entities/automaton_entity.dart';

@@ -1,3 +1,11 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/presentation/widgets/trace_viewers/pda_trace_viewer.dart
+/// Autoria: Equipe de Engenharia JFlutter
+/// Descrição: Exibe traços de simulações de autômatos de pilha destacando estado atual, entrada remanescente e conteúdo da pilha. Converte resultados específicos do simulador em formato comum para reutilizar a infraestrutura de visualização.
+/// Contexto: Trabalha com SimulationHighlightService para sincronizar destaques no canvas e com BaseTraceViewer para renderização consistente. Usa convenções como λ para entradas vazias reforçando conceitos teóricos na interface.
+/// Observações: Simplifica tratamento de resultados aceitos ou rejeitados mantendo mensagens claras. Pode ser integrado a diferentes painéis que necessitem apresentar passo a passo de execuções PDA.
+/// ---------------------------------------------------------------------------
 import 'package:flutter/material.dart';
 
 import '../../../core/algorithms/pda_simulator.dart';

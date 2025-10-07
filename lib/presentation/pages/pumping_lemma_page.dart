@@ -1,3 +1,11 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/presentation/pages/pumping_lemma_page.dart
+/// Autoria: Equipe de Engenharia JFlutter
+/// Descrição: Orquestra a experiência do jogo do Lema do Bombeamento combinando módulos de jogo, ajuda teórica e progresso. Adapta o layout para desktop e mobile permitindo alternar seções conforme o espaço disponível.
+/// Contexto: Utiliza widgets especializados para cada aspecto do aprendizado e fornece controles para mostrar ou ocultar painéis. Centraliza a lógica de disposição para oferecer fluxo pedagógico coeso sobre linguagens regulares e não regulares.
+/// Observações: Mantém estado local para visibilidade de seções facilitando personalização da experiência pelo usuário. Pode ser expandida com novos modos ou métricas preservando a estrutura de alternância existente.
+/// ---------------------------------------------------------------------------
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/pumping_lemma_game/pumping_lemma_game.dart';

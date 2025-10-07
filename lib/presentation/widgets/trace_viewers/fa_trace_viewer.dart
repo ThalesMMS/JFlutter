@@ -1,3 +1,11 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/presentation/widgets/trace_viewers/fa_trace_viewer.dart
+/// Autoria: Equipe de Engenharia JFlutter
+/// Descrição: Apresenta traços de simulação de autômatos finitos detalhando estado corrente, entrada restante e transição utilizada. Utiliza convenções como ε para cadeia vazia reforçando terminologia de teoria de autômatos.
+/// Contexto: Se baseia no BaseTraceViewer para renderização padronizada e suporta personalização de linhas de passo. É utilizado por painéis de simulação para oferecer visão cronológica de execuções.
+/// Observações: Opera diretamente com SimulationResult genérico tornando-se compatível com DFAs, NFAs e execuções passo a passo. Pode ser estendido para incluir metadados adicionais sem romper a API existente.
+/// ---------------------------------------------------------------------------
 import 'package:flutter/material.dart';
 
 import '../../../core/models/simulation_result.dart';

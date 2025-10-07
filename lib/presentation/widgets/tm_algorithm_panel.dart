@@ -1,3 +1,11 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/presentation/widgets/tm_algorithm_panel.dart
+/// Autoria: Equipe de Engenharia JFlutter
+/// Descrição: Disponibiliza conjunto de análises para Máquinas de Turing abrangendo decidibilidade, alcançabilidade e métricas de fita. Apresenta resultados estruturados para auxiliar na depuração dos modelos criados.
+/// Contexto: Interage com o TMEditorProvider e algoritmos do domínio para executar inspeções detalhadas sobre estados e transições. Usa seções temáticas que permitem ao usuário focar em aspectos específicos da máquina.
+/// Observações: Mantém estado interno de foco e resultados para evitar recomputações desnecessárias. Pode ser expandido com novos diagnósticos mantendo a mesma experiência visual e organizacional.
+/// ---------------------------------------------------------------------------
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

@@ -1,13 +1,8 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/widget/presentation/visualizations_test.dart
-// Objetivo: Reservar infraestrutura para testes de visualizações e goldens,
-// indicando trabalho pendente na fase 3.2.
-// Cenários cobertos:
-// - Registro de teste pendente sinalizando necessidade de configuração.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
+/// ---------------------------------------------------------------------------
+/// Teste: placeholder para visualizações e goldens em fase futura.
+/// Resumo: Mantém teste sinalizando pendência de configuração para capturas e
+/// renderizações de visualizações na fase 3.2.
+/// ---------------------------------------------------------------------------
 
 import 'package:flutter_test/flutter_test.dart';
 

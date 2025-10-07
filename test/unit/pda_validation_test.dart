@@ -1,12 +1,8 @@
-//
-//  pda_validation_test.dart
-//  JFlutter
-//
-//  Conjunto de testes que confirma o comportamento do simulador de autômatos de pilha e da conversão de gramáticas livres de contexto para PDAs.
-//  Inclui cenários determinísticos e não determinísticos com manipulação de pilha, transições lambda e validação de linguagem contra a referência.
-//
-//  Thales Matheus Mendonça Santos - October 2025
-//
+/// ---------------------------------------------------------------------------
+/// Teste: simulador de PDAs e conversão de gramáticas para autômatos com pilha.
+/// Resumo: Exercita cenários determinísticos e NDT com transições λ e operações
+/// de pilha, comparando resultados com a referência de linguagem.
+/// ---------------------------------------------------------------------------
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/pda.dart';
 import 'package:jflutter/core/models/state.dart';

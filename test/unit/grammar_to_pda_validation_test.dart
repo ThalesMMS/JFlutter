@@ -1,12 +1,8 @@
-//
-//  grammar_to_pda_validation_test.dart
-//  JFlutter
-//
-//  Suite que garante a fidelidade da conversão de gramáticas livres de contexto em autômatos de pilha mantendo equivalência de linguagem.
-//  Cobre gramáticas simples, produções lambda e estruturas complexas validando o PDA resultante por simulação.
-//
-//  Thales Matheus Mendonça Santos - October 2025
-//
+/// ---------------------------------------------------------------------------
+/// Teste: conversão de gramáticas livres de contexto em PDAs equivalentes.
+/// Resumo: Valida gramáticas simples, com lambda e complexas, simulando o
+/// autômato resultante para assegurar manutenção da linguagem reconhecida.
+/// ---------------------------------------------------------------------------
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/grammar.dart';
 import 'package:jflutter/core/models/production.dart';

@@ -1,12 +1,8 @@
-//
-//  result_test.dart
-//  JFlutter
-//
-//  Testes unitários que asseguram o comportamento das extensões da classe Result ao propagar sucessos e falhas.
-//  Valida especialmente o método mapOrElse preservando mensagens de erro e tipos em cenários de falha.
-//
-//  Thales Matheus Mendonça Santos - October 2025
-//
+/// ---------------------------------------------------------------------------
+/// Teste: extensões da classe Result para mapear sucessos e falhas.
+/// Resumo: Garante que `mapOrElse` preserve mensagens de erro e tipos ao
+/// propagar falhas, além de mapear valores com segurança.
+/// ---------------------------------------------------------------------------
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/result.dart';
 

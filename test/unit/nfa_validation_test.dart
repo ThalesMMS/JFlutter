@@ -1,12 +1,8 @@
-//
-//  nfa_validation_test.dart
-//  JFlutter
-//
-//  Casos de teste que avaliam o simulador de AFNs e a conversão para DFAs garantindo alinhamento com os exemplos clássicos usados como referência.
-//  Os experimentos exploram caminhos não determinísticos, fechos epsilon, símbolos fora do alfabeto e verificações de aceitação versus rejeição.
-//
-//  Thales Matheus Mendonça Santos - October 2025
-//
+/// ---------------------------------------------------------------------------
+/// Teste: simulação de AFNs e checagens com conversão para DFAs.
+/// Resumo: Explora não determinismo, fechos ε, entradas inválidas e confirma
+/// aceitação ou rejeição alinhadas com exemplos canônicos.
+/// ---------------------------------------------------------------------------
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/state.dart';

@@ -1,15 +1,8 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/unit/core/algorithms/pda_to_cfg_converter_test.dart
-// Objetivo: Verificar a conversão de PDAs para gramáticas livres de contexto,
-// assegurando preservação da linguagem reconhecida.
-// Cenários cobertos:
-// - Construção de produções a partir de transições de empilha/desempilha.
-// - Geração de regras iniciais com estados intermediários e terminais.
-// - Tratamento de autômatos inválidos com feedback de erro estruturado.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
+/// ---------------------------------------------------------------------------
+/// Teste: conversão de PDAs em gramáticas livres de contexto.
+/// Resumo: Verifica geração de produções baseadas em push/pop, regras iniciais
+/// intermediárias e tratamento de autômatos inválidos mantendo a linguagem.
+/// ---------------------------------------------------------------------------
 
 import 'dart:math' as math;
 

@@ -1,12 +1,8 @@
-//
-//  glc_validation_test.dart
-//  JFlutter
-//
-//  Coleção de testes que examina o parser de gramáticas livres de contexto e utilitários associados para validar derivação, normalização e análise.
-//  Os cenários detectam recursões, ambiguidades, conversões para CNF e confrontam exemplos importados de bibliotecas de apoio.
-//
-//  Thales Matheus Mendonça Santos - October 2025
-//
+/// ---------------------------------------------------------------------------
+/// Teste: parser e utilitários de gramáticas livres de contexto.
+/// Resumo: Avalia detecção de recursões, ambiguidades e normalizações para CNF
+/// utilizando exemplos referenciais para validar derivação e análise.
+/// ---------------------------------------------------------------------------
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/grammar.dart';
 import 'package:jflutter/core/models/production.dart';

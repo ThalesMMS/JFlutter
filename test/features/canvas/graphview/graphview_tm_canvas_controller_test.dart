@@ -1,15 +1,8 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/features/canvas/graphview/graphview_tm_canvas_controller_test.dart
-// Objetivo: Garantir que o controlador GraphView para MT sincronize estados,
-// transições e seleção com o provider.
-// Cenários cobertos:
-// - Construção de grafo a partir de máquinas de Turing e atualizações em tempo real.
-// - Seleção de transições e estados, emitindo eventos correspondentes.
-// - Descarte seguro de recursos após uso.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
+/// ---------------------------------------------------------------------------
+/// Teste: controlador GraphView específico para máquinas de Turing.
+/// Resumo: Avalia a construção do grafo, a seleção de estados/transições e o
+/// descarte de recursos ao sincronizar o canvas com o provider de MT.
+/// ---------------------------------------------------------------------------
 
 import 'dart:math' as math;
 

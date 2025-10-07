@@ -1,12 +1,8 @@
-//
-//  equivalence_validation_test.dart
-//  JFlutter
-//
-//  Conjunto de testes que valida o EquivalenceChecker para DFAs e NFAs, cobrindo cenários equivalentes, não equivalentes e comparações cruzadas entre autômatos construídos de maneiras distintas.
-//  O arquivo monta máquinas de exemplo para assegurar diagnósticos coerentes e resultados consistentes mesmo em casos extremos e entradas malformadas.
-//
-//  Thales Matheus Mendonça Santos - October 2025
-//
+/// ---------------------------------------------------------------------------
+/// Teste: verificador de equivalência entre DFAs e NFAs.
+/// Resumo: Compara autômatos montados de formas distintas para confirmar
+/// diagnósticos em cenários equivalentes, divergentes e com entradas inválidas.
+/// ---------------------------------------------------------------------------
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/state.dart';

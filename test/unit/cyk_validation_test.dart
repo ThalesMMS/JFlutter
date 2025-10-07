@@ -1,12 +1,8 @@
-//
-//  cyk_validation_test.dart
-//  JFlutter
-//
-//  Conjunto de testes que garante a fidelidade do algoritmo CYK ao analisar gramáticas convertidas para forma normal de Chomsky em cadeias de diversos comprimentos.
-//  Os cenários cobrem construções de tabela, tratamentos de produções especiais, rejeições esperadas e comportamentos extremos para manter a consistência do analisador.
-//
-//  Thales Matheus Mendonça Santos - October 2025
-//
+/// ---------------------------------------------------------------------------
+/// Teste: algoritmo CYK analisando gramáticas em forma normal de Chomsky.
+/// Resumo: Exercita construção de tabela, produções especiais e rejeições
+/// esperadas com cadeias variadas para assegurar a consistência do parser.
+/// ---------------------------------------------------------------------------
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/grammar.dart';
 import 'package:jflutter/core/models/production.dart';

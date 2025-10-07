@@ -1,12 +1,8 @@
-//
-//  regex_validation_test.dart
-//  JFlutter
-//
-//  Suite que verifica as conversões entre expressões regulares e autômatos finitos cobrindo ida e volta no pipeline de linguagem formal.
-//  Os casos exercitam operadores avançados, simulam os autômatos gerados e confirmam consistência com a implementação de referência.
-//
-//  Thales Matheus Mendonça Santos - October 2025
-//
+/// ---------------------------------------------------------------------------
+/// Teste: roundtrip entre expressões regulares e autômatos finitos.
+/// Resumo: Exercita conversões regex→AFN→AFD e retorno para regex, simulando os
+/// autômatos gerados para garantir equivalência com a referência.
+/// ---------------------------------------------------------------------------
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/state.dart';

@@ -1,12 +1,8 @@
-//
-//  dfa_validation_test.dart
-//  JFlutter
-//
-//  Bateria que compara o simulador de DFAs e o minimizador do JFlutter com autômatos de referência para assegurar aceitação, rejeição e estabilidade da linguagem.
-//  Inclui verificações da cadeia vazia, de ciclos e da equivalência entre a máquina original e sua versão minimizada.
-//
-//  Thales Matheus Mendonça Santos - October 2025
-//
+/// ---------------------------------------------------------------------------
+/// Teste: simulador e minimizador de DFAs com casos canônicos.
+/// Resumo: Compara aceitação/rejeição e equivalência entre DFAs originais e
+/// minimizados, cobrindo cadeia vazia, ciclos e estabilidade da linguagem.
+/// ---------------------------------------------------------------------------
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/state.dart';

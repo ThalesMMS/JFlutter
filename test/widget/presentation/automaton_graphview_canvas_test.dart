@@ -1,15 +1,8 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/widget/presentation/automaton_graphview_canvas_test.dart
-// Objetivo: Certificar que o canvas GraphView de autômatos integra-se com os
-// provedores e serviços de layout simulados.
-// Cenários cobertos:
-// - Renderização de estados/transições e interação com ferramentas do canvas.
-// - Rotulagem inline e disparo de callbacks do controlador.
-// - Tratamento de layouts não suportados por repositório fake.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
+/// ---------------------------------------------------------------------------
+/// Teste: canvas GraphView genérico para autômatos finitos.
+/// Resumo: Confere integração com providers e serviços de layout fake,
+/// exercitando renderização, rotulagem inline e tratamento de layouts inválidos.
+/// ---------------------------------------------------------------------------
 
 import 'dart:math' as math;
 

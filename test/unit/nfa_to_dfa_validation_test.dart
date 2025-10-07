@@ -1,12 +1,8 @@
-//
-//  nfa_to_dfa_validation_test.dart
-//  JFlutter
-//
-//  Testes focados na conversão de AFNs para DFAs garantindo que a linguagem e os diagnósticos permaneçam equivalentes após o processo.
-//  Abrange exemplos com transições lambda e epsilon, construções complexas e validação dos autômatos resultantes por simulação.
-//
-//  Thales Matheus Mendonça Santos - October 2025
-//
+/// ---------------------------------------------------------------------------
+/// Teste: conversão de autômatos não determinísticos para determinísticos.
+/// Resumo: Avalia AFNs com transições λ/ε e estruturas complexas, validando que
+/// o DFA resultante preserva a linguagem original em simulação.
+/// ---------------------------------------------------------------------------
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/state.dart';

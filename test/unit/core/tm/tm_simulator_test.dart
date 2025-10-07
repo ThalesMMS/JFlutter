@@ -1,15 +1,8 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/unit/core/tm/tm_simulator_test.dart
-// Objetivo: Exercitar o simulador interno de máquinas de Turing com cenários
-// determinísticos e não determinísticos, incluindo múltiplas fitas.
-// Cenários cobertos:
-// - Máquinas determinísticas que expandem cadeias unárias e reconhecem padrões.
-// - Construções não determinísticas com ramos concorrentes e rejeição.
-// - Operações multi-fita com movimentação independente e sincronização.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
+/// ---------------------------------------------------------------------------
+/// Teste: simulador de máquinas de Turing para cenários determinísticos e NDT.
+/// Resumo: Avalia execução de MTs com múltiplas fitas, expansão de cadeias e
+/// ramos concorrentes garantindo rejeições corretas quando apropriado.
+/// ---------------------------------------------------------------------------
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/algorithms/tm_simulator.dart';

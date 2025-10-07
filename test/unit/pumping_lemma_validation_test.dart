@@ -1,12 +1,8 @@
-//
-//  pumping_lemma_validation_test.dart
-//  JFlutter
-//
-//  Grupo de testes dedicado ao provador do lema do bombeamento avaliando demonstrações para linguagens regulares e diagnósticos para linguagens não regulares.
-//  As validações analisam decomposições bombeáveis, limites mínimos calculados e respostas para cenários de sucesso e falha.
-//
-//  Thales Matheus Mendonça Santos - October 2025
-//
+/// ---------------------------------------------------------------------------
+/// Teste: provador do lema do bombeamento para linguagens regulares.
+/// Resumo: Analisa decomposições bombeáveis, limites mínimos e diagnósticos
+/// gerados ao diferenciar linguagens regulares de não regulares.
+/// ---------------------------------------------------------------------------
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/state.dart';

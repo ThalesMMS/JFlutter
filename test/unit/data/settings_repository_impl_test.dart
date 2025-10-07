@@ -1,15 +1,8 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/unit/data/settings_repository_impl_test.dart
-// Objetivo: Confirmar que o repositório de configurações elimina chaves
-// legadas relacionadas ao canvas Draw2D ao carregar ou salvar preferências.
-// Cenários cobertos:
-// - Limpeza da flag `settings_use_draw2d_canvas` durante o carregamento das
-//   configurações.
-// - Remoção do mesmo sinalizador ao persistir novas preferências.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
+/// ---------------------------------------------------------------------------
+/// Teste: limpeza de chaves legadas no repositório de configurações.
+/// Resumo: Garante que `settings_use_draw2d_canvas` seja removida ao carregar
+/// ou salvar preferências, mantendo o modelo livre de flags obsoletas.
+/// ---------------------------------------------------------------------------
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/settings_model.dart';

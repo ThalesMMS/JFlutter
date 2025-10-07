@@ -1,12 +1,8 @@
-//
-//  dfa_minimization_validation_test.dart
-//  JFlutter
-//
-//  Testes que verificam o algoritmo de minimização de DFAs assegurando redução correta de estados sem alterar a linguagem reconhecida.
-//  Englobam autômatos básicos, estruturas redundantes, casos já minimizados e máquinas sem estados de aceitação para checar diagnósticos.
-//
-//  Thales Matheus Mendonça Santos - October 2025
-//
+/// ---------------------------------------------------------------------------
+/// Teste: minimização de autômatos determinísticos.
+/// Resumo: Exercita DFAs com redundâncias, casos já reduzidos e máquinas sem
+/// aceitação para confirmar preservação de linguagem e diagnósticos.
+/// ---------------------------------------------------------------------------
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/state.dart';

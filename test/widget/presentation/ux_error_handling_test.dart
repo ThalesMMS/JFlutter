@@ -1,15 +1,8 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/widget/presentation/ux_error_handling_test.dart
-// Objetivo: Garantir a experiência de usuário ao lidar com erros de importação,
-// cobrindo banner inline, diálogo e ações de retry.
-// Cenários cobertos:
-// - Exibição do banner de erro e mensagem detalhada.
-// - Interação com diálogo de erro e botões auxiliares.
-// - Funcionamento do botão de tentar novamente e estado do provider.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
+/// ---------------------------------------------------------------------------
+/// Teste: UX para tratamento de erros de importação.
+/// Resumo: Avalia apresentação do banner, diálogo e ação de tentar novamente
+/// garantindo mensagens detalhadas e integração com o estado do provider.
+/// ---------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

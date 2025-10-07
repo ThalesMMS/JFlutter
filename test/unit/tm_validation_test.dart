@@ -1,12 +1,8 @@
-//
-//  tm_validation_test.dart
-//  JFlutter
-//
-//  Bateria de testes que confronta o simulador de máquinas de Turing com casos reais de aceitação, rejeição e detecção de laços infinitos para validar respostas.
-//  As rotinas montam máquinas variadas, verificam transformações de fita e confirmam limites operacionais alinhados com a implementação de referência.
-//
-//  Thales Matheus Mendonça Santos - October 2025
-//
+/// ---------------------------------------------------------------------------
+/// Teste: simulador de máquinas de Turing com cenários diversos.
+/// Resumo: Confronta casos de aceitação, rejeição e laços infinitos verificando
+/// transformações de fita e limites alinhados à implementação de referência.
+/// ---------------------------------------------------------------------------
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/tm.dart';
 import 'package:jflutter/core/models/state.dart';

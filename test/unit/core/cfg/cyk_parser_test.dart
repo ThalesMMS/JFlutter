@@ -1,12 +1,8 @@
-//
-//  cyk_parser_test.dart
-//  JFlutter
-//
-//  Conjunto de testes dedicado ao parser CYK da camada core verificando construção de tabela, árvores de derivação e integração com gramáticas normalizadas.
-//  Abrange cadeias válidas e inválidas, produções lambda e unitárias, além de assegurar o detalhamento do resultado retornado.
-//
-//  Thales Matheus Mendonça Santos - October 2025
-//
+/// ---------------------------------------------------------------------------
+/// Teste: parser CYK operando sobre gramáticas normalizadas.
+/// Resumo: Exercita construção de tabela, derivação e respostas detalhadas para
+/// cadeias válidas ou rejeitadas, incluindo produções λ e unitárias.
+/// ---------------------------------------------------------------------------
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/algorithms/cfg/cyk_parser.dart';
 import 'package:jflutter/core/models/grammar.dart';

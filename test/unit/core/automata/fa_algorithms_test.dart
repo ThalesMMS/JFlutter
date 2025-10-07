@@ -1,12 +1,8 @@
-//
-//  fa_algorithms_test.dart
-//  JFlutter
-//
-//  Casos específicos que exercitam algoritmos utilitários de autômatos finitos como conversão AFN→AFD, minimização de Hopcroft e operações de linguagem.
-//  Os testes montam autômatos pequenos para confirmar fechos epsilon, equivalência de linguagem e composição via complemento, união e interseção.
-//
-//  Thales Matheus Mendonça Santos - October 2025
-//
+/// ---------------------------------------------------------------------------
+/// Teste: algoritmos de autômatos finitos (AFN→AFD, Hopcroft e linguagem).
+/// Resumo: Monta autômatos pequenos para validar fechos ε, conversões,
+/// minimização e operações de união/interseção/complemento mantendo linguagens.
+/// ---------------------------------------------------------------------------
 import 'dart:math' as math;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vector_math/vector_math_64.dart';

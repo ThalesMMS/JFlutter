@@ -27,6 +27,10 @@ class LayoutRepositoryImpl implements LayoutRepository {
       Vector2(_canvasSize.x / 2, _canvasSize.y / 2);
 
   @override
+  /// Distribui os estados igualmente ao redor de um círculo centralizado,
+  /// mantendo distância fixa ao centro para evitar colisões com o padding do
+  /// canvas. Útil quando não há informação estrutural e busca-se uma
+  /// disposição radial equilibrada.
   Future<AutomatonResult> applyAutoLayout(AutomatonEntity automaton) async {
     final states = automaton.states;
     if (states.isEmpty) {
@@ -50,6 +54,10 @@ class LayoutRepositoryImpl implements LayoutRepository {
   }
 
   @override
+  /// Organiza os estados em uma grade retangular balanceada, ajustando o
+  /// número de colunas conforme a área disponível. A estratégia posiciona as
+  /// linhas dentro da região segura calculada, respeitando o padding mínimo e
+  /// evitando extrapolar o tamanho máximo permitido.
   Future<AutomatonResult> applyBalancedLayout(AutomatonEntity automaton) async {
     final states = automaton.states;
     if (states.isEmpty) {
@@ -96,6 +104,10 @@ class LayoutRepositoryImpl implements LayoutRepository {
   }
 
   @override
+  /// Compacta os estados em um padrão espiral baseado no [_goldenAngle],
+  /// semelhante ao arranjo "sunflower". Os pontos são espaçados de forma
+  /// incremental até o limite elíptico da área útil, promovendo densidade sem
+  /// ultrapassar o raio máximo permitido.
   Future<AutomatonResult> applyCompactLayout(AutomatonEntity automaton) async {
     final states = automaton.states;
     if (states.isEmpty) {
@@ -127,6 +139,10 @@ class LayoutRepositoryImpl implements LayoutRepository {
   }
 
   @override
+  /// Distribui estados em camadas hierárquicas a partir do estado inicial,
+  /// usando uma busca em largura para definir profundidades. Cada camada é
+  /// alinhada horizontalmente dentro da área respeitando padding e limites de
+  /// altura, preservando a ordem topológica sempre que possível.
   Future<AutomatonResult> applyHierarchicalLayout(
     AutomatonEntity automaton,
   ) async {
@@ -212,6 +228,10 @@ class LayoutRepositoryImpl implements LayoutRepository {
   }
 
   @override
+  /// Espalha estados em anéis concêntricos proporcionais à raiz quadrada da
+  /// quantidade total. Cada anel respeita o retângulo seguro calculado,
+  /// evitando ultrapassar o padding lateral e permitindo maior densidade nos
+  /// círculos externos.
   Future<AutomatonResult> applySpreadLayout(AutomatonEntity automaton) async {
     final states = automaton.states;
     if (states.isEmpty) {
@@ -259,6 +279,10 @@ class LayoutRepositoryImpl implements LayoutRepository {
   }
 
   @override
+  /// Translaciona o autômato para o centro geométrico do canvas,
+  /// compensando deslocamentos acumulados. Mantém o conjunto de estados
+  /// original e apenas aplica o offset necessário para ficar equidistante dos
+  /// limites com padding.
   Future<AutomatonResult> centerAutomaton(AutomatonEntity automaton) async {
     final states = automaton.states;
     if (states.isEmpty) {
@@ -329,6 +353,10 @@ class _LayoutArea {
   });
 }
 
+/// Calcula uma região retangular segura para reposicionamento considerando o
+/// bounding box atual, os fatores de escala fornecidos e o padding global.
+/// Retorna dimensões minimamente `_minLayoutSize` para evitar colapso visual e
+/// define a quantidade máxima de colunas suportada pelo número de estados.
 _LayoutArea _computeLayoutArea(
   List<StateEntity> states, {
   double scaleX = 1.0,
@@ -391,6 +419,9 @@ Vector2 _adjustCenter(Vector2 desired, double width, double height) {
   return Vector2(x.toDouble(), y.toDouble());
 }
 
+/// Garante que um ponto permaneça dentro da área elíptica calculada para o
+/// layout, respeitando os raios horizontal e vertical derivados do retângulo
+/// seguro. Fundamental para evitar que estados excedam o padding disponível.
 Vector2 _clampToArea(
   Vector2 point,
   Vector2 center,
@@ -418,6 +449,9 @@ Vector2 _computeCentroid(List<StateEntity> states) {
   return Vector2(sumX / states.length, sumY / states.length);
 }
 
+/// Substitui estados originais por suas versões reposicionadas, preservando o
+/// restante sem alterações. Ajuda a manter atributos não espaciais e evita
+/// ultrapassar o número máximo de estados suportado pelo autômato.
 List<StateEntity> _mergeStates(
   List<StateEntity> original,
   Iterable<StateEntity> positioned,

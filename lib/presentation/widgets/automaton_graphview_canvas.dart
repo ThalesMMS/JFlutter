@@ -17,10 +17,10 @@ import 'package:graphview/GraphView.dart';
 import 'package:vector_math/vector_math_64.dart' as vmath;
 
 import '../../core/constants/automaton_canvas.dart';
-import '../../core/models/fsa.dart';
 import '../../core/models/simulation_highlight.dart';
 import '../../core/models/simulation_result.dart';
 import '../../core/services/simulation_highlight_service.dart';
+import '../../features/canvas/graphview/base_graphview_canvas_controller.dart';
 import '../../features/canvas/graphview/graphview_canvas_controller.dart';
 import '../../features/canvas/graphview/graphview_canvas_models.dart';
 import '../../features/canvas/graphview/graphview_highlight_channel.dart';
@@ -30,6 +30,173 @@ import '../../features/canvas/graphview/graphview_link_overlay_utils.dart';
 import '../providers/automaton_provider.dart';
 import 'automaton_canvas_tool.dart';
 import 'transition_editors/transition_label_editor.dart';
+
+typedef AutomatonTransitionOverlayBuilder = Widget Function(
+  BuildContext context,
+  AutomatonTransitionOverlayData data,
+  AutomatonTransitionOverlayController controller,
+);
+
+/// Payload used by the transition overlay to communicate user edits back to
+/// the canvas.
+sealed class AutomatonTransitionPayload {
+  const AutomatonTransitionPayload();
+}
+
+/// Simple payload representing a raw transition label.
+class AutomatonLabelTransitionPayload extends AutomatonTransitionPayload {
+  const AutomatonLabelTransitionPayload(this.label);
+
+  final String label;
+}
+
+/// Payload describing TM tape operations (read/write/direction).
+class AutomatonTmTransitionPayload extends AutomatonTransitionPayload {
+  const AutomatonTmTransitionPayload({
+    required this.readSymbol,
+    required this.writeSymbol,
+    required this.direction,
+  });
+
+  final String readSymbol;
+  final String writeSymbol;
+  final TapeDirection direction;
+}
+
+/// Immutable description of the current transition overlay request.
+class AutomatonTransitionOverlayData {
+  const AutomatonTransitionOverlayData({
+    required this.fromStateId,
+    required this.toStateId,
+    required this.worldAnchor,
+    required this.payload,
+    this.transitionId,
+    this.edge,
+  });
+
+  final String fromStateId;
+  final String toStateId;
+  final Offset worldAnchor;
+  final AutomatonTransitionPayload payload;
+  final String? transitionId;
+  final GraphViewCanvasEdge? edge;
+
+  AutomatonTransitionOverlayData copyWith({
+    AutomatonTransitionPayload? payload,
+    Offset? worldAnchor,
+    String? transitionId,
+    GraphViewCanvasEdge? edge,
+  }) {
+    return AutomatonTransitionOverlayData(
+      fromStateId: fromStateId,
+      toStateId: toStateId,
+      worldAnchor: worldAnchor ?? this.worldAnchor,
+      payload: payload ?? this.payload,
+      transitionId: transitionId ?? this.transitionId,
+      edge: edge ?? this.edge,
+    );
+  }
+}
+
+/// Controller exposed to the overlay widget allowing it to submit or cancel
+/// the edit flow.
+class AutomatonTransitionOverlayController {
+  AutomatonTransitionOverlayController({
+    required this.onSubmit,
+    required this.onCancel,
+  });
+
+  final void Function(AutomatonTransitionPayload payload) onSubmit;
+  final VoidCallback onCancel;
+
+  void submit(AutomatonTransitionPayload payload) => onSubmit(payload);
+  void cancel() => onCancel();
+}
+
+/// Request emitted when the transition overlay is submitted.
+class AutomatonTransitionPersistRequest {
+  const AutomatonTransitionPersistRequest({
+    required this.fromStateId,
+    required this.toStateId,
+    required this.payload,
+    required this.worldAnchor,
+    required this.controller,
+    this.transitionId,
+  });
+
+  final String fromStateId;
+  final String toStateId;
+  final String? transitionId;
+  final AutomatonTransitionPayload payload;
+  final Offset worldAnchor;
+  final BaseGraphViewCanvasController<dynamic, dynamic> controller;
+}
+
+/// Transition configuration describing how to build overlays and persist
+/// updates for the current automaton type.
+class AutomatonGraphViewTransitionConfig {
+  const AutomatonGraphViewTransitionConfig({
+    required this.initialPayloadBuilder,
+    required this.overlayBuilder,
+    required this.persistTransition,
+  });
+
+  final AutomatonTransitionPayload Function(GraphViewCanvasEdge? edge)
+      initialPayloadBuilder;
+  final AutomatonTransitionOverlayBuilder overlayBuilder;
+  final void Function(AutomatonTransitionPersistRequest request)
+      persistTransition;
+}
+
+/// Customisation options applied to the graph canvas behaviour.
+class AutomatonGraphViewCanvasCustomization {
+  const AutomatonGraphViewCanvasCustomization({
+    required this.transitionConfigBuilder,
+    this.enableStateDrag = true,
+    this.enableToolSelection = false,
+  });
+
+  final AutomatonGraphViewTransitionConfig Function(
+    BaseGraphViewCanvasController<dynamic, dynamic> controller,
+  ) transitionConfigBuilder;
+
+  final bool enableStateDrag;
+  final bool enableToolSelection;
+
+  factory AutomatonGraphViewCanvasCustomization.fsa() {
+    return AutomatonGraphViewCanvasCustomization(
+      transitionConfigBuilder: (controller) {
+        return AutomatonGraphViewTransitionConfig(
+          initialPayloadBuilder: (edge) =>
+              AutomatonLabelTransitionPayload(edge?.label ?? ''),
+          overlayBuilder: (context, data, overlayController) {
+            final payload = data.payload as AutomatonLabelTransitionPayload;
+            return GraphViewLabelFieldEditor(
+              initialValue: payload.label,
+              onSubmit: (value) => overlayController.submit(
+                AutomatonLabelTransitionPayload(value),
+              ),
+              onCancel: overlayController.cancel,
+            );
+          },
+          persistTransition: (request) {
+            final payload = request.payload as AutomatonLabelTransitionPayload;
+            final controller =
+                request.controller as GraphViewCanvasController;
+            controller.addOrUpdateTransition(
+              fromStateId: request.fromStateId,
+              toStateId: request.toStateId,
+              label: payload.label,
+              transitionId: request.transitionId,
+              controlPointX: request.worldAnchor.dx,
+              controlPointY: request.worldAnchor.dy,
+            );
+          },
+        );
+      },
+    );
+  }
+}
 
 const double _kNodeDiameter = kAutomatonStateDiameter;
 const double _kNodeRadius = _kNodeDiameter / 2;
@@ -46,15 +213,17 @@ class AutomatonGraphViewCanvas extends ConsumerStatefulWidget {
     this.showTrace = false,
     this.controller,
     this.toolController,
+    this.customization,
   });
 
-  final FSA? automaton;
+  final Object? automaton;
   final GlobalKey canvasKey;
-  final GraphViewCanvasController? controller;
+  final BaseGraphViewCanvasController<dynamic, dynamic>? controller;
   final AutomatonCanvasToolController? toolController;
   final SimulationResult? simulationResult;
   final int? currentStepIndex;
   final bool showTrace;
+  final AutomatonGraphViewCanvasCustomization? customization;
 
   @override
   ConsumerState<AutomatonGraphViewCanvas> createState() =>
@@ -63,7 +232,7 @@ class AutomatonGraphViewCanvas extends ConsumerStatefulWidget {
 
 class _AutomatonGraphViewCanvasState
     extends ConsumerState<AutomatonGraphViewCanvas> {
-  late GraphViewCanvasController _controller;
+  late BaseGraphViewCanvasController<dynamic, dynamic> _controller;
   late bool _ownsController;
   late AutomatonCanvasToolController _toolController;
   late bool _ownsToolController;
@@ -76,10 +245,9 @@ class _AutomatonGraphViewCanvasState
   String? _transitionSourceId;
   OverlayEntry? _transitionOverlayEntry;
   final ValueNotifier<_GraphViewTransitionOverlayState?>
-  _transitionOverlayState = ValueNotifier<_GraphViewTransitionOverlayState?>(
-    null,
-  );
-  FSA? _pendingSyncAutomaton;
+      _transitionOverlayState =
+      ValueNotifier<_GraphViewTransitionOverlayState?>(null);
+  Object? _pendingSyncAutomaton;
   bool _syncScheduled = false;
   String? _draggingNodeId;
   Offset? _dragStartWorldPosition;
@@ -90,6 +258,8 @@ class _AutomatonGraphViewCanvasState
   DateTime? _lastTapTimestamp;
   bool _isDraggingNode = false;
   bool _didMoveDraggedNode = false;
+  late AutomatonGraphViewCanvasCustomization _customization;
+  late AutomatonGraphViewTransitionConfig _transitionConfig;
 
   void _setCanvasPanSuppressed(bool value, {String reason = ''}) {
     if (!mounted) {
@@ -141,6 +311,7 @@ class _AutomatonGraphViewCanvasState
       highlightService.channel = highlightChannel;
     }
 
+    _applyCustomization(widget.customization);
     _algorithm = _AutomatonGraphSugiyamaAlgorithm(
       controller: _controller,
       configuration: _buildConfiguration(),
@@ -149,17 +320,18 @@ class _AutomatonGraphViewCanvasState
     _controller.graphRevision.addListener(_handleGraphRevisionChanged);
     _transformationController?.addListener(_onTransformationChanged);
 
-    if ((widget.automaton?.states.isNotEmpty ?? false)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_controller.graph.nodes.isNotEmpty) {
         _controller.fitToContent();
-      });
-    }
+      }
+    });
   }
 
   @override
   void didUpdateWidget(covariant AutomatonGraphViewCanvas oldWidget) {
     super.didUpdateWidget(oldWidget);
+    var shouldReapplyCustomization = false;
     if (oldWidget.toolController != widget.toolController) {
       _toolController.removeListener(_handleActiveToolChanged);
       if (_ownsToolController) {
@@ -171,6 +343,7 @@ class _AutomatonGraphViewCanvasState
       _ownsToolController = widget.toolController == null;
       _toolController.addListener(_handleActiveToolChanged);
       _activeTool = _toolController.activeTool;
+      shouldReapplyCustomization = true;
     }
 
     if (oldWidget.controller != widget.controller) {
@@ -210,6 +383,7 @@ class _AutomatonGraphViewCanvasState
       _scheduleControllerSync(widget.automaton);
       _controller.graphRevision.addListener(_handleGraphRevisionChanged);
       _hideTransitionOverlay();
+      shouldReapplyCustomization = true;
     } else if (oldWidget.automaton != widget.automaton) {
       _scheduleControllerSync(widget.automaton);
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -220,7 +394,13 @@ class _AutomatonGraphViewCanvasState
         _updateTransitionOverlayPosition();
       });
     }
+
+    if (shouldReapplyCustomization ||
+        oldWidget.customization != widget.customization) {
+      _applyCustomization(widget.customization);
+    }
   }
+
 
   @override
   void dispose() {
@@ -245,6 +425,11 @@ class _AutomatonGraphViewCanvasState
 
   void _handleActiveToolChanged() {
     final nextTool = _toolController.activeTool;
+    if (!_customization.enableToolSelection &&
+        nextTool != AutomatonCanvasTool.selection) {
+      _toolController.setActiveTool(AutomatonCanvasTool.selection);
+      return;
+    }
     if (nextTool == _activeTool) {
       return;
     }
@@ -272,8 +457,22 @@ class _AutomatonGraphViewCanvasState
     setState(() {});
   }
 
-  void _scheduleControllerSync(FSA? automaton) {
-    _pendingSyncAutomaton = automaton;
+  void _applyCustomization(
+    AutomatonGraphViewCanvasCustomization? customization,
+  ) {
+    final resolved =
+        customization ?? AutomatonGraphViewCanvasCustomization.fsa();
+    _customization = resolved;
+    _transitionConfig = resolved.transitionConfigBuilder(_controller);
+    if (!_customization.enableToolSelection &&
+        _toolController.activeTool != AutomatonCanvasTool.selection) {
+      _toolController.setActiveTool(AutomatonCanvasTool.selection);
+    }
+    _activeTool = _toolController.activeTool;
+  }
+
+  void _scheduleControllerSync(Object? data) {
+    _pendingSyncAutomaton = data;
     if (_syncScheduled) {
       return;
     }
@@ -286,7 +485,19 @@ class _AutomatonGraphViewCanvasState
       }
       final target = _pendingSyncAutomaton;
       _pendingSyncAutomaton = null;
-      _controller.synchronize(target);
+      final dynamic synchronizable = _controller;
+      try {
+        // ignore: avoid_dynamic_calls
+        synchronizable.synchronize(target);
+      } catch (error, stackTrace) {
+        if (kDebugMode) {
+          debugPrint(
+            '[AutomatonGraphViewCanvas] Failed to synchronize controller: '
+            '\$error',
+          );
+          debugPrint(stackTrace.toString());
+        }
+      }
     });
   }
 
@@ -466,6 +677,9 @@ class _AutomatonGraphViewCanvasState
   }
 
   void _handleNodePanStart(DragStartDetails details) {
+    if (!_customization.enableStateDrag) {
+      return;
+    }
     final node = _hitTestNode(details.localPosition);
     if (node == null) {
       return;
@@ -681,19 +895,21 @@ class _AutomatonGraphViewCanvasState
       }
     }
 
-    final initialValue = existing?.label ?? '';
+    final payload = _transitionConfig.initialPayloadBuilder(existing);
     final worldAnchor = !createNew && existing != null
         ? resolveLinkAnchorWorld(_controller, existing) ??
               Offset(existing.controlPointX ?? 0, existing.controlPointY ?? 0)
         : _deriveControlPoint(fromId, toId);
-
-    final overlayDisplayed = _showTransitionOverlay(
+    final overlayData = AutomatonTransitionOverlayData(
       fromStateId: fromId,
       toStateId: toId,
-      transitionId: createNew ? null : existing?.id,
-      initialValue: initialValue,
       worldAnchor: worldAnchor,
+      payload: payload,
+      transitionId: createNew ? null : existing?.id,
+      edge: existing,
     );
+
+    final overlayDisplayed = _showTransitionOverlay(overlayData);
 
     if (overlayDisplayed) {
       debugPrint(
@@ -714,22 +930,25 @@ class _AutomatonGraphViewCanvasState
       '$fromId → $toId (existing=${existing?.id})',
     );
 
-    final label = await showDialog<String?>(
+    final result = await showDialog<AutomatonTransitionPayload?>(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          content: TransitionLabelEditorForm(
-            initialValue: initialValue,
-            autofocus: true,
-            touchOptimized: true,
-            onSubmit: (value) => Navigator.of(context).pop(value),
-            onCancel: () => Navigator.of(context).pop(null),
+        final controller = AutomatonTransitionOverlayController(
+          onSubmit: (value) => Navigator.of(context).pop(value),
+          onCancel: () => Navigator.of(context).pop(null),
+        );
+        return Dialog(
+          insetPadding: const EdgeInsets.all(24),
+          child: _transitionConfig.overlayBuilder(
+            context,
+            overlayData,
+            controller,
           ),
         );
       },
     );
 
-    if (!mounted || label == null) {
+    if (!mounted || result == null) {
       return;
     }
 
@@ -738,13 +957,15 @@ class _AutomatonGraphViewCanvasState
       'for $fromId → $toId (transitionId: ${existing?.id})',
     );
 
-    _controller.addOrUpdateTransition(
-      fromStateId: fromId,
-      toStateId: toId,
-      label: label,
-      transitionId: createNew ? null : existing?.id,
-      controlPointX: worldAnchor.dx,
-      controlPointY: worldAnchor.dy,
+    _transitionConfig.persistTransition(
+      AutomatonTransitionPersistRequest(
+        fromStateId: fromId,
+        toStateId: toId,
+        transitionId: createNew ? null : existing?.id,
+        payload: result,
+        worldAnchor: worldAnchor,
+        controller: _controller,
+      ),
     );
   }
 
@@ -845,7 +1066,8 @@ class _AutomatonGraphViewCanvasState
       return;
     }
 
-    final transitionId = state.transitionId;
+    final data = state.data;
+    final transitionId = data.transitionId;
     if (transitionId != null) {
       final edge = _controller.edgeById(transitionId);
       if (edge == null) {
@@ -853,10 +1075,14 @@ class _AutomatonGraphViewCanvasState
         return;
       }
       final anchor =
-          resolveLinkAnchorWorld(_controller, edge) ?? state.worldAnchor;
+          resolveLinkAnchorWorld(_controller, edge) ?? data.worldAnchor;
+      final payload = _transitionConfig.initialPayloadBuilder(edge);
       _transitionOverlayState.value = state.copyWith(
-        initialValue: edge.label,
-        worldAnchor: anchor,
+        data: data.copyWith(
+          payload: payload,
+          worldAnchor: anchor,
+          edge: edge,
+        ),
       );
       final shouldUpdateSelection =
           _selectedTransitions.length != 1 ||
@@ -869,8 +1095,11 @@ class _AutomatonGraphViewCanvasState
         });
       }
     } else {
-      final anchor = _deriveControlPoint(state.fromStateId, state.toStateId);
-      _transitionOverlayState.value = state.copyWith(worldAnchor: anchor);
+      final anchor =
+          _deriveControlPoint(data.fromStateId, data.toStateId);
+      _transitionOverlayState.value = state.copyWith(
+        data: data.copyWith(worldAnchor: anchor),
+      );
     }
   }
 
@@ -896,13 +1125,7 @@ class _AutomatonGraphViewCanvasState
     );
   }
 
-  bool _showTransitionOverlay({
-    required String fromStateId,
-    required String toStateId,
-    required String initialValue,
-    required Offset worldAnchor,
-    String? transitionId,
-  }) {
+  bool _showTransitionOverlay(AutomatonTransitionOverlayData data) {
     final overlayState = Overlay.maybeOf(context);
     if (overlayState == null) {
       return false;
@@ -914,12 +1137,8 @@ class _AutomatonGraphViewCanvasState
     final overlayPosition = overlayBox.size.center(Offset.zero);
     _ensureTransitionOverlay(overlayState);
     _transitionOverlayState.value = _GraphViewTransitionOverlayState(
-      fromStateId: fromStateId,
-      toStateId: toStateId,
-      initialValue: initialValue,
-      worldAnchor: worldAnchor,
+      data: data,
       overlayPosition: overlayPosition,
-      transitionId: transitionId,
     );
     return true;
   }
@@ -938,6 +1157,15 @@ class _AutomatonGraphViewCanvasState
               if (state == null) {
                 return const SizedBox.shrink();
               }
+              final overlayController = AutomatonTransitionOverlayController(
+                onSubmit: (payload) => _handleOverlaySubmit(state, payload),
+                onCancel: _hideTransitionOverlay,
+              );
+              final overlayChild = _transitionConfig.overlayBuilder(
+                context,
+                state.data,
+                overlayController,
+              );
               return Stack(
                 children: [
                   Positioned(
@@ -945,11 +1173,7 @@ class _AutomatonGraphViewCanvasState
                     top: state.overlayPosition.dy,
                     child: FractionalTranslation(
                       translation: const Offset(-0.5, -0.5),
-                      child: GraphViewLabelFieldEditor(
-                        initialValue: state.initialValue,
-                        onSubmit: (value) => _handleOverlaySubmit(state, value),
-                        onCancel: _hideTransitionOverlay,
-                      ),
+                      child: overlayChild,
                     ),
                   ),
                 ],
@@ -964,20 +1188,23 @@ class _AutomatonGraphViewCanvasState
 
   void _handleOverlaySubmit(
     _GraphViewTransitionOverlayState state,
-    String label,
+    AutomatonTransitionPayload payload,
   ) {
+    final data = state.data;
     debugPrint(
       '[AutomatonGraphViewCanvas] Persisting transition '
-      'for ${state.fromStateId} → ${state.toStateId} '
-      '(transitionId: ${state.transitionId})',
+      'for ${data.fromStateId} → ${data.toStateId} '
+      '(transitionId: ${data.transitionId})',
     );
-    _controller.addOrUpdateTransition(
-      fromStateId: state.fromStateId,
-      toStateId: state.toStateId,
-      label: label,
-      transitionId: state.transitionId,
-      controlPointX: state.worldAnchor.dx,
-      controlPointY: state.worldAnchor.dy,
+    _transitionConfig.persistTransition(
+      AutomatonTransitionPersistRequest(
+        fromStateId: data.fromStateId,
+        toStateId: data.toStateId,
+        transitionId: data.transitionId,
+        payload: payload,
+        worldAnchor: data.worldAnchor,
+        controller: _controller,
+      ),
     );
     _hideTransitionOverlay();
   }
@@ -1219,33 +1446,20 @@ class _TransitionEditChoice {
 
 class _GraphViewTransitionOverlayState {
   const _GraphViewTransitionOverlayState({
-    required this.fromStateId,
-    required this.toStateId,
-    required this.initialValue,
-    required this.worldAnchor,
+    required this.data,
     required this.overlayPosition,
-    this.transitionId,
   });
 
-  final String fromStateId;
-  final String toStateId;
-  final String initialValue;
-  final Offset worldAnchor;
+  final AutomatonTransitionOverlayData data;
   final Offset overlayPosition;
-  final String? transitionId;
 
   _GraphViewTransitionOverlayState copyWith({
-    String? initialValue,
-    Offset? worldAnchor,
+    AutomatonTransitionOverlayData? data,
     Offset? overlayPosition,
   }) {
     return _GraphViewTransitionOverlayState(
-      fromStateId: fromStateId,
-      toStateId: toStateId,
-      initialValue: initialValue ?? this.initialValue,
-      worldAnchor: worldAnchor ?? this.worldAnchor,
+      data: data ?? this.data,
       overlayPosition: overlayPosition ?? this.overlayPosition,
-      transitionId: transitionId,
     );
   }
 }
@@ -1256,7 +1470,7 @@ class _AutomatonGraphSugiyamaAlgorithm extends SugiyamaAlgorithm {
     required SugiyamaConfiguration configuration,
   }) : super(configuration);
 
-  final GraphViewCanvasController controller;
+  final BaseGraphViewCanvasController<dynamic, dynamic> controller;
 
   @override
   Size run(Graph? graph, double shiftX, double shiftY) {

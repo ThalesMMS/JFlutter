@@ -17,6 +17,7 @@ import '../widgets/tm_canvas_graphview.dart';
 import '../widgets/tm_algorithm_panel.dart';
 import '../widgets/tm_simulation_panel.dart';
 import '../widgets/graphview_canvas_toolbar.dart';
+import '../widgets/automaton_canvas_tool.dart';
 import '../widgets/mobile_automaton_controls.dart';
 import '../../core/services/simulation_highlight_service.dart';
 import '../../features/canvas/graphview/graphview_highlight_channel.dart';
@@ -43,6 +44,8 @@ class _TMPageState extends ConsumerState<TMPage> {
   late final GraphViewTmCanvasController _canvasController;
   late final GraphViewSimulationHighlightChannel _highlightChannel;
   late final SimulationHighlightService _highlightService;
+  late final AutomatonCanvasToolController _toolController;
+  AutomatonCanvasTool _activeTool = AutomatonCanvasTool.selection;
 
   bool get _isMachineReady =>
       _currentTM != null && _hasInitialState && _hasAcceptingState;
@@ -58,6 +61,9 @@ class _TMPageState extends ConsumerState<TMPage> {
     _canvasController.synchronize(ref.read(tmEditorProvider).tm);
     _highlightChannel = GraphViewSimulationHighlightChannel(_canvasController);
     _highlightService = SimulationHighlightService(channel: _highlightChannel);
+    _toolController = AutomatonCanvasToolController();
+    _toolController.addListener(_handleToolChanged);
+
     _tmEditorSub = ref.listenManual<TMEditorState>(tmEditorProvider, (
       previous,
       next,
@@ -78,9 +84,21 @@ class _TMPageState extends ConsumerState<TMPage> {
     });
   }
 
+
+  void _handleToolChanged() {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _activeTool = _toolController.activeTool;
+    });
+  }
+
   @override
   void dispose() {
     _tmEditorSub?.close();
+    _toolController.removeListener(_handleToolChanged);
+    _toolController.dispose();
     _highlightService.clear();
     _canvasController.dispose();
     super.dispose();
@@ -163,6 +181,7 @@ class _TMPageState extends ConsumerState<TMPage> {
     final hasMachine = _hasMachine;
     final canvas = TMCanvasGraphView(
       controller: _canvasController,
+      toolController: _toolController,
       onTmModified: _handleTMUpdate,
     );
     final combinedListenable = _canvasController.graphRevision;
@@ -216,7 +235,15 @@ class _TMPageState extends ConsumerState<TMPage> {
             return GraphViewCanvasToolbar(
               layout: GraphViewCanvasToolbarLayout.desktop,
               controller: _canvasController,
-              onAddState: _canvasController.addStateAtCenter,
+              enableToolSelection: true,
+              showSelectionTool: true,
+              activeTool: _activeTool,
+              onSelectTool: () =>
+                  _toolController.setActiveTool(AutomatonCanvasTool.selection),
+              onAddState: () =>
+                  _toolController.setActiveTool(AutomatonCanvasTool.addState),
+              onAddTransition: () => _toolController
+                  .setActiveTool(AutomatonCanvasTool.transition),
               onClear: () {
                 ref
                     .read(tmEditorProvider.notifier)

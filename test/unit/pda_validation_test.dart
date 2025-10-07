@@ -1,17 +1,12 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/unit/pda_validation_test.dart
-// Objetivo: Validar o simulador de autômatos de pilha e o conversor de
-// gramáticas, garantindo paridade com a implementação de referência.
-// Cenários cobertos:
-// - Aceitação e rejeição em PDAs determinísticos e não determinísticos.
-// - Conversão de gramáticas livres de contexto para PDAs equivalentes.
-// - Manipulação da pilha (push, pop e transições λ) em cenários complexos.
-// Autoria: Equipe de Qualidade JFlutter — baseado em
-// References/automata-main/tests/test_pda.py.
-// ============================================================================
-
+//
+//  pda_validation_test.dart
+//  JFlutter
+//
+//  Conjunto de testes que confirma o comportamento do simulador de autômatos de pilha e da conversão de gramáticas livres de contexto para PDAs.
+//  Inclui cenários determinísticos e não determinísticos com manipulação de pilha, transições lambda e validação de linguagem contra a referência.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/pda.dart';
 import 'package:jflutter/core/models/state.dart';

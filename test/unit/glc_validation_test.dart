@@ -1,17 +1,12 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/unit/glc_validation_test.dart
-// Objetivo: Validar o parser de gramáticas livres de contexto e operações
-// associadas comparando com a implementação de referência.
-// Cenários cobertos:
-// - Derivações válidas e inválidas para gramáticas representativas.
-// - Detecção de recursão à esquerda, ambiguidades e normalização para CNF/CYK.
-// - Integração com exemplos de `jflutter_js` e cobertura de casos limite.
-// Autoria: Equipe de Qualidade JFlutter — baseado na suíte teórica de
-// References/automata-main.
-// ============================================================================
-
+//
+//  glc_validation_test.dart
+//  JFlutter
+//
+//  Coleção de testes que examina o parser de gramáticas livres de contexto e utilitários associados para validar derivação, normalização e análise.
+//  Os cenários detectam recursões, ambiguidades, conversões para CNF e confrontam exemplos importados de bibliotecas de apoio.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/grammar.dart';
 import 'package:jflutter/core/models/production.dart';

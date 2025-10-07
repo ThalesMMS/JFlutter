@@ -1,16 +1,12 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/unit/cyk_validation_test.dart
-// Objetivo: Validar o algoritmo CYK garantindo reconhecimento correto de
-// linguagens após conversão para FNC.
-// Cenários cobertos:
-// - Construção de tabela e aceitação/rejeição de cadeias em CNF.
-// - Conversão de gramáticas e tratamento de produções especiais.
-// - Casos extremos relacionados a cadeias vazias e entradas curtas.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
-
+//
+//  cyk_validation_test.dart
+//  JFlutter
+//
+//  Conjunto de testes que garante a fidelidade do algoritmo CYK ao analisar gramáticas convertidas para forma normal de Chomsky em cadeias de diversos comprimentos.
+//  Os cenários cobrem construções de tabela, tratamentos de produções especiais, rejeições esperadas e comportamentos extremos para manter a consistência do analisador.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/grammar.dart';
 import 'package:jflutter/core/models/production.dart';

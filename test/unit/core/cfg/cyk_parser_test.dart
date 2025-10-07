@@ -1,16 +1,12 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/unit/core/cfg/cyk_parser_test.dart
-// Objetivo: Testar o parser CYK assegurando construção de tabela, árvores de
-// derivação e integração com gramáticas em FNC.
-// Cenários cobertos:
-// - Aceitação e rejeição de cadeias válidas/ inválidas segundo gramáticas em CNF.
-// - Construção de árvores de derivação completas e parciais.
-// - Tratamento de produções λ e unitárias após normalização.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
-
+//
+//  cyk_parser_test.dart
+//  JFlutter
+//
+//  Conjunto de testes dedicado ao parser CYK da camada core verificando construção de tabela, árvores de derivação e integração com gramáticas normalizadas.
+//  Abrange cadeias válidas e inválidas, produções lambda e unitárias, além de assegurar o detalhamento do resultado retornado.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/algorithms/cfg/cyk_parser.dart';
 import 'package:jflutter/core/models/grammar.dart';

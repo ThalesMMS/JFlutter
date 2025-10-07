@@ -1,16 +1,12 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/unit/pumping_lemma_validation_test.dart
-// Objetivo: Avaliar o provador do lema do bombeamento, confirmando cenários de
-// prova, refutação e cálculo do comprimento mínimo de bombeamento.
-// Cenários cobertos:
-// - Linguagens regulares com decomposição válida e strings bombeáveis.
-// - Linguagens não regulares com detecção de violações.
-// - Determinação de regularidade e cálculo de limites de bombeamento.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
-
+//
+//  pumping_lemma_validation_test.dart
+//  JFlutter
+//
+//  Grupo de testes dedicado ao provador do lema do bombeamento avaliando demonstrações para linguagens regulares e diagnósticos para linguagens não regulares.
+//  As validações analisam decomposições bombeáveis, limites mínimos calculados e respostas para cenários de sucesso e falha.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/state.dart';

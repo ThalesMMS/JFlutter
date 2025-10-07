@@ -1,17 +1,12 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/unit/dfa_minimization_validation_test.dart
-// Objetivo: Validar o algoritmo de minimização de AFD do JFlutter com base na
-// suíte de referência.
-// Cenários cobertos:
-// - Redução de autômatos básicos e complexos com estados redundantes.
-// - Garantia de invariância para AFDs já minimizados ou sem estados finais.
-// - Comparação de linguagem entre versões originais e minimizadas.
-// Autoria: Equipe de Qualidade JFlutter — baseado em
-// References/automata-main/tests/test_dfa.py.
-// ============================================================================
-
+//
+//  dfa_minimization_validation_test.dart
+//  JFlutter
+//
+//  Testes que verificam o algoritmo de minimização de DFAs assegurando redução correta de estados sem alterar a linguagem reconhecida.
+//  Englobam autômatos básicos, estruturas redundantes, casos já minimizados e máquinas sem estados de aceitação para checar diagnósticos.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/state.dart';

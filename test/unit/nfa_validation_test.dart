@@ -1,17 +1,12 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/unit/nfa_validation_test.dart
-// Objetivo: Validar o simulador de AFN e a conversão AFN→AFD garantindo
-// alinhamento com a implementação canônica da pasta References.
-// Cenários cobertos:
-// - Caminhos não determinísticos e transições múltiplas por símbolo.
-// - Processamento de transições λ e construção de fecho-epsilon.
-// - Aceitação, rejeição e símbolos fora do alfabeto esperado.
-// Autoria: Equipe de Qualidade JFlutter — baseado em
-// References/automata-main/tests/test_nfa.py.
-// ============================================================================
-
+//
+//  nfa_validation_test.dart
+//  JFlutter
+//
+//  Casos de teste que avaliam o simulador de AFNs e a conversão para DFAs garantindo alinhamento com os exemplos clássicos usados como referência.
+//  Os experimentos exploram caminhos não determinísticos, fechos epsilon, símbolos fora do alfabeto e verificações de aceitação versus rejeição.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/state.dart';

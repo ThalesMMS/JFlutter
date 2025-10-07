@@ -1,17 +1,12 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/unit/grammar_to_pda_validation_test.dart
-// Objetivo: Validar a conversão de gramáticas livres de contexto em autômatos
-// de pilha, garantindo equivalência de linguagem entre o artefato original e o
-// PDA resultante.
-// Cenários cobertos:
-// - Conversão de gramática simples com produções básicas e aceitação esperada.
-// - Suporte a produções lambda/ε preservando a linguagem reconhecida.
-// - Estruturas complexas com múltiplas produções e tratamento de erros.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
-
+//
+//  grammar_to_pda_validation_test.dart
+//  JFlutter
+//
+//  Suite que garante a fidelidade da conversão de gramáticas livres de contexto em autômatos de pilha mantendo equivalência de linguagem.
+//  Cobre gramáticas simples, produções lambda e estruturas complexas validando o PDA resultante por simulação.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/grammar.dart';
 import 'package:jflutter/core/models/production.dart';

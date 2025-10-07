@@ -1,16 +1,12 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/unit/core/automata/fa_algorithms_test.dart
-// Objetivo: Exercitar algoritmos de autômatos finitos (AFN→AFD, minimização e
-// operações de linguagem) em cenários controlados.
-// Cenários cobertos:
-// - Conversão AFN→AFD preservando fechos-ε e estados aceitando.
-// - Minimização Hopcroft com equivalência de linguagem.
-// - Operações de complemento, união e interseção aplicadas em DFAs.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
-
+//
+//  fa_algorithms_test.dart
+//  JFlutter
+//
+//  Casos específicos que exercitam algoritmos utilitários de autômatos finitos como conversão AFN→AFD, minimização de Hopcroft e operações de linguagem.
+//  Os testes montam autômatos pequenos para confirmar fechos epsilon, equivalência de linguagem e composição via complemento, união e interseção.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'dart:math' as math;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vector_math/vector_math_64.dart';

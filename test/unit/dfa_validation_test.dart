@@ -1,17 +1,12 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/unit/dfa_validation_test.dart
-// Objetivo: Validar o simulador e a minimização de AFDs comparando com a base
-// de referência em Python.
-// Cenários cobertos:
-// - Aceitação, rejeição e tratamento da cadeia vazia.
-// - Detecção de ciclos e consistência em complementação.
-// - Equivalência pós-minimização em relação ao autômato original.
-// Autoria: Equipe de Qualidade JFlutter — baseado em
-// References/automata-main/tests/test_dfa.py.
-// ============================================================================
-
+//
+//  dfa_validation_test.dart
+//  JFlutter
+//
+//  Bateria que compara o simulador de DFAs e o minimizador do JFlutter com autômatos de referência para assegurar aceitação, rejeição e estabilidade da linguagem.
+//  Inclui verificações da cadeia vazia, de ciclos e da equivalência entre a máquina original e sua versão minimizada.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/state.dart';

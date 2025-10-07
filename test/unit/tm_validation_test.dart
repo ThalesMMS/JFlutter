@@ -1,18 +1,12 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/unit/tm_validation_test.dart
-// Objetivo: Comparar o simulador de máquinas de Turing do JFlutter com a
-// implementação de referência para garantir equivalência de resultados e
-// diagnósticos.
-// Cenários cobertos:
-// - Cadeias aceitas e rejeitadas com diferentes configurações de fita.
-// - Detecção de laços infinitos e validação de limites da fita.
-// - Transformações de fita e comportamentos com autômatos triviais.
-// Autoria: Equipe de Qualidade JFlutter — baseado em
-// References/automata-main/tests/test_tm.py.
-// ============================================================================
-
+//
+//  tm_validation_test.dart
+//  JFlutter
+//
+//  Bateria de testes que confronta o simulador de máquinas de Turing com casos reais de aceitação, rejeição e detecção de laços infinitos para validar respostas.
+//  As rotinas montam máquinas variadas, verificam transformações de fita e confirmam limites operacionais alinhados com a implementação de referência.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/tm.dart';
 import 'package:jflutter/core/models/state.dart';

@@ -1,15 +1,13 @@
-// ============================================================================
-// JFlutter - Suite de Testes
-// ----------------------------------------------------------------------------
-// Arquivo: test/features/canvas/graphview/graphview_pda_mapper_test.dart
-// Objetivo: Garantir que PDAs sejam convertidos corretamente para modelos de
-// canvas GraphView.
-// Cenários cobertos:
-// - Tradução de push/pop e símbolos λ em metadados visuais.
-// - Mapeamento de estados iniciais/aceitadores e transições múltiplas.
-// - Atualização do grafo ao sincronizar com GraphViewPdaMapper.
-// Autoria: Equipe de Qualidade JFlutter.
-// ============================================================================
+//
+//  graphview_pda_mapper_test.dart
+//  JFlutter
+//
+//  Valida o GraphViewPdaMapper ao converter autômatos de pilha em estruturas de grafo, assegurando
+//  que estados, transições e metadados de pilha sejam preservados. Exercita cenários com múltiplos
+//  símbolos e ajustes geométricos para garantir compatibilidade com a renderização do canvas.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 
 import 'dart:math' as math;
 

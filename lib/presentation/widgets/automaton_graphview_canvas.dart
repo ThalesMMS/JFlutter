@@ -1634,6 +1634,11 @@ class _NodePanGestureRecognizer extends PanGestureRecognizer {
       debugPrint('[NodePanRecognizer] pointer already active -> ignore');
       return;
     }
+    final tool = toolResolver();
+    if (tool == AutomatonCanvasTool.transition) {
+      debugPrint('[NodePanRecognizer] tool transition -> ignore');
+      return;
+    }
     final node = hitTester(event.position);
     if (node == null) {
       debugPrint('[NodePanRecognizer] no node hit -> ignore');
@@ -1646,6 +1651,7 @@ class _NodePanGestureRecognizer extends PanGestureRecognizer {
     );
     onDragAccepted?.call();
     super.addAllowedPointer(event);
+    resolvePointer(event.pointer, GestureDisposition.accepted);
   }
 
   @override

@@ -1,3 +1,9 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/features/canvas/graphview/graphview_automaton_mapper.dart
+/// Descrição: Converte autômatos finitos em snapshots do GraphView,
+///            traduzindo estados e transições para o modelo visual do canvas.
+/// ---------------------------------------------------------------------------
 import 'package:vector_math/vector_math_64.dart';
 
 import '../../../core/models/fsa.dart';

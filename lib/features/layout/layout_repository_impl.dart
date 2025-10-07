@@ -1,3 +1,10 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/features/layout/layout_repository_impl.dart
+/// Descrição: Implementa heurísticas de auto layout para autômatos, calculando
+///            posições dos estados com distribuição radial e espaçamentos
+///            seguros no canvas.
+/// ---------------------------------------------------------------------------
 import 'dart:collection';
 import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';

@@ -1,3 +1,9 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/features/canvas/graphview/graphview_label_field_editor.dart
+/// Descrição: Fornece o overlay de edição de rótulos de transição no GraphView,
+///            mediando entrada do usuário e confirmação/cancelamento no canvas.
+/// ---------------------------------------------------------------------------
 import 'package:flutter/material.dart';
 
 import '../../../presentation/widgets/transition_editors/transition_label_editor.dart';

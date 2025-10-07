@@ -1,3 +1,9 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/features/canvas/graphview/graphview_pda_mapper.dart
+/// Descrição: Transforma autômatos de pilha em snapshots consumidos pelo
+///            GraphView, organizando estados, pilha e transições para o canvas.
+/// ---------------------------------------------------------------------------
 import 'package:vector_math/vector_math_64.dart';
 
 import '../../../core/models/pda.dart';

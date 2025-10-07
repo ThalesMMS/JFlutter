@@ -1,3 +1,9 @@
+/// ---------------------------------------------------------------------------
+/// Projeto: JFlutter
+/// Arquivo: lib/features/canvas/graphview/graphview_tm_canvas_controller.dart
+/// Descrição: Administra o canvas GraphView para Turing Machines, mantendo
+///            sincronismo entre o grafo, o provedor e interações de edição.
+/// ---------------------------------------------------------------------------
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';

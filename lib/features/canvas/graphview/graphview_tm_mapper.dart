@@ -1,9 +1,14 @@
-/// ---------------------------------------------------------------------------
-/// Projeto: JFlutter
-/// Arquivo: lib/features/canvas/graphview/graphview_tm_mapper.dart
-/// Descrição: Faz a ponte entre Turing Machines do domínio e snapshots do
-///            GraphView, mapeando estados, transições e fitas para o canvas.
-/// ---------------------------------------------------------------------------
+//
+//  graphview_tm_mapper.dart
+//  JFlutter
+//
+//  Utilitário que converte máquinas de Turing em snapshots compatíveis com o
+//  GraphView e reidrata modelos do domínio a partir de edições visuais. O
+//  mapeamento preserva estados, transições, direção de fita e alfabetos para
+//  garantir consistência entre a camada visual e os dados centrais.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
 import 'package:vector_math/vector_math_64.dart';
 
 import '../../../core/models/state.dart';

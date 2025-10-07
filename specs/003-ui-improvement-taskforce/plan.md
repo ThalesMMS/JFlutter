@@ -1,8 +1,8 @@
 
 # Implementation Plan: UI Improvement Taskforce
 
-**Branch**: `003-ui-improvement-taskforce` | **Date**: 2025-10-01 | **Spec**: `/Users/thales/Documents/GitHub/jflutter/specs/003-ui-improvement-taskforce/spec.md`
-**Input**: Feature specification from `/Users/thales/Documents/GitHub/jflutter/specs/003-ui-improvement-taskforce/spec.md`
+**Branch**: `003-ui-improvement-taskforce` | **Date**: 2025-10-01 | **Spec**: [`specs/003-ui-improvement-taskforce/spec.md`](./spec.md)
+**Input**: Feature specification from [`specs/003-ui-improvement-taskforce/spec.md`](./spec.md)
 
 ## Execution Flow (/plan command scope)
 ```

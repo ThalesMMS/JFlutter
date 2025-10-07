@@ -42,9 +42,9 @@ This document provides evidence of the successful execution of the JFlutter appl
 - **Architecture**: arm64
 
 ### Build Artifacts
-- **Application Path**: `/Users/thales/Documents/GitHub/jflutter/build/macos/Build/Products/Debug/jflutter.app`
-- **Build Directory**: `/Users/thales/Documents/GitHub/jflutter/build/macos/`
-- **Xcode Workspace**: `/Users/thales/Documents/GitHub/jflutter/macos/Runner.xcworkspace`
+- **Application Path**: `build/macos/Build/Products/Debug/jflutter.app`
+- **Build Directory**: `build/macos/`
+- **Xcode Workspace**: `macos/Runner.xcworkspace`
 
 ### Verification Commands Used
 ```bash

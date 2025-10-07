@@ -78,6 +78,28 @@ class _AutomatonGraphViewCanvasState
   Offset? _dragStartWorldPosition;
   Offset? _dragStartNodeCenter;
   final GestureArenaTeam _gestureArenaTeam = GestureArenaTeam();
+  bool _suppressCanvasPan = false;
+  String? _lastTapNodeId;
+  DateTime? _lastTapTimestamp;
+  bool _isDraggingNode = false;
+  bool _didMoveDraggedNode = false;
+
+  void _setCanvasPanSuppressed(bool value, {String reason = ''}) {
+    if (!mounted) {
+      return;
+    }
+    if (_suppressCanvasPan == value) {
+      return;
+    }
+    if (kDebugMode) {
+      debugPrint(
+        '[AutomatonGraphViewCanvas] suppressPan=$value reason=$reason',
+      );
+    }
+    setState(() {
+      _suppressCanvasPan = value;
+    });
+  }
 
   TransformationController? get _transformationController =>
       _controller.graphController.transformationController;
@@ -254,6 +276,10 @@ class _AutomatonGraphViewCanvasState
       if (_activeTool != AutomatonCanvasTool.transition) {
         _transitionSourceId = null;
       }
+      if (_activeTool != AutomatonCanvasTool.selection) {
+        _lastTapNodeId = null;
+        _lastTapTimestamp = null;
+      }
     });
     debugPrint(
       '[AutomatonGraphViewCanvas] Active tool set to '
@@ -409,6 +435,8 @@ class _AutomatonGraphViewCanvasState
     _dragStartWorldPosition = _screenToWorld(localPosition);
     final current = _controller.nodeById(node.id) ?? node;
     _dragStartNodeCenter = Offset(current.x, current.y);
+    _isDraggingNode = true;
+    _didMoveDraggedNode = false;
   }
 
   void _updateNodeDrag(Offset localPosition) {
@@ -424,48 +452,85 @@ class _AutomatonGraphViewCanvasState
     final delta = currentWorld - dragStartWorld;
     final nextPosition = dragStartNodeCenter + delta;
     _controller.moveState(nodeId, nextPosition);
+    _didMoveDraggedNode = true;
   }
 
   void _endNodeDrag() {
     _draggingNodeId = null;
     _dragStartWorldPosition = null;
     _dragStartNodeCenter = null;
+    _setCanvasPanSuppressed(false, reason: 'drag ended');
+    _isDraggingNode = false;
+    _didMoveDraggedNode = false;
   }
 
-  Future<void> _handleCanvasTap(TapUpDetails details) async {
+  Future<void> _handleCanvasTapUp(TapUpDetails details) async {
+    final global = details.globalPosition;
+    final local = _globalToCanvasLocal(global);
     debugPrint(
-      '[AutomatonGraphViewCanvas] Canvas tapped with '
-      'active tool ${_activeTool.name}',
+      '[AutomatonGraphViewCanvas] Tap up with active tool ${_activeTool.name} '
+      'local=$local',
     );
-    if (_activeTool != AutomatonCanvasTool.addState) {
-      return;
-    }
-    final box = context.findRenderObject() as RenderBox?;
-    if (box == null) {
-      return;
-    }
-    final localPosition = box.globalToLocal(details.globalPosition);
-    final world = _screenToWorld(localPosition);
-    _controller.addStateAt(world);
-  }
 
-  void _handleNodePanStart(DragStartDetails details) {
+    if (_activeTool == AutomatonCanvasTool.addState) {
+      final box = context.findRenderObject() as RenderBox?;
+      if (box == null) {
+        return;
+      }
+      final world = _screenToWorld(local);
+      _controller.addStateAt(world);
+      return;
+    }
+
     if (_activeTool != AutomatonCanvasTool.selection) {
       return;
     }
-    final node = _hitTestNode(details.localPosition);
+
+    if (_isDraggingNode || _didMoveDraggedNode) {
+      _lastTapNodeId = null;
+      _lastTapTimestamp = null;
+      return;
+    }
+
+    final node = _hitTestNode(local, logDetails: false);
     if (node == null) {
+      _lastTapNodeId = null;
+      _lastTapTimestamp = null;
+      return;
+    }
+
+    const doubleTapTimeout = Duration(milliseconds: 300);
+    final now = DateTime.now();
+    if (_lastTapNodeId == node.id &&
+        _lastTapTimestamp != null &&
+        now.difference(_lastTapTimestamp!) <= doubleTapTimeout) {
+      debugPrint(
+        '[AutomatonGraphViewCanvas] Detected double tap on ${node.id}',
+      );
+      _handleNodeContextTap(node.id);
+      _lastTapNodeId = null;
+      _lastTapTimestamp = null;
+    } else {
+      _lastTapNodeId = node.id;
+      _lastTapTimestamp = now;
+    }
+  }
+
+  void _handleNodePanStart(DragStartDetails details) {
+    final node = _hitTestNode(details.localPosition);
+    if (node == null || _activeTool == AutomatonCanvasTool.transition) {
       return;
     }
     debugPrint(
       '[AutomatonGraphViewCanvas] pan start gesture -> ${node.id} '
       'local=${details.localPosition}',
     );
+    _setCanvasPanSuppressed(true, reason: 'node drag start ${node.id}');
     _beginNodeDrag(node, details.localPosition);
   }
 
   void _handleNodePanUpdate(DragUpdateDetails details) {
-    if (_activeTool != AutomatonCanvasTool.selection) {
+    if (_activeTool == AutomatonCanvasTool.transition) {
       return;
     }
     debugPrint('[AutomatonGraphViewCanvas] pan update delta=${details.delta}');
@@ -473,7 +538,7 @@ class _AutomatonGraphViewCanvasState
   }
 
   void _handleNodePanEnd(DragEndDetails details) {
-    if (_activeTool != AutomatonCanvasTool.selection) {
+    if (_activeTool == AutomatonCanvasTool.transition) {
       return;
     }
     debugPrint(
@@ -483,7 +548,7 @@ class _AutomatonGraphViewCanvasState
   }
 
   void _handleNodePanCancel() {
-    if (_activeTool != AutomatonCanvasTool.selection) {
+    if (_activeTool == AutomatonCanvasTool.transition) {
       return;
     }
     debugPrint('[AutomatonGraphViewCanvas] pan cancel');
@@ -1018,9 +1083,7 @@ class _AutomatonGraphViewCanvasState
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTapDown: _handleCanvasTapDown,
-        onTapUp: _activeTool == AutomatonCanvasTool.addState
-            ? _handleCanvasTap
-            : null,
+        onTapUp: _handleCanvasTapUp,
         child: ValueListenableBuilder<int>(
           valueListenable: _controller.graphRevision,
           builder: (context, _, __) {
@@ -1040,37 +1103,40 @@ class _AutomatonGraphViewCanvasState
                             _controller.updateViewportSize(viewport);
                           }
                           return RepaintBoundary(
-                            child: GraphViewAllNodes.builder(
-                              graph: _controller.graph,
-                              controller: _controller.graphController,
-                              algorithm: _algorithm,
-                              paint: Paint()..color = Colors.transparent,
-                              builder: (node) {
-                                final nodeId = node.key?.value?.toString();
-                                if (nodeId == null) {
-                                  return const SizedBox.shrink();
-                                }
-                                final canvasNode =
-                                    _controller.nodeById(nodeId) ??
-                                    GraphViewCanvasNode(
-                                      id: nodeId,
-                                      label: nodeId,
-                                      x: node.position.dx,
-                                      y: node.position.dy,
-                                      isInitial: false,
-                                      isAccepting: false,
-                                    );
-                                final isHighlighted = _isNodeHighlighted(
-                                  canvasNode,
-                                  highlight,
-                                );
-                                return _AutomatonGraphNode(
-                                  label: canvasNode.label,
-                                  isInitial: canvasNode.isInitial,
-                                  isAccepting: canvasNode.isAccepting,
-                                  isHighlighted: isHighlighted,
-                                );
-                              },
+                            child: AbsorbPointer(
+                              absorbing: _suppressCanvasPan,
+                              child: GraphViewAllNodes.builder(
+                                graph: _controller.graph,
+                                controller: _controller.graphController,
+                                algorithm: _algorithm,
+                                paint: Paint()..color = Colors.transparent,
+                                builder: (node) {
+                                  final nodeId = node.key?.value?.toString();
+                                  if (nodeId == null) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  final canvasNode =
+                                      _controller.nodeById(nodeId) ??
+                                      GraphViewCanvasNode(
+                                        id: nodeId,
+                                        label: nodeId,
+                                        x: node.position.dx,
+                                        y: node.position.dy,
+                                        isInitial: false,
+                                        isAccepting: false,
+                                      );
+                                  final isHighlighted = _isNodeHighlighted(
+                                    canvasNode,
+                                    highlight,
+                                  );
+                                  return _AutomatonGraphNode(
+                                    label: canvasNode.label,
+                                    isInitial: canvasNode.isInitial,
+                                    isAccepting: canvasNode.isAccepting,
+                                    isHighlighted: isHighlighted,
+                                  );
+                                },
+                              ),
                             ),
                           );
                         },
@@ -1086,6 +1152,46 @@ class _AutomatonGraphViewCanvasState
                         ),
                       ),
                     ),
+                    if (_activeTool == AutomatonCanvasTool.transition)
+                      Positioned(
+                        top: 16,
+                        right: 16,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surface.withValues(
+                              alpha: 0.9,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: theme.colorScheme.primary,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.link,
+                                  size: 16,
+                                  color: theme.colorScheme.primary,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Add transition…',
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 );
               },
@@ -1107,6 +1213,14 @@ class _AutomatonGraphViewCanvasState
               onPointerDown: (global) => _logCanvasTapFromGlobal(
                 source: 'pan-pointer',
                 globalPosition: global,
+              ),
+              onDragAccepted: () => _setCanvasPanSuppressed(
+                true,
+                reason: 'node pointer accepted',
+              ),
+              onDragReleased: () => _setCanvasPanSuppressed(
+                false,
+                reason: 'node pointer released',
               ),
             ),
             (recognizer) {
@@ -1139,23 +1253,6 @@ class _AutomatonGraphViewCanvasState
               recognizer.team = _gestureArenaTeam;
             }
             recognizer.onNodeTap = (node) => _handleNodeTap(node.id);
-          },
-        );
-
-    gestures[_NodeDoubleTapGestureRecognizer] =
-        GestureRecognizerFactoryWithHandlers<_NodeDoubleTapGestureRecognizer>(
-          () => _NodeDoubleTapGestureRecognizer(
-            hitTester: (global) =>
-                _hitTestNode(_globalToCanvasLocal(global), logDetails: false),
-            toolResolver: () => _activeTool,
-            onPointerDown: (global) => _logCanvasTapFromGlobal(
-              source: 'double-tap-pointer',
-              globalPosition: global,
-            ),
-          ),
-          (recognizer) {
-            recognizer.onNodeDoubleTap = (node) =>
-                _handleNodeContextTap(node.id);
           },
         );
 
@@ -1574,11 +1671,15 @@ class _NodePanGestureRecognizer extends PanGestureRecognizer {
     required this.hitTester,
     required this.toolResolver,
     this.onPointerDown,
+    this.onDragAccepted,
+    this.onDragReleased,
   });
 
   final _NodeHitTester hitTester;
   final _ToolResolver toolResolver;
   final ValueChanged<Offset>? onPointerDown;
+  final VoidCallback? onDragAccepted;
+  final VoidCallback? onDragReleased;
 
   int? _activePointer;
 
@@ -1594,8 +1695,9 @@ class _NodePanGestureRecognizer extends PanGestureRecognizer {
       debugPrint('[NodePanRecognizer] pointer already active -> ignore');
       return;
     }
-    if (toolResolver() != AutomatonCanvasTool.selection) {
-      debugPrint('[NodePanRecognizer] tool not selection -> ignore');
+    final tool = toolResolver();
+    if (tool == AutomatonCanvasTool.transition) {
+      debugPrint('[NodePanRecognizer] tool transition -> ignore');
       return;
     }
     final node = hitTester(event.position);
@@ -1608,6 +1710,7 @@ class _NodePanGestureRecognizer extends PanGestureRecognizer {
       '[NodePanRecognizer] tracking pointer ${event.pointer} '
       'for node ${node.id}',
     );
+    onDragAccepted?.call();
     super.addAllowedPointer(event);
   }
 
@@ -1616,6 +1719,7 @@ class _NodePanGestureRecognizer extends PanGestureRecognizer {
     debugPrint('[NodePanRecognizer] rejectGesture pointer=$pointer');
     if (pointer == _activePointer) {
       _activePointer = null;
+      onDragReleased?.call();
     }
     super.rejectGesture(pointer);
   }
@@ -1625,6 +1729,7 @@ class _NodePanGestureRecognizer extends PanGestureRecognizer {
     debugPrint('[NodePanRecognizer] didStopTracking pointer=$pointer');
     if (pointer == _activePointer) {
       _activePointer = null;
+      onDragReleased?.call();
     }
     super.didStopTrackingLastPointer(pointer);
   }
@@ -1701,79 +1806,6 @@ class _NodeTapGestureRecognizer extends TapGestureRecognizer {
   @override
   void rejectGesture(int pointer) {
     _downNode = null;
-    super.rejectGesture(pointer);
-  }
-}
-
-class _NodeDoubleTapGestureRecognizer extends DoubleTapGestureRecognizer {
-  _NodeDoubleTapGestureRecognizer({
-    required this.hitTester,
-    required this.toolResolver,
-    this.onPointerDown,
-  }) {
-    onDoubleTapDown = _handleDoubleTapDown;
-    onDoubleTap = _invokeNodeDoubleTap;
-    onDoubleTapCancel = _resetCandidate;
-  }
-
-  final _NodeHitTester hitTester;
-  final _ToolResolver toolResolver;
-  final ValueChanged<Offset>? onPointerDown;
-
-  ValueChanged<GraphViewCanvasNode>? onNodeDoubleTap;
-  GraphViewCanvasNode? _candidate;
-
-  @override
-  void addAllowedPointer(PointerDownEvent event) {
-    debugPrint(
-      '[NodeDoubleTapRecognizer] addAllowedPointer pointer=${event.pointer} '
-      'tool=${toolResolver().name} position=${event.position}',
-    );
-    onPointerDown?.call(event.position);
-    if (toolResolver() != AutomatonCanvasTool.selection) {
-      return;
-    }
-    if (hitTester(event.position) == null) {
-      return;
-    }
-    super.addAllowedPointer(event);
-  }
-
-  void _handleDoubleTapDown(TapDownDetails details) {
-    if (toolResolver() != AutomatonCanvasTool.selection) {
-      _candidate = null;
-      return;
-    }
-    _candidate = hitTester(details.globalPosition);
-    if (_candidate != null) {
-      debugPrint(
-        '[NodeDoubleTapRecognizer] double tap down -> ${_candidate!.id}',
-      );
-    } else {
-      debugPrint('[NodeDoubleTapRecognizer] double tap down -> no node hit');
-    }
-  }
-
-  void _invokeNodeDoubleTap() {
-    final node = _candidate;
-    if (node != null) {
-      debugPrint('[NodeDoubleTapRecognizer] double tap -> ${node.id}');
-      onNodeDoubleTap?.call(node);
-    }
-    debugPrint('[NodeDoubleTapRecognizer] clearing candidate (success=$node)');
-    _candidate = null;
-  }
-
-  void _resetCandidate() {
-    if (_candidate != null) {
-      debugPrint('[NodeDoubleTapRecognizer] cancel -> ${_candidate!.id}');
-    }
-    _candidate = null;
-  }
-
-  @override
-  void rejectGesture(int pointer) {
-    _resetCandidate();
     super.rejectGesture(pointer);
   }
 }

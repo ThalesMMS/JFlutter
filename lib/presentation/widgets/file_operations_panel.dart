@@ -11,10 +11,12 @@
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../core/models/fsa.dart';
 import '../../core/models/grammar.dart';
+import '../../core/result.dart';
 import '../../data/services/file_operations_service.dart';
 
 /// Panel for file operations (save/load/export)
@@ -62,21 +64,23 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  _buildButton(
-                    'Save as JFLAP',
-                    Icons.save,
-                    () => _saveAutomatonAsJFLAP(),
-                  ),
+                  if (!kIsWeb)
+                    _buildButton(
+                      'Save as JFLAP',
+                      Icons.save,
+                      () => _saveAutomatonAsJFLAP(),
+                    ),
                   _buildButton(
                     'Load JFLAP',
                     Icons.folder_open,
                     () => _loadAutomatonFromJFLAP(),
                   ),
-                  _buildButton(
-                    'Export SVG',
-                    Icons.image,
-                    () => _exportAutomatonAsSVG(),
-                  ),
+                  if (!kIsWeb)
+                    _buildButton(
+                      'Export SVG',
+                      Icons.image,
+                      () => _exportAutomatonAsSVG(),
+                    ),
                 ],
               ),
               const SizedBox(height: 16),
@@ -90,11 +94,12 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  _buildButton(
-                    'Save as JFLAP',
-                    Icons.save,
-                    () => _saveGrammarAsJFLAP(),
-                  ),
+                  if (!kIsWeb)
+                    _buildButton(
+                      'Save as JFLAP',
+                      Icons.save,
+                      () => _saveGrammarAsJFLAP(),
+                    ),
                   _buildButton(
                     'Load JFLAP',
                     Icons.folder_open,
@@ -141,6 +146,10 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
 
   Future<void> _saveAutomatonAsJFLAP() async {
     if (widget.automaton == null) return;
+    if (kIsWeb) {
+      _showErrorMessage('Saving JFLAP files is not supported on the web.');
+      return;
+    }
 
     setState(() => _isLoading = true);
 
@@ -179,11 +188,21 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
         type: FileType.custom,
         allowedExtensions: ['jff'],
         dialogTitle: 'Load JFLAP Automaton',
+        withData: true,
       );
 
       if (result != null && result.files.isNotEmpty) {
-        final filePath = result.files.first.path!;
-        final loadResult = await _fileService.loadAutomatonFromJFLAP(filePath);
+        final file = result.files.first;
+        Result<FSA> loadResult;
+
+        if (file.bytes != null) {
+          loadResult = await _fileService.loadAutomatonFromBytes(file.bytes!);
+        } else if (file.path != null) {
+          loadResult = await _fileService.loadAutomatonFromJFLAP(file.path!);
+        } else {
+          _showErrorMessage('Selected file did not contain readable data.');
+          return;
+        }
 
         if (loadResult.isSuccess) {
           widget.onAutomatonLoaded?.call(loadResult.data!);
@@ -201,6 +220,10 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
 
   Future<void> _exportAutomatonAsSVG() async {
     if (widget.automaton == null) return;
+    if (kIsWeb) {
+      _showErrorMessage('SVG export is not supported on the web.');
+      return;
+    }
     setState(() => _isLoading = true);
     try {
       final result = await FilePicker.platform.saveFile(
@@ -232,6 +255,10 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
 
   Future<void> _saveGrammarAsJFLAP() async {
     if (widget.grammar == null) return;
+    if (kIsWeb) {
+      _showErrorMessage('Saving grammar files is not supported on the web.');
+      return;
+    }
 
     setState(() => _isLoading = true);
 
@@ -270,11 +297,21 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
         type: FileType.custom,
         allowedExtensions: ['cfg'],
         dialogTitle: 'Load JFLAP Grammar',
+        withData: true,
       );
 
       if (result != null && result.files.isNotEmpty) {
-        final filePath = result.files.first.path!;
-        final loadResult = await _fileService.loadGrammarFromJFLAP(filePath);
+        final file = result.files.first;
+        Result<Grammar> loadResult;
+
+        if (file.bytes != null) {
+          loadResult = await _fileService.loadGrammarFromBytes(file.bytes!);
+        } else if (file.path != null) {
+          loadResult = await _fileService.loadGrammarFromJFLAP(file.path!);
+        } else {
+          _showErrorMessage('Selected file did not contain readable data.');
+          return;
+        }
 
         if (loadResult.isSuccess) {
           widget.onGrammarLoaded?.call(loadResult.data!);

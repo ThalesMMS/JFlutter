@@ -14,6 +14,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import '../../core/models/fsa.dart';
+import '../../core/result.dart';
 import '../../data/services/file_operations_service.dart';
 
 /// Panel for algorithm operations and controls
@@ -703,9 +704,16 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
       dialogTitle: dialogTitle,
       type: FileType.custom,
       allowedExtensions: const ['jff'],
+      withData: true,
     );
 
-    if (selection == null || selection.files.single.path == null) {
+    if (selection == null || selection.files.isEmpty) {
+      return;
+    }
+
+    final file = selection.files.single;
+    if (file.bytes == null && file.path == null) {
+      _showSnack('Selected file did not contain readable data.', isError: true);
       return;
     }
 
@@ -718,9 +726,12 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
       _currentStepIndex = steps.isEmpty ? 0 : 0;
     });
 
-    final loadResult = await _fileService.loadAutomatonFromJFLAP(
-      selection.files.single.path!,
-    );
+    Result<FSA> loadResult;
+    if (file.bytes != null) {
+      loadResult = await _fileService.loadAutomatonFromBytes(file.bytes!);
+    } else {
+      loadResult = await _fileService.loadAutomatonFromJFLAP(file.path!);
+    }
 
     if (!mounted) return;
 

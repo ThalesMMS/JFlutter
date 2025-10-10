@@ -41,12 +41,17 @@ class GraphViewTmCanvasController
     Graph? graph,
     GraphViewController? viewController,
     TransformationController? transformationController,
+    int historyLimit = BaseGraphViewCanvasController.kDefaultHistoryLimit,
+    int cacheEvictionThreshold =
+        BaseGraphViewCanvasController.kDefaultCacheEvictionThreshold,
   }) : super(
-         notifier: editorNotifier,
-         graph: graph,
-         viewController: viewController,
-         transformationController: transformationController,
-       );
+          notifier: editorNotifier,
+          graph: graph,
+          viewController: viewController,
+          transformationController: transformationController,
+          historyLimit: historyLimit,
+          cacheEvictionThreshold: cacheEvictionThreshold,
+        );
 
   TMEditorNotifier get _notifier => notifier;
 

@@ -37,11 +37,16 @@ class GraphViewCanvasController
     Graph? graph,
     GraphViewController? viewController,
     TransformationController? transformationController,
+    int historyLimit = BaseGraphViewCanvasController.kDefaultHistoryLimit,
+    int cacheEvictionThreshold =
+        BaseGraphViewCanvasController.kDefaultCacheEvictionThreshold,
   }) : super(
          notifier: automatonProvider,
-         graph: graph,
-         viewController: viewController,
-         transformationController: transformationController,
+          graph: graph,
+          viewController: viewController,
+          transformationController: transformationController,
+          historyLimit: historyLimit,
+          cacheEvictionThreshold: cacheEvictionThreshold,
        );
 
   AutomatonProvider get _provider => notifier;

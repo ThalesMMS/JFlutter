@@ -10,6 +10,9 @@
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:graphview/GraphView.dart';
@@ -27,30 +30,55 @@ void _logGraphViewBase(String message) {
 }
 
 class _GraphHistoryEntry {
-  const _GraphHistoryEntry({required this.snapshot, required this.highlight});
+  const _GraphHistoryEntry({
+    required this.serializedSnapshot,
+    required this.highlight,
+  });
 
-  final GraphViewAutomatonSnapshot snapshot;
+  final Uint8List serializedSnapshot;
   final SimulationHighlight highlight;
+
+  GraphViewAutomatonSnapshot? decodeSnapshot(GZipCodec codec) {
+    try {
+      final decompressed = codec.decode(serializedSnapshot);
+      final decoded = utf8.decode(decompressed);
+      final Map<String, dynamic> json =
+          jsonDecode(decoded) as Map<String, dynamic>;
+      return GraphViewAutomatonSnapshot.fromJson(json);
+    } catch (_) {
+      return null;
+    }
+  }
 }
 
 /// Base controller that coordinates GraphView interactions with domain notifiers.
 abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
     extends GraphViewHighlightController
     with GraphViewViewportHighlightMixin {
+  static const int kDefaultHistoryLimit = 20;
+  static const int kDefaultCacheEvictionThreshold = 250;
+  static const GZipCodec _historyCodec = GZipCodec();
+
   BaseGraphViewCanvasController({
     required this.notifier,
     Graph? graph,
     GraphViewController? viewController,
     TransformationController? transformationController,
-  }) : graph = graph ?? Graph(),
-       graphController =
-           viewController ??
-           GraphViewController(
-             transformationController:
-                 transformationController ?? TransformationController(),
-           ),
-       _ownsTransformationController =
-           viewController == null && transformationController == null;
+    int historyLimit = kDefaultHistoryLimit,
+    int cacheEvictionThreshold = kDefaultCacheEvictionThreshold,
+  })  : assert(historyLimit > 0),
+        assert(cacheEvictionThreshold > 0),
+        historyLimit = historyLimit,
+        cacheEvictionThreshold = cacheEvictionThreshold,
+        graph = graph ?? Graph(),
+        graphController =
+            viewController ??
+            GraphViewController(
+              transformationController:
+                  transformationController ?? TransformationController(),
+            ),
+        _ownsTransformationController =
+            viewController == null && transformationController == null;
 
   @protected
   final TNotifier notifier;
@@ -67,6 +95,9 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
   final Map<String, GraphViewCanvasEdge> _edges = {};
   final Map<String, Node> _graphNodes = {};
   final Map<String, Edge> _graphEdges = {};
+
+  final int historyLimit;
+  final int cacheEvictionThreshold;
 
   bool _isSynchronizing = false;
 
@@ -179,6 +210,10 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
     _logGraphViewBase(
       'Disposing controller (ownsTransformation=$_ownsTransformationController)',
     );
+    _undoHistory.clear();
+    _redoHistory.clear();
+    highlightedTransitionIds.clear();
+    _evictGraphCaches(notifyGraph: false);
     disposeViewportHighlight();
     // GraphView internally disposes the transformation controller when the
     // widget is removed from the tree. Disposing it here causes the controller
@@ -225,6 +260,7 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
     final entry = _captureHistoryEntry();
     if (entry != null) {
       _undoHistory.add(entry);
+      _trimHistory(_undoHistory);
       _redoHistory.clear();
       _logGraphViewBase(
         'History snapshot captured (#undo=${_undoHistory.length}, #redo=${_redoHistory.length})',
@@ -250,6 +286,7 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
     final currentEntry = _captureHistoryEntry();
     if (currentEntry != null) {
       _redoHistory.add(currentEntry);
+      _trimHistory(_redoHistory);
     }
 
     final entry = _undoHistory.removeLast();
@@ -270,6 +307,7 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
     final currentEntry = _captureHistoryEntry();
     if (currentEntry != null) {
       _undoHistory.add(currentEntry);
+      _trimHistory(_undoHistory);
     }
 
     final entry = _redoHistory.removeLast();
@@ -300,6 +338,15 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
     _logGraphViewBase(
       'Synchronizing graph (incomingNodes=${incomingNodes.length}, incomingEdges=${incomingEdges.length})',
     );
+
+    final shouldEvictCaches = incomingNodes.length > cacheEvictionThreshold ||
+        incomingEdges.length > cacheEvictionThreshold;
+    if (shouldEvictCaches) {
+      _logGraphViewBase(
+        'Evicting caches due to threshold (limit=$cacheEvictionThreshold)',
+      );
+      _evictGraphCaches(notifyGraph: false);
+    }
 
     final previousHighlight = SimulationHighlight(
       stateIds: Set<String>.from(highlightNotifier.value.stateIds),
@@ -473,19 +520,29 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
   _GraphHistoryEntry? _captureHistoryEntry() {
     try {
       final snapshot = toSnapshot(currentDomainData);
-      final encoded = GraphViewAutomatonSnapshot.fromJson(snapshot.toJson());
+      final serialized = jsonEncode(snapshot.toJson());
+      final compressed =
+          Uint8List.fromList(_historyCodec.encode(utf8.encode(serialized)));
       final highlight = SimulationHighlight(
         stateIds: Set<String>.from(highlightNotifier.value.stateIds),
         transitionIds: Set<String>.from(highlightNotifier.value.transitionIds),
       );
-      return _GraphHistoryEntry(snapshot: encoded, highlight: highlight);
+      return _GraphHistoryEntry(
+        serializedSnapshot: compressed,
+        highlight: highlight,
+      );
     } catch (_) {
       return null;
     }
   }
 
   void _applyHistoryEntry(_GraphHistoryEntry entry) {
-    applySnapshotToDomain(entry.snapshot);
+    final snapshot = entry.decodeSnapshot(_historyCodec);
+    if (snapshot == null) {
+      _logGraphViewBase('Failed to decode history entry');
+      return;
+    }
+    applySnapshotToDomain(snapshot);
 
     final highlight = SimulationHighlight(
       stateIds: Set<String>.from(entry.highlight.stateIds),
@@ -497,5 +554,36 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
     _logGraphViewBase(
       'History entry applied (states=${highlight.stateIds.length}, transitions=${highlight.transitionIds.length})',
     );
+  }
+
+  void _trimHistory(List<_GraphHistoryEntry> history) {
+    final excess = history.length - historyLimit;
+    if (excess > 0) {
+      history.removeRange(0, excess);
+    }
+  }
+
+  void _evictGraphCaches({required bool notifyGraph}) {
+    if (_graphEdges.isEmpty && _graphNodes.isEmpty) {
+      _nodes.clear();
+      _edges.clear();
+      return;
+    }
+
+    for (final edge in List<Edge>.from(_graphEdges.values)) {
+      graph.removeEdge(edge);
+    }
+    for (final node in List<Node>.from(_graphNodes.values)) {
+      graph.removeNode(node);
+    }
+
+    _graphEdges.clear();
+    _graphNodes.clear();
+    _edges.clear();
+    _nodes.clear();
+
+    if (notifyGraph) {
+      graph.notifyGraphObserver();
+    }
   }
 }

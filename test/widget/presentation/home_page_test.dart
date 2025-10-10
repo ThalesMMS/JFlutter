@@ -6,6 +6,7 @@ import 'package:jflutter/core/services/simulation_highlight_service.dart';
 import 'package:jflutter/presentation/providers/home_navigation_provider.dart';
 import 'package:jflutter/presentation/pages/home_page.dart';
 import 'package:jflutter/presentation/widgets/mobile_navigation.dart';
+import 'package:jflutter/presentation/widgets/desktop_navigation.dart';
 
 class _TestHomeNavigationNotifier extends HomeNavigationNotifier {
   final List<int> receivedIndices = [];
@@ -60,7 +61,7 @@ void main() {
 
   group('HomePage', () {
     testWidgets(
-      'renders navigation items, dynamic titles and AppBar actions',
+      'renders mobile navigation with dynamic titles and actions below 1024 width',
       (tester) async {
         final navigationNotifier = _TestHomeNavigationNotifier()..setIndex(1);
         final highlightService = _TestSimulationHighlightService();
@@ -74,38 +75,47 @@ void main() {
           tester,
           navigationNotifier: navigationNotifier,
           highlightService: highlightService,
+          size: const Size(800, 1280),
         );
 
         addTearDown(navigationNotifier.dispose);
 
         expect(find.byType(MobileNavigation), findsOneWidget);
-        expect(find.descendant(
-          of: find.byType(MobileNavigation),
-          matching: find.text('FSA'),
-        ), findsOneWidget);
-        expect(find.descendant(
-          of: find.byType(MobileNavigation),
-          matching: find.text('Grammar'),
-        ), findsOneWidget);
-        expect(find.descendant(
-          of: find.byType(MobileNavigation),
-          matching: find.text('PDA'),
-        ), findsOneWidget);
-        expect(find.descendant(
-          of: find.byType(MobileNavigation),
-          matching: find.text('TM'),
-        ), findsOneWidget);
-        expect(find.descendant(
-          of: find.byType(MobileNavigation),
-          matching: find.text('Regex'),
-        ), findsOneWidget);
-        expect(find.descendant(
-          of: find.byType(MobileNavigation),
-          matching: find.text('Pumping'),
-        ), findsOneWidget);
-
+        expect(find.byType(DesktopNavigation), findsNothing);
         expect(find.text('Grammar'), findsWidgets);
         expect(find.text('Context-Free Grammars'), findsOneWidget);
+        expect(find.byIcon(Icons.help_outline), findsOneWidget);
+        expect(find.byIcon(Icons.settings), findsOneWidget);
+
+        expect(highlightService.clearCallCount, 0);
+      },
+    );
+
+    testWidgets(
+      'renders desktop navigation rail with tooltips at 1024 width or above',
+      (tester) async {
+        final navigationNotifier = _TestHomeNavigationNotifier()..setIndex(0);
+        final highlightService = _TestSimulationHighlightService();
+
+        addTearDown(() {
+          tester.binding.window.clearPhysicalSizeTestValue();
+          tester.binding.window.clearDevicePixelRatioTestValue();
+        });
+
+        await _pumpHomePage(
+          tester,
+          navigationNotifier: navigationNotifier,
+          highlightService: highlightService,
+          size: const Size(1280, 900),
+        );
+
+        addTearDown(navigationNotifier.dispose);
+
+        expect(find.byType(MobileNavigation), findsNothing);
+        expect(find.byType(DesktopNavigation), findsOneWidget);
+        expect(find.byType(NavigationRail), findsOneWidget);
+        expect(find.text('FSA'), findsWidgets);
+        expect(find.widgetWithText(Tooltip, 'Finite State Automata'), findsWidgets);
         expect(find.byIcon(Icons.help_outline), findsOneWidget);
         expect(find.byIcon(Icons.settings), findsOneWidget);
 
@@ -155,6 +165,37 @@ void main() {
       expect(navigationNotifier.receivedIndices.contains(2), isTrue);
       expect(find.text('PDA'), findsWidgets);
       expect(find.text('Pushdown Automata'), findsOneWidget);
+    });
+
+    testWidgets('updates page view via navigation rail on desktop layout',
+        (tester) async {
+      final navigationNotifier = _TestHomeNavigationNotifier()..setIndex(0);
+      final highlightService = _TestSimulationHighlightService();
+
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
+
+      await _pumpHomePage(
+        tester,
+        navigationNotifier: navigationNotifier,
+        highlightService: highlightService,
+        size: const Size(1400, 900),
+      );
+
+      addTearDown(navigationNotifier.dispose);
+
+      expect(find.byType(DesktopNavigation), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Regular Expressions').first);
+      await tester.pumpAndSettle();
+
+      final pageView = tester.widget<PageView>(find.byType(PageView));
+      expect(pageView.controller?.page, closeTo(4, 0.001));
+      expect(navigationNotifier.receivedIndices.contains(4), isTrue);
+      expect(find.text('Regex'), findsWidgets);
+      expect(find.text('Regular Expressions'), findsWidgets);
     });
   });
 }

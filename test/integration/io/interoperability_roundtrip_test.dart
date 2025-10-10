@@ -104,6 +104,7 @@ void main() {
         );
         expect(jffXml, isNotEmpty);
         expect(jffXml, contains('ε')); // Should contain epsilon symbol
+        expect(jffXml, contains('<read>ε</read>'));
 
         // Parse back from JFF format
         final parseResult = JFLAPXMLParser.parseJFLAPFile(jffXml);
@@ -112,6 +113,26 @@ void main() {
           true,
           reason: 'Epsilon NFA JFF parsing should succeed',
         );
+
+        final roundTripResult =
+            serializationService.deserializeAutomatonFromJflap(jffXml);
+        expect(
+          roundTripResult.isSuccess,
+          true,
+          reason: 'Deserializing exported JFF should succeed',
+        );
+
+        if (roundTripResult.isSuccess) {
+          final data = roundTripResult.data!;
+          final transitions =
+              data['transitions'] as Map<String, List<String>>? ??
+                  <String, List<String>>{};
+
+          expect(transitions.containsKey('q0|ε'), isTrue);
+          final epsilonTargets = transitions['q0|ε'];
+          expect(epsilonTargets, isNotNull);
+          expect(epsilonTargets!, contains('q1'));
+        }
       });
 
       test('JFF handles malformed XML gracefully', () {
@@ -770,7 +791,7 @@ AutomatonEntity _createEpsilonNFA() {
       ),
     ],
     transitions: {
-      'q0': ['q1'],
+      'q0|ε': ['q1'],
     },
     initialId: 'q0',
     nextId: 2,

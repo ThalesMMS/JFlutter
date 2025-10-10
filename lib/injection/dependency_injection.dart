@@ -57,7 +57,7 @@ Future<void> setupDependencyInjection() async {
 
   // Core trace persistence service (used by AutomatonProvider and legacy trace flows)
   getIt.registerLazySingleton<TracePersistenceService>(
-    () => TracePersistenceService(),
+    () => createTracePersistenceService(),
   );
 
   // Data layer trace persistence service (for UnifiedTraceNotifier)

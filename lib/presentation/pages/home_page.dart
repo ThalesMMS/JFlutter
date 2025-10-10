@@ -13,6 +13,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/automaton_provider.dart';
 import '../providers/home_navigation_provider.dart';
 import '../widgets/mobile_navigation.dart';
+import '../widgets/desktop_navigation.dart';
 import '../../core/services/simulation_highlight_service.dart';
 import 'fsa_page.dart';
 import 'grammar_page.dart';
@@ -128,23 +129,52 @@ class _HomePageState extends ConsumerState<HomePage> {
       _lastNavigationIndex = currentIndex;
     }
 
+    final theme = Theme.of(context);
+    final pageView = PageView(
+      controller: _pageController,
+      onPageChanged: _onPageChanged,
+      physics: const NeverScrollableScrollPhysics(), // Disable swipe gestures
+      children: const [
+        FSAPage(),
+        GrammarPage(),
+        PDAPage(),
+        TMPage(),
+        RegexPage(),
+        PumpingLemmaPage(),
+      ],
+    );
+
     final scaffold = Scaffold(
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(_getCurrentPageTitle(currentIndex)),
-            if (isMobile)
-              Text(
-                _getCurrentPageDescription(currentIndex),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withOpacity(0.7),
-                ),
+        title: isMobile
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(_getCurrentPageTitle(currentIndex)),
+                  Text(
+                    _getCurrentPageDescription(currentIndex),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                    ),
+                  ),
+                ],
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(_getCurrentPageTitle(currentIndex)),
+                  const SizedBox(width: 16),
+                  Flexible(
+                    child: Text(
+                      _getCurrentPageDescription(currentIndex),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
-          ],
-        ),
         actions: [
           IconButton(
             onPressed: () => _showHelpDialog(context),
@@ -158,19 +188,24 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
         ],
       ),
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: _onPageChanged,
-        physics: const NeverScrollableScrollPhysics(), // Disable swipe gestures
-        children: const [
-          FSAPage(),
-          GrammarPage(),
-          PDAPage(),
-          TMPage(),
-          RegexPage(),
-          PumpingLemmaPage(),
-        ],
-      ),
+      body: isMobile
+          ? pageView
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                  child: DesktopNavigation(
+                    currentIndex: currentIndex,
+                    onDestinationSelected: _onNavigationTap,
+                    items: _navigationItems,
+                    extended: screenSize.width >= 1440,
+                  ),
+                ),
+                const VerticalDivider(width: 1, thickness: 1),
+                Expanded(child: pageView),
+              ],
+            ),
       bottomNavigationBar: isMobile
           ? MobileNavigation(
               currentIndex: currentIndex,

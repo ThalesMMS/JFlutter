@@ -38,6 +38,12 @@ keyPassword=${JFLUTTER_KEY_PASSWORD}
 EOF2
 
 echo "Created ${KEY_PROPERTIES_FILE}"
-if [[ ! -f "${ANDROID_DIR}/${STORE_FILE_PATH}" ]]; then
-  echo "Warning: Keystore file '${STORE_FILE_PATH}' does not exist relative to android/." >&2
+if [[ ${STORE_FILE_PATH} =~ ^/ || ${STORE_FILE_PATH} =~ ^[A-Za-z]:[\\/] ]]; then
+  if [[ ! -f "${STORE_FILE_PATH}" ]]; then
+    echo "Warning: Keystore file '${STORE_FILE_PATH}' does not exist at the specified absolute path." >&2
+  fi
+else
+  if [[ ! -f "${ANDROID_DIR}/${STORE_FILE_PATH}" ]]; then
+    echo "Warning: Keystore file '${STORE_FILE_PATH}' does not exist relative to android/." >&2
+  fi
 fi

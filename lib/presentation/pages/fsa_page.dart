@@ -430,6 +430,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
                   onAddState: _handleAddStatePressed,
                   onAddTransition: () =>
                       _toggleCanvasTool(AutomatonCanvasTool.transition),
+                  onSugiyamaLayout: _canvasController.applySugiyamaLayout,
                   onFitToContent: _canvasController.fitToContent,
                   onResetView: _canvasController.resetView,
                   onClear: () =>
@@ -468,6 +469,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
                 onAddState: _handleAddStatePressed,
                 onAddTransition: () =>
                     _toggleCanvasTool(AutomatonCanvasTool.transition),
+                onSugiyamaLayout: _canvasController.applySugiyamaLayout,
                 onClear: () =>
                     ref.read(automatonProvider.notifier).clearAutomaton(),
                 statusMessage: statusMessage,

@@ -255,6 +255,83 @@ void main() {
       expect(call['controlPointY'], closeTo(-40, 0.0001));
     });
 
+    test('applySugiyamaLayout repositions nodes based on topology', () {
+      final q0 = automaton_state.State(
+        id: 'q0',
+        label: 'q0',
+        position: Vector2.zero(),
+        isInitial: true,
+        isAccepting: false,
+      );
+      final q1 = automaton_state.State(
+        id: 'q1',
+        label: 'q1',
+        position: Vector2.zero(),
+        isInitial: false,
+        isAccepting: false,
+      );
+      final q2 = automaton_state.State(
+        id: 'q2',
+        label: 'q2',
+        position: Vector2.zero(),
+        isInitial: false,
+        isAccepting: true,
+      );
+
+      final t01 = FSATransition(
+        id: 't01',
+        fromState: q0,
+        toState: q1,
+        inputSymbols: const {'a'},
+        lambdaSymbol: null,
+        label: 'a',
+        controlPoint: null,
+      );
+
+      final t12 = FSATransition(
+        id: 't12',
+        fromState: q1,
+        toState: q2,
+        inputSymbols: const {'b'},
+        lambdaSymbol: null,
+        label: 'b',
+        controlPoint: null,
+      );
+
+      provider.updateAutomaton(
+        FSA(
+          id: 'auto',
+          name: 'Automaton',
+          states: {q0, q1, q2},
+          transitions: {t01, t12},
+          alphabet: const {'a', 'b'},
+          initialState: q0,
+          acceptingStates: {q2},
+          created: DateTime.utc(2024, 1, 1),
+          modified: DateTime.utc(2024, 1, 1),
+          bounds: const math.Rectangle<double>(0, 0, 400, 300),
+          panOffset: Vector2.zero(),
+          zoomLevel: 1,
+        ),
+      );
+
+      controller.synchronize(provider.state.currentAutomaton);
+
+      controller.applySugiyamaLayout();
+
+      final automaton = provider.state.currentAutomaton;
+      expect(automaton, isNotNull);
+
+      final positions = automaton!.states
+          .map((state) => state.position)
+          .toList(growable: false);
+      final hasNonZero = positions.any(
+        (vector) => vector.x != 0 || vector.y != 0,
+      );
+
+      expect(hasNonZero, isTrue);
+    });
+
     test('synchronize mirrors provider state into controller caches', () {
       final stateA = automaton_state.State(
         id: 'qa',

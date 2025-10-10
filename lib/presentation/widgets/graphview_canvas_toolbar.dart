@@ -30,11 +30,12 @@ class GraphViewCanvasToolbar extends StatefulWidget {
     this.onClear,
     this.statusMessage,
     this.layout = GraphViewCanvasToolbarLayout.desktop,
+    this.onSugiyamaLayout,
   }) : assert(
          !(enableToolSelection && showSelectionTool) || onSelectTool != null,
          'onSelectTool must be provided when the selection tool is visible.',
        ),
-       assert(
+        assert(
          !enableToolSelection || onAddTransition != null,
          'onAddTransition must be provided when tool selection is enabled.',
        );
@@ -49,6 +50,7 @@ class GraphViewCanvasToolbar extends StatefulWidget {
   final VoidCallback? onClear;
   final String? statusMessage;
   final GraphViewCanvasToolbarLayout layout;
+  final VoidCallback? onSugiyamaLayout;
 
   @override
   State<GraphViewCanvasToolbar> createState() => _GraphViewCanvasToolbarState();
@@ -113,6 +115,11 @@ class _GraphViewCanvasToolbarState extends State<GraphViewCanvasToolbar> {
           isSelected:
               widget.enableToolSelection &&
               widget.activeTool == AutomatonCanvasTool.transition,
+        ),
+      if (widget.onSugiyamaLayout != null)
+        _ToolbarButtonConfig(
+          action: _ToolbarAction.sugiyamaLayout,
+          handler: widget.onSugiyamaLayout,
         ),
       _ToolbarButtonConfig(
         action: _ToolbarAction.redo,
@@ -345,6 +352,7 @@ enum _ToolbarAction {
   selection(icon: Icons.pan_tool, label: 'Select'),
   addState(icon: Icons.add, label: 'Add state'),
   transition(icon: Icons.arrow_right_alt, label: 'Add transition'),
+  sugiyamaLayout(icon: Icons.account_tree, label: 'Sugiyama layout'),
   undo(icon: Icons.undo, label: 'Undo'),
   redo(icon: Icons.redo, label: 'Redo'),
   fitContent(icon: Icons.fit_screen, label: 'Fit to content'),

@@ -17,6 +17,7 @@ import 'package:flutter/material.dart';
 import 'package:graphview/GraphView.dart';
 import 'package:vector_math/vector_math_64.dart';
 
+import '../../../core/constants/automaton_canvas.dart';
 import '../../../core/models/fsa.dart';
 import '../../../presentation/providers/automaton_provider.dart';
 import 'base_graphview_canvas_controller.dart';
@@ -229,6 +230,88 @@ class GraphViewCanvasController
     _logAutomatonCanvas('removeTransition -> id=$id');
     performMutation(() {
       _provider.removeTransition(id: id);
+    });
+  }
+
+  /// Recomputes state positions using the Sugiyama layout algorithm.
+  void applySugiyamaLayout() {
+    final automaton = _provider.state.currentAutomaton;
+    if (automaton == null) {
+      _logAutomatonCanvas('applySugiyamaLayout ignored (no automaton)');
+      return;
+    }
+    if (nodesCache.isEmpty) {
+      _logAutomatonCanvas('applySugiyamaLayout ignored (empty graph)');
+      return;
+    }
+
+    final configuration = SugiyamaConfiguration()
+      ..orientation = SugiyamaConfiguration.ORIENTATION_LEFT_RIGHT
+      ..nodeSeparation = 160
+      ..levelSeparation = 160
+      ..bendPointShape = CurvedBendPointShape(curveLength: 40);
+
+    final layoutGraph = Graph()
+      ..isTree = graph.isTree
+      ..isDirected = graph.isDirected;
+
+    final nodeMap = <String, Node>{};
+    for (final entry in nodesCache.entries) {
+      final node = Node.Id(entry.key)
+        ..size = const Size(kAutomatonStateDiameter, kAutomatonStateDiameter)
+        ..position = Offset(entry.value.x, entry.value.y);
+      nodeMap[entry.key] = node;
+      layoutGraph.addNode(node);
+    }
+
+    for (final edge in edgesCache.values) {
+      final from = nodeMap[edge.fromStateId];
+      final to = nodeMap[edge.toStateId];
+      if (from == null || to == null) {
+        continue;
+      }
+      layoutGraph.addEdgeS(Edge(from, to));
+    }
+
+    final algorithm = SugiyamaAlgorithm(configuration);
+    algorithm.run(layoutGraph, 0, 0);
+
+    final updatedNodes = <GraphViewCanvasNode>[];
+    for (final entry in nodeMap.entries) {
+      final cached = nodesCache[entry.key];
+      if (cached == null) {
+        continue;
+      }
+      final position = entry.value.position;
+      final hasFiniteCoordinates =
+          position.dx.isFinite && position.dy.isFinite;
+      final resolvedPosition = hasFiniteCoordinates
+          ? position
+          : Offset(cached.x, cached.y);
+      updatedNodes.add(
+        cached.copyWith(
+          x: resolvedPosition.dx,
+          y: resolvedPosition.dy,
+        ),
+      );
+    }
+
+    final snapshot = GraphViewAutomatonSnapshot(
+      nodes: updatedNodes,
+      edges: edgesCache.values.toList(growable: false),
+      metadata: GraphViewAutomatonMetadata(
+        id: automaton.id,
+        name: automaton.name,
+        alphabet: automaton.alphabet.toList(growable: false),
+      ),
+    );
+
+    _logAutomatonCanvas(
+      'applySugiyamaLayout -> nodes=${snapshot.nodes.length}',
+    );
+
+    performMutation(() {
+      applySnapshotToDomain(snapshot);
     });
   }
 

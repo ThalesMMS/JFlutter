@@ -30,3 +30,9 @@ The `GraphViewCanvasToolbar` widget centralises viewport actions, undo/redo, and
 ## Data Round-Tripping
 
 When the user edits the canvas, the controller merges the Graph snapshot into the existing automaton template and republishes it through `AutomatonProvider`. This keeps inspector panels, persistence layers, and simulators aligned with the visual representation while avoiding manual diff logic.【F:lib/features/canvas/graphview/graphview_canvas_controller.dart†L188-L219】【F:lib/presentation/providers/automaton_provider.dart†L25-L219】
+
+## History & Cache Management
+
+`BaseGraphViewCanvasController` now enforces configurable undo/redo history limits (default: 20 snapshots) and compresses each `GraphViewAutomatonSnapshot` using gzip before storing it in memory, keeping long editing sessions lighter without affecting replay accuracy.【F:lib/features/canvas/graphview/base_graphview_canvas_controller.dart†L58-L109】【F:lib/features/canvas/graphview/base_graphview_canvas_controller.dart†L253-L566】 Controllers expose the `historyLimit` parameter so editors with heavier workflows can raise or lower retention as needed, and the new tests assert that older entries are discarded as expected.【F:lib/features/canvas/graphview/graphview_canvas_controller.dart†L35-L50】【F:test/features/canvas/graphview/graphview_canvas_controller_test.dart†L418-L446】
+
+To avoid runaway memory usage on large automatons, the same controller exposes a `cacheEvictionThreshold` (default: 250 items). When the active snapshot exceeds that count, the node/edge caches and GraphView instances are cleared and rebuilt on demand, and the same eviction happens on `dispose` to release resources deterministically.【F:lib/features/canvas/graphview/base_graphview_canvas_controller.dart†L99-L217】【F:lib/features/canvas/graphview/base_graphview_canvas_controller.dart†L342-L588】【F:test/features/canvas/graphview/graphview_canvas_controller_test.dart†L432-L519】

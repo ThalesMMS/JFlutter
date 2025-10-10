@@ -13,6 +13,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:graphview/GraphView.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 import 'package:jflutter/core/entities/automaton_entity.dart';
@@ -22,6 +23,7 @@ import 'package:jflutter/core/models/state.dart' as automaton_state;
 import 'package:jflutter/core/repositories/automaton_repository.dart';
 import 'package:jflutter/core/result.dart';
 import 'package:jflutter/data/services/automaton_service.dart';
+import 'package:jflutter/features/canvas/graphview/base_graphview_canvas_controller.dart';
 import 'package:jflutter/features/canvas/graphview/graphview_canvas_controller.dart';
 import 'package:jflutter/presentation/providers/automaton_provider.dart';
 
@@ -145,16 +147,54 @@ class _RecordingAutomatonProvider extends AutomatonProvider {
   }
 }
 
+class _InspectableGraphViewCanvasController extends GraphViewCanvasController {
+  _InspectableGraphViewCanvasController({
+    required AutomatonProvider automatonProvider,
+    int historyLimit = BaseGraphViewCanvasController.kDefaultHistoryLimit,
+    int cacheEvictionThreshold =
+        BaseGraphViewCanvasController.kDefaultCacheEvictionThreshold,
+  }) : super(
+          automatonProvider: automatonProvider,
+          historyLimit: historyLimit,
+          cacheEvictionThreshold: cacheEvictionThreshold,
+        );
+
+  Map<String, Node> get debugGraphNodes => graphNodes;
+  Map<String, Edge> get debugGraphEdges => graphEdges;
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('GraphViewCanvasController', () {
     late _RecordingAutomatonProvider provider;
     late GraphViewCanvasController controller;
+    late bool controllerDisposed;
+    var controllerInitialized = false;
 
-    setUp(() {
+    void recreateController({
+      int historyLimit = BaseGraphViewCanvasController.kDefaultHistoryLimit,
+      int cacheEvictionThreshold =
+          BaseGraphViewCanvasController.kDefaultCacheEvictionThreshold,
+      bool inspectable = false,
+    }) {
+      if (controllerInitialized && !controllerDisposed) {
+        controller.dispose();
+      }
       provider = _RecordingAutomatonProvider();
-      controller = GraphViewCanvasController(automatonProvider: provider);
+      controller = inspectable
+          ? _InspectableGraphViewCanvasController(
+              automatonProvider: provider,
+              historyLimit: historyLimit,
+              cacheEvictionThreshold: cacheEvictionThreshold,
+            )
+          : GraphViewCanvasController(
+              automatonProvider: provider,
+              historyLimit: historyLimit,
+              cacheEvictionThreshold: cacheEvictionThreshold,
+            );
+      controllerInitialized = true;
+      controllerDisposed = false;
       provider.updateAutomaton(
         FSA(
           id: 'auto',
@@ -171,6 +211,17 @@ void main() {
           zoomLevel: 1,
         ),
       );
+    }
+
+    setUp(() {
+      recreateController();
+    });
+
+    tearDown(() {
+      if (controllerInitialized && !controllerDisposed) {
+        controller.dispose();
+        controllerDisposed = true;
+      }
     });
 
     test('addStateAt generates id and forwards to provider', () {
@@ -362,6 +413,109 @@ void main() {
       expect(controller.undo(), isFalse);
       expect(provider.state.currentAutomaton?.id, equals('auto_b'));
       expect(controller.graphRevision.value, greaterThan(revisionBeforeExternalSync));
+    });
+
+    test('enforces undo history limit by discarding oldest entries', () {
+      recreateController(historyLimit: 3);
+
+      controller.addStateAt(const Offset(10, 10));
+      controller.addStateAt(const Offset(20, 20));
+      controller.addStateAt(const Offset(30, 30));
+      controller.addStateAt(const Offset(40, 40));
+
+      expect(controller.undo(), isTrue);
+      expect(controller.undo(), isTrue);
+      expect(controller.undo(), isTrue);
+      expect(controller.undo(), isFalse);
+    });
+
+    test('dispose clears caches and history buffers', () {
+      controller.addStateAt(const Offset(50, 50));
+      controller.addStateAt(const Offset(70, 70));
+
+      expect(controller.canUndo, isTrue);
+      expect(controller.nodesCache, isNotEmpty);
+
+      controller.dispose();
+      controllerDisposed = true;
+
+      expect(controller.canUndo, isFalse);
+      expect(controller.canRedo, isFalse);
+      expect(controller.nodesCache, isEmpty);
+      expect(controller.edgesCache, isEmpty);
+    });
+
+    test('evicts caches when snapshot exceeds configured threshold', () {
+      recreateController(
+        cacheEvictionThreshold: 1,
+        inspectable: true,
+      );
+      final inspectable = controller as _InspectableGraphViewCanvasController;
+
+      provider.updateAutomaton(
+        FSA(
+          id: 'auto',
+          name: 'Automaton',
+          states: {
+            const automaton_state.State(id: 's0', label: 's0'),
+            const automaton_state.State(id: 's1', label: 's1'),
+          },
+          transitions: const {},
+          alphabet: const {},
+          initialState: 's0',
+          acceptingStates: const {'s1'},
+          created: DateTime.utc(2024, 1, 1),
+          modified: DateTime.utc(2024, 1, 1),
+          bounds: const math.Rectangle<double>(0, 0, 400, 300),
+          panOffset: Vector2.zero(),
+          zoomLevel: 1,
+        ),
+      );
+      inspectable.synchronize(provider.state.currentAutomaton);
+      final previousNode = inspectable.debugGraphNodes['s0'];
+      expect(previousNode, isNotNull);
+
+      provider.updateAutomaton(
+        FSA(
+          id: 'auto',
+          name: 'Automaton',
+          states: {
+            const automaton_state.State(id: 's0', label: 's0'),
+            const automaton_state.State(id: 's1', label: 's1'),
+            const automaton_state.State(id: 's2', label: 's2'),
+          },
+          transitions: {
+            const FsaTransition(
+              id: 't0',
+              fromStateId: 's0',
+              toStateId: 's1',
+              readSymbol: 'a',
+            ),
+            const FsaTransition(
+              id: 't1',
+              fromStateId: 's1',
+              toStateId: 's2',
+              readSymbol: 'b',
+            ),
+          },
+          alphabet: const {'a', 'b'},
+          initialState: 's0',
+          acceptingStates: const {'s2'},
+          created: DateTime.utc(2024, 1, 1),
+          modified: DateTime.utc(2024, 1, 1),
+          bounds: const math.Rectangle<double>(0, 0, 400, 300),
+          panOffset: Vector2.zero(),
+          zoomLevel: 1,
+        ),
+      );
+
+      inspectable.synchronize(provider.state.currentAutomaton);
+
+      final updatedNode = inspectable.debugGraphNodes['s0'];
+      expect(updatedNode, isNotNull);
+      expect(identical(previousNode, updatedNode), isFalse);
+      expect(inspectable.debugGraphEdges.length, equals(2));
+      expect(inspectable.nodesCache.length, equals(3));
     });
   });
 }

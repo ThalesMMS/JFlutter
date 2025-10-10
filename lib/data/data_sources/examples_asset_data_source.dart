@@ -89,8 +89,8 @@ class ExamplesAssetDataSource {
       subcategory: 'Stack Verification',
       difficulty: DifficultyLevel.hard,
       description:
-          'Autômato de pilha que reconhece palíndromos. Usa pilha para verificar simetria.',
-      tags: ['pda', 'palindrome', 'stack', 'verification'],
+          'Autômato de pilha não determinístico que empilha a primeira metade da palavra e desempilha a segunda para validar palíndromos.',
+      tags: ['pda', 'palindrome', 'stack', 'non-deterministic', 'mirroring'],
       estimatedComplexity: ComplexityLevel.high,
     ),
 

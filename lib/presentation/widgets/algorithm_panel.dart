@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 import '../../core/models/fsa.dart';
 import '../../core/result.dart';
 import '../../data/services/file_operations_service.dart';
+import 'utils/platform_file_loader.dart';
 
 /// Panel for algorithm operations and controls
 class AlgorithmPanel extends StatefulWidget {
@@ -37,6 +38,7 @@ class AlgorithmPanel extends StatefulWidget {
   final Future<void> Function(FSA other)? onCompareEquivalence;
   final bool? equivalenceResult;
   final String? equivalenceDetails;
+  final FileOperationsService fileService;
 
   const AlgorithmPanel({
     super.key,
@@ -58,7 +60,8 @@ class AlgorithmPanel extends StatefulWidget {
     this.onCompareEquivalence,
     this.equivalenceResult,
     this.equivalenceDetails,
-  });
+    FileOperationsService? fileService,
+  }) : fileService = fileService ?? FileOperationsService();
 
   @override
   State<AlgorithmPanel> createState() => _AlgorithmPanelState();
@@ -66,7 +69,7 @@ class AlgorithmPanel extends StatefulWidget {
 
 class _AlgorithmPanelState extends State<AlgorithmPanel> {
   final TextEditingController _regexController = TextEditingController();
-  final FileOperationsService _fileService = FileOperationsService();
+  late final FileOperationsService _fileService;
   bool _isExecuting = false;
   String? _currentAlgorithm;
   double _executionProgress = 0.0;
@@ -95,6 +98,12 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
   void dispose() {
     _regexController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fileService = widget.fileService;
   }
 
   @override
@@ -712,11 +721,6 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
     }
 
     final file = selection.files.single;
-    if (file.bytes == null && file.path == null) {
-      _showSnack('Selected file did not contain readable data.', isError: true);
-      return;
-    }
-
     setState(() {
       _isExecuting = true;
       _currentAlgorithm = algorithmName;
@@ -726,12 +730,10 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
       _currentStepIndex = steps.isEmpty ? 0 : 0;
     });
 
-    Result<FSA> loadResult;
-    if (file.bytes != null) {
-      loadResult = await _fileService.loadAutomatonFromBytes(file.bytes!);
-    } else {
-      loadResult = await _fileService.loadAutomatonFromJFLAP(file.path!);
-    }
+    final loadResult = await loadAutomatonFromPlatformFile(
+      _fileService,
+      file,
+    );
 
     if (!mounted) return;
 
@@ -740,7 +742,10 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
         _isExecuting = false;
         _executionStatus = 'Failed to load automaton';
       });
-      _showSnack(loadResult.error ?? 'Unable to load automaton.', isError: true);
+      _showSnack(
+        loadResult.error ?? 'Selected file did not contain readable data.',
+        isError: true,
+      );
       return;
     }
 

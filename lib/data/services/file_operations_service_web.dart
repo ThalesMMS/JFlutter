@@ -11,6 +11,7 @@
 //  Thales Matheus Mendonça Santos - October 2025
 //
 import 'dart:convert';
+import 'dart:html' as html;
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:vector_math/vector_math_64.dart';
@@ -32,7 +33,12 @@ class FileOperationsService {
     FSA automaton,
     String filePath,
   ) async {
-    return Failure('Saving JFLAP files is not supported on web.');
+    try {
+      final xml = _buildJFLAPXML(automaton);
+      return _downloadText(filePath, 'application/xml', xml);
+    } catch (e) {
+      return Failure('Failed to prepare automaton download: $e');
+    }
   }
 
   Future<Result<FSA>> loadAutomatonFromJFLAP(String filePath) async {
@@ -54,7 +60,12 @@ class FileOperationsService {
     Grammar grammar,
     String filePath,
   ) async {
-    return Failure('Saving grammars is not supported on web.');
+    try {
+      final xml = _buildGrammarXML(grammar);
+      return _downloadText(filePath, 'application/xml', xml);
+    } catch (e) {
+      return Failure('Failed to prepare grammar download: $e');
+    }
   }
 
   Future<Result<Grammar>> loadGrammarFromJFLAP(String filePath) async {
@@ -84,7 +95,15 @@ class FileOperationsService {
     String filePath, {
     SvgExportOptions? options,
   }) async {
-    return Failure('SVG export is not supported on web.');
+    try {
+      final svg = SvgExporter.exportAutomatonToSvg(
+        automaton,
+        options: options,
+      );
+      return _downloadText(filePath, 'image/svg+xml', svg);
+    } catch (e) {
+      return Failure('Failed to export automaton: $e');
+    }
   }
 
   Future<StringResult> exportGrammarToSVG(
@@ -92,7 +111,15 @@ class FileOperationsService {
     String filePath, {
     SvgExportOptions? options,
   }) async {
-    return Failure('SVG export is not supported on web.');
+    try {
+      final svg = SvgExporter.exportGrammarToSvg(
+        grammar,
+        options: options,
+      );
+      return _downloadText(filePath, 'image/svg+xml', svg);
+    } catch (e) {
+      return Failure('Failed to export grammar: $e');
+    }
   }
 
   Future<StringResult> exportTuringMachineToSVG(
@@ -100,14 +127,27 @@ class FileOperationsService {
     String filePath, {
     SvgExportOptions? options,
   }) async {
-    return Failure('SVG export is not supported on web.');
+    try {
+      final svg = SvgExporter.exportTuringMachineToSvg(
+        machine,
+        options: options,
+      );
+      return _downloadText(filePath, 'image/svg+xml', svg);
+    } catch (e) {
+      return Failure('Failed to export Turing machine: $e');
+    }
   }
 
   Future<StringResult> exportLegacyAutomatonToSVG(
     FSA automaton,
     String filePath,
   ) async {
-    return Failure('Legacy SVG export is not supported on web.');
+    try {
+      final svg = _buildLegacySVG(automaton);
+      return _downloadText(filePath, 'image/svg+xml', svg);
+    } catch (e) {
+      return Failure('Failed to export automaton: $e');
+    }
   }
 
   Future<StringResult> getDocumentsDirectory() async {
@@ -127,6 +167,137 @@ class FileOperationsService {
 
   Future<BoolResult> deleteFile(String filePath) async {
     return Failure('Deleting files is not supported on web.');
+  }
+
+  String _buildJFLAPXML(FSA automaton) {
+    final builder = XmlBuilder();
+    builder.processing('xml', 'version="1.0" encoding="UTF-8"');
+    builder.element('structure', nest: () {
+      builder.attribute('type', 'fa');
+      builder.element('automaton', nest: () {
+        for (final state in automaton.states) {
+          builder.element('state', nest: () {
+            builder.attribute('id', state.id);
+            builder.attribute('name', state.label);
+            if (state.isInitial) {
+              builder.element('initial');
+            }
+            if (state.isAccepting) {
+              builder.element('final');
+            }
+            builder.element('x', nest: state.position.x.toString());
+            builder.element('y', nest: state.position.y.toString());
+          });
+        }
+
+        for (final transition in automaton.transitions) {
+          if (transition is! FSATransition) continue;
+          builder.element('transition', nest: () {
+            builder.element('from', nest: transition.fromState.id);
+            builder.element('to', nest: transition.toState.id);
+            builder.element('read', nest: transition.symbol);
+          });
+        }
+      });
+    });
+
+    return builder.buildDocument().toXmlString(pretty: true);
+  }
+
+  String _buildGrammarXML(Grammar grammar) {
+    final builder = XmlBuilder();
+    builder.processing('xml', 'version="1.0" encoding="UTF-8"');
+    builder.element('structure', nest: () {
+      builder.attribute('type', 'grammar');
+      builder.element('grammar', nest: () {
+        builder.attribute('type', grammar.type.name);
+        builder.element('start', nest: grammar.startSymbol);
+
+        for (final production in grammar.productions) {
+          builder.element('production', nest: () {
+            builder.element('left', nest: production.leftSide.join(' '));
+            builder.element('right', nest: production.rightSide.join(' '));
+          });
+        }
+      });
+    });
+
+    return builder.buildDocument().toXmlString(pretty: true);
+  }
+
+  String _buildLegacySVG(FSA automaton) {
+    final states = automaton.states.toList()
+      ..sort((a, b) => a.id.compareTo(b.id));
+    final transitions =
+        automaton.transitions.whereType<FSATransition>().toList()
+          ..sort((a, b) => a.id.compareTo(b.id));
+
+    final buffer = StringBuffer();
+    buffer.writeln('<?xml version="1.0" encoding="UTF-8"?>');
+    buffer.writeln(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="$_kCanvasWidth" height="$_kCanvasHeight">',
+    );
+
+    for (final transition in transitions) {
+      final from = transition.fromState.position;
+      final to = transition.toState.position;
+      buffer.writeln(
+        '  <line x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}" stroke="$_kStrokeColor" stroke-width="$_kDefaultStrokeWidth"/>',
+      );
+
+      final midX = (from.x + to.x) / 2;
+      final midY = (from.y + to.y) / 2;
+      buffer.writeln(
+        '  <text x="$midX" y="$midY" text-anchor="middle" font-family="Arial" font-size="12" fill="$_kTextColor">${transition.label}</text>',
+      );
+    }
+
+    for (final state in states) {
+      final strokeColor = state.isInitial ? _kInitialStrokeColor : _kStrokeColor;
+      final strokeWidth =
+          state.isInitial ? _kInitialStrokeWidth : _kDefaultStrokeWidth;
+      final fillColor =
+          state.isAccepting ? _kAcceptingFillColor : _kDefaultFillColor;
+      buffer.writeln(
+        '  <circle cx="${state.position.x}" cy="${state.position.y}" r="$_kStateRadius" fill="$fillColor" stroke="$strokeColor" stroke-width="$strokeWidth"/>',
+      );
+      buffer.writeln(
+        '  <text x="${state.position.x}" y="${state.position.y + 5}" text-anchor="middle" font-family="Arial" font-size="14" fill="$_kTextColor">${state.label}</text>',
+      );
+    }
+
+    buffer.writeln('</svg>');
+    return buffer.toString();
+  }
+
+  Future<StringResult> _downloadText(
+    String fileName,
+    String mimeType,
+    String contents,
+  ) async {
+    final bytes = Uint8List.fromList(utf8.encode(contents));
+    return _downloadBytes(fileName, mimeType, bytes);
+  }
+
+  Future<StringResult> _downloadBytes(
+    String fileName,
+    String mimeType,
+    Uint8List bytes,
+  ) async {
+    try {
+      final blob = html.Blob([bytes], mimeType);
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      final anchor = html.AnchorElement(href: url)
+        ..download = fileName
+        ..style.display = 'none';
+      html.document.body?.append(anchor);
+      anchor.click();
+      anchor.remove();
+      html.Url.revokeObjectUrl(url);
+      return Success(fileName);
+    } catch (e) {
+      return Failure('Failed to start download: $e');
+    }
   }
 
   FSA _parseJFLAPXML(XmlDocument document) {
@@ -236,3 +407,15 @@ class FileOperationsService {
     );
   }
 }
+
+const double _kCanvasWidth = 800;
+const double _kCanvasHeight = 600;
+const double _kStateRadius = 30;
+const double _kDefaultStrokeWidth = 2;
+const double _kInitialStrokeWidth = 3;
+
+const String _kDefaultFillColor = '#ffffff';
+const String _kAcceptingFillColor = '#add8e6';
+const String _kStrokeColor = '#000000';
+const String _kInitialStrokeColor = '#ff0000';
+const String _kTextColor = '#000000';

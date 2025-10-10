@@ -22,6 +22,7 @@ import '../../../core/models/simulation_highlight.dart';
 import 'graphview_canvas_models.dart';
 import 'graphview_highlight_controller.dart';
 import 'graphview_viewport_highlight_mixin.dart';
+import 'graphview_snapshot_codec.dart';
 
 void _logGraphViewBase(String message) {
   if (kDebugMode) {
@@ -38,7 +39,9 @@ class _GraphHistoryEntry {
   final Uint8List serializedSnapshot;
   final SimulationHighlight highlight;
 
-  GraphViewAutomatonSnapshot? decodeSnapshot(GZipCodec codec) {
+  GraphViewAutomatonSnapshot? decodeSnapshot(
+    Codec<List<int>, List<int>> codec,
+  ) {
     try {
       final decompressed = codec.decode(serializedSnapshot);
       final decoded = utf8.decode(decompressed);
@@ -57,7 +60,8 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
     with GraphViewViewportHighlightMixin {
   static const int kDefaultHistoryLimit = 20;
   static const int kDefaultCacheEvictionThreshold = 250;
-  static const GZipCodec _historyCodec = GZipCodec();
+  static final Codec<List<int>, List<int>> _historyCodec =
+      createGraphHistoryCodec();
 
   BaseGraphViewCanvasController({
     required this.notifier,
@@ -66,19 +70,19 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
     TransformationController? transformationController,
     int historyLimit = kDefaultHistoryLimit,
     int cacheEvictionThreshold = kDefaultCacheEvictionThreshold,
-  })  : assert(historyLimit > 0),
-        assert(cacheEvictionThreshold > 0),
-        historyLimit = historyLimit,
-        cacheEvictionThreshold = cacheEvictionThreshold,
-        graph = graph ?? Graph(),
-        graphController =
-            viewController ??
-            GraphViewController(
-              transformationController:
-                  transformationController ?? TransformationController(),
-            ),
-        _ownsTransformationController =
-            viewController == null && transformationController == null;
+  }) : assert(historyLimit > 0),
+       assert(cacheEvictionThreshold > 0),
+       historyLimit = historyLimit,
+       cacheEvictionThreshold = cacheEvictionThreshold,
+       graph = graph ?? Graph(),
+       graphController =
+           viewController ??
+           GraphViewController(
+             transformationController:
+                 transformationController ?? TransformationController(),
+           ),
+       _ownsTransformationController =
+           viewController == null && transformationController == null;
 
   @protected
   final TNotifier notifier;
@@ -339,7 +343,8 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
       'Synchronizing graph (incomingNodes=${incomingNodes.length}, incomingEdges=${incomingEdges.length})',
     );
 
-    final shouldEvictCaches = incomingNodes.length > cacheEvictionThreshold ||
+    final shouldEvictCaches =
+        incomingNodes.length > cacheEvictionThreshold ||
         incomingEdges.length > cacheEvictionThreshold;
     if (shouldEvictCaches) {
       _logGraphViewBase(
@@ -521,8 +526,9 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
     try {
       final snapshot = toSnapshot(currentDomainData);
       final serialized = jsonEncode(snapshot.toJson());
-      final compressed =
-          Uint8List.fromList(_historyCodec.encode(utf8.encode(serialized)));
+      final compressed = Uint8List.fromList(
+        _historyCodec.encode(utf8.encode(serialized)),
+      );
       final highlight = SimulationHighlight(
         stateIds: Set<String>.from(highlightNotifier.value.stateIds),
         transitionIds: Set<String>.from(highlightNotifier.value.transitionIds),

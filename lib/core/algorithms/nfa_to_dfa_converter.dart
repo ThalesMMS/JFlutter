@@ -198,7 +198,10 @@ class NFAToDFAConverter {
 
     // Process each state set
     int stateCounter = 1;
-    const int maxStates = 1000; // Performance safeguard
+    // Keep this hard ceiling in sync with docs/reference-deviations.md.
+    // Mobile profiles start thrashing well before the theoretical 2^n bound;
+    // clamping at 1 000 states prevents OOM freezes during subset expansion.
+    const int maxStates = 1000;
     while (queue.isNotEmpty) {
       final currentStateKey = queue.removeAt(0);
       if (processed.contains(currentStateKey)) continue;

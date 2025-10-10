@@ -93,20 +93,21 @@ This document records deviations from reference implementations and regression t
 **JFlutter Implementation**: `lib/core/algorithms/automata/fa_algorithms.dart`
 
 #### Deviation Details
-- **Type**: Performance Optimization
-- **Description**: JFlutter uses iterative state set construction instead of recursive approach
-- **Rationale**: Better memory management for large automata on mobile devices
-- **Impact**: Equivalent results, 30% memory reduction
-- **Validation Status**: ✅ Validated - All test cases pass
+- **Type**: Performance optimisation and safety guard
+- **Description**: JFlutter performs iterative subset construction and stops when the DFA would exceed **1 000** generated states, returning a failure that surfaces `Error converting NFA to DFA: Exceeded maximum number of DFA states (1000) during subset construction.`
+- **Rationale**: Mobile targets repeatedly exhausted memory and froze the UI once the subset queue grew past ~1 000 states during conversion runs; clamping the expansion prevents runaway allocations while keeping classroom-size automata convertible on-device.
+- **Functional Impact vs. Reference**: `References/automata-main/automata/fa/dfa.py` continues expanding without a cap, while `lib/core/algorithms/nfa_to_dfa_converter.dart` aborts and reports the guard once the limit is reached. Consumers must trim NFAs or offload to desktop tooling when they expect an exponential explosion of states.
+- **Validation Status**: ✅ Guard behaviour covered by `test/unit/core/automata/fa_algorithms_test.dart` (fails fast after 1 000 states) alongside the existing NFA→DFA regression suite.
 
 #### Test Results
 ```
 Test Suite: NFA to DFA Conversion
 - Basic NFA (3 states): ✅ PASS
-- Complex NFA (15 states): ✅ PASS  
+- Complex NFA (15 states): ✅ PASS
 - Epsilon transitions: ✅ PASS
 - Empty language: ✅ PASS
 - Universal language: ✅ PASS
+- Guard exhaustion: ✅ FAIL with descriptive error once the 1 000-state ceiling is reached
 - Performance: 30% memory reduction vs reference
 ```
 

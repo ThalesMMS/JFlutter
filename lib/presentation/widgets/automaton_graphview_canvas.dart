@@ -1722,6 +1722,9 @@ class _GraphViewEdgePainter extends CustomPainter {
   final Set<String> selectedTransitions;
   final ThemeData theme;
 
+  static const double _kLabelNormalOffset = 14;
+  static const double _kLoopLabelOffset = 16;
+
   GraphViewCanvasNode? _nodeById(String id) {
     for (final node in nodes) {
       if (node.id == id) {
@@ -1795,9 +1798,11 @@ class _GraphViewEdgePainter extends CustomPainter {
       canvas.drawPath(path, paint);
       _drawArrowHead(canvas, end, direction, color);
 
-      final labelAnchor =
-          controlPoint ??
-          Offset((start.dx + end.dx) / 2, (start.dy + end.dy) / 2);
+      final labelAnchor = _computeEdgeLabelAnchor(
+        start: start,
+        end: end,
+        controlPoint: controlPoint,
+      );
       _drawEdgeLabel(canvas, labelAnchor, edge.label, color);
     }
   }
@@ -1820,7 +1825,10 @@ class _GraphViewEdgePainter extends CustomPainter {
     }
 
     final bounds = loop.path.getBounds();
-    final labelAnchor = Offset(bounds.center.dx, bounds.top - 12);
+    final labelAnchor = Offset(
+      bounds.center.dx,
+      bounds.top - _kLoopLabelOffset,
+    );
 
     return (edge: graphEdge, labelAnchor: labelAnchor);
   }
@@ -1902,8 +1910,65 @@ class _GraphViewEdgePainter extends CustomPainter {
       textDirection: TextDirection.ltr,
     )..layout();
     final offset =
-        position - Offset(textPainter.width / 2, textPainter.height / 2 + 4);
+        position - Offset(textPainter.width / 2, textPainter.height / 2);
     textPainter.paint(canvas, offset);
+  }
+
+  Offset _computeEdgeLabelAnchor({
+    required Offset start,
+    required Offset end,
+    Offset? controlPoint,
+  }) {
+    if (controlPoint == null) {
+      final mid = Offset((start.dx + end.dx) / 2, (start.dy + end.dy) / 2);
+      final tangent = end - start;
+      final normal = _preferredNormal(tangent);
+      return mid + normal * _kLabelNormalOffset;
+    }
+
+    const t = 0.5;
+    final point = _evaluateQuadraticPoint(start, controlPoint, end, t);
+    final tangent = _evaluateQuadraticTangent(start, controlPoint, end, t);
+    final normal = _preferredNormal(tangent);
+    return point + normal * _kLabelNormalOffset;
+  }
+
+  Offset _evaluateQuadraticPoint(
+    Offset start,
+    Offset control,
+    Offset end,
+    double t,
+  ) {
+    final oneMinusT = 1 - t;
+    return start * (oneMinusT * oneMinusT) +
+        control * (2 * oneMinusT * t) +
+        end * (t * t);
+  }
+
+  Offset _evaluateQuadraticTangent(
+    Offset start,
+    Offset control,
+    Offset end,
+    double t,
+  ) {
+    final term1 = (control - start) * (2 * (1 - t));
+    final term2 = (end - control) * (2 * t);
+    return term1 + term2;
+  }
+
+  Offset _preferredNormal(Offset tangent) {
+    if (tangent.distance == 0) {
+      return const Offset(0, -1);
+    }
+    Offset normal = Offset(-tangent.dy, tangent.dx);
+    if (normal.distance == 0) {
+      return const Offset(0, -1);
+    }
+    normal = normal / normal.distance;
+    if (normal.dy > 0) {
+      normal = -normal;
+    }
+    return normal;
   }
 
   @override

@@ -204,6 +204,22 @@ Test Suite: PDA Simulation
 #### Validation Status
 - ✅ All TM suites pass: acceptance, rejection, looping/timeout handling, transformation workflows, limits, performance, and error scenarios.
 
+### 6. DFA Finiteness Detection Helper
+
+**Reference**: `References/automata-main/automata/fa/dfa.py` (`DFA.maximum_word_length`)
+**JFlutter Implementation**: `lib/core/algorithms/automata/fa_algorithms.dart` (`FAAlgorithms.isFinite`)
+
+#### Deviation Details
+- **Type**: Algorithmic implementation swap
+- **Description**: The reference calls into `networkx` to compute the longest path in the subgraph of states that are both reachable from the start state and can reach an accepting state, caching the result (and returning `None` when a cycle implies an infinite language). JFlutter instead does a direct cycle detection inside that subgraph using the collections already available in core.
+
+#### Rationale
+- Avoids bringing the reference's cached word/count machinery and third-party graph dependency into the Dart runtime, keeping the helper stateless and light enough for mobile executions.
+- Encodes the same theoretical criterion—"no accepting-reachable cycle"—but avoids stale cache scenarios when automata are edited interactively.
+
+#### Validation Status
+- ✅ Covered by `test/unit/core/automata/fa_algorithms_test.dart` (finite empty-language DFA, finite acyclic DFA, and infinite-cycle DFA cases) plus manual parity checks against the Python helper.
+
 ## Regression Test Results
 
 ### Core Algorithm Regression Tests
@@ -376,7 +392,7 @@ Mobile Performance (iPhone 17 Pro Max):
 ## Conclusion
 
 ### Summary of Deviations
-- **Total Deviations**: 5 documented deviations from Phase 1
+- **Total Deviations**: 6 documented deviations from Phase 1
 - **Phase 2 Objectives**: 6 objectives completed successfully
 - **Type**: Performance optimizations, mobile enhancements, feature additions, quality improvements
 - **Impact**: All deviations maintain algorithmic equivalence while enhancing user experience

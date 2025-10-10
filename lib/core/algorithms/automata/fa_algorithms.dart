@@ -51,8 +51,12 @@ class FAAlgorithms {
   }
 
   static bool isFinite(FSA dfa) {
-    // A DFA language is finite iff no cycle is both reachable from the initial
-    // state and able to reach an accepting state.
+    // The Python reference (`DFA.maximum_word_length`) walks the accessible
+    // subgraph via NetworkX, caching longest path lengths (and returning
+    // `None` on cycles). We mirror the underlying theory—"a DFA language is
+    // finite iff no accepting-reachable cycle exists"—with an explicit cycle
+    // check. This keeps the helper cache-free and dependency-light while
+    // matching the reference semantics.
     if (dfa.initialState == null) return true;
 
     final reachable = dfa.getReachableStates(dfa.initialState!);

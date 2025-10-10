@@ -26,6 +26,17 @@ class SvgExporter {
   static const double _strokeWidth = 2.0;
   static const String _fontFamily = 'Arial, sans-serif';
 
+  static String _formatDimension(num value) {
+    var text = value.toString();
+    if (text.contains('.')) {
+      text = text.replaceFirst(RegExp(r'0+$'), '');
+      if (text.endsWith('.')) {
+        text = text.substring(0, text.length - 1);
+      }
+    }
+    return text;
+  }
+
   /// Exports automaton to SVG format
   static String exportAutomatonToSvg(
     AutomatonEntity automaton, {
@@ -40,8 +51,12 @@ class SvgExporter {
     buffer.writeln('<?xml version="1.0" encoding="UTF-8" standalone="no"?>');
     buffer.writeln('<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"');
     buffer.writeln('  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">');
-    buffer.writeln('<svg width="${width}px" height="${height}px"');
-    buffer.writeln('  viewBox="0 0 $width $height"');
+    buffer.writeln(
+      '<svg width="${_formatDimension(width)}px" height="${_formatDimension(height)}px"',
+    );
+    buffer.writeln(
+      '  viewBox="0 0 ${_formatDimension(width)} ${_formatDimension(height)}"',
+    );
     buffer.writeln('  xmlns="http://www.w3.org/2000/svg"');
     buffer.writeln('  xmlns:xlink="http://www.w3.org/1999/xlink">');
 
@@ -87,8 +102,12 @@ class SvgExporter {
     buffer.writeln('<?xml version="1.0" encoding="UTF-8" standalone="no"?>');
     buffer.writeln('<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"');
     buffer.writeln('  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">');
-    buffer.writeln('<svg width="${scaledWidth}px" height="${scaledHeight}px"');
-    buffer.writeln('  viewBox="0 0 $width $height"');
+    buffer.writeln(
+      '<svg width="${_formatDimension(scaledWidth)}px" height="${_formatDimension(scaledHeight)}px"',
+    );
+    buffer.writeln(
+      '  viewBox="0 0 ${_formatDimension(width)} ${_formatDimension(height)}"',
+    );
     buffer.writeln('  xmlns="http://www.w3.org/2000/svg"');
     buffer.writeln('  xmlns:xlink="http://www.w3.org/1999/xlink">');
 
@@ -181,21 +200,27 @@ class SvgExporter {
     final alphabet = tm.inputAlphabet.toList()..sort();
 
     buffer.writeln('    <g class="tape">');
+    final formattedTapeTop = _formatDimension(tapeTop);
+    final formattedCellWidth = _formatDimension(cellWidth);
+    final formattedTapeHeight = _formatDimension(tapeHeight);
     for (var i = 0; i < cellsCount; i++) {
       final x = tapeStartX + i * cellWidth;
+      final formattedX = _formatDimension(x);
+      final textX = _formatDimension(x + cellWidth / 2);
+      final textY = _formatDimension(tapeTop + tapeHeight / 2);
       final symbolIndex = alphabet.isEmpty ? 0 : i % alphabet.length;
       final symbol = i == cellsCount ~/ 2
           ? blankSymbol
           : (alphabet.isEmpty ? blankSymbol : alphabet[symbolIndex]);
 
       buffer.writeln(
-        '      <rect class="tape-cell" x="$x" y="$tapeTop" width="$cellWidth" height="$tapeHeight"',
+        '      <rect class="tape-cell" x="$formattedX" y="$formattedTapeTop" width="$formattedCellWidth" height="$formattedTapeHeight"',
       );
       buffer.writeln(
         '        fill="${_colorToHex(tapeFill)}" stroke="${_colorToHex(tapeStroke)}"/>',
       );
       buffer.writeln(
-        '      <text x="${x + cellWidth / 2}" y="${tapeTop + tapeHeight / 2}"',
+        '      <text x="$textX" y="$textY"',
       );
       buffer.writeln(
         '        class="tape-symbol" fill="${_colorToHex(textColor)}">$symbol</text>',
@@ -224,9 +249,14 @@ class SvgExporter {
     final baseLeftX = headTipX - 12;
     final baseRightX = headTipX + 12;
     final baseY = layout.top - 2;
+    final formattedBaseLeftX = _formatDimension(baseLeftX);
+    final formattedBaseRightX = _formatDimension(baseRightX);
+    final formattedBaseY = _formatDimension(baseY);
+    final formattedHeadTipX = _formatDimension(headTipX);
+    final formattedHeadTipY = _formatDimension(headTipY);
 
     buffer.writeln(
-      '    <polygon class="head" points="$baseLeftX $baseY, $baseRightX $baseY, $headTipX $headTipY" fill="${_colorToHex(headColor)}"/>',
+      '    <polygon class="head" points="$formattedBaseLeftX $formattedBaseY, $formattedBaseRightX $formattedBaseY, $formattedHeadTipX $formattedHeadTipY" fill="${_colorToHex(headColor)}"/>',
     );
   }
 
@@ -287,16 +317,22 @@ class SvgExporter {
       buffer.writeln('    <g class="state">');
 
       if (state.isAccepting) {
+        final cx = _formatDimension(position.x);
+        final cy = _formatDimension(position.y);
+        final outerRadius = _formatDimension(_stateRadius + 5);
         buffer.writeln(
-          '      <circle cx="${position.x}" cy="${position.y}" r="${_stateRadius + 5}"',
+          '      <circle cx="$cx" cy="$cy" r="$outerRadius"',
         );
         buffer.writeln(
           '        fill="none" stroke="${_colorToHex(strokeColor)}" stroke-width="3"/>',
         );
       }
 
+      final mainCx = _formatDimension(position.x);
+      final mainCy = _formatDimension(position.y);
+      final radius = _formatDimension(_stateRadius);
       buffer.writeln(
-        '      <circle cx="${position.x}" cy="${position.y}" r="$_stateRadius"',
+        '      <circle cx="$mainCx" cy="$mainCy" r="$radius"',
       );
       buffer.writeln(
         '        fill="${_colorToHex(fillColor)}" stroke="${_colorToHex(strokeColor)}" stroke-width="$_strokeWidth"/>',
@@ -304,16 +340,24 @@ class SvgExporter {
 
       if (state.isRejecting) {
         final lineOffset = _stateRadius * 0.6;
+        final lineStartX1 = _formatDimension(position.x - lineOffset);
+        final lineStartY1 = _formatDimension(position.y - lineOffset);
+        final lineEndX1 = _formatDimension(position.x + lineOffset);
+        final lineEndY1 = _formatDimension(position.y + lineOffset);
+        final lineStartX2 = _formatDimension(position.x - lineOffset);
+        final lineStartY2 = _formatDimension(position.y + lineOffset);
+        final lineEndX2 = _formatDimension(position.x + lineOffset);
+        final lineEndY2 = _formatDimension(position.y - lineOffset);
         buffer.writeln(
-          '      <line x1="${position.x - lineOffset}" y1="${position.y - lineOffset}" x2="${position.x + lineOffset}" y2="${position.y + lineOffset}" stroke="${_colorToHex(strokeColor)}" stroke-width="1.5"/>',
+          '      <line x1="$lineStartX1" y1="$lineStartY1" x2="$lineEndX1" y2="$lineEndY1" stroke="${_colorToHex(strokeColor)}" stroke-width="1.5"/>',
         );
         buffer.writeln(
-          '      <line x1="${position.x - lineOffset}" y1="${position.y + lineOffset}" x2="${position.x + lineOffset}" y2="${position.y - lineOffset}" stroke="${_colorToHex(strokeColor)}" stroke-width="1.5"/>',
+          '      <line x1="$lineStartX2" y1="$lineStartY2" x2="$lineEndX2" y2="$lineEndY2" stroke="${_colorToHex(strokeColor)}" stroke-width="1.5"/>',
         );
       }
 
       buffer.writeln(
-        '      <text x="${position.x}" y="${position.y + 5}" class="state" fill="${_colorToHex(textColor)}">${state.name}</text>',
+        '      <text x="$mainCx" y="${_formatDimension(position.y + 5)}" class="state" fill="${_colorToHex(textColor)}">${state.name}</text>',
       );
 
       if (state.isInitial) {
@@ -349,16 +393,27 @@ class SvgExporter {
         final startX = from.x;
         final startY = from.y - _stateRadius;
         final controlOffset = loopRadius * 1.2;
+        final formattedStartX = _formatDimension(startX);
+        final formattedStartY = _formatDimension(startY);
+        final formattedControlX1 =
+            _formatDimension(startX + controlOffset);
+        final formattedControlY1 =
+            _formatDimension(startY - controlOffset);
+        final formattedControlX2 =
+            _formatDimension(startX - controlOffset);
+        final formattedControlY2 =
+            _formatDimension(startY - controlOffset);
+        final formattedLoopStartY = _formatDimension(startY - loopRadius);
 
         buffer.writeln('    <g class="transition">');
         buffer.writeln(
-          '      <path d="M $startX $startY C ${startX + controlOffset} ${startY - controlOffset}, ${startX - controlOffset} ${startY - controlOffset}, $startX $startY"',
+          '      <path d="M $formattedStartX $formattedStartY C $formattedControlX1 $formattedControlY1, $formattedControlX2 $formattedControlY2, $formattedStartX $formattedStartY"',
         );
         buffer.writeln(
           '        fill="none" stroke="${_colorToHex(strokeColor)}" stroke-width="$_strokeWidth" marker-end="url(#arrowhead)"/>',
         );
         buffer.writeln(
-          '      <text x="$startX" y="${startY - loopRadius}" class="transition" fill="${_colorToHex(textColor)}">$label</text>',
+          '      <text x="$formattedStartX" y="$formattedLoopStartY" class="transition" fill="${_colorToHex(textColor)}">$label</text>',
         );
         buffer.writeln('    </g>');
         continue;
@@ -366,13 +421,19 @@ class SvgExporter {
 
       final midX = (from.x + to.x) / 2;
       final midY = (from.y + to.y) / 2;
+      final formattedFromX = _formatDimension(from.x);
+      final formattedFromY = _formatDimension(from.y);
+      final formattedToX = _formatDimension(to.x);
+      final formattedToY = _formatDimension(to.y);
+      final formattedMidX = _formatDimension(midX);
+      final formattedMidY = _formatDimension(midY);
 
       buffer.writeln('    <g class="transition">');
       buffer.writeln(
-        '      <line x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}" stroke="${_colorToHex(strokeColor)}" stroke-width="$_strokeWidth" marker-end="url(#arrowhead)"/>',
+        '      <line x1="$formattedFromX" y1="$formattedFromY" x2="$formattedToX" y2="$formattedToY" stroke="${_colorToHex(strokeColor)}" stroke-width="$_strokeWidth" marker-end="url(#arrowhead)"/>',
       );
       buffer.writeln(
-        '      <text x="$midX" y="$midY" class="transition" fill="${_colorToHex(textColor)}">$label</text>',
+        '      <text x="$formattedMidX" y="$formattedMidY" class="transition" fill="${_colorToHex(textColor)}">$label</text>',
       );
       buffer.writeln('    </g>');
     }
@@ -389,10 +450,12 @@ class SvgExporter {
         colorScheme?.onSurface ??
         const Color(0xFF424242);
     final legendY = height - 30;
+    final legendYText = _formatDimension(legendY);
+    final legendXText = _formatDimension(width / 2);
 
     buffer.writeln('    <g class="legend">');
     buffer.writeln(
-      '      <text x="${width / 2}" y="$legendY" text-anchor="middle" fill="${_colorToHex(textColor)}">',
+      '      <text x="$legendXText" y="$legendYText" text-anchor="middle" fill="${_colorToHex(textColor)}">',
     );
     buffer.writeln(
       '        δ(q, s) = (q′, w, d) — leitura/escrita/movimento',
@@ -490,17 +553,21 @@ class SvgExporter {
       final strokeWidth = isAccepting ? 3.0 : 2.0;
 
       buffer.writeln('  <g class="state">');
+      final cx = _formatDimension(pos.x);
+      final cy = _formatDimension(pos.y);
       if (isAccepting) {
+        final outerRadius = _formatDimension(_stateRadius + 5);
         // Draw double circle for accepting states
         buffer.writeln(
-          '    <circle cx="${pos.x}" cy="${pos.y}" r="${_stateRadius + 5}"',
+          '    <circle cx="$cx" cy="$cy" r="$outerRadius"',
         );
         buffer.writeln(
           '      fill="none" stroke="$strokeColor" stroke-width="$strokeWidth"/>',
         );
       }
+      final radius = _formatDimension(_stateRadius);
       buffer.writeln(
-        '    <circle cx="${pos.x}" cy="${pos.y}" r="$_stateRadius"',
+        '    <circle cx="$cx" cy="$cy" r="$radius"',
       );
       buffer.writeln('      fill="${isInitial ? '#e3f2fd' : '#fff'}"');
       buffer.writeln(
@@ -509,7 +576,7 @@ class SvgExporter {
 
       // Add state label
       buffer.writeln(
-        '    <text x="${pos.x}" y="${pos.y + 5}" class="state">${state.name}</text>',
+        '    <text x="$cx" y="${_formatDimension(pos.y + 5)}" class="state">${state.name}</text>',
       );
 
       // Add initial arrow if needed
@@ -538,8 +605,12 @@ class SvgExporter {
 
         // Draw transition line
         buffer.writeln('  <g class="transition">');
-        buffer.writeln('    <line x1="${fromPos.x}" y1="${fromPos.y}"');
-        buffer.writeln('      x2="${toPos.x}" y2="${toPos.y}"');
+        buffer.writeln(
+          '    <line x1="${_formatDimension(fromPos.x)}" y1="${_formatDimension(fromPos.y)}"',
+        );
+        buffer.writeln(
+          '      x2="${_formatDimension(toPos.x)}" y2="${_formatDimension(toPos.y)}"',
+        );
         buffer.writeln('      stroke="#000" stroke-width="$_strokeWidth"');
         buffer.writeln('      marker-end="url(#arrowhead)"/>');
 
@@ -547,7 +618,7 @@ class SvgExporter {
         final midX = (fromPos.x + toPos.x) / 2;
         final midY = (fromPos.y + toPos.y) / 2;
         buffer.writeln(
-          '    <text x="$midX" y="$midY" class="transition">ε</text>',
+          '    <text x="${_formatDimension(midX)}" y="${_formatDimension(midY)}" class="transition">ε</text>',
         ); // Default epsilon
         buffer.writeln('  </g>');
       }
@@ -558,9 +629,14 @@ class SvgExporter {
     // Draw arrow pointing to initial state
     final arrowStartX = position.x - _stateRadius - 20;
     final arrowStartY = position.y;
+    final arrowEndX = position.x - _stateRadius;
 
-    buffer.writeln('    <line x1="$arrowStartX" y1="$arrowStartY"');
-    buffer.writeln('      x2="${position.x - _stateRadius}" y2="$arrowStartY"');
+    buffer.writeln(
+      '    <line x1="${_formatDimension(arrowStartX)}" y1="${_formatDimension(arrowStartY)}"',
+    );
+    buffer.writeln(
+      '      x2="${_formatDimension(arrowEndX)}" y2="${_formatDimension(arrowStartY)}"',
+    );
     buffer.writeln('      stroke="#000" stroke-width="$_strokeWidth"');
     buffer.writeln('      marker-end="url(#arrowhead)"/>');
   }
@@ -573,7 +649,7 @@ class SvgExporter {
   ) {
     buffer.writeln('  <g class="title">');
     buffer.writeln(
-      '    <text x="${width / 2}" y="30" font-size="18" font-weight="bold"',
+      '    <text x="${_formatDimension(width / 2)}" y="${_formatDimension(30)}" font-size="18" font-weight="bold"',
     );
     buffer.writeln('      text-anchor="middle">$title</text>');
     buffer.writeln('  </g>');

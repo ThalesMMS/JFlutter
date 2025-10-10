@@ -1,95 +1,72 @@
-import 'package:flutter/material.dart' hide ButtonStyle;
+import 'package:flutter/material.dart';
 
-/// Visual variants available for [RetryButton].
-enum ButtonStyle {
-  /// High emphasis button used as the primary call to action.
-  primary,
-
-  /// Tonal variant that provides a softer emphasis compared to [primary].
-  secondary,
-
-  /// Outlined button variant that keeps emphasis without filling the background.
-  outline,
-
-  /// Text-only variant with minimal emphasis.
-  text,
-}
-
-/// Button used to trigger retry flows across the application.
+/// Primary action used to retry an operation that previously failed.
 ///
-/// The widget centralises the UX expectations validated in
-/// `ux_error_handling_test.dart`, including iconography, disabled and
-/// loading states as well as multiple visual variants.
+/// This button centralises error recovery behaviour so all flows share the
+/// same semantics, accessibility affordances, and loading feedback.
 class RetryButton extends StatelessWidget {
   const RetryButton({
     super.key,
-    this.text = 'Retry',
-    this.onPressed,
+    required this.onPressed,
     this.isLoading = false,
-    this.style = ButtonStyle.primary,
-  });
+    this.isEnabled = true,
+    this.label = 'Retry',
+    this.icon = Icons.refresh,
+  }) : assert(label != '', 'label must not be empty');
 
-  /// Label displayed inside the button when not loading.
-  final String text;
+  /// Callback executed when the user taps the button.
+  final VoidCallback onPressed;
 
-  /// Callback triggered when the user taps the button.
-  final VoidCallback? onPressed;
-
-  /// Whether the button should present a loading indicator instead of the
-  /// regular icon.
+  /// Whether to show the loading state and disable interaction.
   final bool isLoading;
 
-  /// Visual style applied to the button.
-  final ButtonStyle style;
+  /// Whether the button can be interacted with.
+  final bool isEnabled;
 
-  bool get _isDisabled => onPressed == null || isLoading;
+  /// Text shown next to the icon (or instead of it on smaller screens).
+  final String label;
+
+  /// Icon presented while the button is idle.
+  final IconData icon;
+
+  bool get _canTap => isEnabled && !isLoading;
 
   @override
   Widget build(BuildContext context) {
-    final effectiveOnPressed = _isDisabled ? null : onPressed;
-    final Widget icon = _buildIcon(context);
-    final Text label = Text(isLoading ? 'Retrying...' : text);
-
-    switch (style) {
-      case ButtonStyle.primary:
-        return FilledButton.icon(
-          onPressed: effectiveOnPressed,
-          icon: icon,
-          label: label,
-        );
-      case ButtonStyle.secondary:
-        return FilledButton.tonalIcon(
-          onPressed: effectiveOnPressed,
-          icon: icon,
-          label: label,
-        );
-      case ButtonStyle.outline:
-        return OutlinedButton.icon(
-          onPressed: effectiveOnPressed,
-          icon: icon,
-          label: label,
-        );
-      case ButtonStyle.text:
-        return TextButton.icon(
-          onPressed: effectiveOnPressed,
-          icon: icon,
-          label: label,
-        );
-    }
-  }
-
-  Widget _buildIcon(BuildContext context) {
-    if (!isLoading) {
-      return const Icon(Icons.refresh, size: 18);
-    }
-
     final colorScheme = Theme.of(context).colorScheme;
-    return SizedBox(
-      width: 16,
-      height: 16,
-      child: CircularProgressIndicator(
-        strokeWidth: 2,
-        valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+
+    return Semantics(
+      label: label,
+      hint: 'Double tap to retry',
+      value: isLoading ? 'Loading' : null,
+      button: true,
+      enabled: _canTap,
+      child: SizedBox(
+        height: 44,
+        child: FilledButton.icon(
+          onPressed: _canTap ? onPressed : null,
+          icon: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 250),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            transitionBuilder: (child, animation) {
+              return RotationTransition(turns: animation, child: child);
+            },
+            child: isLoading
+                ? SizedBox(
+                    key: const ValueKey('retry_button_progress'),
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(colorScheme.onPrimary),
+                    ),
+                  )
+                : Icon(icon, key: const ValueKey('retry_button_icon'), size: 20),
+          ),
+          label: Text(isLoading ? 'Retrying...' : label),
+        ),
       ),
     );
   }

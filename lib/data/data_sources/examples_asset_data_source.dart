@@ -55,7 +55,7 @@ class ExamplesAssetDataSource {
       subcategory: 'Epsilon Transitions',
       difficulty: DifficultyLevel.medium,
       description:
-          'NFA com transições ε que reconhece "a" ou "ab". Introduz não-determinismo.',
+          'NFA com ramificação ε para explorar "ab" e transição explícita de "a" para aceitação imediata.',
       tags: ['nfa', 'epsilon', 'choice', 'non-deterministic'],
       estimatedComplexity: ComplexityLevel.medium,
     ),

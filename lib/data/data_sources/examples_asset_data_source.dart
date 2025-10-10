@@ -55,7 +55,7 @@ class ExamplesAssetDataSource {
       subcategory: 'Epsilon Transitions',
       difficulty: DifficultyLevel.medium,
       description:
-          'NFA com transições ε que reconhece "a" ou "ab". Introduz não-determinismo.',
+          'NFA com ramificação ε para explorar "ab" e transição explícita de "a" para aceitação imediata.',
       tags: ['nfa', 'epsilon', 'choice', 'non-deterministic'],
       estimatedComplexity: ComplexityLevel.medium,
     ),
@@ -89,8 +89,8 @@ class ExamplesAssetDataSource {
       subcategory: 'Stack Verification',
       difficulty: DifficultyLevel.hard,
       description:
-          'Autômato de pilha que reconhece palíndromos. Usa pilha para verificar simetria.',
-      tags: ['pda', 'palindrome', 'stack', 'verification'],
+          'Autômato de pilha não determinístico que empilha a primeira metade da palavra e desempilha a segunda para validar palíndromos.',
+      tags: ['pda', 'palindrome', 'stack', 'non-deterministic', 'mirroring'],
       estimatedComplexity: ComplexityLevel.high,
     ),
 

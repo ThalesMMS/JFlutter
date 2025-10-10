@@ -14,7 +14,9 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import '../../core/models/fsa.dart';
+import '../../core/result.dart';
 import '../../data/services/file_operations_service.dart';
+import 'utils/platform_file_loader.dart';
 
 /// Panel for algorithm operations and controls
 class AlgorithmPanel extends StatefulWidget {
@@ -36,8 +38,9 @@ class AlgorithmPanel extends StatefulWidget {
   final Future<void> Function(FSA other)? onCompareEquivalence;
   final bool? equivalenceResult;
   final String? equivalenceDetails;
+  final FileOperationsService fileService;
 
-  const AlgorithmPanel({
+  AlgorithmPanel({
     super.key,
     this.onNfaToDfa,
     this.onMinimizeDfa,
@@ -57,7 +60,8 @@ class AlgorithmPanel extends StatefulWidget {
     this.onCompareEquivalence,
     this.equivalenceResult,
     this.equivalenceDetails,
-  });
+    FileOperationsService? fileService,
+  }) : fileService = fileService ?? FileOperationsService();
 
   @override
   State<AlgorithmPanel> createState() => _AlgorithmPanelState();
@@ -65,7 +69,7 @@ class AlgorithmPanel extends StatefulWidget {
 
 class _AlgorithmPanelState extends State<AlgorithmPanel> {
   final TextEditingController _regexController = TextEditingController();
-  final FileOperationsService _fileService = FileOperationsService();
+  late final FileOperationsService _fileService;
   bool _isExecuting = false;
   String? _currentAlgorithm;
   double _executionProgress = 0.0;
@@ -82,8 +86,7 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
             ? TextStyle(color: theme.colorScheme.onErrorContainer)
             : null,
       ),
-      backgroundColor:
-          isError ? theme.colorScheme.errorContainer : null,
+      backgroundColor: isError ? theme.colorScheme.errorContainer : null,
       behavior: SnackBarBehavior.floating,
     );
 
@@ -94,6 +97,12 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
   void dispose() {
     _regexController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fileService = widget.fileService;
   }
 
   @override
@@ -137,8 +146,10 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                 title: 'Remove λ-transitions',
                 description: 'Eliminate epsilon transitions from the automaton',
                 icon: Icons.highlight_off,
-                onPressed: () =>
-                    _executeAlgorithm('Remove λ-transitions', widget.onRemoveLambda),
+                onPressed: () => _executeAlgorithm(
+                  'Remove λ-transitions',
+                  widget.onRemoveLambda,
+                ),
               ),
 
               const SizedBox(height: 12),
@@ -183,7 +194,8 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
               _buildAlgorithmButton(
                 context,
                 title: 'Union of DFAs',
-                description: 'Combine this DFA with another automaton from file',
+                description:
+                    'Combine this DFA with another automaton from file',
                 icon: Icons.merge_type,
                 onPressed: () => _runBinaryOperation(
                   algorithmName: 'Union of DFAs',
@@ -674,10 +686,7 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
         title: 'Normalise DFAs',
         description: 'Align alphabets and ensure determinism',
       ),
-      AlgorithmStep(
-        title: actionTitle,
-        description: actionDescription,
-      ),
+      AlgorithmStep(title: actionTitle, description: actionDescription),
     ];
   }
 
@@ -692,8 +701,7 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
   }) async {
     if (callback == null) {
       _showSnack(
-        missingCallbackMessage ??
-            'Load a DFA before executing $algorithmName.',
+        missingCallbackMessage ?? 'Load a DFA before executing $algorithmName.',
         isError: true,
       );
       return;
@@ -703,12 +711,14 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
       dialogTitle: dialogTitle,
       type: FileType.custom,
       allowedExtensions: const ['jff'],
+      withData: true,
     );
 
-    if (selection == null || selection.files.single.path == null) {
+    if (selection == null || selection.files.isEmpty) {
       return;
     }
 
+    final file = selection.files.single;
     setState(() {
       _isExecuting = true;
       _currentAlgorithm = algorithmName;
@@ -718,9 +728,7 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
       _currentStepIndex = steps.isEmpty ? 0 : 0;
     });
 
-    final loadResult = await _fileService.loadAutomatonFromJFLAP(
-      selection.files.single.path!,
-    );
+    final loadResult = await loadAutomatonFromPlatformFile(_fileService, file);
 
     if (!mounted) return;
 
@@ -729,7 +737,10 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
         _isExecuting = false;
         _executionStatus = 'Failed to load automaton';
       });
-      _showSnack(loadResult.error ?? 'Unable to load automaton.', isError: true);
+      _showSnack(
+        loadResult.error ?? 'Selected file did not contain readable data.',
+        isError: true,
+      );
       return;
     }
 
@@ -786,8 +797,7 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
       ],
       executingStatus: 'Comparing automata...',
       successStatus: 'Comparison complete',
-      missingCallbackMessage:
-          'Load a DFA before comparing equivalence.',
+      missingCallbackMessage: 'Load a DFA before comparing equivalence.',
     );
   }
 
@@ -990,7 +1000,8 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
           ),
           AlgorithmStep(
             title: 'Expand Initial Access',
-            description: 'Add ε-links to states reachable from the initial state',
+            description:
+                'Add ε-links to states reachable from the initial state',
           ),
           AlgorithmStep(
             title: 'Determinize Result',

@@ -11,11 +11,14 @@
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../core/models/fsa.dart';
 import '../../core/models/grammar.dart';
+import '../../core/result.dart';
 import '../../data/services/file_operations_service.dart';
+import 'utils/platform_file_loader.dart';
 
 /// Panel for file operations (save/load/export)
 class FileOperationsPanel extends StatefulWidget {
@@ -23,6 +26,7 @@ class FileOperationsPanel extends StatefulWidget {
   final Grammar? grammar;
   final ValueChanged<FSA>? onAutomatonLoaded;
   final ValueChanged<Grammar>? onGrammarLoaded;
+  final FileOperationsService fileService;
 
   const FileOperationsPanel({
     super.key,
@@ -30,15 +34,22 @@ class FileOperationsPanel extends StatefulWidget {
     this.grammar,
     this.onAutomatonLoaded,
     this.onGrammarLoaded,
-  });
+    FileOperationsService? fileService,
+  }) : fileService = fileService ?? FileOperationsService();
 
   @override
   State<FileOperationsPanel> createState() => _FileOperationsPanelState();
 }
 
 class _FileOperationsPanelState extends State<FileOperationsPanel> {
-  final FileOperationsService _fileService = FileOperationsService();
+  late final FileOperationsService _fileService;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fileService = widget.fileService;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +74,7 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
                 runSpacing: 8,
                 children: [
                   _buildButton(
-                    'Save as JFLAP',
+                    kIsWeb ? 'Download JFLAP' : 'Save as JFLAP',
                     Icons.save,
                     () => _saveAutomatonAsJFLAP(),
                   ),
@@ -73,7 +84,7 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
                     () => _loadAutomatonFromJFLAP(),
                   ),
                   _buildButton(
-                    'Export SVG',
+                    kIsWeb ? 'Download SVG' : 'Export SVG',
                     Icons.image,
                     () => _exportAutomatonAsSVG(),
                   ),
@@ -91,7 +102,7 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
                 runSpacing: 8,
                 children: [
                   _buildButton(
-                    'Save as JFLAP',
+                    kIsWeb ? 'Download JFLAP' : 'Save as JFLAP',
                     Icons.save,
                     () => _saveGrammarAsJFLAP(),
                   ),
@@ -141,28 +152,44 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
 
   Future<void> _saveAutomatonAsJFLAP() async {
     if (widget.automaton == null) return;
-
     setState(() => _isLoading = true);
 
     try {
-      final result = await FilePicker.platform.saveFile(
-        dialogTitle: 'Save Automaton as JFLAP',
-        fileName: '${widget.automaton!.name}.jff',
-        type: FileType.custom,
-        allowedExtensions: ['jff'],
-      );
+      Result<String>? saveResult;
 
-      if (result != null) {
-        final saveResult = await _fileService.saveAutomatonToJFLAP(
+      if (kIsWeb) {
+        saveResult = await _fileService.saveAutomatonToJFLAP(
+          widget.automaton!,
+          '${widget.automaton!.name}.jff',
+        );
+      } else {
+        final result = await FilePicker.platform.saveFile(
+          dialogTitle: 'Save Automaton as JFLAP',
+          fileName: '${widget.automaton!.name}.jff',
+          type: FileType.custom,
+          allowedExtensions: ['jff'],
+        );
+
+        if (result == null) {
+          return;
+        }
+        saveResult = await _fileService.saveAutomatonToJFLAP(
           widget.automaton!,
           result,
         );
+      }
 
-        if (saveResult.isSuccess) {
-          _showSuccessMessage('Automaton saved successfully');
-        } else {
-          _showErrorMessage('Failed to save automaton: ${saveResult.error}');
-        }
+      if (saveResult == null) {
+        return;
+      }
+
+      if (saveResult.isSuccess) {
+        final successMessage = kIsWeb
+            ? 'Download started for ${saveResult.data ?? 'automaton.jff'}'
+            : 'Automaton saved successfully';
+        _showSuccessMessage(successMessage);
+      } else {
+        _showErrorMessage('Failed to save automaton: ${saveResult.error}');
       }
     } catch (e) {
       _showErrorMessage('Error saving automaton: $e');
@@ -179,11 +206,15 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
         type: FileType.custom,
         allowedExtensions: ['jff'],
         dialogTitle: 'Load JFLAP Automaton',
+        withData: true,
       );
 
       if (result != null && result.files.isNotEmpty) {
-        final filePath = result.files.first.path!;
-        final loadResult = await _fileService.loadAutomatonFromJFLAP(filePath);
+        final file = result.files.first;
+        final loadResult = await loadAutomatonFromPlatformFile(
+          _fileService,
+          file,
+        );
 
         if (loadResult.isSuccess) {
           widget.onAutomatonLoaded?.call(loadResult.data!);
@@ -203,25 +234,41 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
     if (widget.automaton == null) return;
     setState(() => _isLoading = true);
     try {
-      final result = await FilePicker.platform.saveFile(
-        dialogTitle: 'Export Automaton as SVG',
-        fileName: '${widget.automaton!.name}.svg',
-        type: FileType.custom,
-        allowedExtensions: ['svg'],
-      );
-      if (result != null) {
-        // Use legacy exporter path for FSA model
-        final exportResult = await _fileService.exportLegacyAutomatonToSVG(
+      Result<String>? exportResult;
+      if (kIsWeb) {
+        exportResult = await _fileService.exportLegacyAutomatonToSVG(
+          widget.automaton!,
+          '${widget.automaton!.name}.svg',
+        );
+      } else {
+        final result = await FilePicker.platform.saveFile(
+          dialogTitle: 'Export Automaton as SVG',
+          fileName: '${widget.automaton!.name}.svg',
+          type: FileType.custom,
+          allowedExtensions: ['svg'],
+        );
+        if (result == null) {
+          return;
+        }
+        exportResult = await _fileService.exportLegacyAutomatonToSVG(
           widget.automaton!,
           result,
         );
-        if (exportResult.isSuccess) {
-          _showSuccessMessage('Automaton exported successfully');
-        } else {
-          _showErrorMessage(
-            'Failed to export automaton: ${exportResult.error}',
-          );
-        }
+      }
+
+      if (exportResult == null) {
+        return;
+      }
+
+      if (exportResult.isSuccess) {
+        final successMessage = kIsWeb
+            ? 'Download started for ${exportResult.data ?? 'automaton.svg'}'
+            : 'Automaton exported successfully';
+        _showSuccessMessage(successMessage);
+      } else {
+        _showErrorMessage(
+          'Failed to export automaton: ${exportResult.error}',
+        );
       }
     } catch (e) {
       _showErrorMessage('Error exporting automaton: $e');
@@ -232,28 +279,45 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
 
   Future<void> _saveGrammarAsJFLAP() async {
     if (widget.grammar == null) return;
-
     setState(() => _isLoading = true);
 
     try {
-      final result = await FilePicker.platform.saveFile(
-        dialogTitle: 'Save Grammar as JFLAP',
-        fileName: '${widget.grammar!.name}.cfg',
-        type: FileType.custom,
-        allowedExtensions: ['cfg'],
-      );
+      Result<String>? saveResult;
 
-      if (result != null) {
-        final saveResult = await _fileService.saveGrammarToJFLAP(
+      if (kIsWeb) {
+        saveResult = await _fileService.saveGrammarToJFLAP(
+          widget.grammar!,
+          '${widget.grammar!.name}.cfg',
+        );
+      } else {
+        final result = await FilePicker.platform.saveFile(
+          dialogTitle: 'Save Grammar as JFLAP',
+          fileName: '${widget.grammar!.name}.cfg',
+          type: FileType.custom,
+          allowedExtensions: ['cfg'],
+        );
+
+        if (result == null) {
+          return;
+        }
+
+        saveResult = await _fileService.saveGrammarToJFLAP(
           widget.grammar!,
           result,
         );
+      }
 
-        if (saveResult.isSuccess) {
-          _showSuccessMessage('Grammar saved successfully');
-        } else {
-          _showErrorMessage('Failed to save grammar: ${saveResult.error}');
-        }
+      if (saveResult == null) {
+        return;
+      }
+
+      if (saveResult.isSuccess) {
+        final successMessage = kIsWeb
+            ? 'Download started for ${saveResult.data ?? 'grammar.cfg'}'
+            : 'Grammar saved successfully';
+        _showSuccessMessage(successMessage);
+      } else {
+        _showErrorMessage('Failed to save grammar: ${saveResult.error}');
       }
     } catch (e) {
       _showErrorMessage('Error saving grammar: $e');
@@ -270,11 +334,15 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
         type: FileType.custom,
         allowedExtensions: ['cfg'],
         dialogTitle: 'Load JFLAP Grammar',
+        withData: true,
       );
 
       if (result != null && result.files.isNotEmpty) {
-        final filePath = result.files.first.path!;
-        final loadResult = await _fileService.loadGrammarFromJFLAP(filePath);
+        final file = result.files.first;
+        final loadResult = await loadGrammarFromPlatformFile(
+          _fileService,
+          file,
+        );
 
         if (loadResult.isSuccess) {
           widget.onGrammarLoaded?.call(loadResult.data!);

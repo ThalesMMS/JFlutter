@@ -93,20 +93,21 @@ This document records deviations from reference implementations and regression t
 **JFlutter Implementation**: `lib/core/algorithms/automata/fa_algorithms.dart`
 
 #### Deviation Details
-- **Type**: Performance Optimization
-- **Description**: JFlutter uses iterative state set construction instead of recursive approach
-- **Rationale**: Better memory management for large automata on mobile devices
-- **Impact**: Equivalent results, 30% memory reduction
-- **Validation Status**: ✅ Validated - All test cases pass
+- **Type**: Performance optimisation and safety guard
+- **Description**: JFlutter performs iterative subset construction and stops when the DFA would exceed **1 000** generated states, returning a failure that surfaces `Error converting NFA to DFA: Exceeded maximum number of DFA states (1000) during subset construction.`
+- **Rationale**: Mobile targets repeatedly exhausted memory and froze the UI once the subset queue grew past ~1 000 states during conversion runs; clamping the expansion prevents runaway allocations while keeping classroom-size automata convertible on-device.
+- **Functional Impact vs. Reference**: `References/automata-main/automata/fa/dfa.py` continues expanding without a cap, while `lib/core/algorithms/nfa_to_dfa_converter.dart` aborts and reports the guard once the limit is reached. Consumers must trim NFAs or offload to desktop tooling when they expect an exponential explosion of states.
+- **Validation Status**: ✅ Guard behaviour covered by `test/unit/core/automata/fa_algorithms_test.dart` (fails fast after 1 000 states) alongside the existing NFA→DFA regression suite.
 
 #### Test Results
 ```
 Test Suite: NFA to DFA Conversion
 - Basic NFA (3 states): ✅ PASS
-- Complex NFA (15 states): ✅ PASS  
+- Complex NFA (15 states): ✅ PASS
 - Epsilon transitions: ✅ PASS
 - Empty language: ✅ PASS
 - Universal language: ✅ PASS
+- Guard exhaustion: ✅ FAIL with descriptive error once the 1 000-state ceiling is reached
 - Performance: 30% memory reduction vs reference
 ```
 
@@ -202,6 +203,22 @@ Test Suite: PDA Simulation
 
 #### Validation Status
 - ✅ All TM suites pass: acceptance, rejection, looping/timeout handling, transformation workflows, limits, performance, and error scenarios.
+
+### 6. DFA Finiteness Detection Helper
+
+**Reference**: `References/automata-main/automata/fa/dfa.py` (`DFA.maximum_word_length`)
+**JFlutter Implementation**: `lib/core/algorithms/automata/fa_algorithms.dart` (`FAAlgorithms.isFinite`)
+
+#### Deviation Details
+- **Type**: Algorithmic implementation swap
+- **Description**: The reference calls into `networkx` to compute the longest path in the subgraph of states that are both reachable from the start state and can reach an accepting state, caching the result (and returning `None` when a cycle implies an infinite language). JFlutter instead does a direct cycle detection inside that subgraph using the collections already available in core.
+
+#### Rationale
+- Avoids bringing the reference's cached word/count machinery and third-party graph dependency into the Dart runtime, keeping the helper stateless and light enough for mobile executions.
+- Encodes the same theoretical criterion—"no accepting-reachable cycle"—but avoids stale cache scenarios when automata are edited interactively.
+
+#### Validation Status
+- ✅ Covered by `test/unit/core/automata/fa_algorithms_test.dart` (finite empty-language DFA, finite acyclic DFA, and infinite-cycle DFA cases) plus manual parity checks against the Python helper.
 
 ## Regression Test Results
 
@@ -375,7 +392,7 @@ Mobile Performance (iPhone 17 Pro Max):
 ## Conclusion
 
 ### Summary of Deviations
-- **Total Deviations**: 5 documented deviations from Phase 1
+- **Total Deviations**: 6 documented deviations from Phase 1
 - **Phase 2 Objectives**: 6 objectives completed successfully
 - **Type**: Performance optimizations, mobile enhancements, feature additions, quality improvements
 - **Impact**: All deviations maintain algorithmic equivalence while enhancing user experience

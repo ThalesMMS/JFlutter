@@ -104,6 +104,7 @@ void main() {
         );
         expect(jffXml, isNotEmpty);
         expect(jffXml, contains('ε')); // Should contain epsilon symbol
+        expect(jffXml, contains('<read>ε</read>'));
 
         // Parse back from JFF format
         final parseResult = JFLAPXMLParser.parseJFLAPFile(jffXml);
@@ -112,6 +113,26 @@ void main() {
           true,
           reason: 'Epsilon NFA JFF parsing should succeed',
         );
+
+        final roundTripResult =
+            serializationService.deserializeAutomatonFromJflap(jffXml);
+        expect(
+          roundTripResult.isSuccess,
+          true,
+          reason: 'Deserializing exported JFF should succeed',
+        );
+
+        if (roundTripResult.isSuccess) {
+          final data = roundTripResult.data!;
+          final transitions =
+              data['transitions'] as Map<String, List<String>>? ??
+                  <String, List<String>>{};
+
+          expect(transitions.containsKey('q0|ε'), isTrue);
+          final epsilonTargets = transitions['q0|ε'];
+          expect(epsilonTargets, isNotNull);
+          expect(epsilonTargets!, contains('q1'));
+        }
       });
 
       test('JFF handles malformed XML gracefully', () {
@@ -309,6 +330,10 @@ void main() {
           height: 300,
         );
         expect(smallSvg, contains('viewBox="0 0 400 300"'));
+        expect(
+          smallSvg,
+          contains('<svg width="400px" height="300px"'),
+        );
 
         final largeSvg = SvgExporter.exportAutomatonToSvg(
           testAutomaton,
@@ -316,6 +341,25 @@ void main() {
           height: 900,
         );
         expect(largeSvg, contains('viewBox="0 0 1200 900"'));
+        expect(
+          largeSvg,
+          contains('<svg width="1200px" height="900px"'),
+        );
+      });
+
+      test('SVG export formats dimensions without trailing decimals', () {
+        final testAutomaton = _createTestDFA();
+
+        final svg = SvgExporter.exportAutomatonToSvg(
+          testAutomaton,
+          width: 640.0,
+          height: 480.0,
+        );
+
+        expect(svg, contains('<svg width="640px" height="480px"'));
+        expect(svg, contains('viewBox="0 0 640 480"'));
+        expect(svg, isNot(contains('640.0px')));
+        expect(svg, isNot(contains('480.0px')));
       });
 
       test('SVG export includes proper styling', () {
@@ -345,6 +389,21 @@ void main() {
         expect(svg, contains('<circle')); // States
         expect(svg, contains('<line')); // Transitions
         expect(svg, contains('<text')); // Labels
+      });
+
+      test('Turing machine SVG export formats dimensions consistently', () {
+        final tm = _createTestTuringMachine();
+
+        final svg = SvgExporter.exportTuringMachineToSvg(
+          tm,
+          width: 512.0,
+          height: 256.0,
+        );
+
+        expect(svg, contains('<svg width="512px" height="256px"'));
+        expect(svg, contains('viewBox="0 0 512 256"'));
+        expect(svg, isNot(contains('512.0px')));
+        expect(svg, isNot(contains('256.0px')));
       });
     });
 
@@ -770,7 +829,7 @@ AutomatonEntity _createEpsilonNFA() {
       ),
     ],
     transitions: {
-      'q0': ['q1'],
+      'q0|ε': ['q1'],
     },
     initialId: 'q0',
     nextId: 2,
@@ -915,6 +974,50 @@ AutomatonEntity _createLargeAutomaton() {
     initialId: 'q0',
     nextId: 50,
     type: AutomatonType.dfa,
+  );
+}
+
+TuringMachineEntity _createTestTuringMachine() {
+  return const TuringMachineEntity(
+    id: 'test_tm',
+    name: 'Test TM',
+    inputAlphabet: {'0', '1'},
+    tapeAlphabet: {'0', '1', '□'},
+    blankSymbol: '□',
+    states: [
+      TuringStateEntity(
+        id: 'q0',
+        name: 'q0',
+        isInitial: true,
+      ),
+      TuringStateEntity(
+        id: 'q1',
+        name: 'q1',
+        isAccepting: true,
+      ),
+    ],
+    transitions: [
+      TuringTransitionEntity(
+        id: 't0',
+        fromStateId: 'q0',
+        toStateId: 'q1',
+        readSymbol: '0',
+        writeSymbol: '1',
+        moveDirection: TuringMoveDirection.right,
+      ),
+      TuringTransitionEntity(
+        id: 't1',
+        fromStateId: 'q1',
+        toStateId: 'q1',
+        readSymbol: '1',
+        writeSymbol: '1',
+        moveDirection: TuringMoveDirection.stay,
+      ),
+    ],
+    initialStateId: 'q0',
+    acceptingStateIds: {'q1'},
+    rejectingStateIds: const <String>{},
+    nextStateIndex: 2,
   );
 }
 

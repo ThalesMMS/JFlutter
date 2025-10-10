@@ -51,18 +51,27 @@ class SerializationService {
             final transitions =
                 automatonData['transitions'] as Map<String, dynamic>? ?? {};
             for (final transition in transitions.entries) {
-              final from = transition.key;
+              final keyParts = transition.key.split('|');
+              final fromState =
+                  keyParts.isNotEmpty ? keyParts.first.trim() : transition.key;
+              final rawSymbol = keyParts.length > 1
+                  ? keyParts.sublist(1).join('|')
+                  : null;
+              final readSymbol = _normalizeTransitionSymbol(rawSymbol);
               final targets = transition.value as List<dynamic>? ?? [];
+
               for (final target in targets) {
+                final toStateId =
+                    target is String ? target : target?.toString() ?? '';
+                if (fromState.isEmpty || toStateId.isEmpty) {
+                  continue;
+                }
                 builder.element(
                   'transition',
                   nest: () {
-                    builder.element('from', nest: from);
-                    builder.element('to', nest: target as String);
-                    builder.element(
-                      'read',
-                      nest: '',
-                    ); // JFLAP uses empty string for epsilon
+                    builder.element('from', nest: fromState);
+                    builder.element('to', nest: toStateId);
+                    builder.element('read', nest: readSymbol);
                   },
                 );
               }
@@ -109,11 +118,17 @@ class SerializationService {
       for (final transitionElement in automatonElement.findAllElements(
         'transition',
       )) {
-        final from = transitionElement.findElements('from').first.innerText;
-        final to = transitionElement.findElements('to').first.innerText;
+        final from =
+            transitionElement.findElements('from').first.innerText.trim();
+        final to = transitionElement.findElements('to').first.innerText.trim();
+        final readElements = transitionElement.findElements('read');
+        final rawSymbol =
+            readElements.isEmpty ? null : readElements.first.innerText;
+        final symbol = _normalizeTransitionSymbol(rawSymbol);
+        final key = '$from|$symbol';
 
-        transitions.putIfAbsent(from, () => []);
-        transitions[from]!.add(to);
+        transitions.putIfAbsent(key, () => <String>[]);
+        transitions[key]!.add(to);
       }
 
       final automatonData = {
@@ -127,6 +142,20 @@ class SerializationService {
     } catch (e) {
       return Failure('Failed to deserialize JFLAP automaton: $e');
     }
+  }
+
+  String _normalizeTransitionSymbol(String? symbol) {
+    final trimmed = symbol?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      return 'ε';
+    }
+
+    final lower = trimmed.toLowerCase();
+    if (lower == 'ε' || lower == 'lambda' || lower == 'λ' || lower == 'epsilon') {
+      return 'ε';
+    }
+
+    return trimmed;
   }
 
   /// Serializes automaton to JSON format

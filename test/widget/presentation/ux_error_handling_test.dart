@@ -12,6 +12,10 @@
 //
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:jflutter/presentation/widgets/error_banner.dart';
+import 'package:jflutter/presentation/widgets/import_error_dialog.dart';
+import 'package:jflutter/presentation/widgets/retry_button.dart';
+
 void main() {
   group('Error Banner Widget Tests', () {
     testWidgets('ErrorBanner displays error message correctly', (tester) async {
@@ -22,6 +26,7 @@ void main() {
           home: Scaffold(
             body: ErrorBanner(
               message: errorMessage,
+              severity: ErrorSeverity.error,
               onRetry: () {},
               onDismiss: () {},
             ),
@@ -31,7 +36,7 @@ void main() {
 
       expect(find.byType(ErrorBanner), findsOneWidget);
       expect(find.text(errorMessage), findsOneWidget);
-      expect(find.byIcon(Icons.error), findsOneWidget);
+      expect(find.byIcon(Icons.error_outline), findsOneWidget);
     });
 
     testWidgets('ErrorBanner shows retry button when onRetry is provided', (
@@ -44,6 +49,7 @@ void main() {
           home: Scaffold(
             body: ErrorBanner(
               message: 'Test error',
+              severity: ErrorSeverity.error,
               onRetry: () {
                 retryCalled = true;
               },
@@ -74,7 +80,8 @@ void main() {
           home: Scaffold(
             body: ErrorBanner(
               message: 'Test error',
-              onRetry: null,
+              severity: ErrorSeverity.warning,
+              showRetryButton: false,
               onDismiss: () {
                 dismissCalled = true;
               },
@@ -105,6 +112,7 @@ void main() {
           home: Scaffold(
             body: ErrorBanner(
               message: 'Test error',
+              severity: ErrorSeverity.error,
               onRetry: () {
                 retryCalled = true;
               },
@@ -148,6 +156,7 @@ void main() {
             home: Scaffold(
               body: ErrorBanner(
                 message: errorType,
+                severity: ErrorSeverity.error,
                 onRetry: () {},
                 onDismiss: () {},
               ),
@@ -167,9 +176,10 @@ void main() {
     testWidgets('ImportErrorDialog displays error details correctly', (
       tester,
     ) async {
-      const errorTitle = 'Import Failed';
-      const errorMessage = 'The selected file is not a valid automaton file.';
-      const errorDetails = 'Expected JSON format but found XML.';
+      const fileName = 'automaton.jff';
+      const detailedMessage =
+          'The selected file is not a valid automaton file.';
+      const technicalDetails = 'Expected JSON format but found XML.';
 
       await tester.pumpWidget(
         MaterialApp(
@@ -180,9 +190,11 @@ void main() {
                   showDialog(
                     context: context,
                     builder: (context) => ImportErrorDialog(
-                      title: errorTitle,
-                      message: errorMessage,
-                      details: errorDetails,
+                      fileName: fileName,
+                      errorType: ImportErrorType.malformedJFF,
+                      detailedMessage: detailedMessage,
+                      technicalDetails: technicalDetails,
+                      showTechnicalDetails: true,
                       onRetry: () {},
                       onCancel: () {},
                     ),
@@ -200,9 +212,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(ImportErrorDialog), findsOneWidget);
-      expect(find.text(errorTitle), findsOneWidget);
-      expect(find.text(errorMessage), findsOneWidget);
-      expect(find.text(errorDetails), findsOneWidget);
+      expect(find.text('Malformed JFLAP File'), findsOneWidget);
+      expect(find.text(fileName), findsOneWidget);
+      expect(find.text(detailedMessage), findsOneWidget);
+      expect(find.text(technicalDetails), findsOneWidget);
     });
 
     testWidgets('ImportErrorDialog handles retry action', (tester) async {
@@ -217,9 +230,9 @@ void main() {
                   showDialog(
                     context: context,
                     builder: (context) => ImportErrorDialog(
-                      title: 'Import Failed',
-                      message: 'Test error',
-                      details: 'Test details',
+                      fileName: 'failing.json',
+                      errorType: ImportErrorType.invalidJSON,
+                      detailedMessage: 'The selected file is not valid JSON.',
                       onRetry: () {
                         retryCalled = true;
                         Navigator.of(context).pop();
@@ -258,9 +271,9 @@ void main() {
                   showDialog(
                     context: context,
                     builder: (context) => ImportErrorDialog(
-                      title: 'Import Failed',
-                      message: 'Test error',
-                      details: 'Test details',
+                      fileName: 'invalid.jff',
+                      errorType: ImportErrorType.unsupportedVersion,
+                      detailedMessage: 'This file targets an unsupported version.',
                       onRetry: () {},
                       onCancel: () {
                         cancelCalled = true;
@@ -290,30 +303,30 @@ void main() {
     testWidgets('ImportErrorDialog handles different error scenarios', (
       tester,
     ) async {
-      final errorScenarios = [
+      final scenarios = [
         {
-          'title': 'Invalid File Format',
-          'message': 'The file is not in a supported format.',
-          'details': 'Supported formats: .jff, .json, .xml',
+          'type': ImportErrorType.malformedJFF,
+          'title': 'Malformed JFLAP File',
+          'message': 'XML parsing failed during import.',
         },
         {
-          'title': 'File Too Large',
-          'message': 'The file exceeds the maximum size limit.',
-          'details': 'Maximum file size: 10MB',
+          'type': ImportErrorType.invalidJSON,
+          'title': 'Invalid JSON Structure',
+          'message': 'Unable to parse JSON payload.',
         },
         {
-          'title': 'Network Error',
-          'message': 'Failed to download the file.',
-          'details': 'Please check your internet connection.',
+          'type': ImportErrorType.corruptedData,
+          'title': 'Corrupted Data Detected',
+          'message': 'Checksum verification failed.',
         },
         {
-          'title': 'Permission Denied',
-          'message': 'Access to the file was denied.',
-          'details': 'Please check file permissions.',
+          'type': ImportErrorType.invalidAutomaton,
+          'title': 'Invalid Automaton Definition',
+          'message': 'Automaton contains disconnected states.',
         },
       ];
 
-      for (final scenario in errorScenarios) {
+      for (final scenario in scenarios) {
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
@@ -323,9 +336,9 @@ void main() {
                     showDialog(
                       context: context,
                       builder: (context) => ImportErrorDialog(
-                        title: scenario['title']!,
-                        message: scenario['message']!,
-                        details: scenario['details']!,
+                        fileName: 'error_file.jff',
+                        errorType: scenario['type']! as ImportErrorType,
+                        detailedMessage: scenario['message']! as String,
                         onRetry: () {},
                         onCancel: () {},
                       ),
@@ -342,9 +355,8 @@ void main() {
         await tester.tap(find.text('Show Error'));
         await tester.pumpAndSettle();
 
-        expect(find.text(scenario['title']!), findsOneWidget);
-        expect(find.text(scenario['message']!), findsOneWidget);
-        expect(find.text(scenario['details']!), findsOneWidget);
+        expect(find.text(scenario['title']! as String), findsOneWidget);
+        expect(find.text(scenario['message']! as String), findsOneWidget);
 
         // Close dialog
         await tester.tap(find.text('Cancel'));
@@ -389,7 +401,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: RetryButton(
-              text: 'Try Again',
+              label: 'Try Again',
               onPressed: () {
                 retryCalled = true;
               },
@@ -416,7 +428,10 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: RetryButton(
-              onPressed: null, // Disabled
+              onPressed: () {
+                retryCalled = true;
+              },
+              isEnabled: false,
             ),
           ),
         ),
@@ -444,28 +459,20 @@ void main() {
       expect(find.text('Retrying...'), findsOneWidget);
     });
 
-    testWidgets('RetryButton handles different button styles', (tester) async {
-      final buttonStyles = [
-        ButtonStyle.primary,
-        ButtonStyle.secondary,
-        ButtonStyle.outline,
-        ButtonStyle.text,
-      ];
-
-      for (final style in buttonStyles) {
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: RetryButton(onPressed: () {}, style: style),
+    testWidgets('RetryButton renders custom icon when provided', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: RetryButton(
+              onPressed: () {},
+              icon: Icons.sync,
             ),
           ),
-        );
+        ),
+      );
 
-        expect(find.byType(RetryButton), findsOneWidget);
-        expect(find.text('Retry'), findsOneWidget);
-
-        await tester.pumpWidget(Container()); // Clear for next iteration
-      }
+      expect(find.byType(RetryButton), findsOneWidget);
+      expect(find.byIcon(Icons.sync), findsOneWidget);
     });
   });
 
@@ -486,6 +493,7 @@ void main() {
                     if (hasError)
                       ErrorBanner(
                         message: errorMessage,
+                        severity: ErrorSeverity.error,
                         onRetry: () {
                           setState(() {
                             hasError = false;
@@ -533,6 +541,7 @@ void main() {
                     if (hasError)
                       ErrorBanner(
                         message: errorMessage,
+                        severity: ErrorSeverity.error,
                         onRetry: () {
                           setState(() {
                             hasError = false;
@@ -578,6 +587,7 @@ void main() {
                   .map(
                     (error) => ErrorBanner(
                       message: error,
+                      severity: ErrorSeverity.error,
                       onRetry: () {},
                       onDismiss: () {},
                     ),
@@ -624,6 +634,7 @@ void main() {
                     if (importAttempted && currentError.isNotEmpty)
                       ErrorBanner(
                         message: currentError,
+                        severity: ErrorSeverity.error,
                         onRetry: () {
                           setState(() {
                             retryAttempted = true;
@@ -691,6 +702,7 @@ void main() {
                     if (importAttempted && currentError.isNotEmpty)
                       ErrorBanner(
                         message: currentError,
+                        severity: ErrorSeverity.error,
                         onRetry: () {},
                         onDismiss: () {
                           setState(() {
@@ -726,128 +738,3 @@ void main() {
     });
   });
 }
-
-/// Mock widgets for testing (these would be actual implementations)
-
-class ErrorBanner extends StatelessWidget {
-  final String message;
-  final VoidCallback? onRetry;
-  final VoidCallback? onDismiss;
-
-  const ErrorBanner({
-    super.key,
-    required this.message,
-    this.onRetry,
-    this.onDismiss,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.red.shade50,
-        border: Border.all(color: Colors.red.shade200),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.error, color: Colors.red.shade600),
-          const SizedBox(width: 8),
-          Expanded(child: Text(message)),
-          if (onRetry != null) ...[
-            const SizedBox(width: 8),
-            TextButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh, size: 16),
-              label: const Text('Retry'),
-            ),
-          ],
-          if (onDismiss != null) ...[
-            const SizedBox(width: 8),
-            TextButton.icon(
-              onPressed: onDismiss,
-              icon: const Icon(Icons.close, size: 16),
-              label: const Text('Dismiss'),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class ImportErrorDialog extends StatelessWidget {
-  final String title;
-  final String message;
-  final String details;
-  final VoidCallback onRetry;
-  final VoidCallback onCancel;
-
-  const ImportErrorDialog({
-    super.key,
-    required this.title,
-    required this.message,
-    required this.details,
-    required this.onRetry,
-    required this.onCancel,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(title),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(message),
-          const SizedBox(height: 8),
-          Text(details, style: Theme.of(context).textTheme.bodySmall),
-        ],
-      ),
-      actions: [
-        TextButton(onPressed: onCancel, child: const Text('Cancel')),
-        ElevatedButton(onPressed: onRetry, child: const Text('Retry')),
-      ],
-    );
-  }
-}
-
-class RetryButton extends StatelessWidget {
-  final String text;
-  final VoidCallback? onPressed;
-  final bool isLoading;
-  final ButtonStyle style;
-
-  const RetryButton({
-    super.key,
-    this.text = 'Retry',
-    this.onPressed,
-    this.isLoading = false,
-    this.style = ButtonStyle.primary,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (isLoading) {
-      return ElevatedButton.icon(
-        onPressed: null,
-        icon: const SizedBox(
-          width: 16,
-          height: 16,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-        label: const Text('Retrying...'),
-      );
-    }
-
-    return ElevatedButton.icon(
-      onPressed: onPressed,
-      icon: const Icon(Icons.refresh, size: 16),
-      label: Text(text),
-    );
-  }
-}
-
-enum ButtonStyle { primary, secondary, outline, text }

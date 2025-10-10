@@ -251,9 +251,7 @@ class GraphViewCanvasController
       ..levelSeparation = 160
       ..bendPointShape = CurvedBendPointShape(curveLength: 40);
 
-    final layoutGraph = Graph()
-      ..isTree = graph.isTree
-      ..isDirected = graph.isDirected;
+    final layoutGraph = Graph()..isTree = graph.isTree;
 
     final nodeMap = <String, Node>{};
     for (final entry in nodesCache.entries) {

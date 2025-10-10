@@ -193,6 +193,33 @@ void main() {
     expect(controller.resetCount, 1);
   });
 
+  testWidgets('renders Sugiyama layout button when handler provided', (
+    tester,
+  ) async {
+    var layoutInvoked = false;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: GraphViewCanvasToolbar(
+            controller: controller,
+            onAddState: () {},
+            onSugiyamaLayout: () => layoutInvoked = true,
+            layout: GraphViewCanvasToolbarLayout.desktop,
+          ),
+        ),
+      ),
+    );
+
+    final finder = find.widgetWithIcon(IconButton, Icons.account_tree);
+    expect(finder, findsOneWidget);
+
+    await tester.tap(finder);
+    await tester.pump();
+
+    expect(layoutInvoked, isTrue);
+  });
+
   testWidgets('renders undo and redo buttons respecting history state', (
     tester,
   ) async {

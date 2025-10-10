@@ -44,11 +44,12 @@ class MobileAutomatonControls extends StatelessWidget {
     this.isAlgorithmsEnabled = true,
     this.onMetrics,
     this.isMetricsEnabled = true,
+    this.onSugiyamaLayout,
   }) : assert(
          !(enableToolSelection && showSelectionTool) || onSelectTool != null,
          'onSelectTool must be provided when the selection tool is visible.',
        ),
-       assert(
+        assert(
          !enableToolSelection || onAddTransition != null,
          'onAddTransition must be provided when tool selection is enabled.',
        );
@@ -73,6 +74,7 @@ class MobileAutomatonControls extends StatelessWidget {
   final bool isAlgorithmsEnabled;
   final VoidCallback? onMetrics;
   final bool isMetricsEnabled;
+  final VoidCallback? onSugiyamaLayout;
 
   @override
   Widget build(BuildContext context) {
@@ -133,6 +135,12 @@ class MobileAutomatonControls extends StatelessWidget {
           isSelected:
               enableToolSelection &&
               activeTool == AutomatonCanvasTool.transition,
+        ),
+      if (onSugiyamaLayout != null)
+        _ControlAction(
+          icon: Icons.account_tree,
+          tooltip: 'Sugiyama layout',
+          onPressed: onSugiyamaLayout,
         ),
       _ControlAction(
         icon: Icons.fit_screen,

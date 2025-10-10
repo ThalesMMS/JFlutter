@@ -98,6 +98,33 @@ void main() {
     expect(find.text('Metrics'), findsNothing);
   });
 
+  testWidgets('exposes Sugiyama layout shortcut when callback provided', (
+    tester,
+  ) async {
+    var invoked = false;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: MobileAutomatonControls(
+            onAddState: () {},
+            onFitToContent: () {},
+            onResetView: () {},
+            onSugiyamaLayout: () => invoked = true,
+          ),
+        ),
+      ),
+    );
+
+    final finder = find.byTooltip('Sugiyama layout');
+    expect(finder, findsOneWidget);
+
+    await tester.tap(finder);
+    await tester.pump();
+
+    expect(invoked, isTrue);
+  });
+
   testWidgets('shows canvas tool toggles when enabled', (tester) async {
     var addStateInvoked = false;
     var transitionInvoked = false;

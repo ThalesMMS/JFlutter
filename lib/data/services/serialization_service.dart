@@ -9,6 +9,7 @@
 import 'dart:convert';
 import 'package:xml/xml.dart';
 import '../../core/result.dart';
+import '../../core/utils/epsilon_utils.dart';
 import '../models/automaton_dto.dart';
 
 /// Service for serializing and deserializing automata
@@ -145,17 +146,7 @@ class SerializationService {
   }
 
   String _normalizeTransitionSymbol(String? symbol) {
-    final trimmed = symbol?.trim() ?? '';
-    if (trimmed.isEmpty) {
-      return 'ε';
-    }
-
-    final lower = trimmed.toLowerCase();
-    if (lower == 'ε' || lower == 'lambda' || lower == 'λ' || lower == 'epsilon') {
-      return 'ε';
-    }
-
-    return trimmed;
+    return normalizeToEpsilon(symbol);
   }
 
   /// Serializes automaton to JSON format

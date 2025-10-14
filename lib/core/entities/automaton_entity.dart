@@ -10,6 +10,8 @@
 //  Thales Matheus Mendonça Santos - October 2025
 //
 
+import '../utils/epsilon_utils.dart';
+
 /// Core domain entity representing an automaton
 /// This is the central business entity that all other layers depend on
 class AutomatonEntity {
@@ -56,9 +58,20 @@ class AutomatonEntity {
   }
 
   /// Checks if the automaton has lambda transitions
-  bool get hasLambda =>
-      alphabet.contains('λ') ||
-      transitions.keys.any((key) => key.endsWith('|λ'));
+  bool get hasLambda {
+    if (alphabet.any(isEpsilonSymbol)) {
+      return true;
+    }
+
+    for (final key in transitions.keys) {
+      final symbol = extractSymbolFromTransitionKey(key);
+      if (isEpsilonSymbol(symbol)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
 
   /// Gets a state by its ID
   StateEntity? getState(String stateId) {

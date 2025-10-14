@@ -135,6 +135,60 @@ void main() {
         }
       });
 
+      test('JFF normalizes epsilon aliases consistently', () {
+        const aliasAutomaton = AutomatonEntity(
+          id: 'alias_nfa',
+          name: 'Alias NFA',
+          alphabet: {'a'},
+          states: [
+            StateEntity(
+              id: 'q0',
+              name: 'q0',
+              x: 0.0,
+              y: 0.0,
+              isInitial: true,
+              isFinal: false,
+            ),
+            StateEntity(
+              id: 'q1',
+              name: 'q1',
+              x: 120.0,
+              y: 0.0,
+              isInitial: false,
+              isFinal: true,
+            ),
+          ],
+          transitions: {
+            'q0|λ': ['q1'],
+            'q1|vazio': ['q0'],
+            'q0|': ['q0'],
+          },
+          initialId: 'q0',
+          nextId: 2,
+          type: AutomatonType.nfa,
+        );
+
+        expect(aliasAutomaton.hasLambda, isTrue);
+
+        final aliasData = _convertEntityToData(aliasAutomaton);
+        final jffXml = serializationService.serializeAutomatonToJflap(aliasData);
+
+        final epsilonTags =
+            RegExp('<read>ε</read>').allMatches(jffXml).length;
+        expect(epsilonTags, equals(3));
+
+        final roundTrip = serializationService.deserializeAutomatonFromJflap(
+          jffXml,
+        );
+        expect(roundTrip.isSuccess, isTrue);
+
+        final transitions =
+            roundTrip.data!['transitions'] as Map<String, List<String>>;
+        expect(transitions.keys, containsAll(['q0|ε', 'q1|ε']));
+        expect(transitions['q0|ε'], containsAll(['q1', 'q0']));
+        expect(transitions['q1|ε'], contains('q0'));
+      });
+
       test('JFF handles malformed XML gracefully', () {
         const malformedXml = '<invalid>xml</invalid>';
 
@@ -163,6 +217,33 @@ void main() {
           true,
           reason: 'Incomplete but valid XML should parse',
         );
+      });
+
+      test('Empty automaton round-trip remains stable across formats', () {
+        final emptyAutomaton = _createEmptyAutomaton();
+        final automatonData = _convertEntityToData(emptyAutomaton);
+
+        final jffXml = serializationService.serializeAutomatonToJflap(
+          automatonData,
+        );
+        expect(jffXml, contains('<automaton>'));
+
+        final jffRoundTrip =
+            serializationService.deserializeAutomatonFromJflap(jffXml);
+        expect(jffRoundTrip.isSuccess, isTrue);
+        final jffTransitions = jffRoundTrip.data!['transitions']
+            as Map<String, List<String>>;
+        expect(jffTransitions, isEmpty);
+
+        final jsonString = serializationService.serializeAutomatonToJson(
+          automatonData,
+        );
+        final jsonRoundTrip =
+            serializationService.deserializeAutomatonFromJson(jsonString);
+        expect(jsonRoundTrip.isSuccess, isTrue);
+        final jsonData = jsonRoundTrip.data!;
+        expect(jsonData['states'], isEmpty);
+        expect((jsonData['transitions'] as Map).isEmpty, isTrue);
       });
     });
 
@@ -374,6 +455,46 @@ void main() {
         expect(svg, contains('class='));
         expect(svg, contains('font-family'));
         expect(svg, contains('text-anchor'));
+      });
+
+      test('SVG export renders placeholders for empty automatons', () {
+        final emptyAutomaton = _createEmptyAutomaton();
+
+        final svg = SvgExporter.exportAutomatonToSvg(emptyAutomaton);
+
+        expect(svg, contains('No states defined'));
+        expect(svg, contains('<svg'));
+        expect(svg, isNot(contains('<circle')));
+      });
+
+      test('SVG export draws self-loop transitions without degenerating', () {
+        const loopAutomaton = AutomatonEntity(
+          id: 'loop',
+          name: 'Loop',
+          alphabet: {'a'},
+          states: [
+            StateEntity(
+              id: 'q0',
+              name: 'q0',
+              x: 0.0,
+              y: 0.0,
+              isInitial: true,
+              isFinal: true,
+            ),
+          ],
+          transitions: {
+            'q0|λ': ['q0'],
+          },
+          initialId: 'q0',
+          nextId: 1,
+          type: AutomatonType.nfa,
+        );
+
+        final svg = SvgExporter.exportAutomatonToSvg(loopAutomaton);
+
+        expect(svg, contains('<path'));
+        expect(svg, contains('>ε<'));
+        expect(svg, isNot(contains('NaN')));
       });
 
       test('SVG export handles complex automatons', () {

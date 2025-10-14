@@ -26,6 +26,7 @@ import '../../core/models/fsa.dart';
 import '../../core/models/fsa_transition.dart';
 import '../../core/models/state.dart';
 import '../../core/models/transition.dart';
+import '../../core/utils/epsilon_utils.dart';
 import '../../core/constants/automaton_canvas.dart';
 import '../../core/models/grammar.dart';
 import '../../core/models/simulation_result.dart' as sim_result;
@@ -641,14 +642,13 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     String label,
   ) {
     final trimmed = label.trim();
-    if (trimmed.isEmpty) {
-      return (symbols: <String>{}, lambdaSymbol: 'ε');
+    if (isEpsilonSymbol(trimmed)) {
+      return (symbols: <String>{}, lambdaSymbol: kEpsilonSymbol);
     }
 
     final normalized = trimmed.replaceAll(RegExp(r'\s+'), '');
-    final lower = normalized.toLowerCase();
-    if (lower == 'ε' || lower == 'lambda' || lower == 'λ') {
-      return (symbols: <String>{}, lambdaSymbol: 'ε');
+    if (isEpsilonSymbol(normalized)) {
+      return (symbols: <String>{}, lambdaSymbol: kEpsilonSymbol);
     }
 
     final parts = normalized
@@ -664,19 +664,26 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     ({Set<String> symbols, String? lambdaSymbol}) metadata,
   ) {
     if (metadata.lambdaSymbol != null) {
-      return 'ε';
+      return kEpsilonSymbol;
     }
 
     final collapsed = rawLabel.trim().replaceAll(RegExp(r'\s+'), '');
     if (collapsed.isNotEmpty) {
-      return collapsed;
+      final normalized = normalizeToEpsilon(collapsed);
+      return normalized;
     }
 
     if (metadata.symbols.isNotEmpty) {
-      return metadata.symbols.join(',');
+      final parts = metadata.symbols
+          .map((symbol) => normalizeToEpsilon(symbol))
+          .where((symbol) => symbol.isNotEmpty && !isEpsilonSymbol(symbol))
+          .toList();
+      if (parts.isNotEmpty) {
+        return parts.join(',');
+      }
     }
 
-    return 'ε';
+    return kEpsilonSymbol;
   }
 
   Vector2 _defaultLoopControlPoint(State state) {
@@ -695,9 +702,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
         .where(
           (symbol) =>
               symbol.isNotEmpty &&
-              symbol != 'ε' &&
-              symbol != 'λ' &&
-              symbol.toLowerCase() != 'lambda',
+              !isEpsilonSymbol(symbol),
         )
         .toSet();
     return {...alphabet, ...filtered};

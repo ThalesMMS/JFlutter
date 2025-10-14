@@ -13,6 +13,7 @@ import '../../core/models/fsa.dart';
 import '../../core/models/state.dart';
 import '../../core/models/fsa_transition.dart';
 import '../../core/result.dart';
+import '../../core/utils/epsilon_utils.dart';
 import '../../core/models/automaton.dart' as core_models;
 
 /// Service for automaton CRUD operations
@@ -55,18 +56,18 @@ class AutomatonService {
         );
       }
 
-      final symbol = transitionData.symbol;
-      final isLambda =
-          symbol == 'λ' || symbol == 'ε' || symbol.toLowerCase() == 'lambda';
+      final normalizedSymbol = normalizeToEpsilon(transitionData.symbol);
+      final isLambda = isEpsilonSymbol(normalizedSymbol);
 
       transitions.add(
         FSATransition(
           id: 't${id}_$transitionIndex',
           fromState: fromState,
           toState: toState,
-          label: symbol,
-          inputSymbols: isLambda ? <String>{} : {symbol},
-          lambdaSymbol: isLambda ? symbol : null,
+          label: normalizedSymbol,
+          inputSymbols:
+              isLambda ? <String>{} : {normalizedSymbol},
+          lambdaSymbol: isLambda ? kEpsilonSymbol : null,
         ),
       );
       transitionIndex++;

@@ -15,6 +15,7 @@ import '../../core/models/fsa.dart';
 import '../../core/models/fsa_transition.dart';
 import '../../core/models/state.dart';
 import '../../core/result.dart';
+import '../../core/utils/epsilon_utils.dart';
 import '../../core/repositories/automaton_repository.dart';
 import '../services/automaton_service.dart';
 
@@ -143,12 +144,11 @@ class AutomatonRepositoryImpl implements AutomatonRepository {
 
     final transitions = <TransitionData>[];
     automaton.transitions.forEach((key, destinations) {
-      final parts = key.split('|');
-      if (parts.length != 2) {
+      final fromStateId = extractStateIdFromTransitionKey(key);
+      if (fromStateId.isEmpty) {
         return;
       }
-      final fromStateId = parts[0];
-      final symbol = parts[1];
+      final symbol = normalizeToEpsilon(extractSymbolFromTransitionKey(key));
       for (final toStateId in destinations) {
         transitions.add(
           TransitionData(
@@ -190,9 +190,11 @@ class AutomatonRepositoryImpl implements AutomatonRepository {
     for (final transition in automaton.transitions.whereType<FSATransition>()) {
       final symbols = <String>{};
       if (transition.lambdaSymbol != null) {
-        symbols.add(transition.lambdaSymbol!);
+        symbols.add(normalizeToEpsilon(transition.lambdaSymbol));
       } else {
-        symbols.addAll(transition.inputSymbols);
+        for (final symbol in transition.inputSymbols) {
+          symbols.add(normalizeToEpsilon(symbol));
+        }
       }
 
       for (final symbol in symbols) {
@@ -240,19 +242,14 @@ class AutomatonRepositoryImpl implements AutomatonRepository {
     var transitionIndex = 0;
 
     automaton.transitions.forEach((key, destinations) {
-      final parts = key.split('|');
-      if (parts.length != 2) {
-        return;
-      }
-
-      final fromState = stateById[parts[0]];
+      final fromId = extractStateIdFromTransitionKey(key);
+      final fromState = stateById[fromId];
       if (fromState == null) {
-        throw StateError('Unknown from state ${parts[0]}');
+        throw StateError('Unknown from state $fromId');
       }
 
-      final symbol = parts[1];
-      final isLambda =
-          symbol == 'λ' || symbol == 'ε' || symbol.toLowerCase() == 'lambda';
+      final symbol = normalizeToEpsilon(extractSymbolFromTransitionKey(key));
+      final isLambda = isEpsilonSymbol(symbol);
 
       for (final destination in destinations) {
         final toState = stateById[destination];
@@ -267,7 +264,7 @@ class AutomatonRepositoryImpl implements AutomatonRepository {
             toState: toState,
             label: symbol,
             inputSymbols: isLambda ? <String>{} : {symbol},
-            lambdaSymbol: isLambda ? symbol : null,
+            lambdaSymbol: isLambda ? kEpsilonSymbol : null,
           ),
         );
         transitionIndex++;

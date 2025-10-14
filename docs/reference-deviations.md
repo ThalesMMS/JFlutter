@@ -389,6 +389,12 @@ Mobile Performance (iPhone 17 Pro Max):
 - Memory Usage: < 50MB ✅
 ```
 
+### 6. Integration Test Execution (2024-11-24)
+
+- **Command**: `flutter test test/integration/io/`
+- **Status**: ⚠️ Not executed – the `flutter` binary is unavailable in this container (`bash: command not found: flutter`).
+- **Impact**: Interoperability regression verification must run in CI or a local environment with Flutter installed.
+
 ## Conclusion
 
 ### Summary of Deviations

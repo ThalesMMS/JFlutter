@@ -161,28 +161,28 @@ flutter run -d chrome
 
 ### ✅ Section 4: Error Handling Widgets
 
-#### 4.1 ErrorBanner - Import Error
-- [ ] Attempt to import invalid file: `invalid_automaton.jff`
-- [ ] Verify ErrorBanner appears:
+#### 4.1 File Operations Panel - Recoverable Failure
+- [ ] Trigger a recoverable error (ex.: export automaton to read-only path)
+- [ ] Verify inline ErrorBanner appears inside the panel:
   - Red background (#FFEBEE)
   - Error icon (left)
-  - Message: "Import failed: malformed JFLAP file"
-  - Retry button (right)
-  - Dismiss button (X icon, far right)
-- [ ] Verify banner inline (above canvas or in panel)
-- [ ] Verify user context preserved (stays on same screen)
+  - Message explaining the failure (no modal shown)
+  - Retry button (uses global RetryButton styling)
+  - Dismiss button (X icon)
+- [ ] Tap "Retry" and confirm the operation is attempted again
+- [ ] After success, verify the banner flips to informational blue with the success copy
 
-#### 4.2 ImportErrorDialog
-- [ ] Tap "Retry" on error banner
-- [ ] Verify ImportErrorDialog appears:
+#### 4.2 ImportErrorDialog - Critical Failure
+- [ ] Attempt to import malformed file: `invalid_automaton.jff`
+- [ ] Verify ImportErrorDialog opens immediately (no inline banner):
   - Modal (blocks background)
-  - Title: "Import Error"
-  - Filename shown
-  - Detailed message
-  - Cancel and Retry buttons
+  - Title contextualised to the failure type
+  - Filename shown in chip
+  - Detailed recovery guidance + technical details toggle
+  - Cancel and Retry buttons wired to RetryButton styling
 - [ ] Tap outside dialog (verify not dismissible)
-- [ ] Tap Cancel
-- [ ] Verify dialog closes, returns to previous state
+- [ ] Tap Cancel → dialog closes and panel clears retry state
+- [ ] Re-open and tap Retry → dialog closes, picker reopens, and success banner is rendered after a valid file
 
 #### 4.3 RetryButton States
 - [ ] Find standalone RetryButton (if any, or use in banner)

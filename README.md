@@ -1,8 +1,6 @@
-# JFlutter (Work in progress)
+# JFlutter
 
-A modern, mobile-first Flutter application for learning formal language theory and automata
-
-JFlutter is a port of the classic JFLAP educational tool, rebuilt from the ground up with Flutter for modern mobile devices. It provides an interactive, touch-optimized interface for creating, editing, and simulating finite automata, context-free grammars, and other formal language constructs.
+JFlutter is a Flutter reimplementation of the JFLAP educational tool. It offers an interactive, touch-first workspace for creating, analysing, and simulating finite automata, grammars, and Turing machines on mobile and desktop platforms.
 
 <p align="center">
   <img src="./screenshots/screenshot1.png" alt="Automaton canvas screenshot" width="300" />
@@ -13,73 +11,30 @@ JFlutter is a port of the classic JFLAP educational tool, rebuilt from the groun
 
 ## Project Status
 
-**Status:** Work in Progress
+**Status:** Work in Progress – the core learning workflows are available while UI polish and advanced visualisations are still being built.
 
-## Key Features
+## Highlights
 
-### Core Functionality
-- **Interactive Automaton Creation** - Touch-optimized canvas for drawing states and transitions
-- **Real-time Simulation** - Test strings against automata with step-by-step visualization
-- **Algorithm Integration** - 13 core algorithms fully integrated with the UI
-- **Mobile-First Design** - Optimized for smartphones and tablets
-- **Modern UI/UX** - Material 3 design with dark/light theme support
-- **Responsive Layout** - All screens adapt to different screen sizes
+### Learning tools
+- Touch-friendly canvas for creating and editing automata
+- Step-by-step simulators for finite automata, pushdown automata, and Turing machines
+- Grammar editors with validation and conversion helpers
+- Inline explanations and diagnostics to support classroom use
 
-### Implemented Algorithms
-- **NFA to DFA Conversion** - Convert non-deterministic to deterministic automata
-- **DFA Minimization** - Minimize deterministic finite automata
-- **Regex to NFA** - Convert regular expressions to automata
-- **FA to Regex** - Convert automata to regular expressions
-- **Automaton Simulation** - Real-time string testing and validation
-- **Grammar Parsing** - Context-free grammar analysis
-- **Pumping Lemma** - Interactive educational game
-- **PDA Simulation** - Pushdown automata simulation
-- **Turing Machine** - Single-tape Turing machine simulation
+### Algorithms shipped in the app
+- Conversions between NFA, DFA, and regular expressions
+- DFA minimisation and automaton simulation traces
+- Grammar analysis utilities and the Pumping Lemma training game
+- Single-tape Turing machine construction and execution
 
-### Mobile Experience
-- **Touch Gestures** - Pinch-to-zoom, pan, tap-to-add states
-- **Responsive Layout** - Adapts to different screen sizes
-- **Collapsible Panels** - Space-efficient mobile interface
-- **Bottom Navigation** - Mobile-optimized navigation
-- **Visual Feedback** - Real-time algorithm execution feedback
-- **Overflow Prevention** - All UI elements handle small screens gracefully
+### User experience and performance
+- Material 3 interface with light and dark themes
+- Adaptive layouts for phones, tablets, desktops, and the web
+- Optimised canvas rendering (viewport culling, level-of-detail drawing, and highlight tracing)
+- Persistent trace management across simulators and resilient import/export flows for JFLAP XML, JSON, and SVG
 
-### Performance & Optimization
-- **Level-of-Detail Rendering** - Optimized canvas rendering for large automata
-- **Viewport Culling** - Only renders visible elements for better performance
-- **Trace Visualization** - Enhanced simulation trace rendering with step indicators
-- **Memory Management** - Efficient state management and resource disposal
-- **Responsive Canvas** - Smooth interactions at 60fps on mobile devices
-
-### Enhanced Features
-- **Unified Trace Management** - Seamless trace persistence across all simulator types
-- **Comprehensive Diagnostics** - Detailed automaton validation with actionable suggestions
-- **Import/Export Validation** - Robust validation for JFLAP XML, JSON, and SVG formats
-- **Error Handling** - User-friendly error messages with technical diagnostics
-- **Cross-Format Compatibility** - Ensures data integrity across different file formats
-- **GraphView Canvas** - Native Flutter graph editor with synchronized Riverpod state and highlight channels
-
-### Examples v1 - Offline Examples Library
-
-**Complete offline educational library** with curated examples for automata theory learning:
-
-#### **Finite Automata (DFA/NFA)**
-- `afd_ends_with_a.json` - DFA accepting strings ending with 'a'
-- `afd_binary_divisible_by_3.json` - DFA for binary numbers divisible by 3
-- `afd_parity_AB.json` - DFA for even/odd A-B patterns
-- `afn_lambda_a_or_ab.json` - NFA with ε-transitions for 'a' or 'ab'
-
-#### **Context-Free Grammars (CFG)**
-- `glc_palindrome.json` - Grammar generating palindromes
-- `glc_balanced_parentheses.json` - Grammar for balanced parentheses
-
-#### **Pushdown Automata (PDA)**
-- `apda_palindrome.json` - PDA accepting palindromes
-
-#### **Turing Machines (TM)**
-- `tm_binary_to_unary.json` - TM converting binary to unary representation
-
-Assets are bundled in `jflutter_js/examples/` via `pubspec.yaml`, ensuring offline access per the "Examples v1" contract.
+### Offline examples
+The repository bundles ready-to-use examples covering DFAs, NFAs, CFGs, PDAs, and Turing Machines in `jflutter_js/examples/`. They are declared in `pubspec.yaml` so the material is available without a network connection.
 
 ## Architecture
 
@@ -184,55 +139,47 @@ export JFLUTTER_KEY_PASSWORD="$JFLUTTER_KEY_PASSWORD"
 ```
 
 ### Platform Support
-- **Android** - Full support with touch optimization
-- **iOS** - Full support with native feel (tested on iPhone 17 Pro Max)
-- **Web** - Responsive web interface
-- **Desktop** - Windows, macOS, Linux support
+- **Android** – Primary target with touch-first workflows
+- **iOS** – Daily-driver support, verified on current iOS devices
+- **Web** – Responsive build suitable for classroom demos
+- **Desktop** – Windows, macOS, and Linux builds share the same UI
 
 ## How to Use
 
 ### Creating an Automaton
-1. Open the **FSA** tab
-2. Tap the **"+"** button to add states
-3. Tap the **arrow** button to add transitions
-4. Double tap on states to edit them or mark them as initial/final
-5. Use the **algorithms panel** to convert or minimize
+1. Open the **FSA** workspace.
+2. Add states with the **+** action and drag them into place.
+3. Choose the arrow tool to connect states with transitions.
+4. Double tap to edit state names or toggle initial/final markers.
+5. Run conversions or minimisation from the algorithms panel.
 
 ### Testing Strings
-1. Enter a string in the **simulation panel**
-2. Tap **"Simulate"** to test acceptance
-3. View **step-by-step execution** results
-4. See **visual feedback** on the canvas
-
-### Using Algorithms
-1. **Regex to NFA**: Enter a regular expression
-2. **NFA to DFA**: Convert non-deterministic automata
-3. **Minimize DFA**: Reduce state count
-4. **FA to Regex**: Generate regular expressions
+1. Enter a string in the simulation panel.
+2. Select **Simulate** to execute the automaton.
+3. Inspect the trace output or canvas highlights to understand each step.
 
 ### Working with Grammars
-1. Open the **Grammar** tab
-2. Enter grammar name and start symbol
-3. Add production rules using the editor
-4. Test strings with the simulation panel
-5. Use algorithms to convert between formats
+1. Open the **Grammar** workspace.
+2. Provide the grammar metadata and production rules.
+3. Use the available algorithms to convert or analyse the grammar.
+4. Test sample strings directly within the editor.
 
 ## Testing
 
 ### Test Suite Overview
 
-Run the automated suites with `flutter test` (requires Flutter 3.24.0+ and Dart 3.8.0+). The repository is split into targeted groups that mirror the product architecture:
+Run `flutter test` (Flutter 3.24.0+ / Dart 3.8.0+) to execute the full suite. Tests are organised to mirror the architecture:
 
-- **Algorithm validation** – `test/unit/` covers DFA/NFA conversions, grammar analysis, and other core engines (for example `test/unit/dfa_validation_test.dart`, `test/unit/regex_validation_test.dart`).
-- **Core services** – `test/core/services/simulation_highlight_service_test.dart` exercises the highlight broadcasting service that powers the simulator overlays.
-- **Canvas GraphView features** – `test/features/canvas/graphview/` validates controllers, mappers, and models for the interactive canvas (`graphview_canvas_controller_test.dart`, `graphview_pda_canvas_controller_test.dart`, etc.).
-- **Integration suites** – `test/integration/io/interoperability_roundtrip_test.dart` and `test/integration/io/examples_roundtrip_test.dart` assert round-trip parity across JFLAP XML, JSON, SVG, and the offline examples bundle.
-- **Widget harnesses** – `test/widget/presentation/` focuses on UI integration. GraphView toolbars, canvas widgets, and mobile controls are exercised in files such as `graphview_canvas_toolbar_test.dart`, `automaton_graphview_canvas_test.dart`, and `mobile_automaton_controls_test.dart`. The UX error-handling harness (`ux_error_handling_test.dart`) ships with inline mock implementations of the banner/dialog/retry widgets until the production versions land.
+- **Algorithm validation** – `test/unit/` keeps DFA/NFA conversions, grammar analysis, and regex tooling aligned with the references.
+- **Core services** – `test/core/services/` verifies utilities such as the simulation highlight broadcaster.
+- **Canvas features** – `test/features/canvas/graphview/` exercises controllers, mappers, and models for the interactive canvas.
+- **Integration** – `test/integration/io/` performs round-trips across JFLAP XML, JSON, SVG, and the offline example bundle.
+- **Widget harnesses** – `test/widget/presentation/` drives UI flows while production widgets are completed.
 
 ### Placeholder and Pending Work
 
-- `test/widget/presentation/visualizations_test.dart` intentionally fails (`expect(false, isTrue)`) to track the pending golden-test pipeline for advanced visualizations.
-- The inline `ErrorBanner`, `ImportErrorDialog`, and `RetryButton` classes embedded in `test/widget/presentation/ux_error_handling_test.dart` act as placeholders. Replace them with the production widgets once the design system components are implemented.
+- `test/widget/presentation/visualizations_test.dart` intentionally fails to track the future golden-test pipeline.
+- Temporary widget stubs live in `test/widget/presentation/ux_error_handling_test.dart` until the design-system components ship.
 
 #### Running Tests
 
@@ -285,25 +232,16 @@ The `References/` directory contains authoritative implementations used as the s
 ## Project Overview
 
 ### Completed Features
-- **Core Algorithms** - 13 algorithms fully implemented and tested
-- **Data Models** - Complete model library with mobile extensions
-- **UI Components** - Modern, responsive interface
-- **State Management** - Riverpod-based reactive state
-- **Mobile Optimization** - Touch-first design
-- **Error Handling** - Comprehensive error management
-- **Testing** - Full test coverage for core functionality
-- **Responsive Design** - All screens adapt to different screen sizes
-- **Grammar Editor** - Visual context-free grammar editing
-- **Turing Machine Canvas** - Interactive TM interface
-- **Pumping Lemma Game** - Interactive educational game
-- **Settings Screen** - Comprehensive configuration options
+- 13 algorithms covering DFA/NFA conversions, regex tooling, and grammar processing
+- Riverpod-based state management with a clean-architecture layout
+- Responsive UI components for automata, grammars, PDAs, and Turing machines
+- Offline example library and import/export flows for JFLAP interoperability
 
 ### Future Enhancements
-- **Advanced Visualizations** - More sophisticated algorithm step visualization
-- **Enhanced Export Options** - Additional file format support
-- **Tutorial System** - Guided learning experience
-- **Advanced Grammar Features** - More grammar analysis tools
-- **PDA and Turing Machine Canvas** - Pushdown automata visualization improvements
+- Richer visual explanations for algorithm steps
+- Expanded export formats and sharing workflows
+- Guided tutorials for first-time learners
+- Additional grammar analysis tooling and PDA/TM canvas refinements
 
 ## Development
 
@@ -324,9 +262,9 @@ The `References/` directory contains authoritative implementations used as the s
 Try to maintain compatibility. Avoid changing core automata/grammar/pda/turing machine algorithms without discussing it first.
 
 ### Development Guidelines
-- Optimize for **mobile devices**
-- Write **comprehensive tests**
-- Write **documentation**
+- Optimise for mobile devices and accessibility
+- Keep tests and documentation current
+- Coordinate changes to shared algorithms before altering behaviour
 
 ## Educational Value
 

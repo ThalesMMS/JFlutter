@@ -593,15 +593,18 @@ class _FSAPageState extends ConsumerState<FSAPage> {
                 controller: scrollController,
                 child: Padding(
                   padding: const EdgeInsets.all(16),
-                  child: SimulationPanel(
-                    onSimulate: (inputString) => ref
-                        .read(automatonProvider.notifier)
-                        .simulateAutomaton(inputString),
-                    simulationResult: ref
-                        .read(automatonProvider)
-                        .simulationResult,
-                    regexResult: ref.read(automatonProvider).regexResult,
-                    highlightService: _highlightService,
+                  child: Consumer(
+                    builder: (context, sheetRef, _) {
+                      final sheetState = sheetRef.watch(automatonProvider);
+                      return SimulationPanel(
+                        onSimulate: (inputString) => sheetRef
+                            .read(automatonProvider.notifier)
+                            .simulateAutomaton(inputString),
+                        simulationResult: sheetState.simulationResult,
+                        regexResult: sheetState.regexResult,
+                        highlightService: _highlightService,
+                      );
+                    },
                   ),
                 ),
               );

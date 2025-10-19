@@ -1,4 +1,0 @@
-1) check automate function for completion-done
-2) add check to prevent floating action button from being pressed when the user has selected the automate option-done
-3) Add UI- done
-4) Add UI to select time gap -

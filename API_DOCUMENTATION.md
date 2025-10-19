@@ -88,28 +88,56 @@ class FSATransition extends Transition {
 
 ```dart
 class AutomatonSimulator {
-  // Simulate automaton with input string
-  static Result<SimulationResult> simulate(
+  // Simulate a DFA with input string (deterministic, no epsilon)
+  static Future<Result<SimulationResult>> simulateDFA(
     FSA automaton,
     String inputString, {
     bool stepByStep = false,
     Duration timeout = const Duration(seconds: 5),
   });
-  
+
+  // Simulate an NFA, handling nondeterminism and epsilon transitions
+  static Future<Result<SimulationResult>> simulateNFA(
+    FSA automaton,
+    String inputString, {
+    bool stepByStep = false,
+    Duration timeout = const Duration(seconds: 5),
+  });
+
+  // Generic entry point that dispatches to DFA/NFA simulators
+  static Future<Result<SimulationResult>> simulate(
+    FSA automaton,
+    String inputString, {
+    bool stepByStep = false,
+    Duration timeout = const Duration(seconds: 5),
+  });
+
   // Test if automaton accepts string
-  static Result<bool> accepts(FSA automaton, String inputString);
-  
+  static Future<Result<bool>> accepts(FSA automaton, String inputString);
+
   // Test if automaton rejects string
-  static Result<bool> rejects(FSA automaton, String inputString);
-  
+  static Future<Result<bool>> rejects(FSA automaton, String inputString);
+
   // Find accepted strings
-  static Result<Set<String>> findAcceptedStrings(
+  static Future<Result<Set<String>>> findAcceptedStrings(
+    FSA automaton,
+    int maxLength, {
+    int maxResults = 100,
+  });
+
+  // Find rejected strings
+  static Future<Result<Set<String>>> findRejectedStrings(
     FSA automaton,
     int maxLength, {
     int maxResults = 100,
   });
 }
 ```
+
+> **Async usage**: All `AutomatonSimulator` methods return `Future<Result<…>>`. Use
+> `await` (or equivalent Future handling) and inspect the resulting `Result`
+> before dereferencing `data`; asynchronous failures surface via the `error`
+> payload just like synchronous validation issues.
 
 ### NFAToDFAConverter
 
@@ -134,7 +162,10 @@ class DFAMinimizer {
 ```dart
 class RegexToNFAConverter {
   // Convert regular expression to NFA
-  static Result<FSA> convert(String regex);
+  static Result<FSA> convert(
+    String regex, {
+    Set<String>? contextAlphabet,
+  });
 }
 ```
 
@@ -324,7 +355,8 @@ the provider state in sync.
 
 ### AlgorithmPanel
 
-Control panel for algorithm operations:
+Control panel for algorithm operations. The constructor wires together all
+available automaton transformations and optional status feedback:
 
 ```dart
 class AlgorithmPanel extends StatefulWidget {
@@ -333,8 +365,62 @@ class AlgorithmPanel extends StatefulWidget {
   final VoidCallback? onClear;
   final Function(String)? onRegexToNfa;
   final VoidCallback? onFaToRegex;
+  final VoidCallback? onRemoveLambda;
+  final VoidCallback? onCompleteDfa;
+  final VoidCallback? onComplementDfa;
+  final Future<void> Function(FSA other)? onUnionDfa;
+  final Future<void> Function(FSA other)? onIntersectionDfa;
+  final Future<void> Function(FSA other)? onDifferenceDfa;
+  final VoidCallback? onPrefixClosure;
+  final VoidCallback? onSuffixClosure;
+  final VoidCallback? onFsaToGrammar;
+  final VoidCallback? onAutoLayout;
+  final Future<void> Function(FSA other)? onCompareEquivalence;
+  final bool? equivalenceResult;
+  final String? equivalenceDetails;
+  final FileOperationsService fileService;
+
+  const AlgorithmPanel({
+    super.key,
+    this.onNfaToDfa,
+    this.onMinimizeDfa,
+    this.onClear,
+    this.onRegexToNfa,
+    this.onFaToRegex,
+    this.onRemoveLambda,
+    this.onCompleteDfa,
+    this.onComplementDfa,
+    this.onUnionDfa,
+    this.onIntersectionDfa,
+    this.onDifferenceDfa,
+    this.onPrefixClosure,
+    this.onSuffixClosure,
+    this.onFsaToGrammar,
+    this.onAutoLayout,
+    this.onCompareEquivalence,
+    this.equivalenceResult,
+    this.equivalenceDetails,
+    FileOperationsService? fileService,
+  }) : fileService = fileService ?? FileOperationsService();
 }
 ```
+
+- `onNfaToDfa`, `onMinimizeDfa`, `onRemoveLambda`, `onCompleteDfa`,
+  `onComplementDfa`, `onPrefixClosure`, `onSuffixClosure`, `onFsaToGrammar`,
+  and `onAutoLayout` trigger single-automaton transformations or layout
+  adjustments.
+- `onRegexToNfa` and `onFaToRegex` bridge regular-expression conversions in
+  either direction; regex input is captured via the built-in text controller.
+- `onUnionDfa`, `onIntersectionDfa`, and `onDifferenceDfa` load a secondary
+  automaton through `fileService` and pass it to the provided async callback for
+  binary language operations.
+- `onCompareEquivalence` performs DFA equivalence checks against a loaded
+  partner automaton; the optional `equivalenceResult` flag and
+  `equivalenceDetails` string drive the textual feedback area.
+- `onClear` provides a host-controlled reset hook for wiping the current
+  automaton and related UI state.
+- Supplying a custom `fileService` enables dependency injection during tests or
+  offline scenarios; by default, a new `FileOperationsService` is created.
 
 ### SimulationPanel
 
@@ -345,8 +431,23 @@ class SimulationPanel extends StatefulWidget {
   final Function(String) onSimulate;
   final SimulationResult? simulationResult;
   final String? regexResult;
+  final SimulationHighlightService highlightService;
+
+  const SimulationPanel({
+    super.key,
+    required this.onSimulate,
+    this.simulationResult,
+    this.regexResult,
+    SimulationHighlightService? highlightService,
+  }) : highlightService = highlightService ?? SimulationHighlightService();
 }
 ```
+
+The panel pipes simulation outcomes into step-by-step playback. Toggling the
+"step by step" mode caches `SimulationStep` snapshots, while
+`SimulationHighlightService` mirrors the current step on the canvas. Each time a
+new simulation starts or the mode changes, the panel clears highlights so the
+canvas stays in sync with the trace controls.
 
 ## Data Services
 

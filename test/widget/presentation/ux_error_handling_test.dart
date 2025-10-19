@@ -10,11 +10,23 @@
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
+import 'dart:collection';
+import 'dart:math' as math;
+import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:jflutter/core/models/fsa.dart';
+import 'package:jflutter/core/models/fsa_transition.dart';
+import 'package:jflutter/core/models/state.dart' as automaton_state;
+import 'package:jflutter/core/result.dart';
+import 'package:jflutter/data/services/file_operations_service.dart';
 import 'package:jflutter/presentation/widgets/error_banner.dart';
+import 'package:jflutter/presentation/widgets/file_operations_panel.dart';
 import 'package:jflutter/presentation/widgets/import_error_dialog.dart';
 import 'package:jflutter/presentation/widgets/retry_button.dart';
+import 'package:vector_math/vector_math_64.dart';
 
 void main() {
   group('Error Banner Widget Tests', () {
@@ -737,4 +749,227 @@ void main() {
       expect(find.text('Error dismissed'), findsOneWidget);
     });
   });
+
+  group('File Operations Panel error handling', () {
+    late _FakeFilePicker fakeFilePicker;
+
+    setUp(() {
+      fakeFilePicker = _FakeFilePicker();
+      FilePicker.platform = fakeFilePicker;
+    });
+
+    testWidgets('displays inline error banner for recoverable export failure',
+        (tester) async {
+      final automaton = _buildSampleAutomaton();
+      final service = _StubFileOperationsService(
+        exportResponses: Queue.of([
+          const Failure<String>('Failed to export automaton: disk is full'),
+          const Success<String>('export.svg'),
+        ]),
+      );
+
+      fakeFilePicker
+        ..enqueueSaveResult('automaton_export.svg')
+        ..enqueueSaveResult('automaton_export.svg');
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: FileOperationsPanel(
+              automaton: automaton,
+              fileService: service,
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Export SVG'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ErrorBanner), findsOneWidget);
+      expect(
+        find.textContaining('Failed to export automaton'),
+        findsOneWidget,
+      );
+      expect(service.exportCallCount, equals(1));
+
+      await tester.tap(find.text('Retry'));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(service.exportCallCount, equals(2));
+      expect(find.text('Automaton exported successfully'), findsOneWidget);
+      expect(find.text('Retry'), findsNothing);
+    });
+
+    testWidgets('opens critical import dialog and retries load operation',
+        (tester) async {
+      final automaton = _buildSampleAutomaton();
+      bool loaded = false;
+      final service = _StubFileOperationsService(
+        loadAutomatonResponses: Queue.of([
+          const Failure<FSA>(
+            'Failed to load automaton from provided data: XmlParserException: Unexpected end tag',
+          ),
+          Success<FSA>(automaton),
+        ]),
+      );
+
+      final brokenFile = PlatformFile(
+        name: 'broken.jff',
+        size: 3,
+        bytes: Uint8List.fromList([0, 1, 2]),
+      );
+      final fixedFile = PlatformFile(
+        name: 'fixed.jff',
+        size: 3,
+        bytes: Uint8List.fromList([0, 1, 2]),
+      );
+
+      fakeFilePicker
+        ..enqueuePickResult(FilePickerResult([brokenFile]))
+        ..enqueuePickResult(FilePickerResult([fixedFile]));
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: FileOperationsPanel(
+              automaton: automaton,
+              onAutomatonLoaded: (_) => loaded = true,
+              fileService: service,
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Load JFLAP'));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ImportErrorDialog), findsOneWidget);
+      expect(service.loadAutomatonCallCount, equals(1));
+
+      await tester.tap(find.text('Retry'));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(service.loadAutomatonCallCount, equals(2));
+      expect(loaded, isTrue);
+      expect(find.byType(ImportErrorDialog), findsNothing);
+      expect(find.text('Automaton loaded successfully'), findsOneWidget);
+    });
+  });
+}
+
+FSA _buildSampleAutomaton() {
+  final state = automaton_state.State(
+    id: 'q0',
+    label: 'q0',
+    position: Vector2.zero(),
+    isInitial: true,
+  );
+
+  return FSA(
+    id: 'sample',
+    name: 'Sample',
+    states: {state},
+    transitions: const <FSATransition>{},
+    alphabet: const <String>{'a'},
+    initialState: state,
+    acceptingStates: {state},
+    created: DateTime.utc(2024, 1, 1),
+    modified: DateTime.utc(2024, 1, 1),
+    bounds: const math.Rectangle<double>(0, 0, 400, 300),
+    zoomLevel: 1,
+    panOffset: Vector2.zero(),
+  );
+}
+
+class _StubFileOperationsService extends FileOperationsService {
+  _StubFileOperationsService({
+    Queue<Result<String>>? exportResponses,
+    Queue<Result<FSA>>? loadAutomatonResponses,
+  })  : exportResponses = exportResponses ?? Queue<Result<String>>(),
+        loadAutomatonResponses =
+            loadAutomatonResponses ?? Queue<Result<FSA>>();
+
+  final Queue<Result<String>> exportResponses;
+  final Queue<Result<FSA>> loadAutomatonResponses;
+  int exportCallCount = 0;
+  int loadAutomatonCallCount = 0;
+
+  @override
+  Future<StringResult> exportLegacyAutomatonToSVG(
+    FSA automaton,
+    String filePath,
+  ) async {
+    exportCallCount++;
+    if (exportResponses.isEmpty) {
+      return const Failure<String>('No export response configured');
+    }
+    return exportResponses.removeFirst();
+  }
+
+  @override
+  Future<Result<FSA>> loadAutomatonFromBytes(Uint8List bytes) async {
+    loadAutomatonCallCount++;
+    if (loadAutomatonResponses.isEmpty) {
+      return const Failure<FSA>('No load response configured');
+    }
+    return loadAutomatonResponses.removeFirst();
+  }
+}
+
+class _FakeFilePicker extends FilePicker {
+  _FakeFilePicker()
+      : _pickResults = Queue<FilePickerResult?>(),
+        _saveResults = Queue<String?>();
+
+  final Queue<FilePickerResult?> _pickResults;
+  final Queue<String?> _saveResults;
+
+  void enqueuePickResult(FilePickerResult? result) {
+    _pickResults.add(result);
+  }
+
+  void enqueueSaveResult(String? result) {
+    _saveResults.add(result);
+  }
+
+  @override
+  Future<FilePickerResult?> pickFiles({
+    String? dialogTitle,
+    String? initialDirectory,
+    FileType type = FileType.any,
+    List<String>? allowedExtensions,
+    Function(FilePickerStatus p1)? onFileLoading,
+    bool allowCompression = true,
+    int compressionQuality = 30,
+    bool allowMultiple = false,
+    bool withData = false,
+    bool withReadStream = false,
+    bool lockParentWindow = false,
+    bool readSequential = false,
+  }) async {
+    if (_pickResults.isEmpty) {
+      return null;
+    }
+    return _pickResults.removeFirst();
+  }
+
+  @override
+  Future<String?> saveFile({
+    String? dialogTitle,
+    String? fileName,
+    String? initialDirectory,
+    FileType type = FileType.any,
+    List<String>? allowedExtensions,
+    Uint8List? bytes,
+    bool lockParentWindow = false,
+  }) async {
+    if (_saveResults.isEmpty) {
+      return null;
+    }
+    return _saveResults.removeFirst();
+  }
 }

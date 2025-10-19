@@ -555,7 +555,7 @@ void main() {
         expect(svg, contains('<?xml'));
         expect(svg, contains('<svg'));
         expect(svg, contains('</svg>'));
-        expect(svg, contains('viewBox="0 0 800.0 600.0"'));
+        expect(svg, contains('viewBox="0 0 800 600"'));
 
         // Tape layout
         expect(svg, contains('<g class="tape">'));
@@ -563,13 +563,13 @@ void main() {
         expect(
           svg,
           contains(
-            '<text x="112.0" y="102.0" class="tape-symbol" fill="#000000">a</text>',
+            '<text x="112" y="102" class="tape-symbol" fill="#000000">a</text>',
           ),
         );
         expect(
           svg,
           contains(
-            '<text x="432.0" y="102.0" class="tape-symbol" fill="#000000">_</text>',
+            '<text x="432" y="102" class="tape-symbol" fill="#000000">_</text>',
           ),
         );
 
@@ -578,7 +578,7 @@ void main() {
         expect(
           svg,
           contains(
-            'points="420.0 70.0, 444.0 70.0, 432.0 54.0"',
+            'points="420 70, 444 70, 432 54"',
           ),
         );
 
@@ -647,6 +647,7 @@ void main() {
         // Verify options are applied
         expect(svg, contains('Test with Options')); // Title included
         expect(svg, contains('class="title"')); // Title styling
+        expect(svg, contains('No states defined'));
       });
 
       test('SVG export handles different sizes correctly', () {
@@ -692,19 +693,41 @@ void main() {
         // Both should be valid SVG
         expect(smallSvg, contains('<?xml'));
         expect(largeSvg, contains('<?xml'));
+        expect(smallSvg, contains('No states defined'));
+        expect(largeSvg, contains('No states defined'));
       });
 
       test('SVG export handles complex automata correctly', () {
         final svg = SvgExporter.exportAutomatonToSvg(
           // Mock automaton entity for testing
           const AutomatonEntity(
-            id: 'test',
-            name: 'Test',
-            alphabet: {'a'},
-            states: <StateEntity>[],
-            transitions: <String, List<String>>{},
+            id: 'complex',
+            name: 'Complex',
+            alphabet: {'a', 'b'},
+            states: [
+              StateEntity(
+                id: 'q0',
+                name: 'q0',
+                x: 0.0,
+                y: 0.0,
+                isInitial: true,
+                isFinal: false,
+              ),
+              StateEntity(
+                id: 'q1',
+                name: 'q1',
+                x: 120.0,
+                y: 60.0,
+                isInitial: false,
+                isFinal: true,
+              ),
+            ],
+            transitions: {
+              'q0|a': ['q1'],
+              'q1|ε': ['q1'],
+            },
             initialId: 'q0',
-            nextId: 0,
+            nextId: 2,
             type: AutomatonType.nfa,
           ),
         );
@@ -713,6 +736,7 @@ void main() {
         expect(svg, contains('<circle')); // Multiple states
         expect(svg, contains('<line')); // Multiple transitions
         expect(svg, contains('<text')); // Labels
+        expect(svg, contains('>ε<'));
 
         // Should still be valid SVG
         expect(svg, contains('<?xml'));
@@ -741,6 +765,7 @@ void main() {
         // Should still produce valid SVG structure even with zero size
         expect(zeroSizeSvg, contains('<?xml'));
         expect(zeroSizeSvg, contains('<svg'));
+        expect(zeroSizeSvg, contains('No states defined'));
 
         // Test with very large size
         final largeSizeSvg = SvgExporter.exportAutomatonToSvg(
@@ -760,6 +785,7 @@ void main() {
         );
 
         expect(largeSizeSvg, contains('viewBox="0 0 10000 10000"'));
+        expect(largeSizeSvg, contains('No states defined'));
       });
 
       test('SVG export includes proper styling and markers', () {
@@ -788,6 +814,7 @@ void main() {
         expect(svg, contains('text-anchor'));
         expect(svg, contains('fill='));
         expect(svg, contains('stroke='));
+        expect(svg, contains('No states defined'));
       });
     });
   });

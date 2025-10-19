@@ -17,6 +17,7 @@ import 'package:vector_math/vector_math_64.dart';
 import '../../../core/entities/automaton_entity.dart';
 import '../../../core/entities/grammar_entity.dart';
 import '../../../core/entities/turing_machine_entity.dart';
+import '../../../core/utils/epsilon_utils.dart';
 
 /// Enhanced SVG exporter for automata visualizations
 class SvgExporter {
@@ -27,8 +28,13 @@ class SvgExporter {
   static const String _fontFamily = 'Arial, sans-serif';
 
   static String _formatDimension(num value) {
-    var text = value.toString();
-    if (text.contains('.')) {
+    if (value.isNaN || value.isInfinite) {
+      return '0';
+    }
+
+    final decimals = value % 1 == 0 ? 0 : 2;
+    var text = value.toStringAsFixed(decimals == 0 ? 0 : 2);
+    if (decimals != 0) {
       text = text.replaceFirst(RegExp(r'0+$'), '');
       if (text.endsWith('.')) {
         text = text.substring(0, text.length - 1);
@@ -46,13 +52,15 @@ class SvgExporter {
   }) {
     final opts = options ?? const SvgExportOptions();
     final buffer = StringBuffer();
+    final scaledWidth = width * opts.scale;
+    final scaledHeight = height * opts.scale;
 
     // SVG header
     buffer.writeln('<?xml version="1.0" encoding="UTF-8" standalone="no"?>');
     buffer.writeln('<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"');
     buffer.writeln('  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">');
     buffer.writeln(
-      '<svg width="${_formatDimension(width)}px" height="${_formatDimension(height)}px"',
+      '<svg width="${_formatDimension(scaledWidth)}px" height="${_formatDimension(scaledHeight)}px"',
     );
     buffer.writeln(
       '  viewBox="0 0 ${_formatDimension(width)} ${_formatDimension(height)}"',
@@ -487,6 +495,14 @@ class SvgExporter {
     double height,
     SvgExportOptions options,
   ) {
+    if (automaton.states.isEmpty) {
+      _addEmptyAutomatonPlaceholder(buffer, width, height);
+      if (options.includeTitle) {
+        _addTitle(buffer, automaton.name, width, height);
+      }
+      return;
+    }
+
     // Calculate positions for states (simple grid layout)
     final statePositions = _calculateStatePositions(
       automaton.states,
@@ -594,35 +610,123 @@ class SvgExporter {
     Map<String, Vector2> positions,
     SvgExportOptions options,
   ) {
-    for (final transition in automaton.transitions.entries) {
-      final fromState = transition.key;
-      final targets = transition.value;
+    if (automaton.transitions.isEmpty) {
+      return;
+    }
 
-      final fromPos = positions[fromState]!;
+    for (final entry in automaton.transitions.entries) {
+      final fromStateId = extractStateIdFromTransitionKey(entry.key);
+      final fromPos = positions[fromStateId];
+      if (fromPos == null) {
+        continue;
+      }
 
-      for (final toState in targets) {
-        final toPos = positions[toState]!;
+      final symbol = normalizeToEpsilon(extractSymbolFromTransitionKey(entry.key));
 
-        // Draw transition line
-        buffer.writeln('  <g class="transition">');
-        buffer.writeln(
-          '    <line x1="${_formatDimension(fromPos.x)}" y1="${_formatDimension(fromPos.y)}"',
-        );
-        buffer.writeln(
-          '      x2="${_formatDimension(toPos.x)}" y2="${_formatDimension(toPos.y)}"',
-        );
-        buffer.writeln('      stroke="#000" stroke-width="$_strokeWidth"');
-        buffer.writeln('      marker-end="url(#arrowhead)"/>');
+      for (final targetStateId in entry.value) {
+        final toPos = positions[targetStateId];
+        if (toPos == null) {
+          continue;
+        }
 
-        // Add transition label (midpoint)
-        final midX = (fromPos.x + toPos.x) / 2;
-        final midY = (fromPos.y + toPos.y) / 2;
-        buffer.writeln(
-          '    <text x="${_formatDimension(midX)}" y="${_formatDimension(midY)}" class="transition">ε</text>',
-        ); // Default epsilon
-        buffer.writeln('  </g>');
+        if (_pointsAreClose(fromPos, toPos)) {
+          _drawSelfLoop(buffer, fromPos, symbol);
+        } else {
+          _drawTransitionEdge(buffer, fromPos, toPos, symbol);
+        }
       }
     }
+  }
+
+  static bool _pointsAreClose(Vector2 a, Vector2 b) {
+    return (a - b).length2 < 1e-6;
+  }
+
+  static void _drawTransitionEdge(
+    StringBuffer buffer,
+    Vector2 from,
+    Vector2 to,
+    String label,
+  ) {
+    final delta = to - from;
+    final distance = delta.length;
+    if (distance == 0) {
+      _drawSelfLoop(buffer, from, label);
+      return;
+    }
+
+    final direction = delta / distance;
+    final start = from + direction * _stateRadius;
+    final end = to - direction * _stateRadius;
+
+    buffer.writeln('  <g class="transition">');
+    buffer.writeln(
+      '    <line x1="${_formatDimension(start.x)}" y1="${_formatDimension(start.y)}"',
+    );
+    buffer.writeln(
+      '      x2="${_formatDimension(end.x)}" y2="${_formatDimension(end.y)}"',
+    );
+    buffer.writeln('      stroke="#000" stroke-width="$_strokeWidth"');
+    buffer.writeln('      marker-end="url(#arrowhead)"/>');
+
+    final midPoint = (start + end) / 2;
+    buffer.writeln(
+      '    <text x="${_formatDimension(midPoint.x)}" y="${_formatDimension(midPoint.y - 5)}" class="transition">$label</text>',
+    );
+    buffer.writeln('  </g>');
+  }
+
+  static void _drawSelfLoop(
+    StringBuffer buffer,
+    Vector2 center,
+    String label,
+  ) {
+    const loopOffset = 24.0;
+    final startX = center.x;
+    final startY = center.y - _stateRadius;
+    final controlOffset = _stateRadius + loopOffset;
+
+    final control1 = Vector2(
+      center.x - controlOffset,
+      center.y - controlOffset,
+    );
+    final control2 = Vector2(
+      center.x + controlOffset,
+      center.y - controlOffset,
+    );
+    final endPoint = Vector2(startX + 0.01, startY - 0.01);
+
+    buffer.writeln('  <g class="transition">');
+    buffer.writeln(
+      '    <path d="M ${_formatDimension(startX)} ${_formatDimension(startY)} '
+      'C ${_formatDimension(control1.x)} ${_formatDimension(control1.y)} '
+      '${_formatDimension(control2.x)} ${_formatDimension(control2.y)} '
+      '${_formatDimension(endPoint.x)} ${_formatDimension(endPoint.y)}"',
+    );
+    buffer.writeln('      fill="none" stroke="#000" stroke-width="$_strokeWidth"');
+    buffer.writeln('      marker-end="url(#arrowhead)"/>');
+
+    final labelPosition = Vector2(
+      center.x,
+      center.y - controlOffset - 6,
+    );
+    buffer.writeln(
+      '    <text x="${_formatDimension(labelPosition.x)}" y="${_formatDimension(labelPosition.y)}" class="transition">$label</text>',
+    );
+    buffer.writeln('  </g>');
+  }
+
+  static void _addEmptyAutomatonPlaceholder(
+    StringBuffer buffer,
+    double width,
+    double height,
+  ) {
+    buffer.writeln('  <g class="empty-automaton">');
+    buffer.writeln(
+      '    <text x="${_formatDimension(width / 2)}" y="${_formatDimension(height / 2)}"'
+      ' class="transition" text-anchor="middle">No states defined</text>',
+    );
+    buffer.writeln('  </g>');
   }
 
   static void _addInitialArrow(StringBuffer buffer, Vector2 position) {

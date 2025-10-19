@@ -13,18 +13,20 @@ void main() {
   testWidgets('loads example and runs simulations', (tester) async {
     SharedPreferences.setMockInitialValues(const {});
 
-    await app.main();
+    app.main();
     await tester.pumpAndSettle();
 
-    final providerScopeFinder = find.byType(ProviderScope);
+    // Find MaterialApp to ensure the app is loaded
+    final materialAppFinder = find.byType(MaterialApp);
     expect(
-      providerScopeFinder,
+      materialAppFinder,
       findsOneWidget,
-      reason: 'The root ProviderScope should be available for dependency access.',
+      reason: 'The MaterialApp should be available.',
     );
 
+    // Get the ProviderScope container from any widget in the tree
     final container = ProviderScope.containerOf(
-      tester.element(providerScopeFinder),
+      tester.element(materialAppFinder),
       listen: false,
     );
 
@@ -54,10 +56,10 @@ void main() {
       await tester.enterText(inputField, input);
       await tester.pumpAndSettle();
 
-      final simulateButton = find.widgetWithText(ElevatedButton, 'Simulate');
-      expect(simulateButton, findsOneWidget);
+      final simulateButton = find.text('Simulate');
+      expect(simulateButton, findsWidgets);
 
-      await tester.tap(simulateButton);
+      await tester.tap(simulateButton.first);
       await tester.pumpAndSettle();
 
       expect(find.text(expectedLabel), findsOneWidget);

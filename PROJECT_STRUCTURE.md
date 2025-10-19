@@ -23,7 +23,8 @@ jflutter/
 │   │   ├── data_sources/          # Data source implementations
 │   │   ├── models/                # Data transfer objects
 │   │   ├── repositories/          # Repository implementations
-│   │   └── services/              # Business services
+│   │   ├── services/              # Business services
+│   │   └── storage/               # Persistence adapters (SharedPreferences, etc.)
 │   ├── presentation/              # Presentation layer
 │   │   ├── pages/                 # Application pages/screens
 │   │   ├── widgets/               # Reusable UI components
@@ -35,22 +36,33 @@ jflutter/
 │   ├── app.dart                   # App configuration
 │   └── main.dart                  # Application entry point
 ├── test/                          # Automated tests (unit, widget, integration, feature, core)
-├── specs/                         # Project specifications
 ├── android/                       # Android-specific files
 ├── ios/                           # iOS-specific files
 ├── web/                           # Web-specific files
 ├── windows/                       # Windows-specific files
 ├── linux/                         # Linux-specific files
 ├── macos/                         # macOS-specific files
+├── docs/                          # Additional architecture notes and guides
+├── jflutter_js/                   # Shared JS runtime assets and examples
+├── References/                    # Implementações de referência (Dart + Python) usadas como base na migração
+├── screenshots/                   # UI captures and visual references
+├── tool/                          # Repo tooling and helper scripts
+├── build.yaml                     # Build orchestration for CI/scripts
+├── fix_compilation.sh             # Helper script for resolving build issues
 ├── pubspec.yaml                   # Project dependencies
 ├── analysis_options.yaml          # Static analysis configuration
+├── pubspec.lock                   # Locked dependency versions
 ├── README.md                      # Project documentation
 ├── API_DOCUMENTATION.md           # API reference
 ├── USER_GUIDE                     # User instructions
+├── QUICKSTART_EVIDENCE.md         # Audit evidence for onboarding
 ├── PHASE2_COMPLETION_SUMMARY.md   # Milestone change summary
 ├── PROJECT_STRUCTURE.md           # This file
-├── References/                    # Implementações de referência (Dart + Python) usadas como base na migração
-└── LICENSE.txt                    # License information
+├── Requisitos.md                  # Requisitos funcionais (PT-BR)
+├── LICENSE.txt                    # License information
+├── LICENSE_JFLAP.txt              # Upstream JFLAP license
+├── icon.png                       # App icon source
+└── AGENTS.md                      # Repository-specific contribution guide
 ```
 
 ## Core Layer (`lib/core/`)
@@ -59,48 +71,70 @@ The core layer contains the business logic and domain models. It's independent o
 
 ### Algorithms (`lib/core/algorithms/`)
 
-Contains 13 core algorithm implementations:
+The algorithms package now covers automata analysis, grammar tooling, and
+conversions, organised into focused modules plus shared helpers:
 
 ```
 algorithms/
-├── algorithm_operations.dart      # High-level algorithm operations
-├── automaton_simulator.dart       # Automaton simulation
-├── dfa_minimizer.dart             # DFA minimization (Hopcroft's algorithm)
+├── automata/                      # DFA/NFA/TM helpers (builders, tracers, validators)
+├── cfg/                           # Context-free grammar utilities and analyzers
+├── common/                        # Shared math, graph, and parser utilities
+├── pda/                           # Pushdown automata specific operations
+├── regex/                         # Regular expression parsing helpers
+├── algorithm_operations.dart      # High-level algorithm orchestration entrypoints
+├── automaton_analyzer.dart        # Aggregate automaton statistics and metrics
+├── automaton_simulator.dart       # DFA/NFA simulation core with step tracing
+├── dfa_completer.dart             # Automates completion of partial DFAs
+├── dfa_minimizer.dart             # Hopcroft-based DFA minimization
+├── dfa_operations.dart            # Set and language operations across DFAs
+├── equivalence_checker.dart       # DFA language equivalence checking
 ├── fa_to_regex_converter.dart     # FA to regular expression conversion
-├── grammar_parser.dart             # Context-free grammar parsing
-├── grammar_to_pda_converter.dart  # Grammar to PDA conversion
-├── nfa_to_dfa_converter.dart      # NFA to DFA conversion
-├── pda_simulator.dart             # PDA simulation
-├── pumping_lemma_game.dart        # Interactive pumping lemma game
-├── pumping_lemma_prover.dart      # Pumping lemma proof
-├── regex_to_nfa_converter.dart    # Regex to NFA conversion
-└── tm_simulator.dart              # Turing machine simulation
+├── fsa_to_grammar_converter.dart  # Grammar conversion entrypoints for FSAs
+├── grammar_analyzer.dart          # Grammar consistency and diagnostics
+├── grammar_parser.dart            # Hand-rolled parser façade
+├── grammar_parser_earley.dart     # Earley parser implementation
+├── grammar_parser_petit.dart      # PetitParser-based parser integration
+├── grammar_parser_simple.dart     # Simplified recursive-descent parser
+├── grammar_parser_simple_recursive.dart # Alternate recursive parser prototype
+├── grammar_to_fsa_converter.dart  # Convert grammars to FSAs
+├── grammar_to_pda_converter.dart  # Convert grammars to PDAs
+├── nfa_to_dfa_converter.dart      # Subset construction converter
+├── pumping_lemma_game.dart        # Interactive pumping lemma simulation
+├── pumping_lemma_prover.dart      # Pumping lemma proof assistant
+├── pda_simulator.dart             # PDA execution engine
+├── pda_to_cfg_converter.dart      # PDA to CFG transformer
+├── regex_to_nfa_converter.dart    # Thompson-style regex conversion
+└── tm_simulator.dart              # Deterministic TM simulation
 ```
 
 ### Models (`lib/core/models/`)
 
-Domain models representing core concepts:
+Domain models representing automata, grammars, UI layout, and simulator state:
 
 ```
 models/
 ├── automaton.dart                 # Abstract automaton base class
-├── fsa.dart                       # Finite state automaton
-├── fsa_transition.dart            # FSA transition
-├── grammar.dart                   # Context-free grammar
-├── layout_settings.dart           # Layout configuration
-├── parse_action.dart              # Parsing action
-├── parse_table.dart               # We are using PetitParser for parsing
-├── pda.dart                       # Pushdown automaton
-├── pda_transition.dart            # PDA transition
-├── production.dart                # Grammar production
-├── pumping_attempt.dart           # Pumping lemma attempt
-├── pumping_lemma_game.dart        # Pumping lemma game state
-├── simulation_result.dart         # Simulation result
-├── simulation_step.dart           # Simulation step
-├── state.dart                     # Automaton state
-├── tm.dart                        # Turing machine
-├── tm_transition.dart             # TM transition
-└── touch_interaction.dart         # Mobile touch data
+├── fsa.dart                       # Finite state automaton aggregate
+├── fsa_transition.dart            # FSA transition model
+├── grammar.dart                   # Context-free grammar definition
+├── layout_settings.dart           # Canvas/grid layout configuration
+├── parse_action.dart              # LR parse action representation
+├── parse_table.dart               # Parsing table structure
+├── pda.dart                       # Pushdown automaton definition
+├── pda_transition.dart            # PDA transition metadata
+├── production.dart                # Grammar production rule
+├── pumping_attempt.dart           # Pumping lemma attempt state
+├── pumping_lemma_game.dart        # Pumping lemma game session
+├── settings_model.dart            # Persisted user preference values
+├── simulation_highlight.dart      # Highlight overlays for simulations
+├── simulation_result.dart         # Result payload returned by simulators
+├── simulation_step.dart           # Individual simulation step details
+├── state.dart                     # Automaton state node
+├── tm.dart                        # Turing machine aggregate
+├── tm_analysis.dart               # TM tape/run inspection helpers
+├── tm_transition.dart             # TM transition representation
+├── touch_interaction.dart         # Pointer/gesture metadata
+└── transition.dart                # Shared transition abstraction
 ```
 
 ### Entities (`lib/core/entities/`)
@@ -109,7 +143,9 @@ Business entities for domain logic:
 
 ```
 entities/
-└── automaton_entity.dart          # Core automaton entity
+├── automaton_entity.dart          # Shared automaton entity contract
+├── grammar_entity.dart            # Grammar entity definition
+└── turing_machine_entity.dart     # Turing machine entity representation
 ```
 
 ### Other Core Files
@@ -117,8 +153,10 @@ entities/
 - `algo_log.dart` - Centralized algorithm logging
 - `error_handler.dart` - Global error handling
 - `result.dart` - Result pattern for error handling
-- `services/simulation_highlight_service.dart` - Emits highlights and now tracks
-  dispatch metrics plus debug logs for GraphView troubleshooting
+- `services/` - Runtime diagnostics and highlighting utilities such as
+  `diagnostic_service.dart`, `diagnostics_service.dart`,
+  `simulation_highlight_service.dart`, and the platform-aware
+  `trace_persistence_service*.dart` shims used by the UI layer
 
 ## Data Layer (`lib/data/`)
 
@@ -130,9 +168,16 @@ Business services for data operations:
 
 ```
 services/
-├── automaton_service.dart         # Automaton CRUD operations
-├── conversion_service.dart        # Algorithm conversion services
-└── simulation_service.dart        # Simulation services
+├── automaton_service.dart                # In-memory CRUD plus layout helpers for automata
+├── conversion_service.dart               # Bridges UI requests to conversion algorithms
+├── examples_service.dart                 # Catalog search, filtering, and caching for examples
+├── file_operations_service.dart          # Conditional export choosing IO/Web implementations
+├── file_operations_service_io.dart       # Platform file reads, exports, and canvas rendering
+├── file_operations_service_web.dart      # Web download/export fallback without dart:io
+├── import_export_validation_service.dart # Round-trip validators for XML/JSON interchange
+├── serialization_service.dart            # JSON/JFLAP XML serialization utilities
+├── simulation_service.dart               # Simulator façade with result normalization
+└── trace_persistence_service.dart        # SharedPreferences-backed trace history manager
 ```
 
 ### Data Sources (`lib/data/data_sources/`)
@@ -141,8 +186,9 @@ Data source implementations:
 
 ```
 data_sources/
-├── examples_data_source.dart      # Example data source
-└── local_storage_data_source.dart # Local storage implementation
+├── examples_asset_data_source.dart  # Rich metadata-backed examples loader
+├── examples_data_source.dart        # Legacy asset loader for simple automata
+└── local_storage_data_source.dart   # SharedPreferences-powered persistence bridge
 ```
 
 ### Repositories (`lib/data/repositories/`)
@@ -151,9 +197,10 @@ Repository pattern implementations:
 
 ```
 repositories/
-├── algorithm_repository_impl.dart # Algorithm repository
-├── automaton_repository_impl.dart # Automaton repository
-└── examples_repository_impl.dart  # Examples repository
+├── algorithm_repository_impl.dart # Wraps algorithm metadata and persistence glue
+├── automaton_repository_impl.dart # Automaton repository backed by services/data sources
+├── examples_repository_impl.dart  # Provides curated example listings and search
+└── settings_repository_impl.dart  # SharedPreferences-powered user settings storage
 ```
 
 ### Models (`lib/data/models/`)
@@ -162,7 +209,19 @@ Data transfer objects:
 
 ```
 models/
-└── automaton_model.dart           # Data model for automata
+├── automaton_dto.dart             # Serializes automata payloads for storage/API
+├── automaton_model.dart           # Rich automaton model consumed by the UI
+├── grammar_dto.dart               # Grammar DTO with production metadata
+└── turing_machine_dto.dart        # Turing machine DTO mapping tape/configurations
+```
+
+### Storage (`lib/data/storage/`)
+
+Persistence adapters shared across repositories:
+
+```
+storage/
+└── settings_storage.dart          # SharedPreferences wrapper with typed helpers
 ```
 
 ## Presentation Layer (`lib/presentation/`)
@@ -192,10 +251,30 @@ Reusable UI components:
 
 ```
 widgets/
-├── algorithm_panel.dart           # Algorithm control panel
-├── automaton_canvas.dart          # Interactive drawing canvas
-├── mobile_navigation.dart         # Mobile bottom navigation
-└── simulation_panel.dart          # Simulation interface
+├── algorithm_panel.dart             # Shared algorithm control surface
+├── grammar_algorithm_panel.dart     # Grammar-specific controls
+├── pda_algorithm_panel.dart         # PDA algorithm shortcuts
+├── tm_algorithm_panel.dart          # Turing machine tooling
+├── automaton_canvas.dart            # Widget-agnostic canvas host
+├── automaton_canvas_web.dart        # Web-optimised canvas wrapper
+├── automaton_graphview_canvas.dart  # GraphView-backed canvas implementation
+├── diagnostics_panel.dart           # Runtime diagnostics and logs
+├── file_operations_panel.dart       # Import/export actions
+├── desktop_navigation.dart          # Desktop navigation rail
+├── mobile_navigation.dart           # Mobile bottom navigation
+├── mobile_automaton_controls.dart   # Compact controls for touch devices
+├── canvas_actions_sheet.dart        # Quick actions sheet for canvas interactions
+├── error_banner.dart                # Inline error messaging
+├── import_error_dialog.dart         # Import failure dialog
+├── retry_button.dart                # Retry CTA used across error states
+├── simulation_panel.dart            # DFA/NFA simulation interface
+├── pda_simulation_panel.dart        # PDA simulation controls
+├── tm_simulation_panel.dart         # Turing machine simulation controls
+├── export/                          # SVG/PNG exporters and dialogs
+├── pumping_lemma_game/              # Interactive pumping lemma widgets
+├── trace_viewers/                   # Simulation trace renderers
+├── transition_editors/              # Editors for transitions across automata types
+└── utils/                           # Widget utilities and shared helpers
 ```
 
 ### Providers (`lib/presentation/providers/`)
@@ -204,7 +283,18 @@ State management using Riverpod:
 
 ```
 providers/
-└── automaton_provider.dart        # Automaton state management
+├── algorithm_provider.dart              # Coordinates algorithm selection
+├── automaton_provider.dart              # Automaton state management
+├── fa_trace_provider.dart               # DFA/NFA trace broadcasting
+├── grammar_provider.dart                # Grammar editor state
+├── home_navigation_provider.dart        # Home shell navigation model
+├── pda_editor_provider.dart             # PDA editor state
+├── pda_simulation_provider.dart         # PDA simulation controller
+├── pda_trace_provider.dart              # PDA trace management
+├── pumping_lemma_progress_provider.dart # Pumping lemma tutorial progress
+├── settings_provider.dart               # User preference state
+├── tm_editor_provider.dart              # Turing machine editor binding
+└── unified_trace_provider.dart          # Shared trace selector across automata
 ```
 
 ### GraphView Canvas (`lib/features/canvas/graphview/`)
@@ -217,8 +307,11 @@ inspection. Specialised controllers (`graphview_canvas_controller.dart`,
 `graphview_tm_canvas_controller.dart`, `graphview_pda_canvas_controller.dart`)
 layer on automaton-specific instrumentation, while
 `graphview_viewport_highlight_mixin.dart` centralises viewport metrics and
-highlight change notifications. When integrating new canvas capabilities, wire
-them through these controllers so the logging/metrics remain consistent.
+highlight change notifications. Supporting utilities such as
+`graphview_highlight_channel.dart`, `graphview_snapshot_codec.dart`, and
+`graphview_link_overlay_utils.dart` power cross-platform export, diagnostics,
+and selection tooling. When integrating new canvas capabilities, wire them
+through these controllers so the logging/metrics remain consistent.
 
 ### Theme (`lib/presentation/theme/`)
 
@@ -242,11 +335,12 @@ injection/
 
 The test suite is split into focused directories that mirror the production architecture:
 
-``` 
+```
 test/
 ├── core/                # Low-level unit tests for algorithms and entities
 ├── features/            # Feature-focused widget/controller tests
 ├── integration/         # End-to-end flows exercising multiple layers
+├── presentation/        # UI flows and provider/widget integration tests
 ├── unit/                # UI-agnostic unit tests for shared utilities
 └── widget/              # Widget tests targeting rendering and interactions
 ```
@@ -309,13 +403,16 @@ web/
 
 - `API_DOCUMENTATION.md` - Comprehensive API reference
 - `USER_GUIDE` - User instructions and tutorials
-- `PHASE2_COMPLETION_SUMMARY.md` - Snapshot of the latest milestone deliverables
 - `PROJECT_STRUCTURE.md` - This file
+- `PHASE2_COMPLETION_SUMMARY.md` - Snapshot of the latest milestone deliverables
+- `QUICKSTART_EVIDENCE.md` - Onboarding and compliance checklist
+- `docs/` - Supplemental design notes (`canvas_bridge.md`, QA sheets, reference alignment)
 
-### Specifications
+### Reference Material & Requirements
 
-- `specs/` - Project specifications and requirements
-  - `001-description-port-jflap/` - Original JFLAP port specifications
+- `References/` - Authoritative Dart/Python implementations mirrored from upstream projects
+- `Requisitos.md` - Functional requirements in Portuguese
+- `LICENSE.txt` / `LICENSE_JFLAP.txt` - Licensing information
 
 ## Architecture Principles
 

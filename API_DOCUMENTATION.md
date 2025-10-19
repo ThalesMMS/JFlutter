@@ -88,28 +88,56 @@ class FSATransition extends Transition {
 
 ```dart
 class AutomatonSimulator {
-  // Simulate automaton with input string
-  static Result<SimulationResult> simulate(
+  // Simulate a DFA with input string (deterministic, no epsilon)
+  static Future<Result<SimulationResult>> simulateDFA(
     FSA automaton,
     String inputString, {
     bool stepByStep = false,
     Duration timeout = const Duration(seconds: 5),
   });
-  
+
+  // Simulate an NFA, handling nondeterminism and epsilon transitions
+  static Future<Result<SimulationResult>> simulateNFA(
+    FSA automaton,
+    String inputString, {
+    bool stepByStep = false,
+    Duration timeout = const Duration(seconds: 5),
+  });
+
+  // Generic entry point that dispatches to DFA/NFA simulators
+  static Future<Result<SimulationResult>> simulate(
+    FSA automaton,
+    String inputString, {
+    bool stepByStep = false,
+    Duration timeout = const Duration(seconds: 5),
+  });
+
   // Test if automaton accepts string
-  static Result<bool> accepts(FSA automaton, String inputString);
-  
+  static Future<Result<bool>> accepts(FSA automaton, String inputString);
+
   // Test if automaton rejects string
-  static Result<bool> rejects(FSA automaton, String inputString);
-  
+  static Future<Result<bool>> rejects(FSA automaton, String inputString);
+
   // Find accepted strings
-  static Result<Set<String>> findAcceptedStrings(
+  static Future<Result<Set<String>>> findAcceptedStrings(
+    FSA automaton,
+    int maxLength, {
+    int maxResults = 100,
+  });
+
+  // Find rejected strings
+  static Future<Result<Set<String>>> findRejectedStrings(
     FSA automaton,
     int maxLength, {
     int maxResults = 100,
   });
 }
 ```
+
+> **Async usage**: All `AutomatonSimulator` methods return `Future<Result<…>>`. Use
+> `await` (or equivalent Future handling) and inspect the resulting `Result`
+> before dereferencing `data`; asynchronous failures surface via the `error`
+> payload just like synchronous validation issues.
 
 ### NFAToDFAConverter
 
@@ -134,7 +162,10 @@ class DFAMinimizer {
 ```dart
 class RegexToNFAConverter {
   // Convert regular expression to NFA
-  static Result<FSA> convert(String regex);
+  static Result<FSA> convert(
+    String regex, {
+    Set<String>? contextAlphabet,
+  });
 }
 ```
 

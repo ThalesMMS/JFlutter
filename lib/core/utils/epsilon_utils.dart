@@ -39,7 +39,7 @@ String normalizeToEpsilon(String? symbol) {
   if (isEpsilonSymbol(symbol)) {
     return kEpsilonSymbol;
   }
-  return symbol!.trim();
+  return symbol?.trim() ?? '';
 }
 
 /// Extracts the state identifier portion from a transition key formatted as

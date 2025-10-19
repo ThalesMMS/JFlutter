@@ -20,7 +20,7 @@ import '../../core/result.dart';
 import '../../data/services/file_operations_service.dart';
 import 'utils/platform_file_loader.dart';
 import 'error_banner.dart';
-import 'import_error_dialog.dart';
+// import 'import_error_dialog.dart'; // does not exist yet (TODO)
 
 /// Panel for file operations (save/load/export)
 class FileOperationsPanel extends StatefulWidget {

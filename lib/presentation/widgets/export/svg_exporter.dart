@@ -33,7 +33,7 @@ class SvgExporter {
     }
 
     final decimals = value % 1 == 0 ? 0 : 2;
-    var text = value.toStringAsFixed(decimals == 0 ? 0 : 2);
+    var text = value.toStringAsFixed(decimals);var text = value.toStringAsFixed(decimals == 0 ? 0 : 2);
     if (decimals != 0) {
       text = text.replaceFirst(RegExp(r'0+$'), '');
       if (text.endsWith('.')) {

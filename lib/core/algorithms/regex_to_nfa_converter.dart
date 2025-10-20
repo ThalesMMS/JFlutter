@@ -281,7 +281,12 @@ class RegexToNFAConverter {
 
   static String _formatSyntaxError(String regex, _RegexSyntaxException error) {
     final position = error.position.clamp(0, regex.length) as int;
-    final caretLine = '${' ' * position}^';
+    final buffer = StringBuffer();
+    for (var i = 0; i < position; i++) {
+      buffer.write(' ');
+    }
+    buffer.write('^');
+    final caretLine = buffer.toString();
     return '${error.message} at position ${position + 1}\n$regex\n$caretLine';
   }
 

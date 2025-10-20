@@ -61,63 +61,14 @@ class _RegexPageState extends ConsumerState<RegexPage> {
         return;
       }
 
-      try {
-        // Basic regex validation - check for balanced parentheses and valid characters
-        if (_isValidRegex(_currentRegex)) {
-          _isValid = true;
-        } else {
-          _isValid = false;
-          _errorMessage = 'Invalid regular expression syntax';
-        }
-      } catch (e) {
+      final validationResult = RegexToNFAConverter.validateSyntax(_currentRegex);
+      if (validationResult.isSuccess) {
+        _isValid = true;
+      } else {
         _isValid = false;
-        _errorMessage = 'Invalid regular expression: $e';
+        _errorMessage = validationResult.error ?? 'Invalid regular expression syntax';
       }
     });
-  }
-
-  bool _isValidRegex(String regex) {
-    // Basic validation for common regex patterns
-    // This is a simplified validation - in a real implementation,
-    // you would use a proper regex parser
-    int parenCount = 0;
-    bool inBracket = false;
-    bool escapeNext = false;
-
-    for (int i = 0; i < regex.length; i++) {
-      final char = regex[i];
-
-      if (escapeNext) {
-        escapeNext = false;
-        continue;
-      }
-
-      if (char == '\\') {
-        escapeNext = true;
-        continue;
-      }
-
-      if (char == '[' && !escapeNext) {
-        inBracket = true;
-        continue;
-      }
-
-      if (char == ']' && !escapeNext) {
-        inBracket = false;
-        continue;
-      }
-
-      if (!inBracket) {
-        if (char == '(') {
-          parenCount++;
-        } else if (char == ')') {
-          parenCount--;
-          if (parenCount < 0) return false;
-        }
-      }
-    }
-
-    return parenCount == 0 && !inBracket;
   }
 
   Future<void> _testStringMatch() async {

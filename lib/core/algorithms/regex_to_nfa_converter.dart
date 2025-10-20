@@ -28,21 +28,17 @@ class RegexToNFAConverter {
   /// Converts a regular expression to an equivalent NFA
   static Result<FSA> convert(String regex, {Set<String>? contextAlphabet}) {
     try {
-      // Validate input
-      final validationResult = _validateRegex(regex);
-      if (!validationResult.isSuccess) {
-        return ResultFactory.failure(validationResult.error!);
-      }
-
-      // Parse the regular expression
-      final parsedRegex = _parseRegex(regex);
-      if (parsedRegex == null) {
-        return ResultFactory.failure('Invalid regular expression syntax');
+      // Parse the regular expression with detailed syntax validation
+      final parseResult = _parseRegex(regex);
+      if (!parseResult.isSuccess || parseResult.data == null) {
+        return ResultFactory.failure(
+          parseResult.error ?? 'Invalid regular expression syntax',
+        );
       }
 
       // Convert to NFA using Thompson's construction
       final nfa = _thompsonConstruction(
-        parsedRegex,
+        parseResult.data!,
         contextAlphabet: contextAlphabet,
       );
 
@@ -52,10 +48,23 @@ class RegexToNFAConverter {
     }
   }
 
+  /// Validates only the syntax of a regular expression without generating an NFA
+  static Result<void> validateSyntax(String regex) {
+    final parseResult = _parseRegex(regex);
+    if (!parseResult.isSuccess) {
+      return ResultFactory.failure(parseResult.error ?? 'Invalid regex');
+    }
+    return ResultFactory.success(null);
+  }
+
   /// Validates the regular expression
   static Result<void> _validateRegex(String regex) {
     if (regex.isEmpty) {
       return ResultFactory.failure('Regular expression cannot be empty');
+    }
+
+    if (regex.endsWith('|')) {
+      return ResultFactory.failure('Union operator cannot be at ends');
     }
 
     // Check for balanced parentheses
@@ -101,9 +110,6 @@ class RegexToNFAConverter {
       if (quantifiers.contains(prev) && quantifiers.contains(curr)) {
         return ResultFactory.failure('Consecutive quantifiers are not allowed');
       }
-      if (curr == '|' && (i == 0 || i == regex.length - 1)) {
-        return ResultFactory.failure('Union operator cannot be at ends');
-      }
       if (curr == ')' && (i == 0 || regex[i - 1] == '(')) {
         return ResultFactory.failure('Empty parentheses are not allowed');
       }
@@ -113,12 +119,21 @@ class RegexToNFAConverter {
   }
 
   /// Parses the regular expression into an abstract syntax tree
-  static RegexNode? _parseRegex(String regex) {
+  static Result<RegexNode> _parseRegex(String regex) {
+    final validationResult = _validateRegex(regex);
+    if (!validationResult.isSuccess) {
+      return ResultFactory.failure(validationResult.error!);
+    }
+
     try {
       final tokens = _tokenize(regex);
-      return _parseExpression(tokens);
+      final parser = _RegexAstParser(regex, tokens);
+      final node = parser.parse();
+      return ResultFactory.success(node);
+    } on _RegexSyntaxException catch (e) {
+      return ResultFactory.failure(_formatSyntaxError(regex, e));
     } catch (e) {
-      return null;
+      return ResultFactory.failure('Invalid regular expression syntax: $e');
     }
   }
 
@@ -132,32 +147,59 @@ class RegexToNFAConverter {
 
       switch (char) {
         case '(':
-          tokens.add(RegexToken(type: TokenType.leftParen, value: char));
+          tokens.add(RegexToken(
+            type: TokenType.leftParen,
+            value: char,
+            index: i,
+          ));
           break;
         case ')':
-          tokens.add(RegexToken(type: TokenType.rightParen, value: char));
+          tokens.add(RegexToken(
+            type: TokenType.rightParen,
+            value: char,
+            index: i,
+          ));
           break;
         case '|':
-          tokens.add(RegexToken(type: TokenType.union, value: char));
+          tokens.add(RegexToken(
+            type: TokenType.union,
+            value: char,
+            index: i,
+          ));
           break;
         case '*':
-          tokens.add(RegexToken(type: TokenType.kleeneStar, value: char));
+          tokens.add(RegexToken(
+            type: TokenType.kleeneStar,
+            value: char,
+            index: i,
+          ));
           break;
         case '+':
-          tokens.add(RegexToken(type: TokenType.plus, value: char));
+          tokens.add(RegexToken(
+            type: TokenType.plus,
+            value: char,
+            index: i,
+          ));
           break;
         case '?':
-          tokens.add(RegexToken(type: TokenType.question, value: char));
+          tokens.add(RegexToken(
+            type: TokenType.question,
+            value: char,
+            index: i,
+          ));
           break;
         case '.':
-          tokens.add(RegexToken(type: TokenType.dot, value: char));
+          tokens.add(RegexToken(
+            type: TokenType.dot,
+            value: char,
+            index: i,
+          ));
           break;
         case '[':
           // Character class until ']'
           int j = i + 1;
           final buf = StringBuffer();
           while (j < regex.length && regex[j] != ']') {
-            // handle escaped chars inside class
             if (regex[j] == '\\' &&
                 j + 1 < regex.length &&
                 regex[j + 1] != ']') {
@@ -170,10 +212,18 @@ class RegexToNFAConverter {
           }
           if (j >= regex.length || regex[j] != ']') {
             // Unclosed class → treat '[' literal
-            tokens.add(RegexToken(type: TokenType.symbol, value: char));
+            tokens.add(RegexToken(
+              type: TokenType.symbol,
+              value: char,
+              index: i,
+            ));
           } else {
             tokens.add(
-              RegexToken(type: TokenType.charClass, value: buf.toString()),
+              RegexToken(
+                type: TokenType.charClass,
+                value: buf.toString(),
+                index: i,
+              ),
             );
             i = j; // will be incremented by i++ at end
           }
@@ -183,22 +233,42 @@ class RegexToNFAConverter {
             final next = regex[i + 1];
             // common shortcuts
             if ('dDsSwW'.contains(next)) {
-              tokens.add(RegexToken(type: TokenType.charShortcut, value: next));
+              tokens.add(RegexToken(
+                type: TokenType.charShortcut,
+                value: next,
+                index: i,
+              ));
               i++;
               break;
             }
             // escaped metachar -> literal
-            tokens.add(RegexToken(type: TokenType.symbol, value: next));
+            tokens.add(RegexToken(
+              type: TokenType.symbol,
+              value: next,
+              index: i,
+            ));
             i++;
           } else {
-            tokens.add(RegexToken(type: TokenType.symbol, value: char));
+            tokens.add(RegexToken(
+              type: TokenType.symbol,
+              value: char,
+              index: i,
+            ));
           }
           break;
         default:
           if (char == 'ε') {
-            tokens.add(RegexToken(type: TokenType.epsilon, value: char));
+            tokens.add(RegexToken(
+              type: TokenType.epsilon,
+              value: char,
+              index: i,
+            ));
           } else {
-            tokens.add(RegexToken(type: TokenType.symbol, value: char));
+            tokens.add(RegexToken(
+              type: TokenType.symbol,
+              value: char,
+              index: i,
+            ));
           }
           break;
       }
@@ -209,97 +279,12 @@ class RegexToNFAConverter {
     return tokens;
   }
 
-  /// Parses the expression from tokens
-  static RegexNode? _parseExpression(List<RegexToken> tokens) {
-    if (tokens.isEmpty) return null;
-
-    final node = _parseUnion(tokens);
-    return node;
+  static String _formatSyntaxError(String regex, _RegexSyntaxException error) {
+    final position = error.position.clamp(0, regex.length) as int;
+    final caretLine = '${' ' * position}^';
+    return '${error.message} at position ${position + 1}\n$regex\n$caretLine';
   }
 
-  /// Parses union expressions (|)
-  static RegexNode? _parseUnion(List<RegexToken> tokens) {
-    var node = _parseConcatenation(tokens);
-
-    while (tokens.isNotEmpty && tokens.first.type == TokenType.union) {
-      tokens.removeAt(0); // Remove |
-      final right = _parseConcatenation(tokens);
-      if (right == null) return null;
-      node = UnionNode(left: node!, right: right);
-    }
-
-    return node;
-  }
-
-  /// Parses concatenation expressions
-  static RegexNode? _parseConcatenation(List<RegexToken> tokens) {
-    var node = _parseUnary(tokens);
-
-    while (tokens.isNotEmpty &&
-        tokens.first.type != TokenType.union &&
-        tokens.first.type != TokenType.rightParen) {
-      final right = _parseUnary(tokens);
-      if (right == null) return null;
-      node = ConcatenationNode(left: node!, right: right);
-    }
-
-    return node;
-  }
-
-  /// Parses unary expressions (*, +, ?)
-  static RegexNode? _parseUnary(List<RegexToken> tokens) {
-    var node = _parsePrimary(tokens);
-
-    while (tokens.isNotEmpty) {
-      final token = tokens.first;
-      switch (token.type) {
-        case TokenType.kleeneStar:
-          tokens.removeAt(0);
-          node = KleeneStarNode(child: node!);
-          break;
-        case TokenType.plus:
-          tokens.removeAt(0);
-          node = PlusNode(child: node!);
-          break;
-        case TokenType.question:
-          tokens.removeAt(0);
-          node = QuestionNode(child: node!);
-          break;
-        default:
-          return node;
-      }
-    }
-
-    return node;
-  }
-
-  /// Parses primary expressions (symbols, parentheses)
-  static RegexNode? _parsePrimary(List<RegexToken> tokens) {
-    if (tokens.isEmpty) return null;
-
-    final token = tokens.removeAt(0);
-
-    switch (token.type) {
-      case TokenType.symbol:
-        return SymbolNode(symbol: token.value);
-      case TokenType.dot:
-        return const DotNode();
-      case TokenType.epsilon:
-        return const EpsilonNode();
-      case TokenType.charClass:
-        return SetNode(symbols: _parseCharClass(token.value));
-      case TokenType.charShortcut:
-        return ShortcutNode(code: token.value);
-      case TokenType.leftParen:
-        final node = _parseExpression(tokens);
-        if (tokens.isEmpty || tokens.removeAt(0).type != TokenType.rightParen) {
-          return null;
-        }
-        return node;
-      default:
-        return null;
-    }
-  }
 
   /// Converts regex node to NFA using Thompson's construction
   static FSA _thompsonConstruction(
@@ -960,6 +945,150 @@ enum TokenType {
 class RegexToken {
   final TokenType type;
   final String value;
+  final int index;
 
-  const RegexToken({required this.type, required this.value});
+  const RegexToken({
+    required this.type,
+    required this.value,
+    required this.index,
+  });
+}
+
+class _RegexAstParser {
+  _RegexAstParser(this.source, this.tokens);
+
+  final String source;
+  final List<RegexToken> tokens;
+  int _current = 0;
+
+  RegexNode parse() {
+    if (tokens.isEmpty) {
+      throw _RegexSyntaxException('Regular expression cannot be empty', 0);
+    }
+
+    final expression = _parseUnion();
+    if (!_isAtEnd) {
+      final token = _peek();
+      throw _RegexSyntaxException(
+        'Unexpected token "${token.value}"',
+        token.index,
+      );
+    }
+
+    return expression;
+  }
+
+  RegexNode _parseUnion() {
+    var node = _parseConcatenation();
+
+    while (!_isAtEnd && _peek().type == TokenType.union) {
+      final unionToken = _advance();
+      if (_isAtEnd) {
+        throw _RegexSyntaxException(
+          'Expected expression after union operator',
+          unionToken.index,
+        );
+      }
+      final right = _parseConcatenation();
+      node = UnionNode(left: node, right: right);
+    }
+
+    return node;
+  }
+
+  RegexNode _parseConcatenation() {
+    final nodes = <RegexNode>[];
+    nodes.add(_parseUnary());
+
+    while (!_isAtEnd &&
+        _peek().type != TokenType.union &&
+        _peek().type != TokenType.rightParen) {
+      nodes.add(_parseUnary());
+    }
+
+    return nodes.reduce(
+      (left, right) => ConcatenationNode(left: left, right: right),
+    );
+  }
+
+  RegexNode _parseUnary() {
+    var node = _parsePrimary();
+
+    while (!_isAtEnd) {
+      final token = _peek();
+      switch (token.type) {
+        case TokenType.kleeneStar:
+          _advance();
+          node = KleeneStarNode(child: node);
+          break;
+        case TokenType.plus:
+          _advance();
+          node = PlusNode(child: node);
+          break;
+        case TokenType.question:
+          _advance();
+          node = QuestionNode(child: node);
+          break;
+        default:
+          return node;
+      }
+    }
+
+    return node;
+  }
+
+  RegexNode _parsePrimary() {
+    if (_isAtEnd) {
+      throw _RegexSyntaxException(
+        'Unexpected end of expression',
+        source.length,
+      );
+    }
+
+    final token = _advance();
+
+    switch (token.type) {
+      case TokenType.symbol:
+        return SymbolNode(symbol: token.value);
+      case TokenType.dot:
+        return const DotNode();
+      case TokenType.epsilon:
+        return const EpsilonNode();
+      case TokenType.charClass:
+        return SetNode(
+          symbols: RegexToNFAConverter._parseCharClass(token.value),
+        );
+      case TokenType.charShortcut:
+        return ShortcutNode(code: token.value);
+      case TokenType.leftParen:
+        final expression = _parseUnion();
+        if (_isAtEnd || _peek().type != TokenType.rightParen) {
+          throw _RegexSyntaxException('Missing closing parenthesis', token.index);
+        }
+        _advance();
+        return expression;
+      case TokenType.rightParen:
+        throw _RegexSyntaxException('Unmatched closing parenthesis', token.index);
+      case TokenType.union:
+        throw _RegexSyntaxException('Union operator cannot be at ends', token.index);
+      default:
+        throw _RegexSyntaxException('Unexpected token "${token.value}"', token.index);
+    }
+  }
+
+  RegexToken _advance() => tokens[_current++];
+
+  bool get _isAtEnd => _current >= tokens.length;
+
+  RegexToken _peek() => tokens[_current];
+}
+
+class _RegexSyntaxException implements Exception {
+  final String message;
+  final int position;
+
+  const _RegexSyntaxException(this.message, this.position);
+
+  @override
+  String toString() => 'RegexSyntaxException($message at position $position)';
 }

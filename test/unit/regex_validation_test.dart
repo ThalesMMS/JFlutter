@@ -136,6 +136,26 @@ void main() {
           );
         }
       });
+
+      test('Invalid regex reports descriptive validation errors', () {
+        final cases = {
+          'a**': 'Consecutive quantifiers are not allowed',
+          'a|': 'Union operator cannot be at ends',
+          '|a': 'Union operator cannot be at ends',
+          '(': 'Unbalanced parentheses in regular expression',
+        };
+
+        cases.forEach((pattern, message) {
+          final result = RegexToNFAConverter.validateSyntax(pattern);
+
+          expect(result.isFailure, isTrue, reason: 'Pattern "$pattern" should be invalid');
+          expect(
+            result.error,
+            contains(message),
+            reason: 'Pattern "$pattern" should report "$message"',
+          );
+        });
+      });
     });
 
     group('FA to Regex Conversion Tests', () {

@@ -3,3 +3,14 @@
 
 # Ignore reference implementations from GitHub language statistics
 References/** linguist-vendored
+
+# Exclude generated platform scaffolding and build artifacts
+android/** linguist-vendored
+ios/** linguist-vendored
+linux/** linguist-vendored
+macos/** linguist-vendored
+windows/** linguist-vendored
+web/** linguist-vendored
+build/** linguist-vendored
+coverage/** linguist-vendored
+jflutter_js/** linguist-vendored

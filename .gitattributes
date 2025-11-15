@@ -14,3 +14,4 @@ web/** linguist-vendored
 build/** linguist-vendored
 coverage/** linguist-vendored
 jflutter_js/** linguist-vendored
+test/** linguist-vendored

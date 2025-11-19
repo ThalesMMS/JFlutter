@@ -204,7 +204,28 @@ class FSA extends Automaton {
 
   /// Checks if the FSA is deterministic
   bool get isDeterministic {
-    return nondeterministicTransitions.isEmpty;
+    if (nondeterministicTransitions.isNotEmpty) return false;
+    if (hasEpsilonTransitions) return false;
+
+    for (final state in states) {
+      final outgoingTransitions = getTransitionsFrom(
+        state,
+      ).whereType<FSATransition>();
+      final seenSymbols = <String>{};
+
+      for (final transition in outgoingTransitions) {
+        // If it's an epsilon transition (should be caught by hasEpsilonTransitions, but for safety)
+        if (transition.isEpsilonTransition) return false;
+
+        for (final symbol in transition.inputSymbols) {
+          if (seenSymbols.contains(symbol)) {
+            return false;
+          }
+          seenSymbols.add(symbol);
+        }
+      }
+    }
+    return true;
   }
 
   /// Checks if the FSA is non-deterministic

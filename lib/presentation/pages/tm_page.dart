@@ -19,6 +19,7 @@ import '../providers/tm_editor_provider.dart';
 import '../widgets/tm_canvas_graphview.dart';
 import '../widgets/tm_algorithm_panel.dart';
 import '../widgets/tm_simulation_panel.dart';
+import '../widgets/tm/tape_drawer.dart';
 import '../widgets/graphview_canvas_toolbar.dart';
 import '../widgets/automaton_canvas_tool.dart';
 import '../widgets/mobile_automaton_controls.dart';
@@ -44,6 +45,7 @@ class _TMPageState extends ConsumerState<TMPage> {
   bool _hasInitialState = false;
   bool _hasAcceptingState = false;
   ProviderSubscription<TMEditorState>? _tmEditorSub;
+  TapeState _currentTape = TapeState.initial();
   late final GraphViewTmCanvasController _canvasController;
   late final GraphViewSimulationHighlightChannel _highlightChannel;
   late final SimulationHighlightService _highlightService;
@@ -122,16 +124,35 @@ class _TMPageState extends ConsumerState<TMPage> {
   }
 
   Widget _buildMobileLayout() {
+    final editorState = ref.watch(tmEditorProvider);
+    final tm = editorState.tm;
+
     return SafeArea(
-      child: Column(
+      child: Stack(
         children: [
-          // Canvas occupies the remaining viewport height
-          Expanded(
+          Positioned.fill(
             child: Padding(
               padding: const EdgeInsets.all(8),
               child: _buildCanvasWithToolbar(isMobile: true),
             ),
           ),
+          // Floating Tape panel
+          if (tm != null)
+            Positioned(
+              top: 16,
+              right: 16,
+              child: TMTapePanel(
+                tapeState: _currentTape,
+                tapeAlphabet: tm.tapeAlphabet,
+                onClear: () {
+                  setState(() {
+                    _currentTape = TapeState.initial(
+                      blankSymbol: tm.blankSymbol,
+                    );
+                  });
+                },
+              ),
+            ),
         ],
       ),
     );

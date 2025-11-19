@@ -179,6 +179,11 @@ class GraphViewCanvasEdge {
   final bool? isLambdaPop;
   final bool? isLambdaPush;
 
+  /// Indica se esta transição é epsilon (para FSA)
+  bool get isEpsilonTransition {
+    return lambdaSymbol != null && lambdaSymbol!.isNotEmpty;
+  }
+
   String get label {
     final hasPdaMetadata = popSymbol != null ||
         pushSymbol != null ||

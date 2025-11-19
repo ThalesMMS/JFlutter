@@ -10,6 +10,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/models/tm_transition.dart';
+import '../tm/direction_icon.dart';
 
 class TmTransitionOperationsEditor extends StatefulWidget {
   const TmTransitionOperationsEditor({
@@ -98,25 +99,41 @@ class _TmTransitionOperationsEditorState
                   labelText: 'Direction',
                   border: OutlineInputBorder(),
                 ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<TapeDirection>(
-                    value: _direction,
-                    items: TapeDirection.values
-                        .map(
-                          (direction) => DropdownMenuItem(
-                            value: direction,
-                            child: Text(direction.description),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (value) {
-                      if (value != null) {
+                child: Column(
+                  children: [
+                    DropdownButtonHideUnderline(
+                      child: DropdownButton<TapeDirection>(
+                        value: _direction,
+                        items: TapeDirection.values
+                            .map(
+                              (direction) => DropdownMenuItem(
+                                value: direction,
+                                child: TMDirectionIndicator(
+                                  direction: direction,
+                                ),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              _direction = value;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TMDirectionSelector(
+                      selected: _direction,
+                      onChanged: (value) {
                         setState(() {
                           _direction = value;
                         });
-                      }
-                    },
-                  ),
+                      },
+                      compact: true,
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 12),

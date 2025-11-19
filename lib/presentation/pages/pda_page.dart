@@ -22,6 +22,7 @@ import '../widgets/mobile_automaton_controls.dart';
 import '../widgets/pda_canvas_graphview.dart';
 import '../widgets/pda_algorithm_panel.dart';
 import '../widgets/pda_simulation_panel.dart';
+import '../widgets/pda/stack_drawer.dart';
 import '../../core/services/simulation_highlight_service.dart';
 import '../../features/canvas/graphview/graphview_highlight_channel.dart';
 import '../../features/canvas/graphview/graphview_pda_canvas_controller.dart';
@@ -40,6 +41,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
   int _transitionCount = 0;
   bool _hasUnsavedChanges = false;
   ProviderSubscription<PDAEditorState>? _pdaEditorSub;
+  StackState _currentStack = const StackState.empty();
   late final GraphViewPdaCanvasController _canvasController;
   late final GraphViewSimulationHighlightChannel _highlightChannel;
   late final SimulationHighlightService _highlightService;
@@ -124,10 +126,35 @@ class _PDAPageState extends ConsumerState<PDAPage> {
   }
 
   Widget _buildMobileLayout() {
+    final editorState = ref.watch(pdaEditorProvider);
+    final pda = editorState.pda;
+
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: _buildCanvasWithToolbar(isMobile: true),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: _buildCanvasWithToolbar(isMobile: true),
+            ),
+          ),
+          // Floating Stack panel
+          if (pda != null)
+            Positioned(
+              top: 16,
+              right: 16,
+              child: PDAStackPanel(
+                stackState: _currentStack,
+                initialStackSymbol: pda.initialStackSymbol,
+                stackAlphabet: pda.stackAlphabet,
+                onClear: () {
+                  setState(() {
+                    _currentStack = const StackState.empty();
+                  });
+                },
+              ),
+            ),
+        ],
       ),
     );
   }

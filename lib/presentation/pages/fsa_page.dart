@@ -20,6 +20,7 @@ import '../widgets/automaton_canvas_tool.dart';
 import '../widgets/graphview_canvas_toolbar.dart';
 import '../widgets/mobile_automaton_controls.dart';
 import '../widgets/simulation_panel.dart';
+import '../widgets/fsa/determinism_badge.dart';
 import 'grammar_page.dart';
 import 'regex_page.dart';
 import '../../core/services/simulation_highlight_service.dart';
@@ -421,6 +422,8 @@ class _FSAPageState extends ConsumerState<FSAPage> {
                   onAlgorithms: onAlgorithms,
                 ),
               ),
+            // Badge DFA/NFA/ε-NFA
+            FSADeterminismOverlay(automaton: state.currentAutomaton),
             AnimatedBuilder(
               animation: combinedListenable,
               builder: (context, _) {
@@ -457,6 +460,8 @@ class _FSAPageState extends ConsumerState<FSAPage> {
       return Stack(
         children: [
           Positioned.fill(child: child),
+          // Badge DFA/NFA/ε-NFA (desktop)
+          FSADeterminismOverlay(automaton: state.currentAutomaton),
           AnimatedBuilder(
             animation: combinedListenable,
             builder: (context, _) {

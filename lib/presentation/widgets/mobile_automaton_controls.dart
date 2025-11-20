@@ -242,8 +242,6 @@ class _ControlAction {
   /// Texto mostrado no Tooltip. Se não vier, caímos para [label] (se houver).
   final String? tooltip;
 
-  /// Rótulo opcional pensado pelo branch "codex". Hoje é usado apenas para
-  /// acessibilidade/tooltip fallback (mantém compatibilidade sem quebrar UI).
   final String? label;
 
   final VoidCallback? onPressed;

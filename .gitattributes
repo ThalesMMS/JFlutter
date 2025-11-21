@@ -15,3 +15,6 @@ build/** linguist-vendored
 coverage/** linguist-vendored
 jflutter_js/** linguist-vendored
 test/** linguist-vendored
+examples/** linguist-vendored
+integration_test/** linguist-vendored
+tool/** linguist-vendored

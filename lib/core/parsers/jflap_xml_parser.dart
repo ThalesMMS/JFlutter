@@ -2,22 +2,21 @@
 //  jflap_xml_parser.dart
 //  JFlutter
 //
-//  Parser dedicado a arquivos JFLAP em XML que valida a estrutura, identifica o tipo
-//  de autômato e instancia entidades internas a partir de estados, transições e
-//  alfabetos extraídos do documento.
-//  Atualmente cobre autômatos finitos, convertendo dados em AutomatonEntity e
-//  retornando Result para sinalizar erros de leitura ou formatos não suportados.
+//  Parser dedicado a arquivos JFLAP em XML que valida a estrutura, identifica o
+//  tipo de autômato e reconstrói a estrutura serializável usada pelos serviços
+//  de importação/exportação.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
+import 'package:collection/collection.dart';
 import 'package:xml/xml.dart';
-import '../entities/automaton_entity.dart';
 import '../result.dart';
+import '../utils/epsilon_utils.dart';
 
 /// Parser para arquivos JFLAP (.jff) em formato XML
 class JFLAPXMLParser {
-  /// Parse um arquivo JFLAP XML e retorna o autômato correspondente
-  static Result<dynamic> parseJFLAPFile(String xmlContent) {
+  /// Parse um arquivo JFLAP XML e retorna o mapa estruturado correspondente
+  static Result<Map<String, dynamic>> parseJFLAPFile(String xmlContent) {
     try {
       final document = XmlDocument.parse(xmlContent);
       final root = document.rootElement;
@@ -27,18 +26,18 @@ class JFLAPXMLParser {
         return const Failure('Arquivo não é um formato JFLAP válido');
       }
 
-      // Obter o tipo do autômato
+      // Obter o tipo do autômato (elemento <type> ou atributo type)
       final typeElement = root.findElements('type').firstOrNull;
-      if (typeElement == null) {
-        return const Failure('Tipo de autômato não especificado');
-      }
-
-      final type = typeElement.innerText.trim();
+      final typeAttribute = root.getAttribute('type');
+      final type = ((typeElement?.innerText ?? typeAttribute ?? 'fa').trim())
+          .toLowerCase();
 
       // Parse baseado no tipo
       switch (type) {
         case 'fa':
-          return _parseFSA(root);
+        case 'dfa':
+        case 'nfa':
+          return _parseFsa(root);
         default:
           return Failure('Tipo de autômato não suportado: $type');
       }
@@ -47,99 +46,97 @@ class JFLAPXMLParser {
     }
   }
 
-  /// Parse um autômato finito (FSA)
-  static Result<AutomatonEntity> _parseFSA(XmlElement root) {
+  /// Parse um autômato finito (FSA) para a estrutura de dados interna
+  static Result<Map<String, dynamic>> _parseFsa(XmlElement root) {
     try {
-      final states = <StateEntity>[];
+      final automatonElement = root.findElements('automaton').firstOrNull;
+      if (automatonElement == null) {
+        return const Failure('Elemento <automaton> não encontrado');
+      }
+
+      final states = <Map<String, dynamic>>[];
       final transitions = <String, List<String>>{};
       final alphabet = <String>{};
       String? initialId;
-      int nextId = 0;
 
-      // Parse estados
-      final stateElements = root.findElements('state');
-      final stateMap = <String, String>{};
+      // Tabela para mapear IDs (numéricos ou rótulos) para o identificador final
+      final idLookup = <String, String>{};
 
-      for (final stateElement in stateElements) {
-        final id = stateElement.getAttribute('id') ?? '';
+      for (final stateElement in automatonElement.findElements('state')) {
+        final id =
+            stateElement.getAttribute('id') ?? stateElement.getAttribute('name');
+        if (id == null || id.isEmpty) {
+          // Ignora estados sem identificador
+          continue;
+        }
+
         final name = stateElement.getAttribute('name') ?? id;
-        final x = double.tryParse(stateElement.getAttribute('x') ?? '0') ?? 0.0;
-        final y = double.tryParse(stateElement.getAttribute('y') ?? '0') ?? 0.0;
+        final xText =
+            stateElement.getAttribute('x') ?? stateElement.getElement('x')?.text;
+        final yText =
+            stateElement.getAttribute('y') ?? stateElement.getElement('y')?.text;
+        final x = double.tryParse(xText ?? '') ?? 0.0;
+        final y = double.tryParse(yText ?? '') ?? 0.0;
+        final isInitial = stateElement.findElements('initial').isNotEmpty;
+        final isFinal = stateElement.findElements('final').isNotEmpty;
 
-        // Verificar se é estado inicial
-        final initial = stateElement.findElements('initial').isNotEmpty;
+        states.add({
+          'id': id,
+          'name': name,
+          'x': x,
+          'y': y,
+          'isInitial': isInitial,
+          'isFinal': isFinal,
+        });
 
-        // Verificar se é estado final
-        final finalState = stateElement.findElements('final').isNotEmpty;
+        idLookup[id] = id;
+        idLookup[name] = id;
 
-        final state = StateEntity(
-          id: name,
-          name: name,
-          x: x,
-          y: y,
-          isInitial: initial,
-          isFinal: finalState,
-        );
-
-        states.add(state);
-        stateMap[id] = name;
-
-        if (initial) {
-          initialId = name;
+        if (isInitial && initialId == null) {
+          initialId = id;
         }
-
-        nextId++;
       }
 
-      // Parse transições
-      final transitionElements = root.findElements('transition');
-      for (final transitionElement in transitionElements) {
-        final fromId =
-            transitionElement
-                .findElements('from')
-                .firstOrNull
-                ?.innerText
-                .trim() ??
-            '';
-        final toId =
-            transitionElement
-                .findElements('to')
-                .firstOrNull
-                ?.innerText
-                .trim() ??
-            '';
-        final read =
-            transitionElement
-                .findElements('read')
-                .firstOrNull
-                ?.innerText
-                .trim() ??
-            '';
+      for (final transitionElement in automatonElement.findElements(
+        'transition',
+      )) {
+        final rawFrom =
+            transitionElement.findElements('from').firstOrNull?.innerText.trim() ??
+                '';
+        final rawTo =
+            transitionElement.findElements('to').firstOrNull?.innerText.trim() ??
+                '';
+        final rawRead =
+            transitionElement.findElements('read').firstOrNull?.innerText ?? '';
 
-        final fromState = stateMap[fromId];
-        final toState = stateMap[toId];
-        final symbol = read.isEmpty ? 'λ' : read;
+        final fromId = idLookup[rawFrom] ?? rawFrom;
+        final toId = idLookup[rawTo] ?? rawTo;
+        if (fromId.isEmpty || toId.isEmpty) {
+          continue;
+        }
 
-        if (fromState != null && toState != null) {
+        final symbol = normalizeToEpsilon(rawRead);
+        final key = '$fromId|$symbol';
+        transitions.putIfAbsent(key, () => <String>[]);
+        transitions[key]!.add(toId);
+
+        if (symbol.isNotEmpty) {
           alphabet.add(symbol);
-          final key = '$fromState|$symbol';
-          transitions[key] = transitions[key] ?? <String>[];
-          transitions[key]!.add(toState);
         }
       }
 
-      final automaton = AutomatonEntity(
-        id: 'parsed_automaton',
-        name: 'Parsed Automaton',
-        alphabet: alphabet,
-        states: states,
-        transitions: transitions,
-        initialId: initialId,
-        nextId: nextId,
-        type: AutomatonType.nfa,
-      );
+      final parsed = <String, dynamic>{
+        'id': 'parsed_automaton',
+        'name': 'Parsed Automaton',
+        'type': 'dfa',
+        'alphabet': alphabet.toList(),
+        'states': states,
+        'transitions': transitions,
+        'initialId': initialId ?? (states.isNotEmpty ? states.first['id'] : null),
+        'nextId': states.length,
+      };
 
-      return Success(automaton);
+      return Success(parsed);
     } catch (e) {
       return Failure('Erro ao parsear FSA: $e');
     }

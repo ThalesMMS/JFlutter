@@ -14,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/pumping_lemma_game/pumping_lemma_game.dart';
 import '../widgets/pumping_lemma_help.dart';
 import '../widgets/pumping_lemma_progress.dart';
+import '../widgets/tablet_layout_container.dart';
 
 /// Page for the Pumping Lemma Game
 class PumpingLemmaPage extends ConsumerStatefulWidget {
@@ -34,7 +35,21 @@ class _PumpingLemmaPageState extends ConsumerState<PumpingLemmaPage> {
     final isMobile = screenSize.width < 1024;
 
     return Scaffold(
-      body: isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
+      body: isMobile 
+          ? _buildMobileLayout() 
+          : screenSize.width < 1400 
+              ? _buildTabletLayout() 
+              : _buildDesktopLayout(),
+    );
+  }
+
+  Widget _buildTabletLayout() {
+    return TabletLayoutContainer(
+      canvas: const PumpingLemmaGame(),
+      algorithmPanel: const PumpingLemmaHelp(),
+      simulationPanel: const PumpingLemmaProgress(),
+      algorithmTabTitle: 'Help',
+      simulationTabTitle: 'Progress',
     );
   }
 

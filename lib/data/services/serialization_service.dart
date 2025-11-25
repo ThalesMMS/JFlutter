@@ -19,13 +19,22 @@ class SerializationService {
     final builder = XmlBuilder();
     builder.processing('xml', 'version="1.0" encoding="UTF-8"');
 
+    final rawType = (automatonData['type'] as String? ?? 'fa').toLowerCase();
+    final automatonType =
+        (rawType == 'dfa' || rawType == 'nfa') ? 'fa' : rawType;
+
     builder.element(
       'structure',
       nest: () {
-        builder.attribute('type', 'fa');
+        builder.attribute('type', automatonType);
+        builder.element('type', nest: automatonType);
         builder.element(
           'automaton',
           nest: () {
+            // Force explicit open/close tags even when empty so consumers don't
+            // receive self-closing <automaton/> nodes.
+            builder.text('\n');
+
             // Add states
             final states = automatonData['states'] as List<dynamic>? ?? [];
             for (final state in states) {
@@ -38,6 +47,14 @@ class SerializationService {
                     'name',
                     stateMap['name'] as String? ?? stateMap['id'] as String,
                   );
+                  final x = (stateMap['x'] as num?)?.toDouble();
+                  final y = (stateMap['y'] as num?)?.toDouble();
+                  if (x != null) {
+                    builder.element('x', nest: x.toString());
+                  }
+                  if (y != null) {
+                    builder.element('y', nest: y.toString());
+                  }
                   if (stateMap['isInitial'] == true) {
                     builder.element('initial');
                   }
@@ -49,8 +66,8 @@ class SerializationService {
             }
 
             // Add transitions
-            final transitions =
-                automatonData['transitions'] as Map<String, dynamic>? ?? {};
+              final transitions =
+                  automatonData['transitions'] as Map<String, dynamic>? ?? {};
             for (final transition in transitions.entries) {
               final keyParts = transition.key.split('|');
               final fromState =
@@ -89,7 +106,22 @@ class SerializationService {
   Result<Map<String, dynamic>> deserializeAutomatonFromJflap(String xmlString) {
     try {
       final document = XmlDocument.parse(xmlString);
-      final automatonElement = document.findAllElements('automaton').first;
+      final root = document.rootElement;
+      final automatonElements = document.findAllElements('automaton');
+      final automatonElement =
+          automatonElements.isEmpty ? null : automatonElements.first;
+
+      if (automatonElement == null) {
+        return const Failure(
+          'Failed to deserialize JFLAP automaton: No <automaton> element found',
+        );
+      }
+
+      final typeElement = root.getElement('type');
+      final typeAttribute = root.getAttribute('type');
+      final automatonType = (typeElement?.innerText.trim().isNotEmpty ?? false)
+          ? typeElement!.innerText.trim()
+          : (typeAttribute ?? 'dfa');
 
       final states = <Map<String, dynamic>>[];
       final transitions = <String, List<String>>{};
@@ -97,14 +129,28 @@ class SerializationService {
 
       // Parse states
       for (final stateElement in automatonElement.findAllElements('state')) {
-        final id = stateElement.getAttribute('id')!;
+        final id =
+            stateElement.getAttribute('id') ??
+            stateElement.getAttribute('name') ??
+            '';
+        if (id.isEmpty) {
+          continue;
+        }
         final name = stateElement.getAttribute('name') ?? id;
+        final xText =
+            stateElement.getAttribute('x') ?? stateElement.getElement('x')?.innerText;
+        final yText =
+            stateElement.getAttribute('y') ?? stateElement.getElement('y')?.innerText;
+        final x = double.tryParse(xText ?? '') ?? 0.0;
+        final y = double.tryParse(yText ?? '') ?? 0.0;
         final isInitial = stateElement.findElements('initial').isNotEmpty;
         final isFinal = stateElement.findElements('final').isNotEmpty;
 
         final state = {
           'id': id,
           'name': name,
+          'x': x,
+          'y': y,
           'isInitial': isInitial,
           'isFinal': isFinal,
         };
@@ -119,9 +165,14 @@ class SerializationService {
       for (final transitionElement in automatonElement.findAllElements(
         'transition',
       )) {
-        final from =
-            transitionElement.findElements('from').first.innerText.trim();
-        final to = transitionElement.findElements('to').first.innerText.trim();
+        final fromElements = transitionElement.findElements('from');
+        final toElements = transitionElement.findElements('to');
+        if (fromElements.isEmpty || toElements.isEmpty) {
+          continue;
+        }
+
+        final from = fromElements.first.innerText.trim();
+        final to = toElements.first.innerText.trim();
         final readElements = transitionElement.findElements('read');
         final rawSymbol =
             readElements.isEmpty ? null : readElements.first.innerText;
@@ -136,7 +187,7 @@ class SerializationService {
         'states': states,
         'transitions': transitions,
         'initialId': initialState,
-        'type': 'dfa',
+        'type': automatonType,
       };
 
       return Success(automatonData);

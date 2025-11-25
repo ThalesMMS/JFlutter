@@ -123,7 +123,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
       child: Scaffold(
         body: isMobile 
             ? _buildMobileLayout() 
-            : screenSize.width < 1200 
+            : screenSize.width < 1400 
                 ? _buildTabletLayout() 
                 : _buildDesktopLayout(),
       ),

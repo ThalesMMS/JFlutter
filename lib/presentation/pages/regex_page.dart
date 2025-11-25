@@ -343,7 +343,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final isMobile = screenSize.width < 768;
-    final isTablet = screenSize.width >= 768 && screenSize.width < 1200;
+    final isTablet = screenSize.width >= 768 && screenSize.width < 1400;
 
     if (isMobile) {
       return _buildMobileLayout();

@@ -54,6 +54,7 @@ class SvgExporter {
     final buffer = StringBuffer();
     final scaledWidth = width * opts.scale;
     final scaledHeight = height * opts.scale;
+    final hasStates = automaton.states.isNotEmpty;
 
     // SVG header
     buffer.writeln('<?xml version="1.0" encoding="UTF-8" standalone="no"?>');
@@ -69,7 +70,10 @@ class SvgExporter {
     buffer.writeln('  xmlns:xlink="http://www.w3.org/1999/xlink">');
 
     // Add styles
-    _addSvgStyles(buffer);
+    _addSvgStyles(
+      buffer,
+      includeAcceptingMask: hasStates,
+    );
 
     // Add automaton content
     _addAutomatonContent(buffer, automaton, width, height, opts);
@@ -143,24 +147,31 @@ class SvgExporter {
     return buffer.toString();
   }
 
-  static void _addSvgStyles(StringBuffer buffer) {
+  static void _addSvgStyles(
+    StringBuffer buffer, {
+    bool includeAcceptingMask = true,
+  }) {
     buffer.writeln('<defs>');
     // Arrow markers for transitions
     buffer.writeln(
       '  <marker id="arrowhead" markerWidth="10" markerHeight="7"',
     );
     buffer.writeln('    refX="9" refY="3.5" orient="auto">');
-    buffer.writeln('    <polygon points="0 0, 10 3.5, 0 7" fill="#000"/>');
+    buffer.writeln(
+      '    <polygon points="0 0, 10 3.5, 0 7" fill="#000" stroke="#000"/>',
+    );
     buffer.writeln('  </marker>');
 
     // State masks for double circles (accepting states)
-    buffer.writeln('  <mask id="accepting-state-mask">');
-    buffer.writeln('    <rect width="100%" height="100%" fill="white"/>');
-    buffer.writeln(
-      '    <circle cx="0" cy="0" r="$_stateRadius" fill="transparent"',
-    );
-    buffer.writeln('      stroke="black" stroke-width="3"/>');
-    buffer.writeln('  </mask>');
+    if (includeAcceptingMask) {
+      buffer.writeln('  <mask id="accepting-state-mask">');
+      buffer.writeln('    <rect width="100%" height="100%" fill="white"/>');
+      buffer.writeln(
+        '    <circle cx="0" cy="0" r="$_stateRadius" fill="transparent"',
+      );
+      buffer.writeln('      stroke="black" stroke-width="3"/>');
+      buffer.writeln('  </mask>');
+    }
 
     buffer.writeln('</defs>');
     buffer.writeln('<style>');
@@ -228,10 +239,7 @@ class SvgExporter {
         '        fill="${_colorToHex(tapeFill)}" stroke="${_colorToHex(tapeStroke)}"/>',
       );
       buffer.writeln(
-        '      <text x="$textX" y="$textY"',
-      );
-      buffer.writeln(
-        '        class="tape-symbol" fill="${_colorToHex(textColor)}">$symbol</text>',
+        '      <text x="$textX" y="$textY" class="tape-symbol" fill="${_colorToHex(textColor)}">$symbol</text>',
       );
     }
     buffer.writeln('    </g>');

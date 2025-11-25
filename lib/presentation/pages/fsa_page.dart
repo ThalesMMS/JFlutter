@@ -536,7 +536,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
       child: Scaffold(
         body: isMobile 
             ? _buildMobileLayout(state) 
-            : screenSize.width < 1200 
+            : screenSize.width < 1400 
                 ? _buildTabletLayout(state) 
                 : _buildDesktopLayout(state),
       ),

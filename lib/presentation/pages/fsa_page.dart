@@ -26,6 +26,7 @@ import 'regex_page.dart';
 import '../../core/services/simulation_highlight_service.dart';
 import '../../features/canvas/graphview/graphview_canvas_controller.dart';
 import '../../features/canvas/graphview/graphview_highlight_channel.dart';
+import '../widgets/tablet_layout_container.dart';
 
 /// Page for working with Finite State Automata
 class FSAPage extends ConsumerStatefulWidget {
@@ -533,7 +534,11 @@ class _FSAPageState extends ConsumerState<FSAPage> {
         canvasHighlightServiceProvider.overrideWithValue(_highlightService),
       ],
       child: Scaffold(
-        body: isMobile ? _buildMobileLayout(state) : _buildDesktopLayout(state),
+        body: isMobile 
+            ? _buildMobileLayout(state) 
+            : screenSize.width < 1200 
+                ? _buildTabletLayout(state) 
+                : _buildDesktopLayout(state),
       ),
     );
   }
@@ -648,6 +653,21 @@ class _FSAPageState extends ConsumerState<FSAPage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildTabletLayout(AutomatonState state) {
+    return TabletLayoutContainer(
+      canvas: _buildCanvasArea(state: state, isMobile: false),
+      algorithmPanel: _buildAlgorithmPanelForState(state),
+      simulationPanel: SimulationPanel(
+        onSimulate: (inputString) => ref
+            .read(automatonProvider.notifier)
+            .simulateAutomaton(inputString),
+        simulationResult: state.simulationResult,
+        regexResult: state.regexResult,
+        highlightService: _highlightService,
+      ),
     );
   }
 }

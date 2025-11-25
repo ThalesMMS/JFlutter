@@ -26,6 +26,7 @@ import '../widgets/mobile_automaton_controls.dart';
 import '../../core/services/simulation_highlight_service.dart';
 import '../../features/canvas/graphview/graphview_highlight_channel.dart';
 import '../../features/canvas/graphview/graphview_tm_canvas_controller.dart';
+import '../widgets/tablet_layout_container.dart';
 
 /// Page for working with Turing Machines
 class TMPage extends ConsumerStatefulWidget {
@@ -118,7 +119,11 @@ class _TMPageState extends ConsumerState<TMPage> {
         canvasHighlightServiceProvider.overrideWithValue(_highlightService),
       ],
       child: Scaffold(
-        body: isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
+        body: isMobile 
+            ? _buildMobileLayout() 
+            : screenSize.width < 1200 
+                ? _buildTabletLayout() 
+                : _buildDesktopLayout(),
       ),
     );
   }
@@ -333,6 +338,15 @@ class _TMPageState extends ConsumerState<TMPage> {
   String _formatCount(String singular, String plural, int count) {
     final label = count == 1 ? singular : plural;
     return '$count $label';
+  }
+
+  Widget _buildTabletLayout() {
+    return TabletLayoutContainer(
+      canvas: _buildCanvasWithToolbar(isMobile: false),
+      algorithmPanel: const TMAlgorithmPanel(useExpanded: false),
+      simulationPanel: TMSimulationPanel(highlightService: _highlightService),
+      infoPanel: _buildInfoPanel(context),
+    );
   }
 
   void _handleTMUpdate(TM tm) {

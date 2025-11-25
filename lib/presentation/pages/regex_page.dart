@@ -20,6 +20,7 @@ import '../../core/models/fsa.dart';
 import '../providers/automaton_provider.dart';
 import '../widgets/algorithm_panel.dart';
 import '../widgets/simulation_panel.dart';
+import '../widgets/tablet_layout_container.dart';
 import 'fsa_page.dart';
 
 /// Regular Expression page for testing and converting regular expressions
@@ -342,9 +343,12 @@ class _RegexPageState extends ConsumerState<RegexPage> {
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final isMobile = screenSize.width < 768;
+    final isTablet = screenSize.width >= 768 && screenSize.width < 1200;
 
     if (isMobile) {
       return _buildMobileLayout();
+    } else if (isTablet) {
+      return _buildTabletLayout();
     } else {
       return _buildDesktopLayout();
     }
@@ -615,254 +619,12 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                   right: BorderSide(
                     color: Theme.of(
                       context,
-                    ).colorScheme.outline.withValues(alpha: 0.2),
+                    ).colorScheme.outline.withOpacity(0.2),
                   ),
                 ),
               ),
               child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Regular Expression',
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Regex input
-                    Text(
-                      'Regular Expression:',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _regexController,
-                      decoration: InputDecoration(
-                        hintText: 'Enter regular expression (e.g., a*b+)',
-                        border: const OutlineInputBorder(),
-                        suffixIcon: IconButton(
-                          onPressed: _validateRegex,
-                          icon: const Icon(Icons.check),
-                          tooltip: 'Validate Regex',
-                        ),
-                      ),
-                      onChanged: (value) => _validateRegex(),
-                    ),
-
-                    // Validation status
-                    const SizedBox(height: 8),
-                    if (_currentRegex.isEmpty)
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant.withOpacity(0.6),
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Enter a regular expression to validate.',
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant
-                                        .withOpacity(0.8),
-                                  ),
-                            ),
-                          ),
-                        ],
-                      )
-                    else
-                      Row(
-                        children: [
-                          Icon(
-                            _isValid ? Icons.check_circle : Icons.error,
-                            color: _isValid ? Colors.green : Colors.red,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              _isValid
-                                  ? 'Valid regex'
-                                  : (_errorMessage.isNotEmpty
-                                        ? _errorMessage
-                                        : 'Invalid regex'),
-                              style: TextStyle(
-                                color: _isValid ? Colors.green : Colors.red,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                    const SizedBox(height: 24),
-
-                    // Test string input
-                    Text(
-                      'Test String:',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _testStringController,
-                      decoration: InputDecoration(
-                        hintText: 'Enter string to test',
-                        border: const OutlineInputBorder(),
-                        suffixIcon: IconButton(
-                          onPressed: _testStringMatch,
-                          icon: const Icon(Icons.play_arrow),
-                          tooltip: 'Test String',
-                        ),
-                      ),
-                      onChanged: (value) => _testStringMatch(),
-                    ),
-
-                    // Match result
-                    const SizedBox(height: 8),
-                    if (_testString.isNotEmpty)
-                      Row(
-                        children: [
-                          Icon(
-                            _matches ? Icons.check_circle : Icons.cancel,
-                            color: _matches ? Colors.green : Colors.red,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            _matches ? 'Matches!' : 'Does not match',
-                            style: TextStyle(
-                              color: _matches ? Colors.green : Colors.red,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                    const SizedBox(height: 24),
-
-                    // Conversion buttons
-                    Text(
-                      'Convert to Automaton:',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: _convertToNFA,
-                            icon: const Icon(Icons.account_tree),
-                            label: const Text('Convert to NFA'),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: _convertToDFA,
-                            icon: const Icon(Icons.account_tree_outlined),
-                            label: const Text('Convert to DFA'),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Compare regular expressions
-                    Text(
-                      'Compare Regular Expressions:',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _comparisonRegexController,
-                      decoration: const InputDecoration(
-                        hintText: 'Enter second regular expression',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Center(
-                      child: ElevatedButton.icon(
-                        onPressed: _compareRegexEquivalence,
-                        icon: const Icon(Icons.compare_arrows),
-                        label: const Text('Compare Equivalence'),
-                      ),
-                    ),
-                    if (_equivalenceMessage.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(
-                            _equivalenceResult == true
-                                ? Icons.check_circle
-                                : Icons.error_outline,
-                            color: _equivalenceResult == true
-                                ? Colors.green
-                                : Colors.orange,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              _equivalenceMessage,
-                              style: TextStyle(
-                                color: _equivalenceResult == true
-                                    ? Colors.green
-                                    : Colors.orange,
-                                fontSize: 14,
-                                fontWeight: _equivalenceResult == true
-                                    ? FontWeight.bold
-                                    : null,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-
-                    const SizedBox(height: 24),
-
-                    // Help section
-                    SizedBox(
-                      width: double.infinity,
-                      child: Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Regex Help',
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(height: 8),
-                              const Text(
-                                'Common patterns:\n'
-                                '• a* - zero or more a\'s\n'
-                                '• a+ - one or more a\'s\n'
-                                '• a? - zero or one a\n'
-                                '• a|b - a or b\n'
-                                '• (ab)* - zero or more ab\'s\n'
-                                '• [abc] - any of a, b, or c',
-                                style: TextStyle(fontSize: 12),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                child: _buildInputArea(),
               ),
             ),
           ),
@@ -915,6 +677,281 @@ class _RegexPageState extends ConsumerState<RegexPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildTabletLayout() {
+    return Scaffold(
+      body: TabletLayoutContainer(
+        canvas: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: _buildInputArea(),
+        ),
+        algorithmPanel: AlgorithmPanel(
+          onNfaToDfa: _convertToDFA,
+          onMinimizeDfa: null,
+          onClear: _clearInputs,
+          onRegexToNfa: (regex) {
+            _regexController.text = regex;
+            _validateRegex();
+            _convertToNFA();
+          },
+          onFaToRegex: null,
+        ),
+        simulationPanel: SimulationPanel(
+          onSimulate: (input) {
+            _testStringController.text = input;
+            _testStringMatch();
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInputArea() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Regular Expression',
+          style: Theme.of(context).textTheme.headlineSmall
+              ?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+
+        // Regex input
+        Text(
+          'Regular Expression:',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _regexController,
+          decoration: InputDecoration(
+            hintText: 'Enter regular expression (e.g., a*b+)',
+            border: const OutlineInputBorder(),
+            suffixIcon: IconButton(
+              onPressed: _validateRegex,
+              icon: const Icon(Icons.check),
+              tooltip: 'Validate Regex',
+            ),
+          ),
+          onChanged: (value) => _validateRegex(),
+        ),
+
+        // Validation status
+        const SizedBox(height: 8),
+        if (_currentRegex.isEmpty)
+          Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurfaceVariant.withOpacity(0.6),
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Enter a regular expression to validate.',
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurfaceVariant
+                            .withOpacity(0.8),
+                      ),
+                ),
+              ),
+            ],
+          )
+        else
+          Row(
+            children: [
+              Icon(
+                _isValid ? Icons.check_circle : Icons.error,
+                color: _isValid ? Colors.green : Colors.red,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  _isValid
+                      ? 'Valid regex'
+                      : (_errorMessage.isNotEmpty
+                            ? _errorMessage
+                            : 'Invalid regex'),
+                  style: TextStyle(
+                    color: _isValid ? Colors.green : Colors.red,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+        const SizedBox(height: 24),
+
+        // Test string input
+        Text(
+          'Test String:',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _testStringController,
+          decoration: InputDecoration(
+            hintText: 'Enter string to test',
+            border: const OutlineInputBorder(),
+            suffixIcon: IconButton(
+              onPressed: _testStringMatch,
+              icon: const Icon(Icons.play_arrow),
+              tooltip: 'Test String',
+              // tooltip: 'Test String', // Duplicate removed
+            ),
+          ),
+          onChanged: (value) => _testStringMatch(),
+        ),
+
+        // Match result
+        const SizedBox(height: 8),
+        if (_testString.isNotEmpty)
+          Row(
+            children: [
+              Icon(
+                _matches ? Icons.check_circle : Icons.cancel,
+                color: _matches ? Colors.green : Colors.red,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _matches ? 'Matches!' : 'Does not match',
+                style: TextStyle(
+                  color: _matches ? Colors.green : Colors.red,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+
+        const SizedBox(height: 24),
+
+        // Conversion buttons
+        Text(
+          'Convert to Automaton:',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: _convertToNFA,
+                icon: const Icon(Icons.account_tree),
+                label: const Text('Convert to NFA'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: _convertToDFA,
+                icon: const Icon(Icons.account_tree_outlined),
+                label: const Text('Convert to DFA'),
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 24),
+
+        // Compare regular expressions
+        Text(
+          'Compare Regular Expressions:',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _comparisonRegexController,
+          decoration: const InputDecoration(
+            hintText: 'Enter second regular expression',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Center(
+          child: ElevatedButton.icon(
+            onPressed: _compareRegexEquivalence,
+            icon: const Icon(Icons.compare_arrows),
+            label: const Text('Compare Equivalence'),
+          ),
+        ),
+        if (_equivalenceMessage.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(
+                _equivalenceResult == true
+                    ? Icons.check_circle
+                    : Icons.error_outline,
+                color: _equivalenceResult == true
+                    ? Colors.green
+                    : Colors.orange,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  _equivalenceMessage,
+                  style: TextStyle(
+                    color: _equivalenceResult == true
+                        ? Colors.green
+                        : Colors.orange,
+                    fontSize: 14,
+                    fontWeight: _equivalenceResult == true
+                        ? FontWeight.bold
+                        : null,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+
+        const SizedBox(height: 24),
+
+        // Help section
+        SizedBox(
+          width: double.infinity,
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Regex Help',
+                    style: Theme.of(context).textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Common patterns:\n'
+                    '• a* - zero or more a\'s\n'
+                    '• a+ - one or more a\'s\n'
+                    '• a? - zero or one a\n'
+                    '• a|b - a or b\n'
+                    '• (ab)* - zero or more ab\'s\n'
+                    '• [abc] - any of a, b, or c',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

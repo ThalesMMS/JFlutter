@@ -43,7 +43,9 @@ enum _TMAnalysisSection {
 
 /// Panel for Turing Machine analysis algorithms
 class TMAlgorithmPanel extends ConsumerStatefulWidget {
-  const TMAlgorithmPanel({super.key});
+  const TMAlgorithmPanel({super.key, this.useExpanded = true});
+
+  final bool useExpanded;
 
   @override
   ConsumerState<TMAlgorithmPanel> createState() => _TMAlgorithmPanelState();
@@ -225,25 +227,27 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
 
   Widget _buildResultsSection(BuildContext context) {
     final hasData = _analysis != null || _analysisError != null;
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Analysis Results',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: hasData
-                ? _buildResults(context)
-                : _buildEmptyResults(context),
-          ),
-        ],
-      ),
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Analysis Results',
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 8),
+        widget.useExpanded
+            ? Expanded(
+                child: hasData
+                    ? _buildResults(context)
+                    : _buildEmptyResults(context),
+              )
+            : (hasData ? _buildResults(context) : _buildEmptyResults(context)),
+      ],
     );
+
+    return widget.useExpanded ? Expanded(child: content) : content;
   }
 
   Widget _buildEmptyResults(BuildContext context) {

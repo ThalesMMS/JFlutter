@@ -17,7 +17,9 @@ import '../providers/grammar_provider.dart';
 
 /// Panel for grammar parsing and string testing
 class GrammarSimulationPanel extends ConsumerStatefulWidget {
-  const GrammarSimulationPanel({super.key});
+  const GrammarSimulationPanel({super.key, this.useExpanded = true});
+
+  final bool useExpanded;
 
   @override
   ConsumerState<GrammarSimulationPanel> createState() =>
@@ -181,25 +183,29 @@ class _GrammarSimulationPanelState
   }
 
   Widget _buildResultsSection(BuildContext context) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Parse Results',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: _parseResult == null
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Parse Results',
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 8),
+        widget.useExpanded
+            ? Expanded(
+                child: _parseResult == null
+                    ? _buildEmptyResults(context)
+                    : _buildResults(context),
+              )
+            : (_parseResult == null
                 ? _buildEmptyResults(context)
-                : _buildResults(context),
-          ),
-        ],
-      ),
+                : _buildResults(context)),
+      ],
     );
+
+    return widget.useExpanded ? Expanded(child: content) : content;
   }
 
   Widget _buildEmptyResults(BuildContext context) {

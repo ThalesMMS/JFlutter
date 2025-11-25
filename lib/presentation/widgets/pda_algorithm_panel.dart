@@ -18,7 +18,9 @@ import '../providers/pda_editor_provider.dart';
 
 /// Panel for PDA analysis algorithms
 class PDAAlgorithmPanel extends ConsumerStatefulWidget {
-  const PDAAlgorithmPanel({super.key});
+  const PDAAlgorithmPanel({super.key, this.useExpanded = true});
+
+  final bool useExpanded;
 
   @override
   ConsumerState<PDAAlgorithmPanel> createState() => _PDAAlgorithmPanelState();
@@ -193,25 +195,29 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
   }
 
   Widget _buildResultsSection(BuildContext context) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Analysis Results',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: _analysisResult == null
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Analysis Results',
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 8),
+        widget.useExpanded
+            ? Expanded(
+                child: _analysisResult == null
+                    ? _buildEmptyResults(context)
+                    : _buildResults(context),
+              )
+            : (_analysisResult == null
                 ? _buildEmptyResults(context)
-                : _buildResults(context),
-          ),
-        ],
-      ),
+                : _buildResults(context)),
+      ],
     );
+
+    return widget.useExpanded ? Expanded(child: content) : content;
   }
 
   Widget _buildEmptyResults(BuildContext context) {

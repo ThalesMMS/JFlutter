@@ -14,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/grammar_editor.dart';
 import '../widgets/grammar_simulation_panel.dart';
 import '../widgets/grammar_algorithm_panel.dart';
+import '../widgets/tablet_layout_container.dart';
 
 /// Page for working with Context-Free Grammars
 class GrammarPage extends ConsumerStatefulWidget {
@@ -34,7 +35,11 @@ class _GrammarPageState extends ConsumerState<GrammarPage> {
     final isMobile = screenSize.width < 1024;
 
     return Scaffold(
-      body: isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
+      body: isMobile 
+          ? _buildMobileLayout() 
+          : screenSize.width < 1200 
+              ? _buildTabletLayout() 
+              : _buildDesktopLayout(),
     );
   }
 
@@ -185,6 +190,14 @@ class _GrammarPageState extends ConsumerState<GrammarPage> {
           ),
         ],
       ],
+    );
+  }
+
+  Widget _buildTabletLayout() {
+    return TabletLayoutContainer(
+      canvas: const GrammarEditor(),
+      algorithmPanel: const GrammarAlgorithmPanel(useExpanded: false),
+      simulationPanel: const GrammarSimulationPanel(useExpanded: false),
     );
   }
 }

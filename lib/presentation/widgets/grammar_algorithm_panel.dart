@@ -24,7 +24,9 @@ import '../providers/pda_editor_provider.dart';
 
 /// Panel for grammar analysis algorithms
 class GrammarAlgorithmPanel extends ConsumerStatefulWidget {
-  const GrammarAlgorithmPanel({super.key});
+  const GrammarAlgorithmPanel({super.key, this.useExpanded = true});
+
+  final bool useExpanded;
 
   @override
   ConsumerState<GrammarAlgorithmPanel> createState() =>
@@ -59,11 +61,13 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
       children: [
         Icon(Icons.auto_awesome, color: Theme.of(context).colorScheme.primary),
         const SizedBox(width: 8),
-        Text(
-          'Grammar Analysis',
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+        Expanded(
+          child: Text(
+            'Grammar Analysis',
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+          ),
         ),
       ],
     );
@@ -408,25 +412,29 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
   }
 
   Widget _buildResultsSection(BuildContext context) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Analysis Results',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: _analysisResult == null
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Analysis Results',
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 8),
+        widget.useExpanded
+            ? Expanded(
+                child: _analysisResult == null
+                    ? _buildEmptyResults(context)
+                    : _buildResults(context),
+              )
+            : (_analysisResult == null
                 ? _buildEmptyResults(context)
-                : _buildResults(context),
-          ),
-        ],
-      ),
+                : _buildResults(context)),
+      ],
     );
+
+    return widget.useExpanded ? Expanded(child: content) : content;
   }
 
   Widget _buildEmptyResults(BuildContext context) {

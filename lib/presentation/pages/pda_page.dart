@@ -26,6 +26,7 @@ import '../widgets/pda/stack_drawer.dart';
 import '../../core/services/simulation_highlight_service.dart';
 import '../../features/canvas/graphview/graphview_highlight_channel.dart';
 import '../../features/canvas/graphview/graphview_pda_canvas_controller.dart';
+import '../widgets/tablet_layout_container.dart';
 
 /// Page for working with Pushdown Automata
 class PDAPage extends ConsumerStatefulWidget {
@@ -120,7 +121,11 @@ class _PDAPageState extends ConsumerState<PDAPage> {
         canvasHighlightServiceProvider.overrideWithValue(_highlightService),
       ],
       child: Scaffold(
-        body: isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
+        body: isMobile 
+            ? _buildMobileLayout() 
+            : screenSize.width < 1200 
+                ? _buildTabletLayout() 
+                : _buildDesktopLayout(),
       ),
     );
   }
@@ -490,6 +495,14 @@ class _PDAPageState extends ConsumerState<PDAPage> {
   String _formatCount(String singular, String plural, int count) {
     final label = count == 1 ? singular : plural;
     return '$count $label';
+  }
+
+  Widget _buildTabletLayout() {
+    return TabletLayoutContainer(
+      canvas: _buildCanvasWithToolbar(isMobile: false),
+      algorithmPanel: const PDAAlgorithmPanel(useExpanded: false),
+      simulationPanel: PDASimulationPanel(highlightService: _highlightService),
+    );
   }
 }
 

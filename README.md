@@ -330,11 +330,6 @@ This project is distributed under a dual license structure:
   - **Usage**: NFA to DFA conversion algorithms, state minimization
   - **Validation**: Conversion algorithms validated against this implementation
 
-- **`References/turing-machine-generator-main/`** - Turing machine implementations
-  - **Source**: [turing-machine-generator](https://github.com/nikhil-RGB/turing-machine-generator) by Nikhil Narayanan
-  - **Usage**: Turing machine simulation, tape operations, state management
-  - **Validation**: TM operations validated against this reference
-
 #### Educational & Design Inspiration
 - **JFLAP Educational Philosophy** - Interactive learning approach
 - **Material Design 3** - Modern UI/UX principles

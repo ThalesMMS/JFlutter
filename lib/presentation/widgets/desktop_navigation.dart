@@ -25,16 +25,19 @@ class DesktopNavigation extends StatelessWidget {
       selectedIndex: currentIndex,
       groupAlignment: -1,
       extended: extended,
+      minWidth: 80,
       labelType: extended ? NavigationRailLabelType.none : NavigationRailLabelType.all,
       selectedIconTheme: IconThemeData(color: colorScheme.primary),
       unselectedIconTheme:
           IconThemeData(color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8)),
       selectedLabelTextStyle: TextStyle(
         color: colorScheme.primary,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.bold,
+        fontSize: 13,
       ),
       unselectedLabelTextStyle: TextStyle(
         color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+        fontSize: 12,
       ),
       destinations: [
         for (final item in items)

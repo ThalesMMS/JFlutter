@@ -171,7 +171,6 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
                       decoration: const InputDecoration(
                         labelText: 'Grammar Name',
                         border: OutlineInputBorder(),
-                        isDense: true,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -183,7 +182,6 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
                       decoration: const InputDecoration(
                         labelText: 'Start Symbol',
                         border: OutlineInputBorder(),
-                        isDense: true,
                       ),
                     ),
                   ],
@@ -201,7 +199,6 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
                       decoration: const InputDecoration(
                         labelText: 'Grammar Name',
                         border: OutlineInputBorder(),
-                        isDense: true,
                       ),
                     ),
                   ),
@@ -215,7 +212,6 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
                       decoration: const InputDecoration(
                         labelText: 'Start Symbol',
                         border: OutlineInputBorder(),
-                        isDense: true,
                       ),
                     ),
                   ),
@@ -258,7 +254,6 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
                         labelText: 'Left Side (Variable)',
                         hintText: 'e.g., S, A, B',
                         border: OutlineInputBorder(),
-                        isDense: true,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -273,7 +268,6 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
                         labelText: 'Right Side (Production)',
                         hintText: 'e.g., aA, bB, ε',
                         border: OutlineInputBorder(),
-                        isDense: true,
                       ),
                     ),
                   ],
@@ -289,7 +283,6 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
                         labelText: 'Left Side (Variable)',
                         hintText: 'e.g., S, A, B',
                         border: OutlineInputBorder(),
-                        isDense: true,
                       ),
                     ),
                   ),
@@ -307,7 +300,6 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
                         labelText: 'Right Side (Production)',
                         hintText: 'e.g., aA, bB, ε',
                         border: OutlineInputBorder(),
-                        isDense: true,
                       ),
                     ),
                   ),

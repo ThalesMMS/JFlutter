@@ -52,8 +52,14 @@ class AppTheme {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
-          vertical: 12,
+          vertical: 16,
         ),
+      ),
+      scrollbarTheme: ScrollbarThemeData(
+        thumbColor: WidgetStateProperty.all(primaryColor.withValues(alpha: 0.5)),
+        radius: const Radius.circular(8),
+        thickness: WidgetStateProperty.all(8),
+        thumbVisibility: WidgetStateProperty.all(true),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         type: BottomNavigationBarType.fixed,
@@ -95,8 +101,14 @@ class AppTheme {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
-          vertical: 12,
+          vertical: 16,
         ),
+      ),
+      scrollbarTheme: ScrollbarThemeData(
+        thumbColor: WidgetStateProperty.all(primaryColor.withValues(alpha: 0.5)),
+        radius: const Radius.circular(8),
+        thickness: WidgetStateProperty.all(8),
+        thumbVisibility: WidgetStateProperty.all(true),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         type: BottomNavigationBarType.fixed,

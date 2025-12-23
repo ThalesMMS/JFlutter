@@ -951,6 +951,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
             ),
           ),
         ),
+        const SizedBox(height: 16),
       ],
     );
   }

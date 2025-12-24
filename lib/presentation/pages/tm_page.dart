@@ -99,6 +99,22 @@ class _TMPageState extends ConsumerState<TMPage> {
     });
   }
 
+  void _handleAddStatePressed() {
+    if (_toolController.activeTool != AutomatonCanvasTool.addState) {
+      _toolController.setActiveTool(AutomatonCanvasTool.addState);
+    }
+    _canvasController.addStateAtCenter();
+  }
+
+  void _toggleCanvasTool(AutomatonCanvasTool tool) {
+    final current = _toolController.activeTool;
+    if (current == tool) {
+      _toolController.setActiveTool(AutomatonCanvasTool.selection);
+    } else {
+      _toolController.setActiveTool(tool);
+    }
+  }
+
   @override
   void dispose() {
     _tmEditorSub?.close();
@@ -281,10 +297,9 @@ class _TMPageState extends ConsumerState<TMPage> {
               activeTool: _activeTool,
               onSelectTool: () =>
                   _toolController.setActiveTool(AutomatonCanvasTool.selection),
-              onAddState: () =>
-                  _toolController.setActiveTool(AutomatonCanvasTool.addState),
+              onAddState: _handleAddStatePressed,
               onAddTransition: () =>
-                  _toolController.setActiveTool(AutomatonCanvasTool.transition),
+                  _toggleCanvasTool(AutomatonCanvasTool.transition),
               onClear: () {
                 ref
                     .read(tmEditorProvider.notifier)
@@ -296,6 +311,23 @@ class _TMPageState extends ConsumerState<TMPage> {
               statusMessage: statusMessage,
             );
           },
+        ),
+        Positioned(
+          bottom: 16,
+          right: 16,
+          child: TMTapePanel(
+            tapeState: _currentTape,
+            tapeAlphabet:
+                ref.read(tmEditorProvider).tm?.tapeAlphabet ?? const {},
+            onClear: () {
+              setState(() {
+                _currentTape = TapeState.initial(
+                  blankSymbol:
+                      ref.read(tmEditorProvider).tm?.blankSymbol ?? '□',
+                );
+              });
+            },
+          ),
         ),
       ],
     );

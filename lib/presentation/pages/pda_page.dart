@@ -452,6 +452,22 @@ class _PDAPageState extends ConsumerState<PDAPage> {
             );
           },
         ),
+        Positioned(
+          bottom: 16,
+          right: 16,
+          child: PDAStackPanel(
+            stackState: _currentStack,
+            initialStackSymbol:
+                ref.read(pdaEditorProvider).pda?.initialStackSymbol ?? 'Z',
+            stackAlphabet:
+                ref.read(pdaEditorProvider).pda?.stackAlphabet ?? const {},
+            onClear: () {
+              setState(() {
+                _currentStack = const StackState.empty();
+              });
+            },
+          ),
+        ),
       ],
     );
   }

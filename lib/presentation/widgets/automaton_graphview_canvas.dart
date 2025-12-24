@@ -1739,7 +1739,85 @@ class _GraphViewEdgePainter extends CustomPainter {
     final baseColor = theme.colorScheme.outline;
     final highlightColor = theme.colorScheme.primary;
 
+    final selfLoops = <String, List<GraphViewCanvasEdge>>{};
+    final normalEdges = <GraphViewCanvasEdge>[];
+
     for (final edge in edges) {
+      if (edge.fromStateId == edge.toStateId) {
+        selfLoops.putIfAbsent(edge.fromStateId, () => []).add(edge);
+      } else {
+        normalEdges.add(edge);
+      }
+    }
+
+    // Paint grouped self-loops
+    for (final nodeId in selfLoops.keys) {
+      final loopEdges = selfLoops[nodeId]!;
+      if (loopEdges.isEmpty) continue;
+
+      final firstEdge = loopEdges.first;
+      final node = _nodeById(nodeId);
+      if (node == null) continue;
+
+      final isAnyHighlighted = loopEdges.any(
+        (e) => highlightedTransitions.contains(e.id),
+      );
+      final isAnySelected = loopEdges.any(
+        (e) => selectedTransitions.contains(e.id),
+      );
+
+      final pathColor = isAnyHighlighted ? highlightColor : baseColor;
+      final strokeWidth = isAnySelected ? 4.0 : 2.0;
+      final paint = Paint()
+        ..color = pathColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round;
+
+      final loopGeometry = _buildGraphViewSelfLoop(firstEdge, node);
+      if (loopGeometry == null) {
+        continue;
+      }
+
+      _loopRenderer.renderEdge(canvas, loopGeometry.edge, paint);
+
+      var previousTopFromAnchor = 0.0;
+      // Stack labels upwards
+      for (var i = 0; i < loopEdges.length; i++) {
+        final edge = loopEdges[i];
+        if (edge.label.isEmpty) continue;
+
+        final isEdgeHighlighted = highlightedTransitions.contains(edge.id);
+        final labelColor = isEdgeHighlighted ? highlightColor : baseColor;
+
+        final textPainter = TextPainter(
+          text: TextSpan(
+            text: edge.label,
+            style: TextStyle(color: labelColor, fontSize: 14),
+          ),
+          textDirection: TextDirection.ltr,
+        )..layout();
+
+        double centerFromAnchor;
+        if (i == 0) {
+          centerFromAnchor = 0.0;
+          previousTopFromAnchor = textPainter.height / 2;
+        } else {
+          centerFromAnchor = previousTopFromAnchor + 2.0 + textPainter.height / 2;
+          previousTopFromAnchor = centerFromAnchor + textPainter.height / 2;
+        }
+
+        final drawPosition =
+            currentAnchor +
+            Offset(-textPainter.width / 2, -centerFromAnchor - textPainter.height / 2);
+        
+        textPainter.paint(canvas, drawPosition);
+      }
+      }
+    }
+
+    // Paint normal edges
+    for (final edge in normalEdges) {
       final from = _nodeById(edge.fromStateId);
       final to = _nodeById(edge.toStateId);
       if (from == null || to == null) {
@@ -1754,21 +1832,12 @@ class _GraphViewEdgePainter extends CustomPainter {
       final isSelected = selectedTransitions.contains(edge.id);
       final color = isHighlighted ? highlightColor : baseColor;
       final strokeWidth = isSelected ? 4.0 : 2.0;
+
       final paint = Paint()
         ..color = color
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth
         ..strokeCap = StrokeCap.round;
-
-      if (edge.fromStateId == edge.toStateId) {
-        final loopGeometry = _buildGraphViewSelfLoop(edge, from);
-        if (loopGeometry == null) {
-          continue;
-        }
-        _loopRenderer.renderEdge(canvas, loopGeometry.edge, paint);
-        _drawEdgeLabel(canvas, loopGeometry.labelAnchor, edge.label, color);
-        continue;
-      }
 
       final start = _projectFromCenter(
         fromCenter,

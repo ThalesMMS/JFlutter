@@ -42,6 +42,7 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
   bool _folded = true;
   final int _foldSize = defaultFoldSize;
   int? _selectedIndex;
+  bool _isPlaying = false;
 
   bool get _highlightEnabled =>
       widget.highlightService != null && widget.result.steps.isNotEmpty;
@@ -53,12 +54,19 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
   }
 
   @override
+  void dispose() {
+    _isPlaying = false;
+    super.dispose();
+  }
+
+  @override
   void didUpdateWidget(covariant BaseTraceViewer oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.result != oldWidget.result ||
         widget.highlightService != oldWidget.highlightService) {
       setState(() {
         _selectedIndex = _highlightEnabled ? 0 : null;
+        _isPlaying = false;
       });
     }
   }
@@ -69,6 +77,117 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
       _selectedIndex = index;
     });
     widget.highlightService?.emitFromSteps(widget.result.steps, index);
+  }
+
+  void _previousStep() {
+    if (!_highlightEnabled) return;
+    final current = _selectedIndex ?? 0;
+    if (current > 0) {
+      setState(() {
+        _selectedIndex = current - 1;
+      });
+      widget.highlightService?.emitFromSteps(widget.result.steps, current - 1);
+    }
+  }
+
+  void _nextStep() {
+    if (!_highlightEnabled) return;
+    final current = _selectedIndex ?? 0;
+    if (current < widget.result.steps.length - 1) {
+      setState(() {
+        _selectedIndex = current + 1;
+      });
+      widget.highlightService?.emitFromSteps(widget.result.steps, current + 1);
+    }
+  }
+
+  void _playSteps() {
+    if (!_highlightEnabled) return;
+    setState(() {
+      _isPlaying = true;
+    });
+    _playStepAnimation();
+  }
+
+  void _pauseSteps() {
+    setState(() {
+      _isPlaying = false;
+    });
+  }
+
+  void _playStepAnimation() {
+    if (!_isPlaying || !mounted) return;
+    final current = _selectedIndex ?? 0;
+    if (current < widget.result.steps.length - 1) {
+      Future.delayed(const Duration(milliseconds: 800), () {
+        if (_isPlaying && mounted) {
+          setState(() {
+            _selectedIndex = current + 1;
+          });
+          widget.highlightService?.emitFromSteps(
+            widget.result.steps,
+            current + 1,
+          );
+          _playStepAnimation();
+        }
+      });
+    } else {
+      setState(() {
+        _isPlaying = false;
+      });
+    }
+  }
+
+  void _resetSteps() {
+    setState(() {
+      _selectedIndex = 0;
+      _isPlaying = false;
+    });
+    widget.highlightService?.clear();
+  }
+
+  Widget _buildNavigationControls(BuildContext context) {
+    final current = _selectedIndex ?? 0;
+    final maxIndex = widget.result.steps.length - 1;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            onPressed: current > 0 ? _previousStep : null,
+            icon: const Icon(Icons.skip_previous),
+            tooltip: 'Previous Step',
+            iconSize: 20,
+          ),
+          IconButton(
+            onPressed: _isPlaying ? _pauseSteps : _playSteps,
+            icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
+            tooltip: _isPlaying ? 'Pause' : 'Play',
+            iconSize: 20,
+          ),
+          IconButton(
+            onPressed: current < maxIndex ? _nextStep : null,
+            icon: const Icon(Icons.skip_next),
+            tooltip: 'Next Step',
+            iconSize: 20,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '${current + 1} / ${widget.result.steps.length}',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const Spacer(),
+          IconButton(
+            onPressed: _resetSteps,
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Reset',
+            iconSize: 20,
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -107,6 +226,7 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
               ),
           ],
         ),
+        if (_highlightEnabled) _buildNavigationControls(context),
         const SizedBox(height: 8),
         if (steps.isEmpty)
           Container(
@@ -123,7 +243,7 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
           )
         else
           SizedBox(
-            height: 220,
+            height: 180,
             child: ListView.builder(
               itemCount: visibleCount,
               itemBuilder: (context, index) {

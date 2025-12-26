@@ -1808,11 +1808,10 @@ class _GraphViewEdgePainter extends CustomPainter {
         }
 
         final drawPosition =
-            currentAnchor +
+            loopGeometry.labelAnchor +
             Offset(-textPainter.width / 2, -centerFromAnchor - textPainter.height / 2);
         
         textPainter.paint(canvas, drawPosition);
-      }
       }
     }
 

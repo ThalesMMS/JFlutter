@@ -21,7 +21,7 @@
 
 This document describes the navigation system and `HomePage` implementation that serves as the application's main navigation hub. The `HomePage` orchestrates PageView-based navigation between six workspace pages (FSA, Grammar, PDA, TM, Regex, Pumping Lemma) with responsive layout adaptation for mobile and desktop platforms. State synchronization is managed through the `homeNavigationProvider`.
 
-For details on individual workspace pages, see [Automaton Workspace Pages](#5). For responsive layout patterns used within workspace pages, see [Responsive Layout System](#8.2).
+For details on individual workspace pages, see [Automaton Workspace Pages](5%20Automaton-Workspace-Pages.md). For responsive layout patterns used within workspace pages, see [Responsive Layout System](8b%20Responsive-Layout-System.md).
 
 ---
 
@@ -527,9 +527,9 @@ Sources: [lib/presentation/pages/home_page.dart L1-L278](https://github.com/Thal
 
  [test/widget/presentation/home_page_test.dart L1-L202](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/test/widget/presentation/home_page_test.dart#L1-L202)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

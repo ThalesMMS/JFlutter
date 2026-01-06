@@ -21,7 +21,7 @@
 
 This document describes JFlutter's responsive layout architecture, which adapts the user interface across mobile, tablet, and desktop screen sizes. The system uses breakpoint-based layout switching to optimize workspace pages (FSA, PDA, TM, Grammar, Regex, Pumping Lemma) for different form factors.
 
-For navigation-specific components and routing between pages, see [Navigation and HomePage](#8.1). For mobile-specific controls and touch interactions, see [Mobile Controls](#8.3). For theme and styling customization, see [Theme System](#8.5).
+For navigation-specific components and routing between pages, see [Navigation and HomePage](8a%20Navigation-and-HomePage.md). For mobile-specific controls and touch interactions, see [Mobile Controls](8c%20Mobile-Controls.md). For theme and styling customization, see [Theme System](8e%20Theme-System.md).
 
 ---
 
@@ -736,9 +736,9 @@ Each workspace page implements `_buildMobileLayout()`, `_buildTabletLayout()`, a
 
  [test/tablet_layout_test.dart L1-L125](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/test/tablet_layout_test.dart#L1-L125)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

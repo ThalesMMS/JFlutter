@@ -16,7 +16,7 @@
 
 This document describes the bidirectional synchronization mechanism between GraphView-based canvas controllers and Riverpod state providers. The system coordinates visual state (nodes, edges, positions) with domain models (FSA, TM, PDA) to maintain consistency during user interactions and algorithmic transformations.
 
-For canvas widget architecture, see [AutomatonGraphViewCanvas Widget](#4.1). For provider implementations, see [Automaton Providers](#6.1). For undo/redo mechanics, see [Undo/Redo System](#4.6).
+For canvas widget architecture, see [AutomatonGraphViewCanvas Widget](4a%20AutomatonGraphViewCanvas-Widget.md). For provider implementations, see [Automaton Providers](6a%20Automaton-Providers.md). For undo/redo mechanics, see [Undo-Redo System](4f%20Undo-Redo-System.md).
 
 ---
 
@@ -644,9 +644,9 @@ Sources: [lib/features/canvas/graphview/base_graphview_canvas_controller.dart L1
 
  [lib/features/canvas/graphview/graphview_canvas_controller.dart L1-L277](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/features/canvas/graphview/graphview_canvas_controller.dart#L1-L277)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

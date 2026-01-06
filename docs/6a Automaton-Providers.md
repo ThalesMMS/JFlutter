@@ -14,7 +14,7 @@
 
 This document describes the Riverpod-based state management providers that coordinate domain logic for automata editors in JFlutter. These providers expose reactive state for Finite State Automata (FSA), Pushdown Automata (PDA), and Turing Machines (TM), handling CRUD operations, algorithm execution, simulation, and persistence.
 
-For information about how these providers synchronize with canvas controllers, see [Canvas-Provider Synchronization](#6.2). For the dependency injection setup that instantiates these providers, see [Dependency Injection](#6.3).
+For information about how these providers synchronize with canvas controllers, see [Canvas-Provider Synchronization](6b%20Canvas-Provider-Synchronization.md). For the dependency injection setup that instantiates these providers, see [Dependency Injection](6c%20Dependency-Injection.md).
 
 ---
 
@@ -573,7 +573,7 @@ Each mutation increments `_graphViewMutationCounter` and logs the resulting grap
 
 ## History Management
 
-While undo/redo functionality is implemented in `BaseGraphViewCanvasController` (see [Canvas Controllers](#4.2)), providers maintain simulation and automaton history for trace playback and example loading.
+While undo/redo functionality is implemented in `BaseGraphViewCanvasController` (see [Canvas Controllers](4b%20Canvas-Controllers.md)), providers maintain simulation and automaton history for trace playback and example loading.
 
 ### History Fields
 
@@ -588,9 +588,9 @@ The `_addSimulationToHistory` method appends simulation results to the history l
 
  [lib/core/services/trace_persistence_service.dart L1-L50](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/core/services/trace_persistence_service.dart#L1-L50)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

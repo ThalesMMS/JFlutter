@@ -16,7 +16,7 @@
 
 ## Purpose and Scope
 
-This page documents the coordinate system transformations and viewport management within the JFlutter canvas system. It covers how the canvas maps between different coordinate spaces (world, viewport, global), how the transformation matrix controls zoom and pan, and the viewport operations available to users. For information about the canvas widget itself, see [AutomatonGraphViewCanvas Widget](#4.1). For canvas interaction gestures, see [Canvas Tools and Interaction](#4.4).
+This page documents the coordinate system transformations and viewport management within the JFlutter canvas system. It covers how the canvas maps between different coordinate spaces (world, viewport, global), how the transformation matrix controls zoom and pan, and the viewport operations available to users. For information about the canvas widget itself, see [AutomatonGraphViewCanvas Widget](4a%20AutomatonGraphViewCanvas-Widget.md). For canvas interaction gestures, see [Canvas Tools and Interaction](4d%20Canvas-Tools-and-Interaction.md).
 
 ---
 
@@ -601,9 +601,9 @@ The JFlutter canvas coordinate system provides a robust foundation for interacti
 
 The architecture separates concerns cleanly: world coordinates represent stable logical positions, viewport coordinates handle rendering and interaction, and the transformation matrix bridges between them. This design allows the canvas to handle complex interactions while maintaining data consistency.
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

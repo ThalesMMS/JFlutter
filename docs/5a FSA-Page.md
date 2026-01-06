@@ -17,7 +17,7 @@
 
 The FSA Page is the primary workspace for creating, editing, and analyzing Finite State Automata (DFA, NFA, and ε-NFA). It coordinates the canvas editing surface, simulation panel, and algorithm panel through a responsive layout system that adapts to mobile, tablet, and desktop screen sizes.
 
-For information about the canvas system used by this page, see [Canvas System](#4). For PDA and TM workspaces with similar structure, see [PDA Page](#5.2) and [TM Page](#5.3).
+For information about the canvas system used by this page, see [Canvas System](4%20Canvas-System.md). For PDA and TM workspaces with similar structure, see [PDA Page](5b%20PDA-Page.md) and [TM Page](5c%20TM-Page.md).
 
 ---
 
@@ -562,9 +562,9 @@ The FSA Page is tested for responsive layout behavior in [test/tablet_layout_tes
 
 **Sources:** [test/tablet_layout_test.dart L16-L24](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/test/tablet_layout_test.dart#L16-L24)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

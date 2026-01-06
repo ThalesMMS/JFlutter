@@ -16,7 +16,7 @@
 
 The `SerializationService` is a central data conversion hub responsible for bidirectional transformations between JFlutter's internal automaton representations and external file formats. This service enables interoperability with JFLAP XML files (`.jff`, `.cfg`) and native JSON storage, ensuring data integrity through epsilon symbol normalization and structural validation.
 
-For user-facing file operations UI, see [File Operations Panel](#9.1). For JFLAP-specific parsing details and epsilon normalization, see [JFLAP Interoperability](#9.3). For visual export capabilities, see [SVG Export](#9.4).
+For user-facing file operations UI, see [File Operations Panel](9a%20File-Operations-Panel.md). For JFLAP-specific parsing details and epsilon normalization, see [JFLAP Interoperability](9c%20JFLAP-Interoperability.md). For visual export capabilities, see [SVG Export](9d%20SVG-Export.md).
 
 ---
 
@@ -586,9 +586,9 @@ Sources: [lib/data/services/serialization_service.dart L106-L255](https://github
 
  (referenced)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

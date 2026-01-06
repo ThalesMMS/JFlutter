@@ -20,7 +20,7 @@
 
 ## Purpose and Scope
 
-This page documents JFlutter's interoperability with JFLAP (Java Formal Languages and Automata Package), focusing on the XML parsing, serialization, and epsilon symbol normalization systems that enable bidirectional conversion between JFLAP `.jff` files and JFlutter's internal representations. For general file I/O operations and the user-facing import/export interface, see [File Operations Panel](#9.1). For the broader serialization architecture covering JSON and other formats, see [Serialization Service](#9.2).
+This page documents JFlutter's interoperability with JFLAP (Java Formal Languages and Automata Package), focusing on the XML parsing, serialization, and epsilon symbol normalization systems that enable bidirectional conversion between JFLAP `.jff` files and JFlutter's internal representations. For general file I/O operations and the user-facing import/export interface, see [File Operations Panel](9a%20File-Operations-Panel.md). For the broader serialization architecture covering JSON and other formats, see [Serialization Service](9b%20Serialization-Service.md).
 
 JFlutter maintains compatibility with JFLAP through a dedicated parser and serialization layer that handles:
 
@@ -709,9 +709,9 @@ The system architecture cleanly separates parsing logic (`JFLAPXMLParser`), seri
 
  [test/integration/io/interoperability_roundtrip_test.dart L1-L700](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/test/integration/io/interoperability_roundtrip_test.dart#L1-L700)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

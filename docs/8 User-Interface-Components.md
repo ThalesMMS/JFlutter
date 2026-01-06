@@ -23,13 +23,13 @@ This document provides an overview of JFlutter's reusable UI components and resp
 
 For detailed information about specific UI subsystems, see:
 
-* [Navigation and HomePage](#8.1) - PageView navigation, route management, and navigation components
-* [Responsive Layout System](#8.2) - Breakpoints, TabletLayoutContainer, and adaptive layout strategies
-* [Mobile Controls](#8.3) - MobileAutomatonControls and touch-optimized UI
-* [Toolbars and Canvas Controls](#8.4) - GraphViewCanvasToolbar and canvas control widgets
-* [Theme System](#8.5) - Material 3 theming, color schemes, and visual styling
+* [Navigation and HomePage](8a%20Navigation-and-HomePage.md) - PageView navigation, route management, and navigation components
+* [Responsive Layout System](8b%20Responsive-Layout-System.md) - Breakpoints, TabletLayoutContainer, and adaptive layout strategies
+* [Mobile Controls](8c%20Mobile-Controls.md) - MobileAutomatonControls and touch-optimized UI
+* [Toolbars and Canvas Controls](8d%20Toolbars-and-Canvas-Controls.md) - GraphViewCanvasToolbar and canvas control widgets
+* [Theme System](8e%20Theme-System.md) - Material 3 theming, color schemes, and visual styling
 
-For canvas-specific rendering components, see [Canvas System](#4).
+For canvas-specific rendering components, see [Canvas System](4%20Canvas-System.md).
 
 ## UI Architecture Overview
 
@@ -175,7 +175,7 @@ The navigation system uses adaptive components that change based on screen width
 
 Six workspace destinations are defined: FSA, Grammar, PDA, TM, Regex, and Pumping Lemma.
 
-For complete navigation architecture and implementation details, see [Navigation and HomePage](#8.1).
+For complete navigation architecture and implementation details, see [Navigation and HomePage](8a%20Navigation-and-HomePage.md).
 
 **Sources:** [lib/presentation/widgets/mobile_navigation.dart](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/widgets/mobile_navigation.dart)
 
@@ -201,7 +201,7 @@ All workspace pages implement a consistent pattern:
 // From fsa_page.dart:527-544Widget build(BuildContext context) {  final screenSize = MediaQuery.of(context).size;  return Scaffold(    body: screenSize.width < 1024         ? _buildMobileLayout()         : screenSize.width < 1400             ? _buildTabletLayout()             : _buildDesktopLayout(),  );}
 ```
 
-For complete layout strategies, `TabletLayoutContainer` implementation, and breakpoint rationale, see [Responsive Layout System](#8.2).
+For complete layout strategies, `TabletLayoutContainer` implementation, and breakpoint rationale, see [Responsive Layout System](8b%20Responsive-Layout-System.md).
 
 **Sources:** [lib/presentation/pages/fsa_page.dart L527-L544](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/pages/fsa_page.dart#L527-L544)
 
@@ -234,7 +234,7 @@ The controller is a `ChangeNotifier` that synchronizes tool state between UI con
 
 Both components share the same `AutomatonCanvasToolController` instance and canvas controller, ensuring synchronized state.
 
-For implementation details, see [Mobile Controls](#8.3) and [Toolbars and Canvas Controls](#8.4).
+For implementation details, see [Mobile Controls](8c%20Mobile-Controls.md) and [Toolbars and Canvas Controls](8d%20Toolbars-and-Canvas-Controls.md).
 
 **Sources:** [lib/presentation/widgets/automaton_canvas_tool.dart](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/widgets/automaton_canvas_tool.dart)
 
@@ -285,7 +285,7 @@ LightTheme -.-> BottomNav
 * Consistent border radius: 8-12px
 * Elevation-based depth: 0-8
 
-For complete theme configuration and customization details, see [Theme System](#8.5).
+For complete theme configuration and customization details, see [Theme System](8e%20Theme-System.md).
 
 **Sources:** [lib/presentation/theme/app_theme.dart L1-L120](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/theme/app_theme.dart#L1-L120)
 
@@ -580,38 +580,38 @@ The UI system includes comprehensive testing for responsive layouts and navigati
 * [lib/presentation/widgets/mobile_navigation.dart](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/widgets/mobile_navigation.dart)
 * [lib/presentation/widgets/desktop_navigation.dart L1-L59](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/widgets/desktop_navigation.dart#L1-L59)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 
-* [User Interface Components](#8-user-interface-components)
-* [Purpose and Scope](#8-purpose-and-scope)
-* [UI Architecture Overview](#8-ui-architecture-overview)
-* [Component Hierarchy](#8-component-hierarchy)
-* [Component Catalog](#8-component-catalog)
-* [Reusable Widget Categories](#8-reusable-widget-categories)
-* [Navigation Components (Overview)](#8-navigation-components-overview)
-* [Responsive Layout Patterns (Overview)](#8-responsive-layout-patterns-overview)
-* [Control Components (Overview)](#8-control-components-overview)
-* [Tool State Management](#8-tool-state-management)
-* [Control Widget Types](#8-control-widget-types)
-* [Theme System (Overview)](#8-theme-system-overview)
-* [Theme Structure](#8-theme-structure)
-* [Common UI Patterns](#8-common-ui-patterns)
-* [Modal Bottom Sheet Pattern](#8-modal-bottom-sheet-pattern)
-* [Status Message Display](#8-status-message-display)
-* [Quick Action Buttons](#8-quick-action-buttons)
-* [Snackbar Notifications](#8-snackbar-notifications)
-* [Page-Specific UI Components](#8-page-specific-ui-components)
-* [FSA Page Components](#8-fsa-page-components)
-* [PDA Page Components](#8-pda-page-components)
-* [TM Page Components](#8-tm-page-components)
-* [Grammar Page Components](#8-grammar-page-components)
-* [Component Interaction Patterns](#8-component-interaction-patterns)
-* [Canvas-Control-Provider Synchronization](#8-canvas-control-provider-synchronization)
-* [Provider-UI Update Flow](#8-provider-ui-update-flow)
-* [Testing Infrastructure](#8-testing-infrastructure)
+* [User Interface Components](8%20User-Interface-Components.md)
+* [Purpose and Scope](8%20User-Interface-Components.md)
+* [UI Architecture Overview](8%20User-Interface-Components.md)
+* [Component Hierarchy](8%20User-Interface-Components.md)
+* [Component Catalog](8%20User-Interface-Components.md)
+* [Reusable Widget Categories](8%20User-Interface-Components.md)
+* [Navigation Components (Overview)](8%20User-Interface-Components.md)
+* [Responsive Layout Patterns (Overview)](8%20User-Interface-Components.md)
+* [Control Components (Overview)](8%20User-Interface-Components.md)
+* [Tool State Management](8%20User-Interface-Components.md)
+* [Control Widget Types](8%20User-Interface-Components.md)
+* [Theme System (Overview)](8%20User-Interface-Components.md)
+* [Theme Structure](8%20User-Interface-Components.md)
+* [Common UI Patterns](8%20User-Interface-Components.md)
+* [Modal Bottom Sheet Pattern](8%20User-Interface-Components.md)
+* [Status Message Display](8%20User-Interface-Components.md)
+* [Quick Action Buttons](8%20User-Interface-Components.md)
+* [Snackbar Notifications](8%20User-Interface-Components.md)
+* [Page-Specific UI Components](8%20User-Interface-Components.md)
+* [FSA Page Components](8%20User-Interface-Components.md)
+* [PDA Page Components](8%20User-Interface-Components.md)
+* [TM Page Components](8%20User-Interface-Components.md)
+* [Grammar Page Components](8%20User-Interface-Components.md)
+* [Component Interaction Patterns](8%20User-Interface-Components.md)
+* [Canvas-Control-Provider Synchronization](8%20User-Interface-Components.md)
+* [Provider-UI Update Flow](8%20User-Interface-Components.md)
+* [Testing Infrastructure](8%20User-Interface-Components.md)
 
 Ask Devin about JFlutter

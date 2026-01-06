@@ -13,7 +13,7 @@
 
 This page documents the touch-optimized mobile control system for automaton editing, implemented in the `MobileAutomatonControls` widget. This control surface consolidates workspace actions and canvas tools into a unified bottom-aligned panel designed for screens below the 1024px breakpoint.
 
-For information about the responsive layout system and breakpoints, see [Responsive Layout System](#8.2). For desktop toolbar controls, see [Toolbars and Canvas Controls](#8.4). For the underlying tool selection mechanism, see [Canvas Tools and Interaction](#4.3).
+For information about the responsive layout system and breakpoints, see [Responsive Layout System](8b%20Responsive-Layout-System.md). For desktop toolbar controls, see [Toolbars and Canvas Controls](8d%20Toolbars-and-Canvas-Controls.md). For the underlying tool selection mechanism, see [Canvas Tools and Interaction](4c%20Canvas-Customization-System.md).
 
 ---
 
@@ -466,9 +466,9 @@ Test coverage includes interaction scenarios for:
 
 Sources: [test/widget/presentation/graphview_canvas_toolbar_test.dart L1-L256](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/test/widget/presentation/graphview_canvas_toolbar_test.dart#L1-L256)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

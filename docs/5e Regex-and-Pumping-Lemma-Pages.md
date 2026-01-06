@@ -19,7 +19,7 @@
 
 This document describes the implementation of two educational workspace pages: the Regular Expression testing and conversion workspace (`RegexPage`) and the Pumping Lemma interactive learning game (`PumpingLemmaPage`). Both pages implement responsive layout strategies and integrate with the application's navigation system.
 
-For information about other workspace pages (FSA, PDA, TM, Grammar), see [Automaton Workspace Pages](#5). For details on the responsive layout system used by both pages, see [Responsive Layout System](#8.2).
+For information about other workspace pages (FSA, PDA, TM, Grammar), see [Automaton Workspace Pages](5%20Automaton-Workspace-Pages.md). For details on the responsive layout system used by both pages, see [Responsive Layout System](8b%20Responsive-Layout-System.md).
 
 ---
 
@@ -750,9 +750,9 @@ Both pages follow mobile-first design principles with progressive enhancement fo
 
  [lib/presentation/widgets/tablet_layout_container.dart L1-L154](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/widgets/tablet_layout_container.dart#L1-L154)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

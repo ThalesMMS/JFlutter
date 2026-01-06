@@ -14,7 +14,7 @@
 
 This document describes the SVG (Scalable Vector Graphics) export system that converts automata, grammars, and Turing machines into vector image format. The system generates standalone SVG files with consistent styling, automatic layout algorithms, and customizable visual properties.
 
-For information about the file operations UI and user-facing export workflow, see [File Operations](#9.1). For details about JFLAP XML export format, see [JFLAP Interoperability](#9.3). For the underlying serialization architecture, see [Serialization and Format Conversion](#9.2).
+For information about the file operations UI and user-facing export workflow, see [File Operations](9a%20File-Operations-Panel.md). For details about JFLAP XML export format, see [JFLAP Interoperability](9c%20JFLAP-Interoperability.md). For the underlying serialization architecture, see [Serialization and Format Conversion](9b%20Serialization-Service.md).
 
 ## Overview
 
@@ -513,7 +513,7 @@ The `_grammarToAutomaton` method provides a simplified conversion for grammar vi
 3. For each production, create transitions: * From left-side non-terminal to right-side symbols * Terminal symbols map to a special "terminal" state
 4. Return `AutomatonEntity` with DFA type
 
-This is a visualization-only conversion and does not implement full PDA-to-CFG conversion (see [PDA/Grammar System](#7.1) for algorithmic conversions).
+This is a visualization-only conversion and does not implement full PDA-to-CFG conversion (see [PDA/Grammar System](7a%20Core-Algorithms.md) for algorithmic conversions).
 
 **Sources:** [lib/presentation/widgets/export/svg_exporter.dart L770-L816](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/widgets/export/svg_exporter.dart#L770-L816)
 
@@ -547,9 +547,9 @@ When calculating transitions:
 
  [lib/presentation/widgets/export/svg_exporter.dart L659-L664](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/widgets/export/svg_exporter.dart#L659-L664)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

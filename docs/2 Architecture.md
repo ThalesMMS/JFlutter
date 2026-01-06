@@ -12,9 +12,9 @@
 
 This document describes JFlutter's architectural design, which follows a Clean Architecture approach with three distinct layers: Presentation, Core (Domain), and Data. It covers the structural organization of the codebase, dependency management, state flow patterns, and the integration of cross-cutting feature modules. For detailed information about specific layers, see:
 
-* [Presentation Layer](#2.1) for UI components, pages, and widgets
-* [Core Domain Layer](#2.2) for business logic and algorithms
-* [Data Layer](#2.3) for repositories, persistence, and serialization
+* [Presentation Layer](2a%20Presentation-Layer.md) for UI components, pages, and widgets
+* [Core Domain Layer](2b%20Core-Domain-Layer.md) for business logic and algorithms
+* [Data Layer](2c%20Data-Layer.md) for repositories, persistence, and serialization
 
 This page focuses on the high-level organization and interaction patterns that govern the entire system.
 
@@ -116,7 +116,7 @@ subgraph subGraph0 ["Presentation Layer"]
 end
 ```
 
-**Sources:** [README.md L39-L91](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L39-L91)
+**Sources:** README.md
 
  [lib/injection/dependency_injection.dart L1-L236](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/injection/dependency_injection.dart#L1-L236)
 
@@ -146,7 +146,7 @@ The Core Layer houses 13+ algorithms covering:
 * Grammar conversions [lib/core/algorithms/fsa_to_grammar_converter.dart](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/core/algorithms/fsa_to_grammar_converter.dart)
 * Simulation engines [lib/core/algorithms/automaton_simulator.dart](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/core/algorithms/automaton_simulator.dart)
 
-**Sources:** [README.md L59-L73](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L59-L73)
+**Sources:** README.md
 
  [lib/core/dfa_algorithms.dart L1-L16](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/core/dfa_algorithms.dart#L1-L16)
 
@@ -210,7 +210,7 @@ end
 * **`SerializationService`**: Handles JFLAP XML, JSON, and SVG format conversions [lib/data/services/serialization_service.dart](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/data/services/serialization_service.dart)
 * **`TracePersistenceService`**: Persists simulation history to SharedPreferences with 50-entry cap [lib/data/services/trace_persistence_service.dart L17-L49](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/data/services/trace_persistence_service.dart#L17-L49)
 
-**Sources:** [README.md L73-L79](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L73-L79)
+**Sources:** README.md
 
  [lib/injection/dependency_injection.dart L51-L66](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/injection/dependency_injection.dart#L51-L66)
 
@@ -450,7 +450,7 @@ The Layout module provides auto-layout capabilities using the Sugiyama algorithm
 * **Algorithm**: Sugiyama hierarchical layout with configurable spacing
 * **Integration**: Called by `AutomatonProvider.applyAutoLayout()` [lib/presentation/providers/automaton_provider.dart L873-L905](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/providers/automaton_provider.dart#L873-L905)
 
-**Sources:** [README.md L82-L83](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L82-L83)
+**Sources:** README.md
 
  [lib/injection/dependency_injection.dart L81](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/injection/dependency_injection.dart#L81-L81)
 
@@ -559,35 +559,35 @@ This ensures that canvas visual state and domain model remain synchronized [lib/
 4. **Single Source of Truth**: Providers own state, services are stateless
 5. **Interface Segregation**: Small, focused repository contracts
 
-**Sources:** [README.md L39-L91](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L39-L91)
+**Sources:** README.md
 
  [lib/injection/dependency_injection.dart L1-L236](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/injection/dependency_injection.dart#L1-L236)
 
  [lib/presentation/providers/automaton_provider.dart L41-L1116](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/providers/automaton_provider.dart#L41-L1116)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 
-* [Architecture](#2-architecture)
-* [Purpose and Scope](#2-purpose-and-scope)
-* [Clean Architecture Layers](#2-clean-architecture-layers)
-* [Layer Structure Diagram](#2-layer-structure-diagram)
-* [Core Layer Organization](#2-core-layer-organization)
-* [Domain Models and Entities](#2-domain-models-and-entities)
-* [Data Layer Implementation](#2-data-layer-implementation)
-* [Service Architecture](#2-service-architecture)
-* [Dependency Injection System](#2-dependency-injection-system)
-* [Dependency Registration Pattern](#2-dependency-registration-pattern)
-* [State Management Architecture](#2-state-management-architecture)
-* [Provider Hierarchy](#2-provider-hierarchy)
-* [Feature Module Organization](#2-feature-module-organization)
-* [Canvas System Architecture](#2-canvas-system-architecture)
-* [Layout Repository](#2-layout-repository)
-* [Data Flow Patterns](#2-data-flow-patterns)
-* [Unidirectional Flow Diagram](#2-unidirectional-flow-diagram)
-* [Architectural Patterns Summary](#2-architectural-patterns-summary)
+* [Architecture](2%20Architecture.md)
+* [Purpose and Scope](2%20Architecture.md)
+* [Clean Architecture Layers](2%20Architecture.md)
+* [Layer Structure Diagram](2%20Architecture.md)
+* [Core Layer Organization](2%20Architecture.md)
+* [Domain Models and Entities](2%20Architecture.md)
+* [Data Layer Implementation](2%20Architecture.md)
+* [Service Architecture](2%20Architecture.md)
+* [Dependency Injection System](2%20Architecture.md)
+* [Dependency Registration Pattern](2%20Architecture.md)
+* [State Management Architecture](2%20Architecture.md)
+* [Provider Hierarchy](2%20Architecture.md)
+* [Feature Module Organization](2%20Architecture.md)
+* [Canvas System Architecture](2%20Architecture.md)
+* [Layout Repository](2%20Architecture.md)
+* [Data Flow Patterns](2%20Architecture.md)
+* [Unidirectional Flow Diagram](2%20Architecture.md)
+* [Architectural Patterns Summary](2%20Architecture.md)
 
 Ask Devin about JFlutter

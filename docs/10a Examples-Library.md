@@ -20,7 +20,7 @@
 
 This document describes the Examples Library system, which provides pre-built automaton examples for educational purposes. The library includes over 8 example automatons across five categories (DFA, NFA, CFG, PDA, TM), each with metadata for categorization, difficulty assessment, and search functionality.
 
-For information about how examples are used in the UI, see the Pumping Lemma Game [10.2](#10.2). For loading and saving user-created automatons, see File Operations [9.1](#9.1).
+For information about how examples are used in the UI, see the Pumping Lemma Game [10.2](10b%20Pumping-Lemma-Game.md). For loading and saving user-created automatons, see File Operations [9.1](9a%20File-Operations-Panel.md).
 
 ## System Overview
 
@@ -521,9 +521,9 @@ The examples library integrates with the application through Riverpod providers 
 
 The library serves as both a learning resource and a starting point for creating new automatons.
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

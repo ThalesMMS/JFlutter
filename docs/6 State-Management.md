@@ -14,7 +14,7 @@
 > * [lib/presentation/widgets/tablet_layout_container.dart](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/widgets/tablet_layout_container.dart)
 > * [test/tablet_layout_test.dart](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/test/tablet_layout_test.dart)
 
-This document explains the Riverpod-based state management architecture in JFlutter, including provider hierarchy, state flow patterns, synchronization mechanisms, and integration with the canvas system. For information about the canvas rendering and interaction system that consumes this state, see [Canvas System](#4). For details about algorithm execution that modifies state through providers, see [Algorithms and Simulation](#7).
+This document explains the Riverpod-based state management architecture in JFlutter, including provider hierarchy, state flow patterns, synchronization mechanisms, and integration with the canvas system. For information about the canvas rendering and interaction system that consumes this state, see [Canvas System](4%20Canvas-System.md). For details about algorithm execution that modifies state through providers, see [Algorithms and Simulation](7%20Algorithms-and-Simulation.md).
 
 ## Purpose and Scope
 
@@ -862,43 +862,43 @@ sequenceDiagram
 
  [lib/core/algorithms/nfa_to_dfa_converter.dart L1-L200](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/core/algorithms/nfa_to_dfa_converter.dart#L1-L200)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 
-* [State Management](#6-state-management)
-* [Purpose and Scope](#6-purpose-and-scope)
-* [Provider Architecture Overview](#6-provider-architecture-overview)
-* [Core Automaton Providers](#6-core-automaton-providers)
-* [AutomatonProvider](#6-automatonprovider)
-* [TMEditorProvider](#6-tmeditorprovider)
-* [PDAEditorProvider](#6-pdaeditorprovider)
-* [State Synchronization with Canvas](#6-state-synchronization-with-canvas)
-* [Synchronization Flow](#6-synchronization-flow)
-* [Canvas-to-Provider Binding](#6-canvas-to-provider-binding)
-* [Provider Lifecycle and Dependency Injection](#6-provider-lifecycle-and-dependency-injection)
-* [Dependency Graph](#6-dependency-graph)
-* [Provider Factory vs Singleton](#6-provider-factory-vs-singleton)
-* [State Persistence Patterns](#6-state-persistence-patterns)
-* [Automaton Persistence](#6-automaton-persistence)
-* [Simulation Trace Persistence](#6-simulation-trace-persistence)
-* [State Mutation Patterns](#6-state-mutation-patterns)
-* [Immutability Guarantees](#6-immutability-guarantees)
-* [Error Handling Pattern](#6-error-handling-pattern)
-* [Specialized Provider Patterns](#6-specialized-provider-patterns)
-* [Algorithm Provider](#6-algorithm-provider)
-* [Unified Trace Provider](#6-unified-trace-provider)
-* [Debug Tracing and Observability](#6-debug-tracing-and-observability)
-* [GraphView Mutation Tracing](#6-graphview-mutation-tracing)
-* [Highlight Service Tracking](#6-highlight-service-tracking)
-* [State Management Best Practices](#6-state-management-best-practices)
-* [When to Use Each Provider Type](#6-when-to-use-each-provider-type)
-* [Mutation Method Naming Convention](#6-mutation-method-naming-convention)
-* [State Consistency Rules](#6-state-consistency-rules)
-* [Integration Examples](#6-integration-examples)
-* [Adding a State from Canvas](#6-adding-a-state-from-canvas)
-* [Executing an Algorithm](#6-executing-an-algorithm)
+* [State Management](6%20State-Management.md)
+* [Purpose and Scope](6%20State-Management.md)
+* [Provider Architecture Overview](6%20State-Management.md)
+* [Core Automaton Providers](6%20State-Management.md)
+* [AutomatonProvider](6%20State-Management.md)
+* [TMEditorProvider](6%20State-Management.md)
+* [PDAEditorProvider](6%20State-Management.md)
+* [State Synchronization with Canvas](6%20State-Management.md)
+* [Synchronization Flow](6%20State-Management.md)
+* [Canvas-to-Provider Binding](6%20State-Management.md)
+* [Provider Lifecycle and Dependency Injection](6%20State-Management.md)
+* [Dependency Graph](6%20State-Management.md)
+* [Provider Factory vs Singleton](6%20State-Management.md)
+* [State Persistence Patterns](6%20State-Management.md)
+* [Automaton Persistence](6%20State-Management.md)
+* [Simulation Trace Persistence](6%20State-Management.md)
+* [State Mutation Patterns](6%20State-Management.md)
+* [Immutability Guarantees](6%20State-Management.md)
+* [Error Handling Pattern](6%20State-Management.md)
+* [Specialized Provider Patterns](6%20State-Management.md)
+* [Algorithm Provider](6%20State-Management.md)
+* [Unified Trace Provider](6%20State-Management.md)
+* [Debug Tracing and Observability](6%20State-Management.md)
+* [GraphView Mutation Tracing](6%20State-Management.md)
+* [Highlight Service Tracking](6%20State-Management.md)
+* [State Management Best Practices](6%20State-Management.md)
+* [When to Use Each Provider Type](6%20State-Management.md)
+* [Mutation Method Naming Convention](6%20State-Management.md)
+* [State Consistency Rules](6%20State-Management.md)
+* [Integration Examples](6%20State-Management.md)
+* [Adding a State from Canvas](6%20State-Management.md)
+* [Executing an Algorithm](6%20State-Management.md)
 
 Ask Devin about JFlutter

@@ -17,9 +17,9 @@
 
 ## Purpose and Scope
 
-The TM Page provides the dedicated workspace for creating, editing, simulating, and analyzing Turing Machines. It is one of the main workspace pages in the JFlutter application (see [Automaton Workspace Pages](#5) for the complete workspace system). This page integrates the canvas editor, simulation panel, algorithm operations, and machine metrics into a responsive layout that adapts to mobile, tablet, and desktop screen sizes.
+The TM Page provides the dedicated workspace for creating, editing, simulating, and analyzing Turing Machines. It is one of the main workspace pages in the JFlutter application (see [Automaton Workspace Pages](5%20Automaton-Workspace-Pages.md) for the complete workspace system). This page integrates the canvas editor, simulation panel, algorithm operations, and machine metrics into a responsive layout that adapts to mobile, tablet, and desktop screen sizes.
 
-For information about the canvas system that powers the TM editing surface, see [Canvas System](#4). For details on the PDA workspace, see [PDA Page](#5.2). For FSA workspace, see [FSA Page](#5.1).
+For information about the canvas system that powers the TM editing surface, see [Canvas System](4%20Canvas-System.md). For details on the PDA workspace, see [PDA Page](5b%20PDA-Page.md). For FSA workspace, see [FSA Page](5a%20FSA-Page.md).
 
 **Sources:** [lib/presentation/pages/tm_page.dart L1-L643](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/pages/tm_page.dart#L1-L643)
 
@@ -567,9 +567,9 @@ The page follows the same architectural pattern as other workspace pages (FSA, P
 
 **Sources:** [lib/presentation/pages/tm_page.dart L1-L643](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/pages/tm_page.dart#L1-L643)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

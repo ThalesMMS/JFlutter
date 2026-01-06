@@ -14,7 +14,7 @@
 
 ## Purpose and Scope
 
-The Theme System provides centralized styling for JFlutter's user interface using Material Design 3 (Material You) specifications. This system defines color schemes, component styles, and visual consistency across all platform implementations. For information about individual UI components that use this theme, see [User Interface Components](#8). For responsive layout patterns that adapt to the theme, see [Responsive Layout System](#8.2).
+The Theme System provides centralized styling for JFlutter's user interface using Material Design 3 (Material You) specifications. This system defines color schemes, component styles, and visual consistency across all platform implementations. For information about individual UI components that use this theme, see [User Interface Components](8%20User-Interface-Components.md). For responsive layout patterns that adapt to the theme, see [Responsive Layout System](8b%20Responsive-Layout-System.md).
 
 **Sources:** [lib/presentation/theme/app_theme.dart L1-L120](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/theme/app_theme.dart#L1-L120)
 
@@ -339,7 +339,7 @@ ElevatedButton.styleFrom(  backgroundColor: Theme.of(context).colorScheme.err
 
 ## Responsive Theme Considerations
 
-The theme system works in conjunction with responsive layout breakpoints defined in [Responsive Layout System](#8.2):
+The theme system works in conjunction with responsive layout breakpoints defined in [Responsive Layout System](8b%20Responsive-Layout-System.md):
 
 | Breakpoint | Width | Theme Adjustments |
 | --- | --- | --- |
@@ -440,9 +440,9 @@ The system balances modern design principles with practical implementation, ensu
 
  [pubspec.yaml L115](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/pubspec.yaml#L115-L115)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

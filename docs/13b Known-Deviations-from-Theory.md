@@ -14,7 +14,7 @@
 
 This page documents intentional deviations between JFlutter's implementation and the theoretical models or reference implementations used during development. These deviations exist primarily for practical reasons such as mobile platform constraints, performance optimization, or engineering tradeoffs.
 
-For information about the reference implementations used during development, see [Dependencies and Configuration](#13.1). For details about the GraphView library modifications, see [GraphView Library Fork](#13.3).
+For information about the reference implementations used during development, see [Dependencies and Configuration](13a%20Dependencies-and-Configuration.md). For details about the GraphView library modifications, see [GraphView Library Fork](13c%20GraphView-Library-Fork.md).
 
 ---
 
@@ -24,7 +24,7 @@ JFlutter implements formal language theory algorithms on resource-constrained mo
 
  and are regularly reviewed during milestone planning. The deviation log captures rationale, impact assessment, mitigation plans, and ownership for each divergence from reference behavior.
 
-**Sources:** [README.md L204-L231](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L204-L231)
+**Sources:** [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L204-L231)
 
  [docs/reference-deviations.md L1-L56](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/docs/reference-deviations.md#L1-L56)
 
@@ -270,7 +270,7 @@ Mitigate -.-> Review
 
 **Sources:** [docs/reference-deviations.md L7-L21](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/docs/reference-deviations.md#L7-L21)
 
- [README.md L216-L224](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L216-L224)
+ **Sources**: [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L216-L224)
 
 ---
 
@@ -335,7 +335,7 @@ end
 
 **Diagram: Reference validation architecture**
 
-**Sources:** [README.md L310-L334](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L310-L334)
+**Sources:** [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L310-L334)
 
 ---
 
@@ -423,7 +423,7 @@ O(n³) complexity is acceptable for educational contexts (strings typically <100
 3. **Reference parity dashboard:** Automated comparison with reference implementations
 4. **Comprehensive golden tests:** Visual regression testing for all widgets
 
-**Sources:** [README.md L239-L244](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L239-L244)
+**Sources:** [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L239-L244)
 
 ---
 
@@ -433,15 +433,15 @@ JFlutter's deviations from theoretical models are intentional, documented, and r
 
  with clear ownership, rationale, and mitigation plans.
 
-For questions about specific algorithms, consult the core algorithm documentation at [Core Algorithms](#7.1). For serialization format details, see [JFLAP Interoperability](#9.3).
+For questions about specific algorithms, consult the core algorithm documentation at [Core Algorithms](7a%20Core-Algorithms.md). For serialization format details, see [JFLAP Interoperability](9c%20JFLAP-Interoperability.md).
 
 **Sources:** [docs/reference-deviations.md L1-L56](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/docs/reference-deviations.md#L1-L56)
 
- [README.md L204-L231](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L204-L231)
+ **Sources**: [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L204-L231)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

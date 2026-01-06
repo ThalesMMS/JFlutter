@@ -18,7 +18,7 @@
 
 The Canvas System is the core interactive visualization subsystem in JFlutter, responsible for rendering and editing automata (FSA, PDA, TM) using the GraphView library. It provides a unified canvas implementation that handles node positioning, edge routing, gesture interaction, tool management, and bidirectional synchronization with Riverpod state providers.
 
-This document covers the canvas widget architecture, controller hierarchy, rendering pipeline, and interaction patterns. For information about specific automaton editor implementations that use this canvas system, see [Automaton Editors](#5). For state management patterns used by the canvas, see [State Management](#6).
+This document covers the canvas widget architecture, controller hierarchy, rendering pipeline, and interaction patterns. For information about specific automaton editor implementations that use this canvas system, see [Automaton Editors](5%20Automaton-Workspace-Pages.md). For state management patterns used by the canvas, see [State Management](6%20State-Management.md).
 
 **Sources:** [lib/presentation/widgets/automaton_graphview_canvas.dart L1-L14](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/widgets/automaton_graphview_canvas.dart#L1-L14)
 
@@ -663,43 +663,43 @@ This architecture enables page-specific editors (FSAPage, PDAPage, TMPage) to sh
 
  [lib/features/canvas/graphview/graphview_canvas_controller.dart](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/features/canvas/graphview/graphview_canvas_controller.dart)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 
-* [Canvas System](#4-canvas-system)
-* [Purpose and Scope](#4-purpose-and-scope)
-* [Canvas Architecture Overview](#4-canvas-architecture-overview)
-* [Core Components](#4-core-components)
-* [Canvas Widget Lifecycle](#4-canvas-widget-lifecycle)
-* [Initialization Process](#4-initialization-process)
-* [Update and Synchronization](#4-update-and-synchronization)
-* [Rendering Pipeline](#4-rendering-pipeline)
-* [Layout Configuration](#4-layout-configuration)
-* [Node and Edge Rendering](#4-node-and-edge-rendering)
-* [Viewport Transformations](#4-viewport-transformations)
-* [Canvas Controllers](#4-canvas-controllers)
-* [Controller Hierarchy](#4-controller-hierarchy)
-* [Synchronization Pattern](#4-synchronization-pattern)
-* [Undo/Redo System](#4-undoredo-system)
-* [Tool System and Interaction](#4-tool-system-and-interaction)
-* [Gesture Handling](#4-gesture-handling)
-* [State Editing Interaction](#4-state-editing-interaction)
-* [Transition Overlay System](#4-transition-overlay-system)
-* [Payload Types](#4-payload-types)
-* [Overlay Data Flow](#4-overlay-data-flow)
-* [Customization System](#4-customization-system)
-* [Canvas Toolbar](#4-canvas-toolbar)
-* [Layout Modes](#4-layout-modes)
-* [Toolbar Actions](#4-toolbar-actions)
-* [Simulation Highlighting](#4-simulation-highlighting)
-* [Highlight Channel](#4-highlight-channel)
-* [Testing Patterns](#4-testing-patterns)
-* [Test Structure](#4-test-structure)
-* [Key Test Scenarios](#4-key-test-scenarios)
-* [Canvas Constants](#4-canvas-constants)
-* [Summary](#4-summary)
+* [Canvas System](4%20Canvas-System.md)
+* [Purpose and Scope](4%20Canvas-System.md)
+* [Canvas Architecture Overview](4%20Canvas-System.md)
+* [Core Components](4%20Canvas-System.md)
+* [Canvas Widget Lifecycle](4%20Canvas-System.md)
+* [Initialization Process](4%20Canvas-System.md)
+* [Update and Synchronization](4%20Canvas-System.md)
+* [Rendering Pipeline](4%20Canvas-System.md)
+* [Layout Configuration](4%20Canvas-System.md)
+* [Node and Edge Rendering](4%20Canvas-System.md)
+* [Viewport Transformations](4%20Canvas-System.md)
+* [Canvas Controllers](4%20Canvas-System.md)
+* [Controller Hierarchy](4%20Canvas-System.md)
+* [Synchronization Pattern](4%20Canvas-System.md)
+* [Undo/Redo System](4%20Canvas-System.md)
+* [Tool System and Interaction](4%20Canvas-System.md)
+* [Gesture Handling](4%20Canvas-System.md)
+* [State Editing Interaction](4%20Canvas-System.md)
+* [Transition Overlay System](4%20Canvas-System.md)
+* [Payload Types](4%20Canvas-System.md)
+* [Overlay Data Flow](4%20Canvas-System.md)
+* [Customization System](4%20Canvas-System.md)
+* [Canvas Toolbar](4%20Canvas-System.md)
+* [Layout Modes](4%20Canvas-System.md)
+* [Toolbar Actions](4%20Canvas-System.md)
+* [Simulation Highlighting](4%20Canvas-System.md)
+* [Highlight Channel](4%20Canvas-System.md)
+* [Testing Patterns](4%20Canvas-System.md)
+* [Test Structure](4%20Canvas-System.md)
+* [Key Test Scenarios](4%20Canvas-System.md)
+* [Canvas Constants](4%20Canvas-System.md)
+* [Summary](4%20Canvas-System.md)
 
 Ask Devin about JFlutter

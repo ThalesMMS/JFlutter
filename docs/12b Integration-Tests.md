@@ -17,7 +17,7 @@
 
 Integration tests in JFlutter validate the interaction between multiple system components, ensuring that file I/O operations, format conversions, and end-to-end workflows function correctly. These tests focus on data integrity across serialization boundaries, interoperability with external formats (JFLAP XML), and complete user flows.
 
-For testing individual components in isolation, see [Canvas System Tests](#12.1). For overall testing strategy, see [Testing](#12).
+For testing individual components in isolation, see [Canvas System Tests](12a%20Canvas-System-Tests.md). For overall testing strategy, see [Testing](12%20Testing.md).
 
 ---
 
@@ -561,7 +561,7 @@ Integration tests validate structure at multiple levels:
 
 ### Mobile Platform Constraints
 
-Integration tests validate behavior under mobile platform constraints documented in [Known Deviations from Theory](#13.2):
+Integration tests validate behavior under mobile platform constraints documented in [Known Deviations from Theory](13b%20Known-Deviations-from-Theory.md):
 
 * **NFA→DFA Conversion Limit**: Tests verify 1000-state cap
 * **Epsilon Normalization**: All ε aliases normalized to single symbol
@@ -590,9 +590,9 @@ Integration tests validate behavior under mobile platform constraints documented
 
  [lib/core/utils/epsilon_utils.dart](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/core/utils/epsilon_utils.dart)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

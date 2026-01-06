@@ -17,7 +17,7 @@
 
 The PDA Page provides a workspace for creating, editing, simulating, and analyzing Pushdown Automata (PDAs). This page implements a responsive layout with canvas-based editing, simulation capabilities, algorithm operations, and stack visualization.
 
-For finite state automata, see [FSA Page](#5.1). For Turing machines, see [TM Page](#5.3). For general canvas system architecture, see [Canvas System](#4).
+For finite state automata, see [FSA Page](5a%20FSA-Page.md). For Turing machines, see [TM Page](5c%20TM-Page.md). For general canvas system architecture, see [Canvas System](4%20Canvas-System.md).
 
 ---
 
@@ -470,9 +470,9 @@ testWidgets('PDAPage uses TabletLayoutContainer on tablet width', (tester)
 
 **Sources:** [test/tablet_layout_test.dart L65-L73](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/test/tablet_layout_test.dart#L65-L73)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

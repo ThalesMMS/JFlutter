@@ -14,7 +14,7 @@
 
 This document describes the Core Domain Layer of JFlutter, which contains the business logic, algorithms, and domain models for automata theory operations. The Core Layer is independent of presentation concerns and implements the computational foundations for finite state automata (FSA), pushdown automata (PDA), Turing machines (TM), context-free grammars (CFG), and regular expressions.
 
-For information about how these core components integrate with the UI, see [Presentation Layer](#2.1). For data persistence and serialization, see [Data Layer](#2.3). Algorithm execution UI is covered in [Algorithm Panels](#7.3).
+For information about how these core components integrate with the UI, see [Presentation Layer](2a%20Presentation-Layer.md). For data persistence and serialization, see [Data Layer](2c%20Data-Layer.md). Algorithm execution UI is covered in [Algorithm Panels](7c%20Algorithm-Panels.md).
 
 **Core Layer Responsibilities:**
 
@@ -1187,9 +1187,9 @@ end
 
  [lib/presentation/widgets/pda_algorithm_panel.dart L654-L688](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/widgets/pda_algorithm_panel.dart#L654-L688)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

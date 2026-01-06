@@ -11,7 +11,7 @@
 
 This page provides a comprehensive reference for all external dependencies used in JFlutter, their purposes, version requirements, and configuration details. This information is essential for understanding the project setup, troubleshooting build issues, and managing dependency updates.
 
-For information about the overall architecture that uses these dependencies, see [Architecture](#2). For testing-specific dependencies and their usage patterns, see [Testing](#12).
+For information about the overall architecture that uses these dependencies, see [Architecture](2%20Architecture.md). For testing-specific dependencies and their usage patterns, see [Testing](12%20Testing.md).
 
 ---
 
@@ -865,9 +865,9 @@ flutter pub run flutter_launcher_icons
 
  [pubspec.yaml L26-L28](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/pubspec.yaml#L26-L28)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

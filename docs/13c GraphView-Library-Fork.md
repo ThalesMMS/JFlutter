@@ -13,7 +13,7 @@
 
 This page documents JFlutter's dependency on a custom fork of the GraphView library, which provides the graph rendering and interaction primitives for the automaton canvas system. The fork adds deterministic loop-edge rendering and related optimizations specific to JFlutter's requirements for displaying formal automata with self-transitions.
 
-For information about how the canvas system uses GraphView, see **[Canvas System](#4)**. For details on canvas controllers and interaction handling, see **[Canvas Controllers](#4.2)** and **[Canvas Tools and Interaction](#4.4)**.
+For information about how the canvas system uses GraphView, see **[Canvas System](4%20Canvas-System.md)**. For details on canvas controllers and interaction handling, see **[Canvas Controllers](4b%20Canvas-Controllers.md)** and **[Canvas Tools and Interaction](4d%20Canvas-Tools-and-Interaction.md)**.
 
 ---
 
@@ -33,9 +33,9 @@ JFlutter uses a custom fork of the GraphView library instead of the upstream pac
 
 The fork was created to address limitations in the upstream library's handling of self-loop edges, which are essential for representing automaton states with transitions back to themselves (e.g., a state that accepts any number of consecutive 'a' symbols).
 
-**Sources:** [README.md L300](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L300-L300)
+**Sources:** [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L300-L300)
 
- [README.md L343](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L343-L343)
+ **Sources**: [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L343-L343)
 
  [pubspec.yaml L53-L57](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/pubspec.yaml#L53-L57)
 
@@ -103,7 +103,7 @@ The `loop-edge-renderer` branch implements:
 
 These modifications ensure that automaton diagrams remain comprehensible even when states have multiple self-transitions or combinations of self-loops and outgoing edges.
 
-**Sources:** [README.md L300](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L300-L300)
+**Sources:** [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L300-L300)
 
  [docs/canvas_bridge.md L5](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/docs/canvas_bridge.md#L5-L5)
 
@@ -306,7 +306,7 @@ The fork supports all platforms JFlutter targets:
 | **Web** | ✅ Full support | Canvas rendering via HTML5 canvas |
 | **Desktop** (Windows/macOS/Linux) | ✅ Full support | Same rendering pipeline |
 
-**Sources:** [README.md L141-L145](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L141-L145)
+**Sources:** [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L141-L145)
 
 ---
 
@@ -316,11 +316,11 @@ The GraphView fork is used exclusively by the canvas system. For details on spec
 
 | Component | Wiki Page | Description |
 | --- | --- | --- |
-| Canvas Widget | **[AutomatonGraphViewCanvas Widget](#4.1)** | Main widget embedding fork's rendering |
-| Controllers | **[Canvas Controllers](#4.2)** | Controller hierarchy managing `Graph` instances |
-| Interaction | **[Canvas Tools and Interaction](#4.4)** | Gesture handling and tool selection |
-| Coordinates | **[Coordinate Systems and Viewport](#4.5)** | Transform management via fork's `GraphViewController` |
-| History | **[Undo/Redo System](#4.6)** | Snapshot compression and replay |
+| Canvas Widget | **[AutomatonGraphViewCanvas Widget](4a%20AutomatonGraphViewCanvas-Widget.md)** | Main widget embedding fork's rendering |
+| Controllers | **[Canvas Controllers](4b%20Canvas-Controllers.md)** | Controller hierarchy managing `Graph` instances |
+| Interaction | **[Canvas Tools and Interaction](4d%20Canvas-Tools-and-Interaction.md)** | Gesture handling and tool selection |
+| Coordinates | **[Coordinate Systems and Viewport](4e%20Coordinate-Systems-and-Viewport.md)** | Transform management via fork's `GraphViewController` |
+| History | **[Undo/Redo System](4f%20Undo-Redo-System.md)** | Snapshot compression and replay |
 
 **Sources:** [docs/canvas_bridge.md L1-L39](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/docs/canvas_bridge.md#L1-L39)
 
@@ -351,9 +351,9 @@ GraphViewPackage -.-> CanvasControllers
 
  [pubspec.lock L373-L381](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/pubspec.lock#L373-L381)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

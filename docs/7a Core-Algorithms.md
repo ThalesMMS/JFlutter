@@ -10,7 +10,7 @@
 > * [test/unit/core/cfg/cyk_parser_test.dart](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/test/unit/core/cfg/cyk_parser_test.dart)
 > * [test/unit/grammar_to_pda_validation_test.dart](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/test/unit/grammar_to_pda_validation_test.dart)
 
-This page documents the core algorithms that implement formal language theory operations in JFlutter. These algorithms transform, analyze, and validate finite automata, grammars, and regular expressions. For algorithm execution and simulation, see [Simulation System](#7.2). For the UI components that expose these algorithms to users, see [Algorithm Panels](#7.3).
+This page documents the core algorithms that implement formal language theory operations in JFlutter. These algorithms transform, analyze, and validate finite automata, grammars, and regular expressions. For algorithm execution and simulation, see [Simulation System](7b%20Simulation-System.md). For the UI components that expose these algorithms to users, see [Algorithm Panels](7c%20Algorithm-Panels.md).
 
 ---
 
@@ -108,7 +108,7 @@ The algorithm implementations are located in `lib/core/algorithms/` with the fol
 
  [test/unit/core/automata/fa_algorithms_test.dart L1-L268](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/test/unit/core/automata/fa_algorithms_test.dart#L1-L268)
 
- [README.md L56-L73](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L56-L73)
+ README.md
 
 ---
 
@@ -666,11 +666,11 @@ Each test suite validates both algorithmic correctness (does it produce the righ
 
 The algorithms are cross-validated against reference implementations in the `References/` directory:
 
-* **Python automata-main**: NFA→DFA conversion, DFA minimization - [README.md L313-L316](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L313-L316)
-* **Dart AutomataTheory**: Finite automata operations - [README.md L323-L326](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L323-L326)
-* **nfa_2_dfa**: NFA→DFA conversion algorithms - [README.md L329-L331](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L329-L331)
+* **Python automata-main**: NFA→DFA conversion, DFA minimization - **Sources**: [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L313-L316)
+* **Dart AutomataTheory**: Finite automata operations - **Sources**: [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L323-L326)
+* **nfa_2_dfa**: NFA→DFA conversion algorithms - **Sources**: [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L329-L331)
 
-The reference validation process is documented at [README.md L204-L230](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L204-L230)
+The reference validation process is documented at **Sources**: [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L204-L230)
 
  Any deviations from reference behavior are tracked in [docs/reference-deviations.md](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/docs/reference-deviations.md)
 
@@ -680,13 +680,13 @@ The reference validation process is documented at [README.md L204-L230](https://
 
  [test/unit/core/cfg/cyk_parser_test.dart L1-L631](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/test/unit/core/cfg/cyk_parser_test.dart#L1-L631)
 
- [README.md L204-L230](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L204-L230)
+ **Sources**: [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L204-L230)
 
  [docs/reference-deviations.md L1-L56](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/docs/reference-deviations.md#L1-L56)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

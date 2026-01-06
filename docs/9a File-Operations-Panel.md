@@ -14,7 +14,7 @@
 
 ## Purpose and Scope
 
-The **File Operations Panel** (`FileOperationsPanel`) is the primary UI component for importing, exporting, and saving automata and grammars in multiple formats. This document covers the panel's architecture, supported file formats, platform-specific behaviors, and integration with the serialization service layer. For details on the underlying format conversion logic, see [Serialization Service](#9.2). For JFLAP interoperability specifics, see [JFLAP Interoperability](#9.3). For SVG export details, see [SVG Export](#9.4).
+The **File Operations Panel** (`FileOperationsPanel`) is the primary UI component for importing, exporting, and saving automata and grammars in multiple formats. This document covers the panel's architecture, supported file formats, platform-specific behaviors, and integration with the serialization service layer. For details on the underlying format conversion logic, see [Serialization Service](9b%20Serialization-Service.md). For JFLAP interoperability specifics, see [JFLAP Interoperability](9c%20JFLAP-Interoperability.md). For SVG export details, see [SVG Export](9d%20SVG-Export.md).
 
 **Sources:** [lib/presentation/widgets/file_operations_panel.dart L1-L602](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/widgets/file_operations_panel.dart#L1-L602)
 
@@ -502,9 +502,9 @@ The component is tested through integration tests that verify:
 
  [test/integration/io/examples_roundtrip_test.dart L1-L739](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/test/integration/io/examples_roundtrip_test.dart#L1-L739)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

@@ -20,7 +20,7 @@
 > * [test/widget/presentation/tm_canvas_graphview_test.dart](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/test/widget/presentation/tm_canvas_graphview_test.dart)
 > * [test/widget/presentation/visualizations_test.dart](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/test/widget/presentation/visualizations_test.dart)
 
-This page documents the testing strategy, infrastructure, and patterns used throughout the JFlutter codebase. It covers the test organization, execution workflows, and common testing utilities that ensure code correctness and maintainability. For detailed coverage of specific test categories, see [Canvas System Tests](#12.1) and [Widget and Integration Tests](#12.2).
+This page documents the testing strategy, infrastructure, and patterns used throughout the JFlutter codebase. It covers the test organization, execution workflows, and common testing utilities that ensure code correctness and maintainability. For detailed coverage of specific test categories, see [Canvas System Tests](12a%20Canvas-System-Tests.md) and [Widget and Integration Tests](12b%20Integration-Tests.md).
 
 ## Testing Infrastructure
 
@@ -411,11 +411,11 @@ This intentionally failing test serves as a reminder for Phase 3.2 implementatio
 
 Areas requiring additional test coverage:
 
-1. **Algorithm Use Cases**: No tests for [SimulateWordUseCase](#7.2), [NfaToDfaUseCase](#7.1)
+1. **Algorithm Use Cases**: No tests for [SimulateWordUseCase](7b%20Simulation-System.md), [NfaToDfaUseCase](7a%20Core-Algorithms.md)
 2. **Grammar System**: Grammar editor and conversion logic untested
 3. **Layout Algorithms**: Layout repository operations use `_FakeLayoutRepository` [test/features/canvas/graphview/graphview_canvas_controller_test.dart L30-L58](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/test/features/canvas/graphview/graphview_canvas_controller_test.dart#L30-L58)
-4. **Error Handling**: [Result](#11) type error paths need coverage
-5. **Serialization**: JFLAP XML parser and format converters [uncovered](#9.2)
+4. **Error Handling**: [Result](11%20Trace-Persistence.md) type error paths need coverage
+5. **Serialization**: JFLAP XML parser and format converters [uncovered](9b%20Serialization-Service.md)
 
 **Sources:** [test/features/canvas/graphview/graphview_canvas_controller_test.dart L30-L58](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/test/features/canvas/graphview/graphview_canvas_controller_test.dart#L30-L58)
 
@@ -498,35 +498,35 @@ The codebase demonstrates several testing best practices:
 
  [test/features/canvas/graphview/graphview_canvas_controller_test.dart L220-L225](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/test/features/canvas/graphview/graphview_canvas_controller_test.dart#L220-L225)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 
-* [Testing](#12-testing)
-* [Testing Infrastructure](#12-testing-infrastructure)
-* [Test Dependencies](#12-test-dependencies)
-* [Test Framework Architecture](#12-test-framework-architecture)
-* [Test Organization](#12-test-organization)
-* [Directory Structure](#12-directory-structure)
-* [Test Categories by Layer](#12-test-categories-by-layer)
-* [Common Testing Patterns](#12-common-testing-patterns)
-* [Provider Mocking and Recording](#12-provider-mocking-and-recording)
-* [Controller Lifecycle Management](#12-controller-lifecycle-management)
-* [Snapshot-Based Testing](#12-snapshot-based-testing)
-* [Widget Test Patterns](#12-widget-test-patterns)
-* [Integration Testing Strategy](#12-integration-testing-strategy)
-* [Integration Test Architecture](#12-integration-test-architecture)
-* [Test Execution](#12-test-execution)
-* [Running Tests](#12-running-tests)
-* [Test Isolation](#12-test-isolation)
-* [Known Testing Gaps](#12-known-testing-gaps)
-* [Visual Regression Testing](#12-visual-regression-testing)
-* [Test Coverage Gaps](#12-test-coverage-gaps)
-* [Testing Utilities and Helpers](#12-testing-utilities-and-helpers)
-* [Inspectable Controllers](#12-inspectable-controllers)
-* [Sample Data Builders](#12-sample-data-builders)
-* [Testing Best Practices](#12-testing-best-practices)
+* [Testing](12%20Testing.md)
+* [Testing Infrastructure](12%20Testing.md)
+* [Test Dependencies](12%20Testing.md)
+* [Test Framework Architecture](12%20Testing.md)
+* [Test Organization](12%20Testing.md)
+* [Directory Structure](12%20Testing.md)
+* [Test Categories by Layer](12%20Testing.md)
+* [Common Testing Patterns](12%20Testing.md)
+* [Provider Mocking and Recording](12%20Testing.md)
+* [Controller Lifecycle Management](12%20Testing.md)
+* [Snapshot-Based Testing](12%20Testing.md)
+* [Widget Test Patterns](12%20Testing.md)
+* [Integration Testing Strategy](12%20Testing.md)
+* [Integration Test Architecture](12%20Testing.md)
+* [Test Execution](12%20Testing.md)
+* [Running Tests](12%20Testing.md)
+* [Test Isolation](12%20Testing.md)
+* [Known Testing Gaps](12%20Testing.md)
+* [Visual Regression Testing](12%20Testing.md)
+* [Test Coverage Gaps](12%20Testing.md)
+* [Testing Utilities and Helpers](12%20Testing.md)
+* [Inspectable Controllers](12%20Testing.md)
+* [Sample Data Builders](12%20Testing.md)
+* [Testing Best Practices](12%20Testing.md)
 
 Ask Devin about JFlutter

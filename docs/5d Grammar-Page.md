@@ -19,7 +19,7 @@
 
 The **Grammar Page** workspace provides a comprehensive environment for working with Context-Free Grammars (CFGs). It features a grammar editor for defining production rules, a simulation panel for parsing input strings, and an algorithm panel for grammar transformations and analysis. The page implements a responsive layout strategy that adapts from mobile to desktop screen sizes.
 
-For information about other workspace pages (FSA, PDA, TM), see [FSA Page](#5.1), [PDA Page](#5.2), and [TM Page](#5.3). For regular expression tools, see [Regex and Pumping Lemma Pages](#5.5).
+For information about other workspace pages (FSA, PDA, TM), see [FSA Page](5a%20FSA-Page.md), [PDA Page](5b%20PDA-Page.md), and [TM Page](5c%20TM-Page.md). For regular expression tools, see [Regex and Pumping Lemma Pages](5e%20Regex-and-Pumping-Lemma-Pages.md).
 
 ---
 
@@ -741,9 +741,9 @@ The page follows JFlutter's consistent workspace pattern while adapting the UI p
 
  [lib/presentation/widgets/grammar_editor.dart L1-L648](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/widgets/grammar_editor.dart#L1-L648)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

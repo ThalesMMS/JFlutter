@@ -19,7 +19,7 @@
 
 ## Purpose and Scope
 
-The Simulation System executes automata and grammars against input strings, generating step-by-step execution traces with real-time visual feedback. This page documents the execution engines, highlight mechanism, trace persistence, and UI integration. For algorithm operations that transform automata (e.g., NFA→DFA conversion), see [Core Algorithms](#7.1). For UI panels that display simulation controls, see [Algorithm Panels](#7.3).
+The Simulation System executes automata and grammars against input strings, generating step-by-step execution traces with real-time visual feedback. This page documents the execution engines, highlight mechanism, trace persistence, and UI integration. For algorithm operations that transform automata (e.g., NFA→DFA conversion), see [Core Algorithms](7a%20Core-Algorithms.md). For UI panels that display simulation controls, see [Algorithm Panels](7c%20Algorithm-Panels.md).
 
 ---
 
@@ -523,9 +523,9 @@ The `SharedPreferences` backend provides cross-platform trace history persistenc
 
 **Sources:** [lib/core/services/trace_persistence_service_stub.dart L26-L39](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/core/services/trace_persistence_service_stub.dart#L26-L39)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

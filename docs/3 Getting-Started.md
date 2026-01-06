@@ -9,7 +9,7 @@
 > * [pubspec.lock](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/pubspec.lock)
 > * [pubspec.yaml](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/pubspec.yaml)
 
-This page covers the installation, configuration, and initial execution of JFlutter. It provides step-by-step instructions for setting up a development environment, installing dependencies, running the application on different platforms, and verifying the setup through basic testing. For information about the overall architecture, see [JFlutter Overview](#1). For platform-specific UI components and responsive design patterns, see [Responsive Layout System](#8.2).
+This page covers the installation, configuration, and initial execution of JFlutter. It provides step-by-step instructions for setting up a development environment, installing dependencies, running the application on different platforms, and verifying the setup through basic testing. For information about the overall architecture, see [JFlutter Overview](1%20JFlutter-Overview.md). For platform-specific UI components and responsive design patterns, see [Responsive Layout System](8b%20Responsive-Layout-System.md).
 
 ---
 
@@ -24,7 +24,7 @@ JFlutter requires the following tools and runtime versions:
 | IDE | Android Studio or VS Code | Recommended development environment |
 | Git | Any recent version | Repository cloning and graphview fork dependency |
 
-**Sources:** [README.md L95-L98](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L95-L98)
+**Sources:** README.md
 
  [pubspec.yaml L26-L28](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/pubspec.yaml#L26-L28)
 
@@ -105,7 +105,7 @@ flutter pub get
 
 This command resolves all packages declared in `pubspec.yaml`, including the graphview git dependency. The Flutter toolchain will clone the fork and check out the `loop-edge-renderer` branch automatically.
 
-**Sources:** [README.md L103-L108](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L103-L108)
+**Sources:** [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L103-L108)
 
  [pubspec.yaml L54-L58](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/pubspec.yaml#L54-L58)
 
@@ -145,7 +145,7 @@ RunApp -.-> AppWidget
 AppWidget -.-> HomePage
 ```
 
-**Sources:** [README.md L110-L111](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L110-L111)
+**Sources:** [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L110-L111)
 
  [integration_test/app_simulation_test.dart L16](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/integration_test/app_simulation_test.dart#L16-L16)
 
@@ -166,7 +166,7 @@ List available devices:
 flutter devices
 ```
 
-**Sources:** [README.md L141-L145](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L141-L145)
+**Sources:** [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L141-L145)
 
 ---
 
@@ -192,7 +192,7 @@ export JFLUTTER_KEYSTORE_PASSWORD="your_store_password"export JFLUTTER_KEY_ALI
 
 The script `create_key_properties.sh` reads environment variables and generates `android/key.properties` automatically.
 
-**Sources:** [README.md L114-L128](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L114-L128)
+**Sources:** [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L114-L128)
 
 #### CI/CD Workflow Example
 
@@ -202,7 +202,7 @@ For GitHub Actions or similar CI systems:
 # Recreate keystore from base64-encoded secretmkdir -p android/keystoresecho "$JFLUTTER_KEYSTORE_BASE64" | base64 --decode > android/keystores/jflutter-release.jks# Export credentialsexport JFLUTTER_KEYSTORE_PASSWORD="$JFLUTTER_KEYSTORE_PASSWORD"export JFLUTTER_KEY_ALIAS="$JFLUTTER_KEY_ALIAS"export JFLUTTER_KEY_PASSWORD="$JFLUTTER_KEY_PASSWORD"# Generate key.properties./android/scripts/create_key_properties.sh# Build release APKflutter build apk --release
 ```
 
-**Sources:** [README.md L129-L139](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L129-L139)
+**Sources:** [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L129-L139)
 
 #### Build Commands
 
@@ -210,7 +210,7 @@ For GitHub Actions or similar CI systems:
 # Android APKflutter build apk --release# Android App Bundle (for Play Store)flutter build appbundle --release# iOS (requires macOS)flutter build ios --release# Webflutter build web --release# Desktop (example for Windows)flutter build windows --release
 ```
 
-**Sources:** [README.md L141-L145](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L141-L145)
+**Sources:** [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L141-L145)
 
 ---
 
@@ -247,7 +247,7 @@ These files are loaded by `ExamplesAssetDataSource` and made available through t
 | `test/integration/` | JFLAP XML/JSON round-trips, example validation | `io/` subdirectory |
 | `test/widget/` | UI component behavior | Presentation layer widgets |
 
-**Sources:** [README.md L169-L202](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L169-L202)
+**Sources:** [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L169-L202)
 
 ### Integration Test
 
@@ -298,7 +298,7 @@ Simulate -.-> VerifyResult
 VerifyResult -.-> Export
 ```
 
-**Sources:** [README.md L147-L165](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L147-L165)
+**Sources:** [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L147-L165)
 
  [USER_GUIDE L63-L70](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/USER_GUIDE#L63-L70)
 
@@ -335,7 +335,7 @@ lib/
     └── widgets/                     # Reusable UI components
 ```
 
-**Sources:** [README.md L55-L91](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L55-L91)
+**Sources:** README.md
 
 ---
 
@@ -372,7 +372,7 @@ Repos -.-> ExamplesRepo
 // Access registered servicefinal examplesRepo = GetIt.instance<ExamplesRepository>();final result = await examplesRepo.loadExample('AFD - Termina com A');
 ```
 
-**Sources:** [README.md L83-L84](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L83-L84)
+**Sources:** README.md
 
  [integration_test/app_simulation_test.dart L33-L44](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/integration_test/app_simulation_test.dart#L33-L44)
 
@@ -382,40 +382,40 @@ Repos -.-> ExamplesRepo
 
 After completing setup and verification:
 
-* **Explore Workspace Pages:** See [Automaton Workspace Pages](#5) for FSA, PDA, TM, and Grammar editors
-* **Canvas Editing:** Review [Canvas System](#4) for interaction patterns and customization
-* **State Management:** Understand [State Management](#6) for Riverpod provider patterns
-* **Import/Export:** Learn [Import and Export System](#9) for JFLAP interoperability
-* **Examples Library:** See [Examples Library](#10.1) for embedded learning content
-* **Testing Strategy:** Review [Testing](#12) for test suite organization
+* **Explore Workspace Pages:** See [Automaton Workspace Pages](5%20Automaton-Workspace-Pages.md) for FSA, PDA, TM, and Grammar editors
+* **Canvas Editing:** Review [Canvas System](4%20Canvas-System.md) for interaction patterns and customization
+* **State Management:** Understand [State Management](6%20State-Management.md) for Riverpod provider patterns
+* **Import/Export:** Learn [Import and Export System](9%20Import-and-Export-System.md) for JFLAP interoperability
+* **Examples Library:** See [Examples Library](10a%20Examples-Library.md) for embedded learning content
+* **Testing Strategy:** Review [Testing](12%20Testing.md) for test suite organization
 
-**Sources:** [README.md L232-L268](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L232-L268)
+**Sources:** [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L232-L268)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 
-* [Getting Started](#3-getting-started)
-* [Prerequisites](#3-prerequisites)
-* [Project Dependencies](#3-project-dependencies)
-* [Core Dependencies](#3-core-dependencies)
-* [Installation](#3-installation)
-* [Clone Repository](#3-clone-repository)
-* [Install Dependencies](#3-install-dependencies)
-* [Running the Application](#3-running-the-application)
-* [Development Mode](#3-development-mode)
-* [Platform-Specific Execution](#3-platform-specific-execution)
-* [Building for Release](#3-building-for-release)
-* [Android Release Build](#3-android-release-build)
-* [Asset Configuration](#3-asset-configuration)
-* [Verification](#3-verification)
-* [Running Tests](#3-running-tests)
-* [Integration Test](#3-integration-test)
-* [Manual Verification](#3-manual-verification)
-* [Project Structure Overview](#3-project-structure-overview)
-* [Dependency Injection Setup](#3-dependency-injection-setup)
-* [Next Steps](#3-next-steps)
+* [Getting Started](3%20Getting-Started.md)
+* [Prerequisites](3%20Getting-Started.md)
+* [Project Dependencies](3%20Getting-Started.md)
+* [Core Dependencies](3%20Getting-Started.md)
+* [Installation](3%20Getting-Started.md)
+* [Clone Repository](3%20Getting-Started.md)
+* [Install Dependencies](3%20Getting-Started.md)
+* [Running the Application](3%20Getting-Started.md)
+* [Development Mode](3%20Getting-Started.md)
+* [Platform-Specific Execution](3%20Getting-Started.md)
+* [Building for Release](3%20Getting-Started.md)
+* [Android Release Build](3%20Getting-Started.md)
+* [Asset Configuration](3%20Getting-Started.md)
+* [Verification](3%20Getting-Started.md)
+* [Running Tests](3%20Getting-Started.md)
+* [Integration Test](3%20Getting-Started.md)
+* [Manual Verification](3%20Getting-Started.md)
+* [Project Structure Overview](3%20Getting-Started.md)
+* [Dependency Injection Setup](3%20Getting-Started.md)
+* [Next Steps](3%20Getting-Started.md)
 
 Ask Devin about JFlutter

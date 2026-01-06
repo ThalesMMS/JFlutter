@@ -22,7 +22,7 @@
 
 This page documents the comprehensive test suite for the Canvas System, the most complex subsystem in JFlutter (importance 67.95). The tests validate the GraphView-based canvas rendering engine, bidirectional synchronization between canvas controllers and Riverpod providers, and automaton editing interactions across FSA, PDA, and TM editors.
 
-For information about the canvas system itself, see [Canvas System](#4). For widget tests of other UI components, see [Widget and Integration Tests](#12.2).
+For information about the canvas system itself, see [Canvas System](4%20Canvas-System.md). For widget tests of other UI components, see [Widget and Integration Tests](12b%20Integration-Tests.md).
 
 ## Test Architecture Overview
 
@@ -479,9 +479,9 @@ Execute canvas system tests with:
 
  [test/widget/presentation/mobile_automaton_controls_test.dart L1-L132](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/test/widget/presentation/mobile_automaton_controls_test.dart#L1-L132)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

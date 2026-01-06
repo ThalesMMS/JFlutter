@@ -9,7 +9,7 @@
 > * [pubspec.lock](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/pubspec.lock)
 > * [pubspec.yaml](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/pubspec.yaml)
 
-**Purpose and Scope**: This page introduces JFlutter as a cross-platform educational tool for formal language theory. It explains the application's capabilities, target audience, supported automaton types, and high-level architecture. For detailed information about specific subsystems, see the architecture pages ([Architecture](#2)), canvas system ([Canvas System](#4)), algorithms ([Algorithms and Simulation](#7)), and other specialized topics.
+**Purpose and Scope**: This page introduces JFlutter as a cross-platform educational tool for formal language theory. It explains the application's capabilities, target audience, supported automaton types, and high-level architecture. For detailed information about specific subsystems, see the architecture pages ([Architecture](2%20Architecture.md)), canvas system ([Canvas System](4%20Canvas-System.md)), algorithms ([Algorithms and Simulation](7%20Algorithms-and-Simulation.md)), and other specialized topics.
 
 ---
 
@@ -45,7 +45,7 @@ JFlutter serves multiple user groups in computer science education:
 
 The application emphasizes interactive learning through visual feedback, allowing users to observe algorithm execution step-by-step and understand state transitions through canvas highlighting.
 
-Sources: [README.md L269-L276](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L269-L276)
+Sources: [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L269-L276)
 
 ---
 
@@ -96,7 +96,7 @@ Sources: [README.md L18-L29](https://github.com/ThalesMMS/JFlutter/blob/32e808b4
 
 Sources: [README.md L18-L29](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L18-L29)
 
- [README.md L235-L244](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L235-L244)
+ **Sources**: [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L235-L244)
 
 ---
 
@@ -613,7 +613,7 @@ This architecture ensures:
 * **Portability**: Business logic can be reused across platforms
 * **Scalability**: Each layer can evolve independently
 
-Sources: [README.md L39-L91](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L39-L91)
+Sources: README.md
 
  [lib/core/](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/core/)
 
@@ -688,7 +688,7 @@ Presentation -.-> PresSub4
 * `lib/presentation/pages/`: Main application screens (`FSAPage`, `TMPage`, `PDAPage`, `GrammarPage`, `HomePage`)
 * `lib/data/services/`: High-level services (`SerializationService`, `TracePersistenceService`, `SvgExporter`)
 
-Sources: [README.md L55-L91](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L55-L91)
+Sources: README.md
 
 ---
 
@@ -737,7 +737,7 @@ Sources: [pubspec.yaml L36-L85](https://github.com/ThalesMMS/JFlutter/blob/32e80
 
 All platforms share the same UI codebase with responsive layout adaptations (mobile <1024px, tablet 1024-1399px, desktop ≥1400px breakpoints).
 
-Sources: [README.md L141-L145](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L141-L145)
+Sources: [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L141-L145)
 
  [pubspec.yaml L26-L28](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/pubspec.yaml#L26-L28)
 
@@ -971,11 +971,11 @@ Sources: [lib/presentation/pages/home_page.dart](https://github.com/ThalesMMS/JF
 # Android APKflutter build apk --release# Android App Bundleflutter build appbundle --release# iOS (requires macOS and Xcode)flutter build ios --release# Webflutter build web --release# Desktopflutter build windows --releaseflutter build macos --releaseflutter build linux --release
 ```
 
-For Android release signing configuration, see [README.md L114-L139](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L114-L139)
+For Android release signing configuration, see **Sources**: [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L114-L139)
 
-Sources: [README.md L93-L112](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L93-L112)
+Sources: README.md
 
- [README.md L168-L202](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L168-L202)
+ **Sources**: [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L168-L202)
 
 ---
 
@@ -999,9 +999,9 @@ JFlutter validates its algorithms against reference implementations stored in th
 
 This methodology ensures correctness while allowing performance optimizations specific to Flutter's execution model.
 
-Sources: [README.md L204-L231](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L204-L231)
+Sources: [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L204-L231)
 
- [README.md L311-L332](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L311-L332)
+ **Sources**: [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L311-L332)
 
 ---
 
@@ -1028,11 +1028,11 @@ Sources: [README.md L204-L231](https://github.com/ThalesMMS/JFlutter/blob/32e808
 * PDA/TM canvas refinements
 * Golden test coverage for visual regression testing
 
-For detailed testing strategy and known issues, see [Testing](#12) and [Known Issues and Deviations](#13.2).
+For detailed testing strategy and known issues, see [Testing](12%20Testing.md) and [Known Issues and Deviations](13b%20Known-Deviations-from-Theory.md).
 
 Sources: [README.md L12-L14](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L12-L14)
 
- [README.md L232-L244](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L232-L244)
+ **Sources**: [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L232-L244)
 
 ---
 
@@ -1059,9 +1059,9 @@ Sources: [README.md L12-L14](https://github.com/ThalesMMS/JFlutter/blob/32e808b4
 * Flutter Team (mobile framework)
 * Riverpod Team (state management)
 * GraphView Contributors (graph rendering)
-* Reference implementation authors (see [README.md L311-L332](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L311-L332) )
+* Reference implementation authors (see **Sources**: [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L311-L332) )
 
-Sources: [README.md L277-L350](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L277-L350)
+Sources: [Project overview and setup](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L277-L350)
 
 ---
 
@@ -1069,51 +1069,52 @@ Sources: [README.md L277-L350](https://github.com/ThalesMMS/JFlutter/blob/32e808
 
 For detailed information about specific subsystems:
 
-* **Architecture details**: See [Architecture](#2) for layer-by-layer breakdown
-* **Canvas system**: See [Canvas System](#4) for GraphView integration, controllers, and interaction patterns
-* **Automaton editors**: See [Automaton Editors](#5) for FSA, PDA, TM, and Grammar editor specifics
-* **State management**: See [State Management](#6) for Riverpod provider patterns
-* **Algorithms**: See [Algorithms and Simulation](#7) for algorithm implementations and simulation pipeline
-* **Import/Export**: See [Import and Export System](#9) for serialization and JFLAP compatibility
-* **Testing**: See [Testing](#12) for test organization and coverage
+* **Architecture details**: See [Architecture](2%20Architecture.md) for layer-by-layer breakdown
+* **Canvas system**: See [Canvas System](4%20Canvas-System.md) for GraphView integration, controllers, and interaction patterns
+* **Automaton editors**: See [Automaton Editors](5%20Automaton-Workspace-Pages.md) for FSA, PDA, TM, and Grammar editor specifics
+* **State management**: See [State Management](6%20State-Management.md) for Riverpod provider patterns
+* **Algorithms**: See [Algorithms and Simulation](7%20Algorithms-and-Simulation.md) for algorithm implementations and simulation pipeline
+* **Import/Export**: See [Import and Export System](9%20Import-and-Export-System.md) for serialization and JFLAP compatibility
+* **Testing**: See [Testing](12%20Testing.md) for test organization and coverage
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 
-* [JFlutter Overview](#1-jflutter-overview)
-* [What is JFlutter?](#1-what-is-jflutter)
-* [Target Audience and Educational Value](#1-target-audience-and-educational-value)
-* [Supported Automaton Types and Features](#1-supported-automaton-types-and-features)
-* [Automaton Type Summary](#1-automaton-type-summary)
-* [Feature Matrix](#1-feature-matrix)
-* [Core Application Features](#1-core-application-features)
-* [Learning and Educational Tools](#1-learning-and-educational-tools)
-* [Canvas System](#1-canvas-system)
-* [Simulation and Trace Management](#1-simulation-and-trace-management)
-* [Import and Export System](#1-import-and-export-system)
-* [Application Architecture](#1-application-architecture)
-* [Layer Responsibilities](#1-layer-responsibilities)
-* [Project Structure and Key Directories](#1-project-structure-and-key-directories)
-* [Technology Stack](#1-technology-stack)
-* [Primary Dependencies](#1-primary-dependencies)
-* [Platform Support Matrix](#1-platform-support-matrix)
-* [State Management Architecture](#1-state-management-architecture)
-* [Algorithm Suite](#1-algorithm-suite)
-* [Finite State Automata Algorithms](#1-finite-state-automata-algorithms)
-* [Pushdown Automata and Grammar Algorithms](#1-pushdown-automata-and-grammar-algorithms)
-* [Turing Machine Algorithms](#1-turing-machine-algorithms)
-* [Responsive Design System](#1-responsive-design-system)
-* [Getting Started](#1-getting-started)
-* [Prerequisites](#1-prerequisites)
-* [Installation](#1-installation)
-* [Running Tests](#1-running-tests)
-* [Building Release Versions](#1-building-release-versions)
-* [Reference Implementation and Validation](#1-reference-implementation-and-validation)
-* [Development Status and Roadmap](#1-development-status-and-roadmap)
-* [License and Acknowledgments](#1-license-and-acknowledgments)
-* [Next Steps](#1-next-steps)
+- [JFlutter Overview](#jflutter-overview)
+  - [What is JFlutter?](#what-is-jflutter)
+  - [Target Audience and Educational Value](#target-audience-and-educational-value)
+  - [Supported Automaton Types and Features](#supported-automaton-types-and-features)
+    - [Automaton Type Summary](#automaton-type-summary)
+    - [Feature Matrix](#feature-matrix)
+  - [Core Application Features](#core-application-features)
+    - [Learning and Educational Tools](#learning-and-educational-tools)
+    - [Canvas System](#canvas-system)
+    - [Simulation and Trace Management](#simulation-and-trace-management)
+    - [Import and Export System](#import-and-export-system)
+  - [Application Architecture](#application-architecture)
+    - [Layer Responsibilities](#layer-responsibilities)
+    - [Project Structure and Key Directories](#project-structure-and-key-directories)
+  - [Technology Stack](#technology-stack)
+    - [Primary Dependencies](#primary-dependencies)
+    - [Platform Support Matrix](#platform-support-matrix)
+  - [State Management Architecture](#state-management-architecture)
+  - [Algorithm Suite](#algorithm-suite)
+    - [Finite State Automata Algorithms](#finite-state-automata-algorithms)
+    - [Pushdown Automata and Grammar Algorithms](#pushdown-automata-and-grammar-algorithms)
+    - [Turing Machine Algorithms](#turing-machine-algorithms)
+  - [Responsive Design System](#responsive-design-system)
+  - [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Installation](#installation)
+    - [Running Tests](#running-tests)
+    - [Building Release Versions](#building-release-versions)
+  - [Reference Implementation and Validation](#reference-implementation-and-validation)
+  - [Development Status and Roadmap](#development-status-and-roadmap)
+  - [License and Acknowledgments](#license-and-acknowledgments)
+  - [Next Steps](#next-steps)
+    - [On this page](#on-this-page)
 
 Ask Devin about JFlutter

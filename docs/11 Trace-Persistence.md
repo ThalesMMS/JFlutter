@@ -15,7 +15,7 @@
 
 This document describes JFlutter's trace persistence system, which stores simulation execution histories for finite state automata, pushdown automata, and Turing machines. The system enables users to review past simulation runs, navigate step-by-step through execution traces, and analyze acceptance patterns across multiple inputs.
 
-For information about the simulation execution engines that generate traces, see [Simulation System](#7.2). For details on the UI components that display traces, see [Simulation Panel](#7.2) sections of the Algorithm and Simulation overview.
+For information about the simulation execution engines that generate traces, see [Simulation System](7b%20Simulation-System.md). For details on the UI components that display traces, see [Simulation Panel](7b%20Simulation-System.md) sections of the Algorithm and Simulation overview.
 
 **Sources:** [README.md L34](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/README.md#L34-L34)
 
@@ -614,46 +614,46 @@ Both exception types implement standard `toString()` for error logging and user 
 
 **Sources:** [lib/core/services/trace_persistence_service_stub.dart L246-L260](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/core/services/trace_persistence_service_stub.dart#L246-L260)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 
-* [Trace Persistence](#11-trace-persistence)
-* [Purpose and Scope](#11-purpose-and-scope)
-* [Architecture Overview](#11-architecture-overview)
-* [System Architecture](#11-system-architecture)
-* [Core Components](#11-core-components)
-* [TracePersistenceService](#11-tracepersistenceservice)
-* [TraceHistoryEntry](#11-tracehistoryentry)
-* [UnifiedTraceNotifier](#11-unifiedtracenotifier)
-* [Storage Strategy](#11-storage-strategy)
-* [SharedPreferences Backend](#11-sharedpreferences-backend)
-* [History Cap and Cleanup](#11-history-cap-and-cleanup)
-* [Storage Keys](#11-storage-keys)
-* [Trace Operations](#11-trace-operations)
-* [Saving Traces](#11-saving-traces)
-* [Loading Traces](#11-loading-traces)
-* [Managing History](#11-managing-history)
-* [Export and Import](#11-export-and-import)
-* [Integration Points](#11-integration-points)
-* [With Simulators](#11-with-simulators)
-* [With UI Components](#11-with-ui-components)
-* [Data Models](#11-data-models)
-* [SimulationResult Structure](#11-simulationresult-structure)
-* [Step-by-Step Navigation](#11-step-by-step-navigation)
-* [Metadata Preservation](#11-metadata-preservation)
-* [Platform Considerations](#11-platform-considerations)
-* [Web Platform Limitations](#11-web-platform-limitations)
-* [Mobile and Desktop Platforms](#11-mobile-and-desktop-platforms)
-* [Storage Quotas](#11-storage-quotas)
-* [Usage Patterns](#11-usage-patterns)
-* [Basic Simulation and Save](#11-basic-simulation-and-save)
-* [Restoring a Previous Trace](#11-restoring-a-previous-trace)
-* [Step-by-Step Playback](#11-step-by-step-playback)
-* [Bulk Export](#11-bulk-export)
-* [Import and Merge](#11-import-and-merge)
-* [Exception Handling](#11-exception-handling)
+* [Trace Persistence](11%20Trace-Persistence.md)
+* [Purpose and Scope](11%20Trace-Persistence.md)
+* [Architecture Overview](11%20Trace-Persistence.md)
+* [System Architecture](11%20Trace-Persistence.md)
+* [Core Components](11%20Trace-Persistence.md)
+* [TracePersistenceService](11%20Trace-Persistence.md)
+* [TraceHistoryEntry](11%20Trace-Persistence.md)
+* [UnifiedTraceNotifier](11%20Trace-Persistence.md)
+* [Storage Strategy](11%20Trace-Persistence.md)
+* [SharedPreferences Backend](11%20Trace-Persistence.md)
+* [History Cap and Cleanup](11%20Trace-Persistence.md)
+* [Storage Keys](11%20Trace-Persistence.md)
+* [Trace Operations](11%20Trace-Persistence.md)
+* [Saving Traces](11%20Trace-Persistence.md)
+* [Loading Traces](11%20Trace-Persistence.md)
+* [Managing History](11%20Trace-Persistence.md)
+* [Export and Import](11%20Trace-Persistence.md)
+* [Integration Points](11%20Trace-Persistence.md)
+* [With Simulators](11%20Trace-Persistence.md)
+* [With UI Components](11%20Trace-Persistence.md)
+* [Data Models](11%20Trace-Persistence.md)
+* [SimulationResult Structure](11%20Trace-Persistence.md)
+* [Step-by-Step Navigation](11%20Trace-Persistence.md)
+* [Metadata Preservation](11%20Trace-Persistence.md)
+* [Platform Considerations](11%20Trace-Persistence.md)
+* [Web Platform Limitations](11%20Trace-Persistence.md)
+* [Mobile and Desktop Platforms](11%20Trace-Persistence.md)
+* [Storage Quotas](11%20Trace-Persistence.md)
+* [Usage Patterns](11%20Trace-Persistence.md)
+* [Basic Simulation and Save](11%20Trace-Persistence.md)
+* [Restoring a Previous Trace](11%20Trace-Persistence.md)
+* [Step-by-Step Playback](11%20Trace-Persistence.md)
+* [Bulk Export](11%20Trace-Persistence.md)
+* [Import and Merge](11%20Trace-Persistence.md)
+* [Exception Handling](11%20Trace-Persistence.md)
 
 Ask Devin about JFlutter

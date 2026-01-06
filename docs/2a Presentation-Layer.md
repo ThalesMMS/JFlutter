@@ -21,7 +21,7 @@
 
 The Presentation Layer encompasses all UI components, pages, widgets, and visual presentation logic in JFlutter. This layer handles user interaction, responsive layouts, navigation, and theme management. It communicates with the State Management Layer via Riverpod providers and never directly accesses core business logic or data sources.
 
-For information about the canvas editing system specifically, see [Canvas System](#4). For state management providers that coordinate between UI and business logic, see [State Management](#6).
+For information about the canvas editing system specifically, see [Canvas System](4%20Canvas-System.md). For state management providers that coordinate between UI and business logic, see [State Management](6%20State-Management.md).
 
 ---
 
@@ -558,9 +558,9 @@ The Presentation Layer adheres to these architectural principles:
 
  [lib/presentation/theme/app_theme.dart L1-L119](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/theme/app_theme.dart#L1-L119)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

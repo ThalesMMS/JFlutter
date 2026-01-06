@@ -19,7 +19,7 @@
 
 This document describes the UI panels that provide user-facing controls for executing algorithms on automata and grammars. Algorithm panels serve as the primary interface for running transformations, conversions, and analyses on finite state automata, pushdown automata, Turing machines, and context-free grammars.
 
-For information about the underlying algorithm implementations, see [Core Algorithms](#7.1). For information about simulation execution and trace visualization, see [Simulation System](#7.2).
+For information about the underlying algorithm implementations, see [Core Algorithms](7a%20Core-Algorithms.md). For information about simulation execution and trace visualization, see [Simulation System](7b%20Simulation-System.md).
 
 ## Overview
 
@@ -893,9 +893,9 @@ TM panel additionally maintains `_analyzedTm` to detect model changes and `_curr
 
  [lib/presentation/widgets/grammar_algorithm_panel.dart L580-L583](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/widgets/grammar_algorithm_panel.dart#L580-L583)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

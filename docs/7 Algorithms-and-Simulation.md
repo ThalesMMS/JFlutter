@@ -13,7 +13,7 @@
 
 ## Purpose and Scope
 
-This page provides an overview of JFlutter's algorithm execution and simulation infrastructure, covering how algorithms are invoked, how results are propagated, and how visual feedback is delivered to users. For detailed documentation on specific algorithms (NFA→DFA conversion, minimization, etc.), see [Core Algorithms](#7.1). For step-by-step simulation mechanics and trace persistence, see [Simulation System](#7.2). For UI-level algorithm panels and their integration patterns, see [Algorithm Panels](#7.3).
+This page provides an overview of JFlutter's algorithm execution and simulation infrastructure, covering how algorithms are invoked, how results are propagated, and how visual feedback is delivered to users. For detailed documentation on specific algorithms (NFA→DFA conversion, minimization, etc.), see [Core Algorithms](7a%20Core-Algorithms.md). For step-by-step simulation mechanics and trace persistence, see [Simulation System](7b%20Simulation-System.md). For UI-level algorithm panels and their integration patterns, see [Algorithm Panels](7c%20Algorithm-Panels.md).
 
 This document focuses on:
 
@@ -710,38 +710,38 @@ JFlutter's algorithm and simulation infrastructure provides:
 4. **Comprehensive Diagnostics**: Validation and analysis services for all model types
 5. **Modular Panel Architecture**: Consistent UI patterns across algorithm types
 
-For implementation details of specific algorithms, see [Core Algorithms](#7.1). For simulation trace persistence and step navigation, see [Simulation System](#7.2). For UI component details, see [Algorithm Panels](#7.3).
+For implementation details of specific algorithms, see [Core Algorithms](7a%20Core-Algorithms.md). For simulation trace persistence and step navigation, see [Simulation System](7b%20Simulation-System.md). For UI component details, see [Algorithm Panels](7c%20Algorithm-Panels.md).
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 
-* [Algorithms and Simulation](#7-algorithms-and-simulation)
-* [Purpose and Scope](#7-purpose-and-scope)
-* [Architecture Overview](#7-architecture-overview)
-* [High-Level Algorithm Execution Flow](#7-high-level-algorithm-execution-flow)
-* [Result Pattern for Error Handling](#7-result-pattern-for-error-handling)
-* [Result Type Definition](#7-result-type-definition)
-* [Result Usage Pattern](#7-result-usage-pattern)
-* [Use Case Architecture](#7-use-case-architecture)
-* [Use Case Classes](#7-use-case-classes)
-* [Use Case Invocation Pattern](#7-use-case-invocation-pattern)
-* [Simulation Execution Pipeline](#7-simulation-execution-pipeline)
-* [Simulation Data Flow](#7-simulation-data-flow)
-* [Visual Feedback System](#7-visual-feedback-system)
-* [Simulation Highlight Architecture](#7-simulation-highlight-architecture)
-* [Algorithm Panel Integration](#7-algorithm-panel-integration)
-* [Algorithm Panel Responsibilities](#7-algorithm-panel-responsibilities)
-* [Common Panel Pattern](#7-common-panel-pattern)
-* [Error Handling and Diagnostics](#7-error-handling-and-diagnostics)
-* [Error Display Utilities](#7-error-display-utilities)
-* [Diagnostic Services](#7-diagnostic-services)
-* [Validation Flow](#7-validation-flow)
-* [Algorithm Logging](#7-algorithm-logging)
-* [Grammar Simulation and Parsing](#7-grammar-simulation-and-parsing)
-* [Grammar Parser Flow](#7-grammar-parser-flow)
-* [Summary](#7-summary)
+* [Algorithms and Simulation](7%20Algorithms-and-Simulation.md)
+* [Purpose and Scope](7%20Algorithms-and-Simulation.md)
+* [Architecture Overview](7%20Algorithms-and-Simulation.md)
+* [High-Level Algorithm Execution Flow](7%20Algorithms-and-Simulation.md)
+* [Result Pattern for Error Handling](7%20Algorithms-and-Simulation.md)
+* [Result Type Definition](7%20Algorithms-and-Simulation.md)
+* [Result Usage Pattern](7%20Algorithms-and-Simulation.md)
+* [Use Case Architecture](7%20Algorithms-and-Simulation.md)
+* [Use Case Classes](7%20Algorithms-and-Simulation.md)
+* [Use Case Invocation Pattern](7%20Algorithms-and-Simulation.md)
+* [Simulation Execution Pipeline](7%20Algorithms-and-Simulation.md)
+* [Simulation Data Flow](7%20Algorithms-and-Simulation.md)
+* [Visual Feedback System](7%20Algorithms-and-Simulation.md)
+* [Simulation Highlight Architecture](7%20Algorithms-and-Simulation.md)
+* [Algorithm Panel Integration](7%20Algorithms-and-Simulation.md)
+* [Algorithm Panel Responsibilities](7%20Algorithms-and-Simulation.md)
+* [Common Panel Pattern](7%20Algorithms-and-Simulation.md)
+* [Error Handling and Diagnostics](7%20Algorithms-and-Simulation.md)
+* [Error Display Utilities](7%20Algorithms-and-Simulation.md)
+* [Diagnostic Services](7%20Algorithms-and-Simulation.md)
+* [Validation Flow](7%20Algorithms-and-Simulation.md)
+* [Algorithm Logging](7%20Algorithms-and-Simulation.md)
+* [Grammar Simulation and Parsing](7%20Algorithms-and-Simulation.md)
+* [Grammar Parser Flow](7%20Algorithms-and-Simulation.md)
+* [Summary](7%20Algorithms-and-Simulation.md)
 
 Ask Devin about JFlutter

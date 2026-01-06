@@ -10,7 +10,7 @@
 
 This document provides a comprehensive reference for the `AutomatonGraphViewCanvas` widget, the primary interactive canvas component for editing and visualizing finite state automata, pushdown automata, and Turing machines. This widget serves as the universal editing surface that orchestrates controllers, tools, overlays, and gesture handling.
 
-For information about the canvas controller architecture, see [Canvas Controllers](#4.2). For details on the customization system that enables type-specific behaviors, see [Canvas Customization System](#4.3). For tool selection and gesture handling strategies, see [Canvas Tools and Interaction](#4.4).
+For information about the canvas controller architecture, see [Canvas Controllers](4b%20Canvas-Controllers.md). For details on the customization system that enables type-specific behaviors, see [Canvas Customization System](4c%20Canvas-Customization-System.md). For tool selection and gesture handling strategies, see [Canvas Tools and Interaction](4d%20Canvas-Tools-and-Interaction.md).
 
 ---
 
@@ -692,22 +692,22 @@ final simulationResult = ref.watch(simulationResultProvider);final currentSt
 
 The canvas widget collaborates with several other components in the canvas system:
 
-* **[GraphViewCanvasToolbar](#8.4)**: Provides zoom, fit, undo/redo controls
-* **[AutomatonCanvasToolController](#4.4)**: Manages tool selection state
-* **[GraphViewCanvasController](#4.2)**: FSA-specific controller implementation
-* **[GraphViewPdaCanvasController](#4.2)**: PDA-specific controller implementation
-* **[GraphViewTmCanvasController](#4.2)**: TM-specific controller implementation
-* **[GraphViewLabelFieldEditor](#4.4)**: Simple text editor for FSA transitions
-* **[PdaTransitionEditor](#4.3)**: Stack operation editor for PDA transitions
-* **[SimulationHighlightService](#7.2)**: Broadcasts simulation state changes
+* **[GraphViewCanvasToolbar](8d%20Toolbars-and-Canvas-Controls.md)**: Provides zoom, fit, undo/redo controls
+* **[AutomatonCanvasToolController](4d%20Canvas-Tools-and-Interaction.md)**: Manages tool selection state
+* **[GraphViewCanvasController](4b%20Canvas-Controllers.md)**: FSA-specific controller implementation
+* **[GraphViewPdaCanvasController](4b%20Canvas-Controllers.md)**: PDA-specific controller implementation
+* **[GraphViewTmCanvasController](4b%20Canvas-Controllers.md)**: TM-specific controller implementation
+* **[GraphViewLabelFieldEditor](4d%20Canvas-Tools-and-Interaction.md)**: Simple text editor for FSA transitions
+* **[PdaTransitionEditor](4c%20Canvas-Customization-System.md)**: Stack operation editor for PDA transitions
+* **[SimulationHighlightService](7b%20Simulation-System.md)**: Broadcasts simulation state changes
 
 **Sources:** [lib/presentation/widgets/automaton_graphview_canvas.dart L1-L50](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/widgets/automaton_graphview_canvas.dart#L1-L50)
 
  (imports section)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

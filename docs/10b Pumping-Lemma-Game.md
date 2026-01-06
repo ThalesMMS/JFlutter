@@ -21,7 +21,7 @@
 
 This document describes the **Pumping Lemma Game**, an interactive educational feature that teaches students the pumping lemma for regular languages through progressive challenges. The game presents formal language theory problems where users determine whether given languages are regular or non-regular, receiving immediate feedback with detailed explanations.
 
-For information about the broader examples library and pre-built automaton templates, see [Examples Library](#10.1). This page focuses exclusively on the game mechanics, progress tracking, challenge system, and educational help content.
+For information about the broader examples library and pre-built automaton templates, see [Examples Library](10a%20Examples-Library.md). This page focuses exclusively on the game mechanics, progress tracking, challenge system, and educational help content.
 
 ## System Overview
 
@@ -460,7 +460,7 @@ The Pumping Lemma Game is accessed through the `PumpingLemmaPage`, which is part
 1. User navigates to Pumping Lemma section via `HomePage` navigation
 2. `PumpingLemmaPage` renders three main widgets: * `PumpingLemmaGame` - Interactive game interface * `PumpingLemmaProgress` - Statistics panel * `PumpingLemmaHelp` - Reference material
 
-The page uses responsive layout adapters (`MobileLayout`, `TabletLayoutContainer`, `DesktopLayout`) to arrange these components based on screen size breakpoints defined in the application's navigation system (see [Navigation and Pages](#8.1)).
+The page uses responsive layout adapters (`MobileLayout`, `TabletLayoutContainer`, `DesktopLayout`) to arrange these components based on screen size breakpoints defined in the application's navigation system (see [Navigation and Pages](8a%20Navigation-and-HomePage.md)).
 
 **Sources:** Based on architecture diagrams and navigation patterns from [presentation layer overview]
 
@@ -468,13 +468,13 @@ The page uses responsive layout adapters (`MobileLayout`, `TabletLayoutContainer
 
 The `PumpingLemmaProgressProvider` uses Riverpod's `StateNotifierProvider`, which keeps progress in memory for the current application session. Progress is reset when the app restarts, making each game session independent. This design focuses on immediate learning feedback rather than long-term achievement tracking.
 
-For persisting automaton traces and simulation results across sessions, see [Simulation System](#7.2).
+For persisting automaton traces and simulation results across sessions, see [Simulation System](7b%20Simulation-System.md).
 
 **Sources:** [lib/presentation/providers/pumping_lemma_progress_provider.dart L214-L220](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/providers/pumping_lemma_progress_provider.dart#L214-L220)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

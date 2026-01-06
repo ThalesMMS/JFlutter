@@ -11,7 +11,7 @@
 > * [test/widget/presentation/graphview_canvas_toolbar_test.dart](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/test/widget/presentation/graphview_canvas_toolbar_test.dart)
 > * [test/widget/presentation/graphview_label_field_editor_test.dart](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/test/widget/presentation/graphview_label_field_editor_test.dart)
 
-This page documents the desktop toolbar system and canvas viewport controls used in automaton editors. These components provide desktop-optimized interfaces for tool selection, viewport manipulation, and undo/redo operations. For touch-optimized mobile controls, see [Mobile Controls](#8.3). For the underlying canvas rendering system, see [Canvas System](#4).
+This page documents the desktop toolbar system and canvas viewport controls used in automaton editors. These components provide desktop-optimized interfaces for tool selection, viewport manipulation, and undo/redo operations. For touch-optimized mobile controls, see [Mobile Controls](8c%20Mobile-Controls.md). For the underlying canvas rendering system, see [Canvas System](4%20Canvas-System.md).
 
 ## Overview
 
@@ -207,7 +207,7 @@ When `layout` is set to `GraphViewCanvasToolbarLayout.mobile`, the toolbar rende
 | Horizontal row | Wrap with center alignment |
 | Tooltip on hover | Always shows label |
 
-The mobile layout is typically not used directly, as mobile pages prefer `MobileAutomatonControls` (see [Mobile Controls](#8.3)). The mobile toolbar layout exists primarily for testing and special use cases.
+The mobile layout is typically not used directly, as mobile pages prefer `MobileAutomatonControls` (see [Mobile Controls](8c%20Mobile-Controls.md)). The mobile toolbar layout exists primarily for testing and special use cases.
 
 **Sources:** [lib/presentation/widgets/graphview_canvas_toolbar.dart L258-L328](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/widgets/graphview_canvas_toolbar.dart#L258-L328)
 
@@ -468,9 +468,9 @@ The toolbar observes the controller to update button states, while tool selectio
 
  [lib/presentation/widgets/automaton_canvas_tool.dart L19-L36](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/widgets/automaton_canvas_tool.dart#L19-L36)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

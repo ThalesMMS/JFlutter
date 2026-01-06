@@ -24,10 +24,10 @@ The Import and Export System provides comprehensive interoperability between JFl
 
 For detailed information about specific subsystems:
 
-* File I/O operations and user workflows: see [File Operations](#9.1)
-* Format conversion mechanics and epsilon handling: see [Serialization and Format Conversion](#9.2)
-* JFLAP XML parser implementation: see [JFLAP Interoperability](#9.3)
-* Visual diagram generation: see [SVG and Visual Export](#9.4)
+* File I/O operations and user workflows: see [File Operations](9a%20File-Operations-Panel.md)
+* Format conversion mechanics and epsilon handling: see [Serialization and Format Conversion](9b%20Serialization-Service.md)
+* JFLAP XML parser implementation: see [JFLAP Interoperability](9c%20JFLAP-Interoperability.md)
+* Visual diagram generation: see [SVG and Visual Export](9d%20SVG-Export.md)
 
 Sources: [lib/data/services/serialization_service.dart L1-L308](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/data/services/serialization_service.dart#L1-L308)
 
@@ -221,7 +221,7 @@ The service ensures epsilon symbol normalization occurs at every format boundary
 
 * `roundTripTest(Map<String, dynamic>, SerializationFormat) → Result<Map<String, dynamic>>` - Validates format conversion correctness by serializing and deserializing data, ensuring no data loss. [lib/data/services/serialization_service.dart L259-L286](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/data/services/serialization_service.dart#L259-L286)
 
-See [Serialization and Format Conversion](#9.2) for implementation details.
+See [Serialization and Format Conversion](9b%20Serialization-Service.md) for implementation details.
 
 Sources: [lib/data/services/serialization_service.dart L15-L308](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/data/services/serialization_service.dart#L15-L308)
 
@@ -256,7 +256,7 @@ The `FileOperationsPanel` widget provides the primary UI for import/export opera
 * Web: "Save" buttons labeled as "Download" and trigger immediate browser downloads [lib/presentation/widgets/file_operations_panel.dart L104-L105](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/widgets/file_operations_panel.dart#L104-L105)
 * Desktop/Mobile: "Save" buttons open native file picker dialogs [lib/presentation/widgets/file_operations_panel.dart L193-L207](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/widgets/file_operations_panel.dart#L193-L207)
 
-See [File Operations](#9.1) for user workflow details.
+See [File Operations](9a%20File-Operations-Panel.md) for user workflow details.
 
 Sources: [lib/presentation/widgets/file_operations_panel.dart L26-L603](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/widgets/file_operations_panel.dart#L26-L603)
 
@@ -296,7 +296,7 @@ The `SvgExporter` utility class generates SVG diagrams from domain entities with
 
 All exported SVGs use `viewBox` for responsive scaling and include proper XML declaration headers for standalone file validity.
 
-See [SVG and Visual Export](#9.4) for rendering details.
+See [SVG and Visual Export](9d%20SVG-Export.md) for rendering details.
 
 Sources: [lib/presentation/widgets/export/svg_exporter.dart L22-L880](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/widgets/export/svg_exporter.dart#L22-L880)
 
@@ -319,7 +319,7 @@ The `JFLAPXMLParser` handles the complexities of JFLAP's XML dialect, including 
 
 The parser is tested extensively in round-trip integration tests to ensure compatibility with JFLAP 7.0+ format variations.
 
-See [JFLAP Interoperability](#9.3) for parser implementation details.
+See [JFLAP Interoperability](9c%20JFLAP-Interoperability.md) for parser implementation details.
 
 Sources: [lib/data/services/serialization_service.dart L105-L197](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/data/services/serialization_service.dart#L105-L197)
 
@@ -520,35 +520,35 @@ Sources: [test/integration/io/interoperability_roundtrip_test.dart L772-L850](ht
 
 The import/export system provides the foundation for the examples library, which loads pre-built automatons and grammars from asset bundles. The `ExamplesAssetDataSource` uses `SerializationService` to deserialize JSON-formatted examples at runtime.
 
-For details on the examples system architecture, see [Examples Library](#10.1).
+For details on the examples system architecture, see [Examples Library](10a%20Examples-Library.md).
 
 Sources: [test/integration/io/examples_roundtrip_test.dart L93-L494](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/test/integration/io/examples_roundtrip_test.dart#L93-L494)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 
-* [Import and Export System](#9-import-and-export-system)
-* [Purpose and Scope](#9-purpose-and-scope)
-* [Architecture Overview](#9-architecture-overview)
-* [Supported Formats](#9-supported-formats)
-* [Data Flow Pipeline](#9-data-flow-pipeline)
-* [Key Components](#9-key-components)
-* [SerializationService](#9-serializationservice)
-* [FileOperationsPanel](#9-fileoperationspanel)
-* [SvgExporter](#9-svgexporter)
-* [JFLAPXMLParser](#9-jflapxmlparser)
-* [Epsilon Symbol Normalization](#9-epsilon-symbol-normalization)
-* [Error Handling and Validation](#9-error-handling-and-validation)
-* [Result Pattern](#9-result-pattern)
-* [Import Error Classification](#9-import-error-classification)
-* [Platform-Specific Handling](#9-platform-specific-handling)
-* [Round-Trip Integrity](#9-round-trip-integrity)
-* [Known Limitations and Deviations](#9-known-limitations-and-deviations)
-* [Active Import/Export Deviations](#9-active-importexport-deviations)
-* [Performance Characteristics](#9-performance-characteristics)
-* [Integration with Examples Library](#9-integration-with-examples-library)
+* [Import and Export System](9%20Import-and-Export-System.md)
+* [Purpose and Scope](9%20Import-and-Export-System.md)
+* [Architecture Overview](9%20Import-and-Export-System.md)
+* [Supported Formats](9%20Import-and-Export-System.md)
+* [Data Flow Pipeline](9%20Import-and-Export-System.md)
+* [Key Components](9%20Import-and-Export-System.md)
+* [SerializationService](9%20Import-and-Export-System.md)
+* [FileOperationsPanel](9%20Import-and-Export-System.md)
+* [SvgExporter](9%20Import-and-Export-System.md)
+* [JFLAPXMLParser](9%20Import-and-Export-System.md)
+* [Epsilon Symbol Normalization](9%20Import-and-Export-System.md)
+* [Error Handling and Validation](9%20Import-and-Export-System.md)
+* [Result Pattern](9%20Import-and-Export-System.md)
+* [Import Error Classification](9%20Import-and-Export-System.md)
+* [Platform-Specific Handling](9%20Import-and-Export-System.md)
+* [Round-Trip Integrity](9%20Import-and-Export-System.md)
+* [Known Limitations and Deviations](9%20Import-and-Export-System.md)
+* [Active Import/Export Deviations](9%20Import-and-Export-System.md)
+* [Performance Characteristics](9%20Import-and-Export-System.md)
+* [Integration with Examples Library](9%20Import-and-Export-System.md)
 
 Ask Devin about JFlutter

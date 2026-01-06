@@ -11,7 +11,7 @@
 > * [test/unit/core/cfg/cyk_parser_test.dart](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/test/unit/core/cfg/cyk_parser_test.dart)
 > * [test/unit/grammar_to_pda_validation_test.dart](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/test/unit/grammar_to_pda_validation_test.dart)
 
-This section provides technical reference material for JFlutter developers, including dependency specifications, configuration requirements, documented deviations from formal language theory, and library customizations. For setup instructions, see [Getting Started](#3). For testing documentation, see [Testing](#12).
+This section provides technical reference material for JFlutter developers, including dependency specifications, configuration requirements, documented deviations from formal language theory, and library customizations. For setup instructions, see [Getting Started](3%20Getting-Started.md). For testing documentation, see [Testing](12%20Testing.md).
 
 ---
 
@@ -19,9 +19,9 @@ This section provides technical reference material for JFlutter developers, incl
 
 The Reference section is organized into three main areas:
 
-1. **Dependencies and Configuration** ([13.1](#13.1)) - Complete documentation of runtime and development dependencies, SDK requirements, asset configuration, and build settings
-2. **Known Deviations from Theory** ([13.2](#13.2)) - Documented intentional deviations from theoretical formal language algorithms and reference implementations, with rationale and mitigation strategies
-3. **GraphView Library Fork** ([13.3](#13.3)) - Details on the custom GraphView fork used for automaton visualization, including loop-edge rendering modifications
+1. **Dependencies and Configuration** ([13.1](13a%20Dependencies-and-Configuration.md)) - Complete documentation of runtime and development dependencies, SDK requirements, asset configuration, and build settings
+2. **Known Deviations from Theory** ([13.2](13b%20Known-Deviations-from-Theory.md)) - Documented intentional deviations from theoretical formal language algorithms and reference implementations, with rationale and mitigation strategies
+3. **GraphView Library Fork** ([13.3](13c%20GraphView-Library-Fork.md)) - Details on the custom GraphView fork used for automaton visualization, including loop-edge rendering modifications
 
 These reference pages complement the main documentation by providing precise technical specifications, constraint documentation, and compatibility notes.
 
@@ -104,7 +104,7 @@ end
 
 ## Quick Reference: Key Dependencies
 
-The following table provides a quick reference to JFlutter's most critical dependencies. For complete dependency documentation, see [Dependencies and Configuration](#13.1).
+The following table provides a quick reference to JFlutter's most critical dependencies. For complete dependency documentation, see [Dependencies and Configuration](13a%20Dependencies-and-Configuration.md).
 
 | Package | Version | Critical For | Configuration |
 | --- | --- | --- | --- |
@@ -122,7 +122,7 @@ The following table provides a quick reference to JFlutter's most critical depen
 
 ## Quick Reference: Known Deviations
 
-The following table summarizes critical deviations from theoretical algorithms and reference implementations. For complete deviation documentation, see [Known Deviations from Theory](#13.2).
+The following table summarizes critical deviations from theoretical algorithms and reference implementations. For complete deviation documentation, see [Known Deviations from Theory](13b%20Known-Deviations-from-Theory.md).
 
 | Area | Deviation | Location | Impact |
 | --- | --- | --- | --- |
@@ -166,7 +166,7 @@ Example from [integration_test/app_simulation_test.dart L14](https://github.com/
 
 :
 
-For complete configuration documentation, see [Dependencies and Configuration](#13.1).
+For complete configuration documentation, see [Dependencies and Configuration](13a%20Dependencies-and-Configuration.md).
 
 ## Sources: pubspec.yaml26-28 integration_test/app_simulation_test.dart13-17
 </old_str>
@@ -346,11 +346,11 @@ end
 
 ## Related Documentation
 
-* **[Dependencies and Configuration](#13.1)** - Complete dependency specifications, SDK requirements, and build configuration
-* **[Known Deviations from Theory](#13.2)** - Detailed deviation log with rationale, impact analysis, and mitigation strategies
-* **[GraphView Library Fork](#13.3)** - Custom GraphView modifications for loop-edge rendering and automaton visualization
+* **[Dependencies and Configuration](13a%20Dependencies-and-Configuration.md)** - Complete dependency specifications, SDK requirements, and build configuration
+* **[Known Deviations from Theory](13b%20Known-Deviations-from-Theory.md)** - Detailed deviation log with rationale, impact analysis, and mitigation strategies
+* **[GraphView Library Fork](13c%20GraphView-Library-Fork.md)** - Custom GraphView modifications for loop-edge rendering and automaton visualization
 
-For architectural documentation, see [Architecture](#2). For testing strategy, see [Testing](#12).
+For architectural documentation, see [Architecture](2%20Architecture.md). For testing strategy, see [Testing](12%20Testing.md).
 
 ---
 
@@ -591,38 +591,38 @@ The deviation log documented in [docs/reference-deviations.md L1-L56](https://gi
 
 **Sources:** [docs/reference-deviations.md L49-L55](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/docs/reference-deviations.md#L49-L55)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 
-* [Reference](#13-reference)
-* [Overview](#13-overview)
-* [Reference Architecture Overview](#13-reference-architecture-overview)
-* [Quick Reference: Key Dependencies](#13-quick-reference-key-dependencies)
-* [Quick Reference: Known Deviations](#13-quick-reference-known-deviations)
-* [<old_str>](#13-old_str)
-* [Quick Reference: Configuration](#13-quick-reference-configuration)
-* [SDK and Build Requirements](#13-sdk-and-build-requirements)
-* [Code Generation Commands](#13-code-generation-commands)
-* [Integration Test Setup](#13-integration-test-setup)
-* [Sources: pubspec.yaml26-28 integration_test/app_simulation_test.dart13-17 </old_str> <new_str>](#13-object-object-object-object-object-object-old_str-new_str)
-* [Deviation Impact Map](#13-deviation-impact-map)
-* [Known Issues and Deviations](#13-known-issues-and-deviations)
-* [Active Deviations](#13-active-deviations)
-* [Test Execution Reference](#13-test-execution-reference)
-* [Related Documentation](#13-related-documentation)
-* [Development Notes](#13-development-notes)
-* [Code Generation](#13-code-generation)
-* [Persistence Implementation](#13-persistence-implementation)
-* [Integration Testing](#13-integration-testing)
-* [Test Execution Notes](#13-test-execution-notes)
-* [Service Locator Pattern](#13-service-locator-pattern)
-* [Simulation Highlight Channel](#13-simulation-highlight-channel)
-* [Repository Pattern Implementation](#13-repository-pattern-implementation)
-* [Conversion Flow](#13-conversion-flow)
-* [Version and Build Information](#13-version-and-build-information)
-* [Review and Maintenance](#13-review-and-maintenance)
+* [Reference](13%20Reference.md)
+* [Overview](13%20Reference.md)
+* [Reference Architecture Overview](13%20Reference.md)
+* [Quick Reference: Key Dependencies](13%20Reference.md)
+* [Quick Reference: Known Deviations](13%20Reference.md)
+* [<old_str>](13%20Reference.md)
+* [Quick Reference: Configuration](13%20Reference.md)
+* [SDK and Build Requirements](13%20Reference.md)
+* [Code Generation Commands](13%20Reference.md)
+* [Integration Test Setup](13%20Reference.md)
+* [Sources: pubspec.yaml26-28 integration_test/app_simulation_test.dart13-17 </old_str> <new_str>](13%20Reference.md)
+* [Deviation Impact Map](13%20Reference.md)
+* [Known Issues and Deviations](13%20Reference.md)
+* [Active Deviations](13%20Reference.md)
+* [Test Execution Reference](13%20Reference.md)
+* [Related Documentation](13%20Reference.md)
+* [Development Notes](13%20Reference.md)
+* [Code Generation](13%20Reference.md)
+* [Persistence Implementation](13%20Reference.md)
+* [Integration Testing](13%20Reference.md)
+* [Test Execution Notes](13%20Reference.md)
+* [Service Locator Pattern](13%20Reference.md)
+* [Simulation Highlight Channel](13%20Reference.md)
+* [Repository Pattern Implementation](13%20Reference.md)
+* [Conversion Flow](13%20Reference.md)
+* [Version and Build Information](13%20Reference.md)
+* [Review and Maintenance](13%20Reference.md)
 
 Ask Devin about JFlutter

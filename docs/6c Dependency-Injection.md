@@ -11,7 +11,7 @@
 
 This page documents the dependency injection (DI) architecture used in JFlutter. The application uses **GetIt** as a service locator pattern to manage dependencies, providing a centralized container for instantiating and retrieving services, repositories, use cases, and providers throughout the application.
 
-For information about how state management providers consume these dependencies, see [Automaton Providers](#6.1). For details on canvas-provider synchronization patterns, see [Canvas-Provider Synchronization](#6.2).
+For information about how state management providers consume these dependencies, see [Automaton Providers](6a%20Automaton-Providers.md). For details on canvas-provider synchronization patterns, see [Canvas-Provider Synchronization](6b%20Canvas-Provider-Synchronization.md).
 
 ---
 
@@ -374,9 +374,9 @@ The dependency injection system relies on the following packages:
 
 **Sources:** [pubspec.yaml L64-L67](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/pubspec.yaml#L64-L67)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

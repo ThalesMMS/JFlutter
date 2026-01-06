@@ -13,7 +13,7 @@
 
 This page documents the tool system, gesture recognition, and user interaction patterns for the canvas-based automaton editors. It covers how user inputs (taps, drags, double-taps) are processed and routed to appropriate handlers based on the active tool mode.
 
-For information about the canvas rendering architecture and widget structure, see [Canvas Architecture](#4.1). For details about the underlying controllers that persist changes, see [Canvas Controllers](#4.2).
+For information about the canvas rendering architecture and widget structure, see [Canvas Architecture](4a%20AutomatonGraphViewCanvas-Widget.md). For details about the underlying controllers that persist changes, see [Canvas Controllers](4b%20Canvas-Controllers.md).
 
 ## Purpose and Scope
 
@@ -534,9 +534,9 @@ The suppression is restored to `false` when:
 
 This mechanism ensures a smooth user experience where node dragging takes priority over viewport navigation.
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

@@ -12,7 +12,7 @@
 > * [test/integration/io/examples_roundtrip_test.dart](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/test/integration/io/examples_roundtrip_test.dart)
 > * [test/integration/io/interoperability_roundtrip_test.dart](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/test/integration/io/interoperability_roundtrip_test.dart)
 
-The Data Layer manages persistence, serialization, and data access for JFlutter. It provides an abstraction boundary between domain logic and external data sources, handling JFLAP XML interoperability, JSON serialization, in-memory storage, embedded examples, and simulation trace persistence. For business logic and algorithms, see [Core Domain Layer](#2.2). For UI state management, see [State Management](#6).
+The Data Layer manages persistence, serialization, and data access for JFlutter. It provides an abstraction boundary between domain logic and external data sources, handling JFLAP XML interoperability, JSON serialization, in-memory storage, embedded examples, and simulation trace persistence. For business logic and algorithms, see [Core Domain Layer](2b%20Core-Domain-Layer.md). For UI state management, see [State Management](6%20State-Management.md).
 
 ---
 
@@ -917,9 +917,9 @@ String normalizeToEpsilon(String? symbol) {  if (isEpsilonSymbol(symbol))�
 
 **Sources**: [lib/data/services/trace_persistence_service.dart](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/data/services/trace_persistence_service.dart)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

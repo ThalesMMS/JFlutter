@@ -22,7 +22,7 @@
 
 The undo/redo system provides history management for canvas editing operations across all automaton types (FSA, PDA, TM). It captures snapshots of the entire graph state before each mutation, enabling users to revert or reapply changes. The system integrates tightly with the canvas controller hierarchy and includes compression to minimize memory overhead.
 
-For information about canvas controllers and their lifecycle, see [Canvas Controllers](#4.2). For details on snapshot serialization format, see [Canvas Customization System](#4.3).
+For information about canvas controllers and their lifecycle, see [Canvas Controllers](4b%20Canvas-Controllers.md). For details on snapshot serialization format, see [Canvas Customization System](4c%20Canvas-Customization-System.md).
 
 ---
 
@@ -563,9 +563,9 @@ Specialized controllers like `GraphViewCanvasController`, `GraphViewPdaCanvasCon
 
  [lib/features/canvas/graphview/base_graphview_canvas_controller.dart L256-L281](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/features/canvas/graphview/base_graphview_canvas_controller.dart#L256-L281)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

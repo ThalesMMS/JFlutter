@@ -21,13 +21,13 @@ This page documents the workspace page system in JFlutter and its responsive lay
 
 For detailed information about specific workspace pages, see:
 
-* **FSA Page**: [FSA Page](#5.1)
-* **PDA Page**: [PDA Page](#5.2)
-* **TM Page**: [TM Page](#5.3)
-* **Grammar Page**: [Grammar Page](#5.4)
-* **Regex and Pumping Lemma Pages**: [Regex and Pumping Lemma Pages](#5.5)
+* **FSA Page**: [FSA Page](5a%20FSA-Page.md)
+* **PDA Page**: [PDA Page](5b%20PDA-Page.md)
+* **TM Page**: [TM Page](5c%20TM-Page.md)
+* **Grammar Page**: [Grammar Page](5d%20Grammar-Page.md)
+* **Regex and Pumping Lemma Pages**: [Regex and Pumping Lemma Pages](5e%20Regex-and-Pumping-Lemma-Pages.md)
 
-For information about the canvas rendering system, see [Canvas System](#4). For state management details, see [State Management](#6).
+For information about the canvas rendering system, see [Canvas System](4%20Canvas-System.md). For state management details, see [State Management](6%20State-Management.md).
 
 ## Workspace System Overview
 
@@ -731,39 +731,39 @@ The Pumping Lemma page implements an interactive game interface for learning the
 
  [lib/presentation/widgets/tablet_layout_container.dart L1-L153](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/widgets/tablet_layout_container.dart#L1-L153)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 
-* [Automaton Workspace Pages](#5-automaton-workspace-pages)
-* [Workspace System Overview](#5-workspace-system-overview)
-* [Navigation System](#5-navigation-system)
-* [HomePage as Navigation Hub](#5-homepage-as-navigation-hub)
-* [Mobile Navigation](#5-mobile-navigation)
-* [Desktop Navigation](#5-desktop-navigation)
-* [Workspace Page Structure](#5-workspace-page-structure)
-* [Common Workspace Components](#5-common-workspace-components)
-* [Responsive Layout Strategy](#5-responsive-layout-strategy)
-* [Layout Breakpoints](#5-layout-breakpoints)
-* [Mobile Layout Pattern](#5-mobile-layout-pattern)
-* [Full-Screen Canvas with Modal Panels](#5-full-screen-canvas-with-modal-panels)
-* [Desktop Layout Pattern](#5-desktop-layout-pattern)
-* [Multi-Column Row Layout](#5-multi-column-row-layout)
-* [Tablet Layout Pattern](#5-tablet-layout-pattern)
-* [TabletLayoutContainer Component](#5-tabletlayoutcontainer-component)
-* [Common UI Components](#5-common-ui-components)
-* [Canvas Toolbars and Controls](#5-canvas-toolbars-and-controls)
-* [Quick Action Buttons](#5-quick-action-buttons)
-* [Status Messages](#5-status-messages)
-* [Workspace-Specific Features](#5-workspace-specific-features)
-* [FSA: Determinism Badge](#5-fsa-determinism-badge)
-* [TM: Tape Panel](#5-tm-tape-panel)
-* [PDA: Stack Panel](#5-pda-stack-panel)
-* [Grammar: Text Editor](#5-grammar-text-editor)
-* [Regex: Validation Display](#5-regex-validation-display)
-* [Pumping Lemma: Game Interface](#5-pumping-lemma-game-interface)
-* [Summary of Common Patterns](#5-summary-of-common-patterns)
+* [Automaton Workspace Pages](5%20Automaton-Workspace-Pages.md)
+* [Workspace System Overview](5%20Automaton-Workspace-Pages.md)
+* [Navigation System](5%20Automaton-Workspace-Pages.md)
+* [HomePage as Navigation Hub](5%20Automaton-Workspace-Pages.md)
+* [Mobile Navigation](5%20Automaton-Workspace-Pages.md)
+* [Desktop Navigation](5%20Automaton-Workspace-Pages.md)
+* [Workspace Page Structure](5%20Automaton-Workspace-Pages.md)
+* [Common Workspace Components](5%20Automaton-Workspace-Pages.md)
+* [Responsive Layout Strategy](5%20Automaton-Workspace-Pages.md)
+* [Layout Breakpoints](5%20Automaton-Workspace-Pages.md)
+* [Mobile Layout Pattern](5%20Automaton-Workspace-Pages.md)
+* [Full-Screen Canvas with Modal Panels](5%20Automaton-Workspace-Pages.md)
+* [Desktop Layout Pattern](5%20Automaton-Workspace-Pages.md)
+* [Multi-Column Row Layout](5%20Automaton-Workspace-Pages.md)
+* [Tablet Layout Pattern](5%20Automaton-Workspace-Pages.md)
+* [TabletLayoutContainer Component](5%20Automaton-Workspace-Pages.md)
+* [Common UI Components](5%20Automaton-Workspace-Pages.md)
+* [Canvas Toolbars and Controls](5%20Automaton-Workspace-Pages.md)
+* [Quick Action Buttons](5%20Automaton-Workspace-Pages.md)
+* [Status Messages](5%20Automaton-Workspace-Pages.md)
+* [Workspace-Specific Features](5%20Automaton-Workspace-Pages.md)
+* [FSA: Determinism Badge](5%20Automaton-Workspace-Pages.md)
+* [TM: Tape Panel](5%20Automaton-Workspace-Pages.md)
+* [PDA: Stack Panel](5%20Automaton-Workspace-Pages.md)
+* [Grammar: Text Editor](5%20Automaton-Workspace-Pages.md)
+* [Regex: Validation Display](5%20Automaton-Workspace-Pages.md)
+* [Pumping Lemma: Game Interface](5%20Automaton-Workspace-Pages.md)
+* [Summary of Common Patterns](5%20Automaton-Workspace-Pages.md)
 
 Ask Devin about JFlutter

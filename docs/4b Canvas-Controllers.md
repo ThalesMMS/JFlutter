@@ -17,7 +17,7 @@
 
 Canvas Controllers mediate between Riverpod state providers (domain layer) and the GraphView rendering system (presentation layer). They manage bidirectional synchronization, maintain visual caches, coordinate user interactions, and provide undo/redo functionality through compressed snapshot history.
 
-This page documents the controller architecture, specialization patterns, and synchronization mechanisms. For information about canvas rendering and visual components, see [Canvas Architecture](#4.1). For tool-based interactions and gesture handling, see [Canvas Tools and Interaction](#4.3).
+This page documents the controller architecture, specialization patterns, and synchronization mechanisms. For information about canvas rendering and visual components, see [Canvas Architecture](4a%20AutomatonGraphViewCanvas-Widget.md). For tool-based interactions and gesture handling, see [Canvas Tools and Interaction](4c%20Canvas-Customization-System.md).
 
 **Sources:** [lib/features/canvas/graphview/base_graphview_canvas_controller.dart L1-L595](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/features/canvas/graphview/base_graphview_canvas_controller.dart#L1-L595)
 
@@ -652,9 +652,9 @@ Controllers preserve control points during partial updates (e.g., label changes)
 
  [lib/features/canvas/graphview/graphview_pda_canvas_controller.dart L242-L256](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/features/canvas/graphview/graphview_pda_canvas_controller.dart#L242-L256)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

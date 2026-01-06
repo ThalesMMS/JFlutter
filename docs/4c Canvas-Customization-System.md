@@ -18,7 +18,7 @@
 
 The Canvas Customization System provides a polymorphic architecture that allows the `AutomatonGraphViewCanvas` widget to handle different automaton types (FSA, PDA, TM) without requiring separate canvas implementations. This system defines how transitions are created, edited, and persisted based on the specific requirements of each automaton type.
 
-For information about the canvas widget itself, see [AutomatonGraphViewCanvas Widget](#4.1). For controller implementations, see [Canvas Controllers](#4.2). For user interaction patterns, see [Canvas Tools and Interaction](#4.4).
+For information about the canvas widget itself, see [AutomatonGraphViewCanvas Widget](4a%20AutomatonGraphViewCanvas-Widget.md). For controller implementations, see [Canvas Controllers](4b%20Canvas-Controllers.md). For user interaction patterns, see [Canvas Tools and Interaction](4d%20Canvas-Tools-and-Interaction.md).
 
 **Sources:** [lib/presentation/widgets/automaton_graphview_canvas.dart L1-L301](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/lib/presentation/widgets/automaton_graphview_canvas.dart#L1-L301)
 
@@ -451,9 +451,9 @@ The customization system is validated through widget tests that exercise the ove
 
 **Sources:** [test/widget/presentation/automaton_graphview_canvas_test.dart L1-L444](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/test/widget/presentation/automaton_graphview_canvas_test.dart#L1-L444)
 
-Refresh this wiki
 
-Last indexed: 30 December 2025 ([32e808](https://github.com/ThalesMMS/JFlutter/commit/32e808b4))
+
+
 
 ### On this page
 

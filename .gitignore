@@ -61,7 +61,6 @@ coverage/
 *.log
 *.swp
 *.tmp
-/JFLAP_source
 
 .gemini/
 gha-creds-*.json

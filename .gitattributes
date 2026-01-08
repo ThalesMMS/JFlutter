@@ -1,9 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
 
-# Ignore reference implementations from GitHub language statistics
-References/** linguist-vendored
-
 # Exclude generated platform scaffolding and build artifacts
 test/** linguist-vendored
 examples/** linguist-vendored

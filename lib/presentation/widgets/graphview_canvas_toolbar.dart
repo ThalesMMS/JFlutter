@@ -205,7 +205,7 @@ class _DesktopToolbar extends StatelessWidget {
                           backgroundColor: isToggle
                               ? (isSelected
                                     ? colorScheme.primaryContainer
-                                    : colorScheme.surfaceVariant.withOpacity(
+                                    : colorScheme.surfaceContainerHighest.withOpacity(
                                         0.18,
                                       ))
                               : null,
@@ -305,7 +305,7 @@ class _MobileToolbar extends StatelessWidget {
                           backgroundColor: entry.isToggle && entry.isSelected
                               ? colorScheme.primary
                               : entry.isToggle
-                              ? colorScheme.surfaceVariant
+                              ? colorScheme.surfaceContainerHighest
                               : null,
                           foregroundColor: entry.isToggle && entry.isSelected
                               ? colorScheme.onPrimary

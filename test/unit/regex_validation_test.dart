@@ -14,8 +14,6 @@ import 'package:jflutter/core/models/fsa_transition.dart';
 import 'package:jflutter/core/algorithms/regex_to_nfa_converter.dart';
 import 'package:jflutter/core/algorithms/fa_to_regex_converter.dart';
 import 'package:jflutter/core/algorithms/automaton_simulator.dart';
-import 'package:jflutter/core/algorithms/nfa_to_dfa_converter.dart';
-import 'package:jflutter/core/result.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'dart:math' as math;
 void main() {
@@ -516,7 +514,7 @@ void main() {
 
     group('Performance Tests', () {
       test('Complex regex should convert efficiently', () async {
-        final complexRegex =
+        const complexRegex =
             '(a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z)*';
 
         final result = RegexToNFAConverter.convert(complexRegex);
@@ -538,7 +536,7 @@ void main() {
       });
 
       test('Deeply nested regex should convert', () async {
-        final nestedRegex = '((((a))))';
+        const nestedRegex = '((((a))))';
 
         final result = RegexToNFAConverter.convert(nestedRegex);
 
@@ -592,7 +590,7 @@ FSA _createSimpleFA() {
     acceptingStates: states.where((s) => s.isAccepting).toSet(),
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 400, 300),
+    bounds: const math.Rectangle(0, 0, 400, 300),
   );
 }
 
@@ -648,7 +646,7 @@ FSA _createComplexFA() {
     acceptingStates: states.where((s) => s.isAccepting).toSet(),
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 600, 300),
+    bounds: const math.Rectangle(0, 0, 600, 300),
   );
 }
 
@@ -683,7 +681,7 @@ FSA _createCyclicFA() {
     acceptingStates: states,
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 300, 300),
+    bounds: const math.Rectangle(0, 0, 300, 300),
   );
 }
 
@@ -698,6 +696,6 @@ FSA _createEmptyFA() {
     acceptingStates: {},
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 300, 300),
+    bounds: const math.Rectangle(0, 0, 300, 300),
   );
 }

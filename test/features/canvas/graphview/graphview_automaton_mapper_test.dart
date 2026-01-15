@@ -93,8 +93,8 @@ void main() {
     });
 
     test('mergeIntoTemplate rebuilds automaton from snapshot', () {
-      final snapshot = GraphViewAutomatonSnapshot(
-        nodes: const [
+      const snapshot = GraphViewAutomatonSnapshot(
+        nodes: [
           GraphViewCanvasNode(
             id: 'q0',
             label: 'Start',
@@ -112,7 +112,7 @@ void main() {
             isAccepting: true,
           ),
         ],
-        edges: const [
+        edges: [
           GraphViewCanvasEdge(
             id: 't0',
             fromStateId: 'q0',
@@ -123,7 +123,7 @@ void main() {
             controlPointY: 12,
           ),
         ],
-        metadata: const GraphViewAutomatonMetadata(
+        metadata: GraphViewAutomatonMetadata(
           id: 'auto',
           name: 'Automaton',
           alphabet: ['b'],

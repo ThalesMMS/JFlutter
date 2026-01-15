@@ -209,7 +209,7 @@ class SvgExporter {
     final tapeStartX = (width - cellWidth * cellsCount) / 2;
 
     final colorScheme = options.colorScheme;
-    final tapeFill = colorScheme?.surfaceVariant ?? const Color(0xFFF5F5F5);
+    final tapeFill = colorScheme?.surfaceContainerHighest ?? const Color(0xFFF5F5F5);
     final tapeStroke = colorScheme?.outlineVariant ??
         colorScheme?.outline ??
         const Color(0xFF424242);
@@ -355,7 +355,7 @@ class SvgExporter {
       );
 
       if (state.isRejecting) {
-        final lineOffset = _stateRadius * 0.6;
+        const lineOffset = _stateRadius * 0.6;
         final lineStartX1 = _formatDimension(position.x - lineOffset);
         final lineStartY1 = _formatDimension(position.y - lineOffset);
         final lineEndX1 = _formatDimension(position.x + lineOffset);
@@ -405,10 +405,10 @@ class SvgExporter {
           '${_directionLabel(transition.moveDirection)}';
 
       if (from == to) {
-        final loopRadius = _stateRadius + 20;
+        const loopRadius = _stateRadius + 20;
         final startX = from.x;
         final startY = from.y - _stateRadius;
-        final controlOffset = loopRadius * 1.2;
+        const controlOffset = loopRadius * 1.2;
         final formattedStartX = _formatDimension(startX);
         final formattedStartY = _formatDimension(startY);
         final formattedControlX1 =
@@ -692,7 +692,7 @@ class SvgExporter {
     const loopOffset = 24.0;
     final startX = center.x;
     final startY = center.y - _stateRadius;
-    final controlOffset = _stateRadius + loopOffset;
+    const controlOffset = _stateRadius + loopOffset;
 
     final control1 = Vector2(
       center.x - controlOffset,

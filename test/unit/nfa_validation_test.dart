@@ -13,7 +13,6 @@ import 'package:jflutter/core/models/state.dart';
 import 'package:jflutter/core/models/fsa_transition.dart';
 import 'package:jflutter/core/algorithms/automaton_simulator.dart';
 import 'package:jflutter/core/algorithms/nfa_to_dfa_converter.dart';
-import 'package:jflutter/core/result.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'dart:math' as math;
 void main() {
@@ -556,7 +555,7 @@ FSA _createLambdaAOrABNFA() {
     acceptingStates: states.where((s) => s.isAccepting).toSet(),
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 600, 400),
+    bounds: const math.Rectangle(0, 0, 600, 400),
   );
 }
 
@@ -635,7 +634,7 @@ FSA _createNondeterministicNFA() {
     acceptingStates: states.where((s) => s.isAccepting).toSet(),
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 600, 400),
+    bounds: const math.Rectangle(0, 0, 600, 400),
   );
 }
 
@@ -697,7 +696,7 @@ FSA _createEpsilonClosureNFA() {
     acceptingStates: states.where((s) => s.isAccepting).toSet(),
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 600, 300),
+    bounds: const math.Rectangle(0, 0, 600, 300),
   );
 }
 
@@ -747,7 +746,7 @@ FSA _createAlphabetEdgeNFA() {
     acceptingStates: states.where((s) => s.isAccepting).toSet(),
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 400, 300),
+    bounds: const math.Rectangle(0, 0, 400, 300),
   );
 }
 
@@ -885,6 +884,6 @@ FSA _createComplexNFA() {
     acceptingStates: states.where((s) => s.isAccepting).toSet(),
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 600, 400),
+    bounds: const math.Rectangle(0, 0, 600, 400),
   );
 }

@@ -9,7 +9,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/models/simulation_result.dart';
-import '../../core/models/simulation_step.dart';
 
 /// Service for persisting and managing traces across different automaton types
 class TracePersistenceService {

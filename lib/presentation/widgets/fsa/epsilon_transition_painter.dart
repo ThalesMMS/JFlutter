@@ -83,7 +83,7 @@ class EpsilonTransitionPainter extends EdgeRenderer {
   Path _createSelfLoopPath(Edge edge) {
     final path = Path();
     final pos = edge.source.position;
-    final radius = 30.0;
+    const radius = 30.0;
 
     // Arco acima do estado
     path.addArc(
@@ -115,7 +115,7 @@ class EpsilonTransitionPainter extends EdgeRenderer {
     final angle = math.atan2(dy, dx);
 
     // Ponta da seta
-    final arrowSize = 12.0;
+    const arrowSize = 12.0;
     final arrowPath = Path();
 
     arrowPath.moveTo(
@@ -132,7 +132,7 @@ class EpsilonTransitionPainter extends EdgeRenderer {
   }
 
   void _drawSelfLoopArrow(Canvas canvas, Offset pos, Paint paint) {
-    final arrowSize = 12.0;
+    const arrowSize = 12.0;
     final arrowPath = Path();
 
     // Seta apontando para baixo no topo do loop

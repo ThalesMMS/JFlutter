@@ -493,7 +493,7 @@ void main() {
       tester,
     ) async {
       bool hasError = true;
-      String errorMessage = 'Test error message';
+      const String errorMessage = 'Test error message';
 
       await tester.pumpWidget(
         MaterialApp(
@@ -541,7 +541,7 @@ void main() {
 
     testWidgets('Error state persists until user action', (tester) async {
       bool hasError = true;
-      String errorMessage = 'Persistent error';
+      const String errorMessage = 'Persistent error';
 
       await tester.pumpWidget(
         MaterialApp(

@@ -11,7 +11,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/algorithms/cfg/cyk_parser.dart';
 import 'package:jflutter/core/models/grammar.dart';
 import 'package:jflutter/core/models/production.dart';
-import 'package:jflutter/core/result.dart';
 void main() {
   group('CYK parser', () {
     late Grammar simpleCNFGrammar;
@@ -405,21 +404,21 @@ void main() {
 
 Grammar _createSimpleCNFGrammar() {
   final productions = {
-    Production(
+    const Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['A', 'B'],
       isLambda: false,
       order: 1,
     ),
-    Production(
+    const Production(
       id: 'p2',
       leftSide: ['A'],
       rightSide: ['a'],
       isLambda: false,
       order: 2,
     ),
-    Production(
+    const Production(
       id: 'p3',
       leftSide: ['B'],
       rightSide: ['b'],
@@ -427,14 +426,14 @@ Grammar _createSimpleCNFGrammar() {
       order: 3,
     ),
     // Add single character productions for S
-    Production(
+    const Production(
       id: 'p4',
       leftSide: ['S'],
       rightSide: ['a'],
       isLambda: false,
       order: 4,
     ),
-    Production(
+    const Production(
       id: 'p5',
       leftSide: ['S'],
       rightSide: ['b'],
@@ -458,42 +457,42 @@ Grammar _createSimpleCNFGrammar() {
 
 Grammar _createComplexCNFGrammar() {
   final productions = {
-    Production(
+    const Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['A', 'B'],
       isLambda: false,
       order: 1,
     ),
-    Production(
+    const Production(
       id: 'p2',
       leftSide: ['A'],
       rightSide: ['C', 'D'],
       isLambda: false,
       order: 2,
     ),
-    Production(
+    const Production(
       id: 'p3',
       leftSide: ['B'],
       rightSide: ['E'],
       isLambda: false,
       order: 3,
     ),
-    Production(
+    const Production(
       id: 'p4',
       leftSide: ['C'],
       rightSide: ['a'],
       isLambda: false,
       order: 4,
     ),
-    Production(
+    const Production(
       id: 'p5',
       leftSide: ['D'],
       rightSide: ['b'],
       isLambda: false,
       order: 5,
     ),
-    Production(
+    const Production(
       id: 'p6',
       leftSide: ['E'],
       rightSide: ['c'],
@@ -501,21 +500,21 @@ Grammar _createComplexCNFGrammar() {
       order: 6,
     ),
     // Add single character productions for S
-    Production(
+    const Production(
       id: 'p7',
       leftSide: ['S'],
       rightSide: ['a'],
       isLambda: false,
       order: 7,
     ),
-    Production(
+    const Production(
       id: 'p8',
       leftSide: ['S'],
       rightSide: ['b'],
       isLambda: false,
       order: 8,
     ),
-    Production(
+    const Production(
       id: 'p9',
       leftSide: ['S'],
       rightSide: ['c'],
@@ -539,21 +538,21 @@ Grammar _createComplexCNFGrammar() {
 
 Grammar _createLambdaGrammar() {
   final productions = {
-    Production(
+    const Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['A', 'B'],
       isLambda: false,
       order: 1,
     ),
-    Production(
+    const Production(
       id: 'p2',
       leftSide: ['A'],
       rightSide: ['a'],
       isLambda: false,
       order: 2,
     ),
-    Production(
+    const Production(
       id: 'p3',
       leftSide: ['B'],
       rightSide: [],
@@ -561,7 +560,7 @@ Grammar _createLambdaGrammar() {
       order: 3,
     ),
     // Add lambda production for S to accept empty string
-    Production(
+    const Production(
       id: 'p4',
       leftSide: ['S'],
       rightSide: [],
@@ -585,21 +584,21 @@ Grammar _createLambdaGrammar() {
 
 Grammar _createUnitGrammar() {
   final productions = {
-    Production(
+    const Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['A'],
       isLambda: false,
       order: 1,
     ),
-    Production(
+    const Production(
       id: 'p2',
       leftSide: ['A'],
       rightSide: ['B'],
       isLambda: false,
       order: 2,
     ),
-    Production(
+    const Production(
       id: 'p3',
       leftSide: ['B'],
       rightSide: ['a'],
@@ -607,7 +606,7 @@ Grammar _createUnitGrammar() {
       order: 3,
     ),
     // Add direct production for S to accept 'a'
-    Production(
+    const Production(
       id: 'p4',
       leftSide: ['S'],
       rightSide: ['a'],

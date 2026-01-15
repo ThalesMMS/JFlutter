@@ -71,8 +71,9 @@ class EquivalenceChecker {
         final nextA = nextASet.isNotEmpty ? nextASet.first.toState : null;
         final nextB = nextBSet.isNotEmpty ? nextBSet.first.toState : null;
 
-        if (nextA == null || nextB == null)
+        if (nextA == null || nextB == null) {
           return false; // completion invariant broken
+        }
         final key = '${nextA.id},${nextB.id}';
         if (visited.add(key)) {
           queue.add([nextA, nextB]);

@@ -14,7 +14,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:graphview/GraphView.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 import '../../../core/models/tm.dart';
@@ -38,19 +37,13 @@ class GraphViewTmCanvasController
     extends BaseGraphViewCanvasController<TMEditorNotifier, TM> {
   GraphViewTmCanvasController({
     required TMEditorNotifier editorNotifier,
-    Graph? graph,
-    GraphViewController? viewController,
-    TransformationController? transformationController,
-    int historyLimit = BaseGraphViewCanvasController.kDefaultHistoryLimit,
-    int cacheEvictionThreshold =
-        BaseGraphViewCanvasController.kDefaultCacheEvictionThreshold,
+    super.graph,
+    super.viewController,
+    super.transformationController,
+    super.historyLimit,
+    super.cacheEvictionThreshold,
   }) : super(
           notifier: editorNotifier,
-          graph: graph,
-          viewController: viewController,
-          transformationController: transformationController,
-          historyLimit: historyLimit,
-          cacheEvictionThreshold: cacheEvictionThreshold,
         );
 
   TMEditorNotifier get _notifier => notifier;
@@ -143,6 +136,7 @@ class GraphViewTmCanvasController
   }
 
   /// Adds a new state at the provided [worldPosition].
+  @override
   void addStateAt(Offset worldPosition) {
     final nodeId = _generateNodeId();
     final label = _nextAvailableStateLabel();
@@ -160,6 +154,7 @@ class GraphViewTmCanvasController
   }
 
   /// Moves an existing state to a new [position].
+  @override
   void moveState(String id, Offset position) {
     _logTmCanvas(
       'moveState -> id=$id position=(${position.dx.toStringAsFixed(2)}, ${position.dy.toStringAsFixed(2)})',
@@ -170,6 +165,7 @@ class GraphViewTmCanvasController
   }
 
   /// Updates the label displayed for the state identified by [id].
+  @override
   void updateStateLabel(String id, String label) {
     final resolvedLabel = label.isEmpty ? id : label;
     _logTmCanvas('updateStateLabel -> id=$id label=$resolvedLabel');
@@ -179,6 +175,7 @@ class GraphViewTmCanvasController
   }
 
   /// Updates the flag metadata for the state identified by [id].
+  @override
   void updateStateFlags(String id, {bool? isInitial, bool? isAccepting}) {
     _logTmCanvas(
       'updateStateFlags -> id=$id isInitial=$isInitial isAccepting=$isAccepting',
@@ -193,6 +190,7 @@ class GraphViewTmCanvasController
   }
 
   /// Removes the state identified by [id] from the machine.
+  @override
   void removeState(String id) {
     _logTmCanvas('removeState -> id=$id');
     performMutation(() {

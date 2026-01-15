@@ -38,7 +38,6 @@ import '../../features/canvas/graphview/graphview_pda_canvas_controller.dart';
 import '../providers/automaton_provider.dart';
 import 'automaton_canvas_tool.dart';
 import 'transition_editors/pda_transition_editor.dart';
-import 'transition_editors/transition_label_editor.dart';
 
 typedef AutomatonTransitionOverlayBuilder =
     Widget Function(
@@ -1019,7 +1018,7 @@ class _AutomatonGraphViewCanvasState
         'for $fromId → $toId (transitionId: ${existing?.id})',
       );
       setState(() {
-        _selectedTransitions..clear();
+        _selectedTransitions.clear();
         if (!createNew && existing?.id != null) {
           _selectedTransitions.add(existing!.id);
         }
@@ -1512,9 +1511,7 @@ class _AutomatonGraphViewCanvasState
               ),
             ),
             (recognizer) {
-              if (recognizer.team == null) {
-                recognizer.team = _gestureArenaTeam;
-              }
+              recognizer.team ??= _gestureArenaTeam;
               recognizer
                 ..onStart = _handleNodePanStart
                 ..onUpdate = _handleNodePanUpdate

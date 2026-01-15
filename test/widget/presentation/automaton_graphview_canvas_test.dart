@@ -192,7 +192,7 @@ void main() {
     for (final tool in [
       AutomatonCanvasTool.addState,
       AutomatonCanvasTool.transition,
-    ])
+    ]) {
       testWidgets(
         "ignores drag gestures when ${tool.toString().split('.').last} tool is active",
         (tester) async {
@@ -257,6 +257,7 @@ void main() {
           );
         },
       );
+    }
   });
 
   group('AutomatonGraphViewCanvas', () {
@@ -292,7 +293,7 @@ void main() {
       toolController.dispose();
     });
 
-    FSA _buildAutomaton(Set<FSATransition> transitions) {
+    FSA buildAutomaton(Set<FSATransition> transitions) {
       final automaton = FSA(
         id: 'auto',
         name: 'Automaton',
@@ -312,7 +313,7 @@ void main() {
       return automaton;
     }
 
-    Future<void> _pumpCanvas(WidgetTester tester, FSA automaton) async {
+    Future<void> pumpCanvas(WidgetTester tester, FSA automaton) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -331,9 +332,9 @@ void main() {
     testWidgets(
       'shows transition editor after jittery taps when transition tool is active',
       (tester) async {
-        final automaton = _buildAutomaton({});
+        final automaton = buildAutomaton({});
 
-        await _pumpCanvas(tester, automaton);
+        await pumpCanvas(tester, automaton);
 
         final sourceGesture =
             await tester.startGesture(tester.getCenter(find.text('A')));
@@ -366,9 +367,9 @@ void main() {
         inputSymbols: const {'x'},
         controlPoint: Vector2(120, 40),
       );
-      final automaton = _buildAutomaton({transition});
+      final automaton = buildAutomaton({transition});
 
-      await _pumpCanvas(tester, automaton);
+      await pumpCanvas(tester, automaton);
 
       await tester.tap(find.text('A'));
       await tester.pump();
@@ -409,9 +410,9 @@ void main() {
         inputSymbols: const {'x'},
         controlPoint: Vector2(120, 40),
       );
-      final automaton = _buildAutomaton({transition});
+      final automaton = buildAutomaton({transition});
 
-      await _pumpCanvas(tester, automaton);
+      await pumpCanvas(tester, automaton);
 
       await tester.tap(find.text('A'));
       await tester.pump();

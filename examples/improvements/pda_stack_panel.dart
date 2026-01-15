@@ -83,13 +83,13 @@ class PdaStackPanel extends StatefulWidget {
   final VoidCallback? onClear;
 
   const PdaStackPanel({
-    Key? key,
+    super.key,
     required this.stackState,
     required this.initialStackSymbol,
     required this.stackAlphabet,
     this.isSimulating = false,
     this.onClear,
-  }) : super(key: key);
+  });
 
   @override
   State<PdaStackPanel> createState() => _PdaStackPanelState();
@@ -359,12 +359,12 @@ class StackOperationPreview extends StatelessWidget {
   final StackState currentStack;
 
   const StackOperationPreview({
-    Key? key,
+    super.key,
     required this.inputSymbol,
     required this.popSymbol,
     required this.pushSymbol,
     required this.currentStack,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -483,7 +483,7 @@ class StackOperationPreview extends StatelessWidget {
 
 /// Exemplo de uso
 class PdaStackPanelExample extends StatefulWidget {
-  const PdaStackPanelExample({Key? key}) : super(key: key);
+  const PdaStackPanelExample({super.key});
 
   @override
   State<PdaStackPanelExample> createState() => _PdaStackPanelExampleState();
@@ -542,7 +542,7 @@ class _PdaStackPanelExampleState extends State<PdaStackPanelExample> {
           PdaStackPanel(
             stackState: _stackState,
             initialStackSymbol: 'Z',
-            stackAlphabet: {'A', 'B', 'Z'},
+            stackAlphabet: const {'A', 'B', 'Z'},
             isSimulating: false,
             onClear: _clear,
           ),

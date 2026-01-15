@@ -237,13 +237,11 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
-        widget.useExpanded
-            ? Expanded(
+        if (widget.useExpanded) Expanded(
                 child: hasData
                     ? _buildResults(context)
                     : _buildEmptyResults(context),
-              )
-            : (hasData ? _buildResults(context) : _buildEmptyResults(context)),
+              ) else hasData ? _buildResults(context) : _buildEmptyResults(context),
       ],
     );
 

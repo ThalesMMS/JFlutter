@@ -194,10 +194,10 @@ class _GrammarPageState extends ConsumerState<GrammarPage> {
   }
 
   Widget _buildTabletLayout() {
-    return TabletLayoutContainer(
-      canvas: const GrammarEditor(),
-      algorithmPanel: const GrammarAlgorithmPanel(useExpanded: false),
-      simulationPanel: const GrammarSimulationPanel(useExpanded: false),
+    return const TabletLayoutContainer(
+      canvas: GrammarEditor(),
+      algorithmPanel: GrammarAlgorithmPanel(useExpanded: false),
+      simulationPanel: GrammarSimulationPanel(useExpanded: false),
     );
   }
 }

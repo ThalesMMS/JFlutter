@@ -34,19 +34,13 @@ class GraphViewCanvasController
     extends BaseGraphViewCanvasController<AutomatonProvider, FSA> {
   GraphViewCanvasController({
     required AutomatonProvider automatonProvider,
-    Graph? graph,
-    GraphViewController? viewController,
-    TransformationController? transformationController,
-    int historyLimit = BaseGraphViewCanvasController.kDefaultHistoryLimit,
-    int cacheEvictionThreshold =
-        BaseGraphViewCanvasController.kDefaultCacheEvictionThreshold,
+    super.graph,
+    super.viewController,
+    super.transformationController,
+    super.historyLimit,
+    super.cacheEvictionThreshold,
   }) : super(
          notifier: automatonProvider,
-          graph: graph,
-          viewController: viewController,
-          transformationController: transformationController,
-          historyLimit: historyLimit,
-          cacheEvictionThreshold: cacheEvictionThreshold,
        );
 
   AutomatonProvider get _provider => notifier;
@@ -138,6 +132,7 @@ class GraphViewCanvasController
   }
 
   /// Adds a new state at the provided [worldPosition].
+  @override
   void addStateAt(Offset worldPosition) {
     final nodeId = _generateNodeId();
     final label = _nextAvailableStateLabel();
@@ -161,6 +156,7 @@ class GraphViewCanvasController
   }
 
   /// Moves an existing state to a new [position].
+  @override
   void moveState(String id, Offset position) {
     _logAutomatonCanvas(
       'moveState -> id=$id position=(${position.dx.toStringAsFixed(2)}, ${position.dy.toStringAsFixed(2)})',
@@ -171,6 +167,7 @@ class GraphViewCanvasController
   }
 
   /// Updates the label displayed for the state identified by [id].
+  @override
   void updateStateLabel(String id, String label) {
     final resolvedLabel = label.isEmpty ? id : label;
     _logAutomatonCanvas('updateStateLabel -> id=$id label=$resolvedLabel');
@@ -180,6 +177,7 @@ class GraphViewCanvasController
   }
 
   /// Removes the state identified by [id] from the automaton.
+  @override
   void removeState(String id) {
     _logAutomatonCanvas('removeState -> id=$id');
     performMutation(() {
@@ -188,6 +186,7 @@ class GraphViewCanvasController
   }
 
   /// Updates the initial/final flags associated with the state [id].
+  @override
   void updateStateFlags(String id, {bool? isInitial, bool? isAccepting}) {
     _logAutomatonCanvas(
       'updateStateFlags -> id=$id isInitial=$isInitial isAccepting=$isAccepting',

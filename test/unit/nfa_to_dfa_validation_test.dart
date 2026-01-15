@@ -13,7 +13,6 @@ import 'package:jflutter/core/models/state.dart';
 import 'package:jflutter/core/models/fsa_transition.dart';
 import 'package:jflutter/core/algorithms/nfa_to_dfa_converter.dart';
 import 'package:jflutter/core/algorithms/automaton_simulator.dart';
-import 'package:jflutter/core/result.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'dart:math' as math;
 void main() {
@@ -692,7 +691,7 @@ FSA _createSimpleNFA() {
     acceptingStates: {states.firstWhere((s) => s.id == 'q2')},
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 300, 100),
+    bounds: const math.Rectangle(0, 0, 300, 100),
     zoomLevel: 1.0,
     panOffset: Vector2.zero(),
   );
@@ -771,7 +770,7 @@ FSA _createComplexNFA() {
     acceptingStates: {states.firstWhere((s) => s.id == 'q2')},
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 300, 100),
+    bounds: const math.Rectangle(0, 0, 300, 100),
     zoomLevel: 1.0,
     panOffset: Vector2.zero(),
   );
@@ -837,7 +836,7 @@ FSA _createLambdaNFA() {
     acceptingStates: {states.firstWhere((s) => s.id == 'q2')},
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 300, 100),
+    bounds: const math.Rectangle(0, 0, 300, 100),
     zoomLevel: 1.0,
     panOffset: Vector2.zero(),
   );
@@ -902,7 +901,7 @@ FSA _createLambdaInitialNFA() {
     acceptingStates: {states.firstWhere((s) => s.id == 'q1')},
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 300, 100),
+    bounds: const math.Rectangle(0, 0, 300, 100),
     zoomLevel: 1.0,
     panOffset: Vector2.zero(),
   );
@@ -967,7 +966,7 @@ FSA _createEpsilonNFA() {
     acceptingStates: {states.firstWhere((s) => s.id == 'q2')},
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 300, 100),
+    bounds: const math.Rectangle(0, 0, 300, 100),
     zoomLevel: 1.0,
     panOffset: Vector2.zero(),
   );
@@ -984,7 +983,7 @@ FSA _createEmptyNFA() {
     acceptingStates: {},
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 0, 0),
+    bounds: const math.Rectangle(0, 0, 0, 0),
     zoomLevel: 1.0,
     panOffset: Vector2.zero(),
   );
@@ -1018,7 +1017,7 @@ FSA _createNoInitialNFA() {
     acceptingStates: {states.firstWhere((s) => s.id == 'q1')},
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 200, 100),
+    bounds: const math.Rectangle(0, 0, 200, 100),
     zoomLevel: 1.0,
     panOffset: Vector2.zero(),
   );

@@ -250,7 +250,7 @@ class GrammarParser {
     }
 
     if (hasConcat && hasEps && open != null && close != null) {
-      return _Pair(open!, close!);
+      return _Pair(open, close);
     }
     return null;
   }

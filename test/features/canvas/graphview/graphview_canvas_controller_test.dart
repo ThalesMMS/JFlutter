@@ -149,15 +149,10 @@ class _RecordingAutomatonProvider extends AutomatonProvider {
 
 class _InspectableGraphViewCanvasController extends GraphViewCanvasController {
   _InspectableGraphViewCanvasController({
-    required AutomatonProvider automatonProvider,
-    int historyLimit = BaseGraphViewCanvasController.kDefaultHistoryLimit,
-    int cacheEvictionThreshold =
-        BaseGraphViewCanvasController.kDefaultCacheEvictionThreshold,
-  }) : super(
-          automatonProvider: automatonProvider,
-          historyLimit: historyLimit,
-          cacheEvictionThreshold: cacheEvictionThreshold,
-        );
+    required super.automatonProvider,
+    super.historyLimit,
+    super.cacheEvictionThreshold,
+  });
 
   Map<String, Node> get debugGraphNodes => graphNodes;
   Map<String, Edge> get debugGraphEdges => graphEdges;

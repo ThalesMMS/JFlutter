@@ -9,35 +9,27 @@
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
-import 'package:flutter/widgets.dart';
 import 'package:graphview/GraphView.dart';
 
 class GraphViewAllNodes extends GraphView {
   GraphViewAllNodes.builder({
-    Key? key,
+    super.key,
     required Graph graph,
     required Algorithm algorithm,
-    Paint? paint,
+    super.paint,
     required NodeWidgetBuilder builder,
     GraphViewController? controller,
-    bool animated = true,
-    ValueKey? initialNode,
-    bool autoZoomToFit = false,
-    Duration? panAnimationDuration,
-    Duration? toggleAnimationDuration,
+    super.animated,
+    super.initialNode,
+    super.autoZoomToFit,
+    super.panAnimationDuration,
+    super.toggleAnimationDuration,
     bool centerGraph = false,
   }) : super.builder(
-          key: key,
           graph: graph,
           algorithm: algorithm,
-          paint: paint,
           builder: builder,
           controller: controller,
-          animated: animated,
-          initialNode: initialNode,
-          autoZoomToFit: autoZoomToFit,
-          panAnimationDuration: panAnimationDuration,
-          toggleAnimationDuration: toggleAnimationDuration,
           centerGraph: centerGraph,
         ) {
     delegate = _GraphViewAllNodesDelegate(

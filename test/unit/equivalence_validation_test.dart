@@ -12,7 +12,6 @@ import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/state.dart';
 import 'package:jflutter/core/models/fsa_transition.dart';
 import 'package:jflutter/core/algorithms/equivalence_checker.dart';
-import 'package:jflutter/core/algorithms/automaton_simulator.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'dart:math' as math;
 void main() {

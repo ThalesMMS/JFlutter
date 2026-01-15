@@ -10,8 +10,6 @@
 //  Thales Matheus Mendonça Santos - October 2025
 //
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:get_it/get_it.dart';
 import '../../core/models/simulation_result.dart';
 import '../../core/models/simulation_step.dart';
 import '../../data/services/trace_persistence_service.dart' as data_trace;
@@ -105,8 +103,9 @@ class UnifiedTraceState {
 
   /// Get the current simulation step
   SimulationStep? get currentStep {
-    if (currentTrace == null || currentStepIndex >= currentTrace!.steps.length)
+    if (currentTrace == null || currentStepIndex >= currentTrace!.steps.length) {
       return null;
+    }
     return currentTrace!.steps[currentStepIndex];
   }
 

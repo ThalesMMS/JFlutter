@@ -22,8 +22,7 @@ import 'package:jflutter/presentation/widgets/graphview_canvas_toolbar.dart';
 import 'package:jflutter/features/canvas/graphview/graphview_canvas_controller.dart';
 
 class _TestGraphViewCanvasController extends GraphViewCanvasController {
-  _TestGraphViewCanvasController({required AutomatonProvider automatonProvider})
-    : super(automatonProvider: automatonProvider);
+  _TestGraphViewCanvasController({required super.automatonProvider});
 
   int zoomInCount = 0;
   int zoomOutCount = 0;

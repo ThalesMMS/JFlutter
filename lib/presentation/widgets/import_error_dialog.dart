@@ -245,7 +245,7 @@ class _TechnicalDetailsSectionState extends State<_TechnicalDetailsSection> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: borderColor),
-              color: theme.colorScheme.surfaceVariant,
+              color: theme.colorScheme.surfaceContainerHighest,
             ),
             child: SingleChildScrollView(
               child: Text(

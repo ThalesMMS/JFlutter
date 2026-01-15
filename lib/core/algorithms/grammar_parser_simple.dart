@@ -12,8 +12,6 @@
 //  Thales Matheus Mendonça Santos - October 2025
 //
 import '../models/grammar.dart';
-import '../models/production.dart';
-import '../models/parse_table.dart';
 import '../result.dart';
 import 'grammar_parser.dart';
 

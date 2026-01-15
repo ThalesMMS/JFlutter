@@ -15,7 +15,6 @@ import 'package:jflutter/core/algorithms/pda_simulator.dart';
 import 'package:jflutter/core/algorithms/grammar_to_pda_converter.dart';
 import 'package:jflutter/core/models/grammar.dart';
 import 'package:jflutter/core/models/production.dart';
-import 'package:jflutter/core/result.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'dart:math' as math;
 void main() {
@@ -55,7 +54,7 @@ void main() {
         ];
 
         for (final testString in testCases) {
-          final result = await PDASimulator.simulateNPDA(
+          final result = PDASimulator.simulateNPDA(
             balancedParenthesesPDA,
             testString,
             mode: PDAAcceptanceMode.finalState,
@@ -90,7 +89,7 @@ void main() {
         ];
 
         for (final testString in testCases) {
-          final result = await PDASimulator.simulateNPDA(
+          final result = PDASimulator.simulateNPDA(
             balancedParenthesesPDA,
             testString,
             mode: PDAAcceptanceMode.finalState,
@@ -129,7 +128,7 @@ void main() {
           ];
 
           for (final testString in testCases) {
-            final result = await PDASimulator.simulateNPDA(
+            final result = PDASimulator.simulateNPDA(
               palindromePDA,
               testString,
               mode: PDAAcceptanceMode.finalState,
@@ -164,7 +163,7 @@ void main() {
         ];
 
         for (final testString in testCases) {
-          final result = await PDASimulator.simulateNPDA(
+          final result = PDASimulator.simulateNPDA(
             palindromePDA,
             testString,
             mode: PDAAcceptanceMode.finalState,
@@ -198,7 +197,7 @@ void main() {
           ];
 
           for (final testString in testCases) {
-            final result = await PDASimulator.simulateNPDA(
+            final result = PDASimulator.simulateNPDA(
               simplePDA,
               testString,
               mode: PDAAcceptanceMode.finalState,
@@ -224,7 +223,7 @@ void main() {
 
     group('Stack Operations Tests', () {
       test('PDA should handle push operations correctly', () async {
-        final result = await PDASimulator.simulateNPDA(
+        final result = PDASimulator.simulateNPDA(
           balancedParenthesesPDA,
           '()',
           mode: PDAAcceptanceMode.finalState,
@@ -248,7 +247,7 @@ void main() {
       });
 
       test('PDA should handle pop operations correctly', () async {
-        final result = await PDASimulator.simulateNPDA(
+        final result = PDASimulator.simulateNPDA(
           balancedParenthesesPDA,
           '(())',
           mode: PDAAcceptanceMode.finalState,
@@ -265,7 +264,7 @@ void main() {
       });
 
       test('PDA should handle lambda operations correctly', () async {
-        final result = await PDASimulator.simulateNPDA(
+        final result = PDASimulator.simulateNPDA(
           lambdaPDA,
           'a',
           mode: PDAAcceptanceMode.finalState,
@@ -282,7 +281,7 @@ void main() {
       });
 
       test('PDA should handle empty stack correctly', () async {
-        final result = await PDASimulator.simulate(balancedParenthesesPDA, '');
+        final result = PDASimulator.simulate(balancedParenthesesPDA, '');
 
         expect(result.isSuccess, true);
         if (result.isSuccess) {
@@ -340,7 +339,7 @@ void main() {
           final testStrings = ['', 'a', 'b', 'ab', 'ba', 'aab', 'bba'];
 
           for (final testString in testStrings) {
-            final result = await PDASimulator.simulate(pda, testString);
+            final result = PDASimulator.simulate(pda, testString);
 
             expect(result.isSuccess, true);
             if (result.isSuccess) {
@@ -379,7 +378,7 @@ void main() {
 
     group('Non-deterministic Behavior Tests', () {
       test('PDA should handle non-deterministic choices', () async {
-        final result = await PDASimulator.simulate(complexPDA, 'ab');
+        final result = PDASimulator.simulate(complexPDA, 'ab');
 
         expect(result.isSuccess, true);
         if (result.isSuccess) {
@@ -393,7 +392,7 @@ void main() {
       });
 
       test('PDA should explore multiple paths', () async {
-        final result = await PDASimulator.simulate(complexPDA, 'aab');
+        final result = PDASimulator.simulate(complexPDA, 'aab');
 
         expect(result.isSuccess, true);
         if (result.isSuccess) {
@@ -417,7 +416,7 @@ void main() {
         ];
 
         for (final testString in testCases) {
-          final result = await PDASimulator.simulateNPDA(
+          final result = PDASimulator.simulateNPDA(
             balancedParenthesesPDA,
             testString,
             mode: PDAAcceptanceMode.finalState,
@@ -444,7 +443,7 @@ void main() {
         // Test with very long balanced parentheses string
         final longString = '(' * 100 + ')' * 100; // 200 characters
 
-        final result = await PDASimulator.simulateNPDA(
+        final result = PDASimulator.simulateNPDA(
           balancedParenthesesPDA,
           longString,
           mode: PDAAcceptanceMode.finalState,
@@ -467,9 +466,9 @@ void main() {
 
       test('PDA should handle complex nested structures', () async {
         // Test with complex nested structures
-        final complexString = '((()))()((()))';
+        const complexString = '((()))()((()))';
 
-        final result = await PDASimulator.simulateNPDA(
+        final result = PDASimulator.simulateNPDA(
           balancedParenthesesPDA,
           complexString,
           mode: PDAAcceptanceMode.finalState,
@@ -493,7 +492,7 @@ void main() {
 
     group('Error Handling Tests', () {
       test('PDA should handle invalid input symbols', () async {
-        final result = await PDASimulator.simulateNPDA(
+        final result = PDASimulator.simulateNPDA(
           balancedParenthesesPDA,
           'c', // Invalid symbol
           mode: PDAAcceptanceMode.finalState,
@@ -510,7 +509,7 @@ void main() {
       });
 
       test('PDA should handle mixed valid and invalid symbols', () async {
-        final result = await PDASimulator.simulateNPDA(
+        final result = PDASimulator.simulateNPDA(
           balancedParenthesesPDA,
           '(c)', // Mix of valid and invalid
           mode: PDAAcceptanceMode.finalState,
@@ -527,7 +526,7 @@ void main() {
       });
 
       test('PDA should handle stack underflow', () async {
-        final result = await PDASimulator.simulateNPDA(
+        final result = PDASimulator.simulateNPDA(
           balancedParenthesesPDA,
           ')', // Try to pop from empty stack
           mode: PDAAcceptanceMode.finalState,
@@ -547,7 +546,7 @@ void main() {
     group('Performance Tests', () {
       test('PDA should handle complex computations efficiently', () async {
         // Test with complex input that requires many stack operations
-        final result = await PDASimulator.simulateNPDA(
+        final result = PDASimulator.simulateNPDA(
           balancedParenthesesPDA,
           '((()))()((()))',
           mode: PDAAcceptanceMode.finalState,
@@ -572,7 +571,7 @@ void main() {
 
       test('PDA should handle multiple stack operations', () async {
         // Test PDA that performs multiple stack operations
-        final result = await PDASimulator.simulateNPDA(
+        final result = PDASimulator.simulateNPDA(
           balancedParenthesesPDA,
           '(()())',
           mode: PDAAcceptanceMode.finalState,
@@ -673,7 +672,7 @@ PDA _createBalancedParenthesesPDA() {
     initialStackSymbol: 'Z',
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 400, 300),
+    bounds: const math.Rectangle(0, 0, 400, 300),
   );
 }
 
@@ -856,7 +855,7 @@ PDA _createPalindromePDA() {
     initialStackSymbol: 'Z',
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 600, 300),
+    bounds: const math.Rectangle(0, 0, 600, 300),
   );
 }
 
@@ -943,7 +942,7 @@ PDA _createSimplePDA() {
     initialStackSymbol: 'Z',
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 400, 300),
+    bounds: const math.Rectangle(0, 0, 400, 300),
   );
 }
 
@@ -1047,7 +1046,7 @@ PDA _createComplexPDA() {
     initialStackSymbol: 'Z',
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 600, 300),
+    bounds: const math.Rectangle(0, 0, 600, 300),
   );
 }
 
@@ -1104,7 +1103,7 @@ PDA _createLambdaPDA() {
     initialStackSymbol: 'Z',
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 400, 300),
+    bounds: const math.Rectangle(0, 0, 400, 300),
   );
 }
 
@@ -1112,14 +1111,14 @@ PDA _createLambdaPDA() {
 
 Grammar _createTestGrammar() {
   final productions = {
-    Production(
+    const Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['a', 'S', 'b'],
       isLambda: false,
       order: 1,
     ),
-    Production(
+    const Production(
       id: 'p2',
       leftSide: ['S'],
       rightSide: [],
@@ -1143,35 +1142,35 @@ Grammar _createTestGrammar() {
 
 Grammar _createComplexGrammar() {
   final productions = {
-    Production(
+    const Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['A', 'B'],
       isLambda: false,
       order: 1,
     ),
-    Production(
+    const Production(
       id: 'p2',
       leftSide: ['A'],
       rightSide: ['a', 'A'],
       isLambda: false,
       order: 2,
     ),
-    Production(
+    const Production(
       id: 'p3',
       leftSide: ['A'],
       rightSide: [],
       isLambda: true,
       order: 3,
     ),
-    Production(
+    const Production(
       id: 'p4',
       leftSide: ['B'],
       rightSide: ['b', 'B'],
       isLambda: false,
       order: 4,
     ),
-    Production(
+    const Production(
       id: 'p5',
       leftSide: ['B'],
       rightSide: [],

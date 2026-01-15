@@ -422,15 +422,13 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
-        widget.useExpanded
-            ? Expanded(
+        if (widget.useExpanded) Expanded(
                 child: _analysisResult == null
                     ? _buildEmptyResults(context)
                     : _buildResults(context),
-              )
-            : (_analysisResult == null
+              ) else _analysisResult == null
                 ? _buildEmptyResults(context)
-                : _buildResults(context)),
+                : _buildResults(context),
       ],
     );
 

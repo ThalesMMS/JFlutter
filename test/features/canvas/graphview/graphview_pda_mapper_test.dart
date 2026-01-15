@@ -112,8 +112,8 @@ void main() {
         acceptingStates: {initialState},
       );
 
-      final snapshot = GraphViewAutomatonSnapshot(
-        nodes: const [
+      const snapshot = GraphViewAutomatonSnapshot(
+        nodes: [
           GraphViewCanvasNode(
             id: 'q0',
             label: 'start',
@@ -131,7 +131,7 @@ void main() {
             isAccepting: true,
           ),
         ],
-        edges: const [
+        edges: [
           GraphViewCanvasEdge(
             id: 't0',
             fromStateId: 'q0',
@@ -147,7 +147,7 @@ void main() {
             isLambdaPush: false,
           ),
         ],
-        metadata: const GraphViewAutomatonMetadata(
+        metadata: GraphViewAutomatonMetadata(
           id: 'pda-1',
           name: 'Updated PDA',
           alphabet: ['a', 'b'],

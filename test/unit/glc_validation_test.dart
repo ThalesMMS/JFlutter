@@ -11,8 +11,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/grammar.dart';
 import 'package:jflutter/core/models/production.dart';
 import 'package:jflutter/core/algorithms/grammar_parser.dart';
-import 'package:jflutter/core/result.dart';
-import 'dart:math' as math;
 void main() {
   group('GLC Validation Tests', () {
     late Grammar balancedParenthesesGrammar;
@@ -444,21 +442,21 @@ void main() {
 
 Grammar _createBalancedParenthesesGrammar() {
   final productions = {
-    Production(
+    const Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['S', 'S'],
       isLambda: false,
       order: 1,
     ),
-    Production(
+    const Production(
       id: 'p2',
       leftSide: ['S'],
       rightSide: ['(', 'S', ')'],
       isLambda: false,
       order: 2,
     ),
-    Production(
+    const Production(
       id: 'p3',
       leftSide: ['S'],
       rightSide: [],
@@ -482,35 +480,35 @@ Grammar _createBalancedParenthesesGrammar() {
 
 Grammar _createPalindromeGrammar() {
   final productions = {
-    Production(
+    const Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['a', 'S', 'a'],
       isLambda: false,
       order: 1,
     ),
-    Production(
+    const Production(
       id: 'p2',
       leftSide: ['S'],
       rightSide: ['b', 'S', 'b'],
       isLambda: false,
       order: 2,
     ),
-    Production(
+    const Production(
       id: 'p3',
       leftSide: ['S'],
       rightSide: ['a'],
       isLambda: false,
       order: 3,
     ),
-    Production(
+    const Production(
       id: 'p4',
       leftSide: ['S'],
       rightSide: ['b'],
       isLambda: false,
       order: 4,
     ),
-    Production(
+    const Production(
       id: 'p5',
       leftSide: ['S'],
       rightSide: [],
@@ -534,14 +532,14 @@ Grammar _createPalindromeGrammar() {
 
 Grammar _createLeftRecursiveGrammar() {
   final productions = {
-    Production(
+    const Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['S', 'a'],
       isLambda: false,
       order: 1,
     ),
-    Production(
+    const Production(
       id: 'p2',
       leftSide: ['S'],
       rightSide: ['a'],
@@ -565,14 +563,14 @@ Grammar _createLeftRecursiveGrammar() {
 
 Grammar _createAmbiguousGrammar() {
   final productions = {
-    Production(
+    const Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['S', 'S'],
       isLambda: false,
       order: 1,
     ),
-    Production(
+    const Production(
       id: 'p2',
       leftSide: ['S'],
       rightSide: ['a'],
@@ -596,49 +594,49 @@ Grammar _createAmbiguousGrammar() {
 
 Grammar _createCNFGrammar() {
   final productions = {
-    Production(
+    const Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['A', 'B'],
       isLambda: false,
       order: 1,
     ),
-    Production(
+    const Production(
       id: 'p2',
       leftSide: ['S'],
       rightSide: ['A'],
       isLambda: false,
       order: 2,
     ),
-    Production(
+    const Production(
       id: 'p3',
       leftSide: ['S'],
       rightSide: ['B'],
       isLambda: false,
       order: 3,
     ),
-    Production(
+    const Production(
       id: 'p4',
       leftSide: ['A'],
       rightSide: ['a'],
       isLambda: false,
       order: 4,
     ),
-    Production(
+    const Production(
       id: 'p5',
       leftSide: ['B'],
       rightSide: ['b'],
       isLambda: false,
       order: 5,
     ),
-    Production(
+    const Production(
       id: 'p6',
       leftSide: ['A'],
       rightSide: ['b'],
       isLambda: false,
       order: 6,
     ),
-    Production(
+    const Production(
       id: 'p7',
       leftSide: ['B'],
       rightSide: ['a'],

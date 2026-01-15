@@ -6,7 +6,6 @@
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
-import 'dart:ui';
 import 'dart:math';
 import 'package:vector_math/vector_math_64.dart';
 import '../../core/result.dart';

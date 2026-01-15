@@ -141,10 +141,10 @@ class GridControls extends StatelessWidget {
   final ValueChanged<GridConfig> onConfigChanged;
 
   const GridControls({
-    Key? key,
+    super.key,
     required this.config,
     required this.onConfigChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -209,7 +209,7 @@ class GridControls extends StatelessWidget {
 
 /// Exemplo de uso em um canvas
 class GridEnabledCanvas extends StatefulWidget {
-  const GridEnabledCanvas({Key? key}) : super(key: key);
+  const GridEnabledCanvas({super.key});
 
   @override
   State<GridEnabledCanvas> createState() => _GridEnabledCanvasState();

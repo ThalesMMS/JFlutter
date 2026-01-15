@@ -86,10 +86,10 @@ class AutomatonTypeBadge extends StatelessWidget {
   final VoidCallback? onTap;
 
   const AutomatonTypeBadge({
-    Key? key,
+    super.key,
     required this.info,
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -146,10 +146,10 @@ class NonDeterminismPanel extends StatelessWidget {
   final VoidCallback? onClose;
 
   const NonDeterminismPanel({
-    Key? key,
+    super.key,
     required this.info,
     this.onClose,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -325,10 +325,10 @@ class GroupedTransitionLabel extends StatelessWidget {
   final bool isEpsilon;
 
   const GroupedTransitionLabel({
-    Key? key,
+    super.key,
     required this.symbols,
     this.isEpsilon = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -399,9 +399,9 @@ class FSACanvasOverlay extends StatefulWidget {
   final DeterminismInfo determinismInfo;
 
   const FSACanvasOverlay({
-    Key? key,
+    super.key,
     required this.determinismInfo,
-  }) : super(key: key);
+  });
 
   @override
   State<FSACanvasOverlay> createState() => _FSACanvasOverlayState();
@@ -449,7 +449,7 @@ class _FSACanvasOverlayState extends State<FSACanvasOverlay> {
 
 /// Exemplo de uso
 class FSASpecializedCanvasExample extends StatefulWidget {
-  const FSASpecializedCanvasExample({Key? key}) : super(key: key);
+  const FSASpecializedCanvasExample({super.key});
 
   @override
   State<FSASpecializedCanvasExample> createState() =>

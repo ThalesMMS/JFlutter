@@ -116,7 +116,7 @@ class _TMTapePanelState extends State<TMTapePanel>
   void _scrollToHead() {
     // Auto-scroll para manter cabeça visível
     if (_horizontalScrollController.hasClients) {
-      final cellWidth = 50.0; // Adjusted for compact view
+      const cellWidth = 50.0; // Adjusted for compact view
       final targetOffset = widget.tapeState.headPosition * cellWidth;
       _horizontalScrollController.animateTo(
         targetOffset,

@@ -44,10 +44,10 @@ class _PumpingLemmaPageState extends ConsumerState<PumpingLemmaPage> {
   }
 
   Widget _buildTabletLayout() {
-    return TabletLayoutContainer(
-      canvas: const PumpingLemmaGame(),
-      algorithmPanel: const PumpingLemmaHelp(),
-      simulationPanel: const PumpingLemmaProgress(),
+    return const TabletLayoutContainer(
+      canvas: PumpingLemmaGame(),
+      algorithmPanel: PumpingLemmaHelp(),
+      simulationPanel: PumpingLemmaProgress(),
       algorithmTabTitle: 'Help',
       simulationTabTitle: 'Progress',
     );

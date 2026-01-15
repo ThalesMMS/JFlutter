@@ -10,7 +10,6 @@
 //  Thales Matheus Mendonça Santos - October 2025
 //
 import '../models/fsa.dart';
-import '../models/state.dart';
 import '../result.dart';
 
 /// Proves or disproves the pumping lemma for regular languages

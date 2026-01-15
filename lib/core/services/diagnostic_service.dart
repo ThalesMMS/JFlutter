@@ -12,7 +12,6 @@
 import '../models/fsa.dart';
 import '../models/state.dart' as automaton_state;
 import '../models/fsa_transition.dart';
-import '../models/transition.dart';
 
 /// Enhanced diagnostic service for providing detailed error messages and diagnostics
 class DiagnosticService {
@@ -52,7 +51,7 @@ class DiagnosticService {
     // Check for empty automaton
     if (automaton.states.isEmpty) {
       issues.add(
-        DiagnosticIssue(
+        const DiagnosticIssue(
           type: DiagnosticIssueType.structural,
           severity: DiagnosticSeverity.error,
           message: 'Automaton has no states',
@@ -68,7 +67,7 @@ class DiagnosticService {
     final initialStates = automaton.states.where((s) => s.isInitial).toList();
     if (initialStates.isEmpty) {
       issues.add(
-        DiagnosticIssue(
+        const DiagnosticIssue(
           type: DiagnosticIssueType.structural,
           severity: DiagnosticSeverity.error,
           message: 'No initial state found',
@@ -80,7 +79,7 @@ class DiagnosticService {
       );
     } else if (initialStates.length > 1) {
       issues.add(
-        DiagnosticIssue(
+        const DiagnosticIssue(
           type: DiagnosticIssueType.structural,
           severity: DiagnosticSeverity.error,
           message: 'Multiple initial states found',
@@ -143,7 +142,7 @@ class DiagnosticService {
 
     if (epsilonTransitions.isNotEmpty) {
       warnings.add(
-        DiagnosticWarning(
+        const DiagnosticWarning(
           type: DiagnosticWarningType.semantic,
           message: 'Epsilon transitions found',
           description:

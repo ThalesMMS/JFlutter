@@ -68,12 +68,12 @@ class ZoomControls extends StatelessWidget {
   final VoidCallback? onCenter;
 
   const ZoomControls({
-    Key? key,
+    super.key,
     required this.config,
     required this.onZoomChanged,
     this.onFitToContent,
     this.onCenter,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -169,10 +169,10 @@ class ZoomSlider extends StatelessWidget {
   final ValueChanged<ZoomConfig> onZoomChanged;
 
   const ZoomSlider({
-    Key? key,
+    super.key,
     required this.config,
     required this.onZoomChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -230,12 +230,12 @@ class MiniMap extends StatelessWidget {
   final ValueChanged<Offset>? onTap;
 
   const MiniMap({
-    Key? key,
+    super.key,
     required this.canvasSize,
     required this.viewport,
     this.statePositions = const [],
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -356,7 +356,7 @@ class FloatingCanvasToolbar extends StatelessWidget {
   final ValueChanged<Offset>? onMiniMapTap;
 
   const FloatingCanvasToolbar({
-    Key? key,
+    super.key,
     required this.zoomConfig,
     required this.onZoomChanged,
     this.onFitToContent,
@@ -366,7 +366,7 @@ class FloatingCanvasToolbar extends StatelessWidget {
     this.viewport,
     this.statePositions,
     this.onMiniMapTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

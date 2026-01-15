@@ -8,7 +8,6 @@ import 'package:jflutter/presentation/pages/tm_page.dart';
 import 'package:jflutter/presentation/pages/pda_page.dart';
 import 'package:jflutter/presentation/widgets/tablet_layout_container.dart';
 import 'package:jflutter/presentation/providers/grammar_provider.dart';
-import 'package:jflutter/presentation/pages/regex_page.dart';
 import 'package:jflutter/presentation/pages/pumping_lemma_page.dart';
 
 void main() {

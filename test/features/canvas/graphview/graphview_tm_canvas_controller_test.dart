@@ -39,7 +39,7 @@ void main() {
       controller.dispose();
     });
 
-    TM _buildSampleTm() {
+    TM buildSampleTm() {
       final initialState = State(
         id: 'q0',
         label: 'start',
@@ -85,7 +85,7 @@ void main() {
     }
 
     test('synchronize populates TM nodes and edges', () {
-      final tm = _buildSampleTm();
+      final tm = buildSampleTm();
 
       controller.synchronize(tm);
 
@@ -161,7 +161,7 @@ void main() {
     });
 
     test('removeTransition removes TM transition', () {
-      final tm = _buildSampleTm();
+      final tm = buildSampleTm();
       notifier.setTm(tm);
       controller.synchronize(tm);
 
@@ -172,8 +172,8 @@ void main() {
     });
 
     test('applySnapshotToDomain rebuilds TM and synchronizes controller', () {
-      final snapshot = GraphViewAutomatonSnapshot(
-        nodes: const [
+      const snapshot = GraphViewAutomatonSnapshot(
+        nodes: [
           GraphViewCanvasNode(
             id: 'q0',
             label: 'start',
@@ -191,7 +191,7 @@ void main() {
             isAccepting: true,
           ),
         ],
-        edges: const [
+        edges: [
           GraphViewCanvasEdge(
             id: 't0',
             fromStateId: 'q0',
@@ -204,7 +204,7 @@ void main() {
             direction: TapeDirection.stay,
           ),
         ],
-        metadata: const GraphViewAutomatonMetadata(
+        metadata: GraphViewAutomatonMetadata(
           id: 'tm-1',
           name: 'Snapshot TM',
           alphabet: ['0', '1'],

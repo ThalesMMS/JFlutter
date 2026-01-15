@@ -39,7 +39,7 @@ void main() {
       controller.dispose();
     });
 
-    PDA _buildSamplePda() {
+    PDA buildSamplePda() {
       final initialState = State(
         id: 'q0',
         label: 'start',
@@ -87,7 +87,7 @@ void main() {
     }
 
     test('synchronize populates nodes and edges from PDA', () {
-      final pda = _buildSamplePda();
+      final pda = buildSamplePda();
 
       controller.synchronize(pda);
 
@@ -166,7 +166,7 @@ void main() {
     });
 
     test('removeTransition clears transition from notifier', () {
-      final pda = _buildSamplePda();
+      final pda = buildSamplePda();
       notifier.setPda(pda);
       controller.synchronize(pda);
 
@@ -177,8 +177,8 @@ void main() {
     });
 
     test('applySnapshotToDomain rebuilds PDA and synchronizes controller', () {
-      final snapshot = GraphViewAutomatonSnapshot(
-        nodes: const [
+      const snapshot = GraphViewAutomatonSnapshot(
+        nodes: [
           GraphViewCanvasNode(
             id: 'q0',
             label: 'start',
@@ -196,7 +196,7 @@ void main() {
             isAccepting: true,
           ),
         ],
-        edges: const [
+        edges: [
           GraphViewCanvasEdge(
             id: 't0',
             fromStateId: 'q0',
@@ -212,7 +212,7 @@ void main() {
             isLambdaPush: false,
           ),
         ],
-        metadata: const GraphViewAutomatonMetadata(
+        metadata: GraphViewAutomatonMetadata(
           id: 'pda-1',
           name: 'Snapshot PDA',
           alphabet: ['a', 'b'],

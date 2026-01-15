@@ -12,7 +12,6 @@ import 'package:jflutter/core/models/tm.dart';
 import 'package:jflutter/core/models/state.dart';
 import 'package:jflutter/core/models/tm_transition.dart';
 import 'package:jflutter/core/algorithms/tm_simulator.dart';
-import 'package:jflutter/core/result.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'dart:math' as math;
 void main() {
@@ -51,7 +50,7 @@ void main() {
         ];
 
         for (final testString in testCases) {
-          final result = await TMSimulator.simulate(
+          final result = TMSimulator.simulate(
             binaryToUnaryTM,
             testString,
           );
@@ -87,7 +86,7 @@ void main() {
         ];
 
         for (final testString in testCases) {
-          final result = await TMSimulator.simulate(palindromeTM, testString);
+          final result = TMSimulator.simulate(palindromeTM, testString);
 
           expect(
             result.isSuccess,
@@ -116,7 +115,7 @@ void main() {
         ];
 
         for (final testString in testCases) {
-          final result = await TMSimulator.simulate(acceptAllTM, testString);
+          final result = TMSimulator.simulate(acceptAllTM, testString);
 
           expect(
             result.isSuccess,
@@ -148,7 +147,7 @@ void main() {
         ];
 
         for (final testString in testCases) {
-          final result = await TMSimulator.simulate(palindromeTM, testString);
+          final result = TMSimulator.simulate(palindromeTM, testString);
 
           expect(
             result.isSuccess,
@@ -177,7 +176,7 @@ void main() {
         ];
 
         for (final testString in testCases) {
-          final result = await TMSimulator.simulate(rejectAllTM, testString);
+          final result = TMSimulator.simulate(rejectAllTM, testString);
 
           expect(
             result.isSuccess,
@@ -200,7 +199,7 @@ void main() {
     group('Loop Detection Tests', () {
       test('TM should detect infinite loops', () async {
         // Test with TM that has infinite loop
-        final result = await TMSimulator.simulate(loopDetectionTM, 'a');
+        final result = TMSimulator.simulate(loopDetectionTM, 'a');
 
         expect(result.isSuccess, true);
         if (result.isSuccess) {
@@ -217,7 +216,7 @@ void main() {
         // Test with very long input that might cause timeout
         final longString = 'a' * 1000; // 1000 a's
 
-        final result = await TMSimulator.simulate(
+        final result = TMSimulator.simulate(
           loopDetectionTM,
           longString,
           timeout: const Duration(milliseconds: 100), // Short timeout
@@ -238,7 +237,7 @@ void main() {
     group('Transformation Tests', () {
       test('Binary to Unary TM should transform input', () async {
         // Test that the TM actually transforms the input
-        final result = await TMSimulator.simulate(
+        final result = TMSimulator.simulate(
           binaryToUnaryTM,
           '10', // Binary 2
         );
@@ -262,7 +261,7 @@ void main() {
 
       test('TM should handle tape modifications correctly', () async {
         // Test with TM that modifies the tape
-        final result = await TMSimulator.simulate(
+        final result = TMSimulator.simulate(
           binaryToUnaryTM,
           '11', // Binary 3
         );
@@ -288,7 +287,7 @@ void main() {
 
     group('Tape Limits Tests', () {
       test('TM should handle empty tape correctly', () async {
-        final result = await TMSimulator.simulate(acceptAllTM, '');
+        final result = TMSimulator.simulate(acceptAllTM, '');
 
         expect(result.isSuccess, true);
         if (result.isSuccess) {
@@ -301,7 +300,7 @@ void main() {
       });
 
       test('TM should handle single character input', () async {
-        final result = await TMSimulator.simulate(palindromeTM, 'a');
+        final result = TMSimulator.simulate(palindromeTM, 'a');
 
         expect(result.isSuccess, true);
         if (result.isSuccess) {
@@ -317,7 +316,7 @@ void main() {
         // Test with very long input to test tape limits
         final longString = 'ab' * 500; // 1000 characters
 
-        final result = await TMSimulator.simulate(palindromeTM, longString);
+        final result = TMSimulator.simulate(palindromeTM, longString);
 
         expect(result.isSuccess, true);
         if (result.isSuccess) {
@@ -334,7 +333,7 @@ void main() {
     group('Performance Tests', () {
       test('TM should handle complex computations efficiently', () async {
         // Test with complex input that requires many steps
-        final result = await TMSimulator.simulate(
+        final result = TMSimulator.simulate(
           binaryToUnaryTM,
           '1111', // Binary 15
         );
@@ -358,7 +357,7 @@ void main() {
 
       test('TM should handle multiple tape operations', () async {
         // Test TM that performs multiple tape operations
-        final result = await TMSimulator.simulate(
+        final result = TMSimulator.simulate(
           binaryToUnaryTM,
           '1010', // Binary 10
         );
@@ -384,7 +383,7 @@ void main() {
     group('Error Handling Tests', () {
       test('TM should handle invalid input symbols', () async {
         // Test with symbols not in the alphabet
-        final result = await TMSimulator.simulate(
+        final result = TMSimulator.simulate(
           binaryToUnaryTM,
           'c', // Invalid symbol
         );
@@ -398,7 +397,7 @@ void main() {
       });
 
       test('TM should handle mixed valid and invalid symbols', () async {
-        final result = await TMSimulator.simulate(
+        final result = TMSimulator.simulate(
           binaryToUnaryTM,
           'a1b', // Mix of valid and invalid
         );
@@ -486,7 +485,7 @@ TM _createBinaryToUnaryTM() {
     blankSymbol: 'B',
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 600, 400),
+    bounds: const math.Rectangle(0, 0, 600, 400),
   );
 }
 
@@ -824,7 +823,7 @@ TM _createSimplePalindromeDTM() {
     blankSymbol: 'B',
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 800, 400),
+    bounds: const math.Rectangle(0, 0, 800, 400),
   );
 }
 
@@ -902,7 +901,7 @@ TM _createAcceptAllTM() {
     blankSymbol: 'B',
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 300, 300),
+    bounds: const math.Rectangle(0, 0, 300, 300),
   );
 }
 
@@ -979,7 +978,7 @@ TM _createRejectAllTM() {
     blankSymbol: 'B',
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 300, 300),
+    bounds: const math.Rectangle(0, 0, 300, 300),
   );
 }
 
@@ -1036,6 +1035,6 @@ TM _createLoopDetectionTM() {
     blankSymbol: 'B',
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 400, 300),
+    bounds: const math.Rectangle(0, 0, 400, 300),
   );
 }

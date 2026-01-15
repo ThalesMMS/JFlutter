@@ -134,7 +134,7 @@ class HierarchicalLayout implements LayoutAlgorithm {
 
     // Calcular posições
     final maxLevel = levels.keys.isEmpty ? 0 : levels.keys.reduce(math.max);
-    final startY = 50.0;
+    const startY = 50.0;
 
     for (final entry in levels.entries) {
       final level = entry.key;
@@ -323,12 +323,12 @@ class LayoutAlgorithmSelector extends StatelessWidget {
   final VoidCallback? onApply;
 
   const LayoutAlgorithmSelector({
-    Key? key,
+    super.key,
     required this.algorithms,
     this.selectedAlgorithm,
     this.onAlgorithmSelected,
     this.onApply,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -361,7 +361,7 @@ class LayoutAlgorithmSelector extends StatelessWidget {
                 },
                 dense: true,
               );
-            }).toList(),
+            }),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
@@ -385,12 +385,12 @@ class LayoutPreview extends StatelessWidget {
   final Set<String> finalStateIds;
 
   const LayoutPreview({
-    Key? key,
+    super.key,
     required this.positions,
     this.previewSize = const Size(300, 200),
     this.initialStateId,
     this.finalStateIds = const {},
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -498,7 +498,7 @@ class _LayoutPreviewPainter extends CustomPainter {
 
 /// Exemplo de uso
 class LayoutAlgorithmExample extends StatefulWidget {
-  const LayoutAlgorithmExample({Key? key}) : super(key: key);
+  const LayoutAlgorithmExample({super.key});
 
   @override
   State<LayoutAlgorithmExample> createState() => _LayoutAlgorithmExampleState();

@@ -14,7 +14,6 @@ import 'package:jflutter/core/models/fsa_transition.dart';
 import 'package:jflutter/core/algorithms/dfa_minimizer.dart';
 import 'dart:math' as math;
 import 'package:jflutter/core/algorithms/automaton_simulator.dart';
-import 'package:jflutter/core/result.dart';
 import 'package:vector_math/vector_math_64.dart';
 void main() {
   group('DFA Minimization Validation Tests', () {

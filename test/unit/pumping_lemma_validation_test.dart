@@ -12,7 +12,6 @@ import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/state.dart';
 import 'package:jflutter/core/models/fsa_transition.dart';
 import 'package:jflutter/core/algorithms/pumping_lemma_prover.dart';
-import 'package:jflutter/core/result.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'dart:math' as math;
 void main() {
@@ -534,7 +533,7 @@ FSA _createRegularDFA() {
     acceptingStates: states.where((s) => s.isAccepting).toSet(),
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 400, 300),
+    bounds: const math.Rectangle(0, 0, 400, 300),
   );
 }
 
@@ -583,7 +582,7 @@ FSA _createRegularNFA() {
     acceptingStates: states.where((s) => s.isAccepting).toSet(),
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 400, 300),
+    bounds: const math.Rectangle(0, 0, 400, 300),
   );
 }
 
@@ -654,7 +653,7 @@ FSA _createNonRegularDFA() {
     acceptingStates: states.where((s) => s.isAccepting).toSet(),
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 600, 300),
+    bounds: const math.Rectangle(0, 0, 600, 300),
   );
 }
 
@@ -689,7 +688,7 @@ FSA _createSimpleDFA() {
     acceptingStates: states,
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 300, 300),
+    bounds: const math.Rectangle(0, 0, 300, 300),
   );
 }
 
@@ -773,7 +772,7 @@ FSA _createComplexDFA() {
     acceptingStates: states.where((s) => s.isAccepting).toSet(),
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 600, 300),
+    bounds: const math.Rectangle(0, 0, 600, 300),
   );
 }
 
@@ -788,7 +787,7 @@ FSA _createEmptyDFA() {
     acceptingStates: {},
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 300, 300),
+    bounds: const math.Rectangle(0, 0, 300, 300),
   );
 }
 
@@ -813,7 +812,7 @@ FSA _createSingleStateDFA() {
     acceptingStates: states,
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 300, 300),
+    bounds: const math.Rectangle(0, 0, 300, 300),
   );
 }
 
@@ -848,6 +847,6 @@ FSA _createNoAcceptingDFA() {
     acceptingStates: {},
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 300, 300),
+    bounds: const math.Rectangle(0, 0, 300, 300),
   );
 }

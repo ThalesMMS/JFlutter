@@ -150,7 +150,7 @@ void main() {
         for (final intermediate in stateLabels) {
           expected.add(
             '[p, Z, $target] → a [q, X, $intermediate] '
-            '[${intermediate}, Y, $target]',
+            '[$intermediate, Y, $target]',
           );
         }
       }

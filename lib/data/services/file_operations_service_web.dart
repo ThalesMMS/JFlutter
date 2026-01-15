@@ -42,7 +42,7 @@ class FileOperationsService {
   }
 
   Future<Result<FSA>> loadAutomatonFromJFLAP(String filePath) async {
-    return Failure('Loading JFLAP files from a path is not supported on web.');
+    return const Failure('Loading JFLAP files from a path is not supported on web.');
   }
 
   Future<Result<FSA>> loadAutomatonFromBytes(Uint8List bytes) async {
@@ -69,7 +69,7 @@ class FileOperationsService {
   }
 
   Future<Result<Grammar>> loadGrammarFromJFLAP(String filePath) async {
-    return Failure('Loading grammars from a path is not supported on web.');
+    return const Failure('Loading grammars from a path is not supported on web.');
   }
 
   Future<Result<Grammar>> loadGrammarFromBytes(Uint8List bytes) async {
@@ -87,7 +87,7 @@ class FileOperationsService {
     FSA automaton,
     String filePath,
   ) async {
-    return Failure('PNG export is not supported on web.');
+    return const Failure('PNG export is not supported on web.');
   }
 
   Future<StringResult> exportAutomatonToSVG(
@@ -151,22 +151,22 @@ class FileOperationsService {
   }
 
   Future<StringResult> getDocumentsDirectory() async {
-    return Failure('Documents directory is not available on web.');
+    return const Failure('Documents directory is not available on web.');
   }
 
   Future<StringResult> createUniqueFile(
     String baseName,
     String extension,
   ) async {
-    return Failure('File creation is not supported on web.');
+    return const Failure('File creation is not supported on web.');
   }
 
   Future<ListResult<String>> listFiles(String extension) async {
-    return Failure('Listing files is not supported on web.');
+    return const Failure('Listing files is not supported on web.');
   }
 
   Future<BoolResult> deleteFile(String filePath) async {
-    return Failure('Deleting files is not supported on web.');
+    return const Failure('Deleting files is not supported on web.');
   }
 
   String _buildJFLAPXML(FSA automaton) {

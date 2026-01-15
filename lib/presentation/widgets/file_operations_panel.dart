@@ -206,10 +206,6 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
         );
       }
 
-      if (saveResult == null) {
-        return;
-      }
-
       if (saveResult.isSuccess) {
         final successMessage = kIsWeb
             ? 'Download started for ${saveResult.data ?? 'automaton.jff'}'
@@ -300,10 +296,6 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
         );
       }
 
-      if (exportResult == null) {
-        return;
-      }
-
       if (exportResult.isSuccess) {
         final successMessage = kIsWeb
             ? 'Download started for ${exportResult.data ?? 'automaton.svg'}'
@@ -354,10 +346,6 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
           widget.grammar!,
           result,
         );
-      }
-
-      if (saveResult == null) {
-        return;
       }
 
       if (saveResult.isSuccess) {

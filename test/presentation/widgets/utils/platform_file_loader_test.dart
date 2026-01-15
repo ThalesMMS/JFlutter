@@ -99,10 +99,10 @@ void main() {
         nonterminals: {'S'},
         startSymbol: 'S',
         productions: {
-          Production(
+          const Production(
             id: 'p0',
-            leftSide: const ['S'],
-            rightSide: const ['a'],
+            leftSide: ['S'],
+            rightSide: ['a'],
             order: 0,
           ),
         },
@@ -176,7 +176,7 @@ class _RecordingFileOperationsService extends FileOperationsService {
   Future<Result<FSA>> loadAutomatonFromBytes(Uint8List bytes) async {
     bytesCalls += 1;
     if (_automaton != null) {
-      return Success(_automaton!);
+      return Success(_automaton);
     }
     return const Failure('No automaton configured');
   }
@@ -185,7 +185,7 @@ class _RecordingFileOperationsService extends FileOperationsService {
   Future<Result<FSA>> loadAutomatonFromJFLAP(String filePath) async {
     pathCalls += 1;
     if (_automaton != null) {
-      return Success(_automaton!);
+      return Success(_automaton);
     }
     return const Failure('No automaton configured');
   }
@@ -194,7 +194,7 @@ class _RecordingFileOperationsService extends FileOperationsService {
   Future<Result<Grammar>> loadGrammarFromBytes(Uint8List bytes) async {
     grammarBytesCalls += 1;
     if (_grammar != null) {
-      return Success(_grammar!);
+      return Success(_grammar);
     }
     return const Failure('No grammar configured');
   }
@@ -203,7 +203,7 @@ class _RecordingFileOperationsService extends FileOperationsService {
   Future<Result<Grammar>> loadGrammarFromJFLAP(String filePath) async {
     grammarPathCalls += 1;
     if (_grammar != null) {
-      return Success(_grammar!);
+      return Success(_grammar);
     }
     return const Failure('No grammar configured');
   }

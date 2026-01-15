@@ -13,12 +13,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'dart:math' as math;
-import '../../../lib/core/models/fsa.dart';
-import '../../../lib/core/models/state.dart' as automaton_state;
-import '../../../lib/core/models/fsa_transition.dart';
-import '../../../lib/data/services/import_export_validation_service.dart';
-import '../../../lib/data/services/file_operations_service.dart';
-import '../../../lib/data/services/serialization_service.dart';
+import 'package:jflutter/core/models/fsa.dart';
+import 'package:jflutter/core/models/state.dart' as automaton_state;
+import 'package:jflutter/core/models/fsa_transition.dart';
+import 'package:jflutter/data/services/import_export_validation_service.dart';
+import 'package:jflutter/data/services/file_operations_service.dart';
+import 'package:jflutter/data/services/serialization_service.dart';
 
 void main() {
   group('Import/Export Validation Tests', () {
@@ -218,7 +218,7 @@ void main() {
 
     group('File Operations Integration', () {
       test('should export automaton to JFLAP format', () async {
-        final tempPath = '/tmp/test_automaton.jff';
+        const tempPath = '/tmp/test_automaton.jff';
 
         try {
           final result = await fileOperationsService.saveAutomatonToJFLAP(
@@ -235,7 +235,7 @@ void main() {
       });
 
       test('should export automaton to SVG format', () async {
-        final tempPath = '/tmp/test_automaton.svg';
+        const tempPath = '/tmp/test_automaton.svg';
 
         try {
           final result = await fileOperationsService.exportLegacyAutomatonToSVG(

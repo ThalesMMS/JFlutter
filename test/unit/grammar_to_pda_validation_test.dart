@@ -12,7 +12,6 @@ import 'package:jflutter/core/models/grammar.dart';
 import 'package:jflutter/core/models/production.dart';
 import 'package:jflutter/core/algorithms/grammar_to_pda_converter.dart';
 import 'package:jflutter/core/algorithms/pda_simulator.dart';
-import 'package:jflutter/core/result.dart';
 void main() {
   group('Grammar to PDA Conversion Tests', () {
     late Grammar simpleGrammar;
@@ -235,7 +234,7 @@ void main() {
           nonterminals: {'S'},
           startSymbol: '',
           productions: {
-            Production(
+            const Production(
               id: 'p1',
               leftSide: ['S'],
               rightSide: ['a'],
@@ -301,14 +300,14 @@ void main() {
 
 Grammar _createSimpleGrammar() {
   final productions = {
-    Production(
+    const Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['a', 'S', 'b'],
       isLambda: false,
       order: 1,
     ),
-    Production(
+    const Production(
       id: 'p2',
       leftSide: ['S'],
       rightSide: [],
@@ -332,14 +331,14 @@ Grammar _createSimpleGrammar() {
 
 Grammar _createLambdaGrammar() {
   final productions = {
-    Production(
+    const Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['a', 'S'],
       isLambda: false,
       order: 1,
     ),
-    Production(
+    const Production(
       id: 'p2',
       leftSide: ['S'],
       rightSide: [],
@@ -363,35 +362,35 @@ Grammar _createLambdaGrammar() {
 
 Grammar _createComplexGrammar() {
   final productions = {
-    Production(
+    const Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['A', 'B'],
       isLambda: false,
       order: 1,
     ),
-    Production(
+    const Production(
       id: 'p2',
       leftSide: ['A'],
       rightSide: ['a', 'A'],
       isLambda: false,
       order: 2,
     ),
-    Production(
+    const Production(
       id: 'p3',
       leftSide: ['A'],
       rightSide: [],
       isLambda: true,
       order: 3,
     ),
-    Production(
+    const Production(
       id: 'p4',
       leftSide: ['B'],
       rightSide: ['b', 'B'],
       isLambda: false,
       order: 4,
     ),
-    Production(
+    const Production(
       id: 'p5',
       leftSide: ['B'],
       rightSide: [],

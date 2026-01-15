@@ -205,15 +205,13 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
-        widget.useExpanded
-            ? Expanded(
+        if (widget.useExpanded) Expanded(
                 child: _analysisResult == null
                     ? _buildEmptyResults(context)
                     : _buildResults(context),
-              )
-            : (_analysisResult == null
+              ) else _analysisResult == null
                 ? _buildEmptyResults(context)
-                : _buildResults(context)),
+                : _buildResults(context),
       ],
     );
 
@@ -701,7 +699,7 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
         return a.id.compareTo(b.id);
       });
 
-    String _formatSymbols(List<String> symbols) {
+    String formatSymbols(List<String> symbols) {
       if (symbols.isEmpty) {
         return 'ε';
       }
@@ -749,8 +747,8 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
           (production) => Padding(
             padding: const EdgeInsets.only(bottom: 4),
             child: Text(
-              '• ${_formatSymbols(production.leftSide)} → '
-              '${production.isLambda ? 'ε' : _formatSymbols(production.rightSide)}',
+              '• ${formatSymbols(production.leftSide)} → '
+              '${production.isLambda ? 'ε' : formatSymbols(production.rightSide)}',
               style: textTheme.bodyMedium?.copyWith(
                 fontFamily: 'monospace',
                 color: colorScheme.onSurface.withValues(alpha: 0.9),

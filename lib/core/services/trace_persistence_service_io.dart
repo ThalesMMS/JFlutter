@@ -14,7 +14,6 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/simulation_result.dart';
-import '../models/simulation_step.dart';
 
 TracePersistenceService createTracePersistenceService() =>
     TracePersistenceService();

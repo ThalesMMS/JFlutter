@@ -23,17 +23,18 @@ class FSATransition extends Transition {
   final String? lambdaSymbol;
 
   /// Primary symbol for this transition (first symbol from inputSymbols or lambdaSymbol)
+  @override
   String get symbol {
     if (lambdaSymbol != null) return lambdaSymbol!;
     return inputSymbols.isNotEmpty ? inputSymbols.first : '';
   }
 
   FSATransition({
-    required String id,
-    required State fromState,
-    required State toState,
+    required super.id,
+    required super.fromState,
+    required super.toState,
     String? label,
-    Vector2? controlPoint,
+    super.controlPoint,
     TransitionType? type,
     Set<String>? inputSymbols,
     this.lambdaSymbol,
@@ -44,9 +45,6 @@ class FSATransition extends Transition {
              .toSet(),
        ),
        super(
-         id: id,
-         fromState: fromState,
-         toState: toState,
          label:
              label ??
              (lambdaSymbol != null
@@ -55,7 +53,6 @@ class FSATransition extends Transition {
                        ((inputSymbols != null && inputSymbols.isNotEmpty)
                            ? inputSymbols.join(',')
                            : ''))),
-         controlPoint: controlPoint,
          type:
              type ??
              (() {

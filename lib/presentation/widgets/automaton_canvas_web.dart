@@ -8,4 +8,6 @@
 //
 
 /// Web now shares the GraphView-based automaton canvas implementation.
+library;
+
 export 'automaton_graphview_canvas.dart';

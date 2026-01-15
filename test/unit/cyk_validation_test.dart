@@ -11,7 +11,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/grammar.dart';
 import 'package:jflutter/core/models/production.dart';
 import 'package:jflutter/core/algorithms/grammar_parser.dart';
-import 'package:jflutter/core/result.dart';
 void main() {
   group('CYK Validation Tests', () {
     late Grammar balancedParenthesesGrammar;
@@ -282,7 +281,7 @@ void main() {
 
     group('CYK Algorithm Correctness Tests', () {
       test('CYK should produce same results as other parsers', () async {
-        final testString = '()';
+        const testString = '()';
 
         final cykResult = GrammarParser.parse(
           balancedParenthesesGrammar,
@@ -309,7 +308,7 @@ void main() {
       });
 
       test('CYK should handle complex nested structures', () async {
-        final testString = '((()))';
+        const testString = '((()))';
 
         final result = GrammarParser.parse(
           balancedParenthesesGrammar,
@@ -350,7 +349,7 @@ void main() {
     group('Grammar Conversion Tests', () {
       test('Grammar should convert to CNF correctly', () async {
         // Test that the grammar can be converted to CNF and still work
-        final testString = 'ab';
+        const testString = 'ab';
 
         final result = GrammarParser.parse(
           cnfGrammar,
@@ -370,7 +369,7 @@ void main() {
 
       test('Non-CNF Grammar should be converted automatically', () async {
         // Test that non-CNF grammar gets converted and works
-        final testString = '()';
+        const testString = '()';
 
         final result = GrammarParser.parse(
           balancedParenthesesGrammar,
@@ -391,7 +390,7 @@ void main() {
 
     group('Performance Tests', () {
       test('CYK should handle complex computations efficiently', () async {
-        final testString = '((()))()((()))';
+        const testString = '((()))()((()))';
 
         final result = GrammarParser.parse(
           balancedParenthesesGrammar,
@@ -417,7 +416,7 @@ void main() {
       });
 
       test('CYK should handle multiple parsing strategies', () async {
-        final testString = 'ab';
+        const testString = 'ab';
 
         final cykResult = GrammarParser.parse(
           cnfGrammar,
@@ -530,7 +529,7 @@ void main() {
       });
 
       test('CYK should handle all possible substrings correctly', () async {
-        final testString = 'ab';
+        const testString = 'ab';
 
         // Test all possible substrings
         final substrings = ['', 'a', 'b', 'ab'];
@@ -557,21 +556,21 @@ void main() {
 
 Grammar _createBalancedParenthesesGrammar() {
   final productions = {
-    Production(
+    const Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['S', 'S'],
       isLambda: false,
       order: 1,
     ),
-    Production(
+    const Production(
       id: 'p2',
       leftSide: ['S'],
       rightSide: ['(', 'S', ')'],
       isLambda: false,
       order: 2,
     ),
-    Production(
+    const Production(
       id: 'p3',
       leftSide: ['S'],
       rightSide: [],
@@ -595,35 +594,35 @@ Grammar _createBalancedParenthesesGrammar() {
 
 Grammar _createPalindromeGrammar() {
   final productions = {
-    Production(
+    const Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['a', 'S', 'a'],
       isLambda: false,
       order: 1,
     ),
-    Production(
+    const Production(
       id: 'p2',
       leftSide: ['S'],
       rightSide: ['b', 'S', 'b'],
       isLambda: false,
       order: 2,
     ),
-    Production(
+    const Production(
       id: 'p3',
       leftSide: ['S'],
       rightSide: ['a'],
       isLambda: false,
       order: 3,
     ),
-    Production(
+    const Production(
       id: 'p4',
       leftSide: ['S'],
       rightSide: ['b'],
       isLambda: false,
       order: 4,
     ),
-    Production(
+    const Production(
       id: 'p5',
       leftSide: ['S'],
       rightSide: [],
@@ -647,7 +646,7 @@ Grammar _createPalindromeGrammar() {
 
 Grammar _createSimpleGrammar() {
   final productions = {
-    Production(
+    const Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['a'],
@@ -671,35 +670,35 @@ Grammar _createSimpleGrammar() {
 
 Grammar _createComplexGrammar() {
   final productions = {
-    Production(
+    const Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['A', 'B'],
       isLambda: false,
       order: 1,
     ),
-    Production(
+    const Production(
       id: 'p2',
       leftSide: ['A'],
       rightSide: ['a', 'A'],
       isLambda: false,
       order: 2,
     ),
-    Production(
+    const Production(
       id: 'p3',
       leftSide: ['A'],
       rightSide: [],
       isLambda: true,
       order: 3,
     ),
-    Production(
+    const Production(
       id: 'p4',
       leftSide: ['B'],
       rightSide: ['b', 'B'],
       isLambda: false,
       order: 4,
     ),
-    Production(
+    const Production(
       id: 'p5',
       leftSide: ['B'],
       rightSide: [],
@@ -723,21 +722,21 @@ Grammar _createComplexGrammar() {
 
 Grammar _createCNFGrammar() {
   final productions = {
-    Production(
+    const Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['A', 'B'],
       isLambda: false,
       order: 1,
     ),
-    Production(
+    const Production(
       id: 'p2',
       leftSide: ['A'],
       rightSide: ['a'],
       isLambda: false,
       order: 2,
     ),
-    Production(
+    const Production(
       id: 'p3',
       leftSide: ['B'],
       rightSide: ['b'],
@@ -775,7 +774,7 @@ Grammar _createEmptyGrammar() {
 
 Grammar _createSingleProductionGrammar() {
   final productions = {
-    Production(
+    const Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['a'],
@@ -799,7 +798,7 @@ Grammar _createSingleProductionGrammar() {
 
 Grammar _createLambdaGrammar() {
   final productions = {
-    Production(
+    const Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: [],

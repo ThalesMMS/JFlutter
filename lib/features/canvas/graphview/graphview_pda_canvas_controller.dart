@@ -14,7 +14,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:graphview/GraphView.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 import '../../../core/models/pda.dart';
@@ -35,19 +34,13 @@ class GraphViewPdaCanvasController
     extends BaseGraphViewCanvasController<PDAEditorNotifier, PDA> {
   GraphViewPdaCanvasController({
     required PDAEditorNotifier editorNotifier,
-    Graph? graph,
-    GraphViewController? viewController,
-    TransformationController? transformationController,
-    int historyLimit = BaseGraphViewCanvasController.kDefaultHistoryLimit,
-    int cacheEvictionThreshold =
-        BaseGraphViewCanvasController.kDefaultCacheEvictionThreshold,
+    super.graph,
+    super.viewController,
+    super.transformationController,
+    super.historyLimit,
+    super.cacheEvictionThreshold,
   }) : super(
           notifier: editorNotifier,
-          graph: graph,
-          viewController: viewController,
-          transformationController: transformationController,
-          historyLimit: historyLimit,
-          cacheEvictionThreshold: cacheEvictionThreshold,
         );
 
   PDAEditorNotifier get _notifier => notifier;
@@ -137,6 +130,7 @@ class GraphViewPdaCanvasController
   }
 
   /// Adds a new state at the provided [worldPosition].
+  @override
   void addStateAt(Offset worldPosition) {
     final nodeId = _generateNodeId();
     final label = _nextAvailableStateLabel();
@@ -154,6 +148,7 @@ class GraphViewPdaCanvasController
   }
 
   /// Moves an existing state to a new [position].
+  @override
   void moveState(String id, Offset position) {
     _logPdaCanvas(
       'moveState -> id=$id position=(${position.dx.toStringAsFixed(2)}, ${position.dy.toStringAsFixed(2)})',
@@ -168,6 +163,7 @@ class GraphViewPdaCanvasController
   }
 
   /// Updates the label displayed for the state identified by [id].
+  @override
   void updateStateLabel(String id, String label) {
     final resolvedLabel = label.isEmpty ? id : label;
     _logPdaCanvas('updateStateLabel -> id=$id label=$resolvedLabel');
@@ -180,6 +176,7 @@ class GraphViewPdaCanvasController
   }
 
   /// Updates the flag metadata for the state identified by [id].
+  @override
   void updateStateFlags(String id, {bool? isInitial, bool? isAccepting}) {
     _logPdaCanvas(
       'updateStateFlags -> id=$id isInitial=$isInitial isAccepting=$isAccepting',
@@ -194,6 +191,7 @@ class GraphViewPdaCanvasController
   }
 
   /// Removes the state identified by [id] from the automaton.
+  @override
   void removeState(String id) {
     _logPdaCanvas('removeState -> id=$id');
     performMutation(() {

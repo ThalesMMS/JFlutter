@@ -12,7 +12,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/simulation_result.dart';
-import '../models/simulation_step.dart';
 
 TracePersistenceService createTracePersistenceService() =>
     TracePersistenceService();
@@ -90,11 +89,11 @@ class TracePersistenceService {
     SimulationResult trace, {
     String? fileName,
   }) async {
-    throw TracePersistenceException('Trace export is not supported on web.');
+    throw const TracePersistenceException('Trace export is not supported on web.');
   }
 
   Future<SimulationResult> importTraceFromFile(String filePath) async {
-    throw TracePersistenceException('Trace import is not supported on web.');
+    throw const TracePersistenceException('Trace import is not supported on web.');
   }
 
   Future<void> deleteTrace(String traceId) async {

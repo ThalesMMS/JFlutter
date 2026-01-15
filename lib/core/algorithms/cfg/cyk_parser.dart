@@ -152,7 +152,7 @@ _CNFGrammar _toCNF(Grammar g) {
   // Map each terminal to a dedicated nonterminal if needed in binary rules
   final Map<String, String> termNt = {};
 
-  String _fresh(String base) {
+  String fresh0(String base) {
     var idx = 0;
     String cand;
     do {
@@ -162,7 +162,7 @@ _CNFGrammar _toCNF(Grammar g) {
     return cand;
   }
 
-  String _ensureTerminalNt(String t) {
+  String ensureTerminalNt(String t) {
     return termNt.putIfAbsent(t, () {
       final nt = 'T_${t.hashCode.abs()}';
       if (!nonterminals.contains(nt)) nonterminals.add(nt);
@@ -194,7 +194,7 @@ _CNFGrammar _toCNF(Grammar g) {
     final rhs = <String>[];
     for (final s in p.rightSide) {
       if (terminals.contains(s) && p.rightSide.length > 1) {
-        rhs.add(_ensureTerminalNt(s));
+        rhs.add(ensureTerminalNt(s));
       } else {
         rhs.add(s);
       }
@@ -215,7 +215,7 @@ _CNFGrammar _toCNF(Grammar g) {
       // Chain of new nonterminals: A -> X1 X2 X3 ... -> ... in binary form
       var left = p.leftSide.first;
       for (int i = 0; i < rhs.length - 2; i++) {
-        final fresh = _fresh('X');
+        final fresh = fresh0('X');
         work.add(
           Production(
             id: 'cnf_bin_${newProds.length}',

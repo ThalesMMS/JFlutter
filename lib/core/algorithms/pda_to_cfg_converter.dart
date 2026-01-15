@@ -74,7 +74,7 @@ class PDAtoCFGConverter {
     final stateLabels = pda.states.map((state) => state.label).toList();
 
     String variable(String from, String stackSymbol, String to) =>
-        '[${from}, ${stackSymbol}, ${to}]';
+        '[$from, $stackSymbol, $to]';
 
     // Start productions
     for (final accept in pda.acceptingStates) {
@@ -83,7 +83,7 @@ class PDAtoCFGConverter {
       nonTerminals.add(targetVariable);
       productions.add(
         Production.unit(
-          id: 'p${productionCounter}',
+          id: 'p$productionCounter',
           leftSide: 'S',
           rightSide: targetVariable,
           order: productionCounter,
@@ -124,12 +124,12 @@ class PDAtoCFGConverter {
 
         final production = input == null
             ? Production.lambda(
-                id: 'p${productionCounter}',
+                id: 'p$productionCounter',
                 leftSide: leftVariable,
                 order: productionCounter,
               )
             : Production(
-                id: 'p${productionCounter}',
+                id: 'p$productionCounter',
                 leftSide: [leftVariable],
                 rightSide: [input],
                 isLambda: false,
@@ -164,7 +164,7 @@ class PDAtoCFGConverter {
 
             productions.add(
               Production(
-                id: 'p${productionCounter}',
+                id: 'p$productionCounter',
                 leftSide: [leftVariable],
                 rightSide: rightSide,
                 isLambda: false,

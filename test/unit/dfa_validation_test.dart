@@ -13,7 +13,6 @@ import 'package:jflutter/core/models/state.dart';
 import 'package:jflutter/core/models/fsa_transition.dart';
 import 'package:jflutter/core/algorithms/automaton_simulator.dart';
 import 'package:jflutter/core/algorithms/dfa_minimizer.dart';
-import 'package:jflutter/core/result.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'dart:math' as math;
 void main() {
@@ -326,7 +325,7 @@ void main() {
     group('Empty String Tests', () {
       test('Empty string acceptance behavior', () async {
         // Test empty string with different DFAs
-        final emptyString = '';
+        const emptyString = '';
 
         // Binary divisible by 3 should accept empty string (0 is divisible by 3)
         final result1 = await AutomatonSimulator.simulate(
@@ -561,7 +560,7 @@ FSA _createBinaryDivisibleBy3DFA() {
     acceptingStates: states.where((s) => s.isAccepting).toSet(),
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 500, 400),
+    bounds: const math.Rectangle(0, 0, 500, 400),
   );
 }
 
@@ -624,7 +623,7 @@ FSA _createEndsWithADFA() {
     acceptingStates: states.where((s) => s.isAccepting).toSet(),
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 400, 300),
+    bounds: const math.Rectangle(0, 0, 400, 300),
   );
 }
 
@@ -687,7 +686,7 @@ FSA _createParityABDFA() {
     acceptingStates: states.where((s) => s.isAccepting).toSet(),
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 400, 300),
+    bounds: const math.Rectangle(0, 0, 400, 300),
   );
 }
 
@@ -771,7 +770,7 @@ FSA _createNoConsecutive11DFA() {
     acceptingStates: states.where((s) => s.isAccepting).toSet(),
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 600, 300),
+    bounds: const math.Rectangle(0, 0, 600, 300),
   );
 }
 
@@ -897,6 +896,6 @@ FSA _createAtLeastFourOnesDFA() {
     acceptingStates: states.where((s) => s.isAccepting).toSet(),
     created: DateTime.now(),
     modified: DateTime.now(),
-    bounds: math.Rectangle(0, 0, 600, 300),
+    bounds: const math.Rectangle(0, 0, 600, 300),
   );
 }

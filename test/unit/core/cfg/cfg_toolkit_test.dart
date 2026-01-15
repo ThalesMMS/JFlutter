@@ -14,7 +14,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/algorithms/cfg/cfg_toolkit.dart';
 import 'package:jflutter/core/models/grammar.dart';
 import 'package:jflutter/core/models/production.dart';
-import 'package:jflutter/core/result.dart';
 void main() {
   group('CFG toolkit (CNF and cleanups)', () {
     late Grammar simpleGrammar;
@@ -333,14 +332,14 @@ void main() {
 
 Grammar _createSimpleGrammar() {
   final productions = {
-    Production(
+    const Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['a', 'A'],
       isLambda: false,
       order: 1,
     ),
-    Production(
+    const Production(
       id: 'p2',
       leftSide: ['A'],
       rightSide: ['b'],
@@ -364,28 +363,28 @@ Grammar _createSimpleGrammar() {
 
 Grammar _createComplexGrammar() {
   final productions = {
-    Production(
+    const Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['A', 'B', 'C'],
       isLambda: false,
       order: 1,
     ),
-    Production(
+    const Production(
       id: 'p2',
       leftSide: ['A'],
       rightSide: ['a'],
       isLambda: false,
       order: 2,
     ),
-    Production(
+    const Production(
       id: 'p3',
       leftSide: ['B'],
       rightSide: ['b'],
       isLambda: false,
       order: 3,
     ),
-    Production(
+    const Production(
       id: 'p4',
       leftSide: ['C'],
       rightSide: ['c'],
@@ -409,21 +408,21 @@ Grammar _createComplexGrammar() {
 
 Grammar _createUnitGrammar() {
   final productions = {
-    Production(
+    const Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['A'],
       isLambda: false,
       order: 1,
     ),
-    Production(
+    const Production(
       id: 'p2',
       leftSide: ['A'],
       rightSide: ['B'],
       isLambda: false,
       order: 2,
     ),
-    Production(
+    const Production(
       id: 'p3',
       leftSide: ['B'],
       rightSide: ['a'],
@@ -447,21 +446,21 @@ Grammar _createUnitGrammar() {
 
 Grammar _createLambdaGrammar() {
   final productions = {
-    Production(
+    const Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['A', 'B'],
       isLambda: false,
       order: 1,
     ),
-    Production(
+    const Production(
       id: 'p2',
       leftSide: ['A'],
       rightSide: ['a'],
       isLambda: false,
       order: 2,
     ),
-    Production(
+    const Production(
       id: 'p3',
       leftSide: ['B'],
       rightSide: [],
@@ -485,14 +484,14 @@ Grammar _createLambdaGrammar() {
 
 Grammar _createUselessGrammar() {
   final productions = {
-    Production(
+    const Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['a'],
       isLambda: false,
       order: 1,
     ),
-    Production(
+    const Production(
       id: 'p2',
       leftSide: ['U'],
       rightSide: ['U', 'b'],
@@ -516,21 +515,21 @@ Grammar _createUselessGrammar() {
 
 Grammar _createCNFGrammar() {
   final productions = {
-    Production(
+    const Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['A', 'B'],
       isLambda: false,
       order: 1,
     ),
-    Production(
+    const Production(
       id: 'p2',
       leftSide: ['A'],
       rightSide: ['a'],
       isLambda: false,
       order: 2,
     ),
-    Production(
+    const Production(
       id: 'p3',
       leftSide: ['B'],
       rightSide: ['b'],
@@ -554,7 +553,7 @@ Grammar _createCNFGrammar() {
 
 Grammar _createMinimalGrammar() {
   final productions = {
-    Production(
+    const Production(
       id: 'p1',
       leftSide: ['S'],
       rightSide: ['a'],

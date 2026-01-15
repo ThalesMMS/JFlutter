@@ -12,14 +12,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'dart:convert';
 import 'package:jflutter/core/entities/automaton_entity.dart';
-import 'package:jflutter/core/entities/grammar_entity.dart';
 import 'package:jflutter/core/entities/turing_machine_entity.dart';
 import 'package:jflutter/data/services/serialization_service.dart';
 import 'package:jflutter/presentation/widgets/export/svg_exporter.dart';
 import 'package:jflutter/core/parsers/jflap_xml_parser.dart';
 import 'package:jflutter/data/data_sources/local_storage_data_source.dart';
-import 'package:jflutter/data/models/automaton_model.dart';
-import 'package:flutter/material.dart';
 /// 3. SVG export/import testing
 /// 4. Cross-format conversion testing
 /// 5. Data integrity validation
@@ -1137,7 +1134,7 @@ TuringMachineEntity _createTestTuringMachine() {
     ],
     initialStateId: 'q0',
     acceptingStateIds: {'q1'},
-    rejectingStateIds: const <String>{},
+    rejectingStateIds: <String>{},
     nextStateIndex: 2,
   );
 }

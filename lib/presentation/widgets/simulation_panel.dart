@@ -45,11 +45,6 @@ class _SimulationPanelState extends BaseSimulationPanelState<SimulationPanel> {
   bool _isPlaying = false;
 
   @override
-  void dispose() {
-    super.dispose();
-  }
-
-  @override
   void didUpdateWidget(covariant SimulationPanel oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.simulationResult != oldWidget.simulationResult) {

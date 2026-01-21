@@ -34,8 +34,8 @@ class PDASimulationPanel extends ConsumerStatefulWidget {
   ConsumerState<PDASimulationPanel> createState() => _PDASimulationPanelState();
 }
 
-class _PDASimulationPanelState extends BaseSimulationPanelState<PDASimulationPanel>
-    with ConsumerStateMixin<PDASimulationPanel> {
+class _PDASimulationPanelState
+    extends BaseConsumerSimulationPanelState<PDASimulationPanel> {
   final TextEditingController _initialStackController = TextEditingController(
     text: 'Z',
   );
@@ -327,7 +327,7 @@ class _PDASimulationPanelState extends BaseSimulationPanelState<PDASimulationPan
 
     highlightService.clear();
 
-    final stackAlphabet = {...currentPda.stackAlphabet};
+    final stackAlphabet = <String>{...currentPda.stackAlphabet};
     stackAlphabet.add(initialStack);
 
     final simulationPda = currentPda.copyWith(

@@ -34,8 +34,7 @@ class GrammarSimulationPanel extends ConsumerStatefulWidget {
 }
 
 class _GrammarSimulationPanelState
-    extends BaseSimulationPanelState<GrammarSimulationPanel>
-    with ConsumerStateMixin<GrammarSimulationPanel> {
+    extends BaseConsumerSimulationPanelState<GrammarSimulationPanel> {
   String? _parseResult;
   List<String> _parseSteps = [];
   Duration? _executionTime;

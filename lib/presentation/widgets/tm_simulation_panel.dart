@@ -34,8 +34,8 @@ class TMSimulationPanel extends ConsumerStatefulWidget {
   ConsumerState<TMSimulationPanel> createState() => _TMSimulationPanelState();
 }
 
-class _TMSimulationPanelState extends BaseSimulationPanelState<TMSimulationPanel>
-    with ConsumerStateMixin<TMSimulationPanel> {
+class _TMSimulationPanelState
+    extends BaseConsumerSimulationPanelState<TMSimulationPanel> {
   bool _hasSimulationResult = false;
   bool? _isAccepted;
   String? _statusMessage;

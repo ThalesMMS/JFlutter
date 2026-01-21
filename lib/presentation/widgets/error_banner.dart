@@ -65,17 +65,16 @@ const Map<ErrorSeverity, _SeverityVisuals> _severityVisuals = {
 
 /// Inline banner that communicates recoverable issues without hiding content.
 class ErrorBanner extends StatelessWidget {
-  ErrorBanner({
+  const ErrorBanner({
     super.key,
     required this.message,
-    required ErrorSeverity severity,
+    required this.severity,
     bool? showRetryButton,
     this.showDismissButton = true,
     this.onRetry,
     this.onDismiss,
     this.icon,
-  })  : severity = severity,
-        showRetryButton = showRetryButton ?? (severity != ErrorSeverity.info);
+  })  : _showRetryButton = showRetryButton;
 
   /// Text communicated to the user about the failure.
   final String message;
@@ -83,8 +82,11 @@ class ErrorBanner extends StatelessWidget {
   /// Determines the colour palette and icon.
   final ErrorSeverity severity;
 
+  /// Whether to render the retry action (defaults to true unless severity is info).
+  final bool? _showRetryButton;
+
   /// Whether to render the retry action.
-  final bool showRetryButton;
+  bool get showRetryButton => _showRetryButton ?? (severity != ErrorSeverity.info);
 
   /// Whether to render the dismiss action.
   final bool showDismissButton;

@@ -16,6 +16,7 @@ import '../../core/algorithms/equivalence_checker.dart';
 import '../../core/algorithms/fa_to_regex_converter.dart';
 import '../../core/algorithms/fsa_to_grammar_converter.dart';
 import '../../core/algorithms/nfa_to_dfa_converter.dart';
+import '../../core/algorithms/regex_simplifier.dart';
 import '../../core/algorithms/regex_to_nfa_converter.dart';
 import '../../core/models/fsa.dart';
 import '../../core/models/grammar.dart';
@@ -24,6 +25,8 @@ import 'automaton_state_provider.dart';
 /// State for algorithm operations
 class AlgorithmOperationState {
   final String? regexResult;
+  final String? rawRegexResult;
+  final String? simplifiedRegexResult;
   final Grammar? grammarResult;
   final bool? equivalenceResult;
   final String? equivalenceDetails;
@@ -32,6 +35,8 @@ class AlgorithmOperationState {
 
   const AlgorithmOperationState({
     this.regexResult,
+    this.rawRegexResult,
+    this.simplifiedRegexResult,
     this.grammarResult,
     this.equivalenceResult,
     this.equivalenceDetails,
@@ -43,6 +48,8 @@ class AlgorithmOperationState {
 
   AlgorithmOperationState copyWith({
     Object? regexResult = _unset,
+    Object? rawRegexResult = _unset,
+    Object? simplifiedRegexResult = _unset,
     Object? grammarResult = _unset,
     Object? equivalenceResult = _unset,
     Object? equivalenceDetails = _unset,
@@ -53,6 +60,12 @@ class AlgorithmOperationState {
       regexResult: regexResult == _unset
           ? this.regexResult
           : regexResult as String?,
+      rawRegexResult: rawRegexResult == _unset
+          ? this.rawRegexResult
+          : rawRegexResult as String?,
+      simplifiedRegexResult: simplifiedRegexResult == _unset
+          ? this.simplifiedRegexResult
+          : simplifiedRegexResult as String?,
       grammarResult: grammarResult == _unset
           ? this.grammarResult
           : grammarResult as Grammar?,
@@ -242,17 +255,30 @@ class AutomatonAlgorithmNotifier
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      // Use the core algorithm directly
-      final result = FAToRegexConverter.convert(currentAutomaton);
+      // Generate raw regex (without simplification)
+      final rawResult = FAToRegexConverter.convert(currentAutomaton);
 
-      if (result.isSuccess) {
-        // Store the regex result in state
-        state = state.copyWith(regexResult: result.data, isLoading: false);
-        return result.data;
-      } else {
-        state = state.copyWith(isLoading: false, error: result.error);
+      if (!rawResult.isSuccess || rawResult.data == null) {
+        state = state.copyWith(isLoading: false, error: rawResult.error);
         return null;
       }
+
+      final rawRegex = rawResult.data!;
+
+      // Generate simplified regex
+      final simplifyResult = RegexSimplifier.simplify(rawRegex);
+      final simplifiedRegex = simplifyResult.isSuccess && simplifyResult.data != null
+          ? simplifyResult.data!
+          : rawRegex; // Fall back to raw if simplification fails
+
+      // Store both versions in state
+      state = state.copyWith(
+        regexResult: simplifiedRegex, // Default to simplified for backward compatibility
+        rawRegexResult: rawRegex,
+        simplifiedRegexResult: simplifiedRegex,
+        isLoading: false,
+      );
+      return simplifiedRegex;
     } catch (e) {
       state = state.copyWith(
         isLoading: false,

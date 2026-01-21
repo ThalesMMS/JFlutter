@@ -147,8 +147,8 @@ class _PDAStackPanelState extends State<PDAStackPanel>
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Container(
-        width: 160,
-        constraints: const BoxConstraints(maxHeight: 220),
+        width: 145, // Compact width for mobile
+        constraints: const BoxConstraints(maxHeight: 200), // Reduced height
         padding: const EdgeInsets.all(8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -157,31 +157,34 @@ class _PDAStackPanelState extends State<PDAStackPanel>
             Row(
               children: [
                 Icon(Icons.layers, size: 16, color: theme.colorScheme.primary),
-                const SizedBox(width: 8),
-                Text(
-                  'Stack (${widget.stackState.size})',
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+                const SizedBox(width: 6), // Reduced spacing
+                Expanded(
+                  child: Text(
+                    'Stack (${widget.stackState.size})',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13, // Compact font size
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                if (widget.isSimulating) ...[
-                  const Spacer(),
+                if (widget.isSimulating)
                   Container(
                     width: 6,
                     height: 6,
+                    margin: const EdgeInsets.only(left: 4),
                     decoration: const BoxDecoration(
                       color: Colors.green,
                       shape: BoxShape.circle,
                     ),
                   ),
-                ],
               ],
             ),
-            const Divider(height: 12),
+            const Divider(height: 10), // Reduced divider height
 
             // Stack Info Panel
             _buildStackInfo(theme),
-            const Divider(height: 12),
+            const Divider(height: 10), // Reduced divider height
 
             // Content
             Flexible(
@@ -191,6 +194,7 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                         'Empty\n(Z₀: ${widget.initialStackSymbol})',
                         textAlign: TextAlign.center,
                         style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: 11, // Compact font size
                           color: theme.colorScheme.outline,
                         ),
                       ),
@@ -211,19 +215,19 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                           behavior: HitTestBehavior.opaque,
                           onTap: () => _handleItemTap(index),
                           child: Container(
-                            // Ensure minimum 44x44 touch target
+                            // Ensure minimum 40x40 touch target (compact)
                             constraints: const BoxConstraints(
-                              minHeight: 44,
-                              minWidth: 44,
+                              minHeight: 40,
+                              minWidth: 40,
                             ),
-                            margin: const EdgeInsets.only(bottom: 4),
+                            margin: const EdgeInsets.only(bottom: 3), // Reduced
                             child: Stack(
                               clipBehavior: Clip.none,
                               children: [
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 12,
+                                    horizontal: 8, // Reduced
+                                    vertical: 8, // Reduced
                                   ),
                                   decoration: BoxDecoration(
                                     color: isHighlighted
@@ -240,23 +244,27 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Row(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
                                       if (isTop) ...[
                                         Icon(
                                           Icons.arrow_right,
-                                          size: 12,
+                                          size: 11, // Slightly smaller
                                           color: theme.colorScheme.primary,
                                         ),
-                                        const SizedBox(width: 4),
+                                        const SizedBox(width: 3),
                                       ],
-                                      Text(
-                                        symbol,
-                                        style: TextStyle(
-                                          fontFamily: 'monospace',
-                                          fontWeight: isTop || isHighlighted
-                                              ? FontWeight.bold
-                                              : FontWeight.normal,
-                                          fontSize: 12,
+                                      Flexible(
+                                        child: Text(
+                                          symbol,
+                                          style: TextStyle(
+                                            fontFamily: 'monospace',
+                                            fontWeight: isTop || isHighlighted
+                                                ? FontWeight.bold
+                                                : FontWeight.normal,
+                                            fontSize: 11, // Compact font size
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
                                     ],
@@ -264,22 +272,22 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                                 ),
                                 if (isTop)
                                   Positioned(
-                                    top: -6,
-                                    right: -6,
+                                    top: -5,
+                                    right: -5,
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(
-                                        horizontal: 4,
-                                        vertical: 2,
+                                        horizontal: 3,
+                                        vertical: 1,
                                       ),
                                       decoration: BoxDecoration(
                                         color: theme.colorScheme.primary,
-                                        borderRadius: BorderRadius.circular(8),
+                                        borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: Text(
                                         'TOP',
                                         style: TextStyle(
                                           color: theme.colorScheme.onPrimary,
-                                          fontSize: 8,
+                                          fontSize: 7, // Compact badge
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
@@ -307,16 +315,20 @@ class _PDAStackPanelState extends State<PDAStackPanel>
             ),
 
             if (widget.onClear != null) ...[
-              const Divider(height: 12),
+              const Divider(height: 10), // Reduced
               SizedBox(
-                height: 28,
-                child: TextButton.icon(
+                width: 60, // Fixed width like tape_drawer
+                height: 24, // Match tape_drawer pattern
+                child: TextButton(
                   onPressed: widget.onClear,
-                  icon: const Icon(Icons.clear_all, size: 14),
-                  label: const Text('Clear', style: TextStyle(fontSize: 12)),
                   style: TextButton.styleFrom(
                     padding: EdgeInsets.zero,
                     foregroundColor: theme.colorScheme.error,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  child: const Text(
+                    'Clear',
+                    style: TextStyle(fontSize: 12),
                   ),
                 ),
               ),
@@ -333,7 +345,7 @@ class _PDAStackPanelState extends State<PDAStackPanel>
     final size = widget.stackState.size;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4), // More compact
       color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -343,33 +355,36 @@ class _PDAStackPanelState extends State<PDAStackPanel>
               Text(
                 'Top: ',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  fontSize: 11,
+                  fontSize: 10, // Smaller for mobile
                 ),
               ),
-              Text(
-                topSymbol,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.primary,
-                  fontFamily: 'monospace',
+              Flexible(
+                child: Text(
+                  topSymbol,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: 11, // Slightly reduced
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                    fontFamily: 'monospace',
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 1), // Reduced spacing
           Text(
             'Size: $size',
             style: theme.textTheme.bodySmall?.copyWith(
-              fontSize: 11,
+              fontSize: 10, // Smaller for mobile
             ),
           ),
           if (widget.stackState.lastOperation != null) ...[
-            const SizedBox(height: 2),
+            const SizedBox(height: 1), // Reduced spacing
             Text(
-              'Last op: ${widget.stackState.lastOperation}',
+              'Op: ${widget.stackState.lastOperation}', // Shortened label
               style: theme.textTheme.bodySmall?.copyWith(
-                fontSize: 10,
+                fontSize: 9, // Smaller for mobile
                 color: theme.colorScheme.outline,
                 fontStyle: FontStyle.italic,
               ),

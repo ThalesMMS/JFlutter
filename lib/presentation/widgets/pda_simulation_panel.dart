@@ -19,13 +19,22 @@ import '../../core/result.dart';
 import '../../core/services/simulation_highlight_service.dart';
 import '../providers/pda_editor_provider.dart';
 import 'trace_viewers/pda_trace_viewer.dart';
+import 'pda/stack_drawer.dart';
 
 /// Panel for PDA simulation and string testing
 class PDASimulationPanel extends ConsumerStatefulWidget {
   final SimulationHighlightService highlightService;
+  final ValueChanged<StackState>? onStackChanged;
+  final VoidCallback? onSimulationStart;
+  final VoidCallback? onSimulationEnd;
 
-  PDASimulationPanel({super.key, SimulationHighlightService? highlightService})
-    : highlightService = highlightService ?? SimulationHighlightService();
+  PDASimulationPanel({
+    super.key,
+    SimulationHighlightService? highlightService,
+    this.onStackChanged,
+    this.onSimulationStart,
+    this.onSimulationEnd,
+  }) : highlightService = highlightService ?? SimulationHighlightService();
 
   @override
   ConsumerState<PDASimulationPanel> createState() => _PDASimulationPanelState();
@@ -334,6 +343,15 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
     });
 
     widget.highlightService.clear();
+    widget.onSimulationStart?.call();
+
+    // Initialize stack with initial symbol
+    _updateStackState(
+      StackState(
+        symbols: [initialStack],
+        lastOperation: 'initialize',
+      ),
+    );
 
     final stackAlphabet = {...currentPda.stackAlphabet};
     stackAlphabet.add(initialStack);
@@ -365,6 +383,8 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
       });
       if (simulation != null && simulation.steps.isNotEmpty) {
         widget.highlightService.emitFromSteps(simulation.steps, 0);
+        // Update stack to final state
+        _updateStackFromStep(simulation.steps.last);
       } else {
         widget.highlightService.clear();
       }
@@ -376,6 +396,24 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
       });
       widget.highlightService.clear();
     }
+
+    widget.onSimulationEnd?.call();
+  }
+
+  void _updateStackState(StackState stackState) {
+    widget.onStackChanged?.call(stackState);
+  }
+
+  void _updateStackFromStep(SimulationStep step) {
+    final stackContents = step.stackContents;
+    final symbols = stackContents.isEmpty
+        ? <String>[]
+        : stackContents.split('').toList();
+
+    final operation = step.usedTransition ?? 'step ${step.stepNumber}';
+    _updateStackState(
+      StackState(symbols: symbols, lastOperation: operation),
+    );
   }
 
   void _showError(String message) {

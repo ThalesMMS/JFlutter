@@ -43,6 +43,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
   bool _hasUnsavedChanges = false;
   ProviderSubscription<PDAEditorState>? _pdaEditorSub;
   StackState _currentStack = const StackState.empty();
+  bool _isSimulating = false;
   late final GraphViewPdaCanvasController _canvasController;
   late final GraphViewSimulationHighlightChannel _highlightChannel;
   late final SimulationHighlightService _highlightService;
@@ -111,6 +112,27 @@ class _PDAPageState extends ConsumerState<PDAPage> {
     });
   }
 
+  void _handleStackChanged(StackState stackState) {
+    if (!mounted) return;
+    setState(() {
+      _currentStack = stackState;
+    });
+  }
+
+  void _handleSimulationStart() {
+    if (!mounted) return;
+    setState(() {
+      _isSimulating = true;
+    });
+  }
+
+  void _handleSimulationEnd() {
+    if (!mounted) return;
+    setState(() {
+      _isSimulating = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
@@ -152,6 +174,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
                 stackState: _currentStack,
                 initialStackSymbol: pda.initialStackSymbol,
                 stackAlphabet: pda.stackAlphabet,
+                isSimulating: _isSimulating,
                 onClear: () {
                   setState(() {
                     _currentStack = const StackState.empty();
@@ -268,7 +291,12 @@ class _PDAPageState extends ConsumerState<PDAPage> {
           flex: 1,
           child: Container(
             margin: const EdgeInsets.all(8),
-            child: PDASimulationPanel(highlightService: _highlightService),
+            child: PDASimulationPanel(
+              highlightService: _highlightService,
+              onStackChanged: _handleStackChanged,
+              onSimulationStart: _handleSimulationStart,
+              onSimulationEnd: _handleSimulationEnd,
+            ),
           ),
         ),
         const SizedBox(width: 16),
@@ -358,7 +386,12 @@ class _PDAPageState extends ConsumerState<PDAPage> {
             context: context,
             title: 'PDA Simulation',
             icon: Icons.play_arrow,
-            child: PDASimulationPanel(highlightService: _highlightService),
+            child: PDASimulationPanel(
+              highlightService: _highlightService,
+              onStackChanged: _handleStackChanged,
+              onSimulationStart: _handleSimulationStart,
+              onSimulationEnd: _handleSimulationEnd,
+            ),
           )
         : null;
     final onAlgorithms = hasPda
@@ -461,6 +494,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
                 ref.read(pdaEditorProvider).pda?.initialStackSymbol ?? 'Z',
             stackAlphabet:
                 ref.read(pdaEditorProvider).pda?.stackAlphabet ?? const {},
+            isSimulating: _isSimulating,
             onClear: () {
               setState(() {
                 _currentStack = const StackState.empty();
@@ -517,7 +551,12 @@ class _PDAPageState extends ConsumerState<PDAPage> {
     return TabletLayoutContainer(
       canvas: _buildCanvasWithToolbar(isMobile: false),
       algorithmPanel: const PDAAlgorithmPanel(useExpanded: false),
-      simulationPanel: PDASimulationPanel(highlightService: _highlightService),
+      simulationPanel: PDASimulationPanel(
+        highlightService: _highlightService,
+        onStackChanged: _handleStackChanged,
+        onSimulationStart: _handleSimulationStart,
+        onSimulationEnd: _handleSimulationEnd,
+      ),
     );
   }
 }

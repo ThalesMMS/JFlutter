@@ -128,12 +128,23 @@ class _TMTapePanelState extends State<TMTapePanel>
   }
 
   void _scrollToHead() {
-    // Auto-scroll para manter cabeça visível
+    // Auto-scroll para manter cabeça centralizada na viewport
     if (_horizontalScrollController.hasClients) {
       const cellWidth = 50.0; // Adjusted for compact view
-      final targetOffset = widget.tapeState.headPosition * cellWidth;
+      final scrollPosition = _horizontalScrollController.position;
+      final viewportWidth = scrollPosition.viewportDimension;
+
+      // Calcula offset para centralizar a cabeça
+      final headCenterOffset = widget.tapeState.headPosition * cellWidth;
+      final targetOffset = headCenterOffset - (viewportWidth / 2) + (cellWidth / 2);
+
+      // Clamp para não ultrapassar os limites do conteúdo
+      final minOffset = scrollPosition.minScrollExtent;
+      final maxOffset = scrollPosition.maxScrollExtent;
+      final clampedOffset = targetOffset.clamp(minOffset, maxOffset);
+
       _horizontalScrollController.animateTo(
-        targetOffset,
+        clampedOffset,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );

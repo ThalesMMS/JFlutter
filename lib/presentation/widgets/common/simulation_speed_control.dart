@@ -40,11 +40,11 @@ class SimulationSpeedControl extends StatelessWidget {
     super.key,
     required this.currentSpeed,
     required this.onSpeedChanged,
-  })  : assert(currentSpeed > 0, 'currentSpeed must be positive'),
-        assert(
-          currentSpeed >= 0.25 && currentSpeed <= 4.0,
-          'currentSpeed should be between 0.25 and 4.0',
-        );
+  }) : assert(currentSpeed > 0, 'currentSpeed must be positive'),
+       assert(
+         currentSpeed >= 0.25 && currentSpeed <= 4.0,
+         'currentSpeed should be between 0.25 and 4.0',
+       );
 
   /// Current animation speed multiplier.
   ///
@@ -91,11 +91,7 @@ class SimulationSpeedControl extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.speed,
-            size: 16,
-            color: colorScheme.onSurfaceVariant,
-          ),
+          Icon(Icons.speed, size: 16, color: colorScheme.onSurfaceVariant),
           const SizedBox(width: 8),
           Text(
             'Speed:',
@@ -104,11 +100,9 @@ class SimulationSpeedControl extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          ..._speedOptions.map((speed) => _buildSpeedChip(
-            context,
-            speed,
-            colorScheme,
-          )),
+          ..._speedOptions.map(
+            (speed) => _buildSpeedChip(context, speed, colorScheme),
+          ),
         ],
       ),
     );

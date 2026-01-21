@@ -226,7 +226,8 @@ class RegexSimplifier {
         final content = regex.substring(i + 1, closeIndex);
 
         // Check if followed by an operator
-        final hasOperatorAfter = closeIndex + 1 < regex.length &&
+        final hasOperatorAfter =
+            closeIndex + 1 < regex.length &&
             (regex[closeIndex + 1] == '*' ||
                 regex[closeIndex + 1] == '+' ||
                 regex[closeIndex + 1] == '?');
@@ -311,8 +312,12 @@ class RegexSimplifier {
     if (s == 'ε' || s == 'λ') return true;
 
     // If it contains operators or parentheses, it's not a single symbol
-    if (s.contains('|') || s.contains('*') || s.contains('+') ||
-        s.contains('?') || s.contains('(') || s.contains(')')) {
+    if (s.contains('|') ||
+        s.contains('*') ||
+        s.contains('+') ||
+        s.contains('?') ||
+        s.contains('(') ||
+        s.contains(')')) {
       return false;
     }
 
@@ -396,7 +401,9 @@ class RegexSimplifier {
         // This case is handled by looking ahead
         buffer.write(regex[i]);
         i++;
-      } else if (i < regex.length - 1 && regex[i] == '|' && regex[i + 1] == '∅') {
+      } else if (i < regex.length - 1 &&
+          regex[i] == '|' &&
+          regex[i + 1] == '∅') {
         // r|∅ → r (skip the union operator and empty set)
         i += 2; // Skip |∅
       } else {
@@ -557,7 +564,7 @@ class RegexSimplifier {
           // Skip ε if it's in concatenation (not after | or ( or start, and not before | or ) or end or *)
           final inConcatenation =
               (before != '' && before != '|' && before != '(') ||
-                  (after != '' && after != '|' && after != ')' && after != '*');
+              (after != '' && after != '|' && after != ')' && after != '*');
 
           if (inConcatenation && regex != 'ε') {
             // Skip the epsilon (remove it from concatenation)

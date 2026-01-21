@@ -39,11 +39,7 @@ void main() {
   group('FileOperationsPanel Basic Rendering Tests', () {
     testWidgets('displays panel title correctly', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: FileOperationsPanel(),
-          ),
-        ),
+        const MaterialApp(home: Scaffold(body: FileOperationsPanel())),
       );
 
       expect(find.byType(FileOperationsPanel), findsOneWidget);
@@ -58,9 +54,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: FileOperationsPanel(automaton: automaton),
-          ),
+          home: Scaffold(body: FileOperationsPanel(automaton: automaton)),
         ),
       );
 
@@ -84,9 +78,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: FileOperationsPanel(grammar: grammar),
-          ),
+          home: Scaffold(body: FileOperationsPanel(grammar: grammar)),
         ),
       );
 
@@ -101,42 +93,39 @@ void main() {
       }
     });
 
-    testWidgets('displays both automaton and grammar sections when both provided',
-        (tester) async {
-      final automaton = _buildSampleAutomaton();
-      final grammar = _buildSampleGrammar();
+    testWidgets(
+      'displays both automaton and grammar sections when both provided',
+      (tester) async {
+        final automaton = _buildSampleAutomaton();
+        final grammar = _buildSampleGrammar();
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: FileOperationsPanel(
-              automaton: automaton,
-              grammar: grammar,
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: FileOperationsPanel(automaton: automaton, grammar: grammar),
             ),
           ),
-        ),
-      );
+        );
 
-      expect(find.text('Automaton'), findsOneWidget);
-      expect(find.text('Grammar'), findsOneWidget);
-      expect(find.text('Load JFLAP'), findsAtLeastNWidgets(2));
-    });
+        expect(find.text('Automaton'), findsOneWidget);
+        expect(find.text('Grammar'), findsOneWidget);
+        expect(find.text('Load JFLAP'), findsAtLeastNWidgets(2));
+      },
+    );
 
-    testWidgets('displays no operation buttons when neither automaton nor grammar provided',
-        (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: FileOperationsPanel(),
-          ),
-        ),
-      );
+    testWidgets(
+      'displays no operation buttons when neither automaton nor grammar provided',
+      (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(home: Scaffold(body: FileOperationsPanel())),
+        );
 
-      expect(find.text('File Operations'), findsOneWidget);
-      expect(find.text('Automaton'), findsNothing);
-      expect(find.text('Grammar'), findsNothing);
-      expect(find.text('Load JFLAP'), findsNothing);
-    });
+        expect(find.text('File Operations'), findsOneWidget);
+        expect(find.text('Automaton'), findsNothing);
+        expect(find.text('Grammar'), findsNothing);
+        expect(find.text('Load JFLAP'), findsNothing);
+      },
+    );
   });
 
   group('FileOperationsPanel Automaton Operations Tests', () {
@@ -145,9 +134,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: FileOperationsPanel(automaton: automaton),
-          ),
+          home: Scaffold(body: FileOperationsPanel(automaton: automaton)),
         ),
       );
 
@@ -177,18 +164,13 @@ void main() {
         ),
       );
 
-      await tester.tap(
-        find.text(kIsWeb ? 'Download JFLAP' : 'Save as JFLAP'),
-      );
+      await tester.tap(find.text(kIsWeb ? 'Download JFLAP' : 'Save as JFLAP'));
       await tester.pump();
       await tester.pumpAndSettle();
 
       if (kIsWeb) {
         expect(service.saveAutomatonCallCount, equals(1));
-        expect(
-          find.textContaining('Download started'),
-          findsOneWidget,
-        );
+        expect(find.textContaining('Download started'), findsOneWidget);
       }
     }, skip: !kIsWeb);
 
@@ -197,9 +179,7 @@ void main() {
       bool automatonLoaded = false;
 
       final service = _StubFileOperationsService(
-        loadAutomatonResponses: Queue.of([
-          Success<FSA>(automaton),
-        ]),
+        loadAutomatonResponses: Queue.of([Success<FSA>(automaton)]),
       );
 
       final file = PlatformFile(
@@ -237,9 +217,7 @@ void main() {
     ) async {
       final automaton = _buildSampleAutomaton();
       final service = _StubFileOperationsService(
-        exportResponses: Queue.of([
-          const Success<String>('automaton.svg'),
-        ]),
+        exportResponses: Queue.of([const Success<String>('automaton.svg')]),
       );
 
       await tester.pumpWidget(
@@ -259,10 +237,7 @@ void main() {
 
       if (kIsWeb) {
         expect(service.exportCallCount, equals(1));
-        expect(
-          find.textContaining('Download started'),
-          findsOneWidget,
-        );
+        expect(find.textContaining('Download started'), findsOneWidget);
       }
     }, skip: !kIsWeb);
   });
@@ -273,9 +248,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: FileOperationsPanel(grammar: grammar),
-          ),
+          home: Scaffold(body: FileOperationsPanel(grammar: grammar)),
         ),
       );
 
@@ -283,39 +256,27 @@ void main() {
       expect(find.byIcon(Icons.folder_open), findsOneWidget);
     });
 
-    testWidgets('save grammar button triggers callback on web', (
-      tester,
-    ) async {
+    testWidgets('save grammar button triggers callback on web', (tester) async {
       final grammar = _buildSampleGrammar();
       final service = _StubFileOperationsService(
-        saveGrammarResponses: Queue.of([
-          const Success<String>('grammar.cfg'),
-        ]),
+        saveGrammarResponses: Queue.of([const Success<String>('grammar.cfg')]),
       );
 
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: FileOperationsPanel(
-              grammar: grammar,
-              fileService: service,
-            ),
+            body: FileOperationsPanel(grammar: grammar, fileService: service),
           ),
         ),
       );
 
-      await tester.tap(
-        find.text(kIsWeb ? 'Download JFLAP' : 'Save as JFLAP'),
-      );
+      await tester.tap(find.text(kIsWeb ? 'Download JFLAP' : 'Save as JFLAP'));
       await tester.pump();
       await tester.pumpAndSettle();
 
       if (kIsWeb) {
         expect(service.saveGrammarCallCount, equals(1));
-        expect(
-          find.textContaining('Download started'),
-          findsOneWidget,
-        );
+        expect(find.textContaining('Download started'), findsOneWidget);
       }
     }, skip: !kIsWeb);
 
@@ -324,9 +285,7 @@ void main() {
       bool grammarLoaded = false;
 
       final service = _StubFileOperationsService(
-        loadGrammarResponses: Queue.of([
-          Success<Grammar>(grammar),
-        ]),
+        loadGrammarResponses: Queue.of([Success<Grammar>(grammar)]),
       );
 
       final file = PlatformFile(
@@ -382,9 +341,7 @@ void main() {
       );
 
       // Trigger save operation
-      await tester.tap(
-        find.text(kIsWeb ? 'Download JFLAP' : 'Save as JFLAP'),
-      );
+      await tester.tap(find.text(kIsWeb ? 'Download JFLAP' : 'Save as JFLAP'));
       await tester.pump();
 
       // Should show loading indicator
@@ -418,9 +375,7 @@ void main() {
       );
 
       // Trigger save operation
-      await tester.tap(
-        find.text(kIsWeb ? 'Download JFLAP' : 'Save as JFLAP'),
-      );
+      await tester.tap(find.text(kIsWeb ? 'Download JFLAP' : 'Save as JFLAP'));
       await tester.pump();
 
       // Buttons should be disabled
@@ -466,17 +421,12 @@ void main() {
         ),
       );
 
-      await tester.tap(
-        find.text(kIsWeb ? 'Download JFLAP' : 'Save as JFLAP'),
-      );
+      await tester.tap(find.text(kIsWeb ? 'Download JFLAP' : 'Save as JFLAP'));
       await tester.pump();
       await tester.pumpAndSettle();
 
       expect(find.byType(ErrorBanner), findsOneWidget);
-      expect(
-        find.textContaining('Failed to save automaton'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('Failed to save automaton'), findsOneWidget);
     }, skip: !kIsWeb);
 
     testWidgets('retry button retries failed operation', (tester) async {
@@ -500,9 +450,7 @@ void main() {
       );
 
       // First attempt fails
-      await tester.tap(
-        find.text(kIsWeb ? 'Download JFLAP' : 'Save as JFLAP'),
-      );
+      await tester.tap(find.text(kIsWeb ? 'Download JFLAP' : 'Save as JFLAP'));
       await tester.pump();
       await tester.pumpAndSettle();
 
@@ -539,9 +487,7 @@ void main() {
         ),
       );
 
-      await tester.tap(
-        find.text(kIsWeb ? 'Download JFLAP' : 'Save as JFLAP'),
-      );
+      await tester.tap(find.text(kIsWeb ? 'Download JFLAP' : 'Save as JFLAP'));
       await tester.pump();
       await tester.pumpAndSettle();
 
@@ -578,46 +524,45 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(ErrorBanner), findsOneWidget);
-      expect(
-        find.textContaining('Failed to export automaton'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('Failed to export automaton'), findsOneWidget);
     }, skip: !kIsWeb);
 
-    testWidgets('handles load failure with error banner for non-critical errors',
-        (tester) async {
-      final automaton = _buildSampleAutomaton();
-      final service = _StubFileOperationsService(
-        loadAutomatonResponses: Queue.of([
-          const Failure<FSA>('Failed to load automaton: file is empty'),
-        ]),
-      );
+    testWidgets(
+      'handles load failure with error banner for non-critical errors',
+      (tester) async {
+        final automaton = _buildSampleAutomaton();
+        final service = _StubFileOperationsService(
+          loadAutomatonResponses: Queue.of([
+            const Failure<FSA>('Failed to load automaton: file is empty'),
+          ]),
+        );
 
-      final file = PlatformFile(
-        name: 'empty.jff',
-        size: 0,
-        bytes: Uint8List(0),
-      );
-      fakeFilePicker.enqueuePickResult(FilePickerResult([file]));
+        final file = PlatformFile(
+          name: 'empty.jff',
+          size: 0,
+          bytes: Uint8List(0),
+        );
+        fakeFilePicker.enqueuePickResult(FilePickerResult([file]));
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: FileOperationsPanel(
-              automaton: automaton,
-              fileService: service,
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: FileOperationsPanel(
+                automaton: automaton,
+                fileService: service,
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      await tester.tap(find.text('Load JFLAP'));
-      await tester.pump();
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('Load JFLAP'));
+        await tester.pump();
+        await tester.pumpAndSettle();
 
-      expect(service.loadAutomatonCallCount, equals(1));
-      expect(find.byType(ErrorBanner), findsOneWidget);
-    });
+        expect(service.loadAutomatonCallCount, equals(1));
+        expect(find.byType(ErrorBanner), findsOneWidget);
+      },
+    );
   });
 
   group('FileOperationsPanel Success Message Tests', () {
@@ -640,9 +585,7 @@ void main() {
         ),
       );
 
-      await tester.tap(
-        find.text(kIsWeb ? 'Download JFLAP' : 'Save as JFLAP'),
-      );
+      await tester.tap(find.text(kIsWeb ? 'Download JFLAP' : 'Save as JFLAP'));
       await tester.pump();
       await tester.pumpAndSettle();
 
@@ -658,9 +601,7 @@ void main() {
     ) async {
       final automaton = _buildSampleAutomaton();
       final service = _StubFileOperationsService(
-        exportResponses: Queue.of([
-          const Success<String>('automaton.svg'),
-        ]),
+        exportResponses: Queue.of([const Success<String>('automaton.svg')]),
       );
 
       await tester.pumpWidget(
@@ -781,8 +722,17 @@ Grammar _buildSampleGrammar() {
     nonterminals: const {'S'},
     startSymbol: 'S',
     productions: {
-      const Production(id: '1', leftSide: const ['S'], rightSide: const ['a', 'S', 'b']),
-      const Production(id: '2', leftSide: const ['S'], rightSide: const [], isLambda: true),
+      const Production(
+        id: '1',
+        leftSide: const ['S'],
+        rightSide: const ['a', 'S', 'b'],
+      ),
+      const Production(
+        id: '2',
+        leftSide: const ['S'],
+        rightSide: const [],
+        isLambda: true,
+      ),
     },
     type: GrammarType.contextFree,
     created: DateTime.utc(2024, 1, 1),
@@ -798,15 +748,12 @@ class _StubFileOperationsService extends FileOperationsService {
     Queue<Result<FSA>>? loadAutomatonResponses,
     Queue<Result<Grammar>>? loadGrammarResponses,
     this.delayMs = 0,
-  })  : saveAutomatonResponses =
-            saveAutomatonResponses ?? Queue<Result<String>>(),
-        saveGrammarResponses =
-            saveGrammarResponses ?? Queue<Result<String>>(),
-        exportResponses = exportResponses ?? Queue<Result<String>>(),
-        loadAutomatonResponses =
-            loadAutomatonResponses ?? Queue<Result<FSA>>(),
-        loadGrammarResponses =
-            loadGrammarResponses ?? Queue<Result<Grammar>>();
+  }) : saveAutomatonResponses =
+           saveAutomatonResponses ?? Queue<Result<String>>(),
+       saveGrammarResponses = saveGrammarResponses ?? Queue<Result<String>>(),
+       exportResponses = exportResponses ?? Queue<Result<String>>(),
+       loadAutomatonResponses = loadAutomatonResponses ?? Queue<Result<FSA>>(),
+       loadGrammarResponses = loadGrammarResponses ?? Queue<Result<Grammar>>();
 
   final Queue<Result<String>> saveAutomatonResponses;
   final Queue<Result<String>> saveGrammarResponses;
@@ -893,8 +840,8 @@ class _StubFileOperationsService extends FileOperationsService {
 
 class _FakeFilePicker extends FilePicker {
   _FakeFilePicker()
-      : _pickResults = Queue<FilePickerResult?>(),
-        _saveResults = Queue<String?>();
+    : _pickResults = Queue<FilePickerResult?>(),
+      _saveResults = Queue<String?>();
 
   final Queue<FilePickerResult?> _pickResults;
   final Queue<String?> _saveResults;

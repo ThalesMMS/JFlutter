@@ -34,8 +34,9 @@ const _testItems = [
 
 void main() {
   group('MobileNavigation', () {
-    testWidgets('renders all navigation items with correct labels and icons',
-        (tester) async {
+    testWidgets('renders all navigation items with correct labels and icons', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -76,10 +77,9 @@ void main() {
 
       final pdaText = tester.widget<Text>(
         find.descendant(
-          of: find.ancestor(
-            of: find.text('PDA'),
-            matching: find.byType(InkWell),
-          ).first,
+          of: find
+              .ancestor(of: find.text('PDA'), matching: find.byType(InkWell))
+              .first,
           matching: find.byType(Text),
         ),
       );
@@ -88,10 +88,9 @@ void main() {
 
       final fsaText = tester.widget<Text>(
         find.descendant(
-          of: find.ancestor(
-            of: find.text('FSA'),
-            matching: find.byType(InkWell),
-          ).first,
+          of: find
+              .ancestor(of: find.text('FSA'), matching: find.byType(InkWell))
+              .first,
           matching: find.byType(Text),
         ),
       );
@@ -99,8 +98,9 @@ void main() {
       expect(fsaText.style?.fontWeight, FontWeight.normal);
     });
 
-    testWidgets('calls onTap with correct index when item is tapped',
-        (tester) async {
+    testWidgets('calls onTap with correct index when item is tapped', (
+      tester,
+    ) async {
       int? tappedIndex;
 
       await tester.pumpWidget(
@@ -142,10 +142,12 @@ void main() {
       expect(find.byType(SafeArea), findsOneWidget);
 
       final container = tester.widget<Container>(
-        find.descendant(
-          of: find.byType(SafeArea),
-          matching: find.byType(Container),
-        ).first,
+        find
+            .descendant(
+              of: find.byType(SafeArea),
+              matching: find.byType(Container),
+            )
+            .first,
       );
 
       expect(container.constraints?.maxHeight, 70);
@@ -192,10 +194,9 @@ void main() {
 
       var firstText = tester.widget<Text>(
         find.descendant(
-          of: find.ancestor(
-            of: find.text('FSA'),
-            matching: find.byType(InkWell),
-          ).first,
+          of: find
+              .ancestor(of: find.text('FSA'), matching: find.byType(InkWell))
+              .first,
           matching: find.byType(Text),
         ),
       );
@@ -206,10 +207,9 @@ void main() {
 
       final regexText = tester.widget<Text>(
         find.descendant(
-          of: find.ancestor(
-            of: find.text('Regex'),
-            matching: find.byType(InkWell),
-          ).first,
+          of: find
+              .ancestor(of: find.text('Regex'), matching: find.byType(InkWell))
+              .first,
           matching: find.byType(Text),
         ),
       );
@@ -217,10 +217,9 @@ void main() {
 
       firstText = tester.widget<Text>(
         find.descendant(
-          of: find.ancestor(
-            of: find.text('FSA'),
-            matching: find.byType(InkWell),
-          ).first,
+          of: find
+              .ancestor(of: find.text('FSA'), matching: find.byType(InkWell))
+              .first,
           matching: find.byType(Text),
         ),
       );
@@ -270,8 +269,9 @@ void main() {
       expect(find.byIcon(Icons.text_fields), findsOneWidget);
     });
 
-    testWidgets('calls onDestinationSelected with correct index when tapped',
-        (tester) async {
+    testWidgets('calls onDestinationSelected with correct index when tapped', (
+      tester,
+    ) async {
       int? selectedIndex;
 
       await tester.pumpWidget(
@@ -297,8 +297,9 @@ void main() {
       expect(selectedIndex, 4);
     });
 
-    testWidgets('configures NavigationRail correctly in compact mode',
-        (tester) async {
+    testWidgets('configures NavigationRail correctly in compact mode', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -321,8 +322,9 @@ void main() {
       expect(rail.groupAlignment, -1);
     });
 
-    testWidgets('configures NavigationRail correctly in extended mode',
-        (tester) async {
+    testWidgets('configures NavigationRail correctly in extended mode', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -401,8 +403,9 @@ void main() {
       expect(rail.selectedIndex, 1);
     });
 
-    testWidgets('renders correct number of NavigationRailDestination items',
-        (tester) async {
+    testWidgets('renders correct number of NavigationRailDestination items', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(

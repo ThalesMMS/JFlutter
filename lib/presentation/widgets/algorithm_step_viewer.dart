@@ -134,7 +134,9 @@ class AlgorithmStepViewer extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
@@ -184,20 +186,14 @@ class AlgorithmStepViewer extends StatelessWidget {
       decoration: BoxDecoration(
         color: colorScheme.tertiaryContainer.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: colorScheme.tertiary.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: colorScheme.tertiary.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                Icons.data_object,
-                size: 18,
-                color: colorScheme.tertiary,
-              ),
+              Icon(Icons.data_object, size: 18, color: colorScheme.tertiary),
               const SizedBox(width: 8),
               Text(
                 'Step Data',
@@ -249,9 +245,7 @@ class AlgorithmStepViewer extends StatelessWidget {
         const SizedBox(width: 8),
 
         // Property value
-        Expanded(
-          child: _buildPropertyValue(context, value, textTheme),
-        ),
+        Expanded(child: _buildPropertyValue(context, value, textTheme)),
       ],
     );
   }
@@ -352,9 +346,7 @@ class AlgorithmStepViewer extends StatelessWidget {
     } else {
       return Text(
         _formatValue(value),
-        style: textTheme.bodySmall?.copyWith(
-          color: colorScheme.onSurface,
-        ),
+        style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurface),
       );
     }
   }
@@ -368,12 +360,8 @@ class AlgorithmStepViewer extends StatelessWidget {
           showExpandedDetails ? Icons.expand_less : Icons.expand_more,
           size: 18,
         ),
-        label: Text(
-          showExpandedDetails ? 'Hide Details' : 'Show More Details',
-        ),
-        style: TextButton.styleFrom(
-          foregroundColor: colorScheme.primary,
-        ),
+        label: Text(showExpandedDetails ? 'Hide Details' : 'Show More Details'),
+        style: TextButton.styleFrom(foregroundColor: colorScheme.primary),
       ),
     );
   }

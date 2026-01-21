@@ -35,14 +35,15 @@ void main() {
               isLambdaInput: false,
               isLambdaPop: false,
               isLambdaPush: false,
-              onSubmit: ({
-                required readSymbol,
-                required popSymbol,
-                required pushSymbol,
-                required lambdaInput,
-                required lambdaPop,
-                required lambdaPush,
-              }) {},
+              onSubmit:
+                  ({
+                    required readSymbol,
+                    required popSymbol,
+                    required pushSymbol,
+                    required lambdaInput,
+                    required lambdaPop,
+                    required lambdaPush,
+                  }) {},
               onCancel: () {},
             ),
           ),
@@ -69,23 +70,24 @@ void main() {
               isLambdaInput: false,
               isLambdaPop: false,
               isLambdaPush: false,
-              onSubmit: ({
-                required readSymbol,
-                required popSymbol,
-                required pushSymbol,
-                required lambdaInput,
-                required lambdaPop,
-                required lambdaPush,
-              }) {
-                submittedData = {
-                  'readSymbol': readSymbol,
-                  'popSymbol': popSymbol,
-                  'pushSymbol': pushSymbol,
-                  'lambdaInput': lambdaInput,
-                  'lambdaPop': lambdaPop,
-                  'lambdaPush': lambdaPush,
-                };
-              },
+              onSubmit:
+                  ({
+                    required readSymbol,
+                    required popSymbol,
+                    required pushSymbol,
+                    required lambdaInput,
+                    required lambdaPop,
+                    required lambdaPush,
+                  }) {
+                    submittedData = {
+                      'readSymbol': readSymbol,
+                      'popSymbol': popSymbol,
+                      'pushSymbol': pushSymbol,
+                      'lambdaInput': lambdaInput,
+                      'lambdaPop': lambdaPop,
+                      'lambdaPush': lambdaPush,
+                    };
+                  },
               onCancel: () {},
             ),
           ),
@@ -118,14 +120,15 @@ void main() {
               isLambdaInput: false,
               isLambdaPop: false,
               isLambdaPush: false,
-              onSubmit: ({
-                required readSymbol,
-                required popSymbol,
-                required pushSymbol,
-                required lambdaInput,
-                required lambdaPop,
-                required lambdaPush,
-              }) {},
+              onSubmit:
+                  ({
+                    required readSymbol,
+                    required popSymbol,
+                    required pushSymbol,
+                    required lambdaInput,
+                    required lambdaPop,
+                    required lambdaPush,
+                  }) {},
               onCancel: () {
                 cancelCalled = true;
               },
@@ -154,14 +157,15 @@ void main() {
               isLambdaInput: false,
               isLambdaPop: false,
               isLambdaPush: false,
-              onSubmit: ({
-                required readSymbol,
-                required popSymbol,
-                required pushSymbol,
-                required lambdaInput,
-                required lambdaPop,
-                required lambdaPush,
-              }) {},
+              onSubmit:
+                  ({
+                    required readSymbol,
+                    required popSymbol,
+                    required pushSymbol,
+                    required lambdaInput,
+                    required lambdaPop,
+                    required lambdaPush,
+                  }) {},
               onCancel: () {},
             ),
           ),
@@ -203,14 +207,15 @@ void main() {
               isLambdaInput: false,
               isLambdaPop: false,
               isLambdaPush: false,
-              onSubmit: ({
-                required readSymbol,
-                required popSymbol,
-                required pushSymbol,
-                required lambdaInput,
-                required lambdaPop,
-                required lambdaPush,
-              }) {},
+              onSubmit:
+                  ({
+                    required readSymbol,
+                    required popSymbol,
+                    required pushSymbol,
+                    required lambdaInput,
+                    required lambdaPop,
+                    required lambdaPush,
+                  }) {},
               onCancel: () {},
             ),
           ),
@@ -227,9 +232,7 @@ void main() {
         matching: find.byType(TextField),
       );
       expect(disabledPopFieldFinder, findsOneWidget);
-      final disabledPopField = tester.widget<TextField>(
-        disabledPopFieldFinder,
-      );
+      final disabledPopField = tester.widget<TextField>(disabledPopFieldFinder);
       expect(disabledPopField.enabled, isFalse);
       expect(disabledPopField.controller?.text, isEmpty);
     });
@@ -247,14 +250,15 @@ void main() {
               isLambdaInput: false,
               isLambdaPop: false,
               isLambdaPush: false,
-              onSubmit: ({
-                required readSymbol,
-                required popSymbol,
-                required pushSymbol,
-                required lambdaInput,
-                required lambdaPop,
-                required lambdaPush,
-              }) {},
+              onSubmit:
+                  ({
+                    required readSymbol,
+                    required popSymbol,
+                    required pushSymbol,
+                    required lambdaInput,
+                    required lambdaPop,
+                    required lambdaPush,
+                  }) {},
               onCancel: () {},
             ),
           ),
@@ -291,23 +295,24 @@ void main() {
               isLambdaInput: false,
               isLambdaPop: false,
               isLambdaPush: false,
-              onSubmit: ({
-                required readSymbol,
-                required popSymbol,
-                required pushSymbol,
-                required lambdaInput,
-                required lambdaPop,
-                required lambdaPush,
-              }) {
-                submittedData = {
-                  'readSymbol': readSymbol,
-                  'popSymbol': popSymbol,
-                  'pushSymbol': pushSymbol,
-                  'lambdaInput': lambdaInput,
-                  'lambdaPop': lambdaPop,
-                  'lambdaPush': lambdaPush,
-                };
-              },
+              onSubmit:
+                  ({
+                    required readSymbol,
+                    required popSymbol,
+                    required pushSymbol,
+                    required lambdaInput,
+                    required lambdaPop,
+                    required lambdaPush,
+                  }) {
+                    submittedData = {
+                      'readSymbol': readSymbol,
+                      'popSymbol': popSymbol,
+                      'pushSymbol': pushSymbol,
+                      'lambdaInput': lambdaInput,
+                      'lambdaPop': lambdaPop,
+                      'lambdaPush': lambdaPush,
+                    };
+                  },
               onCancel: () {},
             ),
           ),
@@ -359,20 +364,21 @@ void main() {
               isLambdaInput: false,
               isLambdaPop: false,
               isLambdaPush: false,
-              onSubmit: ({
-                required readSymbol,
-                required popSymbol,
-                required pushSymbol,
-                required lambdaInput,
-                required lambdaPop,
-                required lambdaPush,
-              }) {
-                submittedData = {
-                  'readSymbol': readSymbol,
-                  'popSymbol': popSymbol,
-                  'pushSymbol': pushSymbol,
-                };
-              },
+              onSubmit:
+                  ({
+                    required readSymbol,
+                    required popSymbol,
+                    required pushSymbol,
+                    required lambdaInput,
+                    required lambdaPop,
+                    required lambdaPush,
+                  }) {
+                    submittedData = {
+                      'readSymbol': readSymbol,
+                      'popSymbol': popSymbol,
+                      'pushSymbol': pushSymbol,
+                    };
+                  },
               onCancel: () {},
             ),
           ),
@@ -404,20 +410,21 @@ void main() {
               isLambdaInput: false,
               isLambdaPop: false,
               isLambdaPush: false,
-              onSubmit: ({
-                required readSymbol,
-                required popSymbol,
-                required pushSymbol,
-                required lambdaInput,
-                required lambdaPop,
-                required lambdaPush,
-              }) {
-                submittedData = {
-                  'readSymbol': readSymbol,
-                  'popSymbol': popSymbol,
-                  'pushSymbol': pushSymbol,
-                };
-              },
+              onSubmit:
+                  ({
+                    required readSymbol,
+                    required popSymbol,
+                    required pushSymbol,
+                    required lambdaInput,
+                    required lambdaPop,
+                    required lambdaPush,
+                  }) {
+                    submittedData = {
+                      'readSymbol': readSymbol,
+                      'popSymbol': popSymbol,
+                      'pushSymbol': pushSymbol,
+                    };
+                  },
               onCancel: () {},
             ),
           ),
@@ -465,11 +472,12 @@ void main() {
               initialRead: 'a',
               initialWrite: 'b',
               initialDirection: TapeDirection.right,
-              onSubmit: ({
-                required readSymbol,
-                required writeSymbol,
-                required direction,
-              }) {},
+              onSubmit:
+                  ({
+                    required readSymbol,
+                    required writeSymbol,
+                    required direction,
+                  }) {},
               onCancel: () {},
             ),
           ),
@@ -492,17 +500,18 @@ void main() {
               initialRead: 'a',
               initialWrite: 'b',
               initialDirection: TapeDirection.right,
-              onSubmit: ({
-                required readSymbol,
-                required writeSymbol,
-                required direction,
-              }) {
-                submittedData = {
-                  'readSymbol': readSymbol,
-                  'writeSymbol': writeSymbol,
-                  'direction': direction,
-                };
-              },
+              onSubmit:
+                  ({
+                    required readSymbol,
+                    required writeSymbol,
+                    required direction,
+                  }) {
+                    submittedData = {
+                      'readSymbol': readSymbol,
+                      'writeSymbol': writeSymbol,
+                      'direction': direction,
+                    };
+                  },
               onCancel: () {},
             ),
           ),
@@ -529,11 +538,12 @@ void main() {
               initialRead: 'a',
               initialWrite: 'b',
               initialDirection: TapeDirection.right,
-              onSubmit: ({
-                required readSymbol,
-                required writeSymbol,
-                required direction,
-              }) {},
+              onSubmit:
+                  ({
+                    required readSymbol,
+                    required writeSymbol,
+                    required direction,
+                  }) {},
               onCancel: () {
                 cancelCalled = true;
               },
@@ -559,15 +569,14 @@ void main() {
               initialRead: 'a',
               initialWrite: 'b',
               initialDirection: TapeDirection.right,
-              onSubmit: ({
-                required readSymbol,
-                required writeSymbol,
-                required direction,
-              }) {
-                submittedData = {
-                  'direction': direction,
-                };
-              },
+              onSubmit:
+                  ({
+                    required readSymbol,
+                    required writeSymbol,
+                    required direction,
+                  }) {
+                    submittedData = {'direction': direction};
+                  },
               onCancel: () {},
             ),
           ),
@@ -599,16 +608,17 @@ void main() {
               initialRead: 'a',
               initialWrite: 'b',
               initialDirection: TapeDirection.right,
-              onSubmit: ({
-                required readSymbol,
-                required writeSymbol,
-                required direction,
-              }) {
-                submittedData = {
-                  'readSymbol': readSymbol,
-                  'writeSymbol': writeSymbol,
-                };
-              },
+              onSubmit:
+                  ({
+                    required readSymbol,
+                    required writeSymbol,
+                    required direction,
+                  }) {
+                    submittedData = {
+                      'readSymbol': readSymbol,
+                      'writeSymbol': writeSymbol,
+                    };
+                  },
               onCancel: () {},
             ),
           ),
@@ -648,16 +658,17 @@ void main() {
               initialRead: '',
               initialWrite: '',
               initialDirection: TapeDirection.right,
-              onSubmit: ({
-                required readSymbol,
-                required writeSymbol,
-                required direction,
-              }) {
-                submittedData = {
-                  'readSymbol': readSymbol,
-                  'writeSymbol': writeSymbol,
-                };
-              },
+              onSubmit:
+                  ({
+                    required readSymbol,
+                    required writeSymbol,
+                    required direction,
+                  }) {
+                    submittedData = {
+                      'readSymbol': readSymbol,
+                      'writeSymbol': writeSymbol,
+                    };
+                  },
               onCancel: () {},
             ),
           ),
@@ -697,13 +708,14 @@ void main() {
               initialRead: 'a',
               initialWrite: 'b',
               initialDirection: TapeDirection.right,
-              onSubmit: ({
-                required readSymbol,
-                required writeSymbol,
-                required direction,
-              }) {
-                submitCalled = true;
-              },
+              onSubmit:
+                  ({
+                    required readSymbol,
+                    required writeSymbol,
+                    required direction,
+                  }) {
+                    submitCalled = true;
+                  },
               onCancel: () {},
             ),
           ),

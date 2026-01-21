@@ -89,10 +89,7 @@ void main() {
     });
 
     test('copyWith should create new instance with updated properties', () {
-      final copied = testStep.copyWith(
-        title: 'Updated Title',
-        stepNumber: 5,
-      );
+      final copied = testStep.copyWith(title: 'Updated Title', stepNumber: 5);
 
       expect(copied.id, testStep.id);
       expect(copied.title, 'Updated Title');
@@ -339,18 +336,9 @@ void main() {
 
   group('AlgorithmType Extension Tests', () {
     test('displayName should return human-readable names', () {
-      expect(
-        AlgorithmType.nfaToDfa.displayName,
-        'NFA to DFA Conversion',
-      );
-      expect(
-        AlgorithmType.dfaMinimization.displayName,
-        'DFA Minimization',
-      );
-      expect(
-        AlgorithmType.faToRegex.displayName,
-        'FA to Regex Conversion',
-      );
+      expect(AlgorithmType.nfaToDfa.displayName, 'NFA to DFA Conversion');
+      expect(AlgorithmType.dfaMinimization.displayName, 'DFA Minimization');
+      expect(AlgorithmType.faToRegex.displayName, 'FA to Regex Conversion');
     });
 
     test('description should return informative descriptions', () {
@@ -358,18 +346,12 @@ void main() {
       expect(AlgorithmType.dfaMinimization.description.isNotEmpty, true);
       expect(AlgorithmType.faToRegex.description.isNotEmpty, true);
 
-      expect(
-        AlgorithmType.nfaToDfa.description.contains('subset'),
-        true,
-      );
+      expect(AlgorithmType.nfaToDfa.description.contains('subset'), true);
       expect(
         AlgorithmType.dfaMinimization.description.contains('Hopcroft'),
         true,
       );
-      expect(
-        AlgorithmType.faToRegex.description.contains('elimination'),
-        true,
-      );
+      expect(AlgorithmType.faToRegex.description.contains('elimination'), true);
     });
   });
 
@@ -383,11 +365,7 @@ void main() {
         position: Vector2(0, 0),
         isInitial: true,
       );
-      q1 = State(
-        id: 'q1',
-        label: 'q1',
-        position: Vector2(100, 0),
-      );
+      q1 = State(id: 'q1', label: 'q1', position: Vector2(100, 0));
       q2 = State(
         id: 'q2',
         label: 'q2',
@@ -542,10 +520,7 @@ void main() {
         reachableStates: {q1},
       );
 
-      final copied = original.copyWith(
-        processedSymbol: 'b',
-        isNewState: true,
-      );
+      final copied = original.copyWith(processedSymbol: 'b', isNewState: true);
 
       expect(copied.processedSymbol, 'b');
       expect(copied.isNewState, true);
@@ -644,11 +619,7 @@ void main() {
         position: Vector2(0, 0),
         isInitial: true,
       );
-      q1 = State(
-        id: 'q1',
-        label: 'q1',
-        position: Vector2(100, 0),
-      );
+      q1 = State(id: 'q1', label: 'q1', position: Vector2(100, 0));
       q2 = State(
         id: 'q2',
         label: 'q2',
@@ -984,11 +955,7 @@ void main() {
         position: Vector2(0, 0),
         isInitial: true,
       );
-      q1 = State(
-        id: 'q1',
-        label: 'q1',
-        position: Vector2(100, 0),
-      );
+      q1 = State(id: 'q1', label: 'q1', position: Vector2(100, 0));
       q2 = State(
         id: 'q2',
         label: 'q2',
@@ -1388,26 +1355,14 @@ void main() {
 
   group('Step Type Extension Tests', () {
     test('NFAToDFAStepType displayName should be human-readable', () {
-      expect(
-        NFAToDFAStepType.epsilonClosure.displayName,
-        'Epsilon Closure',
-      );
-      expect(
-        NFAToDFAStepType.processSymbol.displayName,
-        'Process Symbol',
-      );
-      expect(
-        NFAToDFAStepType.createState.displayName,
-        'Create DFA State',
-      );
+      expect(NFAToDFAStepType.epsilonClosure.displayName, 'Epsilon Closure');
+      expect(NFAToDFAStepType.processSymbol.displayName, 'Process Symbol');
+      expect(NFAToDFAStepType.createState.displayName, 'Create DFA State');
       expect(
         NFAToDFAStepType.createTransition.displayName,
         'Create DFA Transition',
       );
-      expect(
-        NFAToDFAStepType.completion.displayName,
-        'Completion',
-      );
+      expect(NFAToDFAStepType.completion.displayName, 'Completion');
     });
 
     test('DFAMinimizationStepType displayName should be human-readable', () {
@@ -1419,25 +1374,13 @@ void main() {
         DFAMinimizationStepType.initialPartition.displayName,
         'Initial Partition',
       );
-      expect(
-        DFAMinimizationStepType.splitClass.displayName,
-        'Split Class',
-      );
+      expect(DFAMinimizationStepType.splitClass.displayName, 'Split Class');
     });
 
     test('FAToRegexStepType displayName should be human-readable', () {
-      expect(
-        FAToRegexStepType.validation.displayName,
-        'Validation',
-      );
-      expect(
-        FAToRegexStepType.selectState.displayName,
-        'Select State',
-      );
-      expect(
-        FAToRegexStepType.createBypass.displayName,
-        'Create Bypass',
-      );
+      expect(FAToRegexStepType.validation.displayName, 'Validation');
+      expect(FAToRegexStepType.selectState.displayName, 'Select State');
+      expect(FAToRegexStepType.createBypass.displayName, 'Create Bypass');
     });
 
     test('All step type extensions should have descriptions', () {

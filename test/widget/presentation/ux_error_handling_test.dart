@@ -285,7 +285,8 @@ void main() {
                     builder: (context) => ImportErrorDialog(
                       fileName: 'invalid.jff',
                       errorType: ImportErrorType.unsupportedVersion,
-                      detailedMessage: 'This file targets an unsupported version.',
+                      detailedMessage:
+                          'This file targets an unsupported version.',
                       onRetry: () {},
                       onCancel: () {
                         cancelCalled = true;
@@ -474,14 +475,13 @@ void main() {
       expect(find.text('Retrying...'), findsOneWidget);
     });
 
-    testWidgets('RetryButton renders custom icon when provided', (tester) async {
+    testWidgets('RetryButton renders custom icon when provided', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: RetryButton(
-              onPressed: () {},
-              icon: Icons.sync,
-            ),
+            body: RetryButton(onPressed: () {}, icon: Icons.sync),
           ),
         ),
       );
@@ -761,8 +761,9 @@ void main() {
       FilePicker.platform = fakeFilePicker;
     });
 
-    testWidgets('displays inline error banner for recoverable export failure',
-        (tester) async {
+    testWidgets('displays inline error banner for recoverable export failure', (
+      tester,
+    ) async {
       final automaton = _buildSampleAutomaton();
       final service = _StubFileOperationsService(
         exportResponses: Queue.of([
@@ -790,10 +791,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(ErrorBanner), findsOneWidget);
-      expect(
-        find.textContaining('Failed to export automaton'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('Failed to export automaton'), findsOneWidget);
       expect(service.exportCallCount, equals(1));
 
       await tester.tap(find.text('Retry'));
@@ -805,8 +803,9 @@ void main() {
       expect(find.text('Retry'), findsNothing);
     });
 
-    testWidgets('opens critical import dialog and retries load operation',
-        (tester) async {
+    testWidgets('opens critical import dialog and retries load operation', (
+      tester,
+    ) async {
       final automaton = _buildSampleAutomaton();
       bool loaded = false;
       final service = _StubFileOperationsService(
@@ -892,9 +891,8 @@ class _StubFileOperationsService extends FileOperationsService {
   _StubFileOperationsService({
     Queue<Result<String>>? exportResponses,
     Queue<Result<FSA>>? loadAutomatonResponses,
-  })  : exportResponses = exportResponses ?? Queue<Result<String>>(),
-        loadAutomatonResponses =
-            loadAutomatonResponses ?? Queue<Result<FSA>>();
+  }) : exportResponses = exportResponses ?? Queue<Result<String>>(),
+       loadAutomatonResponses = loadAutomatonResponses ?? Queue<Result<FSA>>();
 
   final Queue<Result<String>> exportResponses;
   final Queue<Result<FSA>> loadAutomatonResponses;
@@ -925,8 +923,8 @@ class _StubFileOperationsService extends FileOperationsService {
 
 class _FakeFilePicker extends FilePicker {
   _FakeFilePicker()
-      : _pickResults = Queue<FilePickerResult?>(),
-        _saveResults = Queue<String?>();
+    : _pickResults = Queue<FilePickerResult?>(),
+      _saveResults = Queue<String?>();
 
   final Queue<FilePickerResult?> _pickResults;
   final Queue<String?> _saveResults;

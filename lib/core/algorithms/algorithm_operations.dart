@@ -48,7 +48,9 @@ class AlgorithmOperations {
     try {
       return NFAToDFAConverter.convertWithSteps(nfa);
     } catch (e) {
-      return ResultFactory.failure('Error converting NFA to DFA with steps: $e');
+      return ResultFactory.failure(
+        'Error converting NFA to DFA with steps: $e',
+      );
     }
   }
 
@@ -93,7 +95,9 @@ class AlgorithmOperations {
     try {
       return FAToRegexConverter.convertWithSteps(fa);
     } catch (e) {
-      return ResultFactory.failure('Error converting FA to regex with steps: $e');
+      return ResultFactory.failure(
+        'Error converting FA to regex with steps: $e',
+      );
     }
   }
 

@@ -105,14 +105,8 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            grammarProvider.overrideWith((ref) => provider),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: GrammarEditor(),
-            ),
-          ),
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
         ),
       );
 
@@ -131,14 +125,8 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            grammarProvider.overrideWith((ref) => provider),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: GrammarEditor(),
-            ),
-          ),
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
         ),
       );
 
@@ -155,14 +143,8 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            grammarProvider.overrideWith((ref) => provider),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: GrammarEditor(),
-            ),
-          ),
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
         ),
       );
 
@@ -177,30 +159,21 @@ void main() {
   });
 
   group('GrammarEditor metadata updates', () {
-    testWidgets('updates grammar name when text field changes', (
-      tester,
-    ) async {
+    testWidgets('updates grammar name when text field changes', (tester) async {
       final provider = _RecordingGrammarProvider();
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            grammarProvider.overrideWith((ref) => provider),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: GrammarEditor(),
-            ),
-          ),
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
         ),
       );
 
       await tester.pumpAndSettle();
 
-      final grammarNameField = find.widgetWithText(
-        TextField,
-        'My Grammar',
-      ).first;
+      final grammarNameField = find
+          .widgetWithText(TextField, 'My Grammar')
+          .first;
       await tester.enterText(grammarNameField, 'Test Grammar');
       await tester.pump();
 
@@ -208,21 +181,13 @@ void main() {
       expect(provider.lastNameValue, equals('Test Grammar'));
     });
 
-    testWidgets('updates start symbol when text field changes', (
-      tester,
-    ) async {
+    testWidgets('updates start symbol when text field changes', (tester) async {
       final provider = _RecordingGrammarProvider();
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            grammarProvider.overrideWith((ref) => provider),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: GrammarEditor(),
-            ),
-          ),
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
         ),
       );
 
@@ -245,30 +210,18 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            grammarProvider.overrideWith((ref) => provider),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: GrammarEditor(),
-            ),
-          ),
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
         ),
       );
 
       await tester.pumpAndSettle();
 
-      final leftSideField = find.widgetWithText(
-        TextField,
-        'e.g., S, A, B',
-      );
+      final leftSideField = find.widgetWithText(TextField, 'e.g., S, A, B');
       await tester.enterText(leftSideField, 'S');
       await tester.pump();
 
-      final rightSideField = find.widgetWithText(
-        TextField,
-        'e.g., aA, bB, ε',
-      );
+      final rightSideField = find.widgetWithText(TextField, 'e.g., aA, bB, ε');
       await tester.enterText(rightSideField, 'aA');
       await tester.pump();
 
@@ -283,37 +236,23 @@ void main() {
       expect(call['isLambda'], equals(false));
     });
 
-    testWidgets('adds a lambda production with epsilon symbol', (
-      tester,
-    ) async {
+    testWidgets('adds a lambda production with epsilon symbol', (tester) async {
       final provider = _RecordingGrammarProvider();
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            grammarProvider.overrideWith((ref) => provider),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: GrammarEditor(),
-            ),
-          ),
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
         ),
       );
 
       await tester.pumpAndSettle();
 
-      final leftSideField = find.widgetWithText(
-        TextField,
-        'e.g., S, A, B',
-      );
+      final leftSideField = find.widgetWithText(TextField, 'e.g., S, A, B');
       await tester.enterText(leftSideField, 'S');
       await tester.pump();
 
-      final rightSideField = find.widgetWithText(
-        TextField,
-        'e.g., aA, bB, ε',
-      );
+      final rightSideField = find.widgetWithText(TextField, 'e.g., aA, bB, ε');
       await tester.enterText(rightSideField, 'ε');
       await tester.pump();
 
@@ -335,23 +274,14 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            grammarProvider.overrideWith((ref) => provider),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: GrammarEditor(),
-            ),
-          ),
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
         ),
       );
 
       await tester.pumpAndSettle();
 
-      final rightSideField = find.widgetWithText(
-        TextField,
-        'e.g., aA, bB, ε',
-      );
+      final rightSideField = find.widgetWithText(TextField, 'e.g., aA, bB, ε');
       await tester.enterText(rightSideField, 'aA');
       await tester.pump();
 
@@ -373,23 +303,14 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            grammarProvider.overrideWith((ref) => provider),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: GrammarEditor(),
-            ),
-          ),
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
         ),
       );
 
       await tester.pumpAndSettle();
 
-      final leftSideField = find.widgetWithText(
-        TextField,
-        'e.g., S, A, B',
-      );
+      final leftSideField = find.widgetWithText(TextField, 'e.g., S, A, B');
       await tester.enterText(leftSideField, 'S');
       await tester.pump();
 
@@ -409,30 +330,18 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            grammarProvider.overrideWith((ref) => provider),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: GrammarEditor(),
-            ),
-          ),
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
         ),
       );
 
       await tester.pumpAndSettle();
 
-      final leftSideField = find.widgetWithText(
-        TextField,
-        'e.g., S, A, B',
-      );
+      final leftSideField = find.widgetWithText(TextField, 'e.g., S, A, B');
       await tester.enterText(leftSideField, 'S');
       await tester.pump();
 
-      final rightSideField = find.widgetWithText(
-        TextField,
-        'e.g., aA, bB, ε',
-      );
+      final rightSideField = find.widgetWithText(TextField, 'e.g., aA, bB, ε');
       await tester.enterText(rightSideField, 'aA');
       await tester.pump();
 
@@ -454,29 +363,17 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            grammarProvider.overrideWith((ref) => provider),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: GrammarEditor(),
-            ),
-          ),
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
         ),
       );
 
       await tester.pumpAndSettle();
 
-      final leftSideField = find.widgetWithText(
-        TextField,
-        'e.g., S, A, B',
-      );
+      final leftSideField = find.widgetWithText(TextField, 'e.g., S, A, B');
       await tester.enterText(leftSideField, 'S');
 
-      final rightSideField = find.widgetWithText(
-        TextField,
-        'e.g., aA, bB, ε',
-      );
+      final rightSideField = find.widgetWithText(TextField, 'e.g., aA, bB, ε');
       await tester.enterText(rightSideField, 'aA');
 
       final addButton = find.widgetWithText(ElevatedButton, 'Add');
@@ -495,29 +392,17 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            grammarProvider.overrideWith((ref) => provider),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: GrammarEditor(),
-            ),
-          ),
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
         ),
       );
 
       await tester.pumpAndSettle();
 
-      final leftSideField = find.widgetWithText(
-        TextField,
-        'e.g., S, A, B',
-      );
+      final leftSideField = find.widgetWithText(TextField, 'e.g., S, A, B');
       await tester.enterText(leftSideField, 'A');
 
-      final rightSideField = find.widgetWithText(
-        TextField,
-        'e.g., aA, bB, ε',
-      );
+      final rightSideField = find.widgetWithText(TextField, 'e.g., aA, bB, ε');
       await tester.enterText(rightSideField, 'ε');
 
       final addButton = find.widgetWithText(ElevatedButton, 'Add');
@@ -532,14 +417,8 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            grammarProvider.overrideWith((ref) => provider),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: GrammarEditor(),
-            ),
-          ),
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
         ),
       );
 
@@ -572,14 +451,8 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            grammarProvider.overrideWith((ref) => provider),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: GrammarEditor(),
-            ),
-          ),
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
         ),
       );
 
@@ -612,14 +485,8 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            grammarProvider.overrideWith((ref) => provider),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: GrammarEditor(),
-            ),
-          ),
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
         ),
       );
 
@@ -640,14 +507,8 @@ void main() {
       await tester.tap(editOption);
       await tester.pumpAndSettle();
 
-      final leftField = find.widgetWithText(
-        TextField,
-        'S',
-      );
-      final rightField = find.widgetWithText(
-        TextField,
-        'aB',
-      );
+      final leftField = find.widgetWithText(TextField, 'S');
+      final rightField = find.widgetWithText(TextField, 'aB');
 
       expect(leftField, findsOneWidget);
       expect(rightField, findsOneWidget);
@@ -660,14 +521,8 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            grammarProvider.overrideWith((ref) => provider),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: GrammarEditor(),
-            ),
-          ),
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
         ),
       );
 
@@ -688,10 +543,7 @@ void main() {
       await tester.tap(editOption);
       await tester.pumpAndSettle();
 
-      final rightSideField = find.widgetWithText(
-        TextField,
-        'aA',
-      );
+      final rightSideField = find.widgetWithText(TextField, 'aA');
       await tester.enterText(rightSideField, 'bB');
       await tester.pump();
 
@@ -712,14 +564,8 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            grammarProvider.overrideWith((ref) => provider),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: GrammarEditor(),
-            ),
-          ),
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
         ),
       );
 
@@ -756,14 +602,8 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            grammarProvider.overrideWith((ref) => provider),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: GrammarEditor(),
-            ),
-          ),
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
         ),
       );
 
@@ -788,14 +628,8 @@ void main() {
       await tester.tap(cancelButton);
       await tester.pumpAndSettle();
 
-      final leftSideField = find.widgetWithText(
-        TextField,
-        'e.g., S, A, B',
-      );
-      final rightSideField = find.widgetWithText(
-        TextField,
-        'e.g., aA, bB, ε',
-      );
+      final leftSideField = find.widgetWithText(TextField, 'e.g., S, A, B');
+      final rightSideField = find.widgetWithText(TextField, 'e.g., aA, bB, ε');
 
       final leftField = tester.widget<TextField>(leftSideField);
       final rightField = tester.widget<TextField>(rightSideField);
@@ -813,14 +647,8 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            grammarProvider.overrideWith((ref) => provider),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: GrammarEditor(),
-            ),
-          ),
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
         ),
       );
 
@@ -848,54 +676,47 @@ void main() {
       expect(find.text('Production Rules (0)'), findsOneWidget);
     });
 
-    testWidgets(
-      'exits edit mode if deleted production was being edited',
-      (tester) async {
-        final provider = _RecordingGrammarProvider();
+    testWidgets('exits edit mode if deleted production was being edited', (
+      tester,
+    ) async {
+      final provider = _RecordingGrammarProvider();
 
-        await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              grammarProvider.overrideWith((ref) => provider),
-            ],
-            child: const MaterialApp(
-              home: Scaffold(
-                body: GrammarEditor(),
-              ),
-            ),
-          ),
-        );
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
+        ),
+      );
 
-        await tester.pumpAndSettle();
+      await tester.pumpAndSettle();
 
-        provider.addProduction(
-          leftSide: ['S'],
-          rightSide: ['a', 'A'],
-          isLambda: false,
-        );
-        await tester.pumpAndSettle();
+      provider.addProduction(
+        leftSide: ['S'],
+        rightSide: ['a', 'A'],
+        isLambda: false,
+      );
+      await tester.pumpAndSettle();
 
-        final moreButton = find.byIcon(Icons.more_vert);
-        await tester.tap(moreButton);
-        await tester.pumpAndSettle();
+      final moreButton = find.byIcon(Icons.more_vert);
+      await tester.tap(moreButton);
+      await tester.pumpAndSettle();
 
-        final editOption = find.text('Edit');
-        await tester.tap(editOption);
-        await tester.pumpAndSettle();
+      final editOption = find.text('Edit');
+      await tester.tap(editOption);
+      await tester.pumpAndSettle();
 
-        expect(find.text('Edit Production Rule'), findsOneWidget);
+      expect(find.text('Edit Production Rule'), findsOneWidget);
 
-        await tester.tap(find.byIcon(Icons.more_vert));
-        await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
 
-        final deleteOption = find.text('Delete');
-        await tester.tap(deleteOption);
-        await tester.pumpAndSettle();
+      final deleteOption = find.text('Delete');
+      await tester.tap(deleteOption);
+      await tester.pumpAndSettle();
 
-        expect(find.text('Add Production Rule'), findsOneWidget);
-        expect(find.widgetWithText(ElevatedButton, 'Add'), findsOneWidget);
-      },
-    );
+      expect(find.text('Add Production Rule'), findsOneWidget);
+      expect(find.widgetWithText(ElevatedButton, 'Add'), findsOneWidget);
+    });
   });
 
   group('GrammarEditor clear functionality', () {
@@ -906,14 +727,8 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            grammarProvider.overrideWith((ref) => provider),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: GrammarEditor(),
-            ),
-          ),
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
         ),
       );
 
@@ -942,21 +757,13 @@ void main() {
       expect(find.text('No production rules yet'), findsOneWidget);
     });
 
-    testWidgets('exits edit mode when Clear button is pressed', (
-      tester,
-    ) async {
+    testWidgets('exits edit mode when Clear button is pressed', (tester) async {
       final provider = _RecordingGrammarProvider();
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            grammarProvider.overrideWith((ref) => provider),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: GrammarEditor(),
-            ),
-          ),
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
         ),
       );
 
@@ -993,14 +800,8 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            grammarProvider.overrideWith((ref) => provider),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: GrammarEditor(),
-            ),
-          ),
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
         ),
       );
 
@@ -1014,58 +815,48 @@ void main() {
       expect(find.text('Grammar Editor'), findsOneWidget);
     });
 
-    testWidgets('displays vertical layout for production editor on small screens', (
-      tester,
-    ) async {
-      final provider = _RecordingGrammarProvider();
+    testWidgets(
+      'displays vertical layout for production editor on small screens',
+      (tester) async {
+        final provider = _RecordingGrammarProvider();
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            grammarProvider.overrideWith((ref) => provider),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: GrammarEditor(),
-            ),
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [grammarProvider.overrideWith((ref) => provider)],
+            child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
           ),
-        ),
-      );
+        );
 
-      tester.view.physicalSize = const Size(400, 800);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
+        tester.view.physicalSize = const Size(400, 800);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
 
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.arrow_downward), findsOneWidget);
-    });
+        expect(find.byIcon(Icons.arrow_downward), findsOneWidget);
+      },
+    );
 
-    testWidgets('displays horizontal layout for production editor on large screens', (
-      tester,
-    ) async {
-      final provider = _RecordingGrammarProvider();
+    testWidgets(
+      'displays horizontal layout for production editor on large screens',
+      (tester) async {
+        final provider = _RecordingGrammarProvider();
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            grammarProvider.overrideWith((ref) => provider),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: GrammarEditor(),
-            ),
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [grammarProvider.overrideWith((ref) => provider)],
+            child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
           ),
-        ),
-      );
+        );
 
-      tester.view.physicalSize = const Size(1200, 800);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
+        tester.view.physicalSize = const Size(1200, 800);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
 
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.arrow_forward), findsOneWidget);
-    });
+        expect(find.byIcon(Icons.arrow_forward), findsOneWidget);
+      },
+    );
   });
 }

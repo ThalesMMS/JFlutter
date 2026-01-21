@@ -49,13 +49,13 @@ class AlgorithmButton extends StatelessWidget {
     this.isSelected = false,
     this.executionProgress,
     this.executionStatus,
-  })  : assert(title != '', 'title must not be empty'),
-        assert(description != '', 'description must not be empty'),
-        assert(
-          executionProgress == null ||
-              (executionProgress >= 0.0 && executionProgress <= 1.0),
-          'executionProgress must be between 0.0 and 1.0',
-        );
+  }) : assert(title != '', 'title must not be empty'),
+       assert(description != '', 'description must not be empty'),
+       assert(
+         executionProgress == null ||
+             (executionProgress >= 0.0 && executionProgress <= 1.0),
+         'executionProgress must be between 0.0 and 1.0',
+       );
 
   /// Primary label displayed prominently at the top of the button.
   final String title;
@@ -129,26 +129,24 @@ class AlgorithmButton extends StatelessWidget {
               color: _isDisabled
                   ? colorScheme.outline.withValues(alpha: 0.3)
                   : isSelected
-                      ? color
-                      : color.withValues(alpha: 0.3),
+                  ? color
+                  : color.withValues(alpha: 0.3),
               width: isExecuting ? 2 : 1,
             ),
             borderRadius: BorderRadius.circular(8),
             color: _isDisabled
                 ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
                 : isSelected
-                    ? colorScheme.primaryContainer.withValues(alpha: 0.35)
-                    : isExecuting
-                        ? color.withValues(alpha: 0.1)
-                        : null,
+                ? colorScheme.primaryContainer.withValues(alpha: 0.35)
+                : isExecuting
+                ? color.withValues(alpha: 0.1)
+                : null,
           ),
           child: Row(
             children: [
               _buildLeadingIcon(context, color, colorScheme),
               const SizedBox(width: 12),
-              Expanded(
-                child: _buildContent(context, color, colorScheme),
-              ),
+              Expanded(child: _buildContent(context, color, colorScheme)),
               _buildTrailingIcon(context, color, colorScheme),
             ],
           ),
@@ -175,9 +173,7 @@ class AlgorithmButton extends StatelessWidget {
 
     return Icon(
       icon,
-      color: _isDisabled
-          ? colorScheme.outline.withValues(alpha: 0.5)
-          : color,
+      color: _isDisabled ? colorScheme.outline.withValues(alpha: 0.5) : color,
       size: 24,
     );
   }

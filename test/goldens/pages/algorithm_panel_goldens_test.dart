@@ -82,299 +82,262 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('AlgorithmPanel golden tests', () {
-    testGoldens(
-      'renders empty panel in desktop layout',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders empty panel in desktop layout', (tester) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        await _pumpAlgorithmPanel(
-          tester,
-          size: const Size(400, 900),
-        );
+      await _pumpAlgorithmPanel(tester, size: const Size(400, 900));
 
-        await screenMatchesGolden(tester, 'algorithm_panel_empty_desktop');
-      },
-    );
+      await screenMatchesGolden(tester, 'algorithm_panel_empty_desktop');
+    });
 
-    testGoldens(
-      'renders empty panel in tablet layout',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders empty panel in tablet layout', (tester) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        await _pumpAlgorithmPanel(
-          tester,
-          size: const Size(350, 800),
-        );
+      await _pumpAlgorithmPanel(tester, size: const Size(350, 800));
 
-        await screenMatchesGolden(tester, 'algorithm_panel_empty_tablet');
-      },
-    );
+      await screenMatchesGolden(tester, 'algorithm_panel_empty_tablet');
+    });
 
-    testGoldens(
-      'renders empty panel in mobile layout',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders empty panel in mobile layout', (tester) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        await _pumpAlgorithmPanel(
-          tester,
-          size: const Size(320, 700),
-        );
+      await _pumpAlgorithmPanel(tester, size: const Size(320, 700));
 
-        await screenMatchesGolden(tester, 'algorithm_panel_empty_mobile');
-      },
-    );
+      await screenMatchesGolden(tester, 'algorithm_panel_empty_mobile');
+    });
 
-    testGoldens(
-      'renders panel with all callbacks enabled',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders panel with all callbacks enabled', (tester) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        await _pumpAlgorithmPanel(
-          tester,
-          onNfaToDfa: () {},
-          onMinimizeDfa: () {},
-          onClear: () {},
-          onRegexToNfa: (regex) {},
-          onFaToRegex: () {},
-          onRemoveLambda: () {},
-          onCompleteDfa: () {},
-          onComplementDfa: () {},
-          onPrefixClosure: () {},
-          onSuffixClosure: () {},
-          onFsaToGrammar: () {},
-          onAutoLayout: () {},
-          onStepByStepModeChanged: (enabled) {},
-          size: const Size(400, 900),
-        );
+      await _pumpAlgorithmPanel(
+        tester,
+        onNfaToDfa: () {},
+        onMinimizeDfa: () {},
+        onClear: () {},
+        onRegexToNfa: (regex) {},
+        onFaToRegex: () {},
+        onRemoveLambda: () {},
+        onCompleteDfa: () {},
+        onComplementDfa: () {},
+        onPrefixClosure: () {},
+        onSuffixClosure: () {},
+        onFsaToGrammar: () {},
+        onAutoLayout: () {},
+        onStepByStepModeChanged: (enabled) {},
+        size: const Size(400, 900),
+      );
 
-        await screenMatchesGolden(tester, 'algorithm_panel_all_enabled');
-      },
-    );
+      await screenMatchesGolden(tester, 'algorithm_panel_all_enabled');
+    });
 
-    testGoldens(
-      'renders panel with regex input filled',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders panel with regex input filled', (tester) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        await _pumpAlgorithmPanel(
-          tester,
-          onNfaToDfa: () {},
-          onRegexToNfa: (regex) {},
-          onClear: () {},
-          size: const Size(400, 900),
-        );
+      await _pumpAlgorithmPanel(
+        tester,
+        onNfaToDfa: () {},
+        onRegexToNfa: (regex) {},
+        onClear: () {},
+        size: const Size(400, 900),
+      );
 
-        // Enter regex text
-        await tester.enterText(find.byType(TextField), '(a|b)*c');
-        await tester.pumpAndSettle();
+      // Enter regex text
+      await tester.enterText(find.byType(TextField), '(a|b)*c');
+      await tester.pumpAndSettle();
 
-        await screenMatchesGolden(tester, 'algorithm_panel_regex_filled');
-      },
-    );
+      await screenMatchesGolden(tester, 'algorithm_panel_regex_filled');
+    });
 
-    testGoldens(
-      'renders panel with equivalence result positive',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders panel with equivalence result positive', (
+      tester,
+    ) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        await _pumpAlgorithmPanel(
-          tester,
-          onNfaToDfa: () {},
-          onClear: () {},
-          equivalenceResult: true,
-          equivalenceDetails: 'Automata are equivalent',
-          size: const Size(400, 900),
-        );
+      await _pumpAlgorithmPanel(
+        tester,
+        onNfaToDfa: () {},
+        onClear: () {},
+        equivalenceResult: true,
+        equivalenceDetails: 'Automata are equivalent',
+        size: const Size(400, 900),
+      );
 
-        await screenMatchesGolden(tester, 'algorithm_panel_equivalence_true');
-      },
-    );
+      await screenMatchesGolden(tester, 'algorithm_panel_equivalence_true');
+    });
 
-    testGoldens(
-      'renders panel with equivalence result negative',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders panel with equivalence result negative', (
+      tester,
+    ) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        await _pumpAlgorithmPanel(
-          tester,
-          onNfaToDfa: () {},
-          onClear: () {},
-          equivalenceResult: false,
-          equivalenceDetails: 'Automata are not equivalent: counterexample "ab"',
-          size: const Size(400, 900),
-        );
+      await _pumpAlgorithmPanel(
+        tester,
+        onNfaToDfa: () {},
+        onClear: () {},
+        equivalenceResult: false,
+        equivalenceDetails: 'Automata are not equivalent: counterexample "ab"',
+        size: const Size(400, 900),
+      );
 
-        await screenMatchesGolden(tester, 'algorithm_panel_equivalence_false');
-      },
-    );
+      await screenMatchesGolden(tester, 'algorithm_panel_equivalence_false');
+    });
 
-    testGoldens(
-      'renders panel with step-by-step mode enabled',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders panel with step-by-step mode enabled', (tester) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        await _pumpAlgorithmPanel(
-          tester,
-          onNfaToDfa: () {},
-          onClear: () {},
-          onStepByStepModeChanged: (enabled) {},
-          size: const Size(400, 900),
-        );
+      await _pumpAlgorithmPanel(
+        tester,
+        onNfaToDfa: () {},
+        onClear: () {},
+        onStepByStepModeChanged: (enabled) {},
+        size: const Size(400, 900),
+      );
 
-        // Enable step-by-step mode
-        await tester.tap(find.byType(Switch));
-        await tester.pumpAndSettle();
+      // Enable step-by-step mode
+      await tester.tap(find.byType(Switch));
+      await tester.pumpAndSettle();
 
-        await screenMatchesGolden(tester, 'algorithm_panel_step_mode_enabled');
-      },
-    );
+      await screenMatchesGolden(tester, 'algorithm_panel_step_mode_enabled');
+    });
 
-    testGoldens(
-      'renders scrolled panel showing bottom buttons',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders scrolled panel showing bottom buttons', (
+      tester,
+    ) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        await _pumpAlgorithmPanel(
-          tester,
-          onNfaToDfa: () {},
-          onMinimizeDfa: () {},
-          onClear: () {},
-          onAutoLayout: () {},
-          onFsaToGrammar: () {},
-          size: const Size(400, 600),
-        );
+      await _pumpAlgorithmPanel(
+        tester,
+        onNfaToDfa: () {},
+        onMinimizeDfa: () {},
+        onClear: () {},
+        onAutoLayout: () {},
+        onFsaToGrammar: () {},
+        size: const Size(400, 600),
+      );
 
-        // Scroll to bottom to see Clear and Auto Layout buttons
-        await tester.drag(
-          find.byType(SingleChildScrollView),
-          const Offset(0, -500),
-        );
-        await tester.pumpAndSettle();
+      // Scroll to bottom to see Clear and Auto Layout buttons
+      await tester.drag(
+        find.byType(SingleChildScrollView),
+        const Offset(0, -500),
+      );
+      await tester.pumpAndSettle();
 
-        await screenMatchesGolden(tester, 'algorithm_panel_scrolled_bottom');
-      },
-    );
+      await screenMatchesGolden(tester, 'algorithm_panel_scrolled_bottom');
+    });
 
-    testGoldens(
-      'renders panel with partial callbacks in mobile layout',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders panel with partial callbacks in mobile layout', (
+      tester,
+    ) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        await _pumpAlgorithmPanel(
-          tester,
-          onNfaToDfa: () {},
-          onMinimizeDfa: () {},
-          onClear: () {},
-          // Other callbacks left as null to show disabled state
-          size: const Size(320, 700),
-        );
+      await _pumpAlgorithmPanel(
+        tester,
+        onNfaToDfa: () {},
+        onMinimizeDfa: () {},
+        onClear: () {},
+        // Other callbacks left as null to show disabled state
+        size: const Size(320, 700),
+      );
 
-        await screenMatchesGolden(tester, 'algorithm_panel_partial_mobile');
-      },
-    );
+      await screenMatchesGolden(tester, 'algorithm_panel_partial_mobile');
+    });
 
-    testGoldens(
-      'renders panel focusing on conversion algorithms',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders panel focusing on conversion algorithms', (
+      tester,
+    ) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        await _pumpAlgorithmPanel(
-          tester,
-          onNfaToDfa: () {},
-          onRemoveLambda: () {},
-          onMinimizeDfa: () {},
-          onRegexToNfa: (regex) {},
-          onFaToRegex: () {},
-          size: const Size(400, 700),
-        );
+      await _pumpAlgorithmPanel(
+        tester,
+        onNfaToDfa: () {},
+        onRemoveLambda: () {},
+        onMinimizeDfa: () {},
+        onRegexToNfa: (regex) {},
+        onFaToRegex: () {},
+        size: const Size(400, 700),
+      );
 
-        await screenMatchesGolden(tester, 'algorithm_panel_conversions');
-      },
-    );
+      await screenMatchesGolden(tester, 'algorithm_panel_conversions');
+    });
 
-    testGoldens(
-      'renders panel with regex and equivalence in tablet layout',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders panel with regex and equivalence in tablet layout', (
+      tester,
+    ) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        await _pumpAlgorithmPanel(
-          tester,
-          onNfaToDfa: () {},
-          onRegexToNfa: (regex) {},
-          onClear: () {},
-          equivalenceResult: true,
-          equivalenceDetails: 'The two automata accept the same language',
-          size: const Size(350, 800),
-        );
+      await _pumpAlgorithmPanel(
+        tester,
+        onNfaToDfa: () {},
+        onRegexToNfa: (regex) {},
+        onClear: () {},
+        equivalenceResult: true,
+        equivalenceDetails: 'The two automata accept the same language',
+        size: const Size(350, 800),
+      );
 
-        // Enter regex
-        await tester.enterText(find.byType(TextField), 'a*b+');
-        await tester.pumpAndSettle();
+      // Enter regex
+      await tester.enterText(find.byType(TextField), 'a*b+');
+      await tester.pumpAndSettle();
 
-        await screenMatchesGolden(
-          tester,
-          'algorithm_panel_regex_equiv_tablet',
-        );
-      },
-    );
+      await screenMatchesGolden(tester, 'algorithm_panel_regex_equiv_tablet');
+    });
 
-    testGoldens(
-      'renders compact panel with essential operations',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders compact panel with essential operations', (
+      tester,
+    ) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        await _pumpAlgorithmPanel(
-          tester,
-          onNfaToDfa: () {},
-          onMinimizeDfa: () {},
-          onCompleteDfa: () {},
-          onComplementDfa: () {},
-          onClear: () {},
-          onAutoLayout: () {},
-          size: const Size(380, 650),
-        );
+      await _pumpAlgorithmPanel(
+        tester,
+        onNfaToDfa: () {},
+        onMinimizeDfa: () {},
+        onCompleteDfa: () {},
+        onComplementDfa: () {},
+        onClear: () {},
+        onAutoLayout: () {},
+        size: const Size(380, 650),
+      );
 
-        await screenMatchesGolden(tester, 'algorithm_panel_compact');
-      },
-    );
+      await screenMatchesGolden(tester, 'algorithm_panel_compact');
+    });
   });
 }

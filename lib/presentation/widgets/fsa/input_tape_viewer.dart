@@ -85,7 +85,8 @@ class _InputTapePanelState extends State<InputTapePanel>
   @override
   void didUpdateWidget(InputTapePanel oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.tapeState.currentPosition != widget.tapeState.currentPosition) {
+    if (oldWidget.tapeState.currentPosition !=
+        widget.tapeState.currentPosition) {
       _animationController.forward(from: 0);
       _scrollToCurrentPosition();
     }
@@ -155,10 +156,7 @@ class _InputTapePanelState extends State<InputTapePanel>
             const Divider(height: 12),
 
             // Tape Visual
-            SizedBox(
-              height: 60,
-              child: _buildTapeContent(theme),
-            ),
+            SizedBox(height: 60, child: _buildTapeContent(theme)),
           ],
         ),
       ),
@@ -210,8 +208,8 @@ class _InputTapePanelState extends State<InputTapePanel>
         color: isCurrent
             ? theme.colorScheme.primaryContainer
             : isRead
-                ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
-                : theme.colorScheme.surfaceContainerHighest,
+            ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
+            : theme.colorScheme.surfaceContainerHighest,
         border: Border.all(
           color: isCurrent
               ? theme.colorScheme.primary
@@ -238,8 +236,8 @@ class _InputTapePanelState extends State<InputTapePanel>
               color: isCurrent
                   ? theme.colorScheme.primary
                   : isRead
-                      ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
-                      : theme.colorScheme.onSurface,
+                  ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
+                  : theme.colorScheme.onSurface,
             ),
           ),
         ],

@@ -32,10 +32,7 @@ import 'package:jflutter/presentation/widgets/fsa/determinism_badge.dart';
 import 'package:jflutter/presentation/widgets/graphview_canvas_toolbar.dart';
 
 class _TestAutomatonProvider extends AutomatonStateNotifier {
-  _TestAutomatonProvider()
-    : super(
-        automatonService: AutomatonService(),
-      );
+  _TestAutomatonProvider() : super(automatonService: AutomatonService());
 }
 
 // Widget that composes toolbar + canvas like FSA page does
@@ -43,10 +40,7 @@ class _FSAPageTestWidget extends StatefulWidget {
   final FSA? automaton;
   final bool isMobile;
 
-  const _FSAPageTestWidget({
-    this.automaton,
-    this.isMobile = false,
-  });
+  const _FSAPageTestWidget({this.automaton, this.isMobile = false});
 
   @override
   State<_FSAPageTestWidget> createState() => _FSAPageTestWidgetState();
@@ -125,8 +119,9 @@ class _FSAPageTestWidgetState extends State<_FSAPageTestWidget> {
                   }
                 },
                 onClear: () {},
-                statusMessage:
-                    widget.automaton == null ? 'No automaton loaded' : '',
+                statusMessage: widget.automaton == null
+                    ? 'No automaton loaded'
+                    : '',
               );
             },
           ),
@@ -148,10 +143,7 @@ Future<void> _pumpFSAPageComponents(
 
   await tester.pumpWidgetBuilder(
     MaterialApp(
-      home: _FSAPageTestWidget(
-        automaton: automaton,
-        isMobile: isMobile,
-      ),
+      home: _FSAPageTestWidget(automaton: automaton, isMobile: isMobile),
     ),
   );
 
@@ -171,59 +163,56 @@ void main() {
   });
 
   group('FSA Page Components golden tests', () {
-    testGoldens(
-      'renders empty canvas with toolbar in desktop layout',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders empty canvas with toolbar in desktop layout', (
+      tester,
+    ) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        await _pumpFSAPageComponents(
-          tester,
-          size: const Size(1400, 900),
-          isMobile: false,
-        );
+      await _pumpFSAPageComponents(
+        tester,
+        size: const Size(1400, 900),
+        isMobile: false,
+      );
 
-        await screenMatchesGolden(tester, 'fsa_page_empty_desktop');
-      },
-    );
+      await screenMatchesGolden(tester, 'fsa_page_empty_desktop');
+    });
 
-    testGoldens(
-      'renders empty canvas with toolbar in tablet layout',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders empty canvas with toolbar in tablet layout', (
+      tester,
+    ) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        await _pumpFSAPageComponents(
-          tester,
-          size: const Size(1200, 800),
-          isMobile: false,
-        );
+      await _pumpFSAPageComponents(
+        tester,
+        size: const Size(1200, 800),
+        isMobile: false,
+      );
 
-        await screenMatchesGolden(tester, 'fsa_page_empty_tablet');
-      },
-    );
+      await screenMatchesGolden(tester, 'fsa_page_empty_tablet');
+    });
 
-    testGoldens(
-      'renders empty canvas with toolbar in mobile layout',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders empty canvas with toolbar in mobile layout', (
+      tester,
+    ) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        await _pumpFSAPageComponents(
-          tester,
-          size: const Size(430, 932),
-          isMobile: true,
-        );
+      await _pumpFSAPageComponents(
+        tester,
+        size: const Size(430, 932),
+        isMobile: true,
+      );
 
-        await screenMatchesGolden(tester, 'fsa_page_empty_mobile');
-      },
-    );
+      await screenMatchesGolden(tester, 'fsa_page_empty_mobile');
+    });
 
     testGoldens(
       'renders canvas with toolbar and simple DFA in desktop layout',
@@ -283,278 +272,272 @@ void main() {
       },
     );
 
-    testGoldens(
-      'renders canvas with toolbar and NFA in desktop layout',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders canvas with toolbar and NFA in desktop layout', (
+      tester,
+    ) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        final q0 = automaton_state.State(
-          id: 'q0',
-          label: 'q0',
-          position: Vector2(200, 200),
-          isInitial: true,
-          isAccepting: false,
-        );
+      final q0 = automaton_state.State(
+        id: 'q0',
+        label: 'q0',
+        position: Vector2(200, 200),
+        isInitial: true,
+        isAccepting: false,
+      );
 
-        final q1 = automaton_state.State(
-          id: 'q1',
-          label: 'q1',
-          position: Vector2(400, 200),
-          isInitial: false,
-          isAccepting: true,
-        );
+      final q1 = automaton_state.State(
+        id: 'q1',
+        label: 'q1',
+        position: Vector2(400, 200),
+        isInitial: false,
+        isAccepting: true,
+      );
 
-        // Two transitions with same symbol - makes it nondeterministic
-        final t1 = FSATransition(
-          id: 't1',
-          fromState: q0,
-          toState: q1,
-          symbol: 'a',
-          label: 'a',
-        );
+      // Two transitions with same symbol - makes it nondeterministic
+      final t1 = FSATransition(
+        id: 't1',
+        fromState: q0,
+        toState: q1,
+        symbol: 'a',
+        label: 'a',
+      );
 
-        final t2 = FSATransition(
-          id: 't2',
-          fromState: q0,
-          toState: q0,
-          symbol: 'a',
-          label: 'a',
-        );
+      final t2 = FSATransition(
+        id: 't2',
+        fromState: q0,
+        toState: q0,
+        symbol: 'a',
+        label: 'a',
+      );
 
-        final automaton = FSA(
-          id: 'simple-nfa',
-          name: 'Simple NFA',
-          states: <automaton_state.State>{q0, q1},
-          transitions: <FSATransition>{t1, t2},
-          alphabet: const <String>{'a'},
-          initialState: q0,
-          acceptingStates: <automaton_state.State>{q1},
-          created: DateTime.utc(2024, 1, 1),
-          modified: DateTime.utc(2024, 1, 1),
-          bounds: const math.Rectangle<double>(0, 0, 800, 600),
-          zoomLevel: 1,
-          panOffset: Vector2.zero(),
-        );
+      final automaton = FSA(
+        id: 'simple-nfa',
+        name: 'Simple NFA',
+        states: <automaton_state.State>{q0, q1},
+        transitions: <FSATransition>{t1, t2},
+        alphabet: const <String>{'a'},
+        initialState: q0,
+        acceptingStates: <automaton_state.State>{q1},
+        created: DateTime.utc(2024, 1, 1),
+        modified: DateTime.utc(2024, 1, 1),
+        bounds: const math.Rectangle<double>(0, 0, 800, 600),
+        zoomLevel: 1,
+        panOffset: Vector2.zero(),
+      );
 
-        await _pumpFSAPageComponents(
-          tester,
-          automaton: automaton,
-          size: const Size(1400, 900),
-          isMobile: false,
-        );
+      await _pumpFSAPageComponents(
+        tester,
+        automaton: automaton,
+        size: const Size(1400, 900),
+        isMobile: false,
+      );
 
-        await screenMatchesGolden(tester, 'fsa_page_nfa_desktop');
-      },
-    );
+      await screenMatchesGolden(tester, 'fsa_page_nfa_desktop');
+    });
 
-    testGoldens(
-      'renders page with epsilon-NFA in desktop layout',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders page with epsilon-NFA in desktop layout', (
+      tester,
+    ) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        final q0 = automaton_state.State(
-          id: 'q0',
-          label: 'q0',
-          position: Vector2(200, 200),
-          isInitial: true,
-          isAccepting: false,
-        );
+      final q0 = automaton_state.State(
+        id: 'q0',
+        label: 'q0',
+        position: Vector2(200, 200),
+        isInitial: true,
+        isAccepting: false,
+      );
 
-        final q1 = automaton_state.State(
-          id: 'q1',
-          label: 'q1',
-          position: Vector2(400, 200),
-          isInitial: false,
-          isAccepting: true,
-        );
+      final q1 = automaton_state.State(
+        id: 'q1',
+        label: 'q1',
+        position: Vector2(400, 200),
+        isInitial: false,
+        isAccepting: true,
+      );
 
-        // Epsilon transition
-        final t1 = FSATransition(
-          id: 't1',
-          fromState: q0,
-          toState: q1,
-          symbol: '',
-          label: 'λ',
-        );
+      // Epsilon transition
+      final t1 = FSATransition(
+        id: 't1',
+        fromState: q0,
+        toState: q1,
+        symbol: '',
+        label: 'λ',
+      );
 
-        final automaton = FSA(
-          id: 'epsilon-nfa',
-          name: 'Epsilon-NFA',
-          states: <automaton_state.State>{q0, q1},
-          transitions: <FSATransition>{t1},
-          alphabet: const <String>{'a'},
-          initialState: q0,
-          acceptingStates: <automaton_state.State>{q1},
-          created: DateTime.utc(2024, 1, 1),
-          modified: DateTime.utc(2024, 1, 1),
-          bounds: const math.Rectangle<double>(0, 0, 800, 600),
-          zoomLevel: 1,
-          panOffset: Vector2.zero(),
-        );
+      final automaton = FSA(
+        id: 'epsilon-nfa',
+        name: 'Epsilon-NFA',
+        states: <automaton_state.State>{q0, q1},
+        transitions: <FSATransition>{t1},
+        alphabet: const <String>{'a'},
+        initialState: q0,
+        acceptingStates: <automaton_state.State>{q1},
+        created: DateTime.utc(2024, 1, 1),
+        modified: DateTime.utc(2024, 1, 1),
+        bounds: const math.Rectangle<double>(0, 0, 800, 600),
+        zoomLevel: 1,
+        panOffset: Vector2.zero(),
+      );
 
-        await _pumpFSAPageComponents(
-          tester,
-          automaton: automaton,
-          size: const Size(1400, 900),
-          isMobile: false,
-        );
+      await _pumpFSAPageComponents(
+        tester,
+        automaton: automaton,
+        size: const Size(1400, 900),
+        isMobile: false,
+      );
 
-        await screenMatchesGolden(tester, 'fsa_page_epsilon_nfa_desktop');
-      },
-    );
+      await screenMatchesGolden(tester, 'fsa_page_epsilon_nfa_desktop');
+    });
 
-    testGoldens(
-      'renders page with complex automaton in tablet layout',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders page with complex automaton in tablet layout', (
+      tester,
+    ) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        final q0 = automaton_state.State(
-          id: 'q0',
-          label: 'q0',
-          position: Vector2(150, 200),
-          isInitial: true,
-          isAccepting: false,
-        );
+      final q0 = automaton_state.State(
+        id: 'q0',
+        label: 'q0',
+        position: Vector2(150, 200),
+        isInitial: true,
+        isAccepting: false,
+      );
 
-        final q1 = automaton_state.State(
-          id: 'q1',
-          label: 'q1',
-          position: Vector2(350, 150),
-          isInitial: false,
-          isAccepting: false,
-        );
+      final q1 = automaton_state.State(
+        id: 'q1',
+        label: 'q1',
+        position: Vector2(350, 150),
+        isInitial: false,
+        isAccepting: false,
+      );
 
-        final q2 = automaton_state.State(
-          id: 'q2',
-          label: 'q2',
-          position: Vector2(350, 250),
-          isInitial: false,
-          isAccepting: true,
-        );
+      final q2 = automaton_state.State(
+        id: 'q2',
+        label: 'q2',
+        position: Vector2(350, 250),
+        isInitial: false,
+        isAccepting: true,
+      );
 
-        final t1 = FSATransition(
-          id: 't1',
-          fromState: q0,
-          toState: q1,
-          symbol: 'a',
-          label: 'a',
-        );
+      final t1 = FSATransition(
+        id: 't1',
+        fromState: q0,
+        toState: q1,
+        symbol: 'a',
+        label: 'a',
+      );
 
-        final t2 = FSATransition(
-          id: 't2',
-          fromState: q0,
-          toState: q2,
-          symbol: 'b',
-          label: 'b',
-        );
+      final t2 = FSATransition(
+        id: 't2',
+        fromState: q0,
+        toState: q2,
+        symbol: 'b',
+        label: 'b',
+      );
 
-        final t3 = FSATransition(
-          id: 't3',
-          fromState: q1,
-          toState: q2,
-          symbol: 'b',
-          label: 'b',
-        );
+      final t3 = FSATransition(
+        id: 't3',
+        fromState: q1,
+        toState: q2,
+        symbol: 'b',
+        label: 'b',
+      );
 
-        final t4 = FSATransition(
-          id: 't4',
-          fromState: q2,
-          toState: q2,
-          symbol: 'a',
-          label: 'a',
-        );
+      final t4 = FSATransition(
+        id: 't4',
+        fromState: q2,
+        toState: q2,
+        symbol: 'a',
+        label: 'a',
+      );
 
-        final automaton = FSA(
-          id: 'complex-dfa',
-          name: 'Complex DFA',
-          states: <automaton_state.State>{q0, q1, q2},
-          transitions: <FSATransition>{t1, t2, t3, t4},
-          alphabet: const <String>{'a', 'b'},
-          initialState: q0,
-          acceptingStates: <automaton_state.State>{q2},
-          created: DateTime.utc(2024, 1, 1),
-          modified: DateTime.utc(2024, 1, 1),
-          bounds: const math.Rectangle<double>(0, 0, 800, 600),
-          zoomLevel: 1,
-          panOffset: Vector2.zero(),
-        );
+      final automaton = FSA(
+        id: 'complex-dfa',
+        name: 'Complex DFA',
+        states: <automaton_state.State>{q0, q1, q2},
+        transitions: <FSATransition>{t1, t2, t3, t4},
+        alphabet: const <String>{'a', 'b'},
+        initialState: q0,
+        acceptingStates: <automaton_state.State>{q2},
+        created: DateTime.utc(2024, 1, 1),
+        modified: DateTime.utc(2024, 1, 1),
+        bounds: const math.Rectangle<double>(0, 0, 800, 600),
+        zoomLevel: 1,
+        panOffset: Vector2.zero(),
+      );
 
-        await _pumpFSAPageComponents(
-          tester,
-          automaton: automaton,
-          size: const Size(1200, 800),
-          isMobile: false,
-        );
+      await _pumpFSAPageComponents(
+        tester,
+        automaton: automaton,
+        size: const Size(1200, 800),
+        isMobile: false,
+      );
 
-        await screenMatchesGolden(tester, 'fsa_page_complex_tablet');
-      },
-    );
+      await screenMatchesGolden(tester, 'fsa_page_complex_tablet');
+    });
 
-    testGoldens(
-      'renders page with automaton in mobile layout',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders page with automaton in mobile layout', (tester) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        final q0 = automaton_state.State(
-          id: 'q0',
-          label: 'q0',
-          position: Vector2(150, 200),
-          isInitial: true,
-          isAccepting: false,
-        );
+      final q0 = automaton_state.State(
+        id: 'q0',
+        label: 'q0',
+        position: Vector2(150, 200),
+        isInitial: true,
+        isAccepting: false,
+      );
 
-        final q1 = automaton_state.State(
-          id: 'q1',
-          label: 'q1',
-          position: Vector2(300, 200),
-          isInitial: false,
-          isAccepting: true,
-        );
+      final q1 = automaton_state.State(
+        id: 'q1',
+        label: 'q1',
+        position: Vector2(300, 200),
+        isInitial: false,
+        isAccepting: true,
+      );
 
-        final transition = FSATransition(
-          id: 't1',
-          fromState: q0,
-          toState: q1,
-          symbol: 'a',
-          label: 'a',
-        );
+      final transition = FSATransition(
+        id: 't1',
+        fromState: q0,
+        toState: q1,
+        symbol: 'a',
+        label: 'a',
+      );
 
-        final automaton = FSA(
-          id: 'mobile-dfa',
-          name: 'Mobile DFA',
-          states: <automaton_state.State>{q0, q1},
-          transitions: <FSATransition>{transition},
-          alphabet: const <String>{'a'},
-          initialState: q0,
-          acceptingStates: <automaton_state.State>{q1},
-          created: DateTime.utc(2024, 1, 1),
-          modified: DateTime.utc(2024, 1, 1),
-          bounds: const math.Rectangle<double>(0, 0, 800, 600),
-          zoomLevel: 1,
-          panOffset: Vector2.zero(),
-        );
+      final automaton = FSA(
+        id: 'mobile-dfa',
+        name: 'Mobile DFA',
+        states: <automaton_state.State>{q0, q1},
+        transitions: <FSATransition>{transition},
+        alphabet: const <String>{'a'},
+        initialState: q0,
+        acceptingStates: <automaton_state.State>{q1},
+        created: DateTime.utc(2024, 1, 1),
+        modified: DateTime.utc(2024, 1, 1),
+        bounds: const math.Rectangle<double>(0, 0, 800, 600),
+        zoomLevel: 1,
+        panOffset: Vector2.zero(),
+      );
 
-        await _pumpFSAPageComponents(
-          tester,
-          automaton: automaton,
-          size: const Size(430, 932),
-          isMobile: true,
-        );
+      await _pumpFSAPageComponents(
+        tester,
+        automaton: automaton,
+        size: const Size(430, 932),
+        isMobile: true,
+      );
 
-        await screenMatchesGolden(tester, 'fsa_page_mobile_dfa');
-      },
-    );
+      await screenMatchesGolden(tester, 'fsa_page_mobile_dfa');
+    });
   });
 }

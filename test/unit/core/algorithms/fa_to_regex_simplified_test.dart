@@ -110,10 +110,14 @@ void main() {
           final simplified = simplifiedResult.data!;
 
           // Count parentheses
-          final unsimplifiedParenCount =
-              unsimplified.split('').where((c) => c == '(').length;
-          final simplifiedParenCount =
-              simplified.split('').where((c) => c == '(').length;
+          final unsimplifiedParenCount = unsimplified
+              .split('')
+              .where((c) => c == '(')
+              .length;
+          final simplifiedParenCount = simplified
+              .split('')
+              .where((c) => c == '(')
+              .length;
 
           expect(
             simplifiedParenCount,
@@ -276,8 +280,14 @@ void main() {
             final testStrings = ['', 'a', 'b', 'ab', 'aa', 'bb', 'abc'];
 
             for (final testString in testStrings) {
-              final sim1 = await AutomatonSimulator.simulateNFA(nfa1, testString);
-              final sim2 = await AutomatonSimulator.simulateNFA(nfa2, testString);
+              final sim1 = await AutomatonSimulator.simulateNFA(
+                nfa1,
+                testString,
+              );
+              final sim2 = await AutomatonSimulator.simulateNFA(
+                nfa2,
+                testString,
+              );
 
               expect(sim1.isSuccess, true);
               expect(sim2.isSuccess, true);

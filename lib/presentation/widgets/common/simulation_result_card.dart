@@ -92,7 +92,8 @@ class SimulationResultCard extends StatelessWidget {
             const SizedBox(height: 12),
             _buildPathVisualization(context),
           ],
-          if (showTransitionSequence && result.transitionSequence.isNotEmpty) ...[
+          if (showTransitionSequence &&
+              result.transitionSequence.isNotEmpty) ...[
             const SizedBox(height: 12),
             _buildTransitionSequence(context),
           ],
@@ -224,18 +225,14 @@ class SimulationResultCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.error_outline,
-            size: 16,
-            color: colorScheme.error,
-          ),
+          Icon(Icons.error_outline, size: 16, color: colorScheme.error),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               result.errorMessage,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colorScheme.error,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: colorScheme.error),
             ),
           ),
         ],
@@ -256,11 +253,7 @@ class SimulationResultCard extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(
-              Icons.timeline,
-              size: 16,
-              color: colorScheme.primary,
-            ),
+            Icon(Icons.timeline, size: 16, color: colorScheme.primary),
             const SizedBox(width: 6),
             Text(
               'Execution Path',
@@ -315,8 +308,8 @@ class SimulationResultCard extends StatelessWidget {
     final color = isFirst
         ? colorScheme.primary
         : (isLast
-            ? (isAccepted ? colorScheme.tertiary : colorScheme.error)
-            : colorScheme.secondary);
+              ? (isAccepted ? colorScheme.tertiary : colorScheme.error)
+              : colorScheme.secondary);
 
     final formattedState = state.isEmpty ? '∅' : state;
 
@@ -378,11 +371,7 @@ class SimulationResultCard extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(
-              Icons.swap_horiz,
-              size: 16,
-              color: colorScheme.secondary,
-            ),
+            Icon(Icons.swap_horiz, size: 16, color: colorScheme.secondary),
             const SizedBox(width: 6),
             Text(
               'Transitions',

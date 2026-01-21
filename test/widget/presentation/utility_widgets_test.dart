@@ -9,13 +9,12 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('DiagnosticsPanel', () {
-    testWidgets('renders header with diagnostics icon and title',
-        (tester) async {
+    testWidgets('renders header with diagnostics icon and title', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: DiagnosticsPanel(diagnostics: []),
-          ),
+          home: Scaffold(body: DiagnosticsPanel(diagnostics: [])),
         ),
       );
 
@@ -23,13 +22,12 @@ void main() {
       expect(find.text('Diagnostics'), findsOneWidget);
     });
 
-    testWidgets('shows "No issues found" when diagnostics list is empty',
-        (tester) async {
+    testWidgets('shows "No issues found" when diagnostics list is empty', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: DiagnosticsPanel(diagnostics: []),
-          ),
+          home: Scaffold(body: DiagnosticsPanel(diagnostics: [])),
         ),
       );
 
@@ -37,13 +35,12 @@ void main() {
       expect(find.text('No issues found'), findsOneWidget);
     });
 
-    testWidgets('does not show refresh button when onRefresh is null',
-        (tester) async {
+    testWidgets('does not show refresh button when onRefresh is null', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: DiagnosticsPanel(diagnostics: []),
-          ),
+          home: Scaffold(body: DiagnosticsPanel(diagnostics: [])),
         ),
       );
 
@@ -51,8 +48,9 @@ void main() {
       expect(find.byTooltip('Refresh diagnostics'), findsNothing);
     });
 
-    testWidgets('shows refresh button when onRefresh is provided',
-        (tester) async {
+    testWidgets('shows refresh button when onRefresh is provided', (
+      tester,
+    ) async {
       var refreshCallCount = 0;
 
       await tester.pumpWidget(
@@ -75,8 +73,9 @@ void main() {
       expect(refreshCallCount, 1);
     });
 
-    testWidgets('shows loading indicator when isLoading is true',
-        (tester) async {
+    testWidgets('shows loading indicator when isLoading is true', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -93,8 +92,9 @@ void main() {
       expect(find.byIcon(Icons.refresh), findsNothing);
     });
 
-    testWidgets('disables refresh button when isLoading is true',
-        (tester) async {
+    testWidgets('disables refresh button when isLoading is true', (
+      tester,
+    ) async {
       var refreshCallCount = 0;
 
       await tester.pumpWidget(
@@ -115,8 +115,9 @@ void main() {
       expect(refreshButton.onPressed, isNull);
     });
 
-    testWidgets('renders error diagnostic with correct icon and color',
-        (tester) async {
+    testWidgets('renders error diagnostic with correct icon and color', (
+      tester,
+    ) async {
       final diagnostics = [
         DiagnosticMessage.error(
           'Test Error',
@@ -127,9 +128,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: DiagnosticsPanel(diagnostics: diagnostics),
-          ),
+          home: Scaffold(body: DiagnosticsPanel(diagnostics: diagnostics)),
         ),
       );
 
@@ -141,20 +140,16 @@ void main() {
       expect(errorIcon.color, Colors.red.shade600);
     });
 
-    testWidgets('renders warning diagnostic with correct icon and color',
-        (tester) async {
+    testWidgets('renders warning diagnostic with correct icon and color', (
+      tester,
+    ) async {
       final diagnostics = [
-        DiagnosticMessage.warning(
-          'Test Warning',
-          'This is a warning message',
-        ),
+        DiagnosticMessage.warning('Test Warning', 'This is a warning message'),
       ];
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: DiagnosticsPanel(diagnostics: diagnostics),
-          ),
+          home: Scaffold(body: DiagnosticsPanel(diagnostics: diagnostics)),
         ),
       );
 
@@ -166,20 +161,16 @@ void main() {
       expect(warningIcon.color, Colors.orange.shade600);
     });
 
-    testWidgets('renders info diagnostic with correct icon and color',
-        (tester) async {
+    testWidgets('renders info diagnostic with correct icon and color', (
+      tester,
+    ) async {
       final diagnostics = [
-        DiagnosticMessage.info(
-          'Test Info',
-          'This is an info message',
-        ),
+        DiagnosticMessage.info('Test Info', 'This is an info message'),
       ];
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: DiagnosticsPanel(diagnostics: diagnostics),
-          ),
+          home: Scaffold(body: DiagnosticsPanel(diagnostics: diagnostics)),
         ),
       );
 
@@ -202,9 +193,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: DiagnosticsPanel(diagnostics: diagnostics),
-          ),
+          home: Scaffold(body: DiagnosticsPanel(diagnostics: diagnostics)),
         ),
       );
 
@@ -219,17 +208,12 @@ void main() {
 
     testWidgets('does not show suggestion when it is null', (tester) async {
       final diagnostics = [
-        DiagnosticMessage.error(
-          'Test Error',
-          'This is an error message',
-        ),
+        DiagnosticMessage.error('Test Error', 'This is an error message'),
       ];
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: DiagnosticsPanel(diagnostics: diagnostics),
-          ),
+          home: Scaffold(body: DiagnosticsPanel(diagnostics: diagnostics)),
         ),
       );
 
@@ -239,8 +223,7 @@ void main() {
       expect(find.byIcon(Icons.lightbulb_outline), findsNothing);
     });
 
-    testWidgets('renders multiple diagnostics with separators',
-        (tester) async {
+    testWidgets('renders multiple diagnostics with separators', (tester) async {
       final diagnostics = [
         DiagnosticMessage.error('Error 1', 'First error'),
         DiagnosticMessage.warning('Warning 1', 'First warning'),
@@ -249,9 +232,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: DiagnosticsPanel(diagnostics: diagnostics),
-          ),
+          home: Scaffold(body: DiagnosticsPanel(diagnostics: diagnostics)),
         ),
       );
 
@@ -264,13 +245,12 @@ void main() {
   });
 
   group('DiagnosticsSummary', () {
-    testWidgets('returns empty widget when diagnostics list is empty',
-        (tester) async {
+    testWidgets('returns empty widget when diagnostics list is empty', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: DiagnosticsSummary(diagnostics: []),
-          ),
+          home: Scaffold(body: DiagnosticsSummary(diagnostics: [])),
         ),
       );
 
@@ -280,8 +260,9 @@ void main() {
       expect(sizedBox.height, 0.0);
     });
 
-    testWidgets('displays error icon and count for error diagnostics',
-        (tester) async {
+    testWidgets('displays error icon and count for error diagnostics', (
+      tester,
+    ) async {
       final diagnostics = [
         DiagnosticMessage.error('Error 1', 'Message 1'),
         DiagnosticMessage.error('Error 2', 'Message 2'),
@@ -289,9 +270,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: DiagnosticsSummary(diagnostics: diagnostics),
-          ),
+          home: Scaffold(body: DiagnosticsSummary(diagnostics: diagnostics)),
         ),
       );
 
@@ -302,17 +281,14 @@ void main() {
       expect(errorIcon.color, Colors.red.shade600);
     });
 
-    testWidgets('displays warning icon and count for warning diagnostics',
-        (tester) async {
-      final diagnostics = [
-        DiagnosticMessage.warning('Warning 1', 'Message 1'),
-      ];
+    testWidgets('displays warning icon and count for warning diagnostics', (
+      tester,
+    ) async {
+      final diagnostics = [DiagnosticMessage.warning('Warning 1', 'Message 1')];
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: DiagnosticsSummary(diagnostics: diagnostics),
-          ),
+          home: Scaffold(body: DiagnosticsSummary(diagnostics: diagnostics)),
         ),
       );
 
@@ -323,8 +299,9 @@ void main() {
       expect(warningIcon.color, Colors.orange.shade600);
     });
 
-    testWidgets('displays info icon and count for info diagnostics',
-        (tester) async {
+    testWidgets('displays info icon and count for info diagnostics', (
+      tester,
+    ) async {
       final diagnostics = [
         DiagnosticMessage.info('Info 1', 'Message 1'),
         DiagnosticMessage.info('Info 2', 'Message 2'),
@@ -333,9 +310,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: DiagnosticsSummary(diagnostics: diagnostics),
-          ),
+          home: Scaffold(body: DiagnosticsSummary(diagnostics: diagnostics)),
         ),
       );
 
@@ -346,8 +321,9 @@ void main() {
       expect(infoIcon.color, Colors.blue.shade600);
     });
 
-    testWidgets('displays all severity counts when mixed diagnostics',
-        (tester) async {
+    testWidgets('displays all severity counts when mixed diagnostics', (
+      tester,
+    ) async {
       final diagnostics = [
         DiagnosticMessage.error('Error 1', 'Message 1'),
         DiagnosticMessage.error('Error 2', 'Message 2'),
@@ -359,9 +335,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: DiagnosticsSummary(diagnostics: diagnostics),
-          ),
+          home: Scaffold(body: DiagnosticsSummary(diagnostics: diagnostics)),
         ),
       );
 
@@ -378,9 +352,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: DiagnosticsSummary(diagnostics: diagnostics),
-          ),
+          home: Scaffold(body: DiagnosticsSummary(diagnostics: diagnostics)),
         ),
       );
 
@@ -398,8 +370,9 @@ void main() {
       expect(decoration.border, isA<Border>());
     });
 
-    testWidgets('uses warning styling when warnings but no errors',
-        (tester) async {
+    testWidgets('uses warning styling when warnings but no errors', (
+      tester,
+    ) async {
       final diagnostics = [
         DiagnosticMessage.warning('Warning 1', 'Message 1'),
         DiagnosticMessage.info('Info 1', 'Message 2'),
@@ -407,9 +380,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: DiagnosticsSummary(diagnostics: diagnostics),
-          ),
+          home: Scaffold(body: DiagnosticsSummary(diagnostics: diagnostics)),
         ),
       );
 
@@ -426,8 +397,7 @@ void main() {
       expect(decoration.color, Colors.orange.shade50);
     });
 
-    testWidgets('uses info styling when only info diagnostics',
-        (tester) async {
+    testWidgets('uses info styling when only info diagnostics', (tester) async {
       final diagnostics = [
         DiagnosticMessage.info('Info 1', 'Message 1'),
         DiagnosticMessage.info('Info 2', 'Message 2'),
@@ -435,9 +405,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: DiagnosticsSummary(diagnostics: diagnostics),
-          ),
+          home: Scaffold(body: DiagnosticsSummary(diagnostics: diagnostics)),
         ),
       );
 
@@ -456,8 +424,9 @@ void main() {
   });
 
   group('showCanvasContextActions', () {
-    testWidgets('displays canvas actions sheet with title and subtitle',
-        (tester) async {
+    testWidgets('displays canvas actions sheet with title and subtitle', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -523,8 +492,9 @@ void main() {
       expect(find.byIcon(Icons.center_focus_strong), findsOneWidget);
     });
 
-    testWidgets('enables add state action when canAddState is true',
-        (tester) async {
+    testWidgets('enables add state action when canAddState is true', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -562,8 +532,9 @@ void main() {
       expect(find.text('There is already an item here'), findsNothing);
     });
 
-    testWidgets('disables add state action when canAddState is false',
-        (tester) async {
+    testWidgets('disables add state action when canAddState is false', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -601,8 +572,9 @@ void main() {
       expect(find.text('There is already an item here'), findsOneWidget);
     });
 
-    testWidgets('calls onAddState and closes sheet when tapped',
-        (tester) async {
+    testWidgets('calls onAddState and closes sheet when tapped', (
+      tester,
+    ) async {
       var addStateCallCount = 0;
 
       await tester.pumpWidget(
@@ -638,8 +610,9 @@ void main() {
       expect(find.text('Canvas actions'), findsNothing);
     });
 
-    testWidgets('calls onFitToContent and closes sheet when tapped',
-        (tester) async {
+    testWidgets('calls onFitToContent and closes sheet when tapped', (
+      tester,
+    ) async {
       var fitToContentCallCount = 0;
 
       await tester.pumpWidget(
@@ -675,8 +648,9 @@ void main() {
       expect(find.text('Canvas actions'), findsNothing);
     });
 
-    testWidgets('calls onResetView and closes sheet when tapped',
-        (tester) async {
+    testWidgets('calls onResetView and closes sheet when tapped', (
+      tester,
+    ) async {
       var resetViewCallCount = 0;
 
       await tester.pumpWidget(

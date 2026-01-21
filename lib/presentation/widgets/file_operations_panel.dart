@@ -80,8 +80,9 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
                 message: _feedback!.message,
                 severity: _feedback!.severity,
                 showRetryButton: _feedback!.canRetry && !_isLoading,
-                onRetry:
-                    _feedback!.canRetry && !_isLoading ? _retryLastOperation : null,
+                onRetry: _feedback!.canRetry && !_isLoading
+                    ? _retryLastOperation
+                    : null,
                 onDismiss: _dismissFeedback,
               ),
               const SizedBox(height: 16),
@@ -429,10 +430,7 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
         stackTrace: stackTrace,
       );
     } else {
-      _showErrorMessage(
-        trimmedMessage,
-        retryOperation: retryOperation,
-      );
+      _showErrorMessage(trimmedMessage, retryOperation: retryOperation);
     }
   }
 

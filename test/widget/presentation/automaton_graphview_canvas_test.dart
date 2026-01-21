@@ -62,10 +62,7 @@ class _FakeLayoutRepository implements LayoutRepository {
 }
 
 class _RecordingAutomatonProvider extends AutomatonStateNotifier {
-  _RecordingAutomatonProvider()
-    : super(
-        automatonService: AutomatonService(),
-      );
+  _RecordingAutomatonProvider() : super(automatonService: AutomatonService());
 
   final List<Map<String, Object?>> transitionCalls = [];
 
@@ -238,8 +235,9 @@ void main() {
           final transformation =
               controller.graphController.transformationController;
           expect(transformation, isNotNull);
-          final initialMatrix =
-              List<double>.from(transformation!.value.storage);
+          final initialMatrix = List<double>.from(
+            transformation!.value.storage,
+          );
 
           await tester.drag(find.text('A'), const Offset(32, 0));
           await tester.pump();
@@ -334,22 +332,21 @@ void main() {
 
         await pumpCanvas(tester, automaton);
 
-        final sourceGesture =
-            await tester.startGesture(tester.getCenter(find.text('A')));
+        final sourceGesture = await tester.startGesture(
+          tester.getCenter(find.text('A')),
+        );
         await sourceGesture.moveBy(const Offset(1, 1));
         await sourceGesture.up();
         await tester.pump();
 
-        final targetGesture =
-            await tester.startGesture(tester.getCenter(find.text('B')));
+        final targetGesture = await tester.startGesture(
+          tester.getCenter(find.text('B')),
+        );
         await targetGesture.moveBy(const Offset(1, -1));
         await targetGesture.up();
         await tester.pumpAndSettle();
 
-        expect(
-          find.byType(GraphViewLabelFieldEditor),
-          findsOneWidget,
-        );
+        expect(find.byType(GraphViewLabelFieldEditor), findsOneWidget);
       },
     );
 

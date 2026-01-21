@@ -72,11 +72,10 @@ void main() {
   late _TestGraphViewCanvasController controller;
 
   setUp(() {
-    provider = AutomatonStateNotifier(
-      automatonService: AutomatonService(),
-    );
-    controller = _TestGraphViewCanvasController(automatonStateNotifier: provider)
-      ..synchronize(provider.state.currentAutomaton);
+    provider = AutomatonStateNotifier(automatonService: AutomatonService());
+    controller = _TestGraphViewCanvasController(
+      automatonStateNotifier: provider,
+    )..synchronize(provider.state.currentAutomaton);
   });
 
   tearDown(() {

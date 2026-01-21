@@ -19,7 +19,10 @@ class _TestSimulationHighlightService extends SimulationHighlightService {
   }
 
   @override
-  SimulationHighlight emitFromSteps(List<SimulationStep> steps, int currentIndex) {
+  SimulationHighlight emitFromSteps(
+    List<SimulationStep> steps,
+    int currentIndex,
+  ) {
     emitFromStepsCallCount++;
     emittedIndices.add(currentIndex);
     return super.emitFromSteps(steps, currentIndex);
@@ -50,7 +53,8 @@ Future<void> _pumpSimulationPanel(
           onSimulate: onSimulate,
           simulationResult: simulationResult,
           regexResult: regexResult,
-          highlightService: highlightService ?? _TestSimulationHighlightService(),
+          highlightService:
+              highlightService ?? _TestSimulationHighlightService(),
           animationSpeed: animationSpeed,
           onAnimationSpeedChanged: onAnimationSpeedChanged,
         ),
@@ -68,10 +72,7 @@ void main() {
     testWidgets('renders basic UI elements', (tester) async {
       final callback = _SimulationCallback();
 
-      await _pumpSimulationPanel(
-        tester,
-        onSimulate: callback,
-      );
+      await _pumpSimulationPanel(tester, onSimulate: callback);
 
       expect(find.text('Simulation'), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
@@ -83,14 +84,12 @@ void main() {
       expect(find.byType(Switch), findsOneWidget);
     });
 
-    testWidgets('calls onSimulate when simulate button is pressed',
-        (tester) async {
+    testWidgets('calls onSimulate when simulate button is pressed', (
+      tester,
+    ) async {
       final callback = _SimulationCallback();
 
-      await _pumpSimulationPanel(
-        tester,
-        onSimulate: callback,
-      );
+      await _pumpSimulationPanel(tester, onSimulate: callback);
 
       await tester.enterText(find.byType(TextField), 'abc');
       await tester.pumpAndSettle();
@@ -101,14 +100,12 @@ void main() {
       expect(callback.receivedInputs, contains('abc'));
     });
 
-    testWidgets('calls onSimulate when Enter is pressed in text field',
-        (tester) async {
+    testWidgets('calls onSimulate when Enter is pressed in text field', (
+      tester,
+    ) async {
       final callback = _SimulationCallback();
 
-      await _pumpSimulationPanel(
-        tester,
-        onSimulate: callback,
-      );
+      await _pumpSimulationPanel(tester, onSimulate: callback);
 
       await tester.enterText(find.byType(TextField), 'test');
       await tester.testTextInput.receiveAction(TextInputAction.done);
@@ -120,10 +117,7 @@ void main() {
     testWidgets('does not call onSimulate with empty input', (tester) async {
       final callback = _SimulationCallback();
 
-      await _pumpSimulationPanel(
-        tester,
-        onSimulate: callback,
-      );
+      await _pumpSimulationPanel(tester, onSimulate: callback);
 
       await tester.tap(find.text('Simulate'));
       await tester.pumpAndSettle();
@@ -134,10 +128,7 @@ void main() {
     testWidgets('shows simulating state when simulating', (tester) async {
       final callback = _SimulationCallback();
 
-      await _pumpSimulationPanel(
-        tester,
-        onSimulate: callback,
-      );
+      await _pumpSimulationPanel(tester, onSimulate: callback);
 
       await tester.enterText(find.byType(TextField), 'abc');
       await tester.pumpAndSettle();
@@ -185,8 +176,9 @@ void main() {
       expect(find.text('Steps: 2'), findsOneWidget);
     });
 
-    testWidgets('displays rejected simulation result with error message',
-        (tester) async {
+    testWidgets('displays rejected simulation result with error message', (
+      tester,
+    ) async {
       final callback = _SimulationCallback();
       final result = SimulationResult.failure(
         inputString: 'xyz',
@@ -275,8 +267,9 @@ void main() {
       expect(highlightService.emitFromStepsCallCount, greaterThan(0));
     });
 
-    testWidgets('toggles step-by-step mode off and clears highlight',
-        (tester) async {
+    testWidgets('toggles step-by-step mode off and clears highlight', (
+      tester,
+    ) async {
       final callback = _SimulationCallback();
       final highlightService = _TestSimulationHighlightService();
       final result = SimulationResult.success(
@@ -365,8 +358,9 @@ void main() {
       expect(highlightService.emittedIndices, contains(1));
     });
 
-    testWidgets('navigates to previous step in step-by-step mode',
-        (tester) async {
+    testWidgets('navigates to previous step in step-by-step mode', (
+      tester,
+    ) async {
       final callback = _SimulationCallback();
       final highlightService = _TestSimulationHighlightService();
       final result = SimulationResult.success(
@@ -415,8 +409,9 @@ void main() {
       expect(highlightService.emittedIndices, contains(0));
     });
 
-    testWidgets('resets to first step when reset button is pressed',
-        (tester) async {
+    testWidgets('resets to first step when reset button is pressed', (
+      tester,
+    ) async {
       final callback = _SimulationCallback();
       final highlightService = _TestSimulationHighlightService();
       final result = SimulationResult.success(
@@ -603,8 +598,7 @@ void main() {
       expect(avatars.length, 2);
     });
 
-    testWidgets('shows play/pause button in step-by-step mode',
-        (tester) async {
+    testWidgets('shows play/pause button in step-by-step mode', (tester) async {
       final callback = _SimulationCallback();
       final result = SimulationResult.success(
         inputString: 'ab',
@@ -702,8 +696,9 @@ void main() {
       expect(find.text('Steps: 2'), findsOneWidget);
     });
 
-    testWidgets('displays current step information in step-by-step mode',
-        (tester) async {
+    testWidgets('displays current step information in step-by-step mode', (
+      tester,
+    ) async {
       final callback = _SimulationCallback();
       final result = SimulationResult.success(
         inputString: 'ab',
@@ -785,8 +780,9 @@ void main() {
       expect(find.textContaining('input accepted'), findsOneWidget);
     });
 
-    testWidgets('handles epsilon transitions in step descriptions',
-        (tester) async {
+    testWidgets('handles epsilon transitions in step descriptions', (
+      tester,
+    ) async {
       final callback = _SimulationCallback();
       final result = SimulationResult.success(
         inputString: '',

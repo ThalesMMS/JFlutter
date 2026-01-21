@@ -98,8 +98,9 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('AlgorithmStepViewer', () {
-    testWidgets('renders step header with number, title, and algorithm badge',
-        (tester) async {
+    testWidgets('renders step header with number, title, and algorithm badge', (
+      tester,
+    ) async {
       final step = AlgorithmStep(
         id: 'step-1',
         stepNumber: 0,
@@ -115,8 +116,9 @@ void main() {
       expect(find.text('NFA→DFA'), findsOneWidget);
     });
 
-    testWidgets('renders explanation section with icon and text',
-        (tester) async {
+    testWidgets('renders explanation section with icon and text', (
+      tester,
+    ) async {
       final step = AlgorithmStep(
         id: 'step-1',
         stepNumber: 0,
@@ -183,9 +185,7 @@ void main() {
         title: 'Test Step',
         explanation: 'Test explanation',
         type: AlgorithmType.nfaToDfa,
-        properties: {
-          'emptySet': <String>{},
-        },
+        properties: {'emptySet': <String>{}},
       );
 
       await _pumpStepViewer(tester, step: step);
@@ -200,9 +200,7 @@ void main() {
         title: 'Test Step',
         explanation: 'Test explanation',
         type: AlgorithmType.nfaToDfa,
-        properties: {
-          'emptyList': <String>[],
-        },
+        properties: {'emptyList': <String>[]},
       );
 
       await _pumpStepViewer(tester, step: step);
@@ -210,18 +208,16 @@ void main() {
       expect(find.text('(empty)'), findsOneWidget);
     });
 
-    testWidgets('renders boolean values with check/cancel icons',
-        (tester) async {
+    testWidgets('renders boolean values with check/cancel icons', (
+      tester,
+    ) async {
       final step = AlgorithmStep(
         id: 'step-1',
         stepNumber: 0,
         title: 'Test Step',
         explanation: 'Test explanation',
         type: AlgorithmType.nfaToDfa,
-        properties: {
-          'isAcceptingState': true,
-          'hasTransitions': false,
-        },
+        properties: {'isAcceptingState': true, 'hasTransitions': false},
       );
 
       await _pumpStepViewer(tester, step: step);
@@ -258,9 +254,7 @@ void main() {
         title: 'Test Step',
         explanation: 'Test explanation',
         type: AlgorithmType.nfaToDfa,
-        properties: {
-          'symbol': '',
-        },
+        properties: {'symbol': ''},
       );
 
       await _pumpStepViewer(tester, step: step);
@@ -268,18 +262,16 @@ void main() {
       expect(find.text('ε'), findsOneWidget);
     });
 
-    testWidgets('formats camelCase property keys to Title Case',
-        (tester) async {
+    testWidgets('formats camelCase property keys to Title Case', (
+      tester,
+    ) async {
       final step = AlgorithmStep(
         id: 'step-1',
         stepNumber: 0,
         title: 'Test Step',
         explanation: 'Test explanation',
         type: AlgorithmType.nfaToDfa,
-        properties: {
-          'currentState': 'q0',
-          'nextStateToProcess': 'q1',
-        },
+        properties: {'currentState': 'q0', 'nextStateToProcess': 'q1'},
       );
 
       await _pumpStepViewer(tester, step: step);
@@ -288,8 +280,9 @@ void main() {
       expect(find.text('Next State To Process'), findsOneWidget);
     });
 
-    testWidgets('hides properties section when properties are empty',
-        (tester) async {
+    testWidgets('hides properties section when properties are empty', (
+      tester,
+    ) async {
       final step = AlgorithmStep(
         id: 'step-1',
         stepNumber: 0,
@@ -305,8 +298,9 @@ void main() {
       expect(find.byIcon(Icons.data_object), findsNothing);
     });
 
-    testWidgets('shows details button when callback is provided',
-        (tester) async {
+    testWidgets('shows details button when callback is provided', (
+      tester,
+    ) async {
       final step = AlgorithmStep(
         id: 'step-1',
         stepNumber: 0,
@@ -315,18 +309,15 @@ void main() {
         type: AlgorithmType.nfaToDfa,
       );
 
-      await _pumpStepViewer(
-        tester,
-        step: step,
-        onShowDetails: () {},
-      );
+      await _pumpStepViewer(tester, step: step, onShowDetails: () {});
 
       expect(find.text('Show More Details'), findsOneWidget);
       expect(find.byIcon(Icons.expand_more), findsOneWidget);
     });
 
-    testWidgets('hides details button when callback is not provided',
-        (tester) async {
+    testWidgets('hides details button when callback is not provided', (
+      tester,
+    ) async {
       final step = AlgorithmStep(
         id: 'step-1',
         stepNumber: 0,
@@ -361,8 +352,9 @@ void main() {
       expect(find.byIcon(Icons.expand_less), findsOneWidget);
     });
 
-    testWidgets('triggers onShowDetails callback when button is tapped',
-        (tester) async {
+    testWidgets('triggers onShowDetails callback when button is tapped', (
+      tester,
+    ) async {
       final callbacks = _TestCallbacks();
       final step = AlgorithmStep(
         id: 'step-1',
@@ -432,21 +424,13 @@ void main() {
     });
 
     testWidgets('displays correct step counter', (tester) async {
-      await _pumpNavigationControls(
-        tester,
-        currentStepIndex: 2,
-        totalSteps: 5,
-      );
+      await _pumpNavigationControls(tester, currentStepIndex: 2, totalSteps: 5);
 
       expect(find.text('3 / 5'), findsOneWidget);
     });
 
     testWidgets('displays 0 / 0 when no steps', (tester) async {
-      await _pumpNavigationControls(
-        tester,
-        currentStepIndex: 0,
-        totalSteps: 0,
-      );
+      await _pumpNavigationControls(tester, currentStepIndex: 0, totalSteps: 0);
 
       expect(find.text('0 / 0'), findsOneWidget);
     });
@@ -466,8 +450,9 @@ void main() {
       expect(previousButton.onPressed, isNull);
     });
 
-    testWidgets('enables previous button when not on first step',
-        (tester) async {
+    testWidgets('enables previous button when not on first step', (
+      tester,
+    ) async {
       await _pumpNavigationControls(
         tester,
         currentStepIndex: 2,
@@ -513,27 +498,22 @@ void main() {
     });
 
     testWidgets('shows play icon when not playing', (tester) async {
-      await _pumpNavigationControls(
-        tester,
-        isPlaying: false,
-      );
+      await _pumpNavigationControls(tester, isPlaying: false);
 
       expect(find.byIcon(Icons.play_arrow), findsOneWidget);
       expect(find.byIcon(Icons.pause), findsNothing);
     });
 
     testWidgets('shows pause icon when playing', (tester) async {
-      await _pumpNavigationControls(
-        tester,
-        isPlaying: true,
-      );
+      await _pumpNavigationControls(tester, isPlaying: true);
 
       expect(find.byIcon(Icons.pause), findsOneWidget);
       expect(find.byIcon(Icons.play_arrow), findsNothing);
     });
 
-    testWidgets('triggers previous callback when button is tapped',
-        (tester) async {
+    testWidgets('triggers previous callback when button is tapped', (
+      tester,
+    ) async {
       final callbacks = _TestCallbacks();
 
       await _pumpNavigationControls(
@@ -551,14 +531,12 @@ void main() {
       expect(callbacks.previousCallCount, 1);
     });
 
-    testWidgets('triggers play/pause callback when button is tapped',
-        (tester) async {
+    testWidgets('triggers play/pause callback when button is tapped', (
+      tester,
+    ) async {
       final callbacks = _TestCallbacks();
 
-      await _pumpNavigationControls(
-        tester,
-        onPlayPause: callbacks.onPlayPause,
-      );
+      await _pumpNavigationControls(tester, onPlayPause: callbacks.onPlayPause);
 
       expect(callbacks.playPauseCallCount, 0);
 
@@ -568,8 +546,7 @@ void main() {
       expect(callbacks.playPauseCallCount, 1);
     });
 
-    testWidgets('triggers next callback when button is tapped',
-        (tester) async {
+    testWidgets('triggers next callback when button is tapped', (tester) async {
       final callbacks = _TestCallbacks();
 
       await _pumpNavigationControls(
@@ -587,31 +564,26 @@ void main() {
       expect(callbacks.nextCallCount, 1);
     });
 
-    testWidgets('shows reset button when callback is provided',
-        (tester) async {
-      await _pumpNavigationControls(
-        tester,
-        onReset: () {},
-      );
+    testWidgets('shows reset button when callback is provided', (tester) async {
+      await _pumpNavigationControls(tester, onReset: () {});
 
       expect(find.byIcon(Icons.refresh), findsOneWidget);
     });
 
-    testWidgets('hides reset button when callback is not provided',
-        (tester) async {
+    testWidgets('hides reset button when callback is not provided', (
+      tester,
+    ) async {
       await _pumpNavigationControls(tester);
 
       expect(find.byIcon(Icons.refresh), findsNothing);
     });
 
-    testWidgets('triggers reset callback when button is tapped',
-        (tester) async {
+    testWidgets('triggers reset callback when button is tapped', (
+      tester,
+    ) async {
       final callbacks = _TestCallbacks();
 
-      await _pumpNavigationControls(
-        tester,
-        onReset: callbacks.onReset,
-      );
+      await _pumpNavigationControls(tester, onReset: callbacks.onReset);
 
       expect(callbacks.resetCallCount, 0);
 
@@ -621,20 +593,17 @@ void main() {
       expect(callbacks.resetCallCount, 1);
     });
 
-    testWidgets('shows speed slider when callback is provided',
-        (tester) async {
-      await _pumpNavigationControls(
-        tester,
-        onSpeedChanged: (value) {},
-      );
+    testWidgets('shows speed slider when callback is provided', (tester) async {
+      await _pumpNavigationControls(tester, onSpeedChanged: (value) {});
 
       expect(find.text('Speed:'), findsOneWidget);
       expect(find.byType(Slider), findsOneWidget);
       expect(find.byIcon(Icons.speed), findsOneWidget);
     });
 
-    testWidgets('hides speed slider when callback is not provided',
-        (tester) async {
+    testWidgets('hides speed slider when callback is not provided', (
+      tester,
+    ) async {
       await _pumpNavigationControls(tester);
 
       expect(find.text('Speed:'), findsNothing);
@@ -651,8 +620,9 @@ void main() {
       expect(find.text('2.50x'), findsNWidgets(2)); // Label and display text
     });
 
-    testWidgets('triggers speed change callback when slider is moved',
-        (tester) async {
+    testWidgets('triggers speed change callback when slider is moved', (
+      tester,
+    ) async {
       final callbacks = _TestCallbacks();
 
       await _pumpNavigationControls(
@@ -682,8 +652,7 @@ void main() {
 
       expect(
         find.byWidgetPredicate(
-          (widget) =>
-              widget is IconButton && widget.tooltip == 'Previous Step',
+          (widget) => widget is IconButton && widget.tooltip == 'Previous Step',
         ),
         findsOneWidget,
       );

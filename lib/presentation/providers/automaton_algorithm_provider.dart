@@ -188,9 +188,9 @@ class AutomatonAlgorithmNotifier
         final conversionResult = result.data!;
 
         // Update the automaton in the state provider
-        ref.read(automatonStateProvider.notifier).updateAutomaton(
-          conversionResult.resultDFA,
-        );
+        ref
+            .read(automatonStateProvider.notifier)
+            .updateAutomaton(conversionResult.resultDFA);
 
         // Store the step result in state
         state = state.copyWith(
@@ -208,9 +208,9 @@ class AutomatonAlgorithmNotifier
           );
         }).toList();
 
-        ref.read(algorithmStepProvider.notifier).initializeSteps(
-          algorithmSteps,
-        );
+        ref
+            .read(algorithmStepProvider.notifier)
+            .initializeSteps(algorithmSteps);
       } else {
         state = state.copyWith(isLoading: false, error: result.error);
       }
@@ -274,9 +274,9 @@ class AutomatonAlgorithmNotifier
         final minimizationResult = result.data!;
 
         // Update the automaton in the state provider
-        ref.read(automatonStateProvider.notifier).updateAutomaton(
-          minimizationResult.resultDFA,
-        );
+        ref
+            .read(automatonStateProvider.notifier)
+            .updateAutomaton(minimizationResult.resultDFA);
 
         // Store the step result in state
         state = state.copyWith(
@@ -294,9 +294,9 @@ class AutomatonAlgorithmNotifier
           );
         }).toList();
 
-        ref.read(algorithmStepProvider.notifier).initializeSteps(
-          algorithmSteps,
-        );
+        ref
+            .read(algorithmStepProvider.notifier)
+            .initializeSteps(algorithmSteps);
       } else {
         state = state.copyWith(isLoading: false, error: result.error);
       }
@@ -401,13 +401,15 @@ class AutomatonAlgorithmNotifier
 
       // Generate simplified regex
       final simplifyResult = RegexSimplifier.simplify(rawRegex);
-      final simplifiedRegex = simplifyResult.isSuccess && simplifyResult.data != null
+      final simplifiedRegex =
+          simplifyResult.isSuccess && simplifyResult.data != null
           ? simplifyResult.data!
           : rawRegex; // Fall back to raw if simplification fails
 
       // Store both versions in state
       state = state.copyWith(
-        regexResult: simplifiedRegex, // Default to simplified for backward compatibility
+        regexResult:
+            simplifiedRegex, // Default to simplified for backward compatibility
         rawRegexResult: rawRegex,
         simplifiedRegexResult: simplifiedRegex,
         isLoading: false,
@@ -457,9 +459,9 @@ class AutomatonAlgorithmNotifier
           );
         }).toList();
 
-        ref.read(algorithmStepProvider.notifier).initializeSteps(
-          algorithmSteps,
-        );
+        ref
+            .read(algorithmStepProvider.notifier)
+            .initializeSteps(algorithmSteps);
 
         return conversionResult.resultRegex;
       } else {

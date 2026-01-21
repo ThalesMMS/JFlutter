@@ -95,13 +95,13 @@ class _PDAStackPanelState extends State<PDAStackPanel>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 1), // Start from bottom
-      end: Offset.zero, // End at normal position
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    ));
+    _slideAnimation =
+        Tween<Offset>(
+          begin: const Offset(0, 1), // Start from bottom
+          end: Offset.zero, // End at normal position
+        ).animate(
+          CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+        );
     _scrollController = ScrollController();
     _previousStackSize = widget.stackState.size;
   }
@@ -231,11 +231,9 @@ class _PDAStackPanelState extends State<PDAStackPanel>
               ],
             ),
             const Divider(height: 10), // Reduced divider height
-
             // Stack Info Panel
             _buildStackInfo(theme),
             const Divider(height: 10), // Reduced divider height
-
             // Content
             Flexible(
               child: widget.stackState.isEmpty
@@ -266,133 +264,157 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                           behavior: HitTestBehavior.opaque,
                           onTap: () => _handleItemTap(index),
                           // Add swipe gesture detection
-                          onHorizontalDragStart: (details) => _handleHorizontalDragStart(index, details),
+                          onHorizontalDragStart: (details) =>
+                              _handleHorizontalDragStart(index, details),
                           onHorizontalDragUpdate: _handleHorizontalDragUpdate,
-                          onHorizontalDragEnd: (details) => _handleHorizontalDragEnd(index, details),
-                          onHorizontalDragCancel: () => _handleHorizontalDragCancel(index),
+                          onHorizontalDragEnd: (details) =>
+                              _handleHorizontalDragEnd(index, details),
+                          onHorizontalDragCancel: () =>
+                              _handleHorizontalDragCancel(index),
                           child: Transform.translate(
                             // Apply swipe offset for visual feedback
                             offset: Offset(isSwiping ? _swipeOffset : 0.0, 0.0),
                             child: Container(
-                            // Ensure minimum 40x40 touch target (compact)
-                            constraints: const BoxConstraints(
-                              minHeight: 40,
-                              minWidth: 40,
-                            ),
-                            margin: const EdgeInsets.only(bottom: 3), // Reduced
-                            child: Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                // Background hint for swipe direction
-                                if (isSwiping) ...[
-                                  // Left swipe hint (unhighlight)
-                                  if (_swipeOffset < -10)
-                                    Positioned.fill(
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: theme.colorScheme.errorContainer.withOpacity(0.3),
-                                          borderRadius: BorderRadius.circular(4),
-                                        ),
-                                        alignment: Alignment.centerRight,
-                                        padding: const EdgeInsets.only(right: 8),
-                                        child: Icon(
-                                          Icons.highlight_remove,
-                                          size: 16,
-                                          color: theme.colorScheme.error,
+                              // Ensure minimum 40x40 touch target (compact)
+                              constraints: const BoxConstraints(
+                                minHeight: 40,
+                                minWidth: 40,
+                              ),
+                              margin: const EdgeInsets.only(
+                                bottom: 3,
+                              ), // Reduced
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  // Background hint for swipe direction
+                                  if (isSwiping) ...[
+                                    // Left swipe hint (unhighlight)
+                                    if (_swipeOffset < -10)
+                                      Positioned.fill(
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: theme
+                                                .colorScheme
+                                                .errorContainer
+                                                .withOpacity(0.3),
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
+                                          ),
+                                          alignment: Alignment.centerRight,
+                                          padding: const EdgeInsets.only(
+                                            right: 8,
+                                          ),
+                                          child: Icon(
+                                            Icons.highlight_remove,
+                                            size: 16,
+                                            color: theme.colorScheme.error,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  // Right swipe hint (highlight)
-                                  if (_swipeOffset > 10)
-                                    Positioned.fill(
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: theme.colorScheme.primaryContainer.withOpacity(0.3),
-                                          borderRadius: BorderRadius.circular(4),
+                                    // Right swipe hint (highlight)
+                                    if (_swipeOffset > 10)
+                                      Positioned.fill(
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: theme
+                                                .colorScheme
+                                                .primaryContainer
+                                                .withOpacity(0.3),
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
+                                          ),
+                                          alignment: Alignment.centerLeft,
+                                          padding: const EdgeInsets.only(
+                                            left: 8,
+                                          ),
+                                          child: Icon(
+                                            Icons.highlight,
+                                            size: 16,
+                                            color: theme.colorScheme.primary,
+                                          ),
                                         ),
-                                        alignment: Alignment.centerLeft,
-                                        padding: const EdgeInsets.only(left: 8),
-                                        child: Icon(
-                                          Icons.highlight,
-                                          size: 16,
+                                      ),
+                                  ],
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, // Reduced
+                                      vertical: 8, // Reduced
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isHighlighted
+                                          ? theme.colorScheme.secondaryContainer
+                                          : isTop
+                                          ? theme.colorScheme.primaryContainer
+                                          : theme
+                                                .colorScheme
+                                                .surfaceContainerHighest,
+                                      border: isHighlighted
+                                          ? Border.all(
+                                              color:
+                                                  theme.colorScheme.secondary,
+                                              width: 2,
+                                            )
+                                          : null,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        if (isTop) ...[
+                                          Icon(
+                                            Icons.arrow_right,
+                                            size: 11, // Slightly smaller
+                                            color: theme.colorScheme.primary,
+                                          ),
+                                          const SizedBox(width: 3),
+                                        ],
+                                        Flexible(
+                                          child: Text(
+                                            symbol,
+                                            style: TextStyle(
+                                              fontFamily: 'monospace',
+                                              fontWeight: isTop || isHighlighted
+                                                  ? FontWeight.bold
+                                                  : FontWeight.normal,
+                                              fontSize: 11, // Compact font size
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (isTop)
+                                    Positioned(
+                                      top: -5,
+                                      right: -5,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 3,
+                                          vertical: 1,
+                                        ),
+                                        decoration: BoxDecoration(
                                           color: theme.colorScheme.primary,
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          'TOP',
+                                          style: TextStyle(
+                                            color: theme.colorScheme.onPrimary,
+                                            fontSize: 7, // Compact badge
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
                                     ),
                                 ],
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, // Reduced
-                                    vertical: 8, // Reduced
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: isHighlighted
-                                        ? theme.colorScheme.secondaryContainer
-                                        : isTop
-                                            ? theme.colorScheme.primaryContainer
-                                            : theme.colorScheme.surfaceContainerHighest,
-                                    border: isHighlighted
-                                        ? Border.all(
-                                            color: theme.colorScheme.secondary,
-                                            width: 2,
-                                          )
-                                        : null,
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      if (isTop) ...[
-                                        Icon(
-                                          Icons.arrow_right,
-                                          size: 11, // Slightly smaller
-                                          color: theme.colorScheme.primary,
-                                        ),
-                                        const SizedBox(width: 3),
-                                      ],
-                                      Flexible(
-                                        child: Text(
-                                          symbol,
-                                          style: TextStyle(
-                                            fontFamily: 'monospace',
-                                            fontWeight: isTop || isHighlighted
-                                                ? FontWeight.bold
-                                                : FontWeight.normal,
-                                            fontSize: 11, // Compact font size
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                if (isTop)
-                                  Positioned(
-                                    top: -5,
-                                    right: -5,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 3,
-                                        vertical: 1,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: theme.colorScheme.primary,
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Text(
-                                        'TOP',
-                                        style: TextStyle(
-                                          color: theme.colorScheme.onPrimary,
-                                          fontSize: 7, // Compact badge
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                              ],
+                              ),
                             ),
                           ),
-                        ),
                         );
 
                         // Apply slide animation to top item on push
@@ -423,10 +445,7 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                     foregroundColor: theme.colorScheme.error,
                     visualDensity: VisualDensity.compact,
                   ),
-                  child: const Text(
-                    'Clear',
-                    style: TextStyle(fontSize: 12),
-                  ),
+                  child: const Text('Clear', style: TextStyle(fontSize: 12)),
                 ),
               ),
             ],
@@ -442,7 +461,10 @@ class _PDAStackPanelState extends State<PDAStackPanel>
     final size = widget.stackState.size;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4), // More compact
+      padding: const EdgeInsets.symmetric(
+        horizontal: 6,
+        vertical: 4,
+      ), // More compact
       color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

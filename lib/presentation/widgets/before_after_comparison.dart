@@ -131,11 +131,7 @@ class _BeforeAfterComparisonState extends State<BeforeAfterComparison> {
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.compare_arrows,
-            color: colorScheme.primary,
-            size: 20,
-          ),
+          Icon(Icons.compare_arrows, color: colorScheme.primary, size: 20),
           const SizedBox(width: 8),
           Expanded(
             child: Text(

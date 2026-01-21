@@ -149,8 +149,9 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                 executionProgress: _currentAlgorithm == 'NFA to DFA'
                     ? _executionProgress
                     : null,
-                executionStatus:
-                    _currentAlgorithm == 'NFA to DFA' ? _executionStatus : null,
+                executionStatus: _currentAlgorithm == 'NFA to DFA'
+                    ? _executionStatus
+                    : null,
               ),
 
               const SizedBox(height: 12),
@@ -163,9 +164,9 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                 onPressed: widget.onRemoveLambda == null
                     ? null
                     : () => _executeAlgorithm(
-                          'Remove λ-transitions',
-                          widget.onRemoveLambda,
-                        ),
+                        'Remove λ-transitions',
+                        widget.onRemoveLambda,
+                      ),
                 isExecuting:
                     _isExecuting && _currentAlgorithm == 'Remove λ-transitions',
                 isSelected: _currentAlgorithm == 'Remove λ-transitions',
@@ -186,9 +187,12 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                 icon: Icons.compress,
                 onPressed: widget.onMinimizeDfa == null
                     ? null
-                    : () =>
-                        _executeAlgorithm('Minimize DFA', widget.onMinimizeDfa),
-                isExecuting: _isExecuting && _currentAlgorithm == 'Minimize DFA',
+                    : () => _executeAlgorithm(
+                        'Minimize DFA',
+                        widget.onMinimizeDfa,
+                      ),
+                isExecuting:
+                    _isExecuting && _currentAlgorithm == 'Minimize DFA',
                 isSelected: _currentAlgorithm == 'Minimize DFA',
                 executionProgress: _currentAlgorithm == 'Minimize DFA'
                     ? _executionProgress
@@ -207,9 +211,12 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                 icon: Icons.add_circle_outline,
                 onPressed: widget.onCompleteDfa == null
                     ? null
-                    : () =>
-                        _executeAlgorithm('Complete DFA', widget.onCompleteDfa),
-                isExecuting: _isExecuting && _currentAlgorithm == 'Complete DFA',
+                    : () => _executeAlgorithm(
+                        'Complete DFA',
+                        widget.onCompleteDfa,
+                      ),
+                isExecuting:
+                    _isExecuting && _currentAlgorithm == 'Complete DFA',
                 isSelected: _currentAlgorithm == 'Complete DFA',
                 executionProgress: _currentAlgorithm == 'Complete DFA'
                     ? _executionProgress
@@ -229,9 +236,9 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                 onPressed: widget.onComplementDfa == null
                     ? null
                     : () => _executeAlgorithm(
-                          'Complement DFA',
-                          widget.onComplementDfa,
-                        ),
+                        'Complement DFA',
+                        widget.onComplementDfa,
+                      ),
                 isExecuting:
                     _isExecuting && _currentAlgorithm == 'Complement DFA',
                 isSelected: _currentAlgorithm == 'Complement DFA',
@@ -265,7 +272,8 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                   missingCallbackMessage:
                       'Load a DFA before computing the union.',
                 ),
-                isExecuting: _isExecuting && _currentAlgorithm == 'Union of DFAs',
+                isExecuting:
+                    _isExecuting && _currentAlgorithm == 'Union of DFAs',
                 isSelected: _currentAlgorithm == 'Union of DFAs',
                 executionProgress: _currentAlgorithm == 'Union of DFAs'
                     ? _executionProgress
@@ -351,9 +359,9 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                 onPressed: widget.onPrefixClosure == null
                     ? null
                     : () => _executeAlgorithm(
-                          'Prefix Closure',
-                          widget.onPrefixClosure,
-                        ),
+                        'Prefix Closure',
+                        widget.onPrefixClosure,
+                      ),
                 isExecuting:
                     _isExecuting && _currentAlgorithm == 'Prefix Closure',
                 isSelected: _currentAlgorithm == 'Prefix Closure',
@@ -375,9 +383,9 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                 onPressed: widget.onSuffixClosure == null
                     ? null
                     : () => _executeAlgorithm(
-                          'Suffix Closure',
-                          widget.onSuffixClosure,
-                        ),
+                        'Suffix Closure',
+                        widget.onSuffixClosure,
+                      ),
                 isExecuting:
                     _isExecuting && _currentAlgorithm == 'Suffix Closure',
                 isSelected: _currentAlgorithm == 'Suffix Closure',
@@ -398,14 +406,16 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                 icon: Icons.text_fields,
                 onPressed: widget.onFaToRegex == null
                     ? null
-                    : () => _executeAlgorithm('FA to Regex', widget.onFaToRegex),
+                    : () =>
+                          _executeAlgorithm('FA to Regex', widget.onFaToRegex),
                 isExecuting: _isExecuting && _currentAlgorithm == 'FA to Regex',
                 isSelected: _currentAlgorithm == 'FA to Regex',
                 executionProgress: _currentAlgorithm == 'FA to Regex'
                     ? _executionProgress
                     : null,
-                executionStatus:
-                    _currentAlgorithm == 'FA to Regex' ? _executionStatus : null,
+                executionStatus: _currentAlgorithm == 'FA to Regex'
+                    ? _executionStatus
+                    : null,
               ),
 
               const SizedBox(height: 12),
@@ -418,9 +428,9 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                 onPressed: widget.onFsaToGrammar == null
                     ? null
                     : () => _executeAlgorithm(
-                          'FSA to Grammar',
-                          widget.onFsaToGrammar,
-                        ),
+                        'FSA to Grammar',
+                        widget.onFsaToGrammar,
+                      ),
                 isExecuting:
                     _isExecuting && _currentAlgorithm == 'FSA to Grammar',
                 isSelected: _currentAlgorithm == 'FSA to Grammar',

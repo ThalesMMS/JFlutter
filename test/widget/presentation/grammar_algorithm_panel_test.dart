@@ -50,6 +50,7 @@ class _MockGrammarNotifier extends GrammarProvider {
       modified: DateTime.now(),
     );
   }
+
   @override
   Future<Result<FSA>> convertToAutomaton() async {
     state = state.copyWith(
@@ -67,25 +68,24 @@ class _MockGrammarNotifier extends GrammarProvider {
       isAccepting: false,
     );
 
-    final result = convertToAutomatonResult ?? Success(
-      FSA(
-        id: 'test-fsa-${DateTime.now().millisecondsSinceEpoch}',
-        name: 'Converted FSA',
-        states: {initialState},
-        transitions: const {},
-        alphabet: const {'a', 'b'},
-        initialState: initialState,
-        acceptingStates: const {},
-        created: DateTime.now(),
-        modified: DateTime.now(),
-        bounds: const math.Rectangle(0, 0, 400, 300),
-      ),
-    );
+    final result =
+        convertToAutomatonResult ??
+        Success(
+          FSA(
+            id: 'test-fsa-${DateTime.now().millisecondsSinceEpoch}',
+            name: 'Converted FSA',
+            states: {initialState},
+            transitions: const {},
+            alphabet: const {'a', 'b'},
+            initialState: initialState,
+            acceptingStates: const {},
+            created: DateTime.now(),
+            modified: DateTime.now(),
+            bounds: const math.Rectangle(0, 0, 400, 300),
+          ),
+        );
 
-    state = state.copyWith(
-      isConverting: false,
-      activeConversion: null,
-    );
+    state = state.copyWith(isConverting: false, activeConversion: null);
 
     return result;
   }
@@ -107,22 +107,24 @@ class _MockGrammarNotifier extends GrammarProvider {
       isAccepting: false,
     );
 
-    final result = convertToPdaResult ?? Success(
-      PDA(
-        id: 'test-pda-${DateTime.now().millisecondsSinceEpoch}',
-        name: 'Converted PDA',
-        states: {initialState},
-        transitions: const {},
-        alphabet: const {'a', 'b'},
-        initialState: initialState,
-        acceptingStates: const {},
-        created: DateTime.now(),
-        modified: DateTime.now(),
-        bounds: const math.Rectangle(0, 0, 400, 300),
-        stackAlphabet: const {'Z'},
-        initialStackSymbol: 'Z',
-      ),
-    );
+    final result =
+        convertToPdaResult ??
+        Success(
+          PDA(
+            id: 'test-pda-${DateTime.now().millisecondsSinceEpoch}',
+            name: 'Converted PDA',
+            states: {initialState},
+            transitions: const {},
+            alphabet: const {'a', 'b'},
+            initialState: initialState,
+            acceptingStates: const {},
+            created: DateTime.now(),
+            modified: DateTime.now(),
+            bounds: const math.Rectangle(0, 0, 400, 300),
+            stackAlphabet: const {'Z'},
+            initialStackSymbol: 'Z',
+          ),
+        );
 
     state = state.copyWith(
       isConverting: false,
@@ -150,22 +152,24 @@ class _MockGrammarNotifier extends GrammarProvider {
       isAccepting: false,
     );
 
-    final result = convertToPdaStandardResult ?? Success(
-      PDA(
-        id: 'test-pda-std-${DateTime.now().millisecondsSinceEpoch}',
-        name: 'Converted PDA (Standard)',
-        states: {initialState},
-        transitions: const {},
-        alphabet: const {'a', 'b'},
-        initialState: initialState,
-        acceptingStates: const {},
-        created: DateTime.now(),
-        modified: DateTime.now(),
-        bounds: const math.Rectangle(0, 0, 400, 300),
-        stackAlphabet: const {'Z'},
-        initialStackSymbol: 'Z',
-      ),
-    );
+    final result =
+        convertToPdaStandardResult ??
+        Success(
+          PDA(
+            id: 'test-pda-std-${DateTime.now().millisecondsSinceEpoch}',
+            name: 'Converted PDA (Standard)',
+            states: {initialState},
+            transitions: const {},
+            alphabet: const {'a', 'b'},
+            initialState: initialState,
+            acceptingStates: const {},
+            created: DateTime.now(),
+            modified: DateTime.now(),
+            bounds: const math.Rectangle(0, 0, 400, 300),
+            stackAlphabet: const {'Z'},
+            initialStackSymbol: 'Z',
+          ),
+        );
 
     state = state.copyWith(
       isConverting: false,
@@ -193,22 +197,24 @@ class _MockGrammarNotifier extends GrammarProvider {
       isAccepting: false,
     );
 
-    final result = convertToPdaGreibachResult ?? Success(
-      PDA(
-        id: 'test-pda-greibach-${DateTime.now().millisecondsSinceEpoch}',
-        name: 'Converted PDA (Greibach)',
-        states: {initialState},
-        transitions: const {},
-        alphabet: const {'a', 'b'},
-        initialState: initialState,
-        acceptingStates: const {},
-        created: DateTime.now(),
-        modified: DateTime.now(),
-        bounds: const math.Rectangle(0, 0, 400, 300),
-        stackAlphabet: const {'Z'},
-        initialStackSymbol: 'Z',
-      ),
-    );
+    final result =
+        convertToPdaGreibachResult ??
+        Success(
+          PDA(
+            id: 'test-pda-greibach-${DateTime.now().millisecondsSinceEpoch}',
+            name: 'Converted PDA (Greibach)',
+            states: {initialState},
+            transitions: const {},
+            alphabet: const {'a', 'b'},
+            initialState: initialState,
+            acceptingStates: const {},
+            created: DateTime.now(),
+            modified: DateTime.now(),
+            bounds: const math.Rectangle(0, 0, 400, 300),
+            stackAlphabet: const {'Z'},
+            initialStackSymbol: 'Z',
+          ),
+        );
 
     state = state.copyWith(
       isConverting: false,
@@ -227,31 +233,39 @@ class _MockAutomatonService extends AutomatonService {
 
 class _MockLayoutRepository extends LayoutRepository {
   @override
-  Future<AutomatonResult> applyCompactLayout(AutomatonEntity automaton) async => Success(automaton);
+  Future<AutomatonResult> applyCompactLayout(AutomatonEntity automaton) async =>
+      Success(automaton);
 
   @override
-  Future<AutomatonResult> applyBalancedLayout(AutomatonEntity automaton) async => Success(automaton);
+  Future<AutomatonResult> applyBalancedLayout(
+    AutomatonEntity automaton,
+  ) async => Success(automaton);
 
   @override
-  Future<AutomatonResult> applySpreadLayout(AutomatonEntity automaton) async => Success(automaton);
+  Future<AutomatonResult> applySpreadLayout(AutomatonEntity automaton) async =>
+      Success(automaton);
 
   @override
-  Future<AutomatonResult> applyHierarchicalLayout(AutomatonEntity automaton) async => Success(automaton);
+  Future<AutomatonResult> applyHierarchicalLayout(
+    AutomatonEntity automaton,
+  ) async => Success(automaton);
 
   @override
-  Future<AutomatonResult> applyAutoLayout(AutomatonEntity automaton) async => Success(automaton);
+  Future<AutomatonResult> applyAutoLayout(AutomatonEntity automaton) async =>
+      Success(automaton);
 
   @override
-  Future<AutomatonResult> centerAutomaton(AutomatonEntity automaton) async => Success(automaton);
+  Future<AutomatonResult> centerAutomaton(AutomatonEntity automaton) async =>
+      Success(automaton);
 }
 
 class _MockAutomatonNotifier extends AutomatonProvider {
   @override
   _MockAutomatonNotifier()
-      : super(
-          automatonService: _MockAutomatonService(),
-          layoutRepository: _MockLayoutRepository(),
-        );
+    : super(
+        automatonService: _MockAutomatonService(),
+        layoutRepository: _MockLayoutRepository(),
+      );
 
   @override
   void updateAutomaton(FSA automaton) {
@@ -316,9 +330,7 @@ Future<void> _pumpGrammarAlgorithmPanel(
         homeNavigationProvider.overrideWith((ref) => mockNavNotifier),
       ],
       child: const MaterialApp(
-        home: Scaffold(
-          body: GrammarAlgorithmPanel(useExpanded: false),
-        ),
+        home: Scaffold(body: GrammarAlgorithmPanel(useExpanded: false)),
       ),
     ),
   );
@@ -341,10 +353,7 @@ void main() {
       await _pumpGrammarAlgorithmPanel(tester);
 
       expect(find.text('Conversions'), findsOneWidget);
-      expect(
-        find.text('Convert Right-Linear Grammar to FSA'),
-        findsOneWidget,
-      );
+      expect(find.text('Convert Right-Linear Grammar to FSA'), findsOneWidget);
       expect(find.text('Convert Grammar to PDA (General)'), findsOneWidget);
       expect(find.text('Convert Grammar to PDA (Standard)'), findsOneWidget);
       expect(find.text('Convert Grammar to PDA (Greibach)'), findsOneWidget);
@@ -384,8 +393,9 @@ void main() {
       );
     });
 
-    testWidgets('disables conversion buttons when no productions exist',
-        (tester) async {
+    testWidgets('disables conversion buttons when no productions exist', (
+      tester,
+    ) async {
       await _pumpGrammarAlgorithmPanel(
         tester,
         grammarState: GrammarState.initial(),
@@ -403,8 +413,9 @@ void main() {
       expect(button.onPressed, isNull);
     });
 
-    testWidgets('enables conversion buttons when productions exist',
-        (tester) async {
+    testWidgets('enables conversion buttons when productions exist', (
+      tester,
+    ) async {
       await _pumpGrammarAlgorithmPanel(
         tester,
         grammarState: GrammarState.initial().copyWith(
@@ -436,17 +447,15 @@ void main() {
       const errorMessage = 'Test error message';
       await _pumpGrammarAlgorithmPanel(
         tester,
-        grammarState: GrammarState.initial().copyWith(
-          error: errorMessage,
-        ),
+        grammarState: GrammarState.initial().copyWith(error: errorMessage),
       );
 
       expect(find.text(errorMessage), findsOneWidget);
     });
 
-    testWidgets(
-        'shows processing state for FSA conversion when converting',
-        (tester) async {
+    testWidgets('shows processing state for FSA conversion when converting', (
+      tester,
+    ) async {
       await _pumpGrammarAlgorithmPanel(
         tester,
         grammarState: GrammarState.initial().copyWith(
@@ -465,15 +474,12 @@ void main() {
       );
 
       expect(find.text('Converting to FSA...'), findsOneWidget);
-      expect(
-        find.byType(CircularProgressIndicator),
-        findsWidgets,
-      );
+      expect(find.byType(CircularProgressIndicator), findsWidgets);
     });
 
-    testWidgets(
-        'shows processing state for PDA conversion when converting',
-        (tester) async {
+    testWidgets('shows processing state for PDA conversion when converting', (
+      tester,
+    ) async {
       await _pumpGrammarAlgorithmPanel(
         tester,
         grammarState: GrammarState.initial().copyWith(
@@ -492,68 +498,62 @@ void main() {
       );
 
       expect(find.text('Converting to PDA...'), findsOneWidget);
-      expect(
-        find.byType(CircularProgressIndicator),
-        findsWidgets,
-      );
+      expect(find.byType(CircularProgressIndicator), findsWidgets);
     });
 
     testWidgets(
-        'shows processing state for PDA Standard conversion when converting',
-        (tester) async {
-      await _pumpGrammarAlgorithmPanel(
-        tester,
-        grammarState: GrammarState.initial().copyWith(
-          productions: [
-            const Production(
-              id: 'p1',
-              order: 0,
-              leftSide: const ['S'],
-              rightSide: const ['a'],
-              isLambda: false,
-            ),
-          ],
-          isConverting: true,
-          activeConversion: GrammarConversionType.grammarToPdaStandard,
-        ),
-      );
+      'shows processing state for PDA Standard conversion when converting',
+      (tester) async {
+        await _pumpGrammarAlgorithmPanel(
+          tester,
+          grammarState: GrammarState.initial().copyWith(
+            productions: [
+              const Production(
+                id: 'p1',
+                order: 0,
+                leftSide: const ['S'],
+                rightSide: const ['a'],
+                isLambda: false,
+              ),
+            ],
+            isConverting: true,
+            activeConversion: GrammarConversionType.grammarToPdaStandard,
+          ),
+        );
 
-      expect(find.text('Converting (Standard)...'), findsOneWidget);
-      expect(
-        find.byType(CircularProgressIndicator),
-        findsWidgets,
-      );
-    });
+        expect(find.text('Converting (Standard)...'), findsOneWidget);
+        expect(find.byType(CircularProgressIndicator), findsWidgets);
+      },
+    );
 
     testWidgets(
-        'shows processing state for PDA Greibach conversion when converting',
-        (tester) async {
-      await _pumpGrammarAlgorithmPanel(
-        tester,
-        grammarState: GrammarState.initial().copyWith(
-          productions: [
-            const Production(
-              id: 'p1',
-              order: 0,
-              leftSide: const ['S'],
-              rightSide: const ['a'],
-              isLambda: false,
-            ),
-          ],
-          isConverting: true,
-          activeConversion: GrammarConversionType.grammarToPdaGreibach,
-        ),
-      );
+      'shows processing state for PDA Greibach conversion when converting',
+      (tester) async {
+        await _pumpGrammarAlgorithmPanel(
+          tester,
+          grammarState: GrammarState.initial().copyWith(
+            productions: [
+              const Production(
+                id: 'p1',
+                order: 0,
+                leftSide: const ['S'],
+                rightSide: const ['a'],
+                isLambda: false,
+              ),
+            ],
+            isConverting: true,
+            activeConversion: GrammarConversionType.grammarToPdaGreibach,
+          ),
+        );
 
-      expect(find.text('Converting (Greibach)...'), findsOneWidget);
-      expect(
-        find.byType(CircularProgressIndicator),
-        findsWidgets,
-      );
-    });
+        expect(find.text('Converting (Greibach)...'), findsOneWidget);
+        expect(find.byType(CircularProgressIndicator), findsWidgets);
+      },
+    );
 
-    testWidgets('tapping FSA conversion button triggers conversion',
-        (tester) async {
+    testWidgets('tapping FSA conversion button triggers conversion', (
+      tester,
+    ) async {
       final navNotifier = _MockHomeNavigationNotifier();
 
       await _pumpGrammarAlgorithmPanel(
@@ -584,15 +584,14 @@ void main() {
 
       expect(navNotifier.fsaCallCount, 1);
       expect(
-        find.text(
-          'Grammar converted to automaton. Switched to FSA workspace.',
-        ),
+        find.text('Grammar converted to automaton. Switched to FSA workspace.'),
         findsOneWidget,
       );
     });
 
-    testWidgets('tapping PDA General conversion button triggers conversion',
-        (tester) async {
+    testWidgets('tapping PDA General conversion button triggers conversion', (
+      tester,
+    ) async {
       final navNotifier = _MockHomeNavigationNotifier();
 
       await _pumpGrammarAlgorithmPanel(
@@ -613,9 +612,7 @@ void main() {
 
       expect(navNotifier.pdaCallCount, 0);
 
-      await tester.ensureVisible(
-        find.text('Convert Grammar to PDA (General)'),
-      );
+      await tester.ensureVisible(find.text('Convert Grammar to PDA (General)'));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Convert Grammar to PDA (General)'));
@@ -630,8 +627,9 @@ void main() {
       );
     });
 
-    testWidgets('tapping PDA Standard conversion button triggers conversion',
-        (tester) async {
+    testWidgets('tapping PDA Standard conversion button triggers conversion', (
+      tester,
+    ) async {
       final navNotifier = _MockHomeNavigationNotifier();
 
       await _pumpGrammarAlgorithmPanel(
@@ -669,8 +667,9 @@ void main() {
       );
     });
 
-    testWidgets('tapping PDA Greibach conversion button triggers conversion',
-        (tester) async {
+    testWidgets('tapping PDA Greibach conversion button triggers conversion', (
+      tester,
+    ) async {
       final navNotifier = _MockHomeNavigationNotifier();
 
       await _pumpGrammarAlgorithmPanel(
@@ -755,9 +754,7 @@ void main() {
         convertToPdaResult: Failure(errorMessage),
       );
 
-      await tester.ensureVisible(
-        find.text('Convert Grammar to PDA (General)'),
-      );
+      await tester.ensureVisible(find.text('Convert Grammar to PDA (General)'));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Convert Grammar to PDA (General)'));
@@ -803,9 +800,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byIcon(Icons.sync_alt), findsWidgets);
 
-      await tester.ensureVisible(
-        find.text('Convert Grammar to PDA (General)'),
-      );
+      await tester.ensureVisible(find.text('Convert Grammar to PDA (General)'));
       await tester.pumpAndSettle();
       expect(find.byIcon(Icons.auto_fix_high), findsWidgets);
 
@@ -833,9 +828,7 @@ void main() {
         findsOneWidget,
       );
 
-      await tester.ensureVisible(
-        find.text('Apply left factoring to grammar'),
-      );
+      await tester.ensureVisible(find.text('Apply left factoring to grammar'));
       expect(find.text('Apply left factoring to grammar'), findsOneWidget);
 
       await tester.ensureVisible(
@@ -857,14 +850,9 @@ void main() {
       await tester.ensureVisible(
         find.text('Generate LL(1) or LR(1) parse table'),
       );
-      expect(
-        find.text('Generate LL(1) or LR(1) parse table'),
-        findsOneWidget,
-      );
+      expect(find.text('Generate LL(1) or LR(1) parse table'), findsOneWidget);
 
-      await tester.ensureVisible(
-        find.text('Detect if grammar is ambiguous'),
-      );
+      await tester.ensureVisible(find.text('Detect if grammar is ambiguous'));
       expect(find.text('Detect if grammar is ambiguous'), findsOneWidget);
     });
   });

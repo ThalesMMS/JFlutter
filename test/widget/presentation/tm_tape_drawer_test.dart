@@ -72,10 +72,7 @@ void main() {
     });
 
     test('returns current cell at head position', () {
-      final state = TapeState(
-        cells: const ['a', 'b', 'c'],
-        headPosition: 1,
-      );
+      final state = TapeState(cells: const ['a', 'b', 'c'], headPosition: 1);
 
       expect(state.currentCell, 'b');
     });
@@ -145,10 +142,7 @@ void main() {
     });
 
     test('returns correct head index in visible cells', () {
-      final state = TapeState(
-        cells: const ['a', 'b', 'c'],
-        headPosition: 1,
-      );
+      final state = TapeState(cells: const ['a', 'b', 'c'], headPosition: 1);
 
       final headIndex = state.getHeadIndexInVisible(padding: 3);
 
@@ -229,12 +223,8 @@ void main() {
       expect(find.byIcon(Icons.edit), findsOneWidget);
     });
 
-    testWidgets('displays clear button when onClear provided',
-        (tester) async {
-      final tapeState = TapeState(
-        cells: const ['a', 'b'],
-        headPosition: 0,
-      );
+    testWidgets('displays clear button when onClear provided', (tester) async {
+      final tapeState = TapeState(cells: const ['a', 'b'], headPosition: 0);
       var clearCalled = false;
 
       await _pumpTapePanel(
@@ -251,12 +241,8 @@ void main() {
       expect(clearCalled, isTrue);
     });
 
-    testWidgets('hides clear button when onClear not provided',
-        (tester) async {
-      final tapeState = TapeState(
-        cells: const ['a', 'b'],
-        headPosition: 0,
-      );
+    testWidgets('hides clear button when onClear not provided', (tester) async {
+      final tapeState = TapeState(cells: const ['a', 'b'], headPosition: 0);
 
       await _pumpTapePanel(tester, tapeState: tapeState);
 
@@ -311,10 +297,7 @@ void main() {
     });
 
     testWidgets('shows tape alphabet buttons in edit dialog', (tester) async {
-      final tapeState = TapeState(
-        cells: const ['0', '1'],
-        headPosition: 0,
-      );
+      final tapeState = TapeState(cells: const ['0', '1'], headPosition: 0);
       final editCallback = _CellEditCallback();
 
       await _pumpTapePanel(
@@ -336,10 +319,7 @@ void main() {
     });
 
     testWidgets('cell edit dialog allows manual symbol entry', (tester) async {
-      final tapeState = TapeState(
-        cells: const ['a', 'b'],
-        headPosition: 0,
-      );
+      final tapeState = TapeState(cells: const ['a', 'b'], headPosition: 0);
       final editCallback = _CellEditCallback();
 
       await _pumpTapePanel(
@@ -368,10 +348,7 @@ void main() {
     });
 
     testWidgets('cell edit dialog can be cancelled', (tester) async {
-      final tapeState = TapeState(
-        cells: const ['a', 'b'],
-        headPosition: 0,
-      );
+      final tapeState = TapeState(cells: const ['a', 'b'], headPosition: 0);
       final editCallback = _CellEditCallback();
 
       await _pumpTapePanel(
@@ -423,29 +400,20 @@ void main() {
     });
 
     testWidgets('updates when tape state changes', (tester) async {
-      final initialState = TapeState(
-        cells: const ['a', 'b'],
-        headPosition: 0,
-      );
+      final initialState = TapeState(cells: const ['a', 'b'], headPosition: 0);
 
       await _pumpTapePanel(tester, tapeState: initialState);
       expect(find.text('Tape (Head: 0)'), findsOneWidget);
 
       // Update with new tape state
-      final newState = TapeState(
-        cells: const ['x', 'y', 'z'],
-        headPosition: 2,
-      );
+      final newState = TapeState(cells: const ['x', 'y', 'z'], headPosition: 2);
 
       await _pumpTapePanel(tester, tapeState: newState);
       expect(find.text('Tape (Head: 2)'), findsOneWidget);
     });
 
     testWidgets('renders within Card with proper styling', (tester) async {
-      final tapeState = TapeState(
-        cells: const ['a'],
-        headPosition: 0,
-      );
+      final tapeState = TapeState(cells: const ['a'], headPosition: 0);
 
       await _pumpTapePanel(tester, tapeState: tapeState);
 
@@ -455,8 +423,9 @@ void main() {
       expect(card.elevation, 4);
     });
 
-    testWidgets('displays visible cells with horizontal scroll',
-        (tester) async {
+    testWidgets('displays visible cells with horizontal scroll', (
+      tester,
+    ) async {
       final tapeState = TapeState(
         cells: List.generate(20, (i) => i.toString()),
         headPosition: 10,
@@ -472,12 +441,8 @@ void main() {
       expect(scrollView.scrollDirection, Axis.horizontal);
     });
 
-    testWidgets('cell clear button in edit dialog clears text',
-        (tester) async {
-      final tapeState = TapeState(
-        cells: const ['a', 'b'],
-        headPosition: 0,
-      );
+    testWidgets('cell clear button in edit dialog clears text', (tester) async {
+      final tapeState = TapeState(cells: const ['a', 'b'], headPosition: 0);
       final editCallback = _CellEditCallback();
 
       await _pumpTapePanel(
@@ -531,10 +496,7 @@ void main() {
     });
 
     testWidgets('limits text field input to 1 character', (tester) async {
-      final tapeState = TapeState(
-        cells: const ['a'],
-        headPosition: 0,
-      );
+      final tapeState = TapeState(cells: const ['a'], headPosition: 0);
       final editCallback = _CellEditCallback();
 
       await _pumpTapePanel(

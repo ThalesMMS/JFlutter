@@ -136,11 +136,7 @@ class PDAExamples {
   /// 1. Push all symbols onto stack in q0
   /// 2. Non-deterministically transition to q1 (guessing middle)
   /// 3. Pop symbols from stack matching input in q1/q2
-  static PDA palindrome({
-    String? id,
-    String? name,
-    math.Rectangle? bounds,
-  }) {
+  static PDA palindrome({String? id, String? name, math.Rectangle? bounds}) {
     final now = DateTime.now();
 
     // Define states
@@ -351,11 +347,7 @@ class PDAExamples {
   /// 2. Transition to q1 on first 'b'
   /// 3. Pop one 'a' for each 'b' in q1
   /// 4. Accept when stack is empty
-  static PDA aNbN({
-    String? id,
-    String? name,
-    math.Rectangle? bounds,
-  }) {
+  static PDA aNbN({String? id, String? name, math.Rectangle? bounds}) {
     final now = DateTime.now();
 
     // Define states
@@ -459,11 +451,7 @@ class PDAExamples {
 
   /// Returns a list of all available example PDAs
   static List<PDA> getAllExamples() {
-    return [
-      balancedParentheses(),
-      palindrome(),
-      aNbN(),
-    ];
+    return [balancedParentheses(), palindrome(), aNbN()];
   }
 
   /// Returns a map of example names to their factory functions

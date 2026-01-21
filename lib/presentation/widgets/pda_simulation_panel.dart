@@ -235,7 +235,9 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
               IconButton.outlined(
                 onPressed: simState.currentStepIndex > 0
                     ? () {
-                        ref.read(pdaSimulationProvider.notifier).resetToFirstStep();
+                        ref
+                            .read(pdaSimulationProvider.notifier)
+                            .resetToFirstStep();
                         _updateStackFromCurrentStep();
                       }
                     : null,
@@ -248,7 +250,9 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
                   value: simState.totalSteps > 0
                       ? (simState.currentStepIndex + 1) / simState.totalSteps
                       : 0,
-                  backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest,
                 ),
               ),
               const SizedBox(width: 8),
@@ -309,7 +313,9 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
                     color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.outline.withValues(alpha: 0.2),
                     ),
                   ),
                   child: Column(
@@ -344,7 +350,9 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
                     color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.outline.withValues(alpha: 0.2),
                     ),
                   ),
                   child: Column(
@@ -546,10 +554,7 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
 
     // Initialize stack with initial symbol
     _updateStackState(
-      StackState(
-        symbols: [initialStack],
-        lastOperation: 'initialize',
-      ),
+      StackState(symbols: [initialStack], lastOperation: 'initialize'),
     );
 
     final stackAlphabet = {...currentPda.stackAlphabet};
@@ -586,10 +591,9 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
         simNotifier.setPda(simulationPda);
         simNotifier.setStepByStep(_stepByStep);
         // Manually set the result since we're using the old simulator
-        ref.read(pdaSimulationProvider.notifier).state = ref.read(pdaSimulationProvider).copyWith(
-          result: simulation,
-          currentStepIndex: 0,
-        );
+        ref.read(pdaSimulationProvider.notifier).state = ref
+            .read(pdaSimulationProvider)
+            .copyWith(result: simulation, currentStepIndex: 0);
 
         widget.highlightService.emitFromSteps(simulation.steps, 0);
         // Update stack to first step for step-by-step mode
@@ -624,9 +628,7 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
         : stackContents.split('').toList();
 
     final operation = step.usedTransition ?? 'step ${step.stepNumber}';
-    _updateStackState(
-      StackState(symbols: symbols, lastOperation: operation),
-    );
+    _updateStackState(StackState(symbols: symbols, lastOperation: operation));
   }
 
   void _updateStackFromCurrentStep() {

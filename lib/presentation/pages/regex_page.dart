@@ -1096,7 +1096,8 @@ class _RegexPageState extends ConsumerState<RegexPage> {
             ),
             if (algorithmState.rawRegexResult != null &&
                 algorithmState.simplifiedRegexResult != null &&
-                algorithmState.rawRegexResult != algorithmState.simplifiedRegexResult)
+                algorithmState.rawRegexResult !=
+                    algorithmState.simplifiedRegexResult)
               Padding(
                 padding: const EdgeInsets.only(top: 8.0),
                 child: Text(

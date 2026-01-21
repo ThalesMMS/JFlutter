@@ -96,12 +96,20 @@ class DFAMinimizationStep {
       currentPartition: List.unmodifiable(
         currentPartition.map((set) => Set<State>.unmodifiable(set)).toList(),
       ),
-      processingSet: processingSet != null ? Set.unmodifiable(processingSet) : null,
+      processingSet: processingSet != null
+          ? Set.unmodifiable(processingSet)
+          : null,
       distinguishingSymbol: distinguishingSymbol,
-      predecessors: predecessors != null ? Set.unmodifiable(predecessors) : null,
+      predecessors: predecessors != null
+          ? Set.unmodifiable(predecessors)
+          : null,
       splitSet: splitSet != null ? Set.unmodifiable(splitSet) : null,
-      splitIntersection: splitIntersection != null ? Set.unmodifiable(splitIntersection) : null,
-      splitDifference: splitDifference != null ? Set.unmodifiable(splitDifference) : null,
+      splitIntersection: splitIntersection != null
+          ? Set.unmodifiable(splitIntersection)
+          : null,
+      splitDifference: splitDifference != null
+          ? Set.unmodifiable(splitDifference)
+          : null,
       newPartition: newPartition != null
           ? List.unmodifiable(
               newPartition.map((set) => Set<State>.unmodifiable(set)).toList(),
@@ -110,7 +118,9 @@ class DFAMinimizationStep {
       partitionSize: partitionSize ?? currentPartition.length,
       causedSplit: causedSplit,
       equivalenceClassId: equivalenceClassId,
-      equivalenceClassStates: equivalenceClassStates != null ? Set.unmodifiable(equivalenceClassStates) : null,
+      equivalenceClassStates: equivalenceClassStates != null
+          ? Set.unmodifiable(equivalenceClassStates)
+          : null,
     );
   }
 
@@ -127,14 +137,17 @@ class DFAMinimizationStep {
     ];
 
     final acceptingLabels = acceptingStates.map((s) => s.label).join(', ');
-    final nonAcceptingLabels = nonAcceptingStates.map((s) => s.label).join(', ');
+    final nonAcceptingLabels = nonAcceptingStates
+        .map((s) => s.label)
+        .join(', ');
 
     return DFAMinimizationStep(
       baseStep: AlgorithmStep(
         id: id,
         stepNumber: stepNumber,
         title: 'Create initial partition',
-        explanation: 'Starting DFA minimization by creating the initial partition. '
+        explanation:
+            'Starting DFA minimization by creating the initial partition. '
             'We split states into two equivalence classes: accepting states {$acceptingLabels} '
             'and non-accepting states {$nonAcceptingLabels}. States in different classes cannot be equivalent.',
         type: AlgorithmType.dfaMinimization,
@@ -158,7 +171,8 @@ class DFAMinimizationStep {
         id: id,
         stepNumber: stepNumber,
         title: 'Remove unreachable states',
-        explanation: 'Removing unreachable states before minimization: {$unreachableLabels}. '
+        explanation:
+            'Removing unreachable states before minimization: {$unreachableLabels}. '
             'These states cannot be reached from the initial state and do not affect the language accepted by the DFA. '
             'Remaining ${reachableStates.length} reachable state(s).',
         type: AlgorithmType.dfaMinimization,
@@ -182,7 +196,8 @@ class DFAMinimizationStep {
         id: id,
         stepNumber: stepNumber,
         title: 'Select set to process',
-        explanation: 'Selecting equivalence class {$setLabels} from the worklist to process. '
+        explanation:
+            'Selecting equivalence class {$setLabels} from the worklist to process. '
             'We will check if any other equivalence classes can be split based on transitions to this set.',
         type: AlgorithmType.dfaMinimization,
       ),
@@ -210,7 +225,8 @@ class DFAMinimizationStep {
         id: id,
         stepNumber: stepNumber,
         title: 'Find predecessors on \'$symbol\'',
-        explanation: 'Finding all states that transition to {$setLabels} on symbol \'$symbol\'. '
+        explanation:
+            'Finding all states that transition to {$setLabels} on symbol \'$symbol\'. '
             'Predecessors: {$predLabels}. '
             '${predecessors.isEmpty ? "No predecessors found, so no split will occur." : "We will use these to refine the partition."}',
         type: AlgorithmType.dfaMinimization,
@@ -243,7 +259,8 @@ class DFAMinimizationStep {
         id: id,
         stepNumber: stepNumber,
         title: 'Split equivalence class',
-        explanation: 'Splitting equivalence class {$splitLabels} based on symbol \'$symbol\'. '
+        explanation:
+            'Splitting equivalence class {$splitLabels} based on symbol \'$symbol\'. '
             'States that can reach the processing set: {$intersectionLabels}. '
             'States that cannot: {$differenceLabels}. '
             'These two groups are not equivalent and must be in separate classes. '
@@ -276,7 +293,8 @@ class DFAMinimizationStep {
         id: id,
         stepNumber: stepNumber,
         title: 'No split on \'$symbol\'',
-        explanation: 'Checked equivalence class {$setLabels} for symbol \'$symbol\'. '
+        explanation:
+            'Checked equivalence class {$setLabels} for symbol \'$symbol\'. '
             'All states in this class have the same transition behavior - either all can reach the processing set or none can. '
             'No split is needed.',
         type: AlgorithmType.dfaMinimization,
@@ -299,7 +317,8 @@ class DFAMinimizationStep {
         id: id,
         stepNumber: stepNumber,
         title: 'Partition stabilized',
-        explanation: 'The partition has stabilized with ${finalPartition.length} equivalence class(es). '
+        explanation:
+            'The partition has stabilized with ${finalPartition.length} equivalence class(es). '
             'No further refinement is possible - all states in each class are truly equivalent. '
             'We can now create the minimized DFA by merging states within each class.',
         type: AlgorithmType.dfaMinimization,
@@ -324,7 +343,8 @@ class DFAMinimizationStep {
         id: id,
         stepNumber: stepNumber,
         title: 'Create minimized state $stateId',
-        explanation: 'Creating minimized state $stateId by merging equivalence class {$classLabels}. '
+        explanation:
+            'Creating minimized state $stateId by merging equivalence class {$classLabels}. '
             '${isInitial ? "This is the initial state. " : ""}'
             '${isAccepting ? "This is an accepting state because the class contains an accepting state." : "This is a non-accepting state."}',
         type: AlgorithmType.dfaMinimization,
@@ -349,7 +369,8 @@ class DFAMinimizationStep {
         id: id,
         stepNumber: stepNumber,
         title: 'Create transition on \'$symbol\'',
-        explanation: 'Adding transition: $fromStateId --($symbol)--> $toStateId. '
+        explanation:
+            'Adding transition: $fromStateId --($symbol)--> $toStateId. '
             'This represents the combined transition behavior of all states in the source equivalence class.',
         type: AlgorithmType.dfaMinimization,
       ),
@@ -373,7 +394,8 @@ class DFAMinimizationStep {
         id: id,
         stepNumber: stepNumber,
         title: 'Minimization complete',
-        explanation: 'DFA minimization completed successfully. '
+        explanation:
+            'DFA minimization completed successfully. '
             'Original DFA had $originalStates state(s), minimized DFA has $minimizedStates state(s). '
             '${reduction > 0 ? "Reduced by $reduction state(s). " : "DFA was already minimal. "}'
             'The minimized DFA has $totalTransitions transition(s) and accepts the same language as the original.',
@@ -415,7 +437,8 @@ class DFAMinimizationStep {
       partitionSize: partitionSize ?? this.partitionSize,
       causedSplit: causedSplit ?? this.causedSplit,
       equivalenceClassId: equivalenceClassId ?? this.equivalenceClassId,
-      equivalenceClassStates: equivalenceClassStates ?? this.equivalenceClassStates,
+      equivalenceClassStates:
+          equivalenceClassStates ?? this.equivalenceClassStates,
     );
   }
 
@@ -439,22 +462,29 @@ class DFAMinimizationStep {
       'partitionSize': partitionSize,
       'causedSplit': causedSplit,
       'equivalenceClassId': equivalenceClassId,
-      'equivalenceClassStates': equivalenceClassStates?.map((s) => s.toJson()).toList(),
+      'equivalenceClassStates': equivalenceClassStates
+          ?.map((s) => s.toJson())
+          .toList(),
     };
   }
 
   /// Creates a step from a JSON representation
   factory DFAMinimizationStep.fromJson(Map<String, dynamic> json) {
     return DFAMinimizationStep(
-      baseStep: AlgorithmStep.fromJson(json['baseStep'] as Map<String, dynamic>),
+      baseStep: AlgorithmStep.fromJson(
+        json['baseStep'] as Map<String, dynamic>,
+      ),
       stepType: DFAMinimizationStepType.values.firstWhere(
         (e) => e.name == json['stepType'],
         orElse: () => DFAMinimizationStepType.initialPartition,
       ),
-      currentPartition: (json['currentPartition'] as List?)
-              ?.map((partition) => (partition as List)
-                  .map((s) => State.fromJson(s as Map<String, dynamic>))
-                  .toSet())
+      currentPartition:
+          (json['currentPartition'] as List?)
+              ?.map(
+                (partition) => (partition as List)
+                    .map((s) => State.fromJson(s as Map<String, dynamic>))
+                    .toSet(),
+              )
               .toList() ??
           [],
       processingSet: (json['processingSet'] as List?)
@@ -474,9 +504,11 @@ class DFAMinimizationStep {
           ?.map((s) => State.fromJson(s as Map<String, dynamic>))
           .toSet(),
       newPartition: (json['newPartition'] as List?)
-          ?.map((partition) => (partition as List)
-              .map((s) => State.fromJson(s as Map<String, dynamic>))
-              .toSet())
+          ?.map(
+            (partition) => (partition as List)
+                .map((s) => State.fromJson(s as Map<String, dynamic>))
+                .toSet(),
+          )
           .toList(),
       partitionSize: json['partitionSize'] as int? ?? 0,
       causedSplit: json['causedSplit'] as bool? ?? false,
@@ -529,9 +561,11 @@ class DFAMinimizationStep {
   /// Gets a summary of the partition state
   String get partitionSummary {
     if (currentPartition.isEmpty) return 'No partition data';
-    final classes = currentPartition.map((set) {
-      return '{${set.map((s) => s.label).join(',')}}';
-    }).join(', ');
+    final classes = currentPartition
+        .map((set) {
+          return '{${set.map((s) => s.label).join(',')}}';
+        })
+        .join(', ');
     return 'Partition ($partitionSize class${partitionSize != 1 ? 'es' : ''}): $classes';
   }
 

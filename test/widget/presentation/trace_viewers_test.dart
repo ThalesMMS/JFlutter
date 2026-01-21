@@ -14,9 +14,7 @@ Future<void> _pumpPDATraceViewer(
 }) async {
   await tester.pumpWidget(
     MaterialApp(
-      home: Scaffold(
-        body: PDATraceViewer(result: result),
-      ),
+      home: Scaffold(body: PDATraceViewer(result: result)),
     ),
   );
   await tester.pumpAndSettle();
@@ -28,9 +26,7 @@ Future<void> _pumpTMTraceViewer(
 }) async {
   await tester.pumpWidget(
     MaterialApp(
-      home: Scaffold(
-        body: TMTraceViewer(result: result),
-      ),
+      home: Scaffold(body: TMTraceViewer(result: result)),
     ),
   );
   await tester.pumpAndSettle();
@@ -40,8 +36,9 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('PDATraceViewer', () {
-    testWidgets('renders with accepted result and displays correct title',
-        (tester) async {
+    testWidgets('renders with accepted result and displays correct title', (
+      tester,
+    ) async {
       final result = PDASimulationResult.success(
         inputString: 'abc',
         steps: [
@@ -76,8 +73,9 @@ void main() {
       expect(find.byIcon(Icons.check_circle), findsOneWidget);
     });
 
-    testWidgets('renders with rejected result and displays correct icon',
-        (tester) async {
+    testWidgets('renders with rejected result and displays correct icon', (
+      tester,
+    ) async {
       final result = PDASimulationResult.failure(
         inputString: 'ab',
         steps: [
@@ -159,40 +157,43 @@ void main() {
       expect(find.textContaining('stack=λ'), findsOneWidget);
     });
 
-    testWidgets('displays step information with state, remaining input, and stack',
-        (tester) async {
-      final result = PDASimulationResult.success(
-        inputString: 'abc',
-        steps: [
-          const SimulationStep(
-            currentState: 'q0',
-            remainingInput: 'abc',
-            stackContents: 'Z',
-            stepNumber: 0,
-          ),
-          const SimulationStep(
-            currentState: 'q1',
-            remainingInput: 'bc',
-            stackContents: 'AZ',
-            usedTransition: 'a',
-            stepNumber: 1,
-          ),
-        ],
-        executionTime: const Duration(milliseconds: 8),
-      );
+    testWidgets(
+      'displays step information with state, remaining input, and stack',
+      (tester) async {
+        final result = PDASimulationResult.success(
+          inputString: 'abc',
+          steps: [
+            const SimulationStep(
+              currentState: 'q0',
+              remainingInput: 'abc',
+              stackContents: 'Z',
+              stepNumber: 0,
+            ),
+            const SimulationStep(
+              currentState: 'q1',
+              remainingInput: 'bc',
+              stackContents: 'AZ',
+              usedTransition: 'a',
+              stepNumber: 1,
+            ),
+          ],
+          executionTime: const Duration(milliseconds: 8),
+        );
 
-      await _pumpPDATraceViewer(tester, result: result);
+        await _pumpPDATraceViewer(tester, result: result);
 
-      expect(find.textContaining('q=q0'), findsOneWidget);
-      expect(find.textContaining('rem=abc'), findsOneWidget);
-      expect(find.textContaining('stack=Z'), findsOneWidget);
-      expect(find.textContaining('q=q1'), findsOneWidget);
-      expect(find.textContaining('rem=bc'), findsOneWidget);
-      expect(find.textContaining('stack=AZ'), findsOneWidget);
-    });
+        expect(find.textContaining('q=q0'), findsOneWidget);
+        expect(find.textContaining('rem=abc'), findsOneWidget);
+        expect(find.textContaining('stack=Z'), findsOneWidget);
+        expect(find.textContaining('q=q1'), findsOneWidget);
+        expect(find.textContaining('rem=bc'), findsOneWidget);
+        expect(find.textContaining('stack=AZ'), findsOneWidget);
+      },
+    );
 
-    testWidgets('displays transition information when available',
-        (tester) async {
+    testWidgets('displays transition information when available', (
+      tester,
+    ) async {
       final result = PDASimulationResult.success(
         inputString: 'ab',
         steps: [
@@ -313,8 +314,9 @@ void main() {
       expect(find.byIcon(Icons.all_inclusive), findsOneWidget);
     });
 
-    testWidgets('renders all step containers with proper styling',
-        (tester) async {
+    testWidgets('renders all step containers with proper styling', (
+      tester,
+    ) async {
       final result = PDASimulationResult.success(
         inputString: 'ab',
         steps: [
@@ -370,8 +372,9 @@ void main() {
   });
 
   group('TMTraceViewer', () {
-    testWidgets('renders with accepted result and displays correct title',
-        (tester) async {
+    testWidgets('renders with accepted result and displays correct title', (
+      tester,
+    ) async {
       final result = TMSimulationResult.success(
         inputString: 'abc',
         steps: [
@@ -406,8 +409,9 @@ void main() {
       expect(find.byIcon(Icons.check_circle), findsOneWidget);
     });
 
-    testWidgets('renders with rejected result and displays correct icon',
-        (tester) async {
+    testWidgets('renders with rejected result and displays correct icon', (
+      tester,
+    ) async {
       final result = TMSimulationResult.failure(
         inputString: 'ab',
         steps: [
@@ -463,8 +467,9 @@ void main() {
       expect(find.textContaining('tape=□'), findsOneWidget);
     });
 
-    testWidgets('displays step information with state and tape',
-        (tester) async {
+    testWidgets('displays step information with state and tape', (
+      tester,
+    ) async {
       final result = TMSimulationResult.success(
         inputString: 'abc',
         steps: [
@@ -493,8 +498,9 @@ void main() {
       expect(find.textContaining('tape=Xbc'), findsOneWidget);
     });
 
-    testWidgets('displays transition information when available',
-        (tester) async {
+    testWidgets('displays transition information when available', (
+      tester,
+    ) async {
       final result = TMSimulationResult.success(
         inputString: 'ab',
         steps: [
@@ -615,8 +621,9 @@ void main() {
       expect(find.byIcon(Icons.all_inclusive), findsOneWidget);
     });
 
-    testWidgets('renders all step containers with proper styling',
-        (tester) async {
+    testWidgets('renders all step containers with proper styling', (
+      tester,
+    ) async {
       final result = TMSimulationResult.success(
         inputString: 'ab',
         steps: [
@@ -649,8 +656,7 @@ void main() {
       expect(containers.length, greaterThanOrEqualTo(2));
     });
 
-    testWidgets('displays correct information for single step',
-        (tester) async {
+    testWidgets('displays correct information for single step', (tester) async {
       final result = TMSimulationResult.success(
         inputString: 'a',
         steps: [
@@ -694,8 +700,9 @@ void main() {
       expect(find.textContaining('read'), findsNothing);
     });
 
-    testWidgets('displays tape contents correctly for complex strings',
-        (tester) async {
+    testWidgets('displays tape contents correctly for complex strings', (
+      tester,
+    ) async {
       final result = TMSimulationResult.success(
         inputString: '0011',
         steps: [

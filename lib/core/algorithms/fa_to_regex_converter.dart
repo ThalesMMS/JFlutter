@@ -455,10 +455,7 @@ class FAToRegexConverter {
   }
 
   /// Applies state elimination algorithm with detailed step capture
-  static String _stateEliminationWithSteps(
-    FSA fa,
-    List<FAToRegexStep> steps,
-  ) {
+  static String _stateEliminationWithSteps(FSA fa, List<FAToRegexStep> steps) {
     // Create a copy of the FA for modification
     var currentFA = fa;
 
@@ -656,8 +653,7 @@ class FAToRegexConverter {
           stepNumber: steps.length + 1,
           eliminatedState: stateToEliminate,
           newTransitions: createdTransitions.toSet(),
-          pathRegexExample:
-              createdTransitions.first.label,
+          pathRegexExample: createdTransitions.first.label,
         ),
       );
     }
@@ -723,8 +719,10 @@ class FAToRegexConverter {
       );
 
       // Ensure single initial and final states with step capture
-      final faWithSingleStates =
-          _ensureSingleInitialAndFinalStatesWithSteps(fa, steps);
+      final faWithSingleStates = _ensureSingleInitialAndFinalStatesWithSteps(
+        fa,
+        steps,
+      );
 
       // Apply state elimination with detailed step capture
       final regex = _stateEliminationWithSteps(faWithSingleStates, steps);

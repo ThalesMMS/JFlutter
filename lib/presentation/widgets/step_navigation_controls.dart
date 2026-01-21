@@ -124,9 +124,9 @@ class StepNavigationControls extends StatelessWidget {
               Icon(
                 Icons.speed,
                 size: 20,
-                color: Theme.of(context).colorScheme.onSurface.withValues(
-                  alpha: 0.6,
-                ),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.6),
               ),
               const SizedBox(width: 8),
               Text(

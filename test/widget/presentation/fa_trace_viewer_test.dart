@@ -12,9 +12,7 @@ Future<void> _pumpFATraceViewer(
 }) async {
   await tester.pumpWidget(
     MaterialApp(
-      home: Scaffold(
-        body: FATraceViewer(result: result),
-      ),
+      home: Scaffold(body: FATraceViewer(result: result)),
     ),
   );
   await tester.pumpAndSettle();
@@ -24,8 +22,9 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('FATraceViewer', () {
-    testWidgets('renders with accepted result and displays correct title',
-        (tester) async {
+    testWidgets('renders with accepted result and displays correct title', (
+      tester,
+    ) async {
       final result = SimulationResult.success(
         inputString: 'abc',
         steps: [
@@ -57,8 +56,9 @@ void main() {
       expect(find.byIcon(Icons.check_circle), findsOneWidget);
     });
 
-    testWidgets('renders with rejected result and displays correct icon',
-        (tester) async {
+    testWidgets('renders with rejected result and displays correct icon', (
+      tester,
+    ) async {
       final result = SimulationResult.failure(
         inputString: 'ab',
         steps: [
@@ -110,8 +110,9 @@ void main() {
       expect(find.textContaining('remaining=ε'), findsOneWidget);
     });
 
-    testWidgets('displays step information with state and remaining input',
-        (tester) async {
+    testWidgets('displays step information with state and remaining input', (
+      tester,
+    ) async {
       final result = SimulationResult.success(
         inputString: 'abc',
         steps: [
@@ -139,8 +140,9 @@ void main() {
       expect(find.textContaining('read a'), findsOneWidget);
     });
 
-    testWidgets('displays transition information when available',
-        (tester) async {
+    testWidgets('displays transition information when available', (
+      tester,
+    ) async {
       final result = SimulationResult.success(
         inputString: 'ab',
         steps: [
@@ -216,8 +218,9 @@ void main() {
       expect(find.text('No steps recorded'), findsOneWidget);
     });
 
-    testWidgets('renders all step containers with proper styling',
-        (tester) async {
+    testWidgets('renders all step containers with proper styling', (
+      tester,
+    ) async {
       final result = SimulationResult.success(
         inputString: 'ab',
         steps: [
@@ -248,8 +251,7 @@ void main() {
       expect(containers.length, greaterThanOrEqualTo(2));
     });
 
-    testWidgets('displays correct information for single step',
-        (tester) async {
+    testWidgets('displays correct information for single step', (tester) async {
       final result = SimulationResult.success(
         inputString: 'a',
         steps: [

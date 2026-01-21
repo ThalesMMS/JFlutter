@@ -259,7 +259,9 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     final automaton = _requireAutomaton();
     if (automaton == null) return;
 
-    await ref.read(automatonAlgorithmProvider.notifier).convertNfaToDfaWithSteps();
+    await ref
+        .read(automatonAlgorithmProvider.notifier)
+        .convertNfaToDfaWithSteps();
   }
 
   Future<void> _handleMinimizeDfa() async {
@@ -369,9 +371,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
           if (stepState.currentStep != null)
             Expanded(
               child: SingleChildScrollView(
-                child: AlgorithmStepViewer(
-                  step: stepState.currentStep!,
-                ),
+                child: AlgorithmStepViewer(step: stepState.currentStep!),
               ),
             ),
 
@@ -383,7 +383,8 @@ class _FSAPageState extends ConsumerState<FSAPage> {
               totalSteps: stepState.totalSteps,
               isPlaying: stepState.isPlaying,
               onPrevious: stepState.hasPreviousStep
-                  ? () => ref.read(algorithmStepProvider.notifier).previousStep()
+                  ? () =>
+                        ref.read(algorithmStepProvider.notifier).previousStep()
                   : null,
               onPlayPause: () =>
                   ref.read(algorithmStepProvider.notifier).togglePlayPause(),
@@ -447,7 +448,10 @@ class _FSAPageState extends ConsumerState<FSAPage> {
       final regex = await algorithmNotifier.convertFaToRegex();
       if (!mounted || regex == null) {
         if (mounted && ref.read(automatonAlgorithmProvider).error != null) {
-          _showSnack(ref.read(automatonAlgorithmProvider).error!, isError: true);
+          _showSnack(
+            ref.read(automatonAlgorithmProvider).error!,
+            isError: true,
+          );
         }
         return;
       }

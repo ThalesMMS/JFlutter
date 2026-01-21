@@ -348,7 +348,8 @@ class DFAMinimizer {
       );
 
       final minimizedDFA = hopcroftResult['dfa'] as FSA;
-      final detailedSteps = hopcroftResult['steps'] as List<DFAMinimizationStep>;
+      final detailedSteps =
+          hopcroftResult['steps'] as List<DFAMinimizationStep>;
 
       final endTime = DateTime.now();
       final executionTime = endTime.difference(startTime);
@@ -479,7 +480,8 @@ class DFAMinimizer {
             } else {
               // No split
               newPartition.add(set);
-              if (set.isNotEmpty && (intersection.isNotEmpty || difference.isNotEmpty)) {
+              if (set.isNotEmpty &&
+                  (intersection.isNotEmpty || difference.isNotEmpty)) {
                 steps.add(
                   DFAMinimizationStep.noSplit(
                     id: 'step_${stepCounter}',
@@ -514,7 +516,9 @@ class DFAMinimizer {
     // Capture state creation steps
     int stateIndex = 0;
     for (final equivalenceClass in partition) {
-      final isAccepting = equivalenceClass.intersection(dfa.acceptingStates).isNotEmpty;
+      final isAccepting = equivalenceClass
+          .intersection(dfa.acceptingStates)
+          .isNotEmpty;
       final isInitial = equivalenceClass.contains(dfa.initialState);
       final stateId = 'q${stateIndex}_min';
 
@@ -542,10 +546,7 @@ class DFAMinimizer {
       ),
     );
 
-    return {
-      'dfa': minimizedDFA,
-      'steps': steps,
-    };
+    return {'dfa': minimizedDFA, 'steps': steps};
   }
 }
 

@@ -49,9 +49,7 @@ Future<void> _pumpHomePage(
         }),
         canvasHighlightServiceProvider.overrideWithValue(highlightService),
       ],
-      child: const MaterialApp(
-        home: HomePage(),
-      ),
+      child: const MaterialApp(home: HomePage()),
     ),
   );
 
@@ -118,12 +116,14 @@ void main() {
           size: const Size(1280, 900),
         );
 
-
         expect(find.byType(MobileNavigation), findsNothing);
         expect(find.byType(DesktopNavigation), findsOneWidget);
         expect(find.byType(NavigationRail), findsOneWidget);
         expect(find.text('FSA'), findsWidgets);
-        expect(find.widgetWithText(Tooltip, 'Finite State Automata'), findsWidgets);
+        expect(
+          find.widgetWithText(Tooltip, 'Finite State Automata'),
+          findsWidgets,
+        );
         expect(find.byIcon(Icons.help_outline), findsWidgets);
         expect(find.byIcon(Icons.settings), findsWidgets);
 
@@ -131,8 +131,9 @@ void main() {
       },
     );
 
-    testWidgets('updates page view and provider when tapping navigation',
-        (tester) async {
+    testWidgets('updates page view and provider when tapping navigation', (
+      tester,
+    ) async {
       final navigationNotifier = _TestHomeNavigationNotifier()..setIndex(1);
       final highlightService = _TestSimulationHighlightService();
 
@@ -151,10 +152,9 @@ void main() {
 
       final navigationFinder = find.byType(MobileNavigation);
 
-      await tester.tap(find.descendant(
-        of: navigationFinder,
-        matching: find.text('Regex'),
-      ));
+      await tester.tap(
+        find.descendant(of: navigationFinder, matching: find.text('Regex')),
+      );
       await tester.pumpAndSettle();
 
       final pageView = tester.widget<PageView>(find.byType(PageView));
@@ -163,10 +163,9 @@ void main() {
       expect(find.text('Regex'), findsWidgets);
       expect(find.text('Regular Expressions'), findsOneWidget);
 
-      await tester.tap(find.descendant(
-        of: navigationFinder,
-        matching: find.text('PDA'),
-      ));
+      await tester.tap(
+        find.descendant(of: navigationFinder, matching: find.text('PDA')),
+      );
       await tester.pumpAndSettle();
 
       expect(pageView.controller?.page, closeTo(2, 0.001));
@@ -175,8 +174,9 @@ void main() {
       expect(find.text('Pushdown Automata'), findsOneWidget);
     });
 
-    testWidgets('updates page view via navigation rail on desktop layout',
-        (tester) async {
+    testWidgets('updates page view via navigation rail on desktop layout', (
+      tester,
+    ) async {
       final navigationNotifier = _TestHomeNavigationNotifier()..setIndex(0);
       final highlightService = _TestSimulationHighlightService();
 

@@ -136,7 +136,8 @@ class _TMTapePanelState extends State<TMTapePanel>
 
       // Calcula offset para centralizar a cabeça
       final headCenterOffset = widget.tapeState.headPosition * cellWidth;
-      final targetOffset = headCenterOffset - (viewportWidth / 2) + (cellWidth / 2);
+      final targetOffset =
+          headCenterOffset - (viewportWidth / 2) + (cellWidth / 2);
 
       // Clamp para não ultrapassar os limites do conteúdo
       final minOffset = scrollPosition.minScrollExtent;
@@ -171,10 +172,7 @@ class _TMTapePanelState extends State<TMTapePanel>
     final result = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(
-          'Edit Cell $cellIndex',
-          style: theme.textTheme.titleMedium,
-        ),
+        title: Text('Edit Cell $cellIndex', style: theme.textTheme.titleMedium),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -193,22 +191,14 @@ class _TMTapePanelState extends State<TMTapePanel>
                 runSpacing: 8,
                 children: [
                   // Blank symbol button
-                  _buildSymbolButton(
-                    widget.tapeState.blankSymbol,
-                    () {
-                      controller.text = widget.tapeState.blankSymbol;
-                    },
-                    theme,
-                  ),
+                  _buildSymbolButton(widget.tapeState.blankSymbol, () {
+                    controller.text = widget.tapeState.blankSymbol;
+                  }, theme),
                   // Tape alphabet symbols
                   ...widget.tapeAlphabet.map(
-                    (symbol) => _buildSymbolButton(
-                      symbol,
-                      () {
-                        controller.text = symbol;
-                      },
-                      theme,
-                    ),
+                    (symbol) => _buildSymbolButton(symbol, () {
+                      controller.text = symbol;
+                    }, theme),
                   ),
                 ],
               ),
@@ -233,10 +223,7 @@ class _TMTapePanelState extends State<TMTapePanel>
               ),
               maxLength: 1,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 20,
-                fontFamily: 'monospace',
-              ),
+              style: const TextStyle(fontSize: 20, fontFamily: 'monospace'),
             ),
           ],
         ),
@@ -280,16 +267,11 @@ class _TMTapePanelState extends State<TMTapePanel>
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
           padding: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         child: Text(
           symbol,
-          style: const TextStyle(
-            fontSize: 18,
-            fontFamily: 'monospace',
-          ),
+          style: const TextStyle(fontSize: 18, fontFamily: 'monospace'),
         ),
       ),
     );

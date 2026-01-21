@@ -135,7 +135,8 @@ class TMSimulator {
                   currentState: state.id,
                   remainingInput: '',
                   tapeContents: newTape.join(''),
-                  usedTransition: '${state.id},$read → '
+                  usedTransition:
+                      '${state.id},$read → '
                       '${tr.toState.id},${tr.writeSymbol},${tr.moveDirection.symbol}',
                   stepNumber:
                       (steps.isNotEmpty ? steps.last.stepNumber : 0) + 1,
@@ -321,7 +322,8 @@ class TMSimulator {
 
       // Add step
       if (stepByStep) {
-        final transitionRule = '${currentState.id},$currentSymbol → '
+        final transitionRule =
+            '${currentState.id},$currentSymbol → '
             '${transition.toState.id},${transition.writeSymbol},'
             '${transition.moveDirection.symbol}';
         steps.add(

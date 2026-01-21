@@ -110,9 +110,7 @@ class StackOperationPreview extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             '$label: ',
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontSize: 12,
-            ),
+            style: theme.textTheme.bodySmall?.copyWith(fontSize: 12),
           ),
           Text(
             isLambda ? 'λ' : value,

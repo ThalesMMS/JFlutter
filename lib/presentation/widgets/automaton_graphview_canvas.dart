@@ -403,9 +403,7 @@ class _AutomatonGraphViewCanvasState
       _ownsController = false;
     } else {
       final notifier = ref.read(automatonStateProvider.notifier);
-      _controller = GraphViewCanvasController(
-        automatonStateNotifier: notifier,
-      );
+      _controller = GraphViewCanvasController(automatonStateNotifier: notifier);
       _ownsController = true;
       final highlightService = ref.read(canvasHighlightServiceProvider);
       _highlightService = highlightService;
@@ -1395,7 +1393,8 @@ class _AutomatonGraphViewCanvasState
                           }
                           return RepaintBoundary(
                             child: AbsorbPointer(
-                              absorbing: _suppressCanvasPan ||
+                              absorbing:
+                                  _suppressCanvasPan ||
                                   _activeTool == AutomatonCanvasTool.addState ||
                                   _activeTool == AutomatonCanvasTool.transition,
                               child: GraphViewAllNodes.builder(
@@ -1806,14 +1805,18 @@ class _GraphViewEdgePainter extends CustomPainter {
           centerFromAnchor = 0.0;
           previousTopFromAnchor = textPainter.height / 2;
         } else {
-          centerFromAnchor = previousTopFromAnchor + 2.0 + textPainter.height / 2;
+          centerFromAnchor =
+              previousTopFromAnchor + 2.0 + textPainter.height / 2;
           previousTopFromAnchor = centerFromAnchor + textPainter.height / 2;
         }
 
         final drawPosition =
             loopGeometry.labelAnchor +
-            Offset(-textPainter.width / 2, -centerFromAnchor - textPainter.height / 2);
-        
+            Offset(
+              -textPainter.width / 2,
+              -centerFromAnchor - textPainter.height / 2,
+            );
+
         textPainter.paint(canvas, drawPosition);
       }
     }

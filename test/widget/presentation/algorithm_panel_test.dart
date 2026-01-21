@@ -86,7 +86,9 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('AlgorithmPanel', () {
-    testWidgets('renders all algorithm buttons and regex input', (tester) async {
+    testWidgets('renders all algorithm buttons and regex input', (
+      tester,
+    ) async {
       await _pumpAlgorithmPanel(tester);
 
       expect(find.text('Algorithms'), findsOneWidget);
@@ -108,17 +110,18 @@ void main() {
       expect(find.text('Clear'), findsOneWidget);
 
       expect(find.byType(TextField), findsOneWidget);
-      expect(find.widgetWithText(TextField, 'Regular Expression'), findsOneWidget);
+      expect(
+        find.widgetWithText(TextField, 'Regular Expression'),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('triggers auto layout callback when button is tapped',
-        (tester) async {
+    testWidgets('triggers auto layout callback when button is tapped', (
+      tester,
+    ) async {
       final callbacks = _TestCallbacks();
 
-      await _pumpAlgorithmPanel(
-        tester,
-        onAutoLayout: callbacks.onAutoLayout,
-      );
+      await _pumpAlgorithmPanel(tester, onAutoLayout: callbacks.onAutoLayout);
 
       expect(callbacks.autoLayoutCallCount, 0);
 
@@ -131,14 +134,12 @@ void main() {
       expect(callbacks.autoLayoutCallCount, 1);
     });
 
-    testWidgets('triggers clear callback when button is tapped',
-        (tester) async {
+    testWidgets('triggers clear callback when button is tapped', (
+      tester,
+    ) async {
       final callbacks = _TestCallbacks();
 
-      await _pumpAlgorithmPanel(
-        tester,
-        onClear: callbacks.onClear,
-      );
+      await _pumpAlgorithmPanel(tester, onClear: callbacks.onClear);
 
       expect(callbacks.clearCallCount, 0);
 
@@ -151,32 +152,30 @@ void main() {
       expect(callbacks.clearCallCount, 1);
     });
 
-    testWidgets('triggers regex to NFA callback when button is pressed',
-        (tester) async {
+    testWidgets('triggers regex to NFA callback when button is pressed', (
+      tester,
+    ) async {
       final callbacks = _TestCallbacks();
 
-      await _pumpAlgorithmPanel(
-        tester,
-        onRegexToNfa: callbacks.onRegexToNfa,
-      );
+      await _pumpAlgorithmPanel(tester, onRegexToNfa: callbacks.onRegexToNfa);
 
       expect(callbacks.lastRegexValue, isNull);
 
       await tester.enterText(find.byType(TextField), '(a|b)*');
-      await tester.tap(find.widgetWithIcon(ElevatedButton, Icons.arrow_forward));
+      await tester.tap(
+        find.widgetWithIcon(ElevatedButton, Icons.arrow_forward),
+      );
       await tester.pumpAndSettle();
 
       expect(callbacks.lastRegexValue, '(a|b)*');
     });
 
-    testWidgets('triggers regex to NFA callback when enter is pressed',
-        (tester) async {
+    testWidgets('triggers regex to NFA callback when enter is pressed', (
+      tester,
+    ) async {
       final callbacks = _TestCallbacks();
 
-      await _pumpAlgorithmPanel(
-        tester,
-        onRegexToNfa: callbacks.onRegexToNfa,
-      );
+      await _pumpAlgorithmPanel(tester, onRegexToNfa: callbacks.onRegexToNfa);
 
       expect(callbacks.lastRegexValue, isNull);
 
@@ -187,25 +186,26 @@ void main() {
       expect(callbacks.lastRegexValue, 'a*b*');
     });
 
-    testWidgets('does not trigger regex callback with empty input',
-        (tester) async {
+    testWidgets('does not trigger regex callback with empty input', (
+      tester,
+    ) async {
       final callbacks = _TestCallbacks();
 
-      await _pumpAlgorithmPanel(
-        tester,
-        onRegexToNfa: callbacks.onRegexToNfa,
-      );
+      await _pumpAlgorithmPanel(tester, onRegexToNfa: callbacks.onRegexToNfa);
 
       expect(callbacks.lastRegexValue, isNull);
 
-      await tester.tap(find.widgetWithIcon(ElevatedButton, Icons.arrow_forward));
+      await tester.tap(
+        find.widgetWithIcon(ElevatedButton, Icons.arrow_forward),
+      );
       await tester.pumpAndSettle();
 
       expect(callbacks.lastRegexValue, isNull);
     });
 
-    testWidgets('displays equivalence result when result is true',
-        (tester) async {
+    testWidgets('displays equivalence result when result is true', (
+      tester,
+    ) async {
       await _pumpAlgorithmPanel(
         tester,
         equivalenceResult: true,
@@ -213,12 +213,16 @@ void main() {
       );
 
       expect(find.text('Automata are equivalent'), findsOneWidget);
-      expect(find.text('The automata accept the same language'), findsOneWidget);
+      expect(
+        find.text('The automata accept the same language'),
+        findsOneWidget,
+      );
       expect(find.byIcon(Icons.check_circle), findsOneWidget);
     });
 
-    testWidgets('displays equivalence result when result is false',
-        (tester) async {
+    testWidgets('displays equivalence result when result is false', (
+      tester,
+    ) async {
       await _pumpAlgorithmPanel(
         tester,
         equivalenceResult: false,
@@ -230,8 +234,7 @@ void main() {
       expect(find.byIcon(Icons.cancel), findsOneWidget);
     });
 
-    testWidgets('displays equivalence result with null result',
-        (tester) async {
+    testWidgets('displays equivalence result with null result', (tester) async {
       await _pumpAlgorithmPanel(
         tester,
         equivalenceResult: null,
@@ -243,8 +246,9 @@ void main() {
       expect(find.byIcon(Icons.info_outline), findsOneWidget);
     });
 
-    testWidgets('does not display equivalence result when no data provided',
-        (tester) async {
+    testWidgets('does not display equivalence result when no data provided', (
+      tester,
+    ) async {
       await _pumpAlgorithmPanel(tester);
 
       expect(find.text('Automata are equivalent'), findsNothing);
@@ -252,8 +256,9 @@ void main() {
       expect(find.text('Equivalence comparison'), findsNothing);
     });
 
-    testWidgets('displays correct icons for each algorithm button',
-        (tester) async {
+    testWidgets('displays correct icons for each algorithm button', (
+      tester,
+    ) async {
       await _pumpAlgorithmPanel(tester);
 
       expect(find.byIcon(Icons.transform), findsWidgets);
@@ -283,16 +288,14 @@ void main() {
     testWidgets('uses mock file service when provided', (tester) async {
       final mockFileService = _MockFileOperationsService();
 
-      await _pumpAlgorithmPanel(
-        tester,
-        fileService: mockFileService,
-      );
+      await _pumpAlgorithmPanel(tester, fileService: mockFileService);
 
       expect(find.byType(AlgorithmPanel), findsOneWidget);
     });
 
-    testWidgets('displays descriptions for each algorithm button',
-        (tester) async {
+    testWidgets('displays descriptions for each algorithm button', (
+      tester,
+    ) async {
       await _pumpAlgorithmPanel(tester);
 
       expect(
@@ -307,10 +310,7 @@ void main() {
         find.text('Minimize deterministic finite automaton'),
         findsOneWidget,
       );
-      expect(
-        find.text('Add trap state to make DFA complete'),
-        findsOneWidget,
-      );
+      expect(find.text('Add trap state to make DFA complete'), findsOneWidget);
       expect(
         find.text('Flip accepting states after completion'),
         findsOneWidget,
@@ -356,18 +356,9 @@ void main() {
         find.text('Convert finite automaton to regular grammar'),
         findsOneWidget,
       );
-      expect(
-        find.text('Arrange states in a circle'),
-        findsOneWidget,
-      );
-      expect(
-        find.text('Compare two DFAs for equivalence'),
-        findsOneWidget,
-      );
-      expect(
-        find.text('Clear current automaton'),
-        findsOneWidget,
-      );
+      expect(find.text('Arrange states in a circle'), findsOneWidget);
+      expect(find.text('Compare two DFAs for equivalence'), findsOneWidget);
+      expect(find.text('Clear current automaton'), findsOneWidget);
     });
 
     testWidgets('displays title text with correct styling', (tester) async {

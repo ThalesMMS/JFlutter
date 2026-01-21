@@ -122,9 +122,7 @@ class AlgorithmStepNotifier extends StateNotifier<AlgorithmStepState> {
   /// Initialize steps for an algorithm execution
   void initializeSteps(List<AlgorithmStep> steps) {
     if (steps.isEmpty) {
-      state = state.copyWith(
-        error: 'Cannot initialize with empty steps list',
-      );
+      state = state.copyWith(error: 'Cannot initialize with empty steps list');
       return;
     }
 
@@ -159,26 +157,18 @@ class AlgorithmStepNotifier extends StateNotifier<AlgorithmStepState> {
   /// Jump to a specific step by index
   void jumpToStep(int index) {
     if (index < 0 || index >= state.steps.length) {
-      state = state.copyWith(
-        error: 'Invalid step index: $index',
-      );
+      state = state.copyWith(error: 'Invalid step index: $index');
       return;
     }
 
-    state = state.copyWith(
-      currentStepIndex: index,
-      error: null,
-    );
+    state = state.copyWith(currentStepIndex: index, error: null);
   }
 
   /// Jump to the first step
   void jumpToFirstStep() {
     if (!state.hasSteps) return;
 
-    state = state.copyWith(
-      currentStepIndex: 0,
-      error: null,
-    );
+    state = state.copyWith(currentStepIndex: 0, error: null);
   }
 
   /// Jump to the last step
@@ -195,18 +185,12 @@ class AlgorithmStepNotifier extends StateNotifier<AlgorithmStepState> {
   void play() {
     if (!state.hasSteps) return;
 
-    state = state.copyWith(
-      isPlaying: true,
-      error: null,
-    );
+    state = state.copyWith(isPlaying: true, error: null);
   }
 
   /// Pause auto-playing
   void pause() {
-    state = state.copyWith(
-      isPlaying: false,
-      error: null,
-    );
+    state = state.copyWith(isPlaying: false, error: null);
   }
 
   /// Toggle play/pause
@@ -220,11 +204,7 @@ class AlgorithmStepNotifier extends StateNotifier<AlgorithmStepState> {
 
   /// Reset to initial state
   void reset() {
-    state = state.copyWith(
-      currentStepIndex: 0,
-      isPlaying: false,
-      error: null,
-    );
+    state = state.copyWith(currentStepIndex: 0, isPlaying: false, error: null);
   }
 
   /// Clear all steps and reset
@@ -241,5 +221,5 @@ class AlgorithmStepNotifier extends StateNotifier<AlgorithmStepState> {
 /// Provider registration for algorithm step navigation
 final algorithmStepProvider =
     StateNotifierProvider<AlgorithmStepNotifier, AlgorithmStepState>(
-  (ref) => AlgorithmStepNotifier(ref),
-);
+      (ref) => AlgorithmStepNotifier(ref),
+    );

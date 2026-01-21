@@ -111,10 +111,7 @@ class ImportErrorDialog extends StatelessWidget {
             children: [
               _FileChip(fileName: fileName, color: visuals.color),
               const SizedBox(height: 16),
-              Text(
-                detailedMessage,
-                style: theme.textTheme.bodyMedium,
-              ),
+              Text(detailedMessage, style: theme.textTheme.bodyMedium),
               if (_hasTechnicalDetails) ...[
                 const SizedBox(height: 16),
                 _TechnicalDetailsSection(
@@ -129,10 +126,7 @@ class ImportErrorDialog extends StatelessWidget {
           Semantics(
             label: 'Cancel import',
             button: true,
-            child: TextButton(
-              onPressed: onCancel,
-              child: const Text('Cancel'),
-            ),
+            child: TextButton(onPressed: onCancel, child: const Text('Cancel')),
           ),
           RetryButton(onPressed: onRetry),
         ],
@@ -192,10 +186,9 @@ class _FileChip extends StatelessWidget {
           Flexible(
             child: Text(
               fileName,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: color),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: color),
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -233,7 +226,9 @@ class _TechnicalDetailsSectionState extends State<_TechnicalDetailsSection> {
         TextButton.icon(
           onPressed: () => setState(() => _expanded = !_expanded),
           icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more),
-          label: Text(_expanded ? 'Hide technical details' : 'View technical details'),
+          label: Text(
+            _expanded ? 'Hide technical details' : 'View technical details',
+          ),
         ),
         AnimatedCrossFade(
           firstChild: const SizedBox.shrink(),
@@ -246,14 +241,12 @@ class _TechnicalDetailsSectionState extends State<_TechnicalDetailsSection> {
               color: theme.colorScheme.surfaceContainerHighest,
             ),
             child: SingleChildScrollView(
-              child: Text(
-                widget.details,
-                style: theme.textTheme.bodySmall,
-              ),
+              child: Text(widget.details, style: theme.textTheme.bodySmall),
             ),
           ),
-          crossFadeState:
-              _expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+          crossFadeState: _expanded
+              ? CrossFadeState.showSecond
+              : CrossFadeState.showFirst,
           duration: const Duration(milliseconds: 200),
         ),
       ],

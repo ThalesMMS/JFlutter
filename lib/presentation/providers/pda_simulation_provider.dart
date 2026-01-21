@@ -113,7 +113,11 @@ class PDASimulationNotifier extends StateNotifier<PDASimulationState> {
 
   Future<void> simulate(String input) async {
     if (state.pda == null) return;
-    state = state.copyWith(isRunning: true, lastInput: input, currentStepIndex: 0);
+    state = state.copyWith(
+      isRunning: true,
+      lastInput: input,
+      currentStepIndex: 0,
+    );
 
     final result = pda.PDASimulatorFacade.run(
       state.pda!,
@@ -158,7 +162,9 @@ class PDASimulationNotifier extends StateNotifier<PDASimulationState> {
 
   /// Jumps to a specific step
   void goToStep(int index) {
-    if (state.result != null && index >= 0 && index < state.result!.steps.length) {
+    if (state.result != null &&
+        index >= 0 &&
+        index < state.result!.steps.length) {
       state = state.copyWith(currentStepIndex: index);
     }
   }

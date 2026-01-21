@@ -67,30 +67,18 @@ class _AnimatedStateTransitionState extends State<AnimatedStateTransition>
       milliseconds: (300 / widget.animationSpeed).round(),
     );
 
-    _controller = AnimationController(
-      vsync: this,
-      duration: duration,
-    )..addStatusListener(_handleAnimationStatus);
+    _controller = AnimationController(vsync: this, duration: duration)
+      ..addStatusListener(_handleAnimationStatus);
 
     _scaleAnimation = Tween<double>(
       begin: 1.0,
       end: 1.1,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: widget.curve,
-      ),
-    );
+    ).animate(CurvedAnimation(parent: _controller, curve: widget.curve));
 
     _opacityAnimation = Tween<double>(
       begin: 0.5,
       end: 1.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: widget.curve,
-      ),
-    );
+    ).animate(CurvedAnimation(parent: _controller, curve: widget.curve));
   }
 
   void _handleAnimationStatus(AnimationStatus status) {
@@ -178,15 +166,15 @@ class AnimatedStateFade extends StatefulWidget {
     this.dimmedOpacity = 0.5,
     this.highlightedOpacity = 1.0,
     this.curve = Curves.easeInOut,
-  })  : assert(animationSpeed > 0, 'Animation speed must be positive'),
-        assert(
-          dimmedOpacity >= 0.0 && dimmedOpacity <= 1.0,
-          'Dimmed opacity must be between 0.0 and 1.0',
-        ),
-        assert(
-          highlightedOpacity >= 0.0 && highlightedOpacity <= 1.0,
-          'Highlighted opacity must be between 0.0 and 1.0',
-        );
+  }) : assert(animationSpeed > 0, 'Animation speed must be positive'),
+       assert(
+         dimmedOpacity >= 0.0 && dimmedOpacity <= 1.0,
+         'Dimmed opacity must be between 0.0 and 1.0',
+       ),
+       assert(
+         highlightedOpacity >= 0.0 && highlightedOpacity <= 1.0,
+         'Highlighted opacity must be between 0.0 and 1.0',
+       );
 
   @override
   State<AnimatedStateFade> createState() => _AnimatedStateFadeState();
@@ -211,20 +199,12 @@ class _AnimatedStateFadeState extends State<AnimatedStateFade>
       milliseconds: (300 / widget.animationSpeed).round(),
     );
 
-    _controller = AnimationController(
-      vsync: this,
-      duration: duration,
-    );
+    _controller = AnimationController(vsync: this, duration: duration);
 
     _opacityAnimation = Tween<double>(
       begin: widget.dimmedOpacity,
       end: widget.highlightedOpacity,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: widget.curve,
-      ),
-    );
+    ).animate(CurvedAnimation(parent: _controller, curve: widget.curve));
   }
 
   @override
@@ -261,10 +241,7 @@ class _AnimatedStateFadeState extends State<AnimatedStateFade>
     return AnimatedBuilder(
       animation: _opacityAnimation,
       builder: (context, child) {
-        return Opacity(
-          opacity: _opacityAnimation.value,
-          child: child,
-        );
+        return Opacity(opacity: _opacityAnimation.value, child: child);
       },
       child: widget.child,
     );

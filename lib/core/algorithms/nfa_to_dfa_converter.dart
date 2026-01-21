@@ -347,7 +347,9 @@ class NFAToDFAConverter {
     queue.add(initialStateKey);
 
     // Capture initial epsilon closure step
-    final containsAccepting = initialStateSet.intersection(nfa.acceptingStates).isNotEmpty;
+    final containsAccepting = initialStateSet
+        .intersection(nfa.acceptingStates)
+        .isNotEmpty;
     steps.add(
       NFAToDFAStep.initialEpsilonClosure(
         id: 'step_${stepCounter}',
@@ -415,7 +417,9 @@ class NFAToDFAConverter {
         if (nextStateSet.isNotEmpty) {
           final nextStateKey = _getStateSetKey(nextStateSet);
           final isNewState = !dfaStates.containsKey(nextStateKey);
-          final containsAcceptingState = nextStateSet.intersection(nfa.acceptingStates).isNotEmpty;
+          final containsAcceptingState = nextStateSet
+              .intersection(nfa.acceptingStates)
+              .isNotEmpty;
 
           // Capture epsilon closure of reachable states step
           steps.add(

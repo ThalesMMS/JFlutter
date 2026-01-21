@@ -77,9 +77,9 @@ class FATraceViewer extends StatelessWidget {
                 children: [
                   Text(
                     '${index + 1}.',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(

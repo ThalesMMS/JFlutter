@@ -80,9 +80,15 @@ class NFAToDFAStep {
       stepType: stepType,
       currentStateSet: Set.unmodifiable(currentStateSet),
       processedSymbol: processedSymbol,
-      epsilonClosure: epsilonClosure != null ? Set.unmodifiable(epsilonClosure) : null,
-      reachableStates: reachableStates != null ? Set.unmodifiable(reachableStates) : null,
-      nextStateSet: nextStateSet != null ? Set.unmodifiable(nextStateSet) : null,
+      epsilonClosure: epsilonClosure != null
+          ? Set.unmodifiable(epsilonClosure)
+          : null,
+      reachableStates: reachableStates != null
+          ? Set.unmodifiable(reachableStates)
+          : null,
+      nextStateSet: nextStateSet != null
+          ? Set.unmodifiable(nextStateSet)
+          : null,
       isAcceptingState: isAcceptingState,
       isNewState: isNewState,
       dfaStateId: dfaStateId,
@@ -104,7 +110,8 @@ class NFAToDFAStep {
         id: id,
         stepNumber: stepNumber,
         title: 'Compute initial ε-closure',
-        explanation: 'Computing ε-closure of initial state ${initialState.label}. '
+        explanation:
+            'Computing ε-closure of initial state ${initialState.label}. '
             'This gives us the set of states reachable without consuming input: {$stateLabels}. '
             '${containsAcceptingState ? "This set contains an accepting state, so the initial DFA state will be accepting." : ""}',
         type: AlgorithmType.nfaToDfa,
@@ -134,7 +141,8 @@ class NFAToDFAStep {
         id: id,
         stepNumber: stepNumber,
         title: 'Process symbol \'$symbol\'',
-        explanation: 'From state set {$currentLabels}, processing symbol \'$symbol\'. '
+        explanation:
+            'From state set {$currentLabels}, processing symbol \'$symbol\'. '
             'Following NFA transitions on \'$symbol\' leads to states: {$reachableLabels}.',
         type: AlgorithmType.nfaToDfa,
       ),
@@ -162,7 +170,8 @@ class NFAToDFAStep {
         id: id,
         stepNumber: stepNumber,
         title: 'Compute ε-closure of reachable states',
-        explanation: 'Computing ε-closure of {$reachableLabels}. '
+        explanation:
+            'Computing ε-closure of {$reachableLabels}. '
             'Following ε-transitions gives us the complete state set: {$closureLabels}. '
             '${isNewState ? "This is a new DFA state that needs to be processed." : "This state set has already been processed."} '
             '${containsAcceptingState ? "This set contains an accepting state." : ""}',
@@ -192,7 +201,8 @@ class NFAToDFAStep {
         id: id,
         stepNumber: stepNumber,
         title: 'Create DFA state $dfaStateId',
-        explanation: 'Creating new DFA state $dfaStateId to represent NFA state set {$stateLabels}. '
+        explanation:
+            'Creating new DFA state $dfaStateId to represent NFA state set {$stateLabels}. '
             '${isAccepting ? "This is an accepting state because the NFA state set contains at least one accepting state." : "This is a non-accepting state."}',
         type: AlgorithmType.nfaToDfa,
       ),
@@ -222,7 +232,8 @@ class NFAToDFAStep {
         id: id,
         stepNumber: stepNumber,
         title: 'Create transition on \'$symbol\'',
-        explanation: 'Adding DFA transition: $fromDfaStateId --($symbol)--> $toDfaStateId. '
+        explanation:
+            'Adding DFA transition: $fromDfaStateId --($symbol)--> $toDfaStateId. '
             'This represents moving from NFA state set {$fromLabels} to {$toLabels} on symbol \'$symbol\'.',
         type: AlgorithmType.nfaToDfa,
       ),
@@ -248,7 +259,8 @@ class NFAToDFAStep {
         id: id,
         stepNumber: stepNumber,
         title: 'Conversion complete',
-        explanation: 'NFA to DFA conversion completed successfully. '
+        explanation:
+            'NFA to DFA conversion completed successfully. '
             'The resulting DFA has $totalStates states, $totalTransitions transitions, '
             'and $totalAcceptingStates accepting state(s). '
             'All reachable state sets have been processed.',
@@ -310,12 +322,15 @@ class NFAToDFAStep {
   /// Creates a step from a JSON representation
   factory NFAToDFAStep.fromJson(Map<String, dynamic> json) {
     return NFAToDFAStep(
-      baseStep: AlgorithmStep.fromJson(json['baseStep'] as Map<String, dynamic>),
+      baseStep: AlgorithmStep.fromJson(
+        json['baseStep'] as Map<String, dynamic>,
+      ),
       stepType: NFAToDFAStepType.values.firstWhere(
         (e) => e.name == json['stepType'],
         orElse: () => NFAToDFAStepType.epsilonClosure,
       ),
-      currentStateSet: (json['currentStateSet'] as List?)
+      currentStateSet:
+          (json['currentStateSet'] as List?)
               ?.map((s) => State.fromJson(s as Map<String, dynamic>))
               .toSet() ??
           {},

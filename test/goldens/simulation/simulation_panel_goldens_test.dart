@@ -28,7 +28,10 @@ class _TestSimulationHighlightService extends SimulationHighlightService {
   }
 
   @override
-  SimulationHighlight emitFromSteps(List<SimulationStep> steps, int currentIndex) {
+  SimulationHighlight emitFromSteps(
+    List<SimulationStep> steps,
+    int currentIndex,
+  ) {
     return super.emitFromSteps(steps, currentIndex);
   }
 }
@@ -72,412 +75,371 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('SimulationPanel golden tests', () {
-    testGoldens(
-      'renders empty panel in desktop layout',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders empty panel in desktop layout', (tester) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        await _pumpSimulationPanel(
-          tester,
-          size: const Size(800, 600),
-        );
+      await _pumpSimulationPanel(tester, size: const Size(800, 600));
 
-        await screenMatchesGolden(tester, 'simulation_panel_empty_desktop');
-      },
-    );
+      await screenMatchesGolden(tester, 'simulation_panel_empty_desktop');
+    });
 
-    testGoldens(
-      'renders empty panel in tablet layout',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders empty panel in tablet layout', (tester) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        await _pumpSimulationPanel(
-          tester,
-          size: const Size(600, 800),
-        );
+      await _pumpSimulationPanel(tester, size: const Size(600, 800));
 
-        await screenMatchesGolden(tester, 'simulation_panel_empty_tablet');
-      },
-    );
+      await screenMatchesGolden(tester, 'simulation_panel_empty_tablet');
+    });
 
-    testGoldens(
-      'renders empty panel in mobile layout',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders empty panel in mobile layout', (tester) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        await _pumpSimulationPanel(
-          tester,
-          size: const Size(400, 700),
-        );
+      await _pumpSimulationPanel(tester, size: const Size(400, 700));
 
-        await screenMatchesGolden(tester, 'simulation_panel_empty_mobile');
-      },
-    );
+      await screenMatchesGolden(tester, 'simulation_panel_empty_mobile');
+    });
 
-    testGoldens(
-      'renders accepted simulation result',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders accepted simulation result', (tester) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        final result = SimulationResult.success(
-          inputString: 'abc',
-          steps: [
-            const SimulationStep(
-              currentState: 'q0',
-              remainingInput: 'abc',
-              stepNumber: 0,
-            ),
-            const SimulationStep(
-              currentState: 'q1',
-              remainingInput: 'bc',
-              stepNumber: 1,
-              usedTransition: 'a',
-            ),
-            const SimulationStep(
-              currentState: 'q2',
-              remainingInput: 'c',
-              stepNumber: 2,
-              usedTransition: 'b',
-            ),
-            const SimulationStep(
-              currentState: 'q3',
-              remainingInput: '',
-              stepNumber: 3,
-              usedTransition: 'c',
-            ),
-          ],
-          executionTime: const Duration(milliseconds: 150),
-        );
+      final result = SimulationResult.success(
+        inputString: 'abc',
+        steps: [
+          const SimulationStep(
+            currentState: 'q0',
+            remainingInput: 'abc',
+            stepNumber: 0,
+          ),
+          const SimulationStep(
+            currentState: 'q1',
+            remainingInput: 'bc',
+            stepNumber: 1,
+            usedTransition: 'a',
+          ),
+          const SimulationStep(
+            currentState: 'q2',
+            remainingInput: 'c',
+            stepNumber: 2,
+            usedTransition: 'b',
+          ),
+          const SimulationStep(
+            currentState: 'q3',
+            remainingInput: '',
+            stepNumber: 3,
+            usedTransition: 'c',
+          ),
+        ],
+        executionTime: const Duration(milliseconds: 150),
+      );
 
-        await _pumpSimulationPanel(
-          tester,
-          simulationResult: result,
-          size: const Size(800, 600),
-        );
+      await _pumpSimulationPanel(
+        tester,
+        simulationResult: result,
+        size: const Size(800, 600),
+      );
 
-        await screenMatchesGolden(tester, 'simulation_panel_accepted');
-      },
-    );
+      await screenMatchesGolden(tester, 'simulation_panel_accepted');
+    });
 
-    testGoldens(
-      'renders rejected simulation result with error',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders rejected simulation result with error', (
+      tester,
+    ) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        final result = SimulationResult.failure(
-          inputString: 'xyz',
-          steps: [
-            const SimulationStep(
-              currentState: 'q0',
-              remainingInput: 'xyz',
-              stepNumber: 0,
-            ),
-            const SimulationStep(
-              currentState: 'q1',
-              remainingInput: 'yz',
-              stepNumber: 1,
-              usedTransition: 'x',
-            ),
-          ],
-          errorMessage: 'No valid transition found',
-          executionTime: const Duration(milliseconds: 75),
-        );
+      final result = SimulationResult.failure(
+        inputString: 'xyz',
+        steps: [
+          const SimulationStep(
+            currentState: 'q0',
+            remainingInput: 'xyz',
+            stepNumber: 0,
+          ),
+          const SimulationStep(
+            currentState: 'q1',
+            remainingInput: 'yz',
+            stepNumber: 1,
+            usedTransition: 'x',
+          ),
+        ],
+        errorMessage: 'No valid transition found',
+        executionTime: const Duration(milliseconds: 75),
+      );
 
-        await _pumpSimulationPanel(
-          tester,
-          simulationResult: result,
-          size: const Size(800, 600),
-        );
+      await _pumpSimulationPanel(
+        tester,
+        simulationResult: result,
+        size: const Size(800, 600),
+      );
 
-        await screenMatchesGolden(tester, 'simulation_panel_rejected');
-      },
-    );
+      await screenMatchesGolden(tester, 'simulation_panel_rejected');
+    });
 
-    testGoldens(
-      'renders regex result',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders regex result', (tester) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        await _pumpSimulationPanel(
-          tester,
-          regexResult: 'a(b|c)*d',
-          size: const Size(800, 600),
-        );
+      await _pumpSimulationPanel(
+        tester,
+        regexResult: 'a(b|c)*d',
+        size: const Size(800, 600),
+      );
 
-        await screenMatchesGolden(tester, 'simulation_panel_regex_result');
-      },
-    );
+      await screenMatchesGolden(tester, 'simulation_panel_regex_result');
+    });
 
-    testGoldens(
-      'renders step-by-step mode at first step',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders step-by-step mode at first step', (tester) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        final result = SimulationResult.success(
-          inputString: 'ab',
-          steps: [
-            const SimulationStep(
-              currentState: 'q0',
-              remainingInput: 'ab',
-              stepNumber: 0,
-            ),
-            const SimulationStep(
-              currentState: 'q1',
-              remainingInput: 'b',
-              stepNumber: 1,
-              usedTransition: 'a',
-            ),
-            const SimulationStep(
-              currentState: 'q2',
-              remainingInput: '',
-              stepNumber: 2,
-              usedTransition: 'b',
-            ),
-          ],
-          executionTime: const Duration(milliseconds: 100),
-        );
+      final result = SimulationResult.success(
+        inputString: 'ab',
+        steps: [
+          const SimulationStep(
+            currentState: 'q0',
+            remainingInput: 'ab',
+            stepNumber: 0,
+          ),
+          const SimulationStep(
+            currentState: 'q1',
+            remainingInput: 'b',
+            stepNumber: 1,
+            usedTransition: 'a',
+          ),
+          const SimulationStep(
+            currentState: 'q2',
+            remainingInput: '',
+            stepNumber: 2,
+            usedTransition: 'b',
+          ),
+        ],
+        executionTime: const Duration(milliseconds: 100),
+      );
 
-        await _pumpSimulationPanel(
-          tester,
-          simulationResult: result,
-          size: const Size(800, 700),
-        );
+      await _pumpSimulationPanel(
+        tester,
+        simulationResult: result,
+        size: const Size(800, 700),
+      );
 
-        // Enable step-by-step mode
-        await tester.tap(find.byType(Switch));
-        await tester.pumpAndSettle();
+      // Enable step-by-step mode
+      await tester.tap(find.byType(Switch));
+      await tester.pumpAndSettle();
 
-        await screenMatchesGolden(tester, 'simulation_panel_step_mode_first');
-      },
-    );
+      await screenMatchesGolden(tester, 'simulation_panel_step_mode_first');
+    });
 
-    testGoldens(
-      'renders step-by-step mode at middle step',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders step-by-step mode at middle step', (tester) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        final result = SimulationResult.success(
-          inputString: 'ab',
-          steps: [
-            const SimulationStep(
-              currentState: 'q0',
-              remainingInput: 'ab',
-              stepNumber: 0,
-            ),
-            const SimulationStep(
-              currentState: 'q1',
-              remainingInput: 'b',
-              stepNumber: 1,
-              usedTransition: 'a',
-            ),
-            const SimulationStep(
-              currentState: 'q2',
-              remainingInput: '',
-              stepNumber: 2,
-              usedTransition: 'b',
-            ),
-          ],
-          executionTime: const Duration(milliseconds: 100),
-        );
+      final result = SimulationResult.success(
+        inputString: 'ab',
+        steps: [
+          const SimulationStep(
+            currentState: 'q0',
+            remainingInput: 'ab',
+            stepNumber: 0,
+          ),
+          const SimulationStep(
+            currentState: 'q1',
+            remainingInput: 'b',
+            stepNumber: 1,
+            usedTransition: 'a',
+          ),
+          const SimulationStep(
+            currentState: 'q2',
+            remainingInput: '',
+            stepNumber: 2,
+            usedTransition: 'b',
+          ),
+        ],
+        executionTime: const Duration(milliseconds: 100),
+      );
 
-        await _pumpSimulationPanel(
-          tester,
-          simulationResult: result,
-          size: const Size(800, 700),
-        );
+      await _pumpSimulationPanel(
+        tester,
+        simulationResult: result,
+        size: const Size(800, 700),
+      );
 
-        // Enable step-by-step mode
-        await tester.tap(find.byType(Switch));
-        await tester.pumpAndSettle();
+      // Enable step-by-step mode
+      await tester.tap(find.byType(Switch));
+      await tester.pumpAndSettle();
 
-        // Go to next step
-        await tester.tap(find.byTooltip('Next Step'));
-        await tester.pumpAndSettle();
+      // Go to next step
+      await tester.tap(find.byTooltip('Next Step'));
+      await tester.pumpAndSettle();
 
-        await screenMatchesGolden(tester, 'simulation_panel_step_mode_middle');
-      },
-    );
+      await screenMatchesGolden(tester, 'simulation_panel_step_mode_middle');
+    });
 
-    testGoldens(
-      'renders step-by-step mode at final step',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders step-by-step mode at final step', (tester) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        final result = SimulationResult.success(
-          inputString: 'ab',
-          steps: [
-            const SimulationStep(
-              currentState: 'q0',
-              remainingInput: 'ab',
-              stepNumber: 0,
-            ),
-            const SimulationStep(
-              currentState: 'q1',
-              remainingInput: 'b',
-              stepNumber: 1,
-              usedTransition: 'a',
-            ),
-            const SimulationStep(
-              currentState: 'q2',
-              remainingInput: '',
-              stepNumber: 2,
-              usedTransition: 'b',
-            ),
-          ],
-          executionTime: const Duration(milliseconds: 100),
-        );
+      final result = SimulationResult.success(
+        inputString: 'ab',
+        steps: [
+          const SimulationStep(
+            currentState: 'q0',
+            remainingInput: 'ab',
+            stepNumber: 0,
+          ),
+          const SimulationStep(
+            currentState: 'q1',
+            remainingInput: 'b',
+            stepNumber: 1,
+            usedTransition: 'a',
+          ),
+          const SimulationStep(
+            currentState: 'q2',
+            remainingInput: '',
+            stepNumber: 2,
+            usedTransition: 'b',
+          ),
+        ],
+        executionTime: const Duration(milliseconds: 100),
+      );
 
-        await _pumpSimulationPanel(
-          tester,
-          simulationResult: result,
-          size: const Size(800, 700),
-        );
+      await _pumpSimulationPanel(
+        tester,
+        simulationResult: result,
+        size: const Size(800, 700),
+      );
 
-        // Enable step-by-step mode
-        await tester.tap(find.byType(Switch));
-        await tester.pumpAndSettle();
+      // Enable step-by-step mode
+      await tester.tap(find.byType(Switch));
+      await tester.pumpAndSettle();
 
-        // Go to last step
-        await tester.tap(find.byTooltip('Next Step'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.byTooltip('Next Step'));
-        await tester.pumpAndSettle();
+      // Go to last step
+      await tester.tap(find.byTooltip('Next Step'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Next Step'));
+      await tester.pumpAndSettle();
 
-        await screenMatchesGolden(tester, 'simulation_panel_step_mode_final');
-      },
-    );
+      await screenMatchesGolden(tester, 'simulation_panel_step_mode_final');
+    });
 
-    testGoldens(
-      'renders epsilon transition in step-by-step mode',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders epsilon transition in step-by-step mode', (
+      tester,
+    ) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        final result = SimulationResult.success(
-          inputString: '',
-          steps: [
-            const SimulationStep(
-              currentState: 'q0',
-              remainingInput: '',
-              stepNumber: 0,
-            ),
-            const SimulationStep(
-              currentState: 'q1',
-              remainingInput: '',
-              stepNumber: 1,
-              usedTransition: '',
-            ),
-          ],
-          executionTime: const Duration(milliseconds: 50),
-        );
+      final result = SimulationResult.success(
+        inputString: '',
+        steps: [
+          const SimulationStep(
+            currentState: 'q0',
+            remainingInput: '',
+            stepNumber: 0,
+          ),
+          const SimulationStep(
+            currentState: 'q1',
+            remainingInput: '',
+            stepNumber: 1,
+            usedTransition: '',
+          ),
+        ],
+        executionTime: const Duration(milliseconds: 50),
+      );
 
-        await _pumpSimulationPanel(
-          tester,
-          simulationResult: result,
-          size: const Size(800, 700),
-        );
+      await _pumpSimulationPanel(
+        tester,
+        simulationResult: result,
+        size: const Size(800, 700),
+      );
 
-        // Enable step-by-step mode
-        await tester.tap(find.byType(Switch));
-        await tester.pumpAndSettle();
+      // Enable step-by-step mode
+      await tester.tap(find.byType(Switch));
+      await tester.pumpAndSettle();
 
-        await screenMatchesGolden(tester, 'simulation_panel_epsilon');
-      },
-    );
+      await screenMatchesGolden(tester, 'simulation_panel_epsilon');
+    });
 
-    testGoldens(
-      'renders accepted result in mobile layout',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders accepted result in mobile layout', (tester) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        final result = SimulationResult.success(
-          inputString: 'abc',
-          steps: [
-            const SimulationStep(
-              currentState: 'q0',
-              remainingInput: 'abc',
-              stepNumber: 0,
-            ),
-            const SimulationStep(
-              currentState: 'q1',
-              remainingInput: '',
-              stepNumber: 1,
-            ),
-          ],
-          executionTime: const Duration(milliseconds: 100),
-        );
+      final result = SimulationResult.success(
+        inputString: 'abc',
+        steps: [
+          const SimulationStep(
+            currentState: 'q0',
+            remainingInput: 'abc',
+            stepNumber: 0,
+          ),
+          const SimulationStep(
+            currentState: 'q1',
+            remainingInput: '',
+            stepNumber: 1,
+          ),
+        ],
+        executionTime: const Duration(milliseconds: 100),
+      );
 
-        await _pumpSimulationPanel(
-          tester,
-          simulationResult: result,
-          size: const Size(400, 700),
-        );
+      await _pumpSimulationPanel(
+        tester,
+        simulationResult: result,
+        size: const Size(400, 700),
+      );
 
-        await screenMatchesGolden(tester, 'simulation_panel_accepted_mobile');
-      },
-    );
+      await screenMatchesGolden(tester, 'simulation_panel_accepted_mobile');
+    });
 
-    testGoldens(
-      'renders rejected result in tablet layout',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders rejected result in tablet layout', (tester) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        final result = SimulationResult.failure(
-          inputString: 'xyz',
-          steps: [
-            const SimulationStep(
-              currentState: 'q0',
-              remainingInput: 'xyz',
-              stepNumber: 0,
-            ),
-          ],
-          errorMessage: 'Invalid input symbol',
-          executionTime: const Duration(milliseconds: 50),
-        );
+      final result = SimulationResult.failure(
+        inputString: 'xyz',
+        steps: [
+          const SimulationStep(
+            currentState: 'q0',
+            remainingInput: 'xyz',
+            stepNumber: 0,
+          ),
+        ],
+        errorMessage: 'Invalid input symbol',
+        executionTime: const Duration(milliseconds: 50),
+      );
 
-        await _pumpSimulationPanel(
-          tester,
-          simulationResult: result,
-          size: const Size(600, 800),
-        );
+      await _pumpSimulationPanel(
+        tester,
+        simulationResult: result,
+        size: const Size(600, 800),
+      );
 
-        await screenMatchesGolden(tester, 'simulation_panel_rejected_tablet');
-      },
-    );
+      await screenMatchesGolden(tester, 'simulation_panel_rejected_tablet');
+    });
   });
 }

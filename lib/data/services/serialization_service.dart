@@ -196,6 +196,15 @@ class SerializationService {
     }
   }
 
+  /// Normalizes transition symbols to handle epsilon consistently.
+  ///
+  /// Converts all epsilon aliases (ε, λ, epsilon, empty, etc.) to the canonical
+  /// epsilon symbol 'ε' for both serialization and deserialization.
+  ///
+  /// - During serialization: ensures epsilon transitions write `<read>ε</read>`
+  /// - During deserialization: ensures epsilon from XML becomes 'ε' in keys
+  ///
+  /// Delegates to [normalizeToEpsilon] from epsilon_utils for consistent handling.
   String _normalizeTransitionSymbol(String? symbol) {
     return normalizeToEpsilon(symbol);
   }

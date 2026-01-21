@@ -11,6 +11,8 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/algorithms/regex_simplifier.dart';
+import 'package:jflutter/core/algorithms/regex_to_nfa_converter.dart';
+import 'package:jflutter/core/algorithms/equivalence_checker.dart';
 import 'package:jflutter/core/result.dart';
 
 void main() {
@@ -221,6 +223,440 @@ void main() {
         expect(result.isSuccess, true);
         expect(result.data, 'ac');
       });
+    });
+  });
+
+  group('RegexSimplifier - semantic equivalence', () {
+    test('simplified regex accepts same language as original for (a)', () {
+      const original = '(a)';
+      final simplifyResult = RegexSimplifier.simplify(original);
+
+      expect(simplifyResult.isSuccess, true);
+
+      final originalNFA = RegexToNFAConverter.convert(original);
+      final simplifiedNFA = RegexToNFAConverter.convert(simplifyResult.data!);
+
+      expect(originalNFA.isSuccess, true);
+      expect(simplifiedNFA.isSuccess, true);
+
+      final isEquivalent = EquivalenceChecker.areEquivalent(
+        originalNFA.data!,
+        simplifiedNFA.data!,
+      );
+
+      expect(
+        isEquivalent,
+        true,
+        reason: 'Original and simplified regex should accept same language',
+      );
+    });
+
+    test('simplified regex accepts same language as original for ((a))', () {
+      const original = '((a))';
+      final simplifyResult = RegexSimplifier.simplify(original);
+
+      expect(simplifyResult.isSuccess, true);
+
+      final originalNFA = RegexToNFAConverter.convert(original);
+      final simplifiedNFA = RegexToNFAConverter.convert(simplifyResult.data!);
+
+      expect(originalNFA.isSuccess, true);
+      expect(simplifiedNFA.isSuccess, true);
+
+      final isEquivalent = EquivalenceChecker.areEquivalent(
+        originalNFA.data!,
+        simplifiedNFA.data!,
+      );
+
+      expect(
+        isEquivalent,
+        true,
+        reason: 'Original and simplified regex should accept same language',
+      );
+    });
+
+    test('simplified regex accepts same language for (a)(b)', () {
+      const original = '(a)(b)';
+      final simplifyResult = RegexSimplifier.simplify(original);
+
+      expect(simplifyResult.isSuccess, true);
+
+      final originalNFA = RegexToNFAConverter.convert(original);
+      final simplifiedNFA = RegexToNFAConverter.convert(simplifyResult.data!);
+
+      expect(originalNFA.isSuccess, true);
+      expect(simplifiedNFA.isSuccess, true);
+
+      final isEquivalent = EquivalenceChecker.areEquivalent(
+        originalNFA.data!,
+        simplifiedNFA.data!,
+      );
+
+      expect(
+        isEquivalent,
+        true,
+        reason: 'Original and simplified regex should accept same language',
+      );
+    });
+
+    test('simplified regex accepts same language for (a|b)', () {
+      const original = '(a|b)';
+      final simplifyResult = RegexSimplifier.simplify(original);
+
+      expect(simplifyResult.isSuccess, true);
+
+      final originalNFA = RegexToNFAConverter.convert(original);
+      final simplifiedNFA = RegexToNFAConverter.convert(simplifyResult.data!);
+
+      expect(originalNFA.isSuccess, true);
+      expect(simplifiedNFA.isSuccess, true);
+
+      final isEquivalent = EquivalenceChecker.areEquivalent(
+        originalNFA.data!,
+        simplifiedNFA.data!,
+      );
+
+      expect(
+        isEquivalent,
+        true,
+        reason: 'Original and simplified regex should accept same language',
+      );
+    });
+
+    test('simplified regex accepts same language for (a)*', () {
+      const original = '(a)*';
+      final simplifyResult = RegexSimplifier.simplify(original);
+
+      expect(simplifyResult.isSuccess, true);
+
+      final originalNFA = RegexToNFAConverter.convert(original);
+      final simplifiedNFA = RegexToNFAConverter.convert(simplifyResult.data!);
+
+      expect(originalNFA.isSuccess, true);
+      expect(simplifiedNFA.isSuccess, true);
+
+      final isEquivalent = EquivalenceChecker.areEquivalent(
+        originalNFA.data!,
+        simplifiedNFA.data!,
+      );
+
+      expect(
+        isEquivalent,
+        true,
+        reason: 'Original and simplified regex should accept same language',
+      );
+    });
+
+    test('simplified regex accepts same language for a|a', () {
+      const original = 'a|a';
+      final simplifyResult = RegexSimplifier.simplify(original);
+
+      expect(simplifyResult.isSuccess, true);
+
+      final originalNFA = RegexToNFAConverter.convert(original);
+      final simplifiedNFA = RegexToNFAConverter.convert(simplifyResult.data!);
+
+      expect(originalNFA.isSuccess, true);
+      expect(simplifiedNFA.isSuccess, true);
+
+      final isEquivalent = EquivalenceChecker.areEquivalent(
+        originalNFA.data!,
+        simplifiedNFA.data!,
+      );
+
+      expect(
+        isEquivalent,
+        true,
+        reason: 'Original and simplified regex should accept same language',
+      );
+    });
+
+    test('simplified regex accepts same language for a**', () {
+      const original = 'a**';
+      final simplifyResult = RegexSimplifier.simplify(original);
+
+      expect(simplifyResult.isSuccess, true);
+
+      final originalNFA = RegexToNFAConverter.convert(original);
+      final simplifiedNFA = RegexToNFAConverter.convert(simplifyResult.data!);
+
+      expect(originalNFA.isSuccess, true);
+      expect(simplifiedNFA.isSuccess, true);
+
+      final isEquivalent = EquivalenceChecker.areEquivalent(
+        originalNFA.data!,
+        simplifiedNFA.data!,
+      );
+
+      expect(
+        isEquivalent,
+        true,
+        reason: 'Original and simplified regex should accept same language',
+      );
+    });
+
+    test('simplified regex accepts same language for (ab)|(ab)', () {
+      const original = '(ab)|(ab)';
+      final simplifyResult = RegexSimplifier.simplify(original);
+
+      expect(simplifyResult.isSuccess, true);
+
+      final originalNFA = RegexToNFAConverter.convert(original);
+      final simplifiedNFA = RegexToNFAConverter.convert(simplifyResult.data!);
+
+      expect(originalNFA.isSuccess, true);
+      expect(simplifiedNFA.isSuccess, true);
+
+      final isEquivalent = EquivalenceChecker.areEquivalent(
+        originalNFA.data!,
+        simplifiedNFA.data!,
+      );
+
+      expect(
+        isEquivalent,
+        true,
+        reason: 'Original and simplified regex should accept same language',
+      );
+    });
+
+    test('simplified regex accepts same language for ((a|b))c', () {
+      const original = '((a|b))c';
+      final simplifyResult = RegexSimplifier.simplify(original);
+
+      expect(simplifyResult.isSuccess, true);
+
+      final originalNFA = RegexToNFAConverter.convert(original);
+      final simplifiedNFA = RegexToNFAConverter.convert(simplifyResult.data!);
+
+      expect(originalNFA.isSuccess, true);
+      expect(simplifiedNFA.isSuccess, true);
+
+      final isEquivalent = EquivalenceChecker.areEquivalent(
+        originalNFA.data!,
+        simplifiedNFA.data!,
+      );
+
+      expect(
+        isEquivalent,
+        true,
+        reason: 'Original and simplified regex should accept same language',
+      );
+    });
+
+    test('simplified regex accepts same language for (a)b(c)', () {
+      const original = '(a)b(c)';
+      final simplifyResult = RegexSimplifier.simplify(original);
+
+      expect(simplifyResult.isSuccess, true);
+
+      final originalNFA = RegexToNFAConverter.convert(original);
+      final simplifiedNFA = RegexToNFAConverter.convert(simplifyResult.data!);
+
+      expect(originalNFA.isSuccess, true);
+      expect(simplifiedNFA.isSuccess, true);
+
+      final isEquivalent = EquivalenceChecker.areEquivalent(
+        originalNFA.data!,
+        simplifiedNFA.data!,
+      );
+
+      expect(
+        isEquivalent,
+        true,
+        reason: 'Original and simplified regex should accept same language',
+      );
+    });
+
+    test('simplified regex accepts same language for aε', () {
+      const original = 'aε';
+      final simplifyResult = RegexSimplifier.simplify(original);
+
+      expect(simplifyResult.isSuccess, true);
+
+      final originalNFA = RegexToNFAConverter.convert(original);
+      final simplifiedNFA = RegexToNFAConverter.convert(simplifyResult.data!);
+
+      expect(originalNFA.isSuccess, true);
+      expect(simplifiedNFA.isSuccess, true);
+
+      final isEquivalent = EquivalenceChecker.areEquivalent(
+        originalNFA.data!,
+        simplifiedNFA.data!,
+      );
+
+      expect(
+        isEquivalent,
+        true,
+        reason: 'Original and simplified regex should accept same language',
+      );
+    });
+
+    test('simplified regex accepts same language for εa', () {
+      const original = 'εa';
+      final simplifyResult = RegexSimplifier.simplify(original);
+
+      expect(simplifyResult.isSuccess, true);
+
+      final originalNFA = RegexToNFAConverter.convert(original);
+      final simplifiedNFA = RegexToNFAConverter.convert(simplifyResult.data!);
+
+      expect(originalNFA.isSuccess, true);
+      expect(simplifiedNFA.isSuccess, true);
+
+      final isEquivalent = EquivalenceChecker.areEquivalent(
+        originalNFA.data!,
+        simplifiedNFA.data!,
+      );
+
+      expect(
+        isEquivalent,
+        true,
+        reason: 'Original and simplified regex should accept same language',
+      );
+    });
+
+    test('simplified regex accepts same language for ε*', () {
+      const original = 'ε*';
+      final simplifyResult = RegexSimplifier.simplify(original);
+
+      expect(simplifyResult.isSuccess, true);
+
+      final originalNFA = RegexToNFAConverter.convert(original);
+      final simplifiedNFA = RegexToNFAConverter.convert(simplifyResult.data!);
+
+      expect(originalNFA.isSuccess, true);
+      expect(simplifiedNFA.isSuccess, true);
+
+      final isEquivalent = EquivalenceChecker.areEquivalent(
+        originalNFA.data!,
+        simplifiedNFA.data!,
+      );
+
+      expect(
+        isEquivalent,
+        true,
+        reason: 'Original and simplified regex should accept same language',
+      );
+    });
+
+    test('simplified regex accepts same language for (aε)b', () {
+      const original = '(aε)b';
+      final simplifyResult = RegexSimplifier.simplify(original);
+
+      expect(simplifyResult.isSuccess, true);
+
+      final originalNFA = RegexToNFAConverter.convert(original);
+      final simplifiedNFA = RegexToNFAConverter.convert(simplifyResult.data!);
+
+      expect(originalNFA.isSuccess, true);
+      expect(simplifiedNFA.isSuccess, true);
+
+      final isEquivalent = EquivalenceChecker.areEquivalent(
+        originalNFA.data!,
+        simplifiedNFA.data!,
+      );
+
+      expect(
+        isEquivalent,
+        true,
+        reason: 'Original and simplified regex should accept same language',
+      );
+    });
+
+    test('simplified regex accepts same language for εaεbε', () {
+      const original = 'εaεbε';
+      final simplifyResult = RegexSimplifier.simplify(original);
+
+      expect(simplifyResult.isSuccess, true);
+
+      final originalNFA = RegexToNFAConverter.convert(original);
+      final simplifiedNFA = RegexToNFAConverter.convert(simplifyResult.data!);
+
+      expect(originalNFA.isSuccess, true);
+      expect(simplifiedNFA.isSuccess, true);
+
+      final isEquivalent = EquivalenceChecker.areEquivalent(
+        originalNFA.data!,
+        simplifiedNFA.data!,
+      );
+
+      expect(
+        isEquivalent,
+        true,
+        reason: 'Original and simplified regex should accept same language',
+      );
+    });
+
+    test('simplified regex accepts same language for complex expression', () {
+      const original = '(a|b)(c|d)';
+      final simplifyResult = RegexSimplifier.simplify(original);
+
+      expect(simplifyResult.isSuccess, true);
+
+      final originalNFA = RegexToNFAConverter.convert(original);
+      final simplifiedNFA = RegexToNFAConverter.convert(simplifyResult.data!);
+
+      expect(originalNFA.isSuccess, true);
+      expect(simplifiedNFA.isSuccess, true);
+
+      final isEquivalent = EquivalenceChecker.areEquivalent(
+        originalNFA.data!,
+        simplifiedNFA.data!,
+      );
+
+      expect(
+        isEquivalent,
+        true,
+        reason: 'Original and simplified regex should accept same language',
+      );
+    });
+
+    test('simplified regex accepts same language for nested unions', () {
+      const original = '((a|b)|c)';
+      final simplifyResult = RegexSimplifier.simplify(original);
+
+      expect(simplifyResult.isSuccess, true);
+
+      final originalNFA = RegexToNFAConverter.convert(original);
+      final simplifiedNFA = RegexToNFAConverter.convert(simplifyResult.data!);
+
+      expect(originalNFA.isSuccess, true);
+      expect(simplifiedNFA.isSuccess, true);
+
+      final isEquivalent = EquivalenceChecker.areEquivalent(
+        originalNFA.data!,
+        simplifiedNFA.data!,
+      );
+
+      expect(
+        isEquivalent,
+        true,
+        reason: 'Original and simplified regex should accept same language',
+      );
+    });
+
+    test('simplified regex accepts same language for multiple stars', () {
+      const original = '(a*)*';
+      final simplifyResult = RegexSimplifier.simplify(original);
+
+      expect(simplifyResult.isSuccess, true);
+
+      final originalNFA = RegexToNFAConverter.convert(original);
+      final simplifiedNFA = RegexToNFAConverter.convert(simplifyResult.data!);
+
+      expect(originalNFA.isSuccess, true);
+      expect(simplifiedNFA.isSuccess, true);
+
+      final isEquivalent = EquivalenceChecker.areEquivalent(
+        originalNFA.data!,
+        simplifiedNFA.data!,
+      );
+
+      expect(
+        isEquivalent,
+        true,
+        reason: 'Original and simplified regex should accept same language',
+      );
     });
   });
 }

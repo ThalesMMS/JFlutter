@@ -15,6 +15,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import '../../core/models/fsa.dart';
 import '../../data/services/file_operations_service.dart';
+import 'common/algorithm_button.dart';
 import 'utils/platform_file_loader.dart';
 
 /// Panel for algorithm operations and controls
@@ -127,71 +128,117 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
               const SizedBox(height: 12),
 
               // NFA to DFA conversion
-              _buildAlgorithmButton(
-                context,
+              AlgorithmButton(
                 title: 'NFA to DFA',
                 description:
                     'Convert non-deterministic to deterministic automaton',
                 icon: Icons.transform,
-                onPressed: () =>
-                    _executeAlgorithm('NFA to DFA', widget.onNfaToDfa),
+                onPressed: widget.onNfaToDfa == null
+                    ? null
+                    : () => _executeAlgorithm('NFA to DFA', widget.onNfaToDfa),
+                isExecuting: _isExecuting && _currentAlgorithm == 'NFA to DFA',
+                isSelected: _currentAlgorithm == 'NFA to DFA',
+                executionProgress: _currentAlgorithm == 'NFA to DFA'
+                    ? _executionProgress
+                    : null,
+                executionStatus:
+                    _currentAlgorithm == 'NFA to DFA' ? _executionStatus : null,
               ),
 
               const SizedBox(height: 12),
 
               // Remove lambda transitions
-              _buildAlgorithmButton(
-                context,
+              AlgorithmButton(
                 title: 'Remove λ-transitions',
                 description: 'Eliminate epsilon transitions from the automaton',
                 icon: Icons.highlight_off,
-                onPressed: () => _executeAlgorithm(
-                  'Remove λ-transitions',
-                  widget.onRemoveLambda,
-                ),
+                onPressed: widget.onRemoveLambda == null
+                    ? null
+                    : () => _executeAlgorithm(
+                          'Remove λ-transitions',
+                          widget.onRemoveLambda,
+                        ),
+                isExecuting:
+                    _isExecuting && _currentAlgorithm == 'Remove λ-transitions',
+                isSelected: _currentAlgorithm == 'Remove λ-transitions',
+                executionProgress: _currentAlgorithm == 'Remove λ-transitions'
+                    ? _executionProgress
+                    : null,
+                executionStatus: _currentAlgorithm == 'Remove λ-transitions'
+                    ? _executionStatus
+                    : null,
               ),
 
               const SizedBox(height: 12),
 
               // DFA minimization
-              _buildAlgorithmButton(
-                context,
+              AlgorithmButton(
                 title: 'Minimize DFA',
                 description: 'Minimize deterministic finite automaton',
                 icon: Icons.compress,
-                onPressed: () =>
-                    _executeAlgorithm('Minimize DFA', widget.onMinimizeDfa),
+                onPressed: widget.onMinimizeDfa == null
+                    ? null
+                    : () =>
+                        _executeAlgorithm('Minimize DFA', widget.onMinimizeDfa),
+                isExecuting: _isExecuting && _currentAlgorithm == 'Minimize DFA',
+                isSelected: _currentAlgorithm == 'Minimize DFA',
+                executionProgress: _currentAlgorithm == 'Minimize DFA'
+                    ? _executionProgress
+                    : null,
+                executionStatus: _currentAlgorithm == 'Minimize DFA'
+                    ? _executionStatus
+                    : null,
               ),
 
               const SizedBox(height: 12),
 
               // Complete DFA
-              _buildAlgorithmButton(
-                context,
+              AlgorithmButton(
                 title: 'Complete DFA',
                 description: 'Add trap state to make DFA complete',
                 icon: Icons.add_circle_outline,
-                onPressed: () =>
-                    _executeAlgorithm('Complete DFA', widget.onCompleteDfa),
+                onPressed: widget.onCompleteDfa == null
+                    ? null
+                    : () =>
+                        _executeAlgorithm('Complete DFA', widget.onCompleteDfa),
+                isExecuting: _isExecuting && _currentAlgorithm == 'Complete DFA',
+                isSelected: _currentAlgorithm == 'Complete DFA',
+                executionProgress: _currentAlgorithm == 'Complete DFA'
+                    ? _executionProgress
+                    : null,
+                executionStatus: _currentAlgorithm == 'Complete DFA'
+                    ? _executionStatus
+                    : null,
               ),
 
               const SizedBox(height: 12),
 
               // Complement DFA
-              _buildAlgorithmButton(
-                context,
+              AlgorithmButton(
                 title: 'Complement DFA',
                 description: 'Flip accepting states after completion',
                 icon: Icons.flip,
-                onPressed: () =>
-                    _executeAlgorithm('Complement DFA', widget.onComplementDfa),
+                onPressed: widget.onComplementDfa == null
+                    ? null
+                    : () => _executeAlgorithm(
+                          'Complement DFA',
+                          widget.onComplementDfa,
+                        ),
+                isExecuting:
+                    _isExecuting && _currentAlgorithm == 'Complement DFA',
+                isSelected: _currentAlgorithm == 'Complement DFA',
+                executionProgress: _currentAlgorithm == 'Complement DFA'
+                    ? _executionProgress
+                    : null,
+                executionStatus: _currentAlgorithm == 'Complement DFA'
+                    ? _executionStatus
+                    : null,
               ),
 
               const SizedBox(height: 12),
 
               // Union of DFAs
-              _buildAlgorithmButton(
-                context,
+              AlgorithmButton(
                 title: 'Union of DFAs',
                 description:
                     'Combine this DFA with another automaton from file',
@@ -210,13 +257,20 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                   missingCallbackMessage:
                       'Load a DFA before computing the union.',
                 ),
+                isExecuting: _isExecuting && _currentAlgorithm == 'Union of DFAs',
+                isSelected: _currentAlgorithm == 'Union of DFAs',
+                executionProgress: _currentAlgorithm == 'Union of DFAs'
+                    ? _executionProgress
+                    : null,
+                executionStatus: _currentAlgorithm == 'Union of DFAs'
+                    ? _executionStatus
+                    : null,
               ),
 
               const SizedBox(height: 12),
 
               // Intersection of DFAs
-              _buildAlgorithmButton(
-                context,
+              AlgorithmButton(
                 title: 'Intersection of DFAs',
                 description:
                     'Intersect this DFA with another automaton from file',
@@ -235,13 +289,21 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                   missingCallbackMessage:
                       'Load a DFA before computing the intersection.',
                 ),
+                isExecuting:
+                    _isExecuting && _currentAlgorithm == 'Intersection of DFAs',
+                isSelected: _currentAlgorithm == 'Intersection of DFAs',
+                executionProgress: _currentAlgorithm == 'Intersection of DFAs'
+                    ? _executionProgress
+                    : null,
+                executionStatus: _currentAlgorithm == 'Intersection of DFAs'
+                    ? _executionStatus
+                    : null,
               ),
 
               const SizedBox(height: 12),
 
               // Difference of DFAs
-              _buildAlgorithmButton(
-                context,
+              AlgorithmButton(
                 title: 'Difference of DFAs',
                 description:
                     'Compute the language difference with another DFA from file',
@@ -260,61 +322,112 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                   missingCallbackMessage:
                       'Load a DFA before computing the difference.',
                 ),
+                isExecuting:
+                    _isExecuting && _currentAlgorithm == 'Difference of DFAs',
+                isSelected: _currentAlgorithm == 'Difference of DFAs',
+                executionProgress: _currentAlgorithm == 'Difference of DFAs'
+                    ? _executionProgress
+                    : null,
+                executionStatus: _currentAlgorithm == 'Difference of DFAs'
+                    ? _executionStatus
+                    : null,
               ),
 
               const SizedBox(height: 12),
 
               // Prefix closure
-              _buildAlgorithmButton(
-                context,
+              AlgorithmButton(
                 title: 'Prefix Closure',
                 description: 'Accept all prefixes of the DFA language',
                 icon: Icons.vertical_align_top,
-                onPressed: () =>
-                    _executeAlgorithm('Prefix Closure', widget.onPrefixClosure),
+                onPressed: widget.onPrefixClosure == null
+                    ? null
+                    : () => _executeAlgorithm(
+                          'Prefix Closure',
+                          widget.onPrefixClosure,
+                        ),
+                isExecuting:
+                    _isExecuting && _currentAlgorithm == 'Prefix Closure',
+                isSelected: _currentAlgorithm == 'Prefix Closure',
+                executionProgress: _currentAlgorithm == 'Prefix Closure'
+                    ? _executionProgress
+                    : null,
+                executionStatus: _currentAlgorithm == 'Prefix Closure'
+                    ? _executionStatus
+                    : null,
               ),
 
               const SizedBox(height: 12),
 
               // Suffix closure
-              _buildAlgorithmButton(
-                context,
+              AlgorithmButton(
                 title: 'Suffix Closure',
                 description: 'Accept all suffixes of the DFA language',
                 icon: Icons.vertical_align_bottom,
-                onPressed: () =>
-                    _executeAlgorithm('Suffix Closure', widget.onSuffixClosure),
+                onPressed: widget.onSuffixClosure == null
+                    ? null
+                    : () => _executeAlgorithm(
+                          'Suffix Closure',
+                          widget.onSuffixClosure,
+                        ),
+                isExecuting:
+                    _isExecuting && _currentAlgorithm == 'Suffix Closure',
+                isSelected: _currentAlgorithm == 'Suffix Closure',
+                executionProgress: _currentAlgorithm == 'Suffix Closure'
+                    ? _executionProgress
+                    : null,
+                executionStatus: _currentAlgorithm == 'Suffix Closure'
+                    ? _executionStatus
+                    : null,
               ),
 
               const SizedBox(height: 12),
 
               // FA to Regex conversion
-              _buildAlgorithmButton(
-                context,
+              AlgorithmButton(
                 title: 'FA to Regex',
                 description: 'Convert finite automaton to regular expression',
                 icon: Icons.text_fields,
-                onPressed: () =>
-                    _executeAlgorithm('FA to Regex', widget.onFaToRegex),
+                onPressed: widget.onFaToRegex == null
+                    ? null
+                    : () => _executeAlgorithm('FA to Regex', widget.onFaToRegex),
+                isExecuting: _isExecuting && _currentAlgorithm == 'FA to Regex',
+                isSelected: _currentAlgorithm == 'FA to Regex',
+                executionProgress: _currentAlgorithm == 'FA to Regex'
+                    ? _executionProgress
+                    : null,
+                executionStatus:
+                    _currentAlgorithm == 'FA to Regex' ? _executionStatus : null,
               ),
 
               const SizedBox(height: 12),
 
               // FSA to Grammar conversion
-              _buildAlgorithmButton(
-                context,
+              AlgorithmButton(
                 title: 'FSA to Grammar',
                 description: 'Convert finite automaton to regular grammar',
                 icon: Icons.transform,
-                onPressed: () =>
-                    _executeAlgorithm('FSA to Grammar', widget.onFsaToGrammar),
+                onPressed: widget.onFsaToGrammar == null
+                    ? null
+                    : () => _executeAlgorithm(
+                          'FSA to Grammar',
+                          widget.onFsaToGrammar,
+                        ),
+                isExecuting:
+                    _isExecuting && _currentAlgorithm == 'FSA to Grammar',
+                isSelected: _currentAlgorithm == 'FSA to Grammar',
+                executionProgress: _currentAlgorithm == 'FSA to Grammar'
+                    ? _executionProgress
+                    : null,
+                executionStatus: _currentAlgorithm == 'FSA to Grammar'
+                    ? _executionStatus
+                    : null,
               ),
 
               const SizedBox(height: 12),
 
               // Auto Layout
-              _buildAlgorithmButton(
-                context,
+              AlgorithmButton(
                 title: 'Auto Layout',
                 description: 'Arrange states in a circle',
                 icon: Icons.auto_awesome_motion,
@@ -324,19 +437,26 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
               const SizedBox(height: 12),
 
               // Compare Equivalence
-              _buildAlgorithmButton(
-                context,
+              AlgorithmButton(
                 title: 'Compare Equivalence',
                 description: 'Compare two DFAs for equivalence',
                 icon: Icons.compare_arrows,
                 onPressed: _onCompareEquivalencePressed,
+                isExecuting:
+                    _isExecuting && _currentAlgorithm == 'Compare Equivalence',
+                isSelected: _currentAlgorithm == 'Compare Equivalence',
+                executionProgress: _currentAlgorithm == 'Compare Equivalence'
+                    ? _executionProgress
+                    : null,
+                executionStatus: _currentAlgorithm == 'Compare Equivalence'
+                    ? _executionStatus
+                    : null,
               ),
 
               const SizedBox(height: 12),
 
               // Clear automaton
-              _buildAlgorithmButton(
-                context,
+              AlgorithmButton(
                 title: 'Clear',
                 description: 'Clear current automaton',
                 icon: Icons.clear,
@@ -412,105 +532,6 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
     );
   }
 
-  Widget _buildAlgorithmButton(
-    BuildContext context, {
-    required String title,
-    required String description,
-    required IconData icon,
-    VoidCallback? onPressed,
-    bool isDestructive = false,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final color = isDestructive ? colorScheme.error : colorScheme.primary;
-    final isCurrentAlgorithm = _currentAlgorithm == title;
-    final isDisabled =
-        (_isExecuting && !isCurrentAlgorithm) || onPressed == null;
-
-    return InkWell(
-      onTap: isDisabled ? null : onPressed,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: isCurrentAlgorithm ? color : color.withValues(alpha: 0.3),
-            width: isCurrentAlgorithm ? 2 : 1,
-          ),
-          borderRadius: BorderRadius.circular(8),
-          color: isCurrentAlgorithm
-              ? color.withValues(alpha: 0.1)
-              : isDisabled
-              ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
-              : null,
-        ),
-        child: Row(
-          children: [
-            if (isCurrentAlgorithm && _isExecuting)
-              SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(color),
-                ),
-              )
-            else
-              Icon(
-                icon,
-                color: isDisabled
-                    ? colorScheme.outline.withValues(alpha: 0.5)
-                    : color,
-                size: 24,
-              ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: isDisabled
-                          ? colorScheme.outline.withValues(alpha: 0.5)
-                          : color,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    isCurrentAlgorithm && _executionStatus != null
-                        ? _executionStatus!
-                        : description,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: isDisabled
-                          ? colorScheme.outline.withValues(alpha: 0.5)
-                          : colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (isCurrentAlgorithm && _isExecuting)
-              Text(
-                '${(_executionProgress * 100).toInt()}%',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
-              )
-            else
-              Icon(
-                Icons.arrow_forward_ios,
-                color: isDisabled
-                    ? colorScheme.outline.withValues(alpha: 0.5)
-                    : color.withValues(alpha: 0.5),
-                size: 16,
-              ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildProgressIndicator(BuildContext context) {
     return Container(

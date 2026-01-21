@@ -1237,9 +1237,9 @@ class _AutomatonGraphViewCanvasState
 
   Map<Type, GestureRecognizerFactory> _buildGestureRecognizers() {
     final gestures = <Type, GestureRecognizerFactory>{
-      _NodePanGestureRecognizer:
-          GestureRecognizerFactoryWithHandlers<_NodePanGestureRecognizer>(
-            () => _NodePanGestureRecognizer(
+      NodePanGestureRecognizer:
+          GestureRecognizerFactoryWithHandlers<NodePanGestureRecognizer>(
+            () => NodePanGestureRecognizer(
               hitTester: (global) =>
                   _hitTestNode(_globalToCanvasLocal(global), logDetails: false),
               toolResolver: () => _activeTool,
@@ -1269,78 +1269,5 @@ class _AutomatonGraphViewCanvasState
     };
 
     return gestures;
-  }
-}
-
-typedef _NodeHitTester = GraphViewCanvasNode? Function(Offset globalPosition);
-typedef _ToolResolver = AutomatonCanvasTool Function();
-
-class _NodePanGestureRecognizer extends PanGestureRecognizer {
-  _NodePanGestureRecognizer({
-    required this.hitTester,
-    required this.toolResolver,
-    this.onPointerDown,
-    this.onDragAccepted,
-    this.onDragReleased,
-  });
-
-  final _NodeHitTester hitTester;
-  final _ToolResolver toolResolver;
-  final ValueChanged<Offset>? onPointerDown;
-  final VoidCallback? onDragAccepted;
-  final VoidCallback? onDragReleased;
-
-  int? _activePointer;
-
-  @override
-  void addAllowedPointer(PointerDownEvent event) {
-    debugPrint(
-      '[NodePanRecognizer] addAllowedPointer pointer ${event.pointer} '
-      'tool=${toolResolver().name} active=$_activePointer '
-      'position=${event.position} dragStart=$dragStartBehavior',
-    );
-    onPointerDown?.call(event.position);
-    if (_activePointer != null) {
-      debugPrint('[NodePanRecognizer] pointer already active -> ignore');
-      return;
-    }
-    final tool = toolResolver();
-    if (tool == AutomatonCanvasTool.transition) {
-      debugPrint('[NodePanRecognizer] tool transition -> ignore');
-      return;
-    }
-    final node = hitTester(event.position);
-    if (node == null) {
-      debugPrint('[NodePanRecognizer] no node hit -> ignore');
-      return;
-    }
-    _activePointer = event.pointer;
-    debugPrint(
-      '[NodePanRecognizer] tracking pointer ${event.pointer} '
-      'for node ${node.id}',
-    );
-    onDragAccepted?.call();
-    super.addAllowedPointer(event);
-    resolvePointer(event.pointer, GestureDisposition.accepted);
-  }
-
-  @override
-  void rejectGesture(int pointer) {
-    debugPrint('[NodePanRecognizer] rejectGesture pointer=$pointer');
-    if (pointer == _activePointer) {
-      _activePointer = null;
-      onDragReleased?.call();
-    }
-    super.rejectGesture(pointer);
-  }
-
-  @override
-  void didStopTrackingLastPointer(int pointer) {
-    debugPrint('[NodePanRecognizer] didStopTracking pointer=$pointer');
-    if (pointer == _activePointer) {
-      _activePointer = null;
-      onDragReleased?.call();
-    }
-    super.didStopTrackingLastPointer(pointer);
   }
 }

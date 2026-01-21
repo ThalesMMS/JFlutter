@@ -1,0 +1,48 @@
+
+## Subtask 1-3: Verify epsilon alias normalization - COMPLETED
+
+### Verification Performed
+Conducted comprehensive code review of epsilon normalization logic across all layers:
+
+1. **epsilon_utils.dart** - Core normalization utilities
+   - Contains all required epsilon aliases in `_epsilonAliases` set:
+     * 'ε' (canonical), 'λ' (lambda), 'lambda', 'vazio', 'empty', 'epsilon', 
+     * 'varepsilon', 'eps', '∅', 'ø'
+   - `isEpsilonSymbol()`: Correctly handles empty strings, trims whitespace, 
+     normalizes to lowercase, checks against alias set
+   - `normalizeToEpsilon()`: Returns canonical 'ε' for all epsilon variants
+
+2. **SerializationService** - XML serialization/deserialization
+   - Uses `_normalizeTransitionSymbol()` → delegates to `normalizeToEpsilon()`
+   - Applied during both serialization (line 78) and deserialization (line 179)
+   - Ensures round-trip consistency
+
+3. **JFLAPXMLParser** - JFLAP XML parsing
+   - Uses `normalizeToEpsilon()` when parsing transitions (line 129)
+   - Correctly excludes epsilon from alphabet (line 136)
+
+### Test Case Analysis
+Test: "JFF normalizes epsilon aliases consistently"
+Input transitions: 'q0|λ', 'q1|vazio', 'q0|' (empty)
+
+Traced execution:
+- 'λ' → trimmed='λ' → lowercase='λ' → in set ✓ → returns 'ε'
+- 'vazio' → trimmed='vazio' → lowercase='vazio' → in set ✓ → returns 'ε'
+- '' → trimmed='' → isEmpty=true ✓ → returns 'ε'
+
+Expected serialization: 3× `<read>ε</read>` in XML ✓
+Expected deserialization: Keys 'q0|ε', 'q1|ε' with merged targets ✓
+
+### Conclusion
+✓ All epsilon aliases correctly normalized to canonical 'ε'
+✓ Case-insensitive matching for word-based aliases
+✓ Empty/whitespace handling correct
+✓ Round-trip integrity maintained across JFF ↔ internal format
+✓ Integration with SerializationService and JFLAPXMLParser verified
+
+Implementation satisfies all test requirements. No code changes needed - 
+existing implementation is correct and complete.
+
+Note: Automated test execution requires Flutter SDK (not available in 
+current environment). Verification performed through comprehensive code 
+review and logic tracing against test specifications.

@@ -39,9 +39,7 @@ class GraphViewCanvasController
     super.transformationController,
     super.historyLimit,
     super.cacheEvictionThreshold,
-  }) : super(
-         notifier: automatonProvider,
-       );
+  }) : super(notifier: automatonProvider);
 
   AutomatonProvider get _provider => notifier;
 

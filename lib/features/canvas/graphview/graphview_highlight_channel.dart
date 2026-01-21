@@ -15,7 +15,8 @@ import 'graphview_highlight_controller.dart';
 
 /// Highlight channel that bridges [SimulationHighlightService] payloads to a
 /// GraphView canvas controller.
-class GraphViewSimulationHighlightChannel implements SimulationHighlightChannel {
+class GraphViewSimulationHighlightChannel
+    implements SimulationHighlightChannel {
   GraphViewSimulationHighlightChannel(this._controller);
 
   final GraphViewHighlightController _controller;

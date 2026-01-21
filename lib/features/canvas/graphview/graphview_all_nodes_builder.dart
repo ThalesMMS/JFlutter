@@ -26,12 +26,12 @@ class GraphViewAllNodes extends GraphView {
     super.toggleAnimationDuration,
     bool centerGraph = false,
   }) : super.builder(
-          graph: graph,
-          algorithm: algorithm,
-          builder: builder,
-          controller: controller,
-          centerGraph: centerGraph,
-        ) {
+         graph: graph,
+         algorithm: algorithm,
+         builder: builder,
+         controller: controller,
+         centerGraph: centerGraph,
+       ) {
     delegate = _GraphViewAllNodesDelegate(
       graph: graph,
       algorithm: algorithm,

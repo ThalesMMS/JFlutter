@@ -32,13 +32,19 @@ class SvgExporter {
       return '0';
     }
 
-    final decimals = value % 1 == 0 ? 0 : 2;
-    var text = value.toStringAsFixed(decimals);
-    if (decimals != 0) {
-      text = text.replaceFirst(RegExp(r'0+$'), '');
-      if (text.endsWith('.')) {
-        text = text.substring(0, text.length - 1);
-      }
+    // Use epsilon comparison for floating-point precision
+    const epsilon = 1e-10;
+    final isWholeNumber = (value - value.round()).abs() < epsilon;
+
+    if (isWholeNumber) {
+      return value.round().toString();
+    }
+
+    // Format with 2 decimal places and remove trailing zeros
+    var text = value.toStringAsFixed(2);
+    text = text.replaceFirst(RegExp(r'0+$'), '');
+    if (text.endsWith('.')) {
+      text = text.substring(0, text.length - 1);
     }
     return text;
   }

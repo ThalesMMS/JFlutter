@@ -131,7 +131,9 @@ class JFLAPXMLParser {
         transitions.putIfAbsent(key, () => <String>[]);
         transitions[key]!.add(toId);
 
-        if (symbol.isNotEmpty) {
+        // Only add non-epsilon symbols to the alphabet.
+        // Epsilon is a special transition symbol, not part of the input alphabet.
+        if (symbol.isNotEmpty && symbol != kEpsilonSymbol) {
           alphabet.add(symbol);
         }
       }

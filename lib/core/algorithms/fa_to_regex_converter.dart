@@ -57,7 +57,7 @@ class FAToRegexConverter {
             'FA conversion succeeded but simplification failed: ${simplificationResult.error}',
           );
         }
-        return ResultFactory.success(simplificationResult.value!);
+        return ResultFactory.success(simplificationResult.data!);
       }
 
       return ResultFactory.success(regex);

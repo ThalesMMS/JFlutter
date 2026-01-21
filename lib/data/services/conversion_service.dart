@@ -101,8 +101,11 @@ class ConversionService {
         );
       }
 
-      // Use the FA to regex converter
-      final result = FAToRegexConverter.convert(request.automaton!);
+      // Use the FA to regex converter with simplification option
+      final result = FAToRegexConverter.convert(
+        request.automaton!,
+        simplify: request.simplify,
+      );
       return result;
     } catch (e) {
       return ResultFactory.failure('Error converting FA to regex: $e');
@@ -252,6 +255,7 @@ class ConversionRequest {
   final String? regex;
   final PDA? pda;
   final ConversionType conversionType;
+  final bool simplify;
 
   const ConversionRequest({
     this.automaton,
@@ -259,6 +263,7 @@ class ConversionRequest {
     this.regex,
     this.pda,
     required this.conversionType,
+    this.simplify = false,
   });
 
   /// Creates a conversion request for NFA to DFA
@@ -286,10 +291,14 @@ class ConversionRequest {
   }
 
   /// Creates a conversion request for FA to regex
-  factory ConversionRequest.faToRegex({required FSA automaton}) {
+  factory ConversionRequest.faToRegex({
+    required FSA automaton,
+    bool simplify = false,
+  }) {
     return ConversionRequest(
       automaton: automaton,
       conversionType: ConversionType.faToRegex,
+      simplify: simplify,
     );
   }
 

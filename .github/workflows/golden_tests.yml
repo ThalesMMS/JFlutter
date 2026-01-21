@@ -10,7 +10,7 @@ jobs:
   golden_tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: subosito/flutter-action@v2
         with:
@@ -25,7 +25,7 @@ jobs:
 
       - name: Upload failures (if any)
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: golden-test-failures
           path: |

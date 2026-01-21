@@ -83,7 +83,7 @@ To complete the final verification, please run:
 
 ```bash
 # 1. Navigate to project root
-cd /Users/thales/Documents/GitHub/jflutter
+cd <project-root>
 
 # 2. Run golden tests
 ./run_golden_tests.sh

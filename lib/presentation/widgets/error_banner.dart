@@ -163,6 +163,12 @@ class ErrorBanner extends StatelessWidget {
     _SeverityColors colors,
     EdgeInsets padding,
   ) {
+    final retryCallback = onRetry;
+    final dismissCallback = onDismiss;
+    final showActions =
+        (showRetryButton && retryCallback != null) ||
+        (showDismissButton && dismissCallback != null);
+
     return Padding(
       padding: padding,
       child: Row(
@@ -178,16 +184,17 @@ class ErrorBanner extends StatelessWidget {
               ).textTheme.bodyMedium?.copyWith(color: colors.foreground),
             ),
           ),
-          if (showRetryButton || showDismissButton) const SizedBox(width: 12),
-          if (showRetryButton || showDismissButton)
+          if (showActions) const SizedBox(width: 12),
+          if (showActions)
             Wrap(
               spacing: 8,
               runSpacing: 8,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                if (showRetryButton)
-                  RetryButton(onPressed: onRetry!, label: 'Retry'),
-                if (showDismissButton) _DismissButton(onDismiss: onDismiss!),
+                if (showRetryButton && retryCallback != null)
+                  RetryButton(onPressed: retryCallback, label: 'Retry'),
+                if (showDismissButton && dismissCallback != null)
+                  _DismissButton(onDismiss: dismissCallback),
               ],
             ),
         ],
@@ -201,6 +208,12 @@ class ErrorBanner extends StatelessWidget {
     _SeverityColors colors,
     EdgeInsets padding,
   ) {
+    final retryCallback = onRetry;
+    final dismissCallback = onDismiss;
+    final showActions =
+        (showRetryButton && retryCallback != null) ||
+        (showDismissButton && dismissCallback != null);
+
     return Padding(
       padding: padding,
       child: Column(
@@ -221,15 +234,16 @@ class ErrorBanner extends StatelessWidget {
               ),
             ],
           ),
-          if (showRetryButton || showDismissButton) ...[
+          if (showActions) ...[
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: [
-                if (showRetryButton)
-                  RetryButton(onPressed: onRetry!, label: 'Retry'),
-                if (showDismissButton) _DismissButton(onDismiss: onDismiss!),
+                if (showRetryButton && retryCallback != null)
+                  RetryButton(onPressed: retryCallback, label: 'Retry'),
+                if (showDismissButton && dismissCallback != null)
+                  _DismissButton(onDismiss: dismissCallback),
               ],
             ),
           ],

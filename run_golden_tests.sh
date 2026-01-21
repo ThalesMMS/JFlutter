@@ -43,10 +43,13 @@ echo ""
 echo "Total: 84+ golden test cases"
 echo ""
 
+# Allow the test command to fail so we can print the summary.
+set +e
 flutter test test/goldens/
 
 # Capture exit code
 EXIT_CODE=$?
+set -e
 
 echo ""
 echo "=== Golden Test Results Summary ==="

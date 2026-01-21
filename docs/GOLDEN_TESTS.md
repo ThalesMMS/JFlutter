@@ -111,7 +111,7 @@ test/goldens/
 
 ### Test Coverage
 
-JFlutter currently maintains **59 golden tests** across 8 test files:
+JFlutter currently maintains **84 golden tests** across 8 test files:
 
 | Category | Test File | Test Count | Coverage |
 | --- | --- | --- | --- |

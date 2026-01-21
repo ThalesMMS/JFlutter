@@ -41,6 +41,9 @@ class SettingsModel {
   /// Base font size in the interface.
   final double fontSize;
 
+  /// Animation speed multiplier (1.0 = normal, 0.5 = slow, 2.0 = fast).
+  final double animationSpeed;
+
   const SettingsModel({
     this.emptyStringSymbol = 'λ',
     this.epsilonSymbol = 'ε',
@@ -52,6 +55,7 @@ class SettingsModel {
     this.gridSize = 20.0,
     this.nodeSize = 30.0,
     this.fontSize = 14.0,
+    this.animationSpeed = 1.0,
   });
 
   /// Creates a new [SettingsModel] with updated values.
@@ -66,6 +70,7 @@ class SettingsModel {
     double? gridSize,
     double? nodeSize,
     double? fontSize,
+    double? animationSpeed,
   }) {
     return SettingsModel(
       emptyStringSymbol: emptyStringSymbol ?? this.emptyStringSymbol,
@@ -78,6 +83,7 @@ class SettingsModel {
       gridSize: gridSize ?? this.gridSize,
       nodeSize: nodeSize ?? this.nodeSize,
       fontSize: fontSize ?? this.fontSize,
+      animationSpeed: animationSpeed ?? this.animationSpeed,
     );
   }
 
@@ -95,7 +101,8 @@ class SettingsModel {
         other.showTooltips == showTooltips &&
         other.gridSize == gridSize &&
         other.nodeSize == nodeSize &&
-        other.fontSize == fontSize;
+        other.fontSize == fontSize &&
+        other.animationSpeed == animationSpeed;
   }
 
   @override
@@ -110,5 +117,6 @@ class SettingsModel {
     gridSize,
     nodeSize,
     fontSize,
+    animationSpeed,
   );
 }

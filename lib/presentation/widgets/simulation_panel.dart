@@ -15,6 +15,8 @@ import 'package:flutter/material.dart';
 import '../../core/models/simulation_result.dart';
 import '../../core/models/simulation_step.dart';
 import '../../core/services/simulation_highlight_service.dart';
+import 'common/simulation_speed_control.dart';
+import 'common/simulation_result_card.dart';
 
 /// Panel for automaton simulation
 class SimulationPanel extends StatefulWidget {
@@ -22,6 +24,8 @@ class SimulationPanel extends StatefulWidget {
   final SimulationResult? simulationResult;
   final String? regexResult;
   final SimulationHighlightService highlightService;
+  final double animationSpeed;
+  final ValueChanged<double>? onAnimationSpeedChanged;
 
   SimulationPanel({
     super.key,
@@ -29,6 +33,8 @@ class SimulationPanel extends StatefulWidget {
     this.simulationResult,
     this.regexResult,
     SimulationHighlightService? highlightService,
+    this.animationSpeed = 1.0,
+    this.onAnimationSpeedChanged,
   }) : highlightService = highlightService ?? SimulationHighlightService();
 
   @override
@@ -224,7 +230,7 @@ class _SimulationPanelState extends State<SimulationPanel> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                _buildResultCard(context, widget.simulationResult!),
+                SimulationResultCard(result: widget.simulationResult!),
               ],
 
               // Step-by-step execution
@@ -248,59 +254,6 @@ class _SimulationPanelState extends State<SimulationPanel> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildResultCard(BuildContext context, SimulationResult result) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isAccepted = result.isAccepted;
-    final color = isAccepted ? colorScheme.tertiary : colorScheme.error;
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                isAccepted ? Icons.check_circle : Icons.cancel,
-                color: color,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                isAccepted ? 'Accepted' : 'Rejected',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          if (result.steps.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
-              'Steps: ${result.steps.length}',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-          if (result.errorMessage.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
-              'Error: ${result.errorMessage}',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: colorScheme.error),
-            ),
-          ],
-        ],
       ),
     );
   }
@@ -397,6 +350,13 @@ class _SimulationPanelState extends State<SimulationPanel> {
               ),
             ],
           ),
+          if (_isStepByStep && widget.onAnimationSpeedChanged != null) ...[
+            const SizedBox(height: 12),
+            SimulationSpeedControl(
+              currentSpeed: widget.animationSpeed,
+              onSpeedChanged: widget.onAnimationSpeedChanged!,
+            ),
+          ],
         ],
       ),
     );
@@ -658,7 +618,9 @@ class _SimulationPanelState extends State<SimulationPanel> {
 
   void _playStepAnimation() {
     if (_isPlaying && _currentStepIndex < _simulationSteps.length - 1) {
-      Future.delayed(const Duration(milliseconds: 1000), () {
+      // Calculate delay based on animation speed: slower speed = longer delay
+      final delayMs = (1000 / widget.animationSpeed).round();
+      Future.delayed(Duration(milliseconds: delayMs), () {
         if (_isPlaying && mounted) {
           setState(() {
             _currentStepIndex++;

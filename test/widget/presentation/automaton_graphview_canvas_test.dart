@@ -27,7 +27,7 @@ import 'package:jflutter/core/result.dart';
 import 'package:jflutter/data/services/automaton_service.dart';
 import 'package:jflutter/features/canvas/graphview/graphview_canvas_controller.dart';
 import 'package:jflutter/features/canvas/graphview/graphview_label_field_editor.dart';
-import 'package:jflutter/presentation/providers/automaton_provider.dart';
+import 'package:jflutter/presentation/providers/automaton_state_provider.dart';
 import 'package:jflutter/presentation/widgets/automaton_canvas_tool.dart';
 import 'package:jflutter/presentation/widgets/automaton_graphview_canvas.dart';
 
@@ -61,11 +61,10 @@ class _FakeLayoutRepository implements LayoutRepository {
       _unsupported();
 }
 
-class _RecordingAutomatonProvider extends AutomatonProvider {
+class _RecordingAutomatonProvider extends AutomatonStateNotifier {
   _RecordingAutomatonProvider()
     : super(
         automatonService: AutomatonService(),
-        layoutRepository: _FakeLayoutRepository(),
       );
 
   final List<Map<String, Object?>> transitionCalls = [];
@@ -99,7 +98,7 @@ class _RecordingAutomatonProvider extends AutomatonProvider {
 }
 
 class _RecordingGraphViewCanvasController extends GraphViewCanvasController {
-  _RecordingGraphViewCanvasController({required super.automatonProvider});
+  _RecordingGraphViewCanvasController({required super.automatonStateNotifier});
 
   int addStateAtCallCount = 0;
   Offset? lastAddStateWorldOffset;
@@ -132,7 +131,7 @@ void main() {
     setUp(() {
       provider = _RecordingAutomatonProvider();
       controller = _RecordingGraphViewCanvasController(
-        automatonProvider: provider,
+        automatonStateNotifier: provider,
       );
       toolController = AutomatonCanvasToolController(
         AutomatonCanvasTool.addState,
@@ -268,7 +267,7 @@ void main() {
 
     setUp(() {
       provider = _RecordingAutomatonProvider();
-      controller = GraphViewCanvasController(automatonProvider: provider);
+      controller = GraphViewCanvasController(automatonStateNotifier: provider);
       toolController = AutomatonCanvasToolController(
         AutomatonCanvasTool.transition,
       );

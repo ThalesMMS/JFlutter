@@ -14,51 +14,88 @@ import 'package:flutter/material.dart';
 
 import '../../../core/models/simulation_result.dart';
 import '../../../core/models/simulation_step.dart';
+import '../fsa/input_tape_viewer.dart';
 import 'base_trace_viewer.dart';
 
 class FATraceViewer extends StatelessWidget {
   final SimulationResult result;
   const FATraceViewer({super.key, required this.result});
 
+  InputTapeState _buildTapeState() {
+    if (result.inputString.isEmpty || result.steps.isEmpty) {
+      return const InputTapeState.initial();
+    }
+
+    // Calculate position from last step
+    final lastStep = result.steps.last;
+    final position = result.inputString.length - lastStep.remainingInput.length;
+
+    return InputTapeState(
+      symbols: result.inputString.split(''),
+      currentPosition: position,
+    );
+  }
+
+  Set<String> _extractAlphabet() {
+    if (result.inputString.isEmpty) {
+      return {};
+    }
+    return result.inputString.split('').toSet();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return BaseTraceViewer(
-      result: result,
-      title: 'FA Trace (${result.steps.length} steps)',
-      buildStepLine: (SimulationStep step, int index) {
-        final remaining = step.remainingInput.isEmpty
-            ? 'ε'
-            : step.remainingInput;
-        final transition = step.usedTransition != null
-            ? ' | read ${step.usedTransition}'
-            : '';
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(4),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (result.inputString.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: InputTapePanel(
+              tapeState: _buildTapeState(),
+              inputAlphabet: _extractAlphabet(),
+              isSimulating: false,
+            ),
           ),
-          child: Row(
-            children: [
-              Text(
-                '${index + 1}.',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+        BaseTraceViewer(
+          result: result,
+          title: 'FA Trace (${result.steps.length} steps)',
+          buildStepLine: (SimulationStep step, int index) {
+            final remaining = step.remainingInput.isEmpty
+                ? 'ε'
+                : step.remainingInput;
+            final transition = step.usedTransition != null
+                ? ' | read ${step.usedTransition}'
+                : '';
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(4),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'q=${step.currentState} | remaining=$remaining$transition',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),
-                ),
+              child: Row(
+                children: [
+                  Text(
+                    '${index + 1}.',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'q=${step.currentState} | remaining=$remaining$transition',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        );
-      },
+            );
+          },
+        ),
+      ],
     );
   }
 }

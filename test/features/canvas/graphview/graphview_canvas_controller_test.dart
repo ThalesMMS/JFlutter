@@ -404,18 +404,25 @@ void main() {
       recreateController(cacheEvictionThreshold: 1, inspectable: true);
       final inspectable = controller as _InspectableGraphViewCanvasController;
 
+      final s0_1 = automaton_state.State(
+        id: 's0',
+        label: 's0',
+        position: Vector2.zero(),
+      );
+      final s1_1 = automaton_state.State(
+        id: 's1',
+        label: 's1',
+        position: Vector2(100, 0),
+      );
       provider.updateAutomaton(
         FSA(
           id: 'auto',
           name: 'Automaton',
-          states: {
-            const automaton_state.State(id: 's0', label: 's0'),
-            const automaton_state.State(id: 's1', label: 's1'),
-          },
+          states: {s0_1, s1_1},
           transitions: const {},
           alphabet: const {},
-          initialState: 's0',
-          acceptingStates: const {'s1'},
+          initialState: s0_1,
+          acceptingStates: {s1_1},
           created: DateTime.utc(2024, 1, 1),
           modified: DateTime.utc(2024, 1, 1),
           bounds: const math.Rectangle<double>(0, 0, 400, 300),
@@ -427,32 +434,43 @@ void main() {
       final previousNode = inspectable.debugGraphNodes['s0'];
       expect(previousNode, isNotNull);
 
+      final s0_2 = automaton_state.State(
+        id: 's0',
+        label: 's0',
+        position: Vector2.zero(),
+      );
+      final s1_2 = automaton_state.State(
+        id: 's1',
+        label: 's1',
+        position: Vector2(100, 0),
+      );
+      final s2_2 = automaton_state.State(
+        id: 's2',
+        label: 's2',
+        position: Vector2(200, 0),
+      );
       provider.updateAutomaton(
         FSA(
           id: 'auto',
           name: 'Automaton',
-          states: {
-            const automaton_state.State(id: 's0', label: 's0'),
-            const automaton_state.State(id: 's1', label: 's1'),
-            const automaton_state.State(id: 's2', label: 's2'),
-          },
+          states: {s0_2, s1_2, s2_2},
           transitions: {
-            const FsaTransition(
+            FSATransition(
               id: 't0',
-              fromStateId: 's0',
-              toStateId: 's1',
-              readSymbol: 'a',
+              fromState: s0_2,
+              toState: s1_2,
+              symbol: 'a',
             ),
-            const FsaTransition(
+            FSATransition(
               id: 't1',
-              fromStateId: 's1',
-              toStateId: 's2',
-              readSymbol: 'b',
+              fromState: s1_2,
+              toState: s2_2,
+              symbol: 'b',
             ),
           },
           alphabet: const {'a', 'b'},
-          initialState: 's0',
-          acceptingStates: const {'s2'},
+          initialState: s0_2,
+          acceptingStates: {s2_2},
           created: DateTime.utc(2024, 1, 1),
           modified: DateTime.utc(2024, 1, 1),
           bounds: const math.Rectangle<double>(0, 0, 400, 300),

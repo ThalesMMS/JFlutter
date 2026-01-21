@@ -24,7 +24,8 @@ class BaseTraceViewer extends StatefulWidget {
   final String title;
   final Widget Function(SimulationStep step, int index) buildStepLine;
   final SimulationHighlightService? highlightService;
-  final void Function(int stepIndex)? onStepChanged;
+  final double animationSpeed;
+  final ValueChanged<int>? onStepChanged;
 
   const BaseTraceViewer({
     super.key,
@@ -32,6 +33,7 @@ class BaseTraceViewer extends StatefulWidget {
     required this.title,
     required this.buildStepLine,
     this.highlightService,
+    this.animationSpeed = 1.0,
     this.onStepChanged,
   });
 
@@ -75,22 +77,14 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
 
   void _handleStepTap(int index) {
     if (!_highlightEnabled) return;
-    setState(() {
-      _selectedIndex = index;
-    });
-    widget.highlightService?.emitFromSteps(widget.result.steps, index);
-    widget.onStepChanged?.call(index);
+    _updateSelectedIndex(index);
   }
 
   void _previousStep() {
     if (!_highlightEnabled) return;
     final current = _selectedIndex ?? 0;
     if (current > 0) {
-      setState(() {
-        _selectedIndex = current - 1;
-      });
-      widget.highlightService?.emitFromSteps(widget.result.steps, current - 1);
-      widget.onStepChanged?.call(current - 1);
+      _updateSelectedIndex(current - 1);
     }
   }
 
@@ -98,11 +92,7 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
     if (!_highlightEnabled) return;
     final current = _selectedIndex ?? 0;
     if (current < widget.result.steps.length - 1) {
-      setState(() {
-        _selectedIndex = current + 1;
-      });
-      widget.highlightService?.emitFromSteps(widget.result.steps, current + 1);
-      widget.onStepChanged?.call(current + 1);
+      _updateSelectedIndex(current + 1);
     }
   }
 
@@ -124,16 +114,11 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
     if (!_isPlaying || !mounted) return;
     final current = _selectedIndex ?? 0;
     if (current < widget.result.steps.length - 1) {
-      Future.delayed(const Duration(milliseconds: 800), () {
+      // Calculate delay based on animation speed: slower speed = longer delay
+      final delayMs = (1000 / widget.animationSpeed).round();
+      Future.delayed(Duration(milliseconds: delayMs), () {
         if (_isPlaying && mounted) {
-          setState(() {
-            _selectedIndex = current + 1;
-          });
-          widget.highlightService?.emitFromSteps(
-            widget.result.steps,
-            current + 1,
-          );
-          widget.onStepChanged?.call(current + 1);
+          _updateSelectedIndex(current + 1);
           _playStepAnimation();
         }
       });
@@ -145,12 +130,21 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
   }
 
   void _resetSteps() {
+    _updateSelectedIndex(0, emitHighlight: false);
     setState(() {
-      _selectedIndex = 0;
       _isPlaying = false;
     });
     widget.highlightService?.clear();
-    widget.onStepChanged?.call(0);
+  }
+
+  void _updateSelectedIndex(int index, {bool emitHighlight = true}) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    if (emitHighlight) {
+      widget.highlightService?.emitFromSteps(widget.result.steps, index);
+    }
+    widget.onStepChanged?.call(index);
   }
 
   Widget _buildNavigationControls(BuildContext context) {

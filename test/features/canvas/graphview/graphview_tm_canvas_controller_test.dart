@@ -15,7 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vector_math/vector_math_64.dart';
 
-import 'package:jflutter/core/models/state.dart';
+import 'package:jflutter/core/models/state.dart' as automaton_state;
 import 'package:jflutter/core/models/tm.dart';
 import 'package:jflutter/core/models/tm_transition.dart';
 import 'package:jflutter/core/models/transition.dart';
@@ -40,14 +40,14 @@ void main() {
     });
 
     TM buildSampleTm() {
-      final initialState = State(
+      final initialState = automaton_state.State(
         id: 'q0',
         label: 'start',
         position: Vector2.zero(),
         isInitial: true,
         isAccepting: false,
       );
-      final acceptingState = State(
+      final acceptingState = automaton_state.State(
         id: 'q1',
         label: 'accept',
         position: Vector2(200, 120),

@@ -17,7 +17,7 @@ import 'package:vector_math/vector_math_64.dart';
 
 import 'package:jflutter/core/models/pda.dart';
 import 'package:jflutter/core/models/pda_transition.dart';
-import 'package:jflutter/core/models/state.dart';
+import 'package:jflutter/core/models/state.dart' as automaton_state;
 import 'package:jflutter/core/models/transition.dart';
 import 'package:jflutter/features/canvas/graphview/graphview_canvas_models.dart';
 import 'package:jflutter/features/canvas/graphview/graphview_pda_canvas_controller.dart';
@@ -40,14 +40,14 @@ void main() {
     });
 
     PDA buildSamplePda() {
-      final initialState = State(
+      final initialState = automaton_state.State(
         id: 'q0',
         label: 'start',
         position: Vector2.zero(),
         isInitial: true,
         isAccepting: false,
       );
-      final acceptingState = State(
+      final acceptingState = automaton_state.State(
         id: 'q1',
         label: 'accept',
         position: Vector2(160, 120),

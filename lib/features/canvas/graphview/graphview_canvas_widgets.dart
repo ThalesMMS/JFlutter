@@ -58,7 +58,7 @@ class GraphViewTransitionOverlayState {
 
 /// Widget that renders a single automaton state node with optional initial and
 /// accepting decorations. Integrates with Material 3 theming and supports
-/// highlighting during simulations.
+/// highlighting during simulations with smooth fade-in animations.
 class AutomatonGraphNode extends StatelessWidget {
   const AutomatonGraphNode({
     super.key,
@@ -92,7 +92,9 @@ class AutomatonGraphNode extends StatelessWidget {
         clipBehavior: Clip.none,
         children: [
           Positioned.fill(
-            child: DecoratedBox(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: backgroundColor,

@@ -182,6 +182,58 @@ class SimulationResult {
       errorMessage.contains('infinite loop') ||
       errorMessage.contains('Infinite loop');
 
+  /// Gets a detailed explanation of why the string was rejected.
+  ///
+  /// This method analyzes the simulation result and provides an educational
+  /// explanation of the rejection reason, helping students understand the
+  /// automaton's behavior.
+  ///
+  /// Returns an empty string if the simulation was accepted or if there's
+  /// already a custom error message (timeout, infinite loop, etc.).
+  String get rejectionReason {
+    // If accepted, no rejection reason
+    if (accepted) {
+      return '';
+    }
+
+    // If there's already a specific error message, use it
+    if (errorMessage.isNotEmpty) {
+      return errorMessage;
+    }
+
+    // If there are no steps, we couldn't start the simulation
+    if (steps.isEmpty) {
+      return 'No simulation steps recorded';
+    }
+
+    final lastStep = steps.last;
+    final hasRemainingInput = lastStep.remainingInput.isNotEmpty;
+    final currentState = lastStep.currentState;
+
+    // Case 1: Got stuck with remaining input (no valid transition)
+    if (hasRemainingInput) {
+      final nextSymbol = lastStep.remainingInput.isNotEmpty
+          ? lastStep.remainingInput[0]
+          : '';
+
+      if (nextSymbol.isNotEmpty) {
+        return 'No valid transition from state $currentState on symbol \'$nextSymbol\'. '
+            'Input remaining: \'${lastStep.remainingInput}\'';
+      } else {
+        return 'Stuck at state $currentState with ${lastStep.remainingInput.length} '
+            'symbol(s) remaining';
+      }
+    }
+
+    // Case 2: Consumed all input but ended in non-accepting state
+    if (!hasRemainingInput) {
+      return 'Input fully consumed but ended in non-accepting state $currentState';
+    }
+
+    // Default case
+    return 'String rejected by automaton';
+  }
+
   /// Gets the execution time in milliseconds
   int get executionTimeMs => executionTime.inMilliseconds;
 

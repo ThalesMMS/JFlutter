@@ -40,6 +40,8 @@ Future<void> _pumpSimulationPanel(
   SimulationResult? simulationResult,
   String? regexResult,
   _TestSimulationHighlightService? highlightService,
+  double animationSpeed = 1.0,
+  ValueChanged<double>? onAnimationSpeedChanged,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
@@ -49,6 +51,8 @@ Future<void> _pumpSimulationPanel(
           simulationResult: simulationResult,
           regexResult: regexResult,
           highlightService: highlightService ?? _TestSimulationHighlightService(),
+          animationSpeed: animationSpeed,
+          onAnimationSpeedChanged: onAnimationSpeedChanged,
         ),
       ),
     ),

@@ -28,6 +28,7 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
   static const String _gridSizeKey = 'settings_grid_size';
   static const String _nodeSizeKey = 'settings_node_size';
   static const String _fontSizeKey = 'settings_font_size';
+  static const String _animationSpeedKey = 'settings_animation_speed';
   static const String _legacyUseDraw2dCanvasKey = 'settings_use_draw2d_canvas';
   final SettingsStorage _storage;
 
@@ -53,6 +54,9 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
       gridSize: await _storage.readDouble(_gridSizeKey) ?? defaults.gridSize,
       nodeSize: await _storage.readDouble(_nodeSizeKey) ?? defaults.nodeSize,
       fontSize: await _storage.readDouble(_fontSizeKey) ?? defaults.fontSize,
+      animationSpeed:
+          await _storage.readDouble(_animationSpeedKey) ??
+          defaults.animationSpeed,
     );
     await _removeLegacyCanvasPreference();
     return settings;
@@ -71,6 +75,7 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
       _storage.writeDouble(_gridSizeKey, settings.gridSize),
       _storage.writeDouble(_nodeSizeKey, settings.nodeSize),
       _storage.writeDouble(_fontSizeKey, settings.fontSize),
+      _storage.writeDouble(_animationSpeedKey, settings.animationSpeed),
     ]);
 
     if (results.any((success) => !success)) {

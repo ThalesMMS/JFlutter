@@ -15,14 +15,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:jflutter/data/services/automaton_service.dart';
-import 'package:jflutter/features/layout/layout_repository_impl.dart';
-import 'package:jflutter/presentation/providers/automaton_provider.dart';
+import 'package:jflutter/presentation/providers/automaton_state_provider.dart';
 import 'package:jflutter/presentation/widgets/automaton_canvas_tool.dart';
 import 'package:jflutter/presentation/widgets/graphview_canvas_toolbar.dart';
 import 'package:jflutter/features/canvas/graphview/graphview_canvas_controller.dart';
 
 class _TestGraphViewCanvasController extends GraphViewCanvasController {
-  _TestGraphViewCanvasController({required super.automatonProvider});
+  _TestGraphViewCanvasController({required super.automatonStateNotifier});
 
   int zoomInCount = 0;
   int zoomOutCount = 0;
@@ -69,15 +68,14 @@ class _TestGraphViewCanvasController extends GraphViewCanvasController {
 }
 
 void main() {
-  late AutomatonProvider provider;
+  late AutomatonStateNotifier provider;
   late _TestGraphViewCanvasController controller;
 
   setUp(() {
-    provider = AutomatonProvider(
+    provider = AutomatonStateNotifier(
       automatonService: AutomatonService(),
-      layoutRepository: LayoutRepositoryImpl(),
     );
-    controller = _TestGraphViewCanvasController(automatonProvider: provider)
+    controller = _TestGraphViewCanvasController(automatonStateNotifier: provider)
       ..synchronize(provider.state.currentAutomaton);
   });
 

@@ -105,4 +105,122 @@ void main() {
       expect(result.data, 'abc');
     });
   });
+
+  group('RegexSimplifier - algebraic identities', () {
+    group('empty set (∅) identities', () {
+      test('removes empty set from union on right: a|∅ → a', () {
+        final result = RegexSimplifier.simplify('a|∅');
+        expect(result.isSuccess, true);
+        expect(result.data, 'a');
+      });
+
+      test('removes empty set from union on left: ∅|a → a', () {
+        final result = RegexSimplifier.simplify('∅|a');
+        expect(result.isSuccess, true);
+        expect(result.data, 'a');
+      });
+
+      test('concatenation with empty set on right: a∅ → ∅', () {
+        final result = RegexSimplifier.simplify('a∅');
+        expect(result.isSuccess, true);
+        expect(result.data, '∅');
+      });
+
+      test('concatenation with empty set on left: ∅a → ∅', () {
+        final result = RegexSimplifier.simplify('∅a');
+        expect(result.isSuccess, true);
+        expect(result.data, '∅');
+      });
+
+      test('Kleene star of empty set: ∅* → ε', () {
+        final result = RegexSimplifier.simplify('∅*');
+        expect(result.isSuccess, true);
+        expect(result.data, 'ε');
+      });
+
+      test('handles complex expression with empty set', () {
+        final result = RegexSimplifier.simplify('(a|∅)b');
+        expect(result.isSuccess, true);
+        expect(result.data, 'ab');
+      });
+    });
+
+    group('epsilon (ε) identities', () {
+      test('removes epsilon from concatenation on right: aε → a', () {
+        final result = RegexSimplifier.simplify('aε');
+        expect(result.isSuccess, true);
+        expect(result.data, 'a');
+      });
+
+      test('removes epsilon from concatenation on left: εa → a', () {
+        final result = RegexSimplifier.simplify('εa');
+        expect(result.isSuccess, true);
+        expect(result.data, 'a');
+      });
+
+      test('Kleene star of epsilon: ε* → ε', () {
+        final result = RegexSimplifier.simplify('ε*');
+        expect(result.isSuccess, true);
+        expect(result.data, 'ε');
+      });
+
+      test('handles complex expression with epsilon', () {
+        final result = RegexSimplifier.simplify('(aε)b');
+        expect(result.isSuccess, true);
+        expect(result.data, 'ab');
+      });
+
+      test('removes multiple epsilons in concatenation', () {
+        final result = RegexSimplifier.simplify('εaεbε');
+        expect(result.isSuccess, true);
+        expect(result.data, 'ab');
+      });
+    });
+
+    group('idempotence identities', () {
+      test('union idempotence: a|a → a', () {
+        final result = RegexSimplifier.simplify('a|a');
+        expect(result.isSuccess, true);
+        expect(result.data, 'a');
+      });
+
+      test('double Kleene star: a** → a*', () {
+        final result = RegexSimplifier.simplify('a**');
+        expect(result.isSuccess, true);
+        expect(result.data, 'a*');
+      });
+
+      test('triple Kleene star: a*** → a*', () {
+        final result = RegexSimplifier.simplify('a***');
+        expect(result.isSuccess, true);
+        expect(result.data, 'a*');
+      });
+
+      test('union idempotence with complex expression: (ab)|(ab) → ab', () {
+        final result = RegexSimplifier.simplify('(ab)|(ab)');
+        expect(result.isSuccess, true);
+        expect(result.data, 'ab');
+      });
+    });
+
+    group('combined simplifications', () {
+      test('applies multiple rules: (a|∅)ε → a', () {
+        final result = RegexSimplifier.simplify('(a|∅)ε');
+        expect(result.isSuccess, true);
+        expect(result.data, 'a');
+      });
+
+      test('simplifies complex expression with all rules', () {
+        final result = RegexSimplifier.simplify('((a|∅)ε)*');
+        expect(result.isSuccess, true);
+        expect(result.data, 'a*');
+      });
+
+      test('handles nested expressions with identities', () {
+        final result = RegexSimplifier.simplify('(εa|b∅)c');
+        expect(result.isSuccess, true);
+        expect(result.data, 'ac');
+      });
+    });
+  });
 }

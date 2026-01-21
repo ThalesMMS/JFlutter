@@ -44,7 +44,7 @@ class RegexSimplifier {
       do {
         previous = simplified;
         simplified = _removeRedundantParentheses(simplified);
-        // Algebraic identities will be added in subtask-1-3
+        simplified = _applyAlgebraicIdentities(simplified);
       } while (simplified != previous);
 
       return ResultFactory.success(simplified);
@@ -248,5 +248,238 @@ class RegexSimplifier {
 
     // If longer than 1 character and not epsilon, it's a concatenation
     return s.length == 1;
+  }
+
+  /// Applies algebraic identities to simplify the regex
+  ///
+  /// Handles three categories of identities:
+  /// 1. Empty set (∅) identities:
+  ///    - r|∅ → r, ∅|r → r (union with empty set)
+  ///    - r∅ → ∅, ∅r → ∅ (concatenation with empty set)
+  ///    - ∅* → ε (Kleene star of empty set)
+  /// 2. Epsilon (ε) identities:
+  ///    - rε → r, εr → r (concatenation with epsilon)
+  ///    - ε* → ε (Kleene star of epsilon)
+  /// 3. Idempotence:
+  ///    - r|r → r (union idempotence)
+  ///    - r** → r* (double Kleene star)
+  static String _applyAlgebraicIdentities(String regex) {
+    if (regex.isEmpty) return regex;
+
+    String result = regex;
+
+    // Apply identities in order
+    result = _applyEmptySetIdentities(result);
+    result = _applyEpsilonIdentities(result);
+    result = _applyIdempotenceIdentities(result);
+
+    return result;
+  }
+
+  /// Applies empty set (∅) identities
+  static String _applyEmptySetIdentities(String regex) {
+    String result = regex;
+
+    // ∅* → ε
+    result = result.replaceAll('∅*', 'ε');
+
+    // r|∅ → r and ∅|r → r (union with empty set)
+    result = _removeEmptySetFromUnion(result);
+
+    // r∅ → ∅ and ∅r → ∅ (concatenation with empty set)
+    result = _simplifyEmptySetConcatenation(result);
+
+    return result;
+  }
+
+  /// Removes empty set from union expressions
+  static String _removeEmptySetFromUnion(String regex) {
+    final buffer = StringBuffer();
+    int i = 0;
+
+    while (i < regex.length) {
+      if (i < regex.length - 1 && regex[i] == '∅' && regex[i + 1] == '|') {
+        // ∅|r → r
+        i += 2; // Skip ∅|
+      } else if (i > 0 && regex[i] == '∅' && i > 0 && regex[i - 1] == '|') {
+        // r|∅ → r (already handled by removing |∅)
+        // This case is handled by looking ahead
+        buffer.write(regex[i]);
+        i++;
+      } else if (i < regex.length - 1 && regex[i] == '|' && regex[i + 1] == '∅') {
+        // r|∅ → r
+        i += 2; // Skip |∅
+      } else {
+        buffer.write(regex[i]);
+        i++;
+      }
+    }
+
+    return buffer.toString();
+  }
+
+  /// Simplifies concatenation with empty set
+  static String _simplifyEmptySetConcatenation(String regex) {
+    // Any concatenation with ∅ results in ∅
+    // We need to identify concatenation segments and check if any contain ∅
+
+    // Simple case: if the entire expression is just symbols concatenated
+    // and one is ∅, the whole thing becomes ∅
+    final segments = _splitIntoConcatenationSegments(regex);
+
+    for (final segment in segments) {
+      if (segment.contains('∅') && !segment.contains('|')) {
+        // This segment has ∅ in concatenation, replace entire segment with ∅
+        // But we need to be careful about union context
+        return regex.replaceAll(segment, '∅');
+      }
+    }
+
+    return regex;
+  }
+
+  /// Splits regex into concatenation segments (separated by |)
+  static List<String> _splitIntoConcatenationSegments(String regex) {
+    final segments = <String>[];
+    final buffer = StringBuffer();
+    int depth = 0;
+
+    for (int i = 0; i < regex.length; i++) {
+      if (regex[i] == '(') {
+        depth++;
+        buffer.write(regex[i]);
+      } else if (regex[i] == ')') {
+        depth--;
+        buffer.write(regex[i]);
+      } else if (regex[i] == '|' && depth == 0) {
+        segments.add(buffer.toString());
+        buffer.clear();
+      } else {
+        buffer.write(regex[i]);
+      }
+    }
+
+    if (buffer.isNotEmpty) {
+      segments.add(buffer.toString());
+    }
+
+    return segments;
+  }
+
+  /// Applies epsilon (ε) identities
+  static String _applyEpsilonIdentities(String regex) {
+    String result = regex;
+
+    // ε* → ε
+    result = result.replaceAll('ε*', 'ε');
+
+    // Remove epsilon from concatenation
+    result = _removeEpsilonFromConcatenation(result);
+
+    return result;
+  }
+
+  /// Removes epsilon from concatenation (εr → r, rε → r)
+  static String _removeEpsilonFromConcatenation(String regex) {
+    String result = regex;
+
+    // Remove ε in concatenation, but not in union
+    // We need to be careful not to remove ε when it's the only element
+
+    bool changed;
+    do {
+      changed = false;
+      final buffer = StringBuffer();
+      int i = 0;
+
+      while (i < regex.length) {
+        if (regex[i] == 'ε') {
+          // Check context - is this in a concatenation?
+          final before = i > 0 ? regex[i - 1] : '';
+          final after = i < regex.length - 1 ? regex[i + 1] : '';
+
+          // Skip ε if it's in concatenation (not after | or ( or start, and not before | or ) or end or *)
+          final inConcatenation =
+              (before != '' && before != '|' && before != '(') ||
+                  (after != '' && after != '|' && after != ')' && after != '*');
+
+          if (inConcatenation && regex != 'ε') {
+            // Skip the epsilon
+            changed = true;
+            i++;
+            continue;
+          }
+        }
+
+        buffer.write(regex[i]);
+        i++;
+      }
+
+      if (changed) {
+        regex = buffer.toString();
+      }
+    } while (changed);
+
+    return regex;
+  }
+
+  /// Applies idempotence identities
+  static String _applyIdempotenceIdentities(String regex) {
+    String result = regex;
+
+    // r** → r*, r*** → r*, etc.
+    result = _reduceMultipleStars(result);
+
+    // r|r → r (union idempotence)
+    result = _applyUnionIdempotence(result);
+
+    return result;
+  }
+
+  /// Reduces multiple consecutive Kleene stars to a single star
+  static String _reduceMultipleStars(String regex) {
+    // Match any character followed by multiple stars and reduce to single star
+    final buffer = StringBuffer();
+    int i = 0;
+
+    while (i < regex.length) {
+      buffer.write(regex[i]);
+
+      if (regex[i] == '*') {
+        // Skip any additional consecutive stars
+        while (i + 1 < regex.length && regex[i + 1] == '*') {
+          i++;
+        }
+      }
+
+      i++;
+    }
+
+    return buffer.toString();
+  }
+
+  /// Applies union idempotence (r|r → r)
+  static String _applyUnionIdempotence(String regex) {
+    // Split by | at top level and check for duplicates
+    final segments = _splitIntoConcatenationSegments(regex);
+
+    if (segments.length <= 1) return regex;
+
+    // Remove duplicates while preserving order
+    final seen = <String>{};
+    final unique = <String>[];
+
+    for (final segment in segments) {
+      if (!seen.contains(segment)) {
+        seen.add(segment);
+        unique.add(segment);
+      }
+    }
+
+    if (unique.length < segments.length) {
+      return unique.join('|');
+    }
+
+    return regex;
   }
 }

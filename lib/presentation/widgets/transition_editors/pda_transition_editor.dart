@@ -8,6 +8,8 @@
 //
 
 import 'package:flutter/material.dart';
+import 'package:jflutter/presentation/widgets/pda/stack_drawer.dart';
+import 'package:jflutter/presentation/widgets/pda/stack_operation_preview.dart';
 
 class PdaTransitionEditor extends StatefulWidget {
   const PdaTransitionEditor({
@@ -20,6 +22,7 @@ class PdaTransitionEditor extends StatefulWidget {
     required this.isLambdaPush,
     required this.onSubmit,
     required this.onCancel,
+    this.currentStack,
   });
 
   final String initialRead;
@@ -28,6 +31,7 @@ class PdaTransitionEditor extends StatefulWidget {
   final bool isLambdaInput;
   final bool isLambdaPop;
   final bool isLambdaPush;
+  final StackState? currentStack;
   final void Function({
     required String readSymbol,
     required String popSymbol,
@@ -56,6 +60,15 @@ class _PdaTransitionEditorState extends State<PdaTransitionEditor> {
   late bool _lambdaInput = widget.isLambdaInput;
   late bool _lambdaPop = widget.isLambdaPop;
   late bool _lambdaPush = widget.isLambdaPush;
+
+  @override
+  void initState() {
+    super.initState();
+    // Add listeners to update preview on text change
+    _readController.addListener(() => setState(() {}));
+    _popController.addListener(() => setState(() {}));
+    _pushController.addListener(() => setState(() {}));
+  }
 
   @override
   void dispose() {
@@ -166,7 +179,16 @@ class _PdaTransitionEditorState extends State<PdaTransitionEditor> {
                   }
                 },
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
+              if (widget.currentStack != null) ...[
+                StackOperationPreview(
+                  inputSymbol: _lambdaInput ? 'λ' : _readController.text,
+                  popSymbol: _lambdaPop ? 'λ' : _popController.text,
+                  pushSymbol: _lambdaPush ? 'λ' : _pushController.text,
+                  currentStack: widget.currentStack!,
+                ),
+                const SizedBox(height: 16),
+              ],
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [

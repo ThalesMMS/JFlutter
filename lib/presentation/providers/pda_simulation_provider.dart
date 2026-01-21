@@ -23,6 +23,7 @@ class PDASimulationState {
   final bool stepByStep;
   final PDAAcceptanceMode mode;
   final String lastInput;
+  final int currentStepIndex;
 
   const PDASimulationState({
     this.pda,
@@ -31,6 +32,7 @@ class PDASimulationState {
     this.stepByStep = false,
     this.mode = PDAAcceptanceMode.finalState,
     this.lastInput = '',
+    this.currentStepIndex = 0,
   });
 
   PDASimulationState copyWith({
@@ -40,6 +42,7 @@ class PDASimulationState {
     bool? stepByStep,
     PDAAcceptanceMode? mode,
     String? lastInput,
+    int? currentStepIndex,
   }) {
     return PDASimulationState(
       pda: pda ?? this.pda,
@@ -48,7 +51,48 @@ class PDASimulationState {
       stepByStep: stepByStep ?? this.stepByStep,
       mode: mode ?? this.mode,
       lastInput: lastInput ?? this.lastInput,
+      currentStepIndex: currentStepIndex ?? this.currentStepIndex,
     );
+  }
+
+  /// Gets the current simulation step
+  pda.SimulationStep? get currentStep {
+    if (result == null || result!.steps.isEmpty) return null;
+    if (currentStepIndex < 0 || currentStepIndex >= result!.steps.length) {
+      return null;
+    }
+    return result!.steps[currentStepIndex];
+  }
+
+  /// Gets the stack contents at the current step
+  String get currentStackContents {
+    return currentStep?.stackContents ?? '';
+  }
+
+  /// Gets the current state at the current step
+  String? get currentState {
+    return currentStep?.currentState;
+  }
+
+  /// Gets the remaining input at the current step
+  String? get currentRemainingInput {
+    return currentStep?.remainingInput;
+  }
+
+  /// Checks if we can go to the next step
+  bool get canGoToNextStep {
+    if (result == null || result!.steps.isEmpty) return false;
+    return currentStepIndex < result!.steps.length - 1;
+  }
+
+  /// Checks if we can go to the previous step
+  bool get canGoToPreviousStep {
+    return currentStepIndex > 0;
+  }
+
+  /// Gets the total number of steps
+  int get totalSteps {
+    return result?.steps.length ?? 0;
   }
 }
 
@@ -69,7 +113,7 @@ class PDASimulationNotifier extends StateNotifier<PDASimulationState> {
 
   Future<void> simulate(String input) async {
     if (state.pda == null) return;
-    state = state.copyWith(isRunning: true, lastInput: input);
+    state = state.copyWith(isRunning: true, lastInput: input, currentStepIndex: 0);
 
     final result = pda.PDASimulatorFacade.run(
       state.pda!,
@@ -79,10 +123,15 @@ class PDASimulationNotifier extends StateNotifier<PDASimulationState> {
     );
 
     if (result.isSuccess) {
-      state = state.copyWith(result: result.data, isRunning: false);
+      state = state.copyWith(
+        result: result.data,
+        isRunning: false,
+        currentStepIndex: 0,
+      );
     } else {
       state = state.copyWith(
         isRunning: false,
+        currentStepIndex: 0,
         result: PDASimulationResult.failure(
           inputString: input,
           steps: const [],
@@ -90,6 +139,39 @@ class PDASimulationNotifier extends StateNotifier<PDASimulationState> {
           executionTime: const Duration(milliseconds: 0),
         ),
       );
+    }
+  }
+
+  /// Moves to the next simulation step
+  void nextStep() {
+    if (state.canGoToNextStep) {
+      state = state.copyWith(currentStepIndex: state.currentStepIndex + 1);
+    }
+  }
+
+  /// Moves to the previous simulation step
+  void previousStep() {
+    if (state.canGoToPreviousStep) {
+      state = state.copyWith(currentStepIndex: state.currentStepIndex - 1);
+    }
+  }
+
+  /// Jumps to a specific step
+  void goToStep(int index) {
+    if (state.result != null && index >= 0 && index < state.result!.steps.length) {
+      state = state.copyWith(currentStepIndex: index);
+    }
+  }
+
+  /// Resets to the first step
+  void resetToFirstStep() {
+    state = state.copyWith(currentStepIndex: 0);
+  }
+
+  /// Jumps to the last step
+  void goToLastStep() {
+    if (state.result != null && state.result!.steps.isNotEmpty) {
+      state = state.copyWith(currentStepIndex: state.result!.steps.length - 1);
     }
   }
 }

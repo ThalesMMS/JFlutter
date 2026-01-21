@@ -14,6 +14,7 @@ import '../../core/algorithms/pda_simulator.dart';
 import '../../core/models/grammar.dart';
 import '../../core/models/state.dart' as automaton_models;
 import '../../data/services/conversion_service.dart';
+import '../../data/examples/pda_examples.dart';
 import '../providers/pda_editor_provider.dart';
 
 /// Panel for PDA analysis algorithms
@@ -69,6 +70,10 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
   Widget _buildAlgorithmButtons(BuildContext context) {
     return Column(
       children: [
+        _buildExamplesSection(context),
+        const SizedBox(height: 16),
+        const Divider(),
+        const SizedBox(height: 16),
         _buildAlgorithmButton(
           context,
           title: 'Convert to CFG',
@@ -782,5 +787,72 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
 
   String _formatStateName(automaton_models.State state) {
     return state.label.isNotEmpty ? state.label : state.id;
+  }
+
+  Widget _buildExamplesSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final examples = PDAExamples.getExampleFactories();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.lightbulb_outline, color: theme.colorScheme.secondary),
+            const SizedBox(width: 8),
+            Text(
+              'Load Examples',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        ...examples.entries.map(
+          (entry) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: _buildExampleButton(
+              context,
+              title: entry.key,
+              onPressed: () => _loadExample(entry.value),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildExampleButton(
+    BuildContext context, {
+    required String title,
+    required VoidCallback onPressed,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(Icons.file_open, size: 18),
+        label: Text(title),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: colorScheme.secondary,
+          side: BorderSide(color: colorScheme.secondary.withValues(alpha: 0.5)),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          alignment: Alignment.centerLeft,
+        ),
+      ),
+    );
+  }
+
+  void _loadExample(Function() exampleFactory) {
+    try {
+      final pda = exampleFactory();
+      ref.read(pdaEditorProvider.notifier).setPda(pda);
+      _showSnackbar('Example loaded: ${pda.name}');
+    } catch (error) {
+      _showSnackbar('Failed to load example: $error');
+    }
   }
 }

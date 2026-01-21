@@ -41,6 +41,17 @@ class StackState {
       lastOperation: 'pop $popped',
     );
   }
+
+  /// Cria cópia substituindo o topo
+  StackState replace(String newSymbol) {
+    if (symbols.isEmpty) return push(newSymbol);
+    final newSymbols = [...symbols];
+    newSymbols[newSymbols.length - 1] = newSymbol;
+    return StackState(
+      symbols: newSymbols,
+      lastOperation: 'replace with $newSymbol',
+    );
+  }
 }
 
 /// Painel flutuante para visualização da pilha
@@ -68,6 +79,14 @@ class _PDAStackPanelState extends State<PDAStackPanel>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late ScrollController _scrollController;
+  late Animation<Offset> _slideAnimation;
+  int _previousStackSize = 0;
+  bool _isPushAnimation = false;
+  int? _highlightedIndex;
+
+  // Swipe gesture tracking
+  int? _swipingItemIndex;
+  double _swipeOffset = 0.0;
 
   @override
   void initState() {
@@ -76,15 +95,91 @@ class _PDAStackPanelState extends State<PDAStackPanel>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 1), // Start from bottom
+      end: Offset.zero, // End at normal position
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOut,
+    ));
     _scrollController = ScrollController();
+    _previousStackSize = widget.stackState.size;
   }
 
   @override
   void didUpdateWidget(PDAStackPanel oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.stackState.symbols != widget.stackState.symbols) {
+      // Detect push operation (stack grew)
+      _isPushAnimation = widget.stackState.size > oldWidget.stackState.size;
       _animationController.forward(from: 0);
+      _previousStackSize = widget.stackState.size;
+      _scrollToTop();
     }
+  }
+
+  void _scrollToTop() {
+    // Auto-scroll para manter topo da pilha visível
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0.0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  void _handleItemTap(int index) {
+    setState(() {
+      // Toggle highlight: if tapping the same item, deselect; otherwise select
+      _highlightedIndex = _highlightedIndex == index ? null : index;
+    });
+  }
+
+  void _handleHorizontalDragStart(int index, DragStartDetails details) {
+    setState(() {
+      _swipingItemIndex = index;
+      _swipeOffset = 0.0;
+    });
+  }
+
+  void _handleHorizontalDragUpdate(DragUpdateDetails details) {
+    setState(() {
+      _swipeOffset += details.delta.dx;
+      // Clamp to reasonable range (-80 to 80 pixels)
+      _swipeOffset = _swipeOffset.clamp(-80.0, 80.0);
+    });
+  }
+
+  void _handleHorizontalDragEnd(int index, DragEndDetails details) {
+    // Detect swipe direction and velocity
+    final velocity = details.primaryVelocity ?? 0;
+    final threshold = 30.0; // Minimum swipe distance in pixels
+
+    setState(() {
+      if (_swipeOffset.abs() > threshold || velocity.abs() > 300) {
+        // Swipe detected - determine direction
+        if (_swipeOffset > 0 || velocity > 300) {
+          // Swipe right - highlight item
+          _highlightedIndex = index;
+        } else if (_swipeOffset < 0 || velocity < -300) {
+          // Swipe left - unhighlight if this item is highlighted
+          if (_highlightedIndex == index) {
+            _highlightedIndex = null;
+          }
+        }
+      }
+      // Reset swipe state
+      _swipingItemIndex = null;
+      _swipeOffset = 0.0;
+    });
+  }
+
+  void _handleHorizontalDragCancel(int index) {
+    setState(() {
+      _swipingItemIndex = null;
+      _swipeOffset = 0.0;
+    });
   }
 
   @override
@@ -102,8 +197,8 @@ class _PDAStackPanelState extends State<PDAStackPanel>
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Container(
-        width: 160,
-        constraints: const BoxConstraints(maxHeight: 220),
+        width: 145, // Compact width for mobile
+        constraints: const BoxConstraints(maxHeight: 200), // Reduced height
         padding: const EdgeInsets.all(8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -112,27 +207,34 @@ class _PDAStackPanelState extends State<PDAStackPanel>
             Row(
               children: [
                 Icon(Icons.layers, size: 16, color: theme.colorScheme.primary),
-                const SizedBox(width: 8),
-                Text(
-                  'Stack (${widget.stackState.size})',
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+                const SizedBox(width: 6), // Reduced spacing
+                Expanded(
+                  child: Text(
+                    'Stack (${widget.stackState.size})',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13, // Compact font size
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                if (widget.isSimulating) ...[
-                  const Spacer(),
+                if (widget.isSimulating)
                   Container(
                     width: 6,
                     height: 6,
+                    margin: const EdgeInsets.only(left: 4),
                     decoration: const BoxDecoration(
                       color: Colors.green,
                       shape: BoxShape.circle,
                     ),
                   ),
-                ],
               ],
             ),
-            const Divider(height: 12),
+            const Divider(height: 10), // Reduced divider height
+
+            // Stack Info Panel
+            _buildStackInfo(theme),
+            const Divider(height: 10), // Reduced divider height
 
             // Content
             Flexible(
@@ -142,6 +244,7 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                         'Empty\n(Z₀: ${widget.initialStackSymbol})',
                         textAlign: TextAlign.center,
                         style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: 11, // Compact font size
                           color: theme.colorScheme.outline,
                         ),
                       ),
@@ -156,63 +259,236 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                             widget.stackState.symbols.length - 1 - index;
                         final symbol = widget.stackState.symbols[reversedIndex];
                         final isTop = index == 0;
+                        final isHighlighted = _highlightedIndex == index;
+                        final isSwiping = _swipingItemIndex == index;
 
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 4),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isTop
-                                ? theme.colorScheme.primaryContainer
-                                : theme.colorScheme.surfaceContainerHighest,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Row(
-                            children: [
-                              if (isTop) ...[
-                                Icon(
-                                  Icons.arrow_right,
-                                  size: 12,
-                                  color: theme.colorScheme.primary,
+                        Widget itemWidget = GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => _handleItemTap(index),
+                          // Add swipe gesture detection
+                          onHorizontalDragStart: (details) => _handleHorizontalDragStart(index, details),
+                          onHorizontalDragUpdate: _handleHorizontalDragUpdate,
+                          onHorizontalDragEnd: (details) => _handleHorizontalDragEnd(index, details),
+                          onHorizontalDragCancel: () => _handleHorizontalDragCancel(index),
+                          child: Transform.translate(
+                            // Apply swipe offset for visual feedback
+                            offset: Offset(isSwiping ? _swipeOffset : 0.0, 0.0),
+                            child: Container(
+                            // Ensure minimum 40x40 touch target (compact)
+                            constraints: const BoxConstraints(
+                              minHeight: 40,
+                              minWidth: 40,
+                            ),
+                            margin: const EdgeInsets.only(bottom: 3), // Reduced
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                // Background hint for swipe direction
+                                if (isSwiping) ...[
+                                  // Left swipe hint (unhighlight)
+                                  if (_swipeOffset < -10)
+                                    Positioned.fill(
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme.errorContainer.withOpacity(0.3),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        alignment: Alignment.centerRight,
+                                        padding: const EdgeInsets.only(right: 8),
+                                        child: Icon(
+                                          Icons.highlight_remove,
+                                          size: 16,
+                                          color: theme.colorScheme.error,
+                                        ),
+                                      ),
+                                    ),
+                                  // Right swipe hint (highlight)
+                                  if (_swipeOffset > 10)
+                                    Positioned.fill(
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        alignment: Alignment.centerLeft,
+                                        padding: const EdgeInsets.only(left: 8),
+                                        child: Icon(
+                                          Icons.highlight,
+                                          size: 16,
+                                          color: theme.colorScheme.primary,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, // Reduced
+                                    vertical: 8, // Reduced
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isHighlighted
+                                        ? theme.colorScheme.secondaryContainer
+                                        : isTop
+                                            ? theme.colorScheme.primaryContainer
+                                            : theme.colorScheme.surfaceContainerHighest,
+                                    border: isHighlighted
+                                        ? Border.all(
+                                            color: theme.colorScheme.secondary,
+                                            width: 2,
+                                          )
+                                        : null,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (isTop) ...[
+                                        Icon(
+                                          Icons.arrow_right,
+                                          size: 11, // Slightly smaller
+                                          color: theme.colorScheme.primary,
+                                        ),
+                                        const SizedBox(width: 3),
+                                      ],
+                                      Flexible(
+                                        child: Text(
+                                          symbol,
+                                          style: TextStyle(
+                                            fontFamily: 'monospace',
+                                            fontWeight: isTop || isHighlighted
+                                                ? FontWeight.bold
+                                                : FontWeight.normal,
+                                            fontSize: 11, // Compact font size
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                                const SizedBox(width: 4),
+                                if (isTop)
+                                  Positioned(
+                                    top: -5,
+                                    right: -5,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 3,
+                                        vertical: 1,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: theme.colorScheme.primary,
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        'TOP',
+                                        style: TextStyle(
+                                          color: theme.colorScheme.onPrimary,
+                                          fontSize: 7, // Compact badge
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                               ],
-                              Text(
-                                symbol,
-                                style: TextStyle(
-                                  fontFamily: 'monospace',
-                                  fontWeight: isTop
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
+                        ),
+                        );
+
+                        // Apply slide animation to top item on push
+                        if (isTop && _isPushAnimation) {
+                          itemWidget = SlideTransition(
+                            position: _slideAnimation,
+                            child: itemWidget,
+                          );
+                        }
+
+                        return FadeTransition(
+                          opacity: _animationController,
+                          child: itemWidget,
                         );
                       },
                     ),
             ),
 
             if (widget.onClear != null) ...[
-              const Divider(height: 12),
+              const Divider(height: 10), // Reduced
               SizedBox(
-                height: 28,
-                child: TextButton.icon(
+                width: 60, // Fixed width like tape_drawer
+                height: 24, // Match tape_drawer pattern
+                child: TextButton(
                   onPressed: widget.onClear,
-                  icon: const Icon(Icons.clear_all, size: 14),
-                  label: const Text('Clear', style: TextStyle(fontSize: 12)),
                   style: TextButton.styleFrom(
                     padding: EdgeInsets.zero,
                     foregroundColor: theme.colorScheme.error,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  child: const Text(
+                    'Clear',
+                    style: TextStyle(fontSize: 12),
                   ),
                 ),
               ),
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  /// Builds compact info panel showing top symbol, size, and last operation
+  Widget _buildStackInfo(ThemeData theme) {
+    final topSymbol = widget.stackState.top ?? '(empty)';
+    final size = widget.stackState.size;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4), // More compact
+      color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'Top: ',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: 10, // Smaller for mobile
+                ),
+              ),
+              Flexible(
+                child: Text(
+                  topSymbol,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: 11, // Slightly reduced
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                    fontFamily: 'monospace',
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 1), // Reduced spacing
+          Text(
+            'Size: $size',
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontSize: 10, // Smaller for mobile
+            ),
+          ),
+          if (widget.stackState.lastOperation != null) ...[
+            const SizedBox(height: 1), // Reduced spacing
+            Text(
+              'Op: ${widget.stackState.lastOperation}', // Shortened label
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: 9, // Smaller for mobile
+                color: theme.colorScheme.outline,
+                fontStyle: FontStyle.italic,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ],
       ),
     );
   }

@@ -76,6 +76,7 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
   String? _executionStatus;
   List<AlgorithmStep> _algorithmSteps = [];
   int _currentStepIndex = 0;
+  bool _stepByStepMode = false;
 
   void _showSnack(String message, {bool isError = false}) {
     final theme = Theme.of(context);
@@ -120,6 +121,11 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
                   context,
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
+              const SizedBox(height: 16),
+
+              // Step-by-Step Mode toggle
+              _buildStepByStepModeToggle(context),
+
               const SizedBox(height: 16),
 
               // Regex to NFA conversion
@@ -532,6 +538,66 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
     );
   }
 
+  Widget _buildStepByStepModeToggle(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: _stepByStepMode
+            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
+            : theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: _stepByStepMode
+              ? theme.colorScheme.primary.withValues(alpha: 0.5)
+              : theme.colorScheme.outline.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.linear_scale,
+            size: 20,
+            color: _stepByStepMode
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Step-by-Step Mode',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: _stepByStepMode
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Show detailed algorithm execution steps with explanations',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: _stepByStepMode,
+            onChanged: (value) {
+              setState(() {
+                _stepByStepMode = value;
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildProgressIndicator(BuildContext context) {
     return Container(

@@ -15,6 +15,8 @@ import '../../core/models/grammar.dart';
 import '../../core/models/state.dart' as automaton_models;
 import '../../data/services/conversion_service.dart';
 import '../providers/pda_editor_provider.dart';
+import 'common/algorithm_button.dart';
+import 'common/algorithm_panel_header.dart';
 
 /// Panel for PDA analysis algorithms
 class PDAAlgorithmPanel extends ConsumerStatefulWidget {
@@ -40,7 +42,10 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeader(context),
+            const AlgorithmPanelHeader(
+              title: 'PDA Analysis',
+              icon: Icons.auto_awesome,
+            ),
             const SizedBox(height: 16),
             _buildAlgorithmButtons(context),
             const SizedBox(height: 16),
@@ -51,146 +56,57 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    return Row(
-      children: [
-        Icon(Icons.auto_awesome, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(width: 8),
-        Text(
-          'PDA Analysis',
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-        ),
-      ],
-    );
-  }
-
   Widget _buildAlgorithmButtons(BuildContext context) {
     return Column(
       children: [
-        _buildAlgorithmButton(
-          context,
+        AlgorithmButton(
           title: 'Convert to CFG',
           description: 'Convert PDA to equivalent context-free grammar',
           icon: Icons.transform,
           onPressed: _convertToCFG,
+          isExecuting: _isAnalyzing,
         ),
         const SizedBox(height: 12),
-        _buildAlgorithmButton(
-          context,
+        AlgorithmButton(
           title: 'Minimize PDA',
           description: 'Minimize the number of states in PDA',
           icon: Icons.compress,
           onPressed: _minimizePDA,
+          isExecuting: _isAnalyzing,
         ),
         const SizedBox(height: 12),
-        _buildAlgorithmButton(
-          context,
+        AlgorithmButton(
           title: 'Check Determinism',
           description: 'Determine if PDA is deterministic',
           icon: Icons.help_outline,
           onPressed: _checkDeterminism,
+          isExecuting: _isAnalyzing,
         ),
         const SizedBox(height: 12),
-        _buildAlgorithmButton(
-          context,
+        AlgorithmButton(
           title: 'Find Reachable States',
           description: 'Identify reachable states from initial state',
           icon: Icons.explore,
           onPressed: _findReachableStates,
+          isExecuting: _isAnalyzing,
         ),
         const SizedBox(height: 12),
-        _buildAlgorithmButton(
-          context,
+        AlgorithmButton(
           title: 'Language Analysis',
           description: 'Analyze the language accepted by PDA',
           icon: Icons.analytics,
           onPressed: _analyzeLanguage,
+          isExecuting: _isAnalyzing,
         ),
         const SizedBox(height: 12),
-        _buildAlgorithmButton(
-          context,
+        AlgorithmButton(
           title: 'Stack Operations',
           description: 'Analyze stack operations and depth',
           icon: Icons.storage,
           onPressed: _analyzeStackOperations,
+          isExecuting: _isAnalyzing,
         ),
       ],
-    );
-  }
-
-  Widget _buildAlgorithmButton(
-    BuildContext context, {
-    required String title,
-    required String description,
-    required IconData icon,
-    required VoidCallback onPressed,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return InkWell(
-      onTap: _isAnalyzing ? null : onPressed,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: _isAnalyzing
-                ? colorScheme.outline.withValues(alpha: 0.3)
-                : colorScheme.primary.withValues(alpha: 0.3),
-          ),
-          borderRadius: BorderRadius.circular(8),
-          color: _isAnalyzing
-              ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
-              : null,
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: _isAnalyzing ? colorScheme.outline : colorScheme.primary,
-              size: 24,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: _isAnalyzing
-                          ? colorScheme.outline
-                          : colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (_isAnalyzing)
-              const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            else
-              Icon(
-                Icons.arrow_forward_ios,
-                color: colorScheme.primary.withValues(alpha: 0.5),
-                size: 16,
-              ),
-          ],
-        ),
-      ),
     );
   }
 

@@ -15,11 +15,15 @@ import '../models/fsa.dart';
 import '../models/state.dart';
 import '../models/fsa_transition.dart';
 import '../result.dart';
+import 'regex_simplifier.dart';
 
 /// Converts Finite Automata (FA) to Regular Expressions using the state elimination method
 class FAToRegexConverter {
   /// Converts a Finite Automaton to an equivalent regular expression
-  static Result<String> convert(FSA fa) {
+  ///
+  /// If [simplify] is true, applies algebraic simplification to produce
+  /// a more readable regex. Defaults to false for backward compatibility.
+  static Result<String> convert(FSA fa, {bool simplify = false}) {
     try {
       // Validate input
       final validationResult = _validateInput(fa);
@@ -42,6 +46,17 @@ class FAToRegexConverter {
 
       // Step 2: Apply state elimination algorithm
       final regex = _stateElimination(faWithSingleStates);
+
+      // Step 3: Apply simplification if requested
+      if (simplify) {
+        final simplificationResult = RegexSimplifier.simplify(regex);
+        if (!simplificationResult.isSuccess) {
+          return ResultFactory.failure(
+            'FA conversion succeeded but simplification failed: ${simplificationResult.error}',
+          );
+        }
+        return ResultFactory.success(simplificationResult.value!);
+      }
 
       return ResultFactory.success(regex);
     } catch (e) {

@@ -21,6 +21,8 @@ import '../providers/automaton_provider.dart';
 import '../providers/grammar_provider.dart';
 import '../providers/home_navigation_provider.dart';
 import '../providers/pda_editor_provider.dart';
+import 'common/algorithm_button.dart';
+import 'common/algorithm_panel_header.dart';
 
 /// Panel for grammar analysis algorithms
 class GrammarAlgorithmPanel extends ConsumerStatefulWidget {
@@ -45,7 +47,10 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeader(context),
+            const AlgorithmPanelHeader(
+              title: 'Grammar Analysis',
+              icon: Icons.auto_awesome,
+            ),
             const SizedBox(height: 16),
             _buildAlgorithmButtons(context),
             const SizedBox(height: 16),
@@ -56,75 +61,58 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    return Row(
-      children: [
-        Icon(Icons.auto_awesome, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            'Grammar Analysis',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildAlgorithmButtons(BuildContext context) {
     final grammarState = ref.watch(grammarProvider);
     return Column(
       children: [
         _buildConversionSection(context, grammarState),
         const SizedBox(height: 24),
-        _buildAlgorithmButton(
-          context,
+        AlgorithmButton(
           title: 'Remove Left Recursion',
           description: 'Eliminate left recursion from grammar',
           icon: Icons.transform,
           onPressed: _removeLeftRecursion,
+          isExecuting: _isAnalyzing,
         ),
         const SizedBox(height: 12),
-        _buildAlgorithmButton(
-          context,
+        AlgorithmButton(
           title: 'Left Factor',
           description: 'Apply left factoring to grammar',
           icon: Icons.account_tree,
           onPressed: _leftFactor,
+          isExecuting: _isAnalyzing,
         ),
         const SizedBox(height: 12),
-        _buildAlgorithmButton(
-          context,
+        AlgorithmButton(
           title: 'Find First Sets',
           description: 'Calculate FIRST sets for all variables',
           icon: Icons.first_page,
           onPressed: _findFirstSets,
+          isExecuting: _isAnalyzing,
         ),
         const SizedBox(height: 12),
-        _buildAlgorithmButton(
-          context,
+        AlgorithmButton(
           title: 'Find Follow Sets',
           description: 'Calculate FOLLOW sets for all variables',
           icon: Icons.last_page,
           onPressed: _findFollowSets,
+          isExecuting: _isAnalyzing,
         ),
         const SizedBox(height: 12),
-        _buildAlgorithmButton(
-          context,
+        AlgorithmButton(
           title: 'Build Parse Table',
           description: 'Generate LL(1) or LR(1) parse table',
           icon: Icons.table_chart,
           onPressed: _buildParseTable,
+          isExecuting: _isAnalyzing,
         ),
         const SizedBox(height: 12),
-        _buildAlgorithmButton(
-          context,
+        AlgorithmButton(
           title: 'Check Ambiguity',
           description: 'Detect if grammar is ambiguous',
           icon: Icons.help_outline,
           onPressed: _checkAmbiguity,
+          isExecuting: _isAnalyzing,
         ),
       ],
     );
@@ -215,80 +203,6 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
             ),
           ),
       ],
-    );
-  }
-
-  Widget _buildAlgorithmButton(
-    BuildContext context, {
-    required String title,
-    required String description,
-    required IconData icon,
-    required VoidCallback onPressed,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return InkWell(
-      onTap: _isAnalyzing ? null : onPressed,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: _isAnalyzing
-                ? colorScheme.outline.withValues(alpha: 0.3)
-                : colorScheme.primary.withValues(alpha: 0.3),
-          ),
-          borderRadius: BorderRadius.circular(8),
-          color: _isAnalyzing
-              ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
-              : null,
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: _isAnalyzing ? colorScheme.outline : colorScheme.primary,
-              size: 24,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: _isAnalyzing
-                          ? colorScheme.outline
-                          : colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (_isAnalyzing)
-              const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            else
-              Icon(
-                Icons.arrow_forward_ios,
-                color: colorScheme.primary.withValues(alpha: 0.5),
-                size: 16,
-              ),
-          ],
-        ),
-      ),
     );
   }
 

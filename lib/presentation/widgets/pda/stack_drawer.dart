@@ -145,6 +145,10 @@ class _PDAStackPanelState extends State<PDAStackPanel>
             ),
             const Divider(height: 12),
 
+            // Stack Info Panel
+            _buildStackInfo(theme),
+            const Divider(height: 12),
+
             // Content
             Flexible(
               child: widget.stackState.isEmpty
@@ -224,6 +228,60 @@ class _PDAStackPanelState extends State<PDAStackPanel>
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  /// Builds compact info panel showing top symbol, size, and last operation
+  Widget _buildStackInfo(ThemeData theme) {
+    final topSymbol = widget.stackState.top ?? '(empty)';
+    final size = widget.stackState.size;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'Top: ',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: 11,
+                ),
+              ),
+              Text(
+                topSymbol,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.primary,
+                  fontFamily: 'monospace',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'Size: $size',
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontSize: 11,
+            ),
+          ),
+          if (widget.stackState.lastOperation != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              'Last op: ${widget.stackState.lastOperation}',
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: 10,
+                color: theme.colorScheme.outline,
+                fontStyle: FontStyle.italic,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ],
       ),
     );
   }

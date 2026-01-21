@@ -9,7 +9,6 @@
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
-import 'package:flutter/widgets.dart';
 
 import '../../../features/canvas/graphview/base_graphview_canvas_controller.dart';
 import '../../../features/canvas/graphview/graphview_canvas_controller.dart';

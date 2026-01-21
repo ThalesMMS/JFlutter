@@ -11,12 +11,11 @@
 //
 //  Thales Matheus Mendonça Santos - January 2026
 //
-import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import 'graphview_canvas_models.dart';
-import '../../presentation/widgets/automaton_canvas_tool.dart';
+import '../../../presentation/widgets/automaton_canvas_tool.dart';
 
 typedef NodeHitTester = GraphViewCanvasNode? Function(Offset globalPosition);
 typedef ToolResolver = AutomatonCanvasTool Function();

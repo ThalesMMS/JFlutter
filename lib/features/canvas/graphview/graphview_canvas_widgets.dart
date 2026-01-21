@@ -61,6 +61,7 @@ class GraphViewTransitionOverlayState {
 /// highlighting during simulations.
 class AutomatonGraphNode extends StatelessWidget {
   const AutomatonGraphNode({
+    super.key,
     required this.label,
     required this.isInitial,
     required this.isAccepting,

@@ -9,7 +9,6 @@
 //  Extracted from automaton_graphview_canvas.dart - January 2026
 //
 
-import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:graphview/GraphView.dart';

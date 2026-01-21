@@ -12,7 +12,6 @@
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
-import 'dart:math' as math;
 
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
@@ -26,15 +25,12 @@ import '../../core/constants/automaton_canvas.dart';
 import '../../core/models/simulation_highlight.dart';
 import '../../core/models/simulation_result.dart';
 import '../../core/services/simulation_highlight_service.dart';
-import '../../core/models/tm_transition.dart' show TapeDirection;
 import '../../features/canvas/graphview/base_graphview_canvas_controller.dart';
 import '../../features/canvas/graphview/graphview_canvas_controller.dart';
 import '../../features/canvas/graphview/graphview_canvas_models.dart';
 import '../../features/canvas/graphview/graphview_highlight_channel.dart';
 import '../../features/canvas/graphview/graphview_all_nodes_builder.dart';
-import '../../features/canvas/graphview/graphview_label_field_editor.dart';
 import '../../features/canvas/graphview/graphview_link_overlay_utils.dart';
-import '../../features/canvas/graphview/graphview_pda_canvas_controller.dart';
 import '../../features/canvas/graphview/graphview_transition_models.dart';
 import '../../features/canvas/graphview/graphview_canvas_config.dart';
 import '../../features/canvas/graphview/graphview_canvas_painters.dart';
@@ -43,11 +39,9 @@ import '../../features/canvas/graphview/graphview_canvas_widgets.dart';
 import '../../features/canvas/graphview/graphview_layout_algorithm.dart';
 import '../providers/automaton_provider.dart';
 import 'automaton_canvas_tool.dart';
-import 'transition_editors/pda_transition_editor.dart';
 
 const double _kNodeDiameter = kAutomatonStateDiameter;
 const double _kNodeRadius = _kNodeDiameter / 2;
-const Size _kInitialArrowSize = Size(24, 12);
 
 /// GraphView-based canvas used to render and edit automatons.
 class AutomatonGraphViewCanvas extends ConsumerStatefulWidget {
@@ -86,7 +80,6 @@ class _AutomatonGraphViewCanvasState
   AutomatonCanvasTool _activeTool = AutomatonCanvasTool.selection;
   SimulationHighlightService? _highlightService;
   SimulationHighlightChannel? _previousHighlightChannel;
-  GraphViewSimulationHighlightChannel? _highlightChannel;
   late AutomatonGraphSugiyamaAlgorithm _algorithm;
   final Set<String> _selectedTransitions = <String>{};
   String? _transitionSourceId;
@@ -155,7 +148,6 @@ class _AutomatonGraphViewCanvasState
       _highlightService = highlightService;
       _previousHighlightChannel = highlightService.channel;
       final highlightChannel = GraphViewSimulationHighlightChannel(_controller);
-      _highlightChannel = highlightChannel;
       highlightService.channel = highlightChannel;
     }
 
@@ -200,7 +192,6 @@ class _AutomatonGraphViewCanvasState
       if (_ownsController) {
         if (_highlightService != null) {
           _highlightService!.channel = _previousHighlightChannel;
-          _highlightChannel = null;
         }
         _controller.dispose();
       }
@@ -220,7 +211,6 @@ class _AutomatonGraphViewCanvasState
         final highlightChannel = GraphViewSimulationHighlightChannel(
           _controller,
         );
-        _highlightChannel = highlightChannel;
         highlightService.channel = highlightChannel;
       }
       _algorithm = AutomatonGraphSugiyamaAlgorithm(
@@ -262,7 +252,6 @@ class _AutomatonGraphViewCanvasState
     }
     if (_highlightService != null) {
       _highlightService!.channel = _previousHighlightChannel;
-      _highlightChannel = null;
     }
     _transitionOverlayEntry?.remove();
     _transitionOverlayEntry = null;
@@ -1119,12 +1108,12 @@ class _AutomatonGraphViewCanvasState
         onTapUp: _handleCanvasTapUp,
         child: ValueListenableBuilder<int>(
           valueListenable: _controller.graphRevision,
-          builder: (context, _, __) {
+          builder: (context, _, _) {
             final nodes = _controller.nodes.toList(growable: false);
             final edges = _controller.edges.toList(growable: false);
             return ValueListenableBuilder<SimulationHighlight>(
               valueListenable: _controller.highlightNotifier,
-              builder: (context, highlight, __) {
+              builder: (context, highlight, _) {
                 return Stack(
                   children: [
                     Positioned.fill(

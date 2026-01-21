@@ -46,6 +46,7 @@ class AlgorithmButton extends StatelessWidget {
     this.onPressed,
     this.isExecuting = false,
     this.isDestructive = false,
+    this.isSelected = false,
     this.executionProgress,
     this.executionStatus,
   })  : assert(title != '', 'title must not be empty'),
@@ -87,6 +88,13 @@ class AlgorithmButton extends StatelessWidget {
   /// Destructive actions use error color scheme to warn users.
   final bool isDestructive;
 
+  /// Whether this button is currently selected.
+  ///
+  /// When true, displays with highlighted border and background to indicate
+  /// the active/focused algorithm. Used in panels with multiple analysis modes
+  /// (e.g., TM panel with different focus views).
+  final bool isSelected;
+
   /// Current execution progress from 0.0 to 1.0.
   ///
   /// When provided during execution, displays a percentage indicator on the
@@ -118,15 +126,21 @@ class AlgorithmButton extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             border: Border.all(
-              color: isExecuting ? color : color.withValues(alpha: 0.3),
+              color: _isDisabled
+                  ? colorScheme.outline.withValues(alpha: 0.3)
+                  : isSelected
+                      ? color
+                      : color.withValues(alpha: 0.3),
               width: isExecuting ? 2 : 1,
             ),
             borderRadius: BorderRadius.circular(8),
-            color: isExecuting
-                ? color.withValues(alpha: 0.1)
-                : _isDisabled
-                    ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
-                    : null,
+            color: _isDisabled
+                ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
+                : isSelected
+                    ? colorScheme.primaryContainer.withValues(alpha: 0.35)
+                    : isExecuting
+                        ? color.withValues(alpha: 0.1)
+                        : null,
           ),
           child: Row(
             children: [

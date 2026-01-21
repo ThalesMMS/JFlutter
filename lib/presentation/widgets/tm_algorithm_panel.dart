@@ -22,6 +22,8 @@ import '../../core/models/tm_transition.dart';
 import '../../core/models/tm_transition.dart' as tm_models show TapeDirection;
 import '../../core/result.dart';
 import '../providers/tm_editor_provider.dart';
+import 'common/algorithm_button.dart';
+import 'common/algorithm_panel_header.dart';
 
 enum _TMAnalysisFocus {
   decidability,
@@ -66,7 +68,10 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeader(context),
+            const AlgorithmPanelHeader(
+              title: 'TM Analysis',
+              icon: Icons.auto_awesome,
+            ),
             const SizedBox(height: 16),
             _buildAlgorithmButtons(context),
             const SizedBox(height: 16),
@@ -77,151 +82,63 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    return Row(
-      children: [
-        Icon(Icons.auto_awesome, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(width: 8),
-        Text(
-          'TM Analysis',
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-        ),
-      ],
-    );
-  }
-
   Widget _buildAlgorithmButtons(BuildContext context) {
     return Column(
       children: [
-        _buildAlgorithmButton(
-          context,
+        AlgorithmButton(
           title: 'Check Decidability',
           description: 'Verify halting states and potential infinite loops',
           icon: Icons.help_outline,
-          focus: _TMAnalysisFocus.decidability,
+          onPressed: () => _performAnalysis(_TMAnalysisFocus.decidability),
+          isExecuting: _isAnalyzing,
+          isSelected: _currentFocus == _TMAnalysisFocus.decidability,
         ),
         const SizedBox(height: 12),
-        _buildAlgorithmButton(
-          context,
+        AlgorithmButton(
           title: 'Find Reachable States',
           description: 'Identify which states can be reached from the start',
           icon: Icons.explore,
-          focus: _TMAnalysisFocus.reachability,
+          onPressed: () => _performAnalysis(_TMAnalysisFocus.reachability),
+          isExecuting: _isAnalyzing,
+          isSelected: _currentFocus == _TMAnalysisFocus.reachability,
         ),
         const SizedBox(height: 12),
-        _buildAlgorithmButton(
-          context,
+        AlgorithmButton(
           title: 'Language Analysis',
           description: 'Inspect accepting structure and transition coverage',
           icon: Icons.analytics,
-          focus: _TMAnalysisFocus.language,
+          onPressed: () => _performAnalysis(_TMAnalysisFocus.language),
+          isExecuting: _isAnalyzing,
+          isSelected: _currentFocus == _TMAnalysisFocus.language,
         ),
         const SizedBox(height: 12),
-        _buildAlgorithmButton(
-          context,
+        AlgorithmButton(
           title: 'Tape Operations',
           description: 'Review read/write symbols and head movements',
           icon: Icons.storage,
-          focus: _TMAnalysisFocus.tape,
+          onPressed: () => _performAnalysis(_TMAnalysisFocus.tape),
+          isExecuting: _isAnalyzing,
+          isSelected: _currentFocus == _TMAnalysisFocus.tape,
         ),
         const SizedBox(height: 12),
-        _buildAlgorithmButton(
-          context,
+        AlgorithmButton(
           title: 'Time Characteristics',
           description: 'Understand analysis runtime and processed elements',
           icon: Icons.timer,
-          focus: _TMAnalysisFocus.time,
+          onPressed: () => _performAnalysis(_TMAnalysisFocus.time),
+          isExecuting: _isAnalyzing,
+          isSelected: _currentFocus == _TMAnalysisFocus.time,
         ),
         const SizedBox(height: 12),
-        _buildAlgorithmButton(
-          context,
+        AlgorithmButton(
           title: 'Space Characteristics',
           description: 'Assess tape alphabet and movement coverage',
           icon: Icons.memory,
-          focus: _TMAnalysisFocus.space,
+          onPressed: () => _performAnalysis(_TMAnalysisFocus.space),
+          isExecuting: _isAnalyzing,
+          isSelected: _currentFocus == _TMAnalysisFocus.space,
         ),
       ],
-    );
-  }
-
-  Widget _buildAlgorithmButton(
-    BuildContext context, {
-    required String title,
-    required String description,
-    required IconData icon,
-    required _TMAnalysisFocus focus,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isSelected = _currentFocus == focus;
-
-    return InkWell(
-      onTap: _isAnalyzing ? null : () => _performAnalysis(focus),
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: _isAnalyzing
-                ? colorScheme.outline.withValues(alpha: 0.3)
-                : isSelected
-                ? colorScheme.primary
-                : colorScheme.primary.withValues(alpha: 0.3),
-          ),
-          borderRadius: BorderRadius.circular(8),
-          color: _isAnalyzing
-              ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
-              : isSelected
-              ? colorScheme.primaryContainer.withValues(alpha: 0.35)
-              : null,
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: _isAnalyzing ? colorScheme.outline : colorScheme.primary,
-              size: 24,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: _isAnalyzing
-                          ? colorScheme.outline
-                          : colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (_isAnalyzing)
-              const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            else
-              Icon(
-                Icons.arrow_forward_ios,
-                color: colorScheme.primary.withValues(alpha: 0.5),
-                size: 16,
-              ),
-          ],
-        ),
-      ),
     );
   }
 

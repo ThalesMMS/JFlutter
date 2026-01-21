@@ -35,7 +35,6 @@ import '../../features/canvas/graphview/graphview_all_nodes_builder.dart';
 import '../../features/canvas/graphview/graphview_label_field_editor.dart';
 import '../../features/canvas/graphview/graphview_link_overlay_utils.dart';
 import '../../features/canvas/graphview/graphview_pda_canvas_controller.dart';
-import '../providers/automaton_provider.dart';
 import '../providers/automaton_state_provider.dart';
 import 'automaton_canvas_tool.dart';
 import 'transition_editors/pda_transition_editor.dart';
@@ -404,7 +403,9 @@ class _AutomatonGraphViewCanvasState
       _ownsController = false;
     } else {
       final notifier = ref.read(automatonStateProvider.notifier);
-      _controller = GraphViewCanvasController(automatonStateNotifier: notifier);
+      _controller = GraphViewCanvasController(
+        automatonStateNotifier: notifier,
+      );
       _ownsController = true;
       final highlightService = ref.read(canvasHighlightServiceProvider);
       _highlightService = highlightService;
@@ -1394,7 +1395,9 @@ class _AutomatonGraphViewCanvasState
                           }
                           return RepaintBoundary(
                             child: AbsorbPointer(
-                              absorbing: _suppressCanvasPan,
+                              absorbing: _suppressCanvasPan ||
+                                  _activeTool == AutomatonCanvasTool.addState ||
+                                  _activeTool == AutomatonCanvasTool.transition,
                               child: GraphViewAllNodes.builder(
                                 graph: _controller.graph,
                                 controller: _controller.graphController,
@@ -1803,18 +1806,14 @@ class _GraphViewEdgePainter extends CustomPainter {
           centerFromAnchor = 0.0;
           previousTopFromAnchor = textPainter.height / 2;
         } else {
-          centerFromAnchor =
-              previousTopFromAnchor + 2.0 + textPainter.height / 2;
+          centerFromAnchor = previousTopFromAnchor + 2.0 + textPainter.height / 2;
           previousTopFromAnchor = centerFromAnchor + textPainter.height / 2;
         }
 
         final drawPosition =
             loopGeometry.labelAnchor +
-            Offset(
-              -textPainter.width / 2,
-              -centerFromAnchor - textPainter.height / 2,
-            );
-
+            Offset(-textPainter.width / 2, -centerFromAnchor - textPainter.height / 2);
+        
         textPainter.paint(canvas, drawPosition);
       }
     }
@@ -2089,8 +2088,9 @@ class _NodePanGestureRecognizer extends PanGestureRecognizer {
       return;
     }
     final tool = toolResolver();
-    if (tool == AutomatonCanvasTool.transition) {
-      debugPrint('[NodePanRecognizer] tool transition -> ignore');
+    if (tool == AutomatonCanvasTool.transition ||
+        tool == AutomatonCanvasTool.addState) {
+      debugPrint('[NodePanRecognizer] tool ${tool.name} -> ignore');
       return;
     }
     final node = hitTester(event.position);

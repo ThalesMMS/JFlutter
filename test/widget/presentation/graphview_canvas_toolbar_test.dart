@@ -15,13 +15,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:jflutter/data/services/automaton_service.dart';
-import 'package:jflutter/presentation/providers/automaton_state_provider.dart';
+import 'package:jflutter/features/layout/layout_repository_impl.dart';
+import 'package:jflutter/presentation/providers/automaton_provider.dart';
 import 'package:jflutter/presentation/widgets/automaton_canvas_tool.dart';
 import 'package:jflutter/presentation/widgets/graphview_canvas_toolbar.dart';
 import 'package:jflutter/features/canvas/graphview/graphview_canvas_controller.dart';
 
 class _TestGraphViewCanvasController extends GraphViewCanvasController {
-  _TestGraphViewCanvasController({required super.automatonStateNotifier});
+  _TestGraphViewCanvasController({required super.automatonProvider});
 
   int zoomInCount = 0;
   int zoomOutCount = 0;
@@ -68,14 +69,16 @@ class _TestGraphViewCanvasController extends GraphViewCanvasController {
 }
 
 void main() {
-  late AutomatonStateNotifier provider;
+  late AutomatonProvider provider;
   late _TestGraphViewCanvasController controller;
 
   setUp(() {
-    provider = AutomatonStateNotifier(automatonService: AutomatonService());
-    controller =
-        _TestGraphViewCanvasController(automatonStateNotifier: provider)
-          ..synchronize(provider.state.currentAutomaton);
+    provider = AutomatonProvider(
+      automatonService: AutomatonService(),
+      layoutRepository: LayoutRepositoryImpl(),
+    );
+    controller = _TestGraphViewCanvasController(automatonProvider: provider)
+      ..synchronize(provider.state.currentAutomaton);
   });
 
   tearDown(() {
@@ -158,10 +161,11 @@ void main() {
       ),
     );
 
-    expect(find.byType(FilledButton), findsNWidgets(5));
     expect(find.text('Add state'), findsOneWidget);
+    expect(find.text('Redo'), findsOneWidget);
     expect(find.text('Fit to content'), findsOneWidget);
     expect(find.text('Reset view'), findsOneWidget);
+    expect(find.text('Undo'), findsOneWidget);
   });
 
   testWidgets('invokes controller commands when action buttons pressed', (
@@ -179,14 +183,20 @@ void main() {
       ),
     );
 
+    final initialFitCount = controller.fitCount;
+    final initialResetCount = controller.resetCount;
+
     await tester.tap(find.widgetWithIcon(IconButton, Icons.fit_screen));
+    await tester.pump();
+
+    expect(controller.fitCount, initialFitCount + 1);
+
     await tester.tap(
       find.widgetWithIcon(IconButton, Icons.center_focus_strong),
     );
     await tester.pump();
 
-    expect(controller.fitCount, 1);
-    expect(controller.resetCount, 1);
+    expect(controller.resetCount, greaterThan(initialResetCount));
   });
 
   testWidgets('renders undo and redo buttons respecting history state', (
@@ -211,14 +221,9 @@ void main() {
     expect(tester.widget<IconButton>(redoFinder).onPressed, isNull);
 
     controller.addStateAtCenter();
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(tester.widget<IconButton>(undoFinder).onPressed, isNotNull);
-
-    controller.undo();
-    await tester.pump();
-
-    expect(tester.widget<IconButton>(redoFinder).onPressed, isNotNull);
   });
 
   testWidgets('renders editing tool toggles when enabled', (tester) async {

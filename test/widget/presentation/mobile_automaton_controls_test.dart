@@ -44,22 +44,22 @@ void main() {
       ),
     );
 
-    expect(find.text('Simulate'), findsOneWidget);
-    expect(find.text('Algorithms'), findsOneWidget);
-    expect(find.text('Metrics'), findsOneWidget);
-    expect(find.text('Add state'), findsOneWidget);
-    expect(find.text('Clear canvas'), findsOneWidget);
+    expect(find.byTooltip('Simulate'), findsOneWidget);
+    expect(find.byTooltip('Algorithms'), findsOneWidget);
+    expect(find.byTooltip('Metrics'), findsOneWidget);
+    expect(find.byTooltip('Add state'), findsOneWidget);
+    expect(find.byTooltip('Clear canvas'), findsOneWidget);
     expect(find.text('3 states · 2 transitions'), findsOneWidget);
 
-    await tester.tap(find.text('Simulate'));
+    await tester.tap(find.byTooltip('Simulate'));
     await tester.pump();
-    await tester.tap(find.text('Algorithms'));
+    await tester.tap(find.byTooltip('Algorithms'));
     await tester.pump();
-    await tester.tap(find.text('Metrics'));
+    await tester.tap(find.byTooltip('Metrics'));
     await tester.pump();
-    await tester.tap(find.text('Add state'));
+    await tester.tap(find.byTooltip('Add state'));
     await tester.pump();
-    await tester.tap(find.text('Clear canvas'));
+    await tester.tap(find.byTooltip('Clear canvas'));
     await tester.pump();
 
     expect(simulateInvoked, isTrue);
@@ -86,16 +86,22 @@ void main() {
       ),
     );
 
-    final simulateButton = tester.widget<FilledButton>(
-      find.widgetWithText(FilledButton, 'Simulate'),
+    final simulateButton = tester.widget<IconButton>(
+      find.descendant(
+        of: find.byTooltip('Simulate'),
+        matching: find.byType(IconButton),
+      ),
     );
-    final algorithmButton = tester.widget<FilledButton>(
-      find.widgetWithText(FilledButton, 'Algorithms'),
+    final algorithmButton = tester.widget<IconButton>(
+      find.descendant(
+        of: find.byTooltip('Algorithms'),
+        matching: find.byType(IconButton),
+      ),
     );
 
     expect(simulateButton.onPressed, isNull);
     expect(algorithmButton.onPressed, isNull);
-    expect(find.text('Metrics'), findsNothing);
+    expect(find.byTooltip('Metrics'), findsNothing);
   });
 
   testWidgets('shows canvas tool toggles when enabled', (tester) async {
@@ -117,12 +123,12 @@ void main() {
       ),
     );
 
-    expect(find.text('Select'), findsNothing);
-    expect(find.text('Add transition'), findsOneWidget);
+    expect(find.byTooltip('Select'), findsNothing);
+    expect(find.byIcon(Icons.arrow_right_alt), findsOneWidget);
 
-    await tester.tap(find.text('Add state'));
+    await tester.tap(find.byTooltip('Add state'));
     await tester.pump();
-    await tester.tap(find.text('Add transition'));
+    await tester.tap(find.byIcon(Icons.arrow_right_alt));
     await tester.pump();
 
     expect(addStateInvoked, isTrue);

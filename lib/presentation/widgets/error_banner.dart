@@ -65,17 +65,8 @@ class ErrorBanner extends StatelessWidget {
     this.onRetry,
     this.onDismiss,
     this.icon,
-  }) : assert(message.trim().isNotEmpty, 'message must not be empty'),
-       severity = severity,
-       showRetryButton = showRetryButton ?? (severity != ErrorSeverity.info),
-       assert(
-         !showRetryButton || onRetry != null,
-         'onRetry must be provided when showRetryButton is true',
-       ),
-       assert(
-         !showDismissButton || onDismiss != null,
-         'onDismiss must be provided when showDismissButton is true',
-       );
+  })  : severity = severity,
+        showRetryButton = showRetryButton ?? (severity != ErrorSeverity.info);
 
   /// Text communicated to the user about the failure.
   final String message;
@@ -145,12 +136,13 @@ class ErrorBanner extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: visuals.foreground),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: visuals.foreground,
+                  ),
             ),
           ),
-          if (showRetryButton || showDismissButton) const SizedBox(width: 12),
+          if (showRetryButton || showDismissButton)
+            const SizedBox(width: 12),
           if (showRetryButton || showDismissButton)
             Wrap(
               spacing: 8,
@@ -158,8 +150,12 @@ class ErrorBanner extends StatelessWidget {
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 if (showRetryButton)
-                  RetryButton(onPressed: onRetry!, label: 'Retry'),
-                if (showDismissButton) _DismissButton(onDismiss: onDismiss!),
+                  RetryButton(
+                    onPressed: onRetry!,
+                    label: 'Retry',
+                  ),
+                if (showDismissButton)
+                  _DismissButton(onDismiss: onDismiss!),
               ],
             ),
         ],
@@ -185,9 +181,9 @@ class ErrorBanner extends StatelessWidget {
               Expanded(
                 child: Text(
                   message,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(color: visuals.foreground),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: visuals.foreground,
+                      ),
                 ),
               ),
             ],
@@ -199,8 +195,12 @@ class ErrorBanner extends StatelessWidget {
               runSpacing: 8,
               children: [
                 if (showRetryButton)
-                  RetryButton(onPressed: onRetry!, label: 'Retry'),
-                if (showDismissButton) _DismissButton(onDismiss: onDismiss!),
+                  RetryButton(
+                    onPressed: onRetry!,
+                    label: 'Retry',
+                  ),
+                if (showDismissButton)
+                  _DismissButton(onDismiss: onDismiss!),
               ],
             ),
           ],

@@ -20,7 +20,7 @@ import '../../core/result.dart';
 import '../../data/services/file_operations_service.dart';
 import 'utils/platform_file_loader.dart';
 import 'error_banner.dart';
-// import 'import_error_dialog.dart'; // does not exist yet (TODO)
+import 'import_error_dialog.dart';
 
 /// Panel for file operations (save/load/export)
 class FileOperationsPanel extends StatefulWidget {
@@ -28,7 +28,7 @@ class FileOperationsPanel extends StatefulWidget {
   final Grammar? grammar;
   final ValueChanged<FSA>? onAutomatonLoaded;
   final ValueChanged<Grammar>? onGrammarLoaded;
-  final FileOperationsService fileService;
+  final FileOperationsService? fileService;
 
   const FileOperationsPanel({
     super.key,
@@ -36,8 +36,8 @@ class FileOperationsPanel extends StatefulWidget {
     this.grammar,
     this.onAutomatonLoaded,
     this.onGrammarLoaded,
-    FileOperationsService? fileService,
-  }) : fileService = fileService ?? FileOperationsService();
+    this.fileService,
+  });
 
   @override
   State<FileOperationsPanel> createState() => _FileOperationsPanelState();
@@ -64,7 +64,7 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
   @override
   void initState() {
     super.initState();
-    _fileService = widget.fileService;
+    _fileService = widget.fileService ?? FileOperationsService();
   }
 
   @override
@@ -80,9 +80,8 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
                 message: _feedback!.message,
                 severity: _feedback!.severity,
                 showRetryButton: _feedback!.canRetry && !_isLoading,
-                onRetry: _feedback!.canRetry && !_isLoading
-                    ? _retryLastOperation
-                    : null,
+                onRetry:
+                    _feedback!.canRetry && !_isLoading ? _retryLastOperation : null,
                 onDismiss: _dismissFeedback,
               ),
               const SizedBox(height: 16),
@@ -430,7 +429,10 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
         stackTrace: stackTrace,
       );
     } else {
-      _showErrorMessage(trimmedMessage, retryOperation: retryOperation);
+      _showErrorMessage(
+        trimmedMessage,
+        retryOperation: retryOperation,
+      );
     }
   }
 

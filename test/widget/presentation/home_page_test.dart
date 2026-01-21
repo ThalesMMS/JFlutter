@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:jflutter/core/services/simulation_highlight_service.dart';
 import 'package:jflutter/presentation/providers/home_navigation_provider.dart';
 import 'package:jflutter/presentation/pages/home_page.dart';
 import 'package:jflutter/presentation/widgets/mobile_navigation.dart';
 import 'package:jflutter/presentation/widgets/desktop_navigation.dart';
+import 'package:jflutter/injection/dependency_injection.dart';
 
 class _TestHomeNavigationNotifier extends HomeNavigationNotifier {
   final List<int> receivedIndices = [];
@@ -47,7 +49,9 @@ Future<void> _pumpHomePage(
         }),
         canvasHighlightServiceProvider.overrideWithValue(highlightService),
       ],
-      child: const MaterialApp(home: HomePage()),
+      child: const MaterialApp(
+        home: HomePage(),
+      ),
     ),
   );
 
@@ -56,6 +60,15 @@ Future<void> _pumpHomePage(
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUpAll(() async {
+    SharedPreferences.setMockInitialValues({});
+    await setupDependencyInjection();
+  });
+
+  tearDownAll(() {
+    resetDependencies();
+  });
 
   group('HomePage', () {
     testWidgets(
@@ -76,14 +89,12 @@ void main() {
           size: const Size(800, 1280),
         );
 
-        addTearDown(navigationNotifier.dispose);
-
         expect(find.byType(MobileNavigation), findsOneWidget);
         expect(find.byType(DesktopNavigation), findsNothing);
         expect(find.text('Grammar'), findsWidgets);
         expect(find.text('Context-Free Grammars'), findsOneWidget);
-        expect(find.byIcon(Icons.help_outline), findsOneWidget);
-        expect(find.byIcon(Icons.settings), findsOneWidget);
+        expect(find.byIcon(Icons.help_outline), findsWidgets);
+        expect(find.byIcon(Icons.settings), findsWidgets);
 
         expect(highlightService.clearCallCount, 0);
       },
@@ -107,26 +118,21 @@ void main() {
           size: const Size(1280, 900),
         );
 
-        addTearDown(navigationNotifier.dispose);
 
         expect(find.byType(MobileNavigation), findsNothing);
         expect(find.byType(DesktopNavigation), findsOneWidget);
         expect(find.byType(NavigationRail), findsOneWidget);
         expect(find.text('FSA'), findsWidgets);
-        expect(
-          find.widgetWithText(Tooltip, 'Finite State Automata'),
-          findsWidgets,
-        );
-        expect(find.byIcon(Icons.help_outline), findsOneWidget);
-        expect(find.byIcon(Icons.settings), findsOneWidget);
+        expect(find.widgetWithText(Tooltip, 'Finite State Automata'), findsWidgets);
+        expect(find.byIcon(Icons.help_outline), findsWidgets);
+        expect(find.byIcon(Icons.settings), findsWidgets);
 
         expect(highlightService.clearCallCount, 0);
       },
     );
 
-    testWidgets('updates page view and provider when tapping navigation', (
-      tester,
-    ) async {
+    testWidgets('updates page view and provider when tapping navigation',
+        (tester) async {
       final navigationNotifier = _TestHomeNavigationNotifier()..setIndex(1);
       final highlightService = _TestSimulationHighlightService();
 
@@ -145,9 +151,10 @@ void main() {
 
       final navigationFinder = find.byType(MobileNavigation);
 
-      await tester.tap(
-        find.descendant(of: navigationFinder, matching: find.text('Regex')),
-      );
+      await tester.tap(find.descendant(
+        of: navigationFinder,
+        matching: find.text('Regex'),
+      ));
       await tester.pumpAndSettle();
 
       final pageView = tester.widget<PageView>(find.byType(PageView));
@@ -156,9 +163,10 @@ void main() {
       expect(find.text('Regex'), findsWidgets);
       expect(find.text('Regular Expressions'), findsOneWidget);
 
-      await tester.tap(
-        find.descendant(of: navigationFinder, matching: find.text('PDA')),
-      );
+      await tester.tap(find.descendant(
+        of: navigationFinder,
+        matching: find.text('PDA'),
+      ));
       await tester.pumpAndSettle();
 
       expect(pageView.controller?.page, closeTo(2, 0.001));
@@ -167,9 +175,8 @@ void main() {
       expect(find.text('Pushdown Automata'), findsOneWidget);
     });
 
-    testWidgets('updates page view via navigation rail on desktop layout', (
-      tester,
-    ) async {
+    testWidgets('updates page view via navigation rail on desktop layout',
+        (tester) async {
       final navigationNotifier = _TestHomeNavigationNotifier()..setIndex(0);
       final highlightService = _TestSimulationHighlightService();
 

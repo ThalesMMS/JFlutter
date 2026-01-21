@@ -16,19 +16,25 @@ class TapeState {
   final int headPosition;
   final String blankSymbol;
   final String? lastOperation;
+  final String? lastReadSymbol;
+  final String? lastWriteSymbol;
 
   const TapeState({
     required this.cells,
     required this.headPosition,
     this.blankSymbol = '□',
     this.lastOperation,
+    this.lastReadSymbol,
+    this.lastWriteSymbol,
   });
 
   /// Fita vazia/inicial
   TapeState.initial({this.blankSymbol = '□'})
     : cells = const [],
       headPosition = 0,
-      lastOperation = null;
+      lastOperation = null,
+      lastReadSymbol = null,
+      lastWriteSymbol = null;
 
   bool get isEmpty => cells.isEmpty;
 
@@ -39,6 +45,12 @@ class TapeState {
     }
     return cells[headPosition];
   }
+
+  /// True se a célula atual foi lida na última operação
+  bool get wasRead => lastReadSymbol != null;
+
+  /// True se a célula atual foi escrita na última operação
+  bool get wasWritten => lastWriteSymbol != null;
 
   /// Retorna células visíveis (com padding de blanks se necessário)
   List<String> getVisibleCells({int padding = 3}) {
@@ -216,7 +228,16 @@ class _TMTapePanelState extends State<TMTapePanel>
       child: Row(
         children: List.generate(visibleCells.length, (index) {
           final isHead = index == headIndex;
-          return _buildTapeCell(visibleCells[index], isHead, theme, true);
+          final wasRead = isHead && widget.tapeState.wasRead;
+          final wasWritten = isHead && widget.tapeState.wasWritten;
+          return _buildTapeCell(
+            visibleCells[index],
+            isHead,
+            wasRead,
+            wasWritten,
+            theme,
+            true,
+          );
         }),
       ),
     );
@@ -225,6 +246,8 @@ class _TMTapePanelState extends State<TMTapePanel>
   Widget _buildTapeCell(
     String symbol,
     bool isHead,
+    bool wasRead,
+    bool wasWritten,
     ThemeData theme,
     bool isMobile,
   ) {
@@ -244,26 +267,67 @@ class _TMTapePanelState extends State<TMTapePanel>
         ),
         borderRadius: BorderRadius.circular(4),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Stack(
         children: [
-          if (isHead)
-            Icon(
-              Icons.arrow_downward,
-              size: 10,
-              color: theme.colorScheme.primary,
-            ),
-          Text(
-            symbol,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: isHead ? FontWeight.bold : FontWeight.normal,
-              fontFamily: 'monospace',
-              color: isHead
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.onSurface,
-            ),
+          // Main cell content
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (isHead)
+                Icon(
+                  Icons.arrow_downward,
+                  size: 10,
+                  color: theme.colorScheme.primary,
+                ),
+              Text(
+                symbol,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: isHead ? FontWeight.bold : FontWeight.normal,
+                  fontFamily: 'monospace',
+                  color: isHead
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurface,
+                ),
+              ),
+            ],
           ),
+          // Read indicator badge (top-left)
+          if (wasRead)
+            Positioned(
+              top: 2,
+              left: 2,
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.tertiary,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.visibility,
+                  size: 8,
+                  color: theme.colorScheme.onTertiary,
+                ),
+              ),
+            ),
+          // Write indicator badge (top-right)
+          if (wasWritten)
+            Positioned(
+              top: 2,
+              right: 2,
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.secondary,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.edit,
+                  size: 8,
+                  color: theme.colorScheme.onSecondary,
+                ),
+              ),
+            ),
         ],
       ),
     );

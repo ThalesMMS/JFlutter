@@ -602,7 +602,7 @@ end
 
 **External Integrations**:
 
-* GraphView library: Custom fork at `https://github.com/ThalesMMS/graphview.git` (branch `loop-edge-renderer`)
+* GraphView library: Custom fork at `https://github.com/nabil6391/graphview.git` (branch `loop-edge-renderer`)
 * JFLAP compatibility: `JFLAPXMLParser` for XML parsing, `epsilon_utils` for symbol normalization
 * File pickers: Platform-specific import via `file_picker` package
 
@@ -716,7 +716,7 @@ Sources: README.md
 * `golden_toolkit`: Visual regression testing (planned)
 * `build_runner`, `freezed`, `json_serializable`: Code generation
 
-**Note on GraphView**: The project uses a forked version at `https://github.com/ThalesMMS/graphview.git` (branch `loop-edge-renderer`) which adds deterministic loop edge rendering required for self-transitions in automata.
+**Note on GraphView**: The project uses a forked version at `https://github.com/nabil6391/graphview.git` (branch `loop-edge-renderer`) which adds deterministic loop edge rendering required for self-transitions in automata.
 
 Sources: [pubspec.yaml L36-L85](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/pubspec.yaml#L36-L85)
 

@@ -79,7 +79,7 @@ Parsing -.-> PetitParser
 Parsing -.-> Collection
 ```
 
-**GraphView Fork**: The project depends on a custom fork at `https://github.com/ThalesMMS/graphview.git` (branch: `loop-edge-renderer`) that implements deterministic loop-edge rendering for self-transitions in automata.
+**GraphView Fork**: The project depends on a custom fork at `https://github.com/nabil6391/graphview.git` (branch: `loop-edge-renderer`) that implements deterministic loop-edge rendering for self-transitions in automata.
 
 **Sources:** [pubspec.yaml L36-L85](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/pubspec.yaml#L36-L85)
 

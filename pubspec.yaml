@@ -53,7 +53,7 @@ dependencies:
   # Graph-based canvas primitives
   graphview:
     git:
-      url: https://github.com/ThalesMMS/graphview.git
+      url: https://github.com/nabil6391/graphview.git
       ref: loop-edge-renderer
 
   # The following adds the Cupertino Icons font to your application.

@@ -354,7 +354,7 @@ TM -.-> Canvas
 PDA -.-> Canvas
 ```
 
-**Package:** Custom fork from `https://github.com/ThalesMMS/graphview.git`
+**Package:** Custom fork from `https://github.com/nabil6391/graphview.git`
 **Branch:** `loop-edge-renderer`
 **Version:** `1.5.1`
 
@@ -793,7 +793,7 @@ While not included in the provided files, the project uses:
 The custom GraphView fork requires Git configuration:
 
 ```yaml
-graphview:  git:    url: https://github.com/ThalesMMS/graphview.git    ref: loop-edge-renderer
+graphview:  git:    url: https://github.com/nabil6391/graphview.git    ref: loop-edge-renderer
 ```
 
 **Resolved Commit:** `a87a7a4818bc294487a1daa4365191a41b1d55d8`
@@ -871,48 +871,55 @@ flutter pub run flutter_launcher_icons
 
 ### On this page
 
-* [Dependencies and Configuration](#13.1-dependencies-and-configuration)
-* [Dependency Overview](#13.1-dependency-overview)
-* [SDK Requirements](#13.1-sdk-requirements)
-* [Dart SDK](#13.1-dart-sdk)
-* [Flutter SDK](#13.1-flutter-sdk)
-* [Core Runtime Dependencies](#13.1-core-runtime-dependencies)
-* [State Management](#13.1-state-management)
-* [Data Persistence](#13.1-data-persistence)
-* [File Operations and Sharing](#13.1-file-operations-and-sharing)
-* [File Picker](#13.1-file-picker)
-* [Share Plus](#13.1-share-plus)
-* [Canvas and Rendering](#13.1-canvas-and-rendering)
-* [GraphView (Custom Fork)](#13.1-graphview-custom-fork)
-* [Vector Math](#13.1-vector-math)
-* [Parsing and Serialization](#13.1-parsing-and-serialization)
-* [XML Parser](#13.1-xml-parser)
-* [Code Generation Framework](#13.1-code-generation-framework)
-* [Utility Libraries](#13.1-utility-libraries)
-* [Collection Utilities](#13.1-collection-utilities)
-* [PetitParser](#13.1-petitparser)
-* [Cupertino Icons](#13.1-cupertino-icons)
-* [Build-Time Dependencies](#13.1-build-time-dependencies)
-* [Build Runner](#13.1-build-runner)
-* [Flutter Launcher Icons](#13.1-flutter-launcher-icons)
-* [Testing Dependencies](#13.1-testing-dependencies)
-* [Test Framework Hierarchy](#13.1-test-framework-hierarchy)
-* [Asset Configuration](#13.1-asset-configuration)
-* [Example Files](#13.1-example-files)
-* [Material Design Resources](#13.1-material-design-resources)
-* [Platform-Specific Configuration](#13.1-platform-specific-configuration)
-* [Minimum SDK Versions](#13.1-minimum-sdk-versions)
-* [Web Plugin Configuration](#13.1-web-plugin-configuration)
-* [Dependency Update Strategy](#13.1-dependency-update-strategy)
-* [Semantic Versioning Constraints](#13.1-semantic-versioning-constraints)
-* [Transitive Dependencies](#13.1-transitive-dependencies)
-* [Configuration Files](#13.1-configuration-files)
-* [Analysis Options](#13.1-analysis-options)
-* [Git Dependencies Configuration](#13.1-git-dependencies-configuration)
-* [Common Configuration Issues](#13.1-common-configuration-issues)
-* [Build Failures](#13.1-build-failures)
-* [Integration Test Setup](#13.1-integration-test-setup)
-* [Icon Generation](#13.1-icon-generation)
-* [Version History](#13.1-version-history)
+- [Dependencies and Configuration](#dependencies-and-configuration)
+  - [Dependency Overview](#dependency-overview)
+  - [SDK Requirements](#sdk-requirements)
+    - [Dart SDK](#dart-sdk)
+    - [Flutter SDK](#flutter-sdk)
+  - [Core Runtime Dependencies](#core-runtime-dependencies)
+    - [State Management](#state-management)
+      - [Riverpod Ecosystem](#riverpod-ecosystem)
+      - [Legacy State Management](#legacy-state-management)
+    - [Data Persistence](#data-persistence)
+      - [SharedPreferences](#sharedpreferences)
+      - [Path Provider](#path-provider)
+  - [File Operations and Sharing](#file-operations-and-sharing)
+    - [File Picker](#file-picker)
+    - [Share Plus](#share-plus)
+  - [Canvas and Rendering](#canvas-and-rendering)
+    - [GraphView (Custom Fork)](#graphview-custom-fork)
+    - [Vector Math](#vector-math)
+  - [Parsing and Serialization](#parsing-and-serialization)
+    - [XML Parser](#xml-parser)
+    - [Code Generation Framework](#code-generation-framework)
+      - [Freezed](#freezed)
+      - [JSON Serialization](#json-serialization)
+  - [Utility Libraries](#utility-libraries)
+    - [Collection Utilities](#collection-utilities)
+    - [PetitParser](#petitparser)
+    - [Cupertino Icons](#cupertino-icons)
+  - [Build-Time Dependencies](#build-time-dependencies)
+    - [Build Runner](#build-runner)
+    - [Flutter Launcher Icons](#flutter-launcher-icons)
+  - [Testing Dependencies](#testing-dependencies)
+    - [Test Framework Hierarchy](#test-framework-hierarchy)
+  - [Asset Configuration](#asset-configuration)
+    - [Example Files](#example-files)
+    - [Material Design Resources](#material-design-resources)
+  - [Platform-Specific Configuration](#platform-specific-configuration)
+    - [Minimum SDK Versions](#minimum-sdk-versions)
+    - [Web Plugin Configuration](#web-plugin-configuration)
+  - [Dependency Update Strategy](#dependency-update-strategy)
+    - [Semantic Versioning Constraints](#semantic-versioning-constraints)
+  - [Transitive Dependencies](#transitive-dependencies)
+  - [Configuration Files](#configuration-files)
+    - [Analysis Options](#analysis-options)
+    - [Git Dependencies Configuration](#git-dependencies-configuration)
+  - [Common Configuration Issues](#common-configuration-issues)
+    - [Build Failures](#build-failures)
+    - [Integration Test Setup](#integration-test-setup)
+    - [Icon Generation](#icon-generation)
+  - [Version History](#version-history)
+    - [On this page](#on-this-page)
 
 Ask Devin about JFlutter

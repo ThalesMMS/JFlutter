@@ -376,7 +376,7 @@ packages:
       path: "."
       ref: loop-edge-renderer
       resolved-ref: a87a7a4818bc294487a1daa4365191a41b1d55d8
-      url: "https://github.com/ThalesMMS/graphview.git"
+      url: "https://github.com/nabil6391/graphview.git"
     source: git
     version: "1.5.1"
   http_multi_server:

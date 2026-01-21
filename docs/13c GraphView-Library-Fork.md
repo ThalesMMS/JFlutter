@@ -25,7 +25,7 @@ JFlutter uses a custom fork of the GraphView library instead of the upstream pac
 
 | Property | Value |
 | --- | --- |
-| **Repository** | `https://github.com/ThalesMMS/graphview.git` |
+| **Repository** | `https://github.com/nabil6391/graphview.git` |
 | **Branch** | `loop-edge-renderer` |
 | **Commit (as of pubspec.lock)** | `a87a7a4818bc294487a1daa4365191a41b1d55d8` |
 | **Upstream Library** | `graphview` (pub.dev package) |
@@ -50,7 +50,7 @@ The fork is integrated as a Git-based dependency in JFlutter's package configura
 ### pubspec.yaml Declaration
 
 ```yaml
-graphview:  git:    url: https://github.com/ThalesMMS/graphview.git    ref: loop-edge-renderer
+graphview:  git:    url: https://github.com/nabil6391/graphview.git    ref: loop-edge-renderer
 ```
 
 This configuration tells Flutter to:
@@ -71,7 +71,7 @@ graphview:
     path: "."
     ref: loop-edge-renderer
     resolved-ref: a87a7a4818bc294487a1daa4365191a41b1d55d8
-    url: "https://github.com/ThalesMMS/graphview.git"
+    url: "https://github.com/nabil6391/graphview.git"
   source: git
   version: "1.5.1"
 ```
@@ -223,7 +223,7 @@ sequenceDiagram
 
 To update the fork or change branches:
 
-1. **Modify pubspec.yaml**: Change the `ref` field to point to a different branch or tag: ```yaml graphview:  git:    url: https://github.com/ThalesMMS/graphview.git    ref: new-branch-name  # or a specific commit hash ```
+1. **Modify pubspec.yaml**: Change the `ref` field to point to a different branch or tag: ```yaml graphview:  git:    url: https://github.com/nabil6391/graphview.git    ref: new-branch-name  # or a specific commit hash ```
 2. **Update dependencies**: Run `flutter pub get` to resolve the new commit and update `pubspec.lock`
 3. **Verify integration**: Run the canvas system tests to ensure compatibility: ``` flutter test test/features/canvas/graphview/ ```
 4. **Check rendering**: Manually verify loop-edge rendering in the FSA workspace with examples containing self-transitions
@@ -357,28 +357,29 @@ GraphViewPackage -.-> CanvasControllers
 
 ### On this page
 
-* [GraphView Library Fork](#13.3-graphview-library-fork)
-* [Purpose and Scope](#13.3-purpose-and-scope)
-* [Fork Overview](#13.3-fork-overview)
-* [Fork Location and Branch](#13.3-fork-location-and-branch)
-* [Dependency Configuration](#13.3-dependency-configuration)
-* [pubspec.yaml Declaration](#13.3-pubspecyaml-declaration)
-* [Resolved Dependency Lock](#13.3-resolved-dependency-lock)
-* [Loop-Edge Renderer Modifications](#13.3-loop-edge-renderer-modifications)
-* [Problem Statement](#13.3-problem-statement)
-* [Fork Enhancements](#13.3-fork-enhancements)
-* [Integration with JFlutter Canvas System](#13.3-integration-with-jflutter-canvas-system)
-* [Diagram: GraphView Fork Integration Points](#13.3-diagram-graphview-fork-integration-points)
-* [Key Integration Classes](#13.3-key-integration-classes)
-* [Usage Flow](#13.3-usage-flow)
-* [Maintenance and Updates](#13.3-maintenance-and-updates)
-* [Keeping the Fork Aligned](#13.3-keeping-the-fork-aligned)
-* [Version Tracking](#13.3-version-tracking)
-* [Testing Changes](#13.3-testing-changes)
-* [Fork-Specific Constraints](#13.3-fork-specific-constraints)
-* [Memory and Performance](#13.3-memory-and-performance)
-* [Platform Compatibility](#13.3-platform-compatibility)
-* [Related Canvas System Components](#13.3-related-canvas-system-components)
-* [Diagram: Dependency Resolution Flow](#13.3-diagram-dependency-resolution-flow)
+- [GraphView Library Fork](#graphview-library-fork)
+  - [Purpose and Scope](#purpose-and-scope)
+  - [Fork Overview](#fork-overview)
+    - [Fork Location and Branch](#fork-location-and-branch)
+  - [Dependency Configuration](#dependency-configuration)
+    - [pubspec.yaml Declaration](#pubspecyaml-declaration)
+    - [Resolved Dependency Lock](#resolved-dependency-lock)
+  - [Loop-Edge Renderer Modifications](#loop-edge-renderer-modifications)
+    - [Problem Statement](#problem-statement)
+    - [Fork Enhancements](#fork-enhancements)
+  - [Integration with JFlutter Canvas System](#integration-with-jflutter-canvas-system)
+    - [Diagram: GraphView Fork Integration Points](#diagram-graphview-fork-integration-points)
+    - [Key Integration Classes](#key-integration-classes)
+    - [Usage Flow](#usage-flow)
+  - [Maintenance and Updates](#maintenance-and-updates)
+    - [Keeping the Fork Aligned](#keeping-the-fork-aligned)
+    - [Version Tracking](#version-tracking)
+    - [Testing Changes](#testing-changes)
+  - [Fork-Specific Constraints](#fork-specific-constraints)
+    - [Memory and Performance](#memory-and-performance)
+    - [Platform Compatibility](#platform-compatibility)
+  - [Related Canvas System Components](#related-canvas-system-components)
+  - [Diagram: Dependency Resolution Flow](#diagram-dependency-resolution-flow)
+    - [On this page](#on-this-page)
 
 Ask Devin about JFlutter

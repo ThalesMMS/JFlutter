@@ -44,6 +44,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
   String _errorMessage = '';
   bool? _equivalenceResult;
   String _equivalenceMessage = '';
+  bool _simplifyOutput = true;
 
   @override
   void dispose() {
@@ -514,6 +515,26 @@ class _RegexPageState extends ConsumerState<RegexPage> {
 
             const SizedBox(height: 24),
 
+            // Simplification toggle
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: _buildSwitchSetting(
+                  'Simplify Output',
+                  'Apply algebraic simplifications to converted automata',
+                  _simplifyOutput,
+                  (value) {
+                    setState(() {
+                      _simplifyOutput = value;
+                    });
+                  },
+                  switchKey: const ValueKey('regex_simplify_output_switch'),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
             // Compare regular expressions
             Text(
               'Compare Regular Expressions:',
@@ -861,6 +882,26 @@ class _RegexPageState extends ConsumerState<RegexPage> {
 
         const SizedBox(height: 24),
 
+        // Simplification toggle
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: _buildSwitchSetting(
+              'Simplify Output',
+              'Apply algebraic simplifications to converted automata',
+              _simplifyOutput,
+              (value) {
+                setState(() {
+                  _simplifyOutput = value;
+                });
+              },
+              switchKey: const ValueKey('regex_simplify_output_switch'),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 24),
+
         // Compare regular expressions
         Text(
           'Compare Regular Expressions:',
@@ -965,5 +1006,29 @@ class _RegexPageState extends ConsumerState<RegexPage> {
       _equivalenceResult = null;
       _equivalenceMessage = '';
     });
+  }
+
+  Widget _buildSwitchSetting(
+    String title,
+    String subtitle,
+    bool value,
+    Function(bool) onChanged, {
+    Key? switchKey,
+  }) {
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+            ],
+          ),
+        ),
+        Switch(key: switchKey, value: value, onChanged: onChanged),
+      ],
+    );
   }
 }

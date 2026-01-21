@@ -82,6 +82,7 @@ class _PDAStackPanelState extends State<PDAStackPanel>
   late Animation<Offset> _slideAnimation;
   int _previousStackSize = 0;
   bool _isPushAnimation = false;
+  int? _highlightedIndex;
 
   @override
   void initState() {
@@ -122,6 +123,13 @@ class _PDAStackPanelState extends State<PDAStackPanel>
         curve: Curves.easeInOut,
       );
     }
+  }
+
+  void _handleItemTap(int index) {
+    setState(() {
+      // Toggle highlight: if tapping the same item, deselect; otherwise select
+      _highlightedIndex = _highlightedIndex == index ? null : index;
+    });
   }
 
   @override
@@ -197,70 +205,88 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                             widget.stackState.symbols.length - 1 - index;
                         final symbol = widget.stackState.symbols[reversedIndex];
                         final isTop = index == 0;
+                        final isHighlighted = _highlightedIndex == index;
 
-                        Widget itemWidget = Container(
-                          margin: const EdgeInsets.only(bottom: 4),
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isTop
-                                      ? theme.colorScheme.primaryContainer
-                                      : theme.colorScheme.surfaceContainerHighest,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Row(
-                                  children: [
-                                    if (isTop) ...[
-                                      Icon(
-                                        Icons.arrow_right,
-                                        size: 12,
-                                        color: theme.colorScheme.primary,
+                        Widget itemWidget = GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => _handleItemTap(index),
+                          child: Container(
+                            // Ensure minimum 44x44 touch target
+                            constraints: const BoxConstraints(
+                              minHeight: 44,
+                              minWidth: 44,
+                            ),
+                            margin: const EdgeInsets.only(bottom: 4),
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 12,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isHighlighted
+                                        ? theme.colorScheme.secondaryContainer
+                                        : isTop
+                                            ? theme.colorScheme.primaryContainer
+                                            : theme.colorScheme.surfaceContainerHighest,
+                                    border: isHighlighted
+                                        ? Border.all(
+                                            color: theme.colorScheme.secondary,
+                                            width: 2,
+                                          )
+                                        : null,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      if (isTop) ...[
+                                        Icon(
+                                          Icons.arrow_right,
+                                          size: 12,
+                                          color: theme.colorScheme.primary,
+                                        ),
+                                        const SizedBox(width: 4),
+                                      ],
+                                      Text(
+                                        symbol,
+                                        style: TextStyle(
+                                          fontFamily: 'monospace',
+                                          fontWeight: isTop || isHighlighted
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
+                                          fontSize: 12,
+                                        ),
                                       ),
-                                      const SizedBox(width: 4),
                                     ],
-                                    Text(
-                                      symbol,
-                                      style: TextStyle(
-                                        fontFamily: 'monospace',
-                                        fontWeight: isTop
-                                            ? FontWeight.bold
-                                            : FontWeight.normal,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
+                                  ),
                                 ),
-                              ),
-                              if (isTop)
-                                Positioned(
-                                  top: -6,
-                                  right: -6,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 4,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: theme.colorScheme.primary,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      'TOP',
-                                      style: TextStyle(
-                                        color: theme.colorScheme.onPrimary,
-                                        fontSize: 8,
-                                        fontWeight: FontWeight.bold,
+                                if (isTop)
+                                  Positioned(
+                                    top: -6,
+                                    right: -6,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 4,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: theme.colorScheme.primary,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        'TOP',
+                                        style: TextStyle(
+                                          color: theme.colorScheme.onPrimary,
+                                          fontSize: 8,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                            ],
+                              ],
+                            ),
                           ),
                         );
 

@@ -22,8 +22,14 @@ import 'base_trace_viewer.dart';
 class TMTraceViewer extends StatelessWidget {
   final TMSimulationResult result;
   final SimulationHighlightService? highlightService;
+  final void Function(int stepIndex)? onStepChanged;
 
-  const TMTraceViewer({super.key, required this.result, this.highlightService});
+  const TMTraceViewer({
+    super.key,
+    required this.result,
+    this.highlightService,
+    this.onStepChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -31,10 +37,11 @@ class TMTraceViewer extends StatelessWidget {
       result: _asSimulationResult(),
       title: 'TM Trace (${result.steps.length} steps)',
       highlightService: highlightService,
+      onStepChanged: onStepChanged,
       buildStepLine: (SimulationStep step, int index) {
         final tape = step.tapeContents.isEmpty ? '□' : step.tapeContents;
         final transition = step.usedTransition != null
-            ? ' | read ${step.usedTransition}'
+            ? ' | δ: ${step.usedTransition}'
             : '';
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

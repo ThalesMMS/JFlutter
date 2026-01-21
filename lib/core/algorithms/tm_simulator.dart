@@ -135,7 +135,8 @@ class TMSimulator {
                   currentState: state.id,
                   remainingInput: '',
                   tapeContents: newTape.join(''),
-                  usedTransition: read,
+                  usedTransition: '${state.id},$read → '
+                      '${tr.toState.id},${tr.writeSymbol},${tr.moveDirection.symbol}',
                   stepNumber:
                       (steps.isNotEmpty ? steps.last.stepNumber : 0) + 1,
                   headPosition: newHead,
@@ -320,12 +321,15 @@ class TMSimulator {
 
       // Add step
       if (stepByStep) {
+        final transitionRule = '${currentState.id},$currentSymbol → '
+            '${transition.toState.id},${transition.writeSymbol},'
+            '${transition.moveDirection.symbol}';
         steps.add(
           SimulationStep.tm(
             currentState: currentState.id,
             remainingInput: '',
             tapeContents: tape.join(''),
-            usedTransition: currentSymbol,
+            usedTransition: transitionRule,
             stepNumber: stepNumber,
             headPosition: headPosition,
             consumedInput: currentSymbol,

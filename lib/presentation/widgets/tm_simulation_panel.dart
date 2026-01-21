@@ -18,6 +18,7 @@ import '../../core/algorithms/tm_simulator.dart';
 import '../../core/models/simulation_step.dart';
 import '../../core/services/simulation_highlight_service.dart';
 import '../providers/tm_editor_provider.dart';
+import 'tm/tape_drawer.dart';
 import 'trace_viewers/tm_trace_viewer.dart';
 
 /// Panel for Turing Machine simulation and string testing
@@ -40,6 +41,8 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
   String? _statusMessage;
   List<SimulationStep> _simulationSteps = const [];
   TMSimulationResult? _result;
+  int _currentStepIndex = 0;
+  TapeState _currentTapeState = TapeState.initial();
 
   @override
   void dispose() {
@@ -157,6 +160,10 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
                 ? _buildResults(context)
                 : _buildEmptyResults(context),
           ),
+          if (_hasSimulationResult && _result != null) ...[
+            const SizedBox(height: 12),
+            _buildTapePanel(context),
+          ],
         ],
       ),
     );
@@ -276,6 +283,7 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
               TMTraceViewer(
                 result: _result!,
                 highlightService: widget.highlightService,
+                onStepChanged: _handleStepChanged,
               ),
           ],
         ],
@@ -304,6 +312,8 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
       _statusMessage = null;
       _simulationSteps = const [];
       _result = null;
+      _currentStepIndex = 0;
+      _currentTapeState = TapeState.initial();
     });
 
     widget.highlightService.clear();
@@ -344,6 +354,10 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
                 : 'Rejected');
       _simulationSteps = simulation.steps;
       _result = simulation;
+      _currentStepIndex = 0;
+      _currentTapeState = simulation.steps.isNotEmpty
+          ? _convertStepToTapeState(simulation.steps[0])
+          : TapeState.initial();
     });
 
     if (simulation.steps.isNotEmpty) {
@@ -359,6 +373,81 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
       SnackBar(
         content: Text(message),
         backgroundColor: Theme.of(context).colorScheme.error,
+      ),
+    );
+  }
+
+  void _handleStepChanged(int stepIndex) {
+    if (_result == null || stepIndex >= _result!.steps.length) return;
+
+    setState(() {
+      _currentStepIndex = stepIndex;
+      _currentTapeState = _convertStepToTapeState(_result!.steps[stepIndex]);
+    });
+  }
+
+  TapeState _convertStepToTapeState(SimulationStep step) {
+    final tm = ref.read(tmEditorProvider).tm;
+    final blankSymbol = tm?.blankSymbol ?? '□';
+
+    // Parse tape contents
+    final cells = step.tapeContents.isEmpty
+        ? <String>[]
+        : step.tapeContents.split('');
+
+    // Get head position from step (now available)
+    final headPos = step.headPosition ?? 0;
+
+    // Parse last operation from transition
+    String? lastRead;
+    String? lastWrite;
+    String? lastOp;
+
+    if (step.usedTransition != null) {
+      // Format: "state,readSymbol → nextState,writeSymbol,direction"
+      final parts = step.usedTransition!.split(' → ');
+      if (parts.length == 2) {
+        final before = parts[0].split(',');
+        final after = parts[1].split(',');
+        if (before.length >= 2) {
+          lastRead = before[1];
+        }
+        if (after.length >= 2) {
+          lastWrite = after[1];
+        }
+        if (after.length >= 3) {
+          lastOp = after[2];
+        }
+      }
+    }
+
+    return TapeState(
+      cells: cells,
+      headPosition: headPos,
+      blankSymbol: blankSymbol,
+      lastOperation: lastOp,
+      lastReadSymbol: lastRead,
+      lastWriteSymbol: lastWrite,
+    );
+  }
+
+  Widget _buildTapePanel(BuildContext context) {
+    final editorState = ref.watch(tmEditorProvider);
+    final tapeAlphabet = editorState.tapeSymbols;
+
+    return Container(
+      height: 120,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+        ),
+      ),
+      child: TMTapePanel(
+        tapeState: _currentTapeState,
+        tapeAlphabet: tapeAlphabet,
+        isSimulating: true,
       ),
     );
   }

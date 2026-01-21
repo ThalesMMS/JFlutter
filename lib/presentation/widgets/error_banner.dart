@@ -1,3 +1,15 @@
+//
+//  error_banner.dart
+//  JFlutter
+//
+//  Inline banner that communicates recoverable issues without hiding content.
+//  Provides consistent error, warning, and info messaging with Material 3
+//  styling, responsive layouts, and accessibility support. Integrates with
+//  RetryButton for error recovery flows.
+//
+//  Thales Matheus Mendonça Santos - January 2026
+//
+
 import 'package:flutter/material.dart';
 
 import 'retry_button.dart';
@@ -16,39 +28,36 @@ enum ErrorSeverity {
 
 class _SeverityVisuals {
   const _SeverityVisuals({
+    required this.icon,
+    required this.semanticsLabel,
+  });
+
+  final IconData icon;
+  final String semanticsLabel;
+}
+
+class _SeverityColors {
+  const _SeverityColors({
     required this.background,
     required this.foreground,
     required this.border,
-    required this.icon,
-    required this.semanticsLabel,
   });
 
   final Color background;
   final Color foreground;
   final Color border;
-  final IconData icon;
-  final String semanticsLabel;
 }
 
 const Map<ErrorSeverity, _SeverityVisuals> _severityVisuals = {
   ErrorSeverity.error: _SeverityVisuals(
-    background: Color(0xFFFFEBEE),
-    foreground: Color(0xFFC62828),
-    border: Color(0xFFB71C1C),
     icon: Icons.error_outline,
     semanticsLabel: 'Error banner',
   ),
   ErrorSeverity.warning: _SeverityVisuals(
-    background: Color(0xFFFFF3E0),
-    foreground: Color(0xFFE65100),
-    border: Color(0xFFEF6C00),
     icon: Icons.warning_amber_rounded,
     semanticsLabel: 'Warning banner',
   ),
   ErrorSeverity.info: _SeverityVisuals(
-    background: Color(0xFFE3F2FD),
-    foreground: Color(0xFF1976D2),
-    border: Color(0xFF1565C0),
     icon: Icons.info_outline,
     semanticsLabel: 'Info banner',
   ),
@@ -89,9 +98,36 @@ class ErrorBanner extends StatelessWidget {
   /// Optional icon override.
   final IconData? icon;
 
+  /// Derives Material 3 ColorScheme colors based on severity level.
+  _SeverityColors _getColors(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    switch (severity) {
+      case ErrorSeverity.error:
+        return _SeverityColors(
+          background: colorScheme.errorContainer,
+          foreground: colorScheme.onErrorContainer,
+          border: colorScheme.error,
+        );
+      case ErrorSeverity.warning:
+        return _SeverityColors(
+          background: colorScheme.tertiaryContainer,
+          foreground: colorScheme.onTertiaryContainer,
+          border: colorScheme.tertiary,
+        );
+      case ErrorSeverity.info:
+        return _SeverityColors(
+          background: colorScheme.primaryContainer,
+          foreground: colorScheme.onPrimaryContainer,
+          border: colorScheme.primary,
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final visuals = _severityVisuals[severity]!;
+    final colors = _getColors(context);
 
     return Semantics(
       container: true,
@@ -105,14 +141,14 @@ class ErrorBanner extends StatelessWidget {
           );
 
           final Widget content = isCompact
-              ? _buildVerticalContent(context, visuals, padding)
-              : _buildHorizontalContent(context, visuals, padding);
+              ? _buildVerticalContent(context, visuals, colors, padding)
+              : _buildHorizontalContent(context, visuals, colors, padding);
 
           return DecoratedBox(
             decoration: BoxDecoration(
-              color: visuals.background,
+              color: colors.background,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: visuals.border),
+              border: Border.all(color: colors.border),
             ),
             child: content,
           );
@@ -124,6 +160,7 @@ class ErrorBanner extends StatelessWidget {
   Widget _buildHorizontalContent(
     BuildContext context,
     _SeverityVisuals visuals,
+    _SeverityColors colors,
     EdgeInsets padding,
   ) {
     return Padding(
@@ -131,13 +168,13 @@ class ErrorBanner extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(icon ?? visuals.icon, color: visuals.foreground),
+          Icon(icon ?? visuals.icon, color: colors.foreground),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               message,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: visuals.foreground,
+                    color: colors.foreground,
                   ),
             ),
           ),
@@ -166,6 +203,7 @@ class ErrorBanner extends StatelessWidget {
   Widget _buildVerticalContent(
     BuildContext context,
     _SeverityVisuals visuals,
+    _SeverityColors colors,
     EdgeInsets padding,
   ) {
     return Padding(
@@ -176,13 +214,13 @@ class ErrorBanner extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon ?? visuals.icon, color: visuals.foreground),
+              Icon(icon ?? visuals.icon, color: colors.foreground),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   message,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: visuals.foreground,
+                        color: colors.foreground,
                       ),
                 ),
               ),

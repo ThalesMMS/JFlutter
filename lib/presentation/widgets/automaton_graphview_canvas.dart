@@ -91,8 +91,8 @@ class _AutomatonGraphViewCanvasState
   final Set<String> _selectedTransitions = <String>{};
   String? _transitionSourceId;
   OverlayEntry? _transitionOverlayEntry;
-  final ValueNotifier<_GraphViewTransitionOverlayState?>
-  _transitionOverlayState = ValueNotifier<_GraphViewTransitionOverlayState?>(
+  final ValueNotifier<GraphViewTransitionOverlayState?>
+  _transitionOverlayState = ValueNotifier<GraphViewTransitionOverlayState?>(
     null,
   );
   Object? _pendingSyncAutomaton;
@@ -816,10 +816,10 @@ class _AutomatonGraphViewCanvasState
     );
   }
 
-  Future<_TransitionEditChoice?> _promptTransitionEditChoice(
+  Future<TransitionEditChoice?> _promptTransitionEditChoice(
     List<GraphViewCanvasEdge> edges,
   ) {
-    return showDialog<_TransitionEditChoice>(
+    return showDialog<TransitionEditChoice>(
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -837,7 +837,7 @@ class _AutomatonGraphViewCanvasState
                       subtitle: Text('${edge.fromStateId} → ${edge.toStateId}'),
                       onTap: () => Navigator.of(
                         context,
-                      ).pop(_TransitionEditChoice.edit(edge)),
+                      ).pop(TransitionEditChoice.edit(edge)),
                     ),
                   ListTile(
                     key: const ValueKey(
@@ -847,7 +847,7 @@ class _AutomatonGraphViewCanvasState
                     title: const Text('Create new transition'),
                     onTap: () => Navigator.of(
                       context,
-                    ).pop(const _TransitionEditChoice.createNew()),
+                    ).pop(const TransitionEditChoice.createNew()),
                   ),
                 ],
               ),
@@ -978,7 +978,7 @@ class _AutomatonGraphViewCanvasState
     }
     final overlayPosition = overlayBox.size.center(Offset.zero);
     _ensureTransitionOverlay(overlayState);
-    _transitionOverlayState.value = _GraphViewTransitionOverlayState(
+    _transitionOverlayState.value = GraphViewTransitionOverlayState(
       data: data,
       overlayPosition: overlayPosition,
     );
@@ -993,7 +993,7 @@ class _AutomatonGraphViewCanvasState
       builder: (context) {
         return Material(
           type: MaterialType.transparency,
-          child: ValueListenableBuilder<_GraphViewTransitionOverlayState?>(
+          child: ValueListenableBuilder<GraphViewTransitionOverlayState?>(
             valueListenable: _transitionOverlayState,
             builder: (context, state, _) {
               if (state == null) {
@@ -1029,7 +1029,7 @@ class _AutomatonGraphViewCanvasState
   }
 
   void _handleOverlaySubmit(
-    _GraphViewTransitionOverlayState state,
+    GraphViewTransitionOverlayState state,
     AutomatonTransitionPayload payload,
   ) {
     final data = state.data;
@@ -1162,7 +1162,7 @@ class _AutomatonGraphViewCanvasState
                                     canvasNode,
                                     highlight,
                                   );
-                                  return _AutomatonGraphNode(
+                                  return AutomatonGraphNode(
                                     label: canvasNode.label,
                                     isInitial: canvasNode.isInitial,
                                     isAccepting: canvasNode.isAccepting,
@@ -1272,38 +1272,6 @@ class _AutomatonGraphViewCanvasState
   }
 }
 
-class _TransitionEditChoice {
-  const _TransitionEditChoice._({required this.createNew, this.edge});
-
-  const _TransitionEditChoice.edit(GraphViewCanvasEdge edge)
-    : this._(createNew: false, edge: edge);
-
-  const _TransitionEditChoice.createNew() : this._(createNew: true);
-
-  final bool createNew;
-  final GraphViewCanvasEdge? edge;
-}
-
-class _GraphViewTransitionOverlayState {
-  const _GraphViewTransitionOverlayState({
-    required this.data,
-    required this.overlayPosition,
-  });
-
-  final AutomatonTransitionOverlayData data;
-  final Offset overlayPosition;
-
-  _GraphViewTransitionOverlayState copyWith({
-    AutomatonTransitionOverlayData? data,
-    Offset? overlayPosition,
-  }) {
-    return _GraphViewTransitionOverlayState(
-      data: data ?? this.data,
-      overlayPosition: overlayPosition ?? this.overlayPosition,
-    );
-  }
-}
-
 class _AutomatonGraphSugiyamaAlgorithm extends SugiyamaAlgorithm {
   _AutomatonGraphSugiyamaAlgorithm({
     required this.controller,
@@ -1346,80 +1314,6 @@ class _AutomatonGraphSugiyamaAlgorithm extends SugiyamaAlgorithm {
     final height = (maxY - minY).clamp(0.0, double.infinity) + _kNodeDiameter;
 
     return Size(width, height);
-  }
-}
-
-class _AutomatonGraphNode extends StatelessWidget {
-  const _AutomatonGraphNode({
-    required this.label,
-    required this.isInitial,
-    required this.isAccepting,
-    required this.isHighlighted,
-  });
-
-  final String label;
-  final bool isInitial;
-  final bool isAccepting;
-  final bool isHighlighted;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final borderColor = isHighlighted
-        ? theme.colorScheme.primary
-        : theme.colorScheme.outline;
-    final backgroundColor = isHighlighted
-        ? theme.colorScheme.primaryContainer
-        : theme.colorScheme.surface;
-
-    final badgeColor = theme.colorScheme.primary;
-
-    return SizedBox(
-      width: _kNodeDiameter,
-      height: _kNodeDiameter,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: backgroundColor,
-                border: Border.all(color: borderColor, width: 3),
-              ),
-              child: Center(
-                child: Text(
-                  label,
-                  style: theme.textTheme.titleMedium,
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
-          ),
-          if (isInitial)
-            Positioned(
-              left: -_kInitialArrowSize.width + 1,
-              top: _kNodeRadius - (_kInitialArrowSize.height / 2),
-              child: CustomPaint(
-                size: _kInitialArrowSize,
-                painter: _InitialStateArrowPainter(color: borderColor),
-              ),
-            ),
-          if (isAccepting)
-            Positioned.fill(
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: badgeColor, width: 2),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
   }
 }
 

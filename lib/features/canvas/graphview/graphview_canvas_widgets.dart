@@ -22,13 +22,13 @@ const Size _kInitialArrowSize = Size(24, 12);
 
 /// Internal model representing a user's choice when initiating transition editing:
 /// either creating a new transition or editing an existing one.
-class _TransitionEditChoice {
-  const _TransitionEditChoice._({required this.createNew, this.edge});
+class TransitionEditChoice {
+  const TransitionEditChoice._({required this.createNew, this.edge});
 
-  const _TransitionEditChoice.edit(GraphViewCanvasEdge edge)
+  const TransitionEditChoice.edit(GraphViewCanvasEdge edge)
     : this._(createNew: false, edge: edge);
 
-  const _TransitionEditChoice.createNew() : this._(createNew: true);
+  const TransitionEditChoice.createNew() : this._(createNew: true);
 
   final bool createNew;
   final GraphViewCanvasEdge? edge;
@@ -36,8 +36,8 @@ class _TransitionEditChoice {
 
 /// Internal model holding the current state of a transition overlay during editing,
 /// including the overlay data and its on-screen position.
-class _GraphViewTransitionOverlayState {
-  const _GraphViewTransitionOverlayState({
+class GraphViewTransitionOverlayState {
+  const GraphViewTransitionOverlayState({
     required this.data,
     required this.overlayPosition,
   });
@@ -45,11 +45,11 @@ class _GraphViewTransitionOverlayState {
   final AutomatonTransitionOverlayData data;
   final Offset overlayPosition;
 
-  _GraphViewTransitionOverlayState copyWith({
+  GraphViewTransitionOverlayState copyWith({
     AutomatonTransitionOverlayData? data,
     Offset? overlayPosition,
   }) {
-    return _GraphViewTransitionOverlayState(
+    return GraphViewTransitionOverlayState(
       data: data ?? this.data,
       overlayPosition: overlayPosition ?? this.overlayPosition,
     );
@@ -59,8 +59,8 @@ class _GraphViewTransitionOverlayState {
 /// Widget that renders a single automaton state node with optional initial and
 /// accepting decorations. Integrates with Material 3 theming and supports
 /// highlighting during simulations.
-class _AutomatonGraphNode extends StatelessWidget {
-  const _AutomatonGraphNode({
+class AutomatonGraphNode extends StatelessWidget {
+  const AutomatonGraphNode({
     required this.label,
     required this.isInitial,
     required this.isAccepting,

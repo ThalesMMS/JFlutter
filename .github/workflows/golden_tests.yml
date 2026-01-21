@@ -1,0 +1,34 @@
+name: Golden Tests
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  push:
+    branches: [ main ]
+
+jobs:
+  golden_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run golden tests
+        run: flutter test test/goldens/
+
+      - name: Upload failures (if any)
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: golden-test-failures
+          path: |
+            test/**/goldens/*_masterImage.png
+            test/**/goldens/*_testImage.png
+            test/**/goldens/*_isolatedDiff.png

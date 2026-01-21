@@ -10,6 +10,7 @@
 //  Thales Matheus Mendonça Santos - October 2025
 //
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/algorithms/automaton_simulator.dart';
 import '../../core/algorithms/dfa_completer.dart';
@@ -17,6 +18,7 @@ import '../../core/algorithms/equivalence_checker.dart';
 import '../../core/algorithms/nfa_to_dfa_converter.dart';
 import '../../core/algorithms/regex_to_nfa_converter.dart';
 import '../../core/models/fsa.dart';
+import '../providers/automaton_algorithm_provider.dart';
 import '../providers/automaton_provider.dart';
 import '../providers/automaton_state_provider.dart';
 import '../widgets/algorithm_panel.dart';
@@ -44,6 +46,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
   String _errorMessage = '';
   bool? _equivalenceResult;
   String _equivalenceMessage = '';
+  bool _simplifyOutput = true;
 
   @override
   void dispose() {
@@ -342,20 +345,23 @@ class _RegexPageState extends ConsumerState<RegexPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch algorithm provider to get FA→Regex conversion results
+    final algorithmState = ref.watch(automatonAlgorithmProvider);
+
     final screenSize = MediaQuery.of(context).size;
     final isMobile = screenSize.width < 768;
     final isTablet = screenSize.width >= 768 && screenSize.width < 1400;
 
     if (isMobile) {
-      return _buildMobileLayout();
+      return _buildMobileLayout(algorithmState);
     } else if (isTablet) {
-      return _buildTabletLayout();
+      return _buildTabletLayout(algorithmState);
     } else {
-      return _buildDesktopLayout();
+      return _buildDesktopLayout(algorithmState);
     }
   }
 
-  Widget _buildMobileLayout() {
+  Widget _buildMobileLayout(AlgorithmOperationState algorithmState) {
     return Scaffold(
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -514,6 +520,32 @@ class _RegexPageState extends ConsumerState<RegexPage> {
 
             const SizedBox(height: 24),
 
+            // FA→Regex conversion result display
+            if (_buildFaToRegexResult(algorithmState) != null) ...[
+              _buildFaToRegexResult(algorithmState)!,
+              const SizedBox(height: 16),
+            ],
+
+            // Simplification toggle
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: _buildSwitchSetting(
+                  'Simplify Output',
+                  'Apply algebraic simplifications to converted automata',
+                  _simplifyOutput,
+                  (value) {
+                    setState(() {
+                      _simplifyOutput = value;
+                    });
+                  },
+                  switchKey: const ValueKey('regex_simplify_output_switch'),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
             // Compare regular expressions
             Text(
               'Compare Regular Expressions:',
@@ -605,7 +637,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
     );
   }
 
-  Widget _buildDesktopLayout() {
+  Widget _buildDesktopLayout(AlgorithmOperationState algorithmState) {
     return Scaffold(
       body: Row(
         children: [
@@ -679,7 +711,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
     );
   }
 
-  Widget _buildTabletLayout() {
+  Widget _buildTabletLayout(AlgorithmOperationState algorithmState) {
     return Scaffold(
       body: TabletLayoutContainer(
         canvas: SingleChildScrollView(
@@ -861,6 +893,32 @@ class _RegexPageState extends ConsumerState<RegexPage> {
 
         const SizedBox(height: 24),
 
+        // FA→Regex conversion result display
+        if (_buildFaToRegexResult(algorithmState) != null) ...[
+          _buildFaToRegexResult(algorithmState)!,
+          const SizedBox(height: 16),
+        ],
+
+        // Simplification toggle
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: _buildSwitchSetting(
+              'Simplify Output',
+              'Apply algebraic simplifications to converted automata',
+              _simplifyOutput,
+              (value) {
+                setState(() {
+                  _simplifyOutput = value;
+                });
+              },
+              switchKey: const ValueKey('regex_simplify_output_switch'),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 24),
+
         // Compare regular expressions
         Text(
           'Compare Regular Expressions:',
@@ -965,5 +1023,119 @@ class _RegexPageState extends ConsumerState<RegexPage> {
       _equivalenceResult = null;
       _equivalenceMessage = '';
     });
+  }
+
+  Widget? _buildFaToRegexResult(AlgorithmOperationState algorithmState) {
+    // Only show if we have conversion results
+    if (algorithmState.rawRegexResult == null &&
+        algorithmState.simplifiedRegexResult == null) {
+      return null;
+    }
+
+    final displayedRegex = _simplifyOutput
+        ? algorithmState.simplifiedRegexResult
+        : algorithmState.rawRegexResult;
+
+    if (displayedRegex == null) return null;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.auto_awesome,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Converted Regex ${_simplifyOutput ? '(Simplified)' : '(Raw)'}',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: displayedRegex));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Regex copied to clipboard'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.copy, size: 20),
+                  tooltip: 'Copy to clipboard',
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                ),
+              ),
+              child: SelectableText(
+                displayedRegex,
+                style: TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: 16,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+            ),
+            if (algorithmState.rawRegexResult != null &&
+                algorithmState.simplifiedRegexResult != null &&
+                algorithmState.rawRegexResult != algorithmState.simplifiedRegexResult)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text(
+                  _simplifyOutput
+                      ? 'Toggle off to see raw output'
+                      : 'Toggle on to see simplified output',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSwitchSetting(
+    String title,
+    String subtitle,
+    bool value,
+    Function(bool) onChanged, {
+    Key? switchKey,
+  }) {
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+            ],
+          ),
+        ),
+        Switch(key: switchKey, value: value, onChanged: onChanged),
+      ],
+    );
   }
 }

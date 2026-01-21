@@ -22,9 +22,9 @@ class GraphViewAutomatonMetadata {
   });
 
   const GraphViewAutomatonMetadata.empty()
-      : id = null,
-        name = null,
-        alphabet = const <String>[];
+    : id = null,
+      name = null,
+      alphabet = const <String>[];
 
   final String? id;
   final String? name;
@@ -43,11 +43,7 @@ class GraphViewAutomatonMetadata {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'alphabet': alphabet,
-    };
+    return {'id': id, 'name': name, 'alphabet': alphabet};
   }
 
   factory GraphViewAutomatonMetadata.fromJson(Map<String, dynamic>? json) {
@@ -185,15 +181,19 @@ class GraphViewCanvasEdge {
   }
 
   String get label {
-    final hasPdaMetadata = popSymbol != null ||
+    final hasPdaMetadata =
+        popSymbol != null ||
         pushSymbol != null ||
         isLambdaInput != null ||
         isLambdaPop != null ||
         isLambdaPush != null;
     if (hasPdaMetadata) {
-      final lambdaInput = isLambdaInput ?? (readSymbol == null || readSymbol!.isEmpty);
-      final lambdaPop = isLambdaPop ?? (popSymbol == null || popSymbol!.isEmpty);
-      final lambdaPush = isLambdaPush ?? (pushSymbol == null || pushSymbol!.isEmpty);
+      final lambdaInput =
+          isLambdaInput ?? (readSymbol == null || readSymbol!.isEmpty);
+      final lambdaPop =
+          isLambdaPop ?? (popSymbol == null || popSymbol!.isEmpty);
+      final lambdaPush =
+          isLambdaPush ?? (pushSymbol == null || pushSymbol!.isEmpty);
       final read = lambdaInput ? 'λ' : (readSymbol ?? '');
       final pop = lambdaPop ? 'λ' : (popSymbol ?? '');
       final push = lambdaPush ? 'λ' : (pushSymbol ?? '');
@@ -335,23 +335,23 @@ class GraphViewCanvasEdge {
 
   @override
   int get hashCode => Object.hash(
-        id,
-        fromStateId,
-        toStateId,
-        const ListEquality<String>().hash(symbols),
-        lambdaSymbol,
-        controlPointX,
-        controlPointY,
-        readSymbol,
-        writeSymbol,
-        direction,
-        tapeNumber,
-        popSymbol,
-        pushSymbol,
-        isLambdaInput,
-        isLambdaPop,
-        isLambdaPush,
-      );
+    id,
+    fromStateId,
+    toStateId,
+    const ListEquality<String>().hash(symbols),
+    lambdaSymbol,
+    controlPointX,
+    controlPointY,
+    readSymbol,
+    writeSymbol,
+    direction,
+    tapeNumber,
+    popSymbol,
+    pushSymbol,
+    isLambdaInput,
+    isLambdaPop,
+    isLambdaPush,
+  );
 }
 
 /// Snapshot of nodes, edges and metadata rendered in the GraphView canvas.
@@ -363,9 +363,9 @@ class GraphViewAutomatonSnapshot {
   });
 
   const GraphViewAutomatonSnapshot.empty()
-      : nodes = const <GraphViewCanvasNode>[],
-        edges = const <GraphViewCanvasEdge>[],
-        metadata = const GraphViewAutomatonMetadata.empty();
+    : nodes = const <GraphViewCanvasNode>[],
+      edges = const <GraphViewCanvasEdge>[],
+      metadata = const GraphViewAutomatonMetadata.empty();
 
   final List<GraphViewCanvasNode> nodes;
   final List<GraphViewCanvasEdge> edges;
@@ -396,14 +396,16 @@ class GraphViewAutomatonSnapshot {
     final rawEdges = (json['edges'] as List?)?.cast<Map>() ?? const [];
     return GraphViewAutomatonSnapshot(
       nodes: rawNodes
-          .map((node) => GraphViewCanvasNode.fromJson(
-                node.cast<String, dynamic>(),
-              ))
+          .map(
+            (node) =>
+                GraphViewCanvasNode.fromJson(node.cast<String, dynamic>()),
+          )
           .toList(),
       edges: rawEdges
-          .map((edge) => GraphViewCanvasEdge.fromJson(
-                edge.cast<String, dynamic>(),
-              ))
+          .map(
+            (edge) =>
+                GraphViewCanvasEdge.fromJson(edge.cast<String, dynamic>()),
+          )
           .toList(),
       metadata: GraphViewAutomatonMetadata.fromJson(
         (json['metadata'] as Map?)?.cast<String, dynamic>(),
@@ -426,10 +428,10 @@ class GraphViewAutomatonSnapshot {
 
   @override
   int get hashCode => Object.hash(
-        const ListEquality<GraphViewCanvasNode>().hash(nodes),
-        const ListEquality<GraphViewCanvasEdge>().hash(edges),
-        metadata.id,
-        metadata.name,
-        const ListEquality<String>().hash(metadata.alphabet),
-      );
+    const ListEquality<GraphViewCanvasNode>().hash(nodes),
+    const ListEquality<GraphViewCanvasEdge>().hash(edges),
+    metadata.id,
+    metadata.name,
+    const ListEquality<String>().hash(metadata.alphabet),
+  );
 }

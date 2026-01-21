@@ -39,9 +39,7 @@ class GraphViewPdaCanvasController
     super.transformationController,
     super.historyLimit,
     super.cacheEvictionThreshold,
-  }) : super(
-          notifier: editorNotifier,
-        );
+  }) : super(notifier: editorNotifier);
 
   PDAEditorNotifier get _notifier => notifier;
 
@@ -154,11 +152,7 @@ class GraphViewPdaCanvasController
       'moveState -> id=$id position=(${position.dx.toStringAsFixed(2)}, ${position.dy.toStringAsFixed(2)})',
     );
     performMutation(() {
-      _notifier.moveState(
-        id: id,
-        x: position.dx,
-        y: position.dy,
-      );
+      _notifier.moveState(id: id, x: position.dx, y: position.dy);
     });
   }
 
@@ -168,10 +162,7 @@ class GraphViewPdaCanvasController
     final resolvedLabel = label.isEmpty ? id : label;
     _logPdaCanvas('updateStateLabel -> id=$id label=$resolvedLabel');
     performMutation(() {
-      _notifier.updateStateLabel(
-        id: id,
-        label: resolvedLabel,
-      );
+      _notifier.updateStateLabel(id: id, label: resolvedLabel);
     });
   }
 
@@ -263,9 +254,11 @@ class GraphViewPdaCanvasController
 
   @override
   void applySnapshotToDomain(GraphViewAutomatonSnapshot snapshot) {
-    final template = _notifier.state.pda ??
+    final template =
+        _notifier.state.pda ??
         PDA(
-          id: snapshot.metadata.id ??
+          id:
+              snapshot.metadata.id ??
               'pda_${DateTime.now().microsecondsSinceEpoch}',
           name: snapshot.metadata.name ?? 'Canvas PDA',
           states: const {},
@@ -284,13 +277,13 @@ class GraphViewPdaCanvasController
 
     final merged = GraphViewPdaMapper.mergeIntoTemplate(snapshot, template)
         .copyWith(
-      id: snapshot.metadata.id ?? template.id,
-      name: snapshot.metadata.name ?? template.name,
-      alphabet: snapshot.metadata.alphabet.isNotEmpty
-          ? snapshot.metadata.alphabet.toSet()
-          : template.alphabet,
-      modified: DateTime.now(),
-    );
+          id: snapshot.metadata.id ?? template.id,
+          name: snapshot.metadata.name ?? template.name,
+          alphabet: snapshot.metadata.alphabet.isNotEmpty
+              ? snapshot.metadata.alphabet.toSet()
+              : template.alphabet,
+          modified: DateTime.now(),
+        );
 
     _logPdaCanvas(
       'applySnapshotToDomain -> states=${merged.states.length} transitions=${merged.pdaTransitions.length}',

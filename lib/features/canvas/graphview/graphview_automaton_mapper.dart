@@ -9,7 +9,8 @@
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
-import 'package:jflutter/features/canvas/graphview/graphview_canvas_controller.dart' show GraphViewCanvasController;
+import 'package:jflutter/features/canvas/graphview/graphview_canvas_controller.dart'
+    show GraphViewCanvasController;
 import 'package:vector_math/vector_math_64.dart';
 
 import '../../../core/models/fsa.dart';

@@ -42,9 +42,7 @@ class GraphViewTmCanvasController
     super.transformationController,
     super.historyLimit,
     super.cacheEvictionThreshold,
-  }) : super(
-          notifier: editorNotifier,
-        );
+  }) : super(notifier: editorNotifier);
 
   TMEditorNotifier get _notifier => notifier;
 

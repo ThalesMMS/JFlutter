@@ -99,13 +99,12 @@ class GraphViewPdaMapper {
 
       final controlPoint =
           (edge.controlPointX != null && edge.controlPointY != null)
-              ? Vector2(edge.controlPointX!, edge.controlPointY!)
-              : Vector2.zero();
+          ? Vector2(edge.controlPointX!, edge.controlPointY!)
+          : Vector2.zero();
 
       final isLambdaInput =
           edge.isLambdaInput ?? (edge.readSymbol?.isEmpty ?? true);
-      final isLambdaPop =
-          edge.isLambdaPop ?? (edge.popSymbol?.isEmpty ?? true);
+      final isLambdaPop = edge.isLambdaPop ?? (edge.popSymbol?.isEmpty ?? true);
       final isLambdaPush =
           edge.isLambdaPush ?? (edge.pushSymbol?.isEmpty ?? true);
 
@@ -158,8 +157,9 @@ class GraphViewPdaMapper {
           edge.pushSymbol!,
     };
 
-    final initialState =
-        initialNode != null ? stateMap[initialNode.id] : template.initialState;
+    final initialState = initialNode != null
+        ? stateMap[initialNode.id]
+        : template.initialState;
 
     return template.copyWith(
       states: states,

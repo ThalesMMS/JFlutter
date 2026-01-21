@@ -97,8 +97,8 @@ class GraphViewTmMapper {
 
       final controlPoint =
           (edge.controlPointX != null && edge.controlPointY != null)
-              ? Vector2(edge.controlPointX!, edge.controlPointY!)
-              : Vector2.zero();
+          ? Vector2(edge.controlPointX!, edge.controlPointY!)
+          : Vector2.zero();
 
       final direction = edge.direction ?? TapeDirection.right;
 
@@ -138,8 +138,9 @@ class GraphViewTmMapper {
           edge.writeSymbol!,
     };
 
-    final initialState =
-        initialNode != null ? stateMap[initialNode.id] : template.initialState;
+    final initialState = initialNode != null
+        ? stateMap[initialNode.id]
+        : template.initialState;
 
     return template.copyWith(
       states: states,

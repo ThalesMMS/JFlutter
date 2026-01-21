@@ -87,7 +87,7 @@ class _AutomatonGraphViewCanvasState
   SimulationHighlightService? _highlightService;
   SimulationHighlightChannel? _previousHighlightChannel;
   GraphViewSimulationHighlightChannel? _highlightChannel;
-  late _AutomatonGraphSugiyamaAlgorithm _algorithm;
+  late AutomatonGraphSugiyamaAlgorithm _algorithm;
   final Set<String> _selectedTransitions = <String>{};
   String? _transitionSourceId;
   OverlayEntry? _transitionOverlayEntry;
@@ -160,7 +160,7 @@ class _AutomatonGraphViewCanvasState
     }
 
     _applyCustomization(widget.customization);
-    _algorithm = _AutomatonGraphSugiyamaAlgorithm(
+    _algorithm = AutomatonGraphSugiyamaAlgorithm(
       controller: _controller,
       configuration: _buildConfiguration(),
     );
@@ -223,7 +223,7 @@ class _AutomatonGraphViewCanvasState
         _highlightChannel = highlightChannel;
         highlightService.channel = highlightChannel;
       }
-      _algorithm = _AutomatonGraphSugiyamaAlgorithm(
+      _algorithm = AutomatonGraphSugiyamaAlgorithm(
         controller: _controller,
         configuration: _buildConfiguration(),
       );
@@ -1269,51 +1269,6 @@ class _AutomatonGraphViewCanvasState
     };
 
     return gestures;
-  }
-}
-
-class _AutomatonGraphSugiyamaAlgorithm extends SugiyamaAlgorithm {
-  _AutomatonGraphSugiyamaAlgorithm({
-    required this.controller,
-    required SugiyamaConfiguration configuration,
-  }) : super(configuration);
-
-  final BaseGraphViewCanvasController<dynamic, dynamic> controller;
-
-  @override
-  Size run(Graph? graph, double shiftX, double shiftY) {
-    if (graph == null || graph.nodes.isEmpty) {
-      return Size.zero;
-    }
-
-    var minX = double.infinity;
-    var minY = double.infinity;
-    var maxX = double.negativeInfinity;
-    var maxY = double.negativeInfinity;
-
-    for (final node in graph.nodes) {
-      final nodeId = node.key?.value?.toString();
-      final cached = nodeId != null ? controller.nodeById(nodeId) : null;
-      final position = cached != null
-          ? Offset(cached.x, cached.y)
-          : node.position;
-
-      node.position = position;
-
-      minX = math.min(minX, position.dx);
-      minY = math.min(minY, position.dy);
-      maxX = math.max(maxX, position.dx + node.width);
-      maxY = math.max(maxY, position.dy + node.height);
-    }
-
-    if (minX == double.infinity || minY == double.infinity) {
-      return Size.zero;
-    }
-
-    final width = (maxX - minX).clamp(0.0, double.infinity) + _kNodeDiameter;
-    final height = (maxY - minY).clamp(0.0, double.infinity) + _kNodeDiameter;
-
-    return Size(width, height);
   }
 }
 

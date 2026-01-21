@@ -13,6 +13,8 @@ import 'package:vector_math/vector_math_64.dart';
 import '../models/fsa.dart';
 import '../models/state.dart';
 import '../models/fsa_transition.dart';
+import '../models/nfa_to_dfa_step.dart';
+import '../models/algorithm_step.dart';
 import '../result.dart';
 
 /// Converts Non-deterministic Finite Automata (NFA) to Deterministic Finite Automata (DFA)
@@ -313,52 +315,235 @@ class NFAToDFAConverter {
     );
   }
 
+  /// Builds DFA using subset construction with epsilon-closures and captures detailed steps
+  static FSA _buildDFAWithEpsilonAndSteps(FSA nfa, List<NFAToDFAStep> steps) {
+    bool isEpsilonSymbol(String s) {
+      final normalized = s.trim().toLowerCase();
+      return normalized.isEmpty ||
+          normalized == 'ε' ||
+          normalized == 'λ' ||
+          normalized == 'lambda';
+    }
+
+    final dfaStates = <String, State>{};
+    final dfaTransitions = <FSATransition>{};
+    final dfaAcceptingStates = <State>{};
+    final queue = <String>[];
+    final processed = <String>{};
+    final stateSetMap = <String, Set<State>>{};
+
+    int stepCounter = 1;
+
+    // Start with the epsilon-closure of the initial state
+    final initialStateSet = _epsilonClosureFlexible(
+      nfa,
+      nfa.initialState!,
+      isEpsilonSymbol,
+    );
+    final initialStateKey = _getStateSetKey(initialStateSet);
+    final initialState = _createDFAState(initialStateSet, 0);
+    dfaStates[initialStateKey] = initialState;
+    stateSetMap[initialStateKey] = initialStateSet;
+    queue.add(initialStateKey);
+
+    // Capture initial epsilon closure step
+    final containsAccepting = initialStateSet.intersection(nfa.acceptingStates).isNotEmpty;
+    steps.add(
+      NFAToDFAStep.initialEpsilonClosure(
+        id: 'step_${stepCounter}',
+        stepNumber: stepCounter++,
+        initialState: nfa.initialState!,
+        epsilonClosure: initialStateSet,
+        containsAcceptingState: containsAccepting,
+      ),
+    );
+
+    // Process each state set
+    int stateCounter = 1;
+    const int maxStates = 1000;
+    while (queue.isNotEmpty) {
+      final currentStateKey = queue.removeAt(0);
+      if (processed.contains(currentStateKey)) continue;
+      processed.add(currentStateKey);
+
+      final currentStateSet = stateSetMap[currentStateKey]!;
+      final currentDFAState = dfaStates[currentStateKey]!;
+
+      // Check if this state set contains any accepting states
+      if (currentStateSet.intersection(nfa.acceptingStates).isNotEmpty) {
+        dfaAcceptingStates.add(currentDFAState);
+      }
+
+      // For each symbol in the alphabet (excluding epsilon-like markers)
+      final workingAlphabet = nfa.alphabet
+          .where((s) => !isEpsilonSymbol(s))
+          .toSet();
+      for (final symbol in workingAlphabet) {
+        final reachableBeforeEpsilon = <State>{};
+
+        // Move on symbol
+        for (final state in currentStateSet) {
+          final transitions = nfa
+              .getTransitionsFromStateOnSymbol(state, symbol)
+              .toList();
+          for (final transition in transitions) {
+            reachableBeforeEpsilon.add(transition.toState);
+          }
+        }
+
+        // Capture process symbol step
+        if (reachableBeforeEpsilon.isNotEmpty) {
+          steps.add(
+            NFAToDFAStep.processSymbol(
+              id: 'step_${stepCounter}',
+              stepNumber: stepCounter++,
+              currentStateSet: currentStateSet,
+              symbol: symbol,
+              reachableStates: reachableBeforeEpsilon,
+            ),
+          );
+        }
+
+        // Take epsilon-closure of reachable states
+        final nextStateSet = <State>{};
+        for (final state in reachableBeforeEpsilon) {
+          nextStateSet.addAll(
+            _epsilonClosureFlexible(nfa, state, isEpsilonSymbol),
+          );
+        }
+
+        if (nextStateSet.isNotEmpty) {
+          final nextStateKey = _getStateSetKey(nextStateSet);
+          final isNewState = !dfaStates.containsKey(nextStateKey);
+          final containsAcceptingState = nextStateSet.intersection(nfa.acceptingStates).isNotEmpty;
+
+          // Capture epsilon closure of reachable states step
+          steps.add(
+            NFAToDFAStep.epsilonClosureOfReachable(
+              id: 'step_${stepCounter}',
+              stepNumber: stepCounter++,
+              reachableStates: reachableBeforeEpsilon,
+              epsilonClosure: nextStateSet,
+              containsAcceptingState: containsAcceptingState,
+              isNewState: isNewState,
+            ),
+          );
+
+          // Create or get the DFA state for this set
+          State nextDFAState;
+          if (dfaStates.containsKey(nextStateKey)) {
+            nextDFAState = dfaStates[nextStateKey]!;
+          } else {
+            if (stateCounter >= maxStates) {
+              throw StateError(
+                'Exceeded maximum number of DFA states ($maxStates) during subset construction.',
+              );
+            }
+            nextDFAState = _createDFAState(nextStateSet, stateCounter);
+            dfaStates[nextStateKey] = nextDFAState;
+            stateSetMap[nextStateKey] = nextStateSet;
+            queue.add(nextStateKey);
+
+            // Capture create DFA state step
+            steps.add(
+              NFAToDFAStep.createDFAState(
+                id: 'step_${stepCounter}',
+                stepNumber: stepCounter++,
+                nfaStateSet: nextStateSet,
+                dfaStateId: nextDFAState.id,
+                dfaStateLabel: nextDFAState.label,
+                isAccepting: containsAcceptingState,
+              ),
+            );
+
+            stateCounter++;
+          }
+
+          // Add transition
+          final transition = FSATransition.deterministic(
+            id: 't_${currentDFAState.id}_${symbol}_${nextDFAState.id}',
+            fromState: currentDFAState,
+            toState: nextDFAState,
+            symbol: symbol,
+          );
+          dfaTransitions.add(transition);
+
+          // Capture create DFA transition step
+          steps.add(
+            NFAToDFAStep.createDFATransition(
+              id: 'step_${stepCounter}',
+              stepNumber: stepCounter++,
+              fromStateSet: currentStateSet,
+              fromDfaStateId: currentDFAState.id,
+              symbol: symbol,
+              toStateSet: nextStateSet,
+              toDfaStateId: nextDFAState.id,
+            ),
+          );
+        }
+      }
+    }
+
+    // Capture completion step
+    steps.add(
+      NFAToDFAStep.completion(
+        id: 'step_${stepCounter}',
+        stepNumber: stepCounter,
+        totalStates: dfaStates.length,
+        totalTransitions: dfaTransitions.length,
+        totalAcceptingStates: dfaAcceptingStates.length,
+      ),
+    );
+
+    // Create the DFA
+    return FSA(
+      id: '${nfa.id}_dfa',
+      name: '${nfa.name} (DFA)',
+      states: dfaStates.values.toSet(),
+      transitions: dfaTransitions,
+      alphabet: nfa.alphabet.where((s) => !isEpsilonSymbol(s)).toSet(),
+      initialState: initialState,
+      acceptingStates: dfaAcceptingStates,
+      created: nfa.created,
+      modified: DateTime.now(),
+      bounds: nfa.bounds,
+      zoomLevel: nfa.zoomLevel,
+      panOffset: nfa.panOffset,
+    );
+  }
+
   /// Converts an NFA to DFA with step-by-step information
   static Result<NFAToDFAConversionResult> convertWithSteps(FSA nfa) {
     try {
-      final steps = <NFADFAConversionStep>[];
+      final stopwatch = Stopwatch()..start();
+      final steps = <NFAToDFAStep>[];
 
-      // Step 1: Validate input
-      steps.add(
-        NFADFAConversionStep(
-          stepNumber: 1,
-          description: 'Validating input NFA',
-          nfa: nfa,
-          dfa: null,
-        ),
-      );
-
+      // Validate input
       final validationResult = _validateInput(nfa);
       if (!validationResult.isSuccess) {
         return ResultFactory.failure(validationResult.error!);
       }
 
-      // Step 2: Build DFA (epsilon-aware subset construction)
-      steps.add(
-        NFADFAConversionStep(
-          stepNumber: 2,
-          description: 'Building DFA using epsilon-closure subset construction',
-          nfa: nfa,
-          dfa: null,
-        ),
-      );
+      // Handle empty NFA
+      if (nfa.states.isEmpty) {
+        return ResultFactory.failure('Cannot convert empty NFA to DFA');
+      }
 
-      final dfa = _buildDFAWithEpsilon(nfa);
-      steps.add(
-        NFADFAConversionStep(
-          stepNumber: 3,
-          description: 'DFA construction completed',
-          nfa: nfa,
-          dfa: dfa,
-        ),
-      );
+      // Handle NFA with no initial state
+      if (nfa.initialState == null) {
+        return ResultFactory.failure('NFA must have an initial state');
+      }
+
+      // Build DFA with detailed step capture
+      final dfa = _buildDFAWithEpsilonAndSteps(nfa, steps);
+
+      stopwatch.stop();
 
       final result = NFAToDFAConversionResult(
         originalNFA: nfa,
         resultDFA: dfa,
         steps: steps,
-        executionTime:
-            Duration.zero, // Would be calculated in real implementation
+        executionTime: stopwatch.elapsed,
       );
 
       return ResultFactory.success(result);
@@ -405,8 +590,8 @@ class NFAToDFAConversionResult {
   /// Resulting DFA
   final FSA resultDFA;
 
-  /// Conversion steps
-  final List<NFADFAConversionStep> steps;
+  /// Detailed conversion steps
+  final List<NFAToDFAStep> steps;
 
   /// Execution time
   final Duration executionTime;
@@ -422,41 +607,14 @@ class NFAToDFAConversionResult {
   int get stepCount => steps.length;
 
   /// Gets the first step
-  NFADFAConversionStep? get firstStep => steps.isNotEmpty ? steps.first : null;
+  NFAToDFAStep? get firstStep => steps.isNotEmpty ? steps.first : null;
 
   /// Gets the last step
-  NFADFAConversionStep? get lastStep => steps.isNotEmpty ? steps.last : null;
+  NFAToDFAStep? get lastStep => steps.isNotEmpty ? steps.last : null;
 
   /// Gets the execution time in milliseconds
   int get executionTimeMs => executionTime.inMilliseconds;
 
   /// Gets the execution time in seconds
   double get executionTimeSeconds => executionTime.inMicroseconds / 1000000.0;
-}
-
-/// Single step in NFA to DFA conversion
-class NFADFAConversionStep {
-  /// Step number
-  final int stepNumber;
-
-  /// Description of the step
-  final String description;
-
-  /// NFA at this step
-  final FSA? nfa;
-
-  /// DFA at this step
-  final FSA? dfa;
-
-  const NFADFAConversionStep({
-    required this.stepNumber,
-    required this.description,
-    this.nfa,
-    this.dfa,
-  });
-
-  @override
-  String toString() {
-    return 'NFADFAConversionStep(stepNumber: $stepNumber, description: $description)';
-  }
 }

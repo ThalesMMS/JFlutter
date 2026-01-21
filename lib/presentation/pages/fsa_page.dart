@@ -13,16 +13,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/entities/automaton_entity.dart';
 import '../../core/models/fsa.dart';
 import '../providers/algorithm_provider.dart';
+import '../providers/algorithm_step_provider.dart';
 import '../providers/automaton_algorithm_provider.dart';
 import '../providers/automaton_layout_provider.dart';
 import '../providers/automaton_simulation_provider.dart';
 import '../providers/automaton_state_provider.dart';
 import '../widgets/algorithm_panel.dart';
+import '../widgets/algorithm_step_viewer.dart';
 import '../widgets/automaton_canvas.dart';
 import '../widgets/automaton_canvas_tool.dart';
 import '../widgets/graphview_canvas_toolbar.dart';
 import '../widgets/mobile_automaton_controls.dart';
 import '../widgets/simulation_panel.dart';
+import '../widgets/step_navigation_controls.dart';
 import '../widgets/fsa/determinism_badge.dart';
 import 'grammar_page.dart';
 import 'regex_page.dart';
@@ -45,6 +48,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
   late final GraphViewSimulationHighlightChannel _highlightChannel;
   late final SimulationHighlightService _highlightService;
   late final AutomatonCanvasToolController _toolController;
+  bool _stepByStepMode = false;
 
   @override
   void initState() {
@@ -234,6 +238,45 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     await _applyAlgorithmResult(successMessage: successMessage);
   }
 
+  void _handleStepByStepModeChanged(bool enabled) {
+    setState(() {
+      _stepByStepMode = enabled;
+    });
+    if (!enabled) {
+      ref.read(algorithmStepProvider.notifier).clearSteps();
+    }
+  }
+
+  Future<void> _handleNfaToDfa() async {
+    if (_stepByStepMode) {
+      await _handleNfaToDfaWithSteps();
+    } else {
+      await ref.read(automatonAlgorithmProvider.notifier).convertNfaToDfa();
+    }
+  }
+
+  Future<void> _handleNfaToDfaWithSteps() async {
+    final automaton = _requireAutomaton();
+    if (automaton == null) return;
+
+    await ref.read(automatonAlgorithmProvider.notifier).convertNfaToDfaWithSteps();
+  }
+
+  Future<void> _handleMinimizeDfa() async {
+    if (_stepByStepMode) {
+      await _handleMinimizeDfaWithSteps();
+    } else {
+      await ref.read(automatonAlgorithmProvider.notifier).minimizeDfa();
+    }
+  }
+
+  Future<void> _handleMinimizeDfaWithSteps() async {
+    final automaton = _requireAutomaton(requireDfa: true);
+    if (automaton == null) return;
+
+    await ref.read(automatonAlgorithmProvider.notifier).minimizeDfaWithSteps();
+  }
+
   Future<void> _handleRemoveLambda() async {
     await _runUnaryAlgorithm(
       algorithm: (notifier, entity) => notifier.removeLambdaTransitions(entity),
@@ -310,6 +353,52 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     );
   }
 
+  Widget _buildStepViewerPanel() {
+    final stepState = ref.watch(algorithmStepProvider);
+
+    if (!stepState.hasSteps) {
+      return const SizedBox.shrink();
+    }
+
+    return Card(
+      margin: const EdgeInsets.all(8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Step viewer
+          if (stepState.currentStep != null)
+            Expanded(
+              child: SingleChildScrollView(
+                child: AlgorithmStepViewer(
+                  step: stepState.currentStep!,
+                ),
+              ),
+            ),
+
+          // Navigation controls
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: StepNavigationControls(
+              currentStepIndex: stepState.currentStepIndex,
+              totalSteps: stepState.totalSteps,
+              isPlaying: stepState.isPlaying,
+              onPrevious: stepState.hasPreviousStep
+                  ? () => ref.read(algorithmStepProvider.notifier).previousStep()
+                  : null,
+              onPlayPause: () =>
+                  ref.read(algorithmStepProvider.notifier).togglePlayPause(),
+              onNext: stepState.hasNextStep
+                  ? () => ref.read(algorithmStepProvider.notifier).nextStep()
+                  : null,
+              onReset: () =>
+                  ref.read(algorithmStepProvider.notifier).jumpToFirstStep(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   AlgorithmPanel _buildAlgorithmPanelForState(
     AutomatonStateProviderState state,
   ) {
@@ -326,11 +415,9 @@ class _FSAPageState extends ConsumerState<FSAPage> {
         !automaton.hasEpsilonTransitions;
 
     return AlgorithmPanel(
-      onNfaToDfa: hasAutomaton
-          ? () => algorithmNotifier.convertNfaToDfa()
-          : null,
+      onNfaToDfa: hasAutomaton ? _handleNfaToDfa : null,
       onRemoveLambda: hasLambda ? _handleRemoveLambda : null,
-      onMinimizeDfa: isDfa ? () => algorithmNotifier.minimizeDfa() : null,
+      onMinimizeDfa: isDfa ? _handleMinimizeDfa : null,
       onCompleteDfa: isDfa ? () => algorithmNotifier.completeDfa() : null,
       onComplementDfa: isDfa ? _handleComplementDfa : null,
       onUnionDfa: isDfa ? _handleUnionDfa : null,
@@ -348,12 +435,36 @@ class _FSAPageState extends ConsumerState<FSAPage> {
       onCompareEquivalence: isDfa ? _handleCompareEquivalence : null,
       equivalenceResult: algorithmState.equivalenceResult,
       equivalenceDetails: algorithmState.equivalenceDetails,
+      onStepByStepModeChanged: _handleStepByStepModeChanged,
     );
   }
 
   Future<void> _handleFaToRegex() async {
+    if (_stepByStepMode) {
+      await _handleFaToRegexWithSteps();
+    } else {
+      final algorithmNotifier = ref.read(automatonAlgorithmProvider.notifier);
+      final regex = await algorithmNotifier.convertFaToRegex();
+      if (!mounted || regex == null) {
+        if (mounted && ref.read(automatonAlgorithmProvider).error != null) {
+          _showSnack(ref.read(automatonAlgorithmProvider).error!, isError: true);
+        }
+        return;
+      }
+
+      if (!mounted) return;
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const RegexPage()));
+    }
+  }
+
+  Future<void> _handleFaToRegexWithSteps() async {
+    final automaton = _requireAutomaton();
+    if (automaton == null) return;
+
     final algorithmNotifier = ref.read(automatonAlgorithmProvider.notifier);
-    final regex = await algorithmNotifier.convertFaToRegex();
+    final regex = await algorithmNotifier.convertFaToRegexWithSteps();
     if (!mounted || regex == null) {
       if (mounted && ref.read(automatonAlgorithmProvider).error != null) {
         _showSnack(ref.read(automatonAlgorithmProvider).error!, isError: true);
@@ -588,7 +699,19 @@ class _FSAPageState extends ConsumerState<FSAPage> {
                   child: Consumer(
                     builder: (context, sheetRef, _) {
                       final sheetState = sheetRef.watch(automatonStateProvider);
-                      return _buildAlgorithmPanelForState(sheetState);
+                      final stepState = sheetRef.watch(algorithmStepProvider);
+                      return Column(
+                        children: [
+                          _buildAlgorithmPanelForState(sheetState),
+                          if (stepState.hasSteps) ...[
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              height: 400,
+                              child: _buildStepViewerPanel(),
+                            ),
+                          ],
+                        ],
+                      );
                     },
                   ),
                 ),
@@ -646,12 +769,22 @@ class _FSAPageState extends ConsumerState<FSAPage> {
   Widget _buildDesktopLayout(AutomatonStateProviderState state) {
     final algorithmState = ref.watch(automatonAlgorithmProvider);
     final simulationState = ref.watch(automatonSimulationProvider);
+    final stepState = ref.watch(algorithmStepProvider);
+
     return Row(
       children: [
-        // Left panel - Controls
+        // Left panel - Controls and Step Viewer
         Expanded(
           flex: 2,
-          child: Column(children: [_buildAlgorithmPanelForState(state)]),
+          child: Column(
+            children: [
+              _buildAlgorithmPanelForState(state),
+              if (stepState.hasSteps) ...[
+                const SizedBox(height: 8),
+                Expanded(child: _buildStepViewerPanel()),
+              ],
+            ],
+          ),
         ),
         const SizedBox(width: 16),
         // Center panel - Canvas
@@ -679,9 +812,21 @@ class _FSAPageState extends ConsumerState<FSAPage> {
   Widget _buildTabletLayout(AutomatonStateProviderState state) {
     final algorithmState = ref.watch(automatonAlgorithmProvider);
     final simulationState = ref.watch(automatonSimulationProvider);
+    final stepState = ref.watch(algorithmStepProvider);
+
+    Widget algorithmColumn = Column(
+      children: [
+        _buildAlgorithmPanelForState(state),
+        if (stepState.hasSteps) ...[
+          const SizedBox(height: 8),
+          Expanded(child: _buildStepViewerPanel()),
+        ],
+      ],
+    );
+
     return TabletLayoutContainer(
       canvas: _buildCanvasArea(state: state, isMobile: false),
-      algorithmPanel: _buildAlgorithmPanelForState(state),
+      algorithmPanel: algorithmColumn,
       simulationPanel: SimulationPanel(
         onSimulate: (inputString) => ref
             .read(automatonSimulationProvider.notifier)

@@ -43,12 +43,30 @@ class AlgorithmOperations {
     }
   }
 
+  /// Converts an NFA to a DFA with detailed step-by-step information
+  static Result<NFAToDFAConversionResult> convertNfaToDfaWithSteps(FSA nfa) {
+    try {
+      return NFAToDFAConverter.convertWithSteps(nfa);
+    } catch (e) {
+      return ResultFactory.failure('Error converting NFA to DFA with steps: $e');
+    }
+  }
+
   /// Minimizes a DFA
   static Result<FSA> minimizeDfa(FSA dfa) {
     try {
       return DFAMinimizer.minimize(dfa);
     } catch (e) {
       return ResultFactory.failure('Error minimizing DFA: $e');
+    }
+  }
+
+  /// Minimizes a DFA with detailed step-by-step information
+  static Result<DFAMinimizationResult> minimizeDfaWithSteps(FSA dfa) {
+    try {
+      return DFAMinimizer.minimizeWithSteps(dfa);
+    } catch (e) {
+      return ResultFactory.failure('Error minimizing DFA with steps: $e');
     }
   }
 
@@ -67,6 +85,15 @@ class AlgorithmOperations {
       return FAToRegexConverter.convert(fa);
     } catch (e) {
       return ResultFactory.failure('Error converting FA to regex: $e');
+    }
+  }
+
+  /// Converts a finite automaton to a regular expression with detailed step-by-step information
+  static Result<FAToRegexConversionResult> convertFaToRegexWithSteps(FSA fa) {
+    try {
+      return FAToRegexConverter.convertWithSteps(fa);
+    } catch (e) {
+      return ResultFactory.failure('Error converting FA to regex with steps: $e');
     }
   }
 

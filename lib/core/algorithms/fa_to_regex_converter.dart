@@ -14,6 +14,8 @@ import 'package:vector_math/vector_math_64.dart';
 import '../models/fsa.dart';
 import '../models/state.dart';
 import '../models/fsa_transition.dart';
+import '../models/fa_to_regex_step.dart';
+import '../models/algorithm_step.dart';
 import '../result.dart';
 import 'regex_simplifier.dart';
 
@@ -344,72 +346,407 @@ class FAToRegexConverter {
     return '(${regexParts.join('|')})';
   }
 
+  /// Ensures single initial and final states with detailed step capture
+  static FSA _ensureSingleInitialAndFinalStatesWithSteps(
+    FSA fa,
+    List<FAToRegexStep> steps,
+  ) {
+    final now = DateTime.now();
+
+    // Create new initial state if needed
+    State newInitialState;
+    bool needsNewInitial = false;
+    if (fa.initialState != null && fa.acceptingStates.length == 1) {
+      newInitialState = fa.initialState!;
+    } else {
+      newInitialState = State(
+        id: 'q_initial',
+        label: 'q_initial',
+        position: Vector2(50, 100),
+        isInitial: true,
+        isAccepting: false,
+      );
+      needsNewInitial = true;
+    }
+
+    // Create new final state if needed
+    State newFinalState;
+    bool needsNewFinal = fa.acceptingStates.length != 1;
+    if (fa.acceptingStates.length == 1) {
+      newFinalState = fa.acceptingStates.first;
+    } else {
+      newFinalState = State(
+        id: 'q_final',
+        label: 'q_final',
+        position: Vector2(350, 100),
+        isInitial: false,
+        isAccepting: true,
+      );
+    }
+
+    // If we need to add new states
+    if (needsNewInitial || needsNewFinal) {
+      final newStates = Set<State>.from(fa.states);
+      final newTransitions = Set<FSATransition>.from(fa.fsaTransitions);
+
+      // Add new initial state if needed
+      if (needsNewInitial) {
+        steps.add(
+          FAToRegexStep.addInitialState(
+            id: 'step_${steps.length + 1}',
+            stepNumber: steps.length + 1,
+            oldInitialState: fa.initialState!,
+            newInitialState: newInitialState,
+          ),
+        );
+
+        newStates.add(newInitialState);
+        // Add epsilon transition from new initial to old initial
+        newTransitions.add(
+          FSATransition.epsilon(
+            id: 't_eps_initial',
+            fromState: newInitialState,
+            toState: fa.initialState!,
+          ),
+        );
+      }
+
+      // Add new final state if needed
+      if (needsNewFinal) {
+        steps.add(
+          FAToRegexStep.addFinalState(
+            id: 'step_${steps.length + 1}',
+            stepNumber: steps.length + 1,
+            oldAcceptingStates: fa.acceptingStates,
+            newFinalState: newFinalState,
+          ),
+        );
+
+        newStates.add(newFinalState);
+        // Add epsilon transitions from old accepting states to new final
+        for (final acceptingState in fa.acceptingStates) {
+          newTransitions.add(
+            FSATransition.epsilon(
+              id: 't_eps_final_${acceptingState.id}',
+              fromState: acceptingState,
+              toState: newFinalState,
+            ),
+          );
+        }
+      }
+
+      return FSA(
+        id: '${fa.id}_single_states',
+        name: '${fa.name} (Single States)',
+        states: newStates,
+        transitions: newTransitions,
+        alphabet: fa.alphabet,
+        initialState: newInitialState,
+        acceptingStates: {newFinalState},
+        created: fa.created,
+        modified: now,
+        bounds: fa.bounds,
+        zoomLevel: fa.zoomLevel,
+        panOffset: fa.panOffset,
+      );
+    }
+
+    return fa;
+  }
+
+  /// Applies state elimination algorithm with detailed step capture
+  static String _stateEliminationWithSteps(
+    FSA fa,
+    List<FAToRegexStep> steps,
+  ) {
+    // Create a copy of the FA for modification
+    var currentFA = fa;
+
+    // Get all non-initial, non-final states
+    final statesToEliminate = currentFA.states
+        .where(
+          (state) =>
+              state != currentFA.initialState &&
+              !currentFA.acceptingStates.contains(state),
+        )
+        .toList();
+
+    // Eliminate states one by one
+    for (final stateToEliminate in statesToEliminate) {
+      currentFA = _eliminateStateWithSteps(currentFA, stateToEliminate, steps);
+    }
+
+    // Extract regex from the final automaton
+    final regex = _extractRegexFromFinalFA(currentFA);
+
+    // Add regex extraction step
+    steps.add(
+      FAToRegexStep.extractRegex(
+        id: 'step_${steps.length + 1}',
+        stepNumber: steps.length + 1,
+        regex: regex,
+        initialState: currentFA.initialState!,
+        finalState: currentFA.acceptingStates.first,
+      ),
+    );
+
+    return regex;
+  }
+
+  /// Eliminates a single state with detailed step capture
+  static FSA _eliminateStateWithSteps(
+    FSA fa,
+    State stateToEliminate,
+    List<FAToRegexStep> steps,
+  ) {
+    final newTransitions = <FSATransition>{};
+    final newStates = fa.states.where((s) => s != stateToEliminate).toSet();
+
+    // Step 1: Select state to eliminate
+    steps.add(
+      FAToRegexStep.selectStateToEliminate(
+        id: 'step_${steps.length + 1}',
+        stepNumber: steps.length + 1,
+        state: stateToEliminate,
+        remainingStates: newStates.length,
+      ),
+    );
+
+    // Keep all transitions not involving the state to eliminate
+    for (final transition in fa.fsaTransitions) {
+      if (transition.fromState != stateToEliminate &&
+          transition.toState != stateToEliminate) {
+        newTransitions.add(transition);
+      }
+    }
+
+    // Step 2: Find all states that have transitions to the state to eliminate
+    final incomingStates = <State>{};
+    final incomingTransitions = <FSATransition>[];
+    for (final transition in fa.fsaTransitions) {
+      if (transition.toState == stateToEliminate) {
+        incomingStates.add(transition.fromState);
+        incomingTransitions.add(transition);
+      }
+    }
+
+    steps.add(
+      FAToRegexStep.findIncomingTransitions(
+        id: 'step_${steps.length + 1}',
+        stepNumber: steps.length + 1,
+        eliminatedState: stateToEliminate,
+        incomingStates: incomingStates,
+        incomingTransitions: incomingTransitions.toSet(),
+      ),
+    );
+
+    // Step 3: Find all states that have transitions from the state to eliminate
+    final outgoingStates = <State>{};
+    final outgoingTransitions = <FSATransition>[];
+    for (final transition in fa.fsaTransitions) {
+      if (transition.fromState == stateToEliminate) {
+        outgoingStates.add(transition.toState);
+        outgoingTransitions.add(transition);
+      }
+    }
+
+    steps.add(
+      FAToRegexStep.findOutgoingTransitions(
+        id: 'step_${steps.length + 1}',
+        stepNumber: steps.length + 1,
+        eliminatedState: stateToEliminate,
+        outgoingStates: outgoingStates,
+        outgoingTransitions: outgoingTransitions.toSet(),
+      ),
+    );
+
+    // Step 4: Find self-loop on the state to eliminate
+    String selfLoopRegex = '';
+    final selfLoopTransitions = <FSATransition>[];
+    for (final transition in fa.fsaTransitions) {
+      if (transition.fromState == stateToEliminate &&
+          transition.toState == stateToEliminate) {
+        selfLoopTransitions.add(transition);
+        if (selfLoopRegex.isEmpty) {
+          selfLoopRegex = transition.label;
+        } else {
+          selfLoopRegex = '($selfLoopRegex|${transition.label})';
+        }
+      }
+    }
+
+    // Add Kleene star if there's a self-loop
+    if (selfLoopRegex.isNotEmpty) {
+      selfLoopRegex = '($selfLoopRegex)*';
+    }
+
+    steps.add(
+      FAToRegexStep.findSelfLoop(
+        id: 'step_${steps.length + 1}',
+        stepNumber: steps.length + 1,
+        eliminatedState: stateToEliminate,
+        selfLoopTransitions: selfLoopTransitions.toSet(),
+        selfLoopRegex: selfLoopRegex.isNotEmpty ? selfLoopRegex : 'ε',
+      ),
+    );
+
+    // Step 5: Create new transitions for all combinations of incoming and outgoing states
+    final createdTransitions = <FSATransition>[];
+    for (final incomingState in incomingStates) {
+      for (final outgoingState in outgoingStates) {
+        // Find the incoming transition
+        final incomingTransition = incomingTransitions
+            .where((t) => t.fromState == incomingState)
+            .firstOrNull;
+
+        // Find the outgoing transition
+        final outgoingTransition = outgoingTransitions
+            .where((t) => t.toState == outgoingState)
+            .firstOrNull;
+
+        if (incomingTransition != null && outgoingTransition != null) {
+          // Build the regex for this path
+          String pathRegex = incomingTransition.label;
+          if (selfLoopRegex.isNotEmpty) {
+            pathRegex += selfLoopRegex;
+          }
+          pathRegex += outgoingTransition.label;
+
+          // Check if there's already a transition between these states
+          final existingTransition = newTransitions
+              .where(
+                (t) =>
+                    t.fromState == incomingState && t.toState == outgoingState,
+              )
+              .firstOrNull;
+
+          if (existingTransition != null) {
+            // Combine with existing transition
+            final combinedRegex = '(${existingTransition.label}|$pathRegex)';
+            newTransitions.remove(existingTransition);
+            final newTransition = FSATransition(
+              id: 't_combined_${incomingState.id}_${outgoingState.id}',
+              fromState: incomingState,
+              toState: outgoingState,
+              label: combinedRegex,
+              inputSymbols: {combinedRegex},
+            );
+            newTransitions.add(newTransition);
+            createdTransitions.add(newTransition);
+          } else {
+            // Add new transition
+            final newTransition = FSATransition(
+              id: 't_new_${incomingState.id}_${outgoingState.id}',
+              fromState: incomingState,
+              toState: outgoingState,
+              label: pathRegex,
+              inputSymbols: {pathRegex},
+            );
+            newTransitions.add(newTransition);
+            createdTransitions.add(newTransition);
+          }
+        }
+      }
+    }
+
+    if (createdTransitions.isNotEmpty) {
+      steps.add(
+        FAToRegexStep.createBypassTransitions(
+          id: 'step_${steps.length + 1}',
+          stepNumber: steps.length + 1,
+          eliminatedState: stateToEliminate,
+          newTransitions: createdTransitions.toSet(),
+          pathRegexExample:
+              createdTransitions.first.label,
+        ),
+      );
+    }
+
+    // Step 6: Complete elimination
+    steps.add(
+      FAToRegexStep.completeElimination(
+        id: 'step_${steps.length + 1}',
+        stepNumber: steps.length + 1,
+        eliminatedState: stateToEliminate,
+        remainingStates: newStates.length,
+      ),
+    );
+
+    return FSA(
+      id: '${fa.id}_eliminated_${stateToEliminate.id}',
+      name: '${fa.name} (Eliminated ${stateToEliminate.id})',
+      states: newStates,
+      transitions: newTransitions,
+      alphabet: fa.alphabet,
+      initialState: fa.initialState,
+      acceptingStates: fa.acceptingStates,
+      created: fa.created,
+      modified: DateTime.now(),
+      bounds: fa.bounds,
+      zoomLevel: fa.zoomLevel,
+      panOffset: fa.panOffset,
+    );
+  }
+
   /// Converts FA to regex with step-by-step information
   static Result<FAToRegexConversionResult> convertWithSteps(FSA fa) {
     try {
-      final steps = <FARegexConversionStep>[];
+      final stopwatch = Stopwatch()..start();
+      final steps = <FAToRegexStep>[];
 
-      // Step 1: Validate input
-      steps.add(
-        FARegexConversionStep(
-          stepNumber: 1,
-          description: 'Validating input FA',
-          fa: fa,
-          regex: null,
-        ),
-      );
-
+      // Validate input
       final validationResult = _validateInput(fa);
       if (!validationResult.isSuccess) {
         return ResultFactory.failure(validationResult.error!);
       }
 
-      // Step 2: Ensure single initial and final states
+      // Handle empty automaton
+      if (fa.states.isEmpty) {
+        return ResultFactory.failure('Cannot convert empty automaton to regex');
+      }
+
+      // Handle automaton with no initial state
+      if (fa.initialState == null) {
+        return ResultFactory.failure('Automaton must have an initial state');
+      }
+
+      // Capture validation step
       steps.add(
-        FARegexConversionStep(
-          stepNumber: 2,
-          description: 'Ensuring single initial and final states',
-          fa: fa,
-          regex: null,
+        FAToRegexStep.validation(
+          id: 'step_${steps.length + 1}',
+          stepNumber: steps.length + 1,
+          stateCount: fa.states.length,
+          transitionCount: fa.fsaTransitions.length,
+          hasInitialState: fa.initialState != null,
+          hasAcceptingStates: fa.acceptingStates.isNotEmpty,
         ),
       );
 
-      final faWithSingleStates = _ensureSingleInitialAndFinalStates(fa);
+      // Ensure single initial and final states with step capture
+      final faWithSingleStates =
+          _ensureSingleInitialAndFinalStatesWithSteps(fa, steps);
+
+      // Apply state elimination with detailed step capture
+      final regex = _stateEliminationWithSteps(faWithSingleStates, steps);
+
+      // Add completion step
       steps.add(
-        FARegexConversionStep(
-          stepNumber: 3,
-          description: 'Single initial and final states ensured',
-          fa: faWithSingleStates,
-          regex: null,
+        FAToRegexStep.completion(
+          id: 'step_${steps.length + 1}',
+          stepNumber: steps.length + 1,
+          finalRegex: regex,
+          originalStates: fa.states.length,
+          stepsExecuted: steps.length,
         ),
       );
 
-      // Step 3: Apply state elimination
-      steps.add(
-        FARegexConversionStep(
-          stepNumber: 4,
-          description: 'Applying state elimination algorithm',
-          fa: faWithSingleStates,
-          regex: null,
-        ),
-      );
-
-      final regex = _stateElimination(faWithSingleStates);
-      steps.add(
-        FARegexConversionStep(
-          stepNumber: 5,
-          description: 'State elimination completed',
-          fa: faWithSingleStates,
-          regex: regex,
-        ),
-      );
+      stopwatch.stop();
 
       final result = FAToRegexConversionResult(
         originalFA: fa,
         resultRegex: regex,
         steps: steps,
-        executionTime:
-            Duration.zero, // Would be calculated in real implementation
+        executionTime: stopwatch.elapsed,
       );
 
       return ResultFactory.success(result);
@@ -429,8 +766,8 @@ class FAToRegexConversionResult {
   /// Resulting regex
   final String resultRegex;
 
-  /// Conversion steps
-  final List<FARegexConversionStep> steps;
+  /// Detailed conversion steps
+  final List<FAToRegexStep> steps;
 
   /// Execution time
   final Duration executionTime;
@@ -446,41 +783,14 @@ class FAToRegexConversionResult {
   int get stepCount => steps.length;
 
   /// Gets the first step
-  FARegexConversionStep? get firstStep => steps.isNotEmpty ? steps.first : null;
+  FAToRegexStep? get firstStep => steps.isNotEmpty ? steps.first : null;
 
   /// Gets the last step
-  FARegexConversionStep? get lastStep => steps.isNotEmpty ? steps.last : null;
+  FAToRegexStep? get lastStep => steps.isNotEmpty ? steps.last : null;
 
   /// Gets the execution time in milliseconds
   int get executionTimeMs => executionTime.inMilliseconds;
 
   /// Gets the execution time in seconds
   double get executionTimeSeconds => executionTime.inMicroseconds / 1000000.0;
-}
-
-/// Single step in FA to regex conversion
-class FARegexConversionStep {
-  /// Step number
-  final int stepNumber;
-
-  /// Description of the step
-  final String description;
-
-  /// FA at this step
-  final FSA? fa;
-
-  /// Regex at this step
-  final String? regex;
-
-  const FARegexConversionStep({
-    required this.stepNumber,
-    required this.description,
-    this.fa,
-    this.regex,
-  });
-
-  @override
-  String toString() {
-    return 'FARegexConversionStep(stepNumber: $stepNumber, description: $description)';
-  }
 }

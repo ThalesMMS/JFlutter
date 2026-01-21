@@ -174,36 +174,66 @@ class _PDAStackPanelState extends State<PDAStackPanel>
 
                         return Container(
                           margin: const EdgeInsets.only(bottom: 4),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isTop
-                                ? theme.colorScheme.primaryContainer
-                                : theme.colorScheme.surfaceContainerHighest,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Row(
+                          child: Stack(
+                            clipBehavior: Clip.none,
                             children: [
-                              if (isTop) ...[
-                                Icon(
-                                  Icons.arrow_right,
-                                  size: 12,
-                                  color: theme.colorScheme.primary,
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
                                 ),
-                                const SizedBox(width: 4),
-                              ],
-                              Text(
-                                symbol,
-                                style: TextStyle(
-                                  fontFamily: 'monospace',
-                                  fontWeight: isTop
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                  fontSize: 12,
+                                decoration: BoxDecoration(
+                                  color: isTop
+                                      ? theme.colorScheme.primaryContainer
+                                      : theme.colorScheme.surfaceContainerHighest,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Row(
+                                  children: [
+                                    if (isTop) ...[
+                                      Icon(
+                                        Icons.arrow_right,
+                                        size: 12,
+                                        color: theme.colorScheme.primary,
+                                      ),
+                                      const SizedBox(width: 4),
+                                    ],
+                                    Text(
+                                      symbol,
+                                      style: TextStyle(
+                                        fontFamily: 'monospace',
+                                        fontWeight: isTop
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
+                              if (isTop)
+                                Positioned(
+                                  top: -6,
+                                  right: -6,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.primary,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      'TOP',
+                                      style: TextStyle(
+                                        color: theme.colorScheme.onPrimary,
+                                        fontSize: 8,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                             ],
                           ),
                         );

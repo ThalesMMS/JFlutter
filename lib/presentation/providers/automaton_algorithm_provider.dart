@@ -17,8 +17,12 @@ import '../../core/algorithms/fa_to_regex_converter.dart';
 import '../../core/algorithms/fsa_to_grammar_converter.dart';
 import '../../core/algorithms/nfa_to_dfa_converter.dart';
 import '../../core/algorithms/regex_to_nfa_converter.dart';
+import '../../core/models/dfa_minimization_step.dart';
+import '../../core/models/fa_to_regex_step.dart';
 import '../../core/models/fsa.dart';
 import '../../core/models/grammar.dart';
+import '../../core/models/nfa_to_dfa_step.dart';
+import 'algorithm_step_provider.dart';
 import 'automaton_state_provider.dart';
 
 /// State for algorithm operations
@@ -30,6 +34,11 @@ class AlgorithmOperationState {
   final bool isLoading;
   final String? error;
 
+  // Step-by-step execution results
+  final NFAToDFAConversionResult? nfaToDfaStepResult;
+  final DFAMinimizationResult? dfaMinimizationStepResult;
+  final FAToRegexConversionResult? faToRegexStepResult;
+
   const AlgorithmOperationState({
     this.regexResult,
     this.grammarResult,
@@ -37,6 +46,9 @@ class AlgorithmOperationState {
     this.equivalenceDetails,
     this.isLoading = false,
     this.error,
+    this.nfaToDfaStepResult,
+    this.dfaMinimizationStepResult,
+    this.faToRegexStepResult,
   });
 
   static const _unset = Object();
@@ -48,6 +60,9 @@ class AlgorithmOperationState {
     Object? equivalenceDetails = _unset,
     bool? isLoading,
     Object? error = _unset,
+    Object? nfaToDfaStepResult = _unset,
+    Object? dfaMinimizationStepResult = _unset,
+    Object? faToRegexStepResult = _unset,
   }) {
     return AlgorithmOperationState(
       regexResult: regexResult == _unset
@@ -64,6 +79,15 @@ class AlgorithmOperationState {
           : equivalenceDetails as String?,
       isLoading: isLoading ?? this.isLoading,
       error: error == _unset ? this.error : error as String?,
+      nfaToDfaStepResult: nfaToDfaStepResult == _unset
+          ? this.nfaToDfaStepResult
+          : nfaToDfaStepResult as NFAToDFAConversionResult?,
+      dfaMinimizationStepResult: dfaMinimizationStepResult == _unset
+          ? this.dfaMinimizationStepResult
+          : dfaMinimizationStepResult as DFAMinimizationResult?,
+      faToRegexStepResult: faToRegexStepResult == _unset
+          ? this.faToRegexStepResult
+          : faToRegexStepResult as FAToRegexConversionResult?,
     );
   }
 
@@ -130,6 +154,61 @@ class AutomatonAlgorithmNotifier
     }
   }
 
+  /// Converts NFA to DFA with step-by-step execution
+  Future<void> convertNfaToDfaWithSteps() async {
+    final currentAutomaton = ref.read(automatonStateProvider).currentAutomaton;
+    if (currentAutomaton == null) return;
+
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      equivalenceResult: null,
+      equivalenceDetails: null,
+      nfaToDfaStepResult: null,
+    );
+
+    try {
+      // Use the core algorithm with steps
+      final result = NFAToDFAConverter.convertWithSteps(currentAutomaton);
+
+      if (result.isSuccess && result.data != null) {
+        final conversionResult = result.data!;
+
+        // Update the automaton in the state provider
+        ref.read(automatonStateProvider.notifier).updateAutomaton(
+          conversionResult.resultDFA,
+        );
+
+        // Store the step result in state
+        state = state.copyWith(
+          isLoading: false,
+          nfaToDfaStepResult: conversionResult,
+        );
+
+        // Initialize step provider with algorithm steps
+        final algorithmSteps = conversionResult.steps.map((step) {
+          return AlgorithmStep(
+            id: step.stepNumber.toString(),
+            title: step.stepType.toString(),
+            explanation: step.explanation,
+            metadata: step.toJson(),
+          );
+        }).toList();
+
+        ref.read(algorithmStepProvider.notifier).initializeSteps(
+          algorithmSteps,
+        );
+      } else {
+        state = state.copyWith(isLoading: false, error: result.error);
+      }
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Error converting NFA to DFA with steps: $e',
+      );
+    }
+  }
+
   /// Minimizes DFA
   Future<void> minimizeDfa() async {
     final currentAutomaton = ref.read(automatonStateProvider).currentAutomaton;
@@ -157,6 +236,61 @@ class AutomatonAlgorithmNotifier
       state = state.copyWith(
         isLoading: false,
         error: 'Error minimizing DFA: $e',
+      );
+    }
+  }
+
+  /// Minimizes DFA with step-by-step execution
+  Future<void> minimizeDfaWithSteps() async {
+    final currentAutomaton = ref.read(automatonStateProvider).currentAutomaton;
+    if (currentAutomaton == null) return;
+
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      equivalenceResult: null,
+      equivalenceDetails: null,
+      dfaMinimizationStepResult: null,
+    );
+
+    try {
+      // Use the core algorithm with steps
+      final result = DFAMinimizer.minimizeWithSteps(currentAutomaton);
+
+      if (result.isSuccess && result.data != null) {
+        final minimizationResult = result.data!;
+
+        // Update the automaton in the state provider
+        ref.read(automatonStateProvider.notifier).updateAutomaton(
+          minimizationResult.resultDFA,
+        );
+
+        // Store the step result in state
+        state = state.copyWith(
+          isLoading: false,
+          dfaMinimizationStepResult: minimizationResult,
+        );
+
+        // Initialize step provider with algorithm steps
+        final algorithmSteps = minimizationResult.steps.map((step) {
+          return AlgorithmStep(
+            id: step.stepNumber.toString(),
+            title: step.stepType.toString(),
+            explanation: step.explanation,
+            metadata: step.toJson(),
+          );
+        }).toList();
+
+        ref.read(algorithmStepProvider.notifier).initializeSteps(
+          algorithmSteps,
+        );
+      } else {
+        state = state.copyWith(isLoading: false, error: result.error);
+      }
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Error minimizing DFA with steps: $e',
       );
     }
   }
@@ -262,6 +396,59 @@ class AutomatonAlgorithmNotifier
     }
   }
 
+  /// Converts FA to regex with step-by-step execution
+  Future<String?> convertFaToRegexWithSteps() async {
+    final currentAutomaton = ref.read(automatonStateProvider).currentAutomaton;
+    if (currentAutomaton == null) return null;
+
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      faToRegexStepResult: null,
+    );
+
+    try {
+      // Use the core algorithm with steps
+      final result = FAToRegexConverter.convertWithSteps(currentAutomaton);
+
+      if (result.isSuccess && result.data != null) {
+        final conversionResult = result.data!;
+
+        // Store both the regex result and step result in state
+        state = state.copyWith(
+          regexResult: conversionResult.resultRegex,
+          isLoading: false,
+          faToRegexStepResult: conversionResult,
+        );
+
+        // Initialize step provider with algorithm steps
+        final algorithmSteps = conversionResult.steps.map((step) {
+          return AlgorithmStep(
+            id: step.stepNumber.toString(),
+            title: step.stepType.toString(),
+            explanation: step.explanation,
+            metadata: step.toJson(),
+          );
+        }).toList();
+
+        ref.read(algorithmStepProvider.notifier).initializeSteps(
+          algorithmSteps,
+        );
+
+        return conversionResult.resultRegex;
+      } else {
+        state = state.copyWith(isLoading: false, error: result.error);
+        return null;
+      }
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Error converting FA to regex with steps: $e',
+      );
+      return null;
+    }
+  }
+
   /// Compares the current automaton with another automaton for equivalence
   Future<bool?> compareEquivalence(FSA other) async {
     final currentAutomaton = ref.read(automatonStateProvider).currentAutomaton;
@@ -306,6 +493,38 @@ class AutomatonAlgorithmNotifier
   /// Clears any error messages
   void clearError() {
     state = state.clearError();
+  }
+
+  // Step-by-step navigation methods (delegate to AlgorithmStepProvider)
+
+  /// Navigate to the next step
+  void nextStep() {
+    ref.read(algorithmStepProvider.notifier).nextStep();
+  }
+
+  /// Navigate to the previous step
+  void previousStep() {
+    ref.read(algorithmStepProvider.notifier).previousStep();
+  }
+
+  /// Jump to a specific step by index
+  void setCurrentStep(int index) {
+    ref.read(algorithmStepProvider.notifier).jumpToStep(index);
+  }
+
+  /// Toggle play/pause for auto-stepping
+  void togglePlayPause() {
+    ref.read(algorithmStepProvider.notifier).togglePlayPause();
+  }
+
+  /// Reset step navigation to the beginning
+  void resetSteps() {
+    ref.read(algorithmStepProvider.notifier).reset();
+  }
+
+  /// Clear all steps
+  void clearSteps() {
+    ref.read(algorithmStepProvider.notifier).clearSteps();
   }
 }
 

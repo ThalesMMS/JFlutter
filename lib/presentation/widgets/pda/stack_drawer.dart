@@ -84,6 +84,10 @@ class _PDAStackPanelState extends State<PDAStackPanel>
   bool _isPushAnimation = false;
   int? _highlightedIndex;
 
+  // Swipe gesture tracking
+  int? _swipingItemIndex;
+  double _swipeOffset = 0.0;
+
   @override
   void initState() {
     super.initState();
@@ -129,6 +133,52 @@ class _PDAStackPanelState extends State<PDAStackPanel>
     setState(() {
       // Toggle highlight: if tapping the same item, deselect; otherwise select
       _highlightedIndex = _highlightedIndex == index ? null : index;
+    });
+  }
+
+  void _handleHorizontalDragStart(int index, DragStartDetails details) {
+    setState(() {
+      _swipingItemIndex = index;
+      _swipeOffset = 0.0;
+    });
+  }
+
+  void _handleHorizontalDragUpdate(DragUpdateDetails details) {
+    setState(() {
+      _swipeOffset += details.delta.dx;
+      // Clamp to reasonable range (-80 to 80 pixels)
+      _swipeOffset = _swipeOffset.clamp(-80.0, 80.0);
+    });
+  }
+
+  void _handleHorizontalDragEnd(int index, DragEndDetails details) {
+    // Detect swipe direction and velocity
+    final velocity = details.primaryVelocity ?? 0;
+    final threshold = 30.0; // Minimum swipe distance in pixels
+
+    setState(() {
+      if (_swipeOffset.abs() > threshold || velocity.abs() > 300) {
+        // Swipe detected - determine direction
+        if (_swipeOffset > 0 || velocity > 300) {
+          // Swipe right - highlight item
+          _highlightedIndex = index;
+        } else if (_swipeOffset < 0 || velocity < -300) {
+          // Swipe left - unhighlight if this item is highlighted
+          if (_highlightedIndex == index) {
+            _highlightedIndex = null;
+          }
+        }
+      }
+      // Reset swipe state
+      _swipingItemIndex = null;
+      _swipeOffset = 0.0;
+    });
+  }
+
+  void _handleHorizontalDragCancel(int index) {
+    setState(() {
+      _swipingItemIndex = null;
+      _swipeOffset = 0.0;
     });
   }
 
@@ -210,11 +260,20 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                         final symbol = widget.stackState.symbols[reversedIndex];
                         final isTop = index == 0;
                         final isHighlighted = _highlightedIndex == index;
+                        final isSwiping = _swipingItemIndex == index;
 
                         Widget itemWidget = GestureDetector(
                           behavior: HitTestBehavior.opaque,
                           onTap: () => _handleItemTap(index),
-                          child: Container(
+                          // Add swipe gesture detection
+                          onHorizontalDragStart: (details) => _handleHorizontalDragStart(index, details),
+                          onHorizontalDragUpdate: _handleHorizontalDragUpdate,
+                          onHorizontalDragEnd: (details) => _handleHorizontalDragEnd(index, details),
+                          onHorizontalDragCancel: () => _handleHorizontalDragCancel(index),
+                          child: Transform.translate(
+                            // Apply swipe offset for visual feedback
+                            offset: Offset(isSwiping ? _swipeOffset : 0.0, 0.0),
+                            child: Container(
                             // Ensure minimum 40x40 touch target (compact)
                             constraints: const BoxConstraints(
                               minHeight: 40,
@@ -224,6 +283,43 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                             child: Stack(
                               clipBehavior: Clip.none,
                               children: [
+                                // Background hint for swipe direction
+                                if (isSwiping) ...[
+                                  // Left swipe hint (unhighlight)
+                                  if (_swipeOffset < -10)
+                                    Positioned.fill(
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme.errorContainer.withOpacity(0.3),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        alignment: Alignment.centerRight,
+                                        padding: const EdgeInsets.only(right: 8),
+                                        child: Icon(
+                                          Icons.highlight_remove,
+                                          size: 16,
+                                          color: theme.colorScheme.error,
+                                        ),
+                                      ),
+                                    ),
+                                  // Right swipe hint (highlight)
+                                  if (_swipeOffset > 10)
+                                    Positioned.fill(
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        alignment: Alignment.centerLeft,
+                                        padding: const EdgeInsets.only(left: 8),
+                                        child: Icon(
+                                          Icons.highlight,
+                                          size: 16,
+                                          color: theme.colorScheme.primary,
+                                        ),
+                                      ),
+                                    ),
+                                ],
                                 Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 8, // Reduced
@@ -296,6 +392,7 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                               ],
                             ),
                           ),
+                        ),
                         );
 
                         // Apply slide animation to top item on push

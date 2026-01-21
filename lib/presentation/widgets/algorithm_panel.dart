@@ -38,6 +38,7 @@ class AlgorithmPanel extends StatefulWidget {
   final Future<void> Function(FSA other)? onCompareEquivalence;
   final bool? equivalenceResult;
   final String? equivalenceDetails;
+  final ValueChanged<bool>? onStepByStepModeChanged;
   final FileOperationsService fileService;
 
   AlgorithmPanel({
@@ -60,6 +61,7 @@ class AlgorithmPanel extends StatefulWidget {
     this.onCompareEquivalence,
     this.equivalenceResult,
     this.equivalenceDetails,
+    this.onStepByStepModeChanged,
     FileOperationsService? fileService,
   }) : fileService = fileService ?? FileOperationsService();
 
@@ -592,6 +594,7 @@ class _AlgorithmPanelState extends State<AlgorithmPanel> {
               setState(() {
                 _stepByStepMode = value;
               });
+              widget.onStepByStepModeChanged?.call(value);
             },
           ),
         ],

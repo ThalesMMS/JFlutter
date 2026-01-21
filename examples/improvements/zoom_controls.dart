@@ -200,9 +200,9 @@ class ZoomSlider extends StatelessWidget {
                   value: config.currentZoom,
                   min: config.minZoom,
                   max: config.maxZoom,
-                  divisions: ((config.maxZoom - config.minZoom) /
-                          config.zoomStep)
-                      .round(),
+                  divisions:
+                      ((config.maxZoom - config.minZoom) / config.zoomStep)
+                          .round(),
                   label: '${config.zoomPercent}%',
                   onChanged: (value) {
                     onZoomChanged(config.setZoom(value));
@@ -376,9 +376,7 @@ class FloatingCanvasToolbar extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          if (showMiniMap &&
-              canvasSize != null &&
-              viewport != null) ...[
+          if (showMiniMap && canvasSize != null && viewport != null) ...[
             MiniMap(
               canvasSize: canvasSize!,
               viewport: viewport!,

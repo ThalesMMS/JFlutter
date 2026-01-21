@@ -326,8 +326,9 @@ final algorithmProvider =
 
       return AlgorithmProvider(
         nfaToDfaUseCase: NfaToDfaUseCase(repository),
-        removeLambdaTransitionsUseCase:
-            RemoveLambdaTransitionsUseCase(repository),
+        removeLambdaTransitionsUseCase: RemoveLambdaTransitionsUseCase(
+          repository,
+        ),
         minimizeDfaUseCase: MinimizeDfaUseCase(repository),
         completeDfaUseCase: CompleteDfaUseCase(repository),
         complementDfaUseCase: ComplementDfaUseCase(repository),
@@ -341,7 +342,8 @@ final algorithmProvider =
         fsaToGrammarUseCase: FsaToGrammarUseCase(repository),
         checkEquivalenceUseCase: CheckEquivalenceUseCase(repository),
         simulateWordUseCase: SimulateWordUseCase(repository),
-        createStepByStepSimulationUseCase:
-            CreateStepByStepSimulationUseCase(repository),
+        createStepByStepSimulationUseCase: CreateStepByStepSimulationUseCase(
+          repository,
+        ),
       );
     });

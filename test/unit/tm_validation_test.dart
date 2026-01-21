@@ -14,6 +14,7 @@ import 'package:jflutter/core/models/tm_transition.dart';
 import 'package:jflutter/core/algorithms/tm_simulator.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'dart:math' as math;
+
 void main() {
   group('TM Validation Tests', () {
     late TM binaryToUnaryTM;
@@ -50,10 +51,7 @@ void main() {
         ];
 
         for (final testString in testCases) {
-          final result = TMSimulator.simulate(
-            binaryToUnaryTM,
-            testString,
-          );
+          final result = TMSimulator.simulate(binaryToUnaryTM, testString);
 
           expect(
             result.isSuccess,

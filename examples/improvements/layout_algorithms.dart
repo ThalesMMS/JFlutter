@@ -62,7 +62,8 @@ class CircularLayout implements LayoutAlgorithm {
 
     // Distribuir estados em círculo
     for (var i = 0; i < count; i++) {
-      final angle = (2 * math.pi * i / count) - (math.pi / 2); // Começar no topo
+      final angle =
+          (2 * math.pi * i / count) - (math.pi / 2); // Começar no topo
       final x = centerX + radius * math.cos(angle);
       final y = centerY + radius * math.sin(angle);
       positions[stateIds[i]] = Offset(x, y);
@@ -77,16 +78,14 @@ class HierarchicalLayout implements LayoutAlgorithm {
   final double levelHeight;
   final double nodeSpacing;
 
-  HierarchicalLayout({
-    this.levelHeight = 100.0,
-    this.nodeSpacing = 80.0,
-  });
+  HierarchicalLayout({this.levelHeight = 100.0, this.nodeSpacing = 80.0});
 
   @override
   String get name => 'Hierárquico';
 
   @override
-  String get description => 'Organiza estados em níveis a partir do estado inicial';
+  String get description =>
+      'Organiza estados em níveis a partir do estado inicial';
 
   @override
   Map<String, Offset> computeLayout({
@@ -270,7 +269,8 @@ class ForceDirectedLayout implements LayoutAlgorithm {
 
           final delta = pos1 - pos2;
           final distance = math.max(delta.distance, 1.0);
-          final force = delta / distance * (repulsionStrength / (distance * distance));
+          final force =
+              delta / distance * (repulsionStrength / (distance * distance));
 
           forces[id1] = forces[id1]! + force;
           forces[id2] = forces[id2]! - force;

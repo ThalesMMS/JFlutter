@@ -64,7 +64,8 @@ class JFLAPXMLParser {
 
       for (final stateElement in automatonElement.findElements('state')) {
         final id =
-            stateElement.getAttribute('id') ?? stateElement.getAttribute('name');
+            stateElement.getAttribute('id') ??
+            stateElement.getAttribute('name');
         if (id == null || id.isEmpty) {
           // Ignora estados sem identificador
           continue;
@@ -72,9 +73,11 @@ class JFLAPXMLParser {
 
         final name = stateElement.getAttribute('name') ?? id;
         final xText =
-            stateElement.getAttribute('x') ?? stateElement.getElement('x')?.text;
+            stateElement.getAttribute('x') ??
+            stateElement.getElement('x')?.text;
         final yText =
-            stateElement.getAttribute('y') ?? stateElement.getElement('y')?.text;
+            stateElement.getAttribute('y') ??
+            stateElement.getElement('y')?.text;
         final x = double.tryParse(xText ?? '') ?? 0.0;
         final y = double.tryParse(yText ?? '') ?? 0.0;
         final isInitial = stateElement.findElements('initial').isNotEmpty;
@@ -101,11 +104,19 @@ class JFLAPXMLParser {
         'transition',
       )) {
         final rawFrom =
-            transitionElement.findElements('from').firstOrNull?.innerText.trim() ??
-                '';
+            transitionElement
+                .findElements('from')
+                .firstOrNull
+                ?.innerText
+                .trim() ??
+            '';
         final rawTo =
-            transitionElement.findElements('to').firstOrNull?.innerText.trim() ??
-                '';
+            transitionElement
+                .findElements('to')
+                .firstOrNull
+                ?.innerText
+                .trim() ??
+            '';
         final rawRead =
             transitionElement.findElements('read').firstOrNull?.innerText ?? '';
 
@@ -132,7 +143,8 @@ class JFLAPXMLParser {
         'alphabet': alphabet.toList(),
         'states': states,
         'transitions': transitions,
-        'initialId': initialId ?? (states.isNotEmpty ? states.first['id'] : null),
+        'initialId':
+            initialId ?? (states.isNotEmpty ? states.first['id'] : null),
         'nextId': states.length,
       };
 

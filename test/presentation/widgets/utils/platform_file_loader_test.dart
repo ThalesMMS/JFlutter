@@ -74,10 +74,7 @@ void main() {
     });
 
     test('returns failure when neither bytes nor path are provided', () async {
-      final file = PlatformFile(
-        name: 'automaton.jff',
-        size: 0,
-      );
+      final file = PlatformFile(name: 'automaton.jff', size: 0);
 
       final result = await loadAutomatonFromPlatformFile(service, file);
 
@@ -143,10 +140,7 @@ void main() {
     });
 
     test('returns failure when neither bytes nor path are provided', () async {
-      final file = PlatformFile(
-        name: 'grammar.cfg',
-        size: 0,
-      );
+      final file = PlatformFile(name: 'grammar.cfg', size: 0);
 
       final result = await loadGrammarFromPlatformFile(service, file);
 
@@ -158,11 +152,9 @@ void main() {
 }
 
 class _RecordingFileOperationsService extends FileOperationsService {
-  _RecordingFileOperationsService({
-    FSA? automaton,
-    Grammar? grammar,
-  })  : _automaton = automaton,
-        _grammar = grammar;
+  _RecordingFileOperationsService({FSA? automaton, Grammar? grammar})
+    : _automaton = automaton,
+      _grammar = grammar;
 
   final FSA? _automaton;
   final Grammar? _grammar;

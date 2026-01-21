@@ -18,6 +18,7 @@ import '../../core/algorithms/nfa_to_dfa_converter.dart';
 import '../../core/algorithms/regex_to_nfa_converter.dart';
 import '../../core/models/fsa.dart';
 import '../providers/automaton_provider.dart';
+import '../providers/automaton_state_provider.dart';
 import '../widgets/algorithm_panel.dart';
 import '../widgets/simulation_panel.dart';
 import '../widgets/tablet_layout_container.dart';
@@ -256,7 +257,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
   }
 
   void _pushAutomatonToProvider(FSA automaton) {
-    ref.read(automatonProvider.notifier).updateAutomaton(automaton);
+    ref.read(automatonStateProvider.notifier).updateAutomaton(automaton);
   }
 
   void _compareRegexEquivalence() {
@@ -623,9 +624,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                   ),
                 ),
               ),
-              child: SingleChildScrollView(
-                child: _buildInputArea(),
-              ),
+              child: SingleChildScrollView(child: _buildInputArea()),
             ),
           ),
 
@@ -714,8 +713,9 @@ class _RegexPageState extends ConsumerState<RegexPage> {
       children: [
         Text(
           'Regular Expression',
-          style: Theme.of(context).textTheme.headlineSmall
-              ?.copyWith(fontWeight: FontWeight.bold),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
 
@@ -755,13 +755,11 @@ class _RegexPageState extends ConsumerState<RegexPage> {
               Expanded(
                 child: Text(
                   'Enter a regular expression to validate.',
-                  style: Theme.of(context).textTheme.bodySmall
-                      ?.copyWith(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurfaceVariant
-                            .withOpacity(0.8),
-                      ),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurfaceVariant.withOpacity(0.8),
+                  ),
                 ),
               ),
             ],
@@ -794,10 +792,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
         const SizedBox(height: 24),
 
         // Test string input
-        Text(
-          'Test String:',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
+        Text('Test String:', style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
         TextField(
           controller: _testStringController,
@@ -932,8 +927,9 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                 children: [
                   Text(
                     'Regex Help',
-                    style: Theme.of(context).textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   const Text(

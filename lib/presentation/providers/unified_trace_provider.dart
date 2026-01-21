@@ -103,7 +103,8 @@ class UnifiedTraceState {
 
   /// Get the current simulation step
   SimulationStep? get currentStep {
-    if (currentTrace == null || currentStepIndex >= currentTrace!.steps.length) {
+    if (currentTrace == null ||
+        currentStepIndex >= currentTrace!.steps.length) {
       return null;
     }
     return currentTrace!.steps[currentStepIndex];

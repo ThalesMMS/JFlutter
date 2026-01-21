@@ -18,55 +18,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vector_math/vector_math_64.dart';
 
-import 'package:jflutter/core/entities/automaton_entity.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/fsa_transition.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
-import 'package:jflutter/core/repositories/automaton_repository.dart';
-import 'package:jflutter/core/result.dart';
 import 'package:jflutter/data/services/automaton_service.dart';
 import 'package:jflutter/features/canvas/graphview/graphview_canvas_controller.dart';
 import 'package:jflutter/features/canvas/graphview/graphview_label_field_editor.dart';
-import 'package:jflutter/presentation/providers/automaton_provider.dart';
+import 'package:jflutter/presentation/providers/automaton_state_provider.dart';
 import 'package:jflutter/presentation/widgets/automaton_canvas_tool.dart';
 import 'package:jflutter/presentation/widgets/automaton_graphview_canvas.dart';
 
-class _FakeLayoutRepository implements LayoutRepository {
-  Future<AutomatonResult> _unsupported() async {
-    return ResultFactory.failure('unsupported');
-  }
-
-  @override
-  Future<AutomatonResult> applyAutoLayout(AutomatonEntity automaton) =>
-      _unsupported();
-
-  @override
-  Future<AutomatonResult> applyBalancedLayout(AutomatonEntity automaton) =>
-      _unsupported();
-
-  @override
-  Future<AutomatonResult> applyCompactLayout(AutomatonEntity automaton) =>
-      _unsupported();
-
-  @override
-  Future<AutomatonResult> applyHierarchicalLayout(AutomatonEntity automaton) =>
-      _unsupported();
-
-  @override
-  Future<AutomatonResult> applySpreadLayout(AutomatonEntity automaton) =>
-      _unsupported();
-
-  @override
-  Future<AutomatonResult> centerAutomaton(AutomatonEntity automaton) =>
-      _unsupported();
-}
-
-class _RecordingAutomatonProvider extends AutomatonProvider {
-  _RecordingAutomatonProvider()
-    : super(
-        automatonService: AutomatonService(),
-        layoutRepository: _FakeLayoutRepository(),
-      );
+class _RecordingAutomatonStateNotifier extends AutomatonStateNotifier {
+  _RecordingAutomatonStateNotifier()
+    : super(automatonService: AutomatonService());
 
   final List<Map<String, Object?>> transitionCalls = [];
 
@@ -99,7 +63,9 @@ class _RecordingAutomatonProvider extends AutomatonProvider {
 }
 
 class _RecordingGraphViewCanvasController extends GraphViewCanvasController {
-  _RecordingGraphViewCanvasController({required super.automatonProvider});
+  _RecordingGraphViewCanvasController({
+    required super.automatonStateNotifier,
+  });
 
   int addStateAtCallCount = 0;
   Offset? lastAddStateWorldOffset;
@@ -126,14 +92,14 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('AutomatonGraphViewCanvas gestures', () {
-    late _RecordingAutomatonProvider provider;
+    late _RecordingAutomatonStateNotifier provider;
     late _RecordingGraphViewCanvasController controller;
     late AutomatonCanvasToolController toolController;
 
     setUp(() {
-      provider = _RecordingAutomatonProvider();
+      provider = _RecordingAutomatonStateNotifier();
       controller = _RecordingGraphViewCanvasController(
-        automatonProvider: provider,
+        automatonStateNotifier: provider,
       );
       toolController = AutomatonCanvasToolController(
         AutomatonCanvasTool.addState,
@@ -240,8 +206,9 @@ void main() {
           final transformation =
               controller.graphController.transformationController;
           expect(transformation, isNotNull);
-          final initialMatrix =
-              List<double>.from(transformation!.value.storage);
+          final initialMatrix = List<double>.from(
+            transformation!.value.storage,
+          );
 
           await tester.drag(find.text('A'), const Offset(32, 0));
           await tester.pump();
@@ -261,15 +228,17 @@ void main() {
   });
 
   group('AutomatonGraphViewCanvas', () {
-    late _RecordingAutomatonProvider provider;
+    late _RecordingAutomatonStateNotifier provider;
     late GraphViewCanvasController controller;
     late AutomatonCanvasToolController toolController;
     late automaton_state.State stateA;
     late automaton_state.State stateB;
 
     setUp(() {
-      provider = _RecordingAutomatonProvider();
-      controller = GraphViewCanvasController(automatonProvider: provider);
+      provider = _RecordingAutomatonStateNotifier();
+      controller = GraphViewCanvasController(
+        automatonStateNotifier: provider,
+      );
       toolController = AutomatonCanvasToolController(
         AutomatonCanvasTool.transition,
       );
@@ -336,22 +305,21 @@ void main() {
 
         await pumpCanvas(tester, automaton);
 
-        final sourceGesture =
-            await tester.startGesture(tester.getCenter(find.text('A')));
+        final sourceGesture = await tester.startGesture(
+          tester.getCenter(find.text('A')),
+        );
         await sourceGesture.moveBy(const Offset(1, 1));
         await sourceGesture.up();
         await tester.pump();
 
-        final targetGesture =
-            await tester.startGesture(tester.getCenter(find.text('B')));
+        final targetGesture = await tester.startGesture(
+          tester.getCenter(find.text('B')),
+        );
         await targetGesture.moveBy(const Offset(1, -1));
         await targetGesture.up();
         await tester.pumpAndSettle();
 
-        expect(
-          find.byType(GraphViewLabelFieldEditor),
-          findsOneWidget,
-        );
+        expect(find.byType(GraphViewLabelFieldEditor), findsOneWidget);
       },
     );
 

@@ -5,8 +5,7 @@ import '../../../core/models/grammar.dart';
 import '../../../core/result.dart';
 import '../../../data/services/file_operations_service.dart';
 
-const _kUnreadableFileMessage =
-    'Selected file did not contain readable data.';
+const _kUnreadableFileMessage = 'Selected file did not contain readable data.';
 
 String? _normalizedPath(String? path) {
   if (path == null) {
@@ -52,4 +51,3 @@ Future<Result<Grammar>> loadGrammarFromPlatformFile(
 
   return const Failure<Grammar>(_kUnreadableFileMessage);
 }
-

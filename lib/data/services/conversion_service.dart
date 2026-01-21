@@ -335,10 +335,7 @@ class ConversionRequest {
 
   /// Creates a conversion request for PDA to CFG
   factory ConversionRequest.pdaToCfg({required PDA pda}) {
-    return ConversionRequest(
-      pda: pda,
-      conversionType: ConversionType.pdaToCfg,
-    );
+    return ConversionRequest(pda: pda, conversionType: ConversionType.pdaToCfg);
   }
 }
 

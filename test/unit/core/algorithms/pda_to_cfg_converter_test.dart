@@ -66,49 +66,48 @@ void main() {
 
   String productionToString(Production production) {
     final left = production.leftSide.join(' ');
-    final right = production.isLambda
-        ? 'λ'
-        : production.rightSide.join(' ');
+    final right = production.isLambda ? 'λ' : production.rightSide.join(' ');
     return '$left → $right';
   }
 
   group('PDAtoCFGConverter', () {
-    test('creates terminal productions for transitions that pop without push', () {
-      final initial = buildState('p', isInitial: true);
-      final accept = buildState('q', isAccepting: true);
-      final transition = PDATransition(
-        id: 't0',
-        fromState: initial,
-        toState: accept,
-        label: 'a,Z→ε',
-        inputSymbol: 'a',
-        popSymbol: 'Z',
-        pushSymbol: '',
-        isLambdaPush: true,
-      );
-      final pda = buildPda(
-        states: {initial, accept},
-        transitions: {transition},
-        initial: initial,
-        accepting: {accept},
-      );
+    test(
+      'creates terminal productions for transitions that pop without push',
+      () {
+        final initial = buildState('p', isInitial: true);
+        final accept = buildState('q', isAccepting: true);
+        final transition = PDATransition(
+          id: 't0',
+          fromState: initial,
+          toState: accept,
+          label: 'a,Z→ε',
+          inputSymbol: 'a',
+          popSymbol: 'Z',
+          pushSymbol: '',
+          isLambdaPush: true,
+        );
+        final pda = buildPda(
+          states: {initial, accept},
+          transitions: {transition},
+          initial: initial,
+          accepting: {accept},
+        );
 
-      final result = PDAtoCFGConverter.convert(pda);
-      expect(result, isA<Success<PdaToCfgConversion>>());
-      final conversion = (result as Success<PdaToCfgConversion>).data;
-      final grammar = conversion.grammar;
+        final result = PDAtoCFGConverter.convert(pda);
+        expect(result, isA<Success<PdaToCfgConversion>>());
+        final conversion = (result as Success<PdaToCfgConversion>).data;
+        final grammar = conversion.grammar;
 
-      final productionStrings =
-          grammar.productions.map(productionToString).toSet();
+        final productionStrings = grammar.productions
+            .map(productionToString)
+            .toSet();
 
-      expect(
-        productionStrings,
-        containsAll(<String>{
-          'S → [p, Z, q]',
-          '[p, Z, q] → a',
-        }),
-      );
-    });
+        expect(
+          productionStrings,
+          containsAll(<String>{'S → [p, Z, q]', '[p, Z, q] → a'}),
+        );
+      },
+    );
 
     test('expands pushed strings across intermediate states', () {
       final p = buildState('p', isInitial: true);
@@ -238,13 +237,11 @@ void main() {
       final conversion = (result as Success<PdaToCfgConversion>).data;
       final grammar = conversion.grammar;
 
-      final productionStrings =
-          grammar.productions.map(productionToString).toSet();
+      final productionStrings = grammar.productions
+          .map(productionToString)
+          .toSet();
 
-      expect(
-        productionStrings,
-        contains('[p, Z, q] → λ'),
-      );
+      expect(productionStrings, contains('[p, Z, q] → λ'));
     });
   });
 }

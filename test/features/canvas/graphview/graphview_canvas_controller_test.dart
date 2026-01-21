@@ -16,53 +16,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:graphview/GraphView.dart';
 import 'package:vector_math/vector_math_64.dart';
 
-import 'package:jflutter/core/entities/automaton_entity.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/fsa_transition.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
-import 'package:jflutter/core/repositories/automaton_repository.dart';
-import 'package:jflutter/core/result.dart';
 import 'package:jflutter/data/services/automaton_service.dart';
 import 'package:jflutter/features/canvas/graphview/base_graphview_canvas_controller.dart';
 import 'package:jflutter/features/canvas/graphview/graphview_canvas_controller.dart';
-import 'package:jflutter/presentation/providers/automaton_provider.dart';
+import 'package:jflutter/presentation/providers/automaton_state_provider.dart';
 
-class _FakeLayoutRepository implements LayoutRepository {
-  Future<AutomatonResult> _unsupported() async {
-    return ResultFactory.failure('unsupported');
-  }
-
-  @override
-  Future<AutomatonResult> applyAutoLayout(AutomatonEntity automaton) =>
-      _unsupported();
-
-  @override
-  Future<AutomatonResult> applyBalancedLayout(AutomatonEntity automaton) =>
-      _unsupported();
-
-  @override
-  Future<AutomatonResult> applyCompactLayout(AutomatonEntity automaton) =>
-      _unsupported();
-
-  @override
-  Future<AutomatonResult> applyHierarchicalLayout(AutomatonEntity automaton) =>
-      _unsupported();
-
-  @override
-  Future<AutomatonResult> applySpreadLayout(AutomatonEntity automaton) =>
-      _unsupported();
-
-  @override
-  Future<AutomatonResult> centerAutomaton(AutomatonEntity automaton) =>
-      _unsupported();
-}
-
-class _RecordingAutomatonProvider extends AutomatonProvider {
-  _RecordingAutomatonProvider()
-      : super(
-          automatonService: AutomatonService(),
-          layoutRepository: _FakeLayoutRepository(),
-        );
+class _RecordingAutomatonStateNotifier extends AutomatonStateNotifier {
+  _RecordingAutomatonStateNotifier()
+    : super(automatonService: AutomatonService());
 
   final List<Map<String, Object?>> addStateCalls = [];
   final List<Map<String, Object?>> updateLabelCalls = [];
@@ -97,24 +61,13 @@ class _RecordingAutomatonProvider extends AutomatonProvider {
   }
 
   @override
-  void moveState({
-    required String id,
-    required double x,
-    required double y,
-  }) {
-    moveStateCalls.add({
-      'id': id,
-      'x': x,
-      'y': y,
-    });
+  void moveState({required String id, required double x, required double y}) {
+    moveStateCalls.add({'id': id, 'x': x, 'y': y});
     super.moveState(id: id, x: x, y: y);
   }
 
   @override
-  void updateStateLabel({
-    required String id,
-    required String label,
-  }) {
+  void updateStateLabel({required String id, required String label}) {
     updateLabelCalls.add({'id': id, 'label': label});
     super.updateStateLabel(id: id, label: label);
   }
@@ -149,7 +102,7 @@ class _RecordingAutomatonProvider extends AutomatonProvider {
 
 class _InspectableGraphViewCanvasController extends GraphViewCanvasController {
   _InspectableGraphViewCanvasController({
-    required super.automatonProvider,
+    required super.automatonStateNotifier,
     super.historyLimit,
     super.cacheEvictionThreshold,
   });
@@ -162,7 +115,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('GraphViewCanvasController', () {
-    late _RecordingAutomatonProvider provider;
+    late _RecordingAutomatonStateNotifier provider;
     late GraphViewCanvasController controller;
     late bool controllerDisposed;
     var controllerInitialized = false;
@@ -176,15 +129,15 @@ void main() {
       if (controllerInitialized && !controllerDisposed) {
         controller.dispose();
       }
-      provider = _RecordingAutomatonProvider();
+      provider = _RecordingAutomatonStateNotifier();
       controller = inspectable
           ? _InspectableGraphViewCanvasController(
-              automatonProvider: provider,
+              automatonStateNotifier: provider,
               historyLimit: historyLimit,
               cacheEvictionThreshold: cacheEvictionThreshold,
             )
           : GraphViewCanvasController(
-              automatonProvider: provider,
+              automatonStateNotifier: provider,
               historyLimit: historyLimit,
               cacheEvictionThreshold: cacheEvictionThreshold,
             );
@@ -231,29 +184,33 @@ void main() {
       expect(call['isInitial'], isTrue);
     });
 
-    test('addStateAtCenter converts viewport centre into world coordinates', () {
-      final transformation = controller.graphController.transformationController;
-      expect(transformation, isNotNull);
-      controller.updateViewportSize(const Size(800, 600));
+    test(
+      'addStateAtCenter converts viewport centre into world coordinates',
+      () {
+        final transformation =
+            controller.graphController.transformationController;
+        expect(transformation, isNotNull);
+        controller.updateViewportSize(const Size(800, 600));
 
-      transformation!.value = Matrix4.identity();
-      controller.addStateAtCenter();
+        transformation!.value = Matrix4.identity();
+        controller.addStateAtCenter();
 
-      expect(provider.addStateCalls, hasLength(1));
-      final firstCall = provider.addStateCalls.first;
-      expect(firstCall['x'], closeTo(400, 0.0001));
-      expect(firstCall['y'], closeTo(300, 0.0001));
+        expect(provider.addStateCalls, hasLength(1));
+        final firstCall = provider.addStateCalls.first;
+        expect(firstCall['x'], closeTo(400, 0.0001));
+        expect(firstCall['y'], closeTo(300, 0.0001));
 
-      transformation.value = Matrix4.identity()
-        ..translate(150.0, -50.0)
-        ..scale(1.5);
-      controller.addStateAtCenter();
+        transformation.value = Matrix4.identity()
+          ..translate(150.0, -50.0)
+          ..scale(1.5);
+        controller.addStateAtCenter();
 
-      expect(provider.addStateCalls, hasLength(2));
-      final secondCall = provider.addStateCalls.last;
-      expect(secondCall['x'], closeTo((400 - 150) / 1.5, 0.0001));
-      expect(secondCall['y'], closeTo((300 - (-50)) / 1.5, 0.0001));
-    });
+        expect(provider.addStateCalls, hasLength(2));
+        final secondCall = provider.addStateCalls.last;
+        expect(secondCall['x'], closeTo((400 - 150) / 1.5, 0.0001));
+        expect(secondCall['y'], closeTo((300 - (-50)) / 1.5, 0.0001));
+      },
+    );
 
     test('moveState forwards coordinates to provider', () {
       controller.addStateAt(const Offset(0, 0));
@@ -407,7 +364,10 @@ void main() {
       expect(controller.canUndo, isFalse);
       expect(controller.undo(), isFalse);
       expect(provider.state.currentAutomaton?.id, equals('auto_b'));
-      expect(controller.graphRevision.value, greaterThan(revisionBeforeExternalSync));
+      expect(
+        controller.graphRevision.value,
+        greaterThan(revisionBeforeExternalSync),
+      );
     });
 
     test('enforces undo history limit by discarding oldest entries', () {
@@ -441,10 +401,7 @@ void main() {
     });
 
     test('evicts caches when snapshot exceeds configured threshold', () {
-      recreateController(
-        cacheEvictionThreshold: 1,
-        inspectable: true,
-      );
+      recreateController(cacheEvictionThreshold: 1, inspectable: true);
       final inspectable = controller as _InspectableGraphViewCanvasController;
 
       provider.updateAutomaton(

@@ -59,11 +59,16 @@ class RetryButton extends StatelessWidget {
                     height: 18,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(colorScheme.onPrimary),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        colorScheme.onPrimary,
+                      ),
                     ),
                   )
-                : Icon(icon, key: const ValueKey('retry_button_icon'), size: 20),
+                : Icon(
+                    icon,
+                    key: const ValueKey('retry_button_icon'),
+                    size: 20,
+                  ),
           ),
           label: Text(isLoading ? 'Retrying...' : label),
         ),

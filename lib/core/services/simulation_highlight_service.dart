@@ -17,14 +17,15 @@ import '../models/simulation_result.dart';
 import '../models/simulation_step.dart';
 
 /// Provides access to the highlight service associated with the active canvas.
-final canvasHighlightServiceProvider = Provider<SimulationHighlightService>((ref) {
+final canvasHighlightServiceProvider = Provider<SimulationHighlightService>((
+  ref,
+) {
   return SimulationHighlightService();
 });
 
 /// Utility responsible for deriving and broadcasting simulation highlights.
-typedef SimulationHighlightDispatcher = void Function(
-  SimulationHighlight highlight,
-);
+typedef SimulationHighlightDispatcher =
+    void Function(SimulationHighlight highlight);
 
 /// Destination that consumes highlight payloads emitted by the
 /// [SimulationHighlightService].
@@ -63,14 +64,15 @@ class SimulationHighlightService {
   SimulationHighlightService({
     SimulationHighlightChannel? channel,
     SimulationHighlightDispatcher? dispatcher,
-  })  : assert(
-          channel == null || dispatcher == null,
-          'Pass either a channel or a dispatcher, not both.',
-        ),
-        _channel = channel ??
-            (dispatcher == null
-                ? null
-                : FunctionSimulationHighlightChannel(dispatcher));
+  }) : assert(
+         channel == null || dispatcher == null,
+         'Pass either a channel or a dispatcher, not both.',
+       ),
+       _channel =
+           channel ??
+           (dispatcher == null
+               ? null
+               : FunctionSimulationHighlightChannel(dispatcher));
 
   SimulationHighlightChannel? _channel;
   int _dispatchCount = 0;
@@ -94,7 +96,9 @@ class SimulationHighlightService {
     int stepIndex,
   ) {
     if (result == null) {
-      _logHighlightEvent('Skipping highlight computation: no simulation result');
+      _logHighlightEvent(
+        'Skipping highlight computation: no simulation result',
+      );
       return SimulationHighlight.empty;
     }
     return computeFromSteps(result.steps, stepIndex);
@@ -143,10 +147,7 @@ class SimulationHighlightService {
   }
 
   /// Emits a highlight event derived from [result] and [stepIndex].
-  SimulationHighlight emitFromResult(
-    SimulationResult? result,
-    int stepIndex,
-  ) {
+  SimulationHighlight emitFromResult(SimulationResult? result, int stepIndex) {
     final highlight = computeFromResult(result, stepIndex);
     _logHighlightEvent(
       'Computed highlight from result at step $stepIndex (states: ${highlight.stateIds.length}, transitions: ${highlight.transitionIds.length})',
@@ -156,10 +157,7 @@ class SimulationHighlightService {
   }
 
   /// Emits a highlight event derived from [steps] and [stepIndex].
-  SimulationHighlight emitFromSteps(
-    List<SimulationStep> steps,
-    int stepIndex,
-  ) {
+  SimulationHighlight emitFromSteps(List<SimulationStep> steps, int stepIndex) {
     final highlight = computeFromSteps(steps, stepIndex);
     _logHighlightEvent(
       'Computed highlight from steps at index $stepIndex (states: ${highlight.stateIds.length}, transitions: ${highlight.transitionIds.length})',

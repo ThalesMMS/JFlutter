@@ -96,9 +96,7 @@ class DeterminismInfo {
       }
 
       symbols.addAll(
-        symbolCounts.entries
-            .where((e) => e.value > 1)
-            .map((e) => e.key),
+        symbolCounts.entries.where((e) => e.value > 1).map((e) => e.key),
       );
     }
     return symbols.toList()..sort();
@@ -160,11 +158,7 @@ class AutomatonTypeBadge extends StatelessWidget {
             ),
             if (onTap != null && !isMobile && !compact) ...[
               const SizedBox(width: 4),
-              const Icon(
-                Icons.help_outline,
-                color: Colors.white,
-                size: 14,
-              ),
+              const Icon(Icons.help_outline, color: Colors.white, size: 14),
             ],
           ],
         ),
@@ -178,11 +172,7 @@ class NonDeterminismPanel extends StatelessWidget {
   final DeterminismInfo info;
   final VoidCallback? onClose;
 
-  const NonDeterminismPanel({
-    super.key,
-    required this.info,
-    this.onClose,
-  });
+  const NonDeterminismPanel({super.key, required this.info, this.onClose});
 
   @override
   Widget build(BuildContext context) {
@@ -353,9 +343,7 @@ class NonDeterminismPanel extends StatelessWidget {
       children: [
         Icon(icon, size: 20, color: color),
         const SizedBox(width: 8),
-        Expanded(
-          child: Text(label),
-        ),
+        Expanded(child: Text(label)),
       ],
     );
   }
@@ -365,10 +353,7 @@ class NonDeterminismPanel extends StatelessWidget {
 class FSADeterminismOverlay extends StatefulWidget {
   final FSA? automaton;
 
-  const FSADeterminismOverlay({
-    super.key,
-    required this.automaton,
-  });
+  const FSADeterminismOverlay({super.key, required this.automaton});
 
   @override
   State<FSADeterminismOverlay> createState() => _FSADeterminismOverlayState();

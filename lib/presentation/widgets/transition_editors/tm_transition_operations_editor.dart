@@ -29,7 +29,8 @@ class TmTransitionOperationsEditor extends StatefulWidget {
     required String readSymbol,
     required String writeSymbol,
     required TapeDirection direction,
-  }) onSubmit;
+  })
+  onSubmit;
   final VoidCallback onCancel;
 
   @override
@@ -39,10 +40,12 @@ class TmTransitionOperationsEditor extends StatefulWidget {
 
 class _TmTransitionOperationsEditorState
     extends State<TmTransitionOperationsEditor> {
-  late final TextEditingController _readController =
-      TextEditingController(text: widget.initialRead);
-  late final TextEditingController _writeController =
-      TextEditingController(text: widget.initialWrite);
+  late final TextEditingController _readController = TextEditingController(
+    text: widget.initialRead,
+  );
+  late final TextEditingController _writeController = TextEditingController(
+    text: widget.initialWrite,
+  );
   late TapeDirection _direction = widget.initialDirection;
 
   @override

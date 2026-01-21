@@ -14,6 +14,7 @@ import 'package:jflutter/core/models/fsa_transition.dart';
 import 'package:jflutter/core/algorithms/equivalence_checker.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'dart:math' as math;
+
 void main() {
   group('Equivalence Checker Validation Tests', () {
     late FSA dfa1;
@@ -109,7 +110,10 @@ void main() {
 
       test('DFA and NFA with different languages should not be equivalent', () {
         // Use nonEquivalentDFA which has a different language
-        final isEquivalent = EquivalenceChecker.areEquivalent(nfa1, nonEquivalentDFA);
+        final isEquivalent = EquivalenceChecker.areEquivalent(
+          nfa1,
+          nonEquivalentDFA,
+        );
 
         expect(
           isEquivalent,

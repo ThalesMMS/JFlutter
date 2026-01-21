@@ -86,8 +86,9 @@ class _TabletLayoutContainerState extends State<TabletLayoutContainer> {
                               ),
                           ],
                           labelColor: Theme.of(context).colorScheme.primary,
-                          unselectedLabelColor:
-                              Theme.of(context).colorScheme.onSurfaceVariant,
+                          unselectedLabelColor: Theme.of(
+                            context,
+                          ).colorScheme.onSurfaceVariant,
                           indicatorColor: Theme.of(context).colorScheme.primary,
                         ),
                         Expanded(
@@ -119,23 +120,25 @@ class _TabletLayoutContainerState extends State<TabletLayoutContainer> {
               ),
           ],
         ),
-        
+
         // Toggle Button
         Positioned(
           right: _isSidebarExpanded ? null : 16,
-          left: _isSidebarExpanded ? null : null, // Handled by right alignment when collapsed
+          left: _isSidebarExpanded
+              ? null
+              : null, // Handled by right alignment when collapsed
           top: 24,
-          child: _isSidebarExpanded 
-            ? const SizedBox.shrink() // Don't show floating button when expanded, maybe put it inside sidebar?
-            : FloatingActionButton.small(
-                onPressed: () => setState(() => _isSidebarExpanded = true),
-                child: const Icon(Icons.menu_open),
-              ),
+          child: _isSidebarExpanded
+              ? const SizedBox.shrink() // Don't show floating button when expanded, maybe put it inside sidebar?
+              : FloatingActionButton.small(
+                  onPressed: () => setState(() => _isSidebarExpanded = true),
+                  child: const Icon(Icons.menu_open),
+                ),
         ),
-        
+
         // Collapse Button (inside sidebar if expanded)
         if (_isSidebarExpanded)
-           Positioned(
+          Positioned(
             right: 24,
             top: 24,
             child: IconButton(
@@ -143,7 +146,9 @@ class _TabletLayoutContainerState extends State<TabletLayoutContainer> {
               tooltip: 'Collapse Sidebar',
               onPressed: () => setState(() => _isSidebarExpanded = false),
               style: IconButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                backgroundColor: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest,
               ),
             ),
           ),

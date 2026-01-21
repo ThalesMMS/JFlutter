@@ -18,8 +18,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/features/canvas/graphview/graphview_label_field_editor.dart';
 
 void main() {
-  testWidgets('GraphViewLabelFieldEditor submits value on Enter',
-      (tester) async {
+  testWidgets('GraphViewLabelFieldEditor submits value on Enter', (
+    tester,
+  ) async {
     String? submitted;
 
     await tester.pumpWidget(
@@ -42,8 +43,7 @@ void main() {
     expect(submitted, 'q1');
   });
 
-  testWidgets('GraphViewLabelFieldEditor cancels on Escape',
-      (tester) async {
+  testWidgets('GraphViewLabelFieldEditor cancels on Escape', (tester) async {
     var canceled = false;
 
     await tester.pumpWidget(
@@ -66,8 +66,9 @@ void main() {
     expect(canceled, isTrue);
   });
 
-  testWidgets('GraphViewLabelFieldEditor cancels when focus is lost',
-      (tester) async {
+  testWidgets('GraphViewLabelFieldEditor cancels when focus is lost', (
+    tester,
+  ) async {
     var canceled = false;
 
     await tester.pumpWidget(

@@ -112,7 +112,8 @@ void main() {
     });
 
     test('addStateAtCenter maps viewport centre to PDA world coordinates', () {
-      final transformation = controller.graphController.transformationController;
+      final transformation =
+          controller.graphController.transformationController;
       expect(transformation, isNotNull);
       controller.updateViewportSize(const Size(700, 500));
 

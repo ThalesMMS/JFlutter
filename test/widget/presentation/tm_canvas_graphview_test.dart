@@ -40,9 +40,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            tmEditorProvider.overrideWith((ref) => notifier),
-          ],
+          overrides: [tmEditorProvider.overrideWith((ref) => notifier)],
           child: MaterialApp(
             home: Scaffold(
               body: TMCanvasGraphView(
@@ -74,8 +72,10 @@ void main() {
       );
 
       await tester.pumpAndSettle();
-      expect(find.textContaining('${states.first.id} → ${states.last.id}'),
-          findsOneWidget);
+      expect(
+        find.textContaining('${states.first.id} → ${states.last.id}'),
+        findsOneWidget,
+      );
       expect(delivered, isNotEmpty);
     });
   });

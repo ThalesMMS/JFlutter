@@ -308,7 +308,7 @@ class GrammarProvider extends StateNotifier<GrammarState> {
 
   Future<Result<PDA>> _performPdaConversion({
     required ConversionRequest Function({required Grammar grammar})
-        requestBuilder,
+    requestBuilder,
     required Result<dynamic> Function(ConversionRequest request) converter,
     required GrammarConversionType conversionType,
   }) async {
@@ -332,9 +332,7 @@ class GrammarProvider extends StateNotifier<GrammarState> {
       activeConversion: conversionType,
     );
 
-    final serviceResult = converter(
-      requestBuilder(grammar: grammar),
-    );
+    final serviceResult = converter(requestBuilder(grammar: grammar));
 
     final result = _mapDynamicResultToPda(serviceResult);
 

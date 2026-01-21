@@ -17,6 +17,7 @@ import 'package:jflutter/core/models/grammar.dart';
 import 'package:jflutter/core/models/production.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'dart:math' as math;
+
 void main() {
   group('PDA Validation Tests', () {
     late PDA balancedParenthesesPDA;

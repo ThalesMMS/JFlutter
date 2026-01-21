@@ -44,10 +44,14 @@ Future<void> showCanvasContextActions({
             ),
             const Divider(height: 0),
             ListTile(
-              leading: Icon(Icons.add_circle_outline, color: colorScheme.primary),
+              leading: Icon(
+                Icons.add_circle_outline,
+                color: colorScheme.primary,
+              ),
               title: const Text('Add state'),
-              subtitle:
-                  canAddState ? null : const Text('There is already an item here'),
+              subtitle: canAddState
+                  ? null
+                  : const Text('There is already an item here'),
               enabled: canAddState,
               onTap: () {
                 Navigator.of(sheetContext).pop();

@@ -205,9 +205,8 @@ class _DesktopToolbar extends StatelessWidget {
                           backgroundColor: isToggle
                               ? (isSelected
                                     ? colorScheme.primaryContainer
-                                    : colorScheme.surfaceContainerHighest.withOpacity(
-                                        0.18,
-                                      ))
+                                    : colorScheme.surfaceContainerHighest
+                                          .withOpacity(0.18))
                               : null,
                           foregroundColor: isToggle
                               ? (isSelected

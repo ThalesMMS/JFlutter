@@ -86,8 +86,9 @@ void main() {
       final nodeIds = snapshot.nodes.map((node) => node.id).toSet();
       expect(nodeIds, containsAll({'q0', 'q1'}));
 
-      final encodedInitial =
-          snapshot.nodes.firstWhere((node) => node.id == 'q0');
+      final encodedInitial = snapshot.nodes.firstWhere(
+        (node) => node.id == 'q0',
+      );
       expect(encodedInitial.isInitial, isTrue);
       expect(encodedInitial.x, closeTo(0, 0.0001));
       expect(encodedInitial.y, closeTo(0, 0.0001));
@@ -157,10 +158,12 @@ void main() {
       final rebuilt = GraphViewPdaMapper.mergeIntoTemplate(snapshot, template);
 
       expect(rebuilt.states.length, equals(2));
-      final rebuiltInitial =
-          rebuilt.states.firstWhere((state) => state.id == 'q0');
-      final rebuiltAccepting =
-          rebuilt.states.firstWhere((state) => state.id == 'q1');
+      final rebuiltInitial = rebuilt.states.firstWhere(
+        (state) => state.id == 'q0',
+      );
+      final rebuiltAccepting = rebuilt.states.firstWhere(
+        (state) => state.id == 'q1',
+      );
       expect(rebuiltInitial.position.x, closeTo(12, 0.0001));
       expect(rebuiltInitial.position.y, closeTo(18, 0.0001));
       expect(rebuiltAccepting.isAccepting, isTrue);

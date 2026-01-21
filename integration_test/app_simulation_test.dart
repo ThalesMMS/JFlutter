@@ -31,7 +31,9 @@ void main() {
     );
 
     final examplesDataSource = ExamplesAssetDataSource();
-    final exampleResult = await examplesDataSource.loadExample('AFD - Termina com A');
+    final exampleResult = await examplesDataSource.loadExample(
+      'AFD - Termina com A',
+    );
     expect(
       exampleResult.isSuccess,
       isTrue,
@@ -39,9 +41,15 @@ void main() {
     );
 
     final automaton = exampleResult.data?.automaton;
-    expect(automaton, isNotNull, reason: 'The loaded example should contain an automaton.');
+    expect(
+      automaton,
+      isNotNull,
+      reason: 'The loaded example should contain an automaton.',
+    );
 
-    container.read(automatonProvider.notifier).replaceCurrentAutomaton(automaton!);
+    container
+        .read(automatonProvider.notifier)
+        .replaceCurrentAutomaton(automaton!);
     await tester.pumpAndSettle();
 
     // Open the simulation sheet through the quick action.

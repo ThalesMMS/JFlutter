@@ -13,20 +13,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/algorithms/grammar_parser.dart';
 import '../../core/models/grammar.dart';
 import '../../core/result.dart';
-import '../../core/services/simulation_highlight_service.dart';
 import '../providers/grammar_provider.dart';
-import 'base_simulation_panel.dart';
 
 /// Panel for grammar parsing and string testing
 class GrammarSimulationPanel extends ConsumerStatefulWidget {
-  final bool useExpanded;
-  final SimulationHighlightService highlightService;
+  const GrammarSimulationPanel({super.key, this.useExpanded = true});
 
-  GrammarSimulationPanel({
-    super.key,
-    this.useExpanded = true,
-    SimulationHighlightService? highlightService,
-  }) : highlightService = highlightService ?? SimulationHighlightService();
+  final bool useExpanded;
 
   @override
   ConsumerState<GrammarSimulationPanel> createState() =>
@@ -34,18 +27,19 @@ class GrammarSimulationPanel extends ConsumerStatefulWidget {
 }
 
 class _GrammarSimulationPanelState
-    extends BaseConsumerSimulationPanelState<GrammarSimulationPanel> {
+    extends ConsumerState<GrammarSimulationPanel> {
+  final TextEditingController _inputController = TextEditingController();
+
+  bool _isParsing = false;
   String? _parseResult;
   List<String> _parseSteps = [];
   Duration? _executionTime;
   String _selectedAlgorithm = 'CYK';
 
   @override
-  SimulationHighlightService get highlightService => widget.highlightService;
-
-  @override
-  void simulate() {
-    _parseString();
+  void dispose() {
+    _inputController.dispose();
+    super.dispose();
   }
 
   @override
@@ -149,7 +143,7 @@ class _GrammarSimulationPanelState
           ),
           const SizedBox(height: 8),
           TextField(
-            controller: inputController,
+            controller: _inputController,
             decoration: const InputDecoration(
               labelText: 'Input String',
               hintText: 'e.g., aabb, abab, ε',
@@ -175,15 +169,15 @@ class _GrammarSimulationPanelState
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        onPressed: isSimulating ? null : _parseString,
-        icon: isSimulating
+        onPressed: _isParsing ? null : _parseString,
+        icon: _isParsing
             ? const SizedBox(
                 width: 16,
                 height: 16,
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
             : const Icon(Icons.play_arrow),
-        label: Text(isSimulating ? 'Parsing...' : 'Parse String'),
+        label: Text(_isParsing ? 'Parsing...' : 'Parse String'),
       ),
     );
   }
@@ -332,17 +326,17 @@ class _GrammarSimulationPanelState
   }
 
   Future<void> _parseString() async {
-    final inputString = inputController.text.trim();
+    final inputString = _inputController.text.trim();
 
     if (inputString.isEmpty) {
-      showError(context, 'Please enter a string to parse');
+      _showError('Please enter a string to parse');
       return;
     }
 
     final grammar = _buildCurrentGrammar();
 
     setState(() {
-      isSimulating = true;
+      _isParsing = true;
       _parseResult = null;
       _parseSteps.clear();
       _executionTime = null;
@@ -363,12 +357,12 @@ class _GrammarSimulationPanelState
 
       if (!parseOutcome.isSuccess) {
         setState(() {
-          isSimulating = false;
+          _isParsing = false;
           _parseResult = null;
           _parseSteps = [];
           _executionTime = null;
         });
-        showError(context, parseOutcome.error ?? 'Failed to parse string');
+        _showError(parseOutcome.error ?? 'Failed to parse string');
         return;
       }
 
@@ -376,14 +370,14 @@ class _GrammarSimulationPanelState
       final steps = _buildParseSteps(parseResult);
 
       setState(() {
-        isSimulating = false;
+        _isParsing = false;
         _parseResult = parseResult.accepted ? 'Accepted' : 'Rejected';
         _parseSteps = steps;
         _executionTime = parseResult.executionTime;
       });
 
       if (!parseResult.accepted && parseResult.errorMessage != null) {
-        showError(context, parseResult.errorMessage!);
+        _showError(parseResult.errorMessage!);
       }
     } catch (e) {
       if (!mounted) {
@@ -391,13 +385,13 @@ class _GrammarSimulationPanelState
       }
 
       setState(() {
-        isSimulating = false;
+        _isParsing = false;
         _parseResult = null;
         _parseSteps = [];
         _executionTime = null;
       });
 
-      showError(context, 'Failed to parse string: $e');
+      _showError('Failed to parse string: $e');
     }
   }
 
@@ -445,5 +439,14 @@ class _GrammarSimulationPanelState
       return '${duration.inMilliseconds} ms';
     }
     return '${duration.inSeconds}.${(duration.inMilliseconds % 1000).toString().padLeft(3, '0')} s';
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ),
+    );
   }
 }

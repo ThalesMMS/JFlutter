@@ -23,11 +23,7 @@ class TMTraceViewer extends StatelessWidget {
   final TMSimulationResult result;
   final SimulationHighlightService? highlightService;
 
-  const TMTraceViewer({
-    super.key,
-    required this.result,
-    this.highlightService,
-  });
+  const TMTraceViewer({super.key, required this.result, this.highlightService});
 
   @override
   Widget build(BuildContext context) {

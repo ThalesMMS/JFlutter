@@ -1,66 +1,88 @@
 //
-//  automaton_provider.dart
+//  automaton_state_provider.dart
 //  JFlutter
 //
-//  Centraliza a gestão reativa dos autômatos exibidos no editor visual,
-//  integrando serviços de domínio, algoritmos e persistência para manter
-//  estados, transições, layouts e indicadores de carregamento coerentes com as
-//  interações do usuário, incluindo operações de simulação e conversão.
+//  Manages state CRUD operations for automata including states, transitions,
+//  and history tracking. Extracted from AutomatonProvider to follow single
+//  responsibility principle and improve testability.
 //
-//  Thales Matheus Mendonça Santos - October 2025
+//  Thales Matheus Mendonça Santos - January 2026
 //
 import 'dart:math';
+
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vector_math/vector_math_64.dart';
-import '../../core/algorithms/automaton_simulator.dart';
-import '../../core/algorithms/dfa_completer.dart';
-import '../../core/algorithms/dfa_minimizer.dart';
-import '../../core/algorithms/equivalence_checker.dart';
-import '../../core/algorithms/fa_to_regex_converter.dart';
-import '../../core/algorithms/fsa_to_grammar_converter.dart';
-import '../../core/algorithms/nfa_to_dfa_converter.dart';
-import '../../core/algorithms/regex_to_nfa_converter.dart';
+
+import '../../core/constants/automaton_canvas.dart';
+import '../../core/entities/automaton_entity.dart';
 import '../../core/models/fsa.dart';
 import '../../core/models/fsa_transition.dart';
 import '../../core/models/state.dart';
 import '../../core/models/transition.dart';
 import '../../core/utils/epsilon_utils.dart';
-import '../../core/constants/automaton_canvas.dart';
-import '../../core/models/grammar.dart';
-import '../../core/models/simulation_result.dart' as sim_result;
-import '../../core/entities/automaton_entity.dart';
 import '../../data/services/automaton_service.dart';
-import '../../core/repositories/automaton_repository.dart';
-import '../../core/services/trace_persistence_service.dart';
-import '../../features/layout/layout_repository_impl.dart';
-import '../../features/canvas/graphview/graphview_canvas_controller.dart';
-import 'automaton_state_provider.dart';
 
-/// Provider for automaton state management
-@deprecated
-class AutomatonProvider extends StateNotifier<AutomatonState> {
+/// State for automaton CRUD operations
+class AutomatonStateProviderState {
+  final FSA? currentAutomaton;
+  final List<FSA> automatonHistory;
+  final bool isLoading;
+  final String? error;
+
+  const AutomatonStateProviderState({
+    this.currentAutomaton,
+    this.automatonHistory = const [],
+    this.isLoading = false,
+    this.error,
+  });
+
+  static const _unset = Object();
+
+  AutomatonStateProviderState copyWith({
+    Object? currentAutomaton = _unset,
+    List<FSA>? automatonHistory,
+    bool? isLoading,
+    Object? error = _unset,
+  }) {
+    return AutomatonStateProviderState(
+      currentAutomaton: currentAutomaton == _unset
+          ? this.currentAutomaton
+          : currentAutomaton as FSA?,
+      automatonHistory: automatonHistory ?? this.automatonHistory,
+      isLoading: isLoading ?? this.isLoading,
+      error: error == _unset ? this.error : error as String?,
+    );
+  }
+
+  /// Clear all state and reset to initial
+  AutomatonStateProviderState clear() {
+    return const AutomatonStateProviderState();
+  }
+
+  /// Clear only error state
+  AutomatonStateProviderState clearError() {
+    return copyWith(error: null);
+  }
+}
+
+/// State notifier for automaton CRUD operations
+class AutomatonStateNotifier
+    extends StateNotifier<AutomatonStateProviderState> {
   final AutomatonService _automatonService;
-  final LayoutRepository _layoutRepository;
-  final TracePersistenceService? _tracePersistenceService;
   int _graphViewMutationCounter = 0;
 
-  AutomatonProvider({
-    required AutomatonService automatonService,
-    required LayoutRepository layoutRepository,
-    TracePersistenceService? tracePersistenceService,
-  }) : _automatonService = automatonService,
-       _layoutRepository = layoutRepository,
-       _tracePersistenceService = tracePersistenceService,
-       super(const AutomatonState());
+  AutomatonStateNotifier({required AutomatonService automatonService})
+    : _automatonService = automatonService,
+      super(const AutomatonStateProviderState());
 
   void _traceGraphView(String operation, [Map<String, Object?>? metadata]) {
     if (!kDebugMode) {
       return;
     }
 
-    final buffer = StringBuffer('[AutomatonProvider] $operation');
+    final buffer = StringBuffer('[AutomatonStateProvider] $operation');
     if (metadata != null && metadata.isNotEmpty) {
       final formatted = metadata.entries
           .map((entry) => '${entry.key}=${entry.value}')
@@ -115,11 +137,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
 
   /// Updates the current automaton
   void updateAutomaton(FSA automaton) {
-    state = state.copyWith(
-      currentAutomaton: automaton,
-      equivalenceResult: null,
-      equivalenceDetails: null,
-    );
+    state = state.copyWith(currentAutomaton: automaton);
   }
 
   /// Adds a new state or updates an existing one using coordinates supplied by
@@ -596,6 +614,29 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     });
   }
 
+  /// Clears the current automaton
+  void clearAutomaton() {
+    state = state.copyWith(currentAutomaton: null, error: null);
+  }
+
+  /// Clears any error messages
+  void clearError() {
+    state = state.clearError();
+  }
+
+  /// Clear all state and reset to initial
+  void clearAll() {
+    state = state.clear();
+  }
+
+  /// Get automaton from history
+  FSA? getAutomatonFromHistory(int index) {
+    if (index < 0 || index >= state.automatonHistory.length) return null;
+    return state.automatonHistory[index];
+  }
+
+  // Private helper methods
+
   void _mutateAutomaton(FSA Function(FSA current) transform) {
     final current = state.currentAutomaton ?? _createEmptyAutomaton();
     final updated = transform(current);
@@ -614,15 +655,7 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       'alphabet': updated.alphabet.length,
     });
 
-    state = state.copyWith(
-      currentAutomaton: updated,
-      simulationResult: null,
-      regexResult: null,
-      grammarResult: null,
-      equivalenceResult: null,
-      equivalenceDetails: null,
-      error: null,
-    );
+    state = state.copyWith(currentAutomaton: updated, error: null);
   }
 
   Set<FSATransition> _rebindTransitions(
@@ -724,366 +757,36 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     );
   }
 
-  /// Simulates the current automaton with input string
-  Future<void> simulateAutomaton(String inputString) async {
-    if (state.currentAutomaton == null) return;
-
-    state = state.copyWith(
-      isLoading: true,
-      error: null,
-      equivalenceResult: null,
-      equivalenceDetails: null,
-    );
-
-    try {
-      // Use the core algorithm directly
-      final result = await AutomatonSimulator.simulate(
-        state.currentAutomaton!,
-        inputString,
-        stepByStep: true,
-        timeout: const Duration(seconds: 5),
-      );
-
-      if (result.isSuccess) {
-        _addSimulationToHistory(result.data!);
-        state = state.copyWith(simulationResult: result.data, isLoading: false);
-      } else {
-        state = state.copyWith(isLoading: false, error: result.error);
-      }
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Error simulating automaton: $e',
-      );
-    }
-  }
-
-  /// Converts NFA to DFA
-  Future<void> convertNfaToDfa() async {
-    if (state.currentAutomaton == null) return;
-
-    state = state.copyWith(
-      isLoading: true,
-      error: null,
-      equivalenceResult: null,
-      equivalenceDetails: null,
-    );
-
-    try {
-      // Use the core algorithm directly
-      final result = NFAToDFAConverter.convert(state.currentAutomaton!);
-
-      if (result.isSuccess) {
-        state = state.copyWith(
-          currentAutomaton: result.data,
-          isLoading: false,
-          simulationResult: null,
-        );
-      } else {
-        state = state.copyWith(isLoading: false, error: result.error);
-      }
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Error converting NFA to DFA: $e',
-      );
-    }
-  }
-
-  /// Minimizes DFA
-  Future<void> minimizeDfa() async {
-    if (state.currentAutomaton == null) return;
-
-    state = state.copyWith(
-      isLoading: true,
-      error: null,
-      equivalenceResult: null,
-      equivalenceDetails: null,
-    );
-
-    try {
-      // Use the core algorithm directly
-      final result = DFAMinimizer.minimize(state.currentAutomaton!);
-
-      if (result.isSuccess) {
-        state = state.copyWith(
-          currentAutomaton: result.data,
-          isLoading: false,
-          simulationResult: null,
-        );
-      } else {
-        state = state.copyWith(isLoading: false, error: result.error);
-      }
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Error minimizing DFA: $e',
-      );
-    }
-  }
-
-  /// Completes DFA
-  Future<void> completeDfa() async {
-    if (state.currentAutomaton == null) return;
-
-    state = state.copyWith(
-      isLoading: true,
-      error: null,
-      equivalenceResult: null,
-      equivalenceDetails: null,
-    );
-
-    try {
-      final result = DFACompleter.complete(state.currentAutomaton!);
-      state = state.copyWith(
-        currentAutomaton: result,
-        isLoading: false,
-        simulationResult: null,
-      );
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Error completing DFA: $e',
-      );
-    }
-  }
-
-  /// Converts FSA to Grammar
-  Future<Grammar?> convertFsaToGrammar() async {
-    if (state.currentAutomaton == null) return null;
-
-    state = state.copyWith(isLoading: true, error: null);
-
-    try {
-      final result = FSAToGrammarConverter.convert(state.currentAutomaton!);
-      state = state.copyWith(isLoading: false, grammarResult: result);
-      return result;
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Error converting FSA to Grammar: $e',
-      );
-      return null;
-    }
-  }
-
-  /// Applies auto layout
-  Future<void> applyAutoLayout() async {
-    if (state.currentAutomaton == null) return;
-
-    state = state.copyWith(
-      isLoading: true,
-      error: null,
-      equivalenceResult: null,
-      equivalenceDetails: null,
-    );
-
-    try {
-      // Convert FSA to AutomatonEntity for layout repository
-      final automatonEntity = _convertFsaToEntity(state.currentAutomaton!);
-      final result = await _layoutRepository.applyAutoLayout(automatonEntity);
-
-      if (result.isSuccess) {
-        // Convert back to FSA
-        final updatedFsa = _convertEntityToFsa(result.data!);
-        state = state.copyWith(
-          currentAutomaton: updatedFsa,
-          isLoading: false,
-          simulationResult: null,
-        );
-      } else {
-        state = state.copyWith(isLoading: false, error: result.error);
-      }
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Error applying auto layout: $e',
-      );
-    }
-  }
-
-  /// Returns the current automaton as a domain entity when available.
+  /// Legacy compatibility: Get current automaton as AutomatonEntity
+  /// This is used by the old algorithm_provider.dart infrastructure
   AutomatonEntity? get currentAutomatonEntity {
     final current = state.currentAutomaton;
     if (current == null) return null;
     return _convertFsaToEntity(current);
   }
 
-  /// Converts the provided FSA to its [AutomatonEntity] representation.
-  AutomatonEntity convertFsaToEntity(FSA automaton) {
-    return _convertFsaToEntity(automaton);
+  /// Legacy compatibility: Convert FSA to AutomatonEntity
+  AutomatonEntity convertFsaToEntity(FSA fsa) {
+    return _convertFsaToEntity(fsa);
   }
 
-  /// Converts the provided [AutomatonEntity] back to an [FSA].
+  /// Legacy compatibility: Convert AutomatonEntity to FSA
   FSA convertEntityToFsa(AutomatonEntity entity) {
     return _convertEntityToFsa(entity);
   }
 
-  /// Replaces the current automaton with the one represented by [entity].
+  /// Legacy compatibility: Replace current automaton from AutomatonEntity
+  /// Used by the old algorithm_provider.dart when applying algorithm results
   void replaceCurrentAutomaton(AutomatonEntity entity) {
     final updated = _convertEntityToFsa(entity);
     state = state.copyWith(
       currentAutomaton: updated,
-      simulationResult: null,
-      regexResult: null,
-      grammarResult: null,
-      equivalenceResult: null,
-      equivalenceDetails: null,
       error: null,
       isLoading: false,
     );
+    _traceGraphView('replace_automaton', {'entity_id': entity.id});
   }
 
-  /// Converts regex to NFA
-  Future<void> convertRegexToNfa(String regex) async {
-    state = state.copyWith(
-      isLoading: true,
-      error: null,
-      equivalenceResult: null,
-      equivalenceDetails: null,
-    );
-
-    try {
-      // Use the core algorithm directly
-      final result = RegexToNFAConverter.convert(regex);
-
-      if (result.isSuccess) {
-        state = state.copyWith(
-          currentAutomaton: result.data,
-          isLoading: false,
-          simulationResult: null,
-        );
-      } else {
-        state = state.copyWith(isLoading: false, error: result.error);
-      }
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Error converting regex to NFA: $e',
-      );
-    }
-  }
-
-  /// Converts FA to regex
-  Future<String?> convertFaToRegex() async {
-    if (state.currentAutomaton == null) return null;
-
-    state = state.copyWith(isLoading: true, error: null);
-
-    try {
-      // Use the core algorithm directly
-      final result = FAToRegexConverter.convert(state.currentAutomaton!);
-
-      if (result.isSuccess) {
-        // Store the regex result in state
-        state = state.copyWith(regexResult: result.data, isLoading: false);
-        return result.data;
-      } else {
-        state = state.copyWith(isLoading: false, error: result.error);
-        return null;
-      }
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Error converting FA to regex: $e',
-      );
-      return null;
-    }
-  }
-
-  /// Compares the current automaton with another automaton for equivalence
-  Future<bool?> compareEquivalence(FSA other) async {
-    if (state.currentAutomaton == null) return null;
-
-    state = state.copyWith(
-      isLoading: true,
-      error: null,
-      equivalenceResult: null,
-      equivalenceDetails: null,
-    );
-
-    try {
-      final areEquivalent = EquivalenceChecker.areEquivalent(
-        state.currentAutomaton!,
-        other,
-      );
-      state = state.copyWith(
-        isLoading: false,
-        equivalenceResult: areEquivalent,
-        equivalenceDetails: areEquivalent
-            ? 'The automata accept the same language.'
-            : 'A distinguishing string was found between the automata.',
-      );
-      return areEquivalent;
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        equivalenceResult: null,
-        equivalenceDetails: 'Error comparing automata: $e',
-        error: 'Error comparing automata: $e',
-      );
-      return null;
-    }
-  }
-
-  /// Clears the current automaton
-  void clearAutomaton() {
-    state = state.copyWith(
-      currentAutomaton: null,
-      simulationResult: null,
-      regexResult: null,
-      grammarResult: null,
-      equivalenceResult: null,
-      equivalenceDetails: null,
-      error: null,
-    );
-  }
-
-  /// Clears any error messages
-  void clearError() {
-    state = state.clearError();
-  }
-
-  /// Clear all state and reset to initial
-  void clearAll() {
-    state = state.clear();
-  }
-
-  /// Clear simulation results
-  void clearSimulation() {
-    state = state.clearSimulation();
-  }
-
-  /// Clear algorithm results
-  void clearAlgorithmResults() {
-    state = state.clearAlgorithmResults();
-  }
-
-  /// Add simulation result to history
-  void _addSimulationToHistory(sim_result.SimulationResult result) {
-    final newHistory = [...state.simulationHistory, result];
-    state = state.copyWith(simulationHistory: newHistory);
-
-    // Also save to trace persistence service if available
-    _tracePersistenceService?.saveTrace(result).catchError((error) {
-      // Silently fail - trace persistence is a nice-to-have feature
-      debugPrint('Failed to persist simulation trace: $error');
-    });
-  }
-
-  /// Get automaton from history
-  FSA? getAutomatonFromHistory(int index) {
-    if (index < 0 || index >= state.automatonHistory.length) return null;
-    return state.automatonHistory[index];
-  }
-
-  /// Get simulation result from history
-  sim_result.SimulationResult? getSimulationFromHistory(int index) {
-    if (index < 0 || index >= state.simulationHistory.length) return null;
-    return state.simulationHistory[index];
-  }
-
-  /// Converts FSA to AutomatonEntity
   AutomatonEntity _convertFsaToEntity(FSA fsa) {
     final states = fsa.states
         .map(
@@ -1098,7 +801,6 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
         )
         .toList();
 
-    // Build transitions map from FSA transitions
     final transitions = <String, List<String>>{};
     for (final transition in fsa.transitions) {
       if (transition is FSATransition) {
@@ -1120,11 +822,10 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       transitions: transitions,
       initialId: fsa.initialState?.id,
       nextId: states.length + 1,
-      type: AutomatonType.dfa, // Default to DFA
+      type: AutomatonType.dfa,
     );
   }
 
-  /// Converts AutomatonEntity to FSA
   FSA _convertEntityToFsa(AutomatonEntity entity) {
     final states = entity.states
         .map(
@@ -1141,7 +842,6 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
     final initialState = states.where((s) => s.isInitial).firstOrNull;
     final acceptingStates = states.where((s) => s.isAccepting).toSet();
 
-    // Build FSA transitions from transitions map
     final transitions = <FSATransition>{};
     int transitionId = 1;
 
@@ -1177,124 +877,19 @@ class AutomatonProvider extends StateNotifier<AutomatonState> {
       acceptingStates: acceptingStates,
       created: DateTime.now(),
       modified: DateTime.now(),
-      bounds: const Rectangle(0, 0, 800, 600),
+      bounds: const Rectangle<double>(0, 0, 800, 600),
+      panOffset: Vector2.zero(),
+      zoomLevel: 1.0,
     );
   }
 }
 
-/// State class for automaton provider
-class AutomatonState {
-  final FSA? currentAutomaton;
-  final sim_result.SimulationResult? simulationResult;
-  final String? regexResult;
-  final Grammar? grammarResult;
-  final bool? equivalenceResult;
-  final String? equivalenceDetails;
-  final bool isLoading;
-  final String? error;
-  final List<FSA> automatonHistory; // persistent history of automatons
-  final List<sim_result.SimulationResult>
-  simulationHistory; // persistent simulation history
-
-  const AutomatonState({
-    this.currentAutomaton,
-    this.simulationResult,
-    this.regexResult,
-    this.grammarResult,
-    this.equivalenceResult,
-    this.equivalenceDetails,
-    this.isLoading = false,
-    this.error,
-    this.automatonHistory = const [],
-    this.simulationHistory = const [],
-  });
-
-  static const _unset = Object();
-
-  AutomatonState copyWith({
-    Object? currentAutomaton = _unset,
-    Object? simulationResult = _unset,
-    Object? regexResult = _unset,
-    Object? grammarResult = _unset,
-    Object? equivalenceResult = _unset,
-    Object? equivalenceDetails = _unset,
-    bool? isLoading,
-    Object? error = _unset,
-    List<FSA>? automatonHistory,
-    List<sim_result.SimulationResult>? simulationHistory,
-  }) {
-    return AutomatonState(
-      currentAutomaton: currentAutomaton == _unset
-          ? this.currentAutomaton
-          : currentAutomaton as FSA?,
-      simulationResult: simulationResult == _unset
-          ? this.simulationResult
-          : simulationResult as sim_result.SimulationResult?,
-      regexResult: regexResult == _unset
-          ? this.regexResult
-          : regexResult as String?,
-      grammarResult: grammarResult == _unset
-          ? this.grammarResult
-          : grammarResult as Grammar?,
-      equivalenceResult: equivalenceResult == _unset
-          ? this.equivalenceResult
-          : equivalenceResult as bool?,
-      equivalenceDetails: equivalenceDetails == _unset
-          ? this.equivalenceDetails
-          : equivalenceDetails as String?,
-      isLoading: isLoading ?? this.isLoading,
-      error: error == _unset ? this.error : error as String?,
-      automatonHistory: automatonHistory ?? this.automatonHistory,
-      simulationHistory: simulationHistory ?? this.simulationHistory,
-    );
-  }
-
-  /// Clear all state and reset to initial
-  AutomatonState clear() {
-    return const AutomatonState();
-  }
-
-  /// Clear only error state
-  AutomatonState clearError() {
-    return copyWith(error: null);
-  }
-
-  /// Clear simulation results
-  AutomatonState clearSimulation() {
-    return copyWith(simulationResult: null, simulationHistory: []);
-  }
-
-  /// Clear algorithm results
-  AutomatonState clearAlgorithmResults() {
-    return copyWith(
-      regexResult: null,
-      grammarResult: null,
-      equivalenceResult: null,
-      equivalenceDetails: null,
-    );
-  }
-}
-
-/// Provider instances
-final automatonProvider =
-    StateNotifierProvider<AutomatonProvider, AutomatonState>((ref) {
+/// Provider for automaton state management
+final automatonStateProvider =
+    StateNotifierProvider<AutomatonStateNotifier, AutomatonStateProviderState>((
+      ref,
+    ) {
       final automatonService = AutomatonService();
 
-      return AutomatonProvider(
-        automatonService: automatonService,
-        layoutRepository: LayoutRepositoryImpl(),
-      );
+      return AutomatonStateNotifier(automatonService: automatonService);
     });
-
-/// Provides a lazily constructed GraphView canvas controller for automata.
-final graphViewCanvasControllerProvider = Provider<GraphViewCanvasController>((
-  ref,
-) {
-  final automatonNotifier = ref.read(automatonStateProvider.notifier);
-  final controller = GraphViewCanvasController(
-    automatonStateNotifier: automatonNotifier,
-  );
-  ref.onDispose(controller.dispose);
-  controller.synchronize(automatonNotifier.state.currentAutomaton);
-  return controller;
-});

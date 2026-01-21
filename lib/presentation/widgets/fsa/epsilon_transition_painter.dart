@@ -32,12 +32,10 @@ class EpsilonTransitionPainter extends EdgeRenderer {
     // Configurar paint baseado no tipo de transição
     final effectivePaint = Paint()
       ..color = isEpsilon
-          ? (isHighlighted
-              ? Colors.purple
-              : Colors.grey[600]!)
+          ? (isHighlighted ? Colors.purple : Colors.grey[600]!)
           : (isHighlighted
-              ? Theme.of(canvas as BuildContext).colorScheme.primary
-              : Colors.black)
+                ? Theme.of(canvas as BuildContext).colorScheme.primary
+                : Colors.black)
       ..strokeWidth = isHighlighted ? 2.5 : 2.0
       ..style = PaintingStyle.stroke;
 
@@ -87,10 +85,7 @@ class EpsilonTransitionPainter extends EdgeRenderer {
 
     // Arco acima do estado
     path.addArc(
-      Rect.fromCircle(
-        center: Offset(pos.dx, pos.dy - radius),
-        radius: radius,
-      ),
+      Rect.fromCircle(center: Offset(pos.dx, pos.dy - radius), radius: radius),
       0,
       3.14, // 180 graus
     );
@@ -149,10 +144,7 @@ class EpsilonTransitionPainter extends EdgeRenderer {
 /// Helper para criar paint de transição epsilon
 class EpsilonTransitionPaintHelper {
   /// Cria paint para transição epsilon
-  static Paint createEpsilonPaint({
-    bool isHighlighted = false,
-    Color? color,
-  }) {
+  static Paint createEpsilonPaint({bool isHighlighted = false, Color? color}) {
     return Paint()
       ..color = color ?? (isHighlighted ? Colors.purple : Colors.grey[600]!)
       ..strokeWidth = isHighlighted ? 2.5 : 2.0
@@ -161,10 +153,7 @@ class EpsilonTransitionPaintHelper {
   }
 
   /// Cria paint para transição regular
-  static Paint createRegularPaint({
-    bool isHighlighted = false,
-    Color? color,
-  }) {
+  static Paint createRegularPaint({bool isHighlighted = false, Color? color}) {
     return Paint()
       ..color = color ?? (isHighlighted ? Colors.blue : Colors.black)
       ..strokeWidth = isHighlighted ? 2.5 : 2.0

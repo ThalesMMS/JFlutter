@@ -140,8 +140,9 @@ void main() {
       final rebuilt = GraphViewTmMapper.mergeIntoTemplate(snapshot, template);
 
       expect(rebuilt.states.length, equals(2));
-      final rebuiltInitial =
-          rebuilt.states.firstWhere((state) => state.id == 'q0');
+      final rebuiltInitial = rebuilt.states.firstWhere(
+        (state) => state.id == 'q0',
+      );
       expect(rebuiltInitial.position.x, closeTo(10, 0.0001));
       expect(rebuiltInitial.position.y, closeTo(20, 0.0001));
 

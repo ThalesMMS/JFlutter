@@ -61,33 +61,32 @@ class _TMCanvasGraphViewState extends ConsumerState<TMCanvasGraphView> {
               direction: edge?.direction ?? TapeDirection.right,
             ),
             overlayBuilder: (context, data, overlayController) {
-              final payload =
-                  data.payload as AutomatonTmTransitionPayload;
+              final payload = data.payload as AutomatonTmTransitionPayload;
               return TmTransitionOperationsEditor(
                 initialRead: payload.readSymbol,
                 initialWrite: payload.writeSymbol,
                 initialDirection: payload.direction,
-                onSubmit: ({
-                  required String readSymbol,
-                  required String writeSymbol,
-                  required TapeDirection direction,
-                }) {
-                  overlayController.submit(
-                    AutomatonTmTransitionPayload(
-                      readSymbol: readSymbol,
-                      writeSymbol: writeSymbol,
-                      direction: direction,
-                    ),
-                  );
-                },
+                onSubmit:
+                    ({
+                      required String readSymbol,
+                      required String writeSymbol,
+                      required TapeDirection direction,
+                    }) {
+                      overlayController.submit(
+                        AutomatonTmTransitionPayload(
+                          readSymbol: readSymbol,
+                          writeSymbol: writeSymbol,
+                          direction: direction,
+                        ),
+                      );
+                    },
                 onCancel: overlayController.cancel,
               );
             },
             persistTransition: (request) {
               final tmController =
                   request.controller as GraphViewTmCanvasController;
-              final payload =
-                  request.payload as AutomatonTmTransitionPayload;
+              final payload = request.payload as AutomatonTmTransitionPayload;
               tmController.addOrUpdateTransition(
                 fromStateId: request.fromStateId,
                 toStateId: request.toStateId,
@@ -118,9 +117,7 @@ class _TMCanvasGraphViewState extends ConsumerState<TMCanvasGraphView> {
       final highlightService = ref.read(canvasHighlightServiceProvider);
       _highlightService = highlightService;
       _previousHighlightChannel = highlightService.channel;
-      final highlightChannel = GraphViewSimulationHighlightChannel(
-        _controller,
-      );
+      final highlightChannel = GraphViewSimulationHighlightChannel(_controller);
       _highlightChannel = highlightChannel;
       highlightService.channel = highlightChannel;
     }
@@ -142,19 +139,19 @@ class _TMCanvasGraphViewState extends ConsumerState<TMCanvasGraphView> {
       });
     }
 
-    _subscription = ref.listenManual<TMEditorState>(
-      tmEditorProvider,
-      (previous, next) {
-        if (!mounted) return;
-        final tm = next.tm;
-        if (tm != null && !identical(tm, _lastDeliveredTm)) {
-          _lastDeliveredTm = tm;
-          widget.onTmModified(tm);
-        } else if (tm == null) {
-          _lastDeliveredTm = null;
-        }
-      },
-    );
+    _subscription = ref.listenManual<TMEditorState>(tmEditorProvider, (
+      previous,
+      next,
+    ) {
+      if (!mounted) return;
+      final tm = next.tm;
+      if (tm != null && !identical(tm, _lastDeliveredTm)) {
+        _lastDeliveredTm = tm;
+        widget.onTmModified(tm);
+      } else if (tm == null) {
+        _lastDeliveredTm = null;
+      }
+    });
   }
 
   @override

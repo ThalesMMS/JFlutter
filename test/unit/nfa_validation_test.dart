@@ -15,6 +15,7 @@ import 'package:jflutter/core/algorithms/automaton_simulator.dart';
 import 'package:jflutter/core/algorithms/nfa_to_dfa_converter.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'dart:math' as math;
+
 void main() {
   group('NFA Validation Tests', () {
     late FSA lambdaAOrABNFA;

@@ -3,7 +3,7 @@
 //  JFlutter
 //
 //  Controlador responsável por manter o canvas GraphView de autômatos finitos
-//  sincronizado com o AutomatonProvider, coordenando criação de estados,
+//  sincronizado com o AutomatonStateProvider, coordenando criação de estados,
 //  transições e rótulos conforme o usuário interage. O componente também gera
 //  identificadores previsíveis, trata undo/redo e aplica snapshots recebidos do
 //  domínio para atualizar o grafo exibido.
@@ -18,7 +18,7 @@ import 'package:graphview/GraphView.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 import '../../../core/models/fsa.dart';
-import '../../../presentation/providers/automaton_provider.dart';
+import '../../../presentation/providers/automaton_state_provider.dart';
 import 'base_graphview_canvas_controller.dart';
 import 'graphview_automaton_mapper.dart';
 import 'graphview_canvas_models.dart';
@@ -29,19 +29,19 @@ void _logAutomatonCanvas(String message) {
   }
 }
 
-/// Controller that keeps the [Graph] in sync with the [AutomatonProvider].
+/// Controller that keeps the [Graph] in sync with the [AutomatonStateProvider].
 class GraphViewCanvasController
-    extends BaseGraphViewCanvasController<AutomatonProvider, FSA> {
+    extends BaseGraphViewCanvasController<AutomatonStateNotifier, FSA> {
   GraphViewCanvasController({
-    required AutomatonProvider automatonProvider,
+    required AutomatonStateNotifier automatonStateNotifier,
     super.graph,
     super.viewController,
     super.transformationController,
     super.historyLimit,
     super.cacheEvictionThreshold,
-  }) : super(notifier: automatonProvider);
+  }) : super(notifier: automatonStateNotifier);
 
-  AutomatonProvider get _provider => notifier;
+  AutomatonStateNotifier get _provider => notifier;
 
   @override
   FSA? get currentDomainData => _provider.state.currentAutomaton;

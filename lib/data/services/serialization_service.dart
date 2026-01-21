@@ -20,8 +20,9 @@ class SerializationService {
     builder.processing('xml', 'version="1.0" encoding="UTF-8"');
 
     final rawType = (automatonData['type'] as String? ?? 'fa').toLowerCase();
-    final automatonType =
-        (rawType == 'dfa' || rawType == 'nfa') ? 'fa' : rawType;
+    final automatonType = (rawType == 'dfa' || rawType == 'nfa')
+        ? 'fa'
+        : rawType;
 
     builder.element(
       'structure',
@@ -66,12 +67,13 @@ class SerializationService {
             }
 
             // Add transitions
-              final transitions =
-                  automatonData['transitions'] as Map<String, dynamic>? ?? {};
+            final transitions =
+                automatonData['transitions'] as Map<String, dynamic>? ?? {};
             for (final transition in transitions.entries) {
               final keyParts = transition.key.split('|');
-              final fromState =
-                  keyParts.isNotEmpty ? keyParts.first.trim() : transition.key;
+              final fromState = keyParts.isNotEmpty
+                  ? keyParts.first.trim()
+                  : transition.key;
               final rawSymbol = keyParts.length > 1
                   ? keyParts.sublist(1).join('|')
                   : null;
@@ -79,8 +81,9 @@ class SerializationService {
               final targets = transition.value as List<dynamic>? ?? [];
 
               for (final target in targets) {
-                final toStateId =
-                    target is String ? target : target?.toString() ?? '';
+                final toStateId = target is String
+                    ? target
+                    : target?.toString() ?? '';
                 if (fromState.isEmpty || toStateId.isEmpty) {
                   continue;
                 }
@@ -108,8 +111,9 @@ class SerializationService {
       final document = XmlDocument.parse(xmlString);
       final root = document.rootElement;
       final automatonElements = document.findAllElements('automaton');
-      final automatonElement =
-          automatonElements.isEmpty ? null : automatonElements.first;
+      final automatonElement = automatonElements.isEmpty
+          ? null
+          : automatonElements.first;
 
       if (automatonElement == null) {
         return const Failure(
@@ -138,9 +142,11 @@ class SerializationService {
         }
         final name = stateElement.getAttribute('name') ?? id;
         final xText =
-            stateElement.getAttribute('x') ?? stateElement.getElement('x')?.innerText;
+            stateElement.getAttribute('x') ??
+            stateElement.getElement('x')?.innerText;
         final yText =
-            stateElement.getAttribute('y') ?? stateElement.getElement('y')?.innerText;
+            stateElement.getAttribute('y') ??
+            stateElement.getElement('y')?.innerText;
         final x = double.tryParse(xText ?? '') ?? 0.0;
         final y = double.tryParse(yText ?? '') ?? 0.0;
         final isInitial = stateElement.findElements('initial').isNotEmpty;
@@ -174,8 +180,9 @@ class SerializationService {
         final from = fromElements.first.innerText.trim();
         final to = toElements.first.innerText.trim();
         final readElements = transitionElement.findElements('read');
-        final rawSymbol =
-            readElements.isEmpty ? null : readElements.first.innerText;
+        final rawSymbol = readElements.isEmpty
+            ? null
+            : readElements.first.innerText;
         final symbol = _normalizeTransitionSymbol(rawSymbol);
         final key = '$from|$symbol';
 

@@ -42,7 +42,9 @@ class FileOperationsService {
   }
 
   Future<Result<FSA>> loadAutomatonFromJFLAP(String filePath) async {
-    return const Failure('Loading JFLAP files from a path is not supported on web.');
+    return const Failure(
+      'Loading JFLAP files from a path is not supported on web.',
+    );
   }
 
   Future<Result<FSA>> loadAutomatonFromBytes(Uint8List bytes) async {
@@ -69,7 +71,9 @@ class FileOperationsService {
   }
 
   Future<Result<Grammar>> loadGrammarFromJFLAP(String filePath) async {
-    return const Failure('Loading grammars from a path is not supported on web.');
+    return const Failure(
+      'Loading grammars from a path is not supported on web.',
+    );
   }
 
   Future<Result<Grammar>> loadGrammarFromBytes(Uint8List bytes) async {
@@ -96,10 +100,7 @@ class FileOperationsService {
     SvgExportOptions? options,
   }) async {
     try {
-      final svg = SvgExporter.exportAutomatonToSvg(
-        automaton,
-        options: options,
-      );
+      final svg = SvgExporter.exportAutomatonToSvg(automaton, options: options);
       return _downloadText(filePath, 'image/svg+xml', svg);
     } catch (e) {
       return Failure('Failed to export automaton: $e');
@@ -112,10 +113,7 @@ class FileOperationsService {
     SvgExportOptions? options,
   }) async {
     try {
-      final svg = SvgExporter.exportGrammarToSvg(
-        grammar,
-        options: options,
-      );
+      final svg = SvgExporter.exportGrammarToSvg(grammar, options: options);
       return _downloadText(filePath, 'image/svg+xml', svg);
     } catch (e) {
       return Failure('Failed to export grammar: $e');
@@ -172,34 +170,46 @@ class FileOperationsService {
   String _buildJFLAPXML(FSA automaton) {
     final builder = XmlBuilder();
     builder.processing('xml', 'version="1.0" encoding="UTF-8"');
-    builder.element('structure', nest: () {
-      builder.attribute('type', 'fa');
-      builder.element('automaton', nest: () {
-        for (final state in automaton.states) {
-          builder.element('state', nest: () {
-            builder.attribute('id', state.id);
-            builder.attribute('name', state.label);
-            if (state.isInitial) {
-              builder.element('initial');
+    builder.element(
+      'structure',
+      nest: () {
+        builder.attribute('type', 'fa');
+        builder.element(
+          'automaton',
+          nest: () {
+            for (final state in automaton.states) {
+              builder.element(
+                'state',
+                nest: () {
+                  builder.attribute('id', state.id);
+                  builder.attribute('name', state.label);
+                  if (state.isInitial) {
+                    builder.element('initial');
+                  }
+                  if (state.isAccepting) {
+                    builder.element('final');
+                  }
+                  builder.element('x', nest: state.position.x.toString());
+                  builder.element('y', nest: state.position.y.toString());
+                },
+              );
             }
-            if (state.isAccepting) {
-              builder.element('final');
-            }
-            builder.element('x', nest: state.position.x.toString());
-            builder.element('y', nest: state.position.y.toString());
-          });
-        }
 
-        for (final transition in automaton.transitions) {
-          if (transition is! FSATransition) continue;
-          builder.element('transition', nest: () {
-            builder.element('from', nest: transition.fromState.id);
-            builder.element('to', nest: transition.toState.id);
-            builder.element('read', nest: transition.symbol);
-          });
-        }
-      });
-    });
+            for (final transition in automaton.transitions) {
+              if (transition is! FSATransition) continue;
+              builder.element(
+                'transition',
+                nest: () {
+                  builder.element('from', nest: transition.fromState.id);
+                  builder.element('to', nest: transition.toState.id);
+                  builder.element('read', nest: transition.symbol);
+                },
+              );
+            }
+          },
+        );
+      },
+    );
 
     return builder.buildDocument().toXmlString(pretty: true);
   }
@@ -207,20 +217,32 @@ class FileOperationsService {
   String _buildGrammarXML(Grammar grammar) {
     final builder = XmlBuilder();
     builder.processing('xml', 'version="1.0" encoding="UTF-8"');
-    builder.element('structure', nest: () {
-      builder.attribute('type', 'grammar');
-      builder.element('grammar', nest: () {
-        builder.attribute('type', grammar.type.name);
-        builder.element('start', nest: grammar.startSymbol);
+    builder.element(
+      'structure',
+      nest: () {
+        builder.attribute('type', 'grammar');
+        builder.element(
+          'grammar',
+          nest: () {
+            builder.attribute('type', grammar.type.name);
+            builder.element('start', nest: grammar.startSymbol);
 
-        for (final production in grammar.productions) {
-          builder.element('production', nest: () {
-            builder.element('left', nest: production.leftSide.join(' '));
-            builder.element('right', nest: production.rightSide.join(' '));
-          });
-        }
-      });
-    });
+            for (final production in grammar.productions) {
+              builder.element(
+                'production',
+                nest: () {
+                  builder.element('left', nest: production.leftSide.join(' '));
+                  builder.element(
+                    'right',
+                    nest: production.rightSide.join(' '),
+                  );
+                },
+              );
+            }
+          },
+        );
+      },
+    );
 
     return builder.buildDocument().toXmlString(pretty: true);
   }
@@ -253,11 +275,15 @@ class FileOperationsService {
     }
 
     for (final state in states) {
-      final strokeColor = state.isInitial ? _kInitialStrokeColor : _kStrokeColor;
-      final strokeWidth =
-          state.isInitial ? _kInitialStrokeWidth : _kDefaultStrokeWidth;
-      final fillColor =
-          state.isAccepting ? _kAcceptingFillColor : _kDefaultFillColor;
+      final strokeColor = state.isInitial
+          ? _kInitialStrokeColor
+          : _kStrokeColor;
+      final strokeWidth = state.isInitial
+          ? _kInitialStrokeWidth
+          : _kDefaultStrokeWidth;
+      final fillColor = state.isAccepting
+          ? _kAcceptingFillColor
+          : _kDefaultFillColor;
       buffer.writeln(
         '  <circle cx="${state.position.x}" cy="${state.position.y}" r="$_kStateRadius" fill="$fillColor" stroke="$strokeColor" stroke-width="$strokeWidth"/>',
       );

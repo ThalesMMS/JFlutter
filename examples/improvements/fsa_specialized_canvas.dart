@@ -85,11 +85,7 @@ class AutomatonTypeBadge extends StatelessWidget {
   final DeterminismInfo info;
   final VoidCallback? onTap;
 
-  const AutomatonTypeBadge({
-    super.key,
-    required this.info,
-    this.onTap,
-  });
+  const AutomatonTypeBadge({super.key, required this.info, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -127,11 +123,7 @@ class AutomatonTypeBadge extends StatelessWidget {
             ),
             if (onTap != null) ...[
               const SizedBox(width: 4),
-              const Icon(
-                Icons.help_outline,
-                color: Colors.white,
-                size: 14,
-              ),
+              const Icon(Icons.help_outline, color: Colors.white, size: 14),
             ],
           ],
         ),
@@ -145,11 +137,7 @@ class NonDeterminismPanel extends StatelessWidget {
   final DeterminismInfo info;
   final VoidCallback? onClose;
 
-  const NonDeterminismPanel({
-    super.key,
-    required this.info,
-    this.onClose,
-  });
+  const NonDeterminismPanel({super.key, required this.info, this.onClose});
 
   @override
   Widget build(BuildContext context) {
@@ -175,7 +163,9 @@ class NonDeterminismPanel extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: info.badgeColor,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(8),
+              ),
             ),
             child: Row(
               children: [
@@ -188,9 +178,9 @@ class NonDeterminismPanel extends StatelessWidget {
                   child: Text(
                     'Análise de Determinismo',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 if (onClose != null)
@@ -237,7 +227,8 @@ class NonDeterminismPanel extends StatelessWidget {
                   const SizedBox(height: 8),
                 ],
 
-                if (!info.isDeterministic && info.nonDeterministicStates.isNotEmpty) ...[
+                if (!info.isDeterministic &&
+                    info.nonDeterministicStates.isNotEmpty) ...[
                   _buildFeature(
                     icon: Icons.warning,
                     label: 'Estados não-determinísticos:',
@@ -261,7 +252,8 @@ class NonDeterminismPanel extends StatelessWidget {
                   const SizedBox(height: 12),
                 ],
 
-                if (!info.isDeterministic && info.nonDeterministicSymbols.isNotEmpty) ...[
+                if (!info.isDeterministic &&
+                    info.nonDeterministicSymbols.isNotEmpty) ...[
                   _buildFeature(
                     icon: Icons.content_copy,
                     label: 'Símbolos com múltiplas transições:',
@@ -309,10 +301,7 @@ class NonDeterminismPanel extends StatelessWidget {
         Icon(icon, size: 20, color: color),
         const SizedBox(width: 8),
         Expanded(
-          child: Text(
-            label,
-            style: TextStyle(color: Colors.grey[800]),
-          ),
+          child: Text(label, style: TextStyle(color: Colors.grey[800])),
         ),
       ],
     );
@@ -355,11 +344,7 @@ class GroupedTransitionLabel extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (isEpsilon)
-            Icon(
-              Icons.call_split,
-              size: 12,
-              color: Colors.purple[700],
-            ),
+            Icon(Icons.call_split, size: 12, color: Colors.purple[700]),
           if (isEpsilon) const SizedBox(width: 4),
           Text(
             displayText,
@@ -398,10 +383,7 @@ class GroupedTransitionLabel extends StatelessWidget {
 class FSACanvasOverlay extends StatefulWidget {
   final DeterminismInfo determinismInfo;
 
-  const FSACanvasOverlay({
-    super.key,
-    required this.determinismInfo,
-  });
+  const FSACanvasOverlay({super.key, required this.determinismInfo});
 
   @override
   State<FSACanvasOverlay> createState() => _FSACanvasOverlayState();
@@ -474,9 +456,7 @@ class _FSASpecializedCanvasExampleState
           // Canvas (placeholder)
           Container(
             color: Colors.grey[100],
-            child: const Center(
-              child: Text('Canvas Area'),
-            ),
+            child: const Center(child: Text('Canvas Area')),
           ),
 
           // Overlay especializado

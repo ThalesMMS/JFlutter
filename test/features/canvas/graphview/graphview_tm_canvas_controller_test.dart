@@ -110,7 +110,8 @@ void main() {
     });
 
     test('addStateAtCenter resolves world position from viewport centre', () {
-      final transformation = controller.graphController.transformationController;
+      final transformation =
+          controller.graphController.transformationController;
       expect(transformation, isNotNull);
       controller.updateViewportSize(const Size(600, 400));
 

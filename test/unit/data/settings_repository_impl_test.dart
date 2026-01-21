@@ -20,9 +20,7 @@ void main() {
     late SharedPreferencesSettingsRepository repository;
 
     setUp(() {
-      storage = InMemorySettingsStorage({
-        'settings_use_draw2d_canvas': true,
-      });
+      storage = InMemorySettingsStorage({'settings_use_draw2d_canvas': true});
       repository = SharedPreferencesSettingsRepository(storage: storage);
     });
 

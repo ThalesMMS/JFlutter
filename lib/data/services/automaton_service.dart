@@ -65,8 +65,7 @@ class AutomatonService {
           fromState: fromState,
           toState: toState,
           label: normalizedSymbol,
-          inputSymbols:
-              isLambda ? <String>{} : {normalizedSymbol},
+          inputSymbols: isLambda ? <String>{} : {normalizedSymbol},
           lambdaSymbol: isLambda ? kEpsilonSymbol : null,
         ),
       );

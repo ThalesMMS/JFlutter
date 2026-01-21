@@ -28,8 +28,7 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
   static const String _gridSizeKey = 'settings_grid_size';
   static const String _nodeSizeKey = 'settings_node_size';
   static const String _fontSizeKey = 'settings_font_size';
-  static const String _legacyUseDraw2dCanvasKey =
-      'settings_use_draw2d_canvas';
+  static const String _legacyUseDraw2dCanvasKey = 'settings_use_draw2d_canvas';
   final SettingsStorage _storage;
 
   @override

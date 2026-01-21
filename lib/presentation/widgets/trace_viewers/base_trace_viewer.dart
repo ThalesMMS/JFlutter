@@ -265,10 +265,9 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
                                 color: Theme.of(context).colorScheme.primary,
                                 width: 1.2,
                               ),
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .primary
-                                  .withValues(alpha: 0.08),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.08),
                             )
                           : const BoxDecoration(),
                       child: widget.buildStepLine(step, index),

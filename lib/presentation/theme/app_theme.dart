@@ -56,7 +56,9 @@ class AppTheme {
         ),
       ),
       scrollbarTheme: ScrollbarThemeData(
-        thumbColor: WidgetStateProperty.all(primaryColor.withValues(alpha: 0.5)),
+        thumbColor: WidgetStateProperty.all(
+          primaryColor.withValues(alpha: 0.5),
+        ),
         radius: const Radius.circular(8),
         thickness: WidgetStateProperty.all(8),
         thumbVisibility: WidgetStateProperty.all(true),
@@ -105,7 +107,9 @@ class AppTheme {
         ),
       ),
       scrollbarTheme: ScrollbarThemeData(
-        thumbColor: WidgetStateProperty.all(primaryColor.withValues(alpha: 0.5)),
+        thumbColor: WidgetStateProperty.all(
+          primaryColor.withValues(alpha: 0.5),
+        ),
         radius: const Radius.circular(8),
         thickness: WidgetStateProperty.all(8),
         thumbVisibility: WidgetStateProperty.all(true),

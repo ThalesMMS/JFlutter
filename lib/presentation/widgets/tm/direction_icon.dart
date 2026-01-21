@@ -86,21 +86,13 @@ class TMDirectionIcon extends StatelessWidget {
     final label = TMDirectionHelper.getLabel(direction);
 
     if (compact) {
-      return Icon(
-        icon,
-        size: size,
-        color: color,
-      );
+      return Icon(icon, size: size, color: color);
     }
 
     if (!showLabel) {
       return Tooltip(
         message: label,
-        child: Icon(
-          icon,
-          size: size,
-          color: color,
-        ),
+        child: Icon(icon, size: size, color: color),
       );
     }
 
@@ -109,11 +101,7 @@ class TMDirectionIcon extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            size: size,
-            color: color,
-          ),
+          Icon(icon, size: size, color: color),
           const SizedBox(width: 4),
           Text(
             direction.name.toUpperCase()[0], // L, R, ou S
@@ -281,9 +269,7 @@ class TMDirectionSelector extends StatelessWidget {
               backgroundColor: isSelected
                   ? color.withOpacity(0.2)
                   : Colors.transparent,
-              side: isSelected
-                  ? BorderSide(color: color, width: 2)
-                  : null,
+              side: isSelected ? BorderSide(color: color, width: 2) : null,
             ),
             onPressed: () => onChanged(direction),
           ),

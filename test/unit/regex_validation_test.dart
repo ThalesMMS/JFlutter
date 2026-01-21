@@ -16,6 +16,7 @@ import 'package:jflutter/core/algorithms/fa_to_regex_converter.dart';
 import 'package:jflutter/core/algorithms/automaton_simulator.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'dart:math' as math;
+
 void main() {
   group('REGEX Validation Tests', () {
     group('Regex to NFA Conversion Tests', () {

@@ -34,14 +34,14 @@ void main() {
       controller.dispose();
     });
 
-    testWidgets('renders states and transitions from controller', (tester) async {
+    testWidgets('renders states and transitions from controller', (
+      tester,
+    ) async {
       final delivered = <int>[];
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            pdaEditorProvider.overrideWith((ref) => notifier),
-          ],
+          overrides: [pdaEditorProvider.overrideWith((ref) => notifier)],
           child: MaterialApp(
             home: Scaffold(
               body: PDACanvasGraphView(
@@ -79,8 +79,10 @@ void main() {
       );
 
       await tester.pumpAndSettle();
-      expect(find.textContaining('${states.first.id} → ${states.last.id}'),
-          findsOneWidget);
+      expect(
+        find.textContaining('${states.first.id} → ${states.last.id}'),
+        findsOneWidget,
+      );
     });
   });
 }

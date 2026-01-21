@@ -76,8 +76,9 @@ void main() {
       final nodeIds = snapshot.nodes.map((node) => node.id).toSet();
       expect(nodeIds, containsAll({'q0', 'q1'}));
 
-      final acceptingNode =
-          snapshot.nodes.firstWhere((node) => node.id == 'q1');
+      final acceptingNode = snapshot.nodes.firstWhere(
+        (node) => node.id == 'q1',
+      );
       expect(acceptingNode.isAccepting, isTrue);
       expect(acceptingNode.x, closeTo(160, 0.0001));
       expect(acceptingNode.y, closeTo(120, 0.0001));
@@ -130,16 +131,19 @@ void main() {
         ),
       );
 
-      final merged =
-          GraphViewAutomatonMapper.mergeIntoTemplate(snapshot, baseAutomaton);
+      final merged = GraphViewAutomatonMapper.mergeIntoTemplate(
+        snapshot,
+        baseAutomaton,
+      );
 
       expect(merged.states, hasLength(2));
       expect(merged.transitions, hasLength(1));
       expect(merged.acceptingStates.map((state) => state.id), contains('q1'));
       expect(merged.initialState?.id, equals('q0'));
 
-      final mergedTransition =
-          merged.fsaTransitions.firstWhere((transition) => transition.id == 't0');
+      final mergedTransition = merged.fsaTransitions.firstWhere(
+        (transition) => transition.id == 't0',
+      );
       expect(mergedTransition.fromState.id, equals('q0'));
       expect(mergedTransition.toState.id, equals('q1'));
       expect(mergedTransition.inputSymbols, equals({'b'}));

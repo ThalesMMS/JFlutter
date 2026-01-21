@@ -17,6 +17,7 @@ import 'package:jflutter/data/services/serialization_service.dart';
 import 'package:jflutter/presentation/widgets/export/svg_exporter.dart';
 import 'package:jflutter/core/parsers/jflap_xml_parser.dart';
 import 'package:jflutter/data/data_sources/local_storage_data_source.dart';
+
 /// 3. SVG export/import testing
 /// 4. Cross-format conversion testing
 /// 5. Data integrity validation
@@ -111,8 +112,8 @@ void main() {
           reason: 'Epsilon NFA JFF parsing should succeed',
         );
 
-        final roundTripResult =
-            serializationService.deserializeAutomatonFromJflap(jffXml);
+        final roundTripResult = serializationService
+            .deserializeAutomatonFromJflap(jffXml);
         expect(
           roundTripResult.isSuccess,
           true,
@@ -123,7 +124,7 @@ void main() {
           final data = roundTripResult.data!;
           final transitions =
               data['transitions'] as Map<String, List<String>>? ??
-                  <String, List<String>>{};
+              <String, List<String>>{};
 
           expect(transitions.containsKey('q0|ε'), isTrue);
           final epsilonTargets = transitions['q0|ε'];
@@ -168,10 +169,11 @@ void main() {
         expect(aliasAutomaton.hasLambda, isTrue);
 
         final aliasData = _convertEntityToData(aliasAutomaton);
-        final jffXml = serializationService.serializeAutomatonToJflap(aliasData);
+        final jffXml = serializationService.serializeAutomatonToJflap(
+          aliasData,
+        );
 
-        final epsilonTags =
-            RegExp('<read>ε</read>').allMatches(jffXml).length;
+        final epsilonTags = RegExp('<read>ε</read>').allMatches(jffXml).length;
         expect(epsilonTags, equals(3));
 
         final roundTrip = serializationService.deserializeAutomatonFromJflap(
@@ -225,18 +227,20 @@ void main() {
         );
         expect(jffXml, contains('<automaton>'));
 
-        final jffRoundTrip =
-            serializationService.deserializeAutomatonFromJflap(jffXml);
+        final jffRoundTrip = serializationService.deserializeAutomatonFromJflap(
+          jffXml,
+        );
         expect(jffRoundTrip.isSuccess, isTrue);
-        final jffTransitions = jffRoundTrip.data!['transitions']
-            as Map<String, List<String>>;
+        final jffTransitions =
+            jffRoundTrip.data!['transitions'] as Map<String, List<String>>;
         expect(jffTransitions, isEmpty);
 
         final jsonString = serializationService.serializeAutomatonToJson(
           automatonData,
         );
-        final jsonRoundTrip =
-            serializationService.deserializeAutomatonFromJson(jsonString);
+        final jsonRoundTrip = serializationService.deserializeAutomatonFromJson(
+          jsonString,
+        );
         expect(jsonRoundTrip.isSuccess, isTrue);
         final jsonData = jsonRoundTrip.data!;
         expect(jsonData['states'], isEmpty);
@@ -408,10 +412,7 @@ void main() {
           height: 300,
         );
         expect(smallSvg, contains('viewBox="0 0 400 300"'));
-        expect(
-          smallSvg,
-          contains('<svg width="400px" height="300px"'),
-        );
+        expect(smallSvg, contains('<svg width="400px" height="300px"'));
 
         final largeSvg = SvgExporter.exportAutomatonToSvg(
           testAutomaton,
@@ -419,10 +420,7 @@ void main() {
           height: 900,
         );
         expect(largeSvg, contains('viewBox="0 0 1200 900"'));
-        expect(
-          largeSvg,
-          contains('<svg width="1200px" height="900px"'),
-        );
+        expect(largeSvg, contains('<svg width="1200px" height="900px"'));
       });
 
       test('SVG export formats dimensions without trailing decimals', () {
@@ -1103,16 +1101,8 @@ TuringMachineEntity _createTestTuringMachine() {
     tapeAlphabet: {'0', '1', '□'},
     blankSymbol: '□',
     states: [
-      TuringStateEntity(
-        id: 'q0',
-        name: 'q0',
-        isInitial: true,
-      ),
-      TuringStateEntity(
-        id: 'q1',
-        name: 'q1',
-        isAccepting: true,
-      ),
+      TuringStateEntity(id: 'q0', name: 'q0', isInitial: true),
+      TuringStateEntity(id: 'q1', name: 'q1', isAccepting: true),
     ],
     transitions: [
       TuringTransitionEntity(

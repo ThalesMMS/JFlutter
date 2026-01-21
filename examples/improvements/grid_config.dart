@@ -65,10 +65,7 @@ class GridPainter extends CustomPainter {
   final GridConfig config;
   final Size canvasSize;
 
-  GridPainter({
-    required this.config,
-    required this.canvasSize,
-  });
+  GridPainter({required this.config, required this.canvasSize});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -81,27 +78,18 @@ class GridPainter extends CustomPainter {
 
     // Desenhar linhas verticais
     for (double x = 0; x <= canvasSize.width; x += config.gridSize) {
-      canvas.drawLine(
-        Offset(x, 0),
-        Offset(x, canvasSize.height),
-        paint,
-      );
+      canvas.drawLine(Offset(x, 0), Offset(x, canvasSize.height), paint);
     }
 
     // Desenhar linhas horizontais
     for (double y = 0; y <= canvasSize.height; y += config.gridSize) {
-      canvas.drawLine(
-        Offset(0, y),
-        Offset(canvasSize.width, y),
-        paint,
-      );
+      canvas.drawLine(Offset(0, y), Offset(canvasSize.width, y), paint);
     }
   }
 
   @override
   bool shouldRepaint(GridPainter oldDelegate) {
-    return oldDelegate.config != config ||
-        oldDelegate.canvasSize != canvasSize;
+    return oldDelegate.config != config || oldDelegate.canvasSize != canvasSize;
   }
 }
 
@@ -155,10 +143,7 @@ class GridControls extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Grid',
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
+            Text('Grid', style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 8),
             SwitchListTile(
               title: const Text('Habilitar Grid'),

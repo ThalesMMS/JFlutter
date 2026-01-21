@@ -89,11 +89,15 @@ class TracePersistenceService {
     SimulationResult trace, {
     String? fileName,
   }) async {
-    throw const TracePersistenceException('Trace export is not supported on web.');
+    throw const TracePersistenceException(
+      'Trace export is not supported on web.',
+    );
   }
 
   Future<SimulationResult> importTraceFromFile(String filePath) async {
-    throw const TracePersistenceException('Trace import is not supported on web.');
+    throw const TracePersistenceException(
+      'Trace import is not supported on web.',
+    );
   }
 
   Future<void> deleteTrace(String traceId) async {

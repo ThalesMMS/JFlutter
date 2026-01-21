@@ -39,10 +39,10 @@ class TransitionLabelEditorForm extends StatefulWidget {
       _TransitionLabelEditorFormState();
 }
 
-class _TransitionLabelEditorFormState
-    extends State<TransitionLabelEditorForm> {
-  late final TextEditingController _controller =
-      TextEditingController(text: widget.initialValue);
+class _TransitionLabelEditorFormState extends State<TransitionLabelEditorForm> {
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.initialValue,
+  );
 
   @override
   void dispose() {
@@ -70,18 +70,24 @@ class _TransitionLabelEditorFormState
       shortcuts: shortcuts,
       child: Actions(
         actions: {
-          _SubmitIntent: CallbackAction<_SubmitIntent>(onInvoke: (intent) {
-            _handleSubmit();
-            return null;
-          }),
-          _CancelIntent: CallbackAction<_CancelIntent>(onInvoke: (intent) {
-            _handleCancel();
-            return null;
-          }),
-          DismissIntent: CallbackAction<DismissIntent>(onInvoke: (intent) {
-            _handleCancel();
-            return null;
-          }),
+          _SubmitIntent: CallbackAction<_SubmitIntent>(
+            onInvoke: (intent) {
+              _handleSubmit();
+              return null;
+            },
+          ),
+          _CancelIntent: CallbackAction<_CancelIntent>(
+            onInvoke: (intent) {
+              _handleCancel();
+              return null;
+            },
+          ),
+          DismissIntent: CallbackAction<DismissIntent>(
+            onInvoke: (intent) {
+              _handleCancel();
+              return null;
+            },
+          ),
         },
         child: FocusTraversalGroup(
           child: Semantics(

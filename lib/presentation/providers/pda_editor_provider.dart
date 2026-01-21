@@ -114,9 +114,7 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
         );
       }
 
-      final statesById = {
-        for (final state in states) state.id: state,
-      };
+      final statesById = {for (final state in states) state.id: state};
 
       final updated = _finalisePda(
         base: current,
@@ -128,11 +126,7 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
     });
   }
 
-  PDA? moveState({
-    required String id,
-    required double x,
-    required double y,
-  }) {
+  PDA? moveState({required String id, required double x, required double y}) {
     return _mutatePda((current) {
       final states = current.states
           .map(
@@ -142,9 +136,7 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
           )
           .toList();
 
-      final statesById = {
-        for (final state in states) state.id: state,
-      };
+      final statesById = {for (final state in states) state.id: state};
 
       return _finalisePda(
         base: current,
@@ -154,20 +146,13 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
     });
   }
 
-  PDA? updateStateLabel({
-    required String id,
-    required String label,
-  }) {
+  PDA? updateStateLabel({required String id, required String label}) {
     return _mutatePda((current) {
       final states = current.states
-          .map(
-            (state) => state.id == id ? state.copyWith(label: label) : state,
-          )
+          .map((state) => state.id == id ? state.copyWith(label: label) : state)
           .toList();
 
-      final statesById = {
-        for (final state in states) state.id: state,
-      };
+      final statesById = {for (final state in states) state.id: state};
 
       return _finalisePda(
         base: current,
@@ -187,9 +172,7 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
     }
 
     return _mutatePda((current) {
-      final statesById = {
-        for (final state in current.states) state.id: state,
-      };
+      final statesById = {for (final state in current.states) state.id: state};
       if (!statesById.containsKey(id)) {
         return current;
       }
@@ -222,9 +205,7 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
 
   PDA? removeState({required String id}) {
     return _mutatePda((current) {
-      final statesById = {
-        for (final state in current.states) state.id: state,
-      };
+      final statesById = {for (final state in current.states) state.id: state};
       final removed = statesById.remove(id);
       if (removed == null) {
         return current;
@@ -259,9 +240,7 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
     Vector2? controlPoint,
   }) {
     return _mutatePda((current) {
-      final statesById = {
-        for (final state in current.states) state.id: state,
-      };
+      final statesById = {for (final state in current.states) state.id: state};
       final transitions = current.pdaTransitions.toList();
       final index = transitions.indexWhere((transition) => transition.id == id);
 
@@ -294,7 +273,8 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
         transitions.add(base);
       }
 
-      final effectiveFrom = fromStateId != null && statesById.containsKey(fromStateId)
+      final effectiveFrom =
+          fromStateId != null && statesById.containsKey(fromStateId)
           ? statesById[fromStateId]!
           : base.fromState;
       final effectiveTo = toStateId != null && statesById.containsKey(toStateId)
@@ -308,13 +288,9 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
       final updatedTransition = base.copyWith(
         fromState: effectiveFrom,
         toState: effectiveTo,
-        inputSymbol: lambdaInput
-            ? ''
-            : (readSymbol ?? base.inputSymbol),
-        popSymbol:
-            lambdaPop ? '' : (popSymbol ?? base.popSymbol),
-        pushSymbol:
-            lambdaPush ? '' : (pushSymbol ?? base.pushSymbol),
+        inputSymbol: lambdaInput ? '' : (readSymbol ?? base.inputSymbol),
+        popSymbol: lambdaPop ? '' : (popSymbol ?? base.popSymbol),
+        pushSymbol: lambdaPush ? '' : (pushSymbol ?? base.pushSymbol),
         isLambdaInput: lambdaInput,
         isLambdaPop: lambdaPop,
         isLambdaPush: lambdaPush,
@@ -322,8 +298,9 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
       );
 
       final resolvedLabel = label ?? _formatTransitionLabel(updatedTransition);
-      final finalTransition =
-          updatedTransition.copyWith(label: resolvedLabel.trim());
+      final finalTransition = updatedTransition.copyWith(
+        label: resolvedLabel.trim(),
+      );
 
       if (index >= 0) {
         transitions[index] = finalTransition;
@@ -348,9 +325,7 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
         return current;
       }
 
-      final statesById = {
-        for (final state in current.states) state.id: state,
-      };
+      final statesById = {for (final state in current.states) state.id: state};
 
       return _finalisePda(
         base: current,
@@ -488,11 +463,15 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
         .toSet();
 
     final initialState = _ensureInitialState(statesById);
-    final acceptingStates =
-        statesById.values.where((state) => state.isAccepting).toSet();
+    final acceptingStates = statesById.values
+        .where((state) => state.isAccepting)
+        .toSet();
 
     final alphabet = <String>{...base.alphabet};
-    final stackAlphabet = <String>{base.initialStackSymbol, ...base.stackAlphabet};
+    final stackAlphabet = <String>{
+      base.initialStackSymbol,
+      ...base.stackAlphabet,
+    };
 
     for (final transition in reboundTransitions) {
       if (!transition.isLambdaInput && transition.inputSymbol.isNotEmpty) {

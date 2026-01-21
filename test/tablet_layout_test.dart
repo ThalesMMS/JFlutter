@@ -12,38 +12,44 @@ import 'package:jflutter/presentation/pages/pumping_lemma_page.dart';
 
 void main() {
   group('Tablet Layout Tests', () {
-    testWidgets('FSAPage uses TabletLayoutContainer on tablet width', (tester) async {
+    testWidgets('FSAPage uses TabletLayoutContainer on tablet width', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1366, 1024);
       tester.view.devicePixelRatio = 1.0;
 
-      await tester.pumpWidget(const ProviderScope(child: MaterialApp(home: FSAPage())));
+      await tester.pumpWidget(
+        const ProviderScope(child: MaterialApp(home: FSAPage())),
+      );
       await tester.pumpAndSettle();
 
       expect(find.byType(TabletLayoutContainer), findsOneWidget);
     });
 
-    testWidgets('RegexPage uses TabletLayoutContainer on tablet width', (tester) async {
+    testWidgets('RegexPage uses TabletLayoutContainer on tablet width', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1366, 1024);
       tester.view.devicePixelRatio = 1.0;
 
-      await tester.pumpWidget(const ProviderScope(child: MaterialApp(home: RegexPage())));
+      await tester.pumpWidget(
+        const ProviderScope(child: MaterialApp(home: RegexPage())),
+      );
       await tester.pumpAndSettle();
 
       expect(find.byType(TabletLayoutContainer), findsOneWidget);
     });
 
-    testWidgets('GrammarPage uses TabletLayoutContainer on tablet width', (tester) async {
+    testWidgets('GrammarPage uses TabletLayoutContainer on tablet width', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1366, 1024);
       tester.view.devicePixelRatio = 1.0;
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            grammarProvider.overrideWith((ref) => GrammarProvider()),
-          ],
-          child: const MaterialApp(
-            home: GrammarPage(),
-          ),
+          overrides: [grammarProvider.overrideWith((ref) => GrammarProvider())],
+          child: const MaterialApp(home: GrammarPage()),
         ),
       );
       await tester.pumpAndSettle();
@@ -51,31 +57,43 @@ void main() {
       expect(find.byType(TabletLayoutContainer), findsOneWidget);
     });
 
-    testWidgets('TMPage uses TabletLayoutContainer on tablet width', (tester) async {
+    testWidgets('TMPage uses TabletLayoutContainer on tablet width', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1366, 1024);
       tester.view.devicePixelRatio = 1.0;
 
-      await tester.pumpWidget(const ProviderScope(child: MaterialApp(home: TMPage())));
+      await tester.pumpWidget(
+        const ProviderScope(child: MaterialApp(home: TMPage())),
+      );
       await tester.pumpAndSettle();
 
       expect(find.byType(TabletLayoutContainer), findsOneWidget);
     });
 
-    testWidgets('PDAPage uses TabletLayoutContainer on tablet width', (tester) async {
+    testWidgets('PDAPage uses TabletLayoutContainer on tablet width', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1366, 1024);
       tester.view.devicePixelRatio = 1.0;
 
-      await tester.pumpWidget(const ProviderScope(child: MaterialApp(home: PDAPage())));
+      await tester.pumpWidget(
+        const ProviderScope(child: MaterialApp(home: PDAPage())),
+      );
       await tester.pumpAndSettle();
 
       expect(find.byType(TabletLayoutContainer), findsOneWidget);
     });
 
-    testWidgets('PumpingLemmaPage uses TabletLayoutContainer on tablet width', (tester) async {
+    testWidgets('PumpingLemmaPage uses TabletLayoutContainer on tablet width', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1366, 1024);
       tester.view.devicePixelRatio = 1.0;
 
-      await tester.pumpWidget(const ProviderScope(child: MaterialApp(home: PumpingLemmaPage())));
+      await tester.pumpWidget(
+        const ProviderScope(child: MaterialApp(home: PumpingLemmaPage())),
+      );
       await tester.pumpAndSettle();
 
       expect(find.byType(TabletLayoutContainer), findsOneWidget);
@@ -83,7 +101,9 @@ void main() {
       expect(find.text('Progress'), findsOneWidget);
     });
 
-    testWidgets('TabletLayoutContainer sidebar can be collapsed and expanded', (tester) async {
+    testWidgets('TabletLayoutContainer sidebar can be collapsed and expanded', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1366, 1024);
       tester.view.devicePixelRatio = 1.0;
 

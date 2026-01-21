@@ -14,6 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/algorithms/cfg/cfg_toolkit.dart';
 import 'package:jflutter/core/models/grammar.dart';
 import 'package:jflutter/core/models/production.dart';
+
 void main() {
   group('CFG toolkit (CNF and cleanups)', () {
     late Grammar simpleGrammar;

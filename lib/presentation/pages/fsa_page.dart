@@ -13,7 +13,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/entities/automaton_entity.dart';
 import '../../core/models/fsa.dart';
 import '../providers/algorithm_provider.dart';
-import '../providers/automaton_provider.dart';
+import '../providers/automaton_algorithm_provider.dart';
+import '../providers/automaton_layout_provider.dart';
+import '../providers/automaton_simulation_provider.dart';
+import '../providers/automaton_state_provider.dart';
 import '../widgets/algorithm_panel.dart';
 import '../widgets/automaton_canvas.dart';
 import '../widgets/automaton_canvas_tool.dart';
@@ -47,9 +50,11 @@ class _FSAPageState extends ConsumerState<FSAPage> {
   void initState() {
     super.initState();
     _canvasController = GraphViewCanvasController(
-      automatonProvider: ref.read(automatonProvider.notifier),
+      automatonStateNotifier: ref.read(automatonStateProvider.notifier),
     );
-    _canvasController.synchronize(ref.read(automatonProvider).currentAutomaton);
+    _canvasController.synchronize(
+      ref.read(automatonStateProvider).currentAutomaton,
+    );
     _highlightChannel = GraphViewSimulationHighlightChannel(_canvasController);
     _highlightService = SimulationHighlightService(channel: _highlightChannel);
     _toolController = AutomatonCanvasToolController();
@@ -101,7 +106,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     String? missingMessage,
     String? invalidMessage,
   }) {
-    final automaton = ref.read(automatonProvider).currentAutomaton;
+    final automaton = ref.read(automatonStateProvider).currentAutomaton;
     if (automaton == null) {
       _showSnack(
         missingMessage ?? 'Load an automaton before running this operation.',
@@ -145,7 +150,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     }
 
     if (result is AutomatonEntity) {
-      ref.read(automatonProvider.notifier).replaceCurrentAutomaton(result);
+      ref.read(automatonStateProvider.notifier).replaceCurrentAutomaton(result);
       _showSnack(successMessage);
       notifier.clearResult();
       return;
@@ -175,7 +180,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     );
     if (automaton == null) return;
 
-    final automatonNotifier = ref.read(automatonProvider.notifier);
+    final automatonNotifier = ref.read(automatonStateProvider.notifier);
     final entity = automatonNotifier.currentAutomatonEntity;
     if (entity == null) {
       _showSnack(
@@ -208,7 +213,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     );
     if (automaton == null) return;
 
-    final automatonNotifier = ref.read(automatonProvider.notifier);
+    final automatonNotifier = ref.read(automatonStateProvider.notifier);
     final currentEntity = automatonNotifier.currentAutomatonEntity;
     if (currentEntity == null) {
       _showSnack(
@@ -305,8 +310,13 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     );
   }
 
-  AlgorithmPanel _buildAlgorithmPanelForState(AutomatonState state) {
-    final automatonNotifier = ref.read(automatonProvider.notifier);
+  AlgorithmPanel _buildAlgorithmPanelForState(
+    AutomatonStateProviderState state,
+  ) {
+    final automatonNotifier = ref.read(automatonStateProvider.notifier);
+    final algorithmNotifier = ref.read(automatonAlgorithmProvider.notifier);
+    final algorithmState = ref.read(automatonAlgorithmProvider);
+    final layoutNotifier = ref.read(automatonLayoutProvider.notifier);
     final automaton = state.currentAutomaton;
     final hasAutomaton = automaton != null;
     final hasLambda = automaton?.hasEpsilonTransitions ?? false;
@@ -317,11 +327,11 @@ class _FSAPageState extends ConsumerState<FSAPage> {
 
     return AlgorithmPanel(
       onNfaToDfa: hasAutomaton
-          ? () => automatonNotifier.convertNfaToDfa()
+          ? () => algorithmNotifier.convertNfaToDfa()
           : null,
       onRemoveLambda: hasLambda ? _handleRemoveLambda : null,
-      onMinimizeDfa: isDfa ? () => automatonNotifier.minimizeDfa() : null,
-      onCompleteDfa: isDfa ? () => automatonNotifier.completeDfa() : null,
+      onMinimizeDfa: isDfa ? () => algorithmNotifier.minimizeDfa() : null,
+      onCompleteDfa: isDfa ? () => algorithmNotifier.completeDfa() : null,
       onComplementDfa: isDfa ? _handleComplementDfa : null,
       onUnionDfa: isDfa ? _handleUnionDfa : null,
       onIntersectionDfa: isDfa ? _handleIntersectionDfa : null,
@@ -330,24 +340,23 @@ class _FSAPageState extends ConsumerState<FSAPage> {
       onSuffixClosure: isDfa ? _handleSuffixClosure : null,
       onFsaToGrammar: hasAutomaton ? _handleFsaToGrammar : null,
       onAutoLayout: hasAutomaton
-          ? () => automatonNotifier.applyAutoLayout()
+          ? () => layoutNotifier.applyAutoLayout()
           : null,
       onClear: () => automatonNotifier.clearAutomaton(),
-      onRegexToNfa: (regex) =>
-          ref.read(automatonProvider.notifier).convertRegexToNfa(regex),
+      onRegexToNfa: (regex) => algorithmNotifier.convertRegexToNfa(regex),
       onFaToRegex: hasAutomaton ? _handleFaToRegex : null,
       onCompareEquivalence: isDfa ? _handleCompareEquivalence : null,
-      equivalenceResult: state.equivalenceResult,
-      equivalenceDetails: state.equivalenceDetails,
+      equivalenceResult: algorithmState.equivalenceResult,
+      equivalenceDetails: algorithmState.equivalenceDetails,
     );
   }
 
   Future<void> _handleFaToRegex() async {
-    final notifier = ref.read(automatonProvider.notifier);
-    final regex = await notifier.convertFaToRegex();
+    final algorithmNotifier = ref.read(automatonAlgorithmProvider.notifier);
+    final regex = await algorithmNotifier.convertFaToRegex();
     if (!mounted || regex == null) {
-      if (mounted && ref.read(automatonProvider).error != null) {
-        _showSnack(ref.read(automatonProvider).error!, isError: true);
+      if (mounted && ref.read(automatonAlgorithmProvider).error != null) {
+        _showSnack(ref.read(automatonAlgorithmProvider).error!, isError: true);
       }
       return;
     }
@@ -359,11 +368,11 @@ class _FSAPageState extends ConsumerState<FSAPage> {
   }
 
   Future<void> _handleFsaToGrammar() async {
-    final notifier = ref.read(automatonProvider.notifier);
-    final grammar = await notifier.convertFsaToGrammar();
+    final algorithmNotifier = ref.read(automatonAlgorithmProvider.notifier);
+    final grammar = await algorithmNotifier.convertFsaToGrammar();
     if (!mounted || grammar == null) {
-      if (mounted && ref.read(automatonProvider).error != null) {
-        _showSnack(ref.read(automatonProvider).error!, isError: true);
+      if (mounted && ref.read(automatonAlgorithmProvider).error != null) {
+        _showSnack(ref.read(automatonAlgorithmProvider).error!, isError: true);
       }
       return;
     }
@@ -375,26 +384,29 @@ class _FSAPageState extends ConsumerState<FSAPage> {
   }
 
   Future<void> _handleCompareEquivalence(FSA other) async {
-    await ref.read(automatonProvider.notifier).compareEquivalence(other);
+    await ref
+        .read(automatonAlgorithmProvider.notifier)
+        .compareEquivalence(other);
     if (!mounted) return;
-    final message = ref.read(automatonProvider).equivalenceDetails;
+    final message = ref.read(automatonAlgorithmProvider).equivalenceDetails;
     if (message != null) {
       _showSnack(message);
     }
   }
 
   Widget _buildCanvasArea({
-    required AutomatonState state,
+    required AutomatonStateProviderState state,
     required bool isMobile,
   }) {
+    final simulationState = ref.watch(automatonSimulationProvider);
     Widget buildAutomatonCanvas() {
       return AutomatonCanvas(
         automaton: state.currentAutomaton,
         canvasKey: _canvasKey,
         controller: _canvasController,
         toolController: _toolController,
-        simulationResult: state.simulationResult,
-        showTrace: state.simulationResult != null,
+        simulationResult: simulationState.simulationResult,
+        showTrace: simulationState.simulationResult != null,
       );
     }
 
@@ -436,8 +448,9 @@ class _FSAPageState extends ConsumerState<FSAPage> {
                       _toggleCanvasTool(AutomatonCanvasTool.transition),
                   onFitToContent: _canvasController.fitToContent,
                   onResetView: _canvasController.resetView,
-                  onClear: () =>
-                      ref.read(automatonProvider.notifier).clearAutomaton(),
+                  onClear: () => ref
+                      .read(automatonStateProvider.notifier)
+                      .clearAutomaton(),
                   onUndo: _canvasController.canUndo
                       ? () => _canvasController.undo()
                       : null,
@@ -475,7 +488,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
                 onAddTransition: () =>
                     _toggleCanvasTool(AutomatonCanvasTool.transition),
                 onClear: () =>
-                    ref.read(automatonProvider.notifier).clearAutomaton(),
+                    ref.read(automatonStateProvider.notifier).clearAutomaton(),
                 statusMessage: statusMessage,
               );
             },
@@ -487,7 +500,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     return buildCanvasWithToolbar(buildAutomatonCanvas());
   }
 
-  String _buildToolbarStatusMessage(AutomatonState state) {
+  String _buildToolbarStatusMessage(AutomatonStateProviderState state) {
     final automaton = state.currentAutomaton;
     if (automaton == null) {
       return 'No automaton loaded';
@@ -525,7 +538,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(automatonProvider);
+    final state = ref.watch(automatonStateProvider);
     final screenSize = MediaQuery.of(context).size;
     final isMobile = screenSize.width < 1024;
 
@@ -534,16 +547,16 @@ class _FSAPageState extends ConsumerState<FSAPage> {
         canvasHighlightServiceProvider.overrideWithValue(_highlightService),
       ],
       child: Scaffold(
-        body: isMobile 
-            ? _buildMobileLayout(state) 
-            : screenSize.width < 1400 
-                ? _buildTabletLayout(state) 
-                : _buildDesktopLayout(state),
+        body: isMobile
+            ? _buildMobileLayout(state)
+            : screenSize.width < 1400
+            ? _buildTabletLayout(state)
+            : _buildDesktopLayout(state),
       ),
     );
   }
 
-  Widget _buildMobileLayout(AutomatonState state) {
+  Widget _buildMobileLayout(AutomatonStateProviderState state) {
     return Column(
       children: [
         Expanded(
@@ -574,7 +587,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
                   padding: const EdgeInsets.all(16),
                   child: Consumer(
                     builder: (context, sheetRef, _) {
-                      final sheetState = sheetRef.watch(automatonProvider);
+                      final sheetState = sheetRef.watch(automatonStateProvider);
                       return _buildAlgorithmPanelForState(sheetState);
                     },
                   ),
@@ -605,13 +618,18 @@ class _FSAPageState extends ConsumerState<FSAPage> {
                   padding: const EdgeInsets.all(16),
                   child: Consumer(
                     builder: (context, sheetRef, _) {
-                      final sheetState = sheetRef.watch(automatonProvider);
+                      final simulationState = sheetRef.watch(
+                        automatonSimulationProvider,
+                      );
+                      final algorithmState = sheetRef.watch(
+                        automatonAlgorithmProvider,
+                      );
                       return SimulationPanel(
                         onSimulate: (inputString) => sheetRef
-                            .read(automatonProvider.notifier)
+                            .read(automatonSimulationProvider.notifier)
                             .simulateAutomaton(inputString),
-                        simulationResult: sheetState.simulationResult,
-                        regexResult: sheetState.regexResult,
+                        simulationResult: simulationState.simulationResult,
+                        regexResult: algorithmState.regexResult,
                         highlightService: _highlightService,
                       );
                     },
@@ -625,7 +643,9 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     );
   }
 
-  Widget _buildDesktopLayout(AutomatonState state) {
+  Widget _buildDesktopLayout(AutomatonStateProviderState state) {
+    final algorithmState = ref.watch(automatonAlgorithmProvider);
+    final simulationState = ref.watch(automatonSimulationProvider);
     return Row(
       children: [
         // Left panel - Controls
@@ -645,10 +665,10 @@ class _FSAPageState extends ConsumerState<FSAPage> {
           flex: 2,
           child: SimulationPanel(
             onSimulate: (inputString) => ref
-                .read(automatonProvider.notifier)
+                .read(automatonSimulationProvider.notifier)
                 .simulateAutomaton(inputString),
-            simulationResult: state.simulationResult,
-            regexResult: state.regexResult,
+            simulationResult: simulationState.simulationResult,
+            regexResult: algorithmState.regexResult,
             highlightService: _highlightService,
           ),
         ),
@@ -656,16 +676,18 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     );
   }
 
-  Widget _buildTabletLayout(AutomatonState state) {
+  Widget _buildTabletLayout(AutomatonStateProviderState state) {
+    final algorithmState = ref.watch(automatonAlgorithmProvider);
+    final simulationState = ref.watch(automatonSimulationProvider);
     return TabletLayoutContainer(
       canvas: _buildCanvasArea(state: state, isMobile: false),
       algorithmPanel: _buildAlgorithmPanelForState(state),
       simulationPanel: SimulationPanel(
         onSimulate: (inputString) => ref
-            .read(automatonProvider.notifier)
+            .read(automatonSimulationProvider.notifier)
             .simulateAutomaton(inputString),
-        simulationResult: state.simulationResult,
-        regexResult: state.regexResult,
+        simulationResult: simulationState.simulationResult,
+        regexResult: algorithmState.regexResult,
         highlightService: _highlightService,
       ),
     );

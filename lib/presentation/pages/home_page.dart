@@ -11,6 +11,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/automaton_provider.dart';
+import '../providers/automaton_state_provider.dart';
 import '../providers/home_navigation_provider.dart';
 import '../widgets/mobile_navigation.dart';
 import '../widgets/desktop_navigation.dart';
@@ -194,7 +195,10 @@ class _HomePageState extends ConsumerState<HomePage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 12,
+                  ),
                   child: DesktopNavigation(
                     currentIndex: currentIndex,
                     onDestinationSelected: _onNavigationTap,
@@ -243,7 +247,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Future<void> _createNewAutomaton(BuildContext context) async {
-    final automatonNotifier = ref.read(automatonProvider.notifier);
+    final automatonNotifier = ref.read(automatonStateProvider.notifier);
 
     await automatonNotifier.createAutomaton(
       name: 'Untitled Automaton',
@@ -252,7 +256,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     if (!mounted) return;
 
-    final automatonState = ref.read(automatonProvider);
+    final automatonState = ref.read(automatonStateProvider);
     if (automatonState.error != null) {
       ScaffoldMessenger.of(
         context,

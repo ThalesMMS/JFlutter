@@ -17,10 +17,7 @@ import '../result.dart';
 /// Structured result for PDA → CFG conversions containing both the
 /// generated grammar and a textual description.
 class PdaToCfgConversion {
-  const PdaToCfgConversion({
-    required this.grammar,
-    required this.description,
-  });
+  const PdaToCfgConversion({required this.grammar, required this.description});
 
   /// Grammar generated from the PDA.
   final Grammar grammar;
@@ -56,7 +53,9 @@ class PDAtoCFGConverter {
     }
 
     final description = _buildDescription(grammar, pda);
-    return Success(PdaToCfgConversion(grammar: grammar, description: description));
+    return Success(
+      PdaToCfgConversion(grammar: grammar, description: description),
+    );
   }
 
   static Grammar _buildGrammar(PDA pda) {
@@ -78,8 +77,11 @@ class PDAtoCFGConverter {
 
     // Start productions
     for (final accept in pda.acceptingStates) {
-      final targetVariable =
-          variable(initialState.label, pda.initialStackSymbol, accept.label);
+      final targetVariable = variable(
+        initialState.label,
+        pda.initialStackSymbol,
+        accept.label,
+      );
       nonTerminals.add(targetVariable);
       productions.add(
         Production.unit(
@@ -93,7 +95,8 @@ class PDAtoCFGConverter {
     }
 
     for (final transition in pda.pdaTransitions) {
-      final isLambdaInput = transition.isLambdaInput ||
+      final isLambdaInput =
+          transition.isLambdaInput ||
           transition.inputSymbol.isEmpty ||
           transition.inputSymbol == 'λ' ||
           transition.inputSymbol == 'ε';
@@ -102,18 +105,21 @@ class PDAtoCFGConverter {
         terminals.add(input);
       }
 
-      final isLambdaPop = transition.isLambdaPop ||
+      final isLambdaPop =
+          transition.isLambdaPop ||
           transition.popSymbol.isEmpty ||
           transition.popSymbol == 'λ' ||
           transition.popSymbol == 'ε';
       final pop = isLambdaPop ? 'λ' : transition.popSymbol;
 
-      final isLambdaPush = transition.isLambdaPush ||
+      final isLambdaPush =
+          transition.isLambdaPush ||
           transition.pushSymbol.isEmpty ||
           transition.pushSymbol == 'λ' ||
           transition.pushSymbol == 'ε';
-      final pushSymbols =
-          isLambdaPush ? <String>[] : transition.pushSymbol.split('');
+      final pushSymbols = isLambdaPush
+          ? <String>[]
+          : transition.pushSymbol.split('');
 
       final from = transition.fromState.label;
       final to = transition.toState.label;
@@ -138,7 +144,10 @@ class PDAtoCFGConverter {
         productions.add(production);
         productionCounter++;
       } else {
-        final sequences = _stateLabelSequences(stateLabels, pushSymbols.length - 1);
+        final sequences = _stateLabelSequences(
+          stateLabels,
+          pushSymbols.length - 1,
+        );
 
         for (final target in stateLabels) {
           final leftVariable = variable(from, pop, target);
@@ -209,9 +218,7 @@ class PDAtoCFGConverter {
       (production) =>
           production.leftSide.length == 1 && production.leftSide.first == 'S',
     )) {
-      final right = production.isLambda
-          ? 'λ'
-          : production.rightSide.join(' ');
+      final right = production.isLambda ? 'λ' : production.rightSide.join(' ');
       buffer.writeln('  S → $right');
     }
 
@@ -222,9 +229,7 @@ class PDAtoCFGConverter {
           production.leftSide.length != 1 || production.leftSide.first != 'S',
     )) {
       final left = production.leftSide.join(' ');
-      final right = production.isLambda
-          ? 'λ'
-          : production.rightSide.join(' ');
+      final right = production.isLambda ? 'λ' : production.rightSide.join(' ');
       buffer.writeln('  $left → $right');
     }
 

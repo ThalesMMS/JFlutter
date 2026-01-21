@@ -15,6 +15,7 @@ import 'package:jflutter/core/algorithms/automaton_simulator.dart';
 import 'package:jflutter/core/algorithms/dfa_minimizer.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'dart:math' as math;
+
 void main() {
   group('DFA Validation Tests', () {
     late FSA binaryDivisibleBy3DFA;

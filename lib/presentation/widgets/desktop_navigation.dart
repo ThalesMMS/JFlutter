@@ -26,10 +26,13 @@ class DesktopNavigation extends StatelessWidget {
       groupAlignment: -1,
       extended: extended,
       minWidth: 80,
-      labelType: extended ? NavigationRailLabelType.none : NavigationRailLabelType.all,
+      labelType: extended
+          ? NavigationRailLabelType.none
+          : NavigationRailLabelType.all,
       selectedIconTheme: IconThemeData(color: colorScheme.primary),
-      unselectedIconTheme:
-          IconThemeData(color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8)),
+      unselectedIconTheme: IconThemeData(
+        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+      ),
       selectedLabelTextStyle: TextStyle(
         color: colorScheme.primary,
         fontWeight: FontWeight.bold,

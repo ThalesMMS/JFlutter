@@ -135,11 +135,11 @@ class _TMPageState extends ConsumerState<TMPage> {
         canvasHighlightServiceProvider.overrideWithValue(_highlightService),
       ],
       child: Scaffold(
-        body: isMobile 
-            ? _buildMobileLayout() 
-            : screenSize.width < 1400 
-                ? _buildTabletLayout() 
-                : _buildDesktopLayout(),
+        body: isMobile
+            ? _buildMobileLayout()
+            : screenSize.width < 1400
+            ? _buildTabletLayout()
+            : _buildDesktopLayout(),
       ),
     );
   }

@@ -62,9 +62,7 @@ class _PDACanvasGraphViewState extends ConsumerState<PDACanvasGraphView> {
       final highlightService = ref.read(canvasHighlightServiceProvider);
       _highlightService = highlightService;
       _previousHighlightChannel = highlightService.channel;
-      final highlightChannel = GraphViewSimulationHighlightChannel(
-        _controller,
-      );
+      final highlightChannel = GraphViewSimulationHighlightChannel(_controller);
       _highlightChannel = highlightChannel;
       highlightService.channel = highlightChannel;
     }
@@ -86,19 +84,19 @@ class _PDACanvasGraphViewState extends ConsumerState<PDACanvasGraphView> {
       });
     }
 
-    _subscription = ref.listenManual<PDAEditorState>(
-      pdaEditorProvider,
-      (previous, next) {
-        if (!mounted) return;
-        final pda = next.pda;
-        if (pda != null && !identical(pda, _lastDeliveredPda)) {
-          _lastDeliveredPda = pda;
-          widget.onPdaModified(pda);
-        } else if (pda == null) {
-          _lastDeliveredPda = null;
-        }
-      },
-    );
+    _subscription = ref.listenManual<PDAEditorState>(pdaEditorProvider, (
+      previous,
+      next,
+    ) {
+      if (!mounted) return;
+      final pda = next.pda;
+      if (pda != null && !identical(pda, _lastDeliveredPda)) {
+        _lastDeliveredPda = pda;
+        widget.onPdaModified(pda);
+      } else if (pda == null) {
+        _lastDeliveredPda = null;
+      }
+    });
   }
 
   @override

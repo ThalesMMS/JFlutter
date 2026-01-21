@@ -70,10 +70,7 @@ class SvgExporter {
     buffer.writeln('  xmlns:xlink="http://www.w3.org/1999/xlink">');
 
     // Add styles
-    _addSvgStyles(
-      buffer,
-      includeAcceptingMask: hasStates,
-    );
+    _addSvgStyles(buffer, includeAcceptingMask: hasStates);
 
     // Add automaton content
     _addAutomatonContent(buffer, automaton, width, height, opts);
@@ -189,7 +186,9 @@ class SvgExporter {
       '  .tape-symbol { font-family: monospace; font-size: 16px; text-anchor: middle; dominant-baseline: middle; }',
     );
     buffer.writeln('  .head { fill: #d32f2f; }');
-    buffer.writeln('  .legend { font-family: $_fontFamily; font-size: 12px; fill: #424242; }');
+    buffer.writeln(
+      '  .legend { font-family: $_fontFamily; font-size: 12px; fill: #424242; }',
+    );
     buffer.writeln('</style>');
   }
 
@@ -205,12 +204,16 @@ class SvgExporter {
     final tapeTop = math.max(40.0, height * 0.12);
     final availableWidth = width * 0.8;
     final cellsCount = math.max(7, (availableWidth / minCellWidth).floor());
-    final cellWidth = cellsCount > 0 ? availableWidth / cellsCount : minCellWidth;
+    final cellWidth = cellsCount > 0
+        ? availableWidth / cellsCount
+        : minCellWidth;
     final tapeStartX = (width - cellWidth * cellsCount) / 2;
 
     final colorScheme = options.colorScheme;
-    final tapeFill = colorScheme?.surfaceContainerHighest ?? const Color(0xFFF5F5F5);
-    final tapeStroke = colorScheme?.outlineVariant ??
+    final tapeFill =
+        colorScheme?.surfaceContainerHighest ?? const Color(0xFFF5F5F5);
+    final tapeStroke =
+        colorScheme?.outlineVariant ??
         colorScheme?.outline ??
         const Color(0xFF424242);
     final textColor = colorScheme?.onSurface ?? const Color(0xFF000000);
@@ -336,9 +339,7 @@ class SvgExporter {
         final cx = _formatDimension(position.x);
         final cy = _formatDimension(position.y);
         final outerRadius = _formatDimension(_stateRadius + 5);
-        buffer.writeln(
-          '      <circle cx="$cx" cy="$cy" r="$outerRadius"',
-        );
+        buffer.writeln('      <circle cx="$cx" cy="$cy" r="$outerRadius"');
         buffer.writeln(
           '        fill="none" stroke="${_colorToHex(strokeColor)}" stroke-width="3"/>',
         );
@@ -347,9 +348,7 @@ class SvgExporter {
       final mainCx = _formatDimension(position.x);
       final mainCy = _formatDimension(position.y);
       final radius = _formatDimension(_stateRadius);
-      buffer.writeln(
-        '      <circle cx="$mainCx" cy="$mainCy" r="$radius"',
-      );
+      buffer.writeln('      <circle cx="$mainCx" cy="$mainCy" r="$radius"');
       buffer.writeln(
         '        fill="${_colorToHex(fillColor)}" stroke="${_colorToHex(strokeColor)}" stroke-width="$_strokeWidth"/>',
       );
@@ -401,7 +400,8 @@ class SvgExporter {
         continue;
       }
 
-      final label = '${transition.readSymbol}/${transition.writeSymbol}, '
+      final label =
+          '${transition.readSymbol}/${transition.writeSymbol}, '
           '${_directionLabel(transition.moveDirection)}';
 
       if (from == to) {
@@ -411,14 +411,10 @@ class SvgExporter {
         const controlOffset = loopRadius * 1.2;
         final formattedStartX = _formatDimension(startX);
         final formattedStartY = _formatDimension(startY);
-        final formattedControlX1 =
-            _formatDimension(startX + controlOffset);
-        final formattedControlY1 =
-            _formatDimension(startY - controlOffset);
-        final formattedControlX2 =
-            _formatDimension(startX - controlOffset);
-        final formattedControlY2 =
-            _formatDimension(startY - controlOffset);
+        final formattedControlX1 = _formatDimension(startX + controlOffset);
+        final formattedControlY1 = _formatDimension(startY - controlOffset);
+        final formattedControlX2 = _formatDimension(startX - controlOffset);
+        final formattedControlY2 = _formatDimension(startY - controlOffset);
         final formattedLoopStartY = _formatDimension(startY - loopRadius);
 
         buffer.writeln('    <g class="transition">');
@@ -462,7 +458,8 @@ class SvgExporter {
     SvgExportOptions options,
   ) {
     final colorScheme = options.colorScheme;
-    final textColor = colorScheme?.onSurfaceVariant ??
+    final textColor =
+        colorScheme?.onSurfaceVariant ??
         colorScheme?.onSurface ??
         const Color(0xFF424242);
     final legendY = height - 30;
@@ -473,9 +470,7 @@ class SvgExporter {
     buffer.writeln(
       '      <text x="$legendXText" y="$legendYText" text-anchor="middle" fill="${_colorToHex(textColor)}">',
     );
-    buffer.writeln(
-      '        δ(q, s) = (q′, w, d) — leitura/escrita/movimento',
-    );
+    buffer.writeln('        δ(q, s) = (q′, w, d) — leitura/escrita/movimento');
     buffer.writeln('      </text>');
     buffer.writeln('    </g>');
   }
@@ -495,7 +490,7 @@ class SvgExporter {
     final value = color.value & 0x00FFFFFF;
     return '#${value.toRadixString(16).padLeft(6, '0')}';
   }
-  
+
   static void _addAutomatonContent(
     StringBuffer buffer,
     AutomatonEntity automaton,
@@ -582,17 +577,13 @@ class SvgExporter {
       if (isAccepting) {
         final outerRadius = _formatDimension(_stateRadius + 5);
         // Draw double circle for accepting states
-        buffer.writeln(
-          '    <circle cx="$cx" cy="$cy" r="$outerRadius"',
-        );
+        buffer.writeln('    <circle cx="$cx" cy="$cy" r="$outerRadius"');
         buffer.writeln(
           '      fill="none" stroke="$strokeColor" stroke-width="$strokeWidth"/>',
         );
       }
       final radius = _formatDimension(_stateRadius);
-      buffer.writeln(
-        '    <circle cx="$cx" cy="$cy" r="$radius"',
-      );
+      buffer.writeln('    <circle cx="$cx" cy="$cy" r="$radius"');
       buffer.writeln('      fill="${isInitial ? '#e3f2fd' : '#fff'}"');
       buffer.writeln(
         '      stroke="$strokeColor" stroke-width="$strokeWidth"/>',
@@ -629,7 +620,9 @@ class SvgExporter {
         continue;
       }
 
-      final symbol = normalizeToEpsilon(extractSymbolFromTransitionKey(entry.key));
+      final symbol = normalizeToEpsilon(
+        extractSymbolFromTransitionKey(entry.key),
+      );
 
       for (final targetStateId in entry.value) {
         final toPos = positions[targetStateId];
@@ -684,11 +677,7 @@ class SvgExporter {
     buffer.writeln('  </g>');
   }
 
-  static void _drawSelfLoop(
-    StringBuffer buffer,
-    Vector2 center,
-    String label,
-  ) {
+  static void _drawSelfLoop(StringBuffer buffer, Vector2 center, String label) {
     const loopOffset = 24.0;
     final startX = center.x;
     final startY = center.y - _stateRadius;
@@ -711,13 +700,12 @@ class SvgExporter {
       '${_formatDimension(control2.x)} ${_formatDimension(control2.y)} '
       '${_formatDimension(endPoint.x)} ${_formatDimension(endPoint.y)}"',
     );
-    buffer.writeln('      fill="none" stroke="#000" stroke-width="$_strokeWidth"');
+    buffer.writeln(
+      '      fill="none" stroke="#000" stroke-width="$_strokeWidth"',
+    );
     buffer.writeln('      marker-end="url(#arrowhead)"/>');
 
-    final labelPosition = Vector2(
-      center.x,
-      center.y - controlOffset - 6,
-    );
+    final labelPosition = Vector2(center.x, center.y - controlOffset - 6);
     buffer.writeln(
       '    <text x="${_formatDimension(labelPosition.x)}" y="${_formatDimension(labelPosition.y)}" class="transition">$label</text>',
     );

@@ -25,10 +25,8 @@ class StackState {
   final String? lastOperation; // "push X", "pop X", ou null
   final bool isEmpty;
 
-  StackState({
-    required this.symbols,
-    this.lastOperation,
-  }) : isEmpty = symbols.isEmpty;
+  StackState({required this.symbols, this.lastOperation})
+    : isEmpty = symbols.isEmpty;
 
   /// Retorna o topo da pilha
   String? get top => symbols.isEmpty ? null : symbols.last;
@@ -157,9 +155,9 @@ class _PdaStackPanelState extends State<PdaStackPanel>
           const SizedBox(width: 8),
           Text(
             'Stack',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const Spacer(),
           if (widget.isSimulating)
@@ -207,10 +205,7 @@ class _PdaStackPanelState extends State<PdaStackPanel>
             ],
           ),
           const SizedBox(height: 4),
-          Text(
-            'Tamanho: $size',
-            style: const TextStyle(fontSize: 12),
-          ),
+          Text('Tamanho: $size', style: const TextStyle(fontSize: 12)),
           if (widget.stackState.lastOperation != null) ...[
             const SizedBox(height: 4),
             Text(
@@ -235,17 +230,11 @@ class _PdaStackPanelState extends State<PdaStackPanel>
           children: [
             Icon(Icons.inbox, size: 48, color: Colors.grey[400]),
             const SizedBox(height: 8),
-            Text(
-              'Pilha vazia',
-              style: TextStyle(color: Colors.grey[600]),
-            ),
+            Text('Pilha vazia', style: TextStyle(color: Colors.grey[600])),
             const SizedBox(height: 4),
             Text(
               'Símbolo inicial: ${widget.initialStackSymbol}',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[500],
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
             ),
           ],
         ),
@@ -291,7 +280,11 @@ class _PdaStackPanelState extends State<PdaStackPanel>
                 if (isTop)
                   const Padding(
                     padding: EdgeInsets.only(right: 8),
-                    child: Icon(Icons.arrow_upward, size: 16, color: Colors.blue),
+                    child: Icon(
+                      Icons.arrow_upward,
+                      size: 16,
+                      color: Colors.blue,
+                    ),
                   ),
                 Expanded(
                   child: Text(
@@ -392,14 +385,24 @@ class StackOperationPreview extends StatelessWidget {
           ),
           const Divider(),
           _buildOperationRow('Input', inputSymbol, Icons.input, Colors.blue),
-          _buildOperationRow('Pop', popSymbol, Icons.arrow_downward, Colors.red),
-          _buildOperationRow('Push', pushSymbol, Icons.arrow_upward, Colors.green),
+          _buildOperationRow(
+            'Pop',
+            popSymbol,
+            Icons.arrow_downward,
+            Colors.red,
+          ),
+          _buildOperationRow(
+            'Push',
+            pushSymbol,
+            Icons.arrow_upward,
+            Colors.green,
+          ),
           const Divider(),
           Text(
             'Resultado',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           _buildStackPreview(),
@@ -408,7 +411,12 @@ class StackOperationPreview extends StatelessWidget {
     );
   }
 
-  Widget _buildOperationRow(String label, String value, IconData icon, Color color) {
+  Widget _buildOperationRow(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     final isLambda = value == 'λ' || value == 'ε' || value.isEmpty;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -416,10 +424,7 @@ class StackOperationPreview extends StatelessWidget {
         children: [
           Icon(icon, size: 16, color: color),
           const SizedBox(width: 8),
-          Text(
-            '$label: ',
-            style: const TextStyle(fontSize: 12),
-          ),
+          Text('$label: ', style: const TextStyle(fontSize: 12)),
           Text(
             isLambda ? 'λ' : value,
             style: TextStyle(
@@ -469,10 +474,7 @@ class StackOperationPreview extends StatelessWidget {
             ),
             child: Text(
               symbol.symbol,
-              style: const TextStyle(
-                fontSize: 12,
-                fontFamily: 'monospace',
-              ),
+              style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
             ),
           );
         }).toList(),
@@ -490,7 +492,9 @@ class PdaStackPanelExample extends StatefulWidget {
 }
 
 class _PdaStackPanelExampleState extends State<PdaStackPanelExample> {
-  StackState _stackState = StackState(symbols: ['Z']); // Iniciar com símbolo inicial
+  StackState _stackState = StackState(
+    symbols: ['Z'],
+  ); // Iniciar com símbolo inicial
 
   void _push(String symbol) {
     setState(() {
@@ -531,10 +535,7 @@ class _PdaStackPanelExampleState extends State<PdaStackPanelExample> {
                     onPressed: () => _push('B'),
                     child: const Text('Push B'),
                   ),
-                  ElevatedButton(
-                    onPressed: _pop,
-                    child: const Text('Pop'),
-                  ),
+                  ElevatedButton(onPressed: _pop, child: const Text('Pop')),
                 ],
               ),
             ),

@@ -35,11 +35,11 @@ class _GrammarPageState extends ConsumerState<GrammarPage> {
     final isMobile = screenSize.width < 1024;
 
     return Scaffold(
-      body: isMobile 
-          ? _buildMobileLayout() 
-          : screenSize.width < 1400 
-              ? _buildTabletLayout() 
-              : _buildDesktopLayout(),
+      body: isMobile
+          ? _buildMobileLayout()
+          : screenSize.width < 1400
+          ? _buildTabletLayout()
+          : _buildDesktopLayout(),
     );
   }
 

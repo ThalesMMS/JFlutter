@@ -18,7 +18,6 @@ import '../../core/algorithms/pda_simulator.dart';
 import '../../core/result.dart';
 import '../../core/services/simulation_highlight_service.dart';
 import '../providers/pda_editor_provider.dart';
-import 'base_simulation_panel.dart';
 import 'trace_viewers/pda_trace_viewer.dart';
 
 /// Panel for PDA simulation and string testing
@@ -32,22 +31,22 @@ class PDASimulationPanel extends ConsumerStatefulWidget {
   ConsumerState<PDASimulationPanel> createState() => _PDASimulationPanelState();
 }
 
-class _PDASimulationPanelState
-    extends BaseConsumerSimulationPanelState<PDASimulationPanel> {
+class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
+  final TextEditingController _inputController = TextEditingController();
   final TextEditingController _initialStackController = TextEditingController(
     text: 'Z',
   );
 
+  bool _isSimulating = false;
   PDASimulationResult? _simulationResult;
   String? _errorMessage;
   bool _stepByStep = true;
 
   @override
-  SimulationHighlightService get highlightService => widget.highlightService;
-
-  @override
   void dispose() {
+    _inputController.dispose();
     _initialStackController.dispose();
+    widget.highlightService.clear();
     super.dispose();
   }
 
@@ -104,10 +103,13 @@ class _PDASimulationPanelState
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 12),
-          buildInputField(
-            context: context,
-            labelText: 'Input String',
-            hintText: 'e.g., aabb, abab',
+          TextField(
+            controller: _inputController,
+            decoration: const InputDecoration(
+              labelText: 'Input String',
+              hintText: 'e.g., aabb, abab',
+              border: OutlineInputBorder(),
+            ),
           ),
           const SizedBox(height: 12),
           TextField(
@@ -128,9 +130,12 @@ class _PDASimulationPanelState
                 _stepByStep = value;
               });
               if (!value) {
-                highlightService.clear();
+                widget.highlightService.clear();
               } else if (_simulationResult?.steps.isNotEmpty == true) {
-                highlightService.emitFromSteps(_simulationResult!.steps, 0);
+                widget.highlightService.emitFromSteps(
+                  _simulationResult!.steps,
+                  0,
+                );
               }
             },
           ),
@@ -149,10 +154,19 @@ class _PDASimulationPanelState
   }
 
   Widget _buildSimulateButton(BuildContext context) {
-    return buildSimulateButton(
-      context: context,
-      label: 'Simulate PDA',
-      simulatingLabel: 'Simulating...',
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: _isSimulating ? null : _simulatePDA,
+        icon: _isSimulating
+            ? const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Icon(Icons.play_arrow),
+        label: Text(_isSimulating ? 'Simulating...' : 'Simulate PDA'),
+      ),
     );
   }
 
@@ -291,18 +305,17 @@ class _PDASimulationPanelState
     );
   }
 
-  @override
-  void simulate() {
-    final inputString = inputController.text.trim();
+  void _simulatePDA() {
+    final inputString = _inputController.text.trim();
     final initialStack = _initialStackController.text.trim();
 
     if (inputString.isEmpty) {
-      showError(context, 'Please enter an input string');
+      _showError('Please enter an input string');
       return;
     }
 
     if (initialStack.isEmpty) {
-      showError(context, 'Please enter an initial stack symbol');
+      _showError('Please enter an initial stack symbol');
       return;
     }
 
@@ -310,19 +323,19 @@ class _PDASimulationPanelState
     final currentPda = editorState.pda;
 
     if (currentPda == null) {
-      showError(context, 'Create a PDA on the canvas before simulating.');
+      _showError('Create a PDA on the canvas before simulating.');
       return;
     }
 
     setState(() {
-      isSimulating = true;
+      _isSimulating = true;
       _simulationResult = null;
       _errorMessage = null;
     });
 
-    highlightService.clear();
+    widget.highlightService.clear();
 
-    final stackAlphabet = <String>{...currentPda.stackAlphabet};
+    final stackAlphabet = {...currentPda.stackAlphabet};
     stackAlphabet.add(initialStack);
 
     final simulationPda = currentPda.copyWith(
@@ -344,33 +357,38 @@ class _PDASimulationPanelState
     if (result.isSuccess) {
       final simulation = result.data;
       setState(() {
-        isSimulating = false;
+        _isSimulating = false;
         _simulationResult = result.data;
         _errorMessage = result.data?.errorMessage?.isNotEmpty == true
             ? result.data!.errorMessage
             : null;
       });
       if (simulation != null && simulation.steps.isNotEmpty) {
-        highlightService.emitFromSteps(simulation.steps, 0);
+        widget.highlightService.emitFromSteps(simulation.steps, 0);
       } else {
-        highlightService.clear();
+        widget.highlightService.clear();
       }
     } else {
       setState(() {
-        isSimulating = false;
+        _isSimulating = false;
         _simulationResult = null;
         _errorMessage = result.error;
       });
-      highlightService.clear();
+      widget.highlightService.clear();
     }
   }
 
-  @override
-  void clearSimulation() {
+  void _showError(String message) {
     setState(() {
-      _errorMessage = null;
+      _errorMessage = message;
       _simulationResult = null;
     });
-    super.clearSimulation();
+    widget.highlightService.clear();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ),
+    );
   }
 }

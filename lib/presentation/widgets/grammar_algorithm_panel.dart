@@ -18,11 +18,10 @@ import '../../core/models/grammar.dart';
 import '../../core/models/pda.dart';
 import '../../core/result.dart';
 import '../providers/automaton_provider.dart';
+import '../providers/automaton_state_provider.dart';
 import '../providers/grammar_provider.dart';
 import '../providers/home_navigation_provider.dart';
 import '../providers/pda_editor_provider.dart';
-import 'common/algorithm_button.dart';
-import 'common/algorithm_panel_header.dart';
 
 /// Panel for grammar analysis algorithms
 class GrammarAlgorithmPanel extends ConsumerStatefulWidget {
@@ -47,10 +46,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const AlgorithmPanelHeader(
-              title: 'Grammar Analysis',
-              icon: Icons.auto_awesome,
-            ),
+            _buildHeader(context),
             const SizedBox(height: 16),
             _buildAlgorithmButtons(context),
             const SizedBox(height: 16),
@@ -61,58 +57,75 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
     );
   }
 
+  Widget _buildHeader(BuildContext context) {
+    return Row(
+      children: [
+        Icon(Icons.auto_awesome, color: Theme.of(context).colorScheme.primary),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            'Grammar Analysis',
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildAlgorithmButtons(BuildContext context) {
     final grammarState = ref.watch(grammarProvider);
     return Column(
       children: [
         _buildConversionSection(context, grammarState),
         const SizedBox(height: 24),
-        AlgorithmButton(
+        _buildAlgorithmButton(
+          context,
           title: 'Remove Left Recursion',
           description: 'Eliminate left recursion from grammar',
           icon: Icons.transform,
           onPressed: _removeLeftRecursion,
-          isExecuting: _isAnalyzing,
         ),
         const SizedBox(height: 12),
-        AlgorithmButton(
+        _buildAlgorithmButton(
+          context,
           title: 'Left Factor',
           description: 'Apply left factoring to grammar',
           icon: Icons.account_tree,
           onPressed: _leftFactor,
-          isExecuting: _isAnalyzing,
         ),
         const SizedBox(height: 12),
-        AlgorithmButton(
+        _buildAlgorithmButton(
+          context,
           title: 'Find First Sets',
           description: 'Calculate FIRST sets for all variables',
           icon: Icons.first_page,
           onPressed: _findFirstSets,
-          isExecuting: _isAnalyzing,
         ),
         const SizedBox(height: 12),
-        AlgorithmButton(
+        _buildAlgorithmButton(
+          context,
           title: 'Find Follow Sets',
           description: 'Calculate FOLLOW sets for all variables',
           icon: Icons.last_page,
           onPressed: _findFollowSets,
-          isExecuting: _isAnalyzing,
         ),
         const SizedBox(height: 12),
-        AlgorithmButton(
+        _buildAlgorithmButton(
+          context,
           title: 'Build Parse Table',
           description: 'Generate LL(1) or LR(1) parse table',
           icon: Icons.table_chart,
           onPressed: _buildParseTable,
-          isExecuting: _isAnalyzing,
         ),
         const SizedBox(height: 12),
-        AlgorithmButton(
+        _buildAlgorithmButton(
+          context,
           title: 'Check Ambiguity',
           description: 'Detect if grammar is ambiguous',
           icon: Icons.help_outline,
           onPressed: _checkAmbiguity,
-          isExecuting: _isAnalyzing,
         ),
       ],
     );
@@ -142,8 +155,8 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
           label: 'Convert Right-Linear Grammar to FSA',
           processingLabel: 'Converting to FSA...',
           icon: Icons.sync_alt,
-          isProcessing: isBusy &&
-              activeConversion == GrammarConversionType.grammarToFsa,
+          isProcessing:
+              isBusy && activeConversion == GrammarConversionType.grammarToFsa,
           isDisabled: isDisabled,
           onPressed: _convertToAutomaton,
         ),
@@ -153,8 +166,8 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
           label: 'Convert Grammar to PDA (General)',
           processingLabel: 'Converting to PDA...',
           icon: Icons.auto_fix_high,
-          isProcessing: isBusy &&
-              activeConversion == GrammarConversionType.grammarToPda,
+          isProcessing:
+              isBusy && activeConversion == GrammarConversionType.grammarToPda,
           isDisabled: isDisabled,
           onPressed: _convertToPdaGeneral,
         ),
@@ -164,7 +177,8 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
           label: 'Convert Grammar to PDA (Standard)',
           processingLabel: 'Converting (Standard)...',
           icon: Icons.layers,
-          isProcessing: isBusy &&
+          isProcessing:
+              isBusy &&
               activeConversion == GrammarConversionType.grammarToPdaStandard,
           isDisabled: isDisabled,
           onPressed: _convertToPdaStandard,
@@ -175,7 +189,8 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
           label: 'Convert Grammar to PDA (Greibach)',
           processingLabel: 'Converting (Greibach)...',
           icon: Icons.stacked_bar_chart,
-          isProcessing: isBusy &&
+          isProcessing:
+              isBusy &&
               activeConversion == GrammarConversionType.grammarToPdaGreibach,
           isDisabled: isDisabled,
           onPressed: _convertToPdaGreibach,
@@ -206,6 +221,80 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
     );
   }
 
+  Widget _buildAlgorithmButton(
+    BuildContext context, {
+    required String title,
+    required String description,
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return InkWell(
+      onTap: _isAnalyzing ? null : onPressed,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: _isAnalyzing
+                ? colorScheme.outline.withValues(alpha: 0.3)
+                : colorScheme.primary.withValues(alpha: 0.3),
+          ),
+          borderRadius: BorderRadius.circular(8),
+          color: _isAnalyzing
+              ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
+              : null,
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: _isAnalyzing ? colorScheme.outline : colorScheme.primary,
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: _isAnalyzing
+                          ? colorScheme.outline
+                          : colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (_isAnalyzing)
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else
+              Icon(
+                Icons.arrow_forward_ios,
+                color: colorScheme.primary.withValues(alpha: 0.5),
+                size: 16,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _convertToAutomaton() async {
     final result = await ref
         .read(grammarProvider.notifier)
@@ -215,7 +304,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
 
     if (result.isSuccess) {
       final automaton = result.data!;
-      ref.read(automatonProvider.notifier).updateAutomaton(automaton);
+      ref.read(automatonStateProvider.notifier).updateAutomaton(automaton);
 
       if (!mounted) return;
 
@@ -279,8 +368,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
 
   Future<void> _convertToPdaStandard() {
     return _handlePdaConversion(
-      convert: () =>
-          ref.read(grammarProvider.notifier).convertToPdaStandard(),
+      convert: () => ref.read(grammarProvider.notifier).convertToPdaStandard(),
       successMessage:
           'Grammar converted to PDA (standard). Switched to PDA workspace.',
     );
@@ -288,8 +376,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
 
   Future<void> _convertToPdaGreibach() {
     return _handlePdaConversion(
-      convert: () =>
-          ref.read(grammarProvider.notifier).convertToPdaGreibach(),
+      convert: () => ref.read(grammarProvider.notifier).convertToPdaGreibach(),
       successMessage:
           'Grammar converted to PDA (Greibach). Switched to PDA workspace.',
     );
@@ -336,13 +423,16 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
-        if (widget.useExpanded) Expanded(
-                child: _analysisResult == null
-                    ? _buildEmptyResults(context)
-                    : _buildResults(context),
-              ) else _analysisResult == null
+        if (widget.useExpanded)
+          Expanded(
+            child: _analysisResult == null
                 ? _buildEmptyResults(context)
                 : _buildResults(context),
+          )
+        else
+          _analysisResult == null
+              ? _buildEmptyResults(context)
+              : _buildResults(context),
       ],
     );
 

@@ -575,12 +575,7 @@ void main() {
 
         // Head indicator pointing to the central tape cell
         expect(svg, contains('<polygon class="head"'));
-        expect(
-          svg,
-          contains(
-            'points="420 70, 444 70, 432 54"',
-          ),
-        );
+        expect(svg, contains('points="420 70, 444 70, 432 54"'));
 
         // State layout and labelling
         expect(svg, contains('<g class="state">'));
@@ -593,9 +588,7 @@ void main() {
         expect(svg, contains('<g class="legend">'));
         expect(
           svg,
-          contains(
-            'δ(q, s) = (q′, w, d) — leitura/escrita/movimento',
-          ),
+          contains('δ(q, s) = (q′, w, d) — leitura/escrita/movimento'),
         );
       });
 

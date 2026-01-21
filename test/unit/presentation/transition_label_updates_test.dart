@@ -27,58 +27,61 @@ import 'package:jflutter/presentation/providers/tm_editor_provider.dart';
 
 void main() {
   group('Transition updates', () {
-    test('AutomatonProvider.updateTransitionLabel updates labels and symbols', () {
-      final provider = AutomatonProvider(
-        automatonService: AutomatonService(),
-        layoutRepository: LayoutRepositoryImpl(),
-      );
+    test(
+      'AutomatonProvider.updateTransitionLabel updates labels and symbols',
+      () {
+        final provider = AutomatonProvider(
+          automatonService: AutomatonService(),
+          layoutRepository: LayoutRepositoryImpl(),
+        );
 
-      final stateA = automaton_state.State(
-        id: 'q0',
-        label: 'q0',
-        position: Vector2.zero(),
-        isInitial: true,
-        isAccepting: false,
-      );
-      final stateB = automaton_state.State(
-        id: 'q1',
-        label: 'q1',
-        position: Vector2(100, 0),
-        isInitial: false,
-        isAccepting: true,
-      );
-      final transition = FSATransition(
-        id: 't0',
-        fromState: stateA,
-        toState: stateB,
-        inputSymbols: const {'a'},
-        label: 'a',
-      );
-      final automaton = FSA(
-        id: 'fa',
-        name: 'test',
-        states: {stateA, stateB},
-        transitions: {transition},
-        alphabet: {'a'},
-        initialState: stateA,
-        acceptingStates: {stateB},
-        created: DateTime.now(),
-        modified: DateTime.now(),
-        bounds: const math.Rectangle(0, 0, 400, 300),
-      );
+        final stateA = automaton_state.State(
+          id: 'q0',
+          label: 'q0',
+          position: Vector2.zero(),
+          isInitial: true,
+          isAccepting: false,
+        );
+        final stateB = automaton_state.State(
+          id: 'q1',
+          label: 'q1',
+          position: Vector2(100, 0),
+          isInitial: false,
+          isAccepting: true,
+        );
+        final transition = FSATransition(
+          id: 't0',
+          fromState: stateA,
+          toState: stateB,
+          inputSymbols: const {'a'},
+          label: 'a',
+        );
+        final automaton = FSA(
+          id: 'fa',
+          name: 'test',
+          states: {stateA, stateB},
+          transitions: {transition},
+          alphabet: {'a'},
+          initialState: stateA,
+          acceptingStates: {stateB},
+          created: DateTime.now(),
+          modified: DateTime.now(),
+          bounds: const math.Rectangle(0, 0, 400, 300),
+        );
 
-      provider.updateAutomaton(automaton);
-      provider.updateTransitionLabel(id: 't0', label: 'b,c');
+        provider.updateAutomaton(automaton);
+        provider.updateTransitionLabel(id: 't0', label: 'b,c');
 
-      final updated = provider.state.currentAutomaton!;
-      final updatedTransition = updated.transitions
-          .whereType<FSATransition>()
-          .firstWhere((element) => element.id == 't0');
+        final updated = provider.state.currentAutomaton!;
+        final updatedTransition = updated.transitions
+            .whereType<FSATransition>()
+            .firstWhere((element) => element.id == 't0');
 
-      expect(updatedTransition.label, 'b,c');
-      expect(updatedTransition.inputSymbols, {'b', 'c'});
-      expect(updated.alphabet.containsAll({'a', 'b', 'c'}), isTrue);
-    });
+        expect(updatedTransition.label, 'b,c');
+        expect(updatedTransition.inputSymbols, {'b', 'c'});
+        expect(updated.alphabet.containsAll({'a', 'b', 'c'}), isTrue);
+      },
+    );
 
     test('TMEditorNotifier.updateTransitionOperations rewrites operations', () {
       final notifier = TMEditorNotifier();
@@ -102,9 +105,9 @@ void main() {
       );
 
       final tm = notifier.state.tm!;
-      final transition = tm.transitions
-          .whereType<TMTransition>()
-          .firstWhere((element) => element.id == 't0');
+      final transition = tm.transitions.whereType<TMTransition>().firstWhere(
+        (element) => element.id == 't0',
+      );
 
       expect(transition.readSymbol, 'x');
       expect(transition.writeSymbol, 'y');
@@ -140,8 +143,9 @@ void main() {
       );
 
       final pda = notifier.state.pda!;
-      final transition = pda.pdaTransitions
-          .firstWhere((element) => element.id == 't0');
+      final transition = pda.pdaTransitions.firstWhere(
+        (element) => element.id == 't0',
+      );
 
       expect(transition.isLambdaInput, isTrue);
       expect(transition.isLambdaPop, isTrue);

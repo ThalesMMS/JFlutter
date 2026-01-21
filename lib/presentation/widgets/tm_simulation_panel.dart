@@ -18,7 +18,6 @@ import '../../core/algorithms/tm_simulator.dart';
 import '../../core/models/simulation_step.dart';
 import '../../core/services/simulation_highlight_service.dart';
 import '../providers/tm_editor_provider.dart';
-import 'base_simulation_panel.dart';
 import 'trace_viewers/tm_trace_viewer.dart';
 
 /// Panel for Turing Machine simulation and string testing
@@ -32,8 +31,10 @@ class TMSimulationPanel extends ConsumerStatefulWidget {
   ConsumerState<TMSimulationPanel> createState() => _TMSimulationPanelState();
 }
 
-class _TMSimulationPanelState
-    extends BaseConsumerSimulationPanelState<TMSimulationPanel> {
+class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel> {
+  final TextEditingController _inputController = TextEditingController();
+
+  bool _isSimulating = false;
   bool _hasSimulationResult = false;
   bool? _isAccepted;
   String? _statusMessage;
@@ -41,7 +42,11 @@ class _TMSimulationPanelState
   TMSimulationResult? _result;
 
   @override
-  SimulationHighlightService get highlightService => widget.highlightService;
+  void dispose() {
+    _inputController.dispose();
+    widget.highlightService.clear();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,11 +101,13 @@ class _TMSimulationPanelState
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 12),
-          buildInputField(
-            context: context,
-            labelText: 'Input String',
-            hintText: 'e.g., 101, 1100, 111',
-            onSubmit: simulate,
+          TextField(
+            controller: _inputController,
+            decoration: const InputDecoration(
+              labelText: 'Input String',
+              hintText: 'e.g., 101, 1100, 111',
+              border: OutlineInputBorder(),
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -117,12 +124,19 @@ class _TMSimulationPanelState
   }
 
   Widget _buildSimulateButton(BuildContext context) {
-    return buildSimulateButton(
-      context: context,
-      label: 'Simulate TM',
-      simulatingLabel: 'Simulating...',
-      icon: Icons.play_arrow,
-      onPressed: simulate,
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: _isSimulating ? null : _simulateTM,
+        icon: _isSimulating
+            ? const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Icon(Icons.play_arrow),
+        label: Text(_isSimulating ? 'Simulating...' : 'Simulate TM'),
+      ),
     );
   }
 
@@ -261,7 +275,7 @@ class _TMSimulationPanelState
             if (_hasSimulationResult && _result != null)
               TMTraceViewer(
                 result: _result!,
-                highlightService: highlightService,
+                highlightService: widget.highlightService,
               ),
           ],
         ],
@@ -269,30 +283,22 @@ class _TMSimulationPanelState
     );
   }
 
-  @override
-  void simulate() {
-    _simulateTM();
-  }
-
   Future<void> _simulateTM() async {
-    final inputString = inputController.text.trim();
+    final inputString = _inputController.text.trim();
 
     if (inputString.isEmpty) {
-      showError(context, 'Please enter an input string');
+      _showError('Please enter an input string');
       return;
     }
 
     final tm = ref.read(tmEditorProvider).tm;
     if (tm == null) {
-      showError(
-        context,
-        'Create a Turing machine on the canvas before simulating',
-      );
+      _showError('Create a Turing machine on the canvas before simulating');
       return;
     }
 
     setState(() {
-      isSimulating = true;
+      _isSimulating = true;
       _hasSimulationResult = false;
       _isAccepted = null;
       _statusMessage = null;
@@ -300,7 +306,7 @@ class _TMSimulationPanelState
       _result = null;
     });
 
-    highlightService.clear();
+    widget.highlightService.clear();
 
     final result = await Future(
       () => TMSimulator.simulate(tm, inputString, stepByStep: true),
@@ -313,22 +319,22 @@ class _TMSimulationPanelState
     if (result.isFailure) {
       final message = result.error ?? 'Simulation failed';
       setState(() {
-        isSimulating = false;
+        _isSimulating = false;
         _hasSimulationResult = true;
         _isAccepted = null;
         _statusMessage = message;
         _simulationSteps = const [];
         _result = null;
       });
-      highlightService.clear();
-      showError(context, message);
+      widget.highlightService.clear();
+      _showError(message);
       return;
     }
 
     final simulation = result.data!;
 
     setState(() {
-      isSimulating = false;
+      _isSimulating = false;
       _hasSimulationResult = true;
       _isAccepted = simulation.accepted;
       _statusMessage = simulation.accepted
@@ -341,9 +347,19 @@ class _TMSimulationPanelState
     });
 
     if (simulation.steps.isNotEmpty) {
-      highlightService.emitFromSteps(simulation.steps, 0);
+      widget.highlightService.emitFromSteps(simulation.steps, 0);
     } else {
-      highlightService.clear();
+      widget.highlightService.clear();
     }
+  }
+
+  void _showError(String message) {
+    widget.highlightService.clear();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ),
+    );
   }
 }

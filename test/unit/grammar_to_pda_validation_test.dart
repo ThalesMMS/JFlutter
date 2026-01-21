@@ -12,6 +12,7 @@ import 'package:jflutter/core/models/grammar.dart';
 import 'package:jflutter/core/models/production.dart';
 import 'package:jflutter/core/algorithms/grammar_to_pda_converter.dart';
 import 'package:jflutter/core/algorithms/pda_simulator.dart';
+
 void main() {
   group('Grammar to PDA Conversion Tests', () {
     late Grammar simpleGrammar;

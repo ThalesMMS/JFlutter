@@ -110,20 +110,21 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
         isInitial ?? existing?.isInitial ?? (!hasInitial && index == -1);
     final resolvedAccepting = isAccepting ?? existing?.isAccepting ?? false;
 
-    final updated = (existing ??
-            State(
-              id: id,
+    final updated =
+        (existing ??
+                State(
+                  id: id,
+                  label: label,
+                  position: Vector2(x, y),
+                  isInitial: resolvedInitial || _states.isEmpty,
+                  isAccepting: resolvedAccepting,
+                ))
+            .copyWith(
               label: label,
               position: Vector2(x, y),
-              isInitial: resolvedInitial || _states.isEmpty,
+              isInitial: resolvedInitial,
               isAccepting: resolvedAccepting,
-            ))
-        .copyWith(
-      label: label,
-      position: Vector2(x, y),
-      isInitial: resolvedInitial,
-      isAccepting: resolvedAccepting,
-    );
+            );
 
     if (index == -1) {
       _states.add(updated);
@@ -150,11 +151,7 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
   }
 
   /// Moves a state to a new position on the canvas.
-  TM? moveState({
-    required String id,
-    required double x,
-    required double y,
-  }) {
+  TM? moveState({required String id, required double x, required double y}) {
     final index = _states.indexWhere((state) => state.id == id);
     if (index == -1) {
       return state.tm;
@@ -168,10 +165,7 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
   }
 
   /// Updates the label of the state matching [id].
-  TM? updateStateLabel({
-    required String id,
-    required String label,
-  }) {
+  TM? updateStateLabel({required String id, required String label}) {
     final index = _states.indexWhere((state) => state.id == id);
     if (index == -1) {
       return state.tm;
@@ -270,17 +264,20 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
       return state.tm;
     }
 
-    final existingIndex =
-        _transitions.indexWhere((transition) => transition.id == id);
+    final existingIndex = _transitions.indexWhere(
+      (transition) => transition.id == id,
+    );
     final existing = existingIndex != -1 ? _transitions[existingIndex] : null;
 
     final resolvedRead = readSymbol ?? existing?.readSymbol ?? '';
     final resolvedWrite = writeSymbol ?? existing?.writeSymbol ?? '';
-    final resolvedDirection = direction ?? existing?.direction ?? TapeDirection.right;
+    final resolvedDirection =
+        direction ?? existing?.direction ?? TapeDirection.right;
     final resolvedControlPoint =
         controlPoint ?? existing?.controlPoint ?? Vector2.zero();
 
-    final base = existing ??
+    final base =
+        existing ??
         TMTransition(
           id: id,
           fromState: _states[fromIndex],
@@ -352,11 +349,7 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
   /// Replaces the current TM with [tm], recalculating derived metadata.
   void setTm(TM tm) {
     final clonedStates = tm.states
-        .map(
-          (state) => state.copyWith(
-            position: state.position.clone(),
-          ),
-        )
+        .map((state) => state.copyWith(position: state.position.clone()))
         .toList(growable: false);
     _states
       ..clear()
@@ -364,27 +357,36 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
 
     final stateById = {for (final state in _states) state.id: state};
 
-    final clonedTransitions = tm.transitions.whereType<TMTransition>().map((transition) {
-      final fromState = stateById[transition.fromState.id] ?? transition.fromState;
-      final toState = stateById[transition.toState.id] ?? transition.toState;
-      return transition.copyWith(
-        fromState: fromState,
-        toState: toState,
-        controlPoint: transition.controlPoint.clone(),
-        readSymbol: transition.readSymbol,
-        writeSymbol: transition.writeSymbol,
-        direction: transition.direction,
-        tapeNumber: transition.tapeNumber,
-      );
-    }).toList(growable: false);
+    final clonedTransitions = tm.transitions
+        .whereType<TMTransition>()
+        .map((transition) {
+          final fromState =
+              stateById[transition.fromState.id] ?? transition.fromState;
+          final toState =
+              stateById[transition.toState.id] ?? transition.toState;
+          return transition.copyWith(
+            fromState: fromState,
+            toState: toState,
+            controlPoint: transition.controlPoint.clone(),
+            readSymbol: transition.readSymbol,
+            writeSymbol: transition.writeSymbol,
+            direction: transition.direction,
+            tapeNumber: transition.tapeNumber,
+          );
+        })
+        .toList(growable: false);
 
     _transitions
       ..clear()
       ..addAll(clonedTransitions);
 
     final transitionSet = _transitions.toSet();
-    final moveDirections = transitionSet.map((transition) => transition.direction.name).toSet();
-    final nondeterministicTransitionIds = _findNondeterministicTransitions(transitionSet);
+    final moveDirections = transitionSet
+        .map((transition) => transition.direction.name)
+        .toSet();
+    final nondeterministicTransitionIds = _findNondeterministicTransitions(
+      transitionSet,
+    );
 
     state = state.copyWith(
       tm: tm,
@@ -460,8 +462,9 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
       transitions: transitionSet.map<Transition>((t) => t).toSet(),
       alphabet: alphabet,
       initialState: initialState,
-      acceptingStates:
-          acceptingStates.isEmpty ? {_states.last} : acceptingStates,
+      acceptingStates: acceptingStates.isEmpty
+          ? {_states.last}
+          : acceptingStates,
       created: now,
       modified: now,
       bounds: const math.Rectangle(0, 0, 800, 600),
@@ -523,7 +526,6 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
 }
 
 /// Provider exposing the current TM editor state.
-final tmEditorProvider =
-    StateNotifierProvider<TMEditorNotifier, TMEditorState>(
+final tmEditorProvider = StateNotifierProvider<TMEditorNotifier, TMEditorState>(
   (ref) => TMEditorNotifier(),
 );

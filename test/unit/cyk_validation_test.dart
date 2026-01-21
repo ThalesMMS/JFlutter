@@ -11,6 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/grammar.dart';
 import 'package:jflutter/core/models/production.dart';
 import 'package:jflutter/core/algorithms/grammar_parser.dart';
+
 void main() {
   group('CYK Validation Tests', () {
     late Grammar balancedParenthesesGrammar;

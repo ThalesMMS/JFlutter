@@ -161,8 +161,7 @@ void main() {
                 'Transition target "$targetString" must follow the pattern estado|substituicaoPilha.',
           );
 
-          final stackReplacement =
-              targetParts.length > 1 ? targetParts[1] : '';
+          final stackReplacement = targetParts.length > 1 ? targetParts[1] : '';
 
           return _PdaTransition(
             toState: targetParts[0],
@@ -259,28 +258,42 @@ void main() {
       return false;
     }
 
-    test('APD palindrome example accepts palindromes and rejects non-palindromes', () {
-      final json = loadExample('apda_palindrome.json');
+    test(
+      'APD palindrome example accepts palindromes and rejects non-palindromes',
+      () {
+        final json = loadExample('apda_palindrome.json');
 
-      const accepted = ['','a','b','aa','bb','aba','bab','abba','baab','abbba'];
-      const rejected = ['ab','ba','abb','aab','ababa','abbabb'];
+        const accepted = [
+          '',
+          'a',
+          'b',
+          'aa',
+          'bb',
+          'aba',
+          'bab',
+          'abba',
+          'baab',
+          'abbba',
+        ];
+        const rejected = ['ab', 'ba', 'abb', 'aab', 'ababa', 'abbabb'];
 
-      for (final word in accepted) {
-        expect(
-          runPda(json, word),
-          isTrue,
-          reason: 'Expected palindrome "$word" to be accepted.',
-        );
-      }
+        for (final word in accepted) {
+          expect(
+            runPda(json, word),
+            isTrue,
+            reason: 'Expected palindrome "$word" to be accepted.',
+          );
+        }
 
-      for (final word in rejected) {
-        expect(
-          runPda(json, word),
-          isFalse,
-          reason: 'Expected non-palindrome "$word" to be rejected.',
-        );
-      }
-    });
+        for (final word in rejected) {
+          expect(
+            runPda(json, word),
+            isFalse,
+            reason: 'Expected non-palindrome "$word" to be rejected.',
+          );
+        }
+      },
+    );
 
     test('Validates TM example structure', () {
       final json = loadExample('tm_binary_to_unary.json');

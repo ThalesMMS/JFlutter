@@ -79,6 +79,9 @@ class _PDAStackPanelState extends State<PDAStackPanel>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late ScrollController _scrollController;
+  late Animation<Offset> _slideAnimation;
+  int _previousStackSize = 0;
+  bool _isPushAnimation = false;
 
   @override
   void initState() {
@@ -87,14 +90,25 @@ class _PDAStackPanelState extends State<PDAStackPanel>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 1), // Start from bottom
+      end: Offset.zero, // End at normal position
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOut,
+    ));
     _scrollController = ScrollController();
+    _previousStackSize = widget.stackState.size;
   }
 
   @override
   void didUpdateWidget(PDAStackPanel oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.stackState.symbols != widget.stackState.symbols) {
+      // Detect push operation (stack grew)
+      _isPushAnimation = widget.stackState.size > oldWidget.stackState.size;
       _animationController.forward(from: 0);
+      _previousStackSize = widget.stackState.size;
     }
   }
 
@@ -172,73 +186,83 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                         final symbol = widget.stackState.symbols[reversedIndex];
                         final isTop = index == 0;
 
-                        return FadeTransition(
-                          opacity: _animationController,
-                          child: Container(
-                            margin: const EdgeInsets.only(bottom: 4),
-                            child: Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: isTop
-                                        ? theme.colorScheme.primaryContainer
-                                        : theme.colorScheme.surfaceContainerHighest,
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      if (isTop) ...[
-                                        Icon(
-                                          Icons.arrow_right,
-                                          size: 12,
-                                          color: theme.colorScheme.primary,
-                                        ),
-                                        const SizedBox(width: 4),
-                                      ],
-                                      Text(
-                                        symbol,
-                                        style: TextStyle(
-                                          fontFamily: 'monospace',
-                                          fontWeight: isTop
-                                              ? FontWeight.bold
-                                              : FontWeight.normal,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                        Widget itemWidget = Container(
+                          margin: const EdgeInsets.only(bottom: 4),
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
                                 ),
-                                if (isTop)
-                                  Positioned(
-                                    top: -6,
-                                    right: -6,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 4,
-                                        vertical: 2,
-                                      ),
-                                      decoration: BoxDecoration(
+                                decoration: BoxDecoration(
+                                  color: isTop
+                                      ? theme.colorScheme.primaryContainer
+                                      : theme.colorScheme.surfaceContainerHighest,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Row(
+                                  children: [
+                                    if (isTop) ...[
+                                      Icon(
+                                        Icons.arrow_right,
+                                        size: 12,
                                         color: theme.colorScheme.primary,
-                                        borderRadius: BorderRadius.circular(8),
                                       ),
-                                      child: Text(
-                                        'TOP',
-                                        style: TextStyle(
-                                          color: theme.colorScheme.onPrimary,
-                                          fontSize: 8,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                      const SizedBox(width: 4),
+                                    ],
+                                    Text(
+                                      symbol,
+                                      style: TextStyle(
+                                        fontFamily: 'monospace',
+                                        fontWeight: isTop
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (isTop)
+                                Positioned(
+                                  top: -6,
+                                  right: -6,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.primary,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      'TOP',
+                                      style: TextStyle(
+                                        color: theme.colorScheme.onPrimary,
+                                        fontSize: 8,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                   ),
-                              ],
-                            ),
+                                ),
+                            ],
                           ),
+                        );
+
+                        // Apply slide animation to top item on push
+                        if (isTop && _isPushAnimation) {
+                          itemWidget = SlideTransition(
+                            position: _slideAnimation,
+                            child: itemWidget,
+                          );
+                        }
+
+                        return FadeTransition(
+                          opacity: _animationController,
+                          child: itemWidget,
                         );
                       },
                     ),

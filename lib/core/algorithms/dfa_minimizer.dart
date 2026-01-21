@@ -14,6 +14,7 @@ import 'package:vector_math/vector_math_64.dart';
 import '../models/fsa.dart';
 import '../models/state.dart';
 import '../models/fsa_transition.dart';
+import '../models/dfa_minimization_step.dart';
 import '../result.dart';
 
 /// Minimizes a Deterministic Finite Automaton (DFA) using the Hopcroft algorithm
@@ -312,91 +313,239 @@ class DFAMinimizer {
   /// Minimizes a DFA with step-by-step information
   static Result<DFAMinimizationResult> minimizeWithSteps(FSA dfa) {
     try {
-      final steps = <MinimizationStep>[];
+      final startTime = DateTime.now();
+      final steps = <DFAMinimizationStep>[];
+      int stepCounter = 1;
 
       // Step 1: Validate input
-      steps.add(
-        MinimizationStep(
-          stepNumber: 1,
-          description: 'Validating input DFA',
-          dfa: dfa,
-          partition: null,
-        ),
-      );
-
       final validationResult = _validateInput(dfa);
       if (!validationResult.isSuccess) {
         return ResultFactory.failure(validationResult.error!);
       }
 
       // Step 2: Remove unreachable states
-      steps.add(
-        MinimizationStep(
-          stepNumber: 2,
-          description: 'Removing unreachable states',
-          dfa: dfa,
-          partition: null,
-        ),
-      );
+      final reachableStates = dfa.getReachableStates(dfa.initialState!);
+      final unreachableStates = dfa.states.difference(reachableStates);
+
+      if (unreachableStates.isNotEmpty) {
+        steps.add(
+          DFAMinimizationStep.removeUnreachable(
+            id: 'step_${stepCounter}',
+            stepNumber: stepCounter++,
+            unreachableStates: unreachableStates,
+            reachableStates: reachableStates,
+          ),
+        );
+      }
 
       final dfaWithoutUnreachable = _removeUnreachableStates(dfa);
-      steps.add(
-        MinimizationStep(
-          stepNumber: 3,
-          description: 'Unreachable states removed',
-          dfa: dfaWithoutUnreachable,
-          partition: null,
-        ),
+
+      // Step 3: Run detailed Hopcroft algorithm with step capture
+      final hopcroftResult = _minimizeWithHopcroftDetailed(
+        dfaWithoutUnreachable,
+        steps,
+        stepCounter,
       );
 
-      // Step 3: Initialize partition
-      final initialPartition = <Set<State>>[
-        dfaWithoutUnreachable.acceptingStates.toSet(),
-        dfaWithoutUnreachable.nonAcceptingStates.toSet(),
-      ];
-      initialPartition.removeWhere((set) => set.isEmpty);
+      final minimizedDFA = hopcroftResult['dfa'] as FSA;
+      final detailedSteps = hopcroftResult['steps'] as List<DFAMinimizationStep>;
 
-      steps.add(
-        MinimizationStep(
-          stepNumber: 4,
-          description: 'Initial partition created',
-          dfa: dfaWithoutUnreachable,
-          partition: initialPartition,
-        ),
-      );
-
-      // Step 4: Minimize using Hopcroft algorithm
-      steps.add(
-        MinimizationStep(
-          stepNumber: 5,
-          description: 'Applying Hopcroft minimization algorithm',
-          dfa: dfaWithoutUnreachable,
-          partition: initialPartition,
-        ),
-      );
-
-      final minimizedDFA = _minimizeWithHopcroft(dfaWithoutUnreachable);
-      steps.add(
-        MinimizationStep(
-          stepNumber: 6,
-          description: 'DFA minimization completed',
-          dfa: minimizedDFA,
-          partition: null,
-        ),
-      );
+      final endTime = DateTime.now();
+      final executionTime = endTime.difference(startTime);
 
       final result = DFAMinimizationResult(
         originalDFA: dfa,
         resultDFA: minimizedDFA,
-        steps: steps,
-        executionTime:
-            Duration.zero, // Would be calculated in real implementation
+        steps: detailedSteps,
+        executionTime: executionTime,
       );
 
       return ResultFactory.success(result);
     } catch (e) {
       return ResultFactory.failure('Error minimizing DFA with steps: $e');
     }
+  }
+
+  /// Minimizes DFA using Hopcroft algorithm with detailed step capture
+  static Map<String, dynamic> _minimizeWithHopcroftDetailed(
+    FSA dfa,
+    List<DFAMinimizationStep> steps,
+    int initialStepCounter,
+  ) {
+    int stepCounter = initialStepCounter;
+
+    // Filter alphabet to exclude epsilon-like symbols if present
+    final workingAlphabet = dfa.alphabet
+        .where((s) => !_isEpsilonSymbol(s))
+        .toSet();
+
+    // Initialize partition with accepting and non-accepting states
+    final partition = <Set<State>>[
+      dfa.acceptingStates.toSet(),
+      dfa.nonAcceptingStates.toSet(),
+    ];
+    partition.removeWhere((set) => set.isEmpty);
+
+    // Capture initial partition step
+    steps.add(
+      DFAMinimizationStep.initialPartition(
+        id: 'step_${stepCounter}',
+        stepNumber: stepCounter++,
+        acceptingStates: dfa.acceptingStates.toSet(),
+        nonAcceptingStates: dfa.nonAcceptingStates.toSet(),
+      ),
+    );
+
+    // Worklist for processing
+    final worklist = <Set<State>>[];
+    for (final set in partition) {
+      if (set.isNotEmpty) {
+        worklist.add(set);
+      }
+    }
+
+    // Process worklist
+    while (worklist.isNotEmpty) {
+      final currentSet = worklist.removeAt(0);
+
+      // Capture set selection step
+      steps.add(
+        DFAMinimizationStep.selectProcessingSet(
+          id: 'step_${stepCounter}',
+          stepNumber: stepCounter++,
+          currentPartition: List.from(partition),
+          processingSet: currentSet,
+        ),
+      );
+
+      // For each symbol in the (filtered) alphabet
+      for (final symbol in workingAlphabet) {
+        final predecessors = <State>{};
+
+        // Find all states that transition to current set on this symbol
+        for (final transition in dfa.transitions) {
+          if (transition is FSATransition &&
+              transition.inputSymbols.contains(symbol) &&
+              currentSet.contains(transition.toState)) {
+            predecessors.add(transition.fromState);
+          }
+        }
+
+        // Capture predecessor finding step
+        steps.add(
+          DFAMinimizationStep.findPredecessors(
+            id: 'step_${stepCounter}',
+            stepNumber: stepCounter++,
+            currentPartition: List.from(partition),
+            processingSet: currentSet,
+            symbol: symbol,
+            predecessors: predecessors,
+          ),
+        );
+
+        if (predecessors.isNotEmpty) {
+          // Split each set in the partition
+          final newPartition = <Set<State>>[];
+
+          for (final set in partition) {
+            final intersection = set.intersection(predecessors);
+            final difference = set.difference(predecessors);
+
+            if (intersection.isNotEmpty && difference.isNotEmpty) {
+              // Split occurred
+              newPartition.add(intersection);
+              newPartition.add(difference);
+
+              // Capture split step
+              steps.add(
+                DFAMinimizationStep.splitClass(
+                  id: 'step_${stepCounter}',
+                  stepNumber: stepCounter++,
+                  currentPartition: List.from(partition),
+                  splitSet: set,
+                  intersection: intersection,
+                  difference: difference,
+                  symbol: symbol,
+                  newPartition: List.from(newPartition),
+                ),
+              );
+
+              // Add smaller set to worklist
+              if (intersection.length <= difference.length) {
+                worklist.add(intersection);
+              } else {
+                worklist.add(difference);
+              }
+            } else {
+              // No split
+              newPartition.add(set);
+              if (set.isNotEmpty && (intersection.isNotEmpty || difference.isNotEmpty)) {
+                steps.add(
+                  DFAMinimizationStep.noSplit(
+                    id: 'step_${stepCounter}',
+                    stepNumber: stepCounter++,
+                    currentPartition: List.from(partition),
+                    checkedSet: set,
+                    symbol: symbol,
+                  ),
+                );
+              }
+            }
+          }
+
+          partition.clear();
+          partition.addAll(newPartition);
+        }
+      }
+    }
+
+    // Capture partition stabilization step
+    steps.add(
+      DFAMinimizationStep.partitionStable(
+        id: 'step_${stepCounter}',
+        stepNumber: stepCounter++,
+        finalPartition: List.from(partition),
+      ),
+    );
+
+    // Create minimized DFA
+    final minimizedDFA = _createMinimizedDFA(dfa, partition);
+
+    // Capture state creation steps
+    int stateIndex = 0;
+    for (final equivalenceClass in partition) {
+      final isAccepting = equivalenceClass.intersection(dfa.acceptingStates).isNotEmpty;
+      final isInitial = equivalenceClass.contains(dfa.initialState);
+      final stateId = 'q${stateIndex}_min';
+
+      steps.add(
+        DFAMinimizationStep.createMinimizedState(
+          id: 'step_${stepCounter}',
+          stepNumber: stepCounter++,
+          stateId: stateId,
+          equivalenceClass: equivalenceClass,
+          isAccepting: isAccepting,
+          isInitial: isInitial,
+        ),
+      );
+      stateIndex++;
+    }
+
+    // Capture completion step
+    steps.add(
+      DFAMinimizationStep.completion(
+        id: 'step_${stepCounter}',
+        stepNumber: stepCounter++,
+        originalStates: dfa.states.length,
+        minimizedStates: minimizedDFA.states.length,
+        totalTransitions: minimizedDFA.transitions.length,
+      ),
+    );
+
+    return {
+      'dfa': minimizedDFA,
+      'steps': steps,
+    };
   }
 }
 
@@ -409,7 +558,7 @@ class DFAMinimizationResult {
   final FSA resultDFA;
 
   /// Minimization steps
-  final List<MinimizationStep> steps;
+  final List<DFAMinimizationStep> steps;
 
   /// Execution time
   final Duration executionTime;
@@ -425,10 +574,10 @@ class DFAMinimizationResult {
   int get stepCount => steps.length;
 
   /// Gets the first step
-  MinimizationStep? get firstStep => steps.isNotEmpty ? steps.first : null;
+  DFAMinimizationStep? get firstStep => steps.isNotEmpty ? steps.first : null;
 
   /// Gets the last step
-  MinimizationStep? get lastStep => steps.isNotEmpty ? steps.last : null;
+  DFAMinimizationStep? get lastStep => steps.isNotEmpty ? steps.last : null;
 
   /// Gets the execution time in milliseconds
   int get executionTimeMs => executionTime.inMilliseconds;

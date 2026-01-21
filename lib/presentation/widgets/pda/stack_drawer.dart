@@ -109,6 +109,18 @@ class _PDAStackPanelState extends State<PDAStackPanel>
       _isPushAnimation = widget.stackState.size > oldWidget.stackState.size;
       _animationController.forward(from: 0);
       _previousStackSize = widget.stackState.size;
+      _scrollToTop();
+    }
+  }
+
+  void _scrollToTop() {
+    // Auto-scroll para manter topo da pilha visível
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0.0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
     }
   }
 

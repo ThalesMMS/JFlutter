@@ -85,6 +85,7 @@ class TMTapePanel extends StatefulWidget {
   final Set<String> tapeAlphabet;
   final bool isSimulating;
   final VoidCallback? onClear;
+  final void Function(int cellIndex, String newValue)? onCellEdit;
 
   const TMTapePanel({
     super.key,
@@ -92,6 +93,7 @@ class TMTapePanel extends StatefulWidget {
     required this.tapeAlphabet,
     this.isSimulating = false,
     this.onClear,
+    this.onCellEdit,
   });
 
   @override
@@ -143,6 +145,143 @@ class _TMTapePanelState extends State<TMTapePanel>
     _animationController.dispose();
     _horizontalScrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _showCellEditDialog(int cellIndex, String currentSymbol) async {
+    final theme = Theme.of(context);
+    final controller = TextEditingController(text: currentSymbol);
+    final focusNode = FocusNode();
+
+    // Request focus after dialog is shown
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      focusNode.requestFocus();
+    });
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Edit Cell $cellIndex',
+          style: theme.textTheme.titleMedium,
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Quick selection buttons for tape alphabet
+            if (widget.tapeAlphabet.isNotEmpty) ...[
+              Text(
+                'Tape Alphabet:',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  // Blank symbol button
+                  _buildSymbolButton(
+                    widget.tapeState.blankSymbol,
+                    () {
+                      controller.text = widget.tapeState.blankSymbol;
+                    },
+                    theme,
+                  ),
+                  // Tape alphabet symbols
+                  ...widget.tapeAlphabet.map(
+                    (symbol) => _buildSymbolButton(
+                      symbol,
+                      () {
+                        controller.text = symbol;
+                      },
+                      theme,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Divider(),
+              const SizedBox(height: 16),
+            ],
+            // Text input field
+            TextField(
+              controller: controller,
+              focusNode: focusNode,
+              decoration: InputDecoration(
+                labelText: 'Symbol',
+                hintText: 'Enter a symbol',
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    controller.clear();
+                  },
+                ),
+              ),
+              maxLength: 1,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 20,
+                fontFamily: 'monospace',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final value = controller.text.isEmpty
+                  ? widget.tapeState.blankSymbol
+                  : controller.text;
+              Navigator.of(context).pop(value);
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+
+    controller.dispose();
+    focusNode.dispose();
+
+    if (result != null && mounted) {
+      widget.onCellEdit?.call(cellIndex, result);
+    }
+  }
+
+  Widget _buildSymbolButton(
+    String symbol,
+    VoidCallback onPressed,
+    ThemeData theme,
+  ) {
+    return SizedBox(
+      width: 48,
+      height: 48,
+      child: OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          padding: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        child: Text(
+          symbol,
+          style: const TextStyle(
+            fontSize: 18,
+            fontFamily: 'monospace',
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -220,6 +359,8 @@ class _TMTapePanelState extends State<TMTapePanel>
 
     final visibleCells = widget.tapeState.getVisibleCells(padding: 4);
     final headIndex = widget.tapeState.getHeadIndexInVisible(padding: 4);
+    final padding = 4;
+    final startIndex = widget.tapeState.headPosition - padding;
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -230,8 +371,10 @@ class _TMTapePanelState extends State<TMTapePanel>
           final isHead = index == headIndex;
           final wasRead = isHead && widget.tapeState.wasRead;
           final wasWritten = isHead && widget.tapeState.wasWritten;
+          final actualCellIndex = startIndex + index;
           return _buildTapeCell(
             visibleCells[index],
+            actualCellIndex,
             isHead,
             wasRead,
             wasWritten,
@@ -245,13 +388,16 @@ class _TMTapePanelState extends State<TMTapePanel>
 
   Widget _buildTapeCell(
     String symbol,
+    int cellIndex,
     bool isHead,
     bool wasRead,
     bool wasWritten,
     ThemeData theme,
     bool isMobile,
   ) {
-    return Container(
+    final canEdit = !widget.isSimulating && widget.onCellEdit != null;
+
+    final cellWidget = Container(
       width: 50,
       height: 50,
       margin: const EdgeInsets.symmetric(horizontal: 2),
@@ -330,6 +476,16 @@ class _TMTapePanelState extends State<TMTapePanel>
             ),
         ],
       ),
+    );
+
+    if (!canEdit) {
+      return cellWidget;
+    }
+
+    return InkWell(
+      onTap: () => _showCellEditDialog(cellIndex, symbol),
+      borderRadius: BorderRadius.circular(4),
+      child: cellWidget,
     );
   }
 }

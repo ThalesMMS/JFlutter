@@ -37,7 +37,7 @@ The testing infrastructure is defined in [pubspec.yaml L86-L104](https://github.
 | `flutter_test` | SDK | Widget and unit testing framework |
 | `integration_test` | SDK | End-to-end integration testing |
 | `test` | ^1.24.0 | Core Dart testing utilities |
-| `golden_toolkit` | ^0.15.0 | Visual regression testing (planned) |
+| `golden_toolkit` | ^0.15.0 | Visual regression testing (see [GOLDEN_TESTS.md](GOLDEN_TESTS.md)) |
 | `shared_preferences_platform_interface` | ^2.4.1 | Mock storage for tests |
 
 **Sources:** [pubspec.yaml L86-L104](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/pubspec.yaml#L86-L104)
@@ -391,21 +391,16 @@ The codebase currently has placeholder tests indicating future work:
 
 ### Visual Regression Testing
 
-A placeholder test in [test/widget/presentation/visualizations_test.dart L14-L22](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/test/widget/presentation/visualizations_test.dart#L14-L22)
+JFlutter now has a comprehensive golden test infrastructure for visual regression testing. The implementation includes:
 
- documents the planned golden test infrastructure:
+* Golden file generation and comparison using `golden_toolkit` package
+* 84+ golden test cases covering canvas rendering, pages, simulation panels, and dialogs
+* Automated visual regression detection in CI/CD pipeline
+* Global font configuration for cross-platform consistency
 
-```
-testWidgets('Visualizations render and export correctly (goldens)', (tester) async {  expect(false, isTrue, reason: 'Pending widget/golden setup and renderers');});
-```
+For detailed documentation on golden test infrastructure, workflow, and best practices, see **[GOLDEN_TESTS.md](GOLDEN_TESTS.md)**.
 
-This intentionally failing test serves as a reminder for Phase 3.2 implementation of:
-
-* Golden file generation and comparison
-* Visual regression detection
-* SVG export verification
-
-**Sources:** [test/widget/presentation/visualizations_test.dart L14-L22](https://github.com/ThalesMMS/JFlutter/blob/32e808b4/test/widget/presentation/visualizations_test.dart#L14-L22)
+**Sources:** [test/flutter_test_config.dart](https://github.com/ThalesMMS/JFlutter/blob/main/test/flutter_test_config.dart) [test/goldens/](https://github.com/ThalesMMS/JFlutter/blob/main/test/goldens/) [GOLDEN_TESTS.md](GOLDEN_TESTS.md)
 
 ### Test Coverage Gaps
 

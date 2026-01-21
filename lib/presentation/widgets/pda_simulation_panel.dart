@@ -18,37 +18,36 @@ import '../../core/algorithms/pda_simulator.dart';
 import '../../core/result.dart';
 import '../../core/services/simulation_highlight_service.dart';
 import '../providers/pda_editor_provider.dart';
+import 'base_simulation_panel.dart';
 import 'trace_viewers/pda_trace_viewer.dart';
 
 /// Panel for PDA simulation and string testing
 class PDASimulationPanel extends ConsumerStatefulWidget {
   final SimulationHighlightService highlightService;
 
-  PDASimulationPanel({
-    super.key,
-    SimulationHighlightService? highlightService,
-  }) : highlightService = highlightService ?? SimulationHighlightService();
+  PDASimulationPanel({super.key, SimulationHighlightService? highlightService})
+    : highlightService = highlightService ?? SimulationHighlightService();
 
   @override
   ConsumerState<PDASimulationPanel> createState() => _PDASimulationPanelState();
 }
 
-class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
-  final TextEditingController _inputController = TextEditingController();
+class _PDASimulationPanelState
+    extends BaseConsumerSimulationPanelState<PDASimulationPanel> {
   final TextEditingController _initialStackController = TextEditingController(
     text: 'Z',
   );
 
-  bool _isSimulating = false;
   PDASimulationResult? _simulationResult;
   String? _errorMessage;
   bool _stepByStep = true;
 
   @override
+  SimulationHighlightService get highlightService => widget.highlightService;
+
+  @override
   void dispose() {
-    _inputController.dispose();
     _initialStackController.dispose();
-    widget.highlightService.clear();
     super.dispose();
   }
 
@@ -105,13 +104,10 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 12),
-          TextField(
-            controller: _inputController,
-            decoration: const InputDecoration(
-              labelText: 'Input String',
-              hintText: 'e.g., aabb, abab',
-              border: OutlineInputBorder(),
-            ),
+          buildInputField(
+            context: context,
+            labelText: 'Input String',
+            hintText: 'e.g., aabb, abab',
           ),
           const SizedBox(height: 12),
           TextField(
@@ -132,12 +128,9 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
                 _stepByStep = value;
               });
               if (!value) {
-                widget.highlightService.clear();
+                highlightService.clear();
               } else if (_simulationResult?.steps.isNotEmpty == true) {
-                widget.highlightService.emitFromSteps(
-                  _simulationResult!.steps,
-                  0,
-                );
+                highlightService.emitFromSteps(_simulationResult!.steps, 0);
               }
             },
           ),
@@ -156,19 +149,10 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
   }
 
   Widget _buildSimulateButton(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: _isSimulating ? null : _simulatePDA,
-        icon: _isSimulating
-            ? const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : const Icon(Icons.play_arrow),
-        label: Text(_isSimulating ? 'Simulating...' : 'Simulate PDA'),
-      ),
+    return buildSimulateButton(
+      context: context,
+      label: 'Simulate PDA',
+      simulatingLabel: 'Simulating...',
     );
   }
 
@@ -307,17 +291,18 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
     );
   }
 
-  void _simulatePDA() {
-    final inputString = _inputController.text.trim();
+  @override
+  void simulate() {
+    final inputString = inputController.text.trim();
     final initialStack = _initialStackController.text.trim();
 
     if (inputString.isEmpty) {
-      _showError('Please enter an input string');
+      showError(context, 'Please enter an input string');
       return;
     }
 
     if (initialStack.isEmpty) {
-      _showError('Please enter an initial stack symbol');
+      showError(context, 'Please enter an initial stack symbol');
       return;
     }
 
@@ -325,19 +310,19 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
     final currentPda = editorState.pda;
 
     if (currentPda == null) {
-      _showError('Create a PDA on the canvas before simulating.');
+      showError(context, 'Create a PDA on the canvas before simulating.');
       return;
     }
 
     setState(() {
-      _isSimulating = true;
+      isSimulating = true;
       _simulationResult = null;
       _errorMessage = null;
     });
 
-    widget.highlightService.clear();
+    highlightService.clear();
 
-    final stackAlphabet = {...currentPda.stackAlphabet};
+    final stackAlphabet = <String>{...currentPda.stackAlphabet};
     stackAlphabet.add(initialStack);
 
     final simulationPda = currentPda.copyWith(
@@ -359,38 +344,33 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
     if (result.isSuccess) {
       final simulation = result.data;
       setState(() {
-        _isSimulating = false;
+        isSimulating = false;
         _simulationResult = result.data;
         _errorMessage = result.data?.errorMessage?.isNotEmpty == true
             ? result.data!.errorMessage
             : null;
       });
       if (simulation != null && simulation.steps.isNotEmpty) {
-        widget.highlightService.emitFromSteps(simulation.steps, 0);
+        highlightService.emitFromSteps(simulation.steps, 0);
       } else {
-        widget.highlightService.clear();
+        highlightService.clear();
       }
     } else {
       setState(() {
-        _isSimulating = false;
+        isSimulating = false;
         _simulationResult = null;
         _errorMessage = result.error;
       });
-      widget.highlightService.clear();
+      highlightService.clear();
     }
   }
 
-  void _showError(String message) {
+  @override
+  void clearSimulation() {
     setState(() {
-      _errorMessage = message;
+      _errorMessage = null;
       _simulationResult = null;
     });
-    widget.highlightService.clear();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Theme.of(context).colorScheme.error,
-      ),
-    );
+    super.clearSimulation();
   }
 }

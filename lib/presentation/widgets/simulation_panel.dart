@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import '../../core/models/simulation_result.dart';
 import '../../core/models/simulation_step.dart';
 import '../../core/services/simulation_highlight_service.dart';
+import 'base_simulation_panel.dart';
 
 /// Panel for automaton simulation
 class SimulationPanel extends StatefulWidget {
@@ -35,27 +36,20 @@ class SimulationPanel extends StatefulWidget {
   State<SimulationPanel> createState() => _SimulationPanelState();
 }
 
-class _SimulationPanelState extends State<SimulationPanel> {
-  final TextEditingController _inputController = TextEditingController();
-  bool _isSimulating = false;
+class _SimulationPanelState extends BaseSimulationPanelState<SimulationPanel> {
+  @override
+  SimulationHighlightService get highlightService => widget.highlightService;
   bool _isStepByStep = false;
   int _currentStepIndex = 0;
   List<SimulationStep> _simulationSteps = [];
   bool _isPlaying = false;
 
   @override
-  void dispose() {
-    _inputController.dispose();
-    widget.highlightService.clear();
-    super.dispose();
-  }
-
-  @override
   void didUpdateWidget(covariant SimulationPanel oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.simulationResult != oldWidget.simulationResult) {
       setState(() {
-        _isSimulating = false;
+        isSimulating = false;
       });
       if (_isStepByStep) {
         _loadSimulationSteps();
@@ -63,24 +57,25 @@ class _SimulationPanelState extends State<SimulationPanel> {
     }
   }
 
-  void _simulate() {
-    final inputString = _inputController.text.trim();
+  @override
+  void simulate() {
+    final inputString = inputController.text.trim();
     if (inputString.isNotEmpty) {
       setState(() {
-        _isSimulating = true;
+        isSimulating = true;
         _currentStepIndex = 0;
         _simulationSteps.clear();
       });
 
-      widget.highlightService.clear();
+      highlightService.clear();
 
       widget.onSimulate(inputString);
 
       // Safety timeout in case no result is produced
       Future.delayed(const Duration(seconds: 2), () {
-        if (mounted && _isSimulating) {
+        if (mounted && isSimulating) {
           setState(() {
-            _isSimulating = false;
+            isSimulating = false;
           });
         }
       });
@@ -94,7 +89,7 @@ class _SimulationPanelState extends State<SimulationPanel> {
         _currentStepIndex = 0;
         _isPlaying = false;
       });
-      widget.highlightService.clear();
+      highlightService.clear();
       return;
     }
 
@@ -105,7 +100,7 @@ class _SimulationPanelState extends State<SimulationPanel> {
         _currentStepIndex = 0;
         _isPlaying = false;
       });
-      widget.highlightService.clear();
+      highlightService.clear();
       return;
     }
 
@@ -128,14 +123,14 @@ class _SimulationPanelState extends State<SimulationPanel> {
       final input = step.remainingInput.isEmpty
           ? 'ε'
           : '"${step.remainingInput}"';
-      return 'Start at ${_formatState(step.currentState)} with input $input.';
+      return 'Start at ${formatState(step.currentState)} with input $input.';
     }
 
     final bool isFinal = index == _simulationSteps.length - 1;
     if (isFinal) {
       final accepted = widget.simulationResult?.isAccepted ?? false;
       final verdict = accepted ? 'accepted' : 'rejected';
-      return 'Final configuration ${_formatState(step.currentState)} – input $verdict.';
+      return 'Final configuration ${formatState(step.currentState)} – input $verdict.';
     }
 
     final consumed =
@@ -148,11 +143,7 @@ class _SimulationPanelState extends State<SimulationPanel> {
         : 'remaining "${step.remainingInput}"';
     final nextState = _nextStateFor(index) ?? step.currentState;
 
-    return 'Read "$consumed" from ${_formatState(step.currentState)} → ${_formatState(nextState)} with $remaining.';
-  }
-
-  String _formatState(String state) {
-    return state.isEmpty ? '∅' : state;
+    return 'Read "$consumed" from ${formatState(step.currentState)} → ${formatState(nextState)} with $remaining.';
   }
 
   String? _nextStateFor(int index) {
@@ -178,37 +169,12 @@ class _SimulationPanelState extends State<SimulationPanel> {
               const SizedBox(height: 16),
 
               // Input field
-              TextField(
-                controller: _inputController,
-                decoration: const InputDecoration(
-                  labelText: 'Input String',
-                  hintText: 'Enter string to test',
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                ),
-                onSubmitted: (_) => _simulate(),
-              ),
+              buildInputField(context: context),
 
               const SizedBox(height: 12),
 
               // Simulate button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _isSimulating ? null : _simulate,
-                  icon: _isSimulating
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.play_arrow, size: 18),
-                  label: Text(_isSimulating ? 'Simulating...' : 'Simulate'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                ),
-              ),
+              buildSimulateButton(context: context),
 
               const SizedBox(height: 12),
 
@@ -224,7 +190,17 @@ class _SimulationPanelState extends State<SimulationPanel> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                _buildResultCard(context, widget.simulationResult!),
+                buildResultCard(
+                  context: context,
+                  isAccepted: widget.simulationResult!.isAccepted,
+                  errorMessage: widget.simulationResult!.errorMessage,
+                  additionalInfo: widget.simulationResult!.steps.isNotEmpty
+                      ? Text(
+                          'Steps: ${widget.simulationResult!.steps.length}',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        )
+                      : null,
+                ),
               ],
 
               // Step-by-step execution
@@ -248,59 +224,6 @@ class _SimulationPanelState extends State<SimulationPanel> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildResultCard(BuildContext context, SimulationResult result) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isAccepted = result.isAccepted;
-    final color = isAccepted ? colorScheme.tertiary : colorScheme.error;
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                isAccepted ? Icons.check_circle : Icons.cancel,
-                color: color,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                isAccepted ? 'Accepted' : 'Rejected',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          if (result.steps.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
-              'Steps: ${result.steps.length}',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-          if (result.errorMessage.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
-              'Error: ${result.errorMessage}',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: colorScheme.error),
-            ),
-          ],
-        ],
       ),
     );
   }
@@ -387,7 +310,7 @@ class _SimulationPanelState extends State<SimulationPanel> {
                       _currentStepIndex = 0;
                       _isPlaying = false;
                       _simulationSteps.clear();
-                      widget.highlightService.clear();
+                      highlightService.clear();
                     }
                   });
                   if (value) {
@@ -503,7 +426,7 @@ class _SimulationPanelState extends State<SimulationPanel> {
           if (nextState != null) ...[
             const SizedBox(height: 4),
             Text(
-              'Next state: ${_formatState(nextState)}',
+              'Next state: ${formatState(nextState)}',
               style: Theme.of(
                 context,
               ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
@@ -679,18 +602,15 @@ class _SimulationPanelState extends State<SimulationPanel> {
       _currentStepIndex = 0;
       _isPlaying = false;
     });
-    widget.highlightService.clear();
+    highlightService.clear();
   }
 
   void _emitHighlightForCurrentStep() {
     if (!_isStepByStep || _simulationSteps.isEmpty) {
-      widget.highlightService.clear();
+      highlightService.clear();
       return;
     }
 
-    widget.highlightService.emitFromSteps(
-      _simulationSteps,
-      _currentStepIndex,
-    );
+    highlightService.emitFromSteps(_simulationSteps, _currentStepIndex);
   }
 }

@@ -42,6 +42,9 @@ class SimulationStep {
   /// Input consumed while taking this step
   final String consumedInput;
 
+  /// Head position on tape (for TM)
+  final int? headPosition;
+
   const SimulationStep({
     required this.currentState,
     required this.remainingInput,
@@ -54,6 +57,7 @@ class SimulationStep {
     this.inputSymbol,
     this.nextState,
     this.consumedInput = '',
+    this.headPosition,
   });
 
   /// Creates a copy of this simulation step with updated properties
@@ -69,6 +73,7 @@ class SimulationStep {
     String? inputSymbol,
     String? nextState,
     String? consumedInput,
+    int? headPosition,
   }) {
     return SimulationStep(
       currentState: currentState ?? this.currentState,
@@ -82,6 +87,7 @@ class SimulationStep {
       inputSymbol: inputSymbol ?? this.inputSymbol,
       nextState: nextState ?? this.nextState,
       consumedInput: consumedInput ?? this.consumedInput,
+      headPosition: headPosition ?? this.headPosition,
     );
   }
 
@@ -99,6 +105,7 @@ class SimulationStep {
       'inputSymbol': inputSymbol,
       'nextState': nextState,
       'consumedInput': consumedInput,
+      'headPosition': headPosition,
     };
   }
 
@@ -116,6 +123,7 @@ class SimulationStep {
       inputSymbol: json['inputSymbol'] as String?,
       nextState: json['nextState'] as String?,
       consumedInput: json['consumedInput'] as String? ?? '',
+      headPosition: json['headPosition'] as int?,
     );
   }
 
@@ -133,7 +141,8 @@ class SimulationStep {
         other.isAccepted == isAccepted &&
         other.inputSymbol == inputSymbol &&
         other.nextState == nextState &&
-        other.consumedInput == consumedInput;
+        other.consumedInput == consumedInput &&
+        other.headPosition == headPosition;
   }
 
   @override
@@ -150,6 +159,7 @@ class SimulationStep {
       inputSymbol,
       nextState,
       consumedInput,
+      headPosition,
     );
   }
 
@@ -282,6 +292,7 @@ class SimulationStep {
       usedTransition: usedTransition,
       stepNumber: stepNumber,
       consumedInput: consumedInput,
+      headPosition: headPosition,
     );
   }
 

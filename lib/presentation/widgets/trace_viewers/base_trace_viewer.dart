@@ -24,6 +24,7 @@ class BaseTraceViewer extends StatefulWidget {
   final String title;
   final Widget Function(SimulationStep step, int index) buildStepLine;
   final SimulationHighlightService? highlightService;
+  final void Function(int stepIndex)? onStepChanged;
 
   const BaseTraceViewer({
     super.key,
@@ -31,6 +32,7 @@ class BaseTraceViewer extends StatefulWidget {
     required this.title,
     required this.buildStepLine,
     this.highlightService,
+    this.onStepChanged,
   });
 
   @override
@@ -77,6 +79,7 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
       _selectedIndex = index;
     });
     widget.highlightService?.emitFromSteps(widget.result.steps, index);
+    widget.onStepChanged?.call(index);
   }
 
   void _previousStep() {
@@ -87,6 +90,7 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
         _selectedIndex = current - 1;
       });
       widget.highlightService?.emitFromSteps(widget.result.steps, current - 1);
+      widget.onStepChanged?.call(current - 1);
     }
   }
 
@@ -98,6 +102,7 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
         _selectedIndex = current + 1;
       });
       widget.highlightService?.emitFromSteps(widget.result.steps, current + 1);
+      widget.onStepChanged?.call(current + 1);
     }
   }
 
@@ -128,6 +133,7 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
             widget.result.steps,
             current + 1,
           );
+          widget.onStepChanged?.call(current + 1);
           _playStepAnimation();
         }
       });
@@ -144,6 +150,7 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
       _isPlaying = false;
     });
     widget.highlightService?.clear();
+    widget.onStepChanged?.call(0);
   }
 
   Widget _buildNavigationControls(BuildContext context) {

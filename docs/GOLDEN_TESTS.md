@@ -17,7 +17,7 @@ This page documents the golden test infrastructure for visual regression testing
 
 Golden tests (also known as snapshot tests or screenshot tests) are a form of visual regression testing that:
 
-1. **Capture Reference Images**: Generate baseline PNG images of widgets in specific states
+1. **Capture Reference Images**: Generate baseline PNGs of widgets in specific states
 2. **Compare on Subsequent Runs**: Re-render widgets and compare pixels against baselines
 3. **Detect Visual Regressions**: Fail when rendered output differs from golden files
 4. **Provide Visual Diffs**: Generate comparison images highlighting pixel differences
@@ -86,7 +86,7 @@ This ensures:
 
 Golden tests are organized by component category in the `test/goldens/` directory:
 
-```
+```text
 test/goldens/
 ├── canvas/
 │   ├── automaton_canvas_goldens_test.dart    # FSA/NFA canvas rendering
@@ -360,7 +360,7 @@ flutter test --update-goldens test/goldens/ && flutter test test/goldens/
 
 When golden tests fail, Flutter generates failure artifacts:
 
-```
+```text
 test/goldens/canvas/goldens/
 ├── automaton_canvas_empty.png           # Original baseline
 ├── automaton_canvas_empty_masterImage.png   # Expected (baseline copy)
@@ -558,7 +558,7 @@ Run before committing UI changes:
 #### Issue: "Golden file not found"
 
 **Symptom:**
-```
+```text
 FileSystemException: Cannot open file, path = 'test/goldens/canvas/goldens/automaton_canvas_empty.png'
 ```
 

@@ -7,8 +7,8 @@ VERIFICATION COMPLETED (without Flutter SDK):
 ---------------------------------------------
 
 ✓ 1. Golden Test Files Created
-   - Total test files: 7
-   - Total test cases: 80 (far exceeds requirement of 10)
+   - Total test files: 8
+   - Total test cases: 84 (far exceeds requirement of 10)
    
    Breakdown:
    - automaton_canvas_goldens_test.dart: 8 tests
@@ -18,6 +18,7 @@ VERIFICATION COMPLETED (without Flutter SDK):
    - fsa_page_goldens_test.dart: 8 tests
    - simulation_panel_goldens_test.dart: 12 tests
    - transition_editor_goldens_test.dart: 21 tests
+   - visualizations_test.dart: 4 tests
 
 ✓ 2. Golden Image Files Generated
    - Total golden images: 49 PNG files
@@ -51,7 +52,7 @@ PENDING VERIFICATION (requires Flutter SDK):
 
 ⏳ 1. Run ./run_golden_tests.sh
    Command: ./run_golden_tests.sh
-   Expected: All 80 golden tests pass
+   Expected: All 84 golden tests pass
    Status: Cannot run without Flutter SDK
 
 ⏳ 2. Run full test suite
@@ -90,7 +91,7 @@ All infrastructure, scripts, tests, and documentation have been created
 and verified to the extent possible without a Flutter SDK. The pipeline
 is ready for final testing when Flutter is available.
 
-Golden test count: 80 ✓ (requirement: 10+)
+Golden test count: 84 ✓ (requirement: 10+)
 Golden image files: 49 ✓
 CI workflow: Valid ✓
 Documentation: Complete ✓

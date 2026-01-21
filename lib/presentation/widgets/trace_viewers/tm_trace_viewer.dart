@@ -34,7 +34,7 @@ class TMTraceViewer extends StatelessWidget {
       buildStepLine: (SimulationStep step, int index) {
         final tape = step.tapeContents.isEmpty ? '□' : step.tapeContents;
         final transition = step.usedTransition != null
-            ? ' | read ${step.usedTransition}'
+            ? ' | δ: ${step.usedTransition}'
             : '';
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

@@ -25,10 +25,8 @@ import 'trace_viewers/tm_trace_viewer.dart';
 class TMSimulationPanel extends ConsumerStatefulWidget {
   final SimulationHighlightService highlightService;
 
-  TMSimulationPanel({
-    super.key,
-    SimulationHighlightService? highlightService,
-  }) : highlightService = highlightService ?? SimulationHighlightService();
+  TMSimulationPanel({super.key, SimulationHighlightService? highlightService})
+    : highlightService = highlightService ?? SimulationHighlightService();
 
   @override
   ConsumerState<TMSimulationPanel> createState() => _TMSimulationPanelState();
@@ -286,7 +284,10 @@ class _TMSimulationPanelState
 
     final tm = ref.read(tmEditorProvider).tm;
     if (tm == null) {
-      showError(context, 'Create a Turing machine on the canvas before simulating');
+      showError(
+        context,
+        'Create a Turing machine on the canvas before simulating',
+      );
       return;
     }
 
@@ -333,8 +334,8 @@ class _TMSimulationPanelState
       _statusMessage = simulation.accepted
           ? 'Accepted'
           : (simulation.errorMessage?.isNotEmpty ?? false
-              ? 'Rejected: ${simulation.errorMessage}'
-              : 'Rejected');
+                ? 'Rejected: ${simulation.errorMessage}'
+                : 'Rejected');
       _simulationSteps = simulation.steps;
       _result = simulation;
     });

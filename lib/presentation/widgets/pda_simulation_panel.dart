@@ -25,10 +25,8 @@ import 'trace_viewers/pda_trace_viewer.dart';
 class PDASimulationPanel extends ConsumerStatefulWidget {
   final SimulationHighlightService highlightService;
 
-  PDASimulationPanel({
-    super.key,
-    SimulationHighlightService? highlightService,
-  }) : highlightService = highlightService ?? SimulationHighlightService();
+  PDASimulationPanel({super.key, SimulationHighlightService? highlightService})
+    : highlightService = highlightService ?? SimulationHighlightService();
 
   @override
   ConsumerState<PDASimulationPanel> createState() => _PDASimulationPanelState();
@@ -132,10 +130,7 @@ class _PDASimulationPanelState
               if (!value) {
                 highlightService.clear();
               } else if (_simulationResult?.steps.isNotEmpty == true) {
-                highlightService.emitFromSteps(
-                  _simulationResult!.steps,
-                  0,
-                );
+                highlightService.emitFromSteps(_simulationResult!.steps, 0);
               }
             },
           ),

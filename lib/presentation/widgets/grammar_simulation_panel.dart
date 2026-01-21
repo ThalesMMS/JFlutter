@@ -199,13 +199,16 @@ class _GrammarSimulationPanelState
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
-        if (widget.useExpanded) Expanded(
-                child: _parseResult == null
-                    ? _buildEmptyResults(context)
-                    : _buildResults(context),
-              ) else _parseResult == null
+        if (widget.useExpanded)
+          Expanded(
+            child: _parseResult == null
                 ? _buildEmptyResults(context)
                 : _buildResults(context),
+          )
+        else
+          _parseResult == null
+              ? _buildEmptyResults(context)
+              : _buildResults(context),
       ],
     );
 

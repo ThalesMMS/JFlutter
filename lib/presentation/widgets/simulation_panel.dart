@@ -611,9 +611,6 @@ class _SimulationPanelState extends BaseSimulationPanelState<SimulationPanel> {
       return;
     }
 
-    highlightService.emitFromSteps(
-      _simulationSteps,
-      _currentStepIndex,
-    );
+    highlightService.emitFromSteps(_simulationSteps, _currentStepIndex);
   }
 }

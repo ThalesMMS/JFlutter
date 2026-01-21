@@ -343,5 +343,8 @@ mixin SimulationPanelMixin<T extends StatefulWidget> on State<T> {
 /// Base class for simulation panels that use Riverpod ConsumerState
 ///
 /// Extends ConsumerState and includes the SimulationPanelMixin for shared functionality
-abstract class BaseConsumerSimulationPanelState<T extends ConsumerStatefulWidget>
-    extends ConsumerState<T> with SimulationPanelMixin<T> {}
+abstract class BaseConsumerSimulationPanelState<
+  T extends ConsumerStatefulWidget
+>
+    extends ConsumerState<T>
+    with SimulationPanelMixin<T> {}

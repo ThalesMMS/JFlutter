@@ -18,6 +18,7 @@ import '../../core/algorithms/pda_simulator.dart';
 import '../../core/result.dart';
 import '../../core/services/simulation_highlight_service.dart';
 import '../providers/pda_editor_provider.dart';
+import '../providers/pda_simulation_provider.dart';
 import 'trace_viewers/pda_trace_viewer.dart';
 import 'pda/stack_drawer.dart';
 
@@ -61,6 +62,9 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final simState = ref.watch(pdaSimulationProvider);
+    final hasSteps = simState.result?.steps.isNotEmpty == true;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -72,6 +76,12 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
             _buildInputSection(context),
             const SizedBox(height: 16),
             _buildSimulateButton(context),
+            if (hasSteps && _stepByStep) ...[
+              const SizedBox(height: 16),
+              _buildStepControls(context, simState),
+              const SizedBox(height: 16),
+              _buildStackPreview(context, simState),
+            ],
             const SizedBox(height: 16),
             _buildResultsSection(context),
           ],
@@ -175,6 +185,195 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
               )
             : const Icon(Icons.play_arrow),
         label: Text(_isSimulating ? 'Simulating...' : 'Simulate PDA'),
+      ),
+    );
+  }
+
+  Widget _buildStepControls(BuildContext context, PDASimulationState simState) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Step ${simState.currentStepIndex + 1} of ${simState.totalSteps}',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+              ),
+              Text(
+                'State: ${simState.currentState ?? "—"}',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.7),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              IconButton.outlined(
+                onPressed: simState.canGoToPreviousStep
+                    ? () {
+                        ref.read(pdaSimulationProvider.notifier).previousStep();
+                        _updateStackFromCurrentStep();
+                      }
+                    : null,
+                icon: const Icon(Icons.skip_previous),
+                tooltip: 'Previous Step',
+              ),
+              const SizedBox(width: 8),
+              IconButton.outlined(
+                onPressed: simState.currentStepIndex > 0
+                    ? () {
+                        ref.read(pdaSimulationProvider.notifier).resetToFirstStep();
+                        _updateStackFromCurrentStep();
+                      }
+                    : null,
+                icon: const Icon(Icons.first_page),
+                tooltip: 'Reset to First',
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: LinearProgressIndicator(
+                  value: simState.totalSteps > 0
+                      ? (simState.currentStepIndex + 1) / simState.totalSteps
+                      : 0,
+                  backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton.outlined(
+                onPressed: simState.currentStepIndex < simState.totalSteps - 1
+                    ? () {
+                        ref.read(pdaSimulationProvider.notifier).goToLastStep();
+                        _updateStackFromCurrentStep();
+                      }
+                    : null,
+                icon: const Icon(Icons.last_page),
+                tooltip: 'Jump to Last',
+              ),
+              const SizedBox(width: 8),
+              IconButton.outlined(
+                onPressed: simState.canGoToNextStep
+                    ? () {
+                        ref.read(pdaSimulationProvider.notifier).nextStep();
+                        _updateStackFromCurrentStep();
+                      }
+                    : null,
+                icon: const Icon(Icons.skip_next),
+                tooltip: 'Next Step',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStackPreview(BuildContext context, PDASimulationState simState) {
+    final stackContents = simState.currentStackContents;
+    final remainingInput = simState.currentRemainingInput ?? '';
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Current Stack State',
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Stack:',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        stackContents.isEmpty ? '(empty)' : stackContents,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontFamily: 'monospace',
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Remaining Input:',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        remainingInput.isEmpty ? '(empty)' : remainingInput,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontFamily: 'monospace',
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -382,9 +581,23 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
             : null;
       });
       if (simulation != null && simulation.steps.isNotEmpty) {
+        // Sync with simulation provider for step controls
+        final simNotifier = ref.read(pdaSimulationProvider.notifier);
+        simNotifier.setPda(simulationPda);
+        simNotifier.setStepByStep(_stepByStep);
+        // Manually set the result since we're using the old simulator
+        ref.read(pdaSimulationProvider.notifier).state = ref.read(pdaSimulationProvider).copyWith(
+          result: simulation,
+          currentStepIndex: 0,
+        );
+
         widget.highlightService.emitFromSteps(simulation.steps, 0);
-        // Update stack to final state
-        _updateStackFromStep(simulation.steps.last);
+        // Update stack to first step for step-by-step mode
+        if (_stepByStep) {
+          _updateStackFromStep(simulation.steps.first);
+        } else {
+          _updateStackFromStep(simulation.steps.last);
+        }
       } else {
         widget.highlightService.clear();
       }
@@ -414,6 +627,21 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
     _updateStackState(
       StackState(symbols: symbols, lastOperation: operation),
     );
+  }
+
+  void _updateStackFromCurrentStep() {
+    final simState = ref.read(pdaSimulationProvider);
+    final currentStep = simState.currentStep;
+    if (currentStep != null) {
+      _updateStackFromStep(currentStep);
+      // Update highlight service to show current step
+      if (_stepByStep && simState.result != null) {
+        widget.highlightService.emitFromSteps(
+          simState.result!.steps,
+          simState.currentStepIndex,
+        );
+      }
+    }
   }
 
   void _showError(String message) {

@@ -41,6 +41,17 @@ class StackState {
       lastOperation: 'pop $popped',
     );
   }
+
+  /// Cria cópia substituindo o topo
+  StackState replace(String newSymbol) {
+    if (symbols.isEmpty) return push(newSymbol);
+    final newSymbols = [...symbols];
+    newSymbols[newSymbols.length - 1] = newSymbol;
+    return StackState(
+      symbols: newSymbols,
+      lastOperation: 'replace with $newSymbol',
+    );
+  }
 }
 
 /// Painel flutuante para visualização da pilha

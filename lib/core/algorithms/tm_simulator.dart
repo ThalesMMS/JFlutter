@@ -1,0 +1,765 @@
+//
+//  tm_simulator.dart
+//  JFlutter
+//
+//  Entrega a lógica de simulação para máquinas de Turing determinísticas e não
+//  determinísticas, abrangendo validações, execução passo a passo e métricas de
+//  análise. Gerencia configurações exploradas, movimentação de fita e detecção
+//  de condições de aceitação ou rejeição.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
+
+import '../models/fsa_transition.dart';
+import '../models/simulation_step.dart';
+import '../models/state.dart';
+import '../models/tm.dart';
+import '../models/tm_analysis.dart';
+import '../models/tm_transition.dart';
+import '../result.dart';
+
+/// Simulates Turing Machines (TM) with input strings
+class TMSimulator {
+  /// Deterministic simulation (DTM) stepwise semantics similar às referências
+  static Result<TMSimulationResult> simulateDTM(
+    TM tm,
+    String inputString, {
+    bool stepByStep = false,
+    Duration timeout = const Duration(seconds: 5),
+  }) {
+    return simulate(tm, inputString, stepByStep: stepByStep, timeout: timeout);
+  }
+
+  /// Non-deterministic simulation (NTM) via BFS sobre configurações, aceita se qualquer ramo aceita
+  static Result<TMSimulationResult> simulateNTM(
+    TM tm,
+    String inputString, {
+    bool stepByStep = false,
+    Duration timeout = const Duration(seconds: 5),
+    int maxConfigurations = 100000,
+  }) {
+    try {
+      final validationResult = _validateInput(tm, inputString);
+      if (!validationResult.isSuccess) return Failure(validationResult.error!);
+      if (tm.initialState == null) {
+        return const Failure('Turing machine must have an initial state');
+      }
+
+      final startTime = DateTime.now();
+      int explored = 0;
+
+      // Configuração: (state, tapeList, head, steps)
+      final initialTape = inputString.split('').toList();
+      final initial = (
+        tm.initialState!,
+        initialTape,
+        0,
+        <SimulationStep>[
+          SimulationStep.initial(
+            initialState: tm.initialState!.id,
+            inputString: inputString,
+          ),
+        ],
+      );
+      final queue = <(State, List<String>, int, List<SimulationStep>)>[initial];
+
+      while (queue.isNotEmpty) {
+        if (DateTime.now().difference(startTime) > timeout) {
+          return Success(
+            TMSimulationResult.timeout(
+              inputString: inputString,
+              steps: const [],
+              executionTime: DateTime.now().difference(startTime),
+            ),
+          );
+        }
+        if (explored++ > maxConfigurations) {
+          return Success(
+            TMSimulationResult.infiniteLoop(
+              inputString: inputString,
+              steps: const [],
+              executionTime: DateTime.now().difference(startTime),
+            ),
+          );
+        }
+
+        final (state, tape, head, steps) = queue.removeAt(0);
+        if (tm.acceptingStates.contains(state)) {
+          final finalSteps = List<SimulationStep>.from(steps)
+            ..add(
+              SimulationStep.finalStep(
+                finalState: state.id,
+                remainingInput: '',
+                stackContents: '',
+                tapeContents: tape.join(''),
+                stepNumber: (steps.isNotEmpty ? steps.last.stepNumber : 0) + 1,
+              ),
+            );
+          return Success(
+            TMSimulationResult.success(
+              inputString: inputString,
+              steps: finalSteps,
+              executionTime: DateTime.now().difference(startTime),
+            ),
+          );
+        }
+
+        final read = head < tape.length ? tape[head] : tm.blankSymbol;
+        // Expand all possible transitions from state on read symbol
+        final transitions = tm.getTransitionsFromStateOnSymbol(state, read);
+        for (final tr in transitions) {
+          final newTape = List<String>.from(tape);
+          if (head < newTape.length) {
+            newTape[head] = tr.writeSymbol;
+          } else {
+            newTape.add(tr.writeSymbol);
+          }
+          int newHead = head;
+          switch (tr.moveDirection) {
+            case TapeDirection.left:
+              newHead -= 1;
+              if (newHead < 0) {
+                newHead = 0;
+                newTape.insert(0, tm.blankSymbol);
+              }
+              break;
+            case TapeDirection.right:
+              newHead += 1;
+              if (newHead >= newTape.length) newTape.add(tm.blankSymbol);
+              break;
+            case TapeDirection.stay:
+              break;
+          }
+          final nextStep = stepByStep
+              ? SimulationStep.tm(
+                  currentState: state.id,
+                  remainingInput: '',
+                  tapeContents: newTape.join(''),
+                  usedTransition:
+                      '${state.id},$read → '
+                      '${tr.toState.id},${tr.writeSymbol},${tr.moveDirection.symbol}',
+                  stepNumber:
+                      (steps.isNotEmpty ? steps.last.stepNumber : 0) + 1,
+                  headPosition: newHead,
+                  consumedInput: read,
+                )
+              : null;
+          final nextSteps = nextStep == null ? steps : [...steps, nextStep];
+          queue.add((tr.toState, newTape, newHead, nextSteps));
+        }
+      }
+
+      return Success(
+        TMSimulationResult.failure(
+          inputString: inputString,
+          steps: const [],
+          errorMessage: 'Rejected: no accepting configuration found',
+          executionTime: DateTime.now().difference(startTime),
+        ),
+      );
+    } catch (e) {
+      return Failure('Error simulating NTM: $e');
+    }
+  }
+
+  /// Simulates a TM with an input string
+  static Result<TMSimulationResult> simulate(
+    TM tm,
+    String inputString, {
+    bool stepByStep = true,
+    Duration timeout = const Duration(seconds: 5),
+  }) {
+    try {
+      final stopwatch = Stopwatch()..start();
+
+      // Validate input
+      final validationResult = _validateInput(tm, inputString);
+      if (!validationResult.isSuccess) {
+        return Failure(validationResult.error!);
+      }
+
+      // Handle empty TM
+      if (tm.states.isEmpty) {
+        return const Failure('Cannot simulate empty Turing machine');
+      }
+
+      // Handle TM with no initial state
+      if (tm.initialState == null) {
+        return const Failure('Turing machine must have an initial state');
+      }
+
+      // Simulate the TM
+      final result = _simulateTM(tm, inputString, stepByStep, timeout);
+      stopwatch.stop();
+
+      // Update execution time
+      final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
+
+      return Success(finalResult);
+    } catch (e) {
+      return Failure('Error simulating Turing machine: $e');
+    }
+  }
+
+  /// Validates the input TM and string
+  static Result<void> _validateInput(TM tm, String inputString) {
+    if (tm.states.isEmpty) {
+      return const Failure('Turing machine must have at least one state');
+    }
+
+    if (tm.initialState == null) {
+      return const Failure('Turing machine must have an initial state');
+    }
+
+    if (!tm.states.contains(tm.initialState)) {
+      return const Failure('Initial state must be in the states set');
+    }
+
+    for (final acceptingState in tm.acceptingStates) {
+      if (!tm.states.contains(acceptingState)) {
+        return const Failure('Accepting state must be in the states set');
+      }
+    }
+
+    // Validate input string symbols
+    for (int i = 0; i < inputString.length; i++) {
+      final symbol = inputString[i];
+      if (!tm.alphabet.contains(symbol)) {
+        return Failure('Input string contains invalid symbol: $symbol');
+      }
+    }
+
+    return const Success(null);
+  }
+
+  /// Simulates the TM with the input string
+  static TMSimulationResult _simulateTM(
+    TM tm,
+    String inputString,
+    bool stepByStep,
+    Duration timeout,
+  ) {
+    final steps = <SimulationStep>[];
+    final startTime = DateTime.now();
+
+    // Initialize simulation
+    var currentState = tm.initialState!;
+    final tape = inputString.split('').toList();
+    var headPosition = 0;
+    int stepNumber = 0;
+
+    // Add initial step
+    steps.add(
+      SimulationStep.initial(
+        initialState: currentState.id,
+        inputString: inputString,
+      ),
+    );
+
+    // Process until halting
+    while (true) {
+      stepNumber++;
+
+      // Check timeout
+      if (DateTime.now().difference(startTime) > timeout) {
+        return TMSimulationResult.timeout(
+          inputString: inputString,
+          steps: steps,
+          executionTime: DateTime.now().difference(startTime),
+        );
+      }
+
+      // Check for infinite loop (simplified)
+      if (steps.length > 1000) {
+        return TMSimulationResult.infiniteLoop(
+          inputString: inputString,
+          steps: steps,
+          executionTime: DateTime.now().difference(startTime),
+        );
+      }
+
+      // Get current tape symbol
+      final currentSymbol = headPosition < tape.length
+          ? tape[headPosition]
+          : tm.blankSymbol;
+
+      // Find transition
+      final transition = tm.getTMTransitionFromStateOnSymbol(
+        currentState.id,
+        currentSymbol,
+      );
+      if (transition == null) {
+        // No transition found, halt
+        break;
+      }
+
+      // Write to tape
+      if (headPosition < tape.length) {
+        tape[headPosition] = transition.writeSymbol;
+      } else {
+        tape.add(transition.writeSymbol);
+      }
+
+      // Move head
+      switch (transition.moveDirection) {
+        case TapeDirection.left:
+          headPosition--;
+          if (headPosition < 0) {
+            headPosition = 0;
+            tape.insert(0, tm.blankSymbol);
+          }
+          break;
+        case TapeDirection.right:
+          headPosition++;
+          if (headPosition >= tape.length) {
+            tape.add(tm.blankSymbol);
+          }
+          break;
+        case TapeDirection.stay:
+          // Stay
+          break;
+      }
+
+      // Add step
+      if (stepByStep) {
+        final transitionRule =
+            '${currentState.id},$currentSymbol → '
+            '${transition.toState.id},${transition.writeSymbol},'
+            '${transition.moveDirection.symbol}';
+        steps.add(
+          SimulationStep.tm(
+            currentState: currentState.id,
+            remainingInput: '',
+            tapeContents: tape.join(''),
+            usedTransition: transitionRule,
+            stepNumber: stepNumber,
+            headPosition: headPosition,
+            consumedInput: currentSymbol,
+          ),
+        );
+      }
+
+      // Move to next state
+      currentState = transition.toState;
+
+      // Check if we're in an accepting state
+      if (tm.acceptingStates.contains(currentState)) {
+        break;
+      }
+    }
+
+    // Add final step
+    steps.add(
+      SimulationStep.finalStep(
+        finalState: currentState.id,
+        remainingInput: '',
+        stackContents: '',
+        tapeContents: tape.join(''),
+        stepNumber: stepNumber + 1,
+      ),
+    );
+
+    // Check if final state is accepting
+    final isAccepted = tm.acceptingStates.contains(currentState);
+
+    if (isAccepted) {
+      return TMSimulationResult.success(
+        inputString: inputString,
+        steps: steps,
+        executionTime: DateTime.now().difference(startTime),
+      );
+    } else {
+      return TMSimulationResult.failure(
+        inputString: inputString,
+        steps: steps,
+        errorMessage: 'Input not accepted - final state is not accepting',
+        executionTime: DateTime.now().difference(startTime),
+      );
+    }
+  }
+
+  /// Tests if a TM accepts a specific string
+  static Result<bool> accepts(TM tm, String inputString) {
+    final simulationResult = simulate(tm, inputString);
+    if (!simulationResult.isSuccess) {
+      return Failure(simulationResult.error!);
+    }
+
+    return Success(simulationResult.data!.accepted);
+  }
+
+  /// Tests if a TM rejects a specific string
+  static Result<bool> rejects(TM tm, String inputString) {
+    final acceptsResult = accepts(tm, inputString);
+    if (!acceptsResult.isSuccess) {
+      return Failure(acceptsResult.error!);
+    }
+
+    return Success(!acceptsResult.data!);
+  }
+
+  /// Finds all strings of a given length that the TM accepts
+  static Result<Set<String>> findAcceptedStrings(
+    TM tm,
+    int maxLength, {
+    int maxResults = 100,
+  }) {
+    try {
+      final acceptedStrings = <String>{};
+      final alphabet = tm.alphabet.toList();
+
+      // Generate all possible strings up to maxLength
+      for (
+        int length = 0;
+        length <= maxLength && acceptedStrings.length < maxResults;
+        length++
+      ) {
+        _generateStrings(tm, alphabet, '', length, acceptedStrings, maxResults);
+      }
+
+      return Success(acceptedStrings);
+    } catch (e) {
+      return Failure('Error finding accepted strings: $e');
+    }
+  }
+
+  /// Recursively generates strings and tests them
+  static void _generateStrings(
+    TM tm,
+    List<String> alphabet,
+    String currentString,
+    int remainingLength,
+    Set<String> acceptedStrings,
+    int maxResults,
+  ) {
+    if (acceptedStrings.length >= maxResults) return;
+
+    if (remainingLength == 0) {
+      final acceptsResult = accepts(tm, currentString);
+      if (acceptsResult.isSuccess && acceptsResult.data!) {
+        acceptedStrings.add(currentString);
+      }
+      return;
+    }
+
+    for (final symbol in alphabet) {
+      _generateStrings(
+        tm,
+        alphabet,
+        currentString + symbol,
+        remainingLength - 1,
+        acceptedStrings,
+        maxResults,
+      );
+    }
+  }
+
+  /// Finds all strings of a given length that the TM rejects
+  static Result<Set<String>> findRejectedStrings(
+    TM tm,
+    int maxLength, {
+    int maxResults = 100,
+  }) {
+    try {
+      final rejectedStrings = <String>{};
+      final alphabet = tm.alphabet.toList();
+
+      // Generate all possible strings up to maxLength
+      for (
+        int length = 0;
+        length <= maxLength && rejectedStrings.length < maxResults;
+        length++
+      ) {
+        _generateRejectedStrings(
+          tm,
+          alphabet,
+          '',
+          length,
+          rejectedStrings,
+          maxResults,
+        );
+      }
+
+      return Success(rejectedStrings);
+    } catch (e) {
+      return Failure('Error finding rejected strings: $e');
+    }
+  }
+
+  /// Recursively generates strings and tests them for rejection
+  static void _generateRejectedStrings(
+    TM tm,
+    List<String> alphabet,
+    String currentString,
+    int remainingLength,
+    Set<String> rejectedStrings,
+    int maxResults,
+  ) {
+    if (rejectedStrings.length >= maxResults) return;
+
+    if (remainingLength == 0) {
+      final acceptsResult = accepts(tm, currentString);
+      if (acceptsResult.isSuccess && !acceptsResult.data!) {
+        rejectedStrings.add(currentString);
+      }
+      return;
+    }
+
+    for (final symbol in alphabet) {
+      _generateRejectedStrings(
+        tm,
+        alphabet,
+        currentString + symbol,
+        remainingLength - 1,
+        rejectedStrings,
+        maxResults,
+      );
+    }
+  }
+
+  /// Analyzes the behavior of a TM
+  static Result<TMAnalysis> analyzeTM(
+    TM tm, {
+    int maxInputLength = 10,
+    Duration timeout = const Duration(seconds: 10),
+  }) {
+    try {
+      final stopwatch = Stopwatch()..start();
+
+      // Validate input
+      final validationResult = _validateInput(tm, '');
+      if (!validationResult.isSuccess) {
+        return Failure(validationResult.error!);
+      }
+
+      // Handle empty TM
+      if (tm.states.isEmpty) {
+        return const Failure('Cannot analyze empty Turing machine');
+      }
+
+      // Handle TM with no initial state
+      if (tm.initialState == null) {
+        return const Failure('Turing machine must have an initial state');
+      }
+
+      // Analyze the TM
+      final result = _analyzeTM(tm, maxInputLength, timeout);
+      stopwatch.stop();
+
+      // Update execution time
+      final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
+
+      return Success(finalResult);
+    } catch (e) {
+      return Failure('Error analyzing Turing machine: $e');
+    }
+  }
+
+  /// Analyzes the TM
+  static TMAnalysis _analyzeTM(TM tm, int maxInputLength, Duration timeout) {
+    final startTime = DateTime.now();
+
+    // Analyze states
+    final stateAnalysis = _analyzeStates(tm);
+
+    // Analyze transitions
+    final transitionAnalysis = _analyzeTransitions(tm);
+
+    // Analyze tape operations
+    final tapeAnalysis = _analyzeTapeOperations(tm);
+
+    // Analyze reachability
+    final reachabilityAnalysis = _analyzeReachability(tm);
+
+    return TMAnalysis(
+      stateAnalysis: stateAnalysis,
+      transitionAnalysis: transitionAnalysis,
+      tapeAnalysis: tapeAnalysis,
+      reachabilityAnalysis: reachabilityAnalysis,
+      executionTime: DateTime.now().difference(startTime),
+    );
+  }
+
+  /// Analyzes the states of the TM
+  static TMStateAnalysis _analyzeStates(TM tm) {
+    final totalStates = tm.states.length;
+    final acceptingStates = tm.acceptingStates.length;
+    final nonAcceptingStates = totalStates - acceptingStates;
+
+    return TMStateAnalysis(
+      totalStates: totalStates,
+      acceptingStates: acceptingStates,
+      nonAcceptingStates: nonAcceptingStates,
+    );
+  }
+
+  /// Analyzes the transitions of the TM
+  static TMTransitionAnalysis _analyzeTransitions(TM tm) {
+    final totalTransitions = tm.transitions.length;
+    final tmTransitions = tm.transitions.whereType<TMTransition>().length;
+    final fsaTransitions = tm.transitions.whereType<FSATransition>().length;
+
+    return TMTransitionAnalysis(
+      totalTransitions: totalTransitions,
+      tmTransitions: tmTransitions,
+      fsaTransitions: fsaTransitions,
+    );
+  }
+
+  /// Analyzes the tape operations of the TM
+  static TapeAnalysis _analyzeTapeOperations(TM tm) {
+    final writeOperations = <String>{};
+    final readOperations = <String>{};
+    final moveDirections = <String>{};
+    final tapeSymbols = <String>{};
+
+    for (final transition in tm.transitions) {
+      if (transition is TMTransition) {
+        writeOperations.add(transition.writeSymbol);
+        readOperations.add(transition.readSymbol);
+        moveDirections.add(transition.moveDirection.name);
+        tapeSymbols.add(transition.readSymbol);
+        tapeSymbols.add(transition.writeSymbol);
+      }
+    }
+
+    return TapeAnalysis(
+      writeOperations: writeOperations,
+      readOperations: readOperations,
+      moveDirections: moveDirections,
+      tapeSymbols: tapeSymbols,
+    );
+  }
+
+  /// Analyzes the reachability of the TM
+  static TMReachabilityAnalysis _analyzeReachability(TM tm) {
+    final reachableStates = <State>{};
+    final unreachableStates = <State>{};
+
+    // Find reachable states from initial state
+    if (tm.initialState != null) {
+      _findReachableStates(tm, tm.initialState!, reachableStates);
+    }
+
+    // Find unreachable states
+    for (final state in tm.states) {
+      if (!reachableStates.contains(state)) {
+        unreachableStates.add(state);
+      }
+    }
+
+    return TMReachabilityAnalysis(
+      reachableStates: reachableStates,
+      unreachableStates: unreachableStates,
+    );
+  }
+
+  /// Recursively finds reachable states
+  static void _findReachableStates(
+    TM tm,
+    State currentState,
+    Set<State> reachableStates,
+  ) {
+    if (reachableStates.contains(currentState)) {
+      return; // Already visited
+    }
+
+    reachableStates.add(currentState);
+
+    // Find all states reachable from current state
+    for (final transition in tm.transitions) {
+      if (transition.fromState == currentState) {
+        _findReachableStates(tm, transition.toState, reachableStates);
+      }
+    }
+  }
+}
+
+/// Result of simulating a TM
+class TMSimulationResult {
+  final String inputString;
+  final bool accepted;
+  final List<SimulationStep> steps;
+  final String? errorMessage;
+  final Duration executionTime;
+
+  const TMSimulationResult._({
+    required this.inputString,
+    required this.accepted,
+    required this.steps,
+    this.errorMessage,
+    required this.executionTime,
+  });
+
+  factory TMSimulationResult.success({
+    required String inputString,
+    required List<SimulationStep> steps,
+    required Duration executionTime,
+  }) {
+    return TMSimulationResult._(
+      inputString: inputString,
+      accepted: true,
+      steps: steps,
+      executionTime: executionTime,
+    );
+  }
+
+  factory TMSimulationResult.failure({
+    required String inputString,
+    required List<SimulationStep> steps,
+    required String errorMessage,
+    required Duration executionTime,
+  }) {
+    return TMSimulationResult._(
+      inputString: inputString,
+      accepted: false,
+      steps: steps,
+      errorMessage: errorMessage,
+      executionTime: executionTime,
+    );
+  }
+
+  factory TMSimulationResult.timeout({
+    required String inputString,
+    required List<SimulationStep> steps,
+    required Duration executionTime,
+  }) {
+    return TMSimulationResult._(
+      inputString: inputString,
+      accepted: false,
+      steps: steps,
+      errorMessage: 'Simulation timed out',
+      executionTime: executionTime,
+    );
+  }
+
+  factory TMSimulationResult.infiniteLoop({
+    required String inputString,
+    required List<SimulationStep> steps,
+    required Duration executionTime,
+  }) {
+    return TMSimulationResult._(
+      inputString: inputString,
+      accepted: false,
+      steps: steps,
+      errorMessage: 'Infinite loop detected',
+      executionTime: executionTime,
+    );
+  }
+
+  TMSimulationResult copyWith({
+    String? inputString,
+    bool? accepted,
+    List<SimulationStep>? steps,
+    String? errorMessage,
+    Duration? executionTime,
+  }) {
+    return TMSimulationResult._(
+      inputString: inputString ?? this.inputString,
+      accepted: accepted ?? this.accepted,
+      steps: steps ?? this.steps,
+      errorMessage: errorMessage ?? this.errorMessage,
+      executionTime: executionTime ?? this.executionTime,
+    );
+  }
+}

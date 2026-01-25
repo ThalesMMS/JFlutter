@@ -1,0 +1,579 @@
+//
+//  pda_page_goldens_test.dart
+//  JFlutter
+//
+//  Testes golden de regressão visual para componentes da PDA page (toolbar e
+//  canvas), capturando snapshots de estados críticos: layouts desktop/mobile,
+//  canvas vazio, canvas com autômato de pilha, toolbar, painéis de pilha.
+//  Garante consistência visual da interface principal entre mudanças e detecta
+//  regressões automáticas.
+//
+//  Thales Matheus Mendonça Santos - January 2026
+//
+
+import 'dart:math' as math;
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:golden_toolkit/golden_toolkit.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vector_math/vector_math_64.dart';
+
+import 'package:jflutter/core/models/pda.dart';
+import 'package:jflutter/core/models/pda_transition.dart';
+import 'package:jflutter/core/models/state.dart' as automaton_state;
+import 'package:jflutter/features/canvas/graphview/graphview_pda_canvas_controller.dart';
+import 'package:jflutter/injection/dependency_injection.dart';
+import 'package:jflutter/presentation/providers/pda_editor_provider.dart';
+import 'package:jflutter/presentation/widgets/automaton_canvas_tool.dart';
+import 'package:jflutter/presentation/widgets/graphview_canvas_toolbar.dart';
+import 'package:jflutter/presentation/widgets/pda/stack_drawer.dart';
+import 'package:jflutter/presentation/widgets/pda_canvas_graphview.dart';
+
+class _TestPdaEditorNotifier extends PDAEditorNotifier {
+  _TestPdaEditorNotifier() : super();
+}
+
+// Widget that composes toolbar + canvas like PDA page does
+class _PDAPageTestWidget extends StatefulWidget {
+  final PDA? automaton;
+  final bool isMobile;
+
+  const _PDAPageTestWidget({this.automaton, this.isMobile = false});
+
+  @override
+  State<_PDAPageTestWidget> createState() => _PDAPageTestWidgetState();
+}
+
+class _PDAPageTestWidgetState extends State<_PDAPageTestWidget> {
+  late final GraphViewPdaCanvasController _canvasController;
+  late final AutomatonCanvasToolController _toolController;
+
+  @override
+  void initState() {
+    super.initState();
+    final provider = _TestPdaEditorNotifier();
+    _canvasController = GraphViewPdaCanvasController(
+      editorNotifier: provider,
+    );
+    if (widget.automaton != null) {
+      provider.setPda(widget.automaton!);
+      _canvasController.synchronize(widget.automaton!);
+    }
+    _toolController = AutomatonCanvasToolController();
+  }
+
+  @override
+  void dispose() {
+    _canvasController.dispose();
+    _toolController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final combinedListenable = Listenable.merge([
+      _toolController,
+      _canvasController.graphRevision,
+    ]);
+
+    return Scaffold(
+      body: Stack(
+        children: [
+          // Canvas
+          Positioned.fill(
+            child: PDACanvasGraphView(
+              controller: _canvasController,
+              toolController: _toolController,
+              onPdaModified: (_) {},
+            ),
+          ),
+          // Stack panel
+          if (widget.automaton != null)
+            Positioned(
+              bottom: 16,
+              right: 16,
+              child: PDAStackPanel(
+                stackState: const StackState.empty(),
+                initialStackSymbol: widget.automaton!.initialStackSymbol,
+                stackAlphabet: widget.automaton!.stackAlphabet,
+                isSimulating: false,
+                onClear: () {},
+              ),
+            ),
+          // Toolbar
+          AnimatedBuilder(
+            animation: combinedListenable,
+            builder: (context, _) {
+              return GraphViewCanvasToolbar(
+                layout: widget.isMobile
+                    ? GraphViewCanvasToolbarLayout.mobile
+                    : GraphViewCanvasToolbarLayout.desktop,
+                controller: _canvasController,
+                enableToolSelection: true,
+                activeTool: _toolController.activeTool,
+                onAddState: () {
+                  _toolController.setActiveTool(AutomatonCanvasTool.addState);
+                  _canvasController.addStateAtCenter();
+                },
+                onAddTransition: () {
+                  if (_toolController.activeTool !=
+                      AutomatonCanvasTool.transition) {
+                    _toolController.setActiveTool(
+                      AutomatonCanvasTool.transition,
+                    );
+                  }
+                },
+                onClear: () {},
+                statusMessage: widget.automaton == null
+                    ? 'No automaton loaded'
+                    : '',
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+Future<void> _pumpPDAPageComponents(
+  WidgetTester tester, {
+  PDA? automaton,
+  Size size = const Size(1400, 900),
+  bool isMobile = false,
+}) async {
+  final binding = tester.binding;
+  binding.window.physicalSizeTestValue = size;
+  binding.window.devicePixelRatioTestValue = 1.0;
+
+  await tester.pumpWidgetBuilder(
+    ProviderScope(
+      child: MaterialApp(
+        home: _PDAPageTestWidget(automaton: automaton, isMobile: isMobile),
+      ),
+    ),
+  );
+
+  await tester.pumpAndSettle();
+}
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUpAll(() async {
+    SharedPreferences.setMockInitialValues({});
+    await setupDependencyInjection();
+  });
+
+  tearDownAll(() {
+    resetDependencies();
+  });
+
+  group('PDA Page Components golden tests', () {
+    testGoldens('renders empty canvas with toolbar in desktop layout', (
+      tester,
+    ) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
+
+      await _pumpPDAPageComponents(
+        tester,
+        size: const Size(1400, 900),
+        isMobile: false,
+      );
+
+      await screenMatchesGolden(tester, 'pda_page_empty_desktop');
+    });
+
+    testGoldens('renders empty canvas with toolbar in tablet layout', (
+      tester,
+    ) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
+
+      await _pumpPDAPageComponents(
+        tester,
+        size: const Size(1200, 800),
+        isMobile: false,
+      );
+
+      await screenMatchesGolden(tester, 'pda_page_empty_tablet');
+    });
+
+    testGoldens('renders empty canvas with toolbar in mobile layout', (
+      tester,
+    ) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
+
+      await _pumpPDAPageComponents(
+        tester,
+        size: const Size(430, 932),
+        isMobile: true,
+      );
+
+      await screenMatchesGolden(tester, 'pda_page_empty_mobile');
+    });
+
+    testGoldens(
+      'renders canvas with toolbar and simple PDA in desktop layout',
+      (tester) async {
+        addTearDown(() {
+          tester.binding.window.clearPhysicalSizeTestValue();
+          tester.binding.window.clearDevicePixelRatioTestValue();
+        });
+
+        final q0 = automaton_state.State(
+          id: 'q0',
+          label: 'q0',
+          position: Vector2(200, 200),
+          isInitial: true,
+          isAccepting: false,
+        );
+
+        final q1 = automaton_state.State(
+          id: 'q1',
+          label: 'q1',
+          position: Vector2(400, 200),
+          isInitial: false,
+          isAccepting: true,
+        );
+
+        final transition = PDATransition.readAndStack(
+          id: 't1',
+          fromState: q0,
+          toState: q1,
+          inputSymbol: 'a',
+          popSymbol: 'Z',
+          pushSymbol: 'Z',
+        );
+
+        final automaton = PDA(
+          id: 'simple-pda',
+          name: 'Simple PDA',
+          states: <automaton_state.State>{q0, q1},
+          transitions: <PDATransition>{transition},
+          alphabet: const <String>{'a'},
+          initialState: q0,
+          acceptingStates: <automaton_state.State>{q1},
+          created: DateTime.utc(2024, 1, 1),
+          modified: DateTime.utc(2024, 1, 1),
+          bounds: const math.Rectangle<double>(0, 0, 800, 600),
+          zoomLevel: 1,
+          panOffset: Vector2.zero(),
+          stackAlphabet: const <String>{'Z'},
+          initialStackSymbol: 'Z',
+        );
+
+        await _pumpPDAPageComponents(
+          tester,
+          automaton: automaton,
+          size: const Size(1400, 900),
+          isMobile: false,
+        );
+
+        await screenMatchesGolden(tester, 'pda_page_simple_pda_desktop');
+      },
+    );
+
+    testGoldens(
+      'renders canvas with toolbar and balanced parentheses PDA in desktop layout',
+      (tester) async {
+        addTearDown(() {
+          tester.binding.window.clearPhysicalSizeTestValue();
+          tester.binding.window.clearDevicePixelRatioTestValue();
+        });
+
+        final q0 = automaton_state.State(
+          id: 'q0',
+          label: 'q0',
+          position: Vector2(200, 200),
+          isInitial: true,
+          isAccepting: false,
+        );
+
+        final q1 = automaton_state.State(
+          id: 'q1',
+          label: 'q1',
+          position: Vector2(400, 200),
+          isInitial: false,
+          isAccepting: true,
+        );
+
+        // Push opening parenthesis
+        final t1 = PDATransition.readAndStack(
+          id: 't1',
+          fromState: q0,
+          toState: q0,
+          inputSymbol: '(',
+          popSymbol: 'Z',
+          pushSymbol: 'Z(',
+        );
+
+        // Pop closing parenthesis
+        final t2 = PDATransition.readAndStack(
+          id: 't2',
+          fromState: q0,
+          toState: q0,
+          inputSymbol: ')',
+          popSymbol: '(',
+          pushSymbol: '',
+        );
+
+        // Accept on empty stack
+        final t3 = PDATransition.stackOnly(
+          id: 't3',
+          fromState: q0,
+          toState: q1,
+          popSymbol: 'Z',
+          pushSymbol: '',
+        );
+
+        final automaton = PDA(
+          id: 'balanced-parens-pda',
+          name: 'Balanced Parentheses PDA',
+          states: <automaton_state.State>{q0, q1},
+          transitions: <PDATransition>{t1, t2, t3},
+          alphabet: const <String>{'(', ')'},
+          initialState: q0,
+          acceptingStates: <automaton_state.State>{q1},
+          created: DateTime.utc(2024, 1, 1),
+          modified: DateTime.utc(2024, 1, 1),
+          bounds: const math.Rectangle<double>(0, 0, 800, 600),
+          zoomLevel: 1,
+          panOffset: Vector2.zero(),
+          stackAlphabet: const <String>{'Z', '('},
+          initialStackSymbol: 'Z',
+        );
+
+        await _pumpPDAPageComponents(
+          tester,
+          automaton: automaton,
+          size: const Size(1400, 900),
+          isMobile: false,
+        );
+
+        await screenMatchesGolden(tester, 'pda_page_balanced_parens_desktop');
+      },
+    );
+
+    testGoldens('renders page with epsilon-PDA in desktop layout', (
+      tester,
+    ) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
+
+      final q0 = automaton_state.State(
+        id: 'q0',
+        label: 'q0',
+        position: Vector2(200, 200),
+        isInitial: true,
+        isAccepting: false,
+      );
+
+      final q1 = automaton_state.State(
+        id: 'q1',
+        label: 'q1',
+        position: Vector2(400, 200),
+        isInitial: false,
+        isAccepting: true,
+      );
+
+      // Epsilon transition
+      final t1 = PDATransition.epsilon(
+        id: 't1',
+        fromState: q0,
+        toState: q1,
+      );
+
+      final automaton = PDA(
+        id: 'epsilon-pda',
+        name: 'Epsilon-PDA',
+        states: <automaton_state.State>{q0, q1},
+        transitions: <PDATransition>{t1},
+        alphabet: const <String>{'a'},
+        initialState: q0,
+        acceptingStates: <automaton_state.State>{q1},
+        created: DateTime.utc(2024, 1, 1),
+        modified: DateTime.utc(2024, 1, 1),
+        bounds: const math.Rectangle<double>(0, 0, 800, 600),
+        zoomLevel: 1,
+        panOffset: Vector2.zero(),
+        stackAlphabet: const <String>{'Z'},
+        initialStackSymbol: 'Z',
+      );
+
+      await _pumpPDAPageComponents(
+        tester,
+        automaton: automaton,
+        size: const Size(1400, 900),
+        isMobile: false,
+      );
+
+      await screenMatchesGolden(tester, 'pda_page_epsilon_pda_desktop');
+    });
+
+    testGoldens('renders page with complex PDA in tablet layout', (
+      tester,
+    ) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
+
+      final q0 = automaton_state.State(
+        id: 'q0',
+        label: 'q0',
+        position: Vector2(150, 200),
+        isInitial: true,
+        isAccepting: false,
+      );
+
+      final q1 = automaton_state.State(
+        id: 'q1',
+        label: 'q1',
+        position: Vector2(350, 150),
+        isInitial: false,
+        isAccepting: false,
+      );
+
+      final q2 = automaton_state.State(
+        id: 'q2',
+        label: 'q2',
+        position: Vector2(350, 250),
+        isInitial: false,
+        isAccepting: true,
+      );
+
+      final t1 = PDATransition.readAndStack(
+        id: 't1',
+        fromState: q0,
+        toState: q1,
+        inputSymbol: 'a',
+        popSymbol: 'Z',
+        pushSymbol: 'AZ',
+      );
+
+      final t2 = PDATransition.readAndStack(
+        id: 't2',
+        fromState: q1,
+        toState: q1,
+        inputSymbol: 'a',
+        popSymbol: 'A',
+        pushSymbol: 'AA',
+      );
+
+      final t3 = PDATransition.readAndStack(
+        id: 't3',
+        fromState: q1,
+        toState: q2,
+        inputSymbol: 'b',
+        popSymbol: 'A',
+        pushSymbol: '',
+      );
+
+      final t4 = PDATransition.readAndStack(
+        id: 't4',
+        fromState: q2,
+        toState: q2,
+        inputSymbol: 'b',
+        popSymbol: 'A',
+        pushSymbol: '',
+      );
+
+      final automaton = PDA(
+        id: 'complex-pda',
+        name: 'Complex PDA',
+        states: <automaton_state.State>{q0, q1, q2},
+        transitions: <PDATransition>{t1, t2, t3, t4},
+        alphabet: const <String>{'a', 'b'},
+        initialState: q0,
+        acceptingStates: <automaton_state.State>{q2},
+        created: DateTime.utc(2024, 1, 1),
+        modified: DateTime.utc(2024, 1, 1),
+        bounds: const math.Rectangle<double>(0, 0, 800, 600),
+        zoomLevel: 1,
+        panOffset: Vector2.zero(),
+        stackAlphabet: const <String>{'Z', 'A'},
+        initialStackSymbol: 'Z',
+      );
+
+      await _pumpPDAPageComponents(
+        tester,
+        automaton: automaton,
+        size: const Size(1200, 800),
+        isMobile: false,
+      );
+
+      await screenMatchesGolden(tester, 'pda_page_complex_tablet');
+    });
+
+    testGoldens('renders page with PDA in mobile layout', (tester) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
+
+      final q0 = automaton_state.State(
+        id: 'q0',
+        label: 'q0',
+        position: Vector2(150, 200),
+        isInitial: true,
+        isAccepting: false,
+      );
+
+      final q1 = automaton_state.State(
+        id: 'q1',
+        label: 'q1',
+        position: Vector2(300, 200),
+        isInitial: false,
+        isAccepting: true,
+      );
+
+      final transition = PDATransition.readAndStack(
+        id: 't1',
+        fromState: q0,
+        toState: q1,
+        inputSymbol: 'a',
+        popSymbol: 'Z',
+        pushSymbol: 'Z',
+      );
+
+      final automaton = PDA(
+        id: 'mobile-pda',
+        name: 'Mobile PDA',
+        states: <automaton_state.State>{q0, q1},
+        transitions: <PDATransition>{transition},
+        alphabet: const <String>{'a'},
+        initialState: q0,
+        acceptingStates: <automaton_state.State>{q1},
+        created: DateTime.utc(2024, 1, 1),
+        modified: DateTime.utc(2024, 1, 1),
+        bounds: const math.Rectangle<double>(0, 0, 800, 600),
+        zoomLevel: 1,
+        panOffset: Vector2.zero(),
+        stackAlphabet: const <String>{'Z'},
+        initialStackSymbol: 'Z',
+      );
+
+      await _pumpPDAPageComponents(
+        tester,
+        automaton: automaton,
+        size: const Size(430, 932),
+        isMobile: true,
+      );
+
+      await screenMatchesGolden(tester, 'pda_page_mobile_pda');
+    });
+  });
+}

@@ -1,0 +1,862 @@
+//
+//  grammar_editor_test.dart
+//  JFlutter
+//
+//  Suite abrangente que examina o GrammarEditor, garantindo integração com
+//  provedores simulados e validações de interação por formulários. Os testes
+//  validam adição, edição e remoção de produções, atualização de metadados,
+//  ações de limpeza e respostas a validações de entrada, assegurando
+//  consistência entre a interface e o estado da gramática.
+//
+//  Thales Matheus Mendonça Santos - October 2025
+//
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import 'package:jflutter/presentation/providers/grammar_provider.dart';
+import 'package:jflutter/presentation/widgets/grammar_editor.dart';
+
+class _RecordingGrammarProvider extends GrammarProvider {
+  _RecordingGrammarProvider() : super();
+
+  final List<Map<String, Object?>> addProductionCalls = [];
+  final List<Map<String, Object?>> updateProductionCalls = [];
+  final List<String> deleteProductionCalls = [];
+  int clearProductionsCalls = 0;
+  int updateNameCalls = 0;
+  int updateStartSymbolCalls = 0;
+  String? lastNameValue;
+  String? lastStartSymbolValue;
+
+  @override
+  void addProduction({
+    required List<String> leftSide,
+    required List<String> rightSide,
+    bool isLambda = false,
+  }) {
+    addProductionCalls.add({
+      'leftSide': leftSide,
+      'rightSide': rightSide,
+      'isLambda': isLambda,
+    });
+    super.addProduction(
+      leftSide: leftSide,
+      rightSide: rightSide,
+      isLambda: isLambda,
+    );
+  }
+
+  @override
+  void updateProduction(
+    String id, {
+    required List<String> leftSide,
+    required List<String> rightSide,
+    bool isLambda = false,
+  }) {
+    updateProductionCalls.add({
+      'id': id,
+      'leftSide': leftSide,
+      'rightSide': rightSide,
+      'isLambda': isLambda,
+    });
+    super.updateProduction(
+      id,
+      leftSide: leftSide,
+      rightSide: rightSide,
+      isLambda: isLambda,
+    );
+  }
+
+  @override
+  void deleteProduction(String id) {
+    deleteProductionCalls.add(id);
+    super.deleteProduction(id);
+  }
+
+  @override
+  void clearProductions() {
+    clearProductionsCalls++;
+    super.clearProductions();
+  }
+
+  @override
+  void updateName(String value) {
+    updateNameCalls++;
+    lastNameValue = value;
+    super.updateName(value);
+  }
+
+  @override
+  void updateStartSymbol(String value) {
+    updateStartSymbolCalls++;
+    lastStartSymbolValue = value;
+    super.updateStartSymbol(value);
+  }
+}
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  group('GrammarEditor initialization', () {
+    testWidgets('builds successfully with default state', (tester) async {
+      final provider = _RecordingGrammarProvider();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('Grammar Editor'), findsOneWidget);
+      expect(find.text('Grammar Information'), findsOneWidget);
+      expect(find.text('Add Production Rule'), findsOneWidget);
+      expect(find.text('Production Rules (0)'), findsOneWidget);
+    });
+
+    testWidgets('displays empty state when no productions exist', (
+      tester,
+    ) async {
+      final provider = _RecordingGrammarProvider();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('No production rules yet'), findsOneWidget);
+      expect(find.text('Add your first production rule above'), findsOneWidget);
+    });
+
+    testWidgets('initializes text controllers with provider state', (
+      tester,
+    ) async {
+      final provider = _RecordingGrammarProvider();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final grammarNameField = find.widgetWithText(TextField, 'My Grammar');
+      expect(grammarNameField, findsOneWidget);
+
+      final startSymbolField = find.widgetWithText(TextField, 'S');
+      expect(startSymbolField, findsOneWidget);
+    });
+  });
+
+  group('GrammarEditor metadata updates', () {
+    testWidgets('updates grammar name when text field changes', (tester) async {
+      final provider = _RecordingGrammarProvider();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final grammarNameField = find
+          .widgetWithText(TextField, 'My Grammar')
+          .first;
+      await tester.enterText(grammarNameField, 'Test Grammar');
+      await tester.pump();
+
+      expect(provider.updateNameCalls, equals(1));
+      expect(provider.lastNameValue, equals('Test Grammar'));
+    });
+
+    testWidgets('updates start symbol when text field changes', (tester) async {
+      final provider = _RecordingGrammarProvider();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final startSymbolField = find.widgetWithText(TextField, 'S').first;
+      await tester.enterText(startSymbolField, 'A');
+      await tester.pump();
+
+      expect(provider.updateStartSymbolCalls, equals(1));
+      expect(provider.lastStartSymbolValue, equals('A'));
+    });
+  });
+
+  group('GrammarEditor production management', () {
+    testWidgets('adds a simple production when fields are filled', (
+      tester,
+    ) async {
+      final provider = _RecordingGrammarProvider();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final leftSideField = find.widgetWithText(TextField, 'e.g., S, A, B');
+      await tester.enterText(leftSideField, 'S');
+      await tester.pump();
+
+      final rightSideField = find.widgetWithText(TextField, 'e.g., aA, bB, ε');
+      await tester.enterText(rightSideField, 'aA');
+      await tester.pump();
+
+      final addButton = find.widgetWithText(ElevatedButton, 'Add');
+      await tester.tap(addButton);
+      await tester.pumpAndSettle();
+
+      expect(provider.addProductionCalls, hasLength(1));
+      final call = provider.addProductionCalls.first;
+      expect(call['leftSide'], equals(['S']));
+      expect(call['rightSide'], equals(['a', 'A']));
+      expect(call['isLambda'], equals(false));
+    });
+
+    testWidgets('adds a lambda production with epsilon symbol', (tester) async {
+      final provider = _RecordingGrammarProvider();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final leftSideField = find.widgetWithText(TextField, 'e.g., S, A, B');
+      await tester.enterText(leftSideField, 'S');
+      await tester.pump();
+
+      final rightSideField = find.widgetWithText(TextField, 'e.g., aA, bB, ε');
+      await tester.enterText(rightSideField, 'ε');
+      await tester.pump();
+
+      final addButton = find.widgetWithText(ElevatedButton, 'Add');
+      await tester.tap(addButton);
+      await tester.pumpAndSettle();
+
+      expect(provider.addProductionCalls, hasLength(1));
+      final call = provider.addProductionCalls.first;
+      expect(call['leftSide'], equals(['S']));
+      expect(call['rightSide'], equals([]));
+      expect(call['isLambda'], equals(true));
+    });
+
+    testWidgets('shows error when adding production with empty left side', (
+      tester,
+    ) async {
+      final provider = _RecordingGrammarProvider();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final rightSideField = find.widgetWithText(TextField, 'e.g., aA, bB, ε');
+      await tester.enterText(rightSideField, 'aA');
+      await tester.pump();
+
+      final addButton = find.widgetWithText(ElevatedButton, 'Add');
+      await tester.tap(addButton);
+      await tester.pumpAndSettle();
+
+      expect(provider.addProductionCalls, hasLength(0));
+      expect(
+        find.text('Both left side and right side must be specified'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('shows error when adding production with empty right side', (
+      tester,
+    ) async {
+      final provider = _RecordingGrammarProvider();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final leftSideField = find.widgetWithText(TextField, 'e.g., S, A, B');
+      await tester.enterText(leftSideField, 'S');
+      await tester.pump();
+
+      final addButton = find.widgetWithText(ElevatedButton, 'Add');
+      await tester.tap(addButton);
+      await tester.pumpAndSettle();
+
+      expect(provider.addProductionCalls, hasLength(0));
+      expect(
+        find.text('Both left side and right side must be specified'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('clears input fields after adding production', (tester) async {
+      final provider = _RecordingGrammarProvider();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final leftSideField = find.widgetWithText(TextField, 'e.g., S, A, B');
+      await tester.enterText(leftSideField, 'S');
+      await tester.pump();
+
+      final rightSideField = find.widgetWithText(TextField, 'e.g., aA, bB, ε');
+      await tester.enterText(rightSideField, 'aA');
+      await tester.pump();
+
+      final addButton = find.widgetWithText(ElevatedButton, 'Add');
+      await tester.tap(addButton);
+      await tester.pumpAndSettle();
+
+      final leftField = tester.widget<TextField>(leftSideField);
+      final rightField = tester.widget<TextField>(rightSideField);
+
+      expect(leftField.controller?.text, equals(''));
+      expect(rightField.controller?.text, equals(''));
+    });
+  });
+
+  group('GrammarEditor production list', () {
+    testWidgets('displays added productions in the list', (tester) async {
+      final provider = _RecordingGrammarProvider();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final leftSideField = find.widgetWithText(TextField, 'e.g., S, A, B');
+      await tester.enterText(leftSideField, 'S');
+
+      final rightSideField = find.widgetWithText(TextField, 'e.g., aA, bB, ε');
+      await tester.enterText(rightSideField, 'aA');
+
+      final addButton = find.widgetWithText(ElevatedButton, 'Add');
+      await tester.tap(addButton);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Production Rules (1)'), findsOneWidget);
+      expect(find.text('S → aA'), findsOneWidget);
+      expect(find.text('Rule 1'), findsOneWidget);
+    });
+
+    testWidgets('displays lambda productions with epsilon symbol', (
+      tester,
+    ) async {
+      final provider = _RecordingGrammarProvider();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final leftSideField = find.widgetWithText(TextField, 'e.g., S, A, B');
+      await tester.enterText(leftSideField, 'A');
+
+      final rightSideField = find.widgetWithText(TextField, 'e.g., aA, bB, ε');
+      await tester.enterText(rightSideField, 'ε');
+
+      final addButton = find.widgetWithText(ElevatedButton, 'Add');
+      await tester.tap(addButton);
+      await tester.pumpAndSettle();
+
+      expect(find.text('A → ε'), findsOneWidget);
+    });
+
+    testWidgets('allows selecting a production by tapping', (tester) async {
+      final provider = _RecordingGrammarProvider();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      provider.addProduction(
+        leftSide: ['S'],
+        rightSide: ['a', 'A'],
+        isLambda: false,
+      );
+      await tester.pumpAndSettle();
+
+      final productionTile = find.ancestor(
+        of: find.text('S → aA'),
+        matching: find.byType(ListTile),
+      );
+      await tester.tap(productionTile);
+      await tester.pumpAndSettle();
+
+      final listTile = tester.widget<ListTile>(productionTile);
+      expect(listTile.selected, equals(true));
+    });
+  });
+
+  group('GrammarEditor production editing', () {
+    testWidgets('enters edit mode when edit menu option is selected', (
+      tester,
+    ) async {
+      final provider = _RecordingGrammarProvider();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      provider.addProduction(
+        leftSide: ['S'],
+        rightSide: ['a', 'A'],
+        isLambda: false,
+      );
+      await tester.pumpAndSettle();
+
+      final moreButton = find.byIcon(Icons.more_vert);
+      await tester.tap(moreButton);
+      await tester.pumpAndSettle();
+
+      final editOption = find.text('Edit');
+      await tester.tap(editOption);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Edit Production Rule'), findsOneWidget);
+      expect(find.widgetWithText(ElevatedButton, 'Update'), findsOneWidget);
+      expect(find.widgetWithText(ElevatedButton, 'Cancel'), findsOneWidget);
+    });
+
+    testWidgets('populates fields with production data in edit mode', (
+      tester,
+    ) async {
+      final provider = _RecordingGrammarProvider();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      provider.addProduction(
+        leftSide: ['S'],
+        rightSide: ['a', 'B'],
+        isLambda: false,
+      );
+      await tester.pumpAndSettle();
+
+      final moreButton = find.byIcon(Icons.more_vert);
+      await tester.tap(moreButton);
+      await tester.pumpAndSettle();
+
+      final editOption = find.text('Edit');
+      await tester.tap(editOption);
+      await tester.pumpAndSettle();
+
+      final leftField = find.widgetWithText(TextField, 'S');
+      final rightField = find.widgetWithText(TextField, 'aB');
+
+      expect(leftField, findsOneWidget);
+      expect(rightField, findsOneWidget);
+    });
+
+    testWidgets('updates production when Update button is pressed', (
+      tester,
+    ) async {
+      final provider = _RecordingGrammarProvider();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      provider.addProduction(
+        leftSide: ['S'],
+        rightSide: ['a', 'A'],
+        isLambda: false,
+      );
+      await tester.pumpAndSettle();
+
+      final moreButton = find.byIcon(Icons.more_vert);
+      await tester.tap(moreButton);
+      await tester.pumpAndSettle();
+
+      final editOption = find.text('Edit');
+      await tester.tap(editOption);
+      await tester.pumpAndSettle();
+
+      final rightSideField = find.widgetWithText(TextField, 'aA');
+      await tester.enterText(rightSideField, 'bB');
+      await tester.pump();
+
+      final updateButton = find.widgetWithText(ElevatedButton, 'Update');
+      await tester.tap(updateButton);
+      await tester.pumpAndSettle();
+
+      expect(provider.updateProductionCalls, hasLength(1));
+      final call = provider.updateProductionCalls.first;
+      expect(call['id'], equals('p1'));
+      expect(call['rightSide'], equals(['b', 'B']));
+    });
+
+    testWidgets('exits edit mode when Cancel button is pressed', (
+      tester,
+    ) async {
+      final provider = _RecordingGrammarProvider();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      provider.addProduction(
+        leftSide: ['S'],
+        rightSide: ['a', 'A'],
+        isLambda: false,
+      );
+      await tester.pumpAndSettle();
+
+      final moreButton = find.byIcon(Icons.more_vert);
+      await tester.tap(moreButton);
+      await tester.pumpAndSettle();
+
+      final editOption = find.text('Edit');
+      await tester.tap(editOption);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Edit Production Rule'), findsOneWidget);
+
+      final cancelButton = find.widgetWithText(ElevatedButton, 'Cancel');
+      await tester.tap(cancelButton);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Add Production Rule'), findsOneWidget);
+      expect(find.widgetWithText(ElevatedButton, 'Add'), findsOneWidget);
+      expect(provider.updateProductionCalls, hasLength(0));
+    });
+
+    testWidgets('clears fields after canceling edit', (tester) async {
+      final provider = _RecordingGrammarProvider();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      provider.addProduction(
+        leftSide: ['S'],
+        rightSide: ['a', 'A'],
+        isLambda: false,
+      );
+      await tester.pumpAndSettle();
+
+      final moreButton = find.byIcon(Icons.more_vert);
+      await tester.tap(moreButton);
+      await tester.pumpAndSettle();
+
+      final editOption = find.text('Edit');
+      await tester.tap(editOption);
+      await tester.pumpAndSettle();
+
+      final cancelButton = find.widgetWithText(ElevatedButton, 'Cancel');
+      await tester.tap(cancelButton);
+      await tester.pumpAndSettle();
+
+      final leftSideField = find.widgetWithText(TextField, 'e.g., S, A, B');
+      final rightSideField = find.widgetWithText(TextField, 'e.g., aA, bB, ε');
+
+      final leftField = tester.widget<TextField>(leftSideField);
+      final rightField = tester.widget<TextField>(rightSideField);
+
+      expect(leftField.controller?.text, equals(''));
+      expect(rightField.controller?.text, equals(''));
+    });
+  });
+
+  group('GrammarEditor production deletion', () {
+    testWidgets('deletes production when delete menu option is selected', (
+      tester,
+    ) async {
+      final provider = _RecordingGrammarProvider();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      provider.addProduction(
+        leftSide: ['S'],
+        rightSide: ['a', 'A'],
+        isLambda: false,
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Production Rules (1)'), findsOneWidget);
+
+      final moreButton = find.byIcon(Icons.more_vert);
+      await tester.tap(moreButton);
+      await tester.pumpAndSettle();
+
+      final deleteOption = find.text('Delete');
+      await tester.tap(deleteOption);
+      await tester.pumpAndSettle();
+
+      expect(provider.deleteProductionCalls, hasLength(1));
+      expect(provider.deleteProductionCalls.first, equals('p1'));
+      expect(find.text('Production Rules (0)'), findsOneWidget);
+    });
+
+    testWidgets('exits edit mode if deleted production was being edited', (
+      tester,
+    ) async {
+      final provider = _RecordingGrammarProvider();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      provider.addProduction(
+        leftSide: ['S'],
+        rightSide: ['a', 'A'],
+        isLambda: false,
+      );
+      await tester.pumpAndSettle();
+
+      final moreButton = find.byIcon(Icons.more_vert);
+      await tester.tap(moreButton);
+      await tester.pumpAndSettle();
+
+      final editOption = find.text('Edit');
+      await tester.tap(editOption);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Edit Production Rule'), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+
+      final deleteOption = find.text('Delete');
+      await tester.tap(deleteOption);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Add Production Rule'), findsOneWidget);
+      expect(find.widgetWithText(ElevatedButton, 'Add'), findsOneWidget);
+    });
+  });
+
+  group('GrammarEditor clear functionality', () {
+    testWidgets('clears all productions when Clear button is pressed', (
+      tester,
+    ) async {
+      final provider = _RecordingGrammarProvider();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      provider.addProduction(
+        leftSide: ['S'],
+        rightSide: ['a', 'A'],
+        isLambda: false,
+      );
+      provider.addProduction(
+        leftSide: ['A'],
+        rightSide: ['b'],
+        isLambda: false,
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Production Rules (2)'), findsOneWidget);
+
+      final clearButton = find.widgetWithText(ElevatedButton, 'Clear');
+      await tester.tap(clearButton);
+      await tester.pumpAndSettle();
+
+      expect(provider.clearProductionsCalls, equals(1));
+      expect(find.text('Production Rules (0)'), findsOneWidget);
+      expect(find.text('No production rules yet'), findsOneWidget);
+    });
+
+    testWidgets('exits edit mode when Clear button is pressed', (tester) async {
+      final provider = _RecordingGrammarProvider();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      provider.addProduction(
+        leftSide: ['S'],
+        rightSide: ['a', 'A'],
+        isLambda: false,
+      );
+      await tester.pumpAndSettle();
+
+      final moreButton = find.byIcon(Icons.more_vert);
+      await tester.tap(moreButton);
+      await tester.pumpAndSettle();
+
+      final editOption = find.text('Edit');
+      await tester.tap(editOption);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Edit Production Rule'), findsOneWidget);
+
+      final clearButton = find.widgetWithText(ElevatedButton, 'Clear');
+      await tester.tap(clearButton);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Add Production Rule'), findsOneWidget);
+    });
+  });
+
+  group('GrammarEditor responsive layout', () {
+    testWidgets('displays compact header on small screens', (tester) async {
+      final provider = _RecordingGrammarProvider();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [grammarProvider.overrideWith((ref) => provider)],
+          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
+        ),
+      );
+
+      tester.view.physicalSize = const Size(500, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.text_fields), findsOneWidget);
+      expect(find.text('Grammar Editor'), findsOneWidget);
+    });
+
+    testWidgets(
+      'displays vertical layout for production editor on small screens',
+      (tester) async {
+        final provider = _RecordingGrammarProvider();
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [grammarProvider.overrideWith((ref) => provider)],
+            child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
+          ),
+        );
+
+        tester.view.physicalSize = const Size(400, 800);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+
+        await tester.pumpAndSettle();
+
+        expect(find.byIcon(Icons.arrow_downward), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'displays horizontal layout for production editor on large screens',
+      (tester) async {
+        final provider = _RecordingGrammarProvider();
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [grammarProvider.overrideWith((ref) => provider)],
+            child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
+          ),
+        );
+
+        tester.view.physicalSize = const Size(1200, 800);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+
+        await tester.pumpAndSettle();
+
+        expect(find.byIcon(Icons.arrow_forward), findsOneWidget);
+      },
+    );
+  });
+}

@@ -1,0 +1,804 @@
+//
+//  stack_drawer.dart
+//  JFlutter
+//
+//  Bottom drawer para visualização da pilha do PDA, acessível durante edição
+//  e simulação. Suporta modo compacto para mobile e expandido para desktop.
+//
+//  Created for Phase 1 improvements - November 2025
+//
+
+import 'package:flutter/material.dart';
+
+/// Tipo de operação realizada na pilha
+enum StackOperationType {
+  none,
+  push,
+  pop,
+  replace,
+}
+
+/// Estado da pilha em um momento específico
+class StackState {
+  final List<String> symbols;
+  final String? lastOperation;
+  final StackOperationType operationType;
+  final int maxStackSize;
+  final bool hasOverflow;
+  final bool hasUnderflow;
+
+  const StackState({
+    required this.symbols,
+    this.lastOperation,
+    this.operationType = StackOperationType.none,
+    this.maxStackSize = 100,
+    this.hasOverflow = false,
+    this.hasUnderflow = false,
+  });
+
+  /// Pilha vazia
+  const StackState.empty()
+      : symbols = const [],
+        lastOperation = null,
+        operationType = StackOperationType.none,
+        maxStackSize = 100,
+        hasOverflow = false,
+        hasUnderflow = false;
+
+  bool get isEmpty => symbols.isEmpty;
+  String? get top => symbols.isEmpty ? null : symbols.last;
+  int get size => symbols.length;
+
+  /// True se a pilha atingiu ou excedeu o tamanho máximo
+  bool get isAtCapacity => symbols.length >= maxStackSize;
+
+  /// True se houve tentativa de pop em pilha vazia
+  bool get attemptedUnderflow => hasUnderflow;
+
+  /// True se a pilha excedeu o limite
+  bool get exceededCapacity => hasOverflow;
+
+  /// Cria cópia com push
+  StackState push(String symbol) {
+    final newSymbols = [...symbols, symbol];
+    final willOverflow = newSymbols.length > maxStackSize;
+
+    return StackState(
+      symbols: newSymbols,
+      lastOperation: 'push $symbol',
+      operationType: StackOperationType.push,
+      maxStackSize: maxStackSize,
+      hasOverflow: willOverflow,
+      hasUnderflow: false,
+    );
+  }
+
+  /// Cria cópia com pop
+  StackState pop() {
+    if (symbols.isEmpty) {
+      // Attempting to pop from empty stack - underflow
+      return StackState(
+        symbols: symbols,
+        lastOperation: 'pop (underflow)',
+        operationType: StackOperationType.pop,
+        maxStackSize: maxStackSize,
+        hasOverflow: false,
+        hasUnderflow: true,
+      );
+    }
+    final popped = symbols.last;
+    return StackState(
+      symbols: symbols.sublist(0, symbols.length - 1),
+      lastOperation: 'pop $popped',
+      operationType: StackOperationType.pop,
+      maxStackSize: maxStackSize,
+      hasOverflow: false,
+      hasUnderflow: false,
+    );
+  }
+
+  /// Cria cópia substituindo o topo
+  StackState replace(String newSymbol) {
+    if (symbols.isEmpty) return push(newSymbol);
+    final newSymbols = [...symbols];
+    newSymbols[newSymbols.length - 1] = newSymbol;
+    return StackState(
+      symbols: newSymbols,
+      lastOperation: 'replace with $newSymbol',
+      operationType: StackOperationType.replace,
+      maxStackSize: maxStackSize,
+      hasOverflow: false,
+      hasUnderflow: false,
+    );
+  }
+}
+
+/// Painel flutuante para visualização da pilha
+class PDAStackPanel extends StatefulWidget {
+  final StackState stackState;
+  final String initialStackSymbol;
+  final Set<String> stackAlphabet;
+  final bool isSimulating;
+  final VoidCallback? onClear;
+
+  const PDAStackPanel({
+    super.key,
+    required this.stackState,
+    required this.initialStackSymbol,
+    required this.stackAlphabet,
+    this.isSimulating = false,
+    this.onClear,
+  });
+
+  @override
+  State<PDAStackPanel> createState() => _PDAStackPanelState();
+}
+
+class _PDAStackPanelState extends State<PDAStackPanel>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late ScrollController _scrollController;
+  late Animation<Offset> _slideAnimation;
+  int _previousStackSize = 0;
+  bool _isPushAnimation = false;
+  int _numPushedSymbols = 0; // Track how many symbols were pushed
+  bool _isPopAnimation = false;
+  List<String> _poppedSymbols = []; // Track symbols being popped for animation
+  int? _highlightedIndex;
+
+  // Swipe gesture tracking
+  int? _swipingItemIndex;
+  double _swipeOffset = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _slideAnimation =
+        Tween<Offset>(
+          begin: const Offset(0, 1), // Start from bottom
+          end: Offset.zero, // End at normal position
+        ).animate(
+          CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+        );
+    _scrollController = ScrollController();
+    _previousStackSize = widget.stackState.size;
+  }
+
+  @override
+  void didUpdateWidget(PDAStackPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.stackState.symbols != widget.stackState.symbols) {
+      // Detect push or pop operation
+      final stackGrowth = widget.stackState.size - oldWidget.stackState.size;
+
+      if (stackGrowth > 0) {
+        // Push operation (stack grew)
+        _isPushAnimation = true;
+        _isPopAnimation = false;
+        _numPushedSymbols = stackGrowth;
+        _poppedSymbols = [];
+      } else if (stackGrowth < 0) {
+        // Pop operation (stack shrunk)
+        _isPushAnimation = false;
+        _isPopAnimation = true;
+        _numPushedSymbols = 0;
+        // Store the popped symbols for animation
+        final numPopped = -stackGrowth;
+        _poppedSymbols = oldWidget.stackState.symbols
+            .sublist(oldWidget.stackState.symbols.length - numPopped);
+      } else {
+        // Replace operation (size unchanged)
+        _isPushAnimation = false;
+        _isPopAnimation = false;
+        _numPushedSymbols = 0;
+        _poppedSymbols = [];
+      }
+
+      _animationController.forward(from: 0).then((_) {
+        // Clear popped symbols after animation completes
+        if (mounted) {
+          setState(() {
+            _poppedSymbols = [];
+            _isPopAnimation = false;
+          });
+        }
+      });
+      _previousStackSize = widget.stackState.size;
+      _scrollToTop();
+    }
+  }
+
+  void _scrollToTop() {
+    // Auto-scroll para manter topo da pilha visível
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0.0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  void _handleItemTap(int index) {
+    setState(() {
+      // Toggle highlight: if tapping the same item, deselect; otherwise select
+      _highlightedIndex = _highlightedIndex == index ? null : index;
+    });
+  }
+
+  void _handleHorizontalDragStart(int index, DragStartDetails details) {
+    setState(() {
+      _swipingItemIndex = index;
+      _swipeOffset = 0.0;
+    });
+  }
+
+  void _handleHorizontalDragUpdate(DragUpdateDetails details) {
+    setState(() {
+      _swipeOffset += details.delta.dx;
+      // Clamp to reasonable range (-80 to 80 pixels)
+      _swipeOffset = _swipeOffset.clamp(-80.0, 80.0);
+    });
+  }
+
+  void _handleHorizontalDragEnd(int index, DragEndDetails details) {
+    // Detect swipe direction and velocity
+    final velocity = details.primaryVelocity ?? 0;
+    final threshold = 30.0; // Minimum swipe distance in pixels
+
+    setState(() {
+      if (_swipeOffset.abs() > threshold || velocity.abs() > 300) {
+        // Swipe detected - determine direction
+        if (_swipeOffset > 0 || velocity > 300) {
+          // Swipe right - highlight item
+          _highlightedIndex = index;
+        } else if (_swipeOffset < 0 || velocity < -300) {
+          // Swipe left - unhighlight if this item is highlighted
+          if (_highlightedIndex == index) {
+            _highlightedIndex = null;
+          }
+        }
+      }
+      // Reset swipe state
+      _swipingItemIndex = null;
+      _swipeOffset = 0.0;
+    });
+  }
+
+  void _handleHorizontalDragCancel(int index) {
+    setState(() {
+      _swipingItemIndex = null;
+      _swipeOffset = 0.0;
+    });
+  }
+
+  /// Returns the staggered animation interval for a newly pushed item
+  /// Items are staggered with 80ms delay between each
+  Interval _getStaggeredInterval(int pushIndex) {
+    const delayPerItem = 0.08; // 80ms delay between items (relative to 300ms total)
+    final begin = pushIndex * delayPerItem;
+    final end = begin + (1.0 - (_numPushedSymbols - 1) * delayPerItem);
+    return Interval(
+      begin.clamp(0.0, 1.0),
+      end.clamp(begin, 1.0),
+      curve: Curves.easeOut,
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Container(
+        width: 145, // Compact width for mobile
+        constraints: const BoxConstraints(maxHeight: 200), // Reduced height
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header
+            Row(
+              children: [
+                Icon(Icons.layers, size: 16, color: theme.colorScheme.primary),
+                const SizedBox(width: 6), // Reduced spacing
+                Expanded(
+                  child: Text(
+                    'Stack (${widget.stackState.size})',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13, // Compact font size
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (widget.isSimulating)
+                  Container(
+                    width: 6,
+                    height: 6,
+                    margin: const EdgeInsets.only(left: 4),
+                    decoration: const BoxDecoration(
+                      color: Colors.green,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+              ],
+            ),
+            const Divider(height: 10), // Reduced divider height
+            // Warning Indicators
+            if (widget.stackState.hasOverflow || widget.stackState.hasUnderflow)
+              _buildWarningBanner(theme),
+            // Stack Info Panel
+            _buildStackInfo(theme),
+            const Divider(height: 10), // Reduced divider height
+            // Content
+            Flexible(
+              child: widget.stackState.isEmpty
+                  ? Center(
+                      child: Text(
+                        'Empty\n(Z₀: ${widget.initialStackSymbol})',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: 11, // Compact font size
+                          color: theme.colorScheme.outline,
+                        ),
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: _scrollController,
+                      shrinkWrap: true,
+                      itemCount: widget.stackState.symbols.length +
+                          (_isPopAnimation ? _poppedSymbols.length : 0),
+                      itemBuilder: (context, index) {
+                        // During pop animation, show popped items at the top
+                        final bool isBeingPopped =
+                            _isPopAnimation && index < _poppedSymbols.length;
+
+                        final String symbol;
+                        final bool isTop;
+                        final int reversedIndex;
+
+                        if (isBeingPopped) {
+                          // Show popped symbols (from top of the list)
+                          symbol = _poppedSymbols[_poppedSymbols.length - 1 - index];
+                          isTop = index == 0;
+                          reversedIndex = -1; // Not in actual stack
+                        } else {
+                          // Show current stack symbols
+                          final adjustedIndex =
+                              index - (_isPopAnimation ? _poppedSymbols.length : 0);
+                          reversedIndex =
+                              widget.stackState.symbols.length - 1 - adjustedIndex;
+                          symbol = widget.stackState.symbols[reversedIndex];
+                          isTop = !_isPopAnimation && adjustedIndex == 0;
+                        }
+
+                        final isHighlighted = _highlightedIndex == index;
+                        final isSwiping = _swipingItemIndex == index;
+
+                        Widget itemWidget = GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => _handleItemTap(index),
+                          // Add swipe gesture detection
+                          onHorizontalDragStart: (details) =>
+                              _handleHorizontalDragStart(index, details),
+                          onHorizontalDragUpdate: _handleHorizontalDragUpdate,
+                          onHorizontalDragEnd: (details) =>
+                              _handleHorizontalDragEnd(index, details),
+                          onHorizontalDragCancel: () =>
+                              _handleHorizontalDragCancel(index),
+                          child: Transform.translate(
+                            // Apply swipe offset for visual feedback
+                            offset: Offset(isSwiping ? _swipeOffset : 0.0, 0.0),
+                            child: Container(
+                              // Ensure minimum 40x40 touch target (compact)
+                              constraints: const BoxConstraints(
+                                minHeight: 40,
+                                minWidth: 40,
+                              ),
+                              margin: const EdgeInsets.only(
+                                bottom: 3,
+                              ), // Reduced
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, // Reduced
+                                      vertical: 8, // Reduced
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isHighlighted
+                                          ? theme.colorScheme.secondaryContainer
+                                          : isTop
+                                          ? theme.colorScheme.primaryContainer
+                                          : theme
+                                                .colorScheme
+                                                .surfaceContainerHighest,
+                                      border: isHighlighted
+                                          ? Border.all(
+                                              color:
+                                                  theme.colorScheme.secondary,
+                                              width: 2,
+                                            )
+                                          : null,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Stack(
+                                      clipBehavior: Clip.none,
+                                      children: [
+                                        // Main content
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            if (isTop) ...[
+                                              Icon(
+                                                Icons.arrow_right,
+                                                size: 11, // Slightly smaller
+                                                color: theme.colorScheme.primary,
+                                              ),
+                                              const SizedBox(width: 3),
+                                            ],
+                                            Flexible(
+                                              child: Text(
+                                                symbol,
+                                                style: TextStyle(
+                                                  fontFamily: 'monospace',
+                                                  fontWeight: isTop || isHighlighted
+                                                      ? FontWeight.bold
+                                                      : FontWeight.normal,
+                                                  fontSize: 11, // Compact font size
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        // Push indicator badge (top-left)
+                                        if (_isPushAnimation && index < _numPushedSymbols)
+                                          Positioned(
+                                            top: -4,
+                                            left: -4,
+                                            child: Container(
+                                              padding: const EdgeInsets.all(2),
+                                              decoration: BoxDecoration(
+                                                color: theme.colorScheme.secondary,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Icon(
+                                                Icons.arrow_upward,
+                                                size: 8,
+                                                color: theme.colorScheme.onSecondary,
+                                              ),
+                                            ),
+                                          ),
+                                        // Pop indicator badge (top-right)
+                                        if (isBeingPopped)
+                                          Positioned(
+                                            top: -4,
+                                            right: -4,
+                                            child: Container(
+                                              padding: const EdgeInsets.all(2),
+                                              decoration: BoxDecoration(
+                                                color: theme.colorScheme.tertiary,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Icon(
+                                                Icons.arrow_downward,
+                                                size: 8,
+                                                color: theme.colorScheme.onTertiary,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                  // TOP badge - positioned to avoid overlap with operation badges
+                                  if (isTop && !_isPushAnimation && !isBeingPopped)
+                                    Positioned(
+                                      top: -5,
+                                      right: -5,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 3,
+                                          vertical: 1,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme.primary,
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          'TOP',
+                                          style: TextStyle(
+                                            color: theme.colorScheme.onPrimary,
+                                            fontSize: 7, // Compact badge
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  // Swipe hints - positioned after main content to be visible on top
+                                  if (isSwiping) ...[
+                                    // Left swipe hint (unhighlight)
+                                    if (_swipeOffset < -10)
+                                      Positioned.fill(
+                                        child: IgnorePointer(
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: theme
+                                                  .colorScheme
+                                                  .errorContainer
+                                                  .withOpacity(0.3),
+                                              borderRadius: BorderRadius.circular(
+                                                4,
+                                              ),
+                                            ),
+                                            alignment: Alignment.centerRight,
+                                            padding: const EdgeInsets.only(
+                                              right: 8,
+                                            ),
+                                            child: Icon(
+                                              Icons.highlight_remove,
+                                              size: 16,
+                                              color: theme.colorScheme.error,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    // Right swipe hint (highlight)
+                                    if (_swipeOffset > 10)
+                                      Positioned.fill(
+                                        child: IgnorePointer(
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: theme
+                                                  .colorScheme
+                                                  .primaryContainer
+                                                  .withOpacity(0.3),
+                                              borderRadius: BorderRadius.circular(
+                                                4,
+                                              ),
+                                            ),
+                                            alignment: Alignment.centerLeft,
+                                            padding: const EdgeInsets.only(
+                                              left: 8,
+                                            ),
+                                            child: Icon(
+                                              Icons.highlight,
+                                              size: 16,
+                                              color: theme.colorScheme.primary,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+
+                        // Apply staggered animations to newly pushed items
+                        if (_isPushAnimation && index < _numPushedSymbols) {
+                          // This item is one of the newly pushed symbols
+                          // Calculate reverse push index (top item gets index 0, next gets 1, etc.)
+                          final pushIndex = _numPushedSymbols - 1 - index;
+
+                          // Create staggered animation interval
+                          final interval = _getStaggeredInterval(pushIndex);
+
+                          // Create staggered slide animation
+                          final staggeredSlideAnimation = Tween<Offset>(
+                            begin: const Offset(0, 1),
+                            end: Offset.zero,
+                          ).animate(
+                            CurvedAnimation(
+                              parent: _animationController,
+                              curve: interval,
+                            ),
+                          );
+
+                          // Create staggered fade animation
+                          final staggeredFadeAnimation = CurvedAnimation(
+                            parent: _animationController,
+                            curve: interval,
+                          );
+
+                          itemWidget = SlideTransition(
+                            position: staggeredSlideAnimation,
+                            child: FadeTransition(
+                              opacity: staggeredFadeAnimation,
+                              child: itemWidget,
+                            ),
+                          );
+
+                          return itemWidget;
+                        }
+
+                        // Apply fade-out and scale animations to popped items
+                        if (isBeingPopped) {
+                          // Create fade-out animation (1.0 -> 0.0)
+                          final fadeOutAnimation = Tween<double>(
+                            begin: 1.0,
+                            end: 0.0,
+                          ).animate(
+                            CurvedAnimation(
+                              parent: _animationController,
+                              curve: Curves.easeIn,
+                            ),
+                          );
+
+                          // Create scale animation (1.0 -> 0.8)
+                          final scaleAnimation = Tween<double>(
+                            begin: 1.0,
+                            end: 0.8,
+                          ).animate(
+                            CurvedAnimation(
+                              parent: _animationController,
+                              curve: Curves.easeIn,
+                            ),
+                          );
+
+                          itemWidget = FadeTransition(
+                            opacity: fadeOutAnimation,
+                            child: ScaleTransition(
+                              scale: scaleAnimation,
+                              child: itemWidget,
+                            ),
+                          );
+
+                          return itemWidget;
+                        }
+
+                        // No animation for items that weren't just pushed or popped
+                        return itemWidget;
+                      },
+                    ),
+            ),
+
+            if (widget.onClear != null) ...[
+              const Divider(height: 10), // Reduced
+              SizedBox(
+                width: 60, // Fixed width like tape_drawer
+                height: 24, // Match tape_drawer pattern
+                child: TextButton(
+                  onPressed: widget.onClear,
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    foregroundColor: theme.colorScheme.error,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  child: const Text('Clear', style: TextStyle(fontSize: 12)),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Builds warning banner for overflow/underflow conditions
+  Widget _buildWarningBanner(ThemeData theme) {
+    final isOverflow = widget.stackState.hasOverflow;
+    final isUnderflow = widget.stackState.hasUnderflow;
+
+    if (!isOverflow && !isUnderflow) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.errorContainer.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: theme.colorScheme.error,
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isOverflow ? Icons.error_outline : Icons.warning_amber_rounded,
+            size: 14,
+            color: theme.colorScheme.error,
+          ),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              isOverflow
+                  ? 'Overflow!\nMax: ${widget.stackState.maxStackSize}'
+                  : 'Underflow!\nPop on empty',
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: 9,
+                color: theme.colorScheme.onErrorContainer,
+                fontWeight: FontWeight.bold,
+                height: 1.2,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Builds compact info panel showing top symbol, size, and last operation
+  Widget _buildStackInfo(ThemeData theme) {
+    final topSymbol = widget.stackState.top ?? '(empty)';
+    final size = widget.stackState.size;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 6,
+        vertical: 4,
+      ), // More compact
+      color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'Top: ',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: 10, // Smaller for mobile
+                ),
+              ),
+              Flexible(
+                child: Text(
+                  topSymbol,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: 11, // Slightly reduced
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                    fontFamily: 'monospace',
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 1), // Reduced spacing
+          Text(
+            'Size: $size',
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontSize: 10, // Smaller for mobile
+            ),
+          ),
+          if (widget.stackState.lastOperation != null) ...[
+            const SizedBox(height: 1), // Reduced spacing
+            Text(
+              'Op: ${widget.stackState.lastOperation}', // Shortened label
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: 9, // Smaller for mobile
+                color: theme.colorScheme.outline,
+                fontStyle: FontStyle.italic,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}

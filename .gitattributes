@@ -2,3 +2,4 @@
 * text=auto
 
 # Exclude generated platform scaffolding and build artifacts
+test/** linguist-vendored

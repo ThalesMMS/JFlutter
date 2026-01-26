@@ -54,9 +54,7 @@ class _PDAPageTestWidgetState extends State<_PDAPageTestWidget> {
   void initState() {
     super.initState();
     final provider = _TestPdaEditorNotifier();
-    _canvasController = GraphViewPdaCanvasController(
-      editorNotifier: provider,
-    );
+    _canvasController = GraphViewPdaCanvasController(editorNotifier: provider);
     if (widget.automaton != null) {
       provider.setPda(widget.automaton!);
       _canvasController.synchronize(widget.automaton!);
@@ -390,11 +388,7 @@ void main() {
       );
 
       // Epsilon transition
-      final t1 = PDATransition.epsilon(
-        id: 't1',
-        fromState: q0,
-        toState: q1,
-      );
+      final t1 = PDATransition.epsilon(id: 't1', fromState: q0, toState: q1);
 
       final automaton = PDA(
         id: 'epsilon-pda',

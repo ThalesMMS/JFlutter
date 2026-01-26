@@ -10,6 +10,7 @@
 //
 //  Thales Matheus Mendonça Santos - January 2026
 //
+import '../models/regex_simplification_step.dart';
 import '../result.dart';
 
 /// Simplifies regular expressions by applying algebraic identities and removing unnecessary parentheses
@@ -51,6 +52,516 @@ class RegexSimplifier {
     } catch (e) {
       return ResultFactory.failure('Error simplifying regex: $e');
     }
+  }
+
+  /// Simplifies a regular expression with step-by-step information
+  ///
+  /// Similar to [simplify], but captures each transformation as a step
+  /// with before/after regex and rule explanation. This enables educational
+  /// visualization of the simplification process.
+  ///
+  /// Returns a [Result] containing [RegexSimplificationResult] on success,
+  /// which includes the simplified regex, all steps, and execution time.
+  static Result<RegexSimplificationResult> simplifyWithSteps(String regex) {
+    try {
+      final stopwatch = Stopwatch()..start();
+      final steps = <RegexSimplificationStep>[];
+      int stepCounter = 1;
+      int totalRulesApplied = 0;
+
+      // Validate input
+      final validationResult = _validateInput(regex);
+      if (!validationResult.isSuccess) {
+        return ResultFactory.failure(validationResult.error!);
+      }
+
+      // Handle empty regex
+      if (regex.trim().isEmpty) {
+        return ResultFactory.failure('Cannot simplify empty regex');
+      }
+
+      // Compute initial complexity metrics
+      final initialStarHeight = _computeStarHeight(regex);
+      final initialNestingDepth = _computeNestingDepth(regex);
+      final initialOperatorCount = _countOperators(regex);
+
+      // Add start step
+      steps.add(
+        RegexSimplificationStep.start(
+          id: 'step_$stepCounter',
+          stepNumber: stepCounter++,
+          regex: regex,
+          starHeight: initialStarHeight,
+          nestingDepth: initialNestingDepth,
+          operatorCount: initialOperatorCount,
+        ),
+      );
+
+      // Apply simplification rules iteratively with step capture
+      String simplified = regex;
+      String previous;
+
+      do {
+        previous = simplified;
+
+        // Try to apply parentheses removal rules
+        final parenResult = _applyParenthesesRemovalWithStep(
+          simplified,
+          stepCounter,
+          totalRulesApplied,
+        );
+        if (parenResult != null) {
+          simplified = parenResult.newRegex;
+          steps.add(parenResult.step);
+          stepCounter++;
+          totalRulesApplied++;
+          continue;
+        }
+
+        // Try to apply algebraic identities
+        final algebraicResult = _applyAlgebraicIdentityWithStep(
+          simplified,
+          stepCounter,
+          totalRulesApplied,
+        );
+        if (algebraicResult != null) {
+          simplified = algebraicResult.newRegex;
+          steps.add(algebraicResult.step);
+          stepCounter++;
+          totalRulesApplied++;
+          continue;
+        }
+      } while (simplified != previous);
+
+      // Add no-rule-applicable step if we didn't apply any rules
+      if (totalRulesApplied == 0) {
+        steps.add(
+          RegexSimplificationStep.noRuleApplicable(
+            id: 'step_$stepCounter',
+            stepNumber: stepCounter++,
+            regex: simplified,
+            totalRulesApplied: totalRulesApplied,
+          ),
+        );
+      }
+
+      // Compute final complexity metrics
+      final finalStarHeight = _computeStarHeight(simplified);
+      final finalNestingDepth = _computeNestingDepth(simplified);
+      final finalOperatorCount = _countOperators(simplified);
+
+      // Add completion step
+      steps.add(
+        RegexSimplificationStep.completion(
+          id: 'step_$stepCounter',
+          stepNumber: stepCounter,
+          originalRegex: regex,
+          finalRegex: simplified,
+          totalRulesApplied: totalRulesApplied,
+          starHeight: finalStarHeight,
+          nestingDepth: finalNestingDepth,
+          operatorCount: finalOperatorCount,
+        ),
+      );
+
+      stopwatch.stop();
+
+      final result = RegexSimplificationResult(
+        originalRegex: regex,
+        simplifiedRegex: simplified,
+        steps: steps,
+        executionTime: stopwatch.elapsed,
+        totalRulesApplied: totalRulesApplied,
+      );
+
+      return ResultFactory.success(result);
+    } catch (e) {
+      return ResultFactory.failure('Error simplifying regex with steps: $e');
+    }
+  }
+
+  /// Helper class for step application results
+  static _StepApplicationResult? _applyParenthesesRemovalWithStep(
+    String regex,
+    int stepNumber,
+    int totalRulesApplied,
+  ) {
+    // Try outer parentheses removal
+    if (regex.length >= 2 && regex[0] == '(') {
+      int depth = 0;
+      int matchingIndex = -1;
+
+      for (int i = 0; i < regex.length; i++) {
+        if (regex[i] == '(') {
+          depth++;
+        } else if (regex[i] == ')') {
+          depth--;
+          if (depth == 0) {
+            matchingIndex = i;
+            break;
+          }
+        }
+      }
+
+      // Outer parentheses wrap entire expression
+      if (matchingIndex == regex.length - 1) {
+        final newRegex = regex.substring(1, regex.length - 1);
+        return _StepApplicationResult(
+          newRegex: newRegex,
+          step: RegexSimplificationStep.applyRule(
+            id: 'step_$stepNumber',
+            stepNumber: stepNumber,
+            originalRegex: regex,
+            simplifiedRegex: newRegex,
+            rule: SimplificationRule.redundantParentheses,
+            matchedSubexpression: regex,
+            replacementSubexpression: newRegex,
+            position: 0,
+            totalRulesApplied: totalRulesApplied + 1,
+          ),
+        );
+      }
+
+      // Single symbol with operator: (a)* → a*
+      if (matchingIndex < regex.length - 1) {
+        final afterParen = regex[matchingIndex + 1];
+        if (afterParen == '*' || afterParen == '+' || afterParen == '?') {
+          final content = regex.substring(1, matchingIndex);
+          if (_isSingleSymbol(content)) {
+            final newRegex =
+                content + afterParen + regex.substring(matchingIndex + 2);
+            return _StepApplicationResult(
+              newRegex: newRegex,
+              step: RegexSimplificationStep.applyRule(
+                id: 'step_$stepNumber',
+                stepNumber: stepNumber,
+                originalRegex: regex,
+                simplifiedRegex: newRegex,
+                rule: SimplificationRule.redundantParentheses,
+                matchedSubexpression: regex.substring(0, matchingIndex + 2),
+                replacementSubexpression: content + afterParen,
+                position: 0,
+                totalRulesApplied: totalRulesApplied + 1,
+              ),
+            );
+          }
+        }
+      }
+    }
+
+    // Try single symbol parentheses removal in the middle
+    for (int i = 0; i < regex.length; i++) {
+      if (regex[i] == '(') {
+        final closeIndex = _findMatchingCloseParen(regex, i);
+        if (closeIndex != -1) {
+          final content = regex.substring(i + 1, closeIndex);
+          final hasOperatorAfter = closeIndex + 1 < regex.length &&
+              (regex[closeIndex + 1] == '*' ||
+                  regex[closeIndex + 1] == '+' ||
+                  regex[closeIndex + 1] == '?');
+
+          if (_isSingleSymbol(content) && !hasOperatorAfter) {
+            final newRegex = regex.substring(0, i) +
+                content +
+                regex.substring(closeIndex + 1);
+            return _StepApplicationResult(
+              newRegex: newRegex,
+              step: RegexSimplificationStep.applyRule(
+                id: 'step_$stepNumber',
+                stepNumber: stepNumber,
+                originalRegex: regex,
+                simplifiedRegex: newRegex,
+                rule: SimplificationRule.redundantParentheses,
+                matchedSubexpression: '($content)',
+                replacementSubexpression: content,
+                position: i,
+                totalRulesApplied: totalRulesApplied + 1,
+              ),
+            );
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /// Applies algebraic identities with step capture
+  static _StepApplicationResult? _applyAlgebraicIdentityWithStep(
+    String regex,
+    int stepNumber,
+    int totalRulesApplied,
+  ) {
+    // ∅* → ε
+    if (regex.contains('∅*')) {
+      final newRegex = regex.replaceFirst('∅*', 'ε');
+      return _StepApplicationResult(
+        newRegex: newRegex,
+        step: RegexSimplificationStep.applyRule(
+          id: 'step_$stepNumber',
+          stepNumber: stepNumber,
+          originalRegex: regex,
+          simplifiedRegex: newRegex,
+          rule: SimplificationRule.emptySetStar,
+          matchedSubexpression: '∅*',
+          replacementSubexpression: 'ε',
+          position: regex.indexOf('∅*'),
+          totalRulesApplied: totalRulesApplied + 1,
+        ),
+      );
+    }
+
+    // ε* → ε
+    if (regex.contains('ε*')) {
+      final newRegex = regex.replaceFirst('ε*', 'ε');
+      return _StepApplicationResult(
+        newRegex: newRegex,
+        step: RegexSimplificationStep.applyRule(
+          id: 'step_$stepNumber',
+          stepNumber: stepNumber,
+          originalRegex: regex,
+          simplifiedRegex: newRegex,
+          rule: SimplificationRule.emptyStringStar,
+          matchedSubexpression: 'ε*',
+          replacementSubexpression: 'ε',
+          position: regex.indexOf('ε*'),
+          totalRulesApplied: totalRulesApplied + 1,
+        ),
+      );
+    }
+
+    // ∅|r → r
+    final emptyUnionLeftMatch = RegExp(r'∅\|([^|]+)').firstMatch(regex);
+    if (emptyUnionLeftMatch != null) {
+      final matched = emptyUnionLeftMatch.group(0)!;
+      final replacement = emptyUnionLeftMatch.group(1)!;
+      final newRegex = regex.replaceFirst(matched, replacement);
+      return _StepApplicationResult(
+        newRegex: newRegex,
+        step: RegexSimplificationStep.applyRule(
+          id: 'step_$stepNumber',
+          stepNumber: stepNumber,
+          originalRegex: regex,
+          simplifiedRegex: newRegex,
+          rule: SimplificationRule.emptyUnionLeft,
+          matchedSubexpression: matched,
+          replacementSubexpression: replacement,
+          position: emptyUnionLeftMatch.start,
+          totalRulesApplied: totalRulesApplied + 1,
+        ),
+      );
+    }
+
+    // r|∅ → r
+    final emptyUnionRightMatch = RegExp(r'([^|]+)\|∅').firstMatch(regex);
+    if (emptyUnionRightMatch != null) {
+      final matched = emptyUnionRightMatch.group(0)!;
+      final replacement = emptyUnionRightMatch.group(1)!;
+      final newRegex = regex.replaceFirst(matched, replacement);
+      return _StepApplicationResult(
+        newRegex: newRegex,
+        step: RegexSimplificationStep.applyRule(
+          id: 'step_$stepNumber',
+          stepNumber: stepNumber,
+          originalRegex: regex,
+          simplifiedRegex: newRegex,
+          rule: SimplificationRule.emptyUnion,
+          matchedSubexpression: matched,
+          replacementSubexpression: replacement,
+          position: emptyUnionRightMatch.start,
+          totalRulesApplied: totalRulesApplied + 1,
+        ),
+      );
+    }
+
+    // r** → r* (multiple consecutive stars)
+    final multipleStarsMatch = RegExp(r'\*{2,}').firstMatch(regex);
+    if (multipleStarsMatch != null) {
+      final matched = multipleStarsMatch.group(0)!;
+      final newRegex = regex.replaceFirst(matched, '*');
+      return _StepApplicationResult(
+        newRegex: newRegex,
+        step: RegexSimplificationStep.applyRule(
+          id: 'step_$stepNumber',
+          stepNumber: stepNumber,
+          originalRegex: regex,
+          simplifiedRegex: newRegex,
+          rule: SimplificationRule.starIdempotence,
+          matchedSubexpression: matched,
+          replacementSubexpression: '*',
+          position: multipleStarsMatch.start,
+          totalRulesApplied: totalRulesApplied + 1,
+        ),
+      );
+    }
+
+    // εr → r or rε → r (epsilon concatenation)
+    // Check for ε followed by a symbol (not | or operator)
+    for (int i = 0; i < regex.length; i++) {
+      if (regex[i] == 'ε') {
+        final before = i > 0 ? regex[i - 1] : '';
+        final after = i < regex.length - 1 ? regex[i + 1] : '';
+
+        // εr → r (epsilon at start of concatenation)
+        if ((before == '' || before == '|' || before == '(') &&
+            after != '' &&
+            after != '|' &&
+            after != ')' &&
+            after != '*' &&
+            after != '+' &&
+            after != '?') {
+          final newRegex = regex.substring(0, i) + regex.substring(i + 1);
+          return _StepApplicationResult(
+            newRegex: newRegex,
+            step: RegexSimplificationStep.applyRule(
+              id: 'step_$stepNumber',
+              stepNumber: stepNumber,
+              originalRegex: regex,
+              simplifiedRegex: newRegex,
+              rule: SimplificationRule.emptyStringConcatenationLeft,
+              matchedSubexpression: 'ε$after',
+              replacementSubexpression: after,
+              position: i,
+              totalRulesApplied: totalRulesApplied + 1,
+            ),
+          );
+        }
+
+        // rε → r (epsilon at end of concatenation)
+        if ((after == '' || after == '|' || after == ')') &&
+            before != '' &&
+            before != '|' &&
+            before != '(' &&
+            before != '*' &&
+            before != '+' &&
+            before != '?') {
+          final newRegex = regex.substring(0, i) + regex.substring(i + 1);
+          return _StepApplicationResult(
+            newRegex: newRegex,
+            step: RegexSimplificationStep.applyRule(
+              id: 'step_$stepNumber',
+              stepNumber: stepNumber,
+              originalRegex: regex,
+              simplifiedRegex: newRegex,
+              rule: SimplificationRule.emptyStringConcatenation,
+              matchedSubexpression: '$beforeε',
+              replacementSubexpression: before,
+              position: i - 1,
+              totalRulesApplied: totalRulesApplied + 1,
+            ),
+          );
+        }
+      }
+    }
+
+    // r|r → r (union idempotence)
+    final segments = _splitIntoConcatenationSegments(regex);
+    if (segments.length > 1) {
+      final seen = <String>{};
+      for (int i = 0; i < segments.length; i++) {
+        if (seen.contains(segments[i])) {
+          // Found a duplicate
+          final duplicateSegment = segments[i];
+          final unique = <String>[];
+          final seenForUnique = <String>{};
+          for (final seg in segments) {
+            if (!seenForUnique.contains(seg)) {
+              seenForUnique.add(seg);
+              unique.add(seg);
+            }
+          }
+          final newRegex = unique.join('|');
+          return _StepApplicationResult(
+            newRegex: newRegex,
+            step: RegexSimplificationStep.applyRule(
+              id: 'step_$stepNumber',
+              stepNumber: stepNumber,
+              originalRegex: regex,
+              simplifiedRegex: newRegex,
+              rule: SimplificationRule.unionIdempotence,
+              matchedSubexpression: '$duplicateSegment|$duplicateSegment',
+              replacementSubexpression: duplicateSegment,
+              position: 0,
+              totalRulesApplied: totalRulesApplied + 1,
+            ),
+          );
+        }
+        seen.add(segments[i]);
+      }
+    }
+
+    return null;
+  }
+
+  /// Computes the star height of a regex (maximum nesting of Kleene stars)
+  static int _computeStarHeight(String regex) {
+    int maxHeight = 0;
+    int currentHeight = 0;
+    int parenDepth = 0;
+    final starHeightAtDepth = <int, int>{};
+
+    for (int i = 0; i < regex.length; i++) {
+      final char = regex[i];
+      if (char == '(') {
+        parenDepth++;
+        starHeightAtDepth[parenDepth] = 0;
+      } else if (char == ')') {
+        if (parenDepth > 0) {
+          final heightInParen = starHeightAtDepth[parenDepth] ?? 0;
+          parenDepth--;
+          if (parenDepth > 0) {
+            final parentHeight = starHeightAtDepth[parenDepth] ?? 0;
+            starHeightAtDepth[parenDepth] =
+                parentHeight > heightInParen ? parentHeight : heightInParen;
+          } else {
+            maxHeight = maxHeight > heightInParen ? maxHeight : heightInParen;
+          }
+        }
+      } else if (char == '*') {
+        if (parenDepth > 0) {
+          final heightInParen = starHeightAtDepth[parenDepth] ?? 0;
+          starHeightAtDepth[parenDepth] = heightInParen + 1;
+          final newHeight = starHeightAtDepth[parenDepth]!;
+          maxHeight = maxHeight > newHeight ? maxHeight : newHeight;
+        } else {
+          currentHeight++;
+          maxHeight = maxHeight > currentHeight ? maxHeight : currentHeight;
+        }
+      }
+    }
+
+    return maxHeight > 0 ? maxHeight : (regex.contains('*') ? 1 : 0);
+  }
+
+  /// Computes the nesting depth of parentheses
+  static int _computeNestingDepth(String regex) {
+    int maxDepth = 0;
+    int currentDepth = 0;
+
+    for (int i = 0; i < regex.length; i++) {
+      if (regex[i] == '(') {
+        currentDepth++;
+        if (currentDepth > maxDepth) {
+          maxDepth = currentDepth;
+        }
+      } else if (regex[i] == ')') {
+        currentDepth--;
+      }
+    }
+
+    return maxDepth;
+  }
+
+  /// Counts the number of operators in the regex
+  static int _countOperators(String regex) {
+    int count = 0;
+    for (int i = 0; i < regex.length; i++) {
+      final char = regex[i];
+      if (char == '|' || char == '*' || char == '+' || char == '?') {
+        count++;
+      }
+    }
+    return count;
   }
 
   /// Validates the input regex string
@@ -544,8 +1055,6 @@ class RegexSimplifier {
   /// Time complexity: O(n²) worst case (multiple passes × string length)
   /// Space complexity: O(n) for buffer
   static String _removeEpsilonFromConcatenation(String regex) {
-    String result = regex;
-
     // Remove ε in concatenation, but not in union
     // We need to be careful not to remove ε when it's the only element
 
@@ -697,5 +1206,134 @@ class RegexSimplifier {
     }
 
     return regex;
+  }
+}
+
+/// Internal helper class for step application results
+class _StepApplicationResult {
+  final String newRegex;
+  final RegexSimplificationStep step;
+
+  const _StepApplicationResult({
+    required this.newRegex,
+    required this.step,
+  });
+}
+
+/// Result of regex simplification with step-by-step information
+class RegexSimplificationResult {
+  /// Original regular expression before simplification
+  final String originalRegex;
+
+  /// Simplified regular expression after all transformations
+  final String simplifiedRegex;
+
+  /// Detailed simplification steps
+  final List<RegexSimplificationStep> steps;
+
+  /// Total execution time
+  final Duration executionTime;
+
+  /// Total number of rules applied during simplification
+  final int totalRulesApplied;
+
+  const RegexSimplificationResult({
+    required this.originalRegex,
+    required this.simplifiedRegex,
+    required this.steps,
+    required this.executionTime,
+    required this.totalRulesApplied,
+  });
+
+  /// Gets the number of steps
+  int get stepCount => steps.length;
+
+  /// Gets the first step
+  RegexSimplificationStep? get firstStep => steps.isNotEmpty ? steps.first : null;
+
+  /// Gets the last step
+  RegexSimplificationStep? get lastStep => steps.isNotEmpty ? steps.last : null;
+
+  /// Gets the execution time in milliseconds
+  int get executionTimeMs => executionTime.inMilliseconds;
+
+  /// Gets the execution time in seconds
+  double get executionTimeSeconds => executionTime.inMicroseconds / 1000000.0;
+
+  /// Gets the number of characters saved by simplification
+  int get charactersSaved => originalRegex.length - simplifiedRegex.length;
+
+  /// Gets the percentage reduction in length
+  double get reductionPercentage {
+    if (originalRegex.isEmpty) return 0.0;
+    return (charactersSaved / originalRegex.length) * 100;
+  }
+
+  /// Checks if simplification made any changes
+  bool get madeProgress => originalRegex != simplifiedRegex;
+
+  /// Gets only the rule application steps (excludes start/completion)
+  List<RegexSimplificationStep> get ruleApplicationSteps {
+    return steps
+        .where((s) => s.stepType == RegexSimplificationStepType.applyRule)
+        .toList();
+  }
+
+  /// Gets a summary of all rules applied
+  List<SimplificationRule> get rulesApplied {
+    return ruleApplicationSteps
+        .where((s) => s.ruleApplied != null)
+        .map((s) => s.ruleApplied!)
+        .toList();
+  }
+
+  /// Converts the result to a JSON representation
+  Map<String, dynamic> toJson() {
+    return {
+      'originalRegex': originalRegex,
+      'simplifiedRegex': simplifiedRegex,
+      'steps': steps.map((s) => s.toJson()).toList(),
+      'executionTimeMs': executionTimeMs,
+      'totalRulesApplied': totalRulesApplied,
+      'charactersSaved': charactersSaved,
+      'reductionPercentage': reductionPercentage,
+    };
+  }
+
+  /// Creates a result from a JSON representation
+  factory RegexSimplificationResult.fromJson(Map<String, dynamic> json) {
+    return RegexSimplificationResult(
+      originalRegex: json['originalRegex'] as String,
+      simplifiedRegex: json['simplifiedRegex'] as String,
+      steps: (json['steps'] as List)
+          .map((s) => RegexSimplificationStep.fromJson(s as Map<String, dynamic>))
+          .toList(),
+      executionTime: Duration(milliseconds: json['executionTimeMs'] as int),
+      totalRulesApplied: json['totalRulesApplied'] as int,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'RegexSimplificationResult('
+        'original: "$originalRegex", '
+        'simplified: "$simplifiedRegex", '
+        'steps: $stepCount, '
+        'rules: $totalRulesApplied, '
+        'saved: $charactersSaved chars)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is RegexSimplificationResult &&
+        other.originalRegex == originalRegex &&
+        other.simplifiedRegex == simplifiedRegex &&
+        other.totalRulesApplied == totalRulesApplied;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(originalRegex, simplifiedRegex, totalRulesApplied);
   }
 }

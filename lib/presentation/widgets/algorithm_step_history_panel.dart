@@ -169,11 +169,7 @@ class _AlgorithmStepHistoryPanelState
       padding: const EdgeInsets.all(12),
       child: Row(
         children: [
-          Icon(
-            Icons.history,
-            size: 20,
-            color: colorScheme.primary,
-          ),
+          Icon(Icons.history, size: 20, color: colorScheme.primary),
           const SizedBox(width: 8),
           Text(
             'Execution History',
@@ -272,8 +268,9 @@ class _AlgorithmStepHistoryPanelState
                     Text(
                       step.title,
                       style: textTheme.bodyMedium?.copyWith(
-                        fontWeight:
-                            isCurrentStep ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: isCurrentStep
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                         color: isCurrentStep
                             ? colorScheme.onPrimaryContainer
                             : colorScheme.onSurface,
@@ -318,11 +315,7 @@ class _AlgorithmStepHistoryPanelState
               // Current step indicator
               if (isCurrentStep) ...[
                 const SizedBox(width: 8),
-                Icon(
-                  Icons.play_arrow,
-                  size: 20,
-                  color: colorScheme.primary,
-                ),
+                Icon(Icons.play_arrow, size: 20, color: colorScheme.primary),
               ],
             ],
           ),

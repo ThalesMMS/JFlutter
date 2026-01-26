@@ -24,13 +24,12 @@ import '../models/transition.dart';
 /// active canvas.
 final canvasAlgorithmStepHighlightServiceProvider =
     Provider<AlgorithmStepHighlightService>((ref) {
-  return AlgorithmStepHighlightService();
-});
+      return AlgorithmStepHighlightService();
+    });
 
 /// Utility responsible for deriving and broadcasting algorithm step highlights.
-typedef AlgorithmStepHighlightDispatcher = void Function(
-  SimulationHighlight highlight,
-);
+typedef AlgorithmStepHighlightDispatcher =
+    void Function(SimulationHighlight highlight);
 
 /// Destination that consumes highlight payloads emitted by the
 /// [AlgorithmStepHighlightService].
@@ -71,14 +70,14 @@ class AlgorithmStepHighlightService {
     AlgorithmStepHighlightChannel? channel,
     AlgorithmStepHighlightDispatcher? dispatcher,
   }) : assert(
-          channel == null || dispatcher == null,
-          'Pass either a channel or a dispatcher, not both.',
-        ),
-        _channel =
-            channel ??
-            (dispatcher == null
-                ? null
-                : FunctionAlgorithmStepHighlightChannel(dispatcher));
+         channel == null || dispatcher == null,
+         'Pass either a channel or a dispatcher, not both.',
+       ),
+       _channel =
+           channel ??
+           (dispatcher == null
+               ? null
+               : FunctionAlgorithmStepHighlightChannel(dispatcher));
 
   AlgorithmStepHighlightChannel? _channel;
   int _dispatchCount = 0;
@@ -99,9 +98,7 @@ class AlgorithmStepHighlightService {
   /// Computes a highlight payload from step metadata.
   SimulationHighlight computeFromMetadata(Map<String, dynamic>? metadata) {
     if (metadata == null || metadata.isEmpty) {
-      _logHighlightEvent(
-        'Skipping highlight computation: no step metadata',
-      );
+      _logHighlightEvent('Skipping highlight computation: no step metadata');
       return SimulationHighlight.empty;
     }
 

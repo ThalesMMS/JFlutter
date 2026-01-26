@@ -36,10 +36,7 @@ class _RegexPageTestWidget extends StatelessWidget {
   final Size screenSize;
   final AlgorithmOperationState? algorithmState;
 
-  const _RegexPageTestWidget({
-    required this.screenSize,
-    this.algorithmState,
-  });
+  const _RegexPageTestWidget({required this.screenSize, this.algorithmState});
 
   @override
   Widget build(BuildContext context) {
@@ -70,10 +67,7 @@ Future<void> _pumpRegexPage(
   binding.window.devicePixelRatioTestValue = 1.0;
 
   await tester.pumpWidgetBuilder(
-    _RegexPageTestWidget(
-      screenSize: size,
-      algorithmState: algorithmState,
-    ),
+    _RegexPageTestWidget(screenSize: size, algorithmState: algorithmState),
   );
 
   await tester.pumpAndSettle();
@@ -98,10 +92,7 @@ void main() {
         tester.binding.window.clearDevicePixelRatioTestValue();
       });
 
-      await _pumpRegexPage(
-        tester,
-        size: const Size(1400, 900),
-      );
+      await _pumpRegexPage(tester, size: const Size(1400, 900));
 
       await screenMatchesGolden(tester, 'regex_page_empty_desktop');
     });
@@ -112,10 +103,7 @@ void main() {
         tester.binding.window.clearDevicePixelRatioTestValue();
       });
 
-      await _pumpRegexPage(
-        tester,
-        size: const Size(1200, 800),
-      );
+      await _pumpRegexPage(tester, size: const Size(1200, 800));
 
       await screenMatchesGolden(tester, 'regex_page_empty_tablet');
     });
@@ -126,10 +114,7 @@ void main() {
         tester.binding.window.clearDevicePixelRatioTestValue();
       });
 
-      await _pumpRegexPage(
-        tester,
-        size: const Size(430, 932),
-      );
+      await _pumpRegexPage(tester, size: const Size(430, 932));
 
       await screenMatchesGolden(tester, 'regex_page_empty_mobile');
     });
@@ -142,16 +127,10 @@ void main() {
         tester.binding.window.clearDevicePixelRatioTestValue();
       });
 
-      await _pumpRegexPage(
-        tester,
-        size: const Size(1400, 900),
-      );
+      await _pumpRegexPage(tester, size: const Size(1400, 900));
 
       // Enter valid regex
-      await tester.enterText(
-        find.byType(TextField).first,
-        'a*b+',
-      );
+      await tester.enterText(find.byType(TextField).first, 'a*b+');
       await tester.pumpAndSettle();
 
       await screenMatchesGolden(tester, 'regex_page_valid_regex_desktop');
@@ -165,16 +144,10 @@ void main() {
         tester.binding.window.clearDevicePixelRatioTestValue();
       });
 
-      await _pumpRegexPage(
-        tester,
-        size: const Size(1400, 900),
-      );
+      await _pumpRegexPage(tester, size: const Size(1400, 900));
 
       // Enter invalid regex (unbalanced parentheses)
-      await tester.enterText(
-        find.byType(TextField).first,
-        '(a*b+',
-      );
+      await tester.enterText(find.byType(TextField).first, '(a*b+');
       await tester.pumpAndSettle();
 
       await screenMatchesGolden(tester, 'regex_page_invalid_regex_desktop');
@@ -188,24 +161,15 @@ void main() {
         tester.binding.window.clearDevicePixelRatioTestValue();
       });
 
-      await _pumpRegexPage(
-        tester,
-        size: const Size(1400, 900),
-      );
+      await _pumpRegexPage(tester, size: const Size(1400, 900));
 
       // Enter valid regex
-      await tester.enterText(
-        find.byType(TextField).first,
-        'a*b+',
-      );
+      await tester.enterText(find.byType(TextField).first, 'a*b+');
       await tester.pumpAndSettle();
 
       // Enter matching test string
       final testStringFields = find.byType(TextField);
-      await tester.enterText(
-        testStringFields.at(1),
-        'aaabbb',
-      );
+      await tester.enterText(testStringFields.at(1), 'aaabbb');
       await tester.pumpAndSettle();
 
       await screenMatchesGolden(tester, 'regex_page_test_match_desktop');
@@ -219,91 +183,71 @@ void main() {
         tester.binding.window.clearDevicePixelRatioTestValue();
       });
 
-      await _pumpRegexPage(
-        tester,
-        size: const Size(1400, 900),
-      );
+      await _pumpRegexPage(tester, size: const Size(1400, 900));
 
       // Enter valid regex
-      await tester.enterText(
-        find.byType(TextField).first,
-        'a*b+',
-      );
+      await tester.enterText(find.byType(TextField).first, 'a*b+');
       await tester.pumpAndSettle();
 
       // Enter non-matching test string
       final testStringFields = find.byType(TextField);
-      await tester.enterText(
-        testStringFields.at(1),
-        'bbbaa',
-      );
+      await tester.enterText(testStringFields.at(1), 'bbbaa');
       await tester.pumpAndSettle();
 
       await screenMatchesGolden(tester, 'regex_page_test_nomatch_desktop');
     });
 
-    testGoldens(
-      'renders page with comparison input in desktop layout',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders page with comparison input in desktop layout', (
+      tester,
+    ) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        await _pumpRegexPage(
-          tester,
-          size: const Size(1400, 900),
-        );
+      await _pumpRegexPage(tester, size: const Size(1400, 900));
 
-        // Enter first regex
-        await tester.enterText(
-          find.byType(TextField).first,
-          'a*b+',
-        );
-        await tester.pumpAndSettle();
+      // Enter first regex
+      await tester.enterText(find.byType(TextField).first, 'a*b+');
+      await tester.pumpAndSettle();
 
-        // Scroll to comparison section
-        await tester.drag(
-          find.byType(SingleChildScrollView).first,
-          const Offset(0, -400),
-        );
-        await tester.pumpAndSettle();
+      // Scroll to comparison section
+      await tester.drag(
+        find.byType(SingleChildScrollView).first,
+        const Offset(0, -400),
+      );
+      await tester.pumpAndSettle();
 
-        // Enter comparison regex
-        final textFields = find.byType(TextField);
-        await tester.enterText(
-          textFields.last,
-          'a*b',
-        );
-        await tester.pumpAndSettle();
+      // Enter comparison regex
+      final textFields = find.byType(TextField);
+      await tester.enterText(textFields.last, 'a*b');
+      await tester.pumpAndSettle();
 
-        await screenMatchesGolden(tester, 'regex_page_comparison_desktop');
-      },
-    );
+      await screenMatchesGolden(tester, 'regex_page_comparison_desktop');
+    });
 
-    testGoldens(
-      'renders page with FA to Regex result in desktop layout',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
+    testGoldens('renders page with FA to Regex result in desktop layout', (
+      tester,
+    ) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
 
-        // Create algorithm state with conversion result
-        final algorithmState = AlgorithmOperationState(
-          rawRegexResult: '(a|b)*c',
-          simplifiedRegexResult: '(a|b)*c',
-        );
+      // Create algorithm state with conversion result
+      final algorithmState = AlgorithmOperationState(
+        rawRegexResult: '(a|b)*c',
+        simplifiedRegexResult: '(a|b)*c',
+      );
 
-        await _pumpRegexPage(
-          tester,
-          size: const Size(1400, 900),
-          algorithmState: algorithmState,
-        );
+      await _pumpRegexPage(
+        tester,
+        size: const Size(1400, 900),
+        algorithmState: algorithmState,
+      );
 
-        await screenMatchesGolden(tester, 'regex_page_fa_to_regex_desktop');
-      },
-    );
+      await screenMatchesGolden(tester, 'regex_page_fa_to_regex_desktop');
+    });
 
     testGoldens('renders page with all features in tablet layout', (
       tester,
@@ -313,24 +257,15 @@ void main() {
         tester.binding.window.clearDevicePixelRatioTestValue();
       });
 
-      await _pumpRegexPage(
-        tester,
-        size: const Size(1200, 800),
-      );
+      await _pumpRegexPage(tester, size: const Size(1200, 800));
 
       // Enter valid regex
-      await tester.enterText(
-        find.byType(TextField).first,
-        'a*b+',
-      );
+      await tester.enterText(find.byType(TextField).first, 'a*b+');
       await tester.pumpAndSettle();
 
       // Enter test string
       final testStringFields = find.byType(TextField);
-      await tester.enterText(
-        testStringFields.at(1),
-        'aaabbb',
-      );
+      await tester.enterText(testStringFields.at(1), 'aaabbb');
       await tester.pumpAndSettle();
 
       await screenMatchesGolden(tester, 'regex_page_features_tablet');
@@ -344,16 +279,10 @@ void main() {
         tester.binding.window.clearDevicePixelRatioTestValue();
       });
 
-      await _pumpRegexPage(
-        tester,
-        size: const Size(430, 932),
-      );
+      await _pumpRegexPage(tester, size: const Size(430, 932));
 
       // Enter valid regex
-      await tester.enterText(
-        find.byType(TextField).first,
-        'a+b*',
-      );
+      await tester.enterText(find.byType(TextField).first, 'a+b*');
       await tester.pumpAndSettle();
 
       await screenMatchesGolden(tester, 'regex_page_input_mobile');
@@ -367,10 +296,7 @@ void main() {
         tester.binding.window.clearDevicePixelRatioTestValue();
       });
 
-      await _pumpRegexPage(
-        tester,
-        size: const Size(430, 932),
-      );
+      await _pumpRegexPage(tester, size: const Size(430, 932));
 
       // Scroll down to help section
       await tester.drag(

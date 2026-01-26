@@ -570,12 +570,13 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
       initialStackSymbol: initialStack,
     );
 
-    final Result<pda_core.PDASimulationResult> result = pda_core.PDASimulator.simulate(
-      simulationPda,
-      inputString,
-      stepByStep: _stepByStep,
-      timeout: const Duration(seconds: 5),
-    );
+    final Result<pda_core.PDASimulationResult> result =
+        pda_core.PDASimulator.simulate(
+          simulationPda,
+          inputString,
+          stepByStep: _stepByStep,
+          timeout: const Duration(seconds: 5),
+        );
 
     if (!mounted) {
       return;

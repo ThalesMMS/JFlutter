@@ -604,13 +604,12 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
             notes.add('Verification: Resulting grammar is in valid CNF.');
           }
           return ResultFactory.success(
-            GrammarAnalysisReport<Grammar>(
-              value: cnfGrammar,
-              notes: notes,
-            ),
+            GrammarAnalysisReport<Grammar>(value: cnfGrammar, notes: notes),
           );
         } else {
-          return ResultFactory.failure(result.error ?? 'CNF conversion failed.');
+          return ResultFactory.failure(
+            result.error ?? 'CNF conversion failed.',
+          );
         }
       },
       (original, report) => _formatTransformationResult(
@@ -638,13 +637,12 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
             notes.add('Verification: Resulting grammar is in valid GNF.');
           }
           return ResultFactory.success(
-            GrammarAnalysisReport<Grammar>(
-              value: gnfGrammar,
-              notes: notes,
-            ),
+            GrammarAnalysisReport<Grammar>(value: gnfGrammar, notes: notes),
           );
         } else {
-          return ResultFactory.failure(result.error ?? 'GNF conversion failed.');
+          return ResultFactory.failure(
+            result.error ?? 'GNF conversion failed.',
+          );
         }
       },
       (original, report) => _formatTransformationResult(

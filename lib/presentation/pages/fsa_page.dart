@@ -50,7 +50,8 @@ class _FSAPageState extends ConsumerState<FSAPage> {
   late final GraphViewCanvasController _canvasController;
   late final GraphViewSimulationHighlightChannel _highlightChannel;
   late final SimulationHighlightService _highlightService;
-  late final GraphViewAlgorithmStepHighlightChannel _algorithmStepHighlightChannel;
+  late final GraphViewAlgorithmStepHighlightChannel
+  _algorithmStepHighlightChannel;
   late final AlgorithmStepHighlightService _algorithmStepHighlightService;
   late final AutomatonCanvasToolController _toolController;
   bool _stepByStepMode = false;
@@ -66,9 +67,14 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     );
     _highlightChannel = GraphViewSimulationHighlightChannel(_canvasController);
     _highlightService = SimulationHighlightService(channel: _highlightChannel);
-    _algorithmStepHighlightChannel = GraphViewAlgorithmStepHighlightChannel(_canvasController);
-    _algorithmStepHighlightService = AlgorithmStepHighlightService(channel: _algorithmStepHighlightChannel);
-    _canvasController.algorithmStepHighlightService = _algorithmStepHighlightService;
+    _algorithmStepHighlightChannel = GraphViewAlgorithmStepHighlightChannel(
+      _canvasController,
+    );
+    _algorithmStepHighlightService = AlgorithmStepHighlightService(
+      channel: _algorithmStepHighlightChannel,
+    );
+    _canvasController.algorithmStepHighlightService =
+        _algorithmStepHighlightService;
     _toolController = AutomatonCanvasToolController();
   }
 
@@ -425,6 +431,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
         !automaton.hasEpsilonTransitions;
 
     return AlgorithmPanel(
+      currentAutomaton: hasAutomaton ? automaton : null,
       onNfaToDfa: hasAutomaton ? _handleNfaToDfa : null,
       onRemoveLambda: hasLambda ? _handleRemoveLambda : null,
       onMinimizeDfa: isDfa ? _handleMinimizeDfa : null,
@@ -673,18 +680,17 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     final isMobile = screenSize.width < 1024;
 
     // Listen for algorithm step changes and apply highlights to canvas
-    ref.listen<AlgorithmStepState>(
-      algorithmStepProvider,
-      (previous, next) {
-        if (next.hasSteps && next.currentStep != null) {
-          // Apply highlight for the current step
-          _canvasController.applyAlgorithmStepHighlight(next.currentStep!.properties);
-        } else {
-          // Clear highlights when there are no steps or no current step
-          _canvasController.clearAlgorithmStepHighlight();
-        }
-      },
-    );
+    ref.listen<AlgorithmStepState>(algorithmStepProvider, (previous, next) {
+      if (next.hasSteps && next.currentStep != null) {
+        // Apply highlight for the current step
+        _canvasController.applyAlgorithmStepHighlight(
+          next.currentStep!.properties,
+        );
+      } else {
+        // Clear highlights when there are no steps or no current step
+        _canvasController.clearAlgorithmStepHighlight();
+      }
+    });
 
     return ProviderScope(
       overrides: [

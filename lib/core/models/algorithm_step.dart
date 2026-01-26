@@ -183,6 +183,9 @@ enum AlgorithmType {
 
   /// CYK parsing algorithm for context-free grammars
   cykParsing,
+
+  /// Regular expression simplification using algebraic identities
+  regexSimplification,
 }
 
 /// Extension methods for AlgorithmType
@@ -200,6 +203,8 @@ extension AlgorithmTypeExtension on AlgorithmType {
         return 'Regex to NFA Conversion';
       case AlgorithmType.cykParsing:
         return 'CYK Parsing';
+      case AlgorithmType.regexSimplification:
+        return 'Regex Simplification';
     }
   }
 
@@ -221,6 +226,9 @@ extension AlgorithmTypeExtension on AlgorithmType {
       case AlgorithmType.cykParsing:
         return 'Parses strings using context-free grammars in Chomsky Normal '
             'Form via the Cocke-Younger-Kasami algorithm';
+      case AlgorithmType.regexSimplification:
+        return 'Simplifies regular expressions using algebraic identities '
+            'and equivalence rules';
     }
   }
 }

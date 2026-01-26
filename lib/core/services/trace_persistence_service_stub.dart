@@ -15,8 +15,7 @@ import '../models/simulation_result.dart';
 
 TracePersistenceService createTracePersistenceService(
   SharedPreferences prefs,
-) =>
-    TracePersistenceService(prefs);
+) => TracePersistenceService(prefs);
 
 class TracePersistenceService {
   static const String _traceHistoryKey = 'simulation_trace_history';

@@ -65,10 +65,7 @@ class AlgorithmStepAnimationWrapper extends ConsumerWidget {
   Widget _buildTransition(Widget child, Animation<double> animation) {
     switch (animationType) {
       case AnimationType.fade:
-        return FadeTransition(
-          opacity: animation,
-          child: child,
-        );
+        return FadeTransition(opacity: animation, child: child);
 
       case AnimationType.slide:
         return SlideTransition(
@@ -93,14 +90,8 @@ class AlgorithmStepAnimationWrapper extends ConsumerWidget {
 
       case AnimationType.scale:
         return ScaleTransition(
-          scale: Tween<double>(
-            begin: 0.95,
-            end: 1.0,
-          ).animate(animation),
-          child: FadeTransition(
-            opacity: animation,
-            child: child,
-          ),
+          scale: Tween<double>(begin: 0.95, end: 1.0).animate(animation),
+          child: FadeTransition(opacity: animation, child: child),
         );
     }
   }

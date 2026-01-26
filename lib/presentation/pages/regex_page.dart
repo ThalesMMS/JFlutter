@@ -16,8 +16,12 @@ import '../../core/algorithms/automaton_simulator.dart';
 import '../../core/algorithms/dfa_completer.dart';
 import '../../core/algorithms/equivalence_checker.dart';
 import '../../core/algorithms/nfa_to_dfa_converter.dart';
+import '../../core/algorithms/regex_analyzer.dart';
+import '../../core/algorithms/regex_simplifier.dart';
 import '../../core/algorithms/regex_to_nfa_converter.dart';
 import '../../core/models/fsa.dart';
+import '../../core/models/regex_analysis.dart';
+import '../../core/models/regex_simplification_step.dart';
 import '../providers/automaton_algorithm_provider.dart';
 import '../providers/automaton_provider.dart';
 import '../providers/automaton_state_provider.dart';
@@ -47,6 +51,13 @@ class _RegexPageState extends ConsumerState<RegexPage> {
   bool? _equivalenceResult;
   String _equivalenceMessage = '';
   bool _simplifyOutput = true;
+  RegexSimplificationResult? _simplificationResult;
+  bool _showSimplificationSteps = false;
+  int _selectedStepIndex = 0;
+  RegexAnalysis? _regexAnalysis;
+  bool _showAnalysisDetails = false;
+  RegexSampleStrings? _sampleStrings;
+  bool _showSampleStringsDetails = false;
 
   @override
   void dispose() {
@@ -343,6 +354,95 @@ class _RegexPageState extends ConsumerState<RegexPage> {
     }
   }
 
+  void _runSimplificationWithSteps() {
+    if (!_isValid || _currentRegex.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid regular expression first'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final result = RegexSimplifier.simplifyWithSteps(_currentRegex);
+    if (!result.isSuccess || result.data == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.error ?? 'Failed to simplify regex'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _simplificationResult = result.data;
+      _showSimplificationSteps = true;
+      _selectedStepIndex = 0;
+    });
+  }
+
+  void _runComplexityAnalysis() {
+    if (!_isValid || _currentRegex.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid regular expression first'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final result = RegexAnalyzer.analyze(_currentRegex);
+    if (!result.isSuccess || result.data == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.error ?? 'Failed to analyze regex'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _regexAnalysis = result.data;
+      _showAnalysisDetails = true;
+    });
+  }
+
+  void _runSampleGeneration({int maxSamples = 10}) {
+    if (!_isValid || _currentRegex.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid regular expression first'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final result = RegexAnalyzer.generateSampleStrings(
+      _currentRegex,
+      maxSamples: maxSamples,
+      maxLength: 30,
+    );
+    if (!result.isSuccess || result.data == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.error ?? 'Failed to generate sample strings'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _sampleStrings = result.data;
+      _showSampleStringsDetails = true;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     // Watch algorithm provider to get FA→Regex conversion results
@@ -544,6 +644,21 @@ class _RegexPageState extends ConsumerState<RegexPage> {
               ),
             ),
 
+            const SizedBox(height: 16),
+
+            // Simplification steps section
+            _buildSimplificationStepsSection(),
+
+            const SizedBox(height: 16),
+
+            // Complexity analysis section
+            _buildComplexityAnalysisSection(),
+
+            const SizedBox(height: 16),
+
+            // Sample strings section
+            _buildSampleStringsSection(),
+
             const SizedBox(height: 24),
 
             // Compare regular expressions
@@ -656,7 +771,9 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                   ),
                 ),
               ),
-              child: SingleChildScrollView(child: _buildInputArea(algorithmState)),
+              child: SingleChildScrollView(
+                child: _buildInputArea(algorithmState),
+              ),
             ),
           ),
 
@@ -917,6 +1034,21 @@ class _RegexPageState extends ConsumerState<RegexPage> {
           ),
         ),
 
+        const SizedBox(height: 16),
+
+        // Simplification steps section
+        _buildSimplificationStepsSection(),
+
+        const SizedBox(height: 16),
+
+        // Complexity analysis section
+        _buildComplexityAnalysisSection(),
+
+        const SizedBox(height: 16),
+
+        // Sample strings section
+        _buildSampleStringsSection(),
+
         const SizedBox(height: 24),
 
         // Compare regular expressions
@@ -1022,6 +1154,13 @@ class _RegexPageState extends ConsumerState<RegexPage> {
       _errorMessage = '';
       _equivalenceResult = null;
       _equivalenceMessage = '';
+      _simplificationResult = null;
+      _showSimplificationSteps = false;
+      _selectedStepIndex = 0;
+      _regexAnalysis = null;
+      _showAnalysisDetails = false;
+      _sampleStrings = null;
+      _showSampleStringsDetails = false;
     });
   }
 
@@ -1138,5 +1277,1589 @@ class _RegexPageState extends ConsumerState<RegexPage> {
         Switch(key: switchKey, value: value, onChanged: onChanged),
       ],
     );
+  }
+
+  /// Builds the simplification steps display section
+  Widget _buildSimplificationStepsSection() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header with title and action buttons
+            Row(
+              children: [
+                Icon(
+                  Icons.auto_fix_high,
+                  color: colorScheme.primary,
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Simplification Steps',
+                  style: textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                if (_simplificationResult != null)
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _showSimplificationSteps = !_showSimplificationSteps;
+                      });
+                    },
+                    icon: Icon(
+                      _showSimplificationSteps
+                          ? Icons.expand_less
+                          : Icons.expand_more,
+                    ),
+                    tooltip: _showSimplificationSteps
+                        ? 'Hide steps'
+                        : 'Show steps',
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Simplify button
+            if (_simplificationResult == null)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _runSimplificationWithSteps,
+                  icon: const Icon(Icons.auto_fix_high),
+                  label: const Text('Simplify with Steps'),
+                ),
+              )
+            else ...[
+              // Summary section
+              _buildSimplificationSummary(),
+              const SizedBox(height: 12),
+
+              // Expandable steps list
+              if (_showSimplificationSteps) ...[
+                const Divider(),
+                const SizedBox(height: 8),
+                _buildStepsList(),
+              ],
+
+              // Actions
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _simplificationResult = null;
+                        _showSimplificationSteps = false;
+                        _selectedStepIndex = 0;
+                      });
+                    },
+                    icon: const Icon(Icons.refresh, size: 18),
+                    label: const Text('Clear'),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton.icon(
+                    onPressed: _runSimplificationWithSteps,
+                    icon: const Icon(Icons.auto_fix_high, size: 18),
+                    label: const Text('Re-simplify'),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Builds the simplification summary showing original vs simplified
+  Widget _buildSimplificationSummary() {
+    final result = _simplificationResult;
+    if (result == null) return const SizedBox.shrink();
+
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: colorScheme.outline.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Original regex
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 80,
+                child: Text(
+                  'Original:',
+                  style: textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: SelectableText(
+                  result.originalRegex,
+                  style: textTheme.bodyMedium?.copyWith(
+                    fontFamily: 'monospace',
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+
+          // Arrow indicating transformation
+          Row(
+            children: [
+              const SizedBox(width: 80),
+              Icon(
+                Icons.arrow_downward,
+                size: 16,
+                color: colorScheme.primary,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '${result.totalRulesApplied} rule(s) applied',
+                style: textTheme.bodySmall?.copyWith(
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+
+          // Simplified regex
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 80,
+                child: Text(
+                  'Simplified:',
+                  style: textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: SelectableText(
+                  result.simplifiedRegex,
+                  style: textTheme.bodyMedium?.copyWith(
+                    fontFamily: 'monospace',
+                    color: result.madeProgress
+                        ? colorScheme.primary
+                        : colorScheme.onSurface,
+                    fontWeight: result.madeProgress
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                  ),
+                ),
+              ),
+              if (result.madeProgress)
+                IconButton(
+                  onPressed: () {
+                    Clipboard.setData(
+                      ClipboardData(text: result.simplifiedRegex),
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Simplified regex copied to clipboard'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.copy, size: 18),
+                  tooltip: 'Copy simplified regex',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+            ],
+          ),
+
+          // Stats
+          if (result.madeProgress) ...[
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 16,
+              runSpacing: 8,
+              children: [
+                _buildStatChip(
+                  'Saved',
+                  '${result.charactersSaved} chars',
+                  Icons.compress,
+                  colorScheme.tertiary,
+                ),
+                _buildStatChip(
+                  'Reduction',
+                  '${result.reductionPercentage.toStringAsFixed(1)}%',
+                  Icons.trending_down,
+                  colorScheme.secondary,
+                ),
+                _buildStatChip(
+                  'Time',
+                  '${result.executionTimeMs}ms',
+                  Icons.timer_outlined,
+                  colorScheme.primary,
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Builds a small stat chip widget
+  Widget _buildStatChip(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Text(
+            '$label: $value',
+            style: textTheme.labelSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Builds the list of simplification steps
+  Widget _buildStepsList() {
+    final result = _simplificationResult;
+    if (result == null) return const SizedBox.shrink();
+
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Step navigation
+        if (result.steps.length > 1) ...[
+          Row(
+            children: [
+              Text(
+                'Step ${_selectedStepIndex + 1} of ${result.steps.length}',
+                style: textTheme.labelMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                onPressed: _selectedStepIndex > 0
+                    ? () => setState(() => _selectedStepIndex--)
+                    : null,
+                icon: const Icon(Icons.chevron_left),
+                tooltip: 'Previous step',
+              ),
+              IconButton(
+                onPressed: _selectedStepIndex < result.steps.length - 1
+                    ? () => setState(() => _selectedStepIndex++)
+                    : null,
+                icon: const Icon(Icons.chevron_right),
+                tooltip: 'Next step',
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+        ],
+
+        // Current step detail
+        if (result.steps.isNotEmpty)
+          _buildStepCard(result.steps[_selectedStepIndex]),
+
+        const SizedBox(height: 12),
+
+        // Step timeline
+        Text(
+          'All Steps:',
+          style: textTheme.labelMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ...result.steps.asMap().entries.map((entry) {
+          final index = entry.key;
+          final step = entry.value;
+          final isSelected = index == _selectedStepIndex;
+          return _buildStepTimelineItem(step, index, isSelected);
+        }),
+      ],
+    );
+  }
+
+  /// Builds a detailed card for a single step
+  Widget _buildStepCard(RegexSimplificationStep step) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: colorScheme.primary.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Step header
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'Step ${step.stepNumber}',
+                  style: textTheme.labelSmall?.copyWith(
+                    color: colorScheme.onPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  step.title,
+                  style: textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              // Step type badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: colorScheme.secondaryContainer.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  step.stepType.displayName,
+                  style: textTheme.labelSmall?.copyWith(
+                    color: colorScheme.onSecondaryContainer,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Explanation
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  size: 16,
+                  color: colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    step.explanation,
+                    style: textTheme.bodySmall?.copyWith(
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Rule application details
+          if (step.appliesRule && step.ruleApplied != null) ...[
+            const SizedBox(height: 12),
+            _buildRuleApplicationDetails(step),
+          ],
+
+          // Complexity metrics
+          if (step.starHeight != null || step.nestingDepth != null) ...[
+            const SizedBox(height: 12),
+            _buildComplexityMetrics(step),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Builds the rule application details section
+  Widget _buildRuleApplicationDetails(RegexSimplificationStep step) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: colorScheme.tertiaryContainer.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: colorScheme.tertiary.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.auto_fix_high,
+                size: 16,
+                color: colorScheme.tertiary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Transformation',
+                style: textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.tertiary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+
+          // Before -> After display
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: colorScheme.errorContainer.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Before',
+                        style: textTheme.labelSmall?.copyWith(
+                          color: colorScheme.onErrorContainer,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      SelectableText(
+                        step.matchedSubexpression ?? step.originalRegex ?? '',
+                        style: textTheme.bodySmall?.copyWith(
+                          fontFamily: 'monospace',
+                          color: colorScheme.onErrorContainer,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Icon(
+                  Icons.arrow_forward,
+                  size: 20,
+                  color: colorScheme.tertiary,
+                ),
+              ),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'After',
+                        style: textTheme.labelSmall?.copyWith(
+                          color: colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      SelectableText(
+                        step.replacementSubexpression ??
+                            step.simplifiedRegex ??
+                            '',
+                        style: textTheme.bodySmall?.copyWith(
+                          fontFamily: 'monospace',
+                          color: colorScheme.onPrimaryContainer,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          // Rule formal notation
+          if (step.ruleApplied != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: colorScheme.surface,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: colorScheme.outline.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Text(
+                'Rule: ${step.ruleApplied!.formalNotation}',
+                style: textTheme.labelSmall?.copyWith(
+                  fontFamily: 'monospace',
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Builds the complexity metrics section
+  Widget _buildComplexityMetrics(RegexSimplificationStep step) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Wrap(
+      spacing: 12,
+      runSpacing: 8,
+      children: [
+        if (step.starHeight != null)
+          _buildMetricBadge(
+            'Star Height',
+            step.starHeight.toString(),
+            Icons.star_outline,
+            colorScheme,
+            textTheme,
+          ),
+        if (step.nestingDepth != null)
+          _buildMetricBadge(
+            'Nesting Depth',
+            step.nestingDepth.toString(),
+            Icons.layers_outlined,
+            colorScheme,
+            textTheme,
+          ),
+        if (step.operatorCount != null)
+          _buildMetricBadge(
+            'Operators',
+            step.operatorCount.toString(),
+            Icons.functions,
+            colorScheme,
+            textTheme,
+          ),
+      ],
+    );
+  }
+
+  /// Builds a metric badge widget
+  Widget _buildMetricBadge(
+    String label,
+    String value,
+    IconData icon,
+    ColorScheme colorScheme,
+    TextTheme textTheme,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: colorScheme.onSurfaceVariant),
+          const SizedBox(width: 4),
+          Text(
+            '$label: ',
+            style: textTheme.labelSmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+          Text(
+            value,
+            style: textTheme.labelSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onSurface,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Builds a timeline item for a step
+  Widget _buildStepTimelineItem(
+    RegexSimplificationStep step,
+    int index,
+    bool isSelected,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return InkWell(
+      onTap: () => setState(() => _selectedStepIndex = index),
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        margin: const EdgeInsets.only(bottom: 4),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? colorScheme.primaryContainer.withValues(alpha: 0.3)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: isSelected
+              ? Border.all(color: colorScheme.primary.withValues(alpha: 0.5))
+              : null,
+        ),
+        child: Row(
+          children: [
+            // Step number circle
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isSelected
+                    ? colorScheme.primary
+                    : colorScheme.surfaceContainerHighest,
+              ),
+              child: Center(
+                child: Text(
+                  '${step.stepNumber}',
+                  style: textTheme.labelSmall?.copyWith(
+                    color: isSelected
+                        ? colorScheme.onPrimary
+                        : colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+
+            // Step title
+            Expanded(
+              child: Text(
+                step.title,
+                style: textTheme.bodySmall?.copyWith(
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected
+                      ? colorScheme.onSurface
+                      : colorScheme.onSurfaceVariant,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+
+            // Rule indicator for applyRule steps
+            if (step.appliesRule)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: colorScheme.tertiaryContainer.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  step.ruleApplied?.formalNotation ?? '',
+                  style: textTheme.labelSmall?.copyWith(
+                    fontFamily: 'monospace',
+                    fontSize: 10,
+                    color: colorScheme.onTertiaryContainer,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Builds the complexity analysis display section
+  Widget _buildComplexityAnalysisSection() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header with title and action buttons
+            Row(
+              children: [
+                Icon(
+                  Icons.analytics_outlined,
+                  color: colorScheme.primary,
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Complexity Analysis',
+                  style: textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                if (_regexAnalysis != null)
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _showAnalysisDetails = !_showAnalysisDetails;
+                      });
+                    },
+                    icon: Icon(
+                      _showAnalysisDetails
+                          ? Icons.expand_less
+                          : Icons.expand_more,
+                    ),
+                    tooltip: _showAnalysisDetails
+                        ? 'Hide details'
+                        : 'Show details',
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Analyze button
+            if (_regexAnalysis == null)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _runComplexityAnalysis,
+                  icon: const Icon(Icons.analytics_outlined),
+                  label: const Text('Analyze Complexity'),
+                ),
+              )
+            else ...[
+              // Analysis summary with complexity level
+              _buildComplexityLevelIndicator(),
+              const SizedBox(height: 12),
+
+              // Expandable details
+              if (_showAnalysisDetails) ...[
+                const Divider(),
+                const SizedBox(height: 8),
+                _buildComplexityDetails(),
+              ],
+
+              // Actions
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _regexAnalysis = null;
+                        _showAnalysisDetails = false;
+                      });
+                    },
+                    icon: const Icon(Icons.refresh, size: 18),
+                    label: const Text('Clear'),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton.icon(
+                    onPressed: _runComplexityAnalysis,
+                    icon: const Icon(Icons.analytics_outlined, size: 18),
+                    label: const Text('Re-analyze'),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Builds the complexity level indicator with color coding
+  Widget _buildComplexityLevelIndicator() {
+    final analysis = _regexAnalysis;
+    if (analysis == null) return const SizedBox.shrink();
+
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    // Get color based on complexity level
+    final levelColor = _getComplexityColor(analysis.complexityLevel);
+    final levelIcon = _getComplexityIcon(analysis.complexityLevel);
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: levelColor.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: levelColor.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Complexity level badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: levelColor,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  levelIcon,
+                  size: 16,
+                  color: Colors.white,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  analysis.complexityLevel.displayName,
+                  style: textTheme.labelMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+
+          // Key metrics summary
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  analysis.complexityLevel.description,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 4,
+                  children: [
+                    _buildMiniMetric(
+                      'Star Height',
+                      analysis.starHeight.toString(),
+                      Icons.star_outline,
+                    ),
+                    _buildMiniMetric(
+                      'Nesting',
+                      analysis.nestingDepth.toString(),
+                      Icons.layers_outlined,
+                    ),
+                    _buildMiniMetric(
+                      'Alphabet',
+                      analysis.alphabetSize.toString(),
+                      Icons.abc,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Builds a mini metric display
+  Widget _buildMiniMetric(String label, String value, IconData icon) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: colorScheme.onSurfaceVariant),
+        const SizedBox(width: 4),
+        Text(
+          '$label: ',
+          style: textTheme.labelSmall?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+          ),
+        ),
+        Text(
+          value,
+          style: textTheme.labelSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: colorScheme.onSurface,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Builds the detailed complexity analysis view
+  Widget _buildComplexityDetails() {
+    final analysis = _regexAnalysis;
+    if (analysis == null) return const SizedBox.shrink();
+
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Complexity metrics section
+        Text(
+          'Complexity Metrics',
+          style: textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: colorScheme.onSurface,
+          ),
+        ),
+        const SizedBox(height: 8),
+        _buildMetricRow(
+          'Star Height',
+          analysis.starHeight.toString(),
+          'Maximum nesting of Kleene star operators (*)',
+          Icons.star_outline,
+          colorScheme.primary,
+        ),
+        const SizedBox(height: 8),
+        _buildMetricRow(
+          'Nesting Depth',
+          analysis.nestingDepth.toString(),
+          'Maximum depth of parentheses nesting',
+          Icons.layers_outlined,
+          colorScheme.secondary,
+        ),
+        const SizedBox(height: 8),
+        _buildMetricRow(
+          'Complexity Score',
+          analysis.complexityScore.toString(),
+          'Weighted sum of all complexity factors',
+          Icons.speed,
+          colorScheme.tertiary,
+        ),
+
+        const SizedBox(height: 16),
+
+        // Operator breakdown section
+        Text(
+          'Operator Breakdown',
+          style: textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: colorScheme.onSurface,
+          ),
+        ),
+        const SizedBox(height: 8),
+        _buildOperatorBreakdown(analysis),
+
+        const SizedBox(height: 16),
+
+        // Alphabet section
+        Text(
+          'Alphabet',
+          style: textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: colorScheme.onSurface,
+          ),
+        ),
+        const SizedBox(height: 8),
+        _buildAlphabetDisplay(analysis),
+      ],
+    );
+  }
+
+  /// Builds a metric row with label, value, description, and icon
+  Widget _buildMetricRow(
+    String label,
+    String value,
+    String description,
+    IconData icon,
+    Color color,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  description,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              value,
+              style: textTheme.titleMedium?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Builds the operator breakdown display
+  Widget _buildOperatorBreakdown(RegexAnalysis analysis) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final structure = analysis.structureAnalysis;
+
+    final operators = [
+      ('Union (|)', structure.unionCount, Icons.call_split),
+      ('Concatenation', structure.concatenationCount, Icons.link),
+      ('Kleene Star (*)', structure.starCount, Icons.star),
+      ('Plus (+)', structure.plusCount, Icons.add),
+      ('Optional (?)', structure.questionCount, Icons.help_outline),
+    ];
+
+    // Filter to only show operators that are used
+    final usedOperators = operators.where((op) => op.$2 > 0).toList();
+
+    if (usedOperators.isEmpty) {
+      return Text(
+        'No operators used (literal expression)',
+        style: textTheme.bodySmall?.copyWith(
+          color: colorScheme.onSurfaceVariant,
+          fontStyle: FontStyle.italic,
+        ),
+      );
+    }
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: usedOperators.map((op) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(op.$3, size: 14, color: colorScheme.primary),
+              const SizedBox(width: 6),
+              Text(
+                op.$1,
+                style: textTheme.labelSmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '${op.$2}',
+                  style: textTheme.labelSmall?.copyWith(
+                    color: colorScheme.onPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  /// Builds the alphabet display
+  Widget _buildAlphabetDisplay(RegexAnalysis analysis) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final alphabet = analysis.structureAnalysis.alphabet;
+
+    if (alphabet.isEmpty) {
+      return Text(
+        'Empty alphabet (epsilon-only expression)',
+        style: textTheme.bodySmall?.copyWith(
+          color: colorScheme.onSurfaceVariant,
+          fontStyle: FontStyle.italic,
+        ),
+      );
+    }
+
+    // Sort alphabet for consistent display
+    final sortedAlphabet = alphabet.toList()..sort();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Size: ${alphabet.length} symbol(s)',
+          style: textTheme.bodySmall?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: sortedAlphabet.map((symbol) {
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: colorScheme.primary.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Text(
+                  symbol,
+                  style: textTheme.bodyMedium?.copyWith(
+                    fontFamily: 'monospace',
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.primary,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Gets the color for a complexity level
+  Color _getComplexityColor(ComplexityLevel level) {
+    switch (level) {
+      case ComplexityLevel.simple:
+        return Colors.green;
+      case ComplexityLevel.moderate:
+        return Colors.orange;
+      case ComplexityLevel.complex:
+        return Colors.red;
+    }
+  }
+
+  /// Gets the icon for a complexity level
+  IconData _getComplexityIcon(ComplexityLevel level) {
+    switch (level) {
+      case ComplexityLevel.simple:
+        return Icons.check_circle;
+      case ComplexityLevel.moderate:
+        return Icons.warning;
+      case ComplexityLevel.complex:
+        return Icons.error;
+    }
+  }
+
+  /// Builds the sample strings display section
+  Widget _buildSampleStringsSection() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header with title and action buttons
+            Row(
+              children: [
+                Icon(
+                  Icons.text_snippet_outlined,
+                  color: colorScheme.primary,
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Sample Strings',
+                  style: textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                if (_sampleStrings != null)
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _showSampleStringsDetails = !_showSampleStringsDetails;
+                      });
+                    },
+                    icon: Icon(
+                      _showSampleStringsDetails
+                          ? Icons.expand_less
+                          : Icons.expand_more,
+                    ),
+                    tooltip: _showSampleStringsDetails
+                        ? 'Hide samples'
+                        : 'Show samples',
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Generate button
+            if (_sampleStrings == null)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _runSampleGeneration,
+                  icon: const Icon(Icons.text_snippet_outlined),
+                  label: const Text('Generate Sample Strings'),
+                ),
+              )
+            else ...[
+              // Sample strings summary
+              _buildSampleStringsSummary(),
+              const SizedBox(height: 12),
+
+              // Expandable samples list
+              if (_showSampleStringsDetails) ...[
+                const Divider(),
+                const SizedBox(height: 8),
+                _buildSampleStringsList(),
+              ],
+
+              // Actions
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _sampleStrings = null;
+                        _showSampleStringsDetails = false;
+                      });
+                    },
+                    icon: const Icon(Icons.refresh, size: 18),
+                    label: const Text('Clear'),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton.icon(
+                    onPressed: () => _runSampleGeneration(maxSamples: 15),
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('Generate More'),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Builds the sample strings summary showing key info
+  Widget _buildSampleStringsSummary() {
+    final samples = _sampleStrings;
+    if (samples == null) return const SizedBox.shrink();
+
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: colorScheme.outline.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Summary row
+          Row(
+            children: [
+              Icon(
+                Icons.check_circle_outline,
+                size: 20,
+                color: colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '${samples.count} sample string(s) generated',
+                style: textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+
+          // Info chips
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              if (samples.acceptsEmptyString)
+                _buildInfoChip(
+                  'Accepts ε',
+                  Icons.check,
+                  colorScheme.tertiary,
+                ),
+              if (samples.shortestString != null)
+                _buildInfoChip(
+                  'Shortest: "${_displayString(samples.shortestString!)}"',
+                  Icons.short_text,
+                  colorScheme.secondary,
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Builds an info chip widget
+  Widget _buildInfoChip(String label, IconData icon, Color color) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: textTheme.labelSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Builds the list of sample strings
+  Widget _buildSampleStringsList() {
+    final samples = _sampleStrings;
+    if (samples == null || samples.samples.isEmpty) {
+      return Center(
+        child: Text(
+          'No sample strings generated',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      );
+    }
+
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Generated Samples:',
+          style: textTheme.labelMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: samples.samples.map((sample) {
+              return _buildSampleChip(sample);
+            }).toList(),
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // Copy all button
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton.icon(
+            onPressed: () {
+              final allSamples = samples.samples.join('\n');
+              Clipboard.setData(ClipboardData(text: allSamples));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('All samples copied to clipboard'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+            icon: const Icon(Icons.copy_all, size: 16),
+            label: const Text('Copy All'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Builds a single sample string chip
+  Widget _buildSampleChip(String sample) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final displayText = _displayString(sample);
+
+    return InkWell(
+      onTap: () {
+        // Copy this sample to clipboard
+        Clipboard.setData(ClipboardData(text: sample));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Copied: "$displayText"'),
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: colorScheme.primaryContainer.withValues(alpha: 0.3),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: colorScheme.primary.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '"$displayText"',
+              style: textTheme.bodySmall?.copyWith(
+                fontFamily: 'monospace',
+                fontWeight: FontWeight.w500,
+                color: colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.content_copy,
+              size: 12,
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Formats a string for display, showing special representations for empty/epsilon
+  String _displayString(String s) {
+    if (s.isEmpty) return 'ε';
+    if (s.length > 20) return '${s.substring(0, 17)}...';
+    return s;
   }
 }

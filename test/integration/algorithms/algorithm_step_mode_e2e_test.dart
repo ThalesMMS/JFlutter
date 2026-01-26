@@ -160,7 +160,10 @@ void main() {
             stepNotifier.nextStep();
             final state = container.read(algorithmStepProvider);
             expect(state.currentStepIndex, i + 1);
-            expect((state.currentStepIndex < state.steps.length - 1), i + 1 < totalSteps - 1);
+            expect(
+              (state.currentStepIndex < state.steps.length - 1),
+              i + 1 < totalSteps - 1,
+            );
             expect((state.currentStepIndex > 0), true);
 
             // Verify current step has valid data
@@ -174,7 +177,10 @@ void main() {
           // Verify we reached the last step
           final finalStepState = container.read(algorithmStepProvider);
           expect(finalStepState.currentStepIndex, totalSteps - 1);
-          expect((finalStepState.currentStepIndex < finalStepState.steps.length - 1), false);
+          expect(
+            (finalStepState.currentStepIndex < finalStepState.steps.length - 1),
+            false,
+          );
           expect((finalStepState.currentStepIndex > 0), true);
 
           // 4. Navigate backward through steps
@@ -190,7 +196,11 @@ void main() {
           final backToFirstState = container.read(algorithmStepProvider);
           expect(backToFirstState.currentStepIndex, 0);
           expect((backToFirstState.currentStepIndex > 0), false);
-          expect((backToFirstState.currentStepIndex < backToFirstState.steps.length - 1), true);
+          expect(
+            (backToFirstState.currentStepIndex <
+                backToFirstState.steps.length - 1),
+            true,
+          );
 
           // 5. Verify final result matches standard conversion
           await algorithmNotifier.convertNfaToDfa();
@@ -897,7 +907,10 @@ void main() {
           expect(finalAlgorithmState.faToRegexStepResult, isNotNull);
 
           // Verify final regex result
-          expect(finalAlgorithmState.faToRegexStepResult!.resultRegex, isNotEmpty);
+          expect(
+            finalAlgorithmState.faToRegexStepResult!.resultRegex,
+            isNotEmpty,
+          );
         },
       );
     });

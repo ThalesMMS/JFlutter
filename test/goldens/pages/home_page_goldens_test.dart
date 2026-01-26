@@ -318,8 +318,9 @@ void main() {
       await screenMatchesGolden(tester, 'home_page_tablet');
     });
 
-    testGoldens('renders mobile layout with bottom navigation - FSA selected',
-        (tester) async {
+    testGoldens('renders mobile layout with bottom navigation - FSA selected', (
+      tester,
+    ) async {
       addTearDown(() {
         tester.binding.window.clearPhysicalSizeTestValue();
         tester.binding.window.clearDevicePixelRatioTestValue();

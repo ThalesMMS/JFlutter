@@ -11,12 +11,7 @@
 import 'package:flutter/material.dart';
 
 /// Tipo de operação realizada na pilha
-enum StackOperationType {
-  none,
-  push,
-  pop,
-  replace,
-}
+enum StackOperationType { none, push, pop, replace }
 
 /// Estado da pilha em um momento específico
 class StackState {
@@ -38,12 +33,12 @@ class StackState {
 
   /// Pilha vazia
   const StackState.empty()
-      : symbols = const [],
-        lastOperation = null,
-        operationType = StackOperationType.none,
-        maxStackSize = 100,
-        hasOverflow = false,
-        hasUnderflow = false;
+    : symbols = const [],
+      lastOperation = null,
+      operationType = StackOperationType.none,
+      maxStackSize = 100,
+      hasOverflow = false,
+      hasUnderflow = false;
 
   bool get isEmpty => symbols.isEmpty;
   String? get top => symbols.isEmpty ? null : symbols.last;
@@ -188,8 +183,9 @@ class _PDAStackPanelState extends State<PDAStackPanel>
         _numPushedSymbols = 0;
         // Store the popped symbols for animation
         final numPopped = -stackGrowth;
-        _poppedSymbols = oldWidget.stackState.symbols
-            .sublist(oldWidget.stackState.symbols.length - numPopped);
+        _poppedSymbols = oldWidget.stackState.symbols.sublist(
+          oldWidget.stackState.symbols.length - numPopped,
+        );
       } else {
         // Replace operation (size unchanged)
         _isPushAnimation = false;
@@ -279,7 +275,8 @@ class _PDAStackPanelState extends State<PDAStackPanel>
   /// Returns the staggered animation interval for a newly pushed item
   /// Items are staggered with 80ms delay between each
   Interval _getStaggeredInterval(int pushIndex) {
-    const delayPerItem = 0.08; // 80ms delay between items (relative to 300ms total)
+    const delayPerItem =
+        0.08; // 80ms delay between items (relative to 300ms total)
     final begin = pushIndex * delayPerItem;
     final end = begin + (1.0 - (_numPushedSymbols - 1) * delayPerItem);
     return Interval(
@@ -360,7 +357,8 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                   : ListView.builder(
                       controller: _scrollController,
                       shrinkWrap: true,
-                      itemCount: widget.stackState.symbols.length +
+                      itemCount:
+                          widget.stackState.symbols.length +
                           (_isPopAnimation ? _poppedSymbols.length : 0),
                       itemBuilder: (context, index) {
                         // During pop animation, show popped items at the top
@@ -373,15 +371,19 @@ class _PDAStackPanelState extends State<PDAStackPanel>
 
                         if (isBeingPopped) {
                           // Show popped symbols (from top of the list)
-                          symbol = _poppedSymbols[_poppedSymbols.length - 1 - index];
+                          symbol =
+                              _poppedSymbols[_poppedSymbols.length - 1 - index];
                           isTop = index == 0;
                           reversedIndex = -1; // Not in actual stack
                         } else {
                           // Show current stack symbols
                           final adjustedIndex =
-                              index - (_isPopAnimation ? _poppedSymbols.length : 0);
+                              index -
+                              (_isPopAnimation ? _poppedSymbols.length : 0);
                           reversedIndex =
-                              widget.stackState.symbols.length - 1 - adjustedIndex;
+                              widget.stackState.symbols.length -
+                              1 -
+                              adjustedIndex;
                           symbol = widget.stackState.symbols[reversedIndex];
                           isTop = !_isPopAnimation && adjustedIndex == 0;
                         }
@@ -448,7 +450,8 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                                               Icon(
                                                 Icons.arrow_right,
                                                 size: 11, // Slightly smaller
-                                                color: theme.colorScheme.primary,
+                                                color:
+                                                    theme.colorScheme.primary,
                                               ),
                                               const SizedBox(width: 3),
                                             ],
@@ -457,10 +460,12 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                                                 symbol,
                                                 style: TextStyle(
                                                   fontFamily: 'monospace',
-                                                  fontWeight: isTop || isHighlighted
+                                                  fontWeight:
+                                                      isTop || isHighlighted
                                                       ? FontWeight.bold
                                                       : FontWeight.normal,
-                                                  fontSize: 11, // Compact font size
+                                                  fontSize:
+                                                      11, // Compact font size
                                                 ),
                                                 overflow: TextOverflow.ellipsis,
                                               ),
@@ -468,20 +473,24 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                                           ],
                                         ),
                                         // Push indicator badge (top-left)
-                                        if (_isPushAnimation && index < _numPushedSymbols)
+                                        if (_isPushAnimation &&
+                                            index < _numPushedSymbols)
                                           Positioned(
                                             top: -4,
                                             left: -4,
                                             child: Container(
                                               padding: const EdgeInsets.all(2),
                                               decoration: BoxDecoration(
-                                                color: theme.colorScheme.secondary,
+                                                color:
+                                                    theme.colorScheme.secondary,
                                                 shape: BoxShape.circle,
                                               ),
                                               child: Icon(
                                                 Icons.arrow_upward,
                                                 size: 8,
-                                                color: theme.colorScheme.onSecondary,
+                                                color: theme
+                                                    .colorScheme
+                                                    .onSecondary,
                                               ),
                                             ),
                                           ),
@@ -493,13 +502,16 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                                             child: Container(
                                               padding: const EdgeInsets.all(2),
                                               decoration: BoxDecoration(
-                                                color: theme.colorScheme.tertiary,
+                                                color:
+                                                    theme.colorScheme.tertiary,
                                                 shape: BoxShape.circle,
                                               ),
                                               child: Icon(
                                                 Icons.arrow_downward,
                                                 size: 8,
-                                                color: theme.colorScheme.onTertiary,
+                                                color: theme
+                                                    .colorScheme
+                                                    .onTertiary,
                                               ),
                                             ),
                                           ),
@@ -507,7 +519,9 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                                     ),
                                   ),
                                   // TOP badge - positioned to avoid overlap with operation badges
-                                  if (isTop && !_isPushAnimation && !isBeingPopped)
+                                  if (isTop &&
+                                      !_isPushAnimation &&
+                                      !isBeingPopped)
                                     Positioned(
                                       top: -5,
                                       right: -5,
@@ -544,9 +558,8 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                                                   .colorScheme
                                                   .errorContainer
                                                   .withOpacity(0.3),
-                                              borderRadius: BorderRadius.circular(
-                                                4,
-                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
                                             ),
                                             alignment: Alignment.centerRight,
                                             padding: const EdgeInsets.only(
@@ -570,9 +583,8 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                                                   .colorScheme
                                                   .primaryContainer
                                                   .withOpacity(0.3),
-                                              borderRadius: BorderRadius.circular(
-                                                4,
-                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
                                             ),
                                             alignment: Alignment.centerLeft,
                                             padding: const EdgeInsets.only(
@@ -603,15 +615,16 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                           final interval = _getStaggeredInterval(pushIndex);
 
                           // Create staggered slide animation
-                          final staggeredSlideAnimation = Tween<Offset>(
-                            begin: const Offset(0, 1),
-                            end: Offset.zero,
-                          ).animate(
-                            CurvedAnimation(
-                              parent: _animationController,
-                              curve: interval,
-                            ),
-                          );
+                          final staggeredSlideAnimation =
+                              Tween<Offset>(
+                                begin: const Offset(0, 1),
+                                end: Offset.zero,
+                              ).animate(
+                                CurvedAnimation(
+                                  parent: _animationController,
+                                  curve: interval,
+                                ),
+                              );
 
                           // Create staggered fade animation
                           final staggeredFadeAnimation = CurvedAnimation(
@@ -633,26 +646,22 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                         // Apply fade-out and scale animations to popped items
                         if (isBeingPopped) {
                           // Create fade-out animation (1.0 -> 0.0)
-                          final fadeOutAnimation = Tween<double>(
-                            begin: 1.0,
-                            end: 0.0,
-                          ).animate(
-                            CurvedAnimation(
-                              parent: _animationController,
-                              curve: Curves.easeIn,
-                            ),
-                          );
+                          final fadeOutAnimation =
+                              Tween<double>(begin: 1.0, end: 0.0).animate(
+                                CurvedAnimation(
+                                  parent: _animationController,
+                                  curve: Curves.easeIn,
+                                ),
+                              );
 
                           // Create scale animation (1.0 -> 0.8)
-                          final scaleAnimation = Tween<double>(
-                            begin: 1.0,
-                            end: 0.8,
-                          ).animate(
-                            CurvedAnimation(
-                              parent: _animationController,
-                              curve: Curves.easeIn,
-                            ),
-                          );
+                          final scaleAnimation =
+                              Tween<double>(begin: 1.0, end: 0.8).animate(
+                                CurvedAnimation(
+                                  parent: _animationController,
+                                  curve: Curves.easeIn,
+                                ),
+                              );
 
                           itemWidget = FadeTransition(
                             opacity: fadeOutAnimation,
@@ -708,10 +717,7 @@ class _PDAStackPanelState extends State<PDAStackPanel>
       decoration: BoxDecoration(
         color: theme.colorScheme.errorContainer.withOpacity(0.8),
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(
-          color: theme.colorScheme.error,
-          width: 1,
-        ),
+        border: Border.all(color: theme.colorScheme.error, width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

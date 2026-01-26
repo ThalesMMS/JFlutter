@@ -34,21 +34,9 @@ void main() {
         terminals: {'a', 'b'},
         startSymbol: 'S',
         productions: {
-          Production(
-            id: 'p1',
-            leftSide: ['S'],
-            rightSide: ['A', 'B'],
-          ),
-          Production(
-            id: 'p2',
-            leftSide: ['A'],
-            rightSide: ['a'],
-          ),
-          Production(
-            id: 'p3',
-            leftSide: ['B'],
-            rightSide: ['b'],
-          ),
+          Production(id: 'p1', leftSide: ['S'], rightSide: ['A', 'B']),
+          Production(id: 'p2', leftSide: ['A'], rightSide: ['a']),
+          Production(id: 'p3', leftSide: ['B'], rightSide: ['b']),
         },
         type: GrammarType.contextFree,
         created: DateTime.now(),
@@ -66,36 +54,12 @@ void main() {
         terminals: {'+', '*', '(', ')', 'id'},
         startSymbol: 'E',
         productions: {
-          Production(
-            id: 'e1',
-            leftSide: ['E'],
-            rightSide: ['E', '+', 'T'],
-          ),
-          Production(
-            id: 'e2',
-            leftSide: ['E'],
-            rightSide: ['T'],
-          ),
-          Production(
-            id: 't1',
-            leftSide: ['T'],
-            rightSide: ['T', '*', 'F'],
-          ),
-          Production(
-            id: 't2',
-            leftSide: ['T'],
-            rightSide: ['F'],
-          ),
-          Production(
-            id: 'f1',
-            leftSide: ['F'],
-            rightSide: ['(', 'E', ')'],
-          ),
-          Production(
-            id: 'f2',
-            leftSide: ['F'],
-            rightSide: ['id'],
-          ),
+          Production(id: 'e1', leftSide: ['E'], rightSide: ['E', '+', 'T']),
+          Production(id: 'e2', leftSide: ['E'], rightSide: ['T']),
+          Production(id: 't1', leftSide: ['T'], rightSide: ['T', '*', 'F']),
+          Production(id: 't2', leftSide: ['T'], rightSide: ['F']),
+          Production(id: 'f1', leftSide: ['F'], rightSide: ['(', 'E', ')']),
+          Production(id: 'f2', leftSide: ['F'], rightSide: ['id']),
         },
         type: GrammarType.contextFree,
         created: DateTime.now(),
@@ -111,16 +75,8 @@ void main() {
         terminals: {'a', 'b'},
         startSymbol: 'S',
         productions: {
-          Production(
-            id: 'r1',
-            leftSide: ['S'],
-            rightSide: ['S', 'a'],
-          ),
-          Production(
-            id: 'r2',
-            leftSide: ['S'],
-            rightSide: ['b'],
-          ),
+          Production(id: 'r1', leftSide: ['S'], rightSide: ['S', 'a']),
+          Production(id: 'r2', leftSide: ['S'], rightSide: ['b']),
         },
         type: GrammarType.contextFree,
         created: DateTime.now(),
@@ -137,20 +93,9 @@ void main() {
         terminals: {'a'},
         startSymbol: 'S',
         productions: {
-          Production(
-            id: 'l1',
-            leftSide: ['S'],
-            rightSide: ['A'],
-          ),
-          Production(
-            id: 'l2',
-            leftSide: ['A'],
-            rightSide: ['a', 'A'],
-          ),
-          Production.lambda(
-            id: 'l3',
-            leftSide: 'A',
-          ),
+          Production(id: 'l1', leftSide: ['S'], rightSide: ['A']),
+          Production(id: 'l2', leftSide: ['A'], rightSide: ['a', 'A']),
+          Production.lambda(id: 'l3', leftSide: 'A'),
         },
         type: GrammarType.contextFree,
         created: DateTime.now(),
@@ -162,11 +107,7 @@ void main() {
       test('Should successfully convert simple grammar to GNF', () {
         final result = CFGToolkit.toGNF(simpleGrammar);
 
-        expect(
-          result.isSuccess,
-          true,
-          reason: 'GNF conversion should succeed',
-        );
+        expect(result.isSuccess, true, reason: 'GNF conversion should succeed');
 
         if (result.isSuccess) {
           final gnf = result.data!;
@@ -432,26 +373,10 @@ void main() {
           terminals: {'a', 'b'},
           startSymbol: 'S',
           productions: {
-            Production(
-              id: 'g1',
-              leftSide: ['S'],
-              rightSide: ['a', 'A'],
-            ),
-            Production(
-              id: 'g2',
-              leftSide: ['S'],
-              rightSide: ['b'],
-            ),
-            Production(
-              id: 'g3',
-              leftSide: ['A'],
-              rightSide: ['a', 'A'],
-            ),
-            Production(
-              id: 'g4',
-              leftSide: ['A'],
-              rightSide: ['b'],
-            ),
+            Production(id: 'g1', leftSide: ['S'], rightSide: ['a', 'A']),
+            Production(id: 'g2', leftSide: ['S'], rightSide: ['b']),
+            Production(id: 'g3', leftSide: ['A'], rightSide: ['a', 'A']),
+            Production(id: 'g4', leftSide: ['A'], rightSide: ['b']),
           },
           type: GrammarType.contextFree,
           created: DateTime.now(),
@@ -475,21 +400,9 @@ void main() {
           terminals: {'a', 'b'},
           startSymbol: 'S',
           productions: {
-            Production(
-              id: 'n1',
-              leftSide: ['S'],
-              rightSide: ['A', 'B'],
-            ),
-            Production(
-              id: 'n2',
-              leftSide: ['A'],
-              rightSide: ['a'],
-            ),
-            Production(
-              id: 'n3',
-              leftSide: ['B'],
-              rightSide: ['b'],
-            ),
+            Production(id: 'n1', leftSide: ['S'], rightSide: ['A', 'B']),
+            Production(id: 'n2', leftSide: ['A'], rightSide: ['a']),
+            Production(id: 'n3', leftSide: ['B'], rightSide: ['b']),
           },
           type: GrammarType.contextFree,
           created: DateTime.now(),
@@ -512,16 +425,8 @@ void main() {
           terminals: {'a', 'b'},
           startSymbol: 'S',
           productions: {
-            Production(
-              id: 'i1',
-              leftSide: ['S'],
-              rightSide: ['a', 'A', 'b'],
-            ),
-            Production(
-              id: 'i2',
-              leftSide: ['A'],
-              rightSide: ['a'],
-            ),
+            Production(id: 'i1', leftSide: ['S'], rightSide: ['a', 'A', 'b']),
+            Production(id: 'i2', leftSide: ['A'], rightSide: ['a']),
           },
           type: GrammarType.contextFree,
           created: DateTime.now(),
@@ -546,16 +451,8 @@ void main() {
           startSymbol: 'S',
           productions: {
             Production.lambda(id: 's1', leftSide: 'S'),
-            Production(
-              id: 's2',
-              leftSide: ['S'],
-              rightSide: ['a', 'A'],
-            ),
-            Production(
-              id: 'a1',
-              leftSide: ['A'],
-              rightSide: ['a'],
-            ),
+            Production(id: 's2', leftSide: ['S'], rightSide: ['a', 'A']),
+            Production(id: 'a1', leftSide: ['A'], rightSide: ['a']),
           },
           type: GrammarType.contextFree,
           created: DateTime.now(),
@@ -579,11 +476,7 @@ void main() {
           terminals: {'a'},
           startSymbol: 'S',
           productions: {
-            Production(
-              id: 's1',
-              leftSide: ['S'],
-              rightSide: ['a', 'A'],
-            ),
+            Production(id: 's1', leftSide: ['S'], rightSide: ['a', 'A']),
             Production.lambda(id: 'a1', leftSide: 'A'),
           },
           type: GrammarType.contextFree,
@@ -608,11 +501,7 @@ void main() {
           terminals: {'a'},
           startSymbol: 'S',
           productions: {
-            Production(
-              id: 'p1',
-              leftSide: ['S'],
-              rightSide: ['a'],
-            ),
+            Production(id: 'p1', leftSide: ['S'], rightSide: ['a']),
           },
           type: GrammarType.contextFree,
           created: DateTime.now(),
@@ -639,16 +528,8 @@ void main() {
           terminals: {'a', 'b', 'c'},
           startSymbol: 'S',
           productions: {
-            Production(
-              id: 'p1',
-              leftSide: ['S'],
-              rightSide: ['a', 'b', 'C'],
-            ),
-            Production(
-              id: 'p2',
-              leftSide: ['C'],
-              rightSide: ['c'],
-            ),
+            Production(id: 'p1', leftSide: ['S'], rightSide: ['a', 'b', 'C']),
+            Production(id: 'p2', leftSide: ['C'], rightSide: ['c']),
           },
           type: GrammarType.contextFree,
           created: DateTime.now(),

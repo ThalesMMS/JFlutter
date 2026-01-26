@@ -13,4 +13,10 @@
 // Re-export regex-related algorithms
 export 'algorithms/regex_to_nfa_converter.dart';
 export 'algorithms/fa_to_regex_converter.dart';
+export 'algorithms/regex_simplifier.dart';
+export 'algorithms/regex_analyzer.dart';
 export 'regex/regex_pipeline.dart';
+
+// Re-export regex-related models
+export 'models/regex_simplification_step.dart';
+export 'models/regex_analysis.dart';

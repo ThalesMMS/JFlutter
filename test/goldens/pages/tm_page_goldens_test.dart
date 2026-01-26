@@ -75,9 +75,7 @@ class _TMPageTestWidgetState extends State<_TMPageTestWidget> {
     ]);
 
     return ProviderScope(
-      overrides: [
-        tmEditorProvider.overrideWith((ref) => _editorNotifier),
-      ],
+      overrides: [tmEditorProvider.overrideWith((ref) => _editorNotifier)],
       child: Scaffold(
         body: Stack(
           children: [
@@ -113,9 +111,7 @@ class _TMPageTestWidgetState extends State<_TMPageTestWidget> {
                     }
                   },
                   onClear: () {},
-                  statusMessage: widget.automaton == null
-                      ? 'No TM loaded'
-                      : '',
+                  statusMessage: widget.automaton == null ? 'No TM loaded' : '',
                 );
               },
             ),
@@ -209,8 +205,68 @@ void main() {
       await screenMatchesGolden(tester, 'tm_page_empty_mobile');
     });
 
+    testGoldens('renders canvas with toolbar and simple TM in desktop layout', (
+      tester,
+    ) async {
+      addTearDown(() {
+        tester.binding.window.clearPhysicalSizeTestValue();
+        tester.binding.window.clearDevicePixelRatioTestValue();
+      });
+
+      final q0 = automaton_state.State(
+        id: 'q0',
+        label: 'q0',
+        position: Vector2(200, 200),
+        isInitial: true,
+        isAccepting: false,
+      );
+
+      final q1 = automaton_state.State(
+        id: 'q1',
+        label: 'q1',
+        position: Vector2(400, 200),
+        isInitial: false,
+        isAccepting: true,
+      );
+
+      final transition = TMTransition.readWrite(
+        id: 't1',
+        fromState: q0,
+        toState: q1,
+        symbol: '0',
+        direction: TapeDirection.right,
+      );
+
+      final automaton = TM(
+        id: 'simple-tm',
+        name: 'Simple TM',
+        states: <automaton_state.State>{q0, q1},
+        transitions: <TMTransition>{transition},
+        alphabet: const <String>{'0', '1'},
+        initialState: q0,
+        acceptingStates: <automaton_state.State>{q1},
+        created: DateTime.utc(2024, 1, 1),
+        modified: DateTime.utc(2024, 1, 1),
+        bounds: const math.Rectangle<double>(0, 0, 800, 600),
+        zoomLevel: 1,
+        panOffset: Vector2.zero(),
+        tapeAlphabet: const <String>{'0', '1', 'B'},
+        blankSymbol: 'B',
+        tapeCount: 1,
+      );
+
+      await _pumpTMPageComponents(
+        tester,
+        automaton: automaton,
+        size: const Size(1400, 900),
+        isMobile: false,
+      );
+
+      await screenMatchesGolden(tester, 'tm_page_simple_tm_desktop');
+    });
+
     testGoldens(
-      'renders canvas with toolbar and simple TM in desktop layout',
+      'renders canvas with toolbar and copy machine in desktop layout',
       (tester) async {
         addTearDown(() {
           tester.binding.window.clearPhysicalSizeTestValue();
@@ -233,19 +289,35 @@ void main() {
           isAccepting: true,
         );
 
-        final transition = TMTransition.readWrite(
+        final t1 = TMTransition.readWrite(
           id: 't1',
           fromState: q0,
-          toState: q1,
+          toState: q0,
           symbol: '0',
           direction: TapeDirection.right,
         );
 
+        final t2 = TMTransition.readWrite(
+          id: 't2',
+          fromState: q0,
+          toState: q0,
+          symbol: '1',
+          direction: TapeDirection.right,
+        );
+
+        final t3 = TMTransition.readWrite(
+          id: 't3',
+          fromState: q0,
+          toState: q1,
+          symbol: 'B',
+          direction: TapeDirection.stay,
+        );
+
         final automaton = TM(
-          id: 'simple-tm',
-          name: 'Simple TM',
+          id: 'copy-machine',
+          name: 'Copy Machine',
           states: <automaton_state.State>{q0, q1},
-          transitions: <TMTransition>{transition},
+          transitions: <TMTransition>{t1, t2, t3},
           alphabet: const <String>{'0', '1'},
           initialState: q0,
           acceptingStates: <automaton_state.State>{q1},
@@ -266,147 +338,72 @@ void main() {
           isMobile: false,
         );
 
-        await screenMatchesGolden(tester, 'tm_page_simple_tm_desktop');
+        await screenMatchesGolden(tester, 'tm_page_copy_machine_desktop');
       },
     );
 
-    testGoldens('renders canvas with toolbar and copy machine in desktop layout', (
-      tester,
-    ) async {
-      addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
-      });
+    testGoldens(
+      'renders page with TM with different directions in desktop layout',
+      (tester) async {
+        addTearDown(() {
+          tester.binding.window.clearPhysicalSizeTestValue();
+          tester.binding.window.clearDevicePixelRatioTestValue();
+        });
 
-      final q0 = automaton_state.State(
-        id: 'q0',
-        label: 'q0',
-        position: Vector2(200, 200),
-        isInitial: true,
-        isAccepting: false,
-      );
+        final q0 = automaton_state.State(
+          id: 'q0',
+          label: 'q0',
+          position: Vector2(200, 200),
+          isInitial: true,
+          isAccepting: false,
+        );
 
-      final q1 = automaton_state.State(
-        id: 'q1',
-        label: 'q1',
-        position: Vector2(400, 200),
-        isInitial: false,
-        isAccepting: true,
-      );
+        final q1 = automaton_state.State(
+          id: 'q1',
+          label: 'q1',
+          position: Vector2(400, 200),
+          isInitial: false,
+          isAccepting: true,
+        );
 
-      final t1 = TMTransition.readWrite(
-        id: 't1',
-        fromState: q0,
-        toState: q0,
-        symbol: '0',
-        direction: TapeDirection.right,
-      );
+        // Transition that moves left
+        final t1 = TMTransition.changeSymbol(
+          id: 't1',
+          fromState: q0,
+          toState: q1,
+          readSymbol: '0',
+          writeSymbol: '1',
+          direction: TapeDirection.left,
+        );
 
-      final t2 = TMTransition.readWrite(
-        id: 't2',
-        fromState: q0,
-        toState: q0,
-        symbol: '1',
-        direction: TapeDirection.right,
-      );
+        final automaton = TM(
+          id: 'direction-tm',
+          name: 'Direction TM',
+          states: <automaton_state.State>{q0, q1},
+          transitions: <TMTransition>{t1},
+          alphabet: const <String>{'0', '1'},
+          initialState: q0,
+          acceptingStates: <automaton_state.State>{q1},
+          created: DateTime.utc(2024, 1, 1),
+          modified: DateTime.utc(2024, 1, 1),
+          bounds: const math.Rectangle<double>(0, 0, 800, 600),
+          zoomLevel: 1,
+          panOffset: Vector2.zero(),
+          tapeAlphabet: const <String>{'0', '1', 'B'},
+          blankSymbol: 'B',
+          tapeCount: 1,
+        );
 
-      final t3 = TMTransition.readWrite(
-        id: 't3',
-        fromState: q0,
-        toState: q1,
-        symbol: 'B',
-        direction: TapeDirection.stay,
-      );
+        await _pumpTMPageComponents(
+          tester,
+          automaton: automaton,
+          size: const Size(1400, 900),
+          isMobile: false,
+        );
 
-      final automaton = TM(
-        id: 'copy-machine',
-        name: 'Copy Machine',
-        states: <automaton_state.State>{q0, q1},
-        transitions: <TMTransition>{t1, t2, t3},
-        alphabet: const <String>{'0', '1'},
-        initialState: q0,
-        acceptingStates: <automaton_state.State>{q1},
-        created: DateTime.utc(2024, 1, 1),
-        modified: DateTime.utc(2024, 1, 1),
-        bounds: const math.Rectangle<double>(0, 0, 800, 600),
-        zoomLevel: 1,
-        panOffset: Vector2.zero(),
-        tapeAlphabet: const <String>{'0', '1', 'B'},
-        blankSymbol: 'B',
-        tapeCount: 1,
-      );
-
-      await _pumpTMPageComponents(
-        tester,
-        automaton: automaton,
-        size: const Size(1400, 900),
-        isMobile: false,
-      );
-
-      await screenMatchesGolden(tester, 'tm_page_copy_machine_desktop');
-    });
-
-    testGoldens('renders page with TM with different directions in desktop layout', (
-      tester,
-    ) async {
-      addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
-      });
-
-      final q0 = automaton_state.State(
-        id: 'q0',
-        label: 'q0',
-        position: Vector2(200, 200),
-        isInitial: true,
-        isAccepting: false,
-      );
-
-      final q1 = automaton_state.State(
-        id: 'q1',
-        label: 'q1',
-        position: Vector2(400, 200),
-        isInitial: false,
-        isAccepting: true,
-      );
-
-      // Transition that moves left
-      final t1 = TMTransition.changeSymbol(
-        id: 't1',
-        fromState: q0,
-        toState: q1,
-        readSymbol: '0',
-        writeSymbol: '1',
-        direction: TapeDirection.left,
-      );
-
-      final automaton = TM(
-        id: 'direction-tm',
-        name: 'Direction TM',
-        states: <automaton_state.State>{q0, q1},
-        transitions: <TMTransition>{t1},
-        alphabet: const <String>{'0', '1'},
-        initialState: q0,
-        acceptingStates: <automaton_state.State>{q1},
-        created: DateTime.utc(2024, 1, 1),
-        modified: DateTime.utc(2024, 1, 1),
-        bounds: const math.Rectangle<double>(0, 0, 800, 600),
-        zoomLevel: 1,
-        panOffset: Vector2.zero(),
-        tapeAlphabet: const <String>{'0', '1', 'B'},
-        blankSymbol: 'B',
-        tapeCount: 1,
-      );
-
-      await _pumpTMPageComponents(
-        tester,
-        automaton: automaton,
-        size: const Size(1400, 900),
-        isMobile: false,
-      );
-
-      await screenMatchesGolden(tester, 'tm_page_direction_desktop');
-    });
+        await screenMatchesGolden(tester, 'tm_page_direction_desktop');
+      },
+    );
 
     testGoldens('renders page with complex TM in tablet layout', (
       tester,

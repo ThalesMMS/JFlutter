@@ -158,8 +158,8 @@ class EpsilonTransitionPaintHelper {
       ..color = color ?? (isHighlighted ? Colors.purple : Colors.grey[600]!)
       ..strokeWidth = isHighlighted ? 2.5 : 2.0
       ..style = PaintingStyle.stroke;
-      // TODO: Add pathEffect when SDK supports it
-      // ..pathEffect = ui.PathEffect.dash([8.0, 4.0]);
+    // TODO: Add pathEffect when SDK supports it
+    // ..pathEffect = ui.PathEffect.dash([8.0, 4.0]);
   }
 
   /// Cria paint para transição regular

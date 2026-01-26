@@ -98,10 +98,9 @@ class _MockSettingsPageWidget extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Text(
         title,
-        style: Theme.of(context)
-            .textTheme
-            .titleLarge
-            ?.copyWith(fontWeight: FontWeight.bold),
+        style: Theme.of(
+          context,
+        ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -113,11 +112,15 @@ class _MockSettingsPageWidget extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Empty String Symbol',
-                style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              'Empty String Symbol',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 4),
-            Text('Symbol used to represent empty string (λ or ε)',
-                style: Theme.of(context).textTheme.bodySmall),
+            Text(
+              'Symbol used to represent empty string (λ or ε)',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -135,11 +138,15 @@ class _MockSettingsPageWidget extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            const Text('Epsilon Symbol',
-                style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              'Epsilon Symbol',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 4),
-            Text('Symbol used to represent epsilon transitions',
-                style: Theme.of(context).textTheme.bodySmall),
+            Text(
+              'Symbol used to represent epsilon transitions',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -169,10 +176,15 @@ class _MockSettingsPageWidget extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Theme Mode', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              'Theme Mode',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 4),
-            Text('Choose your preferred theme',
-                style: Theme.of(context).textTheme.bodySmall),
+            Text(
+              'Choose your preferred theme',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -213,7 +225,10 @@ class _MockSettingsPageWidget extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Show Grid', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text(
+                        'Show Grid',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       SizedBox(height: 4),
                       Text('Display grid lines on canvas'),
                     ],
@@ -229,8 +244,10 @@ class _MockSettingsPageWidget extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Show Coordinates',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text(
+                        'Show Coordinates',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       SizedBox(height: 4),
                       Text('Display coordinate information'),
                     ],
@@ -240,7 +257,10 @@ class _MockSettingsPageWidget extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            const Text('Grid Size', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              'Grid Size',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 4),
             const Text('Size of grid cells'),
             Row(
@@ -262,7 +282,10 @@ class _MockSettingsPageWidget extends StatelessWidget {
                 ),
               ],
             ),
-            const Text('Node Size', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              'Node Size',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 4),
             const Text('Size of automaton nodes'),
             Row(
@@ -285,7 +308,10 @@ class _MockSettingsPageWidget extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            const Text('Font Size', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              'Font Size',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 4),
             const Text('Text size in the interface'),
             Row(
@@ -326,7 +352,10 @@ class _MockSettingsPageWidget extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Auto Save', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text(
+                        'Auto Save',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       SizedBox(height: 4),
                       Text('Automatically save changes'),
                     ],
@@ -342,8 +371,10 @@ class _MockSettingsPageWidget extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Show Tooltips',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text(
+                        'Show Tooltips',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       SizedBox(height: 4),
                       Text('Display helpful tooltips'),
                     ],
@@ -442,10 +473,7 @@ void main() {
         tester.binding.window.clearDevicePixelRatioTestValue();
       });
 
-      await _pumpSettingsPage(
-        tester,
-        size: const Size(1400, 900),
-      );
+      await _pumpSettingsPage(tester, size: const Size(1400, 900));
 
       await screenMatchesGolden(tester, 'settings_page_defaults_desktop');
     });
@@ -458,10 +486,7 @@ void main() {
         tester.binding.window.clearDevicePixelRatioTestValue();
       });
 
-      await _pumpSettingsPage(
-        tester,
-        size: const Size(1200, 800),
-      );
+      await _pumpSettingsPage(tester, size: const Size(1200, 800));
 
       await screenMatchesGolden(tester, 'settings_page_defaults_tablet');
     });
@@ -474,10 +499,7 @@ void main() {
         tester.binding.window.clearDevicePixelRatioTestValue();
       });
 
-      await _pumpSettingsPage(
-        tester,
-        size: const Size(430, 932),
-      );
+      await _pumpSettingsPage(tester, size: const Size(430, 932));
 
       await screenMatchesGolden(tester, 'settings_page_defaults_mobile');
     });

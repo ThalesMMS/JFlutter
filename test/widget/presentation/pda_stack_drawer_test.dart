@@ -87,10 +87,7 @@ void main() {
     });
 
     test('detects when stack is not at capacity', () {
-      const state = StackState(
-        symbols: ['A', 'B'],
-        maxStackSize: 100,
-      );
+      const state = StackState(symbols: ['A', 'B'], maxStackSize: 100);
 
       expect(state.isAtCapacity, isFalse);
     });
@@ -254,11 +251,7 @@ void main() {
     testWidgets('displays simulating indicator', (tester) async {
       const stackState = StackState(symbols: ['A', 'B']);
 
-      await _pumpStackPanel(
-        tester,
-        stackState: stackState,
-        isSimulating: true,
-      );
+      await _pumpStackPanel(tester, stackState: stackState, isSimulating: true);
 
       // Find the green indicator dot
       final containerFinder = find.descendant(
@@ -387,7 +380,9 @@ void main() {
       expect(find.byIcon(Icons.arrow_upward), findsWidgets);
     });
 
-    testWidgets('animates push operation with slide transition', (tester) async {
+    testWidgets('animates push operation with slide transition', (
+      tester,
+    ) async {
       const initialState = StackState(symbols: ['A', 'B']);
 
       await _pumpStackPanel(tester, stackState: initialState);
@@ -581,7 +576,9 @@ void main() {
       }
     });
 
-    testWidgets('shows different colors for top vs other items', (tester) async {
+    testWidgets('shows different colors for top vs other items', (
+      tester,
+    ) async {
       const stackState = StackState(symbols: ['A', 'B', 'C']);
 
       await _pumpStackPanel(tester, stackState: stackState);
@@ -612,8 +609,7 @@ void main() {
         of: find.byType(Card),
         matching: find.byWidgetPredicate(
           (widget) =>
-              widget is Container &&
-              widget.constraints?.maxHeight == 200,
+              widget is Container && widget.constraints?.maxHeight == 200,
         ),
       );
 
@@ -656,10 +652,7 @@ void main() {
     });
 
     testWidgets('handles stack state with custom max size', (tester) async {
-      const stackState = StackState(
-        symbols: ['A', 'B'],
-        maxStackSize: 50,
-      );
+      const stackState = StackState(symbols: ['A', 'B'], maxStackSize: 50);
 
       await _pumpStackPanel(tester, stackState: stackState);
 

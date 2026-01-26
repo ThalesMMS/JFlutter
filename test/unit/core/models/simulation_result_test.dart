@@ -18,16 +18,8 @@ import 'package:jflutter/core/models/simulation_step.dart';
 void main() {
   group('SimulationResult', () {
     final testSteps = [
-      SimulationStep(
-        currentState: 'q0',
-        remainingInput: 'abc',
-        stepNumber: 0,
-      ),
-      SimulationStep(
-        currentState: 'q1',
-        remainingInput: 'bc',
-        stepNumber: 1,
-      ),
+      SimulationStep(currentState: 'q0', remainingInput: 'abc', stepNumber: 0),
+      SimulationStep(currentState: 'q1', remainingInput: 'bc', stepNumber: 1),
     ];
 
     final testTree = NFAComputationTree.accepted(
@@ -130,9 +122,7 @@ void main() {
           computationTree: testTree,
         );
 
-        final copied = result.copyWith(
-          inputString: 'modified',
-        );
+        final copied = result.copyWith(inputString: 'modified');
 
         expect(copied.inputString, 'modified');
         expect(copied.computationTree, testTree);
@@ -145,9 +135,7 @@ void main() {
           executionTime: Duration(milliseconds: 100),
         );
 
-        final copied = result.copyWith(
-          computationTree: testTree,
-        );
+        final copied = result.copyWith(computationTree: testTree);
 
         expect(copied.computationTree, testTree);
       });

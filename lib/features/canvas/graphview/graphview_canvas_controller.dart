@@ -52,9 +52,7 @@ class GraphViewCanvasController
       _algorithmStepHighlightService;
 
   /// Configures the algorithm step highlight service for this controller.
-  set algorithmStepHighlightService(
-    AlgorithmStepHighlightService? service,
-  ) {
+  set algorithmStepHighlightService(AlgorithmStepHighlightService? service) {
     _algorithmStepHighlightService = service;
   }
 

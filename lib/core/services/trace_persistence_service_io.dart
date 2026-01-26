@@ -17,8 +17,7 @@ import '../models/simulation_result.dart';
 
 TracePersistenceService createTracePersistenceService(
   SharedPreferences prefs,
-) =>
-    TracePersistenceService(prefs);
+) => TracePersistenceService(prefs);
 
 /// Service for persisting and managing simulation traces across app sessions
 class TracePersistenceService {

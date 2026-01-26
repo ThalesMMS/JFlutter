@@ -152,8 +152,7 @@ void main() {
           fileName:
               'very_long_automaton_file_name_that_might_need_truncation.jff',
           errorType: ImportErrorType.invalidJSON,
-          detailedMessage:
-              'Unable to parse the JSON structure in this file.',
+          detailedMessage: 'Unable to parse the JSON structure in this file.',
           onRetry: () {},
           onCancel: () {},
         ),

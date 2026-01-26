@@ -164,13 +164,17 @@ class _TMTapePanelState extends State<TMTapePanel>
     );
     _cellScaleAnimation = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween<double>(begin: 1.0, end: 1.2)
-            .chain(CurveTween(curve: Curves.easeOut)),
+        tween: Tween<double>(
+          begin: 1.0,
+          end: 1.2,
+        ).chain(CurveTween(curve: Curves.easeOut)),
         weight: 50,
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: 1.2, end: 1.0)
-            .chain(CurveTween(curve: Curves.easeIn)),
+        tween: Tween<double>(
+          begin: 1.2,
+          end: 1.0,
+        ).chain(CurveTween(curve: Curves.easeIn)),
         weight: 50,
       ),
     ]).animate(_cellScaleController);
@@ -179,13 +183,17 @@ class _TMTapePanelState extends State<TMTapePanel>
     );
     _expansionGlowAnimation = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween<double>(begin: 0.0, end: 1.0)
-            .chain(CurveTween(curve: Curves.easeOut)),
+        tween: Tween<double>(
+          begin: 0.0,
+          end: 1.0,
+        ).chain(CurveTween(curve: Curves.easeOut)),
         weight: 50,
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: 1.0, end: 0.0)
-            .chain(CurveTween(curve: Curves.easeIn)),
+        tween: Tween<double>(
+          begin: 1.0,
+          end: 0.0,
+        ).chain(CurveTween(curve: Curves.easeIn)),
         weight: 50,
       ),
     ]).animate(_expansionGlowController);
@@ -543,7 +551,9 @@ class _TMTapePanelState extends State<TMTapePanel>
       builder: (context, child) {
         // Calculate glow intensity based on animation value
         final glowIntensity = isNewCell ? _expansionGlowAnimation.value : 0.0;
-        final glowColor = theme.colorScheme.primary.withOpacity(0.4 * glowIntensity);
+        final glowColor = theme.colorScheme.primary.withOpacity(
+          0.4 * glowIntensity,
+        );
 
         return Container(
           width: 50,

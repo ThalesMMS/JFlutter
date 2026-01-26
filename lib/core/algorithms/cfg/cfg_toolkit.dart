@@ -333,14 +333,10 @@ class CFGToolkit {
           // If first symbol comes before current in ordering, substitute
           if (firstIndex >= 0 && firstIndex < i) {
             prods.remove(p);
-            final substitutions =
-                prods.where((q) => q.leftSide.first == first);
+            final substitutions = prods.where((q) => q.leftSide.first == first);
             for (final sub in substitutions) {
               if (sub.isLambda) continue;
-              final newRhs = [
-                ...sub.rightSide,
-                ...p.rightSide.sublist(1),
-              ];
+              final newRhs = [...sub.rightSide, ...p.rightSide.sublist(1)];
               prods.add(
                 Production(
                   id: '${p.id}_sub_${sub.id}',
@@ -358,8 +354,9 @@ class CFGToolkit {
             nonterminals.add(newSym);
 
             // Find non-recursive productions for ai
-            final nonRecursive =
-                prods.where((q) => q.leftSide.first == ai).toList();
+            final nonRecursive = prods
+                .where((q) => q.leftSide.first == ai)
+                .toList();
 
             for (final nr in nonRecursive) {
               if (nr.isLambda || nr.rightSide.isEmpty) continue;

@@ -354,17 +354,16 @@ class GraphViewEdgePainter extends CustomPainter {
         edge.isLambdaPush != null;
   }
 
-  TextPainter _createPdaTextPainter(
-    GraphViewCanvasEdge edge,
-    Color baseColor,
-  ) {
+  TextPainter _createPdaTextPainter(GraphViewCanvasEdge edge, Color baseColor) {
     // Extract PDA transition components
     final lambdaInput =
-        edge.isLambdaInput ?? (edge.readSymbol == null || edge.readSymbol!.isEmpty);
+        edge.isLambdaInput ??
+        (edge.readSymbol == null || edge.readSymbol!.isEmpty);
     final lambdaPop =
         edge.isLambdaPop ?? (edge.popSymbol == null || edge.popSymbol!.isEmpty);
     final lambdaPush =
-        edge.isLambdaPush ?? (edge.pushSymbol == null || edge.pushSymbol!.isEmpty);
+        edge.isLambdaPush ??
+        (edge.pushSymbol == null || edge.pushSymbol!.isEmpty);
 
     final read = lambdaInput ? 'λ' : (edge.readSymbol ?? '');
     final pop = lambdaPop ? 'λ' : (edge.popSymbol ?? '');

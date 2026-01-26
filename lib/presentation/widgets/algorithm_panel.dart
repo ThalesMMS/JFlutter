@@ -21,9 +21,12 @@ import 'algorithm_step_navigator.dart';
 import 'algorithm_step_viewer.dart';
 import 'common/algorithm_button.dart';
 import 'utils/platform_file_loader.dart';
+import '../../core/algorithms/language_comparator.dart';
+import 'language_comparison_viewer.dart';
 
 /// Panel for algorithm operations and controls
 class AlgorithmPanel extends ConsumerStatefulWidget {
+  final FSA? currentAutomaton;
   final VoidCallback? onNfaToDfa;
   final VoidCallback? onMinimizeDfa;
   final VoidCallback? onClear;
@@ -47,6 +50,7 @@ class AlgorithmPanel extends ConsumerStatefulWidget {
 
   AlgorithmPanel({
     super.key,
+    this.currentAutomaton,
     this.onNfaToDfa,
     this.onMinimizeDfa,
     this.onClear,
@@ -720,13 +724,122 @@ class _AlgorithmPanelState extends ConsumerState<AlgorithmPanel> {
   }
 
   Future<void> _onCompareEquivalencePressed() async {
-    await _runBinaryOperation(
-      algorithmName: 'Compare Equivalence',
-      callback: widget.onCompareEquivalence,
+    // Check if current automaton is available
+    if (widget.currentAutomaton == null) {
+      _showSnack('Load a DFA before comparing equivalence.', isError: true);
+      return;
+    }
+
+    // Pick a file to load the second automaton
+    final selection = await FilePicker.platform.pickFiles(
       dialogTitle: 'Select DFA to compare',
-      executingStatus: 'Comparing automata...',
-      successStatus: 'Comparison complete',
-      missingCallbackMessage: 'Load a DFA before comparing equivalence.',
+      type: FileType.custom,
+      allowedExtensions: const ['jff'],
+      withData: true,
+    );
+
+    if (selection == null || selection.files.isEmpty) {
+      return;
+    }
+
+    final file = selection.files.single;
+    setState(() {
+      _isExecuting = true;
+      _currentAlgorithm = 'Compare Equivalence';
+      _executionStatus = 'Loading automaton...';
+      _executionProgress = 0.0;
+    });
+
+    // Load the second automaton
+    final loadResult = await loadAutomatonFromPlatformFile(_fileService, file);
+
+    if (!mounted) return;
+
+    if (!loadResult.isSuccess) {
+      setState(() {
+        _isExecuting = false;
+        _executionStatus = 'Failed to load automaton';
+      });
+      _showSnack(
+        loadResult.error ?? 'Selected file did not contain readable data.',
+        isError: true,
+      );
+      return;
+    }
+
+    setState(() {
+      _executionProgress = 0.5;
+      _executionStatus = 'Comparing automata...';
+    });
+
+    // Compare the automata using LanguageComparator
+    final comparisonResult = LanguageComparator.compareLanguages(
+      widget.currentAutomaton!,
+      loadResult.data!,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _isExecuting = false;
+      _executionProgress = 1.0;
+      _executionStatus = 'Comparison complete';
+    });
+
+    if (!comparisonResult.isSuccess) {
+      _showSnack(comparisonResult.error ?? 'Comparison failed', isError: true);
+      return;
+    }
+
+    // Show the comparison result in a dialog
+    if (!mounted) return;
+    await showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        child: SizedBox(
+          width: MediaQuery.of(context).size.width * 0.9,
+          height: MediaQuery.of(context).size.height * 0.9,
+          child: Column(
+            children: [
+              // Dialog header
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.compare_arrows,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Language Comparison',
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              // Comparison viewer
+              Expanded(
+                child: SingleChildScrollView(
+                  child: LanguageComparisonViewer(
+                    comparisonResult: comparisonResult.data!,
+                    automatonATitle: 'Current Automaton',
+                    automatonBTitle: 'Compared Automaton',
+                    showProductAutomaton: true,
+                    showSteps: _stepByStepMode,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

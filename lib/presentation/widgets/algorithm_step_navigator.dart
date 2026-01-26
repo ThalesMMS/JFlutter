@@ -139,11 +139,7 @@ class AlgorithmStepNavigator extends ConsumerWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(
-          Icons.pin_drop,
-          size: 18,
-          color: colorScheme.primary,
-        ),
+        Icon(Icons.pin_drop, size: 18, color: colorScheme.primary),
         const SizedBox(width: 8),
         Text(
           'Step ${stepState.currentStepNumber} of ${stepState.totalSteps}',
@@ -172,24 +168,18 @@ class AlgorithmStepNavigator extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           backgroundColor: colorScheme.secondaryContainer,
           foregroundColor: colorScheme.onSecondaryContainer,
-          disabledBackgroundColor:
-              colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-          disabledForegroundColor:
-              colorScheme.onSurface.withValues(alpha: 0.3),
+          disabledBackgroundColor: colorScheme.surfaceContainerHighest
+              .withValues(alpha: 0.3),
+          disabledForegroundColor: colorScheme.onSurface.withValues(alpha: 0.3),
           elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, size: 20),
             const SizedBox(width: 4),
-            Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
+            Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
           ],
         ),
       ),
@@ -218,19 +208,13 @@ class AlgorithmStepNavigator extends ConsumerWidget {
           padding: const EdgeInsets.all(16),
           backgroundColor: colorScheme.primaryContainer,
           foregroundColor: colorScheme.onPrimaryContainer,
-          disabledBackgroundColor:
-              colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-          disabledForegroundColor:
-              colorScheme.onSurface.withValues(alpha: 0.3),
+          disabledBackgroundColor: colorScheme.surfaceContainerHighest
+              .withValues(alpha: 0.3),
+          disabledForegroundColor: colorScheme.onSurface.withValues(alpha: 0.3),
           elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
-        child: Icon(
-          isPlaying ? Icons.pause : Icons.play_arrow,
-          size: 24,
-        ),
+        child: Icon(isPlaying ? Icons.pause : Icons.play_arrow, size: 24),
       ),
     );
   }
@@ -277,7 +261,9 @@ class AlgorithmStepNavigator extends ConsumerWidget {
               value: stepState.currentStepIndex.toDouble(),
               min: 0,
               max: (stepState.totalSteps - 1).toDouble(),
-              divisions: stepState.totalSteps > 1 ? stepState.totalSteps - 1 : 1,
+              divisions: stepState.totalSteps > 1
+                  ? stepState.totalSteps - 1
+                  : 1,
               label: 'Step ${stepState.currentStepNumber}',
               onChanged: (value) {
                 final newIndex = value.toInt();

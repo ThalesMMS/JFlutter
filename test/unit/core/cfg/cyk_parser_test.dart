@@ -482,7 +482,9 @@ void main() {
           );
 
           expect(
-            parseResult.steps.any((s) => s.stepType == CYKStepType.checkAcceptance),
+            parseResult.steps.any(
+              (s) => s.stepType == CYKStepType.checkAcceptance,
+            ),
             true,
             reason: 'Should have check acceptance step',
           );
@@ -567,7 +569,8 @@ void main() {
             expect(
               applyProdSteps.isNotEmpty,
               true,
-              reason: 'Should have production application steps for accepted strings',
+              reason:
+                  'Should have production application steps for accepted strings',
             );
 
             // Production steps should have production information
@@ -580,12 +583,14 @@ void main() {
               expect(
                 step.productionLeft,
                 isNotNull,
-                reason: 'Apply production step should have production left side',
+                reason:
+                    'Apply production step should have production left side',
               );
               expect(
                 step.productionRight,
                 isNotNull,
-                reason: 'Apply production step should have production right side',
+                reason:
+                    'Apply production step should have production right side',
               );
             }
           }

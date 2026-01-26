@@ -142,9 +142,13 @@ class CYKStep {
       tableState: tableState != null
           ? List.unmodifiable(
               tableState
-                  .map((row) => List.unmodifiable(
-                        row.map((cell) => Set<String>.unmodifiable(cell)).toList(),
-                      ))
+                  .map(
+                    (row) => List.unmodifiable(
+                      row
+                          .map((cell) => Set<String>.unmodifiable(cell))
+                          .toList(),
+                    ),
+                  )
                   .toList(),
             )
           : null,
@@ -278,8 +282,12 @@ class CYKStep {
     required Set<String> leftNonTerminals,
     required Set<String> rightNonTerminals,
   }) {
-    final leftVars = leftNonTerminals.isEmpty ? '∅' : leftNonTerminals.join(', ');
-    final rightVars = rightNonTerminals.isEmpty ? '∅' : rightNonTerminals.join(', ');
+    final leftVars = leftNonTerminals.isEmpty
+        ? '∅'
+        : leftNonTerminals.join(', ');
+    final rightVars = rightNonTerminals.isEmpty
+        ? '∅'
+        : rightNonTerminals.join(', ');
     final leftLen = splitPoint + 1;
     final leftSub = substring.substring(0, leftLen);
     final rightSub = substring.substring(leftLen);
@@ -528,8 +536,11 @@ class CYKStep {
         orElse: () => CYKStepType.initialize,
       ),
       tableState: (json['tableState'] as List?)
-          ?.map((row) =>
-              (row as List).map((cell) => (cell as List).cast<String>().toSet()).toList())
+          ?.map(
+            (row) => (row as List)
+                .map((cell) => (cell as List).cast<String>().toSet())
+                .toList(),
+          )
           .toList(),
       currentRow: json['currentRow'] as int?,
       currentCol: json['currentCol'] as int?,
@@ -541,13 +552,19 @@ class CYKStep {
       leftCol: json['leftCol'] as int?,
       rightRow: json['rightRow'] as int?,
       rightCol: json['rightCol'] as int?,
-      leftNonTerminals: (json['leftNonTerminals'] as List?)?.cast<String>().toSet(),
-      rightNonTerminals: (json['rightNonTerminals'] as List?)?.cast<String>().toSet(),
+      leftNonTerminals: (json['leftNonTerminals'] as List?)
+          ?.cast<String>()
+          .toSet(),
+      rightNonTerminals: (json['rightNonTerminals'] as List?)
+          ?.cast<String>()
+          .toSet(),
       production: json['production'] as String?,
       productionLeft: json['productionLeft'] as String?,
       productionRight: (json['productionRight'] as List?)?.cast<String>(),
       addedNonTerminal: json['addedNonTerminal'] as String?,
-      cellNonTerminals: (json['cellNonTerminals'] as List?)?.cast<String>().toSet(),
+      cellNonTerminals: (json['cellNonTerminals'] as List?)
+          ?.cast<String>()
+          .toSet(),
       terminal: json['terminal'] as String?,
       isAccepted: json['isAccepted'] as bool? ?? false,
       cellModified: json['cellModified'] as bool? ?? false,
@@ -605,7 +622,9 @@ class CYKStep {
 
   /// Gets a summary of the production being applied
   String? get productionSummary {
-    if (productionLeft != null && productionRight != null && productionRight!.length == 2) {
+    if (productionLeft != null &&
+        productionRight != null &&
+        productionRight!.length == 2) {
       return '$productionLeft → ${productionRight![0]} ${productionRight![1]}';
     }
     return production;

@@ -494,15 +494,15 @@ class RegexToNFAConverter {
           contextAlphabet: contextAlphabet,
         );
 
-        final nfa = _buildUnionNFA(left, right, contextAlphabet: contextAlphabet);
+        final nfa = _buildUnionNFA(
+          left,
+          right,
+          contextAlphabet: contextAlphabet,
+        );
         final newStart = nfa.initialState!;
         final newAccept = nfa.acceptingStates.first;
         final newTransitions = nfa.fsaTransitions
-            .where(
-              (t) =>
-                  t.fromState == newStart ||
-                  t.toState == newAccept,
-            )
+            .where((t) => t.fromState == newStart || t.toState == newAccept)
             .toSet();
 
         steps.add(
@@ -544,13 +544,12 @@ class RegexToNFAConverter {
           contextAlphabet: contextAlphabet,
         );
 
-        final epsilonTransition = nfa.fsaTransitions
-            .firstWhere(
-              (t) =>
-                  leftNFA.acceptingStates.contains(t.fromState) &&
-                  t.toState == rightNFA.initialState,
-              orElse: () => nfa.fsaTransitions.first,
-            );
+        final epsilonTransition = nfa.fsaTransitions.firstWhere(
+          (t) =>
+              leftNFA.acceptingStates.contains(t.fromState) &&
+              t.toState == rightNFA.initialState,
+          orElse: () => nfa.fsaTransitions.first,
+        );
 
         steps.add(
           RegexToNFAStep.concatenation(
@@ -577,7 +576,10 @@ class RegexToNFAConverter {
           contextAlphabet: contextAlphabet,
         );
 
-        final nfa = _buildKleeneStarNFA(child, contextAlphabet: contextAlphabet);
+        final nfa = _buildKleeneStarNFA(
+          child,
+          contextAlphabet: contextAlphabet,
+        );
         final newStart = nfa.initialState!;
         final newAccept = nfa.acceptingStates.firstWhere((s) => s != newStart);
         final newTransitions = nfa.fsaTransitions
@@ -617,11 +619,7 @@ class RegexToNFAConverter {
         final newStart = nfa.initialState!;
         final newAccept = nfa.acceptingStates.first;
         final newTransitions = nfa.fsaTransitions
-            .where(
-              (t) =>
-                  t.fromState == newStart ||
-                  t.toState == newAccept,
-            )
+            .where((t) => t.fromState == newStart || t.toState == newAccept)
             .toSet();
 
         steps.add(
@@ -652,11 +650,7 @@ class RegexToNFAConverter {
         final newStart = nfa.initialState!;
         final newAccept = nfa.acceptingStates.firstWhere((s) => s != newStart);
         final newTransitions = nfa.fsaTransitions
-            .where(
-              (t) =>
-                  t.fromState == newStart ||
-                  t.toState == newAccept,
-            )
+            .where((t) => t.fromState == newStart || t.toState == newAccept)
             .toSet();
 
         steps.add(

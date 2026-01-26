@@ -100,9 +100,7 @@ class AlgorithmAnimationNotifier
 
   /// Disable animations
   void disable() {
-    state = state.copyWith(
-      animationDuration: Duration.zero,
-    );
+    state = state.copyWith(animationDuration: Duration.zero);
   }
 
   /// Enable animations with default duration
@@ -121,5 +119,5 @@ class AlgorithmAnimationNotifier
 /// Provider for algorithm animation state
 final algorithmAnimationProvider =
     StateNotifierProvider<AlgorithmAnimationNotifier, AlgorithmAnimationState>(
-  (ref) => AlgorithmAnimationNotifier(),
-);
+      (ref) => AlgorithmAnimationNotifier(),
+    );

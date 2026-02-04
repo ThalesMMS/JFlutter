@@ -18,11 +18,13 @@ import '../providers/automaton_algorithm_provider.dart';
 import '../providers/automaton_layout_provider.dart';
 import '../providers/automaton_simulation_provider.dart';
 import '../providers/automaton_state_provider.dart';
+import '../providers/help_provider.dart';
 import '../widgets/algorithm_panel.dart';
 import '../widgets/algorithm_step_navigator.dart';
 import '../widgets/algorithm_step_viewer.dart';
 import '../widgets/automaton_canvas.dart';
 import '../widgets/automaton_canvas_tool.dart';
+import '../widgets/context_aware_help_panel.dart';
 import '../widgets/graphview_canvas_toolbar.dart';
 import '../widgets/mobile_automaton_controls.dart';
 import '../widgets/simulation_panel.dart';
@@ -525,6 +527,31 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     }
   }
 
+  void _showContextualHelp() {
+    final helpNotifier = ref.read(helpProvider.notifier);
+    final automaton = ref.read(automatonStateProvider).currentAutomaton;
+
+    // Determine the most relevant help content based on current automaton state
+    String helpContextId;
+    if (automaton == null) {
+      helpContextId = 'usage_getting_started';
+    } else if (automaton.hasEpsilonTransitions) {
+      helpContextId = 'concept_nfa';
+    } else if (automaton.isDeterministic) {
+      helpContextId = 'concept_dfa';
+    } else {
+      helpContextId = 'concept_nfa';
+    }
+
+    final helpContent = helpNotifier.getHelpByContext(helpContextId);
+    if (helpContent != null) {
+      ContextAwareHelpPanel.show(
+        context,
+        helpContent: helpContent,
+      );
+    }
+  }
+
   Widget _buildCanvasArea({
     required AutomatonStateProviderState state,
     required bool isMobile,
@@ -545,6 +572,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
 
     Widget buildCanvasWithToolbar(Widget child) {
       final hasAutomaton = state.currentAutomaton != null;
+      final VoidCallback? onHelp = _showContextualHelp;
       final onSimulate = hasAutomaton ? _openSimulationSheet : null;
       final onAlgorithms = hasAutomaton ? _openAlgorithmSheet : null;
 
@@ -557,11 +585,12 @@ class _FSAPageState extends ConsumerState<FSAPage> {
         return Stack(
           children: [
             Positioned.fill(child: child),
-            if (onSimulate != null || onAlgorithms != null)
+            if (onHelp != null || onSimulate != null || onAlgorithms != null)
               Positioned(
                 top: 16,
                 left: 16,
                 child: _CanvasQuickActions(
+                  onHelp: onHelp,
                   onSimulate: onSimulate,
                   onAlgorithms: onAlgorithms,
                 ),
@@ -702,6 +731,13 @@ class _FSAPageState extends ConsumerState<FSAPage> {
             : screenSize.width < 1400
             ? _buildTabletLayout(state)
             : _buildDesktopLayout(state),
+        floatingActionButton: !isMobile
+            ? FloatingActionButton(
+                onPressed: _showContextualHelp,
+                tooltip: 'Context-Aware Help',
+                child: const Icon(Icons.help_outline),
+              )
+            : null,
       ),
     );
   }
@@ -879,10 +915,15 @@ class _FSAPageState extends ConsumerState<FSAPage> {
 }
 
 class _CanvasQuickActions extends StatelessWidget {
-  const _CanvasQuickActions({this.onSimulate, this.onAlgorithms});
+  const _CanvasQuickActions({
+    this.onSimulate,
+    this.onAlgorithms,
+    this.onHelp,
+  });
 
   final VoidCallback? onSimulate;
   final VoidCallback? onAlgorithms;
+  final VoidCallback? onHelp;
 
   @override
   Widget build(BuildContext context) {
@@ -892,12 +933,20 @@ class _CanvasQuickActions extends StatelessWidget {
     return Material(
       elevation: 6,
       borderRadius: BorderRadius.circular(32),
-      color: colorScheme.surface.withOpacity(0.92),
+      color: colorScheme.surface.withValues(alpha: 0.92),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (onHelp != null)
+              IconButton(
+                tooltip: 'Help',
+                icon: const Icon(Icons.help_outline),
+                onPressed: onHelp,
+              ),
+            if (onHelp != null && (onSimulate != null || onAlgorithms != null))
+              const SizedBox(width: 4),
             if (onSimulate != null)
               IconButton(
                 tooltip: 'Simulate',

@@ -551,7 +551,7 @@ class _TMTapePanelState extends State<TMTapePanel>
       builder: (context, child) {
         // Calculate glow intensity based on animation value
         final glowIntensity = isNewCell ? _expansionGlowAnimation.value : 0.0;
-        final glowColor = theme.colorScheme.primary.withOpacity(
+        final glowColor = theme.colorScheme.primary.withValues(alpha: 
           0.4 * glowIntensity,
         );
 
@@ -566,7 +566,7 @@ class _TMTapePanelState extends State<TMTapePanel>
             border: Border.all(
               color: isHead
                   ? theme.colorScheme.primary
-                  : theme.colorScheme.outline.withOpacity(0.3),
+                  : theme.colorScheme.outline.withValues(alpha: 0.3),
               width: isHead ? 2 : 1,
             ),
             borderRadius: BorderRadius.circular(4),

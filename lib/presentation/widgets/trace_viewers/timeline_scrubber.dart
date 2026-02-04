@@ -125,12 +125,8 @@ class TimelineScrubber extends StatelessWidget {
               inactiveTrackColor: colorScheme.surfaceContainerHighest,
               thumbColor: colorScheme.primary,
               overlayColor: colorScheme.primary.withValues(alpha: 0.12),
-              disabledActiveTrackColor: colorScheme.onSurface.withValues(
-                alpha: 0.12,
-              ),
-              disabledInactiveTrackColor: colorScheme.onSurface.withValues(
-                alpha: 0.12,
-              ),
+              disabledActiveTrackColor: colorScheme.onSurface.withValues(alpha: 0.12),
+              disabledInactiveTrackColor: colorScheme.onSurface.withValues(alpha: 0.12),
               disabledThumbColor: colorScheme.onSurface.withValues(alpha: 0.38),
               valueIndicatorColor: colorScheme.primaryContainer,
               valueIndicatorTextStyle: Theme.of(context).textTheme.labelSmall

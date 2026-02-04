@@ -12,6 +12,7 @@
 //
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
 
@@ -54,15 +55,17 @@ Future<void> _pumpSimulationPanel(
   binding.window.devicePixelRatioTestValue = 1.0;
 
   await tester.pumpWidgetBuilder(
-    MaterialApp(
-      home: Scaffold(
-        body: SimulationPanel(
-          onSimulate: callback,
-          simulationResult: simulationResult,
-          regexResult: regexResult,
-          highlightService: highlightService,
-          animationSpeed: 1.0,
-          onAnimationSpeedChanged: (_) {},
+    ProviderScope(
+      child: MaterialApp(
+        home: Scaffold(
+          body: SimulationPanel(
+            onSimulate: callback,
+            simulationResult: simulationResult,
+            regexResult: regexResult,
+            highlightService: highlightService,
+            animationSpeed: 1.0,
+            onAnimationSpeedChanged: (_) {},
+          ),
         ),
       ),
     ),

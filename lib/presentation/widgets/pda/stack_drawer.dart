@@ -557,7 +557,7 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                                               color: theme
                                                   .colorScheme
                                                   .errorContainer
-                                                  .withOpacity(0.3),
+                                                  .withValues(alpha: 0.3),
                                               borderRadius:
                                                   BorderRadius.circular(4),
                                             ),
@@ -582,7 +582,7 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                                               color: theme
                                                   .colorScheme
                                                   .primaryContainer
-                                                  .withOpacity(0.3),
+                                                  .withValues(alpha: 0.3),
                                               borderRadius:
                                                   BorderRadius.circular(4),
                                             ),
@@ -715,7 +715,7 @@ class _PDAStackPanelState extends State<PDAStackPanel>
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       decoration: BoxDecoration(
-        color: theme.colorScheme.errorContainer.withOpacity(0.8),
+        color: theme.colorScheme.errorContainer.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(4),
         border: Border.all(color: theme.colorScheme.error, width: 1),
       ),
@@ -758,7 +758,7 @@ class _PDAStackPanelState extends State<PDAStackPanel>
         horizontal: 6,
         vertical: 4,
       ), // More compact
-      color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

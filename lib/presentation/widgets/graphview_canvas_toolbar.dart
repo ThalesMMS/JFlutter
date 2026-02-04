@@ -13,8 +13,11 @@
 //
 import 'package:flutter/material.dart';
 
+import '../../core/constants/help_content.dart';
 import '../../features/canvas/graphview/base_graphview_canvas_controller.dart';
 import 'automaton_canvas_tool.dart';
+import 'contextual_help_tooltip.dart';
+import 'keyboard_shortcuts_dialog.dart';
 
 /// Toolbar exposing viewport commands for the GraphView canvas.
 class GraphViewCanvasToolbar extends StatefulWidget {
@@ -135,6 +138,10 @@ class _GraphViewCanvasToolbarState extends State<GraphViewCanvasToolbar> {
         action: _ToolbarAction.undo,
         handler: controller.canUndo ? () => controller.undo() : null,
       ),
+      _ToolbarButtonConfig(
+        action: _ToolbarAction.help,
+        handler: () => KeyboardShortcutsDialog.show(context),
+      ),
     ];
 
     switch (widget.layout) {
@@ -187,7 +194,7 @@ class _DesktopToolbar extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: Colors.black.withValues(alpha: 0.08),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -206,7 +213,7 @@ class _DesktopToolbar extends StatelessWidget {
                               ? (isSelected
                                     ? colorScheme.primaryContainer
                                     : colorScheme.surfaceContainerHighest
-                                          .withOpacity(0.18))
+                                          .withValues(alpha: 0.18))
                               : null,
                           foregroundColor: isToggle
                               ? (isSelected
@@ -218,17 +225,25 @@ class _DesktopToolbar extends StatelessWidget {
                             side: isToggle && !isSelected
                                 ? BorderSide(
                                     color: colorScheme.outlineVariant
-                                        .withOpacity(0.55),
+                                        .withValues(alpha: 0.55),
                                   )
                                 : BorderSide.none,
                           ),
                         );
-                        return IconButton(
-                          tooltip: entry.action.label,
+                        final helpContent = kHelpContent[entry.action.helpContentId];
+                        final button = IconButton(
+                          tooltip:
+                              helpContent == null ? entry.action.label : null,
                           icon: Icon(entry.action.icon),
                           onPressed: entry.handler,
                           style: iconStyle,
                         );
+                        return helpContent != null
+                            ? ContextualHelpTooltip(
+                                helpContent: helpContent,
+                                child: button,
+                              )
+                            : button;
                       },
                     ),
                     if (entry != actions.last)
@@ -236,7 +251,7 @@ class _DesktopToolbar extends StatelessWidget {
                         width: 1,
                         height: 24,
                         margin: const EdgeInsets.symmetric(horizontal: 4),
-                        color: colorScheme.outlineVariant.withOpacity(0.35),
+                        color: colorScheme.outlineVariant.withValues(alpha: 0.35),
                       ),
                   ],
                 ],
@@ -270,56 +285,75 @@ class _MobileToolbar extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
 
+
     return Align(
       alignment: Alignment.bottomCenter,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (statusMessage != null && statusMessage!.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Text(statusMessage!, style: textTheme.bodyMedium),
-              ),
-            Material(
-              elevation: 6,
-              borderRadius: BorderRadius.circular(16),
-              color: colorScheme.surface,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  alignment: WrapAlignment.center,
-                  children: [
-                    for (final entry in actions)
-                      FilledButton.icon(
-                        onPressed: entry.handler,
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          maxHeight: 400,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (statusMessage != null && statusMessage!.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(statusMessage!, style: textTheme.bodyMedium),
+                ),
+              Flexible(
+                child: Material(
+                  elevation: 6,
+                  borderRadius: BorderRadius.circular(16),
+                  color: colorScheme.surface,
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(12),
+                    child: Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      alignment: WrapAlignment.center,
+                      children: [
+                        for (final entry in actions)
+                          Builder(
+                            builder: (context) {
+                              final helpContent = kHelpContent[entry.action.helpContentId];
+                              final button = FilledButton.icon(
+                                onPressed: entry.handler,
+                                style: FilledButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  backgroundColor: entry.isToggle && entry.isSelected
+                                      ? colorScheme.primary
+                                      : entry.isToggle
+                                      ? colorScheme.surfaceContainerHighest
+                                      : null,
+                                  foregroundColor: entry.isToggle && entry.isSelected
+                                      ? colorScheme.onPrimary
+                                      : entry.isToggle
+                                      ? colorScheme.onSurfaceVariant
+                                      : null,
+                                ),
+                                icon: Icon(entry.action.icon),
+                                label: Text(entry.action.label),
+                              );
+                              return helpContent != null
+                                  ? ContextualHelpTooltip(
+                                      helpContent: helpContent,
+                                      child: button,
+                                    )
+                                  : button;
+                            },
                           ),
-                          backgroundColor: entry.isToggle && entry.isSelected
-                              ? colorScheme.primary
-                              : entry.isToggle
-                              ? colorScheme.surfaceContainerHighest
-                              : null,
-                          foregroundColor: entry.isToggle && entry.isSelected
-                              ? colorScheme.onPrimary
-                              : entry.isToggle
-                              ? colorScheme.onSurfaceVariant
-                              : null,
-                        ),
-                        icon: Icon(entry.action.icon),
-                        label: Text(entry.action.label),
-                      ),
-                  ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -341,17 +375,19 @@ class _ToolbarButtonConfig {
 }
 
 enum _ToolbarAction {
-  selection(icon: Icons.pan_tool, label: 'Select'),
-  addState(icon: Icons.add, label: 'Add state'),
-  transition(icon: Icons.arrow_right_alt, label: 'Add transition'),
-  undo(icon: Icons.undo, label: 'Undo'),
-  redo(icon: Icons.redo, label: 'Redo'),
-  fitContent(icon: Icons.fit_screen, label: 'Fit to content'),
-  resetView(icon: Icons.center_focus_strong, label: 'Reset view'),
-  clear(icon: Icons.delete_outline, label: 'Clear canvas');
+  selection(icon: Icons.pan_tool, label: 'Select', helpContentId: 'tool_select'),
+  addState(icon: Icons.add, label: 'Add state', helpContentId: 'tool_add_state'),
+  transition(icon: Icons.arrow_right_alt, label: 'Add transition', helpContentId: 'tool_add_transition'),
+  undo(icon: Icons.undo, label: 'Undo', helpContentId: 'tool_undo'),
+  redo(icon: Icons.redo, label: 'Redo', helpContentId: 'tool_redo'),
+  fitContent(icon: Icons.fit_screen, label: 'Fit to content', helpContentId: 'tool_fit_content'),
+  resetView(icon: Icons.center_focus_strong, label: 'Reset view', helpContentId: 'tool_reset_view'),
+  clear(icon: Icons.delete_outline, label: 'Clear canvas', helpContentId: 'tool_clear'),
+  help(icon: Icons.help_outline, label: 'Help & Shortcuts', helpContentId: 'shortcut_canvas_general');
 
-  const _ToolbarAction({required this.icon, required this.label});
+  const _ToolbarAction({required this.icon, required this.label, required this.helpContentId});
 
   final IconData icon;
   final String label;
+  final String helpContentId;
 }

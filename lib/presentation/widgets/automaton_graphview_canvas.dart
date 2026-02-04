@@ -1450,9 +1450,7 @@ class _AutomatonGraphViewCanvasState
                         right: 16,
                         child: DecoratedBox(
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.surface.withValues(
-                              alpha: 0.9,
-                            ),
+                            color: theme.colorScheme.surface.withValues(alpha: 0.9),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: theme.colorScheme.primary,

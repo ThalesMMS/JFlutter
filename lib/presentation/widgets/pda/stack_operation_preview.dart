@@ -38,11 +38,11 @@ class StackOperationPreview extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.3)),
+        border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.3)),
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -184,7 +184,7 @@ class StackOperationPreview extends StatelessWidget {
               border: Border.all(
                 color: isTop
                     ? theme.colorScheme.primary
-                    : theme.colorScheme.outline.withOpacity(0.3),
+                    : theme.colorScheme.outline.withValues(alpha: 0.3),
                 width: isTop ? 1.5 : 1,
               ),
               borderRadius: BorderRadius.circular(2),

@@ -14,6 +14,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -79,53 +80,55 @@ class _FSAPageTestWidgetState extends State<_FSAPageTestWidget> {
       _canvasController.graphRevision,
     ]);
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          // Canvas
-          Positioned.fill(
-            child: AutomatonCanvas(
-              automaton: widget.automaton,
-              canvasKey: _canvasKey,
-              controller: _canvasController,
-              toolController: _toolController,
-              simulationResult: null,
-              showTrace: false,
-            ),
-          ),
-          // Determinism badge
-          FSADeterminismOverlay(automaton: widget.automaton),
-          // Toolbar
-          AnimatedBuilder(
-            animation: combinedListenable,
-            builder: (context, _) {
-              return GraphViewCanvasToolbar(
-                layout: widget.isMobile
-                    ? GraphViewCanvasToolbarLayout.mobile
-                    : GraphViewCanvasToolbarLayout.desktop,
+    return ProviderScope(
+      child: Scaffold(
+        body: Stack(
+          children: [
+            // Canvas
+            Positioned.fill(
+              child: AutomatonCanvas(
+                automaton: widget.automaton,
+                canvasKey: _canvasKey,
                 controller: _canvasController,
-                enableToolSelection: true,
-                activeTool: _toolController.activeTool,
-                onAddState: () {
-                  _toolController.setActiveTool(AutomatonCanvasTool.addState);
-                  _canvasController.addStateAtCenter();
-                },
-                onAddTransition: () {
-                  if (_toolController.activeTool !=
-                      AutomatonCanvasTool.transition) {
-                    _toolController.setActiveTool(
-                      AutomatonCanvasTool.transition,
-                    );
-                  }
-                },
-                onClear: () {},
-                statusMessage: widget.automaton == null
-                    ? 'No automaton loaded'
-                    : '',
-              );
-            },
-          ),
-        ],
+                toolController: _toolController,
+                simulationResult: null,
+                showTrace: false,
+              ),
+            ),
+            // Determinism badge
+            FSADeterminismOverlay(automaton: widget.automaton),
+            // Toolbar
+            AnimatedBuilder(
+              animation: combinedListenable,
+              builder: (context, _) {
+                return GraphViewCanvasToolbar(
+                  layout: widget.isMobile
+                      ? GraphViewCanvasToolbarLayout.mobile
+                      : GraphViewCanvasToolbarLayout.desktop,
+                  controller: _canvasController,
+                  enableToolSelection: true,
+                  activeTool: _toolController.activeTool,
+                  onAddState: () {
+                    _toolController.setActiveTool(AutomatonCanvasTool.addState);
+                    _canvasController.addStateAtCenter();
+                  },
+                  onAddTransition: () {
+                    if (_toolController.activeTool !=
+                        AutomatonCanvasTool.transition) {
+                      _toolController.setActiveTool(
+                        AutomatonCanvasTool.transition,
+                      );
+                    }
+                  },
+                  onClear: () {},
+                  statusMessage: widget.automaton == null
+                      ? 'No automaton loaded'
+                      : '',
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

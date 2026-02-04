@@ -286,9 +286,7 @@ class _AlgorithmStepHistoryPanelState
                             Icons.access_time,
                             size: 12,
                             color: isCurrentStep
-                                ? colorScheme.onPrimaryContainer.withValues(
-                                    alpha: 0.7,
-                                  )
+                                ? colorScheme.onPrimaryContainer.withValues(alpha: 0.7)
                                 : colorScheme.onSurfaceVariant,
                           ),
                           const SizedBox(width: 4),
@@ -299,9 +297,7 @@ class _AlgorithmStepHistoryPanelState
                             ),
                             style: textTheme.labelSmall?.copyWith(
                               color: isCurrentStep
-                                  ? colorScheme.onPrimaryContainer.withValues(
-                                      alpha: 0.7,
-                                    )
+                                  ? colorScheme.onPrimaryContainer.withValues(alpha: 0.7)
                                   : colorScheme.onSurfaceVariant,
                             ),
                           ),

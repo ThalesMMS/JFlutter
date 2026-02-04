@@ -72,7 +72,7 @@ class GridPainter extends CustomPainter {
     if (!config.enabled || !config.showGrid) return;
 
     final paint = Paint()
-      ..color = config.gridColor.withOpacity(config.gridOpacity)
+      ..color = config.gridColor.withValues(alpha: config.gridOpacity)
       ..strokeWidth = config.gridLineWidth
       ..style = PaintingStyle.stroke;
 

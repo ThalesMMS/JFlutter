@@ -23,9 +23,10 @@ import '../../core/models/fsa.dart';
 import '../../core/models/regex_analysis.dart';
 import '../../core/models/regex_simplification_step.dart';
 import '../providers/automaton_algorithm_provider.dart';
-import '../providers/automaton_provider.dart';
 import '../providers/automaton_state_provider.dart';
+import '../providers/help_provider.dart';
 import '../widgets/algorithm_panel.dart';
+import '../widgets/context_aware_help_panel.dart';
 import '../widgets/simulation_panel.dart';
 import '../widgets/tablet_layout_container.dart';
 import 'fsa_page.dart';
@@ -354,6 +355,28 @@ class _RegexPageState extends ConsumerState<RegexPage> {
     }
   }
 
+  void _showContextualHelp() {
+    final helpNotifier = ref.read(helpProvider.notifier);
+
+    // Determine the most relevant help content based on current regex state
+    String helpContextId;
+    if (_currentRegex.isNotEmpty && _isValid) {
+      // Show conversion help if user has a valid regex
+      helpContextId = 'algo_regex_to_nfa';
+    } else {
+      // Default: show general regex concepts
+      helpContextId = 'concept_regex';
+    }
+
+    final helpContent = helpNotifier.getHelpByContext(helpContextId);
+    if (helpContent != null) {
+      ContextAwareHelpPanel.show(
+        context,
+        helpContent: helpContent,
+      );
+    }
+  }
+
   void _runSimplificationWithSteps() {
     if (!_isValid || _currentRegex.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -505,7 +528,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                     Icons.info_outline,
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurfaceVariant.withOpacity(0.6),
+                    ).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
                     size: 20,
                   ),
                   const SizedBox(width: 8),
@@ -515,7 +538,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(
                           context,
-                        ).colorScheme.onSurfaceVariant.withOpacity(0.8),
+                        ).colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
                       ),
                     ),
                   ),
@@ -749,6 +772,11 @@ class _RegexPageState extends ConsumerState<RegexPage> {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showContextualHelp,
+        tooltip: 'Context-Aware Help',
+        child: const Icon(Icons.help_outline),
+      ),
     );
   }
 
@@ -767,7 +795,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                   right: BorderSide(
                     color: Theme.of(
                       context,
-                    ).colorScheme.outline.withOpacity(0.2),
+                    ).colorScheme.outline.withValues(alpha: 0.2),
                   ),
                 ),
               ),
@@ -825,6 +853,11 @@ class _RegexPageState extends ConsumerState<RegexPage> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showContextualHelp,
+        tooltip: 'Context-Aware Help',
+        child: const Icon(Icons.help_outline),
+      ),
     );
   }
 
@@ -852,6 +885,11 @@ class _RegexPageState extends ConsumerState<RegexPage> {
             _testStringMatch();
           },
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showContextualHelp,
+        tooltip: 'Context-Aware Help',
+        child: const Icon(Icons.help_outline),
       ),
     );
   }
@@ -897,7 +935,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                 Icons.info_outline,
                 color: Theme.of(
                   context,
-                ).colorScheme.onSurfaceVariant.withOpacity(0.6),
+                ).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
                 size: 20,
               ),
               const SizedBox(width: 8),
@@ -907,7 +945,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurfaceVariant.withOpacity(0.8),
+                    ).colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
                   ),
                 ),
               ),
@@ -1221,7 +1259,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
                 color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
                 ),
               ),
               child: SelectableText(

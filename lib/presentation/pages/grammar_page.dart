@@ -11,6 +11,9 @@
 //
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/grammar_provider.dart';
+import '../providers/help_provider.dart';
+import '../widgets/context_aware_help_panel.dart';
 import '../widgets/grammar_editor.dart';
 import '../widgets/grammar_simulation_panel.dart';
 import '../widgets/grammar_algorithm_panel.dart';
@@ -29,6 +32,29 @@ class _GrammarPageState extends ConsumerState<GrammarPage> {
   bool _showSimulation = false;
   bool _showAlgorithms = false;
 
+  void _showContextualHelp() {
+    final helpNotifier = ref.read(helpProvider.notifier);
+    final grammarState = ref.read(grammarProvider);
+
+    // Determine the most relevant help content based on current grammar state
+    String helpContextId;
+    if (grammarState.productions.isEmpty) {
+      helpContextId = 'usage_getting_started';
+    } else if (grammarState.isConverting || _showAlgorithms) {
+      helpContextId = 'concept_parsing';
+    } else {
+      helpContextId = 'concept_cfg';
+    }
+
+    final helpContent = helpNotifier.getHelpByContext(helpContextId);
+    if (helpContent != null) {
+      ContextAwareHelpPanel.show(
+        context,
+        helpContent: helpContent,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
@@ -40,6 +66,13 @@ class _GrammarPageState extends ConsumerState<GrammarPage> {
           : screenSize.width < 1400
           ? _buildTabletLayout()
           : _buildDesktopLayout(),
+      floatingActionButton: !isMobile
+          ? FloatingActionButton(
+              onPressed: _showContextualHelp,
+              tooltip: 'Context-Aware Help',
+              child: const Icon(Icons.help_outline),
+            )
+          : null,
     );
   }
 
@@ -80,6 +113,12 @@ class _GrammarPageState extends ConsumerState<GrammarPage> {
                     onPressed: () =>
                         setState(() => _showAlgorithms = !_showAlgorithms),
                   ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.help_outline),
+                  tooltip: 'Help',
+                  onPressed: _showContextualHelp,
                 ),
               ],
             ),

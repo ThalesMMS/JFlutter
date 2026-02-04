@@ -400,6 +400,8 @@ class AlgorithmStepViewer extends StatelessWidget {
         return 'Regex→NFA';
       case AlgorithmType.cykParsing:
         return 'CYK Parse';
+      case AlgorithmType.regexSimplification:
+        return 'Simplify';
     }
   }
 }

@@ -93,8 +93,8 @@ lib/
 ## Getting Started
 
 ### Prerequisites
-- Flutter SDK 3.24.0+
-- Dart SDK 3.8.0+
+- Flutter SDK 3.27.0+
+- Dart SDK 3.6.0+
 - Android Studio / VS Code (recommended)
 
 ### Installation
@@ -168,7 +168,7 @@ export JFLUTTER_KEY_PASSWORD="$JFLUTTER_KEY_PASSWORD"
 
 ### Test Suite Overview
 
-Run `flutter test` (Flutter 3.24.0+ / Dart 3.8.0+) to execute the full suite. Tests are organised to mirror the architecture:
+Run `flutter test` (Flutter 3.27.0+ / Dart 3.6.0+) to execute the full suite. Tests are organised to mirror the architecture:
 
 - **Algorithm validation** – `test/unit/` keeps DFA/NFA conversions, grammar analysis, and regex tooling aligned with the references.
 - **Core services** – `test/core/services/` verifies utilities such as the simulation highlight broadcaster.

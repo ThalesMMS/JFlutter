@@ -24,7 +24,6 @@ final settingsProvider = StateNotifierProvider<SettingsNotifier, SettingsModel>(
   (ref) {
     final repository = ref.watch(_settingsRepositoryProvider)();
     final notifier = SettingsNotifier(repository);
-    ref.onDispose(notifier.dispose);
     return notifier;
   },
 );

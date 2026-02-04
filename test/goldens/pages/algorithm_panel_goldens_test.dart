@@ -12,6 +12,7 @@
 //
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
 
@@ -51,25 +52,27 @@ Future<void> _pumpAlgorithmPanel(
   binding.window.devicePixelRatioTestValue = 1.0;
 
   await tester.pumpWidgetBuilder(
-    MaterialApp(
-      home: Scaffold(
-        body: AlgorithmPanel(
-          onNfaToDfa: onNfaToDfa,
-          onMinimizeDfa: onMinimizeDfa,
-          onClear: onClear,
-          onRegexToNfa: onRegexToNfa,
-          onFaToRegex: onFaToRegex,
-          onRemoveLambda: onRemoveLambda,
-          onCompleteDfa: onCompleteDfa,
-          onComplementDfa: onComplementDfa,
-          onPrefixClosure: onPrefixClosure,
-          onSuffixClosure: onSuffixClosure,
-          onFsaToGrammar: onFsaToGrammar,
-          onAutoLayout: onAutoLayout,
-          equivalenceResult: equivalenceResult,
-          equivalenceDetails: equivalenceDetails,
-          onStepByStepModeChanged: onStepByStepModeChanged,
-          fileService: fileService,
+    ProviderScope(
+      child: MaterialApp(
+        home: Scaffold(
+          body: AlgorithmPanel(
+            onNfaToDfa: onNfaToDfa,
+            onMinimizeDfa: onMinimizeDfa,
+            onClear: onClear,
+            onRegexToNfa: onRegexToNfa,
+            onFaToRegex: onFaToRegex,
+            onRemoveLambda: onRemoveLambda,
+            onCompleteDfa: onCompleteDfa,
+            onComplementDfa: onComplementDfa,
+            onPrefixClosure: onPrefixClosure,
+            onSuffixClosure: onSuffixClosure,
+            onFsaToGrammar: onFsaToGrammar,
+            onAutoLayout: onAutoLayout,
+            equivalenceResult: equivalenceResult,
+            equivalenceDetails: equivalenceDetails,
+            onStepByStepModeChanged: onStepByStepModeChanged,
+            fileService: fileService,
+          ),
         ),
       ),
     ),

@@ -15,7 +15,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/pda.dart';
 import '../../core/models/pda_transition.dart';
 import '../../core/models/state.dart' as automaton_state;
+import '../providers/help_provider.dart';
 import '../providers/pda_editor_provider.dart';
+import '../widgets/context_aware_help_panel.dart';
 import '../widgets/graphview_canvas_toolbar.dart';
 import '../widgets/automaton_canvas_tool.dart';
 import '../widgets/mobile_automaton_controls.dart';
@@ -133,6 +135,34 @@ class _PDAPageState extends ConsumerState<PDAPage> {
     });
   }
 
+  void _showContextualHelp() {
+    final helpNotifier = ref.read(helpProvider.notifier);
+    final editorState = ref.read(pdaEditorProvider);
+    final pda = editorState.pda;
+
+    // Determine the most relevant help content based on current PDA state
+    String helpContextId;
+    if (pda == null || pda.states.isEmpty) {
+      helpContextId = 'usage_getting_started';
+    } else if (_isSimulating || _currentStack.symbols.isNotEmpty) {
+      helpContextId = 'concept_stack';
+    } else {
+      helpContextId = 'concept_pda';
+    }
+
+    final helpContent = helpNotifier.getHelpByContext(helpContextId);
+    if (helpContent != null) {
+      ContextAwareHelpPanel.show(
+        context,
+        helpContent: helpContent,
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Help content not available.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
@@ -148,6 +178,13 @@ class _PDAPageState extends ConsumerState<PDAPage> {
             : screenSize.width < 1400
             ? _buildTabletLayout()
             : _buildDesktopLayout(),
+        floatingActionButton: !isMobile
+            ? FloatingActionButton(
+                onPressed: _showContextualHelp,
+                tooltip: 'Context-Aware Help',
+                child: const Icon(Icons.help_outline),
+              )
+            : null,
       ),
     );
   }
@@ -216,7 +253,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 12,
                       offset: const Offset(0, -4),
                     ),
@@ -229,7 +266,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
                       width: 36,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.outline.withOpacity(0.4),
+                        color: theme.colorScheme.outline.withValues(alpha: 0.4),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -381,6 +418,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
 
     final combinedListenable = _canvasController.graphRevision;
 
+    final VoidCallback? onHelp = _showContextualHelp;
     final onSimulate = hasPda
         ? () => _showPanelSheet(
             context: context,
@@ -407,11 +445,12 @@ class _PDAPageState extends ConsumerState<PDAPage> {
       return Stack(
         children: [
           Positioned.fill(child: canvas),
-          if (onSimulate != null || onAlgorithms != null)
+          if (onHelp != null || onSimulate != null || onAlgorithms != null)
             Positioned(
               top: 16,
               left: 16,
               child: _PdaCanvasQuickActions(
+                onHelp: onHelp,
                 onSimulate: onSimulate,
                 onAlgorithms: onAlgorithms,
               ),
@@ -562,8 +601,13 @@ class _PDAPageState extends ConsumerState<PDAPage> {
 }
 
 class _PdaCanvasQuickActions extends StatelessWidget {
-  const _PdaCanvasQuickActions({this.onSimulate, this.onAlgorithms});
+  const _PdaCanvasQuickActions({
+    this.onHelp,
+    this.onSimulate,
+    this.onAlgorithms,
+  });
 
+  final VoidCallback? onHelp;
   final VoidCallback? onSimulate;
   final VoidCallback? onAlgorithms;
 
@@ -575,12 +619,20 @@ class _PdaCanvasQuickActions extends StatelessWidget {
     return Material(
       elevation: 6,
       borderRadius: BorderRadius.circular(32),
-      color: colorScheme.surface.withOpacity(0.92),
+      color: colorScheme.surface.withValues(alpha: 0.92),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (onHelp != null)
+              IconButton(
+                tooltip: 'Help',
+                icon: const Icon(Icons.help_outline),
+                onPressed: onHelp,
+              ),
+            if (onHelp != null && (onSimulate != null || onAlgorithms != null))
+              const SizedBox(width: 4),
             if (onSimulate != null)
               IconButton(
                 tooltip: 'Simulate',

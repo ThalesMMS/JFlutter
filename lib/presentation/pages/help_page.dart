@@ -11,6 +11,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../widgets/help_search_delegate.dart';
+
 /// Help page with interactive documentation and tutorials
 /// Based on JFLAP's HelpAction.java and documentation structure
 class HelpPage extends ConsumerStatefulWidget {
@@ -93,6 +95,16 @@ class _HelpPageState extends ConsumerState<HelpPage> {
       appBar: AppBar(
         title: const Text('Help & Documentation'),
         actions: [
+          IconButton(
+            onPressed: () {
+              showSearch(
+                context: context,
+                delegate: HelpSearchDelegate(ref: ref),
+              );
+            },
+            icon: const Icon(Icons.search),
+            tooltip: 'Search Help',
+          ),
           IconButton(
             onPressed: _showQuickStart,
             icon: const Icon(Icons.rocket_launch),

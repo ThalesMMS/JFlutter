@@ -324,13 +324,16 @@ class _SimulationPanelState extends State<SimulationPanel> {
                 size: 20,
               ),
               const SizedBox(width: 8),
-              Text(
-                'Step-by-Step Mode',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+              Flexible(
+                child: Text(
+                  'Step-by-Step Mode',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               Switch(
                 value: _isStepByStep,
                 onChanged: (value) {

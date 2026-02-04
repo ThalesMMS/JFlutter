@@ -98,7 +98,7 @@ class _GrammarSimulationPanelState
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
-            initialValue: _selectedAlgorithm,
+            value: _selectedAlgorithm,
             decoration: const InputDecoration(
               border: OutlineInputBorder(),
               isDense: true,

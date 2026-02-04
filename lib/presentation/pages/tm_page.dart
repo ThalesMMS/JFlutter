@@ -15,7 +15,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/state.dart' as automaton_state;
 import '../../core/models/tm.dart';
 import '../../core/models/tm_transition.dart';
+import '../providers/help_provider.dart';
 import '../providers/tm_editor_provider.dart';
+import '../widgets/context_aware_help_panel.dart';
 import '../widgets/tm_canvas_graphview.dart';
 import '../widgets/tm_algorithm_panel.dart';
 import '../widgets/tm_simulation_panel.dart';
@@ -115,6 +117,27 @@ class _TMPageState extends ConsumerState<TMPage> {
     }
   }
 
+  void _showContextualHelp() {
+    final helpNotifier = ref.read(helpProvider.notifier);
+    final tm = ref.read(tmEditorProvider).tm;
+
+    // Determine the most relevant help content based on current TM state
+    String helpContextId;
+    if (tm == null) {
+      helpContextId = 'usage_getting_started';
+    } else {
+      helpContextId = 'concept_tm';
+    }
+
+    final helpContent = helpNotifier.getHelpByContext(helpContextId);
+    if (helpContent != null) {
+      ContextAwareHelpPanel.show(
+        context,
+        helpContent: helpContent,
+      );
+    }
+  }
+
   @override
   void dispose() {
     _tmEditorSub?.close();
@@ -140,6 +163,13 @@ class _TMPageState extends ConsumerState<TMPage> {
             : screenSize.width < 1400
             ? _buildTabletLayout()
             : _buildDesktopLayout(),
+        floatingActionButton: !isMobile
+            ? FloatingActionButton(
+                onPressed: _showContextualHelp,
+                tooltip: 'Context-Aware Help',
+                child: const Icon(Icons.help_outline),
+              )
+            : null,
       ),
     );
   }
@@ -242,6 +272,7 @@ class _TMPageState extends ConsumerState<TMPage> {
               top: 16,
               left: 16,
               child: _TmCanvasQuickActions(
+                onHelp: _showContextualHelp,
                 onSimulate: onSimulate,
                 onAlgorithms: onAlgorithms,
                 onMetrics: onMetrics,
@@ -588,11 +619,13 @@ class _TMPageState extends ConsumerState<TMPage> {
 
 class _TmCanvasQuickActions extends StatelessWidget {
   const _TmCanvasQuickActions({
+    this.onHelp,
     this.onSimulate,
     this.onAlgorithms,
     this.onMetrics,
   });
 
+  final VoidCallback? onHelp;
   final VoidCallback? onSimulate;
   final VoidCallback? onAlgorithms;
   final VoidCallback? onMetrics;
@@ -605,12 +638,21 @@ class _TmCanvasQuickActions extends StatelessWidget {
     return Material(
       elevation: 6,
       borderRadius: BorderRadius.circular(32),
-      color: colorScheme.surface.withOpacity(0.92),
+      color: colorScheme.surface.withValues(alpha: 0.92),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (onHelp != null)
+              IconButton(
+                tooltip: 'Help',
+                icon: const Icon(Icons.help_outline),
+                onPressed: onHelp,
+              ),
+            if (onHelp != null &&
+                (onSimulate != null || onAlgorithms != null || onMetrics != null))
+              const SizedBox(width: 4),
             if (onSimulate != null)
               IconButton(
                 tooltip: 'Simulate',

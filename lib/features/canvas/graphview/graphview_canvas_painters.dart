@@ -373,7 +373,7 @@ class GraphViewEdgePainter extends CustomPainter {
     final inputColor = theme.colorScheme.primary;
     final popColor = theme.colorScheme.secondary;
     final pushColor = theme.colorScheme.tertiary;
-    final lambdaColor = theme.colorScheme.outline.withOpacity(0.6);
+    final lambdaColor = theme.colorScheme.outline.withValues(alpha: 0.6);
     final separatorColor = baseColor;
 
     // Build formatted label with color coding

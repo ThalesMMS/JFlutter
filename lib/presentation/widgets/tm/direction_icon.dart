@@ -186,9 +186,9 @@ class TMDirectionChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: selected ? color.withOpacity(0.2) : Colors.transparent,
+          color: selected ? color.withValues(alpha: 0.2) : Colors.transparent,
           border: Border.all(
-            color: selected ? color : color.withOpacity(0.3),
+            color: selected ? color : color.withValues(alpha: 0.3),
             width: selected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(16),
@@ -267,7 +267,7 @@ class TMDirectionSelector extends StatelessWidget {
             iconSize: 20,
             style: IconButton.styleFrom(
               backgroundColor: isSelected
-                  ? color.withOpacity(0.2)
+                  ? color.withValues(alpha: 0.2)
                   : Colors.transparent,
               side: isSelected ? BorderSide(color: color, width: 2) : null,
             ),

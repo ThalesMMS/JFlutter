@@ -433,13 +433,16 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
 
     final acceptingStates = _states.where((state) => state.isAccepting).toSet();
 
+    const blankSymbol = 'B';
     final alphabet = <String>{};
-    final tapeAlphabet = <String>{'B'};
+    final tapeAlphabet = <String>{blankSymbol};
     final moveDirections = <String>{};
 
     for (final transition in transitionSet) {
       if (transition.readSymbol.isNotEmpty) {
-        alphabet.add(transition.readSymbol);
+        if (transition.readSymbol != blankSymbol) {
+          alphabet.add(transition.readSymbol);
+        }
         tapeAlphabet.add(transition.readSymbol);
       }
 
@@ -450,8 +453,7 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
       moveDirections.add(transition.direction.name);
     }
 
-    const blankSymbol = 'B';
-    tapeAlphabet.add(blankSymbol);
+    // blankSymbol already declared above and added to tapeAlphabet
 
     final now = DateTime.now();
 
@@ -462,9 +464,7 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
       transitions: transitionSet.map<Transition>((t) => t).toSet(),
       alphabet: alphabet,
       initialState: initialState,
-      acceptingStates: acceptingStates.isEmpty
-          ? {_states.last}
-          : acceptingStates,
+      acceptingStates: acceptingStates,
       created: now,
       modified: now,
       bounds: const math.Rectangle(0, 0, 800, 600),

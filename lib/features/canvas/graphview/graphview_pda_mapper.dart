@@ -124,9 +124,9 @@ class GraphViewPdaMapper {
       final isLambdaPush =
           edge.isLambdaPush ?? (edge.pushSymbol?.isEmpty ?? true);
 
-      final inputSymbol = edge.readSymbol ?? '';
-      final popSymbol = edge.popSymbol ?? '';
-      final pushSymbol = edge.pushSymbol ?? '';
+      final inputSymbol = isLambdaInput ? '' : (edge.readSymbol ?? '');
+      final popSymbol = isLambdaPop ? '' : (edge.popSymbol ?? '');
+      final pushSymbol = isLambdaPush ? '' : (edge.pushSymbol ?? '');
 
       final label = formatPdaTransitionLabel(
         inputSymbol: inputSymbol,

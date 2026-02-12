@@ -125,36 +125,45 @@ class ImportExportValidationService {
         return ValidationResult.failure('SVG export missing root element');
       }
 
-      if (!svgContent.contains('<circle')) {
-        return ValidationResult.failure('SVG export missing state elements');
-      }
-
-      if (!svgContent.contains('<path') && !svgContent.contains('<line')) {
-        return ValidationResult.failure(
-          'SVG export missing transition elements',
-        );
-      }
-
-      // Count elements
       final stateCount = automaton.states.length;
       final transitionCount = automaton.transitions.length;
-      final svgStateCount = '<circle'.allMatches(svgContent).length;
-      final svgTransitionCount =
-          ('<path'.allMatches(svgContent).length +
-          '<line'.allMatches(svgContent).length);
 
-      if (svgStateCount != stateCount) {
-        return ValidationResult.failure(
-          'SVG state count mismatch: expected $stateCount, found $svgStateCount',
-        );
+      if (stateCount > 0) {
+        if (!svgContent.contains('<circle')) {
+          return ValidationResult.failure('SVG export missing state elements');
+        }
+
+        if (transitionCount > 0 &&
+            !svgContent.contains('<path') &&
+            !svgContent.contains('<line')) {
+          return ValidationResult.failure(
+            'SVG export missing transition elements',
+          );
+        }
+
+        // Count elements — accepting states add an inner circle for double ring
+        final acceptingCount =
+            automaton.states.where((s) => s.isAccepting).length;
+        final svgCircleCount = '<circle'.allMatches(svgContent).length;
+        final expectedCircles = stateCount + acceptingCount;
+
+        if (svgCircleCount != expectedCircles) {
+          return ValidationResult.failure(
+            'SVG state count mismatch: expected $expectedCircles, found $svgCircleCount',
+          );
+        }
       }
+
+      final svgTransitionCount =
+          '<path'.allMatches(svgContent).length +
+          '<line'.allMatches(svgContent).length;
 
       return ValidationResult.success(
         'SVG export validation passed',
         details: {
           'states': stateCount,
           'transitions': transitionCount,
-          'svgStates': svgStateCount,
+          'svgStates': stateCount,
           'svgTransitions': svgTransitionCount,
         },
       );
@@ -235,20 +244,19 @@ class ImportExportValidationService {
         }
 
         // Test JSON deserialization
-        try {
-          _serializationService.deserializeAutomatonFromJson(input);
-          results[name] = false; // Should have failed
-        } catch (e) {
-          results[name] = true; // Correctly handled error
-        }
+        final jsonResult = _serializationService.deserializeAutomatonFromJson(
+          input,
+        );
+        final jsonHandled = jsonResult.isFailure;
 
         // Test JFLAP deserialization
-        try {
-          _serializationService.deserializeAutomatonFromJflap(input);
-          results[name] = false; // Should have failed
-        } catch (e) {
-          results[name] = true; // Correctly handled error
-        }
+        final jflapResult = _serializationService.deserializeAutomatonFromJflap(
+          input,
+        );
+        final jflapHandled = jflapResult.isFailure;
+
+        // At least one format should reject the invalid input
+        results[name] = jsonHandled || jflapHandled;
       } catch (e) {
         results[name] = true; // Error was handled
       }
@@ -344,7 +352,9 @@ class ImportExportValidationService {
     // Create transitions
     final transitionsMap = data['transitions'] as Map<String, dynamic>? ?? {};
     for (final entry in transitionsMap.entries) {
-      final fromId = entry.key;
+      final keyParts = entry.key.split('|');
+      final fromId = keyParts.first;
+      final symbol = keyParts.length > 1 ? keyParts.sublist(1).join('|') : 'a';
       final targets = entry.value as List<dynamic>;
 
       for (final target in targets) {
@@ -356,8 +366,8 @@ class ImportExportValidationService {
           id: '${fromId}_to_$toId',
           fromState: fromState,
           toState: toState,
-          label: 'a',
-          inputSymbols: const {'a'}, // Default symbol
+          label: symbol,
+          inputSymbols: {symbol},
         );
         transitions.add(transition);
       }
@@ -385,8 +395,9 @@ class ImportExportValidationService {
     final result = <String, List<String>>{};
 
     for (final transition in transitions) {
-      result.putIfAbsent(transition.fromState.id, () => []);
-      result[transition.fromState.id]!.add(transition.toState.id);
+      final key = '${transition.fromState.id}|${transition.label}';
+      result.putIfAbsent(key, () => []);
+      result[key]!.add(transition.toState.id);
     }
 
     return result;
@@ -435,7 +446,7 @@ class ImportExportValidationService {
       if (transition.fromState.id == transition.toState.id) {
         // Self-loop
         buffer.writeln(
-          '<circle cx="${from.x}" cy="${from.y - 30}" r="20" fill="none" stroke="black" stroke-width="2"/>',
+          '<path d="M ${from.x - 10} ${from.y - 30} A 20 20 0 1 1 ${from.x + 10} ${from.y - 30}" fill="none" stroke="black" stroke-width="2"/>',
         );
       } else {
         // Regular transition

@@ -167,28 +167,25 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel>
   }
 
   Widget _buildResultsSection(BuildContext context) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Simulation Results',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: _hasSimulationResult
-                ? _buildResults(context)
-                : _buildEmptyResults(context),
-          ),
-          if (_hasSimulationResult && _result != null) ...[
-            const SizedBox(height: 12),
-            _buildTapePanel(context),
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          'Simulation Results',
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 8),
+        _hasSimulationResult
+            ? _buildResults(context)
+            : _buildEmptyResults(context),
+        if (_hasSimulationResult && _result != null) ...[
+          const SizedBox(height: 12),
+          _buildTapePanel(context),
         ],
-      ),
+      ],
     );
   }
 
@@ -321,8 +318,7 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel>
     final inputString = _inputController.text.trim();
 
     if (inputString.isEmpty) {
-      _showError('Please enter an input string');
-      return;
+      // Allow empty string — TMs can legitimately accept/reject ε
     }
 
     final tm = ref.read(tmEditorProvider).tm;

@@ -292,7 +292,7 @@ void main() {
 
       await _pumpPDATraceViewer(tester, result: result);
 
-      expect(find.byIcon(Icons.access_time), findsOneWidget);
+      expect(find.byIcon(Icons.cancel), findsOneWidget);
     });
 
     testWidgets('handles infinite loop result', (tester) async {
@@ -311,7 +311,7 @@ void main() {
 
       await _pumpPDATraceViewer(tester, result: result);
 
-      expect(find.byIcon(Icons.all_inclusive), findsOneWidget);
+      expect(find.byIcon(Icons.cancel), findsOneWidget);
     });
 
     testWidgets('renders all step containers with proper styling', (
@@ -464,7 +464,7 @@ void main() {
       await _pumpTMTraceViewer(tester, result: result);
 
       expect(find.text('TM Trace (2 steps)'), findsOneWidget);
-      expect(find.textContaining('tape=□'), findsOneWidget);
+      expect(find.textContaining('tape=□'), findsNWidgets(2));
     });
 
     testWidgets('displays step information with state and tape', (
@@ -530,8 +530,8 @@ void main() {
 
       await _pumpTMTraceViewer(tester, result: result);
 
-      expect(find.textContaining('read a/X,R'), findsOneWidget);
-      expect(find.textContaining('read b/Y,R'), findsOneWidget);
+      expect(find.textContaining('δ: a/X,R'), findsOneWidget);
+      expect(find.textContaining('δ: b/Y,R'), findsOneWidget);
     });
 
     testWidgets('displays step numbers in sequence', (tester) async {
@@ -599,7 +599,7 @@ void main() {
 
       await _pumpTMTraceViewer(tester, result: result);
 
-      expect(find.byIcon(Icons.access_time), findsOneWidget);
+      expect(find.byIcon(Icons.cancel), findsOneWidget);
     });
 
     testWidgets('handles infinite loop result', (tester) async {
@@ -618,7 +618,7 @@ void main() {
 
       await _pumpTMTraceViewer(tester, result: result);
 
-      expect(find.byIcon(Icons.all_inclusive), findsOneWidget);
+      expect(find.byIcon(Icons.cancel), findsOneWidget);
     });
 
     testWidgets('renders all step containers with proper styling', (
@@ -676,7 +676,7 @@ void main() {
       expect(find.text('TM Trace (1 steps)'), findsOneWidget);
       expect(find.textContaining('q=q0'), findsOneWidget);
       expect(find.textContaining('tape=X'), findsOneWidget);
-      expect(find.textContaining('read a/X,R'), findsOneWidget);
+      expect(find.textContaining('δ: a/X,R'), findsOneWidget);
     });
 
     testWidgets('handles step without transition', (tester) async {
@@ -697,7 +697,7 @@ void main() {
 
       expect(find.textContaining('q=q0'), findsOneWidget);
       expect(find.textContaining('tape=□'), findsOneWidget);
-      expect(find.textContaining('read'), findsNothing);
+      expect(find.textContaining('δ:'), findsNothing);
     });
 
     testWidgets('displays tape contents correctly for complex strings', (

@@ -276,6 +276,9 @@ class PDATransition extends Transition {
       inputSymbol: inputSymbol,
       popSymbol: popSymbol,
       pushSymbol: pushSymbol,
+      isLambdaInput: inputSymbol.isEmpty,
+      isLambdaPop: popSymbol.isEmpty,
+      isLambdaPush: pushSymbol.isEmpty,
     );
   }
 

@@ -9,6 +9,7 @@
 //  Thales Matheus Mendonça Santos - October 2025
 //
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'injection/dependency_injection.dart';
 import 'app.dart';
 
@@ -18,5 +19,5 @@ void main() async {
   // Setup dependency injection
   await setupDependencyInjection();
 
-  runApp(const JFlutterApp());
+  runApp(const ProviderScope(child: JFlutterApp()));
 }

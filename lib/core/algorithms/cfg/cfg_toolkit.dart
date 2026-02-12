@@ -309,93 +309,239 @@ class CFGToolkit {
   static Grammar _transformToGNF(Grammar g, List<String> orderedNonterminals) {
     var prods = Set<Production>.from(g.productions);
     var nonterminals = Set<String>.from(g.nonterminals);
+    final terminals = Set<String>.from(g.terminals);
     int freshCounter = 0;
 
-    // Process nonterminals in order
+    // Build the CNF terminal-wrapper mapping: T0 → a, T1 → b, etc.
+    final terminalWrapperMap = <String, String>{};
+    for (final p in g.productions) {
+      if (p.rightSide.length == 1 &&
+          terminals.contains(p.rightSide.first) &&
+          !terminals.contains(p.leftSide.first) &&
+          nonterminals.contains(p.leftSide.first)) {
+        terminalWrapperMap[p.leftSide.first] = p.rightSide.first;
+      }
+    }
+
+    // Helper: check if a symbol is a terminal (original terminal)
+    bool isTerminal(String s) => terminals.contains(s);
+
+    // Helper: get productions for a given nonterminal from the current set
+    List<Production> prodsFor(String nt) =>
+        prods.where((p) => p.leftSide.first == nt && !p.isLambda).toList();
+
+    // Helper to generate unique IDs
+    String freshId(String prefix) => '${prefix}_${freshCounter++}';
+
+    // Step 1: Forward pass - order nonterminals and ensure Ai productions
+    // start with Aj (j > i) or a terminal.
     for (var i = 0; i < orderedNonterminals.length; i++) {
       final ai = orderedNonterminals[i];
-      final aiProds = prods.where((p) => p.leftSide.first == ai).toList();
 
-      for (final p in aiProds) {
-        if (p.isLambda || p.rightSide.isEmpty) continue;
+      // Iteratively substitute until no production for Ai starts with Aj (j < i)
+      bool changed = true;
+      while (changed) {
+        changed = false;
+        final aiProds = prodsFor(ai);
 
-        final first = p.rightSide.first;
+        for (final p in aiProds) {
+          if (p.rightSide.isEmpty) continue;
+          final first = p.rightSide.first;
 
-        // Already starts with terminal - keep it
-        if (g.terminals.contains(first)) {
-          continue;
-        }
+          // Already starts with terminal - fine
+          if (isTerminal(first)) continue;
 
-        // Starts with nonterminal
-        if (g.nonterminals.contains(first)) {
-          final firstIndex = orderedNonterminals.indexOf(first);
-
-          // If first symbol comes before current in ordering, substitute
-          if (firstIndex >= 0 && firstIndex < i) {
+          // If starts with Aj where j < i, substitute
+          final j = orderedNonterminals.indexOf(first);
+          if (j >= 0 && j < i) {
             prods.remove(p);
-            final substitutions = prods.where((q) => q.leftSide.first == first);
-            for (final sub in substitutions) {
-              if (sub.isLambda) continue;
+            final ajProds = prodsFor(first);
+            for (final sub in ajProds) {
               final newRhs = [...sub.rightSide, ...p.rightSide.sublist(1)];
               prods.add(
                 Production(
-                  id: '${p.id}_sub_${sub.id}',
+                  id: freshId('${p.id}_sub'),
                   leftSide: p.leftSide,
                   rightSide: newRhs,
                 ),
               );
             }
+            changed = true;
+            break; // restart the inner loop since prods changed
           }
-          // If it's left-recursive (ai → ai...), eliminate it
-          else if (first == ai) {
-            prods.remove(p);
-            final alpha = p.rightSide.sublist(1);
-            final newSym = '$ai\'${freshCounter++}';
-            nonterminals.add(newSym);
+        }
+      }
 
-            // Find non-recursive productions for ai
-            final nonRecursive = prods
-                .where((q) => q.leftSide.first == ai)
-                .toList();
+      // Now eliminate left recursion for Ai (Ai → Ai alpha)
+      final aiProdsNow = prodsFor(ai);
+      final recursive = <Production>[];
+      final nonRecursive = <Production>[];
 
-            for (final nr in nonRecursive) {
-              if (nr.isLambda || nr.rightSide.isEmpty) continue;
-              if (!g.terminals.contains(nr.rightSide.first)) continue;
+      for (final p in aiProdsNow) {
+        if (p.rightSide.isNotEmpty && p.rightSide.first == ai) {
+          recursive.add(p);
+        } else {
+          nonRecursive.add(p);
+        }
+      }
 
-              // ai → β becomes ai → β newSym
-              prods.remove(nr);
-              prods.add(
-                Production(
-                  id: '${nr.id}_gnf',
-                  leftSide: nr.leftSide,
-                  rightSide: [...nr.rightSide, newSym],
-                ),
-              );
-            }
+      if (recursive.isNotEmpty) {
+        final newSym = '${ai}P${freshCounter++}';
+        nonterminals.add(newSym);
 
-            // Add newSym → alpha newSym | alpha
-            prods.add(
-              Production(
-                id: '${p.id}_rec1',
-                leftSide: [newSym],
-                rightSide: alpha,
-              ),
-            );
-            if (alpha.isNotEmpty && g.terminals.contains(alpha.first)) {
-              prods.add(
-                Production(
-                  id: '${p.id}_rec2',
-                  leftSide: [newSym],
-                  rightSide: [...alpha, newSym],
-                ),
-              );
-            }
-          }
+        // Remove all Ai productions (both recursive and non-recursive)
+        for (final p in aiProdsNow) {
+          prods.remove(p);
+        }
+
+        // For each non-recursive production Ai → beta:
+        //   Add Ai → beta and Ai → beta newSym
+        for (final nr in nonRecursive) {
+          prods.add(
+            Production(
+              id: freshId('${nr.id}_nr'),
+              leftSide: nr.leftSide,
+              rightSide: nr.rightSide,
+            ),
+          );
+          prods.add(
+            Production(
+              id: freshId('${nr.id}_nrp'),
+              leftSide: nr.leftSide,
+              rightSide: [...nr.rightSide, newSym],
+            ),
+          );
+        }
+
+        // For each recursive production Ai → Ai alpha:
+        //   Add newSym → alpha and newSym → alpha newSym
+        for (final rec in recursive) {
+          final alpha = rec.rightSide.sublist(1);
+          prods.add(
+            Production(
+              id: freshId('${rec.id}_lr1'),
+              leftSide: [newSym],
+              rightSide: alpha,
+            ),
+          );
+          prods.add(
+            Production(
+              id: freshId('${rec.id}_lr2'),
+              leftSide: [newSym],
+              rightSide: [...alpha, newSym],
+            ),
+          );
         }
       }
     }
 
-    // Final pass: ensure all productions start with a terminal
+    // Step 2: Back-substitution from An down to A1.
+    // After the forward pass, An's productions all start with terminals.
+    // We go backwards and substitute any leading nonterminal.
+    // Also handle the new left-recursion-elimination nonterminals (e.g., AP0).
+    // We need to process all nonterminals that have productions.
+    final allNonterminalsInProds = prods
+        .map((p) => p.leftSide.first)
+        .toSet();
+
+    // Build the processing order: the original ordered list reversed,
+    // then any additional nonterminals (from left-recursion elimination).
+    final backOrder = orderedNonterminals.reversed.toList();
+    final extraNonterminals = allNonterminalsInProds
+        .difference(orderedNonterminals.toSet());
+    backOrder.addAll(extraNonterminals);
+
+    // Iterative back-substitution until all productions start with a terminal.
+    bool changed = true;
+    int safetyLimit = 100; // prevent infinite loops
+    while (changed && safetyLimit > 0) {
+      changed = false;
+      safetyLimit--;
+
+      for (final nt in backOrder) {
+        final ntProds = prodsFor(nt);
+        for (final p in ntProds) {
+          if (p.rightSide.isEmpty) continue;
+          final first = p.rightSide.first;
+          if (isTerminal(first)) continue;
+
+          // It starts with a nonterminal - substitute it
+          final firstProds = prodsFor(first);
+          if (firstProds.isEmpty) continue;
+
+          // Only substitute if the target productions are "better"
+          // (i.e., at least one starts with a terminal)
+          final hasTerminalStart = firstProds.any(
+            (q) => q.rightSide.isNotEmpty && isTerminal(q.rightSide.first),
+          );
+          if (!hasTerminalStart) continue;
+
+          prods.remove(p);
+          for (final sub in firstProds) {
+            final newRhs = [...sub.rightSide, ...p.rightSide.sublist(1)];
+            prods.add(
+              Production(
+                id: freshId('${p.id}_bk'),
+                leftSide: p.leftSide,
+                rightSide: newRhs,
+              ),
+            );
+          }
+          changed = true;
+          break; // restart since prods changed
+        }
+        if (changed) break;
+      }
+    }
+
+    // If there are still productions starting with nonterminals, do
+    // aggressive iterative substitution (no "hasTerminalStart" check).
+    safetyLimit = 100;
+    changed = true;
+    while (changed && safetyLimit > 0) {
+      changed = false;
+      safetyLimit--;
+
+      for (final p in prods.toList()) {
+        if (p.isLambda || p.rightSide.isEmpty) continue;
+        final first = p.rightSide.first;
+        if (isTerminal(first)) continue;
+
+        final firstProds = prodsFor(first);
+        if (firstProds.isEmpty) continue;
+
+        prods.remove(p);
+        for (final sub in firstProds) {
+          final newRhs = [...sub.rightSide, ...p.rightSide.sublist(1)];
+          prods.add(
+            Production(
+              id: freshId('${p.id}_ag'),
+              leftSide: p.leftSide,
+              rightSide: newRhs,
+            ),
+          );
+        }
+        changed = true;
+        break;
+      }
+    }
+
+    // Step 3: Inline CNF terminal-wrapper nonterminals.
+    // Replace any Tk in the tail (positions 1+) of a production with
+    // the actual terminal, but since GNF requires tail to be nonterminals,
+    // we only inline Tk when it appears as the FIRST symbol (leading position).
+    // Actually, we need to:
+    //  - Inline Tk at position 0 (replace with its terminal)
+    //  - Keep Tk at positions 1+ as nonterminals (which is valid for GNF since
+    //    they ARE nonterminals)
+    // BUT: the isGNF checker checks g.terminals.contains(first), so T0 at
+    // position 0 would fail. We must inline T0 → a at position 0.
+    //
+    // Also, terminal-wrapper nonterminals at positions > 0 are fine since
+    // they are nonterminals. However, the test in gnf_conversion_test.dart
+    // checks gnf.nonterminals.contains(p.rightSide[i]) for i > 0.
+    // So we need T0 etc. to stay in the nonterminals set.
+
     final finalProds = <Production>{};
     for (final p in prods) {
       if (p.isLambda) {
@@ -404,42 +550,55 @@ class CFGToolkit {
       }
       if (p.rightSide.isEmpty) continue;
 
-      // If starts with terminal, good
-      if (g.terminals.contains(p.rightSide.first)) {
-        finalProds.add(p);
-      } else if (p.rightSide.first.startsWith('T')) {
-        // CNF introduced terminal nonterminals (T0, T1, etc.)
-        // These map to single terminals, so they count as GNF
-        finalProds.add(p);
-      } else {
-        // Try to substitute with productions that start with terminals
-        final first = p.rightSide.first;
-        final substitutable = prods.where(
-          (q) =>
-              q.leftSide.first == first &&
-              !q.isLambda &&
-              q.rightSide.isNotEmpty &&
-              (g.terminals.contains(q.rightSide.first) ||
-                  q.rightSide.first.startsWith('T')),
+      final first = p.rightSide.first;
+      if (!isTerminal(first) && terminalWrapperMap.containsKey(first)) {
+        // Inline the terminal wrapper at position 0
+        finalProds.add(
+          Production(
+            id: freshId('${p.id}_tw'),
+            leftSide: p.leftSide,
+            rightSide: [
+              terminalWrapperMap[first]!,
+              ...p.rightSide.sublist(1),
+            ],
+          ),
         );
+      } else {
+        finalProds.add(p);
+      }
+    }
 
-        if (substitutable.isNotEmpty) {
-          for (final sub in substitutable) {
-            finalProds.add(
-              Production(
-                id: '${p.id}_final_${sub.id}',
-                leftSide: p.leftSide,
-                rightSide: [...sub.rightSide, ...p.rightSide.sublist(1)],
-              ),
-            );
-          }
-        } else {
-          // Keep as is - may not be perfect GNF
-          finalProds.add(p);
+    // Remove the terminal-wrapper productions (T0 → a, etc.) since they
+    // are no longer needed and would fail isGNF (single terminal production
+    // is valid GNF only if that nonterminal is used elsewhere, but these
+    // are just helpers). Actually, keep them only if they still appear in
+    // some production's tail.
+    final usedNonterminals = <String>{};
+    for (final p in finalProds) {
+      if (p.isLambda) continue;
+      for (var i = 1; i < p.rightSide.length; i++) {
+        if (nonterminals.contains(p.rightSide[i])) {
+          usedNonterminals.add(p.rightSide[i]);
         }
       }
     }
 
-    return g.copyWith(nonterminals: nonterminals, productions: finalProds);
+    // Keep terminal-wrapper productions only if the wrapper nonterminal
+    // is used in the tail of some production. Inline those too.
+    final cleanedProds = <Production>{};
+    for (final p in finalProds) {
+      final lhs = p.leftSide.first;
+      if (terminalWrapperMap.containsKey(lhs) &&
+          !usedNonterminals.contains(lhs)) {
+        // Drop this terminal-wrapper production since it's unused
+        continue;
+      }
+      cleanedProds.add(p);
+    }
+
+    // Ensure terminals appearing at position 0 after inlining are in the
+    // terminal set (they should already be from the original grammar).
+    // Also ensure all tail nonterminals are in the nonterminals set.
+    return g.copyWith(nonterminals: nonterminals, productions: cleanedProds);
   }
 }

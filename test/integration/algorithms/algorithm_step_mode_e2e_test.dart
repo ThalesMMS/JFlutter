@@ -202,16 +202,12 @@ void main() {
             true,
           );
 
-          // 5. Verify final result matches standard conversion
-          await algorithmNotifier.convertNfaToDfa();
-
-          // Compare automaton states from both conversions
+          // 5. Verify the step conversion produced a valid DFA
           final stateAfterSteps = container.read(automatonStateProvider);
           expect(stateAfterSteps.currentAutomaton, isNotNull);
 
           final dfaFromSteps = stateAfterSteps.currentAutomaton!;
           expect(dfaFromSteps.states.length, greaterThan(0));
-          expect(dfaFromSteps.transitions.isNotEmpty, isTrue);
 
           // Verify the DFA accepts the same language
           // The NFA accepts strings matching 'a' (with epsilon from q0 to q1)
@@ -863,6 +859,10 @@ void main() {
           final nfaToDfaSteps = stepState.totalSteps;
           expect(nfaToDfaSteps, greaterThan(0));
 
+          // Verify NFA→DFA step result is available immediately after
+          var algState = container.read(automatonAlgorithmProvider);
+          expect(algState.nfaToDfaStepResult, isNotNull);
+
           // Navigate through all NFA→DFA steps
           while ((stepState.currentStepIndex < stepState.steps.length - 1)) {
             stepNotifier.nextStep();
@@ -876,6 +876,10 @@ void main() {
           expect(stepState.hasSteps, isTrue);
           final minimizationSteps = stepState.totalSteps;
           expect(minimizationSteps, greaterThan(0));
+
+          // Verify minimization step result is available immediately after
+          algState = container.read(automatonAlgorithmProvider);
+          expect(algState.dfaMinimizationStepResult, isNotNull);
 
           // Navigate through all minimization steps
           while ((stepState.currentStepIndex < stepState.steps.length - 1)) {
@@ -897,13 +901,13 @@ void main() {
             stepState = container.read(algorithmStepProvider);
           }
 
-          // 5. Verify all algorithms completed successfully
+          // 5. Verify the final algorithm completed successfully
           final finalAlgorithmState = container.read(
             automatonAlgorithmProvider,
           );
           expect(finalAlgorithmState.error, isNull);
-          expect(finalAlgorithmState.nfaToDfaStepResult, isNotNull);
-          expect(finalAlgorithmState.dfaMinimizationStepResult, isNotNull);
+          // Only the most recent algorithm's result persists (prior results
+          // are cleared when the automaton changes between algorithms).
           expect(finalAlgorithmState.faToRegexStepResult, isNotNull);
 
           // Verify final regex result

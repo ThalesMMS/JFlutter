@@ -76,8 +76,8 @@ class TMTransition extends Transition {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'fromState': fromState.id,
-      'toState': toState.id,
+      'fromState': fromState.toJson(),
+      'toState': toState.toJson(),
       'label': label,
       'controlPoint': {'x': controlPoint.x, 'y': controlPoint.y},
       'type': type.name,

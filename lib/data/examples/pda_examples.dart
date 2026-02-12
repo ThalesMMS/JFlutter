@@ -66,8 +66,8 @@ class PDAExamples {
         toState: q0,
         inputSymbol: '(',
         popSymbol: 'Z',
-        pushSymbol: 'Z(',
-        label: '(,Z→Z(',
+        pushSymbol: '(Z',
+        label: '(,Z→(Z',
       ),
 
       // Push '(' onto stack when reading '(' with '(' on top
@@ -173,8 +173,8 @@ class PDAExamples {
         toState: q0,
         inputSymbol: 'a',
         popSymbol: 'Z',
-        pushSymbol: 'Za',
-        label: 'a,Z→Za',
+        pushSymbol: 'aZ',
+        label: 'a,Z→aZ',
       ),
 
       PDATransition.readAndStack(
@@ -193,8 +193,8 @@ class PDAExamples {
         toState: q0,
         inputSymbol: 'a',
         popSymbol: 'b',
-        pushSymbol: 'ba',
-        label: 'a,b→ba',
+        pushSymbol: 'ab',
+        label: 'a,b→ab',
       ),
 
       // Push 'b' onto stack
@@ -204,8 +204,8 @@ class PDAExamples {
         toState: q0,
         inputSymbol: 'b',
         popSymbol: 'Z',
-        pushSymbol: 'Zb',
-        label: 'b,Z→Zb',
+        pushSymbol: 'bZ',
+        label: 'b,Z→bZ',
       ),
 
       PDATransition.readAndStack(
@@ -214,8 +214,8 @@ class PDAExamples {
         toState: q0,
         inputSymbol: 'b',
         popSymbol: 'a',
-        pushSymbol: 'ab',
-        label: 'b,a→ab',
+        pushSymbol: 'ba',
+        label: 'b,a→ba',
       ),
 
       PDATransition.readAndStack(
@@ -384,8 +384,8 @@ class PDAExamples {
         toState: q0,
         inputSymbol: 'a',
         popSymbol: 'Z',
-        pushSymbol: 'Za',
-        label: 'a,Z→Za',
+        pushSymbol: 'aZ',
+        label: 'a,Z→aZ',
       ),
 
       // Push 'a' onto stack with 'a' on top

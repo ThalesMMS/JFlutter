@@ -45,11 +45,7 @@ class AutomatonGraphSugiyamaAlgorithm extends SugiyamaAlgorithm {
     var maxY = double.negativeInfinity;
 
     for (final node in graph.nodes) {
-      final nodeId = node.key?.value?.toString();
-      final cached = nodeId != null ? controller.nodeById(nodeId) : null;
-      final position = cached != null
-          ? Offset(cached.x, cached.y)
-          : node.position;
+      final position = node.position;
 
       node.position = position;
 

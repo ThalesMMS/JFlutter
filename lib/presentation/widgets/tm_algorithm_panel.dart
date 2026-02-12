@@ -21,6 +21,7 @@ import '../../core/models/tm_analysis.dart';
 import '../../core/models/tm_transition.dart';
 import '../../core/models/tm_transition.dart' as tm_models show TapeDirection;
 import '../../core/result.dart';
+import '../../data/examples/tm_examples.dart';
 import '../providers/tm_editor_provider.dart';
 
 enum _TMAnalysisFocus {
@@ -95,6 +96,10 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
   Widget _buildAlgorithmButtons(BuildContext context) {
     return Column(
       children: [
+        _buildExamplesSection(context),
+        const SizedBox(height: 16),
+        const Divider(),
+        const SizedBox(height: 16),
         _buildAlgorithmButton(
           context,
           title: 'Check Decidability',
@@ -539,6 +544,77 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
         ),
       ),
     );
+  }
+
+  Widget _buildExamplesSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final examples = TMExamples.getExampleFactories();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.lightbulb_outline, color: theme.colorScheme.secondary),
+            const SizedBox(width: 8),
+            Text(
+              'Load Examples',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        ...examples.entries.map(
+          (entry) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: _buildExampleButton(
+              context,
+              title: entry.key,
+              onPressed: () => _loadExample(entry.value),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildExampleButton(
+    BuildContext context, {
+    required String title,
+    required VoidCallback onPressed,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: const Icon(Icons.file_open, size: 18),
+        label: Text(title),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: colorScheme.secondary,
+          side: BorderSide(color: colorScheme.secondary.withValues(alpha: 0.5)),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          alignment: Alignment.centerLeft,
+        ),
+      ),
+    );
+  }
+
+  void _loadExample(TM Function() exampleFactory) {
+    try {
+      final tm = exampleFactory();
+      ref.read(tmEditorProvider.notifier).setTm(tm);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Example loaded: ${tm.name}')),
+      );
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load example: $error')),
+      );
+    }
   }
 
   Future<void> _performAnalysis(_TMAnalysisFocus focus) async {

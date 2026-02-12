@@ -171,8 +171,10 @@ class SimulationStep {
   /// Checks if this is the first step
   bool get isFirstStep => stepNumber == 1;
 
-  /// Checks if this is the last step
-  bool get isLastStep => stepNumber == 0; // This will be set by the simulation
+  /// Checks if this is the last step (step number is 0 only for final steps
+  /// created by [SimulationStep.finalStep] when no transitions occurred).
+  /// For a reliable check, compare against the simulation result's step list.
+  bool get isLastStep => false; // Cannot determine without simulation context
 
   /// Checks if a transition was used in this step
   bool get hasTransition => usedTransition != null;
@@ -196,8 +198,13 @@ class SimulationStep {
   String? get stackTop => stackContents.isNotEmpty ? stackContents[0] : null;
 
   /// Gets the current tape symbol (for TM)
-  String? get currentTapeSymbol =>
-      tapeContents.isNotEmpty ? tapeContents[0] : null;
+  String? get currentTapeSymbol {
+    if (tapeContents.isEmpty) return null;
+    if (headPosition != null && headPosition! < tapeContents.length) {
+      return tapeContents[headPosition!];
+    }
+    return tapeContents[0]; // fallback for non-TM steps
+  }
 
   /// Gets the next input symbol
   String? get nextInputSymbol =>
@@ -322,6 +329,7 @@ class SimulationStep {
     required String tapeContents,
     required int stepNumber,
     String consumedInput = '',
+    int? headPosition,
   }) {
     return SimulationStep(
       currentState: finalState,
@@ -330,6 +338,7 @@ class SimulationStep {
       tapeContents: tapeContents,
       stepNumber: stepNumber,
       consumedInput: consumedInput,
+      headPosition: headPosition,
     );
   }
 }

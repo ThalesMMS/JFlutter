@@ -275,7 +275,16 @@ void main() {
           'baab',
           'abbba',
         ];
-        const rejected = ['ab', 'ba', 'abb', 'aab', 'ababa', 'abbabb'];
+        const rejected = ['ab', 'ba', 'abb', 'aab', 'abbabb'];
+        const acceptedOddLong = ['ababa'];
+
+        for (final word in acceptedOddLong) {
+          expect(
+            runPda(json, word),
+            isTrue,
+            reason: 'Expected palindrome "$word" to be accepted.',
+          );
+        }
 
         for (final word in accepted) {
           expect(

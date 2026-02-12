@@ -16,6 +16,7 @@ import '../models/state.dart';
 import '../models/fsa_transition.dart';
 import '../models/dfa_minimization_step.dart';
 import '../result.dart';
+import 'state_renamer.dart';
 
 /// Minimizes a Deterministic Finite Automaton (DFA) using the Hopcroft algorithm
 class DFAMinimizer {
@@ -51,7 +52,10 @@ class DFAMinimizer {
       final dfaWithoutUnreachable = _removeUnreachableStates(dfa);
 
       // Step 2: Minimize using Hopcroft algorithm
-      final minimizedDFA = _minimizeWithHopcroft(dfaWithoutUnreachable);
+      var minimizedDFA = _minimizeWithHopcroft(dfaWithoutUnreachable);
+
+      // Rename labels to q0, q1, q2... and apply circular layout
+      minimizedDFA = StateRenamer.renameAndLayout(minimizedDFA);
 
       return ResultFactory.success(minimizedDFA);
     } catch (e) {
@@ -131,9 +135,8 @@ class DFAMinimizer {
   /// Minimizes DFA using Hopcroft algorithm
   static FSA _minimizeWithHopcroft(FSA dfa) {
     // Filter alphabet to exclude epsilon-like symbols if present
-    final workingAlphabet = dfa.alphabet
-        .where((s) => !_isEpsilonSymbol(s))
-        .toSet();
+    final workingAlphabet =
+        dfa.alphabet.where((s) => !_isEpsilonSymbol(s)).toSet();
 
     // Initialize partition with accepting and non-accepting states
     final partition = <Set<State>>[
@@ -232,6 +235,30 @@ class DFAMinimizer {
       }
     }
 
+    // Fix: set isAccepting and isInitial on state objects so they stay
+    // consistent with the FSA-level acceptingStates and initialState fields.
+    final acceptingIds = newAcceptingStates.map((s) => s.id).toSet();
+    final initialId = newInitialState?.id;
+    final fixedStates = <State>{};
+    for (final s in newStates) {
+      fixedStates.add(s.copyWith(
+        isAccepting: acceptingIds.contains(s.id),
+        isInitial: s.id == initialId,
+      ));
+    }
+    final statesById = <String, State>{
+      for (final s in fixedStates) s.id: s,
+    };
+    final fixedInitialState = initialId != null ? statesById[initialId] : null;
+    final fixedAcceptingStates =
+        fixedStates.where((s) => s.isAccepting).toSet();
+
+    // Update stateMap to point to fixed state objects
+    for (final entry in stateMap.entries) {
+      final fixed = statesById[entry.value.id];
+      if (fixed != null) stateMap[entry.key] = fixed;
+    }
+
     // Create transitions
     for (final originalTransition in originalDFA.transitions) {
       if (originalTransition is FSATransition) {
@@ -268,11 +295,11 @@ class DFAMinimizer {
     return FSA(
       id: '${originalDFA.id}_minimized',
       name: '${originalDFA.name} (Minimized)',
-      states: newStates,
+      states: fixedStates,
       transitions: newTransitions,
       alphabet: originalDFA.alphabet,
-      initialState: newInitialState,
-      acceptingStates: newAcceptingStates,
+      initialState: fixedInitialState,
+      acceptingStates: fixedAcceptingStates,
       created: originalDFA.created,
       modified: DateTime.now(),
       bounds: originalDFA.bounds,
@@ -285,9 +312,8 @@ class DFAMinimizer {
   static State _createMinimizedState(Set<State> equivalenceClass, int counter) {
     final stateIds = equivalenceClass.map((s) => s.id).toList()..sort();
     final stateId = 'q${counter}_min';
-    final stateLabel = stateIds.length == 1
-        ? stateIds.first
-        : '{${stateIds.join(',')}}';
+    final stateLabel =
+        stateIds.length == 1 ? stateIds.first : '{${stateIds.join(',')}}';
 
     // Calculate position as center of the states
     double sumX = 0;
@@ -347,9 +373,12 @@ class DFAMinimizer {
         stepCounter,
       );
 
-      final minimizedDFA = hopcroftResult['dfa'] as FSA;
+      var minimizedDFA = hopcroftResult['dfa'] as FSA;
       final detailedSteps =
           hopcroftResult['steps'] as List<DFAMinimizationStep>;
+
+      // Rename labels to q0, q1, q2... and apply circular layout
+      minimizedDFA = StateRenamer.renameAndLayout(minimizedDFA);
 
       final endTime = DateTime.now();
       final executionTime = endTime.difference(startTime);
@@ -376,9 +405,8 @@ class DFAMinimizer {
     int stepCounter = initialStepCounter;
 
     // Filter alphabet to exclude epsilon-like symbols if present
-    final workingAlphabet = dfa.alphabet
-        .where((s) => !_isEpsilonSymbol(s))
-        .toSet();
+    final workingAlphabet =
+        dfa.alphabet.where((s) => !_isEpsilonSymbol(s)).toSet();
 
     // Initialize partition with accepting and non-accepting states
     final partition = <Set<State>>[
@@ -516,9 +544,8 @@ class DFAMinimizer {
     // Capture state creation steps
     int stateIndex = 0;
     for (final equivalenceClass in partition) {
-      final isAccepting = equivalenceClass
-          .intersection(dfa.acceptingStates)
-          .isNotEmpty;
+      final isAccepting =
+          equivalenceClass.intersection(dfa.acceptingStates).isNotEmpty;
       final isInitial = equivalenceClass.contains(dfa.initialState);
       final stateId = 'q${stateIndex}_min';
 

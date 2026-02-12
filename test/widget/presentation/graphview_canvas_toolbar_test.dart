@@ -12,6 +12,7 @@
 //
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:jflutter/data/services/automaton_service.dart';
@@ -86,13 +87,15 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: GraphViewCanvasToolbar(
-            controller: controller,
-            onAddState: () {},
-            statusMessage: '2 states · 1 transition',
-            layout: GraphViewCanvasToolbarLayout.desktop,
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: GraphViewCanvasToolbar(
+              controller: controller,
+              onAddState: () {},
+              statusMessage: '2 states · 1 transition',
+              layout: GraphViewCanvasToolbarLayout.desktop,
+            ),
           ),
         ),
       ),
@@ -105,12 +108,14 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: GraphViewCanvasToolbar(
-            controller: controller,
-            onAddState: () {},
-            layout: GraphViewCanvasToolbarLayout.desktop,
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: GraphViewCanvasToolbar(
+              controller: controller,
+              onAddState: () {},
+              layout: GraphViewCanvasToolbarLayout.desktop,
+            ),
           ),
         ),
       ),
@@ -124,18 +129,20 @@ void main() {
     bool addStateInvoked = false;
 
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: GraphViewCanvasToolbar(
-            controller: controller,
-            onAddState: () => addStateInvoked = true,
-            layout: GraphViewCanvasToolbarLayout.desktop,
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: GraphViewCanvasToolbar(
+              controller: controller,
+              onAddState: () => addStateInvoked = true,
+              layout: GraphViewCanvasToolbarLayout.desktop,
+            ),
           ),
         ),
       ),
     );
 
-    expect(find.byType(IconButton), findsNWidgets(5));
+    expect(find.byType(IconButton), findsNWidgets(6));
 
     await tester.tap(find.widgetWithIcon(IconButton, Icons.add));
     await tester.pump();
@@ -147,12 +154,14 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: GraphViewCanvasToolbar(
-            controller: controller,
-            onAddState: () {},
-            layout: GraphViewCanvasToolbarLayout.mobile,
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: GraphViewCanvasToolbar(
+              controller: controller,
+              onAddState: () {},
+              layout: GraphViewCanvasToolbarLayout.mobile,
+            ),
           ),
         ),
       ),
@@ -169,12 +178,14 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: GraphViewCanvasToolbar(
-            controller: controller,
-            onAddState: () {},
-            layout: GraphViewCanvasToolbarLayout.desktop,
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: GraphViewCanvasToolbar(
+              controller: controller,
+              onAddState: () {},
+              layout: GraphViewCanvasToolbarLayout.desktop,
+            ),
           ),
         ),
       ),
@@ -200,12 +211,14 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: GraphViewCanvasToolbar(
-            controller: controller,
-            onAddState: controller.addStateAtCenter,
-            layout: GraphViewCanvasToolbarLayout.desktop,
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: GraphViewCanvasToolbar(
+              controller: controller,
+              onAddState: controller.addStateAtCenter,
+              layout: GraphViewCanvasToolbarLayout.desktop,
+            ),
           ),
         ),
       ),
@@ -228,15 +241,17 @@ void main() {
     bool transitionInvoked = false;
 
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: GraphViewCanvasToolbar(
-            controller: controller,
-            enableToolSelection: true,
-            activeTool: AutomatonCanvasTool.transition,
-            onAddState: () => addStateInvoked = true,
-            onAddTransition: () => transitionInvoked = true,
-            layout: GraphViewCanvasToolbarLayout.desktop,
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: GraphViewCanvasToolbar(
+              controller: controller,
+              enableToolSelection: true,
+              activeTool: AutomatonCanvasTool.transition,
+              onAddState: () => addStateInvoked = true,
+              onAddTransition: () => transitionInvoked = true,
+              layout: GraphViewCanvasToolbarLayout.desktop,
+            ),
           ),
         ),
       ),

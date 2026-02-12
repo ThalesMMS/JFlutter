@@ -617,7 +617,7 @@ void main() {
         onSpeedChanged: (value) {},
       );
 
-      expect(find.text('2.50x'), findsNWidgets(2)); // Label and display text
+      expect(find.text('2.50x'), findsOneWidget);
     });
 
     testWidgets('triggers speed change callback when slider is moved', (

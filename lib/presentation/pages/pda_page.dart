@@ -38,7 +38,11 @@ class PDAPage extends ConsumerStatefulWidget {
   ConsumerState<PDAPage> createState() => _PDAPageState();
 }
 
-class _PDAPageState extends ConsumerState<PDAPage> {
+class _PDAPageState extends ConsumerState<PDAPage>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   PDA? _latestPda;
   int _stateCount = 0;
   int _transitionCount = 0;
@@ -165,6 +169,7 @@ class _PDAPageState extends ConsumerState<PDAPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final screenSize = MediaQuery.of(context).size;
     final isMobile = screenSize.width < 1024;
 

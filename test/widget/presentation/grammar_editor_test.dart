@@ -96,21 +96,41 @@ class _RecordingGrammarProvider extends GrammarProvider {
   }
 }
 
+/// Helper to find a [ButtonStyleButton] (including ElevatedButton.icon
+/// private subclass) that contains the given [text] label.
+Finder _findButtonWithText(String text) {
+  return find.ancestor(
+    of: find.text(text),
+    matching: find.bySubtype<ButtonStyleButton>(),
+  );
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  /// Pump the GrammarEditor inside a large-enough viewport to avoid overflow.
+  Future<void> pumpEditor(
+    WidgetTester tester,
+    _RecordingGrammarProvider provider,
+  ) async {
+    tester.view.physicalSize = const Size(1366, 1024);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [grammarProvider.overrideWith((ref) => provider)],
+        child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+  }
 
   group('GrammarEditor initialization', () {
     testWidgets('builds successfully with default state', (tester) async {
       final provider = _RecordingGrammarProvider();
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [grammarProvider.overrideWith((ref) => provider)],
-          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
-        ),
-      );
-
-      await tester.pumpAndSettle();
+      await pumpEditor(tester, provider);
 
       expect(find.text('Grammar Editor'), findsOneWidget);
       expect(find.text('Grammar Information'), findsOneWidget);
@@ -122,15 +142,7 @@ void main() {
       tester,
     ) async {
       final provider = _RecordingGrammarProvider();
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [grammarProvider.overrideWith((ref) => provider)],
-          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
-        ),
-      );
-
-      await tester.pumpAndSettle();
+      await pumpEditor(tester, provider);
 
       expect(find.text('No production rules yet'), findsOneWidget);
       expect(find.text('Add your first production rule above'), findsOneWidget);
@@ -140,15 +152,7 @@ void main() {
       tester,
     ) async {
       final provider = _RecordingGrammarProvider();
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [grammarProvider.overrideWith((ref) => provider)],
-          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
-        ),
-      );
-
-      await tester.pumpAndSettle();
+      await pumpEditor(tester, provider);
 
       final grammarNameField = find.widgetWithText(TextField, 'My Grammar');
       expect(grammarNameField, findsOneWidget);
@@ -161,15 +165,7 @@ void main() {
   group('GrammarEditor metadata updates', () {
     testWidgets('updates grammar name when text field changes', (tester) async {
       final provider = _RecordingGrammarProvider();
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [grammarProvider.overrideWith((ref) => provider)],
-          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
-        ),
-      );
-
-      await tester.pumpAndSettle();
+      await pumpEditor(tester, provider);
 
       final grammarNameField = find
           .widgetWithText(TextField, 'My Grammar')
@@ -183,15 +179,7 @@ void main() {
 
     testWidgets('updates start symbol when text field changes', (tester) async {
       final provider = _RecordingGrammarProvider();
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [grammarProvider.overrideWith((ref) => provider)],
-          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
-        ),
-      );
-
-      await tester.pumpAndSettle();
+      await pumpEditor(tester, provider);
 
       final startSymbolField = find.widgetWithText(TextField, 'S').first;
       await tester.enterText(startSymbolField, 'A');
@@ -207,15 +195,7 @@ void main() {
       tester,
     ) async {
       final provider = _RecordingGrammarProvider();
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [grammarProvider.overrideWith((ref) => provider)],
-          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
-        ),
-      );
-
-      await tester.pumpAndSettle();
+      await pumpEditor(tester, provider);
 
       final leftSideField = find.widgetWithText(TextField, 'e.g., S, A, B');
       await tester.enterText(leftSideField, 'S');
@@ -225,7 +205,7 @@ void main() {
       await tester.enterText(rightSideField, 'aA');
       await tester.pump();
 
-      final addButton = find.widgetWithText(ElevatedButton, 'Add');
+      final addButton = _findButtonWithText('Add');
       await tester.tap(addButton);
       await tester.pumpAndSettle();
 
@@ -238,15 +218,7 @@ void main() {
 
     testWidgets('adds a lambda production with epsilon symbol', (tester) async {
       final provider = _RecordingGrammarProvider();
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [grammarProvider.overrideWith((ref) => provider)],
-          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
-        ),
-      );
-
-      await tester.pumpAndSettle();
+      await pumpEditor(tester, provider);
 
       final leftSideField = find.widgetWithText(TextField, 'e.g., S, A, B');
       await tester.enterText(leftSideField, 'S');
@@ -256,7 +228,7 @@ void main() {
       await tester.enterText(rightSideField, 'ε');
       await tester.pump();
 
-      final addButton = find.widgetWithText(ElevatedButton, 'Add');
+      final addButton = _findButtonWithText('Add');
       await tester.tap(addButton);
       await tester.pumpAndSettle();
 
@@ -271,21 +243,13 @@ void main() {
       tester,
     ) async {
       final provider = _RecordingGrammarProvider();
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [grammarProvider.overrideWith((ref) => provider)],
-          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
-        ),
-      );
-
-      await tester.pumpAndSettle();
+      await pumpEditor(tester, provider);
 
       final rightSideField = find.widgetWithText(TextField, 'e.g., aA, bB, ε');
       await tester.enterText(rightSideField, 'aA');
       await tester.pump();
 
-      final addButton = find.widgetWithText(ElevatedButton, 'Add');
+      final addButton = _findButtonWithText('Add');
       await tester.tap(addButton);
       await tester.pumpAndSettle();
 
@@ -300,21 +264,13 @@ void main() {
       tester,
     ) async {
       final provider = _RecordingGrammarProvider();
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [grammarProvider.overrideWith((ref) => provider)],
-          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
-        ),
-      );
-
-      await tester.pumpAndSettle();
+      await pumpEditor(tester, provider);
 
       final leftSideField = find.widgetWithText(TextField, 'e.g., S, A, B');
       await tester.enterText(leftSideField, 'S');
       await tester.pump();
 
-      final addButton = find.widgetWithText(ElevatedButton, 'Add');
+      final addButton = _findButtonWithText('Add');
       await tester.tap(addButton);
       await tester.pumpAndSettle();
 
@@ -327,15 +283,7 @@ void main() {
 
     testWidgets('clears input fields after adding production', (tester) async {
       final provider = _RecordingGrammarProvider();
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [grammarProvider.overrideWith((ref) => provider)],
-          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
-        ),
-      );
-
-      await tester.pumpAndSettle();
+      await pumpEditor(tester, provider);
 
       final leftSideField = find.widgetWithText(TextField, 'e.g., S, A, B');
       await tester.enterText(leftSideField, 'S');
@@ -345,7 +293,7 @@ void main() {
       await tester.enterText(rightSideField, 'aA');
       await tester.pump();
 
-      final addButton = find.widgetWithText(ElevatedButton, 'Add');
+      final addButton = _findButtonWithText('Add');
       await tester.tap(addButton);
       await tester.pumpAndSettle();
 
@@ -360,15 +308,7 @@ void main() {
   group('GrammarEditor production list', () {
     testWidgets('displays added productions in the list', (tester) async {
       final provider = _RecordingGrammarProvider();
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [grammarProvider.overrideWith((ref) => provider)],
-          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
-        ),
-      );
-
-      await tester.pumpAndSettle();
+      await pumpEditor(tester, provider);
 
       final leftSideField = find.widgetWithText(TextField, 'e.g., S, A, B');
       await tester.enterText(leftSideField, 'S');
@@ -376,7 +316,7 @@ void main() {
       final rightSideField = find.widgetWithText(TextField, 'e.g., aA, bB, ε');
       await tester.enterText(rightSideField, 'aA');
 
-      final addButton = find.widgetWithText(ElevatedButton, 'Add');
+      final addButton = _findButtonWithText('Add');
       await tester.tap(addButton);
       await tester.pumpAndSettle();
 
@@ -389,15 +329,7 @@ void main() {
       tester,
     ) async {
       final provider = _RecordingGrammarProvider();
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [grammarProvider.overrideWith((ref) => provider)],
-          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
-        ),
-      );
-
-      await tester.pumpAndSettle();
+      await pumpEditor(tester, provider);
 
       final leftSideField = find.widgetWithText(TextField, 'e.g., S, A, B');
       await tester.enterText(leftSideField, 'A');
@@ -405,7 +337,7 @@ void main() {
       final rightSideField = find.widgetWithText(TextField, 'e.g., aA, bB, ε');
       await tester.enterText(rightSideField, 'ε');
 
-      final addButton = find.widgetWithText(ElevatedButton, 'Add');
+      final addButton = _findButtonWithText('Add');
       await tester.tap(addButton);
       await tester.pumpAndSettle();
 
@@ -414,15 +346,7 @@ void main() {
 
     testWidgets('allows selecting a production by tapping', (tester) async {
       final provider = _RecordingGrammarProvider();
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [grammarProvider.overrideWith((ref) => provider)],
-          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
-        ),
-      );
-
-      await tester.pumpAndSettle();
+      await pumpEditor(tester, provider);
 
       provider.addProduction(
         leftSide: ['S'],
@@ -448,15 +372,7 @@ void main() {
       tester,
     ) async {
       final provider = _RecordingGrammarProvider();
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [grammarProvider.overrideWith((ref) => provider)],
-          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
-        ),
-      );
-
-      await tester.pumpAndSettle();
+      await pumpEditor(tester, provider);
 
       provider.addProduction(
         leftSide: ['S'],
@@ -474,23 +390,15 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Edit Production Rule'), findsOneWidget);
-      expect(find.widgetWithText(ElevatedButton, 'Update'), findsOneWidget);
-      expect(find.widgetWithText(ElevatedButton, 'Cancel'), findsOneWidget);
+      expect(_findButtonWithText('Update'), findsOneWidget);
+      expect(_findButtonWithText('Cancel'), findsOneWidget);
     });
 
     testWidgets('populates fields with production data in edit mode', (
       tester,
     ) async {
       final provider = _RecordingGrammarProvider();
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [grammarProvider.overrideWith((ref) => provider)],
-          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
-        ),
-      );
-
-      await tester.pumpAndSettle();
+      await pumpEditor(tester, provider);
 
       provider.addProduction(
         leftSide: ['S'],
@@ -507,26 +415,27 @@ void main() {
       await tester.tap(editOption);
       await tester.pumpAndSettle();
 
-      final leftField = find.widgetWithText(TextField, 'S');
+      // In edit mode, the left side field has 'S' as its controller text.
+      // The start symbol field also has 'S', so disambiguate by label.
+      final leftField = find.ancestor(
+        of: find.text('Left Side (Variable)'),
+        matching: find.byType(TextField),
+      );
       final rightField = find.widgetWithText(TextField, 'aB');
 
       expect(leftField, findsOneWidget);
       expect(rightField, findsOneWidget);
+
+      // Verify the left side controller text is 'S'.
+      final leftTextField = tester.widget<TextField>(leftField);
+      expect(leftTextField.controller?.text, equals('S'));
     });
 
     testWidgets('updates production when Update button is pressed', (
       tester,
     ) async {
       final provider = _RecordingGrammarProvider();
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [grammarProvider.overrideWith((ref) => provider)],
-          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
-        ),
-      );
-
-      await tester.pumpAndSettle();
+      await pumpEditor(tester, provider);
 
       provider.addProduction(
         leftSide: ['S'],
@@ -547,7 +456,7 @@ void main() {
       await tester.enterText(rightSideField, 'bB');
       await tester.pump();
 
-      final updateButton = find.widgetWithText(ElevatedButton, 'Update');
+      final updateButton = _findButtonWithText('Update');
       await tester.tap(updateButton);
       await tester.pumpAndSettle();
 
@@ -561,15 +470,7 @@ void main() {
       tester,
     ) async {
       final provider = _RecordingGrammarProvider();
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [grammarProvider.overrideWith((ref) => provider)],
-          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
-        ),
-      );
-
-      await tester.pumpAndSettle();
+      await pumpEditor(tester, provider);
 
       provider.addProduction(
         leftSide: ['S'],
@@ -588,26 +489,18 @@ void main() {
 
       expect(find.text('Edit Production Rule'), findsOneWidget);
 
-      final cancelButton = find.widgetWithText(ElevatedButton, 'Cancel');
+      final cancelButton = _findButtonWithText('Cancel');
       await tester.tap(cancelButton);
       await tester.pumpAndSettle();
 
       expect(find.text('Add Production Rule'), findsOneWidget);
-      expect(find.widgetWithText(ElevatedButton, 'Add'), findsOneWidget);
+      expect(_findButtonWithText('Add'), findsOneWidget);
       expect(provider.updateProductionCalls, hasLength(0));
     });
 
     testWidgets('clears fields after canceling edit', (tester) async {
       final provider = _RecordingGrammarProvider();
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [grammarProvider.overrideWith((ref) => provider)],
-          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
-        ),
-      );
-
-      await tester.pumpAndSettle();
+      await pumpEditor(tester, provider);
 
       provider.addProduction(
         leftSide: ['S'],
@@ -624,7 +517,7 @@ void main() {
       await tester.tap(editOption);
       await tester.pumpAndSettle();
 
-      final cancelButton = find.widgetWithText(ElevatedButton, 'Cancel');
+      final cancelButton = _findButtonWithText('Cancel');
       await tester.tap(cancelButton);
       await tester.pumpAndSettle();
 
@@ -644,15 +537,7 @@ void main() {
       tester,
     ) async {
       final provider = _RecordingGrammarProvider();
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [grammarProvider.overrideWith((ref) => provider)],
-          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
-        ),
-      );
-
-      await tester.pumpAndSettle();
+      await pumpEditor(tester, provider);
 
       provider.addProduction(
         leftSide: ['S'],
@@ -680,15 +565,7 @@ void main() {
       tester,
     ) async {
       final provider = _RecordingGrammarProvider();
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [grammarProvider.overrideWith((ref) => provider)],
-          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
-        ),
-      );
-
-      await tester.pumpAndSettle();
+      await pumpEditor(tester, provider);
 
       provider.addProduction(
         leftSide: ['S'],
@@ -715,7 +592,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Add Production Rule'), findsOneWidget);
-      expect(find.widgetWithText(ElevatedButton, 'Add'), findsOneWidget);
+      expect(_findButtonWithText('Add'), findsOneWidget);
     });
   });
 
@@ -724,15 +601,7 @@ void main() {
       tester,
     ) async {
       final provider = _RecordingGrammarProvider();
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [grammarProvider.overrideWith((ref) => provider)],
-          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
-        ),
-      );
-
-      await tester.pumpAndSettle();
+      await pumpEditor(tester, provider);
 
       provider.addProduction(
         leftSide: ['S'],
@@ -748,7 +617,7 @@ void main() {
 
       expect(find.text('Production Rules (2)'), findsOneWidget);
 
-      final clearButton = find.widgetWithText(ElevatedButton, 'Clear');
+      final clearButton = _findButtonWithText('Clear');
       await tester.tap(clearButton);
       await tester.pumpAndSettle();
 
@@ -759,15 +628,7 @@ void main() {
 
     testWidgets('exits edit mode when Clear button is pressed', (tester) async {
       final provider = _RecordingGrammarProvider();
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [grammarProvider.overrideWith((ref) => provider)],
-          child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
-        ),
-      );
-
-      await tester.pumpAndSettle();
+      await pumpEditor(tester, provider);
 
       provider.addProduction(
         leftSide: ['S'],
@@ -786,7 +647,7 @@ void main() {
 
       expect(find.text('Edit Production Rule'), findsOneWidget);
 
-      final clearButton = find.widgetWithText(ElevatedButton, 'Clear');
+      final clearButton = _findButtonWithText('Clear');
       await tester.tap(clearButton);
       await tester.pumpAndSettle();
 

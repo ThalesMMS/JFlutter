@@ -1581,11 +1581,7 @@ class _AutomatonGraphSugiyamaAlgorithm extends SugiyamaAlgorithm {
     var maxY = double.negativeInfinity;
 
     for (final node in graph.nodes) {
-      final nodeId = node.key?.value?.toString();
-      final cached = nodeId != null ? controller.nodeById(nodeId) : null;
-      final position = cached != null
-          ? Offset(cached.x, cached.y)
-          : node.position;
+      final position = node.position;
 
       node.position = position;
 
@@ -1645,10 +1641,16 @@ class _AutomatonGraphNode extends StatelessWidget {
                 border: Border.all(color: borderColor, width: 3),
               ),
               child: Center(
-                child: Text(
-                  label,
-                  style: theme.textTheme.titleMedium,
-                  textAlign: TextAlign.center,
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      label,
+                      style: theme.textTheme.titleMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                 ),
               ),
             ),

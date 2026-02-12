@@ -873,6 +873,8 @@ void main() {
 
       await tester.pumpAndSettle();
 
+      await tester.tap(find.byType(TextField));
+      await tester.pumpAndSettle();
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
 
@@ -898,6 +900,8 @@ void main() {
 
       await tester.pumpAndSettle();
 
+      await tester.tap(find.byType(TextField));
+      await tester.pumpAndSettle();
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       await tester.pumpAndSettle();
 
@@ -1014,6 +1018,8 @@ void main() {
 
       await tester.pumpAndSettle();
 
+      await tester.tap(find.byType(TextField));
+      await tester.pumpAndSettle();
       await tester.sendKeyEvent(LogicalKeyboardKey.numpadEnter);
       await tester.pumpAndSettle();
 

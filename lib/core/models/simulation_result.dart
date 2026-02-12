@@ -176,7 +176,7 @@ class SimulationResult {
     return 'SimulationResult(inputString: $inputString, accepted: $accepted, steps: ${steps.length}, executionTime: $executionTime)';
   }
 
-  /// Gets the number of steps in the simulation
+  /// Gets the number of simulation steps
   int get stepCount => steps.length;
 
   /// Gets the first step of the simulation

@@ -11,23 +11,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'presentation/pages/home_page.dart';
+import 'presentation/providers/settings_provider.dart';
 import 'presentation/theme/app_theme.dart';
 
 /// Main application widget with clean architecture
-class JFlutterApp extends StatelessWidget {
+class JFlutterApp extends ConsumerWidget {
   const JFlutterApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return ProviderScope(
-      child: MaterialApp(
-        title: 'JFlutter',
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.system,
-        home: const HomePage(),
-        debugShowCheckedModeBanner: false,
-      ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider);
+    return MaterialApp(
+      title: 'JFlutter',
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: _resolveThemeMode(settings.themeMode),
+      home: const HomePage(),
+      debugShowCheckedModeBanner: false,
     );
+  }
+
+  static ThemeMode _resolveThemeMode(String mode) {
+    switch (mode) {
+      case 'light':
+        return ThemeMode.light;
+      case 'dark':
+        return ThemeMode.dark;
+      default:
+        return ThemeMode.system;
+    }
   }
 }

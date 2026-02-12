@@ -14,6 +14,7 @@ import 'package:jflutter/core/result.dart';
 import 'package:jflutter/data/services/automaton_service.dart';
 import 'package:jflutter/core/repositories/automaton_repository.dart';
 import 'package:jflutter/presentation/providers/automaton_provider.dart';
+import 'package:jflutter/presentation/providers/automaton_state_provider.dart';
 import 'package:jflutter/presentation/providers/grammar_provider.dart';
 import 'package:jflutter/presentation/providers/home_navigation_provider.dart';
 import 'package:jflutter/presentation/providers/pda_editor_provider.dart';
@@ -281,6 +282,16 @@ class _MockPdaEditorNotifier extends PDAEditorNotifier {
   }
 }
 
+class _MockAutomatonStateNotifier extends AutomatonStateNotifier {
+  _MockAutomatonStateNotifier()
+    : super(automatonService: _MockAutomatonService());
+
+  @override
+  void updateAutomaton(FSA automaton) {
+    state = state.copyWith(currentAutomaton: automaton);
+  }
+}
+
 class _MockHomeNavigationNotifier extends HomeNavigationNotifier {
   _MockHomeNavigationNotifier() : super();
 
@@ -308,6 +319,7 @@ Future<void> _pumpGrammarAlgorithmPanel(
   Result<PDA>? convertToPdaStandardResult,
   Result<PDA>? convertToPdaGreibachResult,
   _MockHomeNavigationNotifier? navigationNotifier,
+  bool hasAnimatingIndicator = false,
 }) async {
   final mockGrammarNotifier = _MockGrammarNotifier(
     initialState: grammarState,
@@ -318,6 +330,7 @@ Future<void> _pumpGrammarAlgorithmPanel(
   );
 
   final mockAutomatonNotifier = _MockAutomatonNotifier();
+  final mockAutomatonStateNotifier = _MockAutomatonStateNotifier();
   final mockPdaNotifier = _MockPdaEditorNotifier();
   final mockNavNotifier = navigationNotifier ?? _MockHomeNavigationNotifier();
 
@@ -326,16 +339,29 @@ Future<void> _pumpGrammarAlgorithmPanel(
       overrides: [
         grammarProvider.overrideWith((ref) => mockGrammarNotifier),
         automatonProvider.overrideWith((ref) => mockAutomatonNotifier),
+        automatonStateProvider.overrideWith(
+          (ref) => mockAutomatonStateNotifier,
+        ),
         pdaEditorProvider.overrideWith((ref) => mockPdaNotifier),
         homeNavigationProvider.overrideWith((ref) => mockNavNotifier),
       ],
       child: const MaterialApp(
-        home: Scaffold(body: GrammarAlgorithmPanel(useExpanded: false)),
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: GrammarAlgorithmPanel(useExpanded: false),
+          ),
+        ),
       ),
     ),
   );
 
-  await tester.pumpAndSettle();
+  // Use pump() instead of pumpAndSettle() when a CircularProgressIndicator
+  // is visible, because its animation never settles.
+  if (hasAnimatingIndicator) {
+    await tester.pump();
+  } else {
+    await tester.pumpAndSettle();
+  }
 }
 
 void main() {
@@ -401,10 +427,10 @@ void main() {
         grammarState: GrammarState.initial(),
       );
 
-      final conversionButtons = tester.widgetList<ElevatedButton>(
-        find.widgetWithText(
-          ElevatedButton,
-          'Convert Right-Linear Grammar to FSA',
+      final conversionButtons = tester.widgetList<ButtonStyleButton>(
+        find.ancestor(
+          of: find.text('Convert Right-Linear Grammar to FSA'),
+          matching: find.bySubtype<ButtonStyleButton>(),
         ),
       );
 
@@ -431,10 +457,10 @@ void main() {
         ),
       );
 
-      final conversionButtons = tester.widgetList<ElevatedButton>(
-        find.widgetWithText(
-          ElevatedButton,
-          'Convert Right-Linear Grammar to FSA',
+      final conversionButtons = tester.widgetList<ButtonStyleButton>(
+        find.ancestor(
+          of: find.text('Convert Right-Linear Grammar to FSA'),
+          matching: find.bySubtype<ButtonStyleButton>(),
         ),
       );
 
@@ -471,6 +497,7 @@ void main() {
           isConverting: true,
           activeConversion: GrammarConversionType.grammarToFsa,
         ),
+        hasAnimatingIndicator: true,
       );
 
       expect(find.text('Converting to FSA...'), findsOneWidget);
@@ -495,6 +522,7 @@ void main() {
           isConverting: true,
           activeConversion: GrammarConversionType.grammarToPda,
         ),
+        hasAnimatingIndicator: true,
       );
 
       expect(find.text('Converting to PDA...'), findsOneWidget);
@@ -519,6 +547,7 @@ void main() {
             isConverting: true,
             activeConversion: GrammarConversionType.grammarToPdaStandard,
           ),
+          hasAnimatingIndicator: true,
         );
 
         expect(find.text('Converting (Standard)...'), findsOneWidget);
@@ -544,6 +573,7 @@ void main() {
             isConverting: true,
             activeConversion: GrammarConversionType.grammarToPdaGreibach,
           ),
+          hasAnimatingIndicator: true,
         );
 
         expect(find.text('Converting (Greibach)...'), findsOneWidget);

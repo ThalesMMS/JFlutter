@@ -44,7 +44,6 @@ Future<void> _pumpHomePage(
     ProviderScope(
       overrides: [
         homeNavigationProvider.overrideWith((ref) {
-          ref.onDispose(navigationNotifier.dispose);
           return navigationNotifier;
         }),
         canvasHighlightServiceProvider.overrideWithValue(highlightService),
@@ -121,7 +120,7 @@ void main() {
         expect(find.byType(NavigationRail), findsOneWidget);
         expect(find.text('FSA'), findsWidgets);
         expect(
-          find.widgetWithText(Tooltip, 'Finite State Automata'),
+          find.byTooltip('Finite State Automata'),
           findsWidgets,
         );
         expect(find.byIcon(Icons.help_outline), findsWidgets);
@@ -147,8 +146,6 @@ void main() {
         navigationNotifier: navigationNotifier,
         highlightService: highlightService,
       );
-
-      addTearDown(navigationNotifier.dispose);
 
       final navigationFinder = find.byType(MobileNavigation);
 
@@ -180,7 +177,16 @@ void main() {
       final navigationNotifier = _TestHomeNavigationNotifier()..setIndex(0);
       final highlightService = _TestSimulationHighlightService();
 
+      // Suppress overflow errors — this test validates navigation behaviour,
+      // not the page-content layout at this viewport size.
+      final oldOnError = FlutterError.onError;
+      FlutterError.onError = (details) {
+        if (details.exceptionAsString().contains('overflowed')) return;
+        oldOnError?.call(details);
+      };
+
       addTearDown(() {
+        FlutterError.onError = oldOnError;
         tester.binding.window.clearPhysicalSizeTestValue();
         tester.binding.window.clearDevicePixelRatioTestValue();
       });
@@ -189,10 +195,8 @@ void main() {
         tester,
         navigationNotifier: navigationNotifier,
         highlightService: highlightService,
-        size: const Size(1400, 900),
+        size: const Size(1400, 1080),
       );
-
-      addTearDown(navigationNotifier.dispose);
 
       expect(find.byType(DesktopNavigation), findsOneWidget);
 

@@ -218,7 +218,7 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

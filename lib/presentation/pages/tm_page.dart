@@ -38,7 +38,11 @@ class TMPage extends ConsumerStatefulWidget {
   ConsumerState<TMPage> createState() => _TMPageState();
 }
 
-class _TMPageState extends ConsumerState<TMPage> {
+class _TMPageState extends ConsumerState<TMPage>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   TM? _currentTM;
   int _stateCount = 0;
   int _transitionCount = 0;
@@ -150,6 +154,7 @@ class _TMPageState extends ConsumerState<TMPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final screenSize = MediaQuery.of(context).size;
     final isMobile = screenSize.width < 1024;
 

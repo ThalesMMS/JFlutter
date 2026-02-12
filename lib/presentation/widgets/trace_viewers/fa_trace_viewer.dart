@@ -60,7 +60,7 @@ class FATraceViewer extends StatelessWidget {
           ),
         BaseTraceViewer(
           result: result,
-          title: 'FA Trace (${result.steps.length} steps)',
+          title: 'FA Trace (${result.stepCount} steps)',
           buildStepLine: (SimulationStep step, int index) {
             final remaining = step.remainingInput.isEmpty
                 ? 'ε'

@@ -233,4 +233,59 @@ void main() {
       expect(okEmpty.isSuccess && okEmpty.data!.accepted, true);
     });
   });
+
+  group('NPDA step recording', () {
+    test('Step records destination state, not source', () {
+      final pda = _pdaAcceptsAByFinal();
+      final result = PDASimulator.simulateNPDA(
+        pda,
+        'a',
+        stepByStep: true,
+        mode: PDAAcceptanceMode.finalState,
+      );
+      expect(result.isSuccess, true);
+      final steps = result.data!.steps;
+
+      // Find intermediate steps (not initial step 0, not final step)
+      final intermediateSteps =
+          steps.where((s) => s.stepNumber > 0 && s.stepNumber < steps.last.stepNumber).toList();
+      expect(intermediateSteps, isNotEmpty);
+
+      // Intermediate steps should show destination states (q1 or qf), not
+      // always the source (q0)
+      final hasDestination = intermediateSteps.any((s) => s.currentState != 'q0');
+      expect(hasDestination, true);
+    });
+
+    test('Initial step includes stack contents', () {
+      final pda = _pdaAcceptsAByFinal();
+      final result = PDASimulator.simulateNPDA(
+        pda,
+        'a',
+        stepByStep: true,
+        mode: PDAAcceptanceMode.finalState,
+      );
+      expect(result.isSuccess, true);
+
+      // Initial step (stepNumber 0) should have stack contents
+      final initialStep = result.data!.steps.first;
+      expect(initialStep.stepNumber, 0);
+      expect(initialStep.stackContents, isNotEmpty);
+    });
+
+    test('Rejection preserves non-empty trace', () {
+      final pda = _pdaAcceptsAByFinal();
+      final result = PDASimulator.simulateNPDA(
+        pda,
+        'b', // not in alphabet, should reject
+        stepByStep: true,
+        mode: PDAAcceptanceMode.finalState,
+      );
+      expect(result.isSuccess, true);
+      expect(result.data!.accepted, false);
+
+      // Steps should be non-empty even on rejection
+      expect(result.data!.steps, isNotEmpty);
+    });
+  });
 }

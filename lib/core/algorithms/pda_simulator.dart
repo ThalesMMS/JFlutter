@@ -91,11 +91,13 @@ class PDASimulator {
     final stack = <String>[pda.initialStackSymbol];
     int stepNumber = 0;
 
-    // Add initial step
+    // Add initial step (with stack data)
     steps.add(
-      SimulationStep.initial(
-        initialState: currentState.id,
-        inputString: inputString,
+      SimulationStep.pda(
+        currentState: currentState.id,
+        remainingInput: inputString,
+        stackContents: stack.join(''),
+        stepNumber: 0,
       ),
     );
 
@@ -150,7 +152,10 @@ class PDASimulator {
         stack.add(transition.stackPush);
       }
 
-      // Add step
+      // Move to next state
+      currentState = transition.toState;
+
+      // Add step (record destination state, consistent with TM simulator)
       if (stepByStep) {
         steps.add(
           SimulationStep.pda(
@@ -163,9 +168,6 @@ class PDASimulator {
           ),
         );
       }
-
-      // Move to next state
-      currentState = transition.toState;
 
       // Check for infinite loop (simplified)
       if (steps.length > 1000) {
@@ -269,9 +271,11 @@ class PDASimulator {
       inputString,
       <String>[pda.initialStackSymbol],
       <SimulationStep>[
-        SimulationStep.initial(
-          initialState: pda.initialState!.id,
-          inputString: inputString,
+        SimulationStep.pda(
+          currentState: pda.initialState!.id,
+          remainingInput: inputString,
+          stackContents: pda.initialStackSymbol,
+          stepNumber: 0,
         ),
       ],
       0,
@@ -281,23 +285,31 @@ class PDASimulator {
         Queue<(State, String, List<String>, List<SimulationStep>, int)>();
     queue.add(initialConfig);
 
+    // Track longest explored branch for trace preservation on failure
+    var longestBranch = <SimulationStep>[];
+
     while (queue.isNotEmpty) {
       if (DateTime.now().difference(startTime) > timeout) {
         return PDASimulationResult.timeout(
           inputString: inputString,
-          steps: const [],
+          steps: longestBranch,
           executionTime: DateTime.now().difference(startTime),
         );
       }
       if (explored++ > maxConfigurations) {
         return PDASimulationResult.infiniteLoop(
           inputString: inputString,
-          steps: const [],
+          steps: longestBranch,
           executionTime: DateTime.now().difference(startTime),
         );
       }
 
       final (state, remaining, stack, steps, depth) = queue.removeFirst();
+
+      // Track longest branch for trace preservation
+      if (steps.length > longestBranch.length) {
+        longestBranch = steps;
+      }
 
       // Acceptance checks
       final isFinalOk = pda.acceptingStates.contains(state);
@@ -363,7 +375,7 @@ class PDASimulator {
         }
 
         final step = SimulationStep.pda(
-          currentState: state.id,
+          currentState: t.toState.id,
           remainingInput: remaining,
           stackContents: newStack.join(''),
           usedTransition:
@@ -403,7 +415,7 @@ class PDASimulator {
             }
           }
           final step = SimulationStep.pda(
-            currentState: state.id,
+            currentState: t.toState.id,
             remainingInput: newRemaining,
             stackContents: newStack.join(''),
             usedTransition:
@@ -424,7 +436,7 @@ class PDASimulator {
 
     return PDASimulationResult.failure(
       inputString: inputString,
-      steps: const [],
+      steps: longestBranch,
       errorMessage: 'Rejected: no accepting configuration found',
       executionTime: DateTime.now().difference(startTime),
     );

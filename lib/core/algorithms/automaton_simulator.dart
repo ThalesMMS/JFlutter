@@ -151,7 +151,7 @@ class AutomatonSimulator {
     // Add initial step
     steps.add(
       SimulationStep.initial(
-        initialState: automaton.initialState!.id,
+        initialState: automaton.initialState!.label,
         inputString: inputString,
       ),
     );
@@ -183,7 +183,7 @@ class AutomatonSimulator {
           inputString: inputString,
           steps: steps,
           errorMessage:
-              'No transition from state ${currentState.id} on symbol $symbol',
+              'No transition from state ${currentState.label} on symbol $symbol',
           executionTime: DateTime.now().difference(startTime),
         );
       }
@@ -199,13 +199,14 @@ class AutomatonSimulator {
         );
       }
 
-      // Add step
+      // Add step (record destination state, consistent with TM simulator)
       if (stepByStep) {
+        final fromStateLabel = currentState.label;
         steps.add(
           SimulationStep.fsa(
-            currentState: currentState.id,
+            currentState: nextState.label,
             remainingInput: inputSymbols.skip(processedCount).join(''),
-            usedTransition: 'δ(${currentState.id}, $symbol) = ${nextState.id}',
+            usedTransition: 'δ($fromStateLabel, $symbol) = ${nextState.label}',
             stepNumber: stepNumber,
             consumedInput: symbol,
           ),
@@ -224,16 +225,18 @@ class AutomatonSimulator {
     // Check if any current state is accepting
     final isAccepted = automaton.acceptingStates.contains(currentState);
 
-    // Add final step
-    steps.add(
-      SimulationStep.finalStep(
-        finalState: currentState.id,
-        remainingInput: '',
-        stackContents: '',
-        tapeContents: '',
-        stepNumber: stepNumber + 1,
-      ),
-    );
+    // Add final step only in step-by-step mode to avoid duplicate
+    if (stepByStep) {
+      steps.add(
+        SimulationStep.finalStep(
+          finalState: currentState.label,
+          remainingInput: '',
+          stackContents: '',
+          tapeContents: '',
+          stepNumber: stepNumber,
+        ),
+      );
+    }
 
     if (isAccepted) {
       return SimulationResult.success(
@@ -346,13 +349,13 @@ class AutomatonSimulator {
     int stepNumber = 0;
 
     // Add initial step
-    final initialStateId = currentStates.length == 1
-        ? currentStates.first.id
-        : '{${currentStates.map((s) => s.id).join(',')}}';
+    final initialStateLabel = currentStates.length == 1
+        ? currentStates.first.label
+        : '{${currentStates.map((s) => s.label).join(',')}}';
 
     steps.add(
       SimulationStep.initial(
-        initialState: initialStateId,
+        initialState: initialStateLabel,
         inputString: inputString,
       ),
     );
@@ -476,15 +479,17 @@ class AutomatonSimulator {
         }
       }
 
-      // Add step
+      currentStates = nextStates;
+
+      // Add step (record destination states, consistent with TM simulator)
       if (stepByStep) {
-        final currentStateId = currentStates.length == 1
-            ? currentStates.first.id
-            : '{${currentStates.map((s) => s.id).join(',')}}';
+        final nextStateLabel = currentStates.length == 1
+            ? currentStates.first.label
+            : '{${currentStates.map((s) => s.label).join(',')}}';
 
         steps.add(
           SimulationStep.fsa(
-            currentState: currentStateId,
+            currentState: nextStateLabel,
             remainingInput: remainingInput,
             usedTransition: symbol,
             stepNumber: stepNumber,
@@ -492,8 +497,6 @@ class AutomatonSimulator {
           ),
         );
       }
-
-      currentStates = nextStates;
       activeLeaves = newActiveLeaves;
 
       // If no next states, early reject
@@ -535,20 +538,22 @@ class AutomatonSimulator {
         .intersection(nfa.acceptingStates)
         .isNotEmpty;
 
-    // Add final step
-    final finalStateId = currentStates.length == 1
-        ? currentStates.first.id
-        : '{${currentStates.map((s) => s.id).join(',')}}';
+    // Add final step (guard against duplicate when input was already fully consumed)
+    if (steps.isEmpty || steps.last.remainingInput.isNotEmpty) {
+      final finalStateLabel = currentStates.length == 1
+          ? currentStates.first.label
+          : '{${currentStates.map((s) => s.label).join(',')}}';
 
-    steps.add(
-      SimulationStep.finalStep(
-        finalState: finalStateId,
-        remainingInput: remainingInput,
-        stackContents: '',
-        tapeContents: '',
-        stepNumber: stepNumber + 1,
-      ),
-    );
+      steps.add(
+        SimulationStep.finalStep(
+          finalState: finalStateLabel,
+          remainingInput: remainingInput,
+          stackContents: '',
+          tapeContents: '',
+          stepNumber: stepNumber,
+        ),
+      );
+    }
 
     // Build final computation tree
     final treeRoot = _buildTreeRoot(rootNodes);

@@ -101,10 +101,16 @@ class AutomatonGraphNode extends StatelessWidget {
                 border: Border.all(color: borderColor, width: 3),
               ),
               child: Center(
-                child: Text(
-                  label,
-                  style: theme.textTheme.titleMedium,
-                  textAlign: TextAlign.center,
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      label,
+                      style: theme.textTheme.titleMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                 ),
               ),
             ),

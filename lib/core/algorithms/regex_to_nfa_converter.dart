@@ -18,6 +18,7 @@ import '../models/fsa_transition.dart';
 import '../models/regex_to_nfa_step.dart';
 import '../models/algorithm_step.dart';
 import '../result.dart';
+import 'state_renamer.dart';
 
 /// Converts Regular Expressions to Non-deterministic Finite Automata (NFA)
 class RegexToNFAConverter {
@@ -43,10 +44,13 @@ class RegexToNFAConverter {
       }
 
       // Convert to NFA using Thompson's construction
-      final nfa = _thompsonConstruction(
+      var nfa = _thompsonConstruction(
         parsedRegex,
         contextAlphabet: contextAlphabet,
       );
+
+      // Rename labels to q0, q1, q2... and apply circular layout
+      nfa = StateRenamer.renameAndLayout(nfa);
 
       return ResultFactory.success(nfa);
     } catch (e) {
@@ -86,13 +90,16 @@ class RegexToNFAConverter {
       );
 
       // Convert to NFA using Thompson's construction with step capture
-      final nfa = _thompsonConstructionWithSteps(
+      var nfa = _thompsonConstructionWithSteps(
         parsedRegex,
         steps,
         stepCounter,
         contextAlphabet: contextAlphabet,
       );
       stepCounter += steps.length - 1;
+
+      // Rename labels to q0, q1, q2... and apply circular layout
+      nfa = StateRenamer.renameAndLayout(nfa);
 
       // Add completion step
       final finalStates = nfa.states.toList();

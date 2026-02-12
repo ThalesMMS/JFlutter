@@ -146,7 +146,7 @@ class _GrammarSimulationPanelState
             controller: _inputController,
             decoration: const InputDecoration(
               labelText: 'Input String',
-              hintText: 'e.g., aabb, abab, ε',
+              hintText: 'e.g., aabb (try S→aSb|ab), abab, ε',
               border: OutlineInputBorder(),
             ),
             onSubmitted: (_) => _parseString(),
@@ -295,30 +295,58 @@ class _GrammarSimulationPanelState
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
-            Expanded(
-              child: ListView.builder(
-                itemCount: _parseSteps.length,
-                itemBuilder: (context, index) {
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 4),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      '${index + 1}. ${_parseSteps[index]}',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),
-                    ),
-                  );
-                },
+            if (widget.useExpanded)
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _parseSteps.length,
+                  itemBuilder: (context, index) {
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        '${index + 1}. ${_parseSteps[index]}',
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),
+                      ),
+                    );
+                  },
               ),
-            ),
+            )
+            else
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 200),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: _parseSteps.length,
+                  itemBuilder: (context, index) {
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        '${index + 1}. ${_parseSteps[index]}',
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),
+                      ),
+                    );
+                  },
+                ),
+              ),
           ],
         ],
       ),
@@ -416,8 +444,25 @@ class _GrammarSimulationPanelState
     final steps = <String>[];
 
     if (parseResult.derivations.isNotEmpty) {
-      for (final derivation in parseResult.derivations) {
-        steps.add(derivation.join(' ⇒ '));
+      final grammar = _buildCurrentGrammar();
+      // Try to interpret derivations as production applications (LL parser format)
+      // Each derivation is [lhs, rhs...] representing a production A → rhs
+      final firstDeriv = parseResult.derivations.first;
+      final isProductionFormat = firstDeriv.length >= 2 &&
+          grammar.nonTerminals.contains(firstDeriv.first);
+
+      if (isProductionFormat && parseResult.derivations.length > 1) {
+        // Build sentential forms from production applications
+        final sententialForms = _buildSententialForms(
+          parseResult.derivations,
+          grammar,
+        );
+        steps.addAll(sententialForms);
+      } else {
+        // Single derivation (recursive descent trace) — display as-is
+        for (final derivation in parseResult.derivations) {
+          steps.add(derivation.join(' ⇒ '));
+        }
       }
     } else if (parseResult.accepted) {
       steps.add('No derivation steps available for this parser.');
@@ -429,6 +474,37 @@ class _GrammarSimulationPanelState
     }
 
     return steps;
+  }
+
+  List<String> _buildSententialForms(
+    List<List<String>> productions,
+    Grammar grammar,
+  ) {
+    final forms = <String>[];
+    if (productions.isEmpty) return forms;
+
+    // Start with the start symbol
+    var current = [grammar.startSymbol];
+    forms.add(current.join());
+
+    for (final production in productions) {
+      if (production.length < 2) continue;
+      final lhs = production.first;
+      final rhs = production.sublist(1);
+
+      // Find the leftmost occurrence of lhs in current and replace it
+      final idx = current.indexOf(lhs);
+      if (idx >= 0) {
+        current = [
+          ...current.sublist(0, idx),
+          ...rhs,
+          ...current.sublist(idx + 1),
+        ];
+        forms.add(current.join());
+      }
+    }
+
+    return [forms.join(' ⇒ ')];
   }
 
   String _formatExecutionTime(Duration duration) {

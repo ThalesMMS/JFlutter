@@ -31,7 +31,6 @@ import '../widgets/simulation_panel.dart';
 import '../widgets/step_navigation_controls.dart';
 import '../widgets/fsa/determinism_badge.dart';
 import 'grammar_page.dart';
-import 'regex_page.dart';
 import '../../core/services/simulation_highlight_service.dart';
 import '../../core/services/algorithm_step_highlight_service.dart';
 import '../../features/canvas/graphview/graphview_canvas_controller.dart';
@@ -47,7 +46,11 @@ class FSAPage extends ConsumerStatefulWidget {
   ConsumerState<FSAPage> createState() => _FSAPageState();
 }
 
-class _FSAPageState extends ConsumerState<FSAPage> {
+class _FSAPageState extends ConsumerState<FSAPage>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   final GlobalKey _canvasKey = GlobalKey();
   late final GraphViewCanvasController _canvasController;
   late final GraphViewSimulationHighlightChannel _highlightChannel;
@@ -475,9 +478,19 @@ class _FSAPageState extends ConsumerState<FSAPage> {
       }
 
       if (!mounted) return;
-      Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (_) => const RegexPage()));
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('FA to Regex Result'),
+          content: SelectableText(regex),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      );
     }
   }
 
@@ -495,9 +508,19 @@ class _FSAPageState extends ConsumerState<FSAPage> {
     }
 
     if (!mounted) return;
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const RegexPage()));
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('FA to Regex Result (Step-by-Step)'),
+        content: SelectableText(regex),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _handleFsaToGrammar() async {
@@ -602,7 +625,10 @@ class _FSAPageState extends ConsumerState<FSAPage> {
               builder: (context, _) {
                 return MobileAutomatonControls(
                   enableToolSelection: true,
+                  showSelectionTool: true,
                   activeTool: _toolController.activeTool,
+                  onSelectTool: () => _toolController
+                      .setActiveTool(AutomatonCanvasTool.selection),
                   onAddState: _handleAddStatePressed,
                   onAddTransition: () =>
                       _toggleCanvasTool(AutomatonCanvasTool.transition),
@@ -643,7 +669,10 @@ class _FSAPageState extends ConsumerState<FSAPage> {
                 layout: GraphViewCanvasToolbarLayout.desktop,
                 controller: _canvasController,
                 enableToolSelection: true,
+                showSelectionTool: true,
                 activeTool: _toolController.activeTool,
+                onSelectTool: () => _toolController
+                    .setActiveTool(AutomatonCanvasTool.selection),
                 onAddState: _handleAddStatePressed,
                 onAddTransition: () =>
                     _toggleCanvasTool(AutomatonCanvasTool.transition),
@@ -704,6 +733,7 @@ class _FSAPageState extends ConsumerState<FSAPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final state = ref.watch(automatonStateProvider);
     final screenSize = MediaQuery.of(context).size;
     final isMobile = screenSize.width < 1024;

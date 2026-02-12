@@ -20,14 +20,38 @@ import '../result.dart';
 
 /// Simulates Turing Machines (TM) with input strings
 class TMSimulator {
-  /// Deterministic simulation (DTM) stepwise semantics similar às referências
+  /// Deterministic simulation (DTM) stepwise semantics similar às referências.
+  /// Always uses the deterministic path — errors on nondeterministic conflicts.
   static Result<TMSimulationResult> simulateDTM(
     TM tm,
     String inputString, {
     bool stepByStep = false,
     Duration timeout = const Duration(seconds: 5),
   }) {
-    return simulate(tm, inputString, stepByStep: stepByStep, timeout: timeout);
+    try {
+      final stopwatch = Stopwatch()..start();
+
+      final validationResult = _validateInput(tm, inputString);
+      if (!validationResult.isSuccess) {
+        return Failure(validationResult.error!);
+      }
+
+      if (tm.states.isEmpty) {
+        return const Failure('Cannot simulate empty Turing machine');
+      }
+
+      if (tm.initialState == null) {
+        return const Failure('Turing machine must have an initial state');
+      }
+
+      final result = _simulateTM(tm, inputString, stepByStep, timeout);
+      stopwatch.stop();
+
+      final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
+      return Success(finalResult);
+    } catch (e) {
+      return Failure('Error simulating DTM: $e');
+    }
   }
 
   /// Non-deterministic simulation (NTM) via BFS sobre configurações, aceita se qualquer ramo aceita
@@ -55,20 +79,25 @@ class TMSimulator {
         initialTape,
         0,
         <SimulationStep>[
-          SimulationStep.initial(
-            initialState: tm.initialState!.id,
-            inputString: inputString,
+          SimulationStep.tm(
+            currentState: tm.initialState!.id,
+            remainingInput: inputString,
+            tapeContents: inputString,
+            stepNumber: 0,
+            headPosition: 0,
           ),
         ],
       );
       final queue = <(State, List<String>, int, List<SimulationStep>)>[initial];
+      // Track the longest branch for trace preservation on failure
+      var longestBranch = <SimulationStep>[];
 
       while (queue.isNotEmpty) {
         if (DateTime.now().difference(startTime) > timeout) {
           return Success(
             TMSimulationResult.timeout(
               inputString: inputString,
-              steps: const [],
+              steps: longestBranch,
               executionTime: DateTime.now().difference(startTime),
             ),
           );
@@ -77,13 +106,17 @@ class TMSimulator {
           return Success(
             TMSimulationResult.infiniteLoop(
               inputString: inputString,
-              steps: const [],
+              steps: longestBranch,
               executionTime: DateTime.now().difference(startTime),
             ),
           );
         }
 
         final (state, tape, head, steps) = queue.removeAt(0);
+        // Track the longest branch explored for failure reporting
+        if (steps.length > longestBranch.length) {
+          longestBranch = steps;
+        }
         if (tm.acceptingStates.contains(state)) {
           final finalSteps = List<SimulationStep>.from(steps)
             ..add(
@@ -93,6 +126,7 @@ class TMSimulator {
                 stackContents: '',
                 tapeContents: tape.join(''),
                 stepNumber: (steps.isNotEmpty ? steps.last.stepNumber : 0) + 1,
+                headPosition: head,
               ),
             );
           return Success(
@@ -132,7 +166,7 @@ class TMSimulator {
           }
           final nextStep = stepByStep
               ? SimulationStep.tm(
-                  currentState: state.id,
+                  currentState: tr.toState.id,
                   remainingInput: '',
                   tapeContents: newTape.join(''),
                   usedTransition:
@@ -152,7 +186,7 @@ class TMSimulator {
       return Success(
         TMSimulationResult.failure(
           inputString: inputString,
-          steps: const [],
+          steps: longestBranch,
           errorMessage: 'Rejected: no accepting configuration found',
           executionTime: DateTime.now().difference(startTime),
         ),
@@ -188,7 +222,17 @@ class TMSimulator {
         return const Failure('Turing machine must have an initial state');
       }
 
-      // Simulate the TM
+      // Route to NTM simulation when the TM is non-deterministic
+      if (tm.isNondeterministic) {
+        return simulateNTM(
+          tm,
+          inputString,
+          stepByStep: stepByStep,
+          timeout: timeout,
+        );
+      }
+
+      // Simulate the DTM
       final result = _simulateTM(tm, inputString, stepByStep, timeout);
       stopwatch.stop();
 
@@ -248,11 +292,14 @@ class TMSimulator {
     var headPosition = 0;
     int stepNumber = 0;
 
-    // Add initial step
+    // Add initial step with tape data and head position
     steps.add(
-      SimulationStep.initial(
-        initialState: currentState.id,
-        inputString: inputString,
+      SimulationStep.tm(
+        currentState: currentState.id,
+        remainingInput: inputString,
+        tapeContents: tape.join(''),
+        stepNumber: 0,
+        headPosition: 0,
       ),
     );
 
@@ -270,7 +317,7 @@ class TMSimulator {
       }
 
       // Check for infinite loop (simplified)
-      if (steps.length > 1000) {
+      if (steps.length > 10000) {
         return TMSimulationResult.infiniteLoop(
           inputString: inputString,
           steps: steps,
@@ -283,15 +330,27 @@ class TMSimulator {
           ? tape[headPosition]
           : tm.blankSymbol;
 
-      // Find transition
-      final transition = tm.getTMTransitionFromStateOnSymbol(
-        currentState.id,
+      // Find transitions using the same method as NTM for consistency
+      final transitions = tm.getTransitionsFromStateOnSymbol(
+        currentState,
         currentSymbol,
       );
-      if (transition == null) {
+      if (transitions.isEmpty) {
         // No transition found, halt
         break;
       }
+      if (transitions.length > 1) {
+        // Ambiguous: a DTM should have exactly one transition per state/symbol
+        return TMSimulationResult.failure(
+          inputString: inputString,
+          steps: steps,
+          errorMessage:
+              'Nondeterministic conflict: ${transitions.length} transitions '
+              'found for state ${currentState.id} on symbol "$currentSymbol"',
+          executionTime: DateTime.now().difference(startTime),
+        );
+      }
+      final transition = transitions.first;
 
       // Write to tape
       if (headPosition < tape.length) {
@@ -320,10 +379,14 @@ class TMSimulator {
           break;
       }
 
+      // Move to next state BEFORE recording the step (Bug 2 fix)
+      final previousStateId = currentState.id;
+      currentState = transition.toState;
+
       // Add step
       if (stepByStep) {
         final transitionRule =
-            '${currentState.id},$currentSymbol → '
+            '$previousStateId,$currentSymbol → '
             '${transition.toState.id},${transition.writeSymbol},'
             '${transition.moveDirection.symbol}';
         steps.add(
@@ -339,9 +402,6 @@ class TMSimulator {
         );
       }
 
-      // Move to next state
-      currentState = transition.toState;
-
       // Check if we're in an accepting state
       if (tm.acceptingStates.contains(currentState)) {
         break;
@@ -356,6 +416,7 @@ class TMSimulator {
         stackContents: '',
         tapeContents: tape.join(''),
         stepNumber: stepNumber + 1,
+        headPosition: headPosition,
       ),
     );
 

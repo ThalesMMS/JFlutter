@@ -103,6 +103,7 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
   final int cacheEvictionThreshold;
 
   bool _isSynchronizing = false;
+  bool _isRestoringHistory = false;
 
   final List<_GraphHistoryEntry> _undoHistory = [];
   final List<_GraphHistoryEntry> _redoHistory = [];
@@ -293,7 +294,9 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
     }
 
     final entry = _undoHistory.removeLast();
+    _isRestoringHistory = true;
     _applyHistoryEntry(entry);
+    _isRestoringHistory = false;
     _logGraphViewBase(
       'Undo applied (#undo=${_undoHistory.length}, #redo=${_redoHistory.length})',
     );
@@ -314,7 +317,9 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
     }
 
     final entry = _redoHistory.removeLast();
+    _isRestoringHistory = true;
     _applyHistoryEntry(entry);
+    _isRestoringHistory = false;
     _logGraphViewBase(
       'Redo applied (#undo=${_undoHistory.length}, #redo=${_redoHistory.length})',
     );
@@ -324,7 +329,7 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
   /// Synchronises the canvas with the provided domain [data].
   @protected
   void synchronizeGraph(TSnapshot? data, {bool fromMutation = false}) {
-    final isExternalSync = !fromMutation;
+    final isExternalSync = !fromMutation && !_isRestoringHistory;
     if (isExternalSync &&
         (_undoHistory.isNotEmpty || _redoHistory.isNotEmpty)) {
       _undoHistory.clear();

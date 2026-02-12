@@ -2,10 +2,10 @@
 //  error_handler.dart
 //  JFlutter
 //
-//  Provedor central de tratamento de erros que apresenta mensagens nas interfaces via
-//  SnackBars, diálogos de confirmação e utilidades de log para depuração controlada.
-//  Inclui rotinas para traduzir Result em feedback contextual e uma extensão que
-//  simplifica o consumo direto desses fluxos dentro de widgets e fluxos assíncronos.
+//  Central error handling provider that presents messages in the interface via
+//  SnackBars, confirmation dialogs and logging utilities for controlled debugging.
+//  Includes routines to translate Result into contextual feedback and an extension that
+//  simplifies direct consumption of these flows within widgets and asynchronous flows.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
@@ -30,7 +30,7 @@ class ErrorHandler {
         backgroundColor: Colors.red.shade600,
         duration: const Duration(seconds: 4),
         action: SnackBarAction(
-          label: 'Fechar',
+          label: 'Close',
           textColor: Colors.white,
           onPressed: () {
             ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -48,7 +48,7 @@ class ErrorHandler {
         backgroundColor: Colors.green.shade600,
         duration: const Duration(seconds: 3),
         action: SnackBarAction(
-          label: 'Fechar',
+          label: 'Close',
           textColor: Colors.white,
           onPressed: () {
             ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -66,7 +66,7 @@ class ErrorHandler {
         backgroundColor: Colors.blue.shade600,
         duration: const Duration(seconds: 3),
         action: SnackBarAction(
-          label: 'Fechar',
+          label: 'Close',
           textColor: Colors.white,
           onPressed: () {
             ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -84,7 +84,7 @@ class ErrorHandler {
         backgroundColor: Colors.orange.shade600,
         duration: const Duration(seconds: 4),
         action: SnackBarAction(
-          label: 'Fechar',
+          label: 'Close',
           textColor: Colors.white,
           onPressed: () {
             ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -118,8 +118,8 @@ class ErrorHandler {
     BuildContext context, {
     required String title,
     required String message,
-    String confirmText = 'Confirmar',
-    String cancelText = 'Cancelar',
+    String confirmText = 'Confirm',
+    String cancelText = 'Cancel',
   }) async {
     final result = await showDialog<bool>(
       context: context,

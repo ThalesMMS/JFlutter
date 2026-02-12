@@ -2,8 +2,8 @@
 //  stack_operation_preview.dart
 //  JFlutter
 //
-//  Widget de preview de operação de pilha para mostrar ao passar mouse/tocar
-//  em transições PDA. Demonstra visualmente o efeito de input,pop→push na pilha.
+//  Stack operation preview widget to show on hover/touch
+//  in PDA transitions. Visually demonstrates the input,pop→push effect on the stack.
 //
 //  Created for Phase 3 - Transition Operation Preview
 //
@@ -11,11 +11,11 @@
 import 'package:flutter/material.dart';
 import 'package:jflutter/presentation/widgets/pda/stack_drawer.dart';
 
-/// Widget de preview de operação de pilha
+/// Stack operation preview widget
 ///
-/// Mostra uma prévia visual do que uma transição PDA fará com a pilha,
-/// incluindo o símbolo de entrada, símbolo a ser removido (pop) e
-/// símbolo a ser adicionado (push).
+/// Shows a visual preview of what a PDA transition will do with the stack,
+/// including the input symbol, symbol to be removed (pop) and
+/// symbol to be added (push).
 class StackOperationPreview extends StatelessWidget {
   final String inputSymbol;
   final String popSymbol;

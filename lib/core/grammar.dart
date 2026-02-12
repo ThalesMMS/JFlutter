@@ -2,10 +2,10 @@
 //  grammar.dart
 //  JFlutter
 //
-//  Centraliza as exportações de modelos e algoritmos relacionados a gramáticas,
-//  permitindo que outras partes do aplicativo importem um único ponto para
-//  acessar entidades, analisadores, conversores para PDA e automatos
-//  associados às funcionalidades de teoria de linguagens formais.
+//  Centralizes exports of grammar-related models and algorithms,
+//  allowing other parts of the application to import a single point to
+//  access entities, parsers, converters to PDA and automata
+//  associated with formal language theory functionalities.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

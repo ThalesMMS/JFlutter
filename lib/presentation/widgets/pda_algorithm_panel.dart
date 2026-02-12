@@ -36,7 +36,7 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -200,7 +200,7 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
   }
 
   Widget _buildResultsSection(BuildContext context) {
-    final content = Column(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -210,20 +210,11 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
-        if (widget.useExpanded)
-          Expanded(
-            child: _analysisResult == null
-                ? _buildEmptyResults(context)
-                : _buildResults(context),
-          )
-        else
-          _analysisResult == null
-              ? _buildEmptyResults(context)
-              : _buildResults(context),
+        _analysisResult == null
+            ? _buildEmptyResults(context)
+            : _buildResults(context),
       ],
     );
-
-    return widget.useExpanded ? Expanded(child: content) : content;
   }
 
   Widget _buildEmptyResults(BuildContext context) {

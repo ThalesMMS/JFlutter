@@ -3,8 +3,8 @@
 JFlutter is a Flutter reimplementation of the JFLAP educational tool. It offers an interactive, touch-first workspace for creating, analysing, and simulating finite automata, grammars, and Turing machines on mobile and desktop platforms.
 
 <p align="center">
-  <img src="./screenshots/screenshot1.png" alt="Automaton canvas screenshot" width="300" />
-  <img src="./screenshots/screenshot2.png" alt="Regex module screenshot" width="300" />
+  <img src="./screenshots/screenshot1.png" alt="Automaton canvas screenshot" width="600" />
+  <img src="./screenshots/screenshot2.png" alt="Regex module screenshot" width="600" />
   <img src="./screenshots/screenshot3.png" alt="Grammar editor screenshot" width="300" />
   <img src="./screenshots/screenshot4.png" alt="Pumping Lemma Game screenshot" width="300" />
 </p>

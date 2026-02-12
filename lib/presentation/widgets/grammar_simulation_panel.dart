@@ -45,7 +45,7 @@ class _GrammarSimulationPanelState
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -183,7 +183,7 @@ class _GrammarSimulationPanelState
   }
 
   Widget _buildResultsSection(BuildContext context) {
-    final content = Column(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -193,20 +193,11 @@ class _GrammarSimulationPanelState
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
-        if (widget.useExpanded)
-          Expanded(
-            child: _parseResult == null
-                ? _buildEmptyResults(context)
-                : _buildResults(context),
-          )
-        else
-          _parseResult == null
-              ? _buildEmptyResults(context)
-              : _buildResults(context),
+        _parseResult == null
+            ? _buildEmptyResults(context)
+            : _buildResults(context),
       ],
     );
-
-    return widget.useExpanded ? Expanded(child: content) : content;
   }
 
   Widget _buildEmptyResults(BuildContext context) {
@@ -295,34 +286,8 @@ class _GrammarSimulationPanelState
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
-            if (widget.useExpanded)
-              Expanded(
-                child: ListView.builder(
-                  itemCount: _parseSteps.length,
-                  itemBuilder: (context, index) {
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 4),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        '${index + 1}. ${_parseSteps[index]}',
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),
-                      ),
-                    );
-                  },
-              ),
-            )
-            else
               ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 200),
+                constraints: const BoxConstraints(maxHeight: 300),
                 child: ListView.builder(
                   shrinkWrap: true,
                   itemCount: _parseSteps.length,

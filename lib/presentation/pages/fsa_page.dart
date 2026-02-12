@@ -883,7 +883,7 @@ class _FSAPageState extends ConsumerState<FSAPage>
           flex: 2,
           child: Column(
             children: [
-              _buildAlgorithmPanelForState(state),
+              Expanded(child: _buildAlgorithmPanelForState(state)),
               if (stepState.hasSteps) ...[
                 const SizedBox(height: 8),
                 Expanded(child: _buildStepViewerPanel()),

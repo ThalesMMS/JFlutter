@@ -225,8 +225,10 @@ class AutomatonSimulator {
     // Check if any current state is accepting
     final isAccepted = automaton.acceptingStates.contains(currentState);
 
-    // Add final step only in step-by-step mode to avoid duplicate
-    if (stepByStep) {
+    // Add final step only in step-by-step mode (guard against duplicate
+    // when input was already fully consumed in the last transition step)
+    if (stepByStep &&
+        (steps.isEmpty || steps.last.remainingInput.isNotEmpty)) {
       steps.add(
         SimulationStep.finalStep(
           finalState: currentState.label,

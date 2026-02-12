@@ -62,7 +62,7 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -232,7 +232,7 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
 
   Widget _buildResultsSection(BuildContext context) {
     final hasData = _analysis != null || _analysisError != null;
-    final content = Column(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -242,18 +242,9 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
-        if (widget.useExpanded)
-          Expanded(
-            child: hasData
-                ? _buildResults(context)
-                : _buildEmptyResults(context),
-          )
-        else
-          hasData ? _buildResults(context) : _buildEmptyResults(context),
+        hasData ? _buildResults(context) : _buildEmptyResults(context),
       ],
     );
-
-    return widget.useExpanded ? Expanded(child: content) : content;
   }
 
   Widget _buildEmptyResults(BuildContext context) {

@@ -77,7 +77,7 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel>
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

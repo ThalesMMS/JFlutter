@@ -2,7 +2,7 @@
 //  transition_label_editor.dart
 //  JFlutter
 //
-//  Cria formulário acessível para ajustar rótulos de transições com suporte a teclado, botões táteis e atalhos padrão. Encapsula lógica de submissão, cancelamento e semântica de acessibilidade para ser reutilizado em diversos fluxos de edição.
+//  Creates accessible form to adjust transition labels with keyboard support, touch buttons and standard shortcuts. Encapsulates submission, cancellation and accessibility semantics logic to be reused in various editing flows.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
@@ -18,10 +18,10 @@ class TransitionLabelEditorForm extends StatefulWidget {
     required this.onCancel,
     this.autofocus = false,
     this.touchOptimized = false,
-    this.fieldLabel = 'Rótulo',
-    this.cancelLabel = 'Cancelar',
-    this.saveLabel = 'Salvar',
-    this.semanticLabel = 'Editar rótulo da transição',
+    this.fieldLabel = 'Label',
+    this.cancelLabel = 'Cancel',
+    this.saveLabel = 'Save',
+    this.semanticLabel = 'Edit transition label',
   });
 
   final String initialValue;

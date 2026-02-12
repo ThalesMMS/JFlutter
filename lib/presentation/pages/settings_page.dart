@@ -2,10 +2,9 @@
 //  settings_page.dart
 //  JFlutter
 //
-//  Gera a página de configurações carregando preferências persistidas,
-//  exibindo formulários de aparência, símbolos e controles gerais enquanto
-//  salva alterações via repositório compartilhado com feedback responsivo ao
-//  usuário.
+//  Generates the settings page loading persisted preferences,
+//  displaying appearance, symbols and general controls forms while
+//  saving changes via shared repository with responsive user feedback.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

@@ -19,6 +19,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
 import 'package:vector_math/vector_math_64.dart';
 
+import 'package:jflutter/core/models/simulation_highlight.dart';
 import 'package:jflutter/core/models/tm.dart';
 import 'package:jflutter/core/models/tm_transition.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
@@ -679,5 +680,129 @@ void main() {
       controller.dispose();
       toolController.dispose();
     });
+
+    testGoldens(
+      'renders renderer migration scenario with highlighted adaptive edges',
+      (tester) async {
+        final provider = _TestTMEditorProvider();
+        final controller =
+            GraphViewTmCanvasController(editorNotifier: provider);
+        final toolController = AutomatonCanvasToolController(
+          AutomatonCanvasTool.selection,
+        );
+
+        final stateA = automaton_state.State(
+          id: 'A',
+          label: 'A',
+          position: Vector2(40, 120),
+          isInitial: true,
+        );
+        final stateB = automaton_state.State(
+          id: 'B',
+          label: 'B',
+          position: Vector2(260, 120),
+          isAccepting: true,
+        );
+        final stateC = automaton_state.State(
+          id: 'C',
+          label: 'C',
+          position: Vector2(340, 240),
+        );
+
+        final autoEdge = TMTransition(
+          id: 'tm_auto',
+          fromState: stateA,
+          toState: stateB,
+          label: '0→1,R',
+          readSymbol: '0',
+          writeSymbol: '1',
+          direction: TapeDirection.right,
+        );
+        final manualEdge = TMTransition(
+          id: 'tm_manual',
+          fromState: stateA,
+          toState: stateB,
+          label: '1→0,L',
+          controlPoint: Vector2(180, 20),
+          readSymbol: '1',
+          writeSymbol: '0',
+          direction: TapeDirection.left,
+        );
+        final loopA = TMTransition(
+          id: 'tm_loop_a',
+          fromState: stateA,
+          toState: stateA,
+          label: 'B→B,S',
+          readSymbol: 'B',
+          writeSymbol: 'B',
+          direction: TapeDirection.stay,
+        );
+        final loopB = TMTransition(
+          id: 'tm_loop_b',
+          fromState: stateA,
+          toState: stateA,
+          label: '1→1,R',
+          readSymbol: '1',
+          writeSymbol: '1',
+          direction: TapeDirection.right,
+        );
+
+        final tm = TM(
+          id: 'renderer-migration',
+          name: 'Renderer Migration TM',
+          states: <automaton_state.State>{stateA, stateB, stateC},
+          transitions: <TMTransition>{autoEdge, manualEdge, loopA, loopB},
+          alphabet: const <String>{'0', '1', 'B'},
+          initialState: stateA,
+          acceptingStates: <automaton_state.State>{stateB},
+          created: DateTime.utc(2024, 1, 1),
+          modified: DateTime.utc(2024, 1, 1),
+          bounds: const math.Rectangle<double>(0, 0, 480, 360),
+          zoomLevel: 1,
+          panOffset: Vector2.zero(),
+          tapeAlphabet: const {'0', '1', 'B'},
+          blankSymbol: 'B',
+        );
+
+        provider.setTm(tm);
+        controller.synchronize(tm);
+        controller.applyHighlight(
+          const SimulationHighlight(
+            transitionIds: <String>{'tm_manual'},
+          ),
+        );
+
+        await tester.pumpWidgetBuilder(
+          ProviderScope(
+            overrides: [tmEditorProvider.overrideWith((ref) => provider)],
+            child: MaterialApp(
+              home: Scaffold(
+                body: SizedBox(
+                  width: 480,
+                  height: 360,
+                  child: TMCanvasGraphView(
+                    controller: controller,
+                    toolController: toolController,
+                    onTmModified: (_) {},
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        await tester.pump(const Duration(milliseconds: 300));
+
+        await expectLater(
+          find.byType(Scaffold),
+          matchesGoldenFile(
+            'goldens/tm_canvas_renderer_migration_highlighted.png',
+          ),
+        );
+
+        controller.dispose();
+        toolController.dispose();
+      },
+    );
   });
 }

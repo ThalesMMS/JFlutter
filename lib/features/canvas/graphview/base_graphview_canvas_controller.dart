@@ -55,8 +55,7 @@ class _GraphHistoryEntry {
 
 /// Base controller that coordinates GraphView interactions with domain notifiers.
 abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
-    extends GraphViewHighlightController
-    with GraphViewViewportHighlightMixin {
+    extends GraphViewHighlightController with GraphViewViewportHighlightMixin {
   static const int kDefaultHistoryLimit = 20;
   static const int kDefaultCacheEvictionThreshold = 250;
   static final Codec<List<int>, List<int>> _historyCodec =
@@ -69,19 +68,18 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
     TransformationController? transformationController,
     int historyLimit = kDefaultHistoryLimit,
     int cacheEvictionThreshold = kDefaultCacheEvictionThreshold,
-  }) : assert(historyLimit > 0),
-       assert(cacheEvictionThreshold > 0),
-       historyLimit = historyLimit,
-       cacheEvictionThreshold = cacheEvictionThreshold,
-       graph = graph ?? Graph(),
-       graphController =
-           viewController ??
-           GraphViewController(
-             transformationController:
-                 transformationController ?? TransformationController(),
-           ),
-       _ownsTransformationController =
-           viewController == null && transformationController == null;
+  })  : assert(historyLimit > 0),
+        assert(cacheEvictionThreshold > 0),
+        historyLimit = historyLimit,
+        cacheEvictionThreshold = cacheEvictionThreshold,
+        graph = graph ?? Graph(),
+        graphController = viewController ??
+            GraphViewController(
+              transformationController:
+                  transformationController ?? TransformationController(),
+            ),
+        _ownsTransformationController =
+            viewController == null && transformationController == null;
 
   @protected
   final TNotifier notifier;
@@ -130,6 +128,7 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
 
   GraphViewCanvasNode? nodeById(String id) => _nodes[id];
   GraphViewCanvasEdge? edgeById(String id) => _edges[id];
+  Edge? graphEdgeById(String id) => _graphEdges[id];
 
   /// Adds a new state at the provided [worldPosition].
   void addStateAt(Offset worldPosition);
@@ -199,9 +198,8 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
   @protected
   Offset resolveViewportCenterWorld() {
     final size = _viewportSize;
-    final viewportCenter = size != null
-        ? Offset(size.width / 2, size.height / 2)
-        : Offset.zero;
+    final viewportCenter =
+        size != null ? Offset(size.width / 2, size.height / 2) : Offset.zero;
     final world = toWorldOffset(viewportCenter);
     _logGraphViewBase(
       'Viewport centre resolved to (${world.dx.toStringAsFixed(2)}, ${world.dy.toStringAsFixed(2)})',
@@ -249,7 +247,26 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
   /// Creates a GraphView edge for the provided canvas [edge].
   @protected
   Edge buildGraphEdge(GraphViewCanvasEdge edge, Node from, Node to) {
-    return Edge(from, to, key: ValueKey(edge.id));
+    return Edge(
+      from,
+      to,
+      key: ValueKey(edge.id),
+      label: edge.label,
+      labelFollowsEdgeDirection: false,
+      controlPoint: edge.controlPointX != null && edge.controlPointY != null
+          ? Offset(edge.controlPointX!, edge.controlPointY!)
+          : null,
+    );
+  }
+
+  @protected
+  void updateGraphEdgeInstance(Edge target, GraphViewCanvasEdge edge) {
+    target.label = edge.label;
+    target.labelFollowsEdgeDirection = false;
+    target.controlPoint =
+        edge.controlPointX != null && edge.controlPointY != null
+            ? Offset(edge.controlPointX!, edge.controlPointY!)
+            : null;
   }
 
   /// Records the current canvas state before invoking [mutation].
@@ -347,8 +364,7 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
       'Synchronizing graph (incomingNodes=${incomingNodes.length}, incomingEdges=${incomingEdges.length})',
     );
 
-    final shouldEvictCaches =
-        incomingNodes.length > cacheEvictionThreshold ||
+    final shouldEvictCaches = incomingNodes.length > cacheEvictionThreshold ||
         incomingEdges.length > cacheEvictionThreshold;
     if (shouldEvictCaches) {
       _logGraphViewBase(
@@ -368,9 +384,8 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
     var edgesDirty = false;
 
     try {
-      final removedNodeIds = _nodes.keys
-          .where((id) => !incomingNodes.containsKey(id))
-          .toList();
+      final removedNodeIds =
+          _nodes.keys.where((id) => !incomingNodes.containsKey(id)).toList();
       for (final nodeId in removedNodeIds) {
         _nodes.remove(nodeId);
         final nodeInstance = _graphNodes.remove(nodeId);
@@ -396,9 +411,8 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
         }
       }
 
-      final removedEdgeIds = _edges.keys
-          .where((id) => !incomingEdges.containsKey(id))
-          .toList();
+      final removedEdgeIds =
+          _edges.keys.where((id) => !incomingEdges.containsKey(id)).toList();
       for (final edgeId in removedEdgeIds) {
         _edges.remove(edgeId);
         final edgeInstance = _graphEdges.remove(edgeId);
@@ -424,16 +438,15 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
           continue;
         }
 
-        final hasPositionChanged =
-            existingNode.x != incomingNode.x ||
+        final hasPositionChanged = existingNode.x != incomingNode.x ||
             existingNode.y != incomingNode.y;
-        final hasMetadataChanged =
-            existingNode.label != incomingNode.label ||
+        final hasMetadataChanged = existingNode.label != incomingNode.label ||
             existingNode.isInitial != incomingNode.isInitial ||
             existingNode.isAccepting != incomingNode.isAccepting;
 
         if (hasPositionChanged || hasMetadataChanged) {
           nodeInstance.position = Offset(incomingNode.x, incomingNode.y);
+          graph.markModified();
           nodesDirty = true;
         }
 
@@ -461,6 +474,29 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
         }
 
         if (existingEdge != incomingEdge) {
+          final endpointsChanged =
+              existingEdge.fromStateId != incomingEdge.fromStateId ||
+                  existingEdge.toStateId != incomingEdge.toStateId;
+
+          if (endpointsChanged) {
+            graph.removeEdge(edgeInstance);
+            final fromNode = _graphNodes[incomingEdge.fromStateId];
+            final toNode = _graphNodes[incomingEdge.toStateId];
+            if (fromNode == null || toNode == null) {
+              _graphEdges.remove(edgeId);
+              _edges[edgeId] = incomingEdge;
+              edgesDirty = true;
+              continue;
+            }
+
+            final recreatedEdge =
+                buildGraphEdge(incomingEdge, fromNode, toNode);
+            _graphEdges[edgeId] = recreatedEdge;
+            graph.addEdgeS(recreatedEdge);
+          } else {
+            updateGraphEdgeInstance(edgeInstance, incomingEdge);
+            graph.markModified();
+          }
           _edges[edgeId] = incomingEdge;
           edgesDirty = true;
         }

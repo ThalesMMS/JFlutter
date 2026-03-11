@@ -16,10 +16,12 @@ class TransitionLabelEditorForm extends StatefulWidget {
     required this.initialValue,
     required this.onSubmit,
     required this.onCancel,
+    this.onDelete,
     this.autofocus = false,
     this.touchOptimized = false,
     this.fieldLabel = 'Label',
     this.cancelLabel = 'Cancel',
+    this.deleteLabel = 'Delete',
     this.saveLabel = 'Save',
     this.semanticLabel = 'Edit transition label',
   });
@@ -27,10 +29,12 @@ class TransitionLabelEditorForm extends StatefulWidget {
   final String initialValue;
   final ValueChanged<String> onSubmit;
   final VoidCallback onCancel;
+  final VoidCallback? onDelete;
   final bool autofocus;
   final bool touchOptimized;
   final String fieldLabel;
   final String cancelLabel;
+  final String deleteLabel;
   final String saveLabel;
   final String semanticLabel;
 
@@ -56,6 +60,10 @@ class _TransitionLabelEditorFormState extends State<TransitionLabelEditorForm> {
 
   void _handleCancel() {
     widget.onCancel();
+  }
+
+  void _handleDelete() {
+    widget.onDelete?.call();
   }
 
   @override
@@ -121,6 +129,21 @@ class _TransitionLabelEditorFormState extends State<TransitionLabelEditorForm> {
                           child: Text(widget.cancelLabel),
                         ),
                       ),
+                      if (widget.onDelete != null) ...[
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: _handleDelete,
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size.fromHeight(48),
+                              foregroundColor: Theme.of(
+                                context,
+                              ).colorScheme.error,
+                            ),
+                            child: Text(widget.deleteLabel),
+                          ),
+                        ),
+                      ],
                       const SizedBox(width: 12),
                       Expanded(
                         child: FilledButton(
@@ -135,8 +158,18 @@ class _TransitionLabelEditorFormState extends State<TransitionLabelEditorForm> {
                   )
                 else
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
+                      if (widget.onDelete != null)
+                        TextButton(
+                          onPressed: _handleDelete,
+                          child: Text(
+                            widget.deleteLabel,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                        ),
+                      const Spacer(),
                       TextButton(
                         onPressed: _handleCancel,
                         child: Text(widget.cancelLabel),

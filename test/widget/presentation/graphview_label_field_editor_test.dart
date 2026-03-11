@@ -94,4 +94,31 @@ void main() {
 
     expect(canceled, isTrue);
   });
+
+  testWidgets('GraphViewLabelFieldEditor triggers delete without canceling', (
+    tester,
+  ) async {
+    var canceled = false;
+    var deleted = false;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: GraphViewLabelFieldEditor(
+            initialValue: 'q0',
+            onSubmit: (_) {},
+            onCancel: () => canceled = true,
+            onDelete: () => deleted = true,
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete'));
+    await tester.pumpAndSettle();
+
+    expect(deleted, isTrue);
+    expect(canceled, isFalse);
+  });
 }

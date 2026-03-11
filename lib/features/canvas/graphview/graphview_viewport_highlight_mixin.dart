@@ -109,8 +109,8 @@ mixin GraphViewViewportHighlightMixin on GraphViewHighlightController {
     final safeCurrent = currentScale == 0 ? 1.0 : currentScale;
     final targetScale = (safeCurrent * factor).clamp(0.05, 10.0);
     final relativeScale = targetScale / safeCurrent;
-    matrix.scale(relativeScale);
-    transformation.value = matrix;
+    final target = Matrix4.copy(matrix)..scale(relativeScale);
+    graphController.animateToMatrix(target);
     _logViewportEvent(
       'Applied scale factor $relativeScale (target=$targetScale)',
     );
@@ -130,9 +130,7 @@ mixin GraphViewViewportHighlightMixin on GraphViewHighlightController {
 
   /// Resets the viewport offset and zoom to their defaults.
   void resetView() {
-    final transformation = graphController.transformationController;
-    transformation?.value = Matrix4.identity();
-    graphController.resetView();
+    graphController.animateToMatrix(Matrix4.identity());
     _logViewportEvent('Viewport reset');
   }
 
@@ -174,7 +172,7 @@ mixin GraphViewViewportHighlightMixin on GraphViewHighlightController {
       )
       ..scale(targetScale);
 
-    transformation.value = matrix;
+    graphController.animateToMatrix(matrix);
     _logViewportEvent(
       'fitToContent applied (scale=${targetScale.toStringAsFixed(2)}, content=${contentWidth.toStringAsFixed(1)}x${contentHeight.toStringAsFixed(1)})',
     );

@@ -1,0 +1,269 @@
+import 'dart:ui';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:graphview/GraphView.dart';
+import 'package:jflutter/features/canvas/graphview/jflutter_adaptive_edge_renderer.dart';
+
+class _InspectableJFlutterAdaptiveEdgeRenderer
+    extends JFlutterAdaptiveEdgeRenderer {
+  _InspectableJFlutterAdaptiveEdgeRenderer()
+      : super(
+          config: EdgeRoutingConfig(
+            anchorMode: AnchorMode.dynamic,
+            routingMode: RoutingMode.bezier,
+            enableRepulsion: true,
+          ),
+          renderMode: JFlutterEdgeRenderMode.groupedFsa,
+        );
+
+  Paint? lastStrokePaint;
+  Paint? lastArrowPaint;
+  int geometryPaintCount = 0;
+
+  @override
+  void paintEdgeGeometry(
+    Canvas canvas,
+    Edge edge,
+    Paint paint,
+    EdgePathGeometry geometry,
+  ) {
+    geometryPaintCount++;
+    lastStrokePaint = Paint()
+      ..color = paint.color
+      ..style = paint.style
+      ..strokeWidth = paint.strokeWidth
+      ..strokeCap = paint.strokeCap;
+  }
+
+  @override
+  void paintEdgeArrow(
+    Canvas canvas,
+    Edge edge,
+    Paint paint,
+    EdgePathGeometry geometry,
+  ) {
+    lastArrowPaint = Paint()
+      ..color = paint.color
+      ..style = paint.style;
+  }
+
+  @override
+  void renderAnimatedParticlesOnPath(
+    Canvas canvas,
+    Edge edge,
+    Paint paint,
+    Path path,
+  ) {}
+}
+
+Offset _pathMidpoint(Path path) {
+  final metric = path.computeMetrics().first;
+  return metric.getTangentForOffset(metric.length * 0.5)!.position;
+}
+
+bool _pathIntersectsRect(Path path, Rect rect, {double padding = 0}) {
+  final iterator = path.computeMetrics().iterator;
+  if (!iterator.moveNext()) {
+    return false;
+  }
+  final metric = iterator.current;
+
+  final probe = rect.inflate(padding);
+  const samples = 24;
+  for (var index = 0; index <= samples; index++) {
+    final tangent =
+        metric.getTangentForOffset(metric.length * (index / samples));
+    if (tangent != null && probe.contains(tangent.position)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void main() {
+  group('JFlutterAdaptiveEdgeRenderer', () {
+    late Graph graph;
+    late Node source;
+    late Node destination;
+    late Edge edge;
+    late _InspectableJFlutterAdaptiveEdgeRenderer renderer;
+
+    setUp(() {
+      graph = Graph();
+      source = Node.Id('source')
+        ..position = const Offset(0, 0)
+        ..size = const Size(100, 60);
+      destination = Node.Id('destination')
+        ..position = const Offset(220, 0)
+        ..size = const Size(100, 60);
+      edge = Edge(
+        source,
+        destination,
+        key: const ValueKey('edge-id'),
+        label: 'edge',
+        controlPoint: const Offset(160, -80),
+      );
+
+      graph
+        ..addNode(source)
+        ..addNode(destination)
+        ..addEdgeS(edge);
+
+      renderer = _InspectableJFlutterAdaptiveEdgeRenderer()..setGraph(graph);
+    });
+
+    test('uses thicker strokes for selected edges', () {
+      renderer.updateAppearance(
+        highlightedEdgeIds: const <String>{},
+        selectedEdgeIds: const <String>{'edge-id'},
+        baseColor: Colors.black,
+        highlightColor: Colors.blue,
+        labelSurfaceColor: Colors.white,
+      );
+
+      final recorder = PictureRecorder();
+      final canvas = Canvas(recorder);
+      renderer.renderEdge(canvas, edge, Paint()..color = Colors.black);
+
+      expect(renderer.lastStrokePaint, isNotNull);
+      expect(renderer.lastStrokePaint!.strokeWidth, equals(4.0));
+      expect(renderer.lastStrokePaint!.color, equals(Colors.black));
+    });
+
+    test('uses highlight styling when the edge is selected and highlighted',
+        () {
+      renderer.updateAppearance(
+        highlightedEdgeIds: const <String>{'edge-id'},
+        selectedEdgeIds: const <String>{'edge-id'},
+        baseColor: Colors.black,
+        highlightColor: Colors.orange,
+        labelSurfaceColor: Colors.white,
+      );
+
+      final recorder = PictureRecorder();
+      final canvas = Canvas(recorder);
+      renderer.setAnimationValue(0.35);
+      renderer.renderEdge(canvas, edge, Paint()..color = Colors.black);
+
+      expect(renderer.lastStrokePaint, isNotNull);
+      expect(renderer.lastStrokePaint!.strokeWidth, equals(4.0));
+      expect(
+        renderer.lastStrokePaint!.color.toARGB32(),
+        equals(Colors.orange.toARGB32()),
+      );
+      expect(renderer.lastArrowPaint, isNotNull);
+      expect(
+        renderer.lastArrowPaint!.color.toARGB32(),
+        equals(Colors.orange.toARGB32()),
+      );
+    });
+
+    test('renders only one arrow for grouped same-direction transitions', () {
+      final groupedEdge = Edge(
+        source,
+        destination,
+        key: const ValueKey('edge-id-2'),
+        label: 'second',
+      );
+      graph.addEdgeS(groupedEdge);
+      renderer.setGraph(graph);
+
+      final recorder = PictureRecorder();
+      final canvas = Canvas(recorder);
+
+      renderer.renderEdge(canvas, edge, Paint()..color = Colors.black);
+      renderer.renderEdge(canvas, groupedEdge, Paint()..color = Colors.black);
+
+      expect(renderer.geometryPaintCount, equals(1));
+    });
+
+    test('separates opposing vertical transitions into different lanes', () {
+      destination.position = const Offset(0, 220);
+
+      final opposingEdge = Edge(
+        destination,
+        source,
+        key: const ValueKey('edge-opposing'),
+        label: 'return',
+      );
+      graph.addEdgeS(opposingEdge);
+      renderer.setGraph(graph);
+
+      final forwardPath = renderer.debugGroupedPathForEdge(edge);
+      final backwardPath = renderer.debugGroupedPathForEdge(opposingEdge);
+
+      expect(forwardPath, isNotNull);
+      expect(backwardPath, isNotNull);
+
+      final forwardMidpoint = _pathMidpoint(forwardPath!);
+      final backwardMidpoint = _pathMidpoint(backwardPath!);
+      expect(
+        (forwardMidpoint.dx - backwardMidpoint.dx).abs(),
+        greaterThan(20),
+      );
+    });
+
+    test('places opposing vertical labels on opposite sides of the pair', () {
+      destination.position = const Offset(0, 220);
+
+      final opposingEdge = Edge(
+        destination,
+        source,
+        key: const ValueKey('edge-opposing'),
+        label: 'return',
+      );
+      graph.addEdgeS(opposingEdge);
+      renderer.setGraph(graph);
+
+      final forwardRect = renderer.debugGroupedLabelRectForEdge(edge);
+      final backwardRect = renderer.debugGroupedLabelRectForEdge(opposingEdge);
+
+      expect(forwardRect, isNotNull);
+      expect(backwardRect, isNotNull);
+      expect(
+        (forwardRect!.center.dx - 50) * (backwardRect!.center.dx - 50),
+        lessThan(0),
+      );
+    });
+
+    test('keeps grouped same-direction label cards clear of the edge path', () {
+      final groupedEdge = Edge(
+        source,
+        destination,
+        key: const ValueKey('edge-id-2'),
+        label: 'second',
+      );
+      graph.addEdgeS(groupedEdge);
+      renderer.setGraph(graph);
+
+      final path = renderer.debugGroupedPathForEdge(edge);
+      final rect = renderer.debugGroupedLabelRectForEdge(edge);
+
+      expect(path, isNotNull);
+      expect(rect, isNotNull);
+      expect(_pathIntersectsRect(path!, rect!, padding: 8), isFalse);
+    });
+
+    test('keeps self-loop grouped labels clear of the loop path', () {
+      final selfLoop = Edge(
+        source,
+        source,
+        key: const ValueKey('loop-id'),
+        label: 'loop',
+      );
+      graph.addEdgeS(selfLoop);
+      renderer.setGraph(graph);
+
+      final path = renderer.debugGroupedPathForEdge(selfLoop);
+      final rect = renderer.debugGroupedLabelRectForEdge(selfLoop);
+
+      expect(path, isNotNull);
+      expect(rect, isNotNull);
+      expect(_pathIntersectsRect(path!, rect!, padding: 8), isFalse);
+      expect(rect.left - path.getBounds().right, lessThanOrEqualTo(14));
+      expect(rect.center.dx - path.getBounds().right, lessThanOrEqualTo(16));
+      expect(rect.center.dy, lessThan(path.getBounds().center.dy));
+    });
+  });
+}

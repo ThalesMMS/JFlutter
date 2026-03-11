@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/automaton_canvas.dart';
 import 'base_graphview_canvas_controller.dart';
+import 'grouped_fsa_geometry.dart';
 import 'graphview_canvas_models.dart';
 
 const double _kNodeDiameter = kAutomatonStateDiameter;
@@ -27,6 +28,36 @@ Offset? resolveLinkAnchorWorld(
   final to = controller.nodeById(edge.toStateId);
   if (from == null || to == null) {
     return null;
+  }
+
+  if (_isGroupedFsaEdge(edge)) {
+    if (edge.fromStateId == edge.toStateId) {
+      final groupedLoops = controller.edges
+          .where(
+            (candidate) =>
+                candidate.fromStateId == edge.fromStateId &&
+                candidate.toStateId == edge.toStateId,
+          )
+          .length;
+      final extraOffset = resolveGroupedFsaLoopExtraOffset(groupedLoops);
+      final center = resolveNodeCenter(from);
+      return center.translate(0, -(_kNodeDiameter + extraOffset));
+    }
+
+    final fromCenter = resolveNodeCenter(from);
+    final toCenter = resolveNodeCenter(to);
+    final hasOpposingEdge = controller.edges.any(
+      (candidate) =>
+          candidate.fromStateId == edge.toStateId &&
+          candidate.toStateId == edge.fromStateId,
+    );
+    return resolveGroupedFsaControlPoint(
+      fromId: edge.fromStateId,
+      toId: edge.toStateId,
+      fromCenter: fromCenter,
+      toCenter: toCenter,
+      hasOpposingTraffic: hasOpposingEdge,
+    );
   }
 
   if (edge.controlPointX != null && edge.controlPointY != null) {
@@ -75,4 +106,16 @@ Offset _normalizeControlPoint(
   final legacyDistance = (legacyCandidate - averageCenter).distance;
 
   return legacyDistance < rawDistance ? legacyCandidate : raw;
+}
+
+bool _isGroupedFsaEdge(GraphViewCanvasEdge edge) {
+  final hasPdaMetadata = edge.popSymbol != null ||
+      edge.pushSymbol != null ||
+      edge.isLambdaInput != null ||
+      edge.isLambdaPop != null ||
+      edge.isLambdaPush != null;
+  final hasTmMetadata = edge.readSymbol != null ||
+      edge.writeSymbol != null ||
+      edge.direction != null;
+  return !hasPdaMetadata && !hasTmMetadata;
 }

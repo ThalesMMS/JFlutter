@@ -26,7 +26,7 @@ import 'package:jflutter/presentation/providers/automaton_state_provider.dart';
 
 class _RecordingAutomatonStateNotifier extends AutomatonStateNotifier {
   _RecordingAutomatonStateNotifier()
-    : super(automatonService: AutomatonService());
+      : super(automatonService: AutomatonService());
 
   final List<Map<String, Object?>> addStateCalls = [];
   final List<Map<String, Object?>> updateLabelCalls = [];
@@ -257,6 +257,94 @@ void main() {
       expect(call['controlPointX'], closeTo(100, 0.0001));
       expect(call['controlPointY'], closeTo(-40, 0.0001));
     });
+
+    test(
+      'graph edge metadata survives create, edit, undo, redo, and external synchronize',
+      () {
+        recreateController(inspectable: true);
+        controller.addStateAt(const Offset(0, 0));
+        controller.addStateAt(const Offset(200, 0));
+        final fromId = provider.addStateCalls[0]['id'] as String;
+        final toId = provider.addStateCalls[1]['id'] as String;
+
+        controller.addOrUpdateTransition(
+          fromStateId: fromId,
+          toStateId: toId,
+          label: 'a',
+          controlPointX: 100,
+          controlPointY: -40,
+        );
+
+        final createdId = provider.transitionCalls.single['id'] as String;
+        final createdEdge = controller.graphEdgeById(createdId);
+        expect(createdEdge, isNotNull);
+        expect(createdEdge!.label, equals('a'));
+        expect(createdEdge.controlPoint, equals(const Offset(100, -40)));
+
+        controller.addOrUpdateTransition(
+          transitionId: createdId,
+          fromStateId: fromId,
+          toStateId: toId,
+          label: 'edited',
+          controlPointX: 132,
+          controlPointY: -12,
+        );
+
+        final editedEdge = controller.graphEdgeById(createdId);
+        expect(identical(createdEdge, editedEdge), isTrue);
+        expect(editedEdge!.label, equals('edited'));
+        expect(editedEdge.controlPoint, equals(const Offset(132, -12)));
+
+        expect(controller.undo(), isTrue);
+        final undoneEdge = controller.graphEdgeById(createdId);
+        expect(undoneEdge, isNotNull);
+        expect(undoneEdge!.label, equals('a'));
+        expect(undoneEdge.controlPoint, equals(const Offset(100, -40)));
+
+        expect(controller.redo(), isTrue);
+        final redoneEdge = controller.graphEdgeById(createdId);
+        expect(redoneEdge, isNotNull);
+        expect(redoneEdge!.label, equals('edited'));
+        expect(redoneEdge.controlPoint, equals(const Offset(132, -12)));
+
+        final currentAutomaton = provider.state.currentAutomaton!;
+        final syncTransition = FSATransition(
+          id: createdId,
+          fromState: currentAutomaton.states.singleWhere(
+            (state) => state.id == fromId,
+          ),
+          toState:
+              currentAutomaton.states.singleWhere((state) => state.id == toId),
+          label: 's',
+          inputSymbols: const {'s'},
+          controlPoint: Vector2(168, 24),
+        );
+
+        provider.updateAutomaton(
+          FSA(
+            id: currentAutomaton.id,
+            name: currentAutomaton.name,
+            states: currentAutomaton.states,
+            transitions: {syncTransition},
+            alphabet: const {'s'},
+            initialState: currentAutomaton.initialState,
+            acceptingStates: currentAutomaton.acceptingStates,
+            created: currentAutomaton.created,
+            modified: currentAutomaton.modified,
+            bounds: currentAutomaton.bounds,
+            panOffset: currentAutomaton.panOffset,
+            zoomLevel: currentAutomaton.zoomLevel,
+          ),
+        );
+
+        controller.synchronize(provider.state.currentAutomaton);
+
+        final synchronizedEdge = controller.graphEdgeById(createdId);
+        expect(synchronizedEdge, isNotNull);
+        expect(synchronizedEdge!.label, equals('s'));
+        expect(synchronizedEdge.controlPoint, equals(const Offset(168, 24)));
+      },
+    );
 
     test('synchronize mirrors provider state into controller caches', () {
       final stateA = automaton_state.State(

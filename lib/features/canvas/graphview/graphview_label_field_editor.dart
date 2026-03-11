@@ -20,11 +20,13 @@ class GraphViewLabelFieldEditor extends StatefulWidget {
     required this.initialValue,
     required this.onSubmit,
     required this.onCancel,
+    this.onDelete,
   });
 
   final String initialValue;
   final ValueChanged<String> onSubmit;
   final VoidCallback onCancel;
+  final VoidCallback? onDelete;
 
   @override
   State<GraphViewLabelFieldEditor> createState() =>
@@ -34,6 +36,7 @@ class GraphViewLabelFieldEditor extends StatefulWidget {
 class _GraphViewLabelFieldEditorState extends State<GraphViewLabelFieldEditor> {
   late final FocusScopeNode _focusScopeNode;
   late final FocusNode _focusNode;
+  bool _ignoreFocusLoss = false;
 
   @override
   void initState() {
@@ -56,9 +59,14 @@ class _GraphViewLabelFieldEditorState extends State<GraphViewLabelFieldEditor> {
   }
 
   void _handleFocusChange(bool focused) {
-    if (!focused) {
+    if (!focused && !_ignoreFocusLoss) {
       widget.onCancel();
     }
+  }
+
+  void _unfocusWithoutCancel() {
+    _ignoreFocusLoss = true;
+    _focusScopeNode.unfocus();
   }
 
   @override
@@ -79,12 +87,18 @@ class _GraphViewLabelFieldEditorState extends State<GraphViewLabelFieldEditor> {
                 initialValue: widget.initialValue,
                 onSubmit: (value) {
                   widget.onSubmit(value);
-                  _focusScopeNode.unfocus();
+                  _unfocusWithoutCancel();
                 },
                 onCancel: () {
                   widget.onCancel();
-                  _focusScopeNode.unfocus();
+                  _unfocusWithoutCancel();
                 },
+                onDelete: widget.onDelete == null
+                    ? null
+                    : () {
+                        widget.onDelete!();
+                        _unfocusWithoutCancel();
+                      },
                 autofocus: true,
               ),
             ),

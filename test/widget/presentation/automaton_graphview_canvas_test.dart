@@ -16,55 +16,26 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:graphview/GraphView.dart';
 import 'package:vector_math/vector_math_64.dart';
 
-import 'package:jflutter/core/entities/automaton_entity.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/fsa_transition.dart';
+import 'package:jflutter/core/models/simulation_highlight.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
-import 'package:jflutter/core/repositories/automaton_repository.dart';
-import 'package:jflutter/core/result.dart';
 import 'package:jflutter/data/services/automaton_service.dart';
 import 'package:jflutter/features/canvas/graphview/graphview_canvas_controller.dart';
 import 'package:jflutter/features/canvas/graphview/graphview_label_field_editor.dart';
+import 'package:jflutter/features/canvas/graphview/graphview_link_overlay_utils.dart';
 import 'package:jflutter/presentation/providers/automaton_state_provider.dart';
 import 'package:jflutter/presentation/widgets/automaton_canvas_tool.dart';
 import 'package:jflutter/presentation/widgets/automaton_graphview_canvas.dart';
-
-class _FakeLayoutRepository implements LayoutRepository {
-  Future<AutomatonResult> _unsupported() async {
-    return ResultFactory.failure('unsupported');
-  }
-
-  @override
-  Future<AutomatonResult> applyAutoLayout(AutomatonEntity automaton) =>
-      _unsupported();
-
-  @override
-  Future<AutomatonResult> applyBalancedLayout(AutomatonEntity automaton) =>
-      _unsupported();
-
-  @override
-  Future<AutomatonResult> applyCompactLayout(AutomatonEntity automaton) =>
-      _unsupported();
-
-  @override
-  Future<AutomatonResult> applyHierarchicalLayout(AutomatonEntity automaton) =>
-      _unsupported();
-
-  @override
-  Future<AutomatonResult> applySpreadLayout(AutomatonEntity automaton) =>
-      _unsupported();
-
-  @override
-  Future<AutomatonResult> centerAutomaton(AutomatonEntity automaton) =>
-      _unsupported();
-}
 
 class _RecordingAutomatonProvider extends AutomatonStateNotifier {
   _RecordingAutomatonProvider() : super(automatonService: AutomatonService());
 
   final List<Map<String, Object?>> transitionCalls = [];
+  final List<String> removedTransitionIds = [];
 
   @override
   void addOrUpdateTransition({
@@ -91,6 +62,12 @@ class _RecordingAutomatonProvider extends AutomatonStateNotifier {
       controlPointX: controlPointX,
       controlPointY: controlPointY,
     );
+  }
+
+  @override
+  void removeTransition({required String id}) {
+    removedTransitionIds.add(id);
+    super.removeTransition(id: id);
   }
 }
 
@@ -254,6 +231,68 @@ void main() {
         },
       );
     }
+
+    testWidgets('disables GraphView interpolation while a node is dragged', (
+      tester,
+    ) async {
+      toolController.setActiveTool(AutomatonCanvasTool.selection);
+
+      final state = automaton_state.State(
+        id: 'A',
+        label: 'A',
+        position: Vector2(40, 40),
+        isInitial: true,
+      );
+      final automaton = FSA(
+        id: 'drag-motion',
+        name: 'Automaton',
+        states: {state},
+        transitions: const <FSATransition>{},
+        alphabet: const <String>{'a'},
+        initialState: state,
+        acceptingStates: <automaton_state.State>{},
+        created: DateTime.utc(2024, 1, 1),
+        modified: DateTime.utc(2024, 1, 1),
+        bounds: const math.Rectangle<double>(0, 0, 400, 300),
+        zoomLevel: 1,
+        panOffset: Vector2.zero(),
+      );
+
+      provider.updateAutomaton(automaton);
+      controller.synchronize(automaton);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AutomatonGraphViewCanvas(
+              automaton: automaton,
+              canvasKey: GlobalKey(),
+              controller: controller,
+              toolController: toolController,
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(tester.widget<GraphView>(find.byType(GraphView)).animated, isTrue);
+
+      final gesture =
+          await tester.startGesture(tester.getCenter(find.text('A')));
+      await gesture.moveBy(const Offset(24, 0));
+      await tester.pump();
+
+      expect(
+        tester.widget<GraphView>(find.byType(GraphView)).animated,
+        isFalse,
+      );
+
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(tester.widget<GraphView>(find.byType(GraphView)).animated, isTrue);
+    });
   });
 
   group('AutomatonGraphViewCanvas', () {
@@ -325,6 +364,17 @@ void main() {
       await tester.pumpAndSettle();
     }
 
+    testWidgets('renders disconnected states without transitions', (
+      tester,
+    ) async {
+      final automaton = buildAutomaton({});
+
+      await pumpCanvas(tester, automaton);
+
+      expect(find.text('A'), findsOneWidget);
+      expect(find.text('B'), findsOneWidget);
+    });
+
     testWidgets(
       'shows transition editor after jittery taps when transition tool is active',
       (tester) async {
@@ -382,7 +432,7 @@ void main() {
       expect(textFieldFinder, findsOneWidget);
       await tester.enterText(textFieldFinder, 'b');
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Salvar'));
+      await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
 
       expect(provider.transitionCalls, hasLength(1));
@@ -428,7 +478,7 @@ void main() {
 
       await tester.enterText(textFieldFinder, 'edited');
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Salvar'));
+      await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
 
       expect(provider.transitionCalls, hasLength(1));
@@ -436,5 +486,114 @@ void main() {
       expect(call['id'], equals(existingId));
       expect(call['label'], equals('edited'));
     });
+
+    testWidgets('deletes only the selected existing transition', (
+      tester,
+    ) async {
+      const existingId = 'transition_existing';
+      final transition = FSATransition(
+        id: existingId,
+        fromState: stateA,
+        toState: stateB,
+        label: 'x',
+        inputSymbols: const {'x'},
+        controlPoint: Vector2(120, 40),
+      );
+      final automaton = buildAutomaton({transition});
+
+      await pumpCanvas(tester, automaton);
+
+      await tester.tap(find.text('A'));
+      await tester.pump();
+      await tester.tap(find.text('B'), warnIfMissed: false);
+      await tester.pumpAndSettle();
+
+      final existingOptionFinder = find.byKey(
+        const ValueKey('automaton-transition-choice-transition_existing'),
+      );
+      expect(existingOptionFinder, findsOneWidget);
+      await tester.tap(existingOptionFinder);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+
+      expect(provider.removedTransitionIds, equals([existingId]));
+      expect(provider.transitionCalls, isEmpty);
+    });
+
+    testWidgets('animates node highlight emphasis to the highlighted state', (
+      tester,
+    ) async {
+      final automaton = buildAutomaton({});
+
+      await pumpCanvas(tester, automaton);
+
+      final scaleFinder = find.ancestor(
+        of: find.text('A'),
+        matching: find.byType(AnimatedScale),
+      );
+
+      expect(tester.widget<AnimatedScale>(scaleFinder).scale, equals(1.0));
+
+      controller.applyHighlight(
+        const SimulationHighlight(
+          stateIds: {'A'},
+          transitionIds: <String>{},
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.widget<AnimatedScale>(scaleFinder).scale, equals(1.04));
+
+      controller.clearHighlight();
+      await tester.pumpAndSettle();
+
+      expect(tester.widget<AnimatedScale>(scaleFinder).scale, equals(1.0));
+    });
+
+    testWidgets(
+      'recomputes grouped transition anchor while dragging before pointer up',
+      (tester) async {
+        toolController.setActiveTool(AutomatonCanvasTool.selection);
+
+        final transition = FSATransition(
+          id: 'transition_drag',
+          fromState: stateA,
+          toState: stateB,
+          label: 'a',
+          inputSymbols: const {'a'},
+        );
+        final automaton = buildAutomaton({transition});
+
+        await pumpCanvas(tester, automaton);
+
+        final edgeBefore = controller.edgeById('transition_drag');
+        expect(edgeBefore, isNotNull);
+        final anchorBefore = resolveLinkAnchorWorld(controller, edgeBefore!);
+        expect(anchorBefore, isNotNull);
+
+        final gesture = await tester.startGesture(
+          tester.getCenter(find.text('B'), warnIfMissed: false),
+        );
+        await gesture.moveBy(const Offset(0, -96));
+        await tester.pump();
+
+        final edgeDuringDrag = controller.edgeById('transition_drag');
+        expect(edgeDuringDrag, isNotNull);
+        final anchorDuringDrag = resolveLinkAnchorWorld(
+          controller,
+          edgeDuringDrag!,
+        );
+        expect(anchorDuringDrag, isNotNull);
+        expect(
+          (anchorDuringDrag! - anchorBefore!).distance,
+          greaterThan(8),
+        );
+
+        await gesture.up();
+        await tester.pumpAndSettle();
+      },
+    );
   });
 }

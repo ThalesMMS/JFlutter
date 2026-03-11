@@ -121,9 +121,8 @@ class _FSAPageTestWidgetState extends State<_FSAPageTestWidget> {
                     }
                   },
                   onClear: () {},
-                  statusMessage: widget.automaton == null
-                      ? 'No automaton loaded'
-                      : '',
+                  statusMessage:
+                      widget.automaton == null ? 'No automaton loaded' : '',
                 );
               },
             ),
@@ -139,6 +138,7 @@ Future<void> _pumpFSAPageComponents(
   FSA? automaton,
   Size size = const Size(1400, 900),
   bool isMobile = false,
+  ThemeMode themeMode = ThemeMode.light,
 }) async {
   final binding = tester.binding;
   binding.window.physicalSizeTestValue = size;
@@ -146,6 +146,9 @@ Future<void> _pumpFSAPageComponents(
 
   await tester.pumpWidgetBuilder(
     MaterialApp(
+      theme: ThemeData.light(),
+      darkTheme: ThemeData.dark(),
+      themeMode: themeMode,
       home: _FSAPageTestWidget(automaton: automaton, isMobile: isMobile),
     ),
   );
@@ -398,6 +401,206 @@ void main() {
 
       await screenMatchesGolden(tester, 'fsa_page_epsilon_nfa_desktop');
     });
+
+    testGoldens(
+      'renders opposing vertical transitions with separated labels',
+      (tester) async {
+        addTearDown(() {
+          tester.binding.window.clearPhysicalSizeTestValue();
+          tester.binding.window.clearDevicePixelRatioTestValue();
+        });
+
+        final q0 = automaton_state.State(
+          id: 'q0',
+          label: 'q0',
+          position: Vector2(280, 420),
+          isInitial: true,
+          isAccepting: false,
+        );
+
+        final q1 = automaton_state.State(
+          id: 'q1',
+          label: 'q1',
+          position: Vector2(280, 120),
+          isInitial: false,
+          isAccepting: true,
+        );
+
+        final t1 = FSATransition(
+          id: 't1',
+          fromState: q0,
+          toState: q1,
+          symbol: 'a',
+          label: 'a',
+        );
+
+        final t2 = FSATransition(
+          id: 't2',
+          fromState: q1,
+          toState: q0,
+          symbol: 'b',
+          label: 'b',
+        );
+
+        final automaton = FSA(
+          id: 'opposing-vertical',
+          name: 'Opposing Vertical',
+          states: <automaton_state.State>{q0, q1},
+          transitions: <FSATransition>{t1, t2},
+          alphabet: const <String>{'a', 'b'},
+          initialState: q0,
+          acceptingStates: <automaton_state.State>{q1},
+          created: DateTime.utc(2024, 1, 1),
+          modified: DateTime.utc(2024, 1, 1),
+          bounds: const math.Rectangle<double>(0, 0, 800, 600),
+          zoomLevel: 1,
+          panOffset: Vector2.zero(),
+        );
+
+        await _pumpFSAPageComponents(
+          tester,
+          automaton: automaton,
+          size: const Size(1400, 900),
+          isMobile: false,
+        );
+
+        await screenMatchesGolden(tester, 'fsa_page_opposing_vertical_desktop');
+      },
+    );
+
+    testGoldens(
+      'renders grouped same-direction labels as a stacked card',
+      (tester) async {
+        addTearDown(() {
+          tester.binding.window.clearPhysicalSizeTestValue();
+          tester.binding.window.clearDevicePixelRatioTestValue();
+        });
+
+        final q0 = automaton_state.State(
+          id: 'q0',
+          label: 'q0',
+          position: Vector2(180, 260),
+          isInitial: true,
+          isAccepting: false,
+        );
+
+        final q1 = automaton_state.State(
+          id: 'q1',
+          label: 'q1',
+          position: Vector2(460, 180),
+          isInitial: false,
+          isAccepting: true,
+        );
+
+        final transitions = <FSATransition>{
+          FSATransition(
+            id: 't1',
+            fromState: q0,
+            toState: q1,
+            symbol: 'a',
+            label: 'a',
+          ),
+          FSATransition(
+            id: 't2',
+            fromState: q0,
+            toState: q1,
+            symbol: 'b',
+            label: 'b',
+          ),
+          FSATransition(
+            id: 't3',
+            fromState: q0,
+            toState: q1,
+            symbol: 'c',
+            label: 'c',
+          ),
+        };
+
+        final automaton = FSA(
+          id: 'grouped-labels',
+          name: 'Grouped Labels',
+          states: <automaton_state.State>{q0, q1},
+          transitions: transitions,
+          alphabet: const <String>{'a', 'b', 'c'},
+          initialState: q0,
+          acceptingStates: <automaton_state.State>{q1},
+          created: DateTime.utc(2024, 1, 1),
+          modified: DateTime.utc(2024, 1, 1),
+          bounds: const math.Rectangle<double>(0, 0, 800, 600),
+          zoomLevel: 1,
+          panOffset: Vector2.zero(),
+        );
+
+        await _pumpFSAPageComponents(
+          tester,
+          automaton: automaton,
+          size: const Size(1400, 900),
+          isMobile: false,
+        );
+
+        await screenMatchesGolden(tester, 'fsa_page_grouped_labels_desktop');
+      },
+    );
+
+    testGoldens(
+      'renders grouped labels with dark theme surfaces',
+      (tester) async {
+        addTearDown(() {
+          tester.binding.window.clearPhysicalSizeTestValue();
+          tester.binding.window.clearDevicePixelRatioTestValue();
+        });
+
+        final q0 = automaton_state.State(
+          id: 'q0',
+          label: 'q0',
+          position: Vector2(220, 280),
+          isInitial: true,
+          isAccepting: false,
+        );
+
+        final transitions = <FSATransition>{
+          FSATransition(
+            id: 't1',
+            fromState: q0,
+            toState: q0,
+            symbol: 'a',
+            label: 'a',
+          ),
+          FSATransition(
+            id: 't2',
+            fromState: q0,
+            toState: q0,
+            symbol: 'b',
+            label: 'b',
+          ),
+        };
+
+        final automaton = FSA(
+          id: 'grouped-dark',
+          name: 'Grouped Dark',
+          states: <automaton_state.State>{q0},
+          transitions: transitions,
+          alphabet: const <String>{'a', 'b'},
+          initialState: q0,
+          acceptingStates: const <automaton_state.State>{},
+          created: DateTime.utc(2024, 1, 1),
+          modified: DateTime.utc(2024, 1, 1),
+          bounds: const math.Rectangle<double>(0, 0, 800, 600),
+          zoomLevel: 1,
+          panOffset: Vector2.zero(),
+        );
+
+        await _pumpFSAPageComponents(
+          tester,
+          automaton: automaton,
+          size: const Size(1400, 900),
+          isMobile: false,
+          themeMode: ThemeMode.dark,
+        );
+
+        await screenMatchesGolden(tester, 'fsa_page_grouped_labels_dark');
+      },
+    );
 
     testGoldens('renders page with complex automaton in tablet layout', (
       tester,

@@ -31,20 +31,20 @@ import '../../features/canvas/graphview/base_graphview_canvas_controller.dart';
 import '../../features/canvas/graphview/graphview_canvas_controller.dart';
 import '../../features/canvas/graphview/graphview_canvas_models.dart';
 import '../../features/canvas/graphview/graphview_highlight_channel.dart';
-import '../../features/canvas/graphview/graphview_all_nodes_builder.dart';
+import '../../features/canvas/graphview/jflutter_adaptive_edge_renderer.dart';
 import '../../features/canvas/graphview/graphview_label_field_editor.dart';
+import '../../features/canvas/graphview/grouped_fsa_geometry.dart';
 import '../../features/canvas/graphview/graphview_link_overlay_utils.dart';
 import '../../features/canvas/graphview/graphview_pda_canvas_controller.dart';
 import '../providers/automaton_state_provider.dart';
 import 'automaton_canvas_tool.dart';
 import 'transition_editors/pda_transition_editor.dart';
 
-typedef AutomatonTransitionOverlayBuilder =
-    Widget Function(
-      BuildContext context,
-      AutomatonTransitionOverlayData data,
-      AutomatonTransitionOverlayController controller,
-    );
+typedef AutomatonTransitionOverlayBuilder = Widget Function(
+  BuildContext context,
+  AutomatonTransitionOverlayData data,
+  AutomatonTransitionOverlayController controller,
+);
 
 /// Payload used by the transition overlay to communicate user edits back to
 /// the canvas.
@@ -57,6 +57,11 @@ class AutomatonLabelTransitionPayload extends AutomatonTransitionPayload {
   const AutomatonLabelTransitionPayload(this.label);
 
   final String label;
+}
+
+/// Payload describing a request to delete the currently edited transition.
+class AutomatonDeleteTransitionPayload extends AutomatonTransitionPayload {
+  const AutomatonDeleteTransitionPayload();
 }
 
 /// Payload describing TM tape operations (read/write/direction).
@@ -170,10 +175,10 @@ class AutomatonGraphViewTransitionConfig {
   });
 
   final AutomatonTransitionPayload Function(GraphViewCanvasEdge? edge)
-  initialPayloadBuilder;
+      initialPayloadBuilder;
   final AutomatonTransitionOverlayBuilder overlayBuilder;
   final void Function(AutomatonTransitionPersistRequest request)
-  persistTransition;
+      persistTransition;
 }
 
 /// Customisation options applied to the graph canvas behaviour.
@@ -182,18 +187,20 @@ class AutomatonGraphViewCanvasCustomization {
     required this.transitionConfigBuilder,
     this.enableStateDrag = true,
     this.enableToolSelection = true,
+    this.edgeRenderMode = JFlutterEdgeRenderMode.standard,
   });
 
   final AutomatonGraphViewTransitionConfig Function(
     BaseGraphViewCanvasController<dynamic, dynamic> controller,
-  )
-  transitionConfigBuilder;
+  ) transitionConfigBuilder;
 
   final bool enableStateDrag;
   final bool enableToolSelection;
+  final JFlutterEdgeRenderMode edgeRenderMode;
 
   factory AutomatonGraphViewCanvasCustomization.fsa() {
     return AutomatonGraphViewCanvasCustomization(
+      edgeRenderMode: JFlutterEdgeRenderMode.groupedFsa,
       transitionConfigBuilder: (controller) {
         return AutomatonGraphViewTransitionConfig(
           initialPayloadBuilder: (edge) =>
@@ -206,11 +213,22 @@ class AutomatonGraphViewCanvasCustomization {
                 AutomatonLabelTransitionPayload(value),
               ),
               onCancel: overlayController.cancel,
+              onDelete: data.transitionId == null
+                  ? null
+                  : () => overlayController.submit(
+                        const AutomatonDeleteTransitionPayload(),
+                      ),
             );
           },
           persistTransition: (request) {
-            final payload = request.payload as AutomatonLabelTransitionPayload;
             final controller = request.controller as GraphViewCanvasController;
+            if (request.payload is AutomatonDeleteTransitionPayload) {
+              if (request.transitionId != null) {
+                controller.removeTransition(request.transitionId!);
+              }
+              return;
+            }
+            final payload = request.payload as AutomatonLabelTransitionPayload;
             controller.addOrUpdateTransition(
               fromStateId: request.fromStateId,
               toStateId: request.toStateId,
@@ -252,26 +270,25 @@ class AutomatonGraphViewCanvasCustomization {
               isLambdaInput: payload.isLambdaInput,
               isLambdaPop: payload.isLambdaPop,
               isLambdaPush: payload.isLambdaPush,
-              onSubmit:
-                  ({
-                    required String readSymbol,
-                    required String popSymbol,
-                    required String pushSymbol,
-                    required bool lambdaInput,
-                    required bool lambdaPop,
-                    required bool lambdaPush,
-                  }) {
-                    overlayController.submit(
-                      AutomatonPdaTransitionPayload(
-                        readSymbol: readSymbol,
-                        popSymbol: popSymbol,
-                        pushSymbol: pushSymbol,
-                        isLambdaInput: lambdaInput,
-                        isLambdaPop: lambdaPop,
-                        isLambdaPush: lambdaPush,
-                      ),
-                    );
-                  },
+              onSubmit: ({
+                required String readSymbol,
+                required String popSymbol,
+                required String pushSymbol,
+                required bool lambdaInput,
+                required bool lambdaPop,
+                required bool lambdaPush,
+              }) {
+                overlayController.submit(
+                  AutomatonPdaTransitionPayload(
+                    readSymbol: readSymbol,
+                    popSymbol: popSymbol,
+                    pushSymbol: pushSymbol,
+                    isLambdaInput: lambdaInput,
+                    isLambdaPop: lambdaPop,
+                    isLambdaPush: lambdaPush,
+                  ),
+                );
+              },
               onCancel: overlayController.cancel,
             );
           },
@@ -303,6 +320,64 @@ const double _kNodeDiameter = kAutomatonStateDiameter;
 const double _kNodeRadius = _kNodeDiameter / 2;
 const Size _kInitialArrowSize = Size(24, 12);
 
+class _CanvasOrganicCurve extends Curve {
+  const _CanvasOrganicCurve(this.overshoot);
+
+  final double overshoot;
+
+  @override
+  double transformInternal(double t) {
+    final shifted = t - 1.0;
+    return 1.0 +
+        (overshoot + 1.0) * shifted * shifted * shifted +
+        overshoot * shifted * shifted;
+  }
+}
+
+class _CanvasMotionPreset {
+  const _CanvasMotionPreset({
+    required this.nodeDuration,
+    required this.viewportDuration,
+    required this.highlightDuration,
+    required this.nodeCurve,
+    required this.viewportCurve,
+    required this.highlightCurve,
+    required this.highlightScale,
+    required this.graphAnimationEnabled,
+  });
+
+  final Duration nodeDuration;
+  final Duration viewportDuration;
+  final Duration highlightDuration;
+  final Curve nodeCurve;
+  final Curve viewportCurve;
+  final Curve highlightCurve;
+  final double highlightScale;
+  final bool graphAnimationEnabled;
+
+  static const _CanvasMotionPreset organic = _CanvasMotionPreset(
+    nodeDuration: Duration(milliseconds: 280),
+    viewportDuration: Duration(milliseconds: 420),
+    highlightDuration: Duration(milliseconds: 200),
+    nodeCurve: _CanvasOrganicCurve(1.0),
+    viewportCurve: _CanvasOrganicCurve(0.9),
+    highlightCurve: _CanvasOrganicCurve(1.0),
+    highlightScale: 1.04,
+    graphAnimationEnabled: true,
+  );
+
+  static const _CanvasMotionPreset reduced = _CanvasMotionPreset(
+    nodeDuration: Duration.zero,
+    viewportDuration: Duration.zero,
+    highlightDuration: Duration.zero,
+    nodeCurve: Curves.linear,
+    viewportCurve: Curves.linear,
+    highlightCurve: Curves.linear,
+    highlightScale: 1.0,
+    graphAnimationEnabled: false,
+  );
+}
+
 /// GraphView-based canvas used to render and edit automatons.
 class AutomatonGraphViewCanvas extends ConsumerStatefulWidget {
   const AutomatonGraphViewCanvas({
@@ -332,7 +407,8 @@ class AutomatonGraphViewCanvas extends ConsumerStatefulWidget {
 }
 
 class _AutomatonGraphViewCanvasState
-    extends ConsumerState<AutomatonGraphViewCanvas> {
+    extends ConsumerState<AutomatonGraphViewCanvas>
+    with TickerProviderStateMixin {
   late BaseGraphViewCanvasController<dynamic, dynamic> _controller;
   late bool _ownsController;
   late AutomatonCanvasToolController _toolController;
@@ -340,13 +416,13 @@ class _AutomatonGraphViewCanvasState
   AutomatonCanvasTool _activeTool = AutomatonCanvasTool.selection;
   SimulationHighlightService? _highlightService;
   SimulationHighlightChannel? _previousHighlightChannel;
-  GraphViewSimulationHighlightChannel? _highlightChannel;
   late _AutomatonGraphSugiyamaAlgorithm _algorithm;
   final Set<String> _selectedTransitions = <String>{};
   String? _transitionSourceId;
   OverlayEntry? _transitionOverlayEntry;
   final ValueNotifier<_GraphViewTransitionOverlayState?>
-  _transitionOverlayState = ValueNotifier<_GraphViewTransitionOverlayState?>(
+      _transitionOverlayState =
+      ValueNotifier<_GraphViewTransitionOverlayState?>(
     null,
   );
   Object? _pendingSyncAutomaton;
@@ -362,6 +438,9 @@ class _AutomatonGraphViewCanvasState
   bool _didMoveDraggedNode = false;
   late AutomatonGraphViewCanvasCustomization _customization;
   late AutomatonGraphViewTransitionConfig _transitionConfig;
+  late final AnimationController _edgeAnimationController;
+  late final JFlutterAdaptiveEdgeRenderer _edgeRenderer;
+  bool _hasEdgeRenderer = false;
 
   void _setCanvasPanSuppressed(bool value, {String reason = ''}) {
     if (!mounted) {
@@ -409,18 +488,39 @@ class _AutomatonGraphViewCanvasState
       _highlightService = highlightService;
       _previousHighlightChannel = highlightService.channel;
       final highlightChannel = GraphViewSimulationHighlightChannel(_controller);
-      _highlightChannel = highlightChannel;
       highlightService.channel = highlightChannel;
     }
 
     _applyCustomization(widget.customization);
+    _edgeAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..addListener(_handleEdgeAnimationTick);
+    _edgeRenderer = JFlutterAdaptiveEdgeRenderer(
+      config: EdgeRoutingConfig(
+        anchorMode: AnchorMode.dynamic,
+        routingMode: RoutingMode.bezier,
+        enableRepulsion: true,
+      ),
+      animationConfig: const AnimatedEdgeConfiguration(
+        animationSpeed: 1.0,
+        particleCount: 3,
+        particleSize: 3.0,
+      ),
+      renderMode: _customization.edgeRenderMode,
+    );
+    _hasEdgeRenderer = true;
+    _edgeRenderer.setAnimationValue(_edgeAnimationController.value);
     _algorithm = _AutomatonGraphSugiyamaAlgorithm(
       controller: _controller,
       configuration: _buildConfiguration(),
     );
+    _algorithm.renderer = _edgeRenderer;
     _scheduleControllerSync(widget.automaton);
     _controller.graphRevision.addListener(_handleGraphRevisionChanged);
+    _controller.highlightNotifier.addListener(_handleHighlightChanged);
     _transformationController?.addListener(_onTransformationChanged);
+    _handleHighlightChanged();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -450,11 +550,11 @@ class _AutomatonGraphViewCanvasState
 
     if (oldWidget.controller != widget.controller) {
       _controller.graphRevision.removeListener(_handleGraphRevisionChanged);
+      _controller.highlightNotifier.removeListener(_handleHighlightChanged);
       _transformationController?.removeListener(_onTransformationChanged);
       if (_ownsController) {
         if (_highlightService != null) {
           _highlightService!.channel = _previousHighlightChannel;
-          _highlightChannel = null;
         }
         _controller.dispose();
       }
@@ -476,16 +576,18 @@ class _AutomatonGraphViewCanvasState
         final highlightChannel = GraphViewSimulationHighlightChannel(
           _controller,
         );
-        _highlightChannel = highlightChannel;
         highlightService.channel = highlightChannel;
       }
       _algorithm = _AutomatonGraphSugiyamaAlgorithm(
         controller: _controller,
         configuration: _buildConfiguration(),
       );
+      _algorithm.renderer = _edgeRenderer;
       _transformationController?.addListener(_onTransformationChanged);
       _scheduleControllerSync(widget.automaton);
       _controller.graphRevision.addListener(_handleGraphRevisionChanged);
+      _controller.highlightNotifier.addListener(_handleHighlightChanged);
+      _handleHighlightChanged();
       _hideTransitionOverlay();
       shouldReapplyCustomization = true;
     } else if (oldWidget.automaton != widget.automaton) {
@@ -508,8 +610,12 @@ class _AutomatonGraphViewCanvasState
   @override
   void dispose() {
     _controller.graphRevision.removeListener(_handleGraphRevisionChanged);
+    _controller.highlightNotifier.removeListener(_handleHighlightChanged);
     _transformationController?.removeListener(_onTransformationChanged);
     _toolController.removeListener(_handleActiveToolChanged);
+    _edgeAnimationController
+      ..removeListener(_handleEdgeAnimationTick)
+      ..dispose();
     if (_ownsToolController) {
       _toolController.dispose();
     }
@@ -518,7 +624,6 @@ class _AutomatonGraphViewCanvasState
     }
     if (_highlightService != null) {
       _highlightService!.channel = _previousHighlightChannel;
-      _highlightChannel = null;
     }
     _transitionOverlayEntry?.remove();
     _transitionOverlayEntry = null;
@@ -560,6 +665,29 @@ class _AutomatonGraphViewCanvasState
     setState(() {});
   }
 
+  void _handleEdgeAnimationTick() {
+    _edgeRenderer.setAnimationValue(_edgeAnimationController.value);
+  }
+
+  void _handleHighlightChanged() {
+    final hasHighlightedTransitions =
+        _controller.highlightNotifier.value.transitionIds.isNotEmpty;
+    if (hasHighlightedTransitions) {
+      if (!_edgeAnimationController.isAnimating) {
+        _edgeAnimationController.repeat();
+      }
+      return;
+    }
+
+    if (_edgeAnimationController.isAnimating) {
+      _edgeAnimationController.stop();
+    }
+    if (_edgeAnimationController.value != 0) {
+      _edgeAnimationController.value = 0;
+      _edgeRenderer.setAnimationValue(0);
+    }
+  }
+
   void _applyCustomization(
     AutomatonGraphViewCanvasCustomization? customization,
   ) {
@@ -567,6 +695,9 @@ class _AutomatonGraphViewCanvasState
         customization ?? AutomatonGraphViewCanvasCustomization.fsa();
     _customization = resolved;
     _transitionConfig = resolved.transitionConfigBuilder(_controller);
+    if (_hasEdgeRenderer) {
+      _edgeRenderer.renderMode = resolved.edgeRenderMode;
+    }
     if (!_customization.enableToolSelection &&
         _toolController.activeTool != AutomatonCanvasTool.selection) {
       _toolController.setActiveTool(AutomatonCanvasTool.selection);
@@ -1001,7 +1132,7 @@ class _AutomatonGraphViewCanvasState
     final payload = _transitionConfig.initialPayloadBuilder(existing);
     final worldAnchor = !createNew && existing != null
         ? resolveLinkAnchorWorld(_controller, existing) ??
-              Offset(existing.controlPointX ?? 0, existing.controlPointY ?? 0)
+            Offset(existing.controlPointX ?? 0, existing.controlPointY ?? 0)
         : _deriveControlPoint(fromId, toId);
     final overlayData = AutomatonTransitionOverlayData(
       fromStateId: fromId,
@@ -1134,7 +1265,23 @@ class _AutomatonGraphViewCanvasState
     final toCenter = Offset(toNode.x + _kNodeRadius, toNode.y + _kNodeRadius);
 
     if (fromId == toId) {
+      if (_customization.edgeRenderMode == JFlutterEdgeRenderMode.groupedFsa) {
+        final groupedLoops = _findExistingEdges(fromId, toId).length;
+        final extraOffset = resolveGroupedFsaLoopExtraOffset(groupedLoops);
+        return fromCenter.translate(0, -(_kNodeDiameter + extraOffset));
+      }
       return fromCenter.translate(0, -_kNodeDiameter);
+    }
+
+    if (_customization.edgeRenderMode == JFlutterEdgeRenderMode.groupedFsa) {
+      final hasOpposingEdge = _findExistingEdges(toId, fromId).isNotEmpty;
+      return resolveGroupedFsaControlPoint(
+        fromId: fromId,
+        toId: toId,
+        fromCenter: fromCenter,
+        toCenter: toCenter,
+        hasOpposingTraffic: hasOpposingEdge,
+      );
     }
 
     final midpoint = Offset(
@@ -1183,8 +1330,7 @@ class _AutomatonGraphViewCanvasState
       _transitionOverlayState.value = state.copyWith(
         data: data.copyWith(payload: payload, worldAnchor: anchor, edge: edge),
       );
-      final shouldUpdateSelection =
-          _selectedTransitions.length != 1 ||
+      final shouldUpdateSelection = _selectedTransitions.length != 1 ||
           !_selectedTransitions.contains(transitionId);
       if (shouldUpdateSelection) {
         setState(() {
@@ -1331,40 +1477,15 @@ class _AutomatonGraphViewCanvasState
         node.id == _transitionSourceId;
   }
 
-  Widget _buildEdgeLayer({
-    required List<GraphViewCanvasEdge> edges,
-    required List<GraphViewCanvasNode> nodes,
-    required SimulationHighlight highlight,
-    required ThemeData theme,
-  }) {
-    final painter = _GraphViewEdgePainter(
-      edges: edges,
-      nodes: nodes,
-      highlightedTransitions: highlight.transitionIds,
-      selectedTransitions: _selectedTransitions,
-      theme: theme,
-    );
-
-    final transformation = _transformationController;
-    if (transformation == null) {
-      return CustomPaint(painter: painter);
-    }
-
-    return AnimatedBuilder(
-      animation: transformation,
-      builder: (context, _) {
-        return Transform(
-          alignment: Alignment.topLeft,
-          transform: transformation.value,
-          child: CustomPaint(painter: painter),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final disableAnimations = MediaQuery.maybeOf(context)?.disableAnimations ??
+        WidgetsBinding.instance.platformDispatcher.accessibilityFeatures
+            .disableAnimations;
+    final motionPreset = disableAnimations
+        ? _CanvasMotionPreset.reduced
+        : _CanvasMotionPreset.organic;
     return RawGestureDetector(
       key: widget.canvasKey,
       behavior: HitTestBehavior.translucent,
@@ -1376,11 +1497,16 @@ class _AutomatonGraphViewCanvasState
         child: ValueListenableBuilder<int>(
           valueListenable: _controller.graphRevision,
           builder: (context, _, __) {
-            final nodes = _controller.nodes.toList(growable: false);
-            final edges = _controller.edges.toList(growable: false);
             return ValueListenableBuilder<SimulationHighlight>(
               valueListenable: _controller.highlightNotifier,
               builder: (context, highlight, __) {
+                _edgeRenderer.updateAppearance(
+                  highlightedEdgeIds: highlight.transitionIds,
+                  selectedEdgeIds: _selectedTransitions,
+                  baseColor: theme.colorScheme.outline,
+                  highlightColor: theme.colorScheme.primary,
+                  labelSurfaceColor: theme.colorScheme.surfaceContainerHighest,
+                );
                 return Stack(
                   children: [
                     Positioned.fill(
@@ -1393,15 +1519,31 @@ class _AutomatonGraphViewCanvasState
                           }
                           return RepaintBoundary(
                             child: AbsorbPointer(
-                              absorbing:
-                                  _suppressCanvasPan ||
+                              absorbing: _suppressCanvasPan ||
                                   _activeTool == AutomatonCanvasTool.addState ||
                                   _activeTool == AutomatonCanvasTool.transition,
-                              child: GraphViewAllNodes.builder(
+                              child: GraphView.builder(
                                 graph: _controller.graph,
                                 controller: _controller.graphController,
                                 algorithm: _algorithm,
-                                paint: Paint()..color = Colors.transparent,
+                                animated: motionPreset.graphAnimationEnabled &&
+                                    !_isDraggingNode,
+                                panAnimationDuration:
+                                    motionPreset.viewportDuration,
+                                toggleAnimationDuration:
+                                    motionPreset.nodeDuration,
+                                panAnimationCurve: motionPreset.viewportCurve,
+                                nodeAnimationCurve: motionPreset.nodeCurve,
+                                paint: Paint()
+                                  ..color = theme.colorScheme.outline
+                                  ..style = PaintingStyle.stroke
+                                  ..strokeWidth = 2
+                                  ..strokeCap = StrokeCap.round,
+                                includeAllVisibleNodes: true,
+                                repaint: Listenable.merge([
+                                  _edgeAnimationController,
+                                  _controller.graphRevision,
+                                ]),
                                 builder: (node) {
                                   final nodeId = node.key?.value?.toString();
                                   if (nodeId == null) {
@@ -1409,14 +1551,14 @@ class _AutomatonGraphViewCanvasState
                                   }
                                   final canvasNode =
                                       _controller.nodeById(nodeId) ??
-                                      GraphViewCanvasNode(
-                                        id: nodeId,
-                                        label: nodeId,
-                                        x: node.position.dx,
-                                        y: node.position.dy,
-                                        isInitial: false,
-                                        isAccepting: false,
-                                      );
+                                          GraphViewCanvasNode(
+                                            id: nodeId,
+                                            label: nodeId,
+                                            x: node.position.dx,
+                                            y: node.position.dy,
+                                            isInitial: false,
+                                            isAccepting: false,
+                                          );
                                   final isHighlighted = _isNodeHighlighted(
                                     canvasNode,
                                     highlight,
@@ -1426,6 +1568,7 @@ class _AutomatonGraphViewCanvasState
                                     isInitial: canvasNode.isInitial,
                                     isAccepting: canvasNode.isAccepting,
                                     isHighlighted: isHighlighted,
+                                    motionPreset: motionPreset,
                                   );
                                 },
                               ),
@@ -1434,23 +1577,15 @@ class _AutomatonGraphViewCanvasState
                         },
                       ),
                     ),
-                    Positioned.fill(
-                      child: IgnorePointer(
-                        child: _buildEdgeLayer(
-                          edges: edges,
-                          nodes: nodes,
-                          highlight: highlight,
-                          theme: theme,
-                        ),
-                      ),
-                    ),
                     if (_activeTool == AutomatonCanvasTool.transition)
                       Positioned(
                         top: 16,
                         right: 16,
                         child: DecoratedBox(
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.surface.withValues(alpha: 0.9),
+                            color: theme.colorScheme.surface.withValues(
+                              alpha: 0.9,
+                            ),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: theme.colorScheme.primary,
@@ -1496,33 +1631,33 @@ class _AutomatonGraphViewCanvasState
     final gestures = <Type, GestureRecognizerFactory>{
       _NodePanGestureRecognizer:
           GestureRecognizerFactoryWithHandlers<_NodePanGestureRecognizer>(
-            () => _NodePanGestureRecognizer(
-              hitTester: (global) =>
-                  _hitTestNode(_globalToCanvasLocal(global), logDetails: false),
-              toolResolver: () => _activeTool,
-              onPointerDown: (global) => _logCanvasTapFromGlobal(
-                source: 'pan-pointer',
-                globalPosition: global,
-              ),
-              onDragAccepted: () => _setCanvasPanSuppressed(
-                true,
-                reason: 'node pointer accepted',
-              ),
-              onDragReleased: () => _setCanvasPanSuppressed(
-                false,
-                reason: 'node pointer released',
-              ),
-            ),
-            (recognizer) {
-              recognizer.team ??= _gestureArenaTeam;
-              recognizer
-                ..onStart = _handleNodePanStart
-                ..onUpdate = _handleNodePanUpdate
-                ..onEnd = _handleNodePanEnd
-                ..onCancel = _handleNodePanCancel
-                ..dragStartBehavior = DragStartBehavior.start;
-            },
+        () => _NodePanGestureRecognizer(
+          hitTester: (global) =>
+              _hitTestNode(_globalToCanvasLocal(global), logDetails: false),
+          toolResolver: () => _activeTool,
+          onPointerDown: (global) => _logCanvasTapFromGlobal(
+            source: 'pan-pointer',
+            globalPosition: global,
           ),
+          onDragAccepted: () => _setCanvasPanSuppressed(
+            true,
+            reason: 'node pointer accepted',
+          ),
+          onDragReleased: () => _setCanvasPanSuppressed(
+            false,
+            reason: 'node pointer released',
+          ),
+        ),
+        (recognizer) {
+          recognizer.team ??= _gestureArenaTeam;
+          recognizer
+            ..onStart = _handleNodePanStart
+            ..onUpdate = _handleNodePanUpdate
+            ..onEnd = _handleNodePanEnd
+            ..onCancel = _handleNodePanCancel
+            ..dragStartBehavior = DragStartBehavior.start;
+        },
+      ),
     };
 
     return gestures;
@@ -1533,7 +1668,7 @@ class _TransitionEditChoice {
   const _TransitionEditChoice._({required this.createNew, this.edge});
 
   const _TransitionEditChoice.edit(GraphViewCanvasEdge edge)
-    : this._(createNew: false, edge: edge);
+      : this._(createNew: false, edge: edge);
 
   const _TransitionEditChoice.createNew() : this._(createNew: true);
 
@@ -1608,75 +1743,83 @@ class _AutomatonGraphNode extends StatelessWidget {
     required this.isInitial,
     required this.isAccepting,
     required this.isHighlighted,
+    required this.motionPreset,
   });
 
   final String label;
   final bool isInitial;
   final bool isAccepting;
   final bool isHighlighted;
+  final _CanvasMotionPreset motionPreset;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final borderColor = isHighlighted
-        ? theme.colorScheme.primary
-        : theme.colorScheme.outline;
+    final borderColor =
+        isHighlighted ? theme.colorScheme.primary : theme.colorScheme.outline;
     final backgroundColor = isHighlighted
         ? theme.colorScheme.primaryContainer
         : theme.colorScheme.surface;
 
     final badgeColor = theme.colorScheme.primary;
 
-    return SizedBox(
-      width: _kNodeDiameter,
-      height: _kNodeDiameter,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: backgroundColor,
-                border: Border.all(color: borderColor, width: 3),
-              ),
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      label,
-                      style: theme.textTheme.titleMedium,
-                      textAlign: TextAlign.center,
+    return AnimatedScale(
+      duration: motionPreset.highlightDuration,
+      curve: motionPreset.highlightCurve,
+      scale: isHighlighted ? motionPreset.highlightScale : 1.0,
+      child: SizedBox(
+        width: _kNodeDiameter,
+        height: _kNodeDiameter,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned.fill(
+              child: AnimatedContainer(
+                duration: motionPreset.highlightDuration,
+                curve: motionPreset.highlightCurve,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: backgroundColor,
+                  border: Border.all(color: borderColor, width: 3),
+                ),
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        label,
+                        style: theme.textTheme.titleMedium,
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-          if (isInitial)
-            Positioned(
-              left: -_kInitialArrowSize.width + 1,
-              top: _kNodeRadius - (_kInitialArrowSize.height / 2),
-              child: CustomPaint(
-                size: _kInitialArrowSize,
-                painter: _InitialStateArrowPainter(color: borderColor),
+            if (isInitial)
+              Positioned(
+                left: -_kInitialArrowSize.width + 1,
+                top: _kNodeRadius - (_kInitialArrowSize.height / 2),
+                child: CustomPaint(
+                  size: _kInitialArrowSize,
+                  painter: _InitialStateArrowPainter(color: borderColor),
+                ),
               ),
-            ),
-          if (isAccepting)
-            Positioned.fill(
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: badgeColor, width: 2),
+            if (isAccepting)
+              Positioned.fill(
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: badgeColor, width: 2),
+                    ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1704,357 +1847,6 @@ class _InitialStateArrowPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _InitialStateArrowPainter oldDelegate) {
     return oldDelegate.color != color;
-  }
-}
-
-class _GraphViewEdgePainter extends CustomPainter {
-  _GraphViewEdgePainter({
-    required this.edges,
-    required this.nodes,
-    required this.highlightedTransitions,
-    required this.selectedTransitions,
-    required this.theme,
-  });
-
-  static final ArrowEdgeRenderer _loopRenderer = ArrowEdgeRenderer();
-
-  final List<GraphViewCanvasEdge> edges;
-  final List<GraphViewCanvasNode> nodes;
-  final Set<String> highlightedTransitions;
-  final Set<String> selectedTransitions;
-  final ThemeData theme;
-
-  static const double _kLabelNormalOffset = 14;
-  static const double _kLoopLabelOffset = 16;
-
-  GraphViewCanvasNode? _nodeById(String id) {
-    for (final node in nodes) {
-      if (node.id == id) {
-        return node;
-      }
-    }
-    return null;
-  }
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final baseColor = theme.colorScheme.outline;
-    final highlightColor = theme.colorScheme.primary;
-
-    final selfLoops = <String, List<GraphViewCanvasEdge>>{};
-    final normalEdges = <GraphViewCanvasEdge>[];
-
-    for (final edge in edges) {
-      if (edge.fromStateId == edge.toStateId) {
-        selfLoops.putIfAbsent(edge.fromStateId, () => []).add(edge);
-      } else {
-        normalEdges.add(edge);
-      }
-    }
-
-    // Paint grouped self-loops
-    for (final nodeId in selfLoops.keys) {
-      final loopEdges = selfLoops[nodeId]!;
-      if (loopEdges.isEmpty) continue;
-
-      final firstEdge = loopEdges.first;
-      final node = _nodeById(nodeId);
-      if (node == null) continue;
-
-      final isAnyHighlighted = loopEdges.any(
-        (e) => highlightedTransitions.contains(e.id),
-      );
-      final isAnySelected = loopEdges.any(
-        (e) => selectedTransitions.contains(e.id),
-      );
-
-      final pathColor = isAnyHighlighted ? highlightColor : baseColor;
-      final strokeWidth = isAnySelected ? 4.0 : 2.0;
-      final paint = Paint()
-        ..color = pathColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round;
-
-      final loopGeometry = _buildGraphViewSelfLoop(firstEdge, node);
-      if (loopGeometry == null) {
-        continue;
-      }
-
-      _loopRenderer.renderEdge(canvas, loopGeometry.edge, paint);
-
-      var previousTopFromAnchor = 0.0;
-      // Stack labels upwards
-      for (var i = 0; i < loopEdges.length; i++) {
-        final edge = loopEdges[i];
-        if (edge.label.isEmpty) continue;
-
-        final isEdgeHighlighted = highlightedTransitions.contains(edge.id);
-        final labelColor = isEdgeHighlighted ? highlightColor : baseColor;
-
-        final textPainter = TextPainter(
-          text: TextSpan(
-            text: edge.label,
-            style: TextStyle(color: labelColor, fontSize: 14),
-          ),
-          textDirection: TextDirection.ltr,
-        )..layout();
-
-        double centerFromAnchor;
-        if (i == 0) {
-          centerFromAnchor = 0.0;
-          previousTopFromAnchor = textPainter.height / 2;
-        } else {
-          centerFromAnchor =
-              previousTopFromAnchor + 2.0 + textPainter.height / 2;
-          previousTopFromAnchor = centerFromAnchor + textPainter.height / 2;
-        }
-
-        final drawPosition =
-            loopGeometry.labelAnchor +
-            Offset(
-              -textPainter.width / 2,
-              -centerFromAnchor - textPainter.height / 2,
-            );
-
-        textPainter.paint(canvas, drawPosition);
-      }
-    }
-
-    // Paint normal edges
-    for (final edge in normalEdges) {
-      final from = _nodeById(edge.fromStateId);
-      final to = _nodeById(edge.toStateId);
-      if (from == null || to == null) {
-        continue;
-      }
-
-      final fromCenter = Offset(from.x + _kNodeRadius, from.y + _kNodeRadius);
-      final toCenter = Offset(to.x + _kNodeRadius, to.y + _kNodeRadius);
-      final controlPoint = _resolveControlPoint(edge, fromCenter, toCenter);
-
-      final isHighlighted = highlightedTransitions.contains(edge.id);
-      final isSelected = selectedTransitions.contains(edge.id);
-      final color = isHighlighted ? highlightColor : baseColor;
-      final strokeWidth = isSelected ? 4.0 : 2.0;
-
-      final paint = Paint()
-        ..color = color
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round;
-
-      final start = _projectFromCenter(
-        fromCenter,
-        controlPoint ?? toCenter,
-        _kNodeRadius,
-      );
-      final end = _projectFromCenter(
-        toCenter,
-        controlPoint ?? fromCenter,
-        _kNodeRadius,
-      );
-
-      final path = Path()..moveTo(start.dx, start.dy);
-      Offset direction;
-      if (controlPoint != null) {
-        path.quadraticBezierTo(
-          controlPoint.dx,
-          controlPoint.dy,
-          end.dx,
-          end.dy,
-        );
-        direction = end - controlPoint;
-      } else {
-        path.lineTo(end.dx, end.dy);
-        direction = end - start;
-      }
-      canvas.drawPath(path, paint);
-      _drawArrowHead(canvas, end, direction, color);
-
-      final labelAnchor = _computeEdgeLabelAnchor(
-        start: start,
-        end: end,
-        controlPoint: controlPoint,
-      );
-      _drawEdgeLabel(canvas, labelAnchor, edge.label, color);
-    }
-  }
-
-  ({Edge edge, Offset labelAnchor})? _buildGraphViewSelfLoop(
-    GraphViewCanvasEdge edge,
-    GraphViewCanvasNode node,
-  ) {
-    final graphNode = Node.Id(node.id)
-      ..size = const Size(_kNodeDiameter, _kNodeDiameter)
-      ..position = Offset(node.x, node.y);
-    final graphEdge = Edge(graphNode, graphNode);
-
-    final loop = _loopRenderer.buildSelfLoopPath(
-      graphEdge,
-      arrowLength: ARROW_LENGTH,
-    );
-    if (loop == null) {
-      return null;
-    }
-
-    final bounds = loop.path.getBounds();
-    final labelAnchor = Offset(
-      bounds.center.dx,
-      bounds.top - _kLoopLabelOffset,
-    );
-
-    return (edge: graphEdge, labelAnchor: labelAnchor);
-  }
-
-  Offset _projectFromCenter(Offset center, Offset target, double radius) {
-    final vector = target - center;
-    if (vector.distance == 0) {
-      return center;
-    }
-    final normalized = vector / vector.distance;
-    return center + normalized * radius;
-  }
-
-  Offset? _resolveControlPoint(
-    GraphViewCanvasEdge edge,
-    Offset fromCenter,
-    Offset toCenter,
-  ) {
-    final rawX = edge.controlPointX;
-    final rawY = edge.controlPointY;
-    if (rawX == null || rawY == null) {
-      return null;
-    }
-
-    final raw = Offset(rawX, rawY);
-    final averageCenter = Offset(
-      (fromCenter.dx + toCenter.dx) / 2,
-      (fromCenter.dy + toCenter.dy) / 2,
-    );
-
-    const legacyOffset = Offset(_kNodeRadius, _kNodeRadius);
-    final legacyCandidate = raw + legacyOffset;
-
-    final rawDistance = (raw - averageCenter).distance;
-    final legacyDistance = (legacyCandidate - averageCenter).distance;
-
-    return legacyDistance < rawDistance ? legacyCandidate : raw;
-  }
-
-  void _drawArrowHead(
-    Canvas canvas,
-    Offset position,
-    Offset direction,
-    Color color,
-  ) {
-    if (direction.distance == 0) {
-      return;
-    }
-    final normalized = direction / direction.distance;
-    final normal = Offset(-normalized.dy, normalized.dx);
-    const arrowLength = 12.0;
-    const arrowWidth = 6.0;
-    final tip = position;
-    final base = tip - normalized * arrowLength;
-    final left = base + normal * arrowWidth;
-    final right = base - normal * arrowWidth;
-    final path = Path()
-      ..moveTo(tip.dx, tip.dy)
-      ..lineTo(left.dx, left.dy)
-      ..lineTo(right.dx, right.dy)
-      ..close();
-    canvas.drawPath(path, Paint()..color = color);
-  }
-
-  void _drawEdgeLabel(
-    Canvas canvas,
-    Offset position,
-    String label,
-    Color color,
-  ) {
-    if (label.isEmpty) {
-      return;
-    }
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: label,
-        style: TextStyle(color: color, fontSize: 14),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    final offset =
-        position - Offset(textPainter.width / 2, textPainter.height / 2);
-    textPainter.paint(canvas, offset);
-  }
-
-  Offset _computeEdgeLabelAnchor({
-    required Offset start,
-    required Offset end,
-    Offset? controlPoint,
-  }) {
-    if (controlPoint == null) {
-      final mid = Offset((start.dx + end.dx) / 2, (start.dy + end.dy) / 2);
-      final tangent = end - start;
-      final normal = _preferredNormal(tangent);
-      return mid + normal * _kLabelNormalOffset;
-    }
-
-    const t = 0.5;
-    final point = _evaluateQuadraticPoint(start, controlPoint, end, t);
-    final tangent = _evaluateQuadraticTangent(start, controlPoint, end, t);
-    final normal = _preferredNormal(tangent);
-    return point + normal * _kLabelNormalOffset;
-  }
-
-  Offset _evaluateQuadraticPoint(
-    Offset start,
-    Offset control,
-    Offset end,
-    double t,
-  ) {
-    final oneMinusT = 1 - t;
-    return start * (oneMinusT * oneMinusT) +
-        control * (2 * oneMinusT * t) +
-        end * (t * t);
-  }
-
-  Offset _evaluateQuadraticTangent(
-    Offset start,
-    Offset control,
-    Offset end,
-    double t,
-  ) {
-    final term1 = (control - start) * (2 * (1 - t));
-    final term2 = (end - control) * (2 * t);
-    return term1 + term2;
-  }
-
-  Offset _preferredNormal(Offset tangent) {
-    if (tangent.distance == 0) {
-      return const Offset(0, -1);
-    }
-    Offset normal = Offset(-tangent.dy, tangent.dx);
-    if (normal.distance == 0) {
-      return const Offset(0, -1);
-    }
-    normal = normal / normal.distance;
-    if (normal.dy > 0) {
-      normal = -normal;
-    }
-    return normal;
-  }
-
-  @override
-  bool shouldRepaint(covariant _GraphViewEdgePainter oldDelegate) {
-    return !listEquals(oldDelegate.edges, edges) ||
-        !listEquals(oldDelegate.nodes, nodes) ||
-        !setEquals(
-          oldDelegate.highlightedTransitions,
-          highlightedTransitions,
-        ) ||
-        !setEquals(oldDelegate.selectedTransitions, selectedTransitions) ||
-        oldDelegate.theme != theme;
   }
 }
 

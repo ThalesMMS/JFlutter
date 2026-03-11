@@ -20,6 +20,7 @@ import 'package:vector_math/vector_math_64.dart';
 
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/fsa_transition.dart';
+import 'package:jflutter/core/models/simulation_highlight.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
 import 'package:jflutter/data/services/automaton_service.dart';
 import 'package:jflutter/features/canvas/graphview/graphview_canvas_controller.dart';
@@ -560,5 +561,118 @@ void main() {
       controller.dispose();
       toolController.dispose();
     });
+
+    testGoldens(
+      'renders renderer migration scenario with highlighted adaptive edges',
+      (tester) async {
+        final provider = _TestAutomatonProvider();
+        final controller = GraphViewCanvasController(
+          automatonStateNotifier: provider,
+        );
+        final toolController = AutomatonCanvasToolController(
+          AutomatonCanvasTool.selection,
+        );
+
+        final stateA = automaton_state.State(
+          id: 'A',
+          label: 'A',
+          position: Vector2(40, 120),
+          isInitial: true,
+        );
+        final stateB = automaton_state.State(
+          id: 'B',
+          label: 'B',
+          position: Vector2(260, 120),
+          isAccepting: true,
+        );
+        final stateC = automaton_state.State(
+          id: 'C',
+          label: 'C',
+          position: Vector2(340, 240),
+        );
+
+        final autoEdge = FSATransition(
+          id: 't_auto',
+          fromState: stateA,
+          toState: stateB,
+          symbol: '0',
+          label: '0',
+        );
+        final manualEdge = FSATransition(
+          id: 't_manual',
+          fromState: stateA,
+          toState: stateB,
+          symbol: '1',
+          label: '1',
+          controlPoint: Vector2(180, 20),
+        );
+        final loopA = FSATransition(
+          id: 't_loop_a',
+          fromState: stateA,
+          toState: stateA,
+          symbol: 'x',
+          label: 'x',
+        );
+        final loopB = FSATransition(
+          id: 't_loop_b',
+          fromState: stateA,
+          toState: stateA,
+          symbol: 'y',
+          label: 'y',
+        );
+
+        final automaton = FSA(
+          id: 'renderer-migration',
+          name: 'Renderer Migration',
+          states: <automaton_state.State>{stateA, stateB, stateC},
+          transitions: <FSATransition>{autoEdge, manualEdge, loopA, loopB},
+          alphabet: const <String>{'0', '1', 'x', 'y'},
+          initialState: stateA,
+          acceptingStates: <automaton_state.State>{stateB},
+          created: DateTime.utc(2024, 1, 1),
+          modified: DateTime.utc(2024, 1, 1),
+          bounds: const math.Rectangle<double>(0, 0, 480, 360),
+          zoomLevel: 1,
+          panOffset: Vector2.zero(),
+        );
+
+        provider.updateAutomaton(automaton);
+        controller.synchronize(automaton);
+        controller.applyHighlight(
+          const SimulationHighlight(
+            transitionIds: <String>{'t_manual'},
+          ),
+        );
+
+        await tester.pumpWidgetBuilder(
+          MaterialApp(
+            home: Scaffold(
+              body: SizedBox(
+                width: 480,
+                height: 360,
+                child: AutomatonGraphViewCanvas(
+                  automaton: automaton,
+                  canvasKey: GlobalKey(),
+                  controller: controller,
+                  toolController: toolController,
+                ),
+              ),
+            ),
+          ),
+        );
+
+        await tester.pump(const Duration(milliseconds: 300));
+
+        await expectLater(
+          find.byType(Scaffold),
+          matchesGoldenFile(
+            'goldens/automaton_canvas_renderer_migration_highlighted.png',
+          ),
+        );
+
+        controller.dispose();
+        toolController.dispose();
+      },
+    );
   });
 }

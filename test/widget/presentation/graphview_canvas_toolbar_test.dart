@@ -11,13 +11,20 @@
 //  Thales Matheus Mendonça Santos - October 2025
 //
 
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vector_math/vector_math_64.dart';
 
 import 'package:jflutter/data/services/automaton_service.dart';
+import 'package:jflutter/core/models/fsa.dart';
+import 'package:jflutter/core/models/fsa_transition.dart';
+import 'package:jflutter/core/models/state.dart' as automaton_state;
 import 'package:jflutter/presentation/providers/automaton_state_provider.dart';
 import 'package:jflutter/presentation/widgets/automaton_canvas_tool.dart';
+import 'package:jflutter/presentation/widgets/automaton_graphview_canvas.dart';
 import 'package:jflutter/presentation/widgets/graphview_canvas_toolbar.dart';
 import 'package:jflutter/features/canvas/graphview/graphview_canvas_controller.dart';
 
@@ -205,6 +212,85 @@ void main() {
     await tester.pump();
 
     expect(controller.resetCount, greaterThan(initialResetCount));
+  });
+
+  testWidgets('toolbar viewport actions settle on the expected final matrix', (
+    tester,
+  ) async {
+    final state = automaton_state.State(
+      id: 'A',
+      label: 'A',
+      position: Vector2(240, 180),
+      isInitial: true,
+    );
+    final automaton = FSA(
+      id: 'toolbar-canvas',
+      name: 'Toolbar Canvas',
+      states: {state},
+      transitions: const <FSATransition>{},
+      alphabet: const <String>{'a'},
+      initialState: state,
+      acceptingStates: const <automaton_state.State>{},
+      created: DateTime.utc(2024, 1, 1),
+      modified: DateTime.utc(2024, 1, 1),
+      bounds: const math.Rectangle<double>(0, 0, 600, 400),
+      zoomLevel: 1,
+      panOffset: Vector2.zero(),
+    );
+    provider.updateAutomaton(automaton);
+    controller.synchronize(automaton);
+
+    final canvasKey = GlobalKey();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: Column(
+              children: [
+                GraphViewCanvasToolbar(
+                  controller: controller,
+                  onAddState: () {},
+                  layout: GraphViewCanvasToolbarLayout.desktop,
+                ),
+                Expanded(
+                  child: AutomatonGraphViewCanvas(
+                    automaton: automaton,
+                    canvasKey: canvasKey,
+                    controller: controller,
+                    toolController: AutomatonCanvasToolController(
+                      AutomatonCanvasTool.selection,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    final transformation = controller.graphController.transformationController!;
+    transformation.value = Matrix4.identity();
+    await tester.pump();
+
+    await tester.tap(find.widgetWithIcon(IconButton, Icons.fit_screen));
+    await tester.pumpAndSettle();
+
+    final fitMatrix = Matrix4.copy(transformation.value);
+    expect(fitMatrix, isNot(equals(Matrix4.identity())));
+
+    await tester.tap(
+      find.widgetWithIcon(IconButton, Icons.center_focus_strong),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      List<double>.from(transformation.value.storage),
+      equals(List<double>.from(Matrix4.identity().storage)),
+    );
   });
 
   testWidgets('renders undo and redo buttons respecting history state', (

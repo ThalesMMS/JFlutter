@@ -20,6 +20,7 @@ import 'package:vector_math/vector_math_64.dart';
 
 import 'package:jflutter/core/models/pda.dart';
 import 'package:jflutter/core/models/pda_transition.dart';
+import 'package:jflutter/core/models/simulation_highlight.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
 import 'package:jflutter/features/canvas/graphview/graphview_pda_canvas_controller.dart';
 import 'package:jflutter/presentation/providers/pda_editor_provider.dart';
@@ -677,5 +678,132 @@ void main() {
       controller.dispose();
       toolController.dispose();
     });
+
+    testGoldens(
+      'renders renderer migration scenario with highlighted adaptive edges',
+      (tester) async {
+        final provider = _TestPDAEditorProvider();
+        final controller =
+            GraphViewPdaCanvasController(editorNotifier: provider);
+        final toolController = AutomatonCanvasToolController(
+          AutomatonCanvasTool.selection,
+        );
+
+        final stateA = automaton_state.State(
+          id: 'A',
+          label: 'A',
+          position: Vector2(40, 120),
+          isInitial: true,
+        );
+        final stateB = automaton_state.State(
+          id: 'B',
+          label: 'B',
+          position: Vector2(260, 120),
+          isAccepting: true,
+        );
+        final stateC = automaton_state.State(
+          id: 'C',
+          label: 'C',
+          position: Vector2(340, 240),
+        );
+
+        final autoEdge = PDATransition(
+          id: 'p_auto',
+          fromState: stateA,
+          toState: stateB,
+          label: 'a,Z/AZ',
+          inputSymbol: 'a',
+          popSymbol: 'Z',
+          pushSymbol: 'AZ',
+        );
+        final manualEdge = PDATransition(
+          id: 'p_manual',
+          fromState: stateA,
+          toState: stateB,
+          label: 'b,A/AA',
+          controlPoint: Vector2(180, 20),
+          inputSymbol: 'b',
+          popSymbol: 'A',
+          pushSymbol: 'AA',
+        );
+        final loopA = PDATransition(
+          id: 'p_loop_a',
+          fromState: stateA,
+          toState: stateA,
+          label: 'λ,A/λ',
+          inputSymbol: '',
+          popSymbol: 'A',
+          pushSymbol: '',
+          isLambdaInput: true,
+          isLambdaPush: true,
+        );
+        final loopB = PDATransition(
+          id: 'p_loop_b',
+          fromState: stateA,
+          toState: stateA,
+          label: 'λ,Z/Z',
+          inputSymbol: '',
+          popSymbol: 'Z',
+          pushSymbol: 'Z',
+          isLambdaInput: true,
+        );
+
+        final pda = PDA(
+          id: 'renderer-migration',
+          name: 'Renderer Migration PDA',
+          states: <automaton_state.State>{stateA, stateB, stateC},
+          transitions: <PDATransition>{autoEdge, manualEdge, loopA, loopB},
+          alphabet: const <String>{'a', 'b'},
+          initialState: stateA,
+          acceptingStates: <automaton_state.State>{stateB},
+          created: DateTime.utc(2024, 1, 1),
+          modified: DateTime.utc(2024, 1, 1),
+          bounds: const math.Rectangle<double>(0, 0, 480, 360),
+          zoomLevel: 1,
+          panOffset: Vector2.zero(),
+          stackAlphabet: const {'Z', 'A'},
+          initialStackSymbol: 'Z',
+        );
+
+        provider.setPda(pda);
+        controller.synchronize(pda);
+        controller.applyHighlight(
+          const SimulationHighlight(
+            transitionIds: <String>{'p_manual'},
+          ),
+        );
+
+        await tester.pumpWidgetBuilder(
+          ProviderScope(
+            overrides: [pdaEditorProvider.overrideWith((ref) => provider)],
+            child: MaterialApp(
+              home: Scaffold(
+                body: SizedBox(
+                  width: 480,
+                  height: 360,
+                  child: PDACanvasGraphView(
+                    controller: controller,
+                    toolController: toolController,
+                    onPdaModified: (_) {},
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        await tester.pump(const Duration(milliseconds: 300));
+
+        await expectLater(
+          find.byType(Scaffold),
+          matchesGoldenFile(
+            'goldens/pda_canvas_renderer_migration_highlighted.png',
+          ),
+        );
+
+        controller.dispose();
+        toolController.dispose();
+      },
+    );
   });
 }

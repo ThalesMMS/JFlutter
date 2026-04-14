@@ -53,7 +53,7 @@ dependencies:
   # Graph-based canvas primitives
   graphview:
     git:
-      url: ../graphview-dev
+      url: ../graphview
       ref: 57947b8be3cba46285db51ed0842f875ac6b5fde
 
   # The following adds the Cupertino Icons font to your application.
@@ -105,7 +105,7 @@ dev_dependencies:
 
 dependency_overrides:
   graphview:
-    path: ../graphview-dev
+    path: ../graphview
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

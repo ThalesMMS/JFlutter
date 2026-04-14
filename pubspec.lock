@@ -373,7 +373,7 @@ packages:
   graphview:
     dependency: "direct main"
     description:
-      path: "../graphview-dev"
+      path: "../graphview"
       relative: true
     source: path
     version: "1.5.1"

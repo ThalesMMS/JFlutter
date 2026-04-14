@@ -53,8 +53,8 @@ dependencies:
   # Graph-based canvas primitives
   graphview:
     git:
-      url: https://github.com/ThalesMMS/graphview
-      ref: f2443db638e50c86498eea0cb577731d55a6a2f5
+      url: ../graphview-dev
+      ref: 57947b8be3cba46285db51ed0842f875ac6b5fde
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -103,6 +103,9 @@ dev_dependencies:
   json_serializable: ^6.11.1
   golden_toolkit: ^0.15.0
 
+dependency_overrides:
+  graphview:
+    path: ../graphview-dev
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

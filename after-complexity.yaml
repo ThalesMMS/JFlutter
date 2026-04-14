@@ -1,0 +1,103 @@
+- generic [ref=e5]:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - heading "Regex Regular Expressions" [level=2] [ref=e213]
+              - button "Help" [ref=e214]
+              - button "Settings" [ref=e215]
+            - generic:
+              - button "Finite State Automata FSA Tab 1 of 6" [ref=e216]
+              - button "Context-Free Grammars Grammar Tab 2 of 6" [ref=e217]
+              - button "Pushdown Automata PDA Tab 3 of 6" [ref=e218]
+              - button "Turing Machines TM Tab 4 of 6" [ref=e219]
+              - button "Regular Expressions Regex Tab 5 of 6" [ref=e220]
+              - button "Pumping Lemma Pumping Tab 6 of 6" [ref=e221]
+            - generic:
+              - generic:
+                - group "Algorithms":
+                  - group:
+                    - generic [ref=e222]:
+                      - generic: Regular Expression
+                    - generic [ref=e223]:
+                      - generic: "Regular Expression:"
+                    - generic [ref=e224]:
+                      - textbox "Enter regular expression (e.g., a*b+)" [ref=e225]: (a|b)*abb
+                      - button "Validate Regex" [ref=e226]
+                    - generic [ref=e227]:
+                      - generic: Valid regex
+                    - generic [ref=e228]:
+                      - generic: "Test String:"
+                    - generic [ref=e229]:
+                      - textbox "Enter string to test" [ref=e230]: ab
+                      - button "Test String" [ref=e231]
+                    - generic [ref=e275]:
+                      - generic: Does not match
+                    - generic [ref=e232]:
+                      - generic: "Convert to Automaton:"
+                    - button "Convert to NFA" [active] [ref=e233]
+                    - button "Convert to DFA" [ref=e234]
+                    - switch "Simplify Output Apply algebraic simplifications to converted automata" [checked] [ref=e235]
+                    - 'group "Simplification Steps Original: 0 rule(s) applied Simplified: Step 1 of 3 Step 1 Begin regex simplification Start Starting simplification of regular expression \"(a|b)*abb\". Current complexity metrics: star height = 1, nesting depth = 1, operator count = 2. Will apply algebraic identities to find an equivalent simpler form. Star Height: 1 Nesting Depth: 1 Operators: 2 All Steps:"':
+                      - button "Hide steps" [ref=e278]
+                      - textbox [disabled] [ref=e280]
+                      - textbox [disabled] [ref=e282]
+                      - button "Previous step" [disabled] [ref=e283]
+                      - button "Next step" [ref=e284]
+                      - button "1 Begin regex simplification" [ref=e285]
+                      - button "2 No further simplification" [ref=e286]
+                      - button "3 Simplification complete" [ref=e287]
+                      - button "Clear" [ref=e288]
+                      - button "Re-simplify" [ref=e289]
+                    - 'group "Complexity Analysis Moderate Moderate complexity, some analysis required Star Height: 1 Nesting: 1 Alphabet: 2 Complexity Metrics Star Height Maximum nesting of Kleene star operators (*) 1 Nesting Depth Maximum depth of parentheses nesting 1 Complexity Score Weighted sum of all complexity factors 7 Operator Breakdown Union (|) 1 Concatenation 3 Kleene Star (*) 1 Alphabet Size: 2 symbol(s) a b"':
+                      - button "Hide details" [ref=e290]
+                      - button "Clear" [ref=e291]
+                      - button "Re-analyze" [ref=e292]
+                    - group "Sample Strings":
+                      - button "Generate Sample Strings" [ref=e238]
+                    - generic [ref=e239]:
+                      - generic: "Compare Regular Expressions:"
+                    - textbox "Enter second regular expression" [ref=e241]
+                    - button "Compare Equivalence" [ref=e242]
+                    - generic [ref=e243]:
+                      - generic: "Regex Help Common patterns: • a* - zero or more a's • a+ - one or more a's • a? - zero or one a • a|b - a or b • (ab)* - zero or more ab's • [abc] - any of a, b, or c"
+                  - generic:
+                    - group:
+                      - generic [ref=e244]:
+                        - generic: Algorithms
+                      - generic [ref=e245]:
+                        - generic: Step-by-Step Mode
+                      - generic [ref=e246]:
+                        - generic: Show detailed algorithm execution steps with explanations
+                      - switch [ref=e247]
+                      - generic [ref=e248]:
+                        - generic: Regex to NFA
+                      - textbox "Regular Expression" [ref=e250]
+                      - button [ref=e251]
+                      - button "NFA to DFA NFA to DFA Convert non-deterministic to deterministic automaton" [ref=e252]
+                      - button "Remove λ-transitions Remove λ-transitions Eliminate epsilon transitions from the automaton" [disabled] [ref=e253]
+                      - button "Minimize DFA Minimize DFA Minimize deterministic finite automaton" [disabled] [ref=e254]
+                      - button "Complete DFA Complete DFA Add trap state to make DFA complete" [disabled] [ref=e255]
+                      - button "Complement DFA Complement DFA Flip accepting states after completion" [disabled] [ref=e256]
+                      - button "Union of DFAs Union of DFAs Combine this DFA with another automaton from file" [ref=e257]
+                      - button "Intersection of DFAs Intersection of DFAs Intersect this DFA with another automaton from file" [ref=e258]
+                      - button "Difference of DFAs Difference of DFAs Compute the language difference with another DFA from file" [ref=e259]
+                      - button "Prefix Closure Prefix Closure Accept all prefixes of the DFA language" [disabled] [ref=e260]
+                      - button "Suffix Closure Suffix Closure Accept all suffixes of the DFA language" [disabled] [ref=e261]
+                      - button "FA to Regex FA to Regex Convert finite automaton to regular expression" [disabled] [ref=e262]
+                      - button "FSA to Grammar FSA to Grammar Convert finite automaton to regular grammar" [disabled] [ref=e263]
+                      - button "Auto Layout Auto Layout Arrange states in a circle" [disabled] [ref=e264]
+                      - button "Compare Equivalence Compare Equivalence Compare two DFAs for equivalence" [ref=e265]
+                      - button "Clear Clear Clear current automaton" [ref=e266]
+                  - generic:
+                    - group:
+                      - generic [ref=e267]:
+                        - generic: Simulation
+                      - textbox "Input String" [ref=e269]
+                      - button "Simulate" [ref=e270]
+                      - generic [ref=e271]:
+                        - generic: Step-by-Step Mode
+                      - switch [ref=e272]
+                  - button "Context-Aware Help" [ref=e273]

@@ -373,11 +373,9 @@ packages:
   graphview:
     dependency: "direct main"
     description:
-      path: "."
-      ref: f2443db638e50c86498eea0cb577731d55a6a2f5
-      resolved-ref: f2443db638e50c86498eea0cb577731d55a6a2f5
-      url: "https://github.com/ThalesMMS/graphview"
-    source: git
+      path: "../graphview-dev"
+      relative: true
+    source: path
     version: "1.5.1"
   http_multi_server:
     dependency: transitive

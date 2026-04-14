@@ -1,0 +1,68 @@
+- generic [active] [ref=e5]:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - group:
+                - generic [ref=e321]:
+                  - generic: Algorithms
+                - generic [ref=e322]:
+                  - generic: Step-by-Step Mode
+                - generic [ref=e323]:
+                  - generic: Show detailed algorithm execution steps with explanations
+                - switch [ref=e324]
+                - generic [ref=e325]:
+                  - generic: Regex to NFA
+                - textbox "Regular Expression" [ref=e327]
+                - button [ref=e328]
+                - button "NFA to DFA NFA to DFA Convert non-deterministic to deterministic automaton" [ref=e329]
+                - button "Remove λ-transitions Remove λ-transitions Eliminate epsilon transitions from the automaton" [disabled] [ref=e330]
+                - button "Minimize DFA Minimize DFA Minimize deterministic finite automaton" [ref=e331]
+                - button "Complete DFA Complete DFA Add trap state to make DFA complete" [ref=e332]
+                - button "Complement DFA Complement DFA Flip accepting states after completion" [ref=e333]
+                - button "Union of DFAs Union of DFAs Combine this DFA with another automaton from file" [ref=e334]
+                - button "Intersection of DFAs Intersection of DFAs Intersect this DFA with another automaton from file" [ref=e335]
+                - button "Difference of DFAs Difference of DFAs Compute the language difference with another DFA from file" [ref=e336]
+                - button "Prefix Closure Prefix Closure Accept all prefixes of the DFA language" [ref=e337]
+                - button "Suffix Closure Suffix Closure Accept all suffixes of the DFA language" [ref=e338]
+                - button "FA to Regex FA to Regex Convert finite automaton to regular expression" [ref=e339]
+                - button "FSA to Grammar FSA to Grammar Convert finite automaton to regular grammar" [ref=e340]
+                - button "Auto Layout Auto Layout Arrange states in a circle" [ref=e341]
+                - button "Compare Equivalence Compare Equivalence Compare two DFAs for equivalence" [ref=e342]
+                - button "Clear Clear Clear current automaton" [ref=e343]
+            - button [ref=e344]
+            - button "DFA" [ref=e345]
+            - generic "Selection Tool Use this tool to select, move, and edit states and transitions. Click on a state to select it, drag to move it, or double-click to edit its properties. Click on a transition to select and edit its label.":
+              - button [ref=e346]
+            - generic "Add State Click anywhere on the canvas to add a new state at that position. The first state you create is automatically set as the initial state. You can later change initial and final states by editing state properties.":
+              - button [ref=e347]
+            - generic "Add Transition Click on a source state, then click on a destination state to create a transition between them. After creating the transition, you'll be prompted to enter the transition label (symbols, epsilon, or stack operations depending on the automaton type).":
+              - button [ref=e348]
+            - generic "Redo Redo an action that was previously undone. This button is only available after you've used the Undo function. Redo can restore multiple undone actions in sequence.":
+              - button [disabled] [ref=e349]
+            - generic "Fit to Content Automatically zoom and pan the canvas to show all states and transitions in the optimal view. Use this when you've lost track of your automaton or want to see the entire structure at once.":
+              - button [ref=e350]
+            - generic "Reset View Reset the canvas zoom and pan to the default view. This restores the canvas to 100% zoom level and centers the view at the origin. Use this to return to a standard viewing perspective.":
+              - button [ref=e351]
+            - generic "Clear Canvas Remove all states and transitions from the canvas, creating a blank workspace. This action can be undone if needed. Use this when you want to start building a new automaton from scratch.":
+              - button [ref=e352]
+            - generic "Undo Undo the last action performed on the canvas. You can undo multiple actions by clicking this button repeatedly. Common actions that can be undone include adding/deleting states, adding/deleting transitions, and moving states.":
+              - button [disabled] [ref=e353]
+            - 'generic "Canvas Keyboard Shortcuts General canvas shortcuts: • Ctrl/Cmd + Z: Undo last action • Ctrl/Cmd + Y or Ctrl/Cmd + Shift + Z: Redo action • Delete or Backspace: Delete selected state/transition • Escape: Cancel current operation • F: Fit canvas to content • R: Reset view to default • S: Switch to selection tool • A: Switch to add state tool • T: Switch to add transition tool"':
+              - button [ref=e354]
+            - generic [ref=e355]:
+              - generic: 5 states · 10 transitions
+            - generic:
+              - group:
+                - generic [ref=e356]:
+                  - generic: Simulation
+                - textbox "Input String" [ref=e358]
+                - button "Simulate" [ref=e359]
+                - generic [ref=e360]:
+                  - generic: Step-by-Step Mode
+                - switch [ref=e361]
+            - generic [ref=e362]:
+              - generic: Converted regex to DFA. Opening the DFA in the FSA workspace.
+            - button "Context-Aware Help" [ref=e363]

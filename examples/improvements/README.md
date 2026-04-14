@@ -1,31 +1,31 @@
-# Exemplos de Melhorias para JFlutter
+# Improvement Examples for JFlutter
 
-Este diretório contém exemplos de implementação para as melhorias propostas no documento `PROPOSTAS_MELHORIAS.md`.
+This directory contains implementation examples for the improvements proposed in the `PROPOSTAS_MELHORIAS.md` document.
 
-## Arquivos de Exemplo
+## Example Files
 
 ### 1. `grid_config.dart`
-Implementação completa do sistema de grid com snap-to-grid.
+Complete implementation of the grid system with snap-to-grid support.
 
-**Características:**
-- Configuração de grid (tamanho, visibilidade, etc.)
-- Painter para desenhar o grid no canvas
-- Utilitários para snap-to-grid
-- Widget de controles de grid
-- Exemplo funcional
+**Features:**
+- Grid configuration (size, visibility, etc.)
+- Painter for drawing the grid on the canvas
+- Snap-to-grid utilities
+- Grid controls widget
+- Working example
 
-**Como usar:**
+**How to use:**
 ```dart
 import 'grid_config.dart';
 
-// Criar configuração
+// Create grid configuration
 final gridConfig = GridConfig(
   enabled: true,
   gridSize: 50.0,
   snapToGrid: true,
 );
 
-// Snap de posição
+// Snap to grid position
 final snappedPosition = GridUtils.snapToGrid(
   position,
   gridConfig,
@@ -33,53 +33,53 @@ final snappedPosition = GridUtils.snapToGrid(
 ```
 
 ### 2. `zoom_controls.dart`
-Controles visuais de zoom e navegação.
+Visual zoom and navigation controls.
 
-**Características:**
-- Configuração de zoom (min, max, step)
-- Widget de controles (botões + porcentagem)
-- Slider de zoom alternativo
-- Mini-mapa para navegação
-- Barra de ferramentas flutuante completa
+**Features:**
+- Zoom configuration (min, max, step)
+- Controls widget (buttons + percentage)
+- Alternative zoom slider
+- Mini-map for navigation
+- Complete floating toolbar
 
-**Como usar:**
+**How to use:**
 ```dart
 import 'zoom_controls.dart';
 
-// Usar controles
+// Use controls
 ZoomControls(
   config: zoomConfig,
   onZoomChanged: (newConfig) {
-    // Atualizar zoom
+    // Update zoom
   },
   onFitToContent: () {
-    // Ajustar para mostrar todo o conteúdo
+    // Fit to show all content
   },
 )
 ```
 
 ### 3. `pda_stack_panel.dart`
-Painel de visualização de pilha para PDAs.
+Stack visualization panel for PDAs.
 
-**Características:**
-- Visualização animada da pilha
-- Destaque do topo
-- Histórico de operações
-- Preview de operações (ao passar mouse em transições)
-- Animações suaves
+**Features:**
+- Animated stack visualization
+- Top-of-stack highlighting
+- Operation history
+- Operation previews (when hovering over transitions)
+- Smooth animations
 
-**Como usar:**
+**How to use:**
 ```dart
 import 'pda_stack_panel.dart';
 
-// Criar estado da pilha
+// Create stack state
 var stack = StackState(symbols: ['Z']);
 
-// Operações
+// Operations
 stack = stack.push('A');
 stack = stack.pop();
 
-// Usar painel
+// Use panel
 PdaStackPanel(
   stackState: stack,
   initialStackSymbol: 'Z',
@@ -88,18 +88,18 @@ PdaStackPanel(
 ```
 
 ### 4. `layout_algorithms.dart`
-Algoritmos de layout automático.
+Automatic layout algorithms.
 
-**Características:**
-- Interface base para algoritmos
-- **CircularLayout**: Estados em círculo
-- **HierarchicalLayout**: Níveis usando BFS
-- **GridLayout**: Grade regular
-- **ForceDirectedLayout**: Simulação física
-- Widget de seleção de algoritmo
-- Preview de layout
+**Features:**
+- Base interface for algorithms
+- **CircularLayout**: States arranged in a circle
+- **HierarchicalLayout**: Levels using BFS
+- **GridLayout**: Regular grid
+- **ForceDirectedLayout**: Physical simulation
+- Algorithm selection widget
+- Layout preview
 
-**Como usar:**
+**How to use:**
 ```dart
 import 'layout_algorithms.dart';
 
@@ -114,21 +114,21 @@ final positions = algorithm.computeLayout(
 ```
 
 ### 5. `fsa_specialized_canvas.dart`
-Canvas especializado para Autômatos Finitos.
+Specialized canvas for finite automata.
 
-**Características:**
-- Análise de determinismo (DFA/NFA/ε-NFA)
-- Badge de tipo de autômato
-- Painel detalhado de não-determinismo
-- Estilos diferenciados para transições epsilon
-- Agrupamento de transições
-- Overlay especializado
+**Features:**
+- Determinism analysis (DFA/NFA/ε-NFA)
+- Automaton type badge
+- Detailed non-determinism panel
+- Distinct styles for epsilon transitions
+- Transition grouping
+- Specialized overlay
 
-**Como usar:**
+**How to use:**
 ```dart
 import 'fsa_specialized_canvas.dart';
 
-// Analisar determinismo
+// Analyze determinism
 final info = DeterminismInfo(
   isDeterministic: false,
   hasEpsilonTransitions: true,
@@ -136,15 +136,15 @@ final info = DeterminismInfo(
   nonDeterministicSymbols: ['a', 'b'],
 );
 
-// Usar overlay
+// Use overlay
 FSACanvasOverlay(determinismInfo: info)
 ```
 
-## Integrando com JFlutter
+## Integrating with JFlutter
 
-Para integrar esses exemplos na JFlutter:
+To integrate these examples into JFlutter:
 
-### 1. Copiar para estrutura do projeto
+### 1. Copy into the project structure
 
 ```bash
 # Grid
@@ -163,11 +163,11 @@ cp examples/improvements/layout_algorithms.dart lib/presentation/utils/
 cp examples/improvements/fsa_specialized_canvas.dart lib/presentation/widgets/canvas/specialized/
 ```
 
-### 2. Integrar com canvas existente
+### 2. Integrate with the existing canvas
 
 #### Grid:
 ```dart
-// Em AutomatonGraphViewCanvas
+// In AutomatonGraphViewCanvas
 class _AutomatonGraphViewCanvasState extends State<AutomatonGraphViewCanvas> {
   GridConfig _gridConfig = const GridConfig(enabled: true);
 
@@ -182,23 +182,23 @@ class _AutomatonGraphViewCanvasState extends State<AutomatonGraphViewCanvas> {
             canvasSize: widget.size,
           ),
         ),
-        // Canvas existente
+        // Existing canvas
         _buildExistingCanvas(),
       ],
     );
   }
 
-  // Ao arrastar estado
+  // When dragging a state
   void _onStateDragged(Offset position) {
     final snapped = GridUtils.snapToGrid(position, _gridConfig);
-    // Usar posição snapped
+    // Use snapped position
   }
 }
 ```
 
 #### Zoom Controls:
 ```dart
-// Em FSAPage, PDAPage, TMPage
+// In FSAPage, PDAPage, TMPage
 class FSAPageState extends State<FSAPage> {
   ZoomConfig _zoomConfig = const ZoomConfig();
 
@@ -227,7 +227,7 @@ class FSAPageState extends State<FSAPage> {
 
 #### Stack Panel (PDA):
 ```dart
-// Em PDAPage
+// In PDAPage
 class PDAPageState extends State<PDAPage> {
   StackState _currentStack = StackState(symbols: ['Z']);
 
@@ -246,7 +246,7 @@ class PDAPageState extends State<PDAPage> {
     );
   }
 
-  // Atualizar durante simulação
+  // Update during simulation
   void _onSimulationStep(PDAConfiguration config) {
     setState(() {
       _currentStack = StackState(symbols: config.stack);
@@ -257,7 +257,7 @@ class PDAPageState extends State<PDAPage> {
 
 #### Layout Algorithms:
 ```dart
-// Adicionar menu de layout
+// Add layout menu
 void _showLayoutMenu() {
   showDialog(
     context: context,
@@ -289,7 +289,7 @@ void _applyLayout(Map<String, Offset> positions) {
 
 #### FSA Specialized Canvas:
 ```dart
-// Em FSAPage
+// In FSAPage
 class FSAPageState extends State<FSAPage> {
   DeterminismInfo _analyzeDeterminism() {
     final fsa = widget.automaton as FSA;
@@ -315,13 +315,13 @@ class FSAPageState extends State<FSAPage> {
 }
 ```
 
-## Exemplos Executáveis
+## Runnable Examples
 
-Cada arquivo contém um exemplo funcional no final. Para executar:
+Each file contains a working example at the end. To run one:
 
-1. Copie o arquivo para um projeto Flutter
-2. Importe no `main.dart`
-3. Execute o exemplo
+1. Copy the file into a Flutter project
+2. Import it in `main.dart`
+3. Run the example
 
 ```dart
 // main.dart
@@ -335,32 +335,32 @@ void main() {
 }
 ```
 
-## Próximos Passos
+## Next Steps
 
-1. **Testar** cada componente isoladamente
-2. **Integrar** gradualmente na JFlutter
-3. **Adicionar testes** (unit, widget, integration)
-4. **Documentar** APIs públicas
-5. **Otimizar** performance se necessário
-6. **Coletar feedback** de usuários
+1. **Test** each component in isolation
+2. **Integrate** it gradually into JFlutter
+3. **Add tests** (unit, widget, integration)
+4. **Document** public APIs
+5. **Optimize** performance if needed
+6. **Collect feedback** from users
 
-## Dependências
+## Dependencies
 
-Todos os exemplos usam apenas dependências padrão do Flutter:
+All examples use only standard Flutter dependencies:
 - `flutter/material.dart`
-- `dart:math` (para layouts)
+- `dart:math` (for layouts)
 
-Nenhuma dependência externa adicional é necessária.
+No additional external dependencies are required.
 
-## Contribuindo
+## Contributing
 
-Para adicionar novos exemplos:
+To add new examples:
 
-1. Crie um arquivo descritivo (ex: `tm_tape_panel.dart`)
-2. Inclua documentação completa
-3. Adicione exemplo de uso no final do arquivo
-4. Atualize este README
+1. Create a descriptive file (for example `tm_tape_panel.dart`)
+2. Include complete documentation
+3. Add a usage example at the end of the file
+4. Update this README
 
-## Licença
+## License
 
-Estes exemplos seguem a mesma licença da JFlutter.
+These examples follow the same license as JFlutter.

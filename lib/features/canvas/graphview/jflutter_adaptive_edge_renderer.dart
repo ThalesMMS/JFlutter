@@ -6,6 +6,8 @@ import 'package:graphview/GraphView.dart';
 
 import 'grouped_fsa_geometry.dart';
 
+part 'jflutter_adaptive_edge_renderer_compat.dart';
+
 enum JFlutterEdgeRenderMode { standard, groupedFsa }
 
 /// Thin JFlutter-specific edge renderer layered on top of GraphView's adaptive
@@ -382,6 +384,29 @@ class JFlutterAdaptiveEdgeRenderer extends AnimatedAdaptiveEdgeRenderer {
     final sourceCenter = getNodeCenter(edge.source);
     final destinationCenter = getNodeCenter(edge.destination);
     final laneOffset = _laneOffsetForDirectedPair(edge);
+    final manualControlPoint = jFlutterEdgeControlPoint(edge);
+    if (manualControlPoint != null) {
+      final sourcePoint =
+          calculateSourceConnectionPoint(edge, manualControlPoint, 0);
+      final destinationPoint =
+          calculateDestinationConnectionPoint(edge, manualControlPoint, 0);
+      final path = Path()
+        ..moveTo(sourcePoint.dx, sourcePoint.dy)
+        ..quadraticBezierTo(
+          manualControlPoint.dx,
+          manualControlPoint.dy,
+          destinationPoint.dx,
+          destinationPoint.dy,
+        );
+      return _GroupedFsaRenderGeometry(
+        geometry: buildPathGeometry(
+          path,
+          arrowLength: noArrow ? 0.0 : ARROW_LENGTH,
+        ),
+        laneOffset: laneOffset,
+      );
+    }
+
     final controlPoint = resolveGroupedFsaControlPoint(
       fromId: _nodeId(edge.source),
       toId: _nodeId(edge.destination),
@@ -671,8 +696,7 @@ class JFlutterAdaptiveEdgeRenderer extends AnimatedAdaptiveEdgeRenderer {
     final nodeCenter = getNodeCenter(edge.source);
     final anchorOffset =
         metric != null ? math.min(metric.length * 0.42, metric.length) : 0.0;
-    final anchor =
-        metric?.getTangentForOffset(anchorOffset)?.position ??
+    final anchor = metric?.getTangentForOffset(anchorOffset)?.position ??
         geometry.path.getBounds().topRight;
 
     var radial = anchor - nodeCenter;
@@ -681,8 +705,7 @@ class JFlutterAdaptiveEdgeRenderer extends AnimatedAdaptiveEdgeRenderer {
     }
     radial = radial / radial.distance;
 
-    final projectedHalfExtent =
-        (radial.dx.abs() * (cardWidth / 2)) +
+    final projectedHalfExtent = (radial.dx.abs() * (cardWidth / 2)) +
         (radial.dy.abs() * (cardHeight / 2));
 
     var rect = Rect.fromCenter(

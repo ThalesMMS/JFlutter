@@ -173,6 +173,14 @@ void main() {
         expect(challenge.detailedExplanation.length, 2);
         expect(challenge.hints.length, 1);
       });
+
+      test('Challenge list cannot be mutated by consumers', () {
+        expect(pumpingLemmaChallenges, isNotEmpty);
+        expect(
+          () => pumpingLemmaChallenges.add(pumpingLemmaChallenges.first),
+          throwsUnsupportedError,
+        );
+      });
     });
 
     group('Scoring system', () {

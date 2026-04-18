@@ -224,12 +224,16 @@ void main() {
       expect(result.data, {'a', 'b', 'c'});
     });
 
-    test('rejects hyphen in character class range notation', () {
-      // The hyphen character is not in the valid character set
-      // So character class ranges like [a-c] fail validation
+    test('handles hyphen in character class range notation', () {
       final result = RegexAnalyzer.extractAlphabet('[a-c]');
-      expect(result.isSuccess, false);
-      expect(result.error, contains('Invalid character'));
+      expect(result.isSuccess, true);
+      expect(result.data, {'a', 'b', 'c'});
+    });
+
+    test('handles escaped closing bracket in character class', () {
+      final result = RegexAnalyzer.extractAlphabet(r'[\]]');
+      expect(result.isSuccess, true);
+      expect(result.data, {']'});
     });
 
     test('returns error for empty regex', () {
@@ -328,7 +332,8 @@ void main() {
       final result = RegexAnalyzer.determineComplexity('((a|b)c)*d+');
       expect(result.isSuccess, true);
       // Depending on the score calculation, this could be moderate or complex
-      expect(result.data, isIn([ComplexityLevel.moderate, ComplexityLevel.complex]));
+      expect(result.data,
+          isIn([ComplexityLevel.moderate, ComplexityLevel.complex]));
     });
 
     test('determines complex level for nested stars', () {
@@ -341,7 +346,8 @@ void main() {
       final result = RegexAnalyzer.determineComplexity('((((a))))');
       expect(result.isSuccess, true);
       // Deep nesting with 4 levels should be complex
-      expect(result.data, isIn([ComplexityLevel.moderate, ComplexityLevel.complex]));
+      expect(result.data,
+          isIn([ComplexityLevel.moderate, ComplexityLevel.complex]));
     });
 
     test('returns error for empty regex', () {
@@ -475,6 +481,17 @@ void main() {
       }
     });
 
+    test('does not generate required repetitions beyond max length', () {
+      final result = RegexAnalyzer.generateSampleStrings(
+        'a+',
+        maxSamples: 5,
+        maxLength: 0,
+      );
+
+      expect(result.isSuccess, true);
+      expect(result.data!.samples, isEmpty);
+    });
+
     test('generates samples for union', () {
       final result = RegexAnalyzer.generateSampleStrings('a|b');
       expect(result.isSuccess, true);
@@ -518,7 +535,8 @@ void main() {
     });
 
     test('samples are sorted by length', () {
-      final result = RegexAnalyzer.generateSampleStrings('(ab)*', maxSamples: 10);
+      final result =
+          RegexAnalyzer.generateSampleStrings('(ab)*', maxSamples: 10);
       expect(result.isSuccess, true);
       if (result.data!.samples.length > 1) {
         for (int i = 0; i < result.data!.samples.length - 1; i++) {
@@ -540,7 +558,8 @@ void main() {
     });
 
     test('includes all metrics with samples', () {
-      final result = RegexAnalyzer.analyzeWithSamples('(a|b)*c+', maxSamples: 5);
+      final result =
+          RegexAnalyzer.analyzeWithSamples('(a|b)*c+', maxSamples: 5);
       expect(result.isSuccess, true);
       expect(result.data!.starHeight, 1);
       expect(result.data!.nestingDepth, 1);
@@ -629,12 +648,21 @@ void main() {
       expect(result.data!.acceptsEmptyString, true);
     });
 
-    test('rejects backslash escape sequences in validation', () {
-      // Backslash is not in the allowed character set for validation
-      // Character shortcuts like \d are supported by tokenizer but not validator
+    test('accepts backslash shortcuts and escaped literals in validation', () {
       final result = RegexAnalyzer.analyze(r'\d');
-      expect(result.isSuccess, false);
-      expect(result.error, contains('Invalid character'));
+      expect(result.isSuccess, true);
+      expect(result.data!.structureAnalysis.alphabet, contains('0'));
+
+      final escapedParen = RegexAnalyzer.analyze(r'\(');
+      expect(escapedParen.isSuccess, true);
+      expect(escapedParen.data!.structureAnalysis.alphabet, contains('('));
+    });
+
+    test('expands negated shortcuts using analyzer alphabet complements', () {
+      final result = RegexAnalyzer.extractAlphabet(r'\D');
+      expect(result.isSuccess, true);
+      expect(result.data, contains('a'));
+      expect(result.data, isNot(contains('0')));
     });
 
     test('handles deeply nested parentheses', () {

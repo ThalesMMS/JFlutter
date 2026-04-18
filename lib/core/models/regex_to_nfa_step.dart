@@ -59,6 +59,15 @@ class RegexToNFAStep {
   /// Fragment being modified (for unary operations like Kleene star)
   final String? modifiedFragmentLabel;
 
+  /// Accept states from the first fragment for binary operations.
+  final Set<State>? firstFragmentAcceptStates;
+
+  /// Accept states from the second fragment for binary operations.
+  final Set<State>? secondFragmentAcceptStates;
+
+  /// Accept states from the modified child fragment for unary operations.
+  final Set<State>? modifiedFragmentAcceptStates;
+
   /// Whether this is the final NFA
   final bool isFinalNFA;
 
@@ -83,6 +92,9 @@ class RegexToNFAStep {
     this.firstFragmentLabel,
     this.secondFragmentLabel,
     this.modifiedFragmentLabel,
+    this.firstFragmentAcceptStates,
+    this.secondFragmentAcceptStates,
+    this.modifiedFragmentAcceptStates,
     required this.isFinalNFA,
     this.totalStates,
     this.totalTransitions,
@@ -103,6 +115,9 @@ class RegexToNFAStep {
     String? firstFragmentLabel,
     String? secondFragmentLabel,
     String? modifiedFragmentLabel,
+    Set<State>? firstFragmentAcceptStates,
+    Set<State>? secondFragmentAcceptStates,
+    Set<State>? modifiedFragmentAcceptStates,
     bool isFinalNFA = false,
     int? totalStates,
     int? totalTransitions,
@@ -113,9 +128,8 @@ class RegexToNFAStep {
       regexFragment: regexFragment,
       regexPosition: regexPosition,
       processedSymbol: processedSymbol,
-      createdStates: createdStates != null
-          ? Set.unmodifiable(createdStates)
-          : null,
+      createdStates:
+          createdStates != null ? Set.unmodifiable(createdStates) : null,
       createdTransitions: createdTransitions != null
           ? Set.unmodifiable(createdTransitions)
           : null,
@@ -126,6 +140,15 @@ class RegexToNFAStep {
       firstFragmentLabel: firstFragmentLabel,
       secondFragmentLabel: secondFragmentLabel,
       modifiedFragmentLabel: modifiedFragmentLabel,
+      firstFragmentAcceptStates: firstFragmentAcceptStates != null
+          ? Set.unmodifiable(firstFragmentAcceptStates)
+          : null,
+      secondFragmentAcceptStates: secondFragmentAcceptStates != null
+          ? Set.unmodifiable(secondFragmentAcceptStates)
+          : null,
+      modifiedFragmentAcceptStates: modifiedFragmentAcceptStates != null
+          ? Set.unmodifiable(modifiedFragmentAcceptStates)
+          : null,
       isFinalNFA: isFinalNFA,
       totalStates: totalStates,
       totalTransitions: totalTransitions,
@@ -161,7 +184,7 @@ class RegexToNFAStep {
     required String id,
     required int stepNumber,
     required String symbol,
-    required int position,
+    required int? position,
     required State startState,
     required State acceptState,
     required Transition transition,
@@ -197,27 +220,28 @@ class RegexToNFAStep {
   factory RegexToNFAStep.concatenation({
     required String id,
     required int stepNumber,
-    required int position,
+    required int? position,
     required String firstFragmentLabel,
     required String secondFragmentLabel,
     required State firstStart,
-    required State firstAccept,
+    required Set<State> firstAcceptStates,
     required State secondStart,
-    required State secondAccept,
-    required Transition epsilonTransition,
+    required Set<State> secondAcceptStates,
+    required Set<Transition> epsilonTransitions,
     required int stackSize,
   }) {
+    final firstAcceptLabels = _stateLabels(firstAcceptStates);
+    final secondAcceptLabels = _stateLabels(secondAcceptStates);
     return RegexToNFAStep(
       baseStep: AlgorithmStep(
         id: id,
         stepNumber: stepNumber,
         title: 'Apply concatenation',
-        explanation:
-            'Concatenating two NFA fragments at position $position. '
+        explanation: 'Concatenating two NFA fragments at position $position. '
             'Popping fragments for "$secondFragmentLabel" and "$firstFragmentLabel" from the stack. '
-            'Merging the accept state of the first fragment (${firstAccept.label}) with the start state '
+            'Connecting accept state(s) of the first fragment ($firstAcceptLabels) with the start state '
             'of the second fragment (${secondStart.label}) using an ε-transition. '
-            'The resulting fragment has start state ${firstStart.label} and accept state ${secondAccept.label}.',
+            'The resulting fragment has start state ${firstStart.label} and accept state(s) $secondAcceptLabels.',
         type: AlgorithmType.regexToNfa,
       ),
       stepType: RegexToNFAStepType.concatenation,
@@ -225,9 +249,11 @@ class RegexToNFAStep {
       combinesFragments: true,
       firstFragmentLabel: firstFragmentLabel,
       secondFragmentLabel: secondFragmentLabel,
-      createdTransitions: {epsilonTransition},
+      firstFragmentAcceptStates: firstAcceptStates,
+      secondFragmentAcceptStates: secondAcceptStates,
+      createdTransitions: epsilonTransitions,
       fragmentStartState: firstStart,
-      fragmentAcceptState: secondAccept,
+      fragmentAcceptState: _stableState(secondAcceptStates),
       stackSize: stackSize,
     );
   }
@@ -236,18 +262,20 @@ class RegexToNFAStep {
   factory RegexToNFAStep.union({
     required String id,
     required int stepNumber,
-    required int position,
+    required int? position,
     required String firstFragmentLabel,
     required String secondFragmentLabel,
     required State newStart,
     required State newAccept,
     required State firstStart,
-    required State firstAccept,
+    required Set<State> firstAcceptStates,
     required State secondStart,
-    required State secondAccept,
+    required Set<State> secondAcceptStates,
     required Set<Transition> newTransitions,
     required int stackSize,
   }) {
+    final firstAcceptLabels = _stateLabels(firstAcceptStates);
+    final secondAcceptLabels = _stateLabels(secondAcceptStates);
     return RegexToNFAStep(
       baseStep: AlgorithmStep(
         id: id,
@@ -257,8 +285,8 @@ class RegexToNFAStep {
             'Creating union of two NFA fragments at position $position for pattern ($firstFragmentLabel|$secondFragmentLabel). '
             'Popping two fragments from the stack. Creating new start state ${newStart.label} with ε-transitions '
             'to both fragment starts (${firstStart.label} and ${secondStart.label}). '
-            'Creating new accept state ${newAccept.label} with ε-transitions from both fragment accept states '
-            '(${firstAccept.label} and ${secondAccept.label}). '
+            'Creating new accept state ${newAccept.label} with ε-transitions from all fragment accept states '
+            '($firstAcceptLabels and $secondAcceptLabels). '
             'The NFA can now follow either path non-deterministically.',
         type: AlgorithmType.regexToNfa,
       ),
@@ -267,6 +295,8 @@ class RegexToNFAStep {
       combinesFragments: true,
       firstFragmentLabel: firstFragmentLabel,
       secondFragmentLabel: secondFragmentLabel,
+      firstFragmentAcceptStates: firstAcceptStates,
+      secondFragmentAcceptStates: secondAcceptStates,
       createdStates: {newStart, newAccept},
       createdTransitions: newTransitions,
       fragmentStartState: newStart,
@@ -279,15 +309,16 @@ class RegexToNFAStep {
   factory RegexToNFAStep.kleeneStar({
     required String id,
     required int stepNumber,
-    required int position,
+    required int? position,
     required String fragmentLabel,
     required State newStart,
     required State newAccept,
     required State oldStart,
-    required State oldAccept,
+    required Set<State> oldAcceptStates,
     required Set<Transition> newTransitions,
     required int stackSize,
   }) {
+    final oldAcceptLabels = _stateLabels(oldAcceptStates);
     return RegexToNFAStep(
       baseStep: AlgorithmStep(
         id: id,
@@ -298,14 +329,15 @@ class RegexToNFAStep {
             'Popping fragment from stack. Creating new start state ${newStart.label} and accept state ${newAccept.label}. '
             'Adding ε-transitions: (1) ${newStart.label} → ${oldStart.label} to enter the loop, '
             '(2) ${newStart.label} → ${newAccept.label} to skip the loop (zero iterations), '
-            '(3) ${oldAccept.label} → ${oldStart.label} to repeat the loop, '
-            '(4) ${oldAccept.label} → ${newAccept.label} to exit the loop. '
+            '(3) each old accept state ($oldAcceptLabels) → ${oldStart.label} to repeat the loop, '
+            '(4) each old accept state ($oldAcceptLabels) → ${newAccept.label} to exit the loop. '
             'This allows zero or more repetitions of the pattern.',
         type: AlgorithmType.regexToNfa,
       ),
       stepType: RegexToNFAStepType.kleeneStar,
       regexPosition: position,
       modifiedFragmentLabel: fragmentLabel,
+      modifiedFragmentAcceptStates: oldAcceptStates,
       createdStates: {newStart, newAccept},
       createdTransitions: newTransitions,
       fragmentStartState: newStart,
@@ -318,15 +350,16 @@ class RegexToNFAStep {
   factory RegexToNFAStep.plus({
     required String id,
     required int stepNumber,
-    required int position,
+    required int? position,
     required String fragmentLabel,
     required State newStart,
     required State newAccept,
     required State oldStart,
-    required State oldAccept,
+    required Set<State> oldAcceptStates,
     required Set<Transition> newTransitions,
     required int stackSize,
   }) {
+    final oldAcceptLabels = _stateLabels(oldAcceptStates);
     return RegexToNFAStep(
       baseStep: AlgorithmStep(
         id: id,
@@ -336,14 +369,15 @@ class RegexToNFAStep {
             'Applying plus operator to fragment "$fragmentLabel" at position $position. '
             'Popping fragment from stack. Creating new start state ${newStart.label} and accept state ${newAccept.label}. '
             'Adding ε-transitions: (1) ${newStart.label} → ${oldStart.label} to enter (required first iteration), '
-            '(2) ${oldAccept.label} → ${oldStart.label} to repeat the loop, '
-            '(3) ${oldAccept.label} → ${newAccept.label} to exit the loop. '
+            '(2) each old accept state ($oldAcceptLabels) → ${oldStart.label} to repeat the loop, '
+            '(3) each old accept state ($oldAcceptLabels) → ${newAccept.label} to exit the loop. '
             'This requires at least one iteration, unlike Kleene star.',
         type: AlgorithmType.regexToNfa,
       ),
       stepType: RegexToNFAStepType.plus,
       regexPosition: position,
       modifiedFragmentLabel: fragmentLabel,
+      modifiedFragmentAcceptStates: oldAcceptStates,
       createdStates: {newStart, newAccept},
       createdTransitions: newTransitions,
       fragmentStartState: newStart,
@@ -356,15 +390,16 @@ class RegexToNFAStep {
   factory RegexToNFAStep.optional({
     required String id,
     required int stepNumber,
-    required int position,
+    required int? position,
     required String fragmentLabel,
     required State newStart,
     required State newAccept,
     required State oldStart,
-    required State oldAccept,
+    required Set<State> oldAcceptStates,
     required Set<Transition> newTransitions,
     required int stackSize,
   }) {
+    final oldAcceptLabels = _stateLabels(oldAcceptStates);
     return RegexToNFAStep(
       baseStep: AlgorithmStep(
         id: id,
@@ -375,13 +410,14 @@ class RegexToNFAStep {
             'Popping fragment from stack. Creating new start state ${newStart.label} and accept state ${newAccept.label}. '
             'Adding ε-transitions: (1) ${newStart.label} → ${oldStart.label} to match the pattern, '
             '(2) ${newStart.label} → ${newAccept.label} to skip the pattern (zero occurrences), '
-            '(3) ${oldAccept.label} → ${newAccept.label} to complete after matching. '
+            '(3) each old accept state ($oldAcceptLabels) → ${newAccept.label} to complete after matching. '
             'This allows zero or one occurrence of the pattern.',
         type: AlgorithmType.regexToNfa,
       ),
       stepType: RegexToNFAStepType.optional,
       regexPosition: position,
       modifiedFragmentLabel: fragmentLabel,
+      modifiedFragmentAcceptStates: oldAcceptStates,
       createdStates: {newStart, newAccept},
       createdTransitions: newTransitions,
       fragmentStartState: newStart,
@@ -419,6 +455,24 @@ class RegexToNFAStep {
       totalTransitions: totalTransitions,
       stackSize: 1,
     );
+  }
+
+  static String _stateLabels(Set<State> states) {
+    final labels = states.map((state) => state.label).toList()..sort();
+    return labels.join(', ');
+  }
+
+  static State _stableState(Set<State> states) {
+    if (states.isEmpty) {
+      throw ArgumentError.value(states, 'states', 'must not be empty');
+    }
+    final sorted = states.toList()
+      ..sort((a, b) {
+        final idComparison = a.id.compareTo(b.id);
+        if (idComparison != 0) return idComparison;
+        return a.label.compareTo(b.label);
+      });
+    return sorted.first;
   }
 }
 

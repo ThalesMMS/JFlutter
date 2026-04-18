@@ -1,0 +1,270 @@
+part of 'automaton_graphview_canvas.dart';
+
+class _TransitionEditChoice {
+  const _TransitionEditChoice._({required this.createNew, this.edge});
+
+  const _TransitionEditChoice.edit(GraphViewCanvasEdge edge)
+      : this._(createNew: false, edge: edge);
+
+  const _TransitionEditChoice.createNew() : this._(createNew: true);
+
+  final bool createNew;
+  final GraphViewCanvasEdge? edge;
+}
+
+class _GraphViewTransitionOverlayState {
+  const _GraphViewTransitionOverlayState({
+    required this.data,
+    required this.overlayPosition,
+  });
+
+  final AutomatonTransitionOverlayData data;
+  final Offset overlayPosition;
+
+  _GraphViewTransitionOverlayState copyWith({
+    AutomatonTransitionOverlayData? data,
+    Offset? overlayPosition,
+  }) {
+    return _GraphViewTransitionOverlayState(
+      data: data ?? this.data,
+      overlayPosition: overlayPosition ?? this.overlayPosition,
+    );
+  }
+}
+
+class _AutomatonGraphSugiyamaAlgorithm extends SugiyamaAlgorithm {
+  _AutomatonGraphSugiyamaAlgorithm({
+    required SugiyamaConfiguration configuration,
+  }) : super(configuration);
+
+  @override
+  Size run(Graph? graph, double shiftX, double shiftY) {
+    if (graph == null || graph.nodes.isEmpty) {
+      return Size.zero;
+    }
+
+    var minX = double.infinity;
+    var minY = double.infinity;
+    var maxX = double.negativeInfinity;
+    var maxY = double.negativeInfinity;
+
+    for (final node in graph.nodes) {
+      final position = node.position;
+
+      minX = math.min(minX, position.dx);
+      minY = math.min(minY, position.dy);
+      maxX = math.max(maxX, position.dx + node.width);
+      maxY = math.max(maxY, position.dy + node.height);
+    }
+
+    if (minX == double.infinity || minY == double.infinity) {
+      return Size.zero;
+    }
+
+    final width = (maxX - minX).clamp(0.0, double.infinity) + _kNodeDiameter;
+    final height = (maxY - minY).clamp(0.0, double.infinity) + _kNodeDiameter;
+
+    return Size(width, height);
+  }
+
+  @override
+  void init(Graph? graph) {}
+
+  @override
+  void setDimensions(double width, double height) {}
+}
+
+class _AutomatonGraphNode extends StatelessWidget {
+  const _AutomatonGraphNode({
+    required this.label,
+    required this.isInitial,
+    required this.isAccepting,
+    required this.isHighlighted,
+    required this.motionPreset,
+  });
+
+  final String label;
+  final bool isInitial;
+  final bool isAccepting;
+  final bool isHighlighted;
+  final _CanvasMotionPreset motionPreset;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final borderColor =
+        isHighlighted ? theme.colorScheme.primary : theme.colorScheme.outline;
+    final backgroundColor = isHighlighted
+        ? theme.colorScheme.primaryContainer
+        : theme.colorScheme.surface;
+
+    final badgeColor = theme.colorScheme.primary;
+
+    return AnimatedScale(
+      duration: motionPreset.highlightDuration,
+      curve: motionPreset.highlightCurve,
+      scale: isHighlighted ? motionPreset.highlightScale : 1.0,
+      child: SizedBox(
+        width: _kNodeDiameter,
+        height: _kNodeDiameter,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned.fill(
+              child: AnimatedContainer(
+                duration: motionPreset.highlightDuration,
+                curve: motionPreset.highlightCurve,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: backgroundColor,
+                  border: Border.all(color: borderColor, width: 3),
+                ),
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        label,
+                        style: theme.textTheme.titleMedium,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            if (isInitial)
+              Positioned(
+                left: -_kInitialArrowSize.width + 1,
+                top: _kNodeRadius - (_kInitialArrowSize.height / 2),
+                child: CustomPaint(
+                  size: _kInitialArrowSize,
+                  painter: _InitialStateArrowPainter(color: borderColor),
+                ),
+              ),
+            if (isAccepting)
+              Positioned.fill(
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: badgeColor, width: 2),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InitialStateArrowPainter extends CustomPainter {
+  const _InitialStateArrowPainter({required this.color});
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    final path = Path()
+      ..moveTo(0, 0)
+      ..lineTo(size.width, size.height / 2)
+      ..lineTo(0, size.height)
+      ..close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _InitialStateArrowPainter oldDelegate) {
+    return oldDelegate.color != color;
+  }
+}
+
+typedef _NodeHitTester = GraphViewCanvasNode? Function(Offset globalPosition);
+typedef _ToolResolver = AutomatonCanvasTool Function();
+
+class _NodePanGestureRecognizer extends PanGestureRecognizer {
+  _NodePanGestureRecognizer({
+    required this.hitTester,
+    required this.toolResolver,
+    this.onPointerDown,
+    this.onDragAccepted,
+    this.onDragReleased,
+  });
+
+  final _NodeHitTester hitTester;
+  final _ToolResolver toolResolver;
+  final ValueChanged<Offset>? onPointerDown;
+  final VoidCallback? onDragAccepted;
+  final VoidCallback? onDragReleased;
+
+  int? _activePointer;
+
+  @override
+  void addAllowedPointer(PointerDownEvent event) {
+    _debugNodePan(
+      '[NodePanRecognizer] addAllowedPointer pointer ${event.pointer} '
+      'tool=${toolResolver().name} active=$_activePointer '
+      'position=${event.position} dragStart=$dragStartBehavior',
+    );
+    onPointerDown?.call(event.position);
+    if (_activePointer != null) {
+      _debugNodePan('[NodePanRecognizer] pointer already active -> ignore');
+      return;
+    }
+    final tool = toolResolver();
+    if (tool == AutomatonCanvasTool.transition ||
+        tool == AutomatonCanvasTool.addState) {
+      _debugNodePan('[NodePanRecognizer] tool ${tool.name} -> ignore');
+      return;
+    }
+    final node = hitTester(event.position);
+    if (node == null) {
+      _debugNodePan('[NodePanRecognizer] no node hit -> ignore');
+      return;
+    }
+    _activePointer = event.pointer;
+    _debugNodePan(
+      '[NodePanRecognizer] tracking pointer ${event.pointer} '
+      'for node ${node.id}',
+    );
+    onDragAccepted?.call();
+    super.addAllowedPointer(event);
+    resolvePointer(event.pointer, GestureDisposition.accepted);
+  }
+
+  @override
+  void rejectGesture(int pointer) {
+    _debugNodePan('[NodePanRecognizer] rejectGesture pointer=$pointer');
+    if (pointer == _activePointer) {
+      _activePointer = null;
+      onDragReleased?.call();
+    }
+    super.rejectGesture(pointer);
+  }
+
+  @override
+  void didStopTrackingLastPointer(int pointer) {
+    _debugNodePan('[NodePanRecognizer] didStopTracking pointer=$pointer');
+    if (pointer == _activePointer) {
+      _activePointer = null;
+      onDragReleased?.call();
+    }
+    super.didStopTrackingLastPointer(pointer);
+  }
+}
+
+const bool _enablePanDebug = false;
+
+void _debugNodePan(String message) {
+  if (kDebugMode && _enablePanDebug) {
+    debugPrint(message);
+  }
+}

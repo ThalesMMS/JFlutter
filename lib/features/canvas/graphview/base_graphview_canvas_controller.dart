@@ -20,6 +20,7 @@ import 'package:vector_math/vector_math_64.dart' as vmath;
 import '../../../core/models/simulation_highlight.dart';
 import 'graphview_canvas_models.dart';
 import 'graphview_highlight_controller.dart';
+import 'jflutter_adaptive_edge_renderer.dart';
 import 'graphview_viewport_highlight_mixin.dart';
 import 'graphview_snapshot_codec.dart';
 
@@ -27,6 +28,11 @@ void _logGraphViewBase(String message) {
   if (kDebugMode) {
     debugPrint('[GraphViewBase] $message');
   }
+}
+
+class _InvisibleGraphEdgeRenderer extends EdgeRenderer {
+  @override
+  void renderEdge(Canvas canvas, Edge edge, Paint paint) {}
 }
 
 class _GraphHistoryEntry {
@@ -58,6 +64,8 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
     extends GraphViewHighlightController with GraphViewViewportHighlightMixin {
   static const int kDefaultHistoryLimit = 20;
   static const int kDefaultCacheEvictionThreshold = 250;
+  static final EdgeRenderer _invisibleNodeAnchorRenderer =
+      _InvisibleGraphEdgeRenderer();
   static final Codec<List<int>, List<int>> _historyCodec =
       createGraphHistoryCodec();
 
@@ -96,6 +104,7 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
   final Map<String, GraphViewCanvasEdge> _edges = {};
   final Map<String, Node> _graphNodes = {};
   final Map<String, Edge> _graphEdges = {};
+  final Map<String, Edge> _graphNodeAnchors = {};
 
   final int historyLimit;
   final int cacheEvictionThreshold;
@@ -247,26 +256,22 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
   /// Creates a GraphView edge for the provided canvas [edge].
   @protected
   Edge buildGraphEdge(GraphViewCanvasEdge edge, Node from, Node to) {
-    return Edge(
+    final graphEdge = Edge(
       from,
       to,
       key: ValueKey(edge.id),
       label: edge.label,
       labelFollowsEdgeDirection: false,
-      controlPoint: edge.controlPointX != null && edge.controlPointY != null
-          ? Offset(edge.controlPointX!, edge.controlPointY!)
-          : null,
     );
+    _syncGraphEdgeControlPoint(graphEdge, edge);
+    return graphEdge;
   }
 
   @protected
   void updateGraphEdgeInstance(Edge target, GraphViewCanvasEdge edge) {
     target.label = edge.label;
     target.labelFollowsEdgeDirection = false;
-    target.controlPoint =
-        edge.controlPointX != null && edge.controlPointY != null
-            ? Offset(edge.controlPointX!, edge.controlPointY!)
-            : null;
+    _syncGraphEdgeControlPoint(target, edge);
   }
 
   /// Records the current canvas state before invoking [mutation].
@@ -388,6 +393,10 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
           _nodes.keys.where((id) => !incomingNodes.containsKey(id)).toList();
       for (final nodeId in removedNodeIds) {
         _nodes.remove(nodeId);
+        final anchorEdge = _graphNodeAnchors.remove(nodeId);
+        if (anchorEdge != null) {
+          graph.removeEdge(anchorEdge);
+        }
         final nodeInstance = _graphNodes.remove(nodeId);
         if (nodeInstance != null) {
           graph.removeNode(nodeInstance);
@@ -502,6 +511,8 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
         }
       }
 
+      final anchorsDirty = _syncGraphNodeAnchors();
+
       final sanitizedHighlight = SimulationHighlight(
         stateIds: previousHighlight.stateIds
             .where((id) => incomingNodes.containsKey(id))
@@ -517,7 +528,7 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
         'Highlight updated (states=${sanitizedHighlight.stateIds.length}, transitions=${sanitizedHighlight.transitionIds.length})',
       );
 
-      if (nodesDirty || edgesDirty) {
+      if (nodesDirty || edgesDirty || anchorsDirty) {
         graph.notifyGraphObserver();
         graphRevision.value++;
         _logGraphViewBase(
@@ -609,13 +620,73 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
     }
   }
 
+  bool _syncGraphNodeAnchors() {
+    var anchorsDirty = false;
+    final connectedNodeIds = <String>{};
+    for (final edge in _edges.values) {
+      connectedNodeIds
+        ..add(edge.fromStateId)
+        ..add(edge.toStateId);
+    }
+
+    final staleAnchorIds = _graphNodeAnchors.keys
+        .where(
+          (id) => !_graphNodes.containsKey(id) || connectedNodeIds.contains(id),
+        )
+        .toList(growable: false);
+    for (final nodeId in staleAnchorIds) {
+      final anchor = _graphNodeAnchors.remove(nodeId);
+      if (anchor != null) {
+        graph.removeEdge(anchor);
+        anchorsDirty = true;
+      }
+    }
+
+    for (final entry in _graphNodes.entries) {
+      final nodeId = entry.key;
+      if (connectedNodeIds.contains(nodeId) ||
+          _graphNodeAnchors.containsKey(nodeId)) {
+        continue;
+      }
+
+      final node = entry.value;
+      final anchor = Edge(
+        node,
+        node,
+        key: ValueKey('__node_anchor_$nodeId'),
+        renderer: _invisibleNodeAnchorRenderer,
+      );
+      _graphNodeAnchors[nodeId] = anchor;
+      graph.addEdgeS(anchor);
+      anchorsDirty = true;
+    }
+
+    return anchorsDirty;
+  }
+
+  void _syncGraphEdgeControlPoint(
+    Edge target,
+    GraphViewCanvasEdge edge,
+  ) {
+    final controlPoint =
+        edge.controlPointX != null && edge.controlPointY != null
+            ? Offset(edge.controlPointX!, edge.controlPointY!)
+            : null;
+    setJFlutterEdgeControlPoint(target, controlPoint);
+  }
+
   void _evictGraphCaches({required bool notifyGraph}) {
-    if (_graphEdges.isEmpty && _graphNodes.isEmpty) {
+    if (_graphEdges.isEmpty &&
+        _graphNodes.isEmpty &&
+        _graphNodeAnchors.isEmpty) {
       _nodes.clear();
       _edges.clear();
       return;
     }
 
+    for (final edge in List<Edge>.from(_graphNodeAnchors.values)) {
+      graph.removeEdge(edge);
+    }
     for (final edge in List<Edge>.from(_graphEdges.values)) {
       graph.removeEdge(edge);
     }
@@ -624,6 +695,7 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
     }
 
     _graphEdges.clear();
+    _graphNodeAnchors.clear();
     _graphNodes.clear();
     _edges.clear();
     _nodes.clear();

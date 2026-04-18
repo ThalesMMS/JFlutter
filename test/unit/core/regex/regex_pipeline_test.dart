@@ -99,6 +99,36 @@ void main() {
       expect(await _accepts(nfa, 'd'), false);
     });
 
+    test('Character class ranges and escapes are validated by tokenizer',
+        () async {
+      final range = RegexToNFAConverter.convert('[a-c]');
+      expect(range.isSuccess, true);
+      expect(await _accepts(range.data!, 'a'), true);
+      expect(await _accepts(range.data!, 'b'), true);
+      expect(await _accepts(range.data!, 'c'), true);
+      expect(await _accepts(range.data!, 'd'), false);
+
+      final escapedParen = RegexToNFAConverter.convert(r'\(');
+      expect(escapedParen.isSuccess, true);
+      expect(await _accepts(escapedParen.data!, '('), true);
+      expect(await _accepts(escapedParen.data!, ')'), false);
+    });
+
+    test('Shortcut complements use the provided context alphabet', () async {
+      final digit = RegexToNFAConverter.convert(r'\d');
+      expect(digit.isSuccess, true);
+      expect(await _accepts(digit.data!, '4'), true);
+      expect(await _accepts(digit.data!, 'a'), false);
+
+      final nonDigit = RegexToNFAConverter.convert(
+        r'\D',
+        contextAlphabet: const {'a', '4'},
+      );
+      expect(nonDigit.isSuccess, true);
+      expect(await _accepts(nonDigit.data!, 'a'), true);
+      expect(await _accepts(nonDigit.data!, '4'), false);
+    });
+
     test('Dot any symbol with default alphabet', () async {
       final res = RegexToNFAConverter.convert('.');
       expect(res.isSuccess, true);

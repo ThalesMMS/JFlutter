@@ -10,6 +10,7 @@
 //
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'l10n/app_localizations.dart';
 import 'presentation/pages/home_page.dart';
 import 'presentation/providers/settings_provider.dart';
 import 'presentation/theme/app_theme.dart';
@@ -27,6 +28,8 @@ class JFlutterApp extends ConsumerWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: _resolveThemeMode(settings.themeMode),
       home: const HomePage(),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       debugShowCheckedModeBanner: false,
     );
   }

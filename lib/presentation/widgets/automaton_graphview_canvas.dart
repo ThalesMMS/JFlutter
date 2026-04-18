@@ -36,349 +36,16 @@ import '../../features/canvas/graphview/graphview_label_field_editor.dart';
 import '../../features/canvas/graphview/grouped_fsa_geometry.dart';
 import '../../features/canvas/graphview/graphview_link_overlay_utils.dart';
 import '../../features/canvas/graphview/graphview_pda_canvas_controller.dart';
+import '../../l10n/app_localizations.dart';
 import '../providers/automaton_state_provider.dart';
 import 'automaton_canvas_tool.dart';
 import 'transition_editors/pda_transition_editor.dart';
 
-typedef AutomatonTransitionOverlayBuilder = Widget Function(
-  BuildContext context,
-  AutomatonTransitionOverlayData data,
-  AutomatonTransitionOverlayController controller,
-);
+part 'automaton_graphview_canvas_models.dart';
+part 'automaton_graphview_canvas_overlay.dart';
+part 'automaton_graphview_canvas_rendering.dart';
+part 'automaton_graphview_canvas_interactions.dart';
 
-/// Payload used by the transition overlay to communicate user edits back to
-/// the canvas.
-sealed class AutomatonTransitionPayload {
-  const AutomatonTransitionPayload();
-}
-
-/// Simple payload representing a raw transition label.
-class AutomatonLabelTransitionPayload extends AutomatonTransitionPayload {
-  const AutomatonLabelTransitionPayload(this.label);
-
-  final String label;
-}
-
-/// Payload describing a request to delete the currently edited transition.
-class AutomatonDeleteTransitionPayload extends AutomatonTransitionPayload {
-  const AutomatonDeleteTransitionPayload();
-}
-
-/// Payload describing TM tape operations (read/write/direction).
-class AutomatonTmTransitionPayload extends AutomatonTransitionPayload {
-  const AutomatonTmTransitionPayload({
-    required this.readSymbol,
-    required this.writeSymbol,
-    required this.direction,
-  });
-
-  final String readSymbol;
-  final String writeSymbol;
-  final TapeDirection direction;
-}
-
-/// Payload describing PDA stack operations (read/pop/push and λ flags).
-class AutomatonPdaTransitionPayload extends AutomatonTransitionPayload {
-  const AutomatonPdaTransitionPayload({
-    required this.readSymbol,
-    required this.popSymbol,
-    required this.pushSymbol,
-    required this.isLambdaInput,
-    required this.isLambdaPop,
-    required this.isLambdaPush,
-  });
-
-  final String readSymbol;
-  final String popSymbol;
-  final String pushSymbol;
-  final bool isLambdaInput;
-  final bool isLambdaPop;
-  final bool isLambdaPush;
-}
-
-/// Immutable description of the current transition overlay request.
-class AutomatonTransitionOverlayData {
-  const AutomatonTransitionOverlayData({
-    required this.fromStateId,
-    required this.toStateId,
-    required this.worldAnchor,
-    required this.payload,
-    this.transitionId,
-    this.edge,
-  });
-
-  final String fromStateId;
-  final String toStateId;
-  final Offset worldAnchor;
-  final AutomatonTransitionPayload payload;
-  final String? transitionId;
-  final GraphViewCanvasEdge? edge;
-
-  AutomatonTransitionOverlayData copyWith({
-    AutomatonTransitionPayload? payload,
-    Offset? worldAnchor,
-    String? transitionId,
-    GraphViewCanvasEdge? edge,
-  }) {
-    return AutomatonTransitionOverlayData(
-      fromStateId: fromStateId,
-      toStateId: toStateId,
-      worldAnchor: worldAnchor ?? this.worldAnchor,
-      payload: payload ?? this.payload,
-      transitionId: transitionId ?? this.transitionId,
-      edge: edge ?? this.edge,
-    );
-  }
-}
-
-/// Controller exposed to the overlay widget allowing it to submit or cancel
-/// the edit flow.
-class AutomatonTransitionOverlayController {
-  AutomatonTransitionOverlayController({
-    required this.onSubmit,
-    required this.onCancel,
-  });
-
-  final void Function(AutomatonTransitionPayload payload) onSubmit;
-  final VoidCallback onCancel;
-
-  void submit(AutomatonTransitionPayload payload) => onSubmit(payload);
-  void cancel() => onCancel();
-}
-
-/// Request emitted when the transition overlay is submitted.
-class AutomatonTransitionPersistRequest {
-  const AutomatonTransitionPersistRequest({
-    required this.fromStateId,
-    required this.toStateId,
-    required this.payload,
-    required this.worldAnchor,
-    required this.controller,
-    this.transitionId,
-  });
-
-  final String fromStateId;
-  final String toStateId;
-  final String? transitionId;
-  final AutomatonTransitionPayload payload;
-  final Offset worldAnchor;
-  final BaseGraphViewCanvasController<dynamic, dynamic> controller;
-}
-
-/// Transition configuration describing how to build overlays and persist
-/// updates for the current automaton type.
-class AutomatonGraphViewTransitionConfig {
-  const AutomatonGraphViewTransitionConfig({
-    required this.initialPayloadBuilder,
-    required this.overlayBuilder,
-    required this.persistTransition,
-  });
-
-  final AutomatonTransitionPayload Function(GraphViewCanvasEdge? edge)
-      initialPayloadBuilder;
-  final AutomatonTransitionOverlayBuilder overlayBuilder;
-  final void Function(AutomatonTransitionPersistRequest request)
-      persistTransition;
-}
-
-/// Customisation options applied to the graph canvas behaviour.
-class AutomatonGraphViewCanvasCustomization {
-  const AutomatonGraphViewCanvasCustomization({
-    required this.transitionConfigBuilder,
-    this.enableStateDrag = true,
-    this.enableToolSelection = true,
-    this.edgeRenderMode = JFlutterEdgeRenderMode.standard,
-  });
-
-  final AutomatonGraphViewTransitionConfig Function(
-    BaseGraphViewCanvasController<dynamic, dynamic> controller,
-  ) transitionConfigBuilder;
-
-  final bool enableStateDrag;
-  final bool enableToolSelection;
-  final JFlutterEdgeRenderMode edgeRenderMode;
-
-  factory AutomatonGraphViewCanvasCustomization.fsa() {
-    return AutomatonGraphViewCanvasCustomization(
-      edgeRenderMode: JFlutterEdgeRenderMode.groupedFsa,
-      transitionConfigBuilder: (controller) {
-        return AutomatonGraphViewTransitionConfig(
-          initialPayloadBuilder: (edge) =>
-              AutomatonLabelTransitionPayload(edge?.label ?? ''),
-          overlayBuilder: (context, data, overlayController) {
-            final payload = data.payload as AutomatonLabelTransitionPayload;
-            return GraphViewLabelFieldEditor(
-              initialValue: payload.label,
-              onSubmit: (value) => overlayController.submit(
-                AutomatonLabelTransitionPayload(value),
-              ),
-              onCancel: overlayController.cancel,
-              onDelete: data.transitionId == null
-                  ? null
-                  : () => overlayController.submit(
-                        const AutomatonDeleteTransitionPayload(),
-                      ),
-            );
-          },
-          persistTransition: (request) {
-            final controller = request.controller as GraphViewCanvasController;
-            if (request.payload is AutomatonDeleteTransitionPayload) {
-              if (request.transitionId != null) {
-                controller.removeTransition(request.transitionId!);
-              }
-              return;
-            }
-            final payload = request.payload as AutomatonLabelTransitionPayload;
-            controller.addOrUpdateTransition(
-              fromStateId: request.fromStateId,
-              toStateId: request.toStateId,
-              label: payload.label,
-              transitionId: request.transitionId,
-              controlPointX: request.worldAnchor.dx,
-              controlPointY: request.worldAnchor.dy,
-            );
-          },
-        );
-      },
-    );
-  }
-
-  factory AutomatonGraphViewCanvasCustomization.pda() {
-    return AutomatonGraphViewCanvasCustomization(
-      enableToolSelection: true,
-      transitionConfigBuilder: (controller) {
-        return AutomatonGraphViewTransitionConfig(
-          initialPayloadBuilder: (edge) {
-            final read = edge?.readSymbol ?? '';
-            final pop = edge?.popSymbol ?? '';
-            final push = edge?.pushSymbol ?? '';
-            return AutomatonPdaTransitionPayload(
-              readSymbol: read,
-              popSymbol: pop,
-              pushSymbol: push,
-              isLambdaInput: edge?.isLambdaInput ?? false,
-              isLambdaPop: edge?.isLambdaPop ?? false,
-              isLambdaPush: edge?.isLambdaPush ?? false,
-            );
-          },
-          overlayBuilder: (context, data, overlayController) {
-            final payload = data.payload as AutomatonPdaTransitionPayload;
-            return PdaTransitionEditor(
-              initialRead: payload.readSymbol,
-              initialPop: payload.popSymbol,
-              initialPush: payload.pushSymbol,
-              isLambdaInput: payload.isLambdaInput,
-              isLambdaPop: payload.isLambdaPop,
-              isLambdaPush: payload.isLambdaPush,
-              onSubmit: ({
-                required String readSymbol,
-                required String popSymbol,
-                required String pushSymbol,
-                required bool lambdaInput,
-                required bool lambdaPop,
-                required bool lambdaPush,
-              }) {
-                overlayController.submit(
-                  AutomatonPdaTransitionPayload(
-                    readSymbol: readSymbol,
-                    popSymbol: popSymbol,
-                    pushSymbol: pushSymbol,
-                    isLambdaInput: lambdaInput,
-                    isLambdaPop: lambdaPop,
-                    isLambdaPush: lambdaPush,
-                  ),
-                );
-              },
-              onCancel: overlayController.cancel,
-            );
-          },
-          persistTransition: (request) {
-            final payload = request.payload as AutomatonPdaTransitionPayload;
-            final pdaController =
-                request.controller as GraphViewPdaCanvasController;
-            pdaController.addOrUpdateTransition(
-              fromStateId: request.fromStateId,
-              toStateId: request.toStateId,
-              readSymbol: payload.readSymbol,
-              popSymbol: payload.popSymbol,
-              pushSymbol: payload.pushSymbol,
-              isLambdaInput: payload.isLambdaInput,
-              isLambdaPop: payload.isLambdaPop,
-              isLambdaPush: payload.isLambdaPush,
-              transitionId: request.transitionId,
-              controlPointX: request.worldAnchor.dx,
-              controlPointY: request.worldAnchor.dy,
-            );
-          },
-        );
-      },
-    );
-  }
-}
-
-const double _kNodeDiameter = kAutomatonStateDiameter;
-const double _kNodeRadius = _kNodeDiameter / 2;
-const Size _kInitialArrowSize = Size(24, 12);
-
-class _CanvasOrganicCurve extends Curve {
-  const _CanvasOrganicCurve(this.overshoot);
-
-  final double overshoot;
-
-  @override
-  double transformInternal(double t) {
-    final shifted = t - 1.0;
-    return 1.0 +
-        (overshoot + 1.0) * shifted * shifted * shifted +
-        overshoot * shifted * shifted;
-  }
-}
-
-class _CanvasMotionPreset {
-  const _CanvasMotionPreset({
-    required this.nodeDuration,
-    required this.viewportDuration,
-    required this.highlightDuration,
-    required this.nodeCurve,
-    required this.viewportCurve,
-    required this.highlightCurve,
-    required this.highlightScale,
-    required this.graphAnimationEnabled,
-  });
-
-  final Duration nodeDuration;
-  final Duration viewportDuration;
-  final Duration highlightDuration;
-  final Curve nodeCurve;
-  final Curve viewportCurve;
-  final Curve highlightCurve;
-  final double highlightScale;
-  final bool graphAnimationEnabled;
-
-  static const _CanvasMotionPreset organic = _CanvasMotionPreset(
-    nodeDuration: Duration(milliseconds: 280),
-    viewportDuration: Duration(milliseconds: 420),
-    highlightDuration: Duration(milliseconds: 200),
-    nodeCurve: _CanvasOrganicCurve(1.0),
-    viewportCurve: _CanvasOrganicCurve(0.9),
-    highlightCurve: _CanvasOrganicCurve(1.0),
-    highlightScale: 1.04,
-    graphAnimationEnabled: true,
-  );
-
-  static const _CanvasMotionPreset reduced = _CanvasMotionPreset(
-    nodeDuration: Duration.zero,
-    viewportDuration: Duration.zero,
-    highlightDuration: Duration.zero,
-    nodeCurve: Curves.linear,
-    viewportCurve: Curves.linear,
-    highlightCurve: Curves.linear,
-    highlightScale: 1.0,
-    graphAnimationEnabled: false,
-  );
-}
-
-/// GraphView-based canvas used to render and edit automatons.
 class AutomatonGraphViewCanvas extends ConsumerStatefulWidget {
   const AutomatonGraphViewCanvas({
     super.key,
@@ -433,7 +100,8 @@ class _AutomatonGraphViewCanvasState
   final GestureArenaTeam _gestureArenaTeam = GestureArenaTeam();
   bool _suppressCanvasPan = false;
   String? _lastTapNodeId;
-  DateTime? _lastTapTimestamp;
+  Duration? _lastTapTimestamp;
+  final Stopwatch _monotonicStopwatch = Stopwatch()..start();
   bool _isDraggingNode = false;
   bool _didMoveDraggedNode = false;
   late AutomatonGraphViewCanvasCustomization _customization;
@@ -512,7 +180,6 @@ class _AutomatonGraphViewCanvasState
     _hasEdgeRenderer = true;
     _edgeRenderer.setAnimationValue(_edgeAnimationController.value);
     _algorithm = _AutomatonGraphSugiyamaAlgorithm(
-      controller: _controller,
       configuration: _buildConfiguration(),
     );
     _algorithm.renderer = _edgeRenderer;
@@ -579,7 +246,6 @@ class _AutomatonGraphViewCanvasState
         highlightService.channel = highlightChannel;
       }
       _algorithm = _AutomatonGraphSugiyamaAlgorithm(
-        controller: _controller,
         configuration: _buildConfiguration(),
       );
       _algorithm.renderer = _edgeRenderer;
@@ -727,7 +393,7 @@ class _AutomatonGraphViewCanvasState
         if (kDebugMode) {
           debugPrint(
             '[AutomatonGraphViewCanvas] Failed to synchronize controller: '
-            '\$error',
+            '$error',
           );
           debugPrint(stackTrace.toString());
         }
@@ -744,739 +410,117 @@ class _AutomatonGraphViewCanvasState
     return configuration;
   }
 
-  Offset _screenToWorld(Offset localPosition) {
-    final controller = _transformationController;
-    if (controller == null) {
-      return localPosition;
-    }
-    final matrix = Matrix4.copy(controller.value);
-    final determinant = matrix.invert();
-    if (determinant == 0) {
-      return localPosition;
-    }
-    final vector = matrix.transform3(
-      vmath.Vector3(localPosition.dx, localPosition.dy, 0),
-    );
-    return Offset(vector.x, vector.y);
-  }
+  Offset _screenToWorld(Offset localPosition) =>
+      this._screenToWorldExtracted(localPosition);
 
   GraphViewCanvasNode? _hitTestNode(
     Offset localPosition, {
     bool logDetails = true,
-  }) {
-    final world = _screenToWorld(localPosition);
-    GraphViewCanvasNode? closest;
-    var closestDistance = double.infinity;
-    for (final node in _controller.nodes) {
-      final center = Offset(node.x + _kNodeRadius, node.y + _kNodeRadius);
-      final dx = world.dx - center.dx;
-      final dy = world.dy - center.dy;
-      final distanceSquared = dx * dx + dy * dy;
-      if (distanceSquared <= _kNodeRadius * _kNodeRadius &&
-          distanceSquared < closestDistance) {
-        closest = node;
-        closestDistance = distanceSquared;
-      }
-    }
-    if (logDetails) {
-      if (closest != null) {
-        debugPrint(
-          '[AutomatonGraphViewCanvas] Hit node ${closest.id} '
-          '(tool=${_activeTool.name}) local=$localPosition world=$world',
-        );
-      } else if (_activeTool == AutomatonCanvasTool.transition) {
-        debugPrint(
-          '[AutomatonGraphViewCanvas] Transition tool miss '
-          'local=$localPosition world=$world',
-        );
-      }
-    }
-    return closest;
-  }
+  }) =>
+      this._hitTestNodeExtracted(localPosition, logDetails: logDetails);
 
-  Offset _globalToCanvasLocal(Offset globalPosition) {
-    final renderBox =
-        widget.canvasKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox == null) {
-      return globalPosition;
-    }
-    return renderBox.globalToLocal(globalPosition);
-  }
+  Offset _globalToCanvasLocal(Offset globalPosition) =>
+      this._globalToCanvasLocalExtracted(globalPosition);
 
   void _logCanvasTapFromLocal({
     required String source,
     required Offset localPosition,
-  }) {
-    final node = _hitTestNode(localPosition, logDetails: false);
-    final world = _screenToWorld(localPosition);
-    final target = node?.id ?? 'canvas-background';
-    debugPrint(
-      '[AutomatonGraphViewCanvas] Tap source=$source target=$target '
-      'tool=${_activeTool.name} local=$localPosition world=$world',
-    );
-  }
+  }) =>
+      this._logCanvasTapFromLocalExtracted(
+        source: source,
+        localPosition: localPosition,
+      );
 
   void _logCanvasTapFromGlobal({
     required String source,
     required Offset globalPosition,
-  }) {
-    final local = _globalToCanvasLocal(globalPosition);
-    _logCanvasTapFromLocal(source: source, localPosition: local);
-  }
-
-  void _handleCanvasTapDown(TapDownDetails details) {
-    final global = details.globalPosition;
-    final local = _globalToCanvasLocal(global);
-    _logCanvasTapFromLocal(source: 'tap-down', localPosition: local);
-  }
-
-  void _beginNodeDrag(GraphViewCanvasNode node, Offset localPosition) {
-    debugPrint('[AutomatonGraphViewCanvas] Begin drag for ${node.id}');
-    _hideTransitionOverlay();
-    _draggingNodeId = node.id;
-    _dragStartWorldPosition = _screenToWorld(localPosition);
-    final current = _controller.nodeById(node.id) ?? node;
-    _dragStartNodeCenter = Offset(current.x, current.y);
-    _isDraggingNode = true;
-    _didMoveDraggedNode = false;
-  }
-
-  void _updateNodeDrag(Offset localPosition) {
-    final nodeId = _draggingNodeId;
-    final dragStartWorld = _dragStartWorldPosition;
-    final dragStartNodeCenter = _dragStartNodeCenter;
-    if (nodeId == null ||
-        dragStartWorld == null ||
-        dragStartNodeCenter == null) {
-      return;
-    }
-    final currentWorld = _screenToWorld(localPosition);
-    final delta = currentWorld - dragStartWorld;
-    final nextPosition = dragStartNodeCenter + delta;
-    _controller.moveState(nodeId, nextPosition);
-    _didMoveDraggedNode = true;
-  }
-
-  void _endNodeDrag() {
-    _draggingNodeId = null;
-    _dragStartWorldPosition = null;
-    _dragStartNodeCenter = null;
-    _setCanvasPanSuppressed(false, reason: 'drag ended');
-    _isDraggingNode = false;
-    _didMoveDraggedNode = false;
-  }
-
-  Future<void> _handleCanvasTapUp(TapUpDetails details) async {
-    final global = details.globalPosition;
-    final local = _globalToCanvasLocal(global);
-    debugPrint(
-      '[AutomatonGraphViewCanvas] Tap up with active tool ${_activeTool.name} '
-      'local=$local',
-    );
-    final node = _hitTestNode(local, logDetails: false);
-
-    if (_activeTool == AutomatonCanvasTool.addState) {
-      if (_isDraggingNode || _didMoveDraggedNode || node != null) {
-        return;
-      }
-      final world = _screenToWorld(local);
-      _controller.addStateAt(world);
-      return;
-    }
-
-    if (_activeTool == AutomatonCanvasTool.transition) {
-      if (node != null) {
-        _handleNodeTap(node.id);
-      }
-      return;
-    }
-
-    if (_activeTool != AutomatonCanvasTool.selection) {
-      return;
-    }
-
-    if (_isDraggingNode || _didMoveDraggedNode) {
-      _lastTapNodeId = null;
-      _lastTapTimestamp = null;
-      return;
-    }
-
-    if (node == null) {
-      _lastTapNodeId = null;
-      _lastTapTimestamp = null;
-      return;
-    }
-
-    _registerNodeTap(node.id);
-  }
-
-  void _handleNodePanStart(DragStartDetails details) {
-    if (!_customization.enableStateDrag) {
-      return;
-    }
-    final node = _hitTestNode(details.localPosition);
-    if (node == null) {
-      return;
-    }
-    debugPrint(
-      '[AutomatonGraphViewCanvas] pan start gesture -> ${node.id} '
-      'local=${details.localPosition}',
-    );
-    _setCanvasPanSuppressed(true, reason: 'node drag start ${node.id}');
-    _beginNodeDrag(node, details.localPosition);
-  }
-
-  void _handleNodePanUpdate(DragUpdateDetails details) {
-    debugPrint('[AutomatonGraphViewCanvas] pan update delta=${details.delta}');
-    _updateNodeDrag(details.localPosition);
-  }
-
-  void _handleNodePanEnd(DragEndDetails details) {
-    final nodeId = _draggingNodeId;
-    final didMove = _didMoveDraggedNode;
-    debugPrint(
-      '[AutomatonGraphViewCanvas] pan end velocity=${details.velocity}',
-    );
-    _endNodeDrag();
-    if (!didMove &&
-        nodeId != null &&
-        _activeTool != AutomatonCanvasTool.transition) {
-      _handleNodeTapFromPan(nodeId);
-    }
-  }
-
-  void _handleNodePanCancel() {
-    debugPrint('[AutomatonGraphViewCanvas] pan cancel');
-    _endNodeDrag();
-  }
-
-  void _handleNodeTap(String nodeId) {
-    debugPrint(
-      '[AutomatonGraphViewCanvas] Node tapped $nodeId with '
-      'active tool ${_activeTool.name}',
-    );
-    if (_activeTool != AutomatonCanvasTool.transition) {
-      return;
-    }
-
-    if (_transitionSourceId == null) {
-      debugPrint(
-        '[AutomatonGraphViewCanvas] Transition source selected '
-        '-> $nodeId',
-      );
-      setState(() {
-        _transitionSourceId = nodeId;
-      });
-      return;
-    }
-
-    final sourceId = _transitionSourceId!;
-    setState(() {
-      _transitionSourceId = null;
-    });
-    debugPrint(
-      '[AutomatonGraphViewCanvas] Transition target selected '
-      '-> $nodeId (source: $sourceId)',
-    );
-    _showTransitionEditor(sourceId, nodeId);
-  }
-
-  void _handleNodeContextTap(String nodeId) {
-    final node = _controller.nodeById(nodeId);
-    if (node == null) {
-      return;
-    }
-    debugPrint('[AutomatonGraphViewCanvas] opening state options for $nodeId');
-    _showStateOptions(node);
-  }
-
-  void _handleNodeTapFromPan(String nodeId) {
-    _registerNodeTap(nodeId);
-  }
-
-  void _registerNodeTap(String nodeId) {
-    const doubleTapTimeout = Duration(milliseconds: 300);
-    final now = DateTime.now();
-    if (_lastTapNodeId == nodeId &&
-        _lastTapTimestamp != null &&
-        now.difference(_lastTapTimestamp!) <= doubleTapTimeout) {
-      debugPrint('[AutomatonGraphViewCanvas] Detected double tap on $nodeId');
-      _handleNodeContextTap(nodeId);
-      _lastTapNodeId = null;
-      _lastTapTimestamp = null;
-    } else {
-      _lastTapNodeId = nodeId;
-      _lastTapTimestamp = now;
-    }
-  }
-
-  Future<void> _showStateOptions(GraphViewCanvasNode node) async {
-    final labelController = TextEditingController(text: node.label);
-    var isInitial = node.isInitial;
-    var isAccepting = node.isAccepting;
-
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) {
-        final theme = Theme.of(context);
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 24,
-            right: 24,
-            top: 24,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-          ),
-          child: StatefulBuilder(
-            builder: (context, setModalState) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    node.label.isEmpty ? node.id : node.label,
-                    style: theme.textTheme.titleMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: labelController,
-                    decoration: const InputDecoration(labelText: 'State label'),
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (value) {
-                      final resolved = value.trim();
-                      if (resolved != node.label) {
-                        _controller.updateStateLabel(node.id, resolved);
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  SwitchListTile.adaptive(
-                    value: isInitial,
-                    title: const Text('Initial state'),
-                    onChanged: (value) {
-                      setModalState(() => isInitial = value);
-                      _controller.updateStateFlags(node.id, isInitial: value);
-                    },
-                  ),
-                  SwitchListTile.adaptive(
-                    value: isAccepting,
-                    title: const Text('Final state'),
-                    onChanged: (value) {
-                      setModalState(() => isAccepting = value);
-                      _controller.updateStateFlags(node.id, isAccepting: value);
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  FilledButton(
-                    onPressed: () {
-                      final resolved = labelController.text.trim();
-                      if (resolved != node.label) {
-                        _controller.updateStateLabel(node.id, resolved);
-                      }
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text('Save changes'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Close'),
-                  ),
-                ],
-              );
-            },
-          ),
-        );
-      },
-    );
-
-    labelController.dispose();
-  }
-
-  List<GraphViewCanvasEdge> _findExistingEdges(String fromId, String toId) {
-    return _controller.edges
-        .where((edge) => edge.fromStateId == fromId && edge.toStateId == toId)
-        .toList(growable: false);
-  }
-
-  Future<void> _showTransitionEditor(String fromId, String toId) async {
-    final existingEdges = _findExistingEdges(fromId, toId);
-    debugPrint(
-      '[AutomatonGraphViewCanvas] Preparing transition editor '
-      'from=$fromId to=$toId existing=${existingEdges.length}',
-    );
-    GraphViewCanvasEdge? existing;
-    var createNew = existingEdges.isEmpty;
-
-    if (!createNew) {
-      existing = existingEdges.firstWhereOrNull(
-        (edge) => _selectedTransitions.contains(edge.id),
+  }) =>
+      this._logCanvasTapFromGlobalExtracted(
+        source: source,
+        globalPosition: globalPosition,
       );
 
-      if (existing == null) {
-        final selection = await _promptTransitionEditChoice(existingEdges);
-        if (!mounted || selection == null) {
-          return;
-        }
-        if (selection.createNew) {
-          createNew = true;
-        } else {
-          existing = selection.edge;
-          if (existing == null) {
-            createNew = true;
-          }
-        }
-      }
-    }
+  void _handleCanvasTapDown(TapDownDetails details) =>
+      this._handleCanvasTapDownExtracted(details);
 
-    final payload = _transitionConfig.initialPayloadBuilder(existing);
-    final worldAnchor = !createNew && existing != null
-        ? resolveLinkAnchorWorld(_controller, existing) ??
-            Offset(existing.controlPointX ?? 0, existing.controlPointY ?? 0)
-        : _deriveControlPoint(fromId, toId);
-    final overlayData = AutomatonTransitionOverlayData(
-      fromStateId: fromId,
-      toStateId: toId,
-      worldAnchor: worldAnchor,
-      payload: payload,
-      transitionId: createNew ? null : existing?.id,
-      edge: existing,
-    );
+  void _beginNodeDrag(GraphViewCanvasNode node, Offset localPosition) =>
+      this._beginNodeDragExtracted(node, localPosition);
 
-    final overlayDisplayed = _showTransitionOverlay(overlayData);
+  void _updateNodeDrag(Offset localPosition) =>
+      this._updateNodeDragExtracted(localPosition);
 
-    if (overlayDisplayed) {
-      debugPrint(
-        '[AutomatonGraphViewCanvas] Showing transition editor '
-        'for $fromId → $toId (transitionId: ${existing?.id})',
-      );
-      setState(() {
-        _selectedTransitions.clear();
-        if (!createNew && existing?.id != null) {
-          _selectedTransitions.add(existing!.id);
-        }
-      });
-      return;
-    }
+  void _endNodeDrag() => this._endNodeDragExtracted();
 
-    debugPrint(
-      '[AutomatonGraphViewCanvas] Fallback modal for '
-      '$fromId → $toId (existing=${existing?.id})',
-    );
+  Future<void> _handleCanvasTapUp(TapUpDetails details) =>
+      this._handleCanvasTapUpExtracted(details);
 
-    final result = await showDialog<AutomatonTransitionPayload?>(
-      context: context,
-      builder: (context) {
-        final controller = AutomatonTransitionOverlayController(
-          onSubmit: (value) => Navigator.of(context).pop(value),
-          onCancel: () => Navigator.of(context).pop(null),
-        );
-        return Dialog(
-          insetPadding: const EdgeInsets.all(24),
-          child: _transitionConfig.overlayBuilder(
-            context,
-            overlayData,
-            controller,
-          ),
-        );
-      },
-    );
+  void _handleNodePanStart(DragStartDetails details) =>
+      this._handleNodePanStartExtracted(details);
 
-    if (!mounted || result == null) {
-      return;
-    }
+  void _handleNodePanUpdate(DragUpdateDetails details) =>
+      this._handleNodePanUpdateExtracted(details);
 
-    debugPrint(
-      '[AutomatonGraphViewCanvas] Persisting transition '
-      'for $fromId → $toId (transitionId: ${existing?.id})',
-    );
+  void _handleNodePanEnd(DragEndDetails details) =>
+      this._handleNodePanEndExtracted(details);
 
-    _transitionConfig.persistTransition(
-      AutomatonTransitionPersistRequest(
-        fromStateId: fromId,
-        toStateId: toId,
-        transitionId: createNew ? null : existing?.id,
-        payload: result,
-        worldAnchor: worldAnchor,
-        controller: _controller,
-      ),
-    );
-  }
+  void _handleNodePanCancel() => this._handleNodePanCancelExtracted();
+
+  void _handleNodeTap(String nodeId) => this._handleNodeTapExtracted(nodeId);
+
+  void _handleNodeContextTap(String nodeId) =>
+      this._handleNodeContextTapExtracted(nodeId);
+
+  void _handleNodeTapFromPan(String nodeId) =>
+      this._handleNodeTapFromPanExtracted(nodeId);
+
+  void _registerNodeTap(String nodeId) =>
+      this._registerNodeTapExtracted(nodeId);
+
+  Future<void> _showStateOptions(GraphViewCanvasNode node) =>
+      this._showStateOptionsExtracted(node);
+
+  List<GraphViewCanvasEdge> _findExistingEdges(String fromId, String toId) =>
+      this._findExistingEdgesExtracted(fromId, toId);
+
+  Future<void> _showTransitionEditor(String fromId, String toId) =>
+      this._showTransitionEditorExtracted(fromId, toId);
 
   Future<_TransitionEditChoice?> _promptTransitionEditChoice(
     List<GraphViewCanvasEdge> edges,
-  ) {
-    return showDialog<_TransitionEditChoice>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Selecione a transição'),
-          content: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 360),
-            child: SingleChildScrollView(
-              child: ListBody(
-                children: [
-                  for (final edge in edges)
-                    ListTile(
-                      key: ValueKey('automaton-transition-choice-${edge.id}'),
-                      leading: const Icon(Icons.edit_outlined),
-                      title: Text(edge.label.isEmpty ? edge.id : edge.label),
-                      subtitle: Text('${edge.fromStateId} → ${edge.toStateId}'),
-                      onTap: () => Navigator.of(
-                        context,
-                      ).pop(_TransitionEditChoice.edit(edge)),
-                    ),
-                  ListTile(
-                    key: const ValueKey(
-                      'automaton-transition-choice-create-new',
-                    ),
-                    leading: const Icon(Icons.add_outlined),
-                    title: const Text('Create new transition'),
-                    onTap: () => Navigator.of(
-                      context,
-                    ).pop(const _TransitionEditChoice.createNew()),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  ) =>
+      this._promptTransitionEditChoiceExtracted(edges);
 
-  Offset _deriveControlPoint(String fromId, String toId) {
-    final fromNode = _controller.nodeById(fromId);
-    final toNode = _controller.nodeById(toId);
-    if (fromNode == null || toNode == null) {
-      return Offset.zero;
-    }
+  Offset _deriveControlPoint(String fromId, String toId) =>
+      this._deriveControlPointExtracted(fromId, toId);
 
-    final fromCenter = Offset(
-      fromNode.x + _kNodeRadius,
-      fromNode.y + _kNodeRadius,
-    );
-    final toCenter = Offset(toNode.x + _kNodeRadius, toNode.y + _kNodeRadius);
+  void _handleGraphRevisionChanged() =>
+      this._handleGraphRevisionChangedExtracted();
 
-    if (fromId == toId) {
-      if (_customization.edgeRenderMode == JFlutterEdgeRenderMode.groupedFsa) {
-        final groupedLoops = _findExistingEdges(fromId, toId).length;
-        final extraOffset = resolveGroupedFsaLoopExtraOffset(groupedLoops);
-        return fromCenter.translate(0, -(_kNodeDiameter + extraOffset));
-      }
-      return fromCenter.translate(0, -_kNodeDiameter);
-    }
+  void _refreshTransitionOverlayFromGraph() =>
+      this._refreshTransitionOverlayFromGraphExtracted();
 
-    if (_customization.edgeRenderMode == JFlutterEdgeRenderMode.groupedFsa) {
-      final hasOpposingEdge = _findExistingEdges(toId, fromId).isNotEmpty;
-      return resolveGroupedFsaControlPoint(
-        fromId: fromId,
-        toId: toId,
-        fromCenter: fromCenter,
-        toCenter: toCenter,
-        hasOpposingTraffic: hasOpposingEdge,
-      );
-    }
+  void _updateTransitionOverlayPosition() =>
+      this._updateTransitionOverlayPositionExtracted();
 
-    final midpoint = Offset(
-      (fromCenter.dx + toCenter.dx) / 2,
-      (fromCenter.dy + toCenter.dy) / 2,
-    );
+  bool _showTransitionOverlay(AutomatonTransitionOverlayData data) =>
+      this._showTransitionOverlayExtracted(data);
 
-    final dx = toCenter.dx - fromCenter.dx;
-    final dy = toCenter.dy - fromCenter.dy;
-    var normal = Offset(-dy, dx);
-    if (normal.distanceSquared == 0) {
-      normal = const Offset(0, -1);
-    }
-    final existing = _findExistingEdges(fromId, toId).length;
-    final direction = existing.isEven ? 1.0 : -1.0;
-    final magnitude = (_kNodeDiameter * 0.8) + existing * 12;
-    final normalized = normal / normal.distance * magnitude * direction;
-    return midpoint + normalized;
-  }
-
-  void _handleGraphRevisionChanged() {
-    if (!mounted) {
-      return;
-    }
-    _refreshTransitionOverlayFromGraph();
-    _updateTransitionOverlayPosition();
-  }
-
-  void _refreshTransitionOverlayFromGraph() {
-    final state = _transitionOverlayState.value;
-    if (state == null) {
-      return;
-    }
-
-    final data = state.data;
-    final transitionId = data.transitionId;
-    if (transitionId != null) {
-      final edge = _controller.edgeById(transitionId);
-      if (edge == null) {
-        _hideTransitionOverlay();
-        return;
-      }
-      final anchor =
-          resolveLinkAnchorWorld(_controller, edge) ?? data.worldAnchor;
-      final payload = _transitionConfig.initialPayloadBuilder(edge);
-      _transitionOverlayState.value = state.copyWith(
-        data: data.copyWith(payload: payload, worldAnchor: anchor, edge: edge),
-      );
-      final shouldUpdateSelection = _selectedTransitions.length != 1 ||
-          !_selectedTransitions.contains(transitionId);
-      if (shouldUpdateSelection) {
-        setState(() {
-          _selectedTransitions
-            ..clear()
-            ..add(transitionId);
-        });
-      }
-    } else {
-      final anchor = _deriveControlPoint(data.fromStateId, data.toStateId);
-      _transitionOverlayState.value = state.copyWith(
-        data: data.copyWith(worldAnchor: anchor),
-      );
-    }
-  }
-
-  void _updateTransitionOverlayPosition() {
-    final state = _transitionOverlayState.value;
-    if (state == null) {
-      return;
-    }
-    final overlay = Overlay.maybeOf(context);
-    if (overlay == null) {
-      return;
-    }
-    final overlayBox = overlay.context.findRenderObject() as RenderBox?;
-    if (overlayBox == null || !overlayBox.hasSize) {
-      return;
-    }
-    final overlayPosition = overlayBox.size.center(Offset.zero);
-    if ((overlayPosition - state.overlayPosition).distance <= 0.5) {
-      return;
-    }
-    _transitionOverlayState.value = state.copyWith(
-      overlayPosition: overlayPosition,
-    );
-  }
-
-  bool _showTransitionOverlay(AutomatonTransitionOverlayData data) {
-    final overlayState = Overlay.maybeOf(context);
-    if (overlayState == null) {
-      return false;
-    }
-    final overlayBox = overlayState.context.findRenderObject() as RenderBox?;
-    if (overlayBox == null || !overlayBox.hasSize) {
-      return false;
-    }
-    final overlayPosition = overlayBox.size.center(Offset.zero);
-    _ensureTransitionOverlay(overlayState);
-    _transitionOverlayState.value = _GraphViewTransitionOverlayState(
-      data: data,
-      overlayPosition: overlayPosition,
-    );
-    return true;
-  }
-
-  void _ensureTransitionOverlay(OverlayState overlayState) {
-    if (_transitionOverlayEntry != null) {
-      return;
-    }
-    _transitionOverlayEntry = OverlayEntry(
-      builder: (context) {
-        return Material(
-          type: MaterialType.transparency,
-          child: ValueListenableBuilder<_GraphViewTransitionOverlayState?>(
-            valueListenable: _transitionOverlayState,
-            builder: (context, state, _) {
-              if (state == null) {
-                return const SizedBox.shrink();
-              }
-              final overlayController = AutomatonTransitionOverlayController(
-                onSubmit: (payload) => _handleOverlaySubmit(state, payload),
-                onCancel: _hideTransitionOverlay,
-              );
-              final overlayChild = _transitionConfig.overlayBuilder(
-                context,
-                state.data,
-                overlayController,
-              );
-              return Stack(
-                children: [
-                  Positioned(
-                    left: state.overlayPosition.dx,
-                    top: state.overlayPosition.dy,
-                    child: FractionalTranslation(
-                      translation: const Offset(-0.5, -0.5),
-                      child: overlayChild,
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        );
-      },
-    );
-    overlayState.insert(_transitionOverlayEntry!);
-  }
+  void _ensureTransitionOverlay(OverlayState overlayState) =>
+      this._ensureTransitionOverlayExtracted(overlayState);
 
   void _handleOverlaySubmit(
     _GraphViewTransitionOverlayState state,
     AutomatonTransitionPayload payload,
-  ) {
-    final data = state.data;
-    debugPrint(
-      '[AutomatonGraphViewCanvas] Persisting transition '
-      'for ${data.fromStateId} → ${data.toStateId} '
-      '(transitionId: ${data.transitionId})',
-    );
-    _transitionConfig.persistTransition(
-      AutomatonTransitionPersistRequest(
-        fromStateId: data.fromStateId,
-        toStateId: data.toStateId,
-        transitionId: data.transitionId,
-        payload: payload,
-        worldAnchor: data.worldAnchor,
-        controller: _controller,
-      ),
-    );
-    _hideTransitionOverlay();
-  }
+  ) =>
+      this._handleOverlaySubmitExtracted(state, payload);
 
-  void _hideTransitionOverlay() {
-    final hadOverlay = _transitionOverlayState.value != null;
-    final hadSelection = _selectedTransitions.isNotEmpty;
-    if (hadOverlay) {
-      _transitionOverlayState.value = null;
-    }
-    if (hadOverlay || hadSelection) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _selectedTransitions.clear();
-      });
-    }
-  }
+  void _hideTransitionOverlay() => this._hideTransitionOverlayExtracted();
 
   bool _isNodeHighlighted(
     GraphViewCanvasNode node,
     SimulationHighlight highlight,
-  ) {
-    return highlight.stateIds.contains(node.id) ||
-        node.id == _transitionSourceId;
-  }
-
+  ) =>
+      this._isNodeHighlightedExtracted(node, highlight);
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -1532,18 +576,11 @@ class _AutomatonGraphViewCanvasState
                                     motionPreset.viewportDuration,
                                 toggleAnimationDuration:
                                     motionPreset.nodeDuration,
-                                panAnimationCurve: motionPreset.viewportCurve,
-                                nodeAnimationCurve: motionPreset.nodeCurve,
                                 paint: Paint()
                                   ..color = theme.colorScheme.outline
                                   ..style = PaintingStyle.stroke
                                   ..strokeWidth = 2
                                   ..strokeCap = StrokeCap.round,
-                                includeAllVisibleNodes: true,
-                                repaint: Listenable.merge([
-                                  _edgeAnimationController,
-                                  _controller.graphRevision,
-                                ]),
                                 builder: (node) {
                                   final nodeId = node.key?.value?.toString();
                                   if (nodeId == null) {
@@ -1661,265 +698,5 @@ class _AutomatonGraphViewCanvasState
     };
 
     return gestures;
-  }
-}
-
-class _TransitionEditChoice {
-  const _TransitionEditChoice._({required this.createNew, this.edge});
-
-  const _TransitionEditChoice.edit(GraphViewCanvasEdge edge)
-      : this._(createNew: false, edge: edge);
-
-  const _TransitionEditChoice.createNew() : this._(createNew: true);
-
-  final bool createNew;
-  final GraphViewCanvasEdge? edge;
-}
-
-class _GraphViewTransitionOverlayState {
-  const _GraphViewTransitionOverlayState({
-    required this.data,
-    required this.overlayPosition,
-  });
-
-  final AutomatonTransitionOverlayData data;
-  final Offset overlayPosition;
-
-  _GraphViewTransitionOverlayState copyWith({
-    AutomatonTransitionOverlayData? data,
-    Offset? overlayPosition,
-  }) {
-    return _GraphViewTransitionOverlayState(
-      data: data ?? this.data,
-      overlayPosition: overlayPosition ?? this.overlayPosition,
-    );
-  }
-}
-
-class _AutomatonGraphSugiyamaAlgorithm extends SugiyamaAlgorithm {
-  _AutomatonGraphSugiyamaAlgorithm({
-    required this.controller,
-    required SugiyamaConfiguration configuration,
-  }) : super(configuration);
-
-  final BaseGraphViewCanvasController<dynamic, dynamic> controller;
-
-  @override
-  Size run(Graph? graph, double shiftX, double shiftY) {
-    if (graph == null || graph.nodes.isEmpty) {
-      return Size.zero;
-    }
-
-    var minX = double.infinity;
-    var minY = double.infinity;
-    var maxX = double.negativeInfinity;
-    var maxY = double.negativeInfinity;
-
-    for (final node in graph.nodes) {
-      final position = node.position;
-
-      node.position = position;
-
-      minX = math.min(minX, position.dx);
-      minY = math.min(minY, position.dy);
-      maxX = math.max(maxX, position.dx + node.width);
-      maxY = math.max(maxY, position.dy + node.height);
-    }
-
-    if (minX == double.infinity || minY == double.infinity) {
-      return Size.zero;
-    }
-
-    final width = (maxX - minX).clamp(0.0, double.infinity) + _kNodeDiameter;
-    final height = (maxY - minY).clamp(0.0, double.infinity) + _kNodeDiameter;
-
-    return Size(width, height);
-  }
-}
-
-class _AutomatonGraphNode extends StatelessWidget {
-  const _AutomatonGraphNode({
-    required this.label,
-    required this.isInitial,
-    required this.isAccepting,
-    required this.isHighlighted,
-    required this.motionPreset,
-  });
-
-  final String label;
-  final bool isInitial;
-  final bool isAccepting;
-  final bool isHighlighted;
-  final _CanvasMotionPreset motionPreset;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final borderColor =
-        isHighlighted ? theme.colorScheme.primary : theme.colorScheme.outline;
-    final backgroundColor = isHighlighted
-        ? theme.colorScheme.primaryContainer
-        : theme.colorScheme.surface;
-
-    final badgeColor = theme.colorScheme.primary;
-
-    return AnimatedScale(
-      duration: motionPreset.highlightDuration,
-      curve: motionPreset.highlightCurve,
-      scale: isHighlighted ? motionPreset.highlightScale : 1.0,
-      child: SizedBox(
-        width: _kNodeDiameter,
-        height: _kNodeDiameter,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Positioned.fill(
-              child: AnimatedContainer(
-                duration: motionPreset.highlightDuration,
-                curve: motionPreset.highlightCurve,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: backgroundColor,
-                  border: Border.all(color: borderColor, width: 3),
-                ),
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        label,
-                        style: theme.textTheme.titleMedium,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            if (isInitial)
-              Positioned(
-                left: -_kInitialArrowSize.width + 1,
-                top: _kNodeRadius - (_kInitialArrowSize.height / 2),
-                child: CustomPaint(
-                  size: _kInitialArrowSize,
-                  painter: _InitialStateArrowPainter(color: borderColor),
-                ),
-              ),
-            if (isAccepting)
-              Positioned.fill(
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: badgeColor, width: 2),
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _InitialStateArrowPainter extends CustomPainter {
-  const _InitialStateArrowPainter({required this.color});
-
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
-    final path = Path()
-      ..moveTo(0, 0)
-      ..lineTo(size.width, size.height / 2)
-      ..lineTo(0, size.height)
-      ..close();
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _InitialStateArrowPainter oldDelegate) {
-    return oldDelegate.color != color;
-  }
-}
-
-typedef _NodeHitTester = GraphViewCanvasNode? Function(Offset globalPosition);
-typedef _ToolResolver = AutomatonCanvasTool Function();
-
-class _NodePanGestureRecognizer extends PanGestureRecognizer {
-  _NodePanGestureRecognizer({
-    required this.hitTester,
-    required this.toolResolver,
-    this.onPointerDown,
-    this.onDragAccepted,
-    this.onDragReleased,
-  });
-
-  final _NodeHitTester hitTester;
-  final _ToolResolver toolResolver;
-  final ValueChanged<Offset>? onPointerDown;
-  final VoidCallback? onDragAccepted;
-  final VoidCallback? onDragReleased;
-
-  int? _activePointer;
-
-  @override
-  void addAllowedPointer(PointerDownEvent event) {
-    debugPrint(
-      '[NodePanRecognizer] addAllowedPointer pointer ${event.pointer} '
-      'tool=${toolResolver().name} active=$_activePointer '
-      'position=${event.position} dragStart=$dragStartBehavior',
-    );
-    onPointerDown?.call(event.position);
-    if (_activePointer != null) {
-      debugPrint('[NodePanRecognizer] pointer already active -> ignore');
-      return;
-    }
-    final tool = toolResolver();
-    if (tool == AutomatonCanvasTool.transition ||
-        tool == AutomatonCanvasTool.addState) {
-      debugPrint('[NodePanRecognizer] tool ${tool.name} -> ignore');
-      return;
-    }
-    final node = hitTester(event.position);
-    if (node == null) {
-      debugPrint('[NodePanRecognizer] no node hit -> ignore');
-      return;
-    }
-    _activePointer = event.pointer;
-    debugPrint(
-      '[NodePanRecognizer] tracking pointer ${event.pointer} '
-      'for node ${node.id}',
-    );
-    onDragAccepted?.call();
-    super.addAllowedPointer(event);
-    resolvePointer(event.pointer, GestureDisposition.accepted);
-  }
-
-  @override
-  void rejectGesture(int pointer) {
-    debugPrint('[NodePanRecognizer] rejectGesture pointer=$pointer');
-    if (pointer == _activePointer) {
-      _activePointer = null;
-      onDragReleased?.call();
-    }
-    super.rejectGesture(pointer);
-  }
-
-  @override
-  void didStopTrackingLastPointer(int pointer) {
-    debugPrint('[NodePanRecognizer] didStopTracking pointer=$pointer');
-    if (pointer == _activePointer) {
-      _activePointer = null;
-      onDragReleased?.call();
-    }
-    super.didStopTrackingLastPointer(pointer);
   }
 }

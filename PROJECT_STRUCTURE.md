@@ -53,8 +53,6 @@ jflutter/
 ├── analysis_options.yaml          # Static analysis configuration
 ├── pubspec.lock                   # Locked dependency versions
 ├── README.md                      # Project documentation
-├── CLAUDE.md                      # AI assistant guidance
-├── AGENTS.md                      # Repository-specific contribution guide
 ├── PROJECT_STRUCTURE.md           # This file
 ├── USER_GUIDE.md                  # GraphView canvas working guide
 ├── Requisitos.md                  # Requisitos funcionais (PT-BR)

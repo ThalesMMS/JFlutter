@@ -1,0 +1,271 @@
+{
+  "@@locale": "en",
+  "selectTransition": "Select transition",
+  "@selectTransition": {
+    "description": "Title for the transition selection dialog."
+  },
+  "createNewTransition": "Create new transition",
+  "@createNewTransition": {
+    "description": "Action label for creating a new transition from the selection dialog."
+  },
+  "contextAwareHelp": "Context-Aware Help",
+  "@contextAwareHelp": {
+    "description": "Tooltip for opening contextual help for the current regex workflow."
+  },
+  "algorithms": "Algorithms",
+  "@algorithms": {
+    "description": "Label for the algorithms section."
+  },
+  "regularExpressionTitle": "Regular Expression",
+  "@regularExpressionTitle": {
+    "description": "Title for the regular expression page."
+  },
+  "regularExpressionLabel": "Regular Expression:",
+  "@regularExpressionLabel": {
+    "description": "Form label for the primary regular expression input."
+  },
+  "regularExpressionHint": "Enter regular expression (e.g., a*b+)",
+  "@regularExpressionHint": {
+    "description": "Hint text shown in the regular expression input."
+  },
+  "validateRegex": "Validate Regex",
+  "@validateRegex": {
+    "description": "Button label for validating the entered regular expression."
+  },
+  "enterRegexToValidate": "Enter a regular expression to validate.",
+  "@enterRegexToValidate": {
+    "description": "Validation message shown when no regular expression was entered."
+  },
+  "validRegex": "Valid regex",
+  "@validRegex": {
+    "description": "Status message shown when the regular expression is valid."
+  },
+  "invalidRegex": "Invalid regex",
+  "@invalidRegex": {
+    "description": "Status message shown when the regular expression is invalid."
+  },
+  "testStringLabel": "Test String:",
+  "@testStringLabel": {
+    "description": "Form label for the test string input."
+  },
+  "testStringHint": "Enter string to test",
+  "@testStringHint": {
+    "description": "Hint text shown in the test string input."
+  },
+  "testStringTooltip": "Test String",
+  "@testStringTooltip": {
+    "description": "Tooltip for the test string action."
+  },
+  "matches": "Matches!",
+  "@matches": {
+    "description": "Result label shown when the test string matches the regular expression."
+  },
+  "doesNotMatch": "Does not match",
+  "@doesNotMatch": {
+    "description": "Result label shown when the test string does not match the regular expression."
+  },
+  "convertToAutomaton": "Convert to Automaton:",
+  "@convertToAutomaton": {
+    "description": "Section label for regular-expression-to-automaton conversion actions."
+  },
+  "convertToNfa": "Convert to NFA",
+  "@convertToNfa": {
+    "description": "Button label for converting the regular expression to an NFA."
+  },
+  "convertToDfa": "Convert to DFA",
+  "@convertToDfa": {
+    "description": "Button label for converting the regular expression to a DFA."
+  },
+  "simplifyOutput": "Simplify Output",
+  "@simplifyOutput": {
+    "description": "Switch label for simplifying converted regex output."
+  },
+  "simplifyOutputSubtitle": "Apply algebraic simplifications to converted automata",
+  "@simplifyOutputSubtitle": {
+    "description": "Subtitle explaining the simplify output switch."
+  },
+  "compareRegularExpressions": "Compare Regular Expressions:",
+  "@compareRegularExpressions": {
+    "description": "Section label for comparing two regular expressions."
+  },
+  "comparisonRegexHint": "Enter second regular expression",
+  "@comparisonRegexHint": {
+    "description": "Hint text for the comparison regular expression input."
+  },
+  "compareEquivalence": "Compare Equivalence",
+  "@compareEquivalence": {
+    "description": "Button label for checking whether two regular expressions are equivalent."
+  },
+  "regexHelp": "Regex Help",
+  "@regexHelp": {
+    "description": "Title for the regular expression help dialog."
+  },
+  "regexHelpPatterns": "Common patterns:\n• a* - zero or more a's\n• a+ - one or more a's\n• a? - zero or one a\n• a|b - a or b\n• (ab)* - zero or more ab's\n• [abc] - any of a, b, or c",
+  "@regexHelpPatterns": {
+    "description": "Help text listing common regular expression patterns and meanings."
+  },
+  "convertedRegexSimplified": "Converted Regex (Simplified)",
+  "@convertedRegexSimplified": {
+    "description": "Header for a converted regular expression after simplification."
+  },
+  "convertedRegexRaw": "Converted Regex (Raw)",
+  "@convertedRegexRaw": {
+    "description": "Header for a converted regular expression before simplification."
+  },
+  "regexCopiedToClipboard": "Regex copied to clipboard",
+  "@regexCopiedToClipboard": {
+    "description": "Snackbar message shown after copying a regular expression."
+  },
+  "copyToClipboard": "Copy to clipboard",
+  "@copyToClipboard": {
+    "description": "Tooltip or button label for copying text to the clipboard."
+  },
+  "toggleOffRawOutput": "Toggle off to see raw output",
+  "@toggleOffRawOutput": {
+    "description": "Tooltip shown when the simplify output toggle is on."
+  },
+  "toggleOnSimplifiedOutput": "Toggle on to see simplified output",
+  "@toggleOnSimplifiedOutput": {
+    "description": "Tooltip shown when the simplify output toggle is off."
+  },
+  "enterValidRegexFirst": "Please enter a valid regular expression first",
+  "@enterValidRegexFirst": {
+    "description": "Snackbar message shown before conversion when the regex input is invalid."
+  },
+  "failedConvertRegexToNfa": "Failed to convert regex to NFA",
+  "@failedConvertRegexToNfa": {
+    "description": "Error message shown when regex-to-NFA conversion fails."
+  },
+  "convertedRegexToNfa": "Converted regex to NFA. View it in the FSA workspace.",
+  "@convertedRegexToNfa": {
+    "description": "Success message shown after converting a regex to an NFA."
+  },
+  "failedConvertNfaToDfa": "Failed to convert NFA to DFA",
+  "@failedConvertNfaToDfa": {
+    "description": "Error message shown when NFA-to-DFA conversion fails."
+  },
+  "convertedRegexToDfa": "Converted regex to DFA. Opening the DFA in the FSA workspace.",
+  "@convertedRegexToDfa": {
+    "description": "Success message shown after converting a regex through NFA to DFA."
+  },
+  "failedSimplifyRegex": "Failed to simplify regex",
+  "@failedSimplifyRegex": {
+    "description": "Error message shown when regex simplification fails."
+  },
+  "failedAnalyzeRegex": "Failed to analyze regex",
+  "@failedAnalyzeRegex": {
+    "description": "Error message shown when regex complexity analysis fails."
+  },
+  "failedGenerateSampleStrings": "Failed to generate sample strings",
+  "@failedGenerateSampleStrings": {
+    "description": "Error message shown when sample string generation fails."
+  },
+  "simplificationSteps": "Simplification Steps",
+  "@simplificationSteps": {
+    "description": "Title for the regex simplification steps panel."
+  },
+  "hideSteps": "Hide steps",
+  "@hideSteps": {
+    "description": "Tooltip or button label for hiding simplification steps."
+  },
+  "showSteps": "Show steps",
+  "@showSteps": {
+    "description": "Tooltip or button label for showing simplification steps."
+  },
+  "simplifyWithSteps": "Simplify with Steps",
+  "@simplifyWithSteps": {
+    "description": "Button label for running regex simplification with step details."
+  },
+  "clear": "Clear",
+  "@clear": {
+    "description": "Button label for clearing regex simplification results."
+  },
+  "resimplify": "Re-simplify",
+  "@resimplify": {
+    "description": "Button label for rerunning regex simplification."
+  },
+  "originalLabel": "Original:",
+  "@originalLabel": {
+    "description": "Label for the original regex value."
+  },
+  "rulesAppliedLabel": "rule(s) applied",
+  "@rulesAppliedLabel": {
+    "description": "Label suffix for the number of simplification rules applied."
+  },
+  "simplifiedLabel": "Simplified:",
+  "@simplifiedLabel": {
+    "description": "Label for the simplified regex value."
+  },
+  "simplifiedRegexCopiedToClipboard": "Simplified regex copied to clipboard",
+  "@simplifiedRegexCopiedToClipboard": {
+    "description": "Snackbar message shown after copying a simplified regex."
+  },
+  "copySimplifiedRegex": "Copy simplified regex",
+  "@copySimplifiedRegex": {
+    "description": "Tooltip or button label for copying the simplified regex."
+  },
+  "saved": "Saved",
+  "@saved": {
+    "description": "Short status label indicating saved work."
+  },
+  "charactersAbbreviation": "chars",
+  "@charactersAbbreviation": {
+    "description": "Abbreviation for a character count."
+  },
+  "reduction": "Reduction",
+  "@reduction": {
+    "description": "Label for the percentage reduction metric."
+  },
+  "time": "Time",
+  "@time": {
+    "description": "Label for elapsed processing time."
+  },
+  "stepLabel": "Step",
+  "@stepLabel": {
+    "description": "Label for a simplification step number."
+  },
+  "ofLabel": "of",
+  "@ofLabel": {
+    "description": "Separator label between current and total step counts."
+  },
+  "previousStep": "Previous step",
+  "@previousStep": {
+    "description": "Tooltip or button label for moving to the previous simplification step."
+  },
+  "nextStep": "Next step",
+  "@nextStep": {
+    "description": "Tooltip or button label for moving to the next simplification step."
+  },
+  "allSteps": "All Steps:",
+  "@allSteps": {
+    "description": "Header for the list of all simplification steps."
+  },
+  "transformation": "Transformation",
+  "@transformation": {
+    "description": "Label for the before-and-after transformation section."
+  },
+  "before": "Before",
+  "@before": {
+    "description": "Label for the expression before a simplification step."
+  },
+  "after": "After",
+  "@after": {
+    "description": "Label for the expression after a simplification step."
+  },
+  "rule": "Rule",
+  "@rule": {
+    "description": "Label for the simplification rule used by a step."
+  },
+  "starHeight": "Star Height",
+  "@starHeight": {
+    "description": "Metric label for regular expression star height."
+  },
+  "nestingDepth": "Nesting Depth",
+  "@nestingDepth": {
+    "description": "Metric label for regular expression nesting depth."
+  },
+  "operators": "Operators",
+  "@operators": {
+    "description": "Metric label for the number of regex operators."
+  }
+}

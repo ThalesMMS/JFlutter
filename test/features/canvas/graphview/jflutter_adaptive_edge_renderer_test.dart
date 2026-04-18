@@ -102,7 +102,6 @@ void main() {
         destination,
         key: const ValueKey('edge-id'),
         label: 'edge',
-        controlPoint: const Offset(160, -80),
       );
 
       graph

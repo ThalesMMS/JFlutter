@@ -1,0 +1,345 @@
+part of 'transition_editors_test.dart';
+
+void _registerTransitionLabelEditorFormTests() {
+  group('TransitionLabelEditorForm', () {
+    testWidgets('renders with initial value', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TransitionLabelEditorForm(
+              initialValue: 'a,b',
+              onSubmit: (_) {},
+              onCancel: () {},
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('a,b'), findsOneWidget);
+    });
+
+    testWidgets('calls onSubmit when save button is pressed', (tester) async {
+      String? submittedValue;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TransitionLabelEditorForm(
+              initialValue: 'a,b',
+              onSubmit: (value) {
+                submittedValue = value;
+              },
+              onCancel: () {},
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+
+      expect(submittedValue, equals('a,b'));
+    });
+
+    testWidgets('calls onCancel when cancel button is pressed', (tester) async {
+      var cancelCalled = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TransitionLabelEditorForm(
+              initialValue: 'a,b',
+              onSubmit: (_) {},
+              onCancel: () {
+                cancelCalled = true;
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(cancelCalled, isTrue);
+    });
+
+    testWidgets('submits with updated value after text input', (tester) async {
+      String? submittedValue;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TransitionLabelEditorForm(
+              initialValue: 'a,b',
+              onSubmit: (value) {
+                submittedValue = value;
+              },
+              onCancel: () {},
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), 'x,y,z');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+
+      expect(submittedValue, equals('x,y,z'));
+    });
+
+    testWidgets('trims whitespace from submitted value', (tester) async {
+      String? submittedValue;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TransitionLabelEditorForm(
+              initialValue: '',
+              onSubmit: (value) {
+                submittedValue = value;
+              },
+              onCancel: () {},
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), '  a,b  ');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+
+      expect(submittedValue, equals('a,b'));
+    });
+
+    testWidgets('submits on enter key press', (tester) async {
+      String? submittedValue;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TransitionLabelEditorForm(
+              initialValue: 'a,b',
+              onSubmit: (value) {
+                submittedValue = value;
+              },
+              onCancel: () {},
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(TextField));
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+
+      expect(submittedValue, equals('a,b'));
+    });
+
+    testWidgets('cancels on escape key press', (tester) async {
+      var cancelCalled = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TransitionLabelEditorForm(
+              initialValue: 'a,b',
+              onSubmit: (_) {},
+              onCancel: () {
+                cancelCalled = true;
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(TextField));
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+
+      expect(cancelCalled, isTrue);
+    });
+
+    testWidgets('renders with custom labels', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TransitionLabelEditorForm(
+              initialValue: 'test',
+              onSubmit: (_) {},
+              onCancel: () {},
+              fieldLabel: 'Custom Field',
+              cancelLabel: 'Dismiss',
+              saveLabel: 'Apply',
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('Custom Field'), findsOneWidget);
+      expect(find.text('Dismiss'), findsOneWidget);
+      expect(find.text('Apply'), findsOneWidget);
+    });
+
+    testWidgets('renders touch-optimized buttons when enabled', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TransitionLabelEditorForm(
+              initialValue: 'test',
+              onSubmit: (_) {},
+              onCancel: () {},
+              touchOptimized: true,
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final outlinedButton = find.byType(OutlinedButton);
+      expect(outlinedButton, findsOneWidget);
+
+      final filledButton = find.byType(FilledButton);
+      expect(filledButton, findsOneWidget);
+    });
+
+    testWidgets('renders standard buttons when touch-optimized disabled', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TransitionLabelEditorForm(
+              initialValue: 'test',
+              onSubmit: (_) {},
+              onCancel: () {},
+              touchOptimized: false,
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final textButton = find.byType(TextButton);
+      expect(textButton, findsOneWidget);
+
+      final filledButton = find.byType(FilledButton);
+      expect(filledButton, findsOneWidget);
+    });
+
+    testWidgets('renders delete action when delete callback is provided', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TransitionLabelEditorForm(
+              initialValue: 'test',
+              onSubmit: (_) {},
+              onCancel: () {},
+              onDelete: () {},
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('Delete'), findsOneWidget);
+    });
+
+    testWidgets('calls onDelete when delete button is pressed', (tester) async {
+      var deleteCalled = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TransitionLabelEditorForm(
+              initialValue: 'test',
+              onSubmit: (_) {},
+              onCancel: () {},
+              onDelete: () {
+                deleteCalled = true;
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+
+      expect(deleteCalled, isTrue);
+    });
+
+    testWidgets('autofocuses text field when enabled', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TransitionLabelEditorForm(
+              initialValue: 'test',
+              onSubmit: (_) {},
+              onCancel: () {},
+              autofocus: true,
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final textField = tester.widget<TextField>(find.byType(TextField));
+      expect(textField.autofocus, isTrue);
+    });
+
+    testWidgets('submits on numpad enter key press', (tester) async {
+      String? submittedValue;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TransitionLabelEditorForm(
+              initialValue: 'test',
+              onSubmit: (value) {
+                submittedValue = value;
+              },
+              onCancel: () {},
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(TextField));
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.numpadEnter);
+      await tester.pumpAndSettle();
+
+      expect(submittedValue, equals('test'));
+    });
+  });
+}

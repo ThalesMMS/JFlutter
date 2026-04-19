@@ -55,9 +55,7 @@ dependencies:
 
   # Graph-based canvas primitives
   graphview:
-    git:
-      url: ../graph
-      ref: 57947b8be3cba46285db51ed0842f875ac6b5fde
+    path: graphview
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -106,10 +104,6 @@ dev_dependencies:
   json_serializable: ^6.11.1
   golden_toolkit: ^0.15.0
 
-dependency_overrides:
-  graphview:
-    path: ../graph
-
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -136,6 +130,9 @@ flutter:
     - jflutter_js/examples/apda_palindrome.json
     # Turing machine example
     - jflutter_js/examples/tm_binary_to_unary.json
+    # License texts bundled for in-app access and binary distribution
+    - LICENSE.txt
+    - LICENSE_JFLAP.txt
 
 flutter_launcher_icons:
   image_path: "icon.PNG"

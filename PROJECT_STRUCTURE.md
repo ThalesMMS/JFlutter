@@ -54,6 +54,7 @@ jflutter/
 ├── pubspec.lock                   # Locked dependency versions
 ├── README.md                      # Project documentation
 ├── PROJECT_STRUCTURE.md           # This file
+├── LEGAL_DISTRIBUTION.md          # Apple App Store and distribution rights determination
 ├── USER_GUIDE.md                  # GraphView canvas working guide
 ├── Requisitos.md                  # Requisitos funcionais (PT-BR)
 ├── bugs.md                        # Active bug tracker
@@ -394,6 +395,7 @@ web/
 - `pubspec.yaml` - Flutter project configuration and dependencies
 - `analysis_options.yaml` - Static analysis and linting rules
 - `README.md` - Project documentation and setup instructions
+- `LEGAL_DISTRIBUTION.md` - Apple App Store and distribution rights determination
 - `LICENSE.txt` - License information
 
 ### Documentation
@@ -407,6 +409,7 @@ web/
 - `References/` - Authoritative Dart/Python implementations mirrored from upstream projects
 - `Requisitos.md` - Functional requirements in Portuguese
 - `LICENSE.txt` / `LICENSE_JFLAP.txt` - Licensing information
+- `LEGAL_DISTRIBUTION.md` - JFLAP-derived content analysis, App Store distribution determination, and release compliance requirements
 
 ## Architecture Principles
 

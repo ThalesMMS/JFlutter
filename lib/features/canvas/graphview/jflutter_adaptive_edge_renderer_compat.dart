@@ -4,11 +4,12 @@ final Expando<Offset> _jflutterEdgeControlPoints =
     Expando<Offset>('jflutterEdgeControlPoint');
 
 void setJFlutterEdgeControlPoint(Edge edge, Offset? controlPoint) {
+  edge.controlPoint = controlPoint;
   _jflutterEdgeControlPoints[edge] = controlPoint;
 }
 
 Offset? jFlutterEdgeControlPoint(Edge edge) {
-  return _jflutterEdgeControlPoints[edge];
+  return edge.controlPoint ?? _jflutterEdgeControlPoints[edge];
 }
 
 class EdgePathGeometry {

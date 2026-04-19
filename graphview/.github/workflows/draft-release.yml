@@ -1,0 +1,108 @@
+name: Draft release from changelog
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing git tag to draft a release for (for example v1.5.2)
+        required: true
+        type: string
+      prerelease:
+        description: Mark the draft as a prerelease
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  draft-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate version and extract changelog notes
+        id: validate
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          git fetch --force --tags origin
+          git rev-parse --verify "refs/tags/${INPUT_TAG}" >/dev/null
+
+          export VERSION="${INPUT_TAG#v}"
+
+          python3 - <<'PY'
+          import os
+          import pathlib
+          import re
+          import sys
+
+          version = os.environ['VERSION']
+          pubspec = pathlib.Path('graphview/pubspec.yaml').read_text()
+          version_match = re.search(r'^version:\s*(\S+)\s*$', pubspec, re.MULTILINE)
+          name_match = re.search(r'^name:\s*(\S+)\s*$', pubspec, re.MULTILINE)
+          if not version_match:
+              raise SystemExit('Could not find version in pubspec.yaml')
+          if not name_match:
+              raise SystemExit('Could not find package name in pubspec.yaml')
+          pubspec_version = version_match.group(1)
+          package_name = name_match.group(1)
+          if pubspec_version != version:
+              raise SystemExit(f'pubspec.yaml version {pubspec_version} does not match tag version {version}')
+
+          changelog = pathlib.Path('graphview/CHANGELOG.md').read_text()
+          escaped_version = re.escape(version)
+          heading_version = rf'(?:\[v?{escaped_version}\]|v?{escaped_version})'
+          heading_suffix = r'(?:[^\S\n]+(?:[-:][^\S\n]*)?[^\n]*?)?'
+          pattern = re.compile(
+              rf'^##[^\S\n]+{heading_version}{heading_suffix}[^\S\n]*$\n(?P<body>.*?)(?=^##\s+|\Z)',
+              re.MULTILINE | re.DOTALL,
+          )
+          match = pattern.search(changelog)
+          if not match:
+              raise SystemExit(f'CHANGELOG.md does not contain a section for {version}')
+
+          notes = match.group('body').strip()
+          if not notes:
+              raise SystemExit(f'CHANGELOG.md section for {version} is empty')
+
+          pathlib.Path('release_notes.md').write_text(notes + '\n')
+          github_output = pathlib.Path(os.environ['GITHUB_OUTPUT'])
+          with github_output.open('a') as fh:
+              fh.write(f'package_name={package_name}\n')
+              fh.write(f'version={version}\n')
+          PY
+
+      - name: Create or update draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ inputs.tag }}
+          PRERELEASE: ${{ inputs.prerelease }}
+          PACKAGE_NAME: ${{ steps.validate.outputs.package_name }}
+          VERSION: ${{ steps.validate.outputs.version }}
+        run: |
+          set -euo pipefail
+          title="${PACKAGE_NAME} ${VERSION}"
+
+          if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
+            gh release edit "$TAG" \
+              --repo "$REPO" \
+              --draft=true \
+              --prerelease="$PRERELEASE" \
+              --title "$title" \
+              --notes-file release_notes.md \
+              --verify-tag
+          else
+            args=(release create "$TAG" --repo "$REPO" --draft --verify-tag --title "$title" --notes-file release_notes.md)
+            if [ "$PRERELEASE" = "true" ]; then
+              args+=(--prerelease)
+            fi
+            gh "${args[@]}"
+          fi

@@ -140,9 +140,10 @@ export JFLUTTER_KEY_PASSWORD="$JFLUTTER_KEY_PASSWORD"
 
 ### Platform Support
 - **Android** – Primary target with touch-first workflows
-- **iOS** – Daily-driver support, verified on current iOS devices
+- **iOS / iPadOS** – Daily-driver support on iPhone and iPad
+- **macOS** – Native desktop experience, planned for inclusion in the v1.0 App Store release
 - **Web** – Responsive build suitable for classroom demos
-- **Desktop** – Windows, macOS, and Linux builds share the same UI
+- **Windows / Linux** – Desktop builds share the same UI architecture
 
 ## How to Use
 
@@ -262,7 +263,7 @@ The `References/` directory contains authoritative implementations used as the s
 Try to maintain compatibility. Avoid changing core automata/grammar/pda/turing machine algorithms without discussing it first.
 
 ### Development Guidelines
-- Optimise for mobile devices and accessibility
+- Optimise for phone, tablet, and desktop layouts with accessibility in mind
 - Keep tests and documentation current
 - Coordinate changes to shared algorithms before altering behaviour
 
@@ -291,8 +292,15 @@ This project is distributed under a dual license structure:
 
 ### License Summary
 - The **Flutter port** (all new code) is licensed under Apache 2.0, allowing free use, modification, and distribution with proper attribution
+- JFlutter is treated conservatively as a **JFLAP derivative work** where it includes JFLAP-derived algorithms, concepts, data structures, XML import/export behavior, and `.jff` compatibility
 - The **original JFLAP algorithms and concepts** remain under the original JFLAP license, which prohibits commercial use
 - This dual structure ensures compliance with the original license while allowing the Flutter port to be freely used and modified
+
+### Distribution
+- JFlutter may be distributed via the Apple App Store for iOS, iPadOS, and macOS, and via Google Play Store, as a free application only
+- Commercial distribution, paid downloads, in-app purchases, subscriptions, and advertising are prohibited by the JFLAP license
+- See [LEGAL_DISTRIBUTION.md](LEGAL_DISTRIBUTION.md) for the full legal analysis
+- Distributed binaries must include `LICENSE.txt` and `LICENSE_JFLAP.txt`, and the app must keep both license texts accessible to users
 
 ## Acknowledgments & References
 
@@ -337,7 +345,7 @@ This project is distributed under a dual license structure:
 - **Academic Automata Theory** - Hopcroft, Ullman, and Sipser algorithms
 
 ### Technology Stack & Frameworks
-- **Flutter Team** - For the excellent mobile framework
+- **Flutter Team** - For the excellent cross-platform framework
 - **Dart Team** - For the programming language
 - **Riverpod Team** - For state management solutions
 - **GraphView Contributors** - For the graph rendering toolkit powering the native automaton canvas

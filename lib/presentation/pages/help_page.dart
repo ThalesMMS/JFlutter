@@ -10,10 +10,13 @@
 //
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 
 import '../widgets/help_search_delegate.dart';
 
 part 'help_page_content.dart';
+part 'license_text_card.dart';
+part 'licenses_help_content.dart';
 
 /// Help page with interactive documentation and tutorials
 /// Based on JFLAP's HelpAction.java and documentation structure
@@ -69,6 +72,11 @@ class _HelpPageState extends ConsumerState<HelpPage> {
       title: 'Troubleshooting',
       icon: Icons.help_outline,
       content: _TroubleshootingContent(),
+    ),
+    HelpSection(
+      title: 'Licenses',
+      icon: Icons.policy_outlined,
+      content: _LicensesHelpContent(),
     ),
   ];
 

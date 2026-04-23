@@ -155,6 +155,10 @@ void main() {
     await tester.pump();
 
     expect(addStateInvoked, isTrue);
+    expect(
+      tester.getSize(find.widgetWithIcon(IconButton, Icons.add)).height,
+      greaterThanOrEqualTo(44),
+    );
   });
 
   testWidgets('Mobile layout renders filled buttons with labels', (
@@ -179,6 +183,52 @@ void main() {
     expect(find.text('Fit to content'), findsOneWidget);
     expect(find.text('Reset view'), findsOneWidget);
     expect(find.text('Undo'), findsOneWidget);
+    final addStateButton = find.ancestor(
+      of: find.text('Add state'),
+      matching: find.bySubtype<ButtonStyleButton>(),
+    );
+    expect(
+      tester.getSize(addStateButton).height,
+      greaterThanOrEqualTo(44),
+    );
+  });
+
+  testWidgets('exposes semantic labels for toolbar actions', (tester) async {
+    final handle = tester.ensureSemantics();
+    var handleDisposed = false;
+    addTearDown(() {
+      if (!handleDisposed) {
+        handle.dispose();
+        handleDisposed = true;
+      }
+    });
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: GraphViewCanvasToolbar(
+              controller: controller,
+              onAddState: () {},
+              layout: GraphViewCanvasToolbarLayout.desktop,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.bySemanticsLabel('Canvas action: Add state'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel('Canvas action: Fit to content'),
+      findsOneWidget,
+    );
+    expect(
+      find.bySemanticsLabel('Canvas action: Help & Shortcuts'),
+      findsOneWidget,
+    );
+
+    handle.dispose();
+    handleDisposed = true;
   });
 
   testWidgets('invokes controller commands when action buttons pressed', (

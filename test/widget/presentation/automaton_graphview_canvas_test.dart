@@ -161,6 +161,57 @@ void main() {
       },
     );
 
+    testWidgets('excludes the graph canvas from semantics traversal', (
+      tester,
+    ) async {
+      final state = automaton_state.State(
+        id: 'A',
+        label: 'A',
+        position: Vector2(40, 40),
+        isInitial: true,
+      );
+      final automaton = FSA(
+        id: 'semantic-canvas',
+        name: 'Semantic Canvas',
+        states: {state},
+        transitions: const <FSATransition>{},
+        alphabet: const <String>{'a'},
+        initialState: state,
+        acceptingStates: <automaton_state.State>{},
+        created: DateTime.utc(2024, 1, 1),
+        modified: DateTime.utc(2024, 1, 1),
+        bounds: const math.Rectangle<double>(0, 0, 400, 300),
+        zoomLevel: 1,
+        panOffset: Vector2.zero(),
+      );
+
+      provider.updateAutomaton(automaton);
+      controller.synchronize(automaton);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AutomatonGraphViewCanvas(
+              automaton: automaton,
+              canvasKey: GlobalKey(),
+              controller: controller,
+              toolController: toolController,
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(
+        find.descendant(
+          of: find.byType(AutomatonGraphViewCanvas),
+          matching: find.byType(ExcludeSemantics),
+        ),
+        findsOneWidget,
+      );
+    });
+
     for (final tool in [
       AutomatonCanvasTool.addState,
       AutomatonCanvasTool.transition,
@@ -537,7 +588,7 @@ void main() {
       expect(tester.widget<AnimatedScale>(scaleFinder).scale, equals(1.0));
 
       controller.applyHighlight(
-        const SimulationHighlight(
+        SimulationHighlight(
           stateIds: {'A'},
           transitionIds: <String>{},
         ),

@@ -12,6 +12,7 @@ import '../../core/result.dart';
 import '../../core/models/fsa.dart';
 import '../../core/models/state.dart' as automaton_state;
 import '../../core/models/fsa_transition.dart';
+import '../../core/utils/epsilon_utils.dart';
 import 'serialization_service.dart';
 
 /// Service for validating import/export functionality across different formats
@@ -32,8 +33,8 @@ class ImportExportValidationService {
       );
 
       // Deserialize back from JFLAP XML
-      final deserializeResult = _serializationService
-          .deserializeAutomatonFromJflap(xmlString);
+      final deserializeResult =
+          _serializationService.deserializeAutomatonFromJflap(xmlString);
 
       if (deserializeResult.isFailure) {
         return ValidationResult.failure(
@@ -79,8 +80,8 @@ class ImportExportValidationService {
       );
 
       // Deserialize back from JSON
-      final deserializeResult = _serializationService
-          .deserializeAutomatonFromJson(jsonString);
+      final deserializeResult =
+          _serializationService.deserializeAutomatonFromJson(jsonString);
 
       if (deserializeResult.isFailure) {
         return ValidationResult.failure(
@@ -154,8 +155,7 @@ class ImportExportValidationService {
         }
       }
 
-      final svgTransitionCount =
-          '<path'.allMatches(svgContent).length +
+      final svgTransitionCount = '<path'.allMatches(svgContent).length +
           '<line'.allMatches(svgContent).length;
 
       return ValidationResult.success(
@@ -307,7 +307,7 @@ class ImportExportValidationService {
     return {
       'id': automaton.id,
       'name': automaton.name,
-      'type': 'dfa', // Default type
+      'type': _inferAutomatonType(automaton),
       'alphabet': automaton.alphabet.toList(),
       'states': automaton.states
           .map(
@@ -326,6 +326,17 @@ class ImportExportValidationService {
       ),
       'initialId': automaton.states.where((s) => s.isInitial).firstOrNull?.id,
     };
+  }
+
+  String _inferAutomatonType(FSA automaton) {
+    for (final transition in automaton.transitions.whereType<FSATransition>()) {
+      if (transition.isEpsilonTransition ||
+          transition.inputSymbols.any(isEpsilonSymbol) ||
+          transition.inputSymbols.length > 1) {
+        return 'nfa';
+      }
+    }
+    return 'dfa';
   }
 
   /// Convert serializable format back to FSA

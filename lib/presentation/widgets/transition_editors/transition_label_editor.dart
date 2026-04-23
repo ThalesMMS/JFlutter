@@ -98,6 +98,7 @@ class _TransitionLabelEditorFormState extends State<TransitionLabelEditorForm> {
           ),
         },
         child: FocusTraversalGroup(
+          policy: OrderedTraversalPolicy(),
           child: Semantics(
             container: true,
             label: widget.semanticLabel,
@@ -106,52 +107,71 @@ class _TransitionLabelEditorFormState extends State<TransitionLabelEditorForm> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                TextField(
-                  controller: _controller,
-                  autofocus: widget.autofocus,
-                  decoration: InputDecoration(
-                    labelText: widget.fieldLabel,
-                    border: const OutlineInputBorder(),
+                FocusTraversalOrder(
+                  order: const NumericFocusOrder(0.0),
+                  child: TextField(
+                    controller: _controller,
+                    autofocus: widget.autofocus,
+                    decoration: InputDecoration(
+                      labelText: widget.fieldLabel,
+                      border: const OutlineInputBorder(),
+                    ),
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    keyboardType: TextInputType.visiblePassword,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _handleSubmit(),
                   ),
-                  textInputAction: TextInputAction.done,
-                  onSubmitted: (_) => _handleSubmit(),
                 ),
                 SizedBox(height: widget.touchOptimized ? 16 : 8),
                 if (widget.touchOptimized)
                   Row(
                     children: [
                       Expanded(
-                        child: OutlinedButton(
-                          onPressed: _handleCancel,
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size.fromHeight(48),
+                        child: FocusTraversalOrder(
+                          order: NumericFocusOrder(
+                            widget.onDelete != null ? 2.0 : 1.0,
                           ),
-                          child: Text(widget.cancelLabel),
+                          child: OutlinedButton(
+                            onPressed: _handleCancel,
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size.fromHeight(48),
+                            ),
+                            child: Text(widget.cancelLabel),
+                          ),
                         ),
                       ),
                       if (widget.onDelete != null) ...[
                         const SizedBox(width: 12),
                         Expanded(
-                          child: OutlinedButton(
-                            onPressed: _handleDelete,
-                            style: OutlinedButton.styleFrom(
-                              minimumSize: const Size.fromHeight(48),
-                              foregroundColor: Theme.of(
-                                context,
-                              ).colorScheme.error,
+                          child: FocusTraversalOrder(
+                            order: const NumericFocusOrder(1.0),
+                            child: OutlinedButton(
+                              onPressed: _handleDelete,
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: const Size.fromHeight(48),
+                                foregroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.error,
+                              ),
+                              child: Text(widget.deleteLabel),
                             ),
-                            child: Text(widget.deleteLabel),
                           ),
                         ),
                       ],
                       const SizedBox(width: 12),
                       Expanded(
-                        child: FilledButton(
-                          onPressed: _handleSubmit,
-                          style: FilledButton.styleFrom(
-                            minimumSize: const Size.fromHeight(48),
+                        child: FocusTraversalOrder(
+                          order: NumericFocusOrder(
+                            widget.onDelete != null ? 3.0 : 2.0,
                           ),
-                          child: Text(widget.saveLabel),
+                          child: FilledButton(
+                            onPressed: _handleSubmit,
+                            style: FilledButton.styleFrom(
+                              minimumSize: const Size.fromHeight(48),
+                            ),
+                            child: Text(widget.saveLabel),
+                          ),
                         ),
                       ),
                     ],
@@ -160,24 +180,46 @@ class _TransitionLabelEditorFormState extends State<TransitionLabelEditorForm> {
                   Row(
                     children: [
                       if (widget.onDelete != null)
-                        TextButton(
-                          onPressed: _handleDelete,
-                          child: Text(
-                            widget.deleteLabel,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
+                        FocusTraversalOrder(
+                          order: const NumericFocusOrder(1.0),
+                          child: TextButton(
+                            onPressed: _handleDelete,
+                            style: TextButton.styleFrom(
+                              minimumSize: const Size(44, 44),
+                            ),
+                            child: Text(
+                              widget.deleteLabel,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
                             ),
                           ),
                         ),
                       const Spacer(),
-                      TextButton(
-                        onPressed: _handleCancel,
-                        child: Text(widget.cancelLabel),
+                      FocusTraversalOrder(
+                        order: NumericFocusOrder(
+                          widget.onDelete != null ? 2.0 : 1.0,
+                        ),
+                        child: TextButton(
+                          onPressed: _handleCancel,
+                          style: TextButton.styleFrom(
+                            minimumSize: const Size(44, 44),
+                          ),
+                          child: Text(widget.cancelLabel),
+                        ),
                       ),
                       const SizedBox(width: 8),
-                      FilledButton(
-                        onPressed: _handleSubmit,
-                        child: Text(widget.saveLabel),
+                      FocusTraversalOrder(
+                        order: NumericFocusOrder(
+                          widget.onDelete != null ? 3.0 : 2.0,
+                        ),
+                        child: FilledButton(
+                          onPressed: _handleSubmit,
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size(44, 44),
+                          ),
+                          child: Text(widget.saveLabel),
+                        ),
                       ),
                     ],
                   ),

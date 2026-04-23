@@ -1,5 +1,9 @@
 part of graphview;
 
+abstract class RenderCycleAware {
+  void prepareForRenderCycle();
+}
+
 abstract class EdgeRenderer {
   Map<Node, Offset>? _animatedPositions;
   Graph? _graph;

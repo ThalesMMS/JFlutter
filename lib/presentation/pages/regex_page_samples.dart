@@ -306,21 +306,16 @@ extension _RegexPageSampleSections on _RegexPageState {
     } catch (error) {
       debugPrint('Failed to copy to clipboard: $error');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to copy to clipboard'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 2),
-        ),
+      _showFeedback(
+        'Failed to copy to clipboard.',
+        tone: AppSnackBarTone.error,
       );
       return;
     }
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(successMessage),
-        duration: const Duration(seconds: 2),
-      ),
+    _showFeedback(
+      successMessage,
+      tone: AppSnackBarTone.success,
     );
   }
 }

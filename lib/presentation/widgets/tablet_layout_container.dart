@@ -29,6 +29,8 @@ class _TabletLayoutContainerState extends State<TabletLayoutContainer> {
 
   @override
   Widget build(BuildContext context) {
+    final topInset = MediaQuery.of(context).padding.top + 16;
+
     return Stack(
       children: [
         Row(
@@ -70,6 +72,7 @@ class _TabletLayoutContainerState extends State<TabletLayoutContainer> {
                     child: Column(
                       children: [
                         TabBar(
+                          isScrollable: true,
                           tabs: [
                             Tab(
                               text: widget.algorithmTabTitle,
@@ -121,26 +124,21 @@ class _TabletLayoutContainerState extends State<TabletLayoutContainer> {
           ],
         ),
 
-        // Toggle Button
-        Positioned(
-          right: _isSidebarExpanded ? null : 16,
-          left: _isSidebarExpanded
-              ? null
-              : null, // Handled by right alignment when collapsed
-          top: 24,
-          child: _isSidebarExpanded
-              ? const SizedBox.shrink() // Don't show floating button when expanded, maybe put it inside sidebar?
-              : FloatingActionButton.small(
-                  onPressed: () => setState(() => _isSidebarExpanded = true),
-                  child: const Icon(Icons.menu_open),
-                ),
-        ),
+        if (!_isSidebarExpanded)
+          Positioned(
+            right: 16,
+            top: topInset,
+            child: FloatingActionButton.small(
+              onPressed: () => setState(() => _isSidebarExpanded = true),
+              child: const Icon(Icons.menu_open),
+            ),
+          ),
 
         // Collapse Button (inside sidebar if expanded)
         if (_isSidebarExpanded)
           Positioned(
             right: 24,
-            top: 24,
+            top: topInset,
             child: IconButton(
               icon: const Icon(Icons.close_fullscreen),
               tooltip: 'Collapse Sidebar',

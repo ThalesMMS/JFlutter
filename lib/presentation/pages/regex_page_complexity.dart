@@ -103,19 +103,23 @@ extension _RegexPageComplexitySections on _RegexPageState {
     final analysis = _regexAnalysis;
     if (analysis == null) return const SizedBox.shrink();
 
+    final complexityColors = _getComplexityColors(
+      context,
+      analysis.complexityLevel,
+    );
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    // Get color based on complexity level
-    final levelColor = _getComplexityColor(analysis.complexityLevel);
     final levelIcon = _getComplexityIcon(analysis.complexityLevel);
 
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: levelColor.withValues(alpha: 0.1),
+        color: complexityColors.background.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: levelColor.withValues(alpha: 0.3)),
+        border: Border.all(
+          color: complexityColors.background.withValues(alpha: 0.3),
+        ),
       ),
       child: Row(
         children: [
@@ -123,18 +127,18 @@ extension _RegexPageComplexitySections on _RegexPageState {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: levelColor,
+              color: complexityColors.background,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(levelIcon, size: 16, color: Colors.white),
+                Icon(levelIcon, size: 16, color: complexityColors.foreground),
                 const SizedBox(width: 6),
                 Text(
                   analysis.complexityLevel.displayName,
                   style: textTheme.labelMedium?.copyWith(
-                    color: Colors.white,
+                    color: complexityColors.foreground,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -488,14 +492,28 @@ extension _RegexPageComplexitySections on _RegexPageState {
   }
 
   /// Gets the color for a complexity level
-  Color _getComplexityColor(ComplexityLevel level) {
+  _ComplexityColors _getComplexityColors(
+    BuildContext context,
+    ComplexityLevel level,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     switch (level) {
       case ComplexityLevel.simple:
-        return Colors.green;
+        return _ComplexityColors(
+          background: colorScheme.primary,
+          foreground: colorScheme.onPrimary,
+        );
       case ComplexityLevel.moderate:
-        return Colors.orange;
+        return _ComplexityColors(
+          background: colorScheme.secondary,
+          foreground: colorScheme.onSecondary,
+        );
       case ComplexityLevel.complex:
-        return Colors.red;
+        return _ComplexityColors(
+          background: colorScheme.error,
+          foreground: colorScheme.onError,
+        );
     }
   }
 

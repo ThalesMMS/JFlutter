@@ -64,6 +64,17 @@ class _TMPageState extends ConsumerState<TMPage>
 
   bool get _hasMachine => _currentTM != null && _stateCount > 0;
 
+  void _clearCanvasMachine() {
+    final blankSymbol = ref.read(tmEditorProvider).tm?.blankSymbol ?? '□';
+    ref.read(tmEditorProvider.notifier).updateFromCanvas(
+      states: const <automaton_state.State>[],
+      transitions: const <TMTransition>[],
+    );
+    setState(() {
+      _currentTape = TapeState.initial(blankSymbol: blankSymbol);
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -162,19 +173,23 @@ class _TMPageState extends ConsumerState<TMPage>
       overrides: [
         canvasHighlightServiceProvider.overrideWithValue(_highlightService),
       ],
-      child: Scaffold(
-        body: isMobile
-            ? _buildMobileLayout()
-            : screenSize.width < 1400
-            ? _buildTabletLayout()
-            : _buildDesktopLayout(),
-        floatingActionButton: !isMobile
-            ? FloatingActionButton(
-                onPressed: _showContextualHelp,
-                tooltip: 'Context-Aware Help',
-                child: const Icon(Icons.help_outline),
-              )
-            : null,
+      child: FocusTraversalGroup(
+        policy: ReadingOrderTraversalPolicy(),
+        child: Scaffold(
+          body: isMobile
+              ? _buildMobileLayout()
+              : screenSize.width < 1400
+                  ? _buildTabletLayout()
+                  : _buildDesktopLayout(),
+          floatingActionButton: !isMobile
+              ? FloatingActionButton(
+                  heroTag: 'tm_context_help_fab',
+                  onPressed: _showContextualHelp,
+                  tooltip: 'Context-Aware Help',
+                  child: const Icon(Icons.help_outline),
+                )
+              : null,
+        ),
       ),
     );
   }
@@ -290,14 +305,7 @@ class _TMPageState extends ConsumerState<TMPage>
                 onAddState: _canvasController.addStateAtCenter,
                 onFitToContent: _canvasController.fitToContent,
                 onResetView: _canvasController.resetView,
-                onClear: () {
-                  ref
-                      .read(tmEditorProvider.notifier)
-                      .updateFromCanvas(
-                        states: const <automaton_state.State>[],
-                        transitions: const <TMTransition>[],
-                      );
-                },
+                onClear: _clearCanvasMachine,
                 onUndo: _canvasController.canUndo
                     ? () => _canvasController.undo()
                     : null,
@@ -336,14 +344,7 @@ class _TMPageState extends ConsumerState<TMPage>
               onAddState: _handleAddStatePressed,
               onAddTransition: () =>
                   _toggleCanvasTool(AutomatonCanvasTool.transition),
-              onClear: () {
-                ref
-                    .read(tmEditorProvider.notifier)
-                    .updateFromCanvas(
-                      states: const <automaton_state.State>[],
-                      transitions: const <TMTransition>[],
-                    );
-              },
+              onClear: _clearCanvasMachine,
               statusMessage: statusMessage,
             );
           },
@@ -483,7 +484,7 @@ class _TMPageState extends ConsumerState<TMPage>
 
   Future<void> _showDraggableSheet({
     required Widget Function(BuildContext context, ScrollController controller)
-    builder,
+        builder,
     double initialChildSize = 0.6,
     double minChildSize = 0.3,
     double maxChildSize = 0.9,
@@ -656,7 +657,9 @@ class _TmCanvasQuickActions extends StatelessWidget {
                 onPressed: onHelp,
               ),
             if (onHelp != null &&
-                (onSimulate != null || onAlgorithms != null || onMetrics != null))
+                (onSimulate != null ||
+                    onAlgorithms != null ||
+                    onMetrics != null))
               const SizedBox(width: 4),
             if (onSimulate != null)
               IconButton(

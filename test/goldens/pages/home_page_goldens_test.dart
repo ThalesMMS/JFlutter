@@ -63,11 +63,6 @@ class _HomePageTestWidgetState extends State<_HomePageTestWidget> {
       icon: Icons.pattern,
       description: 'Regular Expressions',
     ),
-    NavigationItem(
-      label: 'Pumping',
-      icon: Icons.games,
-      description: 'Pumping Lemma',
-    ),
   ];
 
   @override
@@ -87,7 +82,6 @@ class _HomePageTestWidgetState extends State<_HomePageTestWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final screenSize = MediaQuery.of(context).size;
 
     final contentArea = Container(
       color: theme.colorScheme.surface,
@@ -371,25 +365,6 @@ void main() {
         );
 
         await screenMatchesGolden(tester, 'home_page_mobile_regex');
-      },
-    );
-
-    testGoldens(
-      'renders mobile layout with bottom navigation - Pumping selected',
-      (tester) async {
-        addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
-        });
-
-        await _pumpHomePageComponents(
-          tester,
-          size: const Size(430, 932),
-          isMobile: true,
-          selectedIndex: 5,
-        );
-
-        await screenMatchesGolden(tester, 'home_page_mobile_pumping');
       },
     );
   });

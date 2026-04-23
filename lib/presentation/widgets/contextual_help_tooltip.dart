@@ -74,7 +74,11 @@ class ContextualHelpTooltip extends ConsumerWidget {
         ],
       ),
       preferBelow: false,
+      triggerMode: TooltipTriggerMode.tap,
       waitDuration: const Duration(milliseconds: 500),
+      showDuration: const Duration(seconds: 4),
+      enableTapToDismiss: true,
+      constraints: const BoxConstraints(maxWidth: 320),
       child: child,
     );
 
@@ -192,5 +196,4 @@ class ContextualHelpTooltip extends ConsumerWidget {
         .map((word) => word[0].toUpperCase() + word.substring(1))
         .join(' ');
   }
-
 }

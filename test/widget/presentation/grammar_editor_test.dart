@@ -163,13 +163,41 @@ void main() {
   });
 
   group('GrammarEditor metadata updates', () {
+    testWidgets('uses formal-language keyboard settings for grammar symbols', (
+      tester,
+    ) async {
+      final provider = _RecordingGrammarProvider();
+      await pumpEditor(tester, provider);
+
+      final startSymbolField = tester.widget<TextField>(
+        find.widgetWithText(TextField, 'S').first,
+      );
+
+      expect(startSymbolField.autocorrect, isFalse);
+      expect(startSymbolField.enableSuggestions, isFalse);
+      expect(startSymbolField.keyboardType, TextInputType.visiblePassword);
+
+      final leftSideField = tester.widget<TextField>(
+        find.widgetWithText(TextField, 'e.g., S, A, B').first,
+      );
+      final rightSideField = tester.widget<TextField>(
+        find.widgetWithText(TextField, 'e.g., aA, bB, ε').first,
+      );
+
+      expect(leftSideField.autocorrect, isFalse);
+      expect(leftSideField.enableSuggestions, isFalse);
+      expect(leftSideField.keyboardType, TextInputType.visiblePassword);
+      expect(rightSideField.autocorrect, isFalse);
+      expect(rightSideField.enableSuggestions, isFalse);
+      expect(rightSideField.keyboardType, TextInputType.visiblePassword);
+    });
+
     testWidgets('updates grammar name when text field changes', (tester) async {
       final provider = _RecordingGrammarProvider();
       await pumpEditor(tester, provider);
 
-      final grammarNameField = find
-          .widgetWithText(TextField, 'My Grammar')
-          .first;
+      final grammarNameField =
+          find.widgetWithText(TextField, 'My Grammar').first;
       await tester.enterText(grammarNameField, 'Test Grammar');
       await tester.pump();
 

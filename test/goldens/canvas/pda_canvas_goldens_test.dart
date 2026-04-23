@@ -768,7 +768,7 @@ void main() {
         provider.setPda(pda);
         controller.synchronize(pda);
         controller.applyHighlight(
-          const SimulationHighlight(
+          SimulationHighlight(
             transitionIds: <String>{'p_manual'},
           ),
         );

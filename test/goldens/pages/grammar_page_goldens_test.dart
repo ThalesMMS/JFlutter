@@ -86,8 +86,8 @@ void main() {
     await setupDependencyInjection();
   });
 
-  tearDownAll(() {
-    resetDependencies();
+  tearDownAll(() async {
+    await resetDependencies();
   });
 
   group('Grammar Page Components golden tests', () {

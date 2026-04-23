@@ -105,6 +105,36 @@ class ExamplesAssetDataSource {
       tags: ['tm', 'conversion', 'binary', 'unary'],
       estimatedComplexity: ComplexityLevel.high,
     ),
+    'MT - Cópia de string': ExampleMetadata(
+      fileName: 'tm_copy_string.json',
+      category: ExampleCategory.tm,
+      subcategory: 'Tape Manipulation',
+      difficulty: DifficultyLevel.hard,
+      description:
+          'Máquina de Turing que copia uma string binária para uma nova região da fita.',
+      tags: ['tm', 'copy', 'string', 'tape'],
+      estimatedComplexity: ComplexityLevel.high,
+    ),
+    'MT - Incremento binário': ExampleMetadata(
+      fileName: 'tm_increment.json',
+      category: ExampleCategory.tm,
+      subcategory: 'Arithmetic',
+      difficulty: DifficultyLevel.medium,
+      description:
+          'Máquina de Turing que incrementa um número binário em uma unidade.',
+      tags: ['tm', 'binary', 'increment', 'arithmetic'],
+      estimatedComplexity: ComplexityLevel.medium,
+    ),
+    'MT - Verificador de palíndromo': ExampleMetadata(
+      fileName: 'tm_palindrome.json',
+      category: ExampleCategory.tm,
+      subcategory: 'String Analysis',
+      difficulty: DifficultyLevel.hard,
+      description:
+          'Máquina de Turing que verifica se uma string binária é um palíndromo.',
+      tags: ['tm', 'palindrome', 'binary', 'verification'],
+      estimatedComplexity: ComplexityLevel.high,
+    ),
   };
 
   /// Loads all available examples with metadata
@@ -293,15 +323,14 @@ class ExamplesAssetDataSource {
     final nextId = nextIdRaw is int
         ? nextIdRaw
         : nextIdRaw is String
-        ? int.tryParse(nextIdRaw) ?? states.length
-        : states.length;
+            ? int.tryParse(nextIdRaw) ?? states.length
+            : states.length;
 
     final type = (json['type'] as String?) ?? metadata.category.name;
 
     return Success(
       AutomatonModel(
-        id:
-            json['id'] as String? ??
+        id: json['id'] as String? ??
             'example_${exampleName.toLowerCase().replaceAll(' ', '_')}',
         name: json['name'] as String? ?? exampleName,
         alphabet: alphabet,

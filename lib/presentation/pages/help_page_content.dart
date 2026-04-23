@@ -93,9 +93,9 @@ class _GettingStartedContent extends StatelessWidget {
           _buildSectionTitle('Welcome to JFlutter'),
           const SizedBox(height: 16),
           const Text(
-            'JFlutter is a mobile application for learning formal language theory. '
-            'It provides interactive tools for working with automata, grammars, and other '
-            'formal language concepts.',
+            'JFlutter is an interactive learning app for students and educators '
+            'studying formal languages and automata theory. Build automata and '
+            'grammars, run simulations, and explore core concepts in one place.',
           ),
           const SizedBox(height: 24),
           _buildSectionTitle('Navigation'),
@@ -125,11 +125,12 @@ class _GettingStartedContent extends StatelessWidget {
             Icons.pattern,
             'Regular Expressions - Pattern matching and conversion',
           ),
-          _buildFeatureCard(
-            'Pumping',
-            Icons.games,
-            'Pumping Lemma Game - Interactive learning tool',
-          ),
+          if (V1FeatureFlags.showPumpingLemma)
+            _buildFeatureCard(
+              'Pumping',
+              Icons.games,
+              'Pumping Lemma Game - Interactive learning tool',
+            ),
           const SizedBox(height: 24),
           _buildSectionTitle('Basic Operations'),
           const SizedBox(height: 16),
@@ -146,7 +147,10 @@ class _GettingStartedContent extends StatelessWidget {
             'Convert',
             'Transform between different representations',
           ),
-          _buildComponentCard('Save/Load', 'Persist your work in JFLAP format'),
+          _buildComponentCard(
+            'Save/Load',
+            'Use the supported import and export formats for each workspace',
+          ),
         ],
       ),
     );
@@ -639,49 +643,54 @@ class _FileOperationsHelpContent extends StatelessWidget {
           _buildSectionTitle('File Operations'),
           const SizedBox(height: 16),
           const Text(
-            'JFlutter supports saving and loading automata, grammars, and other structures '
-            'in JFLAP format for compatibility with the original JFLAP software.',
+            'JFlutter supports the following file formats for each workspace.',
           ),
           const SizedBox(height: 24),
-          _buildSectionTitle('Supported Formats'),
+          _buildSectionTitle('Workspace Support'),
           const SizedBox(height: 16),
-          _buildFormatCard('JFLAP XML', 'Native JFLAP format (.jff)'),
-          _buildFormatCard('SVG Export', 'Vector graphics for presentations'),
-          _buildFormatCard('Text Export', 'Plain text representation'),
-          const SizedBox(height: 24),
-          _buildSectionTitle('Saving Files'),
-          const SizedBox(height: 16),
-          const Text(
-            'To save your work:\n'
-            '1. Tap the save button in the file operations panel\n'
-            '2. Choose a location and filename\n'
-            '3. Select the format (JFLAP XML recommended)\n'
-            '4. Confirm to save',
+          _buildFormatCard(
+            'FSA',
+            'JFLAP XML import/export, JSON import/export, SVG export, and PNG export on native platforms',
+          ),
+          _buildFormatCard(
+            'Grammar',
+            'JFLAP grammar import/export and SVG export',
+          ),
+          _buildFormatCard(
+            'PDA',
+            'SVG export only',
+          ),
+          _buildFormatCard(
+            'Turing Machine',
+            'SVG export only',
+          ),
+          _buildFormatCard(
+            'Regex',
+            'No file import/export supported',
           ),
           const SizedBox(height: 24),
-          _buildSectionTitle('Loading Files'),
+          _buildSectionTitle('Current Notes'),
           const SizedBox(height: 16),
           const Text(
-            'To load existing files:\n'
-            '1. Tap the load button in the file operations panel\n'
-            '2. Browse to your file location\n'
-            '3. Select a .jff file\n'
-            '4. The structure will be loaded into the editor',
+            '1. JFLAP import/export is limited to the FSA and Grammar workspaces.\n'
+            '2. PDA and Turing Machine workspaces support SVG export only.\n'
+            '3. PNG export is available on native builds and is not available on the web.\n'
+            '4. Regex workflows operate directly on input strings and converted automata rather than saved regex files.',
           ),
           const SizedBox(height: 24),
           _buildSectionTitle('Import/Export'),
           const SizedBox(height: 16),
           _buildComponentCard(
             'Import from JFLAP',
-            'Load files created in desktop JFLAP',
+            'Load validated JFLAP files in the supported workspaces',
           ),
           _buildComponentCard(
             'Export for Sharing',
-            'Save in formats others can use',
+            'Use SVG or other supported release formats for the current module',
           ),
           _buildComponentCard(
             'Backup Work',
-            'Create copies of your structures',
+            'Create backups only with the formats supported by that workspace',
           ),
         ],
       ),

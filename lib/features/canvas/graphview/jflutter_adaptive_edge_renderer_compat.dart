@@ -40,7 +40,8 @@ class EdgeLabelGeometry {
   final double? angle;
 }
 
-class AnimatedAdaptiveEdgeRenderer extends AdaptiveEdgeRenderer {
+class AnimatedAdaptiveEdgeRenderer extends AdaptiveEdgeRenderer
+    implements RenderCycleAware {
   AnimatedAdaptiveEdgeRenderer({
     required super.config,
     this.animationConfig = const AnimatedEdgeConfiguration(),
@@ -68,6 +69,7 @@ class AnimatedAdaptiveEdgeRenderer extends AdaptiveEdgeRenderer {
     animationValue = value;
   }
 
+  @override
   void prepareForRenderCycle() {
     resetRepulsionCalculation();
     _ensureParallelEdgeCache();

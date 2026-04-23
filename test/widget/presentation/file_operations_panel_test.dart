@@ -20,12 +20,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/fsa_transition.dart';
 import 'package:jflutter/core/models/grammar.dart';
+import 'package:jflutter/core/models/pda.dart';
+import 'package:jflutter/core/models/pda_transition.dart';
 import 'package:jflutter/core/models/production.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
+import 'package:jflutter/core/models/tm.dart';
+import 'package:jflutter/core/models/tm_transition.dart';
 import 'package:jflutter/core/result.dart';
 import 'package:jflutter/data/services/file_operations_service.dart';
 import 'package:jflutter/presentation/widgets/error_banner.dart';
 import 'package:jflutter/presentation/widgets/file_operations_panel.dart';
+import 'package:jflutter/presentation/widgets/import_error_dialog.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 void main() {
@@ -58,16 +63,20 @@ void main() {
         ),
       );
 
-      expect(find.text('Automaton'), findsOneWidget);
+      expect(find.text('FSA'), findsOneWidget);
       expect(find.text('Load JFLAP'), findsOneWidget);
+      expect(find.text('Load JSON'), findsOneWidget);
 
       // Check for platform-specific button text
       if (kIsWeb) {
         expect(find.text('Download JFLAP'), findsOneWidget);
+        expect(find.text('Download JSON'), findsOneWidget);
         expect(find.text('Download SVG'), findsOneWidget);
       } else {
         expect(find.text('Save as JFLAP'), findsOneWidget);
+        expect(find.text('Save as JSON'), findsOneWidget);
         expect(find.text('Export SVG'), findsOneWidget);
+        expect(find.text('Export PNG'), findsOneWidget);
       }
     });
 
@@ -84,6 +93,7 @@ void main() {
 
       expect(find.text('Grammar'), findsOneWidget);
       expect(find.text('Load JFLAP'), findsAtLeastNWidgets(1));
+      expect(find.text(kIsWeb ? 'Download SVG' : 'Export SVG'), findsOneWidget);
 
       // Check for platform-specific button text
       if (kIsWeb) {
@@ -107,7 +117,7 @@ void main() {
           ),
         );
 
-        expect(find.text('Automaton'), findsOneWidget);
+        expect(find.text('FSA'), findsOneWidget);
         expect(find.text('Grammar'), findsOneWidget);
         expect(find.text('Load JFLAP'), findsAtLeastNWidgets(2));
       },
@@ -138,9 +148,14 @@ void main() {
         ),
       );
 
-      expect(find.byIcon(Icons.save), findsOneWidget);
+      expect(find.byIcon(Icons.save), findsAtLeastNWidgets(1));
       expect(find.byIcon(Icons.folder_open), findsOneWidget);
+      expect(find.byIcon(Icons.data_object), findsOneWidget);
+      expect(find.byIcon(Icons.upload_file), findsOneWidget);
       expect(find.byIcon(Icons.image), findsOneWidget);
+      if (!kIsWeb) {
+        expect(find.byIcon(Icons.photo), findsOneWidget);
+      }
     });
 
     testWidgets('save automaton button triggers callback on web', (
@@ -173,6 +188,40 @@ void main() {
         expect(find.textContaining('Download started'), findsOneWidget);
       }
     }, skip: !kIsWeb);
+
+    testWidgets('iOS save automaton passes bytes to the picker',
+        (tester) async {
+      if (kIsWeb) {
+        return;
+      }
+
+      final automaton = _buildSampleAutomaton();
+      final service = _StubFileOperationsService();
+      fakeFilePicker.enqueueSaveResult('/tmp/automaton.jff');
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: FileOperationsPanel(
+              automaton: automaton,
+              fileService: service,
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Save as JFLAP'));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(service.saveAutomatonCallCount, equals(0));
+      expect(fakeFilePicker.lastSaveBytes, isNotNull);
+      expect(fakeFilePicker.lastSaveBytes, isNotEmpty);
+      expect(find.text('Automaton saved successfully'), findsOneWidget);
+    },
+        variant: const TargetPlatformVariant(<TargetPlatform>{
+          TargetPlatform.iOS,
+        }));
 
     testWidgets('load automaton button triggers callback', (tester) async {
       final automaton = _buildSampleAutomaton();
@@ -212,6 +261,107 @@ void main() {
       expect(find.text('Automaton loaded successfully'), findsOneWidget);
     });
 
+    testWidgets('failed to parse json errors open invalid JSON dialog', (
+      tester,
+    ) async {
+      final automaton = _buildSampleAutomaton();
+      final service = _StubFileOperationsService(
+        loadAutomatonResponses: Queue.of([
+          const Failure<FSA>('Failed to parse JSON while importing automaton'),
+        ]),
+      );
+
+      final file = PlatformFile(
+        name: 'broken.json',
+        size: 2,
+        bytes: Uint8List.fromList([123, 125]),
+      );
+      fakeFilePicker.enqueuePickResult(FilePickerResult([file]));
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: FileOperationsPanel(
+              automaton: automaton,
+              fileService: service,
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Load JSON'));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ImportErrorDialog), findsOneWidget);
+      expect(find.text('Invalid JSON Structure'), findsOneWidget);
+      expect(find.textContaining('Failed to parse JSON'), findsOneWidget);
+    });
+
+    testWidgets(
+        'load JFLAP routes version failures to unsupported version dialog',
+        (tester) async {
+      final automaton = _buildSampleAutomaton();
+      final service = _StubFileOperationsService(
+        loadAutomatonResponses: Queue.of([
+          const Failure<FSA>('Unsupported version: JFLAP schema 8'),
+        ]),
+      );
+
+      final file = PlatformFile(
+        name: 'future.jff',
+        size: 3,
+        bytes: Uint8List.fromList([0, 1, 2]),
+      );
+      fakeFilePicker.enqueuePickResult(FilePickerResult([file]));
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: FileOperationsPanel(
+              automaton: automaton,
+              fileService: service,
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Load JFLAP'));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ImportErrorDialog), findsOneWidget);
+      expect(find.text('Unsupported File Version'), findsOneWidget);
+    });
+
+    testWidgets(
+        'load JSON treats inaccessible file payload as a file access error',
+        (tester) async {
+      final automaton = _buildSampleAutomaton();
+      final file = PlatformFile(
+        name: 'empty.json',
+        size: 0,
+      );
+      fakeFilePicker.enqueuePickResult(FilePickerResult([file]));
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: FileOperationsPanel(automaton: automaton)),
+        ),
+      );
+
+      await tester.tap(find.text('Load JSON'));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ImportErrorDialog), findsOneWidget);
+      expect(find.text('File Access Unavailable'), findsOneWidget);
+      expect(
+        find.textContaining('could not access the selected JSON file data'),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('export automaton as SVG triggers callback on web', (
       tester,
     ) async {
@@ -240,6 +390,44 @@ void main() {
         expect(find.textContaining('Download started'), findsOneWidget);
       }
     }, skip: !kIsWeb);
+
+    testWidgets(
+      'desktop PNG export writes pre-rendered bytes without rerendering',
+      (tester) async {
+        if (kIsWeb) {
+          return;
+        }
+
+        final automaton = _buildSampleAutomaton();
+        final service = _StubFileOperationsService(
+          exportResponses:
+              Queue.of([const Success<String>('/tmp/automaton.png')]),
+        );
+        fakeFilePicker.enqueueSaveResult('/tmp/automaton.png');
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: FileOperationsPanel(
+                automaton: automaton,
+                fileService: service,
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Export PNG'));
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        expect(service.exportPngBytesCallCount, equals(1));
+        expect(service.writePngBytesCallCount, equals(1));
+        expect(service.exportAutomatonPngCallCount, equals(0));
+      },
+      variant: const TargetPlatformVariant(<TargetPlatform>{
+        TargetPlatform.macOS,
+      }),
+    );
   });
 
   group('FileOperationsPanel Grammar Operations Tests', () {
@@ -254,6 +442,7 @@ void main() {
 
       expect(find.byIcon(Icons.save), findsOneWidget);
       expect(find.byIcon(Icons.folder_open), findsOneWidget);
+      expect(find.byIcon(Icons.image), findsOneWidget);
     });
 
     testWidgets('save grammar button triggers callback on web', (tester) async {
@@ -317,6 +506,94 @@ void main() {
       expect(grammarLoaded, isTrue);
       expect(find.text('Grammar loaded successfully'), findsOneWidget);
     });
+  });
+
+  group('FileOperationsPanel PDA Operations Tests', () {
+    testWidgets('pda section exposes only svg export', (tester) async {
+      final pda = _buildSamplePda();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: FileOperationsPanel(pda: pda)),
+        ),
+      );
+
+      expect(find.text('PDA'), findsOneWidget);
+      expect(find.text('Load JFLAP'), findsNothing);
+      expect(find.text('Load JSON'), findsNothing);
+      expect(find.text(kIsWeb ? 'Download SVG' : 'Export SVG'), findsOneWidget);
+    });
+
+    testWidgets('pda svg export triggers callback on web', (tester) async {
+      final pda = _buildSamplePda();
+      final service = _StubFileOperationsService(
+        exportResponses: Queue.of([const Success<String>('pda.svg')]),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: FileOperationsPanel(
+              pda: pda,
+              fileService: service,
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text(kIsWeb ? 'Download SVG' : 'Export SVG'));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      if (kIsWeb) {
+        expect(service.exportCallCount, equals(1));
+        expect(find.textContaining('Download started'), findsOneWidget);
+      }
+    }, skip: !kIsWeb);
+  });
+
+  group('FileOperationsPanel TM Operations Tests', () {
+    testWidgets('tm section exposes only svg export', (tester) async {
+      final tm = _buildSampleTm();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: FileOperationsPanel(turingMachine: tm)),
+        ),
+      );
+
+      expect(find.text('Turing Machine'), findsOneWidget);
+      expect(find.text('Load JFLAP'), findsNothing);
+      expect(find.text('Load JSON'), findsNothing);
+      expect(find.text(kIsWeb ? 'Download SVG' : 'Export SVG'), findsOneWidget);
+    });
+
+    testWidgets('tm svg export triggers callback on web', (tester) async {
+      final tm = _buildSampleTm();
+      final service = _StubFileOperationsService(
+        exportResponses: Queue.of([const Success<String>('tm.svg')]),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: FileOperationsPanel(
+              turingMachine: tm,
+              fileService: service,
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text(kIsWeb ? 'Download SVG' : 'Export SVG'));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      if (kIsWeb) {
+        expect(service.exportCallCount, equals(1));
+        expect(find.textContaining('Download started'), findsOneWidget);
+      }
+    }, skip: !kIsWeb);
   });
 
   group('FileOperationsPanel Loading State Tests', () {
@@ -563,6 +840,128 @@ void main() {
         expect(find.byType(ErrorBanner), findsOneWidget);
       },
     );
+
+    testWidgets('shows permission denied load failures in the error banner', (
+      tester,
+    ) async {
+      final automaton = _buildSampleAutomaton();
+      final service = _StubFileOperationsService(
+        loadAutomatonResponses: Queue.of([
+          const Failure<FSA>(
+            'Failed to load automaton from JFLAP format: JFlutter could not read the selected file. The file may be outside the app sandbox or no longer readable. Pick the file again from the system dialog and try again.',
+          ),
+        ]),
+      );
+
+      final file = PlatformFile(
+        name: 'sandboxed.jff',
+        size: 3,
+        bytes: Uint8List.fromList([1, 2, 3]),
+      );
+      fakeFilePicker.enqueuePickResult(FilePickerResult([file]));
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: FileOperationsPanel(
+              automaton: automaton,
+              fileService: service,
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Load JFLAP'));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ImportErrorDialog), findsNothing);
+      expect(find.byType(ErrorBanner), findsOneWidget);
+      expect(
+        find.textContaining('could not read the selected file'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets(
+      'shows import error dialog for invalid automaton JSON failures',
+      (tester) async {
+        final automaton = _buildSampleAutomaton();
+        final service = _StubFileOperationsService(
+          loadAutomatonResponses: Queue.of([
+            const Failure<FSA>('Invalid automaton JSON format'),
+          ]),
+        );
+
+        final file = PlatformFile(
+          name: 'invalid.json',
+          size: 10,
+          bytes: Uint8List.fromList([123, 125]),
+        );
+        fakeFilePicker.enqueuePickResult(FilePickerResult([file]));
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: FileOperationsPanel(
+                automaton: automaton,
+                fileService: service,
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Load JSON'));
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        expect(service.loadAutomatonCallCount, equals(1));
+        expect(find.byType(ImportErrorDialog), findsOneWidget);
+      },
+    );
+
+    testWidgets('shows inaccessible file dialog for JSON access failures', (
+      tester,
+    ) async {
+      final automaton = _buildSampleAutomaton();
+      final service = _StubFileOperationsService(
+        loadAutomatonResponses: Queue.of([
+          const Failure<FSA>(
+            'JFlutter could not access the selected JSON file data. Pick the file again and keep it available until the import finishes.',
+          ),
+        ]),
+      );
+
+      final file = PlatformFile(
+        name: 'icloud.json',
+        size: 10,
+        bytes: Uint8List.fromList([123, 125]),
+      );
+      fakeFilePicker.enqueuePickResult(FilePickerResult([file]));
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: FileOperationsPanel(
+              automaton: automaton,
+              fileService: service,
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Load JSON'));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(service.loadAutomatonCallCount, equals(1));
+      expect(find.byType(ImportErrorDialog), findsOneWidget);
+      expect(find.text('File Access Unavailable'), findsOneWidget);
+      expect(
+        find.textContaining('could not access the selected file'),
+        findsOneWidget,
+      );
+    });
   });
 
   group('FileOperationsPanel Success Message Tests', () {
@@ -652,8 +1051,8 @@ void main() {
       await tester.pump();
       await tester.pumpAndSettle();
 
-      // No error should be displayed
-      expect(find.byType(ErrorBanner), findsNothing);
+      expect(find.byType(ErrorBanner), findsOneWidget);
+      expect(find.text('Import canceled.'), findsOneWidget);
       expect(service.loadAutomatonCallCount, equals(0));
     });
 
@@ -682,8 +1081,8 @@ void main() {
         await tester.pump();
         await tester.pumpAndSettle();
 
-        // No error should be displayed
-        expect(find.byType(ErrorBanner), findsNothing);
+        expect(find.byType(ErrorBanner), findsOneWidget);
+        expect(find.text('Save canceled.'), findsOneWidget);
         expect(service.saveAutomatonCallCount, equals(0));
       }
     }, skip: kIsWeb);
@@ -724,19 +1123,93 @@ Grammar _buildSampleGrammar() {
     productions: {
       const Production(
         id: '1',
-        leftSide: const ['S'],
-        rightSide: const ['a', 'S', 'b'],
+        leftSide: ['S'],
+        rightSide: ['a', 'S', 'b'],
       ),
       const Production(
         id: '2',
-        leftSide: const ['S'],
-        rightSide: const [],
+        leftSide: ['S'],
+        rightSide: [],
         isLambda: true,
       ),
     },
     type: GrammarType.contextFree,
     created: DateTime.utc(2024, 1, 1),
     modified: DateTime.utc(2024, 1, 1),
+  );
+}
+
+PDA _buildSamplePda() {
+  final state = automaton_state.State(
+    id: 'p0',
+    label: 'p0',
+    position: Vector2.zero(),
+    isInitial: true,
+    isAccepting: true,
+  );
+
+  final transition = PDATransition(
+    id: 'pda_t0',
+    fromState: state,
+    toState: state,
+    label: 'a,Z->AZ',
+    inputSymbol: 'a',
+    popSymbol: 'Z',
+    pushSymbol: 'AZ',
+  );
+
+  return PDA(
+    id: 'sample_pda',
+    name: 'Sample PDA',
+    states: {state},
+    transitions: {transition},
+    alphabet: const <String>{'a'},
+    initialState: state,
+    acceptingStates: {state},
+    created: DateTime.utc(2024, 1, 1),
+    modified: DateTime.utc(2024, 1, 1),
+    bounds: const math.Rectangle<double>(0, 0, 400, 300),
+    zoomLevel: 1,
+    panOffset: Vector2.zero(),
+    stackAlphabet: const <String>{'A', 'Z'},
+    initialStackSymbol: 'Z',
+  );
+}
+
+TM _buildSampleTm() {
+  final state = automaton_state.State(
+    id: 't0',
+    label: 't0',
+    position: Vector2.zero(),
+    isInitial: true,
+    isAccepting: true,
+  );
+
+  final transition = TMTransition(
+    id: 'tm_t0',
+    fromState: state,
+    toState: state,
+    label: '1/1,R',
+    readSymbol: '1',
+    writeSymbol: '1',
+    direction: TapeDirection.right,
+  );
+
+  return TM(
+    id: 'sample_tm',
+    name: 'Sample TM',
+    states: {state},
+    transitions: {transition},
+    alphabet: const <String>{'1'},
+    initialState: state,
+    acceptingStates: {state},
+    created: DateTime.utc(2024, 1, 1),
+    modified: DateTime.utc(2024, 1, 1),
+    bounds: const math.Rectangle<double>(0, 0, 400, 300),
+    zoomLevel: 1,
+    panOffset: Vector2.zero(),
+    tapeAlphabet: const <String>{'1', 'B'},
+    blankSymbol: 'B',
   );
 }
 
@@ -748,12 +1221,12 @@ class _StubFileOperationsService extends FileOperationsService {
     Queue<Result<FSA>>? loadAutomatonResponses,
     Queue<Result<Grammar>>? loadGrammarResponses,
     this.delayMs = 0,
-  }) : saveAutomatonResponses =
-           saveAutomatonResponses ?? Queue<Result<String>>(),
-       saveGrammarResponses = saveGrammarResponses ?? Queue<Result<String>>(),
-       exportResponses = exportResponses ?? Queue<Result<String>>(),
-       loadAutomatonResponses = loadAutomatonResponses ?? Queue<Result<FSA>>(),
-       loadGrammarResponses = loadGrammarResponses ?? Queue<Result<Grammar>>();
+  })  : saveAutomatonResponses =
+            saveAutomatonResponses ?? Queue<Result<String>>(),
+        saveGrammarResponses = saveGrammarResponses ?? Queue<Result<String>>(),
+        exportResponses = exportResponses ?? Queue<Result<String>>(),
+        loadAutomatonResponses = loadAutomatonResponses ?? Queue<Result<FSA>>(),
+        loadGrammarResponses = loadGrammarResponses ?? Queue<Result<Grammar>>();
 
   final Queue<Result<String>> saveAutomatonResponses;
   final Queue<Result<String>> saveGrammarResponses;
@@ -765,6 +1238,9 @@ class _StubFileOperationsService extends FileOperationsService {
   int saveAutomatonCallCount = 0;
   int saveGrammarCallCount = 0;
   int exportCallCount = 0;
+  int exportPngBytesCallCount = 0;
+  int writePngBytesCallCount = 0;
+  int exportAutomatonPngCallCount = 0;
   int loadAutomatonCallCount = 0;
   int loadGrammarCallCount = 0;
 
@@ -814,7 +1290,93 @@ class _StubFileOperationsService extends FileOperationsService {
   }
 
   @override
+  Future<StringResult> exportAutomatonToSVG(
+    dynamic automaton,
+    String filePath, {
+    dynamic options,
+  }) async {
+    if (delayMs > 0) {
+      await Future.delayed(Duration(milliseconds: delayMs));
+    }
+    exportCallCount++;
+    if (exportResponses.isEmpty) {
+      return const Failure<String>('No export response configured');
+    }
+    return exportResponses.removeFirst();
+  }
+
+  @override
+  Future<StringResult> exportGrammarToSVG(
+    dynamic grammar,
+    String filePath, {
+    dynamic options,
+  }) async {
+    if (delayMs > 0) {
+      await Future.delayed(Duration(milliseconds: delayMs));
+    }
+    exportCallCount++;
+    if (exportResponses.isEmpty) {
+      return const Failure<String>('No export response configured');
+    }
+    return exportResponses.removeFirst();
+  }
+
+  @override
+  Future<StringResult> exportTuringMachineToSVG(
+    dynamic machine,
+    String filePath, {
+    dynamic options,
+  }) async {
+    if (delayMs > 0) {
+      await Future.delayed(Duration(milliseconds: delayMs));
+    }
+    exportCallCount++;
+    if (exportResponses.isEmpty) {
+      return const Failure<String>('No export response configured');
+    }
+    return exportResponses.removeFirst();
+  }
+
+  @override
+  Future<Result<Uint8List>> exportAutomatonToPngBytes(FSA automaton) async {
+    exportPngBytesCallCount++;
+    return Success(Uint8List.fromList(<int>[137, 80, 78, 71]));
+  }
+
+  @override
+  Future<StringResult> writePngBytesToPath(
+      Uint8List bytes, String filePath) async {
+    writePngBytesCallCount++;
+    if (exportResponses.isEmpty) {
+      return const Failure<String>('No export response configured');
+    }
+    return exportResponses.removeFirst();
+  }
+
+  @override
+  Future<StringResult> exportAutomatonToPNG(
+      FSA automaton, String filePath) async {
+    exportAutomatonPngCallCount++;
+    if (exportResponses.isEmpty) {
+      return const Failure<String>('No export response configured');
+    }
+    return exportResponses.removeFirst();
+  }
+
+  @override
   Future<Result<FSA>> loadAutomatonFromBytes(Uint8List bytes) async {
+    if (delayMs > 0) {
+      await Future.delayed(Duration(milliseconds: delayMs));
+    }
+    loadAutomatonCallCount++;
+    if (loadAutomatonResponses.isEmpty) {
+      return const Failure<FSA>('No load automaton response configured');
+    }
+    return loadAutomatonResponses.removeFirst();
+  }
+
+  @override
+  Future<Result<FSA>> loadAutomatonFromJsonBytes(Uint8List bytes) async {
     if (delayMs > 0) {
       await Future.delayed(Duration(milliseconds: delayMs));
     }
@@ -840,11 +1402,12 @@ class _StubFileOperationsService extends FileOperationsService {
 
 class _FakeFilePicker extends FilePicker {
   _FakeFilePicker()
-    : _pickResults = Queue<FilePickerResult?>(),
-      _saveResults = Queue<String?>();
+      : _pickResults = Queue<FilePickerResult?>(),
+        _saveResults = Queue<String?>();
 
   final Queue<FilePickerResult?> _pickResults;
   final Queue<String?> _saveResults;
+  Uint8List? lastSaveBytes;
 
   void enqueuePickResult(FilePickerResult? result) {
     _pickResults.add(result);
@@ -885,6 +1448,7 @@ class _FakeFilePicker extends FilePicker {
     Uint8List? bytes,
     bool lockParentWindow = false,
   }) async {
+    lastSaveBytes = bytes;
     if (_saveResults.isEmpty) {
       return null;
     }

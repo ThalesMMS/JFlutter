@@ -3,8 +3,9 @@
 //  JFlutter
 //
 //  Fornece exemplos prontos de Máquinas de Turing para fins educacionais,
-//  cobrindo casos clássicos como incremento binário, a^n b^n e palíndromo,
-//  com estados e transições pré-configurados.
+//  alinhados ao conjunto embarcado do Examples v1 para a release Apple,
+//  cobrindo conversão binário→unário, cópia de strings, incremento binário e
+//  verificação de palíndromos.
 //
 //  Thales Matheus Mendonça Santos - February 2026
 //
@@ -17,6 +18,116 @@ import '../../core/models/tm_transition.dart';
 
 /// Provides pre-configured example TMs for educational purposes
 class TMExamples {
+  /// Creates a TM that rewrites a binary string into unary marks on the tape.
+  static TM binaryToUnary({
+    String? id,
+    String? name,
+    math.Rectangle? bounds,
+  }) {
+    final now = DateTime.now();
+
+    final q0 = State(
+      id: 'q0',
+      label: 'q0',
+      position: Vector2(100, 200),
+      isInitial: true,
+      isAccepting: false,
+    );
+
+    final q1 = State(
+      id: 'q1',
+      label: 'q1',
+      position: Vector2(300, 200),
+      isInitial: false,
+      isAccepting: false,
+    );
+
+    final q2 = State(
+      id: 'q2',
+      label: 'q2',
+      position: Vector2(500, 200),
+      isInitial: false,
+      isAccepting: true,
+    );
+
+    // q0: mark each input symbol while scanning to the right.
+    final t1 = TMTransition(
+      id: 't1',
+      fromState: q0,
+      toState: q0,
+      label: '1→X,R',
+      readSymbol: '1',
+      writeSymbol: 'X',
+      direction: TapeDirection.right,
+    );
+
+    final t2 = TMTransition(
+      id: 't2',
+      fromState: q0,
+      toState: q0,
+      label: '0→X,R',
+      readSymbol: '0',
+      writeSymbol: 'X',
+      direction: TapeDirection.right,
+    );
+
+    final t3 = TMTransition(
+      id: 't3',
+      fromState: q0,
+      toState: q1,
+      label: 'B→B,L',
+      readSymbol: 'B',
+      writeSymbol: 'B',
+      direction: TapeDirection.left,
+    );
+
+    // q1: convert the markers into unary symbols while rewinding left.
+    final t4 = TMTransition(
+      id: 't4',
+      fromState: q1,
+      toState: q1,
+      label: 'X→1,L',
+      readSymbol: 'X',
+      writeSymbol: '1',
+      direction: TapeDirection.left,
+    );
+
+    final t5 = TMTransition(
+      id: 't5',
+      fromState: q1,
+      toState: q1,
+      label: '1→1,L',
+      readSymbol: '1',
+      writeSymbol: '1',
+      direction: TapeDirection.left,
+    );
+
+    final t6 = TMTransition(
+      id: 't6',
+      fromState: q1,
+      toState: q2,
+      label: 'B→B,R',
+      readSymbol: 'B',
+      writeSymbol: 'B',
+      direction: TapeDirection.right,
+    );
+
+    return TM(
+      id: id ?? 'tm_binary_to_unary',
+      name: name ?? 'MT - Binário para unário',
+      states: {q0, q1, q2},
+      transitions: {t1, t2, t3, t4, t5, t6},
+      alphabet: {'0', '1'},
+      initialState: q0,
+      acceptingStates: {q2},
+      created: now,
+      modified: now,
+      bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
+      tapeAlphabet: {'0', '1', 'X', 'B'},
+      blankSymbol: 'B',
+    );
+  }
+
   /// Creates a TM that increments a binary number by 1
   ///
   /// Input: binary number on tape (e.g., "101")
@@ -123,7 +234,7 @@ class TMExamples {
 
     return TM(
       id: id ?? 'tm_binary_increment',
-      name: name ?? 'Binary Increment',
+      name: name ?? 'MT - Incremento binário',
       states: {q0, q1, q2},
       transitions: {t1, t2, t3, t4, t5, t6},
       alphabet: {'0', '1'},
@@ -133,6 +244,342 @@ class TMExamples {
       modified: now,
       bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
       tapeAlphabet: {'0', '1', 'B'},
+      blankSymbol: 'B',
+    );
+  }
+
+  /// Creates a TM that copies a binary string to a second tape region.
+  static TM copyString({
+    String? id,
+    String? name,
+    math.Rectangle? bounds,
+  }) {
+    final now = DateTime.now();
+
+    final q0 = State(
+      id: 'q0',
+      label: 'q0',
+      position: Vector2(100, 200),
+      isInitial: true,
+      isAccepting: false,
+    );
+    final q1 = State(
+      id: 'q1',
+      label: 'q1',
+      position: Vector2(250, 100),
+      isInitial: false,
+      isAccepting: false,
+    );
+    final q2 = State(
+      id: 'q2',
+      label: 'q2',
+      position: Vector2(250, 300),
+      isInitial: false,
+      isAccepting: false,
+    );
+    final q3 = State(
+      id: 'q3',
+      label: 'q3',
+      position: Vector2(400, 100),
+      isInitial: false,
+      isAccepting: false,
+    );
+    final q4 = State(
+      id: 'q4',
+      label: 'q4',
+      position: Vector2(400, 300),
+      isInitial: false,
+      isAccepting: false,
+    );
+    final q5 = State(
+      id: 'q5',
+      label: 'q5',
+      position: Vector2(550, 200),
+      isInitial: false,
+      isAccepting: false,
+    );
+    final q6 = State(
+      id: 'q6',
+      label: 'q6',
+      position: Vector2(700, 200),
+      isInitial: false,
+      isAccepting: false,
+    );
+    final qAccept = State(
+      id: 'qAccept',
+      label: 'qAccept',
+      position: Vector2(850, 200),
+      isInitial: false,
+      isAccepting: true,
+    );
+
+    final transitions = <TMTransition>{
+      TMTransition(
+        id: 't1',
+        fromState: q0,
+        toState: q1,
+        label: '0→X,R',
+        readSymbol: '0',
+        writeSymbol: 'X',
+        direction: TapeDirection.right,
+      ),
+      TMTransition(
+        id: 't2',
+        fromState: q0,
+        toState: q2,
+        label: '1→X,R',
+        readSymbol: '1',
+        writeSymbol: 'X',
+        direction: TapeDirection.right,
+      ),
+      TMTransition(
+        id: 't3',
+        fromState: q0,
+        toState: q0,
+        label: 'X→X,R',
+        readSymbol: 'X',
+        writeSymbol: 'X',
+        direction: TapeDirection.right,
+      ),
+      TMTransition(
+        id: 't4',
+        fromState: q0,
+        toState: q6,
+        label: 'B→#,R',
+        readSymbol: 'B',
+        writeSymbol: '#',
+        direction: TapeDirection.right,
+      ),
+      TMTransition(
+        id: 't5',
+        fromState: q1,
+        toState: q1,
+        label: '0→0,R',
+        readSymbol: '0',
+        writeSymbol: '0',
+        direction: TapeDirection.right,
+      ),
+      TMTransition(
+        id: 't6',
+        fromState: q1,
+        toState: q1,
+        label: '1→1,R',
+        readSymbol: '1',
+        writeSymbol: '1',
+        direction: TapeDirection.right,
+      ),
+      TMTransition(
+        id: 't7',
+        fromState: q1,
+        toState: q1,
+        label: 'X→X,R',
+        readSymbol: 'X',
+        writeSymbol: 'X',
+        direction: TapeDirection.right,
+      ),
+      TMTransition(
+        id: 't8',
+        fromState: q1,
+        toState: q3,
+        label: '#→#,R',
+        readSymbol: '#',
+        writeSymbol: '#',
+        direction: TapeDirection.right,
+      ),
+      TMTransition(
+        id: 't8b',
+        fromState: q1,
+        toState: q3,
+        label: 'B→#,R',
+        readSymbol: 'B',
+        writeSymbol: '#',
+        direction: TapeDirection.right,
+      ),
+      TMTransition(
+        id: 't9',
+        fromState: q2,
+        toState: q2,
+        label: '0→0,R',
+        readSymbol: '0',
+        writeSymbol: '0',
+        direction: TapeDirection.right,
+      ),
+      TMTransition(
+        id: 't10',
+        fromState: q2,
+        toState: q2,
+        label: '1→1,R',
+        readSymbol: '1',
+        writeSymbol: '1',
+        direction: TapeDirection.right,
+      ),
+      TMTransition(
+        id: 't11',
+        fromState: q2,
+        toState: q2,
+        label: 'X→X,R',
+        readSymbol: 'X',
+        writeSymbol: 'X',
+        direction: TapeDirection.right,
+      ),
+      TMTransition(
+        id: 't12',
+        fromState: q2,
+        toState: q4,
+        label: '#→#,R',
+        readSymbol: '#',
+        writeSymbol: '#',
+        direction: TapeDirection.right,
+      ),
+      TMTransition(
+        id: 't12b',
+        fromState: q2,
+        toState: q4,
+        label: 'B→#,R',
+        readSymbol: 'B',
+        writeSymbol: '#',
+        direction: TapeDirection.right,
+      ),
+      TMTransition(
+        id: 't13',
+        fromState: q3,
+        toState: q3,
+        label: '0→0,R',
+        readSymbol: '0',
+        writeSymbol: '0',
+        direction: TapeDirection.right,
+      ),
+      TMTransition(
+        id: 't14',
+        fromState: q3,
+        toState: q3,
+        label: '1→1,R',
+        readSymbol: '1',
+        writeSymbol: '1',
+        direction: TapeDirection.right,
+      ),
+      TMTransition(
+        id: 't15',
+        fromState: q3,
+        toState: q5,
+        label: 'B→0,L',
+        readSymbol: 'B',
+        writeSymbol: '0',
+        direction: TapeDirection.left,
+      ),
+      TMTransition(
+        id: 't16',
+        fromState: q4,
+        toState: q4,
+        label: '0→0,R',
+        readSymbol: '0',
+        writeSymbol: '0',
+        direction: TapeDirection.right,
+      ),
+      TMTransition(
+        id: 't17',
+        fromState: q4,
+        toState: q4,
+        label: '1→1,R',
+        readSymbol: '1',
+        writeSymbol: '1',
+        direction: TapeDirection.right,
+      ),
+      TMTransition(
+        id: 't18',
+        fromState: q4,
+        toState: q5,
+        label: 'B→1,L',
+        readSymbol: 'B',
+        writeSymbol: '1',
+        direction: TapeDirection.left,
+      ),
+      TMTransition(
+        id: 't19',
+        fromState: q5,
+        toState: q5,
+        label: '0→0,L',
+        readSymbol: '0',
+        writeSymbol: '0',
+        direction: TapeDirection.left,
+      ),
+      TMTransition(
+        id: 't20',
+        fromState: q5,
+        toState: q5,
+        label: '1→1,L',
+        readSymbol: '1',
+        writeSymbol: '1',
+        direction: TapeDirection.left,
+      ),
+      TMTransition(
+        id: 't21',
+        fromState: q5,
+        toState: q5,
+        label: '#→#,L',
+        readSymbol: '#',
+        writeSymbol: '#',
+        direction: TapeDirection.left,
+      ),
+      TMTransition(
+        id: 't22',
+        fromState: q5,
+        toState: q0,
+        label: 'X→X,R',
+        readSymbol: 'X',
+        writeSymbol: 'X',
+        direction: TapeDirection.right,
+      ),
+      TMTransition(
+        id: 't23',
+        fromState: q0,
+        toState: q6,
+        label: '#→#,R',
+        readSymbol: '#',
+        writeSymbol: '#',
+        direction: TapeDirection.right,
+      ),
+      TMTransition(
+        id: 't24',
+        fromState: q6,
+        toState: q6,
+        label: '0→0,R',
+        readSymbol: '0',
+        writeSymbol: '0',
+        direction: TapeDirection.right,
+      ),
+      TMTransition(
+        id: 't25',
+        fromState: q6,
+        toState: q6,
+        label: '1→1,R',
+        readSymbol: '1',
+        writeSymbol: '1',
+        direction: TapeDirection.right,
+      ),
+      TMTransition(
+        id: 't26',
+        fromState: q6,
+        toState: qAccept,
+        label: 'B→B,R',
+        readSymbol: 'B',
+        writeSymbol: 'B',
+        direction: TapeDirection.right,
+      ),
+    };
+
+    return TM(
+      id: id ?? 'tm_copy_string',
+      name: name ?? 'MT - Cópia de string',
+      states: {q0, q1, q2, q3, q4, q5, q6, qAccept},
+      transitions: transitions,
+      alphabet: {'0', '1'},
+      initialState: q0,
+      acceptingStates: {qAccept},
+      created: now,
+      modified: now,
+      bounds: bounds ?? const math.Rectangle(0, 0, 1000, 700),
+      tapeAlphabet: {'0', '1', 'X', '#', 'B'},
       blankSymbol: 'B',
     );
   }
@@ -305,9 +752,9 @@ class TMExamples {
     );
   }
 
-  /// Creates a TM that checks if input is a palindrome over {a, b}
+  /// Creates a TM that checks if a binary input is a palindrome.
   ///
-  /// Language: { w ∈ {a,b}* | w = w^R }
+  /// Language: { w ∈ {0,1}* | w = w^R }
   ///
   /// Strategy: Compare first and last characters, cross them off,
   /// repeat until string is empty or single character.
@@ -366,25 +813,33 @@ class TMExamples {
       isAccepting: true,
     );
 
+    final qBackLeft = State(
+      id: 'qBackLeft',
+      label: 'qBackLeft',
+      position: Vector2(500, 200),
+      isInitial: false,
+      isAccepting: false,
+    );
+
     // q0: Read first character
-    // If 'a': mark as X, go right to find matching last 'a'
+    // If '0': mark as X, go right to find matching last '0'
     final t1 = TMTransition(
       id: 't1',
       fromState: q0,
       toState: q1,
-      label: 'a→X,R',
-      readSymbol: 'a',
+      label: '0→X,R',
+      readSymbol: '0',
       writeSymbol: 'X',
       direction: TapeDirection.right,
     );
 
-    // If 'b': mark as X, go right to find matching last 'b'
+    // If '1': mark as X, go right to find matching last '1'
     final t2 = TMTransition(
       id: 't2',
       fromState: q0,
       toState: q2,
-      label: 'b→X,R',
-      readSymbol: 'b',
+      label: '1→X,R',
+      readSymbol: '1',
       writeSymbol: 'X',
       direction: TapeDirection.right,
     );
@@ -410,14 +865,14 @@ class TMExamples {
       direction: TapeDirection.stay,
     );
 
-    // q1: Looking for last 'a' — skip a's and b's
+    // q1: Looking for last '0' — skip 0's and 1's
     final t4 = TMTransition(
       id: 't4',
       fromState: q1,
       toState: q1,
-      label: 'a→a,R',
-      readSymbol: 'a',
-      writeSymbol: 'a',
+      label: '0→0,R',
+      readSymbol: '0',
+      writeSymbol: '0',
       direction: TapeDirection.right,
     );
 
@@ -425,9 +880,9 @@ class TMExamples {
       id: 't5',
       fromState: q1,
       toState: q1,
-      label: 'b→b,R',
-      readSymbol: 'b',
-      writeSymbol: 'b',
+      label: '1→1,R',
+      readSymbol: '1',
+      writeSymbol: '1',
       direction: TapeDirection.right,
     );
 
@@ -452,13 +907,23 @@ class TMExamples {
       direction: TapeDirection.left,
     );
 
-    // q3: Must find 'a' at the end (matching the first 'a')
+    // q3: Must find '0' at the end (matching the first '0')
     final t7 = TMTransition(
       id: 't7',
       fromState: q3,
-      toState: q0,
-      label: 'a→X,L',
-      readSymbol: 'a',
+      toState: qBackLeft,
+      label: '0→X,L',
+      readSymbol: '0',
+      writeSymbol: 'X',
+      direction: TapeDirection.left,
+    );
+
+    final t7b = TMTransition(
+      id: 't7b',
+      fromState: q3,
+      toState: qBackLeft,
+      label: 'X→X,L',
+      readSymbol: 'X',
       writeSymbol: 'X',
       direction: TapeDirection.left,
     );
@@ -467,14 +932,14 @@ class TMExamples {
     // Actually q3 finding X means first=last (single unmatched), go left to q0
     // Let's handle q0 seeing X -> accept
 
-    // q2: Looking for last 'b' — skip a's and b's
+    // q2: Looking for last '1' — skip 0's and 1's
     final t8 = TMTransition(
       id: 't8',
       fromState: q2,
       toState: q2,
-      label: 'a→a,R',
-      readSymbol: 'a',
-      writeSymbol: 'a',
+      label: '0→0,R',
+      readSymbol: '0',
+      writeSymbol: '0',
       direction: TapeDirection.right,
     );
 
@@ -482,9 +947,9 @@ class TMExamples {
       id: 't9',
       fromState: q2,
       toState: q2,
-      label: 'b→b,R',
-      readSymbol: 'b',
-      writeSymbol: 'b',
+      label: '1→1,R',
+      readSymbol: '1',
+      writeSymbol: '1',
       direction: TapeDirection.right,
     );
 
@@ -509,44 +974,121 @@ class TMExamples {
       direction: TapeDirection.left,
     );
 
-    // q4: Must find 'b' at the end (matching the first 'b')
+    // q4: Must find '1' at the end (matching the first '1')
     final t11 = TMTransition(
       id: 't11',
       fromState: q4,
-      toState: q0,
-      label: 'b→X,L',
-      readSymbol: 'b',
+      toState: qBackLeft,
+      label: '1→X,L',
+      readSymbol: '1',
       writeSymbol: 'X',
       direction: TapeDirection.left,
     );
 
+    final t11b = TMTransition(
+      id: 't11b',
+      fromState: q4,
+      toState: qBackLeft,
+      label: 'X→X,L',
+      readSymbol: 'X',
+      writeSymbol: 'X',
+      direction: TapeDirection.left,
+    );
+
+    final t12 = TMTransition(
+      id: 't12',
+      fromState: qBackLeft,
+      toState: qBackLeft,
+      label: '0→0,L',
+      readSymbol: '0',
+      writeSymbol: '0',
+      direction: TapeDirection.left,
+    );
+
+    final t13 = TMTransition(
+      id: 't13',
+      fromState: qBackLeft,
+      toState: qBackLeft,
+      label: '1→1,L',
+      readSymbol: '1',
+      writeSymbol: '1',
+      direction: TapeDirection.left,
+    );
+
+    final t14 = TMTransition(
+      id: 't14',
+      fromState: qBackLeft,
+      toState: qBackLeft,
+      label: 'X→X,L',
+      readSymbol: 'X',
+      writeSymbol: 'X',
+      direction: TapeDirection.left,
+    );
+
+    final t15 = TMTransition(
+      id: 't15',
+      fromState: qBackLeft,
+      toState: q0,
+      label: 'B→B,R',
+      readSymbol: 'B',
+      writeSymbol: 'B',
+      direction: TapeDirection.right,
+    );
+
     return TM(
       id: id ?? 'tm_palindrome',
-      name: name ?? 'Palindrome',
-      states: {q0, q1, q2, q3, q4, qAccept},
-      transitions: {t1, t2, t3, t4, t5, t6, t6b, t7, t8, t9, t10, t10b, t11, t3b},
-      alphabet: {'a', 'b'},
+      name: name ?? 'MT - Verificador de palíndromo',
+      states: {q0, q1, q2, q3, q4, qAccept, qBackLeft},
+      transitions: {
+        t1,
+        t2,
+        t3,
+        t4,
+        t5,
+        t6,
+        t6b,
+        t7,
+        t7b,
+        t8,
+        t9,
+        t10,
+        t10b,
+        t11,
+        t11b,
+        t12,
+        t13,
+        t14,
+        t15,
+        t3b,
+      },
+      alphabet: {'0', '1'},
       initialState: q0,
       acceptingStates: {qAccept},
       created: now,
       modified: now,
       bounds: bounds ?? const math.Rectangle(0, 0, 800, 600),
-      tapeAlphabet: {'a', 'b', 'X', 'B'},
+      tapeAlphabet: {'0', '1', 'X', 'B'},
       blankSymbol: 'B',
     );
   }
 
   /// Returns a list of all available example TMs
   static List<TM> getAllExamples() {
-    return [binaryIncrement(), aNbN(), palindrome()];
+    return [
+      binaryToUnary(),
+      copyString(),
+      binaryIncrement(),
+      palindrome(),
+    ];
   }
 
   /// Returns a map of example names to their factory functions
   static Map<String, TM Function()> getExampleFactories() {
     return {
-      'Binary Increment': binaryIncrement,
-      'a^n b^n': aNbN,
-      'Palindrome': palindrome,
+      'MT - Binário para unário': binaryToUnary,
+      'MT - Cópia de string': copyString,
+      'MT - Incremento binário': binaryIncrement,
+      'MT - Verificador de palíndromo': palindrome,
     };
   }
 

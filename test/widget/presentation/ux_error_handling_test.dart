@@ -321,21 +321,31 @@ void main() {
           'type': ImportErrorType.malformedJFF,
           'title': 'Malformed JFLAP File',
           'message': 'XML parsing failed during import.',
+          'icon': Icons.topic_outlined,
         },
         {
           'type': ImportErrorType.invalidJSON,
           'title': 'Invalid JSON Structure',
           'message': 'Unable to parse JSON payload.',
+          'icon': Icons.code_off,
+        },
+        {
+          'type': ImportErrorType.inaccessibleFile,
+          'title': 'File Access Unavailable',
+          'message': 'The selected file is no longer accessible.',
+          'icon': Icons.folder_off_outlined,
         },
         {
           'type': ImportErrorType.corruptedData,
           'title': 'Corrupted Data Detected',
           'message': 'Checksum verification failed.',
+          'icon': Icons.bug_report_outlined,
         },
         {
           'type': ImportErrorType.invalidAutomaton,
           'title': 'Invalid Automaton Definition',
           'message': 'Automaton contains disconnected states.',
+          'icon': Icons.device_hub,
         },
       ];
 
@@ -370,6 +380,7 @@ void main() {
 
         expect(find.text(scenario['title']! as String), findsOneWidget);
         expect(find.text(scenario['message']! as String), findsOneWidget);
+        expect(find.byIcon(scenario['icon']! as IconData), findsOneWidget);
 
         // Close dialog
         await tester.tap(find.text('Cancel'));
@@ -891,8 +902,8 @@ class _StubFileOperationsService extends FileOperationsService {
   _StubFileOperationsService({
     Queue<Result<String>>? exportResponses,
     Queue<Result<FSA>>? loadAutomatonResponses,
-  }) : exportResponses = exportResponses ?? Queue<Result<String>>(),
-       loadAutomatonResponses = loadAutomatonResponses ?? Queue<Result<FSA>>();
+  })  : exportResponses = exportResponses ?? Queue<Result<String>>(),
+        loadAutomatonResponses = loadAutomatonResponses ?? Queue<Result<FSA>>();
 
   final Queue<Result<String>> exportResponses;
   final Queue<Result<FSA>> loadAutomatonResponses;
@@ -923,8 +934,8 @@ class _StubFileOperationsService extends FileOperationsService {
 
 class _FakeFilePicker extends FilePicker {
   _FakeFilePicker()
-    : _pickResults = Queue<FilePickerResult?>(),
-      _saveResults = Queue<String?>();
+      : _pickResults = Queue<FilePickerResult?>(),
+        _saveResults = Queue<String?>();
 
   final Queue<FilePickerResult?> _pickResults;
   final Queue<String?> _saveResults;

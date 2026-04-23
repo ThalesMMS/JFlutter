@@ -11,6 +11,7 @@
 import 'package:collection/collection.dart';
 import 'package:xml/xml.dart';
 import '../result.dart';
+import '../utils/automaton_id_utils.dart';
 import '../utils/epsilon_utils.dart';
 
 /// Parser para arquivos JFLAP (.jff) em formato XML
@@ -37,7 +38,7 @@ class JFLAPXMLParser {
         case 'fa':
         case 'dfa':
         case 'nfa':
-          return _parseFsa(root);
+          return _parseFsa(root, sourceType: type);
         default:
           return Failure('Tipo de autômato não suportado: $type');
       }
@@ -47,7 +48,10 @@ class JFLAPXMLParser {
   }
 
   /// Parse um autômato finito (FSA) para a estrutura de dados interna
-  static Result<Map<String, dynamic>> _parseFsa(XmlElement root) {
+  static Result<Map<String, dynamic>> _parseFsa(
+    XmlElement root, {
+    required String sourceType,
+  }) {
     try {
       final automatonElement = root.findElements('automaton').firstOrNull;
       if (automatonElement == null) {
@@ -58,13 +62,14 @@ class JFLAPXMLParser {
       final transitions = <String, List<String>>{};
       final alphabet = <String>{};
       String? initialId;
+      var hasEpsilonTransition = false;
+      var hasNondeterministicTransition = false;
 
       // Tabela para mapear IDs (numéricos ou rótulos) para o identificador final
       final idLookup = <String, String>{};
 
       for (final stateElement in automatonElement.findElements('state')) {
-        final id =
-            stateElement.getAttribute('id') ??
+        final id = stateElement.getAttribute('id') ??
             stateElement.getAttribute('name');
         if (id == null || id.isEmpty) {
           // Ignora estados sem identificador
@@ -72,12 +77,10 @@ class JFLAPXMLParser {
         }
 
         final name = stateElement.getAttribute('name') ?? id;
-        final xText =
-            stateElement.getAttribute('x') ??
-            stateElement.getElement('x')?.text;
-        final yText =
-            stateElement.getAttribute('y') ??
-            stateElement.getElement('y')?.text;
+        final xText = stateElement.getAttribute('x') ??
+            stateElement.getElement('x')?.innerText;
+        final yText = stateElement.getAttribute('y') ??
+            stateElement.getElement('y')?.innerText;
         final x = double.tryParse(xText ?? '') ?? 0.0;
         final y = double.tryParse(yText ?? '') ?? 0.0;
         final isInitial = stateElement.findElements('initial').isNotEmpty;
@@ -103,15 +106,13 @@ class JFLAPXMLParser {
       for (final transitionElement in automatonElement.findElements(
         'transition',
       )) {
-        final rawFrom =
-            transitionElement
+        final rawFrom = transitionElement
                 .findElements('from')
                 .firstOrNull
                 ?.innerText
                 .trim() ??
             '';
-        final rawTo =
-            transitionElement
+        final rawTo = transitionElement
                 .findElements('to')
                 .firstOrNull
                 ?.innerText
@@ -120,20 +121,27 @@ class JFLAPXMLParser {
         final rawRead =
             transitionElement.findElements('read').firstOrNull?.innerText ?? '';
 
-        final fromId = idLookup[rawFrom] ?? rawFrom;
-        final toId = idLookup[rawTo] ?? rawTo;
-        if (fromId.isEmpty || toId.isEmpty) {
-          continue;
+        if (!idLookup.containsKey(rawFrom) || !idLookup.containsKey(rawTo)) {
+          return Failure(
+            'Transicao referencia estado desconhecido: $rawFrom -> $rawTo',
+          );
         }
+        final fromId = idLookup[rawFrom]!;
+        final toId = idLookup[rawTo]!;
 
         final symbol = normalizeToEpsilon(rawRead);
         final key = '$fromId|$symbol';
         transitions.putIfAbsent(key, () => <String>[]);
-        transitions[key]!.add(toId);
+        if (!transitions[key]!.contains(toId)) {
+          transitions[key]!.add(toId);
+        }
+        hasEpsilonTransition = hasEpsilonTransition || isEpsilonSymbol(symbol);
+        hasNondeterministicTransition =
+            hasNondeterministicTransition || transitions[key]!.length > 1;
 
         // Only add non-epsilon symbols to the alphabet.
         // Epsilon is a special transition symbol, not part of the input alphabet.
-        if (symbol.isNotEmpty && symbol != kEpsilonSymbol) {
+        if (symbol.isNotEmpty && !isEpsilonSymbol(symbol)) {
           alphabet.add(symbol);
         }
       }
@@ -141,18 +149,45 @@ class JFLAPXMLParser {
       final parsed = <String, dynamic>{
         'id': 'parsed_automaton',
         'name': 'Parsed Automaton',
-        'type': 'dfa',
+        'type': _deriveFsaType(
+          sourceType: sourceType,
+          hasEpsilonTransition: hasEpsilonTransition,
+          hasNondeterministicTransition: hasNondeterministicTransition,
+        ),
         'alphabet': alphabet.toList(),
         'states': states,
-        'transitions': transitions,
+        'transitions': transitions.map(
+          (key, value) => MapEntry(key, List<String>.unmodifiable(value)),
+        ),
         'initialId':
             initialId ?? (states.isNotEmpty ? states.first['id'] : null),
-        'nextId': states.length,
+        'nextId': AutomatonIdUtils.calculateNextAutomatonId(states),
       };
 
       return Success(parsed);
     } catch (e) {
       return Failure('Erro ao parsear FSA: $e');
     }
+  }
+
+  static String _deriveFsaType({
+    required String sourceType,
+    required bool hasEpsilonTransition,
+    required bool hasNondeterministicTransition,
+  }) {
+    final normalized = sourceType.trim().toLowerCase();
+    if (hasEpsilonTransition || hasNondeterministicTransition) {
+      return 'nfa';
+    }
+    if (normalized == 'nfa') {
+      return 'nfa';
+    }
+    if (normalized == 'dfa') {
+      return 'dfa';
+    }
+    if (normalized == 'fa') {
+      return 'dfa';
+    }
+    return 'nfa';
   }
 }

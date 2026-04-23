@@ -5,7 +5,8 @@ import '../../../core/models/grammar.dart';
 import '../../../core/result.dart';
 import '../../../data/services/file_operations_service.dart';
 
-const _kUnreadableFileMessage = 'Selected file did not contain readable data.';
+const _kUnreadableFileMessage =
+    'JFlutter could not access the selected file data. Pick the file again and keep it available until the import finishes.';
 
 String? _normalizedPath(String? path) {
   if (path == null) {

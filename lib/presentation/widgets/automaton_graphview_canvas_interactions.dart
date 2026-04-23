@@ -1,5 +1,11 @@
 part of 'automaton_graphview_canvas.dart';
 
+void _logAutomatonGraphViewCanvasInteraction(String message) {
+  if (kDebugMode) {
+    debugPrint('[AutomatonGraphViewCanvas] $message');
+  }
+}
+
 extension _AutomatonGraphViewCanvasInteractions
     on _AutomatonGraphViewCanvasState {
   Offset _screenToWorldExtracted(Offset localPosition) {
@@ -23,6 +29,10 @@ extension _AutomatonGraphViewCanvasInteractions
     bool logDetails = true,
   }) {
     final world = _screenToWorld(localPosition);
+    // A small hit slop keeps slow-start drags and near-edge touches anchored to
+    // the intended node instead of falling through to the canvas pan gesture.
+    const dragHitSlop = 8.0;
+    const hitRadius = _kNodeRadius + dragHitSlop;
     GraphViewCanvasNode? closest;
     var closestDistance = double.infinity;
     for (final node in _controller.nodes) {
@@ -30,7 +40,7 @@ extension _AutomatonGraphViewCanvasInteractions
       final dx = world.dx - center.dx;
       final dy = world.dy - center.dy;
       final distanceSquared = dx * dx + dy * dy;
-      if (distanceSquared <= _kNodeRadius * _kNodeRadius &&
+      if (distanceSquared <= hitRadius * hitRadius &&
           distanceSquared < closestDistance) {
         closest = node;
         closestDistance = distanceSquared;
@@ -38,14 +48,13 @@ extension _AutomatonGraphViewCanvasInteractions
     }
     if (logDetails) {
       if (closest != null) {
-        debugPrint(
-          '[AutomatonGraphViewCanvas] Hit node ${closest.id} '
+        _logAutomatonGraphViewCanvasInteraction(
+          'Hit node ${closest.id} '
           '(tool=${_activeTool.name}) local=$localPosition world=$world',
         );
       } else if (_activeTool == AutomatonCanvasTool.transition) {
-        debugPrint(
-          '[AutomatonGraphViewCanvas] Transition tool miss '
-          'local=$localPosition world=$world',
+        _logAutomatonGraphViewCanvasInteraction(
+          'Transition tool miss local=$localPosition world=$world',
         );
       }
     }
@@ -68,8 +77,8 @@ extension _AutomatonGraphViewCanvasInteractions
     final node = _hitTestNode(localPosition, logDetails: false);
     final world = _screenToWorld(localPosition);
     final target = node?.id ?? 'canvas-background';
-    debugPrint(
-      '[AutomatonGraphViewCanvas] Tap source=$source target=$target '
+    _logAutomatonGraphViewCanvasInteraction(
+      'Tap source=$source target=$target '
       'tool=${_activeTool.name} local=$localPosition world=$world',
     );
   }
@@ -89,7 +98,7 @@ extension _AutomatonGraphViewCanvasInteractions
   }
 
   void _beginNodeDragExtracted(GraphViewCanvasNode node, Offset localPosition) {
-    debugPrint('[AutomatonGraphViewCanvas] Begin drag for ${node.id}');
+    _logAutomatonGraphViewCanvasInteraction('Begin drag for ${node.id}');
     _hideTransitionOverlay();
     _draggingNodeId = node.id;
     _dragStartWorldPosition = _screenToWorld(localPosition);
@@ -127,9 +136,8 @@ extension _AutomatonGraphViewCanvasInteractions
   Future<void> _handleCanvasTapUpExtracted(TapUpDetails details) async {
     final global = details.globalPosition;
     final local = _globalToCanvasLocal(global);
-    debugPrint(
-      '[AutomatonGraphViewCanvas] Tap up with active tool ${_activeTool.name} '
-      'local=$local',
+    _logAutomatonGraphViewCanvasInteraction(
+      'Tap up with active tool ${_activeTool.name} local=$local',
     );
     final node = _hitTestNode(local, logDetails: false);
 
@@ -176,8 +184,8 @@ extension _AutomatonGraphViewCanvasInteractions
     if (node == null) {
       return;
     }
-    debugPrint(
-      '[AutomatonGraphViewCanvas] pan start gesture -> ${node.id} '
+    _logAutomatonGraphViewCanvasInteraction(
+      'pan start gesture -> ${node.id} '
       'local=${details.localPosition}',
     );
     _setCanvasPanSuppressed(true, reason: 'node drag start ${node.id}');
@@ -185,15 +193,17 @@ extension _AutomatonGraphViewCanvasInteractions
   }
 
   void _handleNodePanUpdateExtracted(DragUpdateDetails details) {
-    debugPrint('[AutomatonGraphViewCanvas] pan update delta=${details.delta}');
+    _logAutomatonGraphViewCanvasInteraction(
+      'pan update delta=${details.delta}',
+    );
     _updateNodeDrag(details.localPosition);
   }
 
   void _handleNodePanEndExtracted(DragEndDetails details) {
     final nodeId = _draggingNodeId;
     final didMove = _didMoveDraggedNode;
-    debugPrint(
-      '[AutomatonGraphViewCanvas] pan end velocity=${details.velocity}',
+    _logAutomatonGraphViewCanvasInteraction(
+      'pan end velocity=${details.velocity}',
     );
     _endNodeDrag();
     if (!didMove &&
@@ -204,37 +214,30 @@ extension _AutomatonGraphViewCanvasInteractions
   }
 
   void _handleNodePanCancelExtracted() {
-    debugPrint('[AutomatonGraphViewCanvas] pan cancel');
+    _logAutomatonGraphViewCanvasInteraction('pan cancel');
     _endNodeDrag();
   }
 
   void _handleNodeTapExtracted(String nodeId) {
-    debugPrint(
-      '[AutomatonGraphViewCanvas] Node tapped $nodeId with '
-      'active tool ${_activeTool.name}',
+    _logAutomatonGraphViewCanvasInteraction(
+      'Node tapped $nodeId with active tool ${_activeTool.name}',
     );
     if (_activeTool != AutomatonCanvasTool.transition) {
       return;
     }
 
     if (_transitionSourceId == null) {
-      debugPrint(
-        '[AutomatonGraphViewCanvas] Transition source selected '
-        '-> $nodeId',
+      _logAutomatonGraphViewCanvasInteraction(
+        'Transition source selected -> $nodeId',
       );
-      setState(() {
-        _transitionSourceId = nodeId;
-      });
+      _setTransitionSourceId(nodeId);
       return;
     }
 
     final sourceId = _transitionSourceId!;
-    setState(() {
-      _transitionSourceId = null;
-    });
-    debugPrint(
-      '[AutomatonGraphViewCanvas] Transition target selected '
-      '-> $nodeId (source: $sourceId)',
+    _setTransitionSourceId(null);
+    _logAutomatonGraphViewCanvasInteraction(
+      'Transition target selected -> $nodeId (source: $sourceId)',
     );
     _showTransitionEditor(sourceId, nodeId);
   }
@@ -244,7 +247,9 @@ extension _AutomatonGraphViewCanvasInteractions
     if (node == null) {
       return;
     }
-    debugPrint('[AutomatonGraphViewCanvas] opening state options for $nodeId');
+    _logAutomatonGraphViewCanvasInteraction(
+      'opening state options for $nodeId',
+    );
     _showStateOptions(node);
   }
 
@@ -258,7 +263,9 @@ extension _AutomatonGraphViewCanvasInteractions
     if (_lastTapNodeId == nodeId &&
         _lastTapTimestamp != null &&
         now - _lastTapTimestamp! <= doubleTapTimeout) {
-      debugPrint('[AutomatonGraphViewCanvas] Detected double tap on $nodeId');
+      _logAutomatonGraphViewCanvasInteraction(
+        'Detected double tap on $nodeId',
+      );
       _handleNodeContextTap(nodeId);
       _lastTapNodeId = null;
       _lastTapTimestamp = null;

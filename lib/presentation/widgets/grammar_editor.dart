@@ -54,6 +54,21 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
     super.dispose();
   }
 
+  Widget _buildFormalLanguageTextField({
+    required TextEditingController controller,
+    required InputDecoration decoration,
+    ValueChanged<String>? onChanged,
+  }) {
+    return TextField(
+      controller: controller,
+      decoration: decoration,
+      autocorrect: false,
+      enableSuggestions: false,
+      keyboardType: TextInputType.visiblePassword,
+      onChanged: onChanged,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final grammarState = ref.watch(grammarProvider);
@@ -174,7 +189,7 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    TextField(
+                    _buildFormalLanguageTextField(
                       controller: _startSymbolController,
                       onChanged: (value) => ref
                           .read(grammarProvider.notifier)
@@ -204,7 +219,7 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: TextField(
+                    child: _buildFormalLanguageTextField(
                       controller: _startSymbolController,
                       onChanged: (value) => ref
                           .read(grammarProvider.notifier)
@@ -248,7 +263,7 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
               if (isSmallScreen) {
                 return Column(
                   children: [
-                    TextField(
+                    _buildFormalLanguageTextField(
                       controller: _leftSideController,
                       decoration: const InputDecoration(
                         labelText: 'Left Side (Variable)',
@@ -262,7 +277,7 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
                       color: Theme.of(context).colorScheme.primary,
                     ),
                     const SizedBox(height: 8),
-                    TextField(
+                    _buildFormalLanguageTextField(
                       controller: _rightSideController,
                       decoration: const InputDecoration(
                         labelText: 'Right Side (Production)',
@@ -277,7 +292,7 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
               return Row(
                 children: [
                   Expanded(
-                    child: TextField(
+                    child: _buildFormalLanguageTextField(
                       controller: _leftSideController,
                       decoration: const InputDecoration(
                         labelText: 'Left Side (Variable)',
@@ -294,7 +309,7 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
                   const SizedBox(width: 8),
                   Expanded(
                     flex: 2,
-                    child: TextField(
+                    child: _buildFormalLanguageTextField(
                       controller: _rightSideController,
                       decoration: const InputDecoration(
                         labelText: 'Right Side (Production)',
@@ -317,9 +332,8 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     ElevatedButton.icon(
-                      onPressed: _isEditing
-                          ? _updateProduction
-                          : _addProduction,
+                      onPressed:
+                          _isEditing ? _updateProduction : _addProduction,
                       icon: Icon(_isEditing ? Icons.save : Icons.add),
                       label: Text(_isEditing ? 'Update' : 'Add'),
                     ),
@@ -417,15 +431,15 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
           Text(
             'No production rules yet',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+                  color: Theme.of(context).colorScheme.outline,
+                ),
           ),
           const SizedBox(height: 8),
           Text(
             'Add your first production rule above',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+                  color: Theme.of(context).colorScheme.outline,
+                ),
           ),
         ],
       ),
@@ -465,10 +479,12 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
         ),
         title: Text(
           '${_formatSymbols(production.leftSide)} → ${_formatRightSide(production)}',
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontFamily: 'monospace',
-            fontWeight: FontWeight.w600,
-          ),
+                fontFamily: 'monospace',
+                fontWeight: FontWeight.w600,
+              ),
         ),
         subtitle: Text(
           'Rule ${index + 1}',
@@ -536,9 +552,7 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
         parsedRight.length == 1 && _isLambdaSymbol(parsedRight.first);
     final normalizedRight = isLambda ? <String>[] : parsedRight;
 
-    ref
-        .read(grammarProvider.notifier)
-        .addProduction(
+    ref.read(grammarProvider.notifier).addProduction(
           leftSide: parsedLeft,
           rightSide: normalizedRight,
           isLambda: isLambda,
@@ -572,9 +586,7 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
         parsedRight.length == 1 && _isLambdaSymbol(parsedRight.first);
     final normalizedRight = isLambda ? <String>[] : parsedRight;
 
-    ref
-        .read(grammarProvider.notifier)
-        .updateProduction(
+    ref.read(grammarProvider.notifier).updateProduction(
           _selectedProductionId!,
           leftSide: parsedLeft,
           rightSide: normalizedRight,

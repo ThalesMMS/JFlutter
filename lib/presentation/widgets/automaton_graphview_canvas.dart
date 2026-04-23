@@ -109,6 +109,7 @@ class _AutomatonGraphViewCanvasState
   late final AnimationController _edgeAnimationController;
   late final JFlutterAdaptiveEdgeRenderer _edgeRenderer;
   bool _hasEdgeRenderer = false;
+  String? _lastEdgeStructureSignature;
 
   void _setCanvasPanSuppressed(bool value, {String reason = ''}) {
     if (!mounted) {
@@ -124,6 +125,15 @@ class _AutomatonGraphViewCanvasState
     }
     setState(() {
       _suppressCanvasPan = value;
+    });
+  }
+
+  void _setTransitionSourceId(String? nodeId) {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _transitionSourceId = nodeId;
     });
   }
 
@@ -251,6 +261,7 @@ class _AutomatonGraphViewCanvasState
       _algorithm.renderer = _edgeRenderer;
       _transformationController?.addListener(_onTransformationChanged);
       _scheduleControllerSync(widget.automaton);
+      _lastEdgeStructureSignature = null;
       _controller.graphRevision.addListener(_handleGraphRevisionChanged);
       _controller.highlightNotifier.addListener(_handleHighlightChanged);
       _handleHighlightChanged();
@@ -328,7 +339,6 @@ class _AutomatonGraphViewCanvasState
 
   void _onTransformationChanged() {
     _updateTransitionOverlayPosition();
-    setState(() {});
   }
 
   void _handleEdgeAnimationTick() {
@@ -496,6 +506,34 @@ class _AutomatonGraphViewCanvasState
   void _handleGraphRevisionChanged() =>
       this._handleGraphRevisionChangedExtracted();
 
+  void _invalidateEdgeRendererCachesIfNeeded() {
+    final signature = _computeEdgeStructureSignature();
+    if (signature == _lastEdgeStructureSignature) {
+      return;
+    }
+    _lastEdgeStructureSignature = signature;
+    if (_hasEdgeRenderer) {
+      _edgeRenderer.invalidateEdgeCaches();
+    }
+  }
+
+  String _computeEdgeStructureSignature() {
+    final edges = _controller.edges.sortedBy((edge) => edge.id);
+    final buffer = StringBuffer()..write(edges.length);
+    for (final edge in edges) {
+      buffer
+        ..write('|')
+        ..write(edge.id)
+        ..write(':')
+        ..write(edge.fromStateId)
+        ..write('->')
+        ..write(edge.toStateId)
+        ..write(':')
+        ..write(edge.label);
+    }
+    return buffer.toString();
+  }
+
   void _refreshTransitionOverlayFromGraph() =>
       this._refreshTransitionOverlayFromGraphExtracted();
 
@@ -563,51 +601,61 @@ class _AutomatonGraphViewCanvasState
                           }
                           return RepaintBoundary(
                             child: AbsorbPointer(
+                              // Suppress GraphView's own pan handling whenever
+                              // a node drag or tool-specific gesture owns the
+                              // interaction, avoiding mixed canvas/node motion.
                               absorbing: _suppressCanvasPan ||
                                   _activeTool == AutomatonCanvasTool.addState ||
                                   _activeTool == AutomatonCanvasTool.transition,
-                              child: GraphView.builder(
-                                graph: _controller.graph,
-                                controller: _controller.graphController,
-                                algorithm: _algorithm,
-                                animated: motionPreset.graphAnimationEnabled &&
-                                    !_isDraggingNode,
-                                panAnimationDuration:
-                                    motionPreset.viewportDuration,
-                                toggleAnimationDuration:
-                                    motionPreset.nodeDuration,
-                                paint: Paint()
-                                  ..color = theme.colorScheme.outline
-                                  ..style = PaintingStyle.stroke
-                                  ..strokeWidth = 2
-                                  ..strokeCap = StrokeCap.round,
-                                builder: (node) {
-                                  final nodeId = node.key?.value?.toString();
-                                  if (nodeId == null) {
-                                    return const SizedBox.shrink();
-                                  }
-                                  final canvasNode =
-                                      _controller.nodeById(nodeId) ??
-                                          GraphViewCanvasNode(
-                                            id: nodeId,
-                                            label: nodeId,
-                                            x: node.position.dx,
-                                            y: node.position.dy,
-                                            isInitial: false,
-                                            isAccepting: false,
-                                          );
-                                  final isHighlighted = _isNodeHighlighted(
-                                    canvasNode,
-                                    highlight,
-                                  );
-                                  return _AutomatonGraphNode(
-                                    label: canvasNode.label,
-                                    isInitial: canvasNode.isInitial,
-                                    isAccepting: canvasNode.isAccepting,
-                                    isHighlighted: isHighlighted,
-                                    motionPreset: motionPreset,
-                                  );
-                                },
+                              child: ExcludeSemantics(
+                                // The surrounding controls remain accessible,
+                                // but the free-form canvas itself is excluded
+                                // until state/transition semantics are added in
+                                // a future accessibility pass.
+                                child: GraphView.builder(
+                                  graph: _controller.graph,
+                                  controller: _controller.graphController,
+                                  algorithm: _algorithm,
+                                  animated:
+                                      motionPreset.graphAnimationEnabled &&
+                                          !_isDraggingNode,
+                                  panAnimationDuration:
+                                      motionPreset.viewportDuration,
+                                  toggleAnimationDuration:
+                                      motionPreset.nodeDuration,
+                                  paint: Paint()
+                                    ..color = theme.colorScheme.outline
+                                    ..style = PaintingStyle.stroke
+                                    ..strokeWidth = 2
+                                    ..strokeCap = StrokeCap.round,
+                                  builder: (node) {
+                                    final nodeId = node.key?.value?.toString();
+                                    if (nodeId == null) {
+                                      return const SizedBox.shrink();
+                                    }
+                                    final canvasNode =
+                                        _controller.nodeById(nodeId) ??
+                                            GraphViewCanvasNode(
+                                              id: nodeId,
+                                              label: nodeId,
+                                              x: node.position.dx,
+                                              y: node.position.dy,
+                                              isInitial: false,
+                                              isAccepting: false,
+                                            );
+                                    final isHighlighted = _isNodeHighlighted(
+                                      canvasNode,
+                                      highlight,
+                                    );
+                                    return _AutomatonGraphNode(
+                                      label: canvasNode.label,
+                                      isInitial: canvasNode.isInitial,
+                                      isAccepting: canvasNode.isAccepting,
+                                      isHighlighted: isHighlighted,
+                                      motionPreset: motionPreset,
+                                    );
+                                  },
+                                ),
                               ),
                             ),
                           );

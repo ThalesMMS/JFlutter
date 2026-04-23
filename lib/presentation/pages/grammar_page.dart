@@ -60,19 +60,23 @@ class _GrammarPageState extends ConsumerState<GrammarPage> {
     final screenSize = MediaQuery.of(context).size;
     final isMobile = screenSize.width < 1024;
 
-    return Scaffold(
-      body: isMobile
-          ? _buildMobileLayout()
-          : screenSize.width < 1400
-          ? _buildTabletLayout()
-          : _buildDesktopLayout(),
-      floatingActionButton: !isMobile
-          ? FloatingActionButton(
-              onPressed: _showContextualHelp,
-              tooltip: 'Context-Aware Help',
-              child: const Icon(Icons.help_outline),
-            )
-          : null,
+    return FocusTraversalGroup(
+      policy: ReadingOrderTraversalPolicy(),
+      child: Scaffold(
+        body: isMobile
+            ? _buildMobileLayout()
+            : screenSize.width < 1400
+                ? _buildTabletLayout()
+                : _buildDesktopLayout(),
+        floatingActionButton: !isMobile
+            ? FloatingActionButton(
+                heroTag: 'grammar_context_help_fab',
+                onPressed: _showContextualHelp,
+                tooltip: 'Context-Aware Help',
+                child: const Icon(Icons.help_outline),
+              )
+            : null,
+      ),
     );
   }
 
@@ -80,47 +84,57 @@ class _GrammarPageState extends ConsumerState<GrammarPage> {
     return SafeArea(
       child: Column(
         children: [
-          // Mobile controls toggle - more compact
-          Container(
+          Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _buildToggleButton(
-                    icon: Icons.edit,
-                    label: 'Editor',
-                    isActive: _showControls,
-                    onPressed: () =>
-                        setState(() => _showControls = !_showControls),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildToggleButton(
-                    icon: Icons.play_arrow,
-                    label: 'Parse',
-                    isActive: _showSimulation,
-                    onPressed: () =>
-                        setState(() => _showSimulation = !_showSimulation),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildToggleButton(
-                    icon: Icons.auto_awesome,
-                    label: 'Algorithms',
-                    isActive: _showAlgorithms,
-                    onPressed: () =>
-                        setState(() => _showAlgorithms = !_showAlgorithms),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.help_outline),
-                  tooltip: 'Help',
-                  onPressed: _showContextualHelp,
-                ),
-              ],
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final buttonWidth = (constraints.maxWidth - 8) / 2;
+                return Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    SizedBox(
+                      width: buttonWidth,
+                      child: _buildToggleButton(
+                        icon: Icons.edit,
+                        label: 'Editor',
+                        isActive: _showControls,
+                        onPressed: () =>
+                            setState(() => _showControls = !_showControls),
+                      ),
+                    ),
+                    SizedBox(
+                      width: buttonWidth,
+                      child: _buildToggleButton(
+                        icon: Icons.play_arrow,
+                        label: 'Parse',
+                        isActive: _showSimulation,
+                        onPressed: () =>
+                            setState(() => _showSimulation = !_showSimulation),
+                      ),
+                    ),
+                    SizedBox(
+                      width: buttonWidth,
+                      child: _buildToggleButton(
+                        icon: Icons.auto_awesome,
+                        label: 'Algorithms',
+                        isActive: _showAlgorithms,
+                        onPressed: () =>
+                            setState(() => _showAlgorithms = !_showAlgorithms),
+                      ),
+                    ),
+                    SizedBox(
+                      width: buttonWidth,
+                      child: _buildToggleButton(
+                        icon: Icons.help_outline,
+                        label: 'Help',
+                        isActive: false,
+                        onPressed: _showContextualHelp,
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
 
@@ -189,7 +203,12 @@ class _GrammarPageState extends ConsumerState<GrammarPage> {
     return ElevatedButton.icon(
       onPressed: onPressed,
       icon: Icon(icon, size: 16),
-      label: Text(label, style: const TextStyle(fontSize: 11)),
+      label: Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontSize: 12),
+      ),
       style: ElevatedButton.styleFrom(
         backgroundColor: isActive
             ? Theme.of(context).colorScheme.primary
@@ -197,13 +216,16 @@ class _GrammarPageState extends ConsumerState<GrammarPage> {
         foregroundColor: isActive
             ? Theme.of(context).colorScheme.onPrimary
             : Theme.of(context).colorScheme.onSurface,
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
         minimumSize: Size.zero,
       ),
     );
   }
 
   Widget _buildPanelsColumn() {
+    final panelMaxHeight =
+        (MediaQuery.sizeOf(context).height * 0.35).clamp(220.0, 360.0);
+
     return Column(
       children: [
         // Grammar editor
@@ -215,7 +237,7 @@ class _GrammarPageState extends ConsumerState<GrammarPage> {
         // Simulation panel
         if (_showSimulation) ...[
           Container(
-            constraints: const BoxConstraints(maxHeight: 250),
+            constraints: BoxConstraints(maxHeight: panelMaxHeight),
             child: const GrammarSimulationPanel(),
           ),
           const SizedBox(height: 8),
@@ -224,7 +246,7 @@ class _GrammarPageState extends ConsumerState<GrammarPage> {
         // Algorithm panel
         if (_showAlgorithms) ...[
           Container(
-            constraints: const BoxConstraints(maxHeight: 250),
+            constraints: BoxConstraints(maxHeight: panelMaxHeight),
             child: const GrammarAlgorithmPanel(),
           ),
         ],

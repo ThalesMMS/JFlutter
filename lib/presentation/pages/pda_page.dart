@@ -17,6 +17,7 @@ import '../../core/models/pda_transition.dart';
 import '../../core/models/state.dart' as automaton_state;
 import '../providers/help_provider.dart';
 import '../providers/pda_editor_provider.dart';
+import '../widgets/app_snackbar.dart';
 import '../widgets/context_aware_help_panel.dart';
 import '../widgets/graphview_canvas_toolbar.dart';
 import '../widgets/automaton_canvas_tool.dart';
@@ -161,8 +162,10 @@ class _PDAPageState extends ConsumerState<PDAPage>
         helpContent: helpContent,
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Help content not available.')),
+      showAppSnackBar(
+        context,
+        message: 'Help content is not available right now.',
+        tone: AppSnackBarTone.error,
       );
     }
   }
@@ -177,19 +180,23 @@ class _PDAPageState extends ConsumerState<PDAPage>
       overrides: [
         canvasHighlightServiceProvider.overrideWithValue(_highlightService),
       ],
-      child: Scaffold(
-        body: isMobile
-            ? _buildMobileLayout()
-            : screenSize.width < 1400
-            ? _buildTabletLayout()
-            : _buildDesktopLayout(),
-        floatingActionButton: !isMobile
-            ? FloatingActionButton(
-                onPressed: _showContextualHelp,
-                tooltip: 'Context-Aware Help',
-                child: const Icon(Icons.help_outline),
-              )
-            : null,
+      child: FocusTraversalGroup(
+        policy: ReadingOrderTraversalPolicy(),
+        child: Scaffold(
+          body: isMobile
+              ? _buildMobileLayout()
+              : screenSize.width < 1400
+                  ? _buildTabletLayout()
+                  : _buildDesktopLayout(),
+          floatingActionButton: !isMobile
+              ? FloatingActionButton(
+                  heroTag: 'pda_context_help_fab',
+                  onPressed: _showContextualHelp,
+                  tooltip: 'Context-Aware Help',
+                  child: const Icon(Icons.help_outline),
+                )
+              : null,
+        ),
       ),
     );
   }
@@ -423,34 +430,34 @@ class _PDAPageState extends ConsumerState<PDAPage>
 
     final combinedListenable = _canvasController.graphRevision;
 
-    final VoidCallback? onHelp = _showContextualHelp;
+    final onHelp = _showContextualHelp;
     final onSimulate = hasPda
         ? () => _showPanelSheet(
-            context: context,
-            title: 'PDA Simulation',
-            icon: Icons.play_arrow,
-            child: PDASimulationPanel(
-              highlightService: _highlightService,
-              onStackChanged: _handleStackChanged,
-              onSimulationStart: _handleSimulationStart,
-              onSimulationEnd: _handleSimulationEnd,
-            ),
-          )
+              context: context,
+              title: 'PDA Simulation',
+              icon: Icons.play_arrow,
+              child: PDASimulationPanel(
+                highlightService: _highlightService,
+                onStackChanged: _handleStackChanged,
+                onSimulationStart: _handleSimulationStart,
+                onSimulationEnd: _handleSimulationEnd,
+              ),
+            )
         : null;
     final onAlgorithms = hasPda
         ? () => _showPanelSheet(
-            context: context,
-            title: 'PDA Algorithms',
-            icon: Icons.auto_awesome,
-            child: const PDAAlgorithmPanel(),
-          )
+              context: context,
+              title: 'PDA Algorithms',
+              icon: Icons.auto_awesome,
+              child: const PDAAlgorithmPanel(),
+            )
         : null;
 
     if (isMobile) {
       return Stack(
         children: [
           Positioned.fill(child: canvas),
-          if (onHelp != null || onSimulate != null || onAlgorithms != null)
+          if (onSimulate != null || onAlgorithms != null)
             Positioned(
               top: 16,
               left: 16,
@@ -476,12 +483,11 @@ class _PDAPageState extends ConsumerState<PDAPage>
                 ),
                 onFitToContent: _canvasController.fitToContent,
                 onResetView: _canvasController.resetView,
-                onClear: () => ref
-                    .read(pdaEditorProvider.notifier)
-                    .updateFromCanvas(
-                      states: const <automaton_state.State>[],
-                      transitions: const <PDATransition>[],
-                    ),
+                onClear: () =>
+                    ref.read(pdaEditorProvider.notifier).updateFromCanvas(
+                  states: const <automaton_state.State>[],
+                  transitions: const <PDATransition>[],
+                ),
                 onUndo: _canvasController.canUndo
                     ? () => _canvasController.undo()
                     : null,
@@ -519,12 +525,11 @@ class _PDAPageState extends ConsumerState<PDAPage>
               onAddState: _handleAddStatePressed,
               onAddTransition: () =>
                   _toolController.setActiveTool(AutomatonCanvasTool.transition),
-              onClear: () => ref
-                  .read(pdaEditorProvider.notifier)
-                  .updateFromCanvas(
-                    states: const <automaton_state.State>[],
-                    transitions: const <PDATransition>[],
-                  ),
+              onClear: () =>
+                  ref.read(pdaEditorProvider.notifier).updateFromCanvas(
+                states: const <automaton_state.State>[],
+                transitions: const <PDATransition>[],
+              ),
               statusMessage: statusMessage,
             );
           },

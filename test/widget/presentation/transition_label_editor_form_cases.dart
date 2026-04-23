@@ -20,6 +20,30 @@ void _registerTransitionLabelEditorFormTests() {
       expect(find.text('a,b'), findsOneWidget);
     });
 
+    testWidgets('disables smart text features for formal labels', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TransitionLabelEditorForm(
+              initialValue: 'a,b',
+              onSubmit: (_) {},
+              onCancel: () {},
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final field = tester.widget<TextField>(find.byType(TextField));
+
+      expect(field.autocorrect, isFalse);
+      expect(field.enableSuggestions, isFalse);
+      expect(field.keyboardType, TextInputType.visiblePassword);
+    });
+
     testWidgets('calls onSubmit when save button is pressed', (tester) async {
       String? submittedValue;
 
@@ -222,6 +246,8 @@ void _registerTransitionLabelEditorFormTests() {
 
       final filledButton = find.byType(FilledButton);
       expect(filledButton, findsOneWidget);
+      expect(tester.getSize(outlinedButton).height, greaterThanOrEqualTo(44));
+      expect(tester.getSize(filledButton).height, greaterThanOrEqualTo(44));
     });
 
     testWidgets('renders standard buttons when touch-optimized disabled', (

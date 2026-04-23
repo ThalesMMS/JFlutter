@@ -1,17 +1,16 @@
 # JFlutter
 
-JFlutter is a Flutter reimplementation of the JFLAP educational tool. It offers an interactive, touch-first workspace for creating, analysing, and simulating finite automata, grammars, and Turing machines on mobile and desktop platforms.
+JFlutter is a Flutter reimplementation of the JFLAP educational tool. It offers an interactive, touch-first workspace for creating, analysing, and simulating finite automata, grammars, pushdown automata, Turing machines, and regular expressions on mobile and desktop platforms.
 
 <p align="center">
   <img src="./screenshots/screenshot1.png" alt="Automaton canvas screenshot" width="600" />
   <img src="./screenshots/screenshot2.png" alt="Regex module screenshot" width="600" />
   <img src="./screenshots/screenshot3.png" alt="Grammar editor screenshot" width="300" />
-  <img src="./screenshots/screenshot4.png" alt="Pumping Lemma Game screenshot" width="300" />
 </p>
 
 ## Project Status
 
-**Status:** Work in Progress – the core learning workflows are available while UI polish and advanced visualisations are still being built.
+**Status:** Work in Progress. The Apple v1.0 release scope is frozen to the FSA, Grammar, PDA, TM, and Regex workspaces documented in `V1_SCOPE.md`.
 
 ## Highlights
 
@@ -19,19 +18,20 @@ JFlutter is a Flutter reimplementation of the JFLAP educational tool. It offers 
 - Touch-friendly canvas for creating and editing automata
 - Step-by-step simulators for finite automata, pushdown automata, and Turing machines
 - Grammar editors with validation and conversion helpers
+- Regular-expression workflows for validation, testing, comparison, and conversion
 - Inline explanations and diagnostics to support classroom use
 
 ### Algorithms shipped in the app
 - Conversions between NFA, DFA, and regular expressions
 - DFA minimisation and automaton simulation traces
-- Grammar analysis utilities and the Pumping Lemma training game
+- Grammar analysis utilities for the shipped release workflows
 - Single-tape Turing machine construction and execution
 
 ### User experience and performance
 - Material 3 interface with light and dark themes
 - Adaptive layouts for phones, tablets, desktops, and the web
 - Optimised canvas rendering (viewport culling, level-of-detail drawing, and highlight tracing)
-- Persistent trace management across simulators and resilient import/export flows for JFLAP XML, JSON, and SVG
+- Workspace-scoped import/export flows aligned to the v1.0 release contract in `V1_SCOPE.md`
 
 ### Offline examples
 The repository bundles ready-to-use examples covering DFAs, NFAs, CFGs, PDAs, and Turing Machines in `jflutter_js/examples/`. They are declared in `pubspec.yaml` so the material is available without a network connection.
@@ -169,7 +169,7 @@ export JFLUTTER_KEY_PASSWORD="$JFLUTTER_KEY_PASSWORD"
 
 ### Test Suite Overview
 
-Run `flutter test` (Flutter 3.27.0+ / Dart 3.6.0+) to execute the full suite. Tests are organised to mirror the architecture:
+Run `flutter test` (Flutter 3.27.0+ / Dart 3.6.0+) to execute the full suite. For the current repository baseline and known-failure counts, refer to `AGENTS.md`. Tests are organised to mirror the architecture:
 
 - **Algorithm validation** – `test/unit/` keeps DFA/NFA conversions, grammar analysis, and regex tooling aligned with the references.
 - **Core services** – `test/core/services/` verifies utilities such as the simulation highlight broadcaster.
@@ -179,8 +179,8 @@ Run `flutter test` (Flutter 3.27.0+ / Dart 3.6.0+) to execute the full suite. 
 
 ### Placeholder and Pending Work
 
-- `test/widget/presentation/visualizations_test.dart` intentionally fails to track the future golden-test pipeline.
-- Temporary widget stubs live in `test/widget/presentation/ux_error_handling_test.dart` until the design-system components ship.
+- `test/widget/presentation/visualizations_test.dart` is a golden-test infrastructure suite and should remain aligned with the current golden harness setup.
+- `test/widget/presentation/ux_error_handling_test.dart` is an active widget suite covering import-error UX flows.
 
 #### Running Tests
 
@@ -219,7 +219,7 @@ The `References/` directory contains authoritative implementations used as the s
 ### Quality Assurance
 - **Algorithm Coverage** - Deterministic automata, grammar, and regex suites in `test/unit/` back the domain layer.
 - **Integration Guardrails** - Serialization and examples are validated through the IO round-trip suites in `test/integration/io/`.
-- **UI Exercisers** - Canvas and control widgets are kept regression-safe via the harnesses in `test/widget/presentation/`, with golden coverage tracked by the pending `visualizations_test.dart` placeholder.
+- **UI Exercisers** - Canvas and control widgets are kept regression-safe via the harnesses in `test/widget/presentation/`, with golden coverage supported by the `visualizations_test.dart` infrastructure suite.
 - **Performance Monitoring** - Regular benchmarking against reference implementations.
 - **Deviation Tracking** - All deviations documented with impact assessment and cross-checked with references.
 - **Continuous Validation** - Ongoing comparison with reference implementations.
@@ -233,7 +233,7 @@ The `References/` directory contains authoritative implementations used as the s
 ## Project Overview
 
 ### Completed Features
-- 13 algorithms covering DFA/NFA conversions, regex tooling, and grammar processing
+- Validated automata algorithms covering DFA/NFA conversions, regex tooling, and grammar processing
 - Riverpod-based state management with a clean-architecture layout
 - Responsive UI components for automata, grammars, PDAs, and Turing machines
 - Offline example library and import/export flows for JFLAP interoperability

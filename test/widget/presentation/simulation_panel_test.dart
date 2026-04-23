@@ -95,6 +95,43 @@ void main() {
       expect(find.byType(Switch), findsOneWidget);
     });
 
+    testWidgets('disables smart text features for the input field', (
+      tester,
+    ) async {
+      final callback = _SimulationCallback();
+
+      await _pumpSimulationPanel(tester, onSimulate: callback);
+
+      final field = tester.widget<TextField>(find.byType(TextField));
+
+      expect(field.autocorrect, isFalse);
+      expect(field.enableSuggestions, isFalse);
+      expect(field.keyboardType, TextInputType.visiblePassword);
+    });
+
+    testWidgets('exposes semantic labels for primary simulation controls', (
+      tester,
+    ) async {
+      final callback = _SimulationCallback();
+      final handle = tester.ensureSemantics();
+      var handleDisposed = false;
+      addTearDown(() {
+        if (!handleDisposed) {
+          handle.dispose();
+          handleDisposed = true;
+        }
+      });
+
+      await _pumpSimulationPanel(tester, onSimulate: callback);
+
+      expect(find.bySemanticsLabel('Simulation input string'), findsOneWidget);
+      expect(find.bySemanticsLabel('Run simulation'), findsOneWidget);
+      expect(find.bySemanticsLabel('Step-by-step mode'), findsOneWidget);
+
+      handle.dispose();
+      handleDisposed = true;
+    });
+
     testWidgets('calls onSimulate when simulate button is pressed', (
       tester,
     ) async {

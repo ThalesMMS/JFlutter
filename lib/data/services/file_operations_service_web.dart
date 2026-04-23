@@ -14,6 +14,7 @@ import 'dart:convert';
 import 'dart:html' as html;
 import 'dart:math' as math;
 import 'dart:typed_data';
+import 'package:collection/collection.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'package:xml/xml.dart';
 import '../../core/entities/automaton_entity.dart';
@@ -25,6 +26,7 @@ import '../../core/models/production.dart';
 import '../../core/models/state.dart' as automaton_state;
 import '../../core/models/fsa_transition.dart';
 import '../../core/result.dart';
+import '../../core/utils/epsilon_utils.dart';
 import '../../presentation/widgets/export/svg_exporter.dart';
 
 /// Service for file operations tailored for web environments.
@@ -51,10 +53,40 @@ class FileOperationsService {
     try {
       final xmlString = utf8.decode(bytes);
       final document = XmlDocument.parse(xmlString);
-      final automaton = _parseJFLAPXML(document);
-      return Success(automaton);
+      return _parseJFLAPXML(document);
     } catch (e) {
       return Failure('Failed to load automaton from provided data: $e');
+    }
+  }
+
+  Future<StringResult> saveAutomatonToJson(
+    FSA automaton,
+    String filePath,
+  ) async {
+    try {
+      final jsonString = jsonEncode(automaton.toJson());
+      return _downloadText(filePath, 'application/json', jsonString);
+    } catch (e) {
+      return Failure('Failed to prepare automaton JSON download: $e');
+    }
+  }
+
+  Future<Result<FSA>> loadAutomatonFromJson(String filePath) async {
+    return const Failure(
+      'Loading automaton JSON files from a path is not supported on web.',
+    );
+  }
+
+  Future<Result<FSA>> loadAutomatonFromJsonBytes(Uint8List bytes) async {
+    try {
+      final jsonString = utf8.decode(bytes);
+      final decoded = jsonDecode(jsonString);
+      if (decoded is! Map<String, dynamic>) {
+        return const Failure('Invalid automaton JSON format');
+      }
+      return Success(FSA.fromJson(decoded));
+    } catch (e) {
+      return Failure('Failed to load automaton from provided JSON data: $e');
     }
   }
 
@@ -197,14 +229,23 @@ class FileOperationsService {
 
             for (final transition in automaton.transitions) {
               if (transition is! FSATransition) continue;
-              builder.element(
-                'transition',
-                nest: () {
-                  builder.element('from', nest: transition.fromState.id);
-                  builder.element('to', nest: transition.toState.id);
-                  builder.element('read', nest: transition.symbol);
-                },
-              );
+              final symbols = transition.inputSymbols.isEmpty
+                  ? <String>{transition.symbol}
+                  : transition.inputSymbols;
+              for (final symbol in symbols) {
+                builder.element(
+                  'transition',
+                  nest: () {
+                    builder.element('from', nest: transition.fromState.id);
+                    builder.element('to', nest: transition.toState.id);
+                    if (isEpsilonSymbol(symbol)) {
+                      builder.element('read', isSelfClosing: true);
+                    } else {
+                      builder.element('read', nest: symbol);
+                    }
+                  },
+                );
+              }
             }
           },
         );
@@ -250,9 +291,10 @@ class FileOperationsService {
   String _buildLegacySVG(FSA automaton) {
     final states = automaton.states.toList()
       ..sort((a, b) => a.id.compareTo(b.id));
-    final transitions =
-        automaton.transitions.whereType<FSATransition>().toList()
-          ..sort((a, b) => a.id.compareTo(b.id));
+    final transitions = automaton.transitions
+        .whereType<FSATransition>()
+        .toList()
+      ..sort((a, b) => a.id.compareTo(b.id));
 
     final buffer = StringBuffer();
     buffer.writeln('<?xml version="1.0" encoding="UTF-8"?>');
@@ -275,15 +317,12 @@ class FileOperationsService {
     }
 
     for (final state in states) {
-      final strokeColor = state.isInitial
-          ? _kInitialStrokeColor
-          : _kStrokeColor;
-      final strokeWidth = state.isInitial
-          ? _kInitialStrokeWidth
-          : _kDefaultStrokeWidth;
-      final fillColor = state.isAccepting
-          ? _kAcceptingFillColor
-          : _kDefaultFillColor;
+      final strokeColor =
+          state.isInitial ? _kInitialStrokeColor : _kStrokeColor;
+      final strokeWidth =
+          state.isInitial ? _kInitialStrokeWidth : _kDefaultStrokeWidth;
+      final fillColor =
+          state.isAccepting ? _kAcceptingFillColor : _kDefaultFillColor;
       buffer.writeln(
         '  <circle cx="${state.position.x}" cy="${state.position.y}" r="$_kStateRadius" fill="$fillColor" stroke="$strokeColor" stroke-width="$strokeWidth"/>',
       );
@@ -326,23 +365,38 @@ class FileOperationsService {
     }
   }
 
-  FSA _parseJFLAPXML(XmlDocument document) {
-    final automatonElement = document.findAllElements('automaton').first;
+  Result<FSA> _parseJFLAPXML(XmlDocument document) {
+    final automatonElement = document.findAllElements('automaton').firstOrNull;
+    if (automatonElement == null) {
+      return const Failure('JFLAP import is missing the <automaton> element.');
+    }
     final states = <automaton_state.State>[];
     final transitions = <FSATransition>[];
+    final alphabet = <String>{};
 
     for (final stateElement in automatonElement.findAllElements('state')) {
-      final id = stateElement.getAttribute('id')!;
-      final name = stateElement.getAttribute('name') ?? id;
-      final x = double.parse(stateElement.findElements('x').first.text);
-      final y = double.parse(stateElement.findElements('y').first.text);
+      final id = stateElement.getAttribute('id');
+      final name = stateElement.getAttribute('name');
+      final idOrName = id ?? name;
+      if (idOrName == null || idOrName.isEmpty) {
+        continue;
+      }
+      final stateName = name ?? idOrName;
+      final xText = stateElement.getAttribute('x') ??
+          stateElement.findElements('x').firstOrNull?.innerText ??
+          '0.0';
+      final yText = stateElement.getAttribute('y') ??
+          stateElement.findElements('y').firstOrNull?.innerText ??
+          '0.0';
+      final x = double.tryParse(xText) ?? 0.0;
+      final y = double.tryParse(yText) ?? 0.0;
       final isInitial = stateElement.findElements('initial').isNotEmpty;
       final isAccepting = stateElement.findElements('final').isNotEmpty;
 
       states.add(
         automaton_state.State(
-          id: id,
-          label: name,
+          id: idOrName,
+          label: stateName,
           position: Vector2(x, y),
           isInitial: isInitial,
           isAccepting: isAccepting,
@@ -350,15 +404,43 @@ class FileOperationsService {
       );
     }
 
+    if (states.isEmpty) {
+      return const Failure(
+        'JFLAP import does not contain any states. Empty automata cannot be loaded into the editor.',
+      );
+    }
+
     for (final transitionElement in automatonElement.findAllElements(
       'transition',
     )) {
-      final fromId = transitionElement.findElements('from').first.text;
-      final toId = transitionElement.findElements('to').first.text;
-      final symbol = transitionElement.findElements('read').first.text;
+      final fromId =
+          transitionElement.findElements('from').firstOrNull?.innerText.trim();
+      final toId =
+          transitionElement.findElements('to').firstOrNull?.innerText.trim();
+      if (fromId == null || fromId.isEmpty || toId == null || toId.isEmpty) {
+        return const Failure(
+          'JFLAP import contains a transition without valid origin and destination states.',
+        );
+      }
+      final symbol = normalizeToEpsilon(
+        transitionElement.findElements('read').firstOrNull?.innerText,
+      );
 
-      final fromState = states.firstWhere((s) => s.id == fromId);
-      final toState = states.firstWhere((s) => s.id == toId);
+      final fromState = states.firstWhereOrNull(
+        (s) => s.id == fromId || s.label == fromId,
+      );
+      final toState = states.firstWhereOrNull(
+        (s) => s.id == toId || s.label == toId,
+      );
+      if (fromState == null || toState == null) {
+        return Failure(
+          'JFLAP import references an unknown state in transition $fromId -> $toId.',
+        );
+      }
+
+      if (!isEpsilonSymbol(symbol) && symbol.isNotEmpty) {
+        alphabet.add(symbol);
+      }
 
       transitions.add(
         FSATransition(
@@ -366,52 +448,82 @@ class FileOperationsService {
           fromState: fromState,
           toState: toState,
           label: symbol,
-          inputSymbols: {symbol},
+          inputSymbols: isEpsilonSymbol(symbol) ? <String>{} : <String>{symbol},
+          lambdaSymbol: isEpsilonSymbol(symbol) ? kEpsilonSymbol : null,
         ),
       );
     }
 
-    return FSA(
-      id: 'imported_${DateTime.now().millisecondsSinceEpoch}',
-      name: 'Imported Automaton',
-      states: states.toSet(),
-      transitions: transitions.toSet(),
-      alphabet: transitions.map((t) => t.symbol).toSet(),
-      initialState: states.firstWhere(
-        (s) => s.isInitial,
-        orElse: () => states.first,
+    return Success(
+      FSA(
+        id: 'imported_${DateTime.now().millisecondsSinceEpoch}',
+        name: 'Imported Automaton',
+        states: states.toSet(),
+        transitions: transitions.toSet(),
+        alphabet: alphabet,
+        initialState: states.firstWhere(
+          (s) => s.isInitial,
+          orElse: () => states.first,
+        ),
+        acceptingStates: states.where((s) => s.isAccepting).toSet(),
+        bounds: const math.Rectangle(0, 0, 400, 300),
+        created: DateTime.now(),
+        modified: DateTime.now(),
       ),
-      acceptingStates: states.where((s) => s.isAccepting).toSet(),
-      bounds: const math.Rectangle(0, 0, 400, 300),
-      created: DateTime.now(),
-      modified: DateTime.now(),
     );
   }
 
   Grammar _parseGrammarXML(XmlDocument document) {
-    final grammarElement = document.findAllElements('grammar').first;
-    final startSymbol = grammarElement.findElements('start').first.text;
+    final grammarElement = document.findAllElements('grammar').firstOrNull;
+    if (grammarElement == null) {
+      throw const FormatException(
+        'JFLAP grammar import is missing the <grammar> element.',
+      );
+    }
+
+    final startElement = grammarElement.findElements('start').firstOrNull;
+    if (startElement == null) {
+      throw const FormatException(
+        'JFLAP grammar import is missing the <start> element.',
+      );
+    }
+    final startSymbols = _splitGrammarSymbols(startElement.innerText);
+    if (startSymbols.isEmpty) {
+      throw const FormatException(
+        'JFLAP grammar import has an empty <start> element.',
+      );
+    }
+    if (startSymbols.length != 1) {
+      throw const FormatException(
+        'JFLAP grammar import must declare exactly one start symbol.',
+      );
+    }
+    final startSymbol = startSymbols.single;
     final productions = <Production>{};
 
     for (final productionElement in grammarElement.findAllElements(
       'production',
     )) {
-      final leftSide = productionElement
-          .findElements('left')
-          .first
-          .text
-          .split(' ');
-      final rightSide = productionElement
-          .findElements('right')
-          .first
-          .text
-          .split(' ');
+      final leftElement = productionElement.findElements('left').firstOrNull;
+      final rightElement = productionElement.findElements('right').firstOrNull;
+      if (leftElement == null || rightElement == null) {
+        throw const FormatException(
+          'JFLAP grammar import has a <production> without <left> or <right>.',
+        );
+      }
+      final leftSide = _splitGrammarSymbols(
+        leftElement.innerText,
+      );
+      final rightSide = _splitGrammarSymbols(
+        rightElement.innerText,
+      );
 
       productions.add(
         Production(
           id: 'p${productions.length}',
           leftSide: leftSide,
           rightSide: rightSide,
+          isLambda: rightSide.isEmpty,
           order: productions.length,
         ),
       );
@@ -431,6 +543,14 @@ class FileOperationsService {
       created: DateTime.now(),
       modified: DateTime.now(),
     );
+  }
+
+  List<String> _splitGrammarSymbols(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return const <String>[];
+    }
+    return trimmed.split(RegExp(r'\s+'));
   }
 }
 

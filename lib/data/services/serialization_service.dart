@@ -9,6 +9,7 @@
 import 'dart:convert';
 import 'package:xml/xml.dart';
 import '../../core/result.dart';
+import '../../core/utils/automaton_id_utils.dart';
 import '../../core/utils/epsilon_utils.dart';
 import '../models/automaton_dto.dart';
 
@@ -20,9 +21,10 @@ class SerializationService {
     builder.processing('xml', 'version="1.0" encoding="UTF-8"');
 
     final rawType = (automatonData['type'] as String? ?? 'fa').toLowerCase();
-    final automatonType = (rawType == 'dfa' || rawType == 'nfa')
-        ? 'fa'
-        : rawType;
+    final automatonType =
+        rawType == 'dfa' || rawType == 'nfa' || rawType == 'fa'
+            ? 'fa'
+            : rawType;
 
     builder.element(
       'structure',
@@ -71,19 +73,16 @@ class SerializationService {
                 automatonData['transitions'] as Map<String, dynamic>? ?? {};
             for (final transition in transitions.entries) {
               final keyParts = transition.key.split('|');
-              final fromState = keyParts.isNotEmpty
-                  ? keyParts.first.trim()
-                  : transition.key;
-              final rawSymbol = keyParts.length > 1
-                  ? keyParts.sublist(1).join('|')
-                  : null;
+              final fromState =
+                  keyParts.isNotEmpty ? keyParts.first.trim() : transition.key;
+              final rawSymbol =
+                  keyParts.length > 1 ? keyParts.sublist(1).join('|') : null;
               final readSymbol = _normalizeTransitionSymbol(rawSymbol);
               final targets = transition.value as List<dynamic>? ?? [];
 
               for (final target in targets) {
-                final toStateId = target is String
-                    ? target
-                    : target?.toString() ?? '';
+                final toStateId =
+                    target is String ? target : target?.toString() ?? '';
                 if (fromState.isEmpty || toStateId.isEmpty) {
                   continue;
                 }
@@ -96,7 +95,7 @@ class SerializationService {
                     // tags, not <read>ε</read>. See epsilon_utils.dart for
                     // canonical epsilon representation.
                     if (isEpsilonSymbol(readSymbol)) {
-                      builder.element('read');
+                      builder.element('read', isSelfClosing: true);
                     } else {
                       builder.element('read', nest: readSymbol);
                     }
@@ -117,10 +116,14 @@ class SerializationService {
     try {
       final document = XmlDocument.parse(xmlString);
       final root = document.rootElement;
+      if (root.name.local != 'structure') {
+        return const Failure(
+          'Failed to deserialize JFLAP automaton: Root element must be <structure>',
+        );
+      }
       final automatonElements = document.findAllElements('automaton');
-      final automatonElement = automatonElements.isEmpty
-          ? null
-          : automatonElements.first;
+      final automatonElement =
+          automatonElements.isEmpty ? null : automatonElements.first;
 
       if (automatonElement == null) {
         return const Failure(
@@ -130,29 +133,30 @@ class SerializationService {
 
       final typeElement = root.getElement('type');
       final typeAttribute = root.getAttribute('type');
-      final automatonType = (typeElement?.innerText.trim().isNotEmpty ?? false)
+      final sourceType = (typeElement?.innerText.trim().isNotEmpty ?? false)
           ? typeElement!.innerText.trim()
-          : (typeAttribute ?? 'dfa');
+          : (typeAttribute ?? 'fa');
 
       final states = <Map<String, dynamic>>[];
       final transitions = <String, List<String>>{};
+      final alphabet = <String>{};
       String? initialState;
+      var hasEpsilonTransition = false;
+      var hasNondeterministicTransition = false;
+      final idLookup = <String, String>{};
 
       // Parse states
       for (final stateElement in automatonElement.findAllElements('state')) {
-        final id =
-            stateElement.getAttribute('id') ??
+        final id = stateElement.getAttribute('id') ??
             stateElement.getAttribute('name') ??
             '';
         if (id.isEmpty) {
           continue;
         }
         final name = stateElement.getAttribute('name') ?? id;
-        final xText =
-            stateElement.getAttribute('x') ??
+        final xText = stateElement.getAttribute('x') ??
             stateElement.getElement('x')?.innerText;
-        final yText =
-            stateElement.getAttribute('y') ??
+        final yText = stateElement.getAttribute('y') ??
             stateElement.getElement('y')?.innerText;
         final x = double.tryParse(xText ?? '') ?? 0.0;
         final y = double.tryParse(yText ?? '') ?? 0.0;
@@ -168,6 +172,8 @@ class SerializationService {
           'isFinal': isFinal,
         };
         states.add(state);
+        idLookup[id] = id;
+        idLookup[name] = id;
 
         if (isInitial) {
           initialState = id;
@@ -184,24 +190,49 @@ class SerializationService {
           continue;
         }
 
-        final from = fromElements.first.innerText.trim();
-        final to = toElements.first.innerText.trim();
+        final rawFrom = fromElements.first.innerText.trim();
+        final rawTo = toElements.first.innerText.trim();
+        if (!idLookup.containsKey(rawFrom) || !idLookup.containsKey(rawTo)) {
+          return Failure(
+            'Failed to deserialize JFLAP automaton: Transition references unknown state $rawFrom -> $rawTo',
+          );
+        }
+        final from = idLookup[rawFrom]!;
+        final to = idLookup[rawTo]!;
         final readElements = transitionElement.findElements('read');
-        final rawSymbol = readElements.isEmpty
-            ? null
-            : readElements.first.innerText;
+        final rawSymbol =
+            readElements.isEmpty ? null : readElements.first.innerText;
         final symbol = _normalizeTransitionSymbol(rawSymbol);
         final key = '$from|$symbol';
 
         transitions.putIfAbsent(key, () => <String>[]);
-        transitions[key]!.add(to);
+        if (!transitions[key]!.contains(to)) {
+          transitions[key]!.add(to);
+        }
+        if (isEpsilonSymbol(symbol)) {
+          hasEpsilonTransition = true;
+        } else if (transitions[key]!.length > 1) {
+          hasNondeterministicTransition = true;
+        } else if (symbol.isNotEmpty) {
+          alphabet.add(symbol);
+        }
       }
 
       final automatonData = {
+        'id': _generateImportedAutomatonId(),
+        'name': 'Imported Automaton',
         'states': states,
-        'transitions': transitions,
+        'transitions': transitions.map(
+          (key, value) => MapEntry(key, List<String>.unmodifiable(value)),
+        ),
+        'alphabet': alphabet.toList(),
         'initialId': initialState,
-        'type': automatonType,
+        'type': _deriveFsaType(
+          sourceType: sourceType,
+          hasEpsilonTransition: hasEpsilonTransition,
+          hasNondeterministicTransition: hasNondeterministicTransition,
+        ),
+        'nextId': AutomatonIdUtils.calculateNextAutomatonId(states),
       };
 
       return Success(automatonData);
@@ -215,7 +246,7 @@ class SerializationService {
   /// Converts all epsilon aliases (ε, λ, epsilon, empty, etc.) to the canonical
   /// epsilon symbol 'ε' for both serialization and deserialization.
   ///
-  /// - During serialization: ensures epsilon transitions write `<read>ε</read>`
+  /// - During serialization: ensures epsilon transitions emit empty `<read/>`
   /// - During deserialization: ensures epsilon from XML becomes 'ε' in keys
   ///
   /// Delegates to [normalizeToEpsilon] from epsilon_utils for consistent handling.
@@ -223,11 +254,35 @@ class SerializationService {
     return normalizeToEpsilon(symbol);
   }
 
+  String _generateImportedAutomatonId() {
+    return 'imported_${DateTime.now().millisecondsSinceEpoch}';
+  }
+
+  String _deriveFsaType({
+    required String sourceType,
+    required bool hasEpsilonTransition,
+    required bool hasNondeterministicTransition,
+  }) {
+    final normalized = sourceType.trim().toLowerCase();
+    if (hasEpsilonTransition || hasNondeterministicTransition) {
+      return 'nfa';
+    }
+    if (normalized == 'nfa') {
+      return 'nfa';
+    }
+    if (normalized == 'dfa') {
+      return 'dfa';
+    }
+    if (normalized == 'fa') {
+      return 'dfa';
+    }
+    return 'nfa';
+  }
+
   /// Serializes automaton to JSON format
   String serializeAutomatonToJson(Map<String, dynamic> automatonData) {
     final dto = AutomatonDto(
-      id:
-          automatonData['id'] as String? ??
+      id: automatonData['id'] as String? ??
           'automaton_${DateTime.now().millisecondsSinceEpoch}',
       name: automatonData['name'] as String? ?? 'Automaton',
       type: automatonData['type'] as String? ?? 'dfa',

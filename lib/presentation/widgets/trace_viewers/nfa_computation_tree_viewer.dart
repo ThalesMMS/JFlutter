@@ -428,26 +428,32 @@ class _NFAComputationTreeViewerState extends State<NFAComputationTreeViewer> {
                 InkWell(
                   onTap: () => _toggleNodeCollapse(node),
                   borderRadius: BorderRadius.circular(4),
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          isCollapsed
-                              ? Icons.keyboard_arrow_right
-                              : Icons.keyboard_arrow_down,
-                          size: 16,
-                          color: colorScheme.primary,
-                        ),
-                        Text(
-                          '${node.children.length}',
-                          style: theme.textTheme.bodySmall?.copyWith(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      minWidth: 44,
+                      minHeight: 44,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            isCollapsed
+                                ? Icons.keyboard_arrow_right
+                                : Icons.keyboard_arrow_down,
+                            size: 16,
                             color: colorScheme.primary,
-                            fontWeight: FontWeight.bold,
                           ),
-                        ),
-                      ],
+                          Text(
+                            '${node.children.length}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -469,13 +475,20 @@ class _NFAComputationTreeViewerState extends State<NFAComputationTreeViewer> {
             child: InkWell(
               onTap: () => _toggleNodeCollapse(node),
               borderRadius: BorderRadius.circular(4),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: Text(
-                  '+$hiddenChildrenCount more branch${hiddenChildrenCount > 1 ? 'es' : ''} hidden',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.primary,
-                    fontStyle: FontStyle.italic,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 44),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '+$hiddenChildrenCount more branch${hiddenChildrenCount > 1 ? 'es' : ''} hidden',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.primary,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
                   ),
                 ),
               ),

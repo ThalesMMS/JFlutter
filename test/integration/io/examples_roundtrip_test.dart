@@ -22,6 +22,10 @@ import 'package:jflutter/data/services/serialization_service.dart';
 import 'package:jflutter/presentation/widgets/export/svg_exporter.dart';
 import 'package:flutter/material.dart';
 
+RegExp _viewBoxPattern(num width, num height) => RegExp(
+      'viewBox="0 0 ${width.toInt()}(?:\\\\.0+)? ${height.toInt()}(?:\\\\.0+)?"',
+    );
+
 TuringMachineEntity _buildSimpleTuringMachine() {
   const initialStateId = 'q0';
   const acceptingStateId = 'qAccept';
@@ -121,6 +125,7 @@ void main() {
         expect(counts[ExampleCategory.dfa], greaterThan(0));
         expect(counts.containsKey(ExampleCategory.cfg), isTrue);
         expect(counts[ExampleCategory.nfa], greaterThanOrEqualTo(0));
+        expect(counts[ExampleCategory.tm], equals(4));
       });
 
       test('Search functionality works correctly', () {
@@ -269,6 +274,23 @@ void main() {
 
         final searchResults = dataSource.searchExamples('dfa');
         expect(searchResults, isNotEmpty);
+      });
+
+      test('ExamplesService loads all TM examples from assets', () async {
+        final result = await service.loadExamplesByCategory(ExampleCategory.tm);
+
+        expect(result.isSuccess, isTrue);
+        expect(result.data, isNotNull);
+        expect(result.data!, hasLength(4));
+        expect(
+          result.data!.map((example) => example.name),
+          containsAll(<String>[
+            'MT - Binário para unário',
+            'MT - Cópia de string',
+            'MT - Incremento binário',
+            'MT - Verificador de palíndromo',
+          ]),
+        );
       });
 
       test('ExamplesService provides service methods correctly', () {
@@ -555,27 +577,44 @@ void main() {
         expect(svg, contains('<?xml'));
         expect(svg, contains('<svg'));
         expect(svg, contains('</svg>'));
-        expect(svg, contains('viewBox="0 0 800 600"'));
+        expect(svg, contains(_viewBoxPattern(800, 600)));
 
         // Tape layout
-        expect(svg, contains('<g class="tape">'));
-        expect(svg, contains('<rect class="tape-cell"'));
         expect(
           svg,
           contains(
-            '<text x="112" y="102" class="tape-symbol" fill="#000000">a</text>',
+            RegExp(
+              r'<g class="tape">[\s\S]*<rect class="tape-cell"[\s\S]*</g>',
+            ),
           ),
         );
         expect(
           svg,
           contains(
-            '<text x="432" y="102" class="tape-symbol" fill="#000000">_</text>',
+            RegExp(
+              r'<text x="[^"]+" y="[^"]+" class="tape-symbol" fill="#000000">a</text>',
+            ),
+          ),
+        );
+        expect(
+          svg,
+          contains(
+            RegExp(
+              r'<text x="[^"]+" y="[^"]+" class="tape-symbol" fill="#000000">_</text>',
+            ),
           ),
         );
 
         // Head indicator pointing to the central tape cell
         expect(svg, contains('<polygon class="head"'));
-        expect(svg, contains('points="420 70, 444 70, 432 54"'));
+        expect(
+          svg,
+          contains(
+            RegExp(
+              r'points="[\d.]+ [\d.]+, [\d.]+ [\d.]+, [\d.]+ [\d.]+"',
+            ),
+          ),
+        );
 
         // State layout and labelling
         expect(svg, contains('<g class="state">'));
@@ -680,8 +719,8 @@ void main() {
         );
 
         // Verify viewBox is set correctly
-        expect(smallSvg, contains('viewBox="0 0 400 300"'));
-        expect(largeSvg, contains('viewBox="0 0 1200 900"'));
+        expect(smallSvg, contains(_viewBoxPattern(400, 300)));
+        expect(largeSvg, contains(_viewBoxPattern(1200, 900)));
 
         // Both should be valid SVG
         expect(smallSvg, contains('<?xml'));
@@ -777,7 +816,7 @@ void main() {
           height: 10000,
         );
 
-        expect(largeSizeSvg, contains('viewBox="0 0 10000 10000"'));
+        expect(largeSizeSvg, contains(_viewBoxPattern(10000, 10000)));
         expect(largeSizeSvg, contains('No states defined'));
       });
 

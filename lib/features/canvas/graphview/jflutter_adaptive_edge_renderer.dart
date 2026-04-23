@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
@@ -40,17 +41,38 @@ class JFlutterAdaptiveEdgeRenderer extends AnimatedAdaptiveEdgeRenderer {
   static const double _labelCardSpacing = 12.0;
   static const int _maxVisibleGroupedLabels = 5;
   static const int _labelCollisionAttempts = 6;
+  static const int _maxCachedLabelPainters = 200;
 
   Set<String> _highlightedEdgeIds = const <String>{};
   Set<String> _selectedEdgeIds = const <String>{};
   double _animationTurnCount = 0.0;
   double _lastAnimationValue = 0.0;
+  final Map<_DirectedEdgePair, List<Edge>> _groupedEdgeCache =
+      <_DirectedEdgePair, List<Edge>>{};
+  final Set<_DirectedEdgePair> _opposingTrafficCache = <_DirectedEdgePair>{};
+  final LinkedHashMap<_LabelPainterCacheKey, TextPainter> _labelPainterCache =
+      LinkedHashMap<_LabelPainterCacheKey, TextPainter>();
+  final Set<TextPainter> _activeLabelPainters = HashSet<TextPainter>.identity();
+  final Set<TextPainter> _transientLabelPainters =
+      HashSet<TextPainter>.identity();
+  Graph? _edgeCacheGraph;
+  int _edgeCacheCount = -1;
+  bool _edgeCachesDirty = true;
 
   Color baseColor;
   Color highlightColor;
   Color labelSurfaceColor;
   double labelFontSize;
   JFlutterEdgeRenderMode renderMode;
+
+  @override
+  void setGraph(Graph graph) {
+    if (identical(graph, this.graph)) {
+      return;
+    }
+    super.setGraph(graph);
+    _invalidateEdgeCaches();
+  }
 
   @override
   void setAnimationValue(double value) {
@@ -68,11 +90,26 @@ class JFlutterAdaptiveEdgeRenderer extends AnimatedAdaptiveEdgeRenderer {
     required Color highlightColor,
     required Color labelSurfaceColor,
   }) {
+    final labelStyleChanged =
+        this.baseColor != baseColor || this.highlightColor != highlightColor;
     _highlightedEdgeIds = Set<String>.from(highlightedEdgeIds);
     _selectedEdgeIds = Set<String>.from(selectedEdgeIds);
     this.baseColor = baseColor;
     this.highlightColor = highlightColor;
     this.labelSurfaceColor = labelSurfaceColor;
+    if (labelStyleChanged) {
+      _clearLabelPainterCache();
+    }
+  }
+
+  @override
+  void prepareForRenderCycle() {
+    super.prepareForRenderCycle();
+    _ensureEdgeCaches();
+  }
+
+  void invalidateEdgeCaches() {
+    _invalidateEdgeCaches();
   }
 
   @visibleForTesting
@@ -107,9 +144,26 @@ class JFlutterAdaptiveEdgeRenderer extends AnimatedAdaptiveEdgeRenderer {
         .map((groupedEdge) =>
             _GroupedLabelEntry(painter: _buildLabelPainter(groupedEdge)))
         .toList(growable: false);
-    return _resolveGroupedLabelRect(
-        representative, groupedGeometry, labelEntries);
+    try {
+      return _resolveGroupedLabelRect(
+          representative, groupedGeometry, labelEntries);
+    } finally {
+      _releaseLabelEntries(labelEntries);
+    }
   }
+
+  @visibleForTesting
+  String debugGroupRepresentativeId(Edge edge) =>
+      _edgeId(_groupRepresentative(edge));
+
+  @visibleForTesting
+  int get debugLabelPainterCacheSize => _labelPainterCache.length;
+
+  @visibleForTesting
+  int get debugGroupedEdgeCacheSize => _groupedEdgeCache.length;
+
+  @visibleForTesting
+  int get debugOpposingTrafficCacheSize => _opposingTrafficCache.length;
 
   @override
   void renderEdge(Canvas canvas, Edge edge, Paint paint) {
@@ -117,8 +171,6 @@ class JFlutterAdaptiveEdgeRenderer extends AnimatedAdaptiveEdgeRenderer {
       edge.renderer!.renderEdge(canvas, edge, paint);
       return;
     }
-
-    prepareForRenderCycle();
 
     if (renderMode == JFlutterEdgeRenderMode.groupedFsa) {
       _renderGroupedFsaEdge(canvas, edge);
@@ -304,72 +356,40 @@ class JFlutterAdaptiveEdgeRenderer extends AnimatedAdaptiveEdgeRenderer {
       }
 
       final isHighlighted = _isHighlighted(_edgeId(loopEdge));
-      final textPainter = TextPainter(
-        text: TextSpan(
-          text: loopEdge.label,
-          style: TextStyle(
-            color: _colorFor(highlighted: isHighlighted),
-            fontSize: labelFontSize,
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-
-      double centerFromAnchor;
-      if (i == 0) {
-        centerFromAnchor = 0.0;
-        previousTopFromAnchor = textPainter.height / 2;
-      } else {
-        centerFromAnchor = previousTopFromAnchor + 2.0 + textPainter.height / 2;
-        previousTopFromAnchor = centerFromAnchor + textPainter.height / 2;
-      }
-
-      final drawOffset = Offset(
-        anchor.dx - textPainter.width / 2,
-        anchor.dy - centerFromAnchor - textPainter.height / 2,
+      final textPainter = _buildLabelPainter(
+        loopEdge,
+        selectedOverride: false,
+        highlightedOverride: isHighlighted,
       );
-      textPainter.paint(canvas, drawOffset);
+      try {
+        double centerFromAnchor;
+        if (i == 0) {
+          centerFromAnchor = 0.0;
+          previousTopFromAnchor = textPainter.height / 2;
+        } else {
+          centerFromAnchor =
+              previousTopFromAnchor + 2.0 + textPainter.height / 2;
+          previousTopFromAnchor = centerFromAnchor + textPainter.height / 2;
+        }
+
+        final drawOffset = Offset(
+          anchor.dx - textPainter.width / 2,
+          anchor.dy - centerFromAnchor - textPainter.height / 2,
+        );
+        textPainter.paint(canvas, drawOffset);
+      } finally {
+        _releaseLabelPainter(textPainter);
+      }
     }
   }
 
   List<Edge> _selfLoopEdges(Edge edge) {
-    final currentGraph = graph;
-    if (currentGraph == null) {
-      return <Edge>[edge];
-    }
-    return _sortEdges(
-      currentGraph.edges.where(
-        (candidate) =>
-            candidate.source == edge.source &&
-            candidate.destination == edge.destination,
-      ),
-    );
+    return _groupedEdges(edge);
   }
 
   List<Edge> _groupedEdges(Edge edge) {
-    final currentGraph = graph;
-    if (currentGraph == null) {
-      return <Edge>[edge];
-    }
-    return _sortEdges(
-      currentGraph.edges.where(
-        (candidate) =>
-            candidate.source == edge.source &&
-            candidate.destination == edge.destination,
-      ),
-    );
-  }
-
-  List<Edge> _sortEdges(Iterable<Edge> edges) {
-    final sorted = edges.toList(growable: false);
-    sorted.sort((left, right) {
-      final labelCompare = _edgeLabel(left).compareTo(_edgeLabel(right));
-      if (labelCompare != 0) {
-        return labelCompare;
-      }
-      return _edgeId(left).compareTo(_edgeId(right));
-    });
-    return sorted;
+    _ensureEdgeCaches();
+    return _groupedEdgeCache[_pairForEdge(edge)] ?? <Edge>[edge];
   }
 
   Edge _groupRepresentative(Edge edge) {
@@ -482,15 +502,8 @@ class JFlutterAdaptiveEdgeRenderer extends AnimatedAdaptiveEdgeRenderer {
   }
 
   bool _hasOpposingTraffic(Edge edge) {
-    final currentGraph = graph;
-    if (currentGraph == null) {
-      return false;
-    }
-    return currentGraph.edges.any(
-      (candidate) =>
-          candidate.source == edge.destination &&
-          candidate.destination == edge.source,
-    );
+    _ensureEdgeCaches();
+    return _opposingTrafficCache.contains(_pairForEdge(edge));
   }
 
   double _laneOffsetForDirectedPair(Edge edge) {
@@ -516,86 +529,149 @@ class JFlutterAdaptiveEdgeRenderer extends AnimatedAdaptiveEdgeRenderer {
     if (labelEntries.isEmpty) {
       return;
     }
-
-    final maxVisible = math.min(_maxVisibleGroupedLabels, labelEntries.length);
-    final totalHeight = _sumLabelHeights(labelEntries);
-    final visibleHeight = _sumLabelHeights(labelEntries.take(maxVisible));
-    final cardRect =
-        _resolveGroupedLabelRect(edge, groupedGeometry, labelEntries);
-    final borderColor = _colorFor(highlighted: anyHighlighted).withValues(
-      alpha: anyHighlighted || anySelected ? 0.55 : 0.22,
-    );
-    final cardRRect =
-        RRect.fromRectAndRadius(cardRect, const Radius.circular(12));
-
-    canvas.drawShadow(
-      Path()..addRRect(cardRRect),
-      Colors.black.withValues(alpha: 0.16),
-      4,
-      false,
-    );
-    canvas.drawRRect(
-      cardRRect,
-      Paint()
-        ..color = labelSurfaceColor.withValues(alpha: 0.96)
-        ..style = PaintingStyle.fill,
-    );
-    canvas.drawRRect(
-      cardRRect,
-      Paint()
-        ..color = borderColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.0,
-    );
-
-    final overflowHeight = math.max(0.0, totalHeight - visibleHeight);
-    final cycleDistance = overflowHeight + _labelScrollGap;
-    final scrollOffset =
-        labelEntries.length > _maxVisibleGroupedLabels && cycleDistance > 0
-            ? (_continuousAnimationValue * _labelScrollPixelsPerTurn) %
-                cycleDistance
-            : 0.0;
-
-    canvas.save();
-    canvas.clipRect(
-      Rect.fromLTWH(
-        cardRect.left + 1,
-        cardRect.top + 1,
-        cardRect.width - 2,
-        cardRect.height - 2,
-      ),
-    );
-
-    final contentLeft = cardRect.left + _labelPaddingHorizontal;
-    final contentTop = cardRect.top + _labelPaddingVertical - scrollOffset;
-    _paintLabelColumn(canvas, labelEntries, contentLeft, contentTop);
-    if (scrollOffset > 0) {
-      _paintLabelColumn(
-        canvas,
-        labelEntries,
-        contentLeft,
-        contentTop + totalHeight + _labelScrollGap,
+    try {
+      final maxVisible =
+          math.min(_maxVisibleGroupedLabels, labelEntries.length);
+      final totalHeight = _sumLabelHeights(labelEntries);
+      final visibleHeight = _sumLabelHeights(labelEntries.take(maxVisible));
+      final cardRect =
+          _resolveGroupedLabelRect(edge, groupedGeometry, labelEntries);
+      final borderColor = _colorFor(highlighted: anyHighlighted).withValues(
+        alpha: anyHighlighted || anySelected ? 0.55 : 0.22,
       );
+      final cardRRect =
+          RRect.fromRectAndRadius(cardRect, const Radius.circular(12));
+
+      canvas.drawShadow(
+        Path()..addRRect(cardRRect),
+        Colors.black.withValues(alpha: 0.16),
+        4,
+        false,
+      );
+      canvas.drawRRect(
+        cardRRect,
+        Paint()
+          ..color = labelSurfaceColor.withValues(alpha: 0.96)
+          ..style = PaintingStyle.fill,
+      );
+      canvas.drawRRect(
+        cardRRect,
+        Paint()
+          ..color = borderColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.0,
+      );
+
+      final overflowHeight = math.max(0.0, totalHeight - visibleHeight);
+      final cycleDistance = overflowHeight + _labelScrollGap;
+      final scrollOffset =
+          labelEntries.length > _maxVisibleGroupedLabels && cycleDistance > 0
+              ? (_continuousAnimationValue * _labelScrollPixelsPerTurn) %
+                  cycleDistance
+              : 0.0;
+
+      canvas.save();
+      canvas.clipRect(
+        Rect.fromLTWH(
+          cardRect.left + 1,
+          cardRect.top + 1,
+          cardRect.width - 2,
+          cardRect.height - 2,
+        ),
+      );
+
+      final contentLeft = cardRect.left + _labelPaddingHorizontal;
+      final contentTop = cardRect.top + _labelPaddingVertical - scrollOffset;
+      _paintLabelColumn(canvas, labelEntries, contentLeft, contentTop);
+      if (scrollOffset > 0) {
+        _paintLabelColumn(
+          canvas,
+          labelEntries,
+          contentLeft,
+          contentTop + totalHeight + _labelScrollGap,
+        );
+      }
+      canvas.restore();
+    } finally {
+      _releaseLabelEntries(labelEntries);
     }
-    canvas.restore();
   }
 
-  TextPainter _buildLabelPainter(Edge edge) {
+  TextPainter _buildLabelPainter(
+    Edge edge, {
+    bool? highlightedOverride,
+    bool? selectedOverride,
+  }) {
     final edgeId = _edgeId(edge);
-    final isHighlighted = _isHighlighted(edgeId);
-    final isSelected = _isSelected(edgeId);
-    return TextPainter(
-      text: TextSpan(
-        text: edge.label,
-        style: TextStyle(
-          color: _colorFor(highlighted: isHighlighted),
-          fontSize: labelFontSize,
-          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-        ),
-      ),
+    return _buildLabelPainterForText(
+      text: edge.label ?? '',
+      highlighted: highlightedOverride ?? _isHighlighted(edgeId),
+      selected: selectedOverride ?? _isSelected(edgeId),
+    );
+  }
+
+  TextPainter _buildLabelPainterForText({
+    required String text,
+    required bool highlighted,
+    required bool selected,
+  }) {
+    final style = TextStyle(
+      color: _colorFor(highlighted: highlighted),
+      fontSize: labelFontSize,
+      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+    );
+    final cacheKey = _LabelPainterCacheKey(text: text, style: style);
+    final cached = _labelPainterCache.remove(cacheKey);
+    if (cached != null) {
+      _labelPainterCache[cacheKey] = cached;
+      _activeLabelPainters.add(cached);
+      return cached;
+    }
+
+    final painter = TextPainter(
+      text: TextSpan(text: text, style: style),
       textDirection: TextDirection.ltr,
       maxLines: 1,
     )..layout();
+
+    _activeLabelPainters.add(painter);
+    _labelPainterCache[cacheKey] = painter;
+    while (_labelPainterCache.length > _maxCachedLabelPainters) {
+      _LabelPainterCacheKey? evictableKey;
+      for (final candidateKey in _labelPainterCache.keys) {
+        final candidatePainter = _labelPainterCache[candidateKey];
+        if (candidatePainter != null &&
+            !_activeLabelPainters.contains(candidatePainter)) {
+          evictableKey = candidateKey;
+          break;
+        }
+      }
+
+      if (evictableKey == null) {
+        final transientPainter = _labelPainterCache.remove(cacheKey);
+        if (transientPainter != null) {
+          _transientLabelPainters.add(transientPainter);
+        }
+        break;
+      }
+
+      final evicted = _labelPainterCache.remove(evictableKey);
+      evicted?.dispose();
+    }
+    return painter;
+  }
+
+  void _releaseLabelPainter(TextPainter painter) {
+    _activeLabelPainters.remove(painter);
+    if (_transientLabelPainters.remove(painter)) {
+      painter.dispose();
+    }
+  }
+
+  void _releaseLabelEntries(List<_GroupedLabelEntry> entries) {
+    for (final entry in entries) {
+      _releaseLabelPainter(entry.painter);
+    }
   }
 
   double _sumLabelHeights(Iterable<_GroupedLabelEntry> entries) {
@@ -732,13 +808,11 @@ class JFlutterAdaptiveEdgeRenderer extends AnimatedAdaptiveEdgeRenderer {
       return null;
     }
 
-    final opposingGroup = _sortEdges(
-      currentGraph.edges.where(
-        (candidate) =>
-            candidate.source == edge.destination &&
-            candidate.destination == edge.source,
-      ),
-    );
+    final opposingGroup = _groupedEdgeCache[_DirectedEdgePair(
+          sourceId: _nodeId(edge.destination),
+          destinationId: _nodeId(edge.source),
+        )] ??
+        const <Edge>[];
     if (opposingGroup.isEmpty) {
       return null;
     }
@@ -760,29 +834,35 @@ class JFlutterAdaptiveEdgeRenderer extends AnimatedAdaptiveEdgeRenderer {
         .map((groupedEdge) =>
             _GroupedLabelEntry(painter: _buildLabelPainter(groupedEdge)))
         .toList(growable: false);
-    final maxVisible = math.min(_maxVisibleGroupedLabels, labelEntries.length);
-    final maxWidth = labelEntries.fold<double>(
-      0.0,
-      (current, entry) => math.max(current, entry.painter.width),
-    );
-    final visibleHeight = _sumLabelHeights(labelEntries.take(maxVisible));
-    final cardWidth = maxWidth + (_labelPaddingHorizontal * 2);
-    final cardHeight = visibleHeight + (_labelPaddingVertical * 2);
-    final metric = groupedGeometry.geometry.path.computeMetrics().firstOrNull;
-    final anchor = metric?.getTangentForOffset(metric.length * 0.5)?.position ??
-        groupedGeometry.geometry.path.getBounds().center;
-    final normal = resolveGroupedFsaLabelNormal(
-      fromId: _nodeId(opposingRepresentative.source),
-      toId: _nodeId(opposingRepresentative.destination),
-      fromCenter: getNodeCenter(opposingRepresentative.source),
-      toCenter: getNodeCenter(opposingRepresentative.destination),
-      laneOffset: groupedGeometry.laneOffset,
-    );
-    return Rect.fromCenter(
-      center: anchor + (normal * (_labelPathGap + (cardHeight / 2))),
-      width: cardWidth,
-      height: cardHeight,
-    );
+    try {
+      final maxVisible =
+          math.min(_maxVisibleGroupedLabels, labelEntries.length);
+      final maxWidth = labelEntries.fold<double>(
+        0.0,
+        (current, entry) => math.max(current, entry.painter.width),
+      );
+      final visibleHeight = _sumLabelHeights(labelEntries.take(maxVisible));
+      final cardWidth = maxWidth + (_labelPaddingHorizontal * 2);
+      final cardHeight = visibleHeight + (_labelPaddingVertical * 2);
+      final metric = groupedGeometry.geometry.path.computeMetrics().firstOrNull;
+      final anchor =
+          metric?.getTangentForOffset(metric.length * 0.5)?.position ??
+              groupedGeometry.geometry.path.getBounds().center;
+      final normal = resolveGroupedFsaLabelNormal(
+        fromId: _nodeId(opposingRepresentative.source),
+        toId: _nodeId(opposingRepresentative.destination),
+        fromCenter: getNodeCenter(opposingRepresentative.source),
+        toCenter: getNodeCenter(opposingRepresentative.destination),
+        laneOffset: groupedGeometry.laneOffset,
+      );
+      return Rect.fromCenter(
+        center: anchor + (normal * (_labelPathGap + (cardHeight / 2))),
+        width: cardWidth,
+        height: cardHeight,
+      );
+    } finally {
+      _releaseLabelEntries(labelEntries);
+    }
   }
 
   Rect _resolveLabelRectCollision(
@@ -893,6 +973,83 @@ class JFlutterAdaptiveEdgeRenderer extends AnimatedAdaptiveEdgeRenderer {
   Color _colorFor({required bool highlighted}) {
     return highlighted ? highlightColor : baseColor;
   }
+
+  void _ensureEdgeCaches() {
+    final currentGraph = graph;
+    if (currentGraph == null) {
+      _clearEdgeCaches();
+      return;
+    }
+
+    if (_edgeCachesDirty ||
+        _edgeCacheGraph != currentGraph ||
+        _edgeCacheCount != currentGraph.edges.length) {
+      _rebuildEdgeCaches();
+    }
+  }
+
+  void _rebuildEdgeCaches() {
+    final currentGraph = graph;
+    if (currentGraph == null) {
+      _clearEdgeCaches();
+      return;
+    }
+
+    _groupedEdgeCache.clear();
+    _opposingTrafficCache.clear();
+
+    for (final edge in currentGraph.edges) {
+      _groupedEdgeCache
+          .putIfAbsent(_pairForEdge(edge), () => <Edge>[])
+          .add(edge);
+    }
+
+    for (final edges in _groupedEdgeCache.values) {
+      edges.sort((left, right) {
+        final labelCompare = _edgeLabel(left).compareTo(_edgeLabel(right));
+        if (labelCompare != 0) {
+          return labelCompare;
+        }
+        return _edgeId(left).compareTo(_edgeId(right));
+      });
+    }
+
+    for (final pair in _groupedEdgeCache.keys) {
+      if (_groupedEdgeCache.containsKey(pair.reversed)) {
+        _opposingTrafficCache.add(pair);
+      }
+    }
+
+    _edgeCacheGraph = currentGraph;
+    _edgeCacheCount = currentGraph.edges.length;
+    _edgeCachesDirty = false;
+  }
+
+  void _invalidateEdgeCaches() {
+    _edgeCachesDirty = true;
+    _clearEdgeCaches();
+  }
+
+  void _clearEdgeCaches() {
+    _groupedEdgeCache.clear();
+    _opposingTrafficCache.clear();
+    _edgeCacheGraph = null;
+    _edgeCacheCount = -1;
+  }
+
+  void _clearLabelPainterCache() {
+    for (final painter in _labelPainterCache.values) {
+      _activeLabelPainters.remove(painter);
+      _transientLabelPainters.remove(painter);
+      painter.dispose();
+    }
+    _labelPainterCache.clear();
+  }
+
+  _DirectedEdgePair _pairForEdge(Edge edge) => _DirectedEdgePair(
+        sourceId: _nodeId(edge.source),
+        destinationId: _nodeId(edge.destination),
+      );
 }
 
 class _GroupedFsaRenderGeometry {
@@ -909,4 +1066,100 @@ class _GroupedLabelEntry {
   const _GroupedLabelEntry({required this.painter});
 
   final TextPainter painter;
+}
+
+class _DirectedEdgePair {
+  const _DirectedEdgePair({
+    required this.sourceId,
+    required this.destinationId,
+  });
+
+  final String sourceId;
+  final String destinationId;
+
+  _DirectedEdgePair get reversed => _DirectedEdgePair(
+        sourceId: destinationId,
+        destinationId: sourceId,
+      );
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        other is _DirectedEdgePair &&
+            other.sourceId == sourceId &&
+            other.destinationId == destinationId;
+  }
+
+  @override
+  int get hashCode => Object.hash(sourceId, destinationId);
+}
+
+class _LabelPainterCacheKey {
+  _LabelPainterCacheKey({
+    required this.text,
+    required TextStyle style,
+  })  : colorArgb = style.color?.toARGB32(),
+        fontSize = style.fontSize,
+        fontWeightValue = style.fontWeight?.value,
+        fontStyle = style.fontStyle,
+        fontFamily = style.fontFamily,
+        fontFamilyFallback = style.fontFamilyFallback == null
+            ? null
+            : List<String>.unmodifiable(style.fontFamilyFallback!),
+        letterSpacing = style.letterSpacing,
+        height = style.height,
+        wordSpacing = style.wordSpacing,
+        decoration = style.decoration,
+        decorationColorArgb = style.decorationColor?.toARGB32(),
+        decorationStyle = style.decorationStyle;
+
+  final String text;
+  final int? colorArgb;
+  final double? fontSize;
+  final int? fontWeightValue;
+  final FontStyle? fontStyle;
+  final String? fontFamily;
+  final List<String>? fontFamilyFallback;
+  final double? letterSpacing;
+  final double? height;
+  final double? wordSpacing;
+  final TextDecoration? decoration;
+  final int? decorationColorArgb;
+  final TextDecorationStyle? decorationStyle;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        other is _LabelPainterCacheKey &&
+            other.text == text &&
+            other.colorArgb == colorArgb &&
+            other.fontSize == fontSize &&
+            other.fontWeightValue == fontWeightValue &&
+            other.fontStyle == fontStyle &&
+            other.fontFamily == fontFamily &&
+            listEquals(other.fontFamilyFallback, fontFamilyFallback) &&
+            other.letterSpacing == letterSpacing &&
+            other.height == height &&
+            other.wordSpacing == wordSpacing &&
+            other.decoration == decoration &&
+            other.decorationColorArgb == decorationColorArgb &&
+            other.decorationStyle == decorationStyle;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        text,
+        colorArgb,
+        fontSize,
+        fontWeightValue,
+        fontStyle,
+        fontFamily,
+        Object.hashAll(fontFamilyFallback ?? const <String>[]),
+        letterSpacing,
+        height,
+        wordSpacing,
+        decoration,
+        decorationColorArgb,
+        decorationStyle,
+      );
 }

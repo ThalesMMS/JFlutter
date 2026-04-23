@@ -124,9 +124,8 @@ class _PDAPageTestWidgetState extends State<_PDAPageTestWidget> {
                   }
                 },
                 onClear: () {},
-                statusMessage: widget.automaton == null
-                    ? 'No automaton loaded'
-                    : '',
+                statusMessage:
+                    widget.automaton == null ? 'No automaton loaded' : '',
               );
             },
           ),
@@ -165,8 +164,8 @@ void main() {
     await setupDependencyInjection();
   });
 
-  tearDownAll(() {
-    resetDependencies();
+  tearDownAll(() async {
+    await resetDependencies();
   });
 
   group('PDA Page Components golden tests', () {

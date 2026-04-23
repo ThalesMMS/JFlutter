@@ -61,21 +61,30 @@ abstract class BaseSimulationPanelState<T extends StatefulWidget>
     String hintText = 'Enter string to test',
     VoidCallback? onSubmit,
   }) {
-    return TextField(
-      controller: inputController,
-      decoration: InputDecoration(
-        labelText: labelText,
-        hintText: hintText,
-        border: const OutlineInputBorder(),
-        isDense: true,
+    return Semantics(
+      label: 'Simulation input: $labelText',
+      hint: '$hintText. Double tap to edit the input string.',
+      textField: true,
+      enabled: true,
+      child: TextField(
+        controller: inputController,
+        decoration: InputDecoration(
+          labelText: labelText,
+          hintText: hintText,
+          border: const OutlineInputBorder(),
+          isDense: true,
+        ),
+        autocorrect: false,
+        enableSuggestions: false,
+        keyboardType: TextInputType.visiblePassword,
+        onSubmitted: (_) {
+          if (onSubmit != null) {
+            onSubmit();
+          } else {
+            simulate();
+          }
+        },
       ),
-      onSubmitted: (_) {
-        if (onSubmit != null) {
-          onSubmit();
-        } else {
-          simulate();
-        }
-      },
     );
   }
 
@@ -87,20 +96,27 @@ abstract class BaseSimulationPanelState<T extends StatefulWidget>
     IconData icon = Icons.play_arrow,
     VoidCallback? onPressed,
   }) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: isSimulating ? null : (onPressed ?? simulate),
-        icon: isSimulating
-            ? const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : Icon(icon, size: 18),
-        label: Text(isSimulating ? simulatingLabel : label),
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+    return Semantics(
+      label: 'Simulation action: $label',
+      hint: 'Runs the current machine with the entered input string.',
+      value: isSimulating ? 'Simulating' : null,
+      button: true,
+      enabled: !isSimulating,
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: isSimulating ? null : (onPressed ?? simulate),
+          icon: isSimulating
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Icon(icon, size: 18),
+          label: Text(isSimulating ? simulatingLabel : label),
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+          ),
         ),
       ),
     );
@@ -136,11 +152,15 @@ abstract class BaseSimulationPanelState<T extends StatefulWidget>
                 size: 20,
               ),
               const SizedBox(width: 8),
-              Text(
-                isAccepted ? acceptedLabel : rejectedLabel,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Text(
+                  isAccepted ? acceptedLabel : rejectedLabel,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: color,
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
               ),
             ],
@@ -222,21 +242,30 @@ mixin SimulationPanelMixin<T extends StatefulWidget> on State<T> {
     String hintText = 'Enter string to test',
     VoidCallback? onSubmit,
   }) {
-    return TextField(
-      controller: inputController,
-      decoration: InputDecoration(
-        labelText: labelText,
-        hintText: hintText,
-        border: const OutlineInputBorder(),
-        isDense: true,
+    return Semantics(
+      label: 'Simulation input: $labelText',
+      hint: '$hintText. Double tap to edit the input string.',
+      textField: true,
+      enabled: true,
+      child: TextField(
+        controller: inputController,
+        decoration: InputDecoration(
+          labelText: labelText,
+          hintText: hintText,
+          border: const OutlineInputBorder(),
+          isDense: true,
+        ),
+        autocorrect: false,
+        enableSuggestions: false,
+        keyboardType: TextInputType.visiblePassword,
+        onSubmitted: (_) {
+          if (onSubmit != null) {
+            onSubmit();
+          } else {
+            simulate();
+          }
+        },
       ),
-      onSubmitted: (_) {
-        if (onSubmit != null) {
-          onSubmit();
-        } else {
-          simulate();
-        }
-      },
     );
   }
 
@@ -248,20 +277,27 @@ mixin SimulationPanelMixin<T extends StatefulWidget> on State<T> {
     IconData icon = Icons.play_arrow,
     VoidCallback? onPressed,
   }) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: isSimulating ? null : (onPressed ?? simulate),
-        icon: isSimulating
-            ? const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : Icon(icon, size: 18),
-        label: Text(isSimulating ? simulatingLabel : label),
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+    return Semantics(
+      label: 'Simulation action: $label',
+      hint: 'Runs the current machine with the entered input string.',
+      value: isSimulating ? 'Simulating' : null,
+      button: true,
+      enabled: !isSimulating,
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: isSimulating ? null : (onPressed ?? simulate),
+          icon: isSimulating
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Icon(icon, size: 18),
+          label: Text(isSimulating ? simulatingLabel : label),
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+          ),
         ),
       ),
     );
@@ -297,11 +333,15 @@ mixin SimulationPanelMixin<T extends StatefulWidget> on State<T> {
                 size: 20,
               ),
               const SizedBox(width: 8),
-              Text(
-                isAccepted ? acceptedLabel : rejectedLabel,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Text(
+                  isAccepted ? acceptedLabel : rejectedLabel,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: color,
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
               ),
             ],
@@ -344,7 +384,5 @@ mixin SimulationPanelMixin<T extends StatefulWidget> on State<T> {
 ///
 /// Extends ConsumerState and includes the SimulationPanelMixin for shared functionality
 abstract class BaseConsumerSimulationPanelState<
-  T extends ConsumerStatefulWidget
->
-    extends ConsumerState<T>
+        T extends ConsumerStatefulWidget> extends ConsumerState<T>
     with SimulationPanelMixin<T> {}

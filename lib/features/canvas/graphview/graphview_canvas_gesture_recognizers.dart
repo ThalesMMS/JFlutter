@@ -11,6 +11,7 @@
 //
 //  Thales Matheus Mendonça Santos - January 2026
 //
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -19,6 +20,12 @@ import '../../../presentation/widgets/automaton_canvas_tool.dart';
 
 typedef NodeHitTester = GraphViewCanvasNode? Function(Offset globalPosition);
 typedef ToolResolver = AutomatonCanvasTool Function();
+
+void _logNodePanRecognizer(String message) {
+  if (kDebugMode) {
+    debugPrint('[NodePanRecognizer] $message');
+  }
+}
 
 class NodePanGestureRecognizer extends PanGestureRecognizer {
   NodePanGestureRecognizer({
@@ -39,39 +46,40 @@ class NodePanGestureRecognizer extends PanGestureRecognizer {
 
   @override
   void addAllowedPointer(PointerDownEvent event) {
-    debugPrint(
-      '[NodePanRecognizer] addAllowedPointer pointer ${event.pointer} '
+    _logNodePanRecognizer(
+      'addAllowedPointer pointer ${event.pointer} '
       'tool=${toolResolver().name} active=$_activePointer '
       'position=${event.position} dragStart=$dragStartBehavior',
     );
     onPointerDown?.call(event.position);
     if (_activePointer != null) {
-      debugPrint('[NodePanRecognizer] pointer already active -> ignore');
+      _logNodePanRecognizer('pointer already active -> ignore');
       return;
     }
     final tool = toolResolver();
     if (tool == AutomatonCanvasTool.transition) {
-      debugPrint('[NodePanRecognizer] tool transition -> ignore');
+      _logNodePanRecognizer('tool transition -> ignore');
       return;
     }
     final node = hitTester(event.position);
     if (node == null) {
-      debugPrint('[NodePanRecognizer] no node hit -> ignore');
+      _logNodePanRecognizer('no node hit -> ignore');
       return;
     }
     _activePointer = event.pointer;
-    debugPrint(
-      '[NodePanRecognizer] tracking pointer ${event.pointer} '
-      'for node ${node.id}',
+    _logNodePanRecognizer(
+      'tracking pointer ${event.pointer} for node ${node.id}',
     );
     onDragAccepted?.call();
     super.addAllowedPointer(event);
+    // Accept immediately once a node hit is confirmed so the canvas pan
+    // recognizer does not steal slow drags that originate on a node.
     resolvePointer(event.pointer, GestureDisposition.accepted);
   }
 
   @override
   void rejectGesture(int pointer) {
-    debugPrint('[NodePanRecognizer] rejectGesture pointer=$pointer');
+    _logNodePanRecognizer('rejectGesture pointer=$pointer');
     if (pointer == _activePointer) {
       _activePointer = null;
       onDragReleased?.call();
@@ -81,7 +89,7 @@ class NodePanGestureRecognizer extends PanGestureRecognizer {
 
   @override
   void didStopTrackingLastPointer(int pointer) {
-    debugPrint('[NodePanRecognizer] didStopTracking pointer=$pointer');
+    _logNodePanRecognizer('didStopTracking pointer=$pointer');
     if (pointer == _activePointer) {
       _activePointer = null;
       onDragReleased?.call();

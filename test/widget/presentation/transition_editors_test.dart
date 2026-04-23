@@ -58,6 +58,41 @@ void main() {
       expect(find.text('AZ'), findsOneWidget);
     });
 
+    testWidgets('disables smart text features for PDA symbols', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: PdaTransitionEditor(
+              initialRead: 'a',
+              initialPop: 'Z',
+              initialPush: 'AZ',
+              isLambdaInput: false,
+              isLambdaPop: false,
+              isLambdaPush: false,
+              onSubmit: ({
+                required readSymbol,
+                required popSymbol,
+                required pushSymbol,
+                required lambdaInput,
+                required lambdaPop,
+                required lambdaPush,
+              }) {},
+              onCancel: () {},
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      for (final field
+          in tester.widgetList<TextField>(find.byType(TextField))) {
+        expect(field.autocorrect, isFalse);
+        expect(field.enableSuggestions, isFalse);
+        expect(field.keyboardType, TextInputType.visiblePassword);
+      }
+    });
+
     testWidgets('calls onSubmit when save button is pressed', (tester) async {
       Map<String, dynamic>? submittedData;
 
@@ -450,6 +485,44 @@ void main() {
       expect(submittedData!['popSymbol'], equals('Z'));
       expect(submittedData!['pushSymbol'], equals('AZ'));
     });
+
+    testWidgets('cancels on escape key press', (tester) async {
+      var cancelCalled = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: PdaTransitionEditor(
+              initialRead: 'a',
+              initialPop: 'Z',
+              initialPush: 'AZ',
+              isLambdaInput: false,
+              isLambdaPop: false,
+              isLambdaPush: false,
+              onSubmit: ({
+                required readSymbol,
+                required popSymbol,
+                required pushSymbol,
+                required lambdaInput,
+                required lambdaPop,
+                required lambdaPush,
+              }) {},
+              onCancel: () {
+                cancelCalled = true;
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(TextField).first);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+
+      expect(cancelCalled, isTrue);
+    });
   });
 
   group('TmTransitionOperationsEditor', () {
@@ -476,6 +549,35 @@ void main() {
 
       expect(find.text('a'), findsOneWidget);
       expect(find.text('b'), findsOneWidget);
+    });
+
+    testWidgets('disables smart text features for TM symbols', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TmTransitionOperationsEditor(
+              initialRead: 'a',
+              initialWrite: 'b',
+              initialDirection: TapeDirection.right,
+              onSubmit: ({
+                required readSymbol,
+                required writeSymbol,
+                required direction,
+              }) {},
+              onCancel: () {},
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      for (final field
+          in tester.widgetList<TextField>(find.byType(TextField))) {
+        expect(field.autocorrect, isFalse);
+        expect(field.enableSuggestions, isFalse);
+        expect(field.keyboardType, TextInputType.visiblePassword);
+      }
     });
 
     testWidgets('calls onSubmit when save button is pressed', (tester) async {
@@ -710,6 +812,38 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(submitCalled, isTrue);
+    });
+
+    testWidgets('cancels on escape key press', (tester) async {
+      var cancelCalled = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TmTransitionOperationsEditor(
+              initialRead: 'a',
+              initialWrite: 'b',
+              initialDirection: TapeDirection.right,
+              onSubmit: ({
+                required readSymbol,
+                required writeSymbol,
+                required direction,
+              }) {},
+              onCancel: () {
+                cancelCalled = true;
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(TextField).first);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+
+      expect(cancelCalled, isTrue);
     });
   });
 

@@ -20,17 +20,24 @@ class ExamplesService {
   final Map<String, ExampleEntity> _examplesCache = {};
   final Map<ExampleCategory, List<ExampleEntity>> _categoryCache = {};
 
+  int get _totalExampleCount =>
+      _dataSource.getExamplesCountByCategory().values.fold<int>(
+            0,
+            (sum, count) => sum + count,
+          );
+
+  bool get _hasAllExamplesCached =>
+      _examplesCache.isNotEmpty && _examplesCache.length == _totalExampleCount;
+
   /// Loads all examples with caching
   Future<ListResult<ExampleEntity>> loadAllExamples() async {
-    if (_examplesCache.isNotEmpty) {
+    if (_hasAllExamplesCached) {
       return Success(_examplesCache.values.toList());
     }
 
     final result = await _dataSource.loadAllExamples();
     if (result.isSuccess) {
-      for (final example in result.data!) {
-        _examplesCache[example.name] = example;
-      }
+      _cacheExamples(result.data!);
     }
 
     return result;
@@ -44,9 +51,20 @@ class ExamplesService {
       return Success(_categoryCache[category]!);
     }
 
+    if (_hasAllExamplesCached) {
+      final filtered = _examplesCache.values
+          .where((example) => example.category == category.displayName)
+          .toList();
+      _categoryCache[category] = filtered;
+      return Success(filtered);
+    }
+
     final result = await _dataSource.loadExamplesByCategory(category);
     if (result.isSuccess) {
       _categoryCache[category] = result.data!;
+      for (final example in result.data!) {
+        _examplesCache[example.name] = example;
+      }
     }
 
     return result;
@@ -219,6 +237,19 @@ class ExamplesService {
 
   // Private helper methods
 
+  void _cacheExamples(List<ExampleEntity> examples) {
+    _examplesCache
+      ..clear()
+      ..addEntries(examples.map((example) => MapEntry(example.name, example)));
+
+    _categoryCache.clear();
+    for (final category in ExampleCategory.values) {
+      _categoryCache[category] = examples
+          .where((example) => example.category == category.displayName)
+          .toList();
+    }
+  }
+
   Map<DifficultyLevel, int> _countByDifficulty(List<ExampleEntity> examples) {
     final counts = <DifficultyLevel, int>{};
     for (final level in DifficultyLevel.values) {
@@ -230,9 +261,8 @@ class ExamplesService {
   Map<ComplexityLevel, int> _countByComplexity(List<ExampleEntity> examples) {
     final counts = <ComplexityLevel, int>{};
     for (final level in ComplexityLevel.values) {
-      counts[level] = examples
-          .where((e) => e.estimatedComplexity == level)
-          .length;
+      counts[level] =
+          examples.where((e) => e.estimatedComplexity == level).length;
     }
     return counts;
   }

@@ -14,6 +14,15 @@ class _HelpPageTestHelpers {
   // ignore: constant_identifier_names
   static const JFLAP_LICENSE_TEXT =
       'JFLAP 7.1 LICENSE\nFor use by students and educators\njflap@cs.duke.edu';
+  // ignore: constant_identifier_names
+  static const GRAPHVIEW_LICENSE_TEXT =
+      'MIT License\n'
+      'Copyright (c) 2025 Nabil Mosharraf';
+  // ignore: constant_identifier_names
+  static const APPLE_THIRD_PARTY_NOTICES_TEXT =
+      'JFlutter Apple Platform Third-Party Notices\n'
+      'graphview 1.5.2\n'
+      'file_picker 8.3.7';
 
   /// Registers mock asset handlers so rootBundle.loadString resolves in tests.
   static void setUpAssetMocks() {
@@ -31,6 +40,16 @@ class _HelpPageTestHelpers {
           Uint8List.fromList(utf8.encode(JFLAP_LICENSE_TEXT)),
         );
       }
+      if (key == 'assets/LICENSE_GRAPHVIEW.txt') {
+        return ByteData.sublistView(
+          Uint8List.fromList(utf8.encode(GRAPHVIEW_LICENSE_TEXT)),
+        );
+      }
+      if (key == 'THIRD_PARTY_NOTICES_APPLE.txt') {
+        return ByteData.sublistView(
+          Uint8List.fromList(utf8.encode(APPLE_THIRD_PARTY_NOTICES_TEXT)),
+        );
+      }
       return null;
     });
   }
@@ -38,6 +57,8 @@ class _HelpPageTestHelpers {
   static void tearDownAssetMocks() {
     rootBundle.evict('LICENSE.txt');
     rootBundle.evict('LICENSE_JFLAP.txt');
+    rootBundle.evict('assets/LICENSE_GRAPHVIEW.txt');
+    rootBundle.evict('THIRD_PARTY_NOTICES_APPLE.txt');
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMessageHandler('flutter/assets', null);
   }
@@ -126,6 +147,8 @@ void main() {
       expect(find.text('Licenses & Attribution'), findsOneWidget);
       expect(find.text('Apache License 2.0'), findsOneWidget);
       expect(find.text('JFLAP 7.1 License'), findsOneWidget);
+      expect(find.text('GraphView (MIT License)'), findsOneWidget);
+      expect(find.text('Apple Platform Third-Party Notices'), findsOneWidget);
       expect(find.text('Susan H. Rodger'), findsOneWidget);
     });
 
@@ -500,6 +523,118 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
+  // _LicenseTextCard – Graphview license card
+  // ---------------------------------------------------------------------------
+
+  group('Graphview license card (_LicenseTextCard)', () {
+    setUp(_HelpPageTestHelpers.setUpAssetMocks);
+    tearDown(_HelpPageTestHelpers.tearDownAssetMocks);
+
+    testWidgets('shows Graphview license title', (tester) async {
+      await _HelpPageTestHelpers.pumpHelpPage(tester);
+
+      await _HelpPageTestHelpers.openLicensesAndSettle(tester);
+
+      expect(find.text('GraphView (MIT License)'), findsOneWidget);
+    });
+
+    testWidgets('shows Graphview card summary text', (tester) async {
+      await _HelpPageTestHelpers.pumpHelpPage(tester);
+
+      await _HelpPageTestHelpers.openLicensesAndSettle(tester);
+
+      expect(
+        find.textContaining(
+          'Graph visualization library, forked and modified for JFlutter.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Nabil Mosharraf'), findsWidgets);
+    });
+
+    testWidgets(
+      'expanding Graphview card shows bundled license text',
+      (tester) async {
+        await _HelpPageTestHelpers.pumpHelpPage(tester);
+
+        await _HelpPageTestHelpers.openLicensesAndSettle(tester);
+
+        await _HelpPageTestHelpers.expandLicenseCard(
+          tester,
+          'GraphView (MIT License)',
+        );
+
+        final graphviewCardFinder =
+            _HelpPageTestHelpers.licenseCardFinder('GraphView (MIT License)');
+        expect(
+          find.descendant(
+            of: graphviewCardFinder,
+            matching: find.textContaining(
+              'Copyright (c) 2025 Nabil Mosharraf',
+              skipOffstage: false,
+            ),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: graphviewCardFinder,
+            matching: find.byType(SelectableText, skipOffstage: false),
+          ),
+          findsOneWidget,
+        );
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // _LicenseTextCard – Apple third-party notices card
+  // ---------------------------------------------------------------------------
+
+  group('Apple third-party notices card (_LicenseTextCard)', () {
+    setUp(_HelpPageTestHelpers.setUpAssetMocks);
+    tearDown(_HelpPageTestHelpers.tearDownAssetMocks);
+
+    testWidgets('shows Apple third-party notices title', (tester) async {
+      await _HelpPageTestHelpers.pumpHelpPage(tester);
+
+      await _HelpPageTestHelpers.openLicensesAndSettle(tester);
+
+      expect(find.text('Apple Platform Third-Party Notices'), findsOneWidget);
+    });
+
+    testWidgets('shows graphview fork acknowledgment card', (tester) async {
+      await _HelpPageTestHelpers.pumpHelpPage(tester);
+
+      await _HelpPageTestHelpers.openLicensesAndSettle(tester);
+
+      expect(find.text('GraphView Fork'), findsOneWidget);
+    });
+
+    testWidgets(
+      'expanding Apple third-party notices shows bundled text',
+      (tester) async {
+        await _HelpPageTestHelpers.pumpHelpPage(tester);
+
+        await _HelpPageTestHelpers.openLicensesAndSettle(tester);
+
+        await _HelpPageTestHelpers.expandLicenseCard(
+          tester,
+          'Apple Platform Third-Party Notices',
+        );
+
+        expect(
+          find.textContaining(
+            'JFlutter Apple Platform Third-Party Notices',
+            skipOffstage: false,
+          ),
+          findsOneWidget,
+        );
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
   // _LicenseTextCard – loading fallback (asset unavailable)
   // ---------------------------------------------------------------------------
 
@@ -556,6 +691,8 @@ void main() {
         // Titles are synchronous and independent of asset loading.
         expect(find.text('Apache License 2.0'), findsOneWidget);
         expect(find.text('JFLAP 7.1 License'), findsOneWidget);
+        expect(find.text('GraphView (MIT License)'), findsOneWidget);
+        expect(find.text('Apple Platform Third-Party Notices'), findsOneWidget);
       },
     );
 
@@ -616,7 +753,6 @@ void main() {
         'PDA',
         'Turing Machine',
         'Regular Expression',
-        'Pumping Lemma',
         'File Operations',
         'Troubleshooting',
         'Licenses',
@@ -627,6 +763,7 @@ void main() {
           reason: 'Section "$title" not found in HelpPage navigation',
         );
       }
+      expect(find.text('Pumping Lemma'), findsNothing);
     });
 
     testWidgets('Licenses section does not break other sections', (

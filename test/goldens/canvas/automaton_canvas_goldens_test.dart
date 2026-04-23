@@ -639,7 +639,7 @@ void main() {
         provider.updateAutomaton(automaton);
         controller.synchronize(automaton);
         controller.applyHighlight(
-          const SimulationHighlight(
+          SimulationHighlight(
             transitionIds: <String>{'t_manual'},
           ),
         );

@@ -5,7 +5,7 @@
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#ffffff",
-    "description": "Suite of Flutter tools for designing and simulating formal languages and automata.",
+    "description": "Interactive toolkit for finite automata, grammars, pushdown automata, Turing machines, and regular expressions.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

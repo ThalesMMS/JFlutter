@@ -74,6 +74,13 @@ Future<void> _pumpSimulationPanel(
   await tester.pumpAndSettle();
 }
 
+void _invokeEnabledNextStep(WidgetTester tester) {
+  final nextButton = tester
+      .widgetList<IconButton>(find.widgetWithIcon(IconButton, Icons.skip_next))
+      .firstWhere((button) => button.onPressed != null);
+  nextButton.onPressed!.call();
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -291,7 +298,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Go to next step
-      await tester.tap(find.byTooltip('Next Step'));
+      _invokeEnabledNextStep(tester);
       await tester.pumpAndSettle();
 
       await screenMatchesGolden(tester, 'simulation_panel_step_mode_middle');
@@ -338,9 +345,9 @@ void main() {
       await tester.pumpAndSettle();
 
       // Go to last step
-      await tester.tap(find.byTooltip('Next Step'));
+      _invokeEnabledNextStep(tester);
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Next Step'));
+      _invokeEnabledNextStep(tester);
       await tester.pumpAndSettle();
 
       await screenMatchesGolden(tester, 'simulation_panel_step_mode_final');

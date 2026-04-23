@@ -71,6 +71,7 @@ class _GraphViewLabelFieldEditorState extends State<GraphViewLabelFieldEditor> {
 
   @override
   Widget build(BuildContext context) {
+    final touchOptimized = MediaQuery.sizeOf(context).shortestSide < 900;
     return FocusScope(
       node: _focusScopeNode,
       child: Focus(
@@ -100,6 +101,7 @@ class _GraphViewLabelFieldEditorState extends State<GraphViewLabelFieldEditor> {
                         _unfocusWithoutCancel();
                       },
                 autofocus: true,
+                touchOptimized: touchOptimized,
               ),
             ),
           ),

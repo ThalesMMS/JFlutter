@@ -9,27 +9,12 @@ import 'app_localizations_en.dart';
 import 'app_localizations_pt.dart';
 
 // ignore_for_file: type=lint
-// Generated Flutter l10n output keeps the delegate and lookup helper with the
-// main localization API.
-
-final Map<String, AppLocalizations Function(Locale)>
-    _localizationsByLanguageCode =
-    Map<String, AppLocalizations Function(Locale)>.unmodifiable(
-  <String, AppLocalizations Function(Locale)>{
-    'en': (locale) => AppLocalizationsEn(locale.toString()),
-    'pt': (locale) => AppLocalizationsPt(locale.toString()),
-  },
-);
-
-final List<Locale> _supportedLocales = List<Locale>.unmodifiable(
-  _localizationsByLanguageCode.keys.map(Locale.new),
-);
 
 /// Callers can lookup localized strings with an instance of AppLocalizations
 /// returned by `AppLocalizations.of(context)`.
 ///
-/// Applications need to include `AppLocalizations.delegate` in their app's
-/// `localizationsDelegates` list, and the locales they support in the app's
+/// Applications need to include `AppLocalizations.localizationsDelegates` in
+/// their app's `localizationsDelegates` list, and the locales they support in
 /// `supportedLocales` list. For example:
 ///
 /// ```dart
@@ -82,18 +67,8 @@ abstract class AppLocalizations {
 
   final String localeName;
 
-  static AppLocalizations? maybeOf(BuildContext context) {
-    return Localizations.of<AppLocalizations>(context, AppLocalizations);
-  }
-
   static AppLocalizations of(BuildContext context) {
-    final localizations = maybeOf(context);
-    assert(
-      localizations != null,
-      'No AppLocalizations found in widget tree. Ensure WidgetsApp/MaterialApp '
-      'has localizationsDelegates and supportedLocales.',
-    );
-    return localizations!;
+    return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
   }
 
   static const LocalizationsDelegate<AppLocalizations> delegate =
@@ -118,7 +93,10 @@ abstract class AppLocalizations {
   ];
 
   /// A list of this localizations delegate's supported locales.
-  static final List<Locale> supportedLocales = _supportedLocales;
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('en'),
+    Locale('pt')
+  ];
 
   /// Title for the transition selection dialog.
   ///
@@ -533,8 +511,9 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      _localizationsByLanguageCode.containsKey(locale.languageCode);
+  bool isSupported(Locale locale) => AppLocalizations.supportedLocales
+      .map((Locale supportedLocale) => supportedLocale.languageCode)
+      .contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -542,9 +521,11 @@ class _AppLocalizationsDelegate
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
   // Lookup logic when only language code is specified.
-  final localizations = _localizationsByLanguageCode[locale.languageCode];
-  if (localizations != null) {
-    return localizations(locale);
+  switch (locale.languageCode) {
+    case 'en':
+      return AppLocalizationsEn();
+    case 'pt':
+      return AppLocalizationsPt();
   }
 
   throw FlutterError(

@@ -219,9 +219,8 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
     final steps = widget.result.steps;
     final isAccepted = widget.result.accepted;
     final color = isAccepted ? Colors.green : Colors.red;
-    final visibleCount = _folded
-        ? steps.length.clamp(0, _foldSize)
-        : steps.length;
+    final visibleCount =
+        _folded ? steps.length.clamp(0, _foldSize) : steps.length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,9 +236,9 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
             Text(
               widget.title,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: color,
-              ),
+                    fontWeight: FontWeight.w600,
+                    color: color,
+                  ),
             ),
             const Spacer(),
             if (steps.length > defaultFoldSize)
@@ -276,25 +275,27 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 4),
                   child: InkWell(
-                    onTap: _highlightEnabled
-                        ? () => _handleStepTap(index)
-                        : null,
+                    onTap:
+                        _highlightEnabled ? () => _handleStepTap(index) : null,
                     borderRadius: BorderRadius.circular(6),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 150),
-                      decoration: isSelected
-                          ? BoxDecoration(
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                color: Theme.of(context).colorScheme.primary,
-                                width: 1.2,
-                              ),
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.primary.withValues(alpha: 0.08),
-                            )
-                          : const BoxDecoration(),
-                      child: widget.buildStepLine(step, index),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 44),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        decoration: isSelected
+                            ? BoxDecoration(
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  width: 1.2,
+                                ),
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primary.withValues(alpha: 0.08),
+                              )
+                            : const BoxDecoration(),
+                        child: widget.buildStepLine(step, index),
+                      ),
                     ),
                   ),
                 );
@@ -307,10 +308,10 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
             child: Text(
               '+${steps.length - visibleCount} more steps hidden',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
             ),
           ),
       ],

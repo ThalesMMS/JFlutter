@@ -24,11 +24,11 @@ class DesktopNavigation extends StatelessWidget {
     return NavigationRail(
       selectedIndex: currentIndex,
       groupAlignment: -1,
+      scrollable: true,
       extended: extended,
       minWidth: 80,
-      labelType: extended
-          ? NavigationRailLabelType.none
-          : NavigationRailLabelType.all,
+      labelType:
+          extended ? NavigationRailLabelType.none : NavigationRailLabelType.all,
       selectedIconTheme: IconThemeData(color: colorScheme.primary),
       unselectedIconTheme: IconThemeData(
         color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
@@ -43,19 +43,27 @@ class DesktopNavigation extends StatelessWidget {
         fontSize: 12,
       ),
       destinations: [
-        for (final item in items)
+        for (final item in items.asMap().entries)
           NavigationRailDestination(
             icon: Tooltip(
               waitDuration: const Duration(milliseconds: 250),
-              message: item.description,
-              child: Icon(item.icon),
+              message: item.value.description,
+              child: ExcludeSemantics(child: Icon(item.value.icon)),
             ),
             selectedIcon: Tooltip(
               waitDuration: const Duration(milliseconds: 150),
-              message: item.description,
-              child: Icon(item.icon),
+              message: item.value.description,
+              child: ExcludeSemantics(child: Icon(item.value.icon)),
             ),
-            label: Text(item.label),
+            label: Semantics(
+              label: 'Navigate to ${item.value.label}',
+              hint: item.value.description,
+              button: true,
+              enabled: true,
+              selected: currentIndex == item.key,
+              excludeSemantics: true,
+              child: Text(item.value.label),
+            ),
           ),
       ],
       onDestinationSelected: onDestinationSelected,

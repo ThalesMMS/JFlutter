@@ -29,6 +29,7 @@ import '../widgets/graphview_canvas_toolbar.dart';
 import '../widgets/mobile_automaton_controls.dart';
 import '../widgets/simulation_panel.dart';
 import '../widgets/step_navigation_controls.dart';
+import '../widgets/app_snackbar.dart';
 import '../widgets/fsa/determinism_badge.dart';
 import 'grammar_page.dart';
 import '../../core/services/simulation_highlight_service.dart';
@@ -37,6 +38,10 @@ import '../../features/canvas/graphview/graphview_canvas_controller.dart';
 import '../../features/canvas/graphview/graphview_highlight_channel.dart';
 import '../../features/canvas/graphview/graphview_algorithm_step_highlight_channel.dart';
 import '../widgets/tablet_layout_container.dart';
+
+const double _kStepViewerNavigationControlsHeight = 88.0;
+const double _kTabletStepViewerMinHeight = 240.0;
+const double _kTabletStepViewerMaxHeight = 520.0;
 
 /// Page for working with Finite State Automata
 class FSAPage extends ConsumerStatefulWidget {
@@ -56,7 +61,7 @@ class _FSAPageState extends ConsumerState<FSAPage>
   late final GraphViewSimulationHighlightChannel _highlightChannel;
   late final SimulationHighlightService _highlightService;
   late final GraphViewAlgorithmStepHighlightChannel
-  _algorithmStepHighlightChannel;
+      _algorithmStepHighlightChannel;
   late final AlgorithmStepHighlightService _algorithmStepHighlightService;
   late final AutomatonCanvasToolController _toolController;
   bool _stepByStepMode = false;
@@ -109,18 +114,10 @@ class _FSAPageState extends ConsumerState<FSAPage>
   }
 
   void _showSnack(String message, {bool isError = false}) {
-    final theme = Theme.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: isError
-              ? TextStyle(color: theme.colorScheme.onErrorContainer)
-              : null,
-        ),
-        backgroundColor: isError ? theme.colorScheme.errorContainer : null,
-        behavior: SnackBarBehavior.floating,
-      ),
+    showAppSnackBar(
+      context,
+      message: message,
+      tone: isError ? AppSnackBarTone.error : AppSnackBarTone.success,
     );
   }
 
@@ -190,8 +187,7 @@ class _FSAPageState extends ConsumerState<FSAPage>
     required Future<void> Function(
       AlgorithmProvider notifier,
       AutomatonEntity entity,
-    )
-    algorithm,
+    ) algorithm,
     required String successMessage,
     bool requireDfa = false,
     bool requireLambda = false,
@@ -225,8 +221,7 @@ class _FSAPageState extends ConsumerState<FSAPage>
       AlgorithmProvider notifier,
       AutomatonEntity current,
       AutomatonEntity other,
-    )
-    algorithm,
+    ) algorithm,
     required String successMessage,
     bool requireDfa = false,
     String? invalidMessage,
@@ -384,38 +379,50 @@ class _FSAPageState extends ConsumerState<FSAPage>
 
     return Card(
       margin: const EdgeInsets.all(8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Step viewer
-          if (stepState.currentStep != null)
-            Expanded(
-              child: SingleChildScrollView(
-                child: AlgorithmStepViewer(step: stepState.currentStep!),
-              ),
-            ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final viewerMaxHeight = constraints.maxHeight.isFinite
+              ? (constraints.maxHeight - _kStepViewerNavigationControlsHeight)
+                  .clamp(160.0, 640.0)
+              : 360.0;
 
-          // Navigation controls
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: StepNavigationControls(
-              currentStepIndex: stepState.currentStepIndex,
-              totalSteps: stepState.totalSteps,
-              isPlaying: stepState.isPlaying,
-              onPrevious: stepState.hasPreviousStep
-                  ? () =>
-                        ref.read(algorithmStepProvider.notifier).previousStep()
-                  : null,
-              onPlayPause: () =>
-                  ref.read(algorithmStepProvider.notifier).togglePlayPause(),
-              onNext: stepState.hasNextStep
-                  ? () => ref.read(algorithmStepProvider.notifier).nextStep()
-                  : null,
-              onReset: () =>
-                  ref.read(algorithmStepProvider.notifier).jumpToFirstStep(),
-            ),
-          ),
-        ],
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (stepState.currentStep != null)
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: viewerMaxHeight),
+                  child: SingleChildScrollView(
+                    child: AlgorithmStepViewer(step: stepState.currentStep!),
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: StepNavigationControls(
+                  currentStepIndex: stepState.currentStepIndex,
+                  totalSteps: stepState.totalSteps,
+                  isPlaying: stepState.isPlaying,
+                  onPrevious: stepState.hasPreviousStep
+                      ? () => ref
+                          .read(algorithmStepProvider.notifier)
+                          .previousStep()
+                      : null,
+                  onPlayPause: () => ref
+                      .read(algorithmStepProvider.notifier)
+                      .togglePlayPause(),
+                  onNext: stepState.hasNextStep
+                      ? () =>
+                          ref.read(algorithmStepProvider.notifier).nextStep()
+                      : null,
+                  onReset: () => ref
+                      .read(algorithmStepProvider.notifier)
+                      .jumpToFirstStep(),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -430,8 +437,7 @@ class _FSAPageState extends ConsumerState<FSAPage>
     final automaton = state.currentAutomaton;
     final hasAutomaton = automaton != null;
     final hasLambda = automaton?.hasEpsilonTransitions ?? false;
-    final isDfa =
-        automaton != null &&
+    final isDfa = automaton != null &&
         automaton.isDeterministic &&
         !automaton.hasEpsilonTransitions;
 
@@ -448,9 +454,8 @@ class _FSAPageState extends ConsumerState<FSAPage>
       onPrefixClosure: isDfa ? _handlePrefixClosure : null,
       onSuffixClosure: isDfa ? _handleSuffixClosure : null,
       onFsaToGrammar: hasAutomaton ? _handleFsaToGrammar : null,
-      onAutoLayout: hasAutomaton
-          ? () => layoutNotifier.applyAutoLayout()
-          : null,
+      onAutoLayout:
+          hasAutomaton ? () => layoutNotifier.applyAutoLayout() : null,
       onClear: () => automatonNotifier.clearAutomaton(),
       onRegexToNfa: (regex) => algorithmNotifier.convertRegexToNfa(regex),
       onFaToRegex: hasAutomaton ? _handleFaToRegex : null,
@@ -595,7 +600,7 @@ class _FSAPageState extends ConsumerState<FSAPage>
 
     Widget buildCanvasWithToolbar(Widget child) {
       final hasAutomaton = state.currentAutomaton != null;
-      final VoidCallback? onHelp = _showContextualHelp;
+      final onHelp = _showContextualHelp;
       final onSimulate = hasAutomaton ? _openSimulationSheet : null;
       final onAlgorithms = hasAutomaton ? _openAlgorithmSheet : null;
 
@@ -608,7 +613,7 @@ class _FSAPageState extends ConsumerState<FSAPage>
         return Stack(
           children: [
             Positioned.fill(child: child),
-            if (onHelp != null || onSimulate != null || onAlgorithms != null)
+            if (onSimulate != null || onAlgorithms != null)
               Positioned(
                 top: 16,
                 left: 16,
@@ -755,33 +760,39 @@ class _FSAPageState extends ConsumerState<FSAPage>
       overrides: [
         canvasHighlightServiceProvider.overrideWithValue(_highlightService),
       ],
-      child: Scaffold(
-        body: isMobile
-            ? _buildMobileLayout(state)
-            : screenSize.width < 1400
-            ? _buildTabletLayout(state)
-            : _buildDesktopLayout(state),
-        floatingActionButton: !isMobile
-            ? FloatingActionButton(
-                onPressed: _showContextualHelp,
-                tooltip: 'Context-Aware Help',
-                child: const Icon(Icons.help_outline),
-              )
-            : null,
+      child: FocusTraversalGroup(
+        policy: ReadingOrderTraversalPolicy(),
+        child: Scaffold(
+          body: isMobile
+              ? _buildMobileLayout(state)
+              : screenSize.width < 1400
+                  ? _buildTabletLayout(state)
+                  : _buildDesktopLayout(state),
+          floatingActionButton: !isMobile
+              ? FloatingActionButton(
+                  heroTag: 'fsa_context_help_fab',
+                  onPressed: _showContextualHelp,
+                  tooltip: 'Context-Aware Help',
+                  child: const Icon(Icons.help_outline),
+                )
+              : null,
+        ),
       ),
     );
   }
 
   Widget _buildMobileLayout(AutomatonStateProviderState state) {
-    return Column(
-      children: [
-        Expanded(
-          child: Container(
-            margin: const EdgeInsets.all(8),
-            child: _buildCanvasArea(state: state, isMobile: true),
+    return SafeArea(
+      child: Column(
+        children: [
+          Expanded(
+            child: Container(
+              margin: const EdgeInsets.all(8),
+              child: _buildCanvasArea(state: state, isMobile: true),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -918,13 +929,25 @@ class _FSAPageState extends ConsumerState<FSAPage>
     final algorithmState = ref.watch(automatonAlgorithmProvider);
     final simulationState = ref.watch(automatonSimulationProvider);
     final stepState = ref.watch(algorithmStepProvider);
+    final tabletStepViewerMaxHeight =
+        (MediaQuery.sizeOf(context).height * 0.45).clamp(
+      _kTabletStepViewerMinHeight,
+      _kTabletStepViewerMaxHeight,
+    );
 
-    Widget algorithmColumn = Column(
+    final algorithmColumn = Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         _buildAlgorithmPanelForState(state),
         if (stepState.hasSteps) ...[
           const SizedBox(height: 8),
-          Expanded(child: _buildStepViewerPanel()),
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: _kTabletStepViewerMinHeight,
+              maxHeight: tabletStepViewerMaxHeight,
+            ),
+            child: _buildStepViewerPanel(),
+          ),
         ],
       ],
     );

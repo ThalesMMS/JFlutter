@@ -71,6 +71,17 @@ void main() {
       expect(find.byType(BaseTraceViewer), findsOneWidget);
       expect(find.text('PDA Trace (3 steps)'), findsOneWidget);
       expect(find.byIcon(Icons.check_circle), findsOneWidget);
+      expect(find.byType(InkWell), findsWidgets);
+      final stepRowInkWell = find
+          .descendant(
+            of: find.byType(ListView),
+            matching: find.byType(InkWell),
+          )
+          .first;
+      expect(
+        tester.getSize(stepRowInkWell).height,
+        greaterThanOrEqualTo(44),
+      );
     });
 
     testWidgets('renders with rejected result and displays correct icon', (

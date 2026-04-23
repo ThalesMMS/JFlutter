@@ -39,25 +39,28 @@ class MobileNavigation extends StatelessWidget {
         ],
       ),
       child: SafeArea(
-        child: Container(
-          height: 70, // Reduced height for better space usage
+        child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: items.asMap().entries.map((entry) {
-              final index = entry.key;
-              final item = entry.value;
-              final isSelected = currentIndex == index;
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 70),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: items.asMap().entries.map((entry) {
+                final index = entry.key;
+                final item = entry.value;
+                final isSelected = currentIndex == index;
 
-              return Expanded(
-                child: _buildNavigationItem(
-                  context,
-                  item,
-                  isSelected,
-                  () => onTap(index),
-                ),
-              );
-            }).toList(),
+                return Expanded(
+                  child: _buildNavigationItem(
+                    context,
+                    item,
+                    isSelected,
+                    () => onTap(index),
+                  ),
+                );
+              }).toList(),
+            ),
           ),
         ),
       ),
@@ -70,37 +73,49 @@ class MobileNavigation extends StatelessWidget {
     bool isSelected,
     VoidCallback onTap,
   ) {
+    final theme = Theme.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final color = isSelected
         ? colorScheme.primary
         : colorScheme.onSurface.withValues(alpha: 0.6);
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              item.icon,
-              color: color,
-              size: 18, // Smaller icons for better fit
+    return Semantics(
+      label: 'Navigate to ${item.label}',
+      hint: item.description,
+      button: true,
+      enabled: true,
+      selected: isSelected,
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Icon(
+                  item.icon,
+                  color: color,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  item.label,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: color,
+                    fontWeight:
+                        isSelected ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
-            const SizedBox(height: 2),
-            Text(
-              item.label,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: color,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                fontSize: 9, // Even smaller text
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+          ),
         ),
       ),
     );

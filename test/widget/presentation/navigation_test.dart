@@ -141,16 +141,16 @@ void main() {
 
       expect(find.byType(SafeArea), findsOneWidget);
 
-      final container = tester.widget<Container>(
+      final constrainedBox = tester.widget<ConstrainedBox>(
         find
             .descendant(
-              of: find.byType(SafeArea),
-              matching: find.byType(Container),
+              of: find.byType(MobileNavigation),
+              matching: find.byType(ConstrainedBox),
             )
             .first,
       );
 
-      expect(container.constraints?.maxHeight, 70);
+      expect(constrainedBox.constraints.minHeight, 70);
     });
 
     testWidgets('applies correct styling to items', (tester) async {
@@ -171,6 +171,7 @@ void main() {
 
       final firstInkWell = tester.widget<InkWell>(inkWells.first);
       expect(firstInkWell.borderRadius, BorderRadius.circular(12));
+      expect(tester.getSize(inkWells.first).height, greaterThanOrEqualTo(44));
     });
 
     testWidgets('updates when currentIndex changes', (tester) async {
@@ -224,6 +225,76 @@ void main() {
         ),
       );
       expect(firstText.style?.fontWeight, FontWeight.normal);
+    });
+
+    testWidgets('expands for larger text scales on narrow widths', (
+      tester,
+    ) async {
+      const dynamicTypeItems = [
+        NavigationItem(
+          label: 'Finite State',
+          icon: Icons.route,
+          description: 'Finite State Automata',
+        ),
+        NavigationItem(
+          label: 'Regular Expressions',
+          icon: Icons.text_fields,
+          description: 'Regular Expressions',
+        ),
+      ];
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MediaQuery(
+            data: const MediaQueryData(
+              size: Size(320, 640),
+              textScaler: TextScaler.linear(2),
+            ),
+            child: Scaffold(
+              bottomNavigationBar: MobileNavigation(
+                currentIndex: 0,
+                onTap: (_) {},
+                items: dynamicTypeItems,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final constrainedBox = find
+          .descendant(
+            of: find.byType(MobileNavigation),
+            matching: find.byType(ConstrainedBox),
+          )
+          .first;
+      final navLabel = tester.widget<Text>(find.text('Regular Expressions'));
+
+      expect(tester.takeException(), isNull);
+      expect(tester.getSize(constrainedBox).height, greaterThan(70));
+      expect(navLabel.maxLines, 2);
+    });
+
+    testWidgets('exposes semantic labels for navigation items', (tester) async {
+      final handle = tester.ensureSemantics();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            bottomNavigationBar: MobileNavigation(
+              currentIndex: 0,
+              onTap: (_) {},
+              items: _testItems,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.bySemanticsLabel('Navigate to FSA'), findsOneWidget);
+      expect(find.bySemanticsLabel('Navigate to Regex'), findsOneWidget);
+
+      handle.dispose();
     });
   });
 
@@ -420,6 +491,27 @@ void main() {
 
       final rail = tester.widget<NavigationRail>(find.byType(NavigationRail));
       expect(rail.destinations.length, _testItems.length);
+    });
+
+    testWidgets('exposes semantic labels for destinations', (tester) async {
+      final handle = tester.ensureSemantics();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: DesktopNavigation(
+              currentIndex: 0,
+              onDestinationSelected: (_) {},
+              items: _testItems,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.bySemanticsLabel('Navigate to FSA'), findsOneWidget);
+      expect(find.bySemanticsLabel('Navigate to PDA'), findsOneWidget);
+
+      handle.dispose();
     });
   });
 

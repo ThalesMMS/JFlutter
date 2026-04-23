@@ -11,6 +11,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:vector_math/vector_math_64.dart';
@@ -24,20 +25,160 @@ import '../../core/models/production.dart';
 import '../../core/models/state.dart' as automaton_state;
 import '../../core/models/fsa_transition.dart';
 import '../../core/result.dart';
+import '../../core/utils/epsilon_utils.dart';
 import '../../presentation/widgets/export/svg_exporter.dart';
 
 /// Service for file operations including JFLAP format support
 class FileOperationsService {
+  static const _writeAccessRetryMessage =
+      'JFlutter could not write to the selected location. The file may be outside the app sandbox or no longer writable. Choose a destination again from the system save dialog and try again.';
+  static const _readAccessRetryMessage =
+      'JFlutter could not read the selected file. The file may be outside the app sandbox or no longer readable. Pick the file again from the system dialog and try again.';
+  static const _missingSaveLocationMessage =
+      'The selected save location is no longer available. Choose a different destination and try again.';
+  static const _missingReadLocationMessage =
+      'The selected file is no longer available. Pick the file again and try again.';
+
+  /// Creates the JFLAP XML payload without writing it to disk.
+  String serializeAutomatonToJFLAPString(FSA automaton) {
+    return _buildJFLAPXML(automaton);
+  }
+
+  /// Creates the JSON payload without writing it to disk.
+  String serializeAutomatonToJsonString(FSA automaton) {
+    return jsonEncode(automaton.toJson());
+  }
+
+  /// Creates the grammar JFLAP payload without writing it to disk.
+  String serializeGrammarToJFLAPString(Grammar grammar) {
+    return _buildGrammarXML(grammar);
+  }
+
+  /// Creates the SVG payload without writing it to disk.
+  String exportAutomatonToSvgString(
+    AutomatonEntity automaton, {
+    SvgExportOptions? options,
+  }) {
+    return SvgExporter.exportAutomatonToSvg(automaton, options: options);
+  }
+
+  /// Creates the grammar SVG payload without writing it to disk.
+  String exportGrammarToSvgString(
+    GrammarEntity grammar, {
+    SvgExportOptions? options,
+  }) {
+    return SvgExporter.exportGrammarToSvg(grammar, options: options);
+  }
+
+  /// Creates the Turing machine SVG payload without writing it to disk.
+  String exportTuringMachineToSvgString(
+    TuringMachineEntity tm, {
+    SvgExportOptions? options,
+  }) {
+    return SvgExporter.exportTuringMachineToSvg(tm, options: options);
+  }
+
+  /// Creates the legacy FSA SVG payload without writing it to disk.
+  String exportLegacyAutomatonToSvgString(FSA automaton) {
+    return _buildSVG(automaton);
+  }
+
+  /// Renders the PNG payload without writing it to disk.
+  Future<Result<Uint8List>> exportAutomatonToPngBytes(FSA automaton) async {
+    ui.Picture? picture;
+    ui.Image? image;
+    try {
+      const size = Size(_kCanvasWidth, _kCanvasHeight);
+      final recorder = ui.PictureRecorder();
+      final canvas = Canvas(
+        recorder,
+        Rect.fromLTWH(0, 0, size.width, size.height),
+      );
+
+      canvas.drawRect(
+        Rect.fromLTWH(0, 0, size.width, size.height),
+        Paint()..color = _kBackgroundColor,
+      );
+
+      final drawingData = _prepareDrawingData(automaton);
+      final painter = _AutomatonPainter(drawingData);
+      painter.paint(canvas, size);
+
+      picture = recorder.endRecording();
+      image = await picture.toImage(
+        size.width.toInt(),
+        size.height.toInt(),
+      );
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) {
+        return const Failure('Failed to encode PNG data');
+      }
+
+      return Success(byteData.buffer.asUint8List());
+    } catch (e) {
+      return Failure('Failed to export automaton to PNG: $e');
+    } finally {
+      image?.dispose();
+      picture?.dispose();
+    }
+  }
+
+  static String describeFileAccessFailure(
+    Object error, {
+    required bool isWrite,
+  }) {
+    if (error is! FileSystemException) {
+      return error.toString();
+    }
+
+    final errorCode = error.osError?.errorCode;
+    final normalized = [
+      error.message,
+      error.osError?.message,
+      error.path,
+    ].whereType<String>().join(' ').toLowerCase();
+
+    final isPermissionDenied = errorCode == 1 ||
+        errorCode == 13 ||
+        normalized.contains('operation not permitted') ||
+        normalized.contains('permission denied') ||
+        normalized.contains('access is denied') ||
+        normalized.contains('not permitted');
+    if (isPermissionDenied) {
+      return isWrite ? _writeAccessRetryMessage : _readAccessRetryMessage;
+    }
+
+    final isMissingPath = errorCode == 2 ||
+        normalized.contains('no such file') ||
+        normalized.contains('cannot find the path') ||
+        normalized.contains('does not exist');
+    if (isMissingPath) {
+      return isWrite
+          ? _missingSaveLocationMessage
+          : _missingReadLocationMessage;
+    }
+
+    final osMessage = error.osError?.message.trim();
+    if (osMessage != null && osMessage.isNotEmpty) {
+      return osMessage;
+    }
+
+    return error.message;
+  }
+
   /// Saves automaton to JFLAP XML format (.jff)
   Future<StringResult> saveAutomatonToJFLAP(
     FSA automaton,
     String filePath,
   ) async {
     try {
-      final xml = _buildJFLAPXML(automaton);
       final file = File(filePath);
-      await file.writeAsString(xml);
+      await file.writeAsString(serializeAutomatonToJFLAPString(automaton));
       return Success(filePath);
+    } on FileSystemException catch (e) {
+      return Failure(
+        'Failed to save automaton to JFLAP format: ${describeFileAccessFailure(e, isWrite: true)}',
+      );
     } catch (e) {
       return Failure('Failed to save automaton to JFLAP format: $e');
     }
@@ -49,8 +190,11 @@ class FileOperationsService {
       final file = File(filePath);
       final xmlString = await file.readAsString();
       final document = XmlDocument.parse(xmlString);
-      final automaton = _parseJFLAPXML(document);
-      return Success(automaton);
+      return _parseJFLAPXML(document);
+    } on FileSystemException catch (e) {
+      return Failure(
+        'Failed to load automaton from JFLAP format: ${describeFileAccessFailure(e, isWrite: false)}',
+      );
     } catch (e) {
       return Failure('Failed to load automaton from JFLAP format: $e');
     }
@@ -61,10 +205,60 @@ class FileOperationsService {
     try {
       final xmlString = utf8.decode(bytes);
       final document = XmlDocument.parse(xmlString);
-      final automaton = _parseJFLAPXML(document);
-      return Success(automaton);
+      return _parseJFLAPXML(document);
     } catch (e) {
       return Failure('Failed to load automaton from provided data: $e');
+    }
+  }
+
+  /// Saves automaton to JSON format.
+  Future<StringResult> saveAutomatonToJson(
+    FSA automaton,
+    String filePath,
+  ) async {
+    try {
+      final file = File(filePath);
+      await file.writeAsString(serializeAutomatonToJsonString(automaton));
+      return Success(filePath);
+    } on FileSystemException catch (e) {
+      return Failure(
+        'Failed to save automaton to JSON format: ${describeFileAccessFailure(e, isWrite: true)}',
+      );
+    } catch (e) {
+      return Failure('Failed to save automaton to JSON format: $e');
+    }
+  }
+
+  /// Loads automaton from JSON format.
+  Future<Result<FSA>> loadAutomatonFromJson(String filePath) async {
+    try {
+      final file = File(filePath);
+      final jsonString = await file.readAsString();
+      final decoded = jsonDecode(jsonString);
+      if (decoded is! Map<String, dynamic>) {
+        return const Failure('Invalid automaton JSON format');
+      }
+      return Success(FSA.fromJson(decoded));
+    } on FileSystemException catch (e) {
+      return Failure(
+        'Failed to load automaton from JSON format: ${describeFileAccessFailure(e, isWrite: false)}',
+      );
+    } catch (e) {
+      return Failure('Failed to load automaton from JSON format: $e');
+    }
+  }
+
+  /// Loads automaton from in-memory bytes (JSON format).
+  Future<Result<FSA>> loadAutomatonFromJsonBytes(Uint8List bytes) async {
+    try {
+      final jsonString = utf8.decode(bytes);
+      final decoded = jsonDecode(jsonString);
+      if (decoded is! Map<String, dynamic>) {
+        return const Failure('Invalid automaton JSON format');
+      }
+      return Success(FSA.fromJson(decoded));
+    } catch (e) {
+      return Failure('Failed to load automaton from provided JSON data: $e');
     }
   }
 
@@ -74,10 +268,13 @@ class FileOperationsService {
     String filePath,
   ) async {
     try {
-      final xml = _buildGrammarXML(grammar);
       final file = File(filePath);
-      await file.writeAsString(xml);
+      await file.writeAsString(serializeGrammarToJFLAPString(grammar));
       return Success(filePath);
+    } on FileSystemException catch (e) {
+      return Failure(
+        'Failed to save grammar to JFLAP format: ${describeFileAccessFailure(e, isWrite: true)}',
+      );
     } catch (e) {
       return Failure('Failed to save grammar to JFLAP format: $e');
     }
@@ -91,6 +288,10 @@ class FileOperationsService {
       final document = XmlDocument.parse(xmlString);
       final grammar = _parseGrammarXML(document);
       return Success(grammar);
+    } on FileSystemException catch (e) {
+      return Failure(
+        'Failed to load grammar from JFLAP format: ${describeFileAccessFailure(e, isWrite: false)}',
+      );
     } catch (e) {
       return Failure('Failed to load grammar from JFLAP format: $e');
     }
@@ -114,37 +315,29 @@ class FileOperationsService {
     String filePath,
   ) async {
     try {
-      const size = Size(_kCanvasWidth, _kCanvasHeight);
-      final recorder = ui.PictureRecorder();
-      final canvas = Canvas(
-        recorder,
-        Rect.fromLTWH(0, 0, size.width, size.height),
-      );
-
-      // Fill background
-      canvas.drawRect(
-        Rect.fromLTWH(0, 0, size.width, size.height),
-        Paint()..color = _kBackgroundColor,
-      );
-
-      final drawingData = _prepareDrawingData(automaton);
-      final painter = _AutomatonPainter(drawingData);
-      painter.paint(canvas, size);
-
-      final picture = recorder.endRecording();
-      final image = await picture.toImage(
-        size.width.toInt(),
-        size.height.toInt(),
-      );
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      if (byteData == null) {
-        return const Failure('Failed to encode PNG data');
+      final pngBytesResult = await exportAutomatonToPngBytes(automaton);
+      if (pngBytesResult.isFailure) {
+        return Failure(pngBytesResult.error!);
       }
+      return writePngBytesToPath(pngBytesResult.data!, filePath);
+    } catch (e) {
+      return Failure('Failed to export automaton to PNG: $e');
+    }
+  }
 
-      final pngBytes = byteData.buffer.asUint8List();
+  /// Writes previously rendered PNG bytes to disk.
+  Future<StringResult> writePngBytesToPath(
+    Uint8List bytes,
+    String filePath,
+  ) async {
+    try {
       final file = File(filePath);
-      await file.writeAsBytes(pngBytes);
+      await file.writeAsBytes(bytes);
       return Success(filePath);
+    } on FileSystemException catch (e) {
+      return Failure(
+        'Failed to export automaton to PNG: ${describeFileAccessFailure(e, isWrite: true)}',
+      );
     } catch (e) {
       return Failure('Failed to export automaton to PNG: $e');
     }
@@ -157,10 +350,15 @@ class FileOperationsService {
     SvgExportOptions? options,
   }) async {
     try {
-      final svg = SvgExporter.exportAutomatonToSvg(automaton, options: options);
       final file = File(filePath);
-      await file.writeAsString(svg);
+      await file.writeAsString(
+        exportAutomatonToSvgString(automaton, options: options),
+      );
       return Success(filePath);
+    } on FileSystemException catch (e) {
+      return Failure(
+        'Failed to export automaton to SVG: ${describeFileAccessFailure(e, isWrite: true)}',
+      );
     } catch (e) {
       return Failure('Failed to export automaton to SVG: $e');
     }
@@ -173,10 +371,15 @@ class FileOperationsService {
     SvgExportOptions? options,
   }) async {
     try {
-      final svg = SvgExporter.exportGrammarToSvg(grammar, options: options);
       final file = File(filePath);
-      await file.writeAsString(svg);
+      await file.writeAsString(
+        exportGrammarToSvgString(grammar, options: options),
+      );
       return Success(filePath);
+    } on FileSystemException catch (e) {
+      return Failure(
+        'Failed to export grammar to SVG: ${describeFileAccessFailure(e, isWrite: true)}',
+      );
     } catch (e) {
       return Failure('Failed to export grammar to SVG: $e');
     }
@@ -189,10 +392,15 @@ class FileOperationsService {
     SvgExportOptions? options,
   }) async {
     try {
-      final svg = SvgExporter.exportTuringMachineToSvg(tm, options: options);
       final file = File(filePath);
-      await file.writeAsString(svg);
+      await file.writeAsString(
+        exportTuringMachineToSvgString(tm, options: options),
+      );
       return Success(filePath);
+    } on FileSystemException catch (e) {
+      return Failure(
+        'Failed to export Turing machine to SVG: ${describeFileAccessFailure(e, isWrite: true)}',
+      );
     } catch (e) {
       return Failure('Failed to export Turing machine to SVG: $e');
     }
@@ -204,10 +412,13 @@ class FileOperationsService {
     String filePath,
   ) async {
     try {
-      final svg = _buildSVG(automaton);
       final file = File(filePath);
-      await file.writeAsString(svg);
+      await file.writeAsString(exportLegacyAutomatonToSvgString(automaton));
       return Success(filePath);
+    } on FileSystemException catch (e) {
+      return Failure(
+        'Failed to export automaton to SVG: ${describeFileAccessFailure(e, isWrite: true)}',
+      );
     } catch (e) {
       return Failure('Failed to export automaton to SVG: $e');
     }
@@ -314,7 +525,11 @@ class FileOperationsService {
                   nest: () {
                     builder.element('from', nest: transition.fromState.id);
                     builder.element('to', nest: transition.toState.id);
-                    builder.element('read', nest: transition.symbol);
+                    if (isEpsilonSymbol(transition.symbol)) {
+                      builder.element('read', isSelfClosing: true);
+                    } else {
+                      builder.element('read', nest: transition.symbol);
+                    }
                   },
                 );
               }
@@ -328,17 +543,30 @@ class FileOperationsService {
   }
 
   /// Parses JFLAP XML to create automaton
-  FSA _parseJFLAPXML(XmlDocument document) {
-    final automatonElement = document.findAllElements('automaton').first;
+  Result<FSA> _parseJFLAPXML(XmlDocument document) {
+    final automatonElement = document.findAllElements('automaton').firstOrNull;
+    if (automatonElement == null) {
+      return const Failure('JFLAP import is missing the <automaton> element.');
+    }
     final states = <automaton_state.State>[];
     final transitions = <FSATransition>[];
+    final alphabet = <String>{};
 
     // Parse states
     for (final stateElement in automatonElement.findAllElements('state')) {
-      final id = stateElement.getAttribute('id')!;
+      final id = stateElement.getAttribute('id');
+      if (id == null || id.isEmpty) {
+        continue;
+      }
       final name = stateElement.getAttribute('name') ?? id;
-      final x = double.parse(stateElement.findElements('x').first.text);
-      final y = double.parse(stateElement.findElements('y').first.text);
+      final xText = stateElement.getAttribute('x') ??
+          stateElement.findElements('x').firstOrNull?.innerText ??
+          '0.0';
+      final yText = stateElement.getAttribute('y') ??
+          stateElement.findElements('y').firstOrNull?.innerText ??
+          '0.0';
+      final x = double.tryParse(xText) ?? 0.0;
+      final y = double.tryParse(yText) ?? 0.0;
       final isInitial = stateElement.findElements('initial').isNotEmpty;
       final isAccepting = stateElement.findElements('final').isNotEmpty;
 
@@ -353,16 +581,40 @@ class FileOperationsService {
       );
     }
 
+    if (states.isEmpty) {
+      return const Failure(
+        'JFLAP import does not contain any states. Empty automata cannot be loaded into the editor.',
+      );
+    }
+
     // Parse transitions
     for (final transitionElement in automatonElement.findAllElements(
       'transition',
     )) {
-      final fromId = transitionElement.findElements('from').first.text;
-      final toId = transitionElement.findElements('to').first.text;
-      final symbol = transitionElement.findElements('read').first.text;
+      final fromId =
+          transitionElement.findElements('from').firstOrNull?.innerText.trim();
+      final toId =
+          transitionElement.findElements('to').firstOrNull?.innerText.trim();
+      if (fromId == null || fromId.isEmpty || toId == null || toId.isEmpty) {
+        return const Failure(
+          'JFLAP import contains a transition without valid origin and destination states.',
+        );
+      }
+      final symbol = normalizeToEpsilon(
+        transitionElement.findElements('read').firstOrNull?.innerText,
+      );
 
-      final fromState = states.firstWhere((s) => s.id == fromId);
-      final toState = states.firstWhere((s) => s.id == toId);
+      final fromState = states.firstWhereOrNull((s) => s.id == fromId);
+      final toState = states.firstWhereOrNull((s) => s.id == toId);
+      if (fromState == null || toState == null) {
+        return Failure(
+          'JFLAP import references an unknown state in transition $fromId -> $toId.',
+        );
+      }
+
+      if (!isEpsilonSymbol(symbol) && symbol.isNotEmpty) {
+        alphabet.add(symbol);
+      }
 
       transitions.add(
         FSATransition(
@@ -370,25 +622,28 @@ class FileOperationsService {
           fromState: fromState,
           toState: toState,
           label: symbol,
-          inputSymbols: {symbol},
+          inputSymbols: isEpsilonSymbol(symbol) ? const {} : {symbol},
+          lambdaSymbol: isEpsilonSymbol(symbol) ? symbol : null,
         ),
       );
     }
 
-    return FSA(
-      id: 'imported_${DateTime.now().millisecondsSinceEpoch}',
-      name: 'Imported Automaton',
-      states: states.toSet(),
-      transitions: transitions.toSet(),
-      alphabet: transitions.map((t) => t.symbol).toSet(),
-      initialState: states.firstWhere(
-        (s) => s.isInitial,
-        orElse: () => states.first,
+    return Success(
+      FSA(
+        id: 'imported_${DateTime.now().millisecondsSinceEpoch}',
+        name: 'Imported Automaton',
+        states: states.toSet(),
+        transitions: transitions.toSet(),
+        alphabet: alphabet,
+        initialState: states.firstWhere(
+          (s) => s.isInitial,
+          orElse: () => states.first,
+        ),
+        acceptingStates: states.where((s) => s.isAccepting).toSet(),
+        bounds: const math.Rectangle(0, 0, 400, 300),
+        created: DateTime.now(),
+        modified: DateTime.now(),
       ),
-      acceptingStates: states.where((s) => s.isAccepting).toSet(),
-      bounds: const math.Rectangle(0, 0, 400, 300),
-      created: DateTime.now(),
-      modified: DateTime.now(),
     );
   }
 
@@ -429,28 +684,25 @@ class FileOperationsService {
   /// Parses grammar XML
   Grammar _parseGrammarXML(XmlDocument document) {
     final grammarElement = document.findAllElements('grammar').first;
-    final startSymbol = grammarElement.findElements('start').first.text;
+    final startSymbol = grammarElement.findElements('start').first.innerText;
     final productions = <Production>{};
 
     for (final productionElement in grammarElement.findAllElements(
       'production',
     )) {
-      final leftSide = productionElement
-          .findElements('left')
-          .first
-          .text
-          .split(' ');
-      final rightSide = productionElement
-          .findElements('right')
-          .first
-          .text
-          .split(' ');
+      final leftSide = _splitGrammarSymbols(
+        productionElement.findElements('left').first.innerText,
+      );
+      final rightSide = _splitGrammarSymbols(
+        productionElement.findElements('right').first.innerText,
+      );
 
       productions.add(
         Production(
           id: 'p${productions.length}',
           leftSide: leftSide,
           rightSide: rightSide,
+          isLambda: rightSide.isEmpty,
           order: productions.length,
         ),
       );
@@ -470,6 +722,14 @@ class FileOperationsService {
       created: DateTime.now(),
       modified: DateTime.now(),
     );
+  }
+
+  List<String> _splitGrammarSymbols(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return const <String>[];
+    }
+    return trimmed.split(RegExp(r'\s+'));
   }
 
   /// Builds SVG representation of automaton
@@ -516,22 +776,21 @@ class FileOperationsService {
   _AutomatonDrawingData _prepareDrawingData(FSA automaton) {
     final states = automaton.states.toList()
       ..sort((a, b) => a.id.compareTo(b.id));
-    final transitions =
-        automaton.transitions.whereType<FSATransition>().toList()
-          ..sort((a, b) => a.id.compareTo(b.id));
+    final transitions = automaton.transitions
+        .whereType<FSATransition>()
+        .toList()
+      ..sort((a, b) => a.id.compareTo(b.id));
 
     final drawableStates = states
         .map(
           (state) => _DrawableState(
             center: Offset(state.position.x, state.position.y),
             label: state.label,
-            fillColor: state.isAccepting
-                ? _kAcceptingFillColor
-                : _kDefaultFillColor,
+            fillColor:
+                state.isAccepting ? _kAcceptingFillColor : _kDefaultFillColor,
             strokeColor: state.isInitial ? _kInitialStrokeColor : _kStrokeColor,
-            strokeWidth: state.isInitial
-                ? _kInitialStrokeWidth
-                : _kDefaultStrokeWidth,
+            strokeWidth:
+                state.isInitial ? _kInitialStrokeWidth : _kDefaultStrokeWidth,
           ),
         )
         .toList();
@@ -573,7 +832,9 @@ const Color _kInitialStrokeColor = Color(0xFFFF0000);
 const Color _kTextColor = Color(0xFF000000);
 
 String _colorToHex(Color color) {
-  final value = color.value & 0xFFFFFF;
+  final value = ((color.r * 255).round() << 16) |
+      ((color.g * 255).round() << 8) |
+      (color.b * 255).round();
   return '#${value.toRadixString(16).padLeft(6, '0')}';
 }
 

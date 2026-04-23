@@ -10,6 +10,8 @@
 //  Thales Matheus Mendonça Santos - October 2025
 //
 
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'dart:math' as math;
@@ -217,6 +219,30 @@ void main() {
     });
 
     group('File Operations Integration', () {
+      test('should preserve lambda grammar productions on import', () async {
+        const xml = '''<?xml version="1.0" encoding="UTF-8"?>
+<structure type="grammar">
+  <grammar type="contextFree">
+    <start>S</start>
+    <production>
+      <left>S</left>
+      <right></right>
+    </production>
+  </grammar>
+</structure>''';
+
+        final result = await fileOperationsService.loadGrammarFromBytes(
+          Uint8List.fromList(utf8.encode(xml)),
+        );
+
+        expect(result.isSuccess, isTrue);
+        expect(result.data, isNotNull);
+        final production = result.data!.productions.first;
+        expect(production.leftSide, ['S']);
+        expect(production.rightSide, isEmpty);
+        expect(production.isLambda, isTrue);
+      });
+
       test('should export automaton to JFLAP format', () async {
         const tempPath = '/tmp/test_automaton.jff';
 
@@ -248,6 +274,80 @@ void main() {
         } catch (e) {
           // File operations might fail in test environment, that's OK
         }
+      });
+
+      test('should reject empty JFLAP automata with a descriptive failure',
+          () async {
+        const xml = '''<?xml version="1.0" encoding="UTF-8"?>
+<structure type="fa">
+  <automaton>
+  </automaton>
+</structure>''';
+
+        final result = await fileOperationsService.loadAutomatonFromBytes(
+          Uint8List.fromList(utf8.encode(xml)),
+        );
+
+        expect(result.isFailure, isTrue);
+        expect(result.error, contains('does not contain any states'));
+      });
+
+      test(
+          'should default missing JFLAP coordinates to 0.0 instead of crashing',
+          () async {
+        const xml = '''<?xml version="1.0" encoding="UTF-8"?>
+<structure type="fa">
+  <automaton>
+    <state id="q0" name="q0">
+      <initial/>
+      <final/>
+    </state>
+  </automaton>
+</structure>''';
+
+        final result = await fileOperationsService.loadAutomatonFromBytes(
+          Uint8List.fromList(utf8.encode(xml)),
+        );
+
+        expect(result.isSuccess, isTrue);
+        final importedState = result.data!.states.single;
+        expect(importedState.position.x, equals(0.0));
+        expect(importedState.position.y, equals(0.0));
+      });
+
+      test('should normalize epsilon transitions when loading JFLAP automata',
+          () async {
+        const xml = '''<?xml version="1.0" encoding="UTF-8"?>
+<structure type="fa">
+  <automaton>
+    <state id="q0" name="q0">
+      <x>0</x>
+      <y>0</y>
+      <initial/>
+    </state>
+    <state id="q1" name="q1">
+      <x>50</x>
+      <y>0</y>
+      <final/>
+    </state>
+    <transition>
+      <from>q0</from>
+      <to>q1</to>
+      <read/>
+    </transition>
+  </automaton>
+</structure>''';
+
+        final result = await fileOperationsService.loadAutomatonFromBytes(
+          Uint8List.fromList(utf8.encode(xml)),
+        );
+
+        expect(result.isSuccess, isTrue);
+        final transition =
+            result.data!.transitions.whereType<FSATransition>().single;
+        expect(transition.isEpsilonTransition, isTrue);
+        expect(transition.lambdaSymbol, equals('ε'));
+        expect(result.data!.alphabet, isEmpty);
       });
     });
 

@@ -33,14 +33,14 @@ class GraphViewCanvasToolbar extends StatefulWidget {
     this.onClear,
     this.statusMessage,
     this.layout = GraphViewCanvasToolbarLayout.desktop,
-  }) : assert(
-         !(enableToolSelection && showSelectionTool) || onSelectTool != null,
-         'onSelectTool must be provided when the selection tool is visible.',
-       ),
-       assert(
-         !enableToolSelection || onAddTransition != null,
-         'onAddTransition must be provided when tool selection is enabled.',
-       );
+  })  : assert(
+          !(enableToolSelection && showSelectionTool) || onSelectTool != null,
+          'onSelectTool must be provided when the selection tool is visible.',
+        ),
+        assert(
+          !enableToolSelection || onAddTransition != null,
+          'onAddTransition must be provided when tool selection is enabled.',
+        );
 
   final BaseGraphViewCanvasController<dynamic, dynamic> controller;
   final bool enableToolSelection;
@@ -104,8 +104,7 @@ class _GraphViewCanvasToolbarState extends State<GraphViewCanvasToolbar> {
         action: _ToolbarAction.addState,
         handler: widget.onAddState,
         isToggle: widget.enableToolSelection,
-        isSelected:
-            widget.enableToolSelection &&
+        isSelected: widget.enableToolSelection &&
             widget.activeTool == AutomatonCanvasTool.addState,
       ),
       if (widget.onAddTransition != null)
@@ -113,8 +112,7 @@ class _GraphViewCanvasToolbarState extends State<GraphViewCanvasToolbar> {
           action: _ToolbarAction.transition,
           handler: widget.onAddTransition,
           isToggle: widget.enableToolSelection,
-          isSelected:
-              widget.enableToolSelection &&
+          isSelected: widget.enableToolSelection &&
               widget.activeTool == AutomatonCanvasTool.transition,
         ),
       _ToolbarButtonConfig(
@@ -183,86 +181,110 @@ class _DesktopToolbar extends StatelessWidget {
       alignment: Alignment.topRight,
       child: Padding(
         padding: const EdgeInsets.all(12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              decoration: BoxDecoration(
-                color: colorScheme.surface,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (final entry in actions) ...[
-                    Builder(
-                      builder: (context) {
-                        final isToggle = entry.isToggle;
-                        final isSelected = entry.isSelected;
-                        final iconStyle = IconButton.styleFrom(
-                          backgroundColor: isToggle
-                              ? (isSelected
-                                    ? colorScheme.primaryContainer
-                                    : colorScheme.surfaceContainerHighest
-                                          .withValues(alpha: 0.18))
-                              : null,
-                          foregroundColor: isToggle
-                              ? (isSelected
-                                    ? colorScheme.onPrimaryContainer
-                                    : colorScheme.onSurfaceVariant)
-                              : null,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            side: isToggle && !isSelected
-                                ? BorderSide(
-                                    color: colorScheme.outlineVariant
-                                        .withValues(alpha: 0.55),
-                                  )
-                                : BorderSide.none,
-                          ),
-                        );
-                        final helpContent = kHelpContent[entry.action.helpContentId];
-                        final button = IconButton(
-                          tooltip:
-                              helpContent == null ? entry.action.label : null,
-                          icon: Icon(entry.action.icon),
-                          onPressed: entry.handler,
-                          style: iconStyle,
-                        );
-                        return helpContent != null
-                            ? ContextualHelpTooltip(
-                                helpContent: helpContent,
-                                child: button,
-                              )
-                            : button;
-                      },
+        child: FocusTraversalGroup(
+          policy: OrderedTraversalPolicy(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                decoration: BoxDecoration(
+                  color: colorScheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
-                    if (entry != actions.last)
-                      Container(
-                        width: 1,
-                        height: 24,
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        color: colorScheme.outlineVariant.withValues(alpha: 0.35),
-                      ),
                   ],
-                ],
+                ),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final indexedEntry in actions.asMap().entries) ...[
+                        Builder(
+                          builder: (context) {
+                            final index = indexedEntry.key;
+                            final entry = indexedEntry.value;
+                            final isToggle = entry.isToggle;
+                            final isSelected = entry.isSelected;
+                            final iconStyle = IconButton.styleFrom(
+                              minimumSize: const Size(44, 44),
+                              backgroundColor: isToggle
+                                  ? (isSelected
+                                      ? colorScheme.primaryContainer
+                                      : colorScheme.surfaceContainerHighest
+                                          .withValues(alpha: 0.18))
+                                  : null,
+                              foregroundColor: isToggle
+                                  ? (isSelected
+                                      ? colorScheme.onPrimaryContainer
+                                      : colorScheme.onSurfaceVariant)
+                                  : null,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                side: isToggle && !isSelected
+                                    ? BorderSide(
+                                        color: colorScheme.outlineVariant
+                                            .withValues(alpha: 0.55),
+                                      )
+                                    : BorderSide.none,
+                              ),
+                            );
+                            final helpContent =
+                                kHelpContent[entry.action.helpContentId];
+                            final button = FocusTraversalOrder(
+                              order: NumericFocusOrder(index.toDouble()),
+                              child: Semantics(
+                                label: 'Canvas action: ${entry.action.label}',
+                                hint: entry.action.semanticsHint,
+                                button: true,
+                                enabled: entry.handler != null,
+                                selected: entry.isToggle && entry.isSelected,
+                                excludeSemantics: true,
+                                child: IconButton(
+                                  tooltip: helpContent == null
+                                      ? entry.action.label
+                                      : null,
+                                  icon: Icon(entry.action.icon),
+                                  onPressed: entry.handler,
+                                  style: iconStyle,
+                                ),
+                              ),
+                            );
+                            return helpContent != null
+                                ? ContextualHelpTooltip(
+                                    helpContent: helpContent,
+                                    child: button,
+                                  )
+                                : button;
+                          },
+                        ),
+                        if (indexedEntry.key < actions.length - 1)
+                          Container(
+                            width: 1,
+                            height: 24,
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            color: colorScheme.outlineVariant.withValues(
+                              alpha: 0.35,
+                            ),
+                          ),
+                      ],
+                    ],
+                  ),
+                ),
               ),
-            ),
-            if (statusMessage != null && statusMessage!.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(statusMessage!, style: textTheme.bodySmall),
-              ),
-          ],
+              if (statusMessage != null && statusMessage!.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(statusMessage!, style: textTheme.bodySmall),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -285,7 +307,6 @@ class _MobileToolbar extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
 
-
     return Align(
       alignment: Alignment.bottomCenter,
       child: ConstrainedBox(
@@ -294,65 +315,88 @@ class _MobileToolbar extends StatelessWidget {
         ),
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (statusMessage != null && statusMessage!.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Text(statusMessage!, style: textTheme.bodyMedium),
-                ),
-              Flexible(
-                child: Material(
-                  elevation: 6,
-                  borderRadius: BorderRadius.circular(16),
-                  color: colorScheme.surface,
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(12),
-                    child: Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      alignment: WrapAlignment.center,
-                      children: [
-                        for (final entry in actions)
-                          Builder(
-                            builder: (context) {
-                              final helpContent = kHelpContent[entry.action.helpContentId];
-                              final button = FilledButton.icon(
-                                onPressed: entry.handler,
-                                style: FilledButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
+          child: FocusTraversalGroup(
+            policy: OrderedTraversalPolicy(),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (statusMessage != null && statusMessage!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Text(statusMessage!, style: textTheme.bodyMedium),
+                  ),
+                Flexible(
+                  child: Material(
+                    elevation: 6,
+                    borderRadius: BorderRadius.circular(16),
+                    color: colorScheme.surface,
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(12),
+                      child: Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        alignment: WrapAlignment.center,
+                        children: [
+                          for (final indexedEntry in actions.asMap().entries)
+                            Builder(
+                              builder: (context) {
+                                final index = indexedEntry.key;
+                                final entry = indexedEntry.value;
+                                final helpContent =
+                                    kHelpContent[entry.action.helpContentId];
+                                final button = FocusTraversalOrder(
+                                  order: NumericFocusOrder(index.toDouble()),
+                                  child: Semantics(
+                                    label:
+                                        'Canvas action: ${entry.action.label}',
+                                    hint: entry.action.semanticsHint,
+                                    button: true,
+                                    enabled: entry.handler != null,
+                                    selected:
+                                        entry.isToggle && entry.isSelected,
+                                    excludeSemantics: true,
+                                    child: FilledButton.icon(
+                                      onPressed: entry.handler,
+                                      style: FilledButton.styleFrom(
+                                        minimumSize: const Size(44, 44),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 12,
+                                        ),
+                                        backgroundColor:
+                                            entry.isToggle && entry.isSelected
+                                                ? colorScheme.primary
+                                                : entry.isToggle
+                                                    ? colorScheme
+                                                        .surfaceContainerHighest
+                                                    : null,
+                                        foregroundColor: entry.isToggle &&
+                                                entry.isSelected
+                                            ? colorScheme.onPrimary
+                                            : entry.isToggle
+                                                ? colorScheme.onSurfaceVariant
+                                                : null,
+                                      ),
+                                      icon: Icon(entry.action.icon),
+                                      label: Text(entry.action.label),
+                                    ),
                                   ),
-                                  backgroundColor: entry.isToggle && entry.isSelected
-                                      ? colorScheme.primary
-                                      : entry.isToggle
-                                      ? colorScheme.surfaceContainerHighest
-                                      : null,
-                                  foregroundColor: entry.isToggle && entry.isSelected
-                                      ? colorScheme.onPrimary
-                                      : entry.isToggle
-                                      ? colorScheme.onSurfaceVariant
-                                      : null,
-                                ),
-                                icon: Icon(entry.action.icon),
-                                label: Text(entry.action.label),
-                              );
-                              return helpContent != null
-                                  ? ContextualHelpTooltip(
-                                      helpContent: helpContent,
-                                      child: button,
-                                    )
-                                  : button;
-                            },
-                          ),
-                      ],
+                                );
+                                return helpContent != null
+                                    ? ContextualHelpTooltip(
+                                        helpContent: helpContent,
+                                        child: button,
+                                      )
+                                    : button;
+                              },
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -375,19 +419,60 @@ class _ToolbarButtonConfig {
 }
 
 enum _ToolbarAction {
-  selection(icon: Icons.pan_tool, label: 'Select', helpContentId: 'tool_select'),
-  addState(icon: Icons.add, label: 'Add state', helpContentId: 'tool_add_state'),
-  transition(icon: Icons.arrow_right_alt, label: 'Add transition', helpContentId: 'tool_add_transition'),
-  undo(icon: Icons.undo, label: 'Undo', helpContentId: 'tool_undo'),
-  redo(icon: Icons.redo, label: 'Redo', helpContentId: 'tool_redo'),
-  fitContent(icon: Icons.fit_screen, label: 'Fit to content', helpContentId: 'tool_fit_content'),
-  resetView(icon: Icons.center_focus_strong, label: 'Reset view', helpContentId: 'tool_reset_view'),
-  clear(icon: Icons.delete_outline, label: 'Clear canvas', helpContentId: 'tool_clear'),
-  help(icon: Icons.help_outline, label: 'Help & Shortcuts', helpContentId: 'shortcut_canvas_general');
+  selection(
+      icon: Icons.pan_tool,
+      label: 'Select',
+      helpContentId: 'tool_select',
+      semanticsHint: 'Activates selection mode for moving and editing states.'),
+  addState(
+      icon: Icons.add,
+      label: 'Add state',
+      helpContentId: 'tool_add_state',
+      semanticsHint: 'Adds a new state to the automaton canvas.'),
+  transition(
+      icon: Icons.arrow_right_alt,
+      label: 'Add transition',
+      helpContentId: 'tool_add_transition',
+      semanticsHint: 'Activates transition mode to connect two states.'),
+  undo(
+      icon: Icons.undo,
+      label: 'Undo',
+      helpContentId: 'tool_undo',
+      semanticsHint: 'Reverts the most recent canvas change.'),
+  redo(
+      icon: Icons.redo,
+      label: 'Redo',
+      helpContentId: 'tool_redo',
+      semanticsHint: 'Restores the most recently undone canvas change.'),
+  fitContent(
+      icon: Icons.fit_screen,
+      label: 'Fit to content',
+      helpContentId: 'tool_fit_content',
+      semanticsHint: 'Zooms and pans to show the full automaton.'),
+  resetView(
+      icon: Icons.center_focus_strong,
+      label: 'Reset view',
+      helpContentId: 'tool_reset_view',
+      semanticsHint: 'Resets the canvas zoom and pan position.'),
+  clear(
+      icon: Icons.delete_outline,
+      label: 'Clear canvas',
+      helpContentId: 'tool_clear',
+      semanticsHint: 'Removes all states and transitions from the canvas.'),
+  help(
+      icon: Icons.help_outline,
+      label: 'Help & Shortcuts',
+      helpContentId: 'shortcut_canvas_general',
+      semanticsHint: 'Opens canvas help and keyboard shortcut information.');
 
-  const _ToolbarAction({required this.icon, required this.label, required this.helpContentId});
+  const _ToolbarAction(
+      {required this.icon,
+      required this.label,
+      required this.helpContentId,
+      required this.semanticsHint});
 
   final IconData icon;
   final String label;
   final String helpContentId;
+  final String semanticsHint;
 }

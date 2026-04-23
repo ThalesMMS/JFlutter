@@ -16,21 +16,21 @@ import 'package:jflutter/core/repositories/settings_repository.dart';
 import 'package:jflutter/data/repositories/settings_repository_impl.dart';
 import 'package:jflutter/data/storage/settings_storage.dart';
 import 'package:jflutter/presentation/providers/settings_provider.dart';
+import 'package:jflutter/presentation/widgets/app_snackbar.dart';
+import 'package:jflutter/presentation/widgets/switch_setting_tile.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   SettingsPage({
     super.key,
     SettingsRepository? repository,
     SettingsStorage? storage,
-  }) : repository =
-           repository ??
-           SharedPreferencesSettingsRepository(
-             storage: storage ?? const SharedPreferencesSettingsStorage(),
-           );
+  }) : repository = repository ??
+            SharedPreferencesSettingsRepository(
+              storage: storage ?? const SharedPreferencesSettingsStorage(),
+            );
 
   final SettingsRepository repository;
 
-  @override
   @override
   ConsumerState<SettingsPage> createState() => _SettingsPageState();
 }
@@ -38,6 +38,27 @@ class SettingsPage extends ConsumerStatefulWidget {
 class _SettingsPageState extends ConsumerState<SettingsPage> {
   bool _isLoading = false;
   SettingsModel _settings = const SettingsModel();
+
+  TextStyle? _settingTitleStyle(BuildContext context) {
+    return Theme.of(
+      context,
+    ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold);
+  }
+
+  TextStyle? _settingSubtitleStyle(BuildContext context) {
+    final theme = Theme.of(context);
+    return theme.textTheme.bodyMedium?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+  }
+
+  bool _useStackedControlLayout(
+    BuildContext context,
+    BoxConstraints constraints,
+  ) {
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    return constraints.maxWidth / textScale < 360;
+  }
 
   @override
   void initState() {
@@ -78,9 +99,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           .read(settingsProvider.notifier)
           .refreshFromModel(currentSettings);
       if (!mounted) return;
-      ScaffoldMessenger.of(
+      showAppSnackBar(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Settings saved!')));
+        message: 'Settings saved.',
+        tone: AppSnackBarTone.success,
+      );
     } catch (error, stackTrace) {
       debugPrint('Failed to save settings: $error');
       debugPrintStack(stackTrace: stackTrace);
@@ -100,8 +123,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       await widget.repository.saveSettings(defaults);
       await ref.read(settingsProvider.notifier).refreshFromModel(defaults);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Settings reset to defaults!')),
+      showAppSnackBar(
+        context,
+        message: 'Settings reset to defaults.',
+        tone: AppSnackBarTone.success,
       );
     } catch (error, stackTrace) {
       debugPrint('Failed to reset settings: $error');
@@ -112,18 +137,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   void _showError(String message) {
-    final theme = Theme.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: theme.colorScheme.error,
-        behavior: SnackBarBehavior.floating,
-        action: SnackBarAction(
-          label: 'Dismiss',
-          textColor: theme.colorScheme.onError,
-          onPressed: () {},
-        ),
-      ),
+    showAppSnackBar(
+      context,
+      message: message,
+      tone: AppSnackBarTone.error,
+      actionLabel: 'Dismiss',
+      onAction: () {},
     );
   }
 
@@ -149,26 +168,29 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionHeader('Symbols'),
-            _buildSymbolSettings(),
-            const SizedBox(height: 24),
-            _buildSectionHeader('Theme'),
-            _buildThemeSettings(),
-            const SizedBox(height: 24),
-            _buildSectionHeader('Canvas'),
-            _buildCanvasSettings(),
-            const SizedBox(height: 24),
-            _buildSectionHeader('General'),
-            _buildGeneralSettings(),
-            const SizedBox(height: 24),
-            _buildSectionHeader('Actions'),
-            _buildActionButtons(),
-          ],
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionHeader('Symbols'),
+              _buildSymbolSettings(),
+              const SizedBox(height: 24),
+              _buildSectionHeader('Theme'),
+              _buildThemeSettings(),
+              const SizedBox(height: 24),
+              _buildSectionHeader('Canvas'),
+              _buildCanvasSettings(),
+              const SizedBox(height: 24),
+              _buildSectionHeader('General'),
+              _buildGeneralSettings(),
+              const SizedBox(height: 24),
+              _buildSectionHeader('Actions'),
+              _buildActionButtons(),
+            ],
+          ),
         ),
       ),
     );
@@ -267,11 +289,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSwitchSetting(
-              'Show Grid',
-              'Display grid lines on canvas',
-              _settings.showGrid,
-              (value) {
+            SwitchSettingTile(
+              title: 'Show Grid',
+              subtitle: 'Display grid lines on canvas',
+              value: _settings.showGrid,
+              onChanged: (value) {
                 setState(() {
                   _settings = _settings.copyWith(showGrid: value);
                 });
@@ -279,11 +301,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               switchKey: const ValueKey('settings_show_grid_switch'),
             ),
             const SizedBox(height: 16),
-            _buildSwitchSetting(
-              'Show Coordinates',
-              'Display coordinate information',
-              _settings.showCoordinates,
-              (value) {
+            SwitchSettingTile(
+              title: 'Show Coordinates',
+              subtitle: 'Display coordinate information',
+              value: _settings.showCoordinates,
+              onChanged: (value) {
                 setState(() {
                   _settings = _settings.copyWith(showCoordinates: value);
                 });
@@ -344,11 +366,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSwitchSetting(
-              'Auto Save',
-              'Automatically save changes',
-              _settings.autoSave,
-              (value) {
+            SwitchSettingTile(
+              title: 'Auto Save',
+              subtitle: 'Automatically save changes',
+              value: _settings.autoSave,
+              onChanged: (value) {
                 setState(() {
                   _settings = _settings.copyWith(autoSave: value);
                 });
@@ -356,11 +378,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               switchKey: const ValueKey('settings_auto_save_switch'),
             ),
             const SizedBox(height: 16),
-            _buildSwitchSetting(
-              'Show Tooltips',
-              'Display helpful tooltips',
-              _settings.showTooltips,
-              (value) {
+            SwitchSettingTile(
+              title: 'Show Tooltips',
+              subtitle: 'Display helpful tooltips',
+              value: _settings.showTooltips,
+              onChanged: (value) {
                 setState(() {
                   _settings = _settings.copyWith(showTooltips: value);
                 });
@@ -415,20 +437,21 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        Text(title, style: _settingTitleStyle(context)),
         const SizedBox(height: 4),
-        Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+        Text(subtitle, style: _settingSubtitleStyle(context)),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
+          runSpacing: 8,
           children: options.map((option) {
             final isSelected =
                 option.toLowerCase().contains(currentValue.toLowerCase()) ||
-                (currentValue == 'λ' && option.contains('Lambda')) ||
-                (currentValue == 'ε' && option.contains('Epsilon')) ||
-                (currentValue == 'system' && option == 'System') ||
-                (currentValue == 'light' && option == 'Light') ||
-                (currentValue == 'dark' && option == 'Dark');
+                    (currentValue == 'λ' && option.contains('Lambda')) ||
+                    (currentValue == 'ε' && option.contains('Epsilon')) ||
+                    (currentValue == 'system' && option == 'System') ||
+                    (currentValue == 'light' && option == 'Light') ||
+                    (currentValue == 'dark' && option == 'Dark');
 
             return FilterChip(
               key: chipKeyBuilder?.call(option),
@@ -446,30 +469,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     );
   }
 
-  Widget _buildSwitchSetting(
-    String title,
-    String subtitle,
-    bool value,
-    Function(bool) onChanged, {
-    Key? switchKey,
-  }) {
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 4),
-              Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
-            ],
-          ),
-        ),
-        Switch(key: switchKey, value: value, onChanged: onChanged),
-      ],
-    );
-  }
-
   Widget _buildSliderSetting(
     String title,
     String subtitle,
@@ -479,34 +478,49 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     Function(double) onChanged, {
     Key? sliderKey,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 4),
-        Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
-        const SizedBox(height: 8),
-        Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final useStackedLayout = _useStackedControlLayout(context, constraints);
+        final slider = Slider(
+          key: sliderKey,
+          value: value,
+          min: min,
+          max: max,
+          divisions: ((max - min) / 5).round(),
+          label: value.round().toString(),
+          onChanged: onChanged,
+        );
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Slider(
-                key: sliderKey,
-                value: value,
-                min: min,
-                max: max,
-                divisions: ((max - min) / 5).round(),
-                label: value.round().toString(),
-                onChanged: onChanged,
+            Text(title, style: _settingTitleStyle(context)),
+            const SizedBox(height: 4),
+            Text(subtitle, style: _settingSubtitleStyle(context)),
+            const SizedBox(height: 8),
+            if (useStackedLayout) ...[
+              slider,
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  value.round().toString(),
+                  style: _settingTitleStyle(context),
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Text(
-              value.round().toString(),
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
+            ] else
+              Row(
+                children: [
+                  Expanded(child: slider),
+                  const SizedBox(width: 16),
+                  Text(
+                    value.round().toString(),
+                    style: _settingTitleStyle(context),
+                  ),
+                ],
+              ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 }

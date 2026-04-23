@@ -27,14 +27,18 @@ import '../providers/automaton_algorithm_provider.dart';
 import '../providers/automaton_state_provider.dart';
 import '../providers/help_provider.dart';
 import '../widgets/algorithm_panel.dart';
+import '../widgets/app_snackbar.dart';
 import '../widgets/context_aware_help_panel.dart';
+import '../widgets/error_banner.dart';
 import '../widgets/simulation_panel.dart';
+import '../widgets/switch_setting_tile.dart';
 import '../widgets/tablet_layout_container.dart';
 import 'fsa_page.dart';
 
 part 'regex_page_layout.dart';
 part 'regex_page_simplification.dart';
 part 'regex_page_complexity.dart';
+part 'regex_page_complexity_colors.dart';
 part 'regex_page_samples.dart';
 
 /// Regular Expression page for testing and converting regular expressions
@@ -73,6 +77,37 @@ class _RegexPageState extends ConsumerState<RegexPage> {
     _testStringController.dispose();
     _comparisonRegexController.dispose();
     super.dispose();
+  }
+
+  void _showFeedback(String message,
+      {AppSnackBarTone tone = AppSnackBarTone.info}) {
+    showAppSnackBar(context, message: message, tone: tone);
+  }
+
+  void _setSimplifyOutput(bool value) {
+    setState(() {
+      _simplifyOutput = value;
+    });
+  }
+
+  void _resetClearedInputsState() {
+    setState(() {
+      _currentRegex = '';
+      _testString = '';
+      _isValid = false;
+      _matches = false;
+      _hasTested = false;
+      _errorMessage = '';
+      _equivalenceResult = null;
+      _equivalenceMessage = '';
+      _simplificationResult = null;
+      _showSimplificationSteps = false;
+      _selectedStepIndex = 0;
+      _regexAnalysis = null;
+      _showAnalysisDetails = false;
+      _sampleStrings = null;
+      _showSampleStringsDetails = false;
+    });
   }
 
   void _validateRegex() {
@@ -201,57 +236,37 @@ class _RegexPageState extends ConsumerState<RegexPage> {
     final l10n = AppLocalizations.of(context);
 
     if (!_isValid) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.enterValidRegexFirst),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showFeedback(l10n.enterValidRegexFirst, tone: AppSnackBarTone.error);
       return;
     }
 
     final result = RegexToNFAConverter.convert(_currentRegex);
     if (!result.isSuccess || result.data == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result.error ?? l10n.failedConvertRegexToNfa),
-          backgroundColor: Colors.red,
-        ),
+      _showFeedback(
+        result.error ?? l10n.failedConvertRegexToNfa,
+        tone: AppSnackBarTone.error,
       );
       return;
     }
 
     _pushAutomatonToProvider(result.data!);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.convertedRegexToNfa),
-      ),
-    );
+    _showFeedback(l10n.convertedRegexToNfa, tone: AppSnackBarTone.success);
   }
 
   void _convertToDFA() {
     final l10n = AppLocalizations.of(context);
 
     if (!_isValid) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.enterValidRegexFirst),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showFeedback(l10n.enterValidRegexFirst, tone: AppSnackBarTone.error);
       return;
     }
 
     final regexToNfaResult = RegexToNFAConverter.convert(_currentRegex);
     if (!regexToNfaResult.isSuccess || regexToNfaResult.data == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            regexToNfaResult.error ?? l10n.failedConvertRegexToNfa,
-          ),
-          backgroundColor: Colors.red,
-        ),
+      _showFeedback(
+        regexToNfaResult.error ?? l10n.failedConvertRegexToNfa,
+        tone: AppSnackBarTone.error,
       );
       return;
     }
@@ -259,11 +274,9 @@ class _RegexPageState extends ConsumerState<RegexPage> {
     final nfa = regexToNfaResult.data!;
     final nfaToDfaResult = NFAToDFAConverter.convert(nfa);
     if (!nfaToDfaResult.isSuccess || nfaToDfaResult.data == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(nfaToDfaResult.error ?? l10n.failedConvertNfaToDfa),
-          backgroundColor: Colors.red,
-        ),
+      _showFeedback(
+        nfaToDfaResult.error ?? l10n.failedConvertNfaToDfa,
+        tone: AppSnackBarTone.error,
       );
       return;
     }
@@ -271,11 +284,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
     final completedDfa = DFACompleter.complete(nfaToDfaResult.data!);
     _pushAutomatonToProvider(completedDfa);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.convertedRegexToDfa),
-      ),
-    );
+    _showFeedback(l10n.convertedRegexToDfa, tone: AppSnackBarTone.success);
 
     Navigator.of(
       context,
@@ -389,22 +398,15 @@ class _RegexPageState extends ConsumerState<RegexPage> {
     final l10n = AppLocalizations.of(context);
 
     if (!_isValid || _currentRegex.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.enterValidRegexFirst),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showFeedback(l10n.enterValidRegexFirst, tone: AppSnackBarTone.error);
       return;
     }
 
     final result = RegexSimplifier.simplifyWithSteps(_currentRegex);
     if (!result.isSuccess || result.data == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result.error ?? l10n.failedSimplifyRegex),
-          backgroundColor: Colors.red,
-        ),
+      _showFeedback(
+        result.error ?? l10n.failedSimplifyRegex,
+        tone: AppSnackBarTone.error,
       );
       return;
     }
@@ -420,22 +422,15 @@ class _RegexPageState extends ConsumerState<RegexPage> {
     final l10n = AppLocalizations.of(context);
 
     if (!_isValid || _currentRegex.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.enterValidRegexFirst),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showFeedback(l10n.enterValidRegexFirst, tone: AppSnackBarTone.error);
       return;
     }
 
     final result = RegexAnalyzer.analyze(_currentRegex);
     if (!result.isSuccess || result.data == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result.error ?? l10n.failedAnalyzeRegex),
-          backgroundColor: Colors.red,
-        ),
+      _showFeedback(
+        result.error ?? l10n.failedAnalyzeRegex,
+        tone: AppSnackBarTone.error,
       );
       return;
     }
@@ -450,12 +445,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
     final l10n = AppLocalizations.of(context);
 
     if (!_isValid || _currentRegex.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.enterValidRegexFirst),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showFeedback(l10n.enterValidRegexFirst, tone: AppSnackBarTone.error);
       return;
     }
 
@@ -465,11 +455,9 @@ class _RegexPageState extends ConsumerState<RegexPage> {
       maxLength: 30,
     );
     if (!result.isSuccess || result.data == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result.error ?? l10n.failedGenerateSampleStrings),
-          backgroundColor: Colors.red,
-        ),
+      _showFeedback(
+        result.error ?? l10n.failedGenerateSampleStrings,
+        tone: AppSnackBarTone.error,
       );
       return;
     }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/help_content.dart';
@@ -24,58 +25,91 @@ class KeyboardShortcutsDialog extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
-    return Semantics(
-      namesRoute: true,
-      label: 'Keyboard shortcuts dialog',
-      child: AlertDialog(
-        clipBehavior: Clip.antiAlias,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-        contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
-        actionsPadding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
-        title: _DialogTitle(theme: theme),
-        content: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _ShortcutSection(
-                  title: 'Canvas Operations',
-                  icon: Icons.edit,
-                  color: theme.colorScheme.primary,
-                  helpContent: kHelpContent['shortcut_canvas_general']!,
+    return Shortcuts(
+      shortcuts: const <ShortcutActivator, Intent>{
+        SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
+        SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+        SingleActivator(LogicalKeyboardKey.numpadEnter): ActivateIntent(),
+      },
+      child: Actions(
+        actions: <Type, Action<Intent>>{
+          DismissIntent: CallbackAction<DismissIntent>(
+            onInvoke: (intent) {
+              Navigator.of(context).pop();
+              return null;
+            },
+          ),
+          ActivateIntent: CallbackAction<ActivateIntent>(
+            onInvoke: (intent) {
+              Navigator.of(context).pop();
+              return null;
+            },
+          ),
+        },
+        child: FocusTraversalGroup(
+          policy: OrderedTraversalPolicy(),
+          child: Semantics(
+            namesRoute: true,
+            label: 'Keyboard shortcuts dialog',
+            child: AlertDialog(
+              clipBehavior: Clip.antiAlias,
+              insetPadding:
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+              contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
+              actionsPadding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
+              title: _DialogTitle(theme: theme),
+              content: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _ShortcutSection(
+                        title: 'Canvas Operations',
+                        icon: Icons.edit,
+                        color: theme.colorScheme.primary,
+                        helpContent: kHelpContent['shortcut_canvas_general']!,
+                      ),
+                      const SizedBox(height: 20),
+                      _ShortcutSection(
+                        title: 'Simulation Controls',
+                        icon: Icons.play_arrow,
+                        color: theme.colorScheme.secondary,
+                        helpContent: kHelpContent['shortcut_simulation']!,
+                      ),
+                      const SizedBox(height: 20),
+                      _ShortcutSection(
+                        title: 'Dialog Shortcuts',
+                        icon: Icons.chat_bubble_outline,
+                        color: theme.colorScheme.tertiary,
+                        helpContent: kHelpContent['shortcut_dialogs']!,
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 20),
-                _ShortcutSection(
-                  title: 'Simulation Controls',
-                  icon: Icons.play_arrow,
-                  color: theme.colorScheme.secondary,
-                  helpContent: kHelpContent['shortcut_simulation']!,
+              ),
+              actions: [
+                FocusTraversalOrder(
+                  order: const NumericFocusOrder(0.0),
+                  child: Semantics(
+                    label: 'Close shortcuts dialog',
+                    button: true,
+                    child: TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: TextButton.styleFrom(
+                        minimumSize: const Size(44, 44),
+                      ),
+                      child: const Text('Close'),
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 20),
-                _ShortcutSection(
-                  title: 'Dialog Shortcuts',
-                  icon: Icons.chat_bubble_outline,
-                  color: theme.colorScheme.tertiary,
-                  helpContent: kHelpContent['shortcut_dialogs']!,
-                ),
-                const SizedBox(height: 16),
               ],
             ),
           ),
         ),
-        actions: [
-          Semantics(
-            label: 'Close shortcuts dialog',
-            button: true,
-            child: TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close'),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -133,7 +167,8 @@ class _ShortcutSection extends StatelessWidget {
       if (trimmed.isEmpty || trimmed.endsWith(':')) continue;
 
       // Remove leading bullet (•)
-      final cleaned = trimmed.startsWith('•') ? trimmed.substring(1).trim() : trimmed;
+      final cleaned =
+          trimmed.startsWith('•') ? trimmed.substring(1).trim() : trimmed;
 
       // Split on first colon to get key and description
       final colonIndex = cleaned.indexOf(':');
@@ -252,7 +287,8 @@ class _ShortcutRow extends StatelessWidget {
                       child: Text(
                         'or',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.6),
                           fontStyle: FontStyle.italic,
                         ),
                       ),

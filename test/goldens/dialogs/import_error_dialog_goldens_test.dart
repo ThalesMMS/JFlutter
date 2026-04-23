@@ -70,6 +70,22 @@ void main() {
       await screenMatchesGolden(tester, 'import_error_unsupported_version');
     });
 
+    testGoldens('renders inaccessible file error', (tester) async {
+      await tester.pumpWidgetBuilder(
+        ImportErrorDialog(
+          fileName: 'icloud_drive_automaton.json',
+          errorType: ImportErrorType.inaccessibleFile,
+          detailedMessage:
+              'JFlutter could not access the selected file. Pick it again from the system dialog and keep it available until the import finishes.',
+          onRetry: () {},
+          onCancel: () {},
+        ),
+        surfaceSize: const Size(600, 400),
+      );
+
+      await screenMatchesGolden(tester, 'import_error_inaccessible_file');
+    });
+
     testGoldens('renders corrupted data error', (tester) async {
       await tester.pumpWidgetBuilder(
         ImportErrorDialog(
@@ -220,8 +236,7 @@ void main() {
           errorType: ImportErrorType.corruptedData,
           detailedMessage:
               'Multiple data integrity issues detected during import.',
-          technicalDetails:
-              'Error: CRC mismatch at byte offset 1024\n'
+          technicalDetails: 'Error: CRC mismatch at byte offset 1024\n'
               'Expected: 0x4A5F4C41\n'
               'Actual: 0x00000000\n\n'
               'Additional errors:\n'

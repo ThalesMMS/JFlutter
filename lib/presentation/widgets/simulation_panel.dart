@@ -131,9 +131,8 @@ class _SimulationPanelState extends State<SimulationPanel> {
     final step = _simulationSteps[index];
 
     if (index == 0) {
-      final input = step.remainingInput.isEmpty
-          ? 'ε'
-          : '"${step.remainingInput}"';
+      final input =
+          step.remainingInput.isEmpty ? 'ε' : '"${step.remainingInput}"';
       return 'Start at ${_formatState(step.currentState)} with input $input.';
     }
 
@@ -144,8 +143,7 @@ class _SimulationPanelState extends State<SimulationPanel> {
       return 'Final configuration ${_formatState(step.currentState)} – input $verdict.';
     }
 
-    final consumed =
-        step.usedTransition ??
+    final consumed = step.usedTransition ??
         (_simulationSteps[index - 1].remainingInput.isNotEmpty
             ? _simulationSteps[index - 1].remainingInput[0]
             : 'ε');
@@ -168,90 +166,115 @@ class _SimulationPanelState extends State<SimulationPanel> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Simulation',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-
-              // Input field
-              TextField(
-                controller: _inputController,
-                decoration: const InputDecoration(
-                  labelText: 'Input String',
-                  hintText: 'Enter string to test',
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                ),
-                onSubmitted: (_) => _simulate(),
-              ),
-
-              const SizedBox(height: 12),
-
-              // Simulate button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _isSimulating ? null : _simulate,
-                  icon: _isSimulating
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.play_arrow, size: 18),
-                  label: Text(_isSimulating ? 'Simulating...' : 'Simulate'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // Step-by-step controls
-              _buildStepByStepControls(context),
-
-              // Results
-              if (widget.simulationResult != null) ...[
+    return FocusTraversalGroup(
+      policy: ReadingOrderTraversalPolicy(),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text(
-                  'Simulation Result',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+                  'Simulation',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+
+                // Input field
+                Semantics(
+                  label: 'Simulation input string',
+                  hint:
+                      'Enter the string to test, then activate the Simulate button.',
+                  textField: true,
+                  enabled: true,
+                  excludeSemantics: true,
+                  child: TextField(
+                    controller: _inputController,
+                    decoration: const InputDecoration(
+                      labelText: 'Input String',
+                      hintText: 'Enter string to test',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    keyboardType: TextInputType.visiblePassword,
+                    onSubmitted: (_) => _simulate(),
                   ),
                 ),
-                const SizedBox(height: 8),
-                SimulationResultCard(result: widget.simulationResult!),
-              ],
 
-              // Step-by-step execution
-              if (_isStepByStep && _simulationSteps.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                _buildStepByStepExecution(context),
-              ],
+                const SizedBox(height: 12),
 
-              // Regex Result
-              if (widget.regexResult != null) ...[
-                const SizedBox(height: 16),
-                Text(
-                  'Regex Result',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+                // Simulate button
+                Semantics(
+                  label: 'Run simulation',
+                  hint:
+                      'Runs the automaton using the currently entered input string.',
+                  value: _isSimulating ? 'Simulating' : null,
+                  button: true,
+                  enabled: !_isSimulating,
+                  excludeSemantics: true,
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _isSimulating ? null : _simulate,
+                      icon: _isSimulating
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.play_arrow, size: 18),
+                      label: Text(
+                        _isSimulating ? 'Simulating...' : 'Simulate',
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 8),
-                _buildRegexResultCard(context, widget.regexResult!),
+
+                const SizedBox(height: 12),
+
+                // Step-by-step controls
+                _buildStepByStepControls(context),
+
+                // Results
+                if (widget.simulationResult != null) ...[
+                  Text(
+                    'Simulation Result',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  SimulationResultCard(result: widget.simulationResult!),
+                ],
+
+                // Step-by-step execution
+                if (_isStepByStep && _simulationSteps.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  _buildStepByStepExecution(context),
+                ],
+
+                // Regex Result
+                if (widget.regexResult != null) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    'Regex Result',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildRegexResultCard(context, widget.regexResult!),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -275,11 +298,15 @@ class _SimulationPanelState extends State<SimulationPanel> {
             children: [
               Icon(Icons.text_fields, color: colorScheme.primary, size: 20),
               const SizedBox(width: 8),
-              Text(
-                'Regular Expression',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: colorScheme.primary,
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Text(
+                  'Regular Expression',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
               ),
             ],
@@ -295,10 +322,12 @@ class _SimulationPanelState extends State<SimulationPanel> {
             ),
             child: Text(
               regex,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                fontFamily: 'monospace',
-                fontWeight: FontWeight.bold,
-              ),
+                    fontFamily: 'monospace',
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
           ),
         ],
@@ -334,22 +363,30 @@ class _SimulationPanelState extends State<SimulationPanel> {
                 ),
               ),
               const SizedBox(width: 8),
-              Switch(
-                value: _isStepByStep,
-                onChanged: (value) {
-                  setState(() {
-                    _isStepByStep = value;
-                    if (!value) {
-                      _currentStepIndex = 0;
-                      _isPlaying = false;
-                      _simulationSteps.clear();
-                      widget.highlightService.clear();
+              Semantics(
+                label: 'Step-by-step mode',
+                hint:
+                    'Turns manual simulation review on or off for the current result.',
+                value: _isStepByStep ? 'On' : 'Off',
+                enabled: true,
+                excludeSemantics: true,
+                child: Switch(
+                  value: _isStepByStep,
+                  onChanged: (value) {
+                    setState(() {
+                      _isStepByStep = value;
+                      if (!value) {
+                        _currentStepIndex = 0;
+                        _isPlaying = false;
+                        _simulationSteps.clear();
+                        widget.highlightService.clear();
+                      }
+                    });
+                    if (value) {
+                      _loadSimulationSteps();
                     }
-                  });
-                  if (value) {
-                    _loadSimulationSteps();
-                  }
-                },
+                  },
+                ),
               ),
             ],
           ),
@@ -387,10 +424,10 @@ class _SimulationPanelState extends State<SimulationPanel> {
               Text(
                 'Step ${_currentStepIndex + 1} of ${_simulationSteps.length}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.7),
-                ),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
               ),
             ],
           ),
@@ -446,14 +483,19 @@ class _SimulationPanelState extends State<SimulationPanel> {
               Text(
                 'Step ${_currentStepIndex + 1}',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
+                      color: color,
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          Text(description, style: Theme.of(context).textTheme.bodyMedium),
+          Text(
+            description,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
           if (consumed != null) ...[
             const SizedBox(height: 4),
             Text(
@@ -487,28 +529,60 @@ class _SimulationPanelState extends State<SimulationPanel> {
   Widget _buildStepNavigationControls(BuildContext context) {
     return Row(
       children: [
-        IconButton(
-          onPressed: _currentStepIndex > 0 ? _previousStep : null,
-          icon: const Icon(Icons.skip_previous),
-          tooltip: 'Previous Step',
+        Semantics(
+          label: 'Previous simulation step',
+          hint: 'Moves to the prior recorded simulation step.',
+          button: true,
+          enabled: _currentStepIndex > 0,
+          excludeSemantics: true,
+          child: IconButton(
+            onPressed: _currentStepIndex > 0 ? _previousStep : null,
+            icon: const Icon(Icons.skip_previous),
+            tooltip: 'Previous Step',
+          ),
         ),
-        IconButton(
-          onPressed: _isPlaying ? _pauseSteps : _playSteps,
-          icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
-          tooltip: _isPlaying ? 'Pause' : 'Play',
+        Semantics(
+          label: _isPlaying
+              ? 'Pause simulation playback'
+              : 'Play simulation steps',
+          hint: _isPlaying
+              ? 'Pauses automatic playback of simulation steps.'
+              : 'Automatically advances through the recorded simulation steps.',
+          button: true,
+          enabled: true,
+          excludeSemantics: true,
+          child: IconButton(
+            onPressed: _isPlaying ? _pauseSteps : _playSteps,
+            icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
+            tooltip: _isPlaying ? 'Pause' : 'Play',
+          ),
         ),
-        IconButton(
-          onPressed: _currentStepIndex < _simulationSteps.length - 1
-              ? _nextStep
-              : null,
-          icon: const Icon(Icons.skip_next),
-          tooltip: 'Next Step',
+        Semantics(
+          label: 'Next simulation step',
+          hint: 'Advances to the next recorded simulation step.',
+          button: true,
+          enabled: _currentStepIndex < _simulationSteps.length - 1,
+          excludeSemantics: true,
+          child: IconButton(
+            onPressed: _currentStepIndex < _simulationSteps.length - 1
+                ? _nextStep
+                : null,
+            icon: const Icon(Icons.skip_next),
+            tooltip: 'Next Step',
+          ),
         ),
         const Spacer(),
-        IconButton(
-          onPressed: _resetSteps,
-          icon: const Icon(Icons.refresh),
-          tooltip: 'Reset',
+        Semantics(
+          label: 'Reset simulation steps',
+          hint: 'Returns the step-by-step view to the first recorded step.',
+          button: true,
+          enabled: true,
+          excludeSemantics: true,
+          child: IconButton(
+            onPressed: _resetSteps,
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Reset',
+          ),
         ),
       ],
     );
@@ -529,9 +603,8 @@ class _SimulationPanelState extends State<SimulationPanel> {
         itemBuilder: (context, index) {
           final isCurrentStep = index == _currentStepIndex;
           final isFinal = index == _simulationSteps.length - 1;
-          final isAcceptedStep = isFinal
-              ? (widget.simulationResult?.isAccepted ?? false)
-              : false;
+          final isAcceptedStep =
+              isFinal ? (widget.simulationResult?.isAccepted ?? false) : false;
 
           return Container(
             margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),

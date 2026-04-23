@@ -49,13 +49,13 @@ class AlgorithmButton extends StatelessWidget {
     this.isSelected = false,
     this.executionProgress,
     this.executionStatus,
-  }) : assert(title != '', 'title must not be empty'),
-       assert(description != '', 'description must not be empty'),
-       assert(
-         executionProgress == null ||
-             (executionProgress >= 0.0 && executionProgress <= 1.0),
-         'executionProgress must be between 0.0 and 1.0',
-       );
+  })  : assert(title != '', 'title must not be empty'),
+        assert(description != '', 'description must not be empty'),
+        assert(
+          executionProgress == null ||
+              (executionProgress >= 0.0 && executionProgress <= 1.0),
+          'executionProgress must be between 0.0 and 1.0',
+        );
 
   /// Primary label displayed prominently at the top of the button.
   final String title;
@@ -114,11 +114,18 @@ class AlgorithmButton extends StatelessWidget {
     final color = isDestructive ? colorScheme.error : colorScheme.primary;
 
     return Semantics(
-      label: title,
-      hint: description,
-      value: isExecuting ? 'Executing' : null,
+      label: 'Algorithm action: $title',
+      hint: _isDisabled
+          ? 'Unavailable. $description'
+          : 'Double tap to start. $description',
+      value: isExecuting
+          ? 'Executing'
+          : isSelected
+              ? 'Selected'
+              : null,
       button: true,
       enabled: !_isDisabled,
+      excludeSemantics: true,
       child: InkWell(
         onTap: _isDisabled ? null : onPressed,
         borderRadius: BorderRadius.circular(8),
@@ -129,18 +136,18 @@ class AlgorithmButton extends StatelessWidget {
               color: _isDisabled
                   ? colorScheme.outline.withValues(alpha: 0.3)
                   : isSelected
-                  ? color
-                  : color.withValues(alpha: 0.3),
+                      ? color
+                      : color.withValues(alpha: 0.3),
               width: isExecuting ? 2 : 1,
             ),
             borderRadius: BorderRadius.circular(8),
             color: _isDisabled
                 ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
                 : isSelected
-                ? colorScheme.primaryContainer.withValues(alpha: 0.35)
-                : isExecuting
-                ? color.withValues(alpha: 0.1)
-                : null,
+                    ? colorScheme.primaryContainer.withValues(alpha: 0.35)
+                    : isExecuting
+                        ? color.withValues(alpha: 0.1)
+                        : null,
           ),
           child: Row(
             children: [
@@ -183,30 +190,33 @@ class AlgorithmButton extends StatelessWidget {
     Color color,
     ColorScheme colorScheme,
   ) {
-    final displayDescription = isExecuting && executionStatus != null
-        ? executionStatus!
-        : description;
+    final displayDescription =
+        isExecuting && executionStatus != null ? executionStatus! : description;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: _isDisabled
-                ? colorScheme.outline.withValues(alpha: 0.5)
-                : color,
-            fontWeight: FontWeight.w600,
-          ),
+                color: _isDisabled
+                    ? colorScheme.outline.withValues(alpha: 0.5)
+                    : color,
+                fontWeight: FontWeight.w600,
+              ),
         ),
         const SizedBox(height: 4),
         Text(
           displayDescription,
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: _isDisabled
-                ? colorScheme.outline.withValues(alpha: 0.5)
-                : colorScheme.onSurface.withValues(alpha: 0.7),
-          ),
+                color: _isDisabled
+                    ? colorScheme.outline.withValues(alpha: 0.5)
+                    : colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
         ),
       ],
     );
@@ -221,9 +231,9 @@ class AlgorithmButton extends StatelessWidget {
       return Text(
         '${(executionProgress! * 100).toInt()}%',
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: color,
-          fontWeight: FontWeight.bold,
-        ),
+              color: color,
+              fontWeight: FontWeight.bold,
+            ),
       );
     }
 

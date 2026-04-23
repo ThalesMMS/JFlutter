@@ -44,14 +44,14 @@ class MobileAutomatonControls extends StatelessWidget {
     this.isAlgorithmsEnabled = true,
     this.onMetrics,
     this.isMetricsEnabled = true,
-  }) : assert(
-         !(enableToolSelection && showSelectionTool) || onSelectTool != null,
-         'onSelectTool must be provided when the selection tool is visible.',
-       ),
-       assert(
-         !enableToolSelection || onAddTransition != null,
-         'onAddTransition must be provided when tool selection is enabled.',
-       );
+  })  : assert(
+          !(enableToolSelection && showSelectionTool) || onSelectTool != null,
+          'onSelectTool must be provided when the selection tool is visible.',
+        ),
+        assert(
+          !enableToolSelection || onAddTransition != null,
+          'onAddTransition must be provided when tool selection is enabled.',
+        );
 
   final bool enableToolSelection;
   final bool showSelectionTool;
@@ -130,8 +130,7 @@ class MobileAutomatonControls extends StatelessWidget {
           label: 'Add transition',
           onPressed: onAddTransition,
           isToggle: enableToolSelection,
-          isSelected:
-              enableToolSelection &&
+          isSelected: enableToolSelection &&
               activeTool == AutomatonCanvasTool.transition,
         ),
       _ControlAction(
@@ -209,6 +208,8 @@ class MobileAutomatonControls extends StatelessWidget {
                       padding: const EdgeInsets.only(top: 10),
                       child: Text(
                         statusMessage!,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -289,15 +290,15 @@ class _MobileControlButton extends StatelessWidget {
 
     final Widget button = switch (style) {
       _ButtonStyleVariant.filled => IconButton.filled(
-        onPressed: action.onPressed,
-        style: effectiveStyle,
-        icon: Icon(action.icon),
-      ),
+          onPressed: action.onPressed,
+          style: effectiveStyle,
+          icon: Icon(action.icon),
+        ),
       _ButtonStyleVariant.tonal => IconButton.filledTonal(
-        onPressed: action.onPressed,
-        style: effectiveStyle,
-        icon: Icon(action.icon),
-      ),
+          onPressed: action.onPressed,
+          style: effectiveStyle,
+          icon: Icon(action.icon),
+        ),
     };
 
     // Mantém acessibilidade e tooltip (fallback para label se tooltip não vier).

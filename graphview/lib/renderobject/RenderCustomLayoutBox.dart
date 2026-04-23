@@ -191,6 +191,7 @@ class RenderCustomLayoutBox extends RenderBox
       context.canvas.translate(offset.dx, offset.dy);
       algorithm.renderer?.setGraph(graph);
       algorithm.renderer?.setAnimatedPositions(animatedPositions);
+      _prepareRendererForEdgePass();
 
       final collapsingEdges =
           _delegate.controller?.getCollapsingEdges(graph).toSet() ?? {};
@@ -233,6 +234,7 @@ class RenderCustomLayoutBox extends RenderBox
       context.canvas.save();
       context.canvas.translate(offset.dx, offset.dy);
       algorithm.renderer?.setGraph(graph);
+      _prepareRendererForEdgePass();
       graph.edges.forEach((edge) {
         algorithm.renderer?.renderEdge(context.canvas, edge, edgePaint);
       });
@@ -317,6 +319,16 @@ class RenderCustomLayoutBox extends RenderBox
 
     if (_nodeAnimationController.isCompleted) {
       _delegate.controller?.removeCollapsingNodes();
+    }
+  }
+
+  void _prepareRendererForEdgePass() {
+    final renderer = algorithm.renderer;
+    if (renderer == null) {
+      return;
+    }
+    if (renderer is RenderCycleAware) {
+      (renderer as RenderCycleAware).prepareForRenderCycle();
     }
   }
 

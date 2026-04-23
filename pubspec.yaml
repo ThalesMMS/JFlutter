@@ -1,5 +1,5 @@
 name: jflutter
-description: "A modern, mobile-first Flutter application for learning formal language theory and automata. Interactive educational tool for finite automata, context-free grammars, and formal language concepts."
+description: "A modern, mobile-first Flutter application for finite automata, grammars, pushdown automata, Turing machines, and regular expressions."
 homepage: https://github.com/ThalesMMS/jflutter
 repository: https://github.com/ThalesMMS/jflutter
 issue_tracker: https://github.com/ThalesMMS/jflutter/issues
@@ -44,12 +44,10 @@ dependencies:
 
   # State persistence (localStorage analogue)
   shared_preferences: ^2.3.2
+  shared_preferences_platform_interface: ^2.4.1
 
   # Save PNG to filesystem
   path_provider: ^2.1.4
-
-  # Share sheet for PNG export
-  share_plus: ^12.0.0
 
   # Clipboard support (built into Flutter)
 
@@ -90,7 +88,6 @@ dev_dependencies:
   integration_test:
     sdk: flutter
   test: ^1.24.0
-  shared_preferences_platform_interface: ^2.4.1
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -128,11 +125,16 @@ flutter:
     - jflutter_js/examples/glc_palindrome.json
     # Pushdown automaton example
     - jflutter_js/examples/apda_palindrome.json
-    # Turing machine example
+    # Turing machine examples
     - jflutter_js/examples/tm_binary_to_unary.json
+    - jflutter_js/examples/tm_copy_string.json
+    - jflutter_js/examples/tm_increment.json
+    - jflutter_js/examples/tm_palindrome.json
     # License texts bundled for in-app access and binary distribution
     - LICENSE.txt
     - LICENSE_JFLAP.txt
+    - assets/LICENSE_GRAPHVIEW.txt
+    - THIRD_PARTY_NOTICES_APPLE.txt
 
 flutter_launcher_icons:
   image_path: "icon.PNG"

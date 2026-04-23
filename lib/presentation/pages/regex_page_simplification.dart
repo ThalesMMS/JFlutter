@@ -200,11 +200,9 @@ extension _RegexPageSimplificationSections on _RegexPageState {
                       return;
                     }
                     if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(l10n.simplifiedRegexCopiedToClipboard),
-                        duration: const Duration(seconds: 2),
-                      ),
+                    _showFeedback(
+                      l10n.simplifiedRegexCopiedToClipboard,
+                      tone: AppSnackBarTone.success,
                     );
                   },
                   icon: const Icon(Icons.copy, size: 18),

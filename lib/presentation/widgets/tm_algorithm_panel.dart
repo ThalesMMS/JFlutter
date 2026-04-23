@@ -23,6 +23,8 @@ import '../../core/models/tm_transition.dart' as tm_models show TapeDirection;
 import '../../core/result.dart';
 import '../../data/examples/tm_examples.dart';
 import '../providers/tm_editor_provider.dart';
+import 'app_snackbar.dart';
+import 'file_operations_panel.dart';
 
 enum _TMAnalysisFocus {
   decidability,
@@ -61,6 +63,8 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final tm = ref.watch(tmEditorProvider).tm;
+
     return Card(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -72,6 +76,12 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
             _buildAlgorithmButtons(context),
             const SizedBox(height: 16),
             _buildResultsSection(context),
+            if (tm != null) ...[
+              const SizedBox(height: 16),
+              const Divider(),
+              const SizedBox(height: 16),
+              FileOperationsPanel(turingMachine: tm),
+            ],
           ],
         ),
       ),
@@ -171,15 +181,15 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
             color: _isAnalyzing
                 ? colorScheme.outline.withValues(alpha: 0.3)
                 : isSelected
-                ? colorScheme.primary
-                : colorScheme.primary.withValues(alpha: 0.3),
+                    ? colorScheme.primary
+                    : colorScheme.primary.withValues(alpha: 0.3),
           ),
           borderRadius: BorderRadius.circular(8),
           color: _isAnalyzing
               ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
               : isSelected
-              ? colorScheme.primaryContainer.withValues(alpha: 0.35)
-              : null,
+                  ? colorScheme.primaryContainer.withValues(alpha: 0.35)
+                  : null,
         ),
         child: Row(
           children: [
@@ -196,18 +206,18 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: _isAnalyzing
-                          ? colorScheme.outline
-                          : colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
+                          color: _isAnalyzing
+                              ? colorScheme.outline
+                              : colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     description,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
+                          color: colorScheme.onSurface.withValues(alpha: 0.7),
+                        ),
                   ),
                 ],
               ),
@@ -242,7 +252,7 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
-        hasData ? _buildResults(context) : _buildEmptyResults(context),
+        if (hasData) _buildResults(context) else _buildEmptyResults(context),
       ],
     );
   }
@@ -270,15 +280,15 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
           Text(
             'No analysis results yet',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+                  color: Theme.of(context).colorScheme.outline,
+                ),
           ),
           const SizedBox(height: 8),
           Text(
             'Select an algorithm above to analyze your TM.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+                  color: Theme.of(context).colorScheme.outline,
+                ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -306,8 +316,8 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
               child: Text(
                 _analysisError!,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onErrorContainer,
-                ),
+                      color: colorScheme.onErrorContainer,
+                    ),
               ),
             ),
           ],
@@ -583,7 +593,11 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
       child: OutlinedButton.icon(
         onPressed: onPressed,
         icon: const Icon(Icons.file_open, size: 18),
-        label: Text(title),
+        label: Text(
+          title,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
         style: OutlinedButton.styleFrom(
           foregroundColor: colorScheme.secondary,
           side: BorderSide(color: colorScheme.secondary.withValues(alpha: 0.5)),
@@ -598,12 +612,16 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
     try {
       final tm = exampleFactory();
       ref.read(tmEditorProvider.notifier).setTm(tm);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Example loaded: ${tm.name}')),
+      showAppSnackBar(
+        context,
+        message: 'Example loaded: ${tm.name}',
+        tone: AppSnackBarTone.success,
       );
     } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load example: $error')),
+      showAppSnackBar(
+        context,
+        message: 'Failed to load example: $error',
+        tone: AppSnackBarTone.error,
       );
     }
   }
@@ -645,8 +663,7 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
         _analysis = result.data;
         _analyzedTm = tm;
       } else {
-        _analysisError =
-            result.error ??
+        _analysisError = result.error ??
             'Analysis failed due to an unknown error. Please verify the machine configuration.';
       }
     });
@@ -788,9 +805,9 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
           Text(
             value,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: valueColor,
-              fontWeight: highlight ? FontWeight.bold : null,
-            ),
+                  color: valueColor,
+                  fontWeight: highlight ? FontWeight.bold : null,
+                ),
           ),
         ],
       ),
@@ -817,9 +834,9 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
           Text(
             label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-            ),
+                  color: colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
           ),
           const SizedBox(height: 4),
           Wrap(

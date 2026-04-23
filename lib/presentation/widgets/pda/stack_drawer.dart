@@ -33,12 +33,12 @@ class StackState {
 
   /// Pilha vazia
   const StackState.empty()
-    : symbols = const [],
-      lastOperation = null,
-      operationType = StackOperationType.none,
-      maxStackSize = 100,
-      hasOverflow = false,
-      hasUnderflow = false;
+      : symbols = const [],
+        lastOperation = null,
+        operationType = StackOperationType.none,
+        maxStackSize = 100,
+        hasOverflow = false,
+        hasUnderflow = false;
 
   bool get isEmpty => symbols.isEmpty;
   String? get top => symbols.isEmpty ? null : symbols.last;
@@ -152,13 +152,12 @@ class _PDAStackPanelState extends State<PDAStackPanel>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
-    _slideAnimation =
-        Tween<Offset>(
-          begin: const Offset(0, 1), // Start from bottom
-          end: Offset.zero, // End at normal position
-        ).animate(
-          CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
-        );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 1), // Start from bottom
+      end: Offset.zero, // End at normal position
+    ).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
     _scrollController = ScrollController();
     _previousStackSize = widget.stackState.size;
   }
@@ -357,8 +356,7 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                   : ListView.builder(
                       controller: _scrollController,
                       shrinkWrap: true,
-                      itemCount:
-                          widget.stackState.symbols.length +
+                      itemCount: widget.stackState.symbols.length +
                           (_isPopAnimation ? _poppedSymbols.length : 0),
                       itemBuilder: (context, index) {
                         // During pop animation, show popped items at the top
@@ -377,11 +375,9 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                           reversedIndex = -1; // Not in actual stack
                         } else {
                           // Show current stack symbols
-                          final adjustedIndex =
-                              index -
+                          final adjustedIndex = index -
                               (_isPopAnimation ? _poppedSymbols.length : 0);
-                          reversedIndex =
-                              widget.stackState.symbols.length -
+                          reversedIndex = widget.stackState.symbols.length -
                               1 -
                               adjustedIndex;
                           symbol = widget.stackState.symbols[reversedIndex];
@@ -391,215 +387,236 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                         final isHighlighted = _highlightedIndex == index;
                         final isSwiping = _swipingItemIndex == index;
 
-                        Widget itemWidget = GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () => _handleItemTap(index),
-                          // Add swipe gesture detection
-                          onHorizontalDragStart: (details) =>
-                              _handleHorizontalDragStart(index, details),
-                          onHorizontalDragUpdate: _handleHorizontalDragUpdate,
-                          onHorizontalDragEnd: (details) =>
-                              _handleHorizontalDragEnd(index, details),
-                          onHorizontalDragCancel: () =>
-                              _handleHorizontalDragCancel(index),
-                          child: Transform.translate(
-                            // Apply swipe offset for visual feedback
-                            offset: Offset(isSwiping ? _swipeOffset : 0.0, 0.0),
-                            child: Container(
-                              // Ensure minimum 40x40 touch target (compact)
-                              constraints: const BoxConstraints(
-                                minHeight: 40,
-                                minWidth: 40,
+                        final cellPosition = index + 1;
+                        final stackSize = widget.stackState.symbols.length +
+                            (_isPopAnimation ? _poppedSymbols.length : 0);
+                        final semanticsLabel = [
+                          'Stack cell $cellPosition of $stackSize',
+                          'symbol $symbol',
+                          if (isTop) 'top of stack',
+                          if (isHighlighted) 'highlighted',
+                          if (isBeingPopped) 'being removed',
+                        ].join(', ');
+                        final semanticsHint = isHighlighted
+                            ? 'Double tap to clear the highlight. Swipe left to unhighlight this stack cell.'
+                            : 'Double tap to highlight this stack cell. Swipe right to highlight it.';
+
+                        Widget itemWidget = Semantics(
+                          label: semanticsLabel,
+                          hint: semanticsHint,
+                          button: true,
+                          enabled: true,
+                          selected: isHighlighted,
+                          excludeSemantics: true,
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () => _handleItemTap(index),
+                            // Add swipe gesture detection
+                            onHorizontalDragStart: (details) =>
+                                _handleHorizontalDragStart(index, details),
+                            onHorizontalDragUpdate: _handleHorizontalDragUpdate,
+                            onHorizontalDragEnd: (details) =>
+                                _handleHorizontalDragEnd(index, details),
+                            onHorizontalDragCancel: () =>
+                                _handleHorizontalDragCancel(index),
+                            child: Transform.translate(
+                              // Apply swipe offset for visual feedback
+                              offset: Offset(
+                                isSwiping ? _swipeOffset : 0.0,
+                                0.0,
                               ),
-                              margin: const EdgeInsets.only(
-                                bottom: 3,
-                              ), // Reduced
-                              child: Stack(
-                                clipBehavior: Clip.none,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, // Reduced
-                                      vertical: 8, // Reduced
+                              child: Container(
+                                // Keep each stack cell at Apple's 44pt minimum
+                                // while preserving the swipe gesture behavior.
+                                constraints: const BoxConstraints(
+                                  minHeight: 44,
+                                  minWidth: 44,
+                                ),
+                                margin: const EdgeInsets.only(
+                                  bottom: 3,
+                                ), // Reduced
+                                child: Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, // Reduced
+                                        vertical: 8, // Reduced
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: isHighlighted
+                                            ? theme
+                                                .colorScheme.secondaryContainer
+                                            : isTop
+                                                ? theme.colorScheme
+                                                    .primaryContainer
+                                                : theme.colorScheme
+                                                    .surfaceContainerHighest,
+                                        border: isHighlighted
+                                            ? Border.all(
+                                                color:
+                                                    theme.colorScheme.secondary,
+                                                width: 2,
+                                              )
+                                            : null,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Stack(
+                                        clipBehavior: Clip.none,
+                                        children: [
+                                          // Main content
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              if (isTop) ...[
+                                                Icon(
+                                                  Icons.arrow_right,
+                                                  size: 11,
+                                                  color:
+                                                      theme.colorScheme.primary,
+                                                ),
+                                                const SizedBox(width: 3),
+                                              ],
+                                              Flexible(
+                                                child: Text(
+                                                  symbol,
+                                                  style: TextStyle(
+                                                    fontFamily: 'monospace',
+                                                    fontWeight:
+                                                        isTop || isHighlighted
+                                                            ? FontWeight.bold
+                                                            : FontWeight.normal,
+                                                    fontSize: 11,
+                                                  ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          if (_isPushAnimation &&
+                                              index < _numPushedSymbols)
+                                            Positioned(
+                                              top: -4,
+                                              left: -4,
+                                              child: Container(
+                                                padding:
+                                                    const EdgeInsets.all(2),
+                                                decoration: BoxDecoration(
+                                                  color: theme
+                                                      .colorScheme.secondary,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: Icon(
+                                                  Icons.arrow_upward,
+                                                  size: 8,
+                                                  color: theme
+                                                      .colorScheme.onSecondary,
+                                                ),
+                                              ),
+                                            ),
+                                          if (isBeingPopped)
+                                            Positioned(
+                                              top: -4,
+                                              right: -4,
+                                              child: Container(
+                                                padding:
+                                                    const EdgeInsets.all(2),
+                                                decoration: BoxDecoration(
+                                                  color: theme
+                                                      .colorScheme.tertiary,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: Icon(
+                                                  Icons.arrow_downward,
+                                                  size: 8,
+                                                  color: theme
+                                                      .colorScheme.onTertiary,
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
                                     ),
-                                    decoration: BoxDecoration(
-                                      color: isHighlighted
-                                          ? theme.colorScheme.secondaryContainer
-                                          : isTop
-                                          ? theme.colorScheme.primaryContainer
-                                          : theme
-                                                .colorScheme
-                                                .surfaceContainerHighest,
-                                      border: isHighlighted
-                                          ? Border.all(
+                                    if (isTop &&
+                                        !_isPushAnimation &&
+                                        !isBeingPopped)
+                                      Positioned(
+                                        top: -5,
+                                        right: -5,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 3,
+                                            vertical: 1,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: theme.colorScheme.primary,
+                                            borderRadius: BorderRadius.circular(
+                                              6,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            'TOP',
+                                            style: TextStyle(
                                               color:
-                                                  theme.colorScheme.secondary,
-                                              width: 2,
-                                            )
-                                          : null,
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Stack(
-                                      clipBehavior: Clip.none,
-                                      children: [
-                                        // Main content
-                                        Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            if (isTop) ...[
-                                              Icon(
-                                                Icons.arrow_right,
-                                                size: 11, // Slightly smaller
+                                                  theme.colorScheme.onPrimary,
+                                              fontSize: 7,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    if (isSwiping) ...[
+                                      if (_swipeOffset < -10)
+                                        Positioned.fill(
+                                          child: IgnorePointer(
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                color: theme
+                                                    .colorScheme.errorContainer
+                                                    .withValues(alpha: 0.3),
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
+                                              ),
+                                              alignment: Alignment.centerRight,
+                                              padding: const EdgeInsets.only(
+                                                right: 8,
+                                              ),
+                                              child: Icon(
+                                                Icons.highlight_remove,
+                                                size: 16,
+                                                color: theme.colorScheme.error,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      if (_swipeOffset > 10)
+                                        Positioned.fill(
+                                          child: IgnorePointer(
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                color: theme.colorScheme
+                                                    .primaryContainer
+                                                    .withValues(alpha: 0.3),
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
+                                              ),
+                                              alignment: Alignment.centerLeft,
+                                              padding: const EdgeInsets.only(
+                                                left: 8,
+                                              ),
+                                              child: Icon(
+                                                Icons.highlight,
+                                                size: 16,
                                                 color:
                                                     theme.colorScheme.primary,
                                               ),
-                                              const SizedBox(width: 3),
-                                            ],
-                                            Flexible(
-                                              child: Text(
-                                                symbol,
-                                                style: TextStyle(
-                                                  fontFamily: 'monospace',
-                                                  fontWeight:
-                                                      isTop || isHighlighted
-                                                      ? FontWeight.bold
-                                                      : FontWeight.normal,
-                                                  fontSize:
-                                                      11, // Compact font size
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        // Push indicator badge (top-left)
-                                        if (_isPushAnimation &&
-                                            index < _numPushedSymbols)
-                                          Positioned(
-                                            top: -4,
-                                            left: -4,
-                                            child: Container(
-                                              padding: const EdgeInsets.all(2),
-                                              decoration: BoxDecoration(
-                                                color:
-                                                    theme.colorScheme.secondary,
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: Icon(
-                                                Icons.arrow_upward,
-                                                size: 8,
-                                                color: theme
-                                                    .colorScheme
-                                                    .onSecondary,
-                                              ),
-                                            ),
-                                          ),
-                                        // Pop indicator badge (top-right)
-                                        if (isBeingPopped)
-                                          Positioned(
-                                            top: -4,
-                                            right: -4,
-                                            child: Container(
-                                              padding: const EdgeInsets.all(2),
-                                              decoration: BoxDecoration(
-                                                color:
-                                                    theme.colorScheme.tertiary,
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: Icon(
-                                                Icons.arrow_downward,
-                                                size: 8,
-                                                color: theme
-                                                    .colorScheme
-                                                    .onTertiary,
-                                              ),
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                  // TOP badge - positioned to avoid overlap with operation badges
-                                  if (isTop &&
-                                      !_isPushAnimation &&
-                                      !isBeingPopped)
-                                    Positioned(
-                                      top: -5,
-                                      right: -5,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 3,
-                                          vertical: 1,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: theme.colorScheme.primary,
-                                          borderRadius: BorderRadius.circular(
-                                            6,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          'TOP',
-                                          style: TextStyle(
-                                            color: theme.colorScheme.onPrimary,
-                                            fontSize: 7, // Compact badge
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  // Swipe hints - positioned after main content to be visible on top
-                                  if (isSwiping) ...[
-                                    // Left swipe hint (unhighlight)
-                                    if (_swipeOffset < -10)
-                                      Positioned.fill(
-                                        child: IgnorePointer(
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              color: theme
-                                                  .colorScheme
-                                                  .errorContainer
-                                                  .withValues(alpha: 0.3),
-                                              borderRadius:
-                                                  BorderRadius.circular(4),
-                                            ),
-                                            alignment: Alignment.centerRight,
-                                            padding: const EdgeInsets.only(
-                                              right: 8,
-                                            ),
-                                            child: Icon(
-                                              Icons.highlight_remove,
-                                              size: 16,
-                                              color: theme.colorScheme.error,
                                             ),
                                           ),
                                         ),
-                                      ),
-                                    // Right swipe hint (highlight)
-                                    if (_swipeOffset > 10)
-                                      Positioned.fill(
-                                        child: IgnorePointer(
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              color: theme
-                                                  .colorScheme
-                                                  .primaryContainer
-                                                  .withValues(alpha: 0.3),
-                                              borderRadius:
-                                                  BorderRadius.circular(4),
-                                            ),
-                                            alignment: Alignment.centerLeft,
-                                            padding: const EdgeInsets.only(
-                                              left: 8,
-                                            ),
-                                            child: Icon(
-                                              Icons.highlight,
-                                              size: 16,
-                                              color: theme.colorScheme.primary,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
+                                    ],
                                   ],
-                                ],
+                                ),
                               ),
                             ),
                           ),
@@ -615,16 +632,15 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                           final interval = _getStaggeredInterval(pushIndex);
 
                           // Create staggered slide animation
-                          final staggeredSlideAnimation =
-                              Tween<Offset>(
-                                begin: const Offset(0, 1),
-                                end: Offset.zero,
-                              ).animate(
-                                CurvedAnimation(
-                                  parent: _animationController,
-                                  curve: interval,
-                                ),
-                              );
+                          final staggeredSlideAnimation = Tween<Offset>(
+                            begin: const Offset(0, 1),
+                            end: Offset.zero,
+                          ).animate(
+                            CurvedAnimation(
+                              parent: _animationController,
+                              curve: interval,
+                            ),
+                          );
 
                           // Create staggered fade animation
                           final staggeredFadeAnimation = CurvedAnimation(
@@ -648,20 +664,20 @@ class _PDAStackPanelState extends State<PDAStackPanel>
                           // Create fade-out animation (1.0 -> 0.0)
                           final fadeOutAnimation =
                               Tween<double>(begin: 1.0, end: 0.0).animate(
-                                CurvedAnimation(
-                                  parent: _animationController,
-                                  curve: Curves.easeIn,
-                                ),
-                              );
+                            CurvedAnimation(
+                              parent: _animationController,
+                              curve: Curves.easeIn,
+                            ),
+                          );
 
                           // Create scale animation (1.0 -> 0.8)
                           final scaleAnimation =
                               Tween<double>(begin: 1.0, end: 0.8).animate(
-                                CurvedAnimation(
-                                  parent: _animationController,
-                                  curve: Curves.easeIn,
-                                ),
-                              );
+                            CurvedAnimation(
+                              parent: _animationController,
+                              curve: Curves.easeIn,
+                            ),
+                          );
 
                           itemWidget = FadeTransition(
                             opacity: fadeOutAnimation,
@@ -682,17 +698,27 @@ class _PDAStackPanelState extends State<PDAStackPanel>
 
             if (widget.onClear != null) ...[
               const Divider(height: 10), // Reduced
-              SizedBox(
-                width: 60, // Fixed width like tape_drawer
-                height: 24, // Match tape_drawer pattern
+              ConstrainedBox(
+                constraints: const BoxConstraints(
+                  minWidth: 72,
+                  minHeight: 44,
+                ),
                 child: TextButton(
                   onPressed: widget.onClear,
                   style: TextButton.styleFrom(
+                    minimumSize: const Size(72, 44),
                     padding: EdgeInsets.zero,
                     foregroundColor: theme.colorScheme.error,
                     visualDensity: VisualDensity.compact,
                   ),
-                  child: const Text('Clear', style: TextStyle(fontSize: 12)),
+                  child: Semantics(
+                    label: 'Clear stack',
+                    hint: 'Removes every symbol from the stack view.',
+                    button: true,
+                    enabled: true,
+                    excludeSemantics: true,
+                    child: const Text('Clear', style: TextStyle(fontSize: 12)),
+                  ),
                 ),
               ),
             ],

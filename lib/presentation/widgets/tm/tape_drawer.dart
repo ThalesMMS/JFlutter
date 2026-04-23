@@ -30,11 +30,11 @@ class TapeState {
 
   /// Fita vazia/inicial
   TapeState.initial({this.blankSymbol = '□'})
-    : cells = const [],
-      headPosition = 0,
-      lastOperation = null,
-      lastReadSymbol = null,
-      lastWriteSymbol = null;
+      : cells = const [],
+        headPosition = 0,
+        lastOperation = null,
+        lastReadSymbol = null,
+        lastWriteSymbol = null;
 
   bool get isEmpty => cells.isEmpty;
 
@@ -424,12 +424,15 @@ class _TMTapePanelState extends State<TMTapePanel>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final maxPanelWidth =
+        (MediaQuery.sizeOf(context).width - 32).clamp(0.0, 300.0).toDouble();
 
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Container(
-        width: 300,
+        width: maxPanelWidth,
+        constraints: BoxConstraints(maxWidth: maxPanelWidth),
         padding: const EdgeInsets.all(8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -551,8 +554,8 @@ class _TMTapePanelState extends State<TMTapePanel>
       builder: (context, child) {
         // Calculate glow intensity based on animation value
         final glowIntensity = isNewCell ? _expansionGlowAnimation.value : 0.0;
-        final glowColor = theme.colorScheme.primary.withValues(alpha: 
-          0.4 * glowIntensity,
+        final glowColor = theme.colorScheme.primary.withValues(
+          alpha: 0.4 * glowIntensity,
         );
 
         return Container(

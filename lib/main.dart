@@ -13,11 +13,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'injection/dependency_injection.dart';
 import 'app.dart';
 
+part 'startup_error_helpers.dart';
+part 'initialization_error_app.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  _installGlobalErrorHandler();
 
-  // Setup dependency injection
-  await setupDependencyInjection();
+  try {
+    // Setup dependency injection
+    await setupDependencyInjection();
 
-  runApp(const ProviderScope(child: JFlutterApp()));
+    runApp(const ProviderScope(child: JFlutterApp()));
+  } catch (error, stackTrace) {
+    _reportInitializationFailure(error, stackTrace);
+    runApp(const _InitializationErrorApp());
+  }
 }

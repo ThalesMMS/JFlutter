@@ -10,8 +10,10 @@
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
+import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 import '../core/repositories/automaton_repository.dart';
 import '../core/use_cases/automaton_use_cases.dart';
 import '../core/use_cases/algorithm_use_cases.dart';
@@ -31,15 +33,42 @@ import '../presentation/providers/algorithm_provider.dart';
 import '../presentation/providers/grammar_provider.dart';
 import '../presentation/providers/unified_trace_provider.dart';
 
+part 'dependency_initialization_typedefs.dart';
+part 'dependency_initialization_stage.dart';
+part 'dependency_initialization_status.dart';
+part 'shared_preferences_initialization_result.dart';
+
 /// Global service locator instance
 final GetIt getIt = GetIt.instance;
+SharedPreferencesStorePlatform? _originalSharedPreferencesStorePlatform;
+bool _sharedPreferencesFallbackApplied = false;
 
 /// Sets up dependency injection for the application
-Future<void> setupDependencyInjection() async {
+Future<void> setupDependencyInjection({
+  SharedPreferencesProvider? sharedPreferencesProvider,
+  DependencyInitializationObserver? onStage,
+  DependencyInitializationLogger? logger,
+}) async {
+  final log = logger ?? debugPrint;
+
   // Initialize SharedPreferences for trace persistence
-  final prefs = await SharedPreferences.getInstance();
+  onStage?.call(DependencyInitializationStage.sharedPreferences);
+  final prefsResult = await _initializeSharedPreferences(
+    provider: sharedPreferencesProvider,
+    logger: log,
+  );
+  final prefs = prefsResult.prefs;
+
+  getIt.registerSingleton<SharedPreferences>(prefs);
+  getIt.registerSingleton<DependencyInitializationStatus>(
+    DependencyInitializationStatus(
+      sharedPreferencesFallbackUsed: prefsResult.fallbackUsed,
+      sharedPreferencesError: prefsResult.originalError,
+    ),
+  );
 
   // Data Sources
+  onStage?.call(DependencyInitializationStage.dataSources);
   getIt.registerLazySingleton<LocalStorageDataSource>(
     () => LocalStorageDataSource(),
   );
@@ -49,6 +78,7 @@ Future<void> setupDependencyInjection() async {
   );
 
   // Services
+  onStage?.call(DependencyInitializationStage.services);
   getIt.registerLazySingleton<AutomatonService>(() => AutomatonService());
 
   getIt.registerLazySingleton<SimulationService>(() => SimulationService());
@@ -66,6 +96,7 @@ Future<void> setupDependencyInjection() async {
   );
 
   // Repositories
+  onStage?.call(DependencyInitializationStage.repositories);
   getIt.registerLazySingleton<AutomatonRepository>(
     () => AutomatonRepositoryImpl(getIt<AutomatonService>()),
   );
@@ -81,6 +112,7 @@ Future<void> setupDependencyInjection() async {
   getIt.registerLazySingleton<LayoutRepository>(() => LayoutRepositoryImpl());
 
   // Use Cases
+  onStage?.call(DependencyInitializationStage.useCases);
   getIt.registerLazySingleton<CreateAutomatonUseCase>(
     () => CreateAutomatonUseCase(getIt<AutomatonRepository>()),
   );
@@ -191,6 +223,7 @@ Future<void> setupDependencyInjection() async {
   );
 
   // Providers
+  onStage?.call(DependencyInitializationStage.providers);
   getIt.registerFactory<AutomatonProvider>(
     () => AutomatonProvider(
       automatonService: getIt<AutomatonService>(),
@@ -231,6 +264,62 @@ Future<void> setupDependencyInjection() async {
 }
 
 /// Resets all dependencies (useful for testing)
-void resetDependencies() {
-  getIt.reset();
+Future<void> resetDependencies() async {
+  await getIt.reset();
+  if (_originalSharedPreferencesStorePlatform != null) {
+    SharedPreferencesStorePlatform.instance =
+        _originalSharedPreferencesStorePlatform!;
+  }
+  // ignore: invalid_use_of_visible_for_testing_member
+  SharedPreferences.resetStatic();
+  _originalSharedPreferencesStorePlatform = null;
+  _sharedPreferencesFallbackApplied = false;
+}
+
+Future<_SharedPreferencesInitializationResult> _initializeSharedPreferences({
+  SharedPreferencesProvider? provider,
+  required DependencyInitializationLogger logger,
+}) async {
+  final resolver = provider ?? SharedPreferences.getInstance;
+
+  try {
+    final prefs = await resolver();
+    return _SharedPreferencesInitializationResult(
+      prefs: prefs,
+      fallbackUsed: false,
+    );
+  } catch (error, stackTrace) {
+    logger(
+      '[DI] SharedPreferences initialization failed. Falling back to in-memory preferences. Error: $error',
+    );
+    debugPrintStack(stackTrace: stackTrace);
+
+    try {
+      if (!_sharedPreferencesFallbackApplied) {
+        _originalSharedPreferencesStorePlatform =
+            SharedPreferencesStorePlatform.instance;
+        _sharedPreferencesFallbackApplied = true;
+      }
+      SharedPreferencesStorePlatform.instance =
+          InMemorySharedPreferencesStore.empty();
+      final fallbackPrefs = await SharedPreferences.getInstance();
+      return _SharedPreferencesInitializationResult(
+        prefs: fallbackPrefs,
+        fallbackUsed: true,
+        originalError: error,
+      );
+    } catch (fallbackError, fallbackStackTrace) {
+      if (_originalSharedPreferencesStorePlatform != null) {
+        SharedPreferencesStorePlatform.instance =
+            _originalSharedPreferencesStorePlatform!;
+      }
+      _originalSharedPreferencesStorePlatform = null;
+      _sharedPreferencesFallbackApplied = false;
+      logger(
+        '[DI] SharedPreferences fallback initialization failed: $fallbackError',
+      );
+      debugPrintStack(stackTrace: fallbackStackTrace);
+      rethrow;
+    }
+  }
 }

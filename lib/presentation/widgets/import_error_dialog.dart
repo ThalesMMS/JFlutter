@@ -7,6 +7,7 @@ enum ImportErrorType {
   malformedJFF,
   invalidJSON,
   unsupportedVersion,
+  inaccessibleFile,
   corruptedData,
   invalidAutomaton,
 }
@@ -38,6 +39,11 @@ const Map<ImportErrorType, _ErrorDialogVisuals> _dialogVisuals = {
     title: 'Unsupported File Version',
     icon: Icons.update_disabled,
     color: Color(0xFF1565C0),
+  ),
+  ImportErrorType.inaccessibleFile: _ErrorDialogVisuals(
+    title: 'File Access Unavailable',
+    icon: Icons.folder_off_outlined,
+    color: Color(0xFF00838F),
   ),
   ImportErrorType.corruptedData: _ErrorDialogVisuals(
     title: 'Corrupted Data Detected',
@@ -244,9 +250,8 @@ class _TechnicalDetailsSectionState extends State<_TechnicalDetailsSection> {
               child: Text(widget.details, style: theme.textTheme.bodySmall),
             ),
           ),
-          crossFadeState: _expanded
-              ? CrossFadeState.showSecond
-              : CrossFadeState.showFirst,
+          crossFadeState:
+              _expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
           duration: const Duration(milliseconds: 200),
         ),
       ],

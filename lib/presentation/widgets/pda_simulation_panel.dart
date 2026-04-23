@@ -96,11 +96,15 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
       children: [
         Icon(Icons.play_arrow, color: Theme.of(context).colorScheme.primary),
         const SizedBox(width: 8),
-        Text(
-          'PDA Simulation',
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+        Expanded(
+          child: Text(
+            'PDA Simulation',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+          ),
         ),
       ],
     );
@@ -163,10 +167,10 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
           Text(
             'Examples: aabb (for balanced parentheses), abab (for palindromes)',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurface.withValues(alpha: 0.7),
-            ),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.7),
+                ),
           ),
         ],
       ),
@@ -212,10 +216,10 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
               Text(
                 'State: ${simState.currentState ?? "—"}',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.7),
-                ),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
               ),
             ],
           ),
@@ -325,19 +329,21 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
                       Text(
                         'Stack:',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withValues(alpha: 0.6),
-                        ),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.6),
+                            ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         stackContents.isEmpty ? '(empty)' : stackContents,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontFamily: 'monospace',
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
+                              fontFamily: 'monospace',
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
                       ),
                     ],
                   ),
@@ -362,19 +368,21 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
                       Text(
                         'Remaining Input:',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withValues(alpha: 0.6),
-                        ),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.6),
+                            ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         remainingInput.isEmpty ? '(empty)' : remainingInput,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontFamily: 'monospace',
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.secondary,
-                        ),
+                              fontFamily: 'monospace',
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.secondary,
+                            ),
                       ),
                     ],
                   ),
@@ -431,15 +439,15 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
           Text(
             'No simulation results yet',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+                  color: Theme.of(context).colorScheme.outline,
+                ),
           ),
           const SizedBox(height: 8),
           Text(
             'Enter an input string and click Simulate to see results',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+                  color: Theme.of(context).colorScheme.outline,
+                ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -451,7 +459,8 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
     final result = _simulationResult;
     final isAccepted = result?.accepted ?? false;
     final hasResult = result != null;
-    final color = isAccepted ? Colors.green : Colors.red;
+    final colorScheme = Theme.of(context).colorScheme;
+    final color = isAccepted ? colorScheme.tertiary : colorScheme.error;
     final message = hasResult
         ? (isAccepted ? 'Accepted' : 'Rejected')
         : 'Simulation failed';
@@ -475,11 +484,15 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
                 size: 24,
               ),
               const SizedBox(width: 8),
-              Text(
-                message,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Text(
+                  message,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: color,
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
               ),
             ],
@@ -498,8 +511,8 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
               child: Text(
                 errorText,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.error,
-                ),
+                      color: Theme.of(context).colorScheme.error,
+                    ),
               ),
             ),
           if (result case final simulationResult?
@@ -572,11 +585,11 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
 
     final Result<pda_core.PDASimulationResult> result =
         pda_core.PDASimulator.simulate(
-          simulationPda,
-          inputString,
-          stepByStep: _stepByStep,
-          timeout: const Duration(seconds: 5),
-        );
+      simulationPda,
+      inputString,
+      stepByStep: _stepByStep,
+      timeout: const Duration(seconds: 5),
+    );
 
     if (!mounted) {
       return;
@@ -629,9 +642,8 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
 
   void _updateStackFromStep(SimulationStep step) {
     final stackContents = step.stackContents;
-    final symbols = stackContents.isEmpty
-        ? <String>[]
-        : stackContents.split('').toList();
+    final symbols =
+        stackContents.isEmpty ? <String>[] : stackContents.split('').toList();
 
     final operation = step.usedTransition ?? 'step ${step.stepNumber}';
     final operationType = _determineOperationType(step.usedTransition);

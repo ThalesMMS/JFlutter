@@ -105,6 +105,21 @@ Every distributed binary or package must comply with both license tracks:
 - Any release notes or marketing copy must preserve the distinction between
   JFlutter and the original JFLAP project.
 
+## Vendored Graphview Fork
+
+JFlutter also distributes a vendored fork of `graphview` from `graphview/`.
+
+- License: MIT, preserved in `graphview/LICENSE`.
+- Current vendored package version: `1.5.2` from the in-repo path dependency.
+- In-app attribution is provided through the Licenses section in
+  `lib/presentation/pages/licenses_help_content.dart`, with the bundled asset
+  `assets/LICENSE_GRAPHVIEW.txt`.
+- The MIT license terms are compatible with JFlutter's free, non-monetized App
+  Store distribution posture.
+- The vendored graphview fork does not add a conflicting copyleft,
+  attribution, or monetization restriction beyond preserving the MIT notice in
+  shipped copies and substantial portions of the fork.
+
 ## JFLAP Maintainer Contact
 
 The JFLAP 7.1 License requires modified distributions to clearly describe how

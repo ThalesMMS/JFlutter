@@ -178,9 +178,8 @@ void main() {
       final finalStates = Set<String>.from(
         (json['finalStates'] as List).map((e) => e.toString()),
       );
-      final initialStack = (json['initialStack'] as List)
-          .map((e) => e.toString())
-          .toList();
+      final initialStack =
+          (json['initialStack'] as List).map((e) => e.toString()).toList();
 
       final queue = ListQueue<_PdaConfiguration>();
       queue.add(
@@ -319,6 +318,36 @@ void main() {
 
       expect(result.isSuccess, isTrue);
       expect(result.data, isNull);
+    });
+
+    test('Validates all registered TM example structures', () {
+      const fixtures = [
+        ('tm_binary_to_unary.json', 'MT - Binário para unário'),
+        ('tm_copy_string.json', 'MT - Cópia de string'),
+        ('tm_increment.json', 'MT - Incremento binário'),
+        ('tm_palindrome.json', 'MT - Verificador de palíndromo'),
+      ];
+
+      for (final (fileName, exampleName) in fixtures) {
+        final json = loadExample(fileName);
+        final metadata = metadataFor(
+          category: ExampleCategory.tm,
+          fileName: fileName,
+        );
+
+        final result = dataSource.convertJsonForTesting(
+          json,
+          metadata,
+          exampleName,
+        );
+
+        expect(
+          result.isSuccess,
+          isTrue,
+          reason: 'Expected $fileName to validate as a TM example.',
+        );
+        expect(result.data, isNull);
+      }
     });
   });
 }

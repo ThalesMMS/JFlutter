@@ -4,8 +4,8 @@
 //
 //  Controla a navegação principal da HomePage utilizando um StateNotifier que
 //  mapeia índices simbólicos para os espaços de trabalho de autômatos,
-//  gramáticas, PDAs, máquinas de Turing, expressões regulares e o jogo do Lema
-//  do Bombeamento, permitindo alternância reativa entre módulos.
+//  gramáticas, PDAs, máquinas de Turing e expressões regulares, permitindo
+//  alternância reativa entre módulos.
 //  Centraliza constantes de índices e expõe helpers de troca para que widgets
 //  mudem o workspace ativo de forma consistente em toda a interface.
 //
@@ -32,7 +32,11 @@ class HomeNavigationNotifier extends StateNotifier<int> {
   /// Index for the Regular Expression workspace.
   static const int regexIndex = 4;
 
-  /// Index for the Pumping Lemma workspace.
+  @Deprecated(
+    'Pumping Lemma is hidden for the Apple v1.0 release scope. Do not use this index in new code.',
+  )
+
+  /// Legacy index for the Pumping Lemma workspace.
   static const int pumpingLemmaIndex = 5;
 
   /// Updates the currently visible workspace.
@@ -53,5 +57,5 @@ class HomeNavigationNotifier extends StateNotifier<int> {
 /// Provides the current navigation index for the home page.
 final homeNavigationProvider =
     StateNotifierProvider<HomeNavigationNotifier, int>(
-      (ref) => HomeNavigationNotifier(),
-    );
+  (ref) => HomeNavigationNotifier(),
+);

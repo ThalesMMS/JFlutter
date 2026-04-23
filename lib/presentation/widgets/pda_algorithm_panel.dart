@@ -16,6 +16,8 @@ import '../../core/models/state.dart' as automaton_models;
 import '../../data/services/conversion_service.dart';
 import '../../data/examples/pda_examples.dart';
 import '../providers/pda_editor_provider.dart';
+import 'app_snackbar.dart';
+import 'file_operations_panel.dart';
 
 /// Panel for PDA analysis algorithms
 class PDAAlgorithmPanel extends ConsumerStatefulWidget {
@@ -35,6 +37,8 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final pda = ref.watch(pdaEditorProvider).pda;
+
     return Card(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -46,6 +50,12 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
             _buildAlgorithmButtons(context),
             const SizedBox(height: 16),
             _buildResultsSection(context),
+            if (pda != null) ...[
+              const SizedBox(height: 16),
+              const Divider(),
+              const SizedBox(height: 16),
+              FileOperationsPanel(pda: pda),
+            ],
           ],
         ),
       ),
@@ -165,18 +175,18 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: _isAnalyzing
-                          ? colorScheme.outline
-                          : colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
+                          color: _isAnalyzing
+                              ? colorScheme.outline
+                              : colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     description,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
+                          color: colorScheme.onSurface.withValues(alpha: 0.7),
+                        ),
                   ),
                 ],
               ),
@@ -210,9 +220,10 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
-        _analysisResult == null
-            ? _buildEmptyResults(context)
-            : _buildResults(context),
+        if (_analysisResult == null)
+          _buildEmptyResults(context)
+        else
+          _buildResults(context),
       ],
     );
   }
@@ -240,15 +251,15 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
           Text(
             'No analysis results yet',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+                  color: Theme.of(context).colorScheme.outline,
+                ),
           ),
           const SizedBox(height: 8),
           Text(
             'Select an algorithm above to analyze your PDA',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+                  color: Theme.of(context).colorScheme.outline,
+                ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -297,7 +308,10 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
     final pda = editorState.pda;
 
     if (pda == null) {
-      _showSnackbar('Draw a PDA before converting to a grammar.');
+      _showSnackbar(
+        'Draw a PDA before converting to a grammar.',
+        tone: AppSnackBarTone.error,
+      );
       return;
     }
 
@@ -320,7 +334,7 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
 
       final message = 'Conversion failed: ${conversionResult.error}';
       _latestConvertedGrammar = null;
-      _showSnackbar(message);
+      _showSnackbar(message, tone: AppSnackBarTone.error);
       return message;
     }, resetConvertedGrammar: false);
   }
@@ -330,7 +344,10 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
     final pda = editorState.pda;
 
     if (pda == null) {
-      _showSnackbar('Create a PDA to analyze minimization.');
+      _showSnackbar(
+        'Create a PDA to analyze minimization.',
+        tone: AppSnackBarTone.error,
+      );
       return;
     }
 
@@ -338,7 +355,7 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
       final simplificationResult = PDASimulator.simplify(pda);
       if (!simplificationResult.isSuccess) {
         final message = 'Minimization failed: ${simplificationResult.error}';
-        _showSnackbar(message);
+        _showSnackbar(message, tone: AppSnackBarTone.error);
         return message;
       }
 
@@ -414,7 +431,10 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
     final pda = editorState.pda;
 
     if (pda == null) {
-      _showSnackbar('Create a PDA to analyze determinism.');
+      _showSnackbar(
+        'Create a PDA to analyze determinism.',
+        tone: AppSnackBarTone.error,
+      );
       return;
     }
 
@@ -437,15 +457,15 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
           if (nondeterministicTransitions.contains(transition.id)) {
             final input =
                 transition.isLambdaInput || transition.inputSymbol.isEmpty
-                ? 'λ'
-                : transition.inputSymbol;
+                    ? 'λ'
+                    : transition.inputSymbol;
             final pop = transition.isLambdaPop || transition.popSymbol.isEmpty
                 ? 'λ'
                 : transition.popSymbol;
             final push =
                 transition.isLambdaPush || transition.pushSymbol.isEmpty
-                ? 'λ'
-                : transition.pushSymbol;
+                    ? 'λ'
+                    : transition.pushSymbol;
             buffer.writeln(
               '  ${transition.fromState.label} -- $input, pop $pop / push $push → ${transition.toState.label}',
             );
@@ -469,7 +489,10 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
     final pda = editorState.pda;
 
     if (pda == null) {
-      _showSnackbar('Create a PDA to analyze reachability.');
+      _showSnackbar(
+        'Create a PDA to analyze reachability.',
+        tone: AppSnackBarTone.error,
+      );
       return;
     }
 
@@ -477,21 +500,19 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
       final analysisResult = PDASimulator.analyzePDA(pda);
       if (!analysisResult.isSuccess) {
         final message = 'Analysis failed: ${analysisResult.error}';
-        _showSnackbar(message);
+        _showSnackbar(message, tone: AppSnackBarTone.error);
         return message;
       }
 
       final analysis = analysisResult.data!;
-      final reachable =
-          analysis.reachabilityAnalysis.reachableStates
-              .map((state) => state.label)
-              .toList()
-            ..sort();
-      final unreachable =
-          analysis.reachabilityAnalysis.unreachableStates
-              .map((state) => state.label)
-              .toList()
-            ..sort();
+      final reachable = analysis.reachabilityAnalysis.reachableStates
+          .map((state) => state.label)
+          .toList()
+        ..sort();
+      final unreachable = analysis.reachabilityAnalysis.unreachableStates
+          .map((state) => state.label)
+          .toList()
+        ..sort();
 
       final buffer = StringBuffer();
       buffer.writeln('Initial state: ${pda.initialState?.label ?? '—'}');
@@ -512,7 +533,10 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
     final pda = editorState.pda;
 
     if (pda == null) {
-      _showSnackbar('Create a PDA to analyze its language.');
+      _showSnackbar(
+        'Create a PDA to analyze its language.',
+        tone: AppSnackBarTone.error,
+      );
       return;
     }
 
@@ -520,7 +544,7 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
       final analysisResult = PDASimulator.analyzePDA(pda);
       if (!analysisResult.isSuccess) {
         final message = 'Analysis failed: ${analysisResult.error}';
-        _showSnackbar(message);
+        _showSnackbar(message, tone: AppSnackBarTone.error);
         return message;
       }
 
@@ -607,7 +631,10 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
     final pda = editorState.pda;
 
     if (pda == null) {
-      _showSnackbar('Create a PDA to inspect stack operations.');
+      _showSnackbar(
+        'Create a PDA to inspect stack operations.',
+        tone: AppSnackBarTone.error,
+      );
       return;
     }
 
@@ -615,7 +642,7 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
       final analysisResult = PDASimulator.analyzePDA(pda);
       if (!analysisResult.isSuccess) {
         final message = 'Analysis failed: ${analysisResult.error}';
-        _showSnackbar(message);
+        _showSnackbar(message, tone: AppSnackBarTone.error);
         return message;
       }
 
@@ -758,14 +785,11 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
     );
   }
 
-  void _showSnackbar(String message) {
-    final messenger = ScaffoldMessenger.maybeOf(context);
-    if (messenger == null) {
-      return;
-    }
-    messenger
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+  void _showSnackbar(
+    String message, {
+    AppSnackBarTone tone = AppSnackBarTone.success,
+  }) {
+    showAppSnackBar(context, message: message, tone: tone);
   }
 
   String _formatStateList(Iterable<automaton_models.State> states) {
@@ -825,8 +849,12 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
       width: double.infinity,
       child: OutlinedButton.icon(
         onPressed: onPressed,
-        icon: Icon(Icons.file_open, size: 18),
-        label: Text(title),
+        icon: const Icon(Icons.file_open, size: 18),
+        label: Text(
+          title,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
         style: OutlinedButton.styleFrom(
           foregroundColor: colorScheme.secondary,
           side: BorderSide(color: colorScheme.secondary.withValues(alpha: 0.5)),
@@ -843,7 +871,10 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
       ref.read(pdaEditorProvider.notifier).setPda(pda);
       _showSnackbar('Example loaded: ${pda.name}');
     } catch (error) {
-      _showSnackbar('Failed to load example: $error');
+      _showSnackbar(
+        'Failed to load example: $error',
+        tone: AppSnackBarTone.error,
+      );
     }
   }
 }

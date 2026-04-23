@@ -149,8 +149,8 @@ void main() {
     await setupDependencyInjection();
   });
 
-  tearDownAll(() {
-    resetDependencies();
+  tearDownAll(() async {
+    await resetDependencies();
   });
 
   group('TM Page Components golden tests', () {

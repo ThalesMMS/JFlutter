@@ -16,6 +16,9 @@ import 'retry_button.dart';
 
 /// Severity levels supported by [ErrorBanner].
 enum ErrorSeverity {
+  /// Positive feedback for completed or successful actions.
+  success,
+
   /// Critical failure that requires immediate attention.
   error,
 
@@ -46,6 +49,10 @@ class _SeverityColors {
 }
 
 const Map<ErrorSeverity, _SeverityVisuals> _severityVisuals = {
+  ErrorSeverity.success: _SeverityVisuals(
+    icon: Icons.check_circle_outline,
+    semanticsLabel: 'Success banner',
+  ),
   ErrorSeverity.error: _SeverityVisuals(
     icon: Icons.error_outline,
     semanticsLabel: 'Error banner',
@@ -79,12 +86,19 @@ class ErrorBanner extends StatelessWidget {
   /// Determines the colour palette and icon.
   final ErrorSeverity severity;
 
-  /// Whether to render the retry action (defaults to true unless severity is info).
+  /// Whether to render the retry action.
+  ///
+  /// Defaults to true unless the severity is [ErrorSeverity.info] or
+  /// [ErrorSeverity.success].
   final bool? _showRetryButton;
 
   /// Whether to render the retry action.
+  ///
+  /// Defaults to true unless the severity is [ErrorSeverity.info] or
+  /// [ErrorSeverity.success].
   bool get showRetryButton =>
-      _showRetryButton ?? (severity != ErrorSeverity.info);
+      _showRetryButton ??
+      (severity != ErrorSeverity.info && severity != ErrorSeverity.success);
 
   /// Whether to render the dismiss action.
   final bool showDismissButton;
@@ -103,6 +117,12 @@ class ErrorBanner extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     switch (severity) {
+      case ErrorSeverity.success:
+        return _SeverityColors(
+          background: colorScheme.primaryContainer,
+          foreground: colorScheme.onPrimaryContainer,
+          border: colorScheme.primary,
+        );
       case ErrorSeverity.error:
         return _SeverityColors(
           background: colorScheme.errorContainer,
@@ -165,8 +185,7 @@ class ErrorBanner extends StatelessWidget {
   ) {
     final retryCallback = onRetry;
     final dismissCallback = onDismiss;
-    final showActions =
-        (showRetryButton && retryCallback != null) ||
+    final showActions = (showRetryButton && retryCallback != null) ||
         (showDismissButton && dismissCallback != null);
 
     return Padding(
@@ -210,8 +229,7 @@ class ErrorBanner extends StatelessWidget {
   ) {
     final retryCallback = onRetry;
     final dismissCallback = onDismiss;
-    final showActions =
-        (showRetryButton && retryCallback != null) ||
+    final showActions = (showRetryButton && retryCallback != null) ||
         (showDismissButton && dismissCallback != null);
 
     return Padding(
@@ -265,6 +283,9 @@ class _DismissButton extends StatelessWidget {
       button: true,
       child: TextButton.icon(
         onPressed: onDismiss,
+        style: TextButton.styleFrom(
+          minimumSize: const Size(44, 44),
+        ),
         icon: const Icon(Icons.close, size: 18),
         label: const Text('Dismiss'),
       ),

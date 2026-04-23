@@ -4,8 +4,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:jflutter/core/services/simulation_highlight_service.dart';
+import 'package:jflutter/l10n/app_localizations.dart';
+import 'package:jflutter/presentation/pages/help_page.dart';
 import 'package:jflutter/presentation/providers/home_navigation_provider.dart';
 import 'package:jflutter/presentation/pages/home_page.dart';
+import 'package:jflutter/presentation/pages/settings_page.dart';
 import 'package:jflutter/presentation/widgets/mobile_navigation.dart';
 import 'package:jflutter/presentation/widgets/desktop_navigation.dart';
 import 'package:jflutter/injection/dependency_injection.dart';
@@ -30,15 +33,27 @@ class _TestSimulationHighlightService extends SimulationHighlightService {
   }
 }
 
+class _RecordingNavigatorObserver extends NavigatorObserver {
+  final List<Route<dynamic>> pushedRoutes = [];
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (previousRoute != null) {
+      pushedRoutes.add(route);
+    }
+    super.didPush(route, previousRoute);
+  }
+}
+
 Future<void> _pumpHomePage(
   WidgetTester tester, {
   required _TestHomeNavigationNotifier navigationNotifier,
   required _TestSimulationHighlightService highlightService,
   Size size = const Size(430, 932),
+  List<NavigatorObserver> navigatorObservers = const [],
 }) async {
-  final binding = tester.binding;
-  binding.window.physicalSizeTestValue = size;
-  binding.window.devicePixelRatioTestValue = 1.0;
+  tester.view.physicalSize = size;
+  tester.view.devicePixelRatio = 1.0;
 
   await tester.pumpWidget(
     ProviderScope(
@@ -48,11 +63,39 @@ Future<void> _pumpHomePage(
         }),
         canvasHighlightServiceProvider.overrideWithValue(highlightService),
       ],
-      child: const MaterialApp(home: HomePage()),
+      child: MaterialApp(
+        home: const HomePage(),
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        navigatorObservers: navigatorObservers,
+      ),
     ),
   );
 
   await tester.pumpAndSettle();
+}
+
+void _triggerEnabledAppBarAction(WidgetTester tester, IconData icon) {
+  final appBarActionFinder = find.descendant(
+    of: find.byType(AppBar),
+    matching: find.widgetWithIcon(IconButton, icon),
+  );
+  final button = tester
+      .widgetList<IconButton>(appBarActionFinder)
+      .firstWhere((candidate) => candidate.onPressed != null);
+  button.onPressed!.call();
+}
+
+void _expectSinglePushTo<T>(
+  _RecordingNavigatorObserver observer,
+) {
+  expect(observer.pushedRoutes, hasLength(1));
+  final route = observer.pushedRoutes.single;
+  expect(route, isA<MaterialPageRoute<dynamic>>());
+  final page = (route as MaterialPageRoute<dynamic>)
+      .builder(observer.navigator!.context);
+  expect(page, isA<T>());
 }
 
 void main() {
@@ -63,8 +106,8 @@ void main() {
     await setupDependencyInjection();
   });
 
-  tearDownAll(() {
-    resetDependencies();
+  tearDownAll(() async {
+    await resetDependencies();
   });
 
   group('HomePage', () {
@@ -75,8 +118,8 @@ void main() {
         final highlightService = _TestSimulationHighlightService();
 
         addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
         });
 
         await _pumpHomePage(
@@ -90,6 +133,7 @@ void main() {
         expect(find.byType(DesktopNavigation), findsNothing);
         expect(find.text('Grammar'), findsWidgets);
         expect(find.text('Context-Free Grammars'), findsOneWidget);
+        expect(find.text('Pumping'), findsNothing);
         expect(find.byIcon(Icons.help_outline), findsWidgets);
         expect(find.byIcon(Icons.settings), findsWidgets);
 
@@ -104,8 +148,8 @@ void main() {
         final highlightService = _TestSimulationHighlightService();
 
         addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
         });
 
         await _pumpHomePage(
@@ -119,6 +163,7 @@ void main() {
         expect(find.byType(DesktopNavigation), findsOneWidget);
         expect(find.byType(NavigationRail), findsOneWidget);
         expect(find.text('FSA'), findsWidgets);
+        expect(find.text('Pumping'), findsNothing);
         expect(
           find.byTooltip('Finite State Automata'),
           findsWidgets,
@@ -137,8 +182,8 @@ void main() {
       final highlightService = _TestSimulationHighlightService();
 
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       await _pumpHomePage(
@@ -177,18 +222,9 @@ void main() {
       final navigationNotifier = _TestHomeNavigationNotifier()..setIndex(0);
       final highlightService = _TestSimulationHighlightService();
 
-      // Suppress overflow errors — this test validates navigation behaviour,
-      // not the page-content layout at this viewport size.
-      final oldOnError = FlutterError.onError;
-      FlutterError.onError = (details) {
-        if (details.exceptionAsString().contains('overflowed')) return;
-        oldOnError?.call(details);
-      };
-
       addTearDown(() {
-        FlutterError.onError = oldOnError;
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       await _pumpHomePage(
@@ -209,5 +245,62 @@ void main() {
       expect(find.text('Regex'), findsWidgets);
       expect(find.text('Regular Expressions'), findsWidgets);
     });
+
+    for (final scenario in [
+      ('mobile', const Size(430, 932)),
+      ('desktop', const Size(1400, 1080)),
+    ]) {
+      testWidgets('pushes HelpPage from app bar on ${scenario.$1} layout', (
+        tester,
+      ) async {
+        final navigationNotifier = _TestHomeNavigationNotifier()..setIndex(0);
+        final highlightService = _TestSimulationHighlightService();
+        final observer = _RecordingNavigatorObserver();
+
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
+
+        await _pumpHomePage(
+          tester,
+          navigationNotifier: navigationNotifier,
+          highlightService: highlightService,
+          size: scenario.$2,
+          navigatorObservers: [observer],
+        );
+
+        _triggerEnabledAppBarAction(tester, Icons.help_outline);
+        await tester.pumpAndSettle();
+
+        _expectSinglePushTo<HelpPage>(observer);
+      });
+
+      testWidgets('pushes SettingsPage from app bar on ${scenario.$1} layout', (
+        tester,
+      ) async {
+        final navigationNotifier = _TestHomeNavigationNotifier()..setIndex(0);
+        final highlightService = _TestSimulationHighlightService();
+        final observer = _RecordingNavigatorObserver();
+
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
+
+        await _pumpHomePage(
+          tester,
+          navigationNotifier: navigationNotifier,
+          highlightService: highlightService,
+          size: scenario.$2,
+          navigatorObservers: [observer],
+        );
+
+        _triggerEnabledAppBarAction(tester, Icons.settings);
+        await tester.pumpAndSettle();
+
+        _expectSinglePushTo<SettingsPage>(observer);
+      });
+    }
   });
 }

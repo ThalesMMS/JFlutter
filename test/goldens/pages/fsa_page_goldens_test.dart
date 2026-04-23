@@ -164,8 +164,8 @@ void main() {
     await setupDependencyInjection();
   });
 
-  tearDownAll(() {
-    resetDependencies();
+  tearDownAll(() async {
+    await resetDependencies();
   });
 
   group('FSA Page Components golden tests', () {

@@ -9,11 +9,50 @@
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/simulation_result.dart';
 import '../../core/models/simulation_step.dart';
 import '../../data/services/trace_persistence_service.dart' as data_trace;
 import '../../injection/dependency_injection.dart';
+
+Map<String, dynamic> _deepUnmodifiableMap(Map<String, dynamic> source) {
+  return Map<String, dynamic>.unmodifiable(
+    source.map(
+      (key, value) => MapEntry<String, dynamic>(key, _deepFreezeValue(value)),
+    ),
+  );
+}
+
+List<Map<String, dynamic>> _deepUnmodifiableTraceList(
+  List<Map<String, dynamic>> traces,
+) {
+  return List<Map<String, dynamic>>.unmodifiable(
+    traces.map(_deepUnmodifiableMap),
+  );
+}
+
+dynamic _deepFreezeValue(dynamic value) {
+  if (value is Map) {
+    final map = <String, dynamic>{};
+    for (final entry in value.entries) {
+      final key = entry.key;
+      if (key is! String) {
+        return value;
+      }
+      map[key] = _deepFreezeValue(entry.value);
+    }
+    return Map<String, dynamic>.unmodifiable(map);
+  }
+
+  if (value is List) {
+    return List<dynamic>.unmodifiable(value.map(_deepFreezeValue));
+  }
+
+  return value;
+}
 
 /// Unified trace state that can handle traces from any automaton type
 class UnifiedTraceState {
@@ -139,9 +178,10 @@ class UnifiedTraceNotifier extends StateNotifier<UnifiedTraceState> {
   final data_trace.TracePersistenceService _persistenceService;
 
   UnifiedTraceNotifier(this._persistenceService)
-    : super(const UnifiedTraceState()) {
+      : super(const UnifiedTraceState()) {
     _loadTraceHistory();
     _loadTraceStatistics();
+    _restoreCurrentTrace();
   }
 
   /// Set the current automaton context
@@ -197,45 +237,49 @@ class UnifiedTraceNotifier extends StateNotifier<UnifiedTraceState> {
   }
 
   /// Set a new trace (from simulation)
-  void setTrace(SimulationResult trace) {
+  Future<void> setTrace(SimulationResult trace) async {
     state = state.copyWith(
       currentTrace: trace,
       currentStepIndex: 0,
       errorMessage: null,
     );
 
-    // Auto-save to history
-    saveCurrentTraceToHistory();
+    final saveSucceeded = await _saveCurrentTrace();
+    if (!saveSucceeded) {
+      return;
+    }
+
+    await saveCurrentTraceToHistory();
   }
 
   /// Navigate to a specific step
   void navigateToStep(int stepIndex) {
     state = state.navigateToStep(stepIndex);
-    _saveCurrentTrace();
+    unawaited(_saveCurrentTrace());
   }
 
   /// Navigate to the next step
   void nextStep() {
     state = state.nextStep();
-    _saveCurrentTrace();
+    unawaited(_saveCurrentTrace());
   }
 
   /// Navigate to the previous step
   void previousStep() {
     state = state.previousStep();
-    _saveCurrentTrace();
+    unawaited(_saveCurrentTrace());
   }
 
   /// Navigate to the first step
   void firstStep() {
     state = state.firstStep();
-    _saveCurrentTrace();
+    unawaited(_saveCurrentTrace());
   }
 
   /// Navigate to the last step
   void lastStep() {
     state = state.lastStep();
-    _saveCurrentTrace();
+    unawaited(_saveCurrentTrace());
   }
 
   /// Clear the current trace
@@ -301,28 +345,78 @@ class UnifiedTraceNotifier extends StateNotifier<UnifiedTraceState> {
   }
 
   /// Save current trace state for persistence
-  void _saveCurrentTrace() {
-    if (state.currentTrace != null) {
-      _persistenceService.saveCurrentTrace(
+  Future<bool> _saveCurrentTrace() async {
+    if (state.currentTrace == null) {
+      return false;
+    }
+
+    try {
+      await _persistenceService.saveCurrentTrace(
         state.currentTrace!,
         state.currentStepIndex,
       );
+      return true;
+    } catch (error, stackTrace) {
+      debugPrint('Failed to save current trace: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      state = state.copyWith(
+        errorMessage: 'Failed to save current trace: $error',
+      );
+      return false;
     }
   }
+
+  Future<void> _restoreCurrentTrace() async {
+    try {
+      final persisted = await _persistenceService.getCurrentTrace();
+      if (persisted == null) {
+        return;
+      }
+
+      final traceJson = persisted['trace'];
+      if (traceJson is! Map<String, dynamic>) {
+        await _persistenceService.clearCurrentTrace();
+        return;
+      }
+
+      final trace = SimulationResult.fromJson(traceJson);
+      final storedStepIndex = persisted['currentStepIndex'];
+      final stepIndex = storedStepIndex is int ? storedStepIndex : 0;
+      final normalizedStepIndex =
+          trace.steps.isEmpty ? 0 : stepIndex.clamp(0, trace.steps.length - 1);
+
+      state = state.copyWith(
+        currentTrace: trace,
+        currentStepIndex: normalizedStepIndex,
+        errorMessage: null,
+      );
+    } catch (_) {
+      await _persistenceService.clearCurrentTrace();
+    }
+  }
+
+  Map<String, dynamic> get traceStatisticsSnapshot =>
+      _deepUnmodifiableMap(state.traceStatistics);
+
+  List<Map<String, dynamic>> get currentAutomatonTracesSnapshot =>
+      _deepUnmodifiableTraceList(state.tracesForCurrentAutomaton);
+
+  List<Map<String, dynamic>> get currentTypeTracesSnapshot =>
+      _deepUnmodifiableTraceList(state.tracesForCurrentType);
 }
 
 /// Provider for trace persistence service (data layer version)
 final dataTracePersistenceServiceProvider =
     Provider<data_trace.TracePersistenceService>((ref) {
-      return getIt<data_trace.TracePersistenceService>();
-    });
+  return getIt<data_trace.TracePersistenceService>();
+});
 
 /// Provider for unified trace state
 final unifiedTraceProvider =
     StateNotifierProvider<UnifiedTraceNotifier, UnifiedTraceState>((ref) {
-      final persistenceService = ref.watch(dataTracePersistenceServiceProvider);
-      return UnifiedTraceNotifier(persistenceService);
-    });
+  final persistenceService = ref.watch(dataTracePersistenceServiceProvider);
+  return UnifiedTraceNotifier(persistenceService);
+});
 
 /// Provider for trace statistics
 final traceStatisticsProvider = Provider<Map<String, dynamic>>((ref) {
@@ -352,17 +446,17 @@ UnifiedTraceNotifier getUnifiedTraceNotifier() {
 /// GetIt-based provider for trace statistics
 Map<String, dynamic> getTraceStatistics() {
   final notifier = getIt<UnifiedTraceNotifier>();
-  return notifier.state.traceStatistics;
+  return notifier.traceStatisticsSnapshot;
 }
 
 /// GetIt-based provider for current automaton traces
 List<Map<String, dynamic>> getCurrentAutomatonTraces() {
   final notifier = getIt<UnifiedTraceNotifier>();
-  return notifier.state.tracesForCurrentAutomaton;
+  return notifier.currentAutomatonTracesSnapshot;
 }
 
 /// GetIt-based provider for current automaton type traces
 List<Map<String, dynamic>> getCurrentTypeTraces() {
   final notifier = getIt<UnifiedTraceNotifier>();
-  return notifier.state.tracesForCurrentType;
+  return notifier.currentTypeTracesSnapshot;
 }

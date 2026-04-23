@@ -767,7 +767,7 @@ void main() {
         provider.setTm(tm);
         controller.synchronize(tm);
         controller.applyHighlight(
-          const SimulationHighlight(
+          SimulationHighlight(
             transitionIds: <String>{'tm_manual'},
           ),
         );

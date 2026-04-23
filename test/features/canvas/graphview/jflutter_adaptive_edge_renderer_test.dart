@@ -177,6 +177,72 @@ void main() {
       expect(renderer.geometryPaintCount, equals(1));
     });
 
+    test('updates grouped representative after explicit cache invalidation',
+        () {
+      final groupedEdge = Edge(
+        source,
+        destination,
+        key: const ValueKey('edge-id-2'),
+        label: 'zz-top',
+      );
+      graph.addEdgeS(groupedEdge);
+      renderer.setGraph(graph);
+
+      expect(renderer.debugGroupRepresentativeId(edge), equals('edge-id'));
+
+      groupedEdge.label = 'aa-first';
+      expect(
+        renderer.debugGroupRepresentativeId(edge),
+        equals('edge-id'),
+        reason: 'Representative stays stale until caches are invalidated.',
+      );
+
+      renderer.invalidateEdgeCaches();
+
+      expect(renderer.debugGroupRepresentativeId(edge), equals('edge-id-2'));
+    });
+
+    test('clears cached label painters when highlight colors change', () {
+      renderer.updateAppearance(
+        highlightedEdgeIds: const <String>{'edge-id'},
+        selectedEdgeIds: const <String>{},
+        baseColor: Colors.black,
+        highlightColor: Colors.blue,
+        labelSurfaceColor: Colors.white,
+      );
+
+      expect(renderer.debugGroupedLabelRectForEdge(edge), isNotNull);
+      expect(renderer.debugLabelPainterCacheSize, greaterThan(0));
+
+      renderer.updateAppearance(
+        highlightedEdgeIds: const <String>{'edge-id'},
+        selectedEdgeIds: const <String>{},
+        baseColor: Colors.black,
+        highlightColor: Colors.orange,
+        labelSurfaceColor: Colors.white,
+      );
+
+      expect(renderer.debugLabelPainterCacheSize, equals(0));
+    });
+
+    test('caps label painter cache at 200 entries', () {
+      for (var index = 0; index < 220; index++) {
+        graph.addEdgeS(
+          Edge(
+            source,
+            destination,
+            key: ValueKey('edge-cache-$index'),
+            label: 'label-$index',
+          ),
+        );
+      }
+      renderer.setGraph(graph);
+
+      expect(renderer.debugGroupedLabelRectForEdge(edge), isNotNull);
+      expect(renderer.debugLabelPainterCacheSize, lessThanOrEqualTo(200));
+      expect(renderer.debugGroupedEdgeCacheSize, equals(1));
+    });
+
     test('separates opposing vertical transitions into different lanes', () {
       destination.position = const Offset(0, 220);
 

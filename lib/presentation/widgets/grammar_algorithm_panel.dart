@@ -18,11 +18,11 @@ import '../../core/algorithms/grammar_analyzer.dart';
 import '../../core/models/grammar.dart';
 import '../../core/models/pda.dart';
 import '../../core/result.dart';
-import '../providers/automaton_provider.dart';
 import '../providers/automaton_state_provider.dart';
 import '../providers/grammar_provider.dart';
 import '../providers/home_navigation_provider.dart';
 import '../providers/pda_editor_provider.dart';
+import 'app_snackbar.dart';
 
 /// Panel for grammar analysis algorithms
 class GrammarAlgorithmPanel extends ConsumerStatefulWidget {
@@ -194,8 +194,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
           label: 'Convert Grammar to PDA (Standard)',
           processingLabel: 'Converting (Standard)...',
           icon: Icons.layers,
-          isProcessing:
-              isBusy &&
+          isProcessing: isBusy &&
               activeConversion == GrammarConversionType.grammarToPdaStandard,
           isDisabled: isDisabled,
           onPressed: _convertToPdaStandard,
@@ -206,8 +205,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
           label: 'Convert Grammar to PDA (Greibach)',
           processingLabel: 'Converting (Greibach)...',
           icon: Icons.stacked_bar_chart,
-          isProcessing:
-              isBusy &&
+          isProcessing: isBusy &&
               activeConversion == GrammarConversionType.grammarToPdaGreibach,
           isDisabled: isDisabled,
           onPressed: _convertToPdaGreibach,
@@ -218,10 +216,10 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
             child: Text(
               'Add at least one production rule to enable conversions.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withValues(alpha: 0.7),
-              ),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.7),
+                  ),
             ),
           ),
         if (grammarState.error != null)
@@ -230,8 +228,8 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
             child: Text(
               grammarState.error!,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.error,
-              ),
+                    color: Theme.of(context).colorScheme.error,
+                  ),
             ),
           ),
       ],
@@ -278,18 +276,18 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: _isAnalyzing
-                          ? colorScheme.outline
-                          : colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
+                          color: _isAnalyzing
+                              ? colorScheme.outline
+                              : colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     description,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
+                          color: colorScheme.onSurface.withValues(alpha: 0.7),
+                        ),
                   ),
                 ],
               ),
@@ -313,9 +311,8 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
   }
 
   Future<void> _convertToAutomaton() async {
-    final result = await ref
-        .read(grammarProvider.notifier)
-        .convertToAutomaton();
+    final result =
+        await ref.read(grammarProvider.notifier).convertToAutomaton();
 
     if (!mounted) return;
 
@@ -327,21 +324,17 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
 
       ref.read(homeNavigationProvider.notifier).goToFsa();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Grammar converted to automaton. Switched to FSA workspace.',
-          ),
-          duration: Duration(seconds: 2),
-        ),
+      showAppSnackBar(
+        context,
+        message: 'Grammar converted to automaton. Switched to FSA workspace.',
+        tone: AppSnackBarTone.success,
       );
     } else {
       final message = result.error ?? 'Failed to convert grammar to automaton.';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
+      showAppSnackBar(
+        context,
+        message: message,
+        tone: AppSnackBarTone.error,
       );
     }
   }
@@ -412,19 +405,17 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
       ref.read(pdaEditorProvider.notifier).setPda(pda);
       ref.read(homeNavigationProvider.notifier).goToPda();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(successMessage),
-          duration: const Duration(seconds: 2),
-        ),
+      showAppSnackBar(
+        context,
+        message: successMessage,
+        tone: AppSnackBarTone.success,
       );
     } else {
       final message = result.error ?? 'Failed to convert grammar to PDA.';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
+      showAppSnackBar(
+        context,
+        message: message,
+        tone: AppSnackBarTone.error,
       );
     }
   }
@@ -440,9 +431,10 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
-        _analysisResult == null
-            ? _buildEmptyResults(context)
-            : _buildResults(context),
+        if (_analysisResult == null)
+          _buildEmptyResults(context)
+        else
+          _buildResults(context),
       ],
     );
   }
@@ -470,15 +462,15 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
           Text(
             'No analysis results yet',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+                  color: Theme.of(context).colorScheme.outline,
+                ),
           ),
           const SizedBox(height: 8),
           Text(
             'Select an algorithm above to analyze your grammar',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+                  color: Theme.of(context).colorScheme.outline,
+                ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -649,9 +641,9 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
   Future<void> _performAnalysis<T>(
     String algorithmName,
     Future<Result<GrammarAnalysisReport<T>>> Function(Grammar grammar)
-    runAnalysis,
+        runAnalysis,
     String Function(Grammar original, GrammarAnalysisReport<T> report)
-    formatter,
+        formatter,
   ) async {
     setState(() {
       _isAnalyzing = true;

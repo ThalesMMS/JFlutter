@@ -70,11 +70,15 @@ class _GrammarSimulationPanelState
       children: [
         Icon(Icons.play_arrow, color: Theme.of(context).colorScheme.primary),
         const SizedBox(width: 8),
-        Text(
-          'Grammar Parser',
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+        Expanded(
+          child: Text(
+            'Grammar Parser',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+          ),
         ),
       ],
     );
@@ -155,10 +159,10 @@ class _GrammarSimulationPanelState
           Text(
             'Examples: aabb, abab, aabbb (for S → aSb | ab)',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurface.withValues(alpha: 0.7),
-            ),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.7),
+                ),
           ),
         ],
       ),
@@ -223,15 +227,15 @@ class _GrammarSimulationPanelState
           Text(
             'No parse results yet',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+                  color: Theme.of(context).colorScheme.outline,
+                ),
           ),
           const SizedBox(height: 8),
           Text(
             'Enter a string and click Parse to see results',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+                  color: Theme.of(context).colorScheme.outline,
+                ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -241,7 +245,8 @@ class _GrammarSimulationPanelState
 
   Widget _buildResults(BuildContext context) {
     final isAccepted = _parseResult == 'Accepted';
-    final color = isAccepted ? Colors.green : Colors.red;
+    final colorScheme = Theme.of(context).colorScheme;
+    final color = isAccepted ? colorScheme.tertiary : colorScheme.error;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -261,11 +266,15 @@ class _GrammarSimulationPanelState
                 size: 24,
               ),
               const SizedBox(width: 8),
-              Text(
-                _parseResult!,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Text(
+                  _parseResult!,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: color,
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
               ),
             ],
@@ -286,32 +295,34 @@ class _GrammarSimulationPanelState
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 300),
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: _parseSteps.length,
-                  itemBuilder: (context, index) {
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 4),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        '${index + 1}. ${_parseSteps[index]}',
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),
-                      ),
-                    );
-                  },
-                ),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 300),
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: _parseSteps.length,
+                itemBuilder: (context, index) {
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      '${index + 1}. ${_parseSteps[index]}',
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),
+                    ),
+                  );
+                },
               ),
+            ),
           ],
         ],
       ),

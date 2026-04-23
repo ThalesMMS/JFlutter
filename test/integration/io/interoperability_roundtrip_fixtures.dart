@@ -26,7 +26,7 @@ AutomatonEntity _createTestDFA() {
       ),
     ],
     transitions: {
-      'q0': ['q1'],
+      'q0|0': ['q1'],
     },
     initialId: 'q0',
     nextId: 2,
@@ -58,7 +58,7 @@ AutomatonEntity _createTestNFA() {
       ),
     ],
     transitions: {
-      'q0': ['q1'],
+      'q0|0': ['q1'],
     },
     initialId: 'q0',
     nextId: 2,
@@ -130,8 +130,8 @@ AutomatonEntity _createComplexDFA() {
       ),
     ],
     transitions: {
-      'q0': ['q1'],
-      'q1': ['q2'],
+      'q0|0': ['q1'],
+      'q1|1': ['q2'],
     },
     initialId: 'q0',
     nextId: 3,
@@ -222,7 +222,7 @@ AutomatonEntity _createLargeAutomaton() {
     );
 
     if (i < 49) {
-      transitions['q$i'] = ['q${i + 1}'];
+      transitions['q$i|0'] = ['q${i + 1}'];
     }
   }
 

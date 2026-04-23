@@ -16,9 +16,12 @@ import 'package:jflutter/core/entities/turing_machine_entity.dart';
 import 'package:jflutter/data/services/serialization_service.dart';
 import 'package:jflutter/presentation/widgets/export/svg_exporter.dart';
 import 'package:jflutter/core/parsers/jflap_xml_parser.dart';
-import 'package:jflutter/data/data_sources/local_storage_data_source.dart';
 
 part 'interoperability_roundtrip_fixtures.dart';
+
+RegExp _viewBoxPattern(num width, num height) => RegExp(
+      'viewBox="0 0 ${width.toInt()}(?:\\\\.0+)? ${height.toInt()}(?:\\\\.0+)?"',
+    );
 
 /// 3. SVG export/import testing
 /// 4. Cross-format conversion testing
@@ -26,11 +29,9 @@ part 'interoperability_roundtrip_fixtures.dart';
 void main() {
   group('Interoperability and Round-trip Tests', () {
     late SerializationService serializationService;
-    late LocalStorageDataSource storageDataSource;
 
     setUp(() {
       serializationService = SerializationService();
-      storageDataSource = LocalStorageDataSource();
     });
 
     group('JFF (JFLAP) Format Tests', () {
@@ -60,10 +61,24 @@ void main() {
           expect(parsedData, isA<Map<String, dynamic>>());
 
           // Validate structure preservation
+          expect(parsedData['type'], equals('dfa'));
           expect(parsedData['states'], isNotNull);
           expect(parsedData['transitions'], isNotNull);
           expect(parsedData['initialId'], isNotNull);
         }
+      });
+
+      test('JFF serialization writes finite automata as fa type', () {
+        final originalAutomaton = _createTestDFA();
+        final automatonData = _convertEntityToData(originalAutomaton);
+
+        final jffXml = serializationService.serializeAutomatonToJflap(
+          automatonData,
+        );
+
+        expect(jffXml, contains('<structure type="fa">'));
+        expect(jffXml, contains('<type>fa</type>'));
+        expect(jffXml, isNot(contains('<type>dfa</type>')));
       });
 
       test('JFF handles complex automatons correctly', () {
@@ -105,7 +120,7 @@ void main() {
         expect(jffXml, isNotEmpty);
         // JFLAP XML spec requires epsilon as empty <read/> tag, not <read>ε</read>
         expect(jffXml, isNot(contains('<read>ε</read>')));
-        expect(jffXml, contains('<read/>'));
+        expect(jffXml, contains(RegExp(r'<read\s*/>')));
 
         // Parse back from JFF format
         final parseResult = JFLAPXMLParser.parseJFLAPFile(jffXml);
@@ -129,11 +144,94 @@ void main() {
               data['transitions'] as Map<String, List<String>>? ??
                   <String, List<String>>{};
 
+          expect(data['type'], equals('nfa'));
+          expect(data['alphabet'], isNot(contains('ε')));
           expect(transitions.containsKey('q0|ε'), isTrue);
           final epsilonTargets = transitions['q0|ε'];
           expect(epsilonTargets, isNotNull);
           expect(epsilonTargets!, contains('q1'));
         }
+      });
+
+      test('JFF treats nondeterministic non-epsilon transitions as nfa', () {
+        const xml = '''<?xml version="1.0" encoding="UTF-8"?>
+<structure type="fa">
+  <type>fa</type>
+  <automaton>
+    <state id="q0" name="q0">
+      <x>0</x>
+      <y>0</y>
+      <initial/>
+    </state>
+    <state id="q1" name="q1">
+      <x>100</x>
+      <y>0</y>
+    </state>
+    <state id="q2" name="q2">
+      <x>200</x>
+      <y>0</y>
+      <final/>
+    </state>
+    <transition>
+      <from>q0</from>
+      <to>q1</to>
+      <read>a</read>
+    </transition>
+    <transition>
+      <from>q0</from>
+      <to>q2</to>
+      <read>a</read>
+    </transition>
+  </automaton>
+</structure>''';
+
+        final result = serializationService.deserializeAutomatonFromJflap(xml);
+
+        expect(result.isSuccess, isTrue);
+        expect(result.data!['type'], equals('nfa'));
+      });
+
+      test('JFF deduplicates identical destinations before inferring type', () {
+        const xml = '''<?xml version="1.0" encoding="UTF-8"?>
+<structure type="fa">
+  <type>fa</type>
+  <automaton>
+    <state id="q0" name="q0">
+      <x>0</x>
+      <y>0</y>
+      <initial/>
+    </state>
+    <state id="q1" name="q1">
+      <x>100</x>
+      <y>0</y>
+      <final/>
+    </state>
+    <transition>
+      <from>q0</from>
+      <to>q1</to>
+      <read>a</read>
+    </transition>
+    <transition>
+      <from>q0</from>
+      <to>q1</to>
+      <read>a</read>
+    </transition>
+  </automaton>
+</structure>''';
+
+        final serviceResult =
+            serializationService.deserializeAutomatonFromJflap(
+          xml,
+        );
+        final parserResult = JFLAPXMLParser.parseJFLAPFile(xml);
+
+        expect(serviceResult.isSuccess, isTrue);
+        expect(serviceResult.data!['type'], equals('dfa'));
+        expect(serviceResult.data!['transitions']['q0|a'], equals(['q1']));
+
+        expect(parserResult.isSuccess, isTrue);
+        expect(parserResult.data!['type'], equals('dfa'));
+        expect(parserResult.data!['transitions']['q0|a'], equals(['q1']));
       });
 
       test('JFF normalizes epsilon aliases consistently', () {
@@ -192,6 +290,102 @@ void main() {
         expect(transitions['q1|ε'], contains('q0'));
       });
 
+      test('JFF normalizes empty non-self-closing read tags to epsilon', () {
+        const xml = '''<?xml version="1.0" encoding="UTF-8"?>
+<structure type="fa">
+  <type>fa</type>
+  <automaton>
+    <state id="q0" name="q0">
+      <x>0</x>
+      <y>0</y>
+      <initial/>
+    </state>
+    <state id="q1" name="q1">
+      <x>100</x>
+      <y>0</y>
+      <final/>
+    </state>
+    <transition>
+      <from>q0</from>
+      <to>q1</to>
+      <read></read>
+    </transition>
+  </automaton>
+</structure>''';
+
+        final result = serializationService.deserializeAutomatonFromJflap(xml);
+
+        expect(result.isSuccess, isTrue);
+        final transitions =
+            result.data!['transitions'] as Map<String, List<String>>;
+        expect(transitions.keys, contains('q0|ε'));
+        expect(transitions['q0|ε'], contains('q1'));
+      });
+
+      test('JFF normalizes explicit ε read tags to epsilon', () {
+        const xml = '''<?xml version="1.0" encoding="UTF-8"?>
+<structure type="fa">
+  <type>fa</type>
+  <automaton>
+    <state id="q0" name="q0">
+      <x>0</x>
+      <y>0</y>
+      <initial/>
+    </state>
+    <state id="q1" name="q1">
+      <x>100</x>
+      <y>0</y>
+      <final/>
+    </state>
+    <transition>
+      <from>q0</from>
+      <to>q1</to>
+      <read>ε</read>
+    </transition>
+  </automaton>
+</structure>''';
+
+        final result = serializationService.deserializeAutomatonFromJflap(xml);
+
+        expect(result.isSuccess, isTrue);
+        final transitions =
+            result.data!['transitions'] as Map<String, List<String>>;
+        expect(transitions.keys, contains('q0|ε'));
+        expect(transitions['q0|ε'], contains('q1'));
+      });
+
+      test('JFF normalizes λ read tags to epsilon', () {
+        const xml = '''<?xml version="1.0" encoding="UTF-8"?>
+<structure type="fa">
+  <type>fa</type>
+  <automaton>
+    <state id="q0" name="q0">
+      <x>0</x>
+      <y>0</y>
+      <initial/>
+    </state>
+    <state id="q1" name="q1">
+      <x>100</x>
+      <y>0</y>
+      <final/>
+    </state>
+    <transition>
+      <from>q0</from>
+      <to>q1</to>
+      <read>λ</read>
+    </transition>
+  </automaton>
+</structure>''';
+
+        final result = serializationService.deserializeAutomatonFromJflap(xml);
+
+        expect(result.isSuccess, isTrue);
+        final transitions =
+            result.data!['transitions'] as Map<String, List<String>>;
+        expect(transitions.keys, contains('q0|ε'));
+        expect(transitions['q0|ε'], contains('q1'));
+      });
+
       test('JFF handles malformed XML gracefully', () {
         const malformedXml = '<invalid>xml</invalid>';
 
@@ -222,6 +416,76 @@ void main() {
         );
       });
 
+      test('JFF deserialization reconstructs metadata for release round-trips',
+          () {
+        const xml = '''<?xml version="1.0" encoding="UTF-8"?>
+<structure type="dfa">
+  <type>dfa</type>
+  <automaton>
+    <state id="q0" name="q0">
+      <x>10</x>
+      <y>20</y>
+      <initial/>
+    </state>
+    <state id="q1" name="q1">
+      <x>30</x>
+      <y>40</y>
+      <final/>
+    </state>
+    <transition>
+      <from>q0</from>
+      <to>q1</to>
+      <read>a</read>
+    </transition>
+  </automaton>
+</structure>''';
+
+        final result = serializationService.deserializeAutomatonFromJflap(xml);
+
+        expect(result.isSuccess, isTrue);
+        final data = result.data!;
+        expect(data['id'] as String, startsWith('imported_'));
+        expect(data['name'], equals('Imported Automaton'));
+        expect(data['type'], equals('dfa'));
+        expect(data['alphabet'], equals(['a']));
+        expect(data['nextId'], equals(2));
+      });
+
+      test('JFF deserialization rejects invalid root structures predictably',
+          () {
+        const xml = '<invalid><automaton/></invalid>';
+
+        final result = serializationService.deserializeAutomatonFromJflap(xml);
+
+        expect(result.isFailure, isTrue);
+        expect(result.error, contains('Root element must be <structure>'));
+      });
+
+      test('JFF deserialization rejects dangling transition state references',
+          () {
+        const xml = '''<?xml version="1.0" encoding="UTF-8"?>
+<structure type="fa">
+  <type>fa</type>
+  <automaton>
+    <state id="q0" name="q0">
+      <x>0</x>
+      <y>0</y>
+      <initial/>
+    </state>
+    <transition>
+      <from>q0</from>
+      <to>q9</to>
+      <read>a</read>
+    </transition>
+  </automaton>
+</structure>''';
+
+        final result = serializationService.deserializeAutomatonFromJflap(xml);
+
+        expect(result.isFailure, isTrue);
+        expect(result.error, contains('unknown state'));
+      });
+
       test('Empty automaton round-trip remains stable across formats', () {
         final emptyAutomaton = _createEmptyAutomaton();
         final automatonData = _convertEntityToData(emptyAutomaton);
@@ -235,6 +499,8 @@ void main() {
           jffXml,
         );
         expect(jffRoundTrip.isSuccess, isTrue);
+        expect(jffRoundTrip.data!['alphabet'], isEmpty);
+        expect(jffRoundTrip.data!['nextId'], equals(0));
         final jffTransitions =
             jffRoundTrip.data!['transitions'] as Map<String, List<String>>;
         expect(jffTransitions, isEmpty);
@@ -249,6 +515,21 @@ void main() {
         final jsonData = jsonRoundTrip.data!;
         expect(jsonData['states'], isEmpty);
         expect((jsonData['transitions'] as Map).isEmpty, isTrue);
+      });
+
+      test('NFA epsilon round-trip preserves nfa type', () {
+        final originalAutomaton = _createEpsilonNFA();
+        final automatonData = _convertEntityToData(originalAutomaton);
+
+        final jffXml = serializationService.serializeAutomatonToJflap(
+          automatonData,
+        );
+        final result = serializationService.deserializeAutomatonFromJflap(
+          jffXml,
+        );
+
+        expect(result.isSuccess, isTrue);
+        expect(result.data!['type'], equals('nfa'));
       });
     });
 
@@ -415,7 +696,7 @@ void main() {
           width: 400,
           height: 300,
         );
-        expect(smallSvg, contains('viewBox="0 0 400 300"'));
+        expect(smallSvg, contains(_viewBoxPattern(400, 300)));
         expect(smallSvg, contains('<svg width="400px" height="300px"'));
 
         final largeSvg = SvgExporter.exportAutomatonToSvg(
@@ -423,7 +704,7 @@ void main() {
           width: 1200,
           height: 900,
         );
-        expect(largeSvg, contains('viewBox="0 0 1200 900"'));
+        expect(largeSvg, contains(_viewBoxPattern(1200, 900)));
         expect(largeSvg, contains('<svg width="1200px" height="900px"'));
       });
 
@@ -437,7 +718,7 @@ void main() {
         );
 
         expect(svg, contains('<svg width="640px" height="480px"'));
-        expect(svg, contains('viewBox="0 0 640 480"'));
+        expect(svg, contains(_viewBoxPattern(640, 480)));
         expect(svg, isNot(contains('640.0px')));
         expect(svg, isNot(contains('480.0px')));
       });
@@ -521,7 +802,7 @@ void main() {
         );
 
         expect(svg, contains('<svg width="512px" height="256px"'));
-        expect(svg, contains('viewBox="0 0 512 256"'));
+        expect(svg, contains(_viewBoxPattern(512, 256)));
         expect(svg, isNot(contains('512.0px')));
         expect(svg, isNot(contains('256.0px')));
       });

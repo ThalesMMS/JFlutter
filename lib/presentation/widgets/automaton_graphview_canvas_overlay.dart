@@ -1,5 +1,11 @@
 part of 'automaton_graphview_canvas.dart';
 
+void _logAutomatonGraphViewCanvasOverlay(String message) {
+  if (kDebugMode) {
+    debugPrint('[AutomatonGraphViewCanvas] $message');
+  }
+}
+
 extension _AutomatonGraphViewCanvasOverlay on _AutomatonGraphViewCanvasState {
   List<GraphViewCanvasEdge> _findExistingEdgesExtracted(
     String fromId,
@@ -15,8 +21,8 @@ extension _AutomatonGraphViewCanvasOverlay on _AutomatonGraphViewCanvasState {
     String toId,
   ) async {
     final existingEdges = _findExistingEdges(fromId, toId);
-    debugPrint(
-      '[AutomatonGraphViewCanvas] Preparing transition editor '
+    _logAutomatonGraphViewCanvasOverlay(
+      'Preparing transition editor '
       'from=$fromId to=$toId existing=${existingEdges.length}',
     );
     GraphViewCanvasEdge? existing;
@@ -60,8 +66,8 @@ extension _AutomatonGraphViewCanvasOverlay on _AutomatonGraphViewCanvasState {
     final overlayDisplayed = _showTransitionOverlay(overlayData);
 
     if (overlayDisplayed) {
-      debugPrint(
-        '[AutomatonGraphViewCanvas] Showing transition editor '
+      _logAutomatonGraphViewCanvasOverlay(
+        'Showing transition editor '
         'for $fromId → $toId (transitionId: ${existing?.id})',
       );
       setState(() {
@@ -73,9 +79,8 @@ extension _AutomatonGraphViewCanvasOverlay on _AutomatonGraphViewCanvasState {
       return;
     }
 
-    debugPrint(
-      '[AutomatonGraphViewCanvas] Fallback modal for '
-      '$fromId → $toId (existing=${existing?.id})',
+    _logAutomatonGraphViewCanvasOverlay(
+      'Fallback modal for $fromId → $toId (existing=${existing?.id})',
     );
 
     final result = await showDialog<AutomatonTransitionPayload?>(
@@ -100,8 +105,8 @@ extension _AutomatonGraphViewCanvasOverlay on _AutomatonGraphViewCanvasState {
       return;
     }
 
-    debugPrint(
-      '[AutomatonGraphViewCanvas] Persisting transition '
+    _logAutomatonGraphViewCanvasOverlay(
+      'Persisting transition '
       'for $fromId → $toId (transitionId: ${existing?.id})',
     );
 
@@ -226,6 +231,7 @@ extension _AutomatonGraphViewCanvasOverlay on _AutomatonGraphViewCanvasState {
     if (!mounted) {
       return;
     }
+    _invalidateEdgeRendererCachesIfNeeded();
     _refreshTransitionOverlayFromGraph();
     _updateTransitionOverlayPosition();
   }
@@ -355,8 +361,8 @@ extension _AutomatonGraphViewCanvasOverlay on _AutomatonGraphViewCanvasState {
     AutomatonTransitionPayload payload,
   ) {
     final data = state.data;
-    debugPrint(
-      '[AutomatonGraphViewCanvas] Persisting transition '
+    _logAutomatonGraphViewCanvasOverlay(
+      'Persisting transition '
       'for ${data.fromStateId} → ${data.toStateId} '
       '(transitionId: ${data.transitionId})',
     );

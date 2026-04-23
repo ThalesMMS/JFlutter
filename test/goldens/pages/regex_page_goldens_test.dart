@@ -19,6 +19,7 @@ import 'package:golden_toolkit/golden_toolkit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:jflutter/injection/dependency_injection.dart';
+import 'package:jflutter/l10n/app_localizations.dart';
 import 'package:jflutter/presentation/pages/regex_page.dart';
 import 'package:jflutter/presentation/providers/automaton_algorithm_provider.dart';
 
@@ -48,6 +49,9 @@ class _RegexPageTestWidget extends StatelessWidget {
           ),
       ],
       child: MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: MediaQuery(
           data: MediaQueryData(size: screenSize),
           child: const RegexPage(),
@@ -81,8 +85,8 @@ void main() {
     await setupDependencyInjection();
   });
 
-  tearDownAll(() {
-    resetDependencies();
+  tearDownAll(() async {
+    await resetDependencies();
   });
 
   group('Regex Page golden tests', () {
@@ -298,11 +302,10 @@ void main() {
 
       await _pumpRegexPage(tester, size: const Size(430, 932));
 
-      // Scroll down to help section
-      await tester.drag(
-        find.byType(SingleChildScrollView).first,
-        const Offset(0, -800),
-      );
+      final helpButton = tester
+          .widgetList<FloatingActionButton>(find.byType(FloatingActionButton))
+          .firstWhere((button) => button.onPressed != null);
+      helpButton.onPressed!.call();
       await tester.pumpAndSettle();
 
       await screenMatchesGolden(tester, 'regex_page_help_mobile');

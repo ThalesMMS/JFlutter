@@ -10,6 +10,7 @@
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
+import 'package:flutter/foundation.dart';
 import 'package:petitparser/petitparser.dart';
 
 import '../models/grammar.dart';
@@ -152,22 +153,15 @@ class GrammarParserPetit {
         return jflutter_result.Failure(validationResult.error!);
       }
 
-      // Convert grammar to PetitParser
-      print('Building parser for grammar: ${grammar.name}');
-      print('Start symbol: ${grammar.startSymbol}');
-      print('Non-terminals: ${grammar.nonTerminals}');
-      print('Terminals: ${grammar.terminals}');
-      print('Productions: ${grammar.productions.length}');
-
       final parser = _buildParser(grammar);
       if (parser == null) {
-        print('Failed to build parser from grammar');
+        if (kDebugMode) {
+          debugPrint('Failed to build parser from grammar');
+        }
         return const jflutter_result.Failure(
           'Failed to build parser from grammar',
         );
       }
-
-      print('Parser built successfully');
 
       // Parse the string
       final result = parser.parse(inputString);
@@ -182,8 +176,11 @@ class GrammarParserPetit {
           ),
         );
       } else {
-        // Debug output
-        print('PetitParser failed to parse "$inputString": ${result.message}');
+        if (kDebugMode) {
+          debugPrint(
+            'PetitParser failed to parse "$inputString": ${result.message}',
+          );
+        }
         return jflutter_result.Failure(
           'String "$inputString" cannot be derived from grammar',
         );
@@ -236,7 +233,9 @@ class GrammarParserPetit {
       // Get the parser
       return cfgParser.getParser();
     } catch (e) {
-      print('Error building parser: $e');
+      if (kDebugMode) {
+        debugPrint('Error building parser: $e');
+      }
       return null;
     }
   }

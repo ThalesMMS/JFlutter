@@ -32,7 +32,8 @@ const Map<String, HelpContentModel> kHelpContent = {
   'tool_add_state': HelpContentModel(
     id: 'tool_add_state',
     title: 'Add State',
-    content: 'Click anywhere on the canvas to add a new state at that position. '
+    content:
+        'Click anywhere on the canvas to add a new state at that position. '
         'The first state you create is automatically set as the initial state. '
         'You can later change initial and final states by editing state properties.',
     category: 'canvas',
@@ -49,7 +50,11 @@ const Map<String, HelpContentModel> kHelpContent = {
         'or stack operations depending on the automaton type).',
     category: 'canvas',
     keywords: ['add', 'transition', 'edge', 'arrow', 'connect'],
-    relatedConcepts: ['tool_add_state', 'concept_transition', 'concept_epsilon'],
+    relatedConcepts: [
+      'tool_add_state',
+      'concept_transition',
+      'concept_epsilon'
+    ],
     icon: 'arrow_forward',
   ),
   'tool_undo': HelpContentModel(
@@ -124,13 +129,19 @@ const Map<String, HelpContentModel> kHelpContent = {
         '• Can be converted to an equivalent NFA or regular expression',
     category: 'automata',
     keywords: ['dfa', 'deterministic', 'finite', 'automaton', 'fsa'],
-    relatedConcepts: ['concept_nfa', 'concept_state', 'concept_transition', 'algo_dfa_minimize'],
+    relatedConcepts: [
+      'concept_nfa',
+      'concept_state',
+      'concept_transition',
+      'algo_dfa_minimize'
+    ],
     icon: 'account_tree',
   ),
   'concept_nfa': HelpContentModel(
     id: 'concept_nfa',
     title: 'Nondeterministic Finite Automaton (NFA)',
-    content: 'An NFA is a finite state machine where a state can have zero, one, '
+    content:
+        'An NFA is a finite state machine where a state can have zero, one, '
         'or multiple transitions for the same input symbol. NFAs can also have '
         'epsilon transitions. Key properties:\n'
         '• Multiple or zero transitions per symbol allowed\n'
@@ -146,7 +157,8 @@ const Map<String, HelpContentModel> kHelpContent = {
   'concept_state': HelpContentModel(
     id: 'concept_state',
     title: 'States',
-    content: 'States represent the different configurations an automaton can be '
+    content:
+        'States represent the different configurations an automaton can be '
         'in during computation. Types of states:\n'
         '• Initial State: Where computation begins (marked with incoming arrow)\n'
         '• Final/Accept State: Ends computation successfully (double circle)\n'
@@ -172,7 +184,12 @@ const Map<String, HelpContentModel> kHelpContent = {
         'the same symbol or epsilon transitions.',
     category: 'automata',
     keywords: ['transition', 'edge', 'arrow', 'label', 'symbol'],
-    relatedConcepts: ['concept_state', 'concept_epsilon', 'concept_dfa', 'concept_nfa'],
+    relatedConcepts: [
+      'concept_state',
+      'concept_epsilon',
+      'concept_dfa',
+      'concept_nfa'
+    ],
     icon: 'arrow_forward',
   ),
   'concept_epsilon': HelpContentModel(
@@ -188,7 +205,11 @@ const Map<String, HelpContentModel> kHelpContent = {
         'for epsilon transitions.',
     category: 'automata',
     keywords: ['epsilon', 'lambda', 'empty', 'null', 'transition'],
-    relatedConcepts: ['concept_nfa', 'concept_transition', 'algo_epsilon_closure'],
+    relatedConcepts: [
+      'concept_nfa',
+      'concept_transition',
+      'algo_epsilon_closure'
+    ],
     icon: 'more_horiz',
   ),
 
@@ -214,7 +235,8 @@ const Map<String, HelpContentModel> kHelpContent = {
   'concept_stack': HelpContentModel(
     id: 'concept_stack',
     title: 'Stack Operations',
-    content: 'In a PDA, the stack is a last-in-first-out (LIFO) memory structure '
+    content:
+        'In a PDA, the stack is a last-in-first-out (LIFO) memory structure '
         'used to store and retrieve symbols. Operations:\n'
         '• Push: Add a symbol to the top of the stack\n'
         '• Pop: Remove and read the symbol at the top of the stack\n'
@@ -349,7 +371,8 @@ const Map<String, HelpContentModel> kHelpContent = {
   'algo_nfa_to_dfa': HelpContentModel(
     id: 'algo_nfa_to_dfa',
     title: 'NFA to DFA Conversion',
-    content: 'Convert an NFA to an equivalent DFA using the subset construction '
+    content:
+        'Convert an NFA to an equivalent DFA using the subset construction '
         'algorithm:\n'
         '1. Compute epsilon closures for all states\n'
         '2. Create DFA states from sets of NFA states\n'
@@ -381,7 +404,8 @@ const Map<String, HelpContentModel> kHelpContent = {
   'algo_epsilon_closure': HelpContentModel(
     id: 'algo_epsilon_closure',
     title: 'Epsilon Closure',
-    content: 'The epsilon closure of a state is the set of all states reachable '
+    content:
+        'The epsilon closure of a state is the set of all states reachable '
         'from that state using only epsilon transitions. Algorithm:\n'
         '1. Start with the initial state\n'
         '2. Follow all epsilon transitions to find reachable states\n'
@@ -396,7 +420,8 @@ const Map<String, HelpContentModel> kHelpContent = {
   'algo_regex_to_nfa': HelpContentModel(
     id: 'algo_regex_to_nfa',
     title: 'Regular Expression to NFA',
-    content: 'Convert a regular expression to an equivalent NFA using Thompson\'s '
+    content:
+        'Convert a regular expression to an equivalent NFA using Thompson\'s '
         'construction:\n'
         '• Base case: Single symbol → NFA with two states\n'
         '• Concatenation: Connect NFAs in sequence\n'
@@ -432,17 +457,24 @@ const Map<String, HelpContentModel> kHelpContent = {
     id: 'shortcut_canvas_general',
     title: 'Canvas Keyboard Shortcuts',
     content: 'General canvas shortcuts:\n'
-        '• Ctrl/Cmd + Z: Undo last action\n'
-        '• Ctrl/Cmd + Y or Ctrl/Cmd + Shift + Z: Redo action\n'
-        '• Delete or Backspace: Delete selected state/transition\n'
-        '• Escape: Cancel current operation\n'
-        '• F: Fit canvas to content\n'
-        '• R: Reset view to default\n'
-        '• S: Switch to selection tool\n'
-        '• A: Switch to add state tool\n'
-        '• T: Switch to add transition tool',
+        '• Tab: Move focus between canvas toolbar actions\n'
+        '• Shift + Tab: Move focus to the previous toolbar action\n'
+        '• Enter or Space: Activate the focused toolbar action\n'
+        '• Escape: Cancel the current dialog or editor',
     category: 'shortcuts',
-    keywords: ['keyboard', 'shortcut', 'hotkey', 'canvas', 'ctrl', 'cmd'],
+    keywords: [
+      'keyboard',
+      'shortcut',
+      'hotkey',
+      'canvas',
+      'tab',
+      'shift',
+      'enter',
+      'space',
+      'escape',
+      'toolbar',
+      'focus',
+    ],
     relatedConcepts: ['tool_undo', 'tool_redo', 'tool_select'],
     icon: 'keyboard',
   ),
@@ -450,12 +482,10 @@ const Map<String, HelpContentModel> kHelpContent = {
     id: 'shortcut_simulation',
     title: 'Simulation Shortcuts',
     content: 'Shortcuts during string simulation:\n'
-        '• Space: Step forward one transition\n'
-        '• Enter: Run simulation to completion\n'
-        '• Escape: Cancel simulation\n'
-        '• R: Reset simulation to beginning\n'
-        '• Left Arrow: Step backward (if available)\n'
-        '• Right Arrow: Step forward',
+        '• Enter: Submit the focused input field and run the simulation\n'
+        '• Tab: Move focus between the input field, toggles, and controls\n'
+        '• Shift + Tab: Move focus to the previous simulation control\n'
+        '• Enter or Space: Activate the focused simulation button',
     category: 'shortcuts',
     keywords: ['keyboard', 'shortcut', 'simulation', 'test', 'run'],
     relatedConcepts: ['concept_dfa', 'concept_nfa'],

@@ -183,6 +183,20 @@ void main() {
       expect(find.text('C'), findsWidgets);
     });
 
+    testWidgets('exposes semantic labels for stack cells', (tester) async {
+      const stackState = StackState(symbols: ['A', 'B', 'C']);
+      final handle = tester.ensureSemantics();
+
+      await _pumpStackPanel(tester, stackState: stackState);
+
+      expect(
+        find.bySemanticsLabel('Stack cell 1 of 3, symbol C, top of stack'),
+        findsOneWidget,
+      );
+
+      handle.dispose();
+    });
+
     testWidgets('highlights top element with arrow', (tester) async {
       const stackState = StackState(symbols: ['A', 'B', 'C']);
 

@@ -15,6 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/help_content_model.dart';
 import '../pages/help_category_page.dart';
 import '../providers/help_provider.dart';
+import 'app_snackbar.dart';
 import 'help_icon_mapper.dart';
 
 /// Displays context-aware help content in an expandable panel dialog.
@@ -127,7 +128,8 @@ class ContextAwareHelpPanel extends ConsumerWidget {
                   final rootContext = navigator.context;
                   navigator.pop();
                   // Navigate to help page with this category
-                  await _showCategoryHelp(rootContext, ref, helpContent.category);
+                  await _showCategoryHelp(
+                      rootContext, ref, helpContent.category);
                 },
                 icon: const Icon(Icons.help_outline),
                 label: const Text('More Help'),
@@ -145,15 +147,16 @@ class ContextAwareHelpPanel extends ConsumerWidget {
     String category,
   ) async {
     final helpNotifier = ref.read(helpProvider.notifier);
-    final messenger = ScaffoldMessenger.maybeOf(context);
 
     List<HelpContentModel> results = [];
     try {
       results = helpNotifier.getHelpByCategory(category);
     } catch (error) {
       if (context.mounted) {
-        messenger?.showSnackBar(
-          SnackBar(content: Text('Unable to load help for "$category".')),
+        showAppSnackBar(
+          context,
+          message: 'Unable to load help for "$category".',
+          tone: AppSnackBarTone.error,
         );
       }
       return;
@@ -162,8 +165,10 @@ class ContextAwareHelpPanel extends ConsumerWidget {
     if (!context.mounted) return;
 
     if (results.isEmpty) {
-      messenger?.showSnackBar(
-        SnackBar(content: Text('No help items found for "$category".')),
+      showAppSnackBar(
+        context,
+        message: 'No help items found for "$category".',
+        tone: AppSnackBarTone.info,
       );
       return;
     }
@@ -234,7 +239,6 @@ class _PanelTitle extends StatelessWidget {
       ],
     );
   }
-
 }
 
 class _CategoryChip extends StatelessWidget {
@@ -483,9 +487,8 @@ class _ExamplesSectionState extends State<_ExamplesSection> {
               ),
             ),
           ),
-          crossFadeState: _expanded
-              ? CrossFadeState.showSecond
-              : CrossFadeState.showFirst,
+          crossFadeState:
+              _expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
           duration: const Duration(milliseconds: 200),
         ),
       ],

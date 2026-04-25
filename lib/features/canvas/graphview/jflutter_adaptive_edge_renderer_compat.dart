@@ -1,7 +1,8 @@
 part of 'jflutter_adaptive_edge_renderer.dart';
 
-final Expando<Offset> _jflutterEdgeControlPoints =
-    Expando<Offset>('jflutterEdgeControlPoint');
+final Expando<Offset> _jflutterEdgeControlPoints = Expando<Offset>(
+  'jflutterEdgeControlPoint',
+);
 
 void setJFlutterEdgeControlPoint(Edge edge, Offset? controlPoint) {
   edge.controlPoint = controlPoint;
@@ -31,10 +32,7 @@ class EdgePathGeometry {
 }
 
 class EdgeLabelGeometry {
-  const EdgeLabelGeometry({
-    required this.position,
-    this.angle,
-  });
+  const EdgeLabelGeometry({required this.position, this.angle});
 
   final Offset position;
   final double? angle;
@@ -102,8 +100,11 @@ class AnimatedAdaptiveEdgeRenderer extends AdaptiveEdgeRenderer
     final controlPoint = jFlutterEdgeControlPoint(edge);
     if (controlPoint != null) {
       final sourcePoint = calculateSourceConnectionPoint(edge, controlPoint, 0);
-      final destinationPoint =
-          calculateDestinationConnectionPoint(edge, controlPoint, 0);
+      final destinationPoint = calculateDestinationConnectionPoint(
+        edge,
+        controlPoint,
+        0,
+      );
       final path = Path()
         ..moveTo(sourcePoint.dx, sourcePoint.dy)
         ..quadraticBezierTo(
@@ -180,8 +181,9 @@ class AnimatedAdaptiveEdgeRenderer extends AdaptiveEdgeRenderer
 
     final start = metric.getTangentForOffset(0)?.position ?? Offset.zero;
     final end = metric.getTangentForOffset(metric.length)?.position ?? start;
-    final effectiveArrowLength =
-        arrowLength <= 0 ? 0.0 : math.min(arrowLength, metric.length * 0.3);
+    final effectiveArrowLength = arrowLength <= 0
+        ? 0.0
+        : math.min(arrowLength, metric.length * 0.3);
     final arrowBaseOffset = math.max(0.0, metric.length - effectiveArrowLength);
     final arrowBase =
         metric.getTangentForOffset(arrowBaseOffset)?.position ?? end;
@@ -245,9 +247,10 @@ class AnimatedAdaptiveEdgeRenderer extends AdaptiveEdgeRenderer
       final basePosition = i / animationConfig.particleCount;
       final animatedPosition =
           (basePosition + animationValue * animationConfig.animationSpeed) %
-              1.0;
-      final tangent =
-          metric.getTangentForOffset(animatedPosition * metric.length);
+          1.0;
+      final tangent = metric.getTangentForOffset(
+        animatedPosition * metric.length,
+      );
       if (tangent != null) {
         canvas.drawCircle(
           tangent.position,
@@ -292,15 +295,15 @@ class AnimatedAdaptiveEdgeRenderer extends AdaptiveEdgeRenderer
     for (final edge in graphEdges) {
       _parallelEdgeCache
           .putIfAbsent(_parallelEdgeKey(edge), () => <Edge>[])
-          .add(
-            edge,
-          );
+          .add(edge);
     }
 
     for (final edges in _parallelEdgeCache.values) {
       edges.sort(
-        (left, right) => _edgeSortKey(left, graphEdges)
-            .compareTo(_edgeSortKey(right, graphEdges)),
+        (left, right) => _edgeSortKey(
+          left,
+          graphEdges,
+        ).compareTo(_edgeSortKey(right, graphEdges)),
       );
     }
     _parallelEdgeCacheGraph = currentGraph;

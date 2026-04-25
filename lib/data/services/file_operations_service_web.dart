@@ -11,6 +11,7 @@
 //  Thales Matheus Mendonça Santos - October 2025
 //
 import 'dart:convert';
+// ignore: avoid_web_libraries_in_flutter, deprecated_member_use
 import 'dart:html' as html;
 import 'dart:math' as math;
 import 'dart:typed_data';
@@ -31,12 +32,69 @@ import '../../presentation/widgets/export/svg_exporter.dart';
 
 /// Service for file operations tailored for web environments.
 class FileOperationsService {
+  /// Creates the JFLAP XML payload without starting a download.
+  String serializeAutomatonToJFLAPString(FSA automaton) {
+    return _buildJFLAPXML(automaton);
+  }
+
+  /// Creates the JSON payload without starting a download.
+  String serializeAutomatonToJsonString(FSA automaton) {
+    return jsonEncode(automaton.toJson());
+  }
+
+  /// Creates the grammar JFLAP payload without starting a download.
+  String serializeGrammarToJFLAPString(Grammar grammar) {
+    return _buildGrammarXML(grammar);
+  }
+
+  /// Creates the SVG payload without starting a download.
+  String exportAutomatonToSvgString(
+    AutomatonEntity automaton, {
+    SvgExportOptions? options,
+  }) {
+    return SvgExporter.exportAutomatonToSvg(automaton, options: options);
+  }
+
+  /// Creates the grammar SVG payload without starting a download.
+  String exportGrammarToSvgString(
+    GrammarEntity grammar, {
+    SvgExportOptions? options,
+  }) {
+    return SvgExporter.exportGrammarToSvg(grammar, options: options);
+  }
+
+  /// Creates the Turing machine SVG payload without starting a download.
+  String exportTuringMachineToSvgString(
+    TuringMachineEntity machine, {
+    SvgExportOptions? options,
+  }) {
+    return SvgExporter.exportTuringMachineToSvg(machine, options: options);
+  }
+
+  /// Creates the legacy FSA SVG payload without starting a download.
+  String exportLegacyAutomatonToSvgString(FSA automaton) {
+    return _buildLegacySVG(automaton);
+  }
+
+  /// PNG rendering is not available in the web service implementation.
+  Future<Result<Uint8List>> exportAutomatonToPngBytes(FSA automaton) async {
+    return const Failure<Uint8List>('PNG export is not supported on web.');
+  }
+
+  /// Starts a PNG download from previously rendered bytes.
+  Future<StringResult> writePngBytesToPath(
+    Uint8List bytes,
+    String filePath,
+  ) {
+    return _downloadBytes(filePath, 'image/png', bytes);
+  }
+
   Future<StringResult> saveAutomatonToJFLAP(
     FSA automaton,
     String filePath,
   ) async {
     try {
-      final xml = _buildJFLAPXML(automaton);
+      final xml = serializeAutomatonToJFLAPString(automaton);
       return _downloadText(filePath, 'application/xml', xml);
     } catch (e) {
       return Failure('Failed to prepare automaton download: $e');
@@ -64,7 +122,7 @@ class FileOperationsService {
     String filePath,
   ) async {
     try {
-      final jsonString = jsonEncode(automaton.toJson());
+      final jsonString = serializeAutomatonToJsonString(automaton);
       return _downloadText(filePath, 'application/json', jsonString);
     } catch (e) {
       return Failure('Failed to prepare automaton JSON download: $e');
@@ -95,7 +153,7 @@ class FileOperationsService {
     String filePath,
   ) async {
     try {
-      final xml = _buildGrammarXML(grammar);
+      final xml = serializeGrammarToJFLAPString(grammar);
       return _downloadText(filePath, 'application/xml', xml);
     } catch (e) {
       return Failure('Failed to prepare grammar download: $e');
@@ -132,7 +190,7 @@ class FileOperationsService {
     SvgExportOptions? options,
   }) async {
     try {
-      final svg = SvgExporter.exportAutomatonToSvg(automaton, options: options);
+      final svg = exportAutomatonToSvgString(automaton, options: options);
       return _downloadText(filePath, 'image/svg+xml', svg);
     } catch (e) {
       return Failure('Failed to export automaton: $e');
@@ -145,7 +203,7 @@ class FileOperationsService {
     SvgExportOptions? options,
   }) async {
     try {
-      final svg = SvgExporter.exportGrammarToSvg(grammar, options: options);
+      final svg = exportGrammarToSvgString(grammar, options: options);
       return _downloadText(filePath, 'image/svg+xml', svg);
     } catch (e) {
       return Failure('Failed to export grammar: $e');
@@ -158,7 +216,7 @@ class FileOperationsService {
     SvgExportOptions? options,
   }) async {
     try {
-      final svg = SvgExporter.exportTuringMachineToSvg(
+      final svg = exportTuringMachineToSvgString(
         machine,
         options: options,
       );
@@ -173,7 +231,7 @@ class FileOperationsService {
     String filePath,
   ) async {
     try {
-      final svg = _buildLegacySVG(automaton);
+      final svg = exportLegacyAutomatonToSvgString(automaton);
       return _downloadText(filePath, 'image/svg+xml', svg);
     } catch (e) {
       return Failure('Failed to export automaton: $e');

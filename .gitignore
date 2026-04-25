@@ -64,3 +64,5 @@ coverage/
 AGENTS.md
 CLAUDE.md
 bugs.md
+/docs
+/release

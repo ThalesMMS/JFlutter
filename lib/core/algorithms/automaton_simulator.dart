@@ -16,12 +16,15 @@ import '../models/state.dart';
 import '../models/fsa_transition.dart';
 import '../models/simulation_result.dart';
 import '../models/simulation_step.dart';
+import '../models/step_explanation.dart';
 import '../models/nfa_path_node.dart';
 import '../models/nfa_computation_tree.dart';
 import '../result.dart';
 
 /// Simulates Finite Automata (FA) with input strings
 class AutomatonSimulator {
+  static const _epsilonClosureTransition = 'ε-closure';
+
   /// Simulates a DFA with an input string (deterministic, no epsilon)
   static Future<Result<SimulationResult>> simulateDFA(
     FSA automaton,
@@ -209,6 +212,24 @@ class AutomatonSimulator {
             usedTransition: 'δ($fromStateLabel, $symbol) = ${nextState.label}',
             stepNumber: stepNumber,
             consumedInput: symbol,
+            explanation: StepExplanation(
+              title: 'Transition applied',
+              bullets: [
+                'Read symbol "$symbol" from the input.',
+                'From state ${currentState.label}, the transition on "$symbol" leads to ${nextState.label}.',
+              ],
+              categories: const [ExplanationCategory.info],
+              highlights: [
+                HighlightTarget(
+                  type: HighlightTargetType.state,
+                  id: currentState.id,
+                ),
+                HighlightTarget(
+                  type: HighlightTargetType.state,
+                  id: nextState.id,
+                ),
+              ],
+            ),
           ),
         );
       }
@@ -227,8 +248,7 @@ class AutomatonSimulator {
 
     // Add final step only in step-by-step mode (guard against duplicate
     // when input was already fully consumed in the last transition step)
-    if (stepByStep &&
-        (steps.isEmpty || steps.last.remainingInput.isNotEmpty)) {
+    if (stepByStep && (steps.isEmpty || steps.last.remainingInput.isNotEmpty)) {
       steps.add(
         SimulationStep.finalStep(
           finalState: currentState.label,
@@ -346,14 +366,20 @@ class AutomatonSimulator {
     }
 
     // Initialize simulation with epsilon closure of initial state
-    var currentStates = epsilonClosureFlexibleOf(nfa.initialState!);
+    final initialClosure = epsilonClosureFlexibleOf(nfa.initialState!);
+    var currentStates = initialClosure;
     var remainingInput = inputString;
     int stepNumber = 0;
+    int nextStepNumber() => ++stepNumber;
+
+    String stateSetLabel(Set<State> states) {
+      if (states.isEmpty) return '{}';
+      if (states.length == 1) return states.first.label;
+      return '{${states.map((s) => s.label).join(',')}}';
+    }
 
     // Add initial step
-    final initialStateLabel = currentStates.length == 1
-        ? currentStates.first.label
-        : '{${currentStates.map((s) => s.label).join(',')}}';
+    final initialStateLabel = stateSetLabel(currentStates);
 
     steps.add(
       SimulationStep.initial(
@@ -361,6 +387,31 @@ class AutomatonSimulator {
         inputString: inputString,
       ),
     );
+
+    // Optional: make the initial ε-closure explicit in step-by-step mode.
+    if (stepByStep && initialClosure.length > 1) {
+      steps.add(
+        SimulationStep.fsa(
+          currentState: initialStateLabel,
+          remainingInput: inputString,
+          usedTransition: _epsilonClosureTransition,
+          stepNumber: nextStepNumber(),
+          consumedInput: '',
+          explanation: StepExplanation(
+            title: 'Computed ε-closure',
+            bullets: [
+              'Before reading any input, an NFA may take ε-transitions (moves that consume no input).',
+              'Starting from ${nfa.initialState!.label}, ε-transitions reach: $initialStateLabel.',
+            ],
+            categories: const [ExplanationCategory.epsilonMove],
+            highlights: [
+              for (final s in initialClosure)
+                HighlightTarget(type: HighlightTargetType.state, id: s.id),
+            ],
+          ),
+        ),
+      );
+    }
 
     // Build computation tree - start with root nodes for each state in epsilon closure
     final rootNodes = <NFAPathNode>[];
@@ -383,7 +434,7 @@ class AutomatonSimulator {
 
     // Process each input symbol
     while (remainingInput.isNotEmpty) {
-      stepNumber++;
+      final symbolStepNumber = nextStepNumber();
       totalSteps = stepNumber;
 
       // Check timeout
@@ -414,7 +465,69 @@ class AutomatonSimulator {
       }
 
       // Apply epsilon closure to next states (flexible)
+      final closureBefore = nextStates;
       nextStates = epsilonClosureFlexibleOfSet(nextStates);
+      final beforeLabel = stateSetLabel(closureBefore);
+      final afterLabel = stateSetLabel(nextStates);
+
+      if (stepByStep) {
+        steps.add(
+          SimulationStep.fsa(
+            currentState: beforeLabel,
+            remainingInput: remainingInput,
+            usedTransition: symbol,
+            stepNumber: symbolStepNumber,
+            consumedInput: symbol,
+            explanation: StepExplanation(
+              title: 'Symbol consumed',
+              bullets: [
+                'Read symbol "$symbol" from the input.',
+                if (closureBefore.length > 1)
+                  'This is an NFA step: multiple states may be active at once (nondeterminism).',
+                'After taking all possible transitions on "$symbol", the active state set is $beforeLabel.',
+              ],
+              categories: [
+                ExplanationCategory.info,
+                if (closureBefore.length > 1)
+                  ExplanationCategory.nondeterminism,
+              ],
+              highlights: [
+                for (final s in closureBefore)
+                  HighlightTarget(
+                    type: HighlightTargetType.state,
+                    id: s.id,
+                  ),
+              ],
+            ),
+          ),
+        );
+      }
+
+      // If ε-closure expanded the set, attach an explicit explanation step.
+      if (stepByStep && nextStates.length != closureBefore.length) {
+        steps.add(
+          SimulationStep.fsa(
+            currentState: afterLabel,
+            remainingInput: remainingInput,
+            usedTransition: _epsilonClosureTransition,
+            stepNumber: nextStepNumber(),
+            consumedInput: '',
+            explanation: StepExplanation(
+              title: 'Expanded via ε-transitions',
+              bullets: [
+                'After consuming "$symbol", we also follow any ε-transitions (moves that consume no input).',
+                'ε-closure expanded the active state set from $beforeLabel to $afterLabel.',
+              ],
+              categories: const [ExplanationCategory.epsilonMove],
+              highlights: [
+                for (final s in nextStates)
+                  HighlightTarget(type: HighlightTargetType.state, id: s.id),
+              ],
+            ),
+          ),
+        );
+        totalSteps = stepNumber;
+      }
 
       // Check for infinite loop (simplified)
       if (steps.length > 1000) {
@@ -468,7 +581,7 @@ class AutomatonSimulator {
               inputSymbol: symbol,
               transitionUsed:
                   'δ(${leaf.currentState}, $symbol) → ${destState.id}',
-              stepNumber: stepNumber,
+              stepNumber: symbolStepNumber,
               description: 'Consumed $symbol, now at ${destState.id}',
             );
             children.add(childNode);
@@ -482,23 +595,6 @@ class AutomatonSimulator {
       }
 
       currentStates = nextStates;
-
-      // Add step (record destination states, consistent with TM simulator)
-      if (stepByStep) {
-        final nextStateLabel = currentStates.length == 1
-            ? currentStates.first.label
-            : '{${currentStates.map((s) => s.label).join(',')}}';
-
-        steps.add(
-          SimulationStep.fsa(
-            currentState: nextStateLabel,
-            remainingInput: remainingInput,
-            usedTransition: symbol,
-            stepNumber: stepNumber,
-            consumedInput: symbol,
-          ),
-        );
-      }
       activeLeaves = newActiveLeaves;
 
       // If no next states, early reject
@@ -536,23 +632,27 @@ class AutomatonSimulator {
     }
 
     // Check if any current state is accepting
-    final isAccepted = currentStates
-        .intersection(nfa.acceptingStates)
-        .isNotEmpty;
+    final isAccepted =
+        currentStates.intersection(nfa.acceptingStates).isNotEmpty;
 
-    // Add final step (guard against duplicate when input was already fully consumed)
-    if (steps.isEmpty || steps.last.remainingInput.isNotEmpty) {
-      final finalStateLabel = currentStates.length == 1
-          ? currentStates.first.label
-          : '{${currentStates.map((s) => s.label).join(',')}}';
+    final finalStateLabel = currentStates.length == 1
+        ? currentStates.first.label
+        : '{${currentStates.map((s) => s.label).join(',')}}';
+    final shouldAddFinalStep = steps.isEmpty ||
+        steps.last.remainingInput.isNotEmpty ||
+        steps.last.usedTransition == _epsilonClosureTransition ||
+        steps.last.currentState != finalStateLabel;
+    final finalStepNumber = shouldAddFinalStep ? nextStepNumber() : stepNumber;
+    totalSteps = stepNumber;
 
+    if (shouldAddFinalStep) {
       steps.add(
         SimulationStep.finalStep(
           finalState: finalStateLabel,
           remainingInput: remainingInput,
           stackContents: '',
           tapeContents: '',
-          stepNumber: stepNumber,
+          stepNumber: finalStepNumber,
         ),
       );
     }
@@ -687,11 +787,9 @@ class AutomatonSimulator {
       final alphabet = automaton.alphabet.toList();
 
       // Generate all possible strings up to maxLength
-      for (
-        int length = 0;
-        length <= maxLength && acceptedStrings.length < maxResults;
-        length++
-      ) {
+      for (int length = 0;
+          length <= maxLength && acceptedStrings.length < maxResults;
+          length++) {
         await _generateStrings(
           automaton,
           alphabet,
@@ -750,11 +848,9 @@ class AutomatonSimulator {
       final alphabet = automaton.alphabet.toList();
 
       // Generate all possible strings up to maxLength
-      for (
-        int length = 0;
-        length <= maxLength && rejectedStrings.length < maxResults;
-        length++
-      ) {
+      for (int length = 0;
+          length <= maxLength && rejectedStrings.length < maxResults;
+          length++) {
         await _generateRejectedStrings(
           automaton,
           alphabet,

@@ -12,6 +12,7 @@
 
 import 'algorithm_step.dart';
 import 'state.dart';
+import 'step_explanation.dart';
 
 /// Represents a single step in NFA to DFA conversion using subset construction
 class NFAToDFAStep {
@@ -80,15 +81,12 @@ class NFAToDFAStep {
       stepType: stepType,
       currentStateSet: Set.unmodifiable(currentStateSet),
       processedSymbol: processedSymbol,
-      epsilonClosure: epsilonClosure != null
-          ? Set.unmodifiable(epsilonClosure)
-          : null,
-      reachableStates: reachableStates != null
-          ? Set.unmodifiable(reachableStates)
-          : null,
-      nextStateSet: nextStateSet != null
-          ? Set.unmodifiable(nextStateSet)
-          : null,
+      epsilonClosure:
+          epsilonClosure != null ? Set.unmodifiable(epsilonClosure) : null,
+      reachableStates:
+          reachableStates != null ? Set.unmodifiable(reachableStates) : null,
+      nextStateSet:
+          nextStateSet != null ? Set.unmodifiable(nextStateSet) : null,
       isAcceptingState: isAcceptingState,
       isNewState: isNewState,
       dfaStateId: dfaStateId,
@@ -114,6 +112,22 @@ class NFAToDFAStep {
             'Computing ε-closure of initial state ${initialState.label}. '
             'This gives us the set of states reachable without consuming input: {$stateLabels}. '
             '${containsAcceptingState ? "This set contains an accepting state, so the initial DFA state will be accepting." : ""}',
+        stepExplanation: StepExplanation(
+          title: 'Initial DFA state is the ε-closure of the NFA start state',
+          categories: const [ExplanationCategory.conversion],
+          bullets: [
+            'Start from NFA start state ${initialState.label}.',
+            'Take ε-transitions without consuming input to reach {$stateLabels}.',
+            if (containsAcceptingState)
+              'Because this set includes an accepting NFA state, the corresponding DFA state will be accepting.',
+          ],
+          highlights: [
+            HighlightTarget(
+              type: HighlightTargetType.state,
+              data: {'stateIds': epsilonClosure.map((s) => s.id).toList()},
+            ),
+          ],
+        ),
         type: AlgorithmType.nfaToDfa,
       ),
       stepType: NFAToDFAStepType.epsilonClosure,
@@ -144,6 +158,21 @@ class NFAToDFAStep {
         explanation:
             'From state set {$currentLabels}, processing symbol \'$symbol\'. '
             'Following NFA transitions on \'$symbol\' leads to states: {$reachableLabels}.',
+        stepExplanation: StepExplanation(
+          title: 'Follow NFA transitions on the current symbol',
+          categories: const [ExplanationCategory.conversion],
+          bullets: [
+            'Current DFA state represents NFA set {$currentLabels}.',
+            'On input symbol \'$symbol\', collect all NFA destinations reachable from any state in the set.',
+            'Reachable before ε-closure: {$reachableLabels}.',
+          ],
+          highlights: [
+            HighlightTarget(
+              type: HighlightTargetType.state,
+              data: {'stateIds': reachableStates.map((s) => s.id).toList()},
+            ),
+          ],
+        ),
         type: AlgorithmType.nfaToDfa,
       ),
       stepType: NFAToDFAStepType.processSymbol,
@@ -170,11 +199,30 @@ class NFAToDFAStep {
         id: id,
         stepNumber: stepNumber,
         title: 'Compute ε-closure of reachable states',
-        explanation:
-            'Computing ε-closure of {$reachableLabels}. '
+        explanation: 'Computing ε-closure of {$reachableLabels}. '
             'Following ε-transitions gives us the complete state set: {$closureLabels}. '
             '${isNewState ? "This is a new DFA state that needs to be processed." : "This state set has already been processed."} '
             '${containsAcceptingState ? "This set contains an accepting state." : ""}',
+        stepExplanation: StepExplanation(
+          title: 'Close under ε-transitions to form the next DFA state',
+          categories: const [ExplanationCategory.conversion],
+          bullets: [
+            'ε-transitions do not consume input, so they must be included in the DFA state definition.',
+            'Starting from reachable states {$reachableLabels}, follow ε-transitions to get {$closureLabels}.',
+            if (isNewState)
+              'This set has not appeared before, so we will create (and later process) a new DFA state for it.'
+            else
+              'This set already has a corresponding DFA state, so we can reuse it.',
+            if (containsAcceptingState)
+              'Because this set includes an accepting NFA state, the DFA state will be accepting.',
+          ],
+          highlights: [
+            HighlightTarget(
+              type: HighlightTargetType.state,
+              data: {'stateIds': epsilonClosure.map((s) => s.id).toList()},
+            ),
+          ],
+        ),
         type: AlgorithmType.nfaToDfa,
       ),
       stepType: NFAToDFAStepType.epsilonClosure,
@@ -204,6 +252,25 @@ class NFAToDFAStep {
         explanation:
             'Creating new DFA state $dfaStateId to represent NFA state set {$stateLabels}. '
             '${isAccepting ? "This is an accepting state because the NFA state set contains at least one accepting state." : "This is a non-accepting state."}',
+        stepExplanation: StepExplanation(
+          title: 'One DFA state represents an entire set of NFA states',
+          categories: const [ExplanationCategory.conversion],
+          bullets: [
+            'Subset construction creates a DFA state for each distinct reachable NFA state set.',
+            'This DFA state represents {$stateLabels}.',
+            if (isAccepting)
+              'It is accepting because at least one state in the set is accepting in the NFA.'
+            else
+              'It is non-accepting because none of the states in the set are accepting in the NFA.',
+          ],
+          highlights: [
+            HighlightTarget(type: HighlightTargetType.state, id: dfaStateId),
+            HighlightTarget(
+              type: HighlightTargetType.state,
+              data: {'stateIds': nfaStateSet.map((s) => s.id).toList()},
+            ),
+          ],
+        ),
         type: AlgorithmType.nfaToDfa,
       ),
       stepType: NFAToDFAStepType.createState,
@@ -235,6 +302,29 @@ class NFAToDFAStep {
         explanation:
             'Adding DFA transition: $fromDfaStateId --($symbol)--> $toDfaStateId. '
             'This represents moving from NFA state set {$fromLabels} to {$toLabels} on symbol \'$symbol\'.',
+        stepExplanation: StepExplanation(
+          title: 'DFA transitions summarize all possible NFA moves on a symbol',
+          categories: const [ExplanationCategory.conversion],
+          bullets: [
+            'From NFA set {$fromLabels}, on \'$symbol\' you can reach {$toLabels} (after ε-closure).',
+            'In the DFA, this becomes a single deterministic transition.',
+          ],
+          highlights: [
+            HighlightTarget(
+              type: HighlightTargetType.state,
+              id: fromDfaStateId,
+            ),
+            HighlightTarget(type: HighlightTargetType.state, id: toDfaStateId),
+            HighlightTarget(
+              type: HighlightTargetType.transition,
+              data: {
+                'fromStateId': fromDfaStateId,
+                'toStateId': toDfaStateId,
+                'symbol': symbol,
+              },
+            ),
+          ],
+        ),
         type: AlgorithmType.nfaToDfa,
       ),
       stepType: NFAToDFAStepType.createTransition,
@@ -259,11 +349,19 @@ class NFAToDFAStep {
         id: id,
         stepNumber: stepNumber,
         title: 'Conversion complete',
-        explanation:
-            'NFA to DFA conversion completed successfully. '
+        explanation: 'NFA to DFA conversion completed successfully. '
             'The resulting DFA has $totalStates states, $totalTransitions transitions, '
             'and $totalAcceptingStates accepting state(s). '
             'All reachable state sets have been processed.',
+        stepExplanation: StepExplanation(
+          title: 'All reachable subsets have been converted to DFA components',
+          categories: const [ExplanationCategory.conversion],
+          bullets: [
+            'Created $totalStates DFA state(s).',
+            'Created $totalTransitions transition(s).',
+            'Marked $totalAcceptingStates accepting state(s).',
+          ],
+        ),
         type: AlgorithmType.nfaToDfa,
       ),
       stepType: NFAToDFAStepType.completion,
@@ -329,8 +427,7 @@ class NFAToDFAStep {
         (e) => e.name == json['stepType'],
         orElse: () => NFAToDFAStepType.epsilonClosure,
       ),
-      currentStateSet:
-          (json['currentStateSet'] as List?)
+      currentStateSet: (json['currentStateSet'] as List?)
               ?.map((s) => State.fromJson(s as Map<String, dynamic>))
               .toSet() ??
           {},

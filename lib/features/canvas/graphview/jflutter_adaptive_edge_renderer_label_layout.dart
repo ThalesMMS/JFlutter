@@ -116,6 +116,7 @@ extension _JFlutterAdaptiveEdgeRendererLabelLayout
     if (cached != null) {
       _labelPainterCache[cacheKey] = cached;
       _activeLabelPainters.add(cached);
+      _usedLabelPaintersInRenderCycle.add(cached);
       return cached;
     }
 
@@ -126,6 +127,7 @@ extension _JFlutterAdaptiveEdgeRendererLabelLayout
     )..layout();
 
     _activeLabelPainters.add(painter);
+    _usedLabelPaintersInRenderCycle.add(painter);
     _labelPainterCache[cacheKey] = painter;
     while (_labelPainterCache.length > _maxCachedLabelPainters) {
       _LabelPainterCacheKey? evictableKey;
@@ -155,7 +157,28 @@ extension _JFlutterAdaptiveEdgeRendererLabelLayout
   void _releaseLabelPainter(TextPainter painter) {
     _activeLabelPainters.remove(painter);
     if (_transientLabelPainters.remove(painter)) {
+      _usedLabelPaintersInRenderCycle.remove(painter);
       painter.dispose();
+    }
+  }
+
+  void _pruneCachedLabelPainters() {
+    if (_labelPainterCache.isEmpty) {
+      return;
+    }
+
+    final keysToRemove = <_LabelPainterCacheKey>[];
+    for (final entry in _labelPainterCache.entries) {
+      final painter = entry.value;
+      if (!_activeLabelPainters.contains(painter) &&
+          !_usedLabelPaintersInRenderCycle.contains(painter)) {
+        keysToRemove.add(entry.key);
+      }
+    }
+
+    for (final key in keysToRemove) {
+      final painter = _labelPainterCache.remove(key);
+      painter?.dispose();
     }
   }
 

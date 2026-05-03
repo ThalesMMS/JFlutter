@@ -11,6 +11,9 @@
 //  Thales Matheus Mendonça Santos - October 2025
 //
 import '../models/grammar.dart';
+import '../models/grammar_diagnostic.dart';
+import '../models/grammar_diagnostic_severity.dart';
+import '../models/grammar_diagnostics_report.dart';
 import '../models/production.dart';
 import '../result.dart';
 
@@ -38,6 +41,364 @@ class LL1ParseTable {
 }
 
 class GrammarAnalyzer {
+  static Result<GrammarDiagnosticsReport> validateMalformedProductions(
+    Grammar grammar,
+  ) {
+    final diagnostics = <GrammarDiagnostic>[];
+
+    if (grammar.startSymbol.isEmpty) {
+      diagnostics.add(
+        const GrammarDiagnostic(
+          code: 'grammar.start_symbol_missing',
+          severity: GrammarDiagnosticSeverity.error,
+          message: 'Grammar has no start symbol.',
+        ),
+      );
+    } else if (!grammar.nonterminals.contains(grammar.startSymbol)) {
+      diagnostics.add(
+        GrammarDiagnostic(
+          code: 'grammar.start_symbol_not_nonterminal',
+          severity: GrammarDiagnosticSeverity.error,
+          message:
+              'Start symbol ${grammar.startSymbol} is not declared as a non-terminal.',
+          symbols: [grammar.startSymbol],
+        ),
+      );
+    }
+
+    if (grammar.productions.isEmpty) {
+      diagnostics.add(
+        const GrammarDiagnostic(
+          code: 'grammar.no_productions',
+          severity: GrammarDiagnosticSeverity.warning,
+          message: 'Grammar has no productions.',
+        ),
+      );
+      return ResultFactory.success(
+        GrammarDiagnosticsReport(diagnostics: diagnostics),
+      );
+    }
+
+    for (final production in grammar.productions) {
+      if (production.leftSide.isEmpty) {
+        diagnostics.add(
+          GrammarDiagnostic(
+            code: 'grammar.production_left_side_empty',
+            severity: GrammarDiagnosticSeverity.error,
+            message: 'Production ${production.id} has an empty left-hand side.',
+            productionIds: [production.id],
+          ),
+        );
+        continue;
+      }
+
+      if (production.leftSide.length != 1) {
+        diagnostics.add(
+          GrammarDiagnostic(
+            code: 'grammar.production_left_side_not_single_nonterminal',
+            severity: GrammarDiagnosticSeverity.error,
+            message:
+                'Production ${production.id} left-hand side must be exactly one non-terminal for CFG tooling; got ${production.leftSide.join(' ')}.',
+            symbols: production.leftSide,
+            productionIds: [production.id],
+          ),
+        );
+      } else {
+        final left = production.leftSide.first;
+        if (left.isEmpty) {
+          diagnostics.add(
+            GrammarDiagnostic(
+              code: 'grammar.production_left_side_empty_symbol',
+              severity: GrammarDiagnosticSeverity.error,
+              message:
+                  'Production ${production.id} left-hand side contains an empty symbol.',
+              productionIds: [production.id],
+            ),
+          );
+        } else if (!grammar.nonterminals.contains(left)) {
+          diagnostics.add(
+            GrammarDiagnostic(
+              code: 'grammar.production_left_side_not_nonterminal',
+              severity: GrammarDiagnosticSeverity.error,
+              message:
+                  'Production ${production.id} left-hand side "$left" is not declared as a non-terminal.',
+              symbols: [left],
+              productionIds: [production.id],
+            ),
+          );
+        }
+      }
+
+      for (final symbol in production.rightSide) {
+        if (_isEpsilon(symbol)) {
+          continue;
+        }
+
+        if (grammar.terminals.contains(symbol)) {
+          continue;
+        }
+
+        if (grammar.nonterminals.contains(symbol)) {
+          continue;
+        }
+
+        diagnostics.add(
+          GrammarDiagnostic(
+            code: 'grammar.unknown_symbol',
+            severity: GrammarDiagnosticSeverity.warning,
+            message:
+                'Production ${production.id} references unknown symbol "$symbol".',
+            symbols: [symbol],
+            productionIds: [production.id],
+          ),
+        );
+      }
+
+      if (production.isLambda && production.rightSide.isNotEmpty) {
+        diagnostics.add(
+          GrammarDiagnostic(
+            code: 'grammar.lambda_production_rhs_not_empty',
+            severity: GrammarDiagnosticSeverity.error,
+            message:
+                'Production ${production.id} is marked as lambda but has a non-empty right-hand side.',
+            productionIds: [production.id],
+          ),
+        );
+      }
+
+      if (!production.isLambda && production.rightSide.isEmpty) {
+        diagnostics.add(
+          GrammarDiagnostic(
+            code: 'grammar.production_rhs_empty',
+            severity: GrammarDiagnosticSeverity.error,
+            message:
+                'Production ${production.id} has an empty right-hand side; use ε/λ or mark it as lambda.',
+            productionIds: [production.id],
+          ),
+        );
+      }
+    }
+
+    return ResultFactory.success(
+      GrammarDiagnosticsReport(diagnostics: diagnostics),
+    );
+  }
+
+  static Result<GrammarDiagnosticsReport> detectUnreachableNonTerminals(
+    Grammar grammar,
+  ) {
+    // Existing reachability diagnostics.
+
+    final diagnostics = <GrammarDiagnostic>[];
+
+    if (grammar.startSymbol.isEmpty) {
+      diagnostics.add(
+        const GrammarDiagnostic(
+          code: 'grammar.start_symbol_missing',
+          severity: GrammarDiagnosticSeverity.error,
+          message: 'Grammar has no start symbol; unreachable analysis skipped.',
+        ),
+      );
+      return ResultFactory.success(
+        GrammarDiagnosticsReport(diagnostics: diagnostics),
+      );
+    }
+
+    if (!grammar.nonterminals.contains(grammar.startSymbol)) {
+      diagnostics.add(
+        GrammarDiagnostic(
+          code: 'grammar.start_symbol_not_nonterminal',
+          severity: GrammarDiagnosticSeverity.error,
+          message:
+              'Start symbol ${grammar.startSymbol} is not declared as a non-terminal; unreachable analysis may be inaccurate.',
+          symbols: [grammar.startSymbol],
+        ),
+      );
+    }
+
+    final visited = <String>{};
+    final queue = <String>[];
+    final warnedUnknownSymbols = <String>{};
+    queue.add(grammar.startSymbol);
+
+    final productionsByNonTerminal = _groupProductions(grammar);
+
+    while (queue.isNotEmpty) {
+      final current = queue.removeLast();
+      if (!visited.add(current)) continue;
+
+      final alternatives = productionsByNonTerminal[current];
+      if (alternatives == null) {
+        continue;
+      }
+
+      for (final rhs in alternatives) {
+        for (final symbol in rhs) {
+          if (_isEpsilon(symbol)) continue;
+
+          if (grammar.nonterminals.contains(symbol)) {
+            if (!visited.contains(symbol)) {
+              queue.add(symbol);
+            }
+            continue;
+          }
+
+          if (grammar.terminals.contains(symbol)) {
+            continue;
+          }
+
+          if (warnedUnknownSymbols.add(symbol)) {
+            diagnostics.add(
+              GrammarDiagnostic(
+                code: 'grammar.unknown_symbol',
+                severity: GrammarDiagnosticSeverity.warning,
+                message:
+                    'Production references unknown symbol "$symbol"; treating as terminal for reachability purposes.',
+                symbols: [symbol],
+              ),
+            );
+          }
+        }
+      }
+    }
+
+    final unreachable =
+        grammar.nonterminals.where((nt) => !visited.contains(nt));
+    final unreachableList = unreachable.toList()..sort();
+
+    if (unreachableList.isNotEmpty) {
+      diagnostics.add(
+        GrammarDiagnostic(
+          code: 'grammar.unreachable_nonterminal',
+          severity: GrammarDiagnosticSeverity.warning,
+          message:
+              'Found ${unreachableList.length} unreachable non-terminal(s): ${unreachableList.join(', ')}.',
+          symbols: unreachableList,
+        ),
+      );
+    }
+
+    return ResultFactory.success(
+      GrammarDiagnosticsReport(diagnostics: diagnostics),
+    );
+  }
+
+  static Result<GrammarDiagnosticsReport> detectUnproductiveNonTerminals(
+    Grammar grammar,
+  ) {
+    final diagnostics = <GrammarDiagnostic>[];
+
+    if (grammar.productions.isEmpty) {
+      diagnostics.add(
+        const GrammarDiagnostic(
+          code: 'grammar.no_productions',
+          severity: GrammarDiagnosticSeverity.warning,
+          message: 'Grammar has no productions; productivity analysis skipped.',
+        ),
+      );
+      return ResultFactory.success(
+        GrammarDiagnosticsReport(diagnostics: diagnostics),
+      );
+    }
+
+    final productionsByNonTerminal = _groupProductions(grammar);
+
+    final productive = <String>{};
+    final warnedUnknownSymbols = <String>{};
+    var changed = true;
+
+    while (changed) {
+      changed = false;
+
+      for (final entry in productionsByNonTerminal.entries) {
+        final nonTerminal = entry.key;
+        if (productive.contains(nonTerminal)) continue;
+
+        for (final rhs in entry.value) {
+          var rhsIsProductive = true;
+
+          for (final symbol in rhs) {
+            if (_isEpsilon(symbol)) {
+              continue;
+            }
+
+            if (grammar.terminals.contains(symbol)) {
+              continue;
+            }
+
+            if (grammar.nonterminals.contains(symbol)) {
+              if (!productive.contains(symbol)) {
+                rhsIsProductive = false;
+              }
+              continue;
+            }
+
+            // Unknown symbol: treat as terminal for productivity, but warn.
+            if (warnedUnknownSymbols.add(symbol)) {
+              diagnostics.add(
+                GrammarDiagnostic(
+                  code: 'grammar.unknown_symbol',
+                  severity: GrammarDiagnosticSeverity.warning,
+                  message:
+                      'Production references unknown symbol "$symbol"; treating as terminal for productivity purposes.',
+                  symbols: [symbol],
+                ),
+              );
+            }
+          }
+
+          if (rhsIsProductive) {
+            productive.add(nonTerminal);
+            changed = true;
+            break;
+          }
+        }
+      }
+    }
+
+    final unproductive = grammar.nonterminals
+        .where((nt) => !productive.contains(nt))
+        .toList()
+      ..sort();
+
+    if (unproductive.isNotEmpty) {
+      diagnostics.add(
+        GrammarDiagnostic(
+          code: 'grammar.unproductive_nonterminal',
+          severity: GrammarDiagnosticSeverity.warning,
+          message:
+              'Found ${unproductive.length} unproductive non-terminal(s): ${unproductive.join(', ')}.',
+          symbols: unproductive,
+        ),
+      );
+
+      final productionIds = <String>[];
+      for (final production in grammar.productions) {
+        final left =
+            production.leftSide.isNotEmpty ? production.leftSide.first : '';
+        if (unproductive.contains(left)) {
+          productionIds.add(production.id);
+        }
+      }
+      if (productionIds.isNotEmpty) {
+        diagnostics.add(
+          GrammarDiagnostic(
+            code: 'grammar.unproductive_production',
+            severity: GrammarDiagnosticSeverity.info,
+            message:
+                'Productions for unproductive non-terminals cannot derive terminal strings.',
+            symbols: unproductive,
+            productionIds: productionIds,
+          ),
+        );
+      }
+    }
+
+    return ResultFactory.success(
+      GrammarDiagnosticsReport(diagnostics: diagnostics),
+    );
+  }
+
   static Result<GrammarAnalysisReport<Grammar>> removeDirectLeftRecursion(
     Grammar grammar,
   ) {
@@ -264,8 +625,9 @@ class GrammarAnalyzer {
     );
   }
 
+  // FIRST/FOLLOW/LL(1) reference notes live in docs/reference-deviations.md.
   static Result<GrammarAnalysisReport<Map<String, Set<String>>>>
-  computeFirstSets(Grammar grammar) {
+      computeFirstSets(Grammar grammar) {
     if (grammar.productions.isEmpty) {
       return ResultFactory.failure('The grammar has no productions.');
     }
@@ -288,6 +650,11 @@ class GrammarAnalyzer {
       changed = false;
       for (final entry in productions.entries) {
         final left = entry.key;
+        if (!grammar.nonterminals.contains(left) || !first.containsKey(left)) {
+          return ResultFactory.failure(
+            'Cannot compute FIRST sets: production LHS "$left" is not a declared non-terminal.',
+          );
+        }
         for (final right in entry.value) {
           if (right.isEmpty) {
             if (first[left]!.add('ε')) {
@@ -368,8 +735,16 @@ class GrammarAnalyzer {
     );
   }
 
+  // FIRST/FOLLOW/LL(1) reference notes live in docs/reference-deviations.md.
   static Result<GrammarAnalysisReport<Map<String, Set<String>>>>
-  computeFollowSets(Grammar grammar) {
+      computeFollowSets(Grammar grammar) {
+    if (grammar.startSymbol.isEmpty ||
+        !grammar.nonterminals.contains(grammar.startSymbol)) {
+      return ResultFactory.failure(
+        'Cannot compute FOLLOW sets: start symbol "${grammar.startSymbol}" is not a declared non-terminal.',
+      );
+    }
+
     final firstResult = computeFirstSets(grammar);
     if (firstResult.isFailure) {
       return ResultFactory.failure(firstResult.error!);
@@ -380,7 +755,13 @@ class GrammarAnalyzer {
     final notes = <String>[];
     final derivations = List<String>.from(firstResult.data!.derivations);
 
-    follow[grammar.startSymbol]!.add('\$');
+    final startFollow = follow[grammar.startSymbol];
+    if (startFollow == null) {
+      return ResultFactory.failure(
+        'Cannot compute FOLLOW sets: start symbol "${grammar.startSymbol}" has no FOLLOW entry.',
+      );
+    }
+    startFollow.add('\$');
     derivations.add(
       'FOLLOW(${grammar.startSymbol}) includes \$ (start symbol).',
     );
@@ -392,6 +773,12 @@ class GrammarAnalyzer {
       changed = false;
       for (final entry in productions.entries) {
         final left = entry.key;
+        final leftFollow = follow[left];
+        if (!grammar.nonterminals.contains(left) || leftFollow == null) {
+          return ResultFactory.failure(
+            'Cannot compute FOLLOW sets: production LHS "$left" is not a declared non-terminal.',
+          );
+        }
         for (final right in entry.value) {
           for (var i = 0; i < right.length; i++) {
             final symbol = right[i];
@@ -414,7 +801,7 @@ class GrammarAnalyzer {
 
             if (suffix.isEmpty || firstOfSuffix.contains('ε')) {
               final previousFollowLength = targetFollow.length;
-              targetFollow.addAll(follow[left]!);
+              targetFollow.addAll(leftFollow);
               if (targetFollow.length > previousFollowLength) {
                 changed = true;
                 derivations.add(
@@ -440,6 +827,7 @@ class GrammarAnalyzer {
     );
   }
 
+  // FIRST/FOLLOW/LL(1) reference notes live in docs/reference-deviations.md.
   static Result<GrammarAnalysisReport<LL1ParseTable>> buildLL1ParseTable(
     Grammar grammar,
   ) {
@@ -462,12 +850,23 @@ class GrammarAnalyzer {
     final productions = _groupProductions(grammar);
     for (final entry in productions.entries) {
       final left = entry.key;
+      if (!grammar.nonterminals.contains(left) || !follow.containsKey(left)) {
+        return ResultFactory.failure(
+          'Cannot build LL(1) parse table: production LHS "$left" is not a declared non-terminal.',
+        );
+      }
       table.putIfAbsent(left, () => {});
       for (final right in entry.value) {
         final firstSet = _firstOfSequence(right, first);
         final targets = firstSet.where((symbol) => symbol != 'ε');
         for (final terminal in targets) {
-          final cell = table[left]!.putIfAbsent(
+          final row = table[left];
+          if (row == null) {
+            return ResultFactory.failure(
+              'Cannot build LL(1) parse table: missing table row for "$left".',
+            );
+          }
+          final cell = row.putIfAbsent(
             terminal,
             () => <List<String>>[],
           );
@@ -485,8 +884,15 @@ class GrammarAnalyzer {
         }
 
         if (firstSet.contains('ε')) {
-          for (final terminal in follow[left]!) {
-            final cell = table[left]!.putIfAbsent(
+          final followSet = follow[left];
+          final row = table[left];
+          if (followSet == null || row == null) {
+            return ResultFactory.failure(
+              'Cannot build LL(1) parse table: missing FOLLOW or table entry for "$left".',
+            );
+          }
+          for (final terminal in followSet) {
+            final cell = row.putIfAbsent(
               terminal,
               () => <List<String>>[],
             );
@@ -527,6 +933,13 @@ class GrammarAnalyzer {
     );
   }
 
+  /// Educational ambiguity indicator.
+  ///
+  /// IMPORTANT: LL(1) table conflicts only prove the grammar is *not LL(1)*.
+  /// They do *not* prove true ambiguity (multiple parse trees) for all inputs.
+  ///
+  /// This method returns `true` when the grammar appears LL(1) (no conflicts)
+  /// and `false` when conflicts are present.
   static Result<GrammarAnalysisReport<bool>> detectAmbiguity(Grammar grammar) {
     final tableResult = buildLL1ParseTable(grammar);
     if (tableResult.isFailure) {
@@ -534,18 +947,21 @@ class GrammarAnalyzer {
     }
 
     final conflicts = tableResult.data!.conflicts;
-    final notes = <String>[];
     final derivations = List<String>.from(tableResult.data!.derivations);
 
-    if (conflicts.isNotEmpty) {
-      notes.add('Grammar is likely ambiguous due to parse table conflicts.');
-    } else {
-      notes.add('No LL(1) conflicts detected; grammar appears unambiguous.');
-    }
+    final isLl1 = conflicts.isEmpty;
+
+    final notes = <String>[
+      if (isLl1)
+        'No LL(1) conflicts detected (grammar appears LL(1) for this analysis).'
+      else
+        'LL(1) conflicts detected (grammar is not LL(1)).',
+      'Note: Being non-LL(1) does not necessarily mean the grammar is ambiguous; it may still be unambiguous but require a stronger parser (e.g., LR/Earley).',
+    ];
 
     return ResultFactory.success(
       GrammarAnalysisReport<bool>(
-        value: conflicts.isEmpty,
+        value: isLl1,
         notes: notes,
         conflicts: conflicts,
         derivations: derivations,
@@ -670,9 +1086,8 @@ _FactoringResult? _findCommonPrefix(List<List<String>> alternatives) {
     for (var j = i + 1; j < alternatives.length; j++) {
       final second = alternatives[j];
       final prefix = <String>[];
-      final length = first.length < second.length
-          ? first.length
-          : second.length;
+      final length =
+          first.length < second.length ? first.length : second.length;
       for (var k = 0; k < length; k++) {
         if (first[k] == second[k]) {
           prefix.add(first[k]);

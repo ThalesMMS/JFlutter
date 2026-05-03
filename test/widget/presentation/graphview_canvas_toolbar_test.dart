@@ -161,6 +161,42 @@ void main() {
     );
   });
 
+  testWidgets('Desktop layout renders actions in grouped order', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: GraphViewCanvasToolbar(
+              controller: controller,
+              onAddState: () {},
+              onClear: () {},
+              layout: GraphViewCanvasToolbarLayout.desktop,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final buttons =
+        tester.widgetList<IconButton>(find.byType(IconButton)).toList();
+    final icons = buttons.map((button) => (button.icon as Icon).icon).toList();
+
+    expect(
+      icons,
+      equals(<IconData>[
+        Icons.add,
+        Icons.redo,
+        Icons.undo,
+        Icons.fit_screen,
+        Icons.center_focus_strong,
+        Icons.delete_outline,
+        Icons.help_outline,
+      ]),
+    );
+  });
+
   testWidgets('Mobile layout renders filled buttons with labels', (
     tester,
   ) async {
@@ -191,6 +227,49 @@ void main() {
       tester.getSize(addStateButton).height,
       greaterThanOrEqualTo(44),
     );
+  });
+
+  testWidgets('Mobile layout renders actions in grouped order', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: GraphViewCanvasToolbar(
+              controller: controller,
+              onAddState: () {},
+              onClear: () {},
+              layout: GraphViewCanvasToolbarLayout.mobile,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final labels = <String>[
+      'Add state',
+      'Redo',
+      'Undo',
+      'Fit to content',
+      'Reset view',
+      'Clear canvas',
+      'Help & Shortcuts',
+    ];
+
+    final renderedLabels = tester
+        .elementList(
+          find.descendant(
+            of: find.byType(GraphViewCanvasToolbar),
+            matching: find.byType(Text),
+          ),
+        )
+        .map((element) => (element.widget as Text).data)
+        .nonNulls
+        .where(labels.contains)
+        .toList();
+
+    expect(renderedLabels, labels);
   });
 
   testWidgets('exposes semantic labels for toolbar actions', (tester) async {

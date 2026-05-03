@@ -16,6 +16,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/algorithms/pda_simulator.dart' as pda_core;
 import '../../core/models/simulation_step.dart';
+import '../../core/models/step_explanation.dart';
 import '../../core/result.dart';
 import '../../core/services/simulation_highlight_service.dart';
 import '../providers/pda_editor_provider.dart';
@@ -292,6 +293,7 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
   Widget _buildStackPreview(BuildContext context, PDASimulationState simState) {
     final stackContents = simState.currentStackContents;
     final remainingInput = simState.currentRemainingInput ?? '';
+    final highlightedIndex = _inferHighlightedStackIndex(simState.currentStep);
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -345,6 +347,33 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
                               color: Theme.of(context).colorScheme.primary,
                             ),
                       ),
+                      if (highlightedIndex != null) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.highlight,
+                              size: 16,
+                              color: Theme.of(context).colorScheme.tertiary,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                'Highlighting stack cell ${highlightedIndex + 1} (from bottom)',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withValues(alpha: 0.7),
+                                    ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -393,6 +422,23 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
         ],
       ),
     );
+  }
+
+  int? _inferHighlightedStackIndex(SimulationStep? step) {
+    if (step == null) return null;
+    final explanation = step.explanation;
+    if (explanation == null) return null;
+
+    final highlight = explanation.highlights.firstWhere(
+      (h) => h.type == HighlightTargetType.pdaStack,
+      orElse: () => const HighlightTarget(type: HighlightTargetType.none),
+    );
+
+    final data = highlight.data;
+    if (data.isEmpty) return null;
+    final index = data['index'];
+    if (index is int) return index;
+    return null;
   }
 
   Widget _buildResultsSection(BuildContext context) {

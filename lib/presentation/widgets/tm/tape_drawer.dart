@@ -19,6 +19,12 @@ class TapeState {
   final String? lastReadSymbol;
   final String? lastWriteSymbol;
 
+  /// Optional explicit tape-cell highlights coming from a selected simulation step.
+  ///
+  /// These are indices into [cells] (not the visible window). When indices fall
+  /// outside the current tape length, they are treated as blanks.
+  final Set<int> highlightedCellIndices;
+
   const TapeState({
     required this.cells,
     required this.headPosition,
@@ -26,6 +32,7 @@ class TapeState {
     this.lastOperation,
     this.lastReadSymbol,
     this.lastWriteSymbol,
+    this.highlightedCellIndices = const <int>{},
   });
 
   /// Fita vazia/inicial
@@ -34,7 +41,8 @@ class TapeState {
         headPosition = 0,
         lastOperation = null,
         lastReadSymbol = null,
-        lastWriteSymbol = null;
+        lastWriteSymbol = null,
+        highlightedCellIndices = const <int>{};
 
   bool get isEmpty => cells.isEmpty;
 
@@ -514,6 +522,8 @@ class _TMTapePanelState extends State<TMTapePanel>
           final wasRead = isHead && widget.tapeState.wasRead;
           final wasWritten = isHead && widget.tapeState.wasWritten;
           final actualCellIndex = startIndex + index;
+          final isHighlighted = widget.tapeState.highlightedCellIndices
+              .contains(actualCellIndex);
 
           // Determine if this cell is at the edge (newly expanded)
           final isAtLeftEdge = index == 0;
@@ -526,6 +536,7 @@ class _TMTapePanelState extends State<TMTapePanel>
             isHead,
             wasRead,
             wasWritten,
+            isHighlighted,
             theme,
             true,
             isNewCell: isNewCell,
@@ -542,6 +553,7 @@ class _TMTapePanelState extends State<TMTapePanel>
     bool isHead,
     bool wasRead,
     bool wasWritten,
+    bool isHighlighted,
     ThemeData theme,
     bool isMobile, {
     bool isNewCell = false,
@@ -567,10 +579,16 @@ class _TMTapePanelState extends State<TMTapePanel>
                 ? theme.colorScheme.primaryContainer
                 : theme.colorScheme.surfaceContainerHighest,
             border: Border.all(
-              color: isHead
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.outline.withValues(alpha: 0.3),
-              width: isHead ? 2 : 1,
+              color: isHighlighted
+                  ? theme.colorScheme.tertiary
+                  : isHead
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.outline.withValues(alpha: 0.3),
+              width: isHighlighted
+                  ? 2.5
+                  : isHead
+                      ? 2
+                      : 1,
             ),
             borderRadius: BorderRadius.circular(4),
             boxShadow: isNewCell && glowIntensity > 0

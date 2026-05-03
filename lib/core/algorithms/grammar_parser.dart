@@ -9,7 +9,10 @@
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
+import '../models/derivation_tree.dart';
+import '../models/derivation_tree_node.dart';
 import '../models/grammar.dart';
+import '../models/grammar_parse_report.dart';
 import '../models/production.dart';
 import '../models/parse_table.dart';
 import '../result.dart';
@@ -19,21 +22,22 @@ import 'grammar_parser_earley.dart';
 /// Parses strings using context-free grammars
 enum ParsingStrategyHint { auto, bruteForce, cyk, ll, lr }
 
-typedef _ParsingStrategy =
-    ParseResult? Function(
-      Grammar grammar,
-      String inputString,
-      Duration timeout,
-    );
+typedef _ParsingStrategy = ParseResult? Function(
+  Grammar grammar,
+  String inputString,
+  Duration timeout,
+);
 
 class GrammarParser {
-  /// Parses a string using a grammar
+  /// Parses a string using a grammar (legacy API).
   static Result<ParseResult> parse(
     Grammar grammar,
     String inputString, {
     Duration timeout = const Duration(seconds: 5),
     ParsingStrategyHint strategyHint = ParsingStrategyHint.auto,
   }) {
+    // Keep the old behavior unchanged.
+
     // Validate input (symbols and basic invariants)
     final validation = _validateInput(grammar, inputString);
     if (!validation.isSuccess) {
@@ -49,8 +53,7 @@ class GrammarParser {
       final close = dyckDelims.item2;
 
       // Ensure grammar uses only these two terminals for safety
-      final onlyDyckTerminals =
-          grammar.terminals.length == 2 &&
+      final onlyDyckTerminals = grammar.terminals.length == 2 &&
           grammar.terminals.contains(open) &&
           grammar.terminals.contains(close);
       if (onlyDyckTerminals) {
@@ -111,6 +114,162 @@ class GrammarParser {
         executionTime: const Duration(),
       ),
     );
+  }
+
+  /// Parses a string using a grammar and returns a structured parse report.
+  static Result<GrammarParseReport> parseWithReport(
+    Grammar grammar,
+    String inputString, {
+    Duration timeout = const Duration(seconds: 5),
+    int maxTrees = 3,
+    ParsingStrategyHint strategyHint = ParsingStrategyHint.auto,
+  }) {
+    final startTime = DateTime.now();
+
+    // Validate input (symbols and basic invariants)
+    final validation = _validateInput(grammar, inputString);
+    if (!validation.isSuccess) {
+      return Failure(validation.error!);
+    }
+
+    // Dyck-1 fast path (accept/reject only; no trees).
+    final dyckDelims = _detectDyck1Delimiters(grammar);
+    if (dyckDelims != null) {
+      final open = dyckDelims.item1;
+      final close = dyckDelims.item2;
+
+      final onlyDyckTerminals = grammar.terminals.length == 2 &&
+          grammar.terminals.contains(open) &&
+          grammar.terminals.contains(close);
+
+      if (onlyDyckTerminals) {
+        final accepted = _fastDyck1Recognize(inputString, open, close);
+        final elapsed = DateTime.now().difference(startTime);
+        if (!accepted) {
+          return Success(
+            GrammarParseReport.rejected(
+              inputString: inputString,
+              farthestPosition: 0,
+              expectedSymbols: {open},
+              message: 'String "$inputString" cannot be derived from grammar',
+              executionTime: elapsed,
+            ),
+          );
+        }
+        return Success(
+          GrammarParseReport.accepted(
+            inputString: inputString,
+            executionTime: elapsed,
+          ),
+        );
+      }
+    }
+
+    if (strategyHint != ParsingStrategyHint.auto) {
+      final result = _parseString(
+        grammar,
+        inputString,
+        timeout,
+        _resolveStrategies(strategyHint),
+        strategyHint,
+      );
+      final elapsed = DateTime.now().difference(startTime);
+      if (!result.accepted) {
+        return Success(
+          GrammarParseReport.rejected(
+            inputString: inputString,
+            farthestPosition: 0,
+            message: result.errorMessage ??
+                'String "$inputString" cannot be derived from grammar',
+            executionTime: elapsed,
+          ),
+        );
+      }
+
+      final allTrees = _treesFromDerivations(
+        result.derivations,
+        inputString,
+      );
+      return Success(
+        GrammarParseReport.accepted(
+          inputString: inputString,
+          executionTime: elapsed,
+          trees: allTrees.take(maxTrees).toList(growable: false),
+          isAmbiguous: allTrees.length > maxTrees,
+        ),
+      );
+    }
+
+    // Robust acceptance via Earley.
+    final earley = EarleyRecognizer(grammar);
+    final accepted = earley.recognizes(inputString, timeout: timeout);
+    if (!accepted) {
+      return Success(
+        GrammarParseReport.rejected(
+          inputString: inputString,
+          farthestPosition: 0,
+          message: 'String "$inputString" cannot be derived from grammar',
+          executionTime: DateTime.now().difference(startTime),
+        ),
+      );
+    }
+
+    // Best-effort tree via recursive descent derivation trace (legacy format).
+    final parser = SimpleRecursiveDescentParser(grammar);
+    final rd = parser.parse(inputString, timeout: timeout);
+    if (rd.isSuccess) {
+      final result = rd.data!;
+      final allTrees = _treesFromDerivations(result.derivations, inputString);
+      return Success(
+        GrammarParseReport.accepted(
+          inputString: inputString,
+          executionTime: DateTime.now().difference(startTime),
+          trees: allTrees.take(maxTrees).toList(growable: false),
+          isAmbiguous: allTrees.length > maxTrees,
+        ),
+      );
+    }
+
+    return Success(
+      GrammarParseReport.accepted(
+        inputString: inputString,
+        executionTime: DateTime.now().difference(startTime),
+      ),
+    );
+  }
+
+  static List<DerivationTree> _treesFromDerivations(
+    List<List<String>> derivations,
+    String inputString,
+  ) {
+    final out = <DerivationTree>[];
+    for (final derivation in derivations) {
+      if (derivation.isEmpty) continue;
+      // The legacy derivation format is a flat list [LHS, ...expansion].
+      final root = DerivationTreeNode(
+        symbol: derivation.first,
+        children: derivation.length == 1
+            ? const <DerivationTreeNode>[]
+            : derivation
+                .skip(1)
+                .map(
+                  (s) => DerivationTreeNode(
+                    symbol: s,
+                    children: const <DerivationTreeNode>[],
+                    // no reliable span info from this parser
+                    lexeme: null,
+                    start: null,
+                    end: null,
+                  ),
+                )
+                .toList(growable: false),
+        lexeme: null,
+        start: null,
+        end: null,
+      );
+      out.add(DerivationTree(root: root, isShallow: true));
+    }
+    return out;
   }
 
   /// Validates the input grammar and string
@@ -851,11 +1010,9 @@ class GrammarParser {
       final alphabet = grammar.terminals.toList();
 
       // Generate all possible strings up to maxLength
-      for (
-        int length = 0;
-        length <= maxLength && generatedStrings.length < maxResults;
-        length++
-      ) {
+      for (int length = 0;
+          length <= maxLength && generatedStrings.length < maxResults;
+          length++) {
         _generateStrings(
           grammar,
           alphabet,

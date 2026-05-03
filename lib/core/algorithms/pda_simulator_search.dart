@@ -1,5 +1,70 @@
 part of 'pda_simulator.dart';
 
+StepExplanation _buildPdaStepExplanation({
+  required PDATransition transition,
+  required String consumedInput,
+  required List<String> priorStack,
+  required List<String> nextStack,
+}) {
+  final lambdaInput =
+      transition.isLambdaInput || transition.inputSymbol.isEmpty;
+  final lambdaPop = transition.isLambdaPop || transition.popSymbol.isEmpty;
+  final lambdaPush = transition.isLambdaPush || transition.pushSymbol.isEmpty;
+
+  final readSymbol = lambdaInput ? 'ε' : consumedInput;
+  final popSymbol = lambdaPop ? 'ε' : transition.popSymbol;
+  final pushSymbol = lambdaPush ? 'ε' : transition.pushSymbol;
+
+  final beforeTop = priorStack.isEmpty ? '∅' : priorStack.last;
+  final afterTop = nextStack.isEmpty ? '∅' : nextStack.last;
+
+  final bullets = <String>[
+    'Read input: $readSymbol',
+    'Stack action: pop $popSymbol, push $pushSymbol',
+    'Top of stack before: $beforeTop → after: $afterTop',
+  ];
+
+  if (!lambdaPop) {
+    bullets.add(
+      'Pop is allowed because the top of stack matches "${transition.popSymbol}".',
+    );
+  } else {
+    bullets.add('No stack symbol was required (ε-pop).');
+  }
+
+  if (!lambdaPush && transition.pushSymbol.isNotEmpty) {
+    bullets.add('Pushed "${transition.pushSymbol}" onto the stack.');
+  } else {
+    bullets.add('No symbols were pushed (ε-push).');
+  }
+
+  if (lambdaInput) {
+    bullets.add(
+      'This is an ε-move: it changes the stack/state without consuming input.',
+    );
+  }
+
+  return StepExplanation(
+    title: 'Applied PDA transition',
+    bullets: bullets,
+    categories: const [
+      ExplanationCategory.info,
+      ExplanationCategory.stackOperation,
+    ],
+    highlights: [
+      HighlightTarget(
+        type: HighlightTargetType.state,
+        id: transition.toState.id,
+      ),
+      if (nextStack.isNotEmpty)
+        HighlightTarget(
+          type: HighlightTargetType.pdaStack,
+          data: {'index': nextStack.length - 1},
+        ),
+    ],
+  );
+}
+
 /// Applies a PDA transition's stack operations to a copy of [stack].
 ///
 /// Returns the updated stack, or `null` if the pop operation cannot be applied.
@@ -182,6 +247,12 @@ PDASimulationResult _simulateSearch(
         usedTransition: _transitionLabel(t, 'ε'),
         stepNumber: nextStepNumber,
         consumedInput: '',
+        explanation: _buildPdaStepExplanation(
+          transition: t,
+          consumedInput: '',
+          priorStack: stack,
+          nextStack: newStack,
+        ),
       );
       enqueue(t.toState, remaining, newStack, step);
     }
@@ -203,6 +274,12 @@ PDASimulationResult _simulateSearch(
           usedTransition: _transitionLabel(t, a),
           stepNumber: nextStepNumber,
           consumedInput: a,
+          explanation: _buildPdaStepExplanation(
+            transition: t,
+            consumedInput: a,
+            priorStack: stack,
+            nextStack: newStack,
+          ),
         );
         enqueue(t.toState, newRemaining, newStack, step);
       }

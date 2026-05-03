@@ -109,6 +109,7 @@ extension _JFlutterAdaptiveEdgeRendererCache on JFlutterAdaptiveEdgeRenderer {
   void _clearLabelPainterCache() {
     for (final painter in _labelPainterCache.values) {
       _activeLabelPainters.remove(painter);
+      _usedLabelPaintersInRenderCycle.remove(painter);
       _transientLabelPainters.remove(painter);
       painter.dispose();
     }
@@ -116,7 +117,7 @@ extension _JFlutterAdaptiveEdgeRendererCache on JFlutterAdaptiveEdgeRenderer {
   }
 
   _DirectedEdgePair _pairForEdge(Edge edge) => _DirectedEdgePair(
-    sourceId: _nodeId(edge.source),
-    destinationId: _nodeId(edge.destination),
-  );
+        sourceId: _nodeId(edge.source),
+        destinationId: _nodeId(edge.destination),
+      );
 }

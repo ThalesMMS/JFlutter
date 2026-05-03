@@ -7,6 +7,8 @@
 //  Thales Matheus Mendonça Santos - October 2025
 //
 
+import 'step_explanation.dart';
+
 /// Single step in an automaton simulation
 class SimulationStep {
   /// Current state in this step
@@ -45,6 +47,9 @@ class SimulationStep {
   /// Head position on tape (for TM)
   final int? headPosition;
 
+  /// Optional explanation payload for this step.
+  final StepExplanation? explanation;
+
   const SimulationStep({
     required this.currentState,
     required this.remainingInput,
@@ -58,6 +63,7 @@ class SimulationStep {
     this.nextState,
     this.consumedInput = '',
     this.headPosition,
+    this.explanation,
   });
 
   /// Creates a copy of this simulation step with updated properties
@@ -74,6 +80,7 @@ class SimulationStep {
     String? nextState,
     String? consumedInput,
     int? headPosition,
+    StepExplanation? explanation,
   }) {
     return SimulationStep(
       currentState: currentState ?? this.currentState,
@@ -88,6 +95,7 @@ class SimulationStep {
       nextState: nextState ?? this.nextState,
       consumedInput: consumedInput ?? this.consumedInput,
       headPosition: headPosition ?? this.headPosition,
+      explanation: explanation ?? this.explanation,
     );
   }
 
@@ -106,6 +114,7 @@ class SimulationStep {
       'nextState': nextState,
       'consumedInput': consumedInput,
       'headPosition': headPosition,
+      'explanation': explanation?.toJson(),
     };
   }
 
@@ -124,6 +133,11 @@ class SimulationStep {
       nextState: json['nextState'] as String?,
       consumedInput: json['consumedInput'] as String? ?? '',
       headPosition: json['headPosition'] as int?,
+      explanation: json['explanation'] is Map
+          ? StepExplanation.fromJson(
+              Map<String, dynamic>.from(json['explanation'] as Map),
+            )
+          : null,
     );
   }
 
@@ -142,7 +156,8 @@ class SimulationStep {
         other.inputSymbol == inputSymbol &&
         other.nextState == nextState &&
         other.consumedInput == consumedInput &&
-        other.headPosition == headPosition;
+        other.headPosition == headPosition &&
+        other.explanation == explanation;
   }
 
   @override
@@ -160,6 +175,7 @@ class SimulationStep {
       nextState,
       consumedInput,
       headPosition,
+      explanation,
     );
   }
 
@@ -253,6 +269,7 @@ class SimulationStep {
     String? usedTransition,
     required int stepNumber,
     String consumedInput = '',
+    StepExplanation? explanation,
   }) {
     return SimulationStep(
       currentState: currentState,
@@ -260,6 +277,7 @@ class SimulationStep {
       usedTransition: usedTransition,
       stepNumber: stepNumber,
       consumedInput: consumedInput,
+      explanation: explanation,
     );
   }
 
@@ -271,6 +289,7 @@ class SimulationStep {
     String? usedTransition,
     required int stepNumber,
     String consumedInput = '',
+    StepExplanation? explanation,
   }) {
     return SimulationStep(
       currentState: currentState,
@@ -279,6 +298,7 @@ class SimulationStep {
       usedTransition: usedTransition,
       stepNumber: stepNumber,
       consumedInput: consumedInput,
+      explanation: explanation,
     );
   }
 
@@ -291,6 +311,7 @@ class SimulationStep {
     required int stepNumber,
     int? headPosition,
     String consumedInput = '',
+    StepExplanation? explanation,
   }) {
     return SimulationStep(
       currentState: currentState,
@@ -300,6 +321,7 @@ class SimulationStep {
       stepNumber: stepNumber,
       consumedInput: consumedInput,
       headPosition: headPosition,
+      explanation: explanation,
     );
   }
 

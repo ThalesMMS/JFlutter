@@ -14,6 +14,7 @@ import 'package:jflutter/presentation/pages/pda_page.dart';
 import 'package:jflutter/presentation/widgets/tablet_layout_container.dart';
 import 'package:jflutter/presentation/providers/grammar_provider.dart';
 import 'package:jflutter/presentation/pages/pumping_lemma_page.dart';
+import 'package:jflutter/l10n/app_localizations.dart';
 
 void main() {
   group('Tablet Layout Tests', () {
@@ -53,7 +54,13 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
 
       await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: RegexPage())),
+        const ProviderScope(
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: RegexPage(),
+          ),
+        ),
       );
       await tester.pumpAndSettle();
 

@@ -11,10 +11,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/entities/automaton_entity.dart';
+import '../../core/models/conversion_step_history.dart';
 import '../../core/models/fsa.dart';
+import '../../core/models/simulation_highlight.dart';
+import '../../core/models/validation_diagnostic.dart';
 import '../providers/algorithm_provider.dart';
 import '../providers/algorithm_step_provider.dart';
 import '../providers/automaton_algorithm_provider.dart';
+import '../providers/conversion_history_provider.dart';
 import '../providers/automaton_layout_provider.dart';
 import '../providers/automaton_simulation_provider.dart';
 import '../providers/automaton_state_provider.dart';
@@ -38,6 +42,11 @@ import '../../features/canvas/graphview/graphview_canvas_controller.dart';
 import '../../features/canvas/graphview/graphview_highlight_channel.dart';
 import '../../features/canvas/graphview/graphview_algorithm_step_highlight_channel.dart';
 import '../widgets/tablet_layout_container.dart';
+import '../../core/validators/input_validators.dart';
+import '../../core/validators/validation_issue_to_diagnostic.dart';
+import '../widgets/validation_diagnostic_card.dart';
+import '../widgets/before_after_comparison.dart';
+import '../../core/models/step_explanation.dart';
 
 part 'fsa_page/fsa_page_behavior.dart';
 part 'fsa_page/fsa_page_quick_actions.dart';
@@ -72,6 +81,10 @@ class _FSAPageState extends ConsumerState<FSAPage>
   late final AlgorithmStepHighlightService _algorithmStepHighlightService;
   late final AutomatonCanvasToolController _toolController;
   bool _stepByStepMode = false;
+  SimulationHighlight? _lastValidationHighlight;
+  String? _lastValidationHighlightKey;
+  String? _cachedValidationAutomatonKey;
+  List<ValidationDiagnostic> _cachedValidationDiagnostics = const [];
 
   @override
   void initState() {

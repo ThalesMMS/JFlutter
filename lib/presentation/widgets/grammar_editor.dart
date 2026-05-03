@@ -37,6 +37,9 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
   String? _selectedProductionId;
   bool _isEditing = false;
 
+  String? _leftSideErrorText;
+  String? _rightSideErrorText;
+
   @override
   void initState() {
     super.initState();
@@ -58,10 +61,11 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
     required TextEditingController controller,
     required InputDecoration decoration,
     ValueChanged<String>? onChanged,
+    String? errorText,
   }) {
     return TextField(
       controller: controller,
-      decoration: decoration,
+      decoration: decoration.copyWith(errorText: errorText),
       autocorrect: false,
       enableSuggestions: false,
       keyboardType: TextInputType.visiblePassword,
@@ -73,20 +77,22 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
   Widget build(BuildContext context) {
     final grammarState = ref.watch(grammarProvider);
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildHeader(context),
-            const SizedBox(height: 16),
-            _buildGrammarInfo(context),
-            const SizedBox(height: 16),
-            _buildProductionEditor(context),
-            const SizedBox(height: 16),
-            _buildProductionsList(context, grammarState.productions),
-          ],
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildHeader(context),
+              const SizedBox(height: 16),
+              _buildGrammarInfo(context),
+              const SizedBox(height: 16),
+              _buildProductionEditor(context),
+              const SizedBox(height: 16),
+              _buildProductionsList(context, grammarState.productions),
+            ],
+          ),
         ),
       ),
     );
@@ -265,11 +271,21 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
                   children: [
                     _buildFormalLanguageTextField(
                       controller: _leftSideController,
+                      onChanged: (_) => _validateProductionEditorInputs(),
+                      errorText: _leftSideErrorText,
                       decoration: const InputDecoration(
                         labelText: 'Left Side (Variable)',
                         hintText: 'e.g., S, A, B',
                         border: OutlineInputBorder(),
                       ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Enter exactly one non-terminal (e.g., S).',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
                     ),
                     const SizedBox(height: 8),
                     Icon(
@@ -279,11 +295,46 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
                     const SizedBox(height: 8),
                     _buildFormalLanguageTextField(
                       controller: _rightSideController,
-                      decoration: const InputDecoration(
+                      onChanged: (_) => _validateProductionEditorInputs(),
+                      errorText: _rightSideErrorText,
+                      decoration: InputDecoration(
                         labelText: 'Right Side (Production)',
                         hintText: 'e.g., aA, bB, ε',
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
+                        suffixIcon: _LambdaShortcutButton(
+                          onInsert: () => _insertIntoController(
+                            controller: _rightSideController,
+                            symbol: 'λ',
+                          ),
+                        ),
                       ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        TextButton(
+                          onPressed: () => _insertIntoController(
+                            controller: _rightSideController,
+                            symbol: 'λ',
+                          ),
+                          child: const Text('Insert λ'),
+                        ),
+                        TextButton(
+                          onPressed: () => _insertIntoController(
+                            controller: _rightSideController,
+                            symbol: 'ε',
+                          ),
+                          child: const Text('Insert ε'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Use λ/ε for empty string. Right side can be multiple symbols (e.g., aA).',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
                     ),
                   ],
                 );
@@ -292,13 +343,30 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
               return Row(
                 children: [
                   Expanded(
-                    child: _buildFormalLanguageTextField(
-                      controller: _leftSideController,
-                      decoration: const InputDecoration(
-                        labelText: 'Left Side (Variable)',
-                        hintText: 'e.g., S, A, B',
-                        border: OutlineInputBorder(),
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildFormalLanguageTextField(
+                          controller: _leftSideController,
+                          onChanged: (_) => _validateProductionEditorInputs(),
+                          errorText: _leftSideErrorText,
+                          decoration: const InputDecoration(
+                            labelText: 'Left Side (Variable)',
+                            hintText: 'e.g., S, A, B',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Enter exactly one non-terminal (e.g., S).',
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -309,13 +377,55 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
                   const SizedBox(width: 8),
                   Expanded(
                     flex: 2,
-                    child: _buildFormalLanguageTextField(
-                      controller: _rightSideController,
-                      decoration: const InputDecoration(
-                        labelText: 'Right Side (Production)',
-                        hintText: 'e.g., aA, bB, ε',
-                        border: OutlineInputBorder(),
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildFormalLanguageTextField(
+                          controller: _rightSideController,
+                          onChanged: (_) => _validateProductionEditorInputs(),
+                          errorText: _rightSideErrorText,
+                          decoration: InputDecoration(
+                            labelText: 'Right Side (Production)',
+                            hintText: 'e.g., aA, bB, ε',
+                            border: const OutlineInputBorder(),
+                            suffixIcon: _LambdaShortcutButton(
+                              onInsert: () => _insertIntoController(
+                                controller: _rightSideController,
+                                symbol: 'λ',
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            TextButton(
+                              onPressed: () => _insertIntoController(
+                                controller: _rightSideController,
+                                symbol: 'λ',
+                              ),
+                              child: const Text('Insert λ'),
+                            ),
+                            TextButton(
+                              onPressed: () => _insertIntoController(
+                                controller: _rightSideController,
+                                symbol: 'ε',
+                              ),
+                              child: const Text('Insert ε'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Use λ/ε for empty string. Right side can be multiple symbols (e.g., aA).',
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -529,24 +639,14 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
   }
 
   void _addProduction() {
+    if (!_validateProductionEditorInputs()) {
+      return;
+    }
+
     final leftSide = _leftSideController.text.trim();
     final rightSide = _rightSideController.text.trim();
 
-    if (leftSide.isEmpty || rightSide.isEmpty) {
-      _showError('Both left side and right side must be specified');
-      return;
-    }
-
     final parsedLeft = _parseLeftSide(leftSide);
-    if (parsedLeft.isEmpty) {
-      _showError('Left side must contain a non-terminal symbol');
-      return;
-    }
-    if (parsedLeft.length != 1) {
-      _showError('Left side must contain exactly one non-terminal symbol');
-      return;
-    }
-
     final parsedRight = _parseRightSide(rightSide);
     final isLambda =
         parsedRight.length == 1 && _isLambdaSymbol(parsedRight.first);
@@ -557,30 +657,21 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
           rightSide: normalizedRight,
           isLambda: isLambda,
         );
+
     _clearFields();
   }
 
   void _updateProduction() {
     if (_selectedProductionId == null) return;
 
+    if (!_validateProductionEditorInputs()) {
+      return;
+    }
+
     final leftSide = _leftSideController.text.trim();
     final rightSide = _rightSideController.text.trim();
 
-    if (leftSide.isEmpty || rightSide.isEmpty) {
-      _showError('Both left side and right side must be specified');
-      return;
-    }
-
     final parsedLeft = _parseLeftSide(leftSide);
-    if (parsedLeft.isEmpty) {
-      _showError('Left side must contain a non-terminal symbol');
-      return;
-    }
-    if (parsedLeft.length != 1) {
-      _showError('Left side must contain exactly one non-terminal symbol');
-      return;
-    }
-
     final parsedRight = _parseRightSide(rightSide);
     final isLambda =
         parsedRight.length == 1 && _isLambdaSymbol(parsedRight.first);
@@ -603,6 +694,8 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
     setState(() {
       _selectedProductionId = production.id;
       _isEditing = true;
+      _leftSideErrorText = null;
+      _rightSideErrorText = null;
       _leftSideController.text = _formatSymbols(production.leftSide);
       _rightSideController.text = _formatRightSide(production);
     });
@@ -629,31 +722,155 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
     setState(() {
       _isEditing = false;
       _selectedProductionId = null;
+      _leftSideErrorText = null;
+      _rightSideErrorText = null;
     });
     _clearFields();
   }
 
-  void _clearGrammar() {
+  Future<void> _clearGrammar() async {
+    final grammarState = ref.read(grammarProvider);
+    if (grammarState.productions.isEmpty) {
+      return;
+    }
+
+    final previousProductions = List<Production>.from(grammarState.productions);
+
+    final shouldClear = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Clear all productions?'),
+          content: const Text(
+            'This will remove every production rule from the current grammar.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Clear'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldClear != true) {
+      return;
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    final messenger = ScaffoldMessenger.of(context);
     ref.read(grammarProvider.notifier).clearProductions();
     setState(() {
       _selectedProductionId = null;
       _isEditing = false;
     });
     _clearFields();
+
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: const Text('Productions cleared.'),
+          action: SnackBarAction(
+            label: 'Undo',
+            onPressed: () {
+              ref
+                  .read(grammarProvider.notifier)
+                  .setProductions(previousProductions);
+            },
+          ),
+        ),
+      );
   }
 
   void _clearFields() {
     _leftSideController.clear();
     _rightSideController.clear();
+    setState(() {
+      _leftSideErrorText = null;
+      _rightSideErrorText = null;
+    });
   }
 
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Theme.of(context).colorScheme.error,
-      ),
+  void _insertIntoController({
+    required TextEditingController controller,
+    required String symbol,
+  }) {
+    final value = controller.value;
+    final text = value.text;
+    final selection = value.selection;
+
+    final start = selection.isValid ? selection.start : text.length;
+    final end = selection.isValid ? selection.end : text.length;
+
+    final safeStart = start.clamp(0, text.length);
+    final safeEnd = end.clamp(0, text.length);
+
+    final newText = text.replaceRange(safeStart, safeEnd, symbol);
+    final newOffset = safeStart + symbol.length;
+
+    controller.value = value.copyWith(
+      text: newText,
+      selection: TextSelection.collapsed(offset: newOffset),
+      composing: TextRange.empty,
     );
+
+    _validateProductionEditorInputs();
+  }
+
+
+  bool _validateProductionEditorInputs() {
+    final leftSide = _leftSideController.text.trim();
+    final rightSide = _rightSideController.text.trim();
+
+    String? leftError;
+    String? rightError;
+
+    if (leftSide.isEmpty || rightSide.isEmpty) {
+      leftError = leftSide.isEmpty
+          ? 'Both left side and right side must be specified'
+          : null;
+      rightError = rightSide.isEmpty
+          ? 'Both left side and right side must be specified'
+          : null;
+    } else {
+      final parsedLeft = _parseLeftSide(leftSide);
+      if (parsedLeft.isEmpty) {
+        leftError = 'Left side must contain a non-terminal symbol';
+      } else if (parsedLeft.length != 1) {
+        leftError = 'Left side must contain exactly one non-terminal symbol';
+      }
+
+      final parsedRight = _parseRightSide(rightSide);
+      if (parsedRight.isEmpty) {
+        rightError = 'Right side must contain at least one symbol (or λ/ε)';
+      } else {
+        final lambdaCount = parsedRight.where(_isLambdaSymbol).length;
+        if (lambdaCount > 1) {
+          rightError = 'Right side can contain only one λ/ε symbol';
+        } else if (lambdaCount == 1 && parsedRight.length > 1) {
+          rightError = 'λ/ε must be the only symbol on the right side';
+        }
+      }
+    }
+
+    final isValid = leftError == null && rightError == null;
+    if (_leftSideErrorText != leftError || _rightSideErrorText != rightError) {
+      setState(() {
+        _leftSideErrorText = leftError;
+        _rightSideErrorText = rightError;
+      });
+    }
+
+    return isValid;
   }
 
   List<String> _parseLeftSide(String input) {
@@ -699,5 +916,27 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
       return 'ε';
     }
     return _formatSymbols(production.rightSide);
+  }
+}
+
+class _LambdaShortcutButton extends StatelessWidget {
+  const _LambdaShortcutButton({required this.onInsert});
+
+  final VoidCallback onInsert;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: 'Insert λ',
+      onPressed: onInsert,
+      icon: const Text(
+        'λ',
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+      ),
+    );
+
+    // Note: The tooltip provides an accessibility label for screen readers and
+    // hover hints on desktop/web. The icon uses a Text widget so the symbol is
+    // always rendered consistently across platforms.
   }
 }

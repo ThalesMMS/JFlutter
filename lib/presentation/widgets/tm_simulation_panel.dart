@@ -18,6 +18,7 @@ import '../../core/algorithms/tm_simulator.dart';
 import '../../core/models/simulation_step.dart';
 import '../../core/services/simulation_highlight_service.dart';
 import '../providers/tm_editor_provider.dart';
+import '../../core/models/step_explanation.dart';
 import 'tm/tape_drawer.dart';
 import 'trace_viewers/tm_trace_viewer.dart';
 
@@ -437,6 +438,13 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel>
     final tm = ref.read(tmEditorProvider).tm;
     final blankSymbol = tm?.blankSymbol ?? '□';
 
+    final highlightedCells = <int>{
+      if (step.explanation != null)
+        for (final highlight in step.explanation!.highlights)
+          if (highlight.type == HighlightTargetType.tapeCell)
+            _highlightedCellIndex(highlight.data['index']) ?? -1,
+    }..removeWhere((index) => index < 0);
+
     // Parse tape contents
     final cells =
         step.tapeContents.isEmpty ? <String>[] : step.tapeContents.split('');
@@ -474,7 +482,18 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel>
       lastOperation: lastOp,
       lastReadSymbol: lastRead,
       lastWriteSymbol: lastWrite,
+      highlightedCellIndices: highlightedCells,
     );
+  }
+
+  int? _highlightedCellIndex(Object? value) {
+    if (value is int) return value;
+    if (value is double &&
+        value.isFinite &&
+        value == value.truncateToDouble()) {
+      return value.toInt();
+    }
+    return null;
   }
 
   Widget _buildTapePanel(BuildContext context) {

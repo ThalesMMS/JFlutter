@@ -13,6 +13,7 @@
 import '../models/fsa_transition.dart';
 import '../models/simulation_step.dart';
 import '../models/state.dart';
+import '../models/step_explanation.dart';
 import '../models/tm.dart';
 import '../models/tm_analysis.dart';
 import '../models/tm_transition.dart';
@@ -20,6 +21,63 @@ import '../result.dart';
 
 /// Simulates Turing Machines (TM) with input strings
 class TMSimulator {
+  static StepExplanation _buildTmStepExplanation({
+    required String fromStateId,
+    required String toStateId,
+    required String readSymbol,
+    required String writeSymbol,
+    required TapeDirection moveDirection,
+    required int headBefore,
+    required int headAfter,
+  }) {
+    final bullets = <String>[
+      'Read "$readSymbol" at tape position $headBefore in state $fromStateId.',
+      'Applied rule: $fromStateId,$readSymbol → $toStateId,$writeSymbol,${moveDirection.symbol}.',
+      'Wrote "$writeSymbol" at position $headBefore.',
+    ];
+
+    final moveText = switch (moveDirection) {
+      TapeDirection.left => 'Moved head left to position $headAfter.',
+      TapeDirection.right => 'Moved head right to position $headAfter.',
+      TapeDirection.stay => 'Head stayed at position $headAfter.',
+    };
+    bullets.add(moveText);
+
+    final highlights = <HighlightTarget>[
+      HighlightTarget(
+        type: HighlightTargetType.state,
+        id: toStateId,
+      ),
+      HighlightTarget(
+        type: HighlightTargetType.tapeCell,
+        data: {
+          'index': headBefore,
+          'read': readSymbol,
+          'write': writeSymbol,
+        },
+      ),
+    ];
+
+    if (headAfter != headBefore) {
+      highlights.add(
+        HighlightTarget(
+          type: HighlightTargetType.tapeCell,
+          data: {
+            'index': headAfter,
+          },
+        ),
+      );
+    }
+
+    return StepExplanation(
+      title: 'Turing machine transition',
+      bullets: bullets,
+      categories: const [ExplanationCategory.tapeOperation],
+      highlights: highlights,
+      suggestedFixes: const [],
+    );
+  }
+
   /// Deterministic simulation (DTM) stepwise semantics similar às referências.
   /// Always uses the deterministic path — errors on nondeterministic conflicts.
   static Result<TMSimulationResult> simulateDTM(
@@ -169,13 +227,21 @@ class TMSimulator {
                   currentState: tr.toState.id,
                   remainingInput: '',
                   tapeContents: newTape.join(''),
-                  usedTransition:
-                      '${state.id},$read → '
+                  usedTransition: '${state.id},$read → '
                       '${tr.toState.id},${tr.writeSymbol},${tr.moveDirection.symbol}',
                   stepNumber:
                       (steps.isNotEmpty ? steps.last.stepNumber : 0) + 1,
                   headPosition: newHead,
                   consumedInput: read,
+                  explanation: _buildTmStepExplanation(
+                    fromStateId: state.id,
+                    toStateId: tr.toState.id,
+                    readSymbol: read,
+                    writeSymbol: tr.writeSymbol,
+                    moveDirection: tr.moveDirection,
+                    headBefore: head,
+                    headAfter: newHead,
+                  ),
                 )
               : null;
           final nextSteps = nextStep == null ? steps : [...steps, nextStep];
@@ -326,9 +392,8 @@ class TMSimulator {
       }
 
       // Get current tape symbol
-      final currentSymbol = headPosition < tape.length
-          ? tape[headPosition]
-          : tm.blankSymbol;
+      final currentSymbol =
+          headPosition < tape.length ? tape[headPosition] : tm.blankSymbol;
 
       // Find transitions using the same method as NTM for consistency
       final transitions = tm.getTransitionsFromStateOnSymbol(
@@ -351,6 +416,8 @@ class TMSimulator {
         );
       }
       final transition = transitions.first;
+
+      final headBefore = headPosition;
 
       // Write to tape
       if (headPosition < tape.length) {
@@ -382,11 +449,11 @@ class TMSimulator {
       // Move to next state BEFORE recording the step (Bug 2 fix)
       final previousStateId = currentState.id;
       currentState = transition.toState;
+      final headAfter = headPosition;
 
       // Add step
       if (stepByStep) {
-        final transitionRule =
-            '$previousStateId,$currentSymbol → '
+        final transitionRule = '$previousStateId,$currentSymbol → '
             '${transition.toState.id},${transition.writeSymbol},'
             '${transition.moveDirection.symbol}';
         steps.add(
@@ -398,6 +465,15 @@ class TMSimulator {
             stepNumber: stepNumber,
             headPosition: headPosition,
             consumedInput: currentSymbol,
+            explanation: _buildTmStepExplanation(
+              fromStateId: previousStateId,
+              toStateId: currentState.id,
+              readSymbol: currentSymbol,
+              writeSymbol: transition.writeSymbol,
+              moveDirection: transition.moveDirection,
+              headBefore: headBefore,
+              headAfter: headAfter,
+            ),
           ),
         );
       }
@@ -470,11 +546,9 @@ class TMSimulator {
       final alphabet = tm.alphabet.toList();
 
       // Generate all possible strings up to maxLength
-      for (
-        int length = 0;
-        length <= maxLength && acceptedStrings.length < maxResults;
-        length++
-      ) {
+      for (int length = 0;
+          length <= maxLength && acceptedStrings.length < maxResults;
+          length++) {
         _generateStrings(tm, alphabet, '', length, acceptedStrings, maxResults);
       }
 
@@ -526,11 +600,9 @@ class TMSimulator {
       final alphabet = tm.alphabet.toList();
 
       // Generate all possible strings up to maxLength
-      for (
-        int length = 0;
-        length <= maxLength && rejectedStrings.length < maxResults;
-        length++
-      ) {
+      for (int length = 0;
+          length <= maxLength && rejectedStrings.length < maxResults;
+          length++) {
         _generateRejectedStrings(
           tm,
           alphabet,

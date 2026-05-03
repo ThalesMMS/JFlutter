@@ -218,24 +218,43 @@ class AdaptiveEdgeRenderer extends EdgeRenderer {
 
   @override
   Path routeEdgePath(Offset sourcePoint, Offset destinationPoint, Edge edge) {
-    switch (config.routingMode) {
-      case RoutingMode.direct:
-        return _buildDirectPath(sourcePoint, destinationPoint);
+    // Routing must never crash paint. If a routing implementation throws for a
+    // particular edge geometry, degrade gracefully to a direct line.
+    try {
+      switch (config.routingMode) {
+        case RoutingMode.direct:
+          return _buildDirectPath(sourcePoint, destinationPoint);
 
-      case RoutingMode.orthogonal:
-        return _buildOrthogonalPath(sourcePoint, destinationPoint);
+        case RoutingMode.orthogonal:
+          return _buildOrthogonalPath(sourcePoint, destinationPoint);
 
-      case RoutingMode.bezier:
-        return _buildBezierPath(sourcePoint, destinationPoint, edge);
+        case RoutingMode.bezier:
+          return _buildBezierPath(sourcePoint, destinationPoint, edge);
 
-      case RoutingMode.bundling:
-        if (!_warnedBundlingFallback) {
-          debugPrint(
-            'RoutingMode.bundling is not implemented; falling back to _buildBezierPath.',
-          );
-          _warnedBundlingFallback = true;
-        }
-        return _buildBezierPath(sourcePoint, destinationPoint, edge);
+        case RoutingMode.bundling:
+          // Bundling can be expensive and is not currently implemented in this fork.
+          // It previously fell back to bezier which can be visually misleading (it
+          // suggests an intentional curved route). For correctness and predictable
+          // behavior, we degrade to a direct line.
+          if (!_warnedBundlingFallback) {
+            assert(() {
+              debugPrint(
+                'RoutingMode.bundling is not implemented; falling back to RoutingMode.direct.',
+              );
+              return true;
+            }());
+            _warnedBundlingFallback = true;
+          }
+          return _buildDirectPath(sourcePoint, destinationPoint);
+      }
+    } catch (e, st) {
+      assert(() {
+        debugPrint(
+          'AdaptiveEdgeRenderer: routing failed for ${config.routingMode} (falling back to direct). Error: $e\n$st',
+        );
+        return true;
+      }());
+      return _buildDirectPath(sourcePoint, destinationPoint);
     }
   }
 

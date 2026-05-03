@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:jflutter/core/models/production.dart';
 import 'package:jflutter/presentation/providers/grammar_provider.dart';
 import 'package:jflutter/presentation/widgets/grammar_editor.dart';
 
@@ -25,6 +26,7 @@ class _RecordingGrammarProvider extends GrammarProvider {
   final List<Map<String, Object?>> updateProductionCalls = [];
   final List<String> deleteProductionCalls = [];
   int clearProductionsCalls = 0;
+  int setProductionsCalls = 0;
   int updateNameCalls = 0;
   int updateStartSymbolCalls = 0;
   String? lastNameValue;
@@ -82,6 +84,12 @@ class _RecordingGrammarProvider extends GrammarProvider {
   }
 
   @override
+  void setProductions(List<Production> productions) {
+    setProductionsCalls++;
+    super.setProductions(productions);
+  }
+
+  @override
   void updateName(String value) {
     updateNameCalls++;
     lastNameValue = value;
@@ -136,6 +144,17 @@ void main() {
       expect(find.text('Grammar Information'), findsOneWidget);
       expect(find.text('Add Production Rule'), findsOneWidget);
       expect(find.text('Production Rules (0)'), findsOneWidget);
+
+      expect(
+        find.text('Enter exactly one non-terminal (e.g., S).'),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          'Use λ/ε for empty string. Right side can be multiple symbols (e.g., aA).',
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('displays empty state when no productions exist', (
@@ -219,6 +238,64 @@ void main() {
   });
 
   group('GrammarEditor production management', () {
+    testWidgets('helper text is visible by default', (tester) async {
+      final provider = _RecordingGrammarProvider();
+      await pumpEditor(tester, provider);
+
+      expect(
+        find.text('Enter exactly one non-terminal (e.g., S).'),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          'Use λ/ε for empty string. Right side can be multiple symbols (e.g., aA).',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('lambda shortcut inserts symbol into right side field', (
+      tester,
+    ) async {
+      final provider = _RecordingGrammarProvider();
+      await pumpEditor(tester, provider);
+
+      final rightSideField = find.widgetWithText(TextField, 'e.g., aA, bB, ε');
+      await tester.tap(rightSideField);
+      await tester.pump();
+
+      await tester.tap(find.text('Insert λ'));
+      await tester.pump();
+
+      final rightSideTextField = tester.widget<TextField>(rightSideField);
+      expect(rightSideTextField.controller?.text, equals('λ'));
+    });
+
+    testWidgets('can add a production after inserting λ shortcut', (
+      tester,
+    ) async {
+      final provider = _RecordingGrammarProvider();
+      await pumpEditor(tester, provider);
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'e.g., S, A, B'),
+        'S',
+      );
+      await tester.tap(find.text('Insert λ'));
+      await tester.pump();
+
+      await tester.tap(_findButtonWithText('Add'));
+      await tester.pumpAndSettle();
+
+      expect(provider.addProductionCalls, hasLength(1));
+      expect(provider.addProductionCalls.single['leftSide'], equals(['S']));
+      expect(provider.addProductionCalls.single['rightSide'], equals(<String>[]));
+      expect(provider.addProductionCalls.single['isLambda'], equals(true));
+
+      // Lambda productions are formatted as epsilon in the productions list.
+      expect(find.text('S → ε'), findsOneWidget);
+    });
+
     testWidgets('adds a simple production when fields are filled', (
       tester,
     ) async {
@@ -267,7 +344,66 @@ void main() {
       expect(call['isLambda'], equals(true));
     });
 
-    testWidgets('shows error when adding production with empty left side', (
+    testWidgets('shows specific error for repeated lambda symbols', (
+      tester,
+    ) async {
+      final provider = _RecordingGrammarProvider();
+      await pumpEditor(tester, provider);
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'e.g., S, A, B'),
+        'S',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextField, 'e.g., aA, bB, ε'),
+        'λε',
+      );
+      await tester.pump();
+
+      await tester.tap(_findButtonWithText('Add'));
+      await tester.pumpAndSettle();
+
+      expect(provider.addProductionCalls, isEmpty);
+      expect(
+        find.text('Right side can contain only one λ/ε symbol'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('λ/ε must be the only symbol on the right side'),
+        findsNothing,
+      );
+    });
+
+    testWidgets('shows specific error when lambda is mixed with other symbols',
+        (
+      tester,
+    ) async {
+      final provider = _RecordingGrammarProvider();
+      await pumpEditor(tester, provider);
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'e.g., S, A, B'),
+        'S',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextField, 'e.g., aA, bB, ε'),
+        'λA',
+      );
+      await tester.pump();
+
+      await tester.tap(_findButtonWithText('Add'));
+      await tester.pumpAndSettle();
+
+      expect(provider.addProductionCalls, isEmpty);
+      expect(
+        find.text('λ/ε must be the only symbol on the right side'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets(
+        'shows error when adding production with empty left side (helper text stays visible)',
+        (
       tester,
     ) async {
       final provider = _RecordingGrammarProvider();
@@ -284,6 +420,16 @@ void main() {
       expect(provider.addProductionCalls, hasLength(0));
       expect(
         find.text('Both left side and right side must be specified'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Enter exactly one non-terminal (e.g., S).'),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          'Use λ/ε for empty string. Right side can be multiple symbols (e.g., aA).',
+        ),
         findsOneWidget,
       );
     });
@@ -649,9 +795,50 @@ void main() {
       await tester.tap(clearButton);
       await tester.pumpAndSettle();
 
+      // Confirmation dialog.
+      await tester.tap(find.widgetWithText(FilledButton, 'Clear'));
+      await tester.pumpAndSettle();
+
       expect(provider.clearProductionsCalls, equals(1));
       expect(find.text('Production Rules (0)'), findsOneWidget);
       expect(find.text('No production rules yet'), findsOneWidget);
+      expect(find.text('Clear now'), findsNothing);
+      expect(find.widgetWithText(TextButton, 'Undo'), findsOneWidget);
+    });
+
+    testWidgets('undo restores productions after clearing', (tester) async {
+      final provider = _RecordingGrammarProvider();
+      await pumpEditor(tester, provider);
+
+      provider.addProduction(
+        leftSide: ['S'],
+        rightSide: ['a', 'A'],
+        isLambda: false,
+      );
+      provider.addProduction(
+        leftSide: ['A'],
+        rightSide: ['b'],
+        isLambda: false,
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Production Rules (2)'), findsOneWidget);
+
+      final clearButton = _findButtonWithText('Clear');
+      await tester.tap(clearButton);
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Clear'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Production Rules (0)'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(TextButton, 'Undo'));
+      await tester.pumpAndSettle();
+
+      expect(provider.setProductionsCalls, equals(1));
+      expect(find.text('Production Rules (2)'), findsOneWidget);
+      expect(find.text('S → aA'), findsOneWidget);
+      expect(find.text('A → b'), findsOneWidget);
     });
 
     testWidgets('exits edit mode when Clear button is pressed', (tester) async {
@@ -679,6 +866,12 @@ void main() {
       await tester.tap(clearButton);
       await tester.pumpAndSettle();
 
+      // Clear shouldn't happen until the confirmation is accepted.
+      expect(find.text('Edit Production Rule'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(FilledButton, 'Clear'));
+      await tester.pumpAndSettle();
+
       expect(find.text('Add Production Rule'), findsOneWidget);
     });
   });
@@ -687,16 +880,16 @@ void main() {
     testWidgets('displays compact header on small screens', (tester) async {
       final provider = _RecordingGrammarProvider();
 
+      tester.view.physicalSize = const Size(500, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
       await tester.pumpWidget(
         ProviderScope(
           overrides: [grammarProvider.overrideWith((ref) => provider)],
           child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
         ),
       );
-
-      tester.view.physicalSize = const Size(500, 800);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
 
       await tester.pumpAndSettle();
 
@@ -709,16 +902,16 @@ void main() {
       (tester) async {
         final provider = _RecordingGrammarProvider();
 
+        tester.view.physicalSize = const Size(400, 800);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+
         await tester.pumpWidget(
           ProviderScope(
             overrides: [grammarProvider.overrideWith((ref) => provider)],
             child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
           ),
         );
-
-        tester.view.physicalSize = const Size(400, 800);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.reset);
 
         await tester.pumpAndSettle();
 
@@ -731,16 +924,16 @@ void main() {
       (tester) async {
         final provider = _RecordingGrammarProvider();
 
+        tester.view.physicalSize = const Size(1200, 800);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+
         await tester.pumpWidget(
           ProviderScope(
             overrides: [grammarProvider.overrideWith((ref) => provider)],
             child: const MaterialApp(home: Scaffold(body: GrammarEditor())),
           ),
         );
-
-        tester.view.physicalSize = const Size(1200, 800);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.reset);
 
         await tester.pumpAndSettle();
 

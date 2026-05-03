@@ -28,7 +28,7 @@ Status markers:
 
 | Patch Name | Affected Files | Status | Rationale |
 | --- | --- | --- | --- |
-| `AdaptiveEdgeRenderer` | `lib/edgerenderer/AdaptiveEdgeRenderer.dart` | **Required** | Adds adaptive connection points and routes edges through 4 routing modes (`direct`, `orthogonal`, `bezier`, `bundling`) and 4 anchor modes (`center`, `cardinal`, `octagonal`, `dynamic`). This is the main renderer for fork-specific edge routing behavior. |
+| `AdaptiveEdgeRenderer` | `lib/edgerenderer/AdaptiveEdgeRenderer.dart` | **Required** | Adds adaptive connection points and routes edges through 4 routing modes (`direct`, `orthogonal`, `bezier`, `bundling`) and 4 anchor modes (`center`, `cardinal`, `octagonal`, `dynamic`). **Hardening:** routing is wrapped in a try/catch and will gracefully fall back to a direct path if routing throws; `bundling` is currently unimplemented and degrades to `direct` with an assert-only debug log. |
 | `AnimatedEdgeRenderer` | `lib/edgerenderer/AnimatedEdgeRenderer.dart` | **Optional** | Adds particle flow animation on edges. It is selected explicitly as a renderer and can be avoided when static edge rendering is preferred. |
 | `OrthogonalEdgeRenderer` | `lib/edgerenderer/OrthogonalEdgeRenderer.dart` | **Optional** | Adds Manhattan-style L-shaped edge paths for graphs where right-angle routing is easier to read than direct lines. |
 | Routing infrastructure | `lib/edgerenderer/routing/EdgeRoutingConfig.dart`, `lib/edgerenderer/routing/EdgeRepulsionSolver.dart`, `lib/edgerenderer/routing/VectorUtils.dart` | **Required** | Centralizes anchor mode, routing mode, movement threshold, and edge repulsion configuration used by adaptive routing. |

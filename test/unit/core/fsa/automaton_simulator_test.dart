@@ -102,6 +102,64 @@ FSA _simpleNFA() {
   );
 }
 
+FSA _epsilonNFAWithInitialAndMidClosure() {
+  final q0 = State(
+    id: 'q0',
+    label: 'q0',
+    position: Vector2(0, 0),
+    isInitial: true,
+  );
+  final q1 = State(
+    id: 'q1',
+    label: 'q1',
+    position: Vector2(100, 0),
+  );
+  final q2 = State(
+    id: 'q2',
+    label: 'q2',
+    position: Vector2(200, 0),
+  );
+  final q3 = State(
+    id: 'q3',
+    label: 'q3',
+    position: Vector2(300, 0),
+    isAccepting: true,
+  );
+
+  return FSA(
+    id: 'epsilon-nfa',
+    name: 'Epsilon NFA',
+    states: {q0, q1, q2, q3},
+    transitions: {
+      FSATransition(
+        id: 't0',
+        fromState: q0,
+        toState: q1,
+        lambdaSymbol: 'ε',
+      ),
+      FSATransition(
+        id: 't1',
+        fromState: q1,
+        toState: q2,
+        inputSymbols: {'a'},
+        label: 'a',
+      ),
+      FSATransition(
+        id: 't2',
+        fromState: q2,
+        toState: q3,
+        lambdaSymbol: 'ε',
+      ),
+    },
+    alphabet: {'a'},
+    initialState: q0,
+    acceptingStates: {q3},
+    created: DateTime.now(),
+    modified: DateTime.now(),
+    bounds: const math.Rectangle(0, 0, 400, 300),
+  );
+}
+
 void main() {
   group('DFA simulator step recording', () {
     test('Step records destination state, not source', () async {
@@ -140,12 +198,64 @@ void main() {
 
       // After consuming 'a', current state should be the destination set {q1,q2}
       // (not the source q0)
-      final intermediateSteps =
-          steps.where((s) => s.stepNumber > 0).toList();
+      final intermediateSteps = steps.where((s) => s.stepNumber > 0).toList();
       expect(intermediateSteps, isNotEmpty);
       for (final step in intermediateSteps) {
         expect(step.currentState, isNot('q0'));
       }
+    });
+
+    test('epsilon annotation steps have unique step numbers', () async {
+      final nfa = _epsilonNFAWithInitialAndMidClosure();
+      final result = await AutomatonSimulator.simulateNFA(
+        nfa,
+        'a',
+        stepByStep: true,
+      );
+      expect(result.isSuccess, true);
+      final steps = result.data!.steps;
+      final stepNumbers = steps.map((s) => s.stepNumber).toList();
+
+      expect(stepNumbers.toSet(), hasLength(stepNumbers.length));
+    });
+
+    test('appends final verdict after trailing epsilon closure step', () async {
+      final nfa = _epsilonNFAWithInitialAndMidClosure();
+      final result = await AutomatonSimulator.simulateNFA(
+        nfa,
+        'a',
+        stepByStep: true,
+      );
+      expect(result.isSuccess, true);
+
+      final steps = result.data!.steps;
+      expect(steps.where((s) => s.usedTransition == 'ε-closure'), isNotEmpty);
+      expect(steps[steps.length - 2].usedTransition, 'ε-closure');
+      expect(steps.last.usedTransition, isNull);
+      expect(steps.last.remainingInput, isEmpty);
+      expect(steps.last.currentState, '{q2,q3}');
+    });
+
+    test('does not duplicate final symbol step without epsilon closure',
+        () async {
+      final nfa = _simpleNFA();
+      final result = await AutomatonSimulator.simulateNFA(
+        nfa,
+        'a',
+        stepByStep: true,
+      );
+      expect(result.isSuccess, true);
+
+      final steps = result.data!.steps;
+      expect(steps.last.remainingInput, isEmpty);
+      expect(steps.last.currentState, '{q1,q2}');
+      expect(
+        steps.where(
+          (s) => s.remainingInput.isEmpty && s.currentState == '{q1,q2}',
+        ),
+        hasLength(1),
+      );
+      expect(result.data!.computationTree?.totalSteps, steps.last.stepNumber);
     });
   });
 }

@@ -23,6 +23,7 @@ import 'package:jflutter/data/services/automaton_service.dart';
 import 'package:jflutter/data/services/trace_persistence_service.dart';
 import 'package:jflutter/features/layout/layout_repository_impl.dart';
 import 'package:jflutter/presentation/providers/automaton_algorithm_provider.dart';
+import 'package:jflutter/presentation/providers/conversion_history_provider.dart';
 import 'package:jflutter/presentation/providers/automaton_layout_provider.dart';
 import 'package:jflutter/presentation/providers/automaton_simulation_provider.dart';
 import 'package:jflutter/presentation/providers/automaton_state_provider.dart';
@@ -125,6 +126,11 @@ void main() {
         expect(updatedState.currentAutomaton, isNotNull);
         // The automaton should still work (conversion successful)
         expect(updatedState.error, isNull);
+
+        final history = container.read(conversionHistoryProvider).history;
+        expect(history, isNotNull);
+        expect(history!.initialSnapshot, isNotNull);
+        expect(history.finalSnapshot, isNotNull);
       },
     );
 
@@ -231,9 +237,8 @@ void main() {
         // Store original positions
         final originalState = container.read(automatonStateProvider);
         final originalAutomaton = originalState.currentAutomaton!;
-        final originalPositions = originalAutomaton.states
-            .map((s) => s.position)
-            .toList();
+        final originalPositions =
+            originalAutomaton.states.map((s) => s.position).toList();
 
         // Apply auto layout using layout provider
         final layoutNotifier = container.read(automatonLayoutProvider.notifier);
@@ -247,9 +252,8 @@ void main() {
         expect(updatedState.error, isNull);
 
         // Layout should have changed positions (they were all at zero)
-        final updatedPositions = updatedAutomaton!.states
-            .map((s) => s.position)
-            .toList();
+        final updatedPositions =
+            updatedAutomaton!.states.map((s) => s.position).toList();
 
         // At least some positions should be different after layout
         final positionsChanged = updatedPositions.any(
@@ -314,7 +318,7 @@ void main() {
       );
       await algorithmNotifier.convertNfaToDfa();
 
-      var stateAfterAlgorithm = container.read(automatonStateProvider);
+      final stateAfterAlgorithm = container.read(automatonStateProvider);
       expect(stateAfterAlgorithm.currentAutomaton, isNotNull);
       expect(stateAfterAlgorithm.error, isNull);
 
@@ -324,7 +328,7 @@ void main() {
       );
       await simulationNotifier.simulateAutomaton('ab');
 
-      var simulationState = container.read(automatonSimulationProvider);
+      final simulationState = container.read(automatonSimulationProvider);
       expect(simulationState.simulationResult, isNotNull);
       expect(simulationState.error, isNull);
 
@@ -332,7 +336,7 @@ void main() {
       final layoutNotifier = container.read(automatonLayoutProvider.notifier);
       await layoutNotifier.applyAutoLayout();
 
-      var finalState = container.read(automatonStateProvider);
+      final finalState = container.read(automatonStateProvider);
       expect(finalState.currentAutomaton, isNotNull);
       expect(finalState.error, isNull);
 

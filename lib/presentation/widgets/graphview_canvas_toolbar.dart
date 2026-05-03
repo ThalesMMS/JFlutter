@@ -19,6 +19,9 @@ import 'automaton_canvas_tool.dart';
 import 'contextual_help_tooltip.dart';
 import 'keyboard_shortcuts_dialog.dart';
 
+part 'graphview_canvas_toolbar_group.dart';
+part 'graphview_canvas_toolbar_group_config.dart';
+
 /// Toolbar exposing viewport commands for the GraphView canvas.
 class GraphViewCanvasToolbar extends StatefulWidget {
   const GraphViewCanvasToolbar({
@@ -92,66 +95,91 @@ class _GraphViewCanvasToolbarState extends State<GraphViewCanvasToolbar> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final controller = widget.controller;
-    final actions = <_ToolbarButtonConfig>[
-      if (widget.enableToolSelection && widget.showSelectionTool)
-        _ToolbarButtonConfig(
-          action: _ToolbarAction.selection,
-          handler: widget.onSelectTool,
-          isToggle: true,
-          isSelected: widget.activeTool == AutomatonCanvasTool.selection,
-        ),
-      _ToolbarButtonConfig(
-        action: _ToolbarAction.addState,
-        handler: widget.onAddState,
-        isToggle: widget.enableToolSelection,
-        isSelected: widget.enableToolSelection &&
-            widget.activeTool == AutomatonCanvasTool.addState,
+    final actionGroups = <_ToolbarGroupConfig>[
+      _ToolbarGroupConfig(
+        id: _ToolbarGroup.editing,
+        actions: [
+          if (widget.enableToolSelection && widget.showSelectionTool)
+            _ToolbarButtonConfig(
+              action: _ToolbarAction.selection,
+              handler: widget.onSelectTool,
+              isToggle: true,
+              isSelected: widget.activeTool == AutomatonCanvasTool.selection,
+            ),
+          _ToolbarButtonConfig(
+            action: _ToolbarAction.addState,
+            handler: widget.onAddState,
+            isToggle: widget.enableToolSelection,
+            isSelected: widget.enableToolSelection &&
+                widget.activeTool == AutomatonCanvasTool.addState,
+          ),
+          if (widget.onAddTransition != null)
+            _ToolbarButtonConfig(
+              action: _ToolbarAction.transition,
+              handler: widget.onAddTransition,
+              isToggle: widget.enableToolSelection,
+              isSelected: widget.enableToolSelection &&
+                  widget.activeTool == AutomatonCanvasTool.transition,
+            ),
+        ],
       ),
-      if (widget.onAddTransition != null)
-        _ToolbarButtonConfig(
-          action: _ToolbarAction.transition,
-          handler: widget.onAddTransition,
-          isToggle: widget.enableToolSelection,
-          isSelected: widget.enableToolSelection &&
-              widget.activeTool == AutomatonCanvasTool.transition,
-        ),
-      _ToolbarButtonConfig(
-        action: _ToolbarAction.redo,
-        handler: controller.canRedo ? () => controller.redo() : null,
+      _ToolbarGroupConfig(
+        id: _ToolbarGroup.history,
+        actions: [
+          _ToolbarButtonConfig(
+            action: _ToolbarAction.redo,
+            handler: controller.canRedo ? () => controller.redo() : null,
+          ),
+          _ToolbarButtonConfig(
+            action: _ToolbarAction.undo,
+            handler: controller.canUndo ? () => controller.undo() : null,
+          ),
+        ],
       ),
-      _ToolbarButtonConfig(
-        action: _ToolbarAction.fitContent,
-        handler: controller.fitToContent,
-      ),
-      _ToolbarButtonConfig(
-        action: _ToolbarAction.resetView,
-        handler: controller.resetView,
+      _ToolbarGroupConfig(
+        id: _ToolbarGroup.viewport,
+        actions: [
+          _ToolbarButtonConfig(
+            action: _ToolbarAction.fitContent,
+            handler: controller.fitToContent,
+          ),
+          _ToolbarButtonConfig(
+            action: _ToolbarAction.resetView,
+            handler: controller.resetView,
+          ),
+        ],
       ),
       if (widget.onClear != null)
-        _ToolbarButtonConfig(
-          action: _ToolbarAction.clear,
-          handler: widget.onClear!,
+        _ToolbarGroupConfig(
+          id: _ToolbarGroup.destructive,
+          actions: [
+            _ToolbarButtonConfig(
+              action: _ToolbarAction.clear,
+              handler: widget.onClear!,
+            ),
+          ],
         ),
-      _ToolbarButtonConfig(
-        action: _ToolbarAction.undo,
-        handler: controller.canUndo ? () => controller.undo() : null,
-      ),
-      _ToolbarButtonConfig(
-        action: _ToolbarAction.help,
-        handler: () => KeyboardShortcutsDialog.show(context),
+      _ToolbarGroupConfig(
+        id: _ToolbarGroup.help,
+        actions: [
+          _ToolbarButtonConfig(
+            action: _ToolbarAction.help,
+            handler: () => KeyboardShortcutsDialog.show(context),
+          ),
+        ],
       ),
     ];
 
     switch (widget.layout) {
       case GraphViewCanvasToolbarLayout.mobile:
         return _MobileToolbar(
-          actions: actions,
+          actionGroups: actionGroups,
           statusMessage: widget.statusMessage,
           theme: theme,
         );
       case GraphViewCanvasToolbarLayout.desktop:
         return _DesktopToolbar(
-          actions: actions,
+          actionGroups: actionGroups,
           statusMessage: widget.statusMessage,
           theme: theme,
         );
@@ -163,12 +191,12 @@ enum GraphViewCanvasToolbarLayout { desktop, mobile }
 
 class _DesktopToolbar extends StatelessWidget {
   const _DesktopToolbar({
-    required this.actions,
+    required this.actionGroups,
     required this.statusMessage,
     required this.theme,
   });
 
-  final List<_ToolbarButtonConfig> actions;
+  final List<_ToolbarGroupConfig> actionGroups;
   final String? statusMessage;
   final ThemeData theme;
 
@@ -205,72 +233,38 @@ class _DesktopToolbar extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      for (final indexedEntry in actions.asMap().entries) ...[
-                        Builder(
-                          builder: (context) {
-                            final index = indexedEntry.key;
-                            final entry = indexedEntry.value;
-                            final isToggle = entry.isToggle;
-                            final isSelected = entry.isSelected;
-                            final iconStyle = IconButton.styleFrom(
-                              minimumSize: const Size(44, 44),
-                              backgroundColor: isToggle
-                                  ? (isSelected
-                                      ? colorScheme.primaryContainer
-                                      : colorScheme.surfaceContainerHighest
-                                          .withValues(alpha: 0.18))
-                                  : null,
-                              foregroundColor: isToggle
-                                  ? (isSelected
-                                      ? colorScheme.onPrimaryContainer
-                                      : colorScheme.onSurfaceVariant)
-                                  : null,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                side: isToggle && !isSelected
-                                    ? BorderSide(
-                                        color: colorScheme.outlineVariant
-                                            .withValues(alpha: 0.55),
-                                      )
-                                    : BorderSide.none,
+                      for (final indexedGroupEntry
+                          in actionGroups.asMap().entries) ...[
+                        for (final indexedEntry in indexedGroupEntry
+                            .value.actions
+                            .asMap()
+                            .entries) ...[
+                          _buildActionButton(
+                            entry: indexedEntry.value,
+                            groupId: indexedGroupEntry.value.id,
+                            groupIndex: indexedGroupEntry.key,
+                            actionIndex: indexedEntry.key,
+                            colorScheme: colorScheme,
+                            isMobile: false,
+                          ),
+                          if (indexedEntry.key <
+                              indexedGroupEntry.value.actions.length - 1)
+                            Container(
+                              width: 1,
+                              height: 24,
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              color: colorScheme.outlineVariant.withValues(
+                                alpha: 0.35,
                               ),
-                            );
-                            final helpContent =
-                                kHelpContent[entry.action.helpContentId];
-                            final button = FocusTraversalOrder(
-                              order: NumericFocusOrder(index.toDouble()),
-                              child: Semantics(
-                                label: 'Canvas action: ${entry.action.label}',
-                                hint: entry.action.semanticsHint,
-                                button: true,
-                                enabled: entry.handler != null,
-                                selected: entry.isToggle && entry.isSelected,
-                                excludeSemantics: true,
-                                child: IconButton(
-                                  tooltip: helpContent == null
-                                      ? entry.action.label
-                                      : null,
-                                  icon: Icon(entry.action.icon),
-                                  onPressed: entry.handler,
-                                  style: iconStyle,
-                                ),
-                              ),
-                            );
-                            return helpContent != null
-                                ? ContextualHelpTooltip(
-                                    helpContent: helpContent,
-                                    child: button,
-                                  )
-                                : button;
-                          },
-                        ),
-                        if (indexedEntry.key < actions.length - 1)
+                            ),
+                        ],
+                        if (indexedGroupEntry.key < actionGroups.length - 1)
                           Container(
                             width: 1,
-                            height: 24,
-                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            height: 28,
+                            margin: const EdgeInsets.symmetric(horizontal: 8),
                             color: colorScheme.outlineVariant.withValues(
-                              alpha: 0.35,
+                              alpha: 0.55,
                             ),
                           ),
                       ],
@@ -293,12 +287,12 @@ class _DesktopToolbar extends StatelessWidget {
 
 class _MobileToolbar extends StatelessWidget {
   const _MobileToolbar({
-    required this.actions,
+    required this.actionGroups,
     required this.statusMessage,
     required this.theme,
   });
 
-  final List<_ToolbarButtonConfig> actions;
+  final List<_ToolbarGroupConfig> actionGroups;
   final String? statusMessage;
   final ThemeData theme;
 
@@ -330,67 +324,37 @@ class _MobileToolbar extends StatelessWidget {
                     elevation: 6,
                     borderRadius: BorderRadius.circular(16),
                     color: colorScheme.surface,
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(12),
-                      child: Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        alignment: WrapAlignment.center,
-                        children: [
-                          for (final indexedEntry in actions.asMap().entries)
-                            Builder(
-                              builder: (context) {
-                                final index = indexedEntry.key;
-                                final entry = indexedEntry.value;
-                                final helpContent =
-                                    kHelpContent[entry.action.helpContentId];
-                                final button = FocusTraversalOrder(
-                                  order: NumericFocusOrder(index.toDouble()),
-                                  child: Semantics(
-                                    label:
-                                        'Canvas action: ${entry.action.label}',
-                                    hint: entry.action.semanticsHint,
-                                    button: true,
-                                    enabled: entry.handler != null,
-                                    selected:
-                                        entry.isToggle && entry.isSelected,
-                                    excludeSemantics: true,
-                                    child: FilledButton.icon(
-                                      onPressed: entry.handler,
-                                      style: FilledButton.styleFrom(
-                                        minimumSize: const Size(44, 44),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 12,
-                                        ),
-                                        backgroundColor:
-                                            entry.isToggle && entry.isSelected
-                                                ? colorScheme.primary
-                                                : entry.isToggle
-                                                    ? colorScheme
-                                                        .surfaceContainerHighest
-                                                    : null,
-                                        foregroundColor: entry.isToggle &&
-                                                entry.isSelected
-                                            ? colorScheme.onPrimary
-                                            : entry.isToggle
-                                                ? colorScheme.onSurfaceVariant
-                                                : null,
-                                      ),
-                                      icon: Icon(entry.action.icon),
-                                      label: Text(entry.action.label),
-                                    ),
+                    child: Scrollbar(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.all(12),
+                        child: IntrinsicWidth(
+                          child: Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            alignment: WrapAlignment.center,
+                            children: [
+                              for (final indexedGroupEntry
+                                  in actionGroups.asMap().entries) ...[
+                                for (final indexedEntry in indexedGroupEntry
+                                    .value.actions
+                                    .asMap()
+                                    .entries)
+                                  _buildActionButton(
+                                    entry: indexedEntry.value,
+                                    groupId: indexedGroupEntry.value.id,
+                                    groupIndex: indexedGroupEntry.key,
+                                    actionIndex: indexedEntry.key,
+                                    colorScheme: colorScheme,
+                                    isMobile: true,
                                   ),
-                                );
-                                return helpContent != null
-                                    ? ContextualHelpTooltip(
-                                        helpContent: helpContent,
-                                        child: button,
-                                      )
-                                    : button;
-                              },
-                            ),
-                        ],
+                                if (indexedGroupEntry.key <
+                                    actionGroups.length - 1)
+                                  const SizedBox(width: 24),
+                              ],
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -402,6 +366,137 @@ class _MobileToolbar extends StatelessWidget {
       ),
     );
   }
+}
+
+Widget _buildActionButton({
+  required _ToolbarButtonConfig entry,
+  required _ToolbarGroup groupId,
+  required int groupIndex,
+  required int actionIndex,
+  required ColorScheme colorScheme,
+  required bool isMobile,
+}) {
+  final helpContent = kHelpContent[entry.action.helpContentId];
+  final traversalIndex = (groupIndex * 100 + actionIndex).toDouble();
+  final isDestructive = groupId == _ToolbarGroup.destructive;
+  final button = FocusTraversalOrder(
+    order: NumericFocusOrder(traversalIndex),
+    child: Semantics(
+      label: 'Canvas action: ${entry.action.label}',
+      hint: entry.action.semanticsHint,
+      button: true,
+      enabled: entry.handler != null,
+      selected: entry.isToggle && entry.isSelected,
+      excludeSemantics: true,
+      child: isMobile
+          ? FilledButton.icon(
+              onPressed: entry.handler,
+              style: _mobileActionButtonStyle(
+                entry: entry,
+                isDestructive: isDestructive,
+                colorScheme: colorScheme,
+              ),
+              icon: Icon(entry.action.icon),
+              label: Text(entry.action.label),
+            )
+          : IconButton(
+              tooltip: helpContent == null ? entry.action.label : null,
+              icon: Icon(entry.action.icon),
+              onPressed: entry.handler,
+              style: _desktopActionButtonStyle(
+                entry: entry,
+                isDestructive: isDestructive,
+                colorScheme: colorScheme,
+              ),
+            ),
+    ),
+  );
+
+  return helpContent != null
+      ? ContextualHelpTooltip(
+          helpContent: helpContent,
+          child: button,
+        )
+      : button;
+}
+
+ButtonStyle _desktopActionButtonStyle({
+  required _ToolbarButtonConfig entry,
+  required bool isDestructive,
+  required ColorScheme colorScheme,
+}) {
+  final isToggle = entry.isToggle;
+  final isSelected = entry.isSelected;
+
+  return IconButton.styleFrom(
+    minimumSize: const Size(44, 44),
+    backgroundColor: isDestructive
+        ? colorScheme.errorContainer
+        : isToggle
+            ? (isSelected
+                ? colorScheme.primaryContainer
+                : colorScheme.surfaceContainerHighest.withValues(alpha: 0.18))
+            : null,
+    foregroundColor: isDestructive
+        ? colorScheme.onErrorContainer
+        : isToggle
+            ? (isSelected
+                ? colorScheme.onPrimaryContainer
+                : colorScheme.onSurfaceVariant)
+            : null,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(10),
+      side: isDestructive
+          ? BorderSide(
+              color: colorScheme.error.withValues(alpha: 0.55),
+            )
+          : isToggle && !isSelected
+              ? BorderSide(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.55),
+                )
+              : BorderSide.none,
+    ),
+  );
+}
+
+ButtonStyle _mobileActionButtonStyle({
+  required _ToolbarButtonConfig entry,
+  required bool isDestructive,
+  required ColorScheme colorScheme,
+}) {
+  return FilledButton.styleFrom(
+    minimumSize: const Size(44, 44),
+    padding: const EdgeInsets.symmetric(
+      horizontal: 16,
+      vertical: 12,
+    ),
+    backgroundColor: isDestructive
+        ? colorScheme.errorContainer
+        : entry.isToggle && entry.isSelected
+            ? colorScheme.primary
+            : entry.isToggle
+                ? colorScheme.surfaceContainerHighest
+                : colorScheme.surfaceContainerHighest.withValues(alpha: 0.18),
+    foregroundColor: isDestructive
+        ? colorScheme.onErrorContainer
+        : entry.isToggle && entry.isSelected
+            ? colorScheme.onPrimary
+            : colorScheme.onSurfaceVariant,
+    elevation: isDestructive
+        ? 0
+        : entry.isToggle
+            ? 1
+            : 0,
+    side: isDestructive
+        ? BorderSide(
+            color: colorScheme.error.withValues(alpha: 0.55),
+          )
+        : entry.isToggle && !entry.isSelected
+            ? BorderSide(
+                color: colorScheme.outlineVariant.withValues(alpha: 0.55),
+              )
+            : null,
+  );
 }
 
 class _ToolbarButtonConfig {

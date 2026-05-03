@@ -12,6 +12,8 @@
 
 /// Represents a single step in an algorithm execution
 /// This is the base model that can be extended by specific algorithm step types
+import 'step_explanation.dart';
+
 class AlgorithmStep {
   /// Unique identifier for this step
   final String id;
@@ -22,8 +24,13 @@ class AlgorithmStep {
   /// Short title describing this step's action
   final String title;
 
-  /// Detailed explanation of what's happening and why
+  /// Detailed explanation of what's happening and why.
+  ///
+  /// Kept for backwards compatibility with existing step-by-step UI.
   final String explanation;
+
+  /// Optional structured explanation (bullets, highlights, suggested fixes).
+  final StepExplanation? stepExplanation;
 
   /// Type of algorithm this step belongs to
   final AlgorithmType type;
@@ -39,6 +46,7 @@ class AlgorithmStep {
     required this.stepNumber,
     required this.title,
     required this.explanation,
+    this.stepExplanation,
     required this.type,
     required this.timestamp,
     required this.properties,
@@ -49,6 +57,7 @@ class AlgorithmStep {
     required int stepNumber,
     required String title,
     required String explanation,
+    StepExplanation? stepExplanation,
     required AlgorithmType type,
     DateTime? timestamp,
     Map<String, dynamic> properties = const {},
@@ -58,6 +67,7 @@ class AlgorithmStep {
       stepNumber: stepNumber,
       title: title,
       explanation: explanation,
+      stepExplanation: stepExplanation,
       type: type,
       timestamp: timestamp ?? DateTime.now(),
       properties: Map<String, dynamic>.unmodifiable(Map.of(properties)),
@@ -70,6 +80,7 @@ class AlgorithmStep {
     int? stepNumber,
     String? title,
     String? explanation,
+    StepExplanation? stepExplanation,
     AlgorithmType? type,
     DateTime? timestamp,
     Map<String, dynamic>? properties,
@@ -79,6 +90,7 @@ class AlgorithmStep {
       stepNumber: stepNumber ?? this.stepNumber,
       title: title ?? this.title,
       explanation: explanation ?? this.explanation,
+      stepExplanation: stepExplanation ?? this.stepExplanation,
       type: type ?? this.type,
       timestamp: timestamp ?? this.timestamp,
       properties: properties ?? this.properties,
@@ -92,6 +104,7 @@ class AlgorithmStep {
       'stepNumber': stepNumber,
       'title': title,
       'explanation': explanation,
+      'stepExplanation': stepExplanation?.toJson(),
       'type': type.name,
       'timestamp': timestamp.toIso8601String(),
       'properties': properties,
@@ -100,11 +113,18 @@ class AlgorithmStep {
 
   /// Creates a step from a JSON representation
   factory AlgorithmStep.fromJson(Map<String, dynamic> json) {
+    final stepExplanationJson = json['stepExplanation'];
+
     return AlgorithmStep(
       id: json['id'] as String,
       stepNumber: json['stepNumber'] as int,
       title: json['title'] as String,
       explanation: json['explanation'] as String,
+      stepExplanation: stepExplanationJson is Map
+          ? StepExplanation.fromJson(
+              Map<String, dynamic>.from(stepExplanationJson),
+            )
+          : null,
       type: AlgorithmType.values.firstWhere(
         (e) => e.name == json['type'],
         orElse: () => AlgorithmType.nfaToDfa,

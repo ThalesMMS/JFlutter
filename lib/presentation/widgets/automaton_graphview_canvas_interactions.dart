@@ -28,33 +28,85 @@ extension _AutomatonGraphViewCanvasInteractions
     Offset localPosition, {
     bool logDetails = true,
   }) {
+    // Keep hit testing in world coordinates so it remains stable under zoom.
     final world = _screenToWorld(localPosition);
+
     // A small hit slop keeps slow-start drags and near-edge touches anchored to
     // the intended node instead of falling through to the canvas pan gesture.
     const dragHitSlop = 8.0;
     const hitRadius = _kNodeRadius + dragHitSlop;
+    final hitRadiusSquared = hitRadius * hitRadius;
+
     GraphViewCanvasNode? closest;
-    var closestDistance = double.infinity;
-    for (final node in _controller.nodes) {
-      final center = Offset(node.x + _kNodeRadius, node.y + _kNodeRadius);
-      final dx = world.dx - center.dx;
-      final dy = world.dy - center.dy;
-      final distanceSquared = dx * dx + dy * dy;
-      if (distanceSquared <= hitRadius * hitRadius &&
-          distanceSquared < closestDistance) {
-        closest = node;
-        closestDistance = distanceSquared;
+    var closestDistanceSquared = double.infinity;
+    var candidateCount = 0;
+
+    // PERF: avoid per-node sqrt by staying in squared distance space.
+    // Timeline events are assert-only, so there is zero overhead in release.
+    assert(() {
+      Timeline.startSync('GraphViewCanvas.hitTestNode');
+      return true;
+    }());
+    var iterations = 0;
+    try {
+      for (final node in _controller.nodes) {
+        iterations++;
+
+        // Coarse early-out: skip nodes whose bounding box cannot intersect the
+        // circular hit area.
+        final left = node.x;
+        final top = node.y;
+        final right = left + _kNodeRadius * 2;
+        final bottom = top + _kNodeRadius * 2;
+        if (world.dx < left - hitRadius ||
+            world.dx > right + hitRadius ||
+            world.dy < top - hitRadius ||
+            world.dy > bottom + hitRadius) {
+          continue;
+        }
+
+        candidateCount++;
+        final center = Offset(left + _kNodeRadius, top + _kNodeRadius);
+        final dx = world.dx - center.dx;
+        final dy = world.dy - center.dy;
+        final distanceSquared = dx * dx + dy * dy;
+        if (distanceSquared <= hitRadiusSquared &&
+            distanceSquared < closestDistanceSquared) {
+          closest = node;
+          closestDistanceSquared = distanceSquared;
+        }
       }
+    } finally {
+      assert(() {
+        Timeline.finishSync();
+        return true;
+      }());
     }
+
+    assert(() {
+      Timeline.instantSync(
+        'GraphViewCanvas.hitTestNode.result',
+        arguments: {
+          'iterations': iterations,
+          'candidates': candidateCount,
+          'hit': closest != null,
+          'tool': _activeTool.name,
+        },
+      );
+      return true;
+    }());
+
     if (logDetails) {
       if (closest != null) {
         _logAutomatonGraphViewCanvasInteraction(
           'Hit node ${closest.id} '
-          '(tool=${_activeTool.name}) local=$localPosition world=$world',
+          '(tool=${_activeTool.name}) local=$localPosition world=$world '
+          'candidates=$candidateCount',
         );
       } else if (_activeTool == AutomatonCanvasTool.transition) {
         _logAutomatonGraphViewCanvasInteraction(
-          'Transition tool miss local=$localPosition world=$world',
+          'Transition tool miss local=$localPosition world=$world '
+          'candidates=$candidateCount',
         );
       }
     }

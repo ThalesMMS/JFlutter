@@ -12,11 +12,52 @@
 //  Thales Matheus Mendonça Santos - October 2025
 //
 import '../models/grammar.dart';
+import '../models/grammar_parse_report.dart';
 import '../result.dart';
 import 'grammar_parser.dart';
 
 /// Simple grammar parser that can handle basic CFG parsing
 class SimpleGrammarParser {
+  static Result<GrammarParseReport> parseWithReport(
+    Grammar grammar,
+    String inputString, {
+    Duration timeout = const Duration(seconds: 5),
+  }) {
+    final stopwatch = Stopwatch()..start();
+
+    try {
+      // Validate input
+      final validationResult = _validateInput(grammar, inputString);
+      if (!validationResult.isSuccess) {
+        return Failure(validationResult.error!);
+      }
+
+      final parseResult = _parseString(grammar, inputString, timeout);
+
+      if (parseResult != null) {
+        return Success(
+          GrammarParseReport.accepted(
+            inputString: inputString,
+            executionTime: stopwatch.elapsed,
+          ),
+        );
+      }
+
+      return Success(
+        GrammarParseReport.rejected(
+          inputString: inputString,
+          farthestPosition: 0,
+          message: 'String "$inputString" cannot be derived from grammar',
+          executionTime: stopwatch.elapsed,
+        ),
+      );
+    } catch (e) {
+      return Failure('Error parsing string: $e');
+    } finally {
+      stopwatch.stop();
+    }
+  }
+
   /// Parses a string using a grammar with a simple approach
   static Result<ParseResult> parse(
     Grammar grammar,

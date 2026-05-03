@@ -12,6 +12,7 @@
 //
 
 import 'algorithm_step.dart';
+import 'step_explanation.dart';
 
 /// Represents a single step in CYK parsing algorithm
 class CYKStep {
@@ -199,6 +200,14 @@ class CYKStep {
             'Initializing CYK parse table for input string "$inputString" (length $tableSize). '
             'The table is a triangular matrix where cell [i][j] will contain all non-terminals '
             'that can derive the substring of length i+1 starting at position j.',
+        stepExplanation: StepExplanation(
+          title: 'Initialize CYK table',
+          bullets: [
+            'Input: "$inputString" (length $tableSize).',
+            'We create an empty triangular table: cell [i][j] stores non-terminals that derive the substring of length i+1 starting at j.',
+          ],
+          categories: const [ExplanationCategory.grammarDerivation],
+        ),
         type: AlgorithmType.cykParsing,
       ),
       stepType: CYKStepType.initialize,
@@ -225,6 +234,26 @@ class CYKStep {
             'Processing terminal "$terminal" at position $position. '
             'Looking for productions of the form A → "$terminal". '
             '${derivingVariables.isEmpty ? "No variables produce this terminal." : "Variables that derive this terminal: $varList."}',
+        stepExplanation: StepExplanation(
+          title: 'Match terminal "$terminal"',
+          bullets: [
+            'Sentential form fragment: "$terminal" at input position $position.',
+            'We add every variable A such that there is a production A → "$terminal".',
+            if (derivingVariables.isEmpty)
+              'No variable derives "$terminal", so this cell stays empty.'
+            else
+              'Added variables: $varList.',
+          ],
+          categories: const [ExplanationCategory.grammarDerivation],
+          highlights: [
+            HighlightTarget(
+              type: HighlightTargetType.productionSpan,
+              data: {
+                'terminal': terminal,
+              },
+            ),
+          ],
+        ),
         type: AlgorithmType.cykParsing,
       ),
       stepType: CYKStepType.fillBaseCase,
@@ -256,6 +285,14 @@ class CYKStep {
         explanation:
             'Processing substring "$substring" of length $length starting at position $col. '
             'We will try all possible ways to split this substring and check if any productions apply.',
+        stepExplanation: StepExplanation(
+          title: 'Process substring "$substring"',
+          bullets: [
+            'We are filling table cell [$row][$col] for substring length $length.',
+            'Try all split points and apply productions A → B C where B derives the left part and C derives the right part.',
+          ],
+          categories: const [ExplanationCategory.grammarDerivation],
+        ),
         type: AlgorithmType.cykParsing,
       ),
       stepType: CYKStepType.processCell,
@@ -301,6 +338,15 @@ class CYKStep {
             'Splitting "$substring" into "$leftSub" (cell [$leftRow][$leftCol]) and "$rightSub" (cell [$rightRow][$rightCol]). '
             'Left cell contains: {$leftVars}. Right cell contains: {$rightVars}. '
             'Looking for productions of the form A → B C where B ∈ left and C ∈ right.',
+        stepExplanation: StepExplanation(
+          title: 'Try split "$leftSub" | "$rightSub"',
+          bullets: [
+            'Left part (cell [$leftRow][$leftCol]) has {$leftVars}.',
+            'Right part (cell [$rightRow][$rightCol]) has {$rightVars}.',
+            'If we find a production A → B C with B in left and C in right, then add A to cell [$row][$col].',
+          ],
+          categories: const [ExplanationCategory.grammarDerivation],
+        ),
         type: AlgorithmType.cykParsing,
       ),
       stepType: CYKStepType.checkSplit,
@@ -339,6 +385,24 @@ class CYKStep {
             'Found production $variable → $leftVar $rightVar. '
             'Since $leftVar is in the left cell and $rightVar is in the right cell, '
             'we can derive "$substring" using $variable. Adding $variable to cell [$row][$col].',
+        stepExplanation: StepExplanation(
+          title: 'Apply production $variable → $leftVar $rightVar',
+          bullets: [
+            'We found a production that can combine the left and right parts.',
+            'Because $leftVar derives the left substring and $rightVar derives the right substring, $variable derives "$substring".',
+            'Add $variable to table cell [$row][$col].',
+          ],
+          categories: const [ExplanationCategory.grammarDerivation],
+          highlights: [
+            HighlightTarget(
+              type: HighlightTargetType.productionSpan,
+              data: {
+                'lhs': variable,
+                'rhs': [leftVar, rightVar],
+              },
+            ),
+          ],
+        ),
         type: AlgorithmType.cykParsing,
       ),
       stepType: CYKStepType.applyProduction,
@@ -375,6 +439,17 @@ class CYKStep {
         explanation:
             'Finished processing substring "$substring" at cell [$row][$col]. '
             '${cellNonTerminals.isEmpty ? "No non-terminals can derive this substring." : "Non-terminals that can derive this substring: $varList."}',
+        stepExplanation: StepExplanation(
+          title: 'Cell [$row][$col] complete',
+          bullets: [
+            'Substring: "$substring".',
+            if (cellNonTerminals.isEmpty)
+              'No non-terminal derives this substring.'
+            else
+              'Non-terminals that derive this substring: $varList.',
+          ],
+          categories: const [ExplanationCategory.grammarDerivation],
+        ),
         type: AlgorithmType.cykParsing,
       ),
       stepType: CYKStepType.completeCell,
@@ -408,6 +483,16 @@ class CYKStep {
             'Checking if input string "$inputString" is accepted. '
             'The top cell of the table contains: {$varList}. '
             '${isAccepted ? "The start symbol $startSymbol is present, so the string IS accepted by the grammar." : "The start symbol $startSymbol is NOT present, so the string is NOT accepted by the grammar."}',
+        stepExplanation: StepExplanation(
+          title: 'Acceptance check',
+          bullets: [
+            'Final (top) cell contains: {$varList}.',
+            isAccepted
+                ? 'Start symbol $startSymbol is present → ACCEPT.'
+                : 'Start symbol $startSymbol is missing → REJECT.',
+          ],
+          categories: const [ExplanationCategory.grammarDerivation],
+        ),
         type: AlgorithmType.cykParsing,
       ),
       stepType: CYKStepType.checkAcceptance,
@@ -434,6 +519,16 @@ class CYKStep {
             'CYK parsing completed for input string "$inputString". '
             'Processed $filledCells out of $totalCells cells in the parse table. '
             '${isAccepted ? "The string IS in the language generated by the grammar." : "The string is NOT in the language generated by the grammar."}',
+        stepExplanation: StepExplanation(
+          title: 'CYK parsing complete',
+          bullets: [
+            'Filled $filledCells / $totalCells cells.',
+            isAccepted
+                ? 'Result: ACCEPT (string is generated by the grammar).'
+                : 'Result: REJECT (string is not generated by the grammar).',
+          ],
+          categories: const [ExplanationCategory.grammarDerivation],
+        ),
         type: AlgorithmType.cykParsing,
       ),
       stepType: CYKStepType.completion,

@@ -18,6 +18,7 @@ import '../models/state.dart';
 import '../models/pda_transition.dart';
 import '../models/fsa_transition.dart';
 import '../models/simulation_step.dart';
+import '../models/step_explanation.dart';
 import '../models/transition.dart';
 import '../result.dart';
 

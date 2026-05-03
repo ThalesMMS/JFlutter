@@ -114,6 +114,7 @@ class PDAStackPanel extends StatefulWidget {
   final String initialStackSymbol;
   final Set<String> stackAlphabet;
   final bool isSimulating;
+  final int? highlightedIndex;
   final VoidCallback? onClear;
 
   const PDAStackPanel({
@@ -122,6 +123,7 @@ class PDAStackPanel extends StatefulWidget {
     required this.initialStackSymbol,
     required this.stackAlphabet,
     this.isSimulating = false,
+    this.highlightedIndex,
     this.onClear,
   });
 
@@ -148,6 +150,7 @@ class _PDAStackPanelState extends State<PDAStackPanel>
   @override
   void initState() {
     super.initState();
+    _highlightedIndex = widget.highlightedIndex;
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
@@ -165,6 +168,13 @@ class _PDAStackPanelState extends State<PDAStackPanel>
   @override
   void didUpdateWidget(PDAStackPanel oldWidget) {
     super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.highlightedIndex != widget.highlightedIndex) {
+      setState(() {
+        _highlightedIndex = widget.highlightedIndex;
+      });
+    }
+
     if (oldWidget.stackState.symbols != widget.stackState.symbols) {
       // Detect push or pop operation
       final stackGrowth = widget.stackState.size - oldWidget.stackState.size;

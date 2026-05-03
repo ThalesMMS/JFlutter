@@ -18,12 +18,23 @@ import '../models/pda_transition.dart';
 import '../models/tm.dart';
 import '../models/tm_transition.dart';
 import '../models/grammar.dart';
+import '../models/validation_diagnostic.dart';
 
 class ValidationIssue {
   final String code;
   final String message;
   final String? location;
-  const ValidationIssue(this.code, this.message, {this.location});
+
+  /// Optional structured diagnostics payload. When present, UI layers can show
+  /// actionable suggestions/highlights without parsing [message].
+  final ValidationDiagnostic? diagnostic;
+
+  const ValidationIssue(
+    this.code,
+    this.message, {
+    this.location,
+    this.diagnostic,
+  });
 }
 
 class InputValidators {

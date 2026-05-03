@@ -18,13 +18,11 @@ import '../../core/algorithms/fsa_to_grammar_converter.dart';
 import '../../core/algorithms/nfa_to_dfa_converter.dart';
 import '../../core/algorithms/regex_simplifier.dart';
 import '../../core/algorithms/regex_to_nfa_converter.dart';
-import '../../core/models/dfa_minimization_step.dart';
-import '../../core/models/fa_to_regex_step.dart';
+import '../../core/models/algorithm_step.dart';
 import '../../core/models/fsa.dart';
 import '../../core/models/grammar.dart';
-import '../../core/models/nfa_to_dfa_step.dart';
-import '../../core/models/regex_to_nfa_step.dart';
 import 'algorithm_step_provider.dart';
+import 'conversion_history_provider.dart';
 import 'automaton_state_provider.dart';
 
 /// State for algorithm operations
@@ -76,9 +74,8 @@ class AlgorithmOperationState {
     Object? regexToNfaStepResult = _unset,
   }) {
     return AlgorithmOperationState(
-      regexResult: regexResult == _unset
-          ? this.regexResult
-          : regexResult as String?,
+      regexResult:
+          regexResult == _unset ? this.regexResult : regexResult as String?,
       rawRegexResult: rawRegexResult == _unset
           ? this.rawRegexResult
           : rawRegexResult as String?,
@@ -128,7 +125,7 @@ class AutomatonAlgorithmNotifier
   final Ref ref;
 
   AutomatonAlgorithmNotifier(this.ref)
-    : super(const AlgorithmOperationState()) {
+      : super(const AlgorithmOperationState()) {
     // Listen to automaton state changes and clear results when automaton changes
     ref.listen<AutomatonStateProviderState>(automatonStateProvider, (
       previous,
@@ -160,6 +157,10 @@ class AutomatonAlgorithmNotifier
       final result = NFAToDFAConverter.convert(currentAutomaton);
 
       if (result.isSuccess) {
+        _recordConversionHistory(
+          initialAutomaton: currentAutomaton,
+          finalAutomaton: result.data!,
+        );
         // Update the automaton in the state provider
         ref.read(automatonStateProvider.notifier).updateAutomaton(result.data!);
         state = state.copyWith(isLoading: false);
@@ -206,13 +207,18 @@ class AutomatonAlgorithmNotifier
         );
 
         // Initialize step provider with algorithm steps
-        final algorithmSteps = conversionResult.steps
-            .map((step) => step.baseStep)
-            .toList();
+        final algorithmSteps =
+            conversionResult.steps.map((step) => step.baseStep).toList();
 
         ref
             .read(algorithmStepProvider.notifier)
             .initializeSteps(algorithmSteps);
+
+        _recordConversionHistory(
+          initialAutomaton: currentAutomaton,
+          finalAutomaton: conversionResult.resultDFA,
+          steps: algorithmSteps,
+        );
       } else {
         state = state.copyWith(isLoading: false, error: result.error);
       }
@@ -222,6 +228,22 @@ class AutomatonAlgorithmNotifier
         error: 'Error converting NFA to DFA with steps: $e',
       );
     }
+  }
+
+  void _recordConversionHistory({
+    required FSA initialAutomaton,
+    required FSA finalAutomaton,
+    List<AlgorithmStep> steps = const [],
+  }) {
+    final historyNotifier = ref.read(conversionHistoryProvider.notifier);
+    historyNotifier.startNewSession(
+      algorithmType: AlgorithmType.nfaToDfa,
+      initialSnapshot: initialAutomaton.toJson(),
+    );
+    for (final step in steps) {
+      historyNotifier.addStep(algorithmStep: step);
+    }
+    historyNotifier.setFinalSnapshot(finalAutomaton.toJson());
   }
 
   /// Minimizes DFA
@@ -287,9 +309,8 @@ class AutomatonAlgorithmNotifier
         );
 
         // Initialize step provider with algorithm steps
-        final algorithmSteps = minimizationResult.steps
-            .map((step) => step.baseStep)
-            .toList();
+        final algorithmSteps =
+            minimizationResult.steps.map((step) => step.baseStep).toList();
 
         ref
             .read(algorithmStepProvider.notifier)
@@ -407,9 +428,8 @@ class AutomatonAlgorithmNotifier
         );
 
         // Initialize step provider with algorithm steps
-        final algorithmSteps = conversionResult.steps
-            .map((step) => step.baseStep)
-            .toList();
+        final algorithmSteps =
+            conversionResult.steps.map((step) => step.baseStep).toList();
 
         ref
             .read(algorithmStepProvider.notifier)
@@ -447,8 +467,8 @@ class AutomatonAlgorithmNotifier
       final simplifyResult = RegexSimplifier.simplify(rawRegex);
       final simplifiedRegex =
           simplifyResult.isSuccess && simplifyResult.data != null
-          ? simplifyResult.data!
-          : rawRegex; // Fall back to raw if simplification fails
+              ? simplifyResult.data!
+              : rawRegex; // Fall back to raw if simplification fails
 
       // Store both versions in state
       state = state.copyWith(
@@ -494,9 +514,8 @@ class AutomatonAlgorithmNotifier
         );
 
         // Initialize step provider with algorithm steps
-        final algorithmSteps = conversionResult.steps
-            .map((step) => step.baseStep)
-            .toList();
+        final algorithmSteps =
+            conversionResult.steps.map((step) => step.baseStep).toList();
 
         ref
             .read(algorithmStepProvider.notifier)
@@ -598,5 +617,5 @@ class AutomatonAlgorithmNotifier
 /// Provider registration for automaton algorithm operations
 final automatonAlgorithmProvider =
     StateNotifierProvider<AutomatonAlgorithmNotifier, AlgorithmOperationState>(
-      (ref) => AutomatonAlgorithmNotifier(ref),
-    );
+  (ref) => AutomatonAlgorithmNotifier(ref),
+);

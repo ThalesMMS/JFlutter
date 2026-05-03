@@ -635,6 +635,8 @@ extension _FSAPageStateBehavior on _FSAPageState {
   }
 
   Widget _buildMobileLayout(AutomatonStateProviderState state) {
+    _syncValidationHighlight(_validationDiagnosticsFor(state.currentAutomaton));
+
     return SafeArea(
       child: Column(
         children: [
@@ -672,11 +674,23 @@ extension _FSAPageStateBehavior on _FSAPageState {
                         automatonAlgorithmProvider,
                       );
                       final stepState = sheetRef.watch(algorithmStepProvider);
+                      final conversionHistory =
+                          sheetRef.watch(conversionHistoryProvider).history;
+                      final validationDiagnostics = _validationDiagnosticsFor(
+                        sheetState.currentAutomaton,
+                      );
                       return Column(
                         children: [
                           _buildAlgorithmPanelForState(
                             sheetState,
                             algorithmState,
+                          ),
+                          _buildValidationDiagnosticsPanel(
+                            validationDiagnostics,
+                          ),
+                          _buildConversionComparisonPanel(
+                            conversionHistory,
+                            sheetState.currentAutomaton,
                           ),
                           if (stepState.hasSteps) ...[
                             const SizedBox(height: 16),
@@ -745,16 +759,26 @@ extension _FSAPageStateBehavior on _FSAPageState {
     final algorithmState = ref.watch(automatonAlgorithmProvider);
     final simulationState = ref.watch(automatonSimulationProvider);
     final stepState = ref.watch(algorithmStepProvider);
+    final conversionHistory = ref.watch(conversionHistoryProvider).history;
+    final validationDiagnostics = _validationDiagnosticsFor(
+      state.currentAutomaton,
+    );
+    _syncValidationHighlight(validationDiagnostics);
 
     return Row(
       children: [
-        // Left panel - Controls and Step Viewer
+        // Left panel - Controls, validation, and Step Viewer
         Expanded(
           flex: 2,
           child: Column(
             children: [
               Expanded(
                 child: _buildAlgorithmPanelForState(state, algorithmState),
+              ),
+              _buildValidationDiagnosticsPanel(validationDiagnostics),
+              _buildConversionComparisonPanel(
+                conversionHistory,
+                state.currentAutomaton,
               ),
               if (stepState.hasSteps) ...[
                 const SizedBox(height: 8),
@@ -786,10 +810,188 @@ extension _FSAPageStateBehavior on _FSAPageState {
     );
   }
 
+  List<ValidationDiagnostic> _validationDiagnosticsFor(FSA? automaton) {
+    final cacheKey =
+        automaton == null ? null : _validationAutomatonKey(automaton);
+    if (cacheKey == _cachedValidationAutomatonKey) {
+      return _cachedValidationDiagnostics;
+    }
+
+    _cachedValidationAutomatonKey = cacheKey;
+    if (automaton == null) {
+      _cachedValidationDiagnostics = const [];
+      return _cachedValidationDiagnostics;
+    }
+
+    _cachedValidationDiagnostics = [
+      for (final issue in InputValidators.validateFSA(automaton))
+        ValidationIssueToDiagnostic.fromIssue(issue),
+    ];
+    return _cachedValidationDiagnostics;
+  }
+
+  String _validationAutomatonKey(FSA automaton) {
+    final stateKeys = automaton.states
+        .map(
+          (state) =>
+              '${state.id}|${state.label}|${state.isInitial}|${state.isAccepting}|${state.type.name}',
+        )
+        .toList()
+      ..sort();
+    final transitionKeys = automaton.transitions
+        .map((transition) => transition.toJson().toString())
+        .toList()
+      ..sort();
+    final alphabet = automaton.alphabet.toList()..sort();
+    final accepting = automaton.acceptingStates.map((s) => s.id).toList()
+      ..sort();
+
+    return [
+      automaton.id,
+      automaton.name,
+      automaton.initialState?.id ?? '',
+      alphabet.join(','),
+      accepting.join(','),
+      stateKeys.join(';'),
+      transitionKeys.join(';'),
+    ].join('|');
+  }
+
+  Widget _buildValidationDiagnosticsPanel(
+    List<ValidationDiagnostic> diagnostics,
+  ) {
+    if (diagnostics.isEmpty) return const SizedBox.shrink();
+
+    return SizedBox(
+      height: 220,
+      child: ListView.builder(
+        itemCount: diagnostics.length,
+        itemBuilder: (context, index) => ValidationDiagnosticCard(
+          diagnostic: diagnostics[index],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildConversionComparisonPanel(
+    ConversionHistory? history,
+    FSA? currentAutomaton,
+  ) {
+    if (history?.initialSnapshot == null ||
+        history?.finalSnapshot == null ||
+        currentAutomaton == null) {
+      return const SizedBox.shrink();
+    }
+
+    late final FSA beforeAutomaton;
+    late final FSA afterAutomaton;
+    try {
+      beforeAutomaton = FSA.fromJson(history!.initialSnapshot!);
+      afterAutomaton = FSA.fromJson(history.finalSnapshot!);
+    } catch (_) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: SizedBox(
+        height: 320,
+        child: BeforeAfterComparison(
+          beforeAutomaton: beforeAutomaton,
+          afterAutomaton: afterAutomaton,
+          transformationDescription: 'Conversion result',
+          showStatistics: true,
+        ),
+      ),
+    );
+  }
+
+  void _syncValidationHighlight(List<ValidationDiagnostic> diagnostics) {
+    final validationDiagnostic = diagnostics.isEmpty ? null : diagnostics.first;
+    final validationHighlight = validationDiagnostic == null
+        ? SimulationHighlight.empty
+        : _simulationHighlightForDiagnostic(validationDiagnostic);
+    _scheduleValidationHighlight(
+      validationDiagnostic == null
+          ? 'none'
+          : _validationHighlightKey(validationDiagnostic, validationHighlight),
+      validationHighlight,
+    );
+  }
+
+  SimulationHighlight _simulationHighlightForDiagnostic(
+    ValidationDiagnostic diagnostic,
+  ) {
+    final stateIds = <String>{};
+    final transitionIds = <String>{};
+    for (final target in diagnostic.highlights) {
+      switch (target.type) {
+        case HighlightTargetType.state:
+          if (target.id != null && target.id!.trim().isNotEmpty) {
+            stateIds.add(target.id!.trim());
+          }
+          break;
+        case HighlightTargetType.transition:
+          if (target.id != null && target.id!.trim().isNotEmpty) {
+            transitionIds.add(target.id!.trim());
+          }
+          break;
+        default:
+          break;
+      }
+    }
+
+    return SimulationHighlight(
+      stateIds: Set.unmodifiable(stateIds),
+      transitionIds: Set.unmodifiable(transitionIds),
+    );
+  }
+
+  String _validationHighlightKey(
+    ValidationDiagnostic diagnostic,
+    SimulationHighlight highlight,
+  ) {
+    final stateIds = highlight.stateIds.toList()..sort();
+    final transitionIds = highlight.transitionIds.toList()..sort();
+    return [
+      diagnostic.code,
+      diagnostic.location ?? '',
+      stateIds.join(','),
+      transitionIds.join(','),
+    ].join('|');
+  }
+
+  void _scheduleValidationHighlight(String key, SimulationHighlight highlight) {
+    if (_lastValidationHighlightKey == key &&
+        _lastValidationHighlight == highlight) {
+      return;
+    }
+    _lastValidationHighlightKey = key;
+    _lastValidationHighlight = highlight;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted ||
+          _lastValidationHighlightKey != key ||
+          _lastValidationHighlight != highlight) {
+        return;
+      }
+      if (highlight.isEmpty) {
+        _highlightService.clear();
+      } else {
+        _highlightService.dispatch(highlight);
+      }
+    });
+  }
+
   Widget _buildTabletLayout(AutomatonStateProviderState state) {
     final algorithmState = ref.watch(automatonAlgorithmProvider);
     final simulationState = ref.watch(automatonSimulationProvider);
     final stepState = ref.watch(algorithmStepProvider);
+    final conversionHistory = ref.watch(conversionHistoryProvider).history;
+    final validationDiagnostics = _validationDiagnosticsFor(
+      state.currentAutomaton,
+    );
+    _syncValidationHighlight(validationDiagnostics);
     final tabletStepViewerMaxHeight = (MediaQuery.sizeOf(context).height * 0.45)
         .clamp(_kTabletStepViewerMinHeight, _kTabletStepViewerMaxHeight);
 
@@ -797,6 +999,11 @@ extension _FSAPageStateBehavior on _FSAPageState {
       mainAxisSize: MainAxisSize.min,
       children: [
         _buildAlgorithmPanelForState(state, algorithmState),
+        _buildValidationDiagnosticsPanel(validationDiagnostics),
+        _buildConversionComparisonPanel(
+          conversionHistory,
+          state.currentAutomaton,
+        ),
         if (stepState.hasSteps) ...[
           const SizedBox(height: 8),
           ConstrainedBox(

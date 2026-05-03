@@ -11,14 +11,54 @@
 //
 
 import '../models/grammar.dart';
+import '../models/grammar_parse_report.dart';
 import '../result.dart' as jflutter_result;
 import 'grammar_parser.dart';
 
 /// Simple recursive descent parser for CFG
 class SimpleRecursiveDescentParser {
   final Grammar grammar;
+  int _farthestPosition = 0;
 
   SimpleRecursiveDescentParser(this.grammar);
+
+  jflutter_result.Result<GrammarParseReport> parseWithReport(
+    String inputString, {
+    Duration timeout = const Duration(seconds: 5),
+  }) {
+    final start = DateTime.now();
+
+    try {
+      // Validate input
+      final validationResult = _validateInput(inputString);
+      if (!validationResult.isSuccess) {
+        return jflutter_result.Failure(validationResult.error!);
+      }
+
+      final result = _parseString(inputString, timeout);
+      final elapsed = DateTime.now().difference(start);
+
+      if (result != null) {
+        return jflutter_result.Success(
+          GrammarParseReport.accepted(
+            inputString: inputString,
+            executionTime: elapsed,
+          ),
+        );
+      }
+
+      return jflutter_result.Success(
+        GrammarParseReport.rejected(
+          inputString: inputString,
+          farthestPosition: _farthestPosition,
+          message: 'String "$inputString" cannot be derived from grammar',
+          executionTime: elapsed,
+        ),
+      );
+    } catch (e) {
+      return jflutter_result.Failure('Error parsing string: $e');
+    }
+  }
 
   /// Parses a string using recursive descent
   jflutter_result.Result<ParseResult> parse(
@@ -74,6 +114,7 @@ class SimpleRecursiveDescentParser {
   /// Parses the string using recursive descent
   List<String>? _parseString(String inputString, Duration timeout) {
     final startTime = DateTime.now();
+    _farthestPosition = 0;
 
     // Handle empty string case
     if (inputString.isEmpty) {
@@ -89,6 +130,7 @@ class SimpleRecursiveDescentParser {
       inputString,
       startTime,
       timeout,
+      0,
     );
   }
 
@@ -98,8 +140,11 @@ class SimpleRecursiveDescentParser {
     String inputString,
     DateTime startTime,
     Duration timeout, [
+    int offset = 0,
     int depth = 0,
   ]) {
+    _recordFarthest(offset);
+
     // Check timeout
     if (DateTime.now().difference(startTime) > timeout) {
       return null;
@@ -134,8 +179,12 @@ class SimpleRecursiveDescentParser {
         // Handle terminal productions
         if (production.rightSide.length == 1 &&
             grammar.terminals.contains(production.rightSide.first)) {
-          if (inputString == production.rightSide.first) {
-            return [nonTerminal, production.rightSide.first];
+          final terminal = production.rightSide.first;
+          if (inputString.startsWith(terminal)) {
+            _recordFarthest(offset + terminal.length);
+            if (inputString == terminal) {
+              return [nonTerminal, terminal];
+            }
           }
           continue;
         }
@@ -148,6 +197,7 @@ class SimpleRecursiveDescentParser {
             inputString,
             startTime,
             timeout,
+            offset,
             depth + 1,
           );
           if (result != null) {
@@ -168,6 +218,7 @@ class SimpleRecursiveDescentParser {
                 leftPart,
                 startTime,
                 timeout,
+                offset,
                 depth + 1,
               );
               final rightResult = _parseNonTerminal(
@@ -175,6 +226,7 @@ class SimpleRecursiveDescentParser {
                 rightPart,
                 startTime,
                 timeout,
+                offset + split,
                 depth + 1,
               );
 
@@ -192,6 +244,7 @@ class SimpleRecursiveDescentParser {
                       firstSymbol.length + lastSymbol.length &&
                   inputString.startsWith(firstSymbol) &&
                   inputString.endsWith(lastSymbol)) {
+                _recordFarthest(offset + firstSymbol.length);
                 final innerString = inputString.substring(
                   firstSymbol.length,
                   inputString.length - lastSymbol.length,
@@ -201,9 +254,11 @@ class SimpleRecursiveDescentParser {
                   innerString,
                   startTime,
                   timeout,
+                  offset + firstSymbol.length,
                   depth + 1,
                 );
                 if (innerResult != null) {
+                  _recordFarthest(offset + inputString.length);
                   return [nonTerminal, firstSymbol, ...innerResult, lastSymbol];
                 }
               }
@@ -217,6 +272,12 @@ class SimpleRecursiveDescentParser {
     }
 
     return null;
+  }
+
+  void _recordFarthest(int position) {
+    if (position > _farthestPosition) {
+      _farthestPosition = position;
+    }
   }
 
   /// Checks if a non-terminal can derive the empty string

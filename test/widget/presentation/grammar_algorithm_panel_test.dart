@@ -796,6 +796,14 @@ void main() {
     testWidgets('algorithm buttons have correct icons', (tester) async {
       await _pumpGrammarAlgorithmPanel(tester);
 
+      await tester.ensureVisible(find.text('Convert to CNF'));
+      await tester.pumpAndSettle();
+      expect(find.byIcon(Icons.filter_list), findsWidgets);
+
+      await tester.ensureVisible(find.text('Convert to GNF'));
+      await tester.pumpAndSettle();
+      expect(find.byIcon(Icons.format_list_numbered), findsWidgets);
+
       await tester.ensureVisible(find.text('Remove Left Recursion'));
       await tester.pumpAndSettle();
       expect(find.byIcon(Icons.transform), findsWidgets);
@@ -849,6 +857,22 @@ void main() {
 
     testWidgets('algorithm button descriptions are visible', (tester) async {
       await _pumpGrammarAlgorithmPanel(tester);
+
+      await tester.ensureVisible(
+        find.text('Convert grammar to Chomsky Normal Form'),
+      );
+      expect(
+        find.text('Convert grammar to Chomsky Normal Form'),
+        findsOneWidget,
+      );
+
+      await tester.ensureVisible(
+        find.text('Convert grammar to Greibach Normal Form'),
+      );
+      expect(
+        find.text('Convert grammar to Greibach Normal Form'),
+        findsOneWidget,
+      );
 
       await tester.ensureVisible(
         find.text('Eliminate left recursion from grammar'),

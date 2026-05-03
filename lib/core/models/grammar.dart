@@ -136,6 +136,10 @@ class Grammar {
   }
 
   /// Validates the grammar properties
+  ///
+  /// Note: this legacy validation returns plain strings and is kept for
+  /// backward compatibility. Prefer GrammarAnalyzer.validateMalformedProductions
+  /// for typed, non-throwing diagnostics suitable for UI display.
   List<String> validate() {
     final errors = <String>[];
 

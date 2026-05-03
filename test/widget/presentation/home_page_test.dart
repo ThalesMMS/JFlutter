@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:jflutter/core/services/simulation_highlight_service.dart';
 import 'package:jflutter/l10n/app_localizations.dart';
 import 'package:jflutter/presentation/pages/help_page.dart';
+import 'package:jflutter/presentation/providers/automaton_state_provider.dart';
 import 'package:jflutter/presentation/providers/home_navigation_provider.dart';
 import 'package:jflutter/presentation/pages/home_page.dart';
 import 'package:jflutter/presentation/pages/settings_page.dart';
@@ -35,6 +36,7 @@ class _TestSimulationHighlightService extends SimulationHighlightService {
 
 class _RecordingNavigatorObserver extends NavigatorObserver {
   final List<Route<dynamic>> pushedRoutes = [];
+  final List<Route<dynamic>?> replacedRoutes = [];
 
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
@@ -42,6 +44,14 @@ class _RecordingNavigatorObserver extends NavigatorObserver {
       pushedRoutes.add(route);
     }
     super.didPush(route, previousRoute);
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    if (oldRoute != null) {
+      replacedRoutes.add(newRoute);
+    }
+    super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
   }
 }
 
@@ -245,6 +255,83 @@ void main() {
       expect(find.text('Regex'), findsWidgets);
       expect(find.text('Regular Expressions'), findsWidgets);
     });
+
+    testWidgets(
+      'regex DFA conversion stores completed DFA and switches to FSA workspace',
+      (tester) async {
+        final navigationNotifier = _TestHomeNavigationNotifier()
+          ..setIndex(HomeNavigationNotifier.regexIndex);
+        final highlightService = _TestSimulationHighlightService();
+        final mockNavigatorObserver = _RecordingNavigatorObserver();
+
+        bool hasCompleteAlphabetCoverage(AutomatonStateProviderState state) {
+          final currentAutomaton = state.currentAutomaton;
+          if (currentAutomaton == null) {
+            return false;
+          }
+          if (currentAutomaton.states.isEmpty ||
+              currentAutomaton.alphabet.isEmpty) {
+            return false;
+          }
+
+          return currentAutomaton.states.every(
+            (automatonState) => currentAutomaton.alphabet.every(
+              (symbol) => currentAutomaton.fsaTransitions.any(
+                (transition) =>
+                    transition.fromState == automatonState &&
+                    transition.inputSymbols.contains(symbol),
+              ),
+            ),
+          );
+        }
+
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
+
+        await _pumpHomePage(
+          tester,
+          navigationNotifier: navigationNotifier,
+          highlightService: highlightService,
+          size: const Size(1400, 1080),
+          navigatorObservers: [mockNavigatorObserver],
+        );
+
+        final container = ProviderScope.containerOf(
+          tester.element(find.byType(HomePage)),
+          listen: false,
+        );
+
+        await tester.enterText(
+          find.byKey(const ValueKey('regex_input_field')),
+          'a',
+        );
+        await tester.pump();
+
+        await tester.tap(find.text('Convert to DFA'));
+        await tester.pumpAndSettle();
+
+        final automatonState = container.read(automatonStateProvider);
+        final currentAutomaton = automatonState.currentAutomaton;
+
+        expect(currentAutomaton, isNotNull);
+        expect(currentAutomaton!.isDeterministic, isTrue);
+        expect(hasCompleteAlphabetCoverage(automatonState), isTrue);
+        expect(
+          container.read(homeNavigationProvider),
+          HomeNavigationNotifier.fsaIndex,
+        );
+        expect(
+          navigationNotifier.receivedIndices,
+          contains(HomeNavigationNotifier.fsaIndex),
+        );
+        expect(mockNavigatorObserver.pushedRoutes, isEmpty);
+        expect(mockNavigatorObserver.replacedRoutes, isEmpty);
+        expect(find.text('FSA'), findsWidgets);
+        expect(find.text('Finite State Automata'), findsWidgets);
+      },
+    );
 
     for (final scenario in [
       ('mobile', const Size(430, 932)),

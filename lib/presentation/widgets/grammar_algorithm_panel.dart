@@ -15,9 +15,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/algorithms/cfg/cfg_toolkit.dart';
 import '../../core/algorithms/grammar_analyzer.dart';
+import '../../core/algorithms/grammar_cnf_transformer.dart';
+import '../../core/algorithms/grammar_gnf_transformer.dart';
 import '../../core/models/grammar.dart';
+import '../../core/models/grammar_diagnostic_severity.dart';
+import '../../core/models/grammar_transformation_step.dart';
 import '../../core/models/pda.dart';
 import '../../core/result.dart';
+import 'grammar_transformation_history.dart';
 import '../providers/automaton_state_provider.dart';
 import '../providers/grammar_provider.dart';
 import '../providers/home_navigation_provider.dart';
@@ -38,6 +43,7 @@ class GrammarAlgorithmPanel extends ConsumerStatefulWidget {
 class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
   bool _isAnalyzing = false;
   String? _analysisResult;
+  List<GrammarTransformationStep> _transformationSteps = const [];
 
   @override
   Widget build(BuildContext context) {
@@ -431,6 +437,20 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
+        if (_transformationSteps.isNotEmpty) ...[
+          GrammarTransformationHistory(
+            steps: _transformationSteps,
+            onApplyGrammar: (grammar) {
+              ref.read(grammarProvider.notifier).applyGrammar(grammar);
+              showAppSnackBar(
+                context,
+                message: 'Grammar applied to editor.',
+                tone: AppSnackBarTone.success,
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+        ],
         if (_analysisResult == null)
           _buildEmptyResults(context)
         else
@@ -573,68 +593,109 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
   }
 
   void _convertToCnf() {
-    _performAnalysis<Grammar>(
+    _performAnalysis<GrammarCnfTransformationReport>(
       'Convert to CNF',
       (grammar) async {
-        final result = CFGToolkit.toCNF(grammar);
-        if (result.isSuccess) {
-          final cnfGrammar = result.data!;
-          final notes = <String>[
-            'Grammar successfully converted to Chomsky Normal Form (CNF).',
-            'CNF rules: A→BC (two nonterminals) or A→a (single terminal).',
-          ];
-          if (CFGToolkit.isCNF(cnfGrammar)) {
-            notes.add('Verification: Resulting grammar is in valid CNF.');
+        final result = GrammarCnfTransformer.toCnf(grammar);
+        if (result.isSuccess && result.data != null) {
+          final errors = result.data!.diagnostics
+              .where((d) => d.severity == GrammarDiagnosticSeverity.error)
+              .map((d) => d.message)
+              .toList();
+          if (errors.isNotEmpty) {
+            return ResultFactory.failure(errors.join('\n'));
           }
+
           return ResultFactory.success(
-            GrammarAnalysisReport<Grammar>(value: cnfGrammar, notes: notes),
-          );
-        } else {
-          return ResultFactory.failure(
-            result.error ?? 'CNF conversion failed.',
+            GrammarAnalysisReport<GrammarCnfTransformationReport>(
+              value: result.data!,
+              notes: const [
+                'Converted grammar to Chomsky Normal Form (CNF) using a step pipeline.',
+                'CNF rules: A→BC (two nonterminals) or A→a (single terminal).',
+              ],
+            ),
           );
         }
+
+        return ResultFactory.failure(
+          result.error ?? 'CNF conversion failed.',
+        );
       },
-      (original, report) => _formatTransformationResult(
-        title: 'Chomsky Normal Form (CNF) Conversion',
-        original: original,
-        transformed: report.value,
-        notes: report.notes,
-        derivations: report.derivations,
-      ),
+      (original, report) {
+        setState(() {
+          _transformationSteps = report.value.steps;
+        });
+
+        final diagnosticsText = report.value.diagnostics.isEmpty
+            ? ''
+            : '\nDiagnostics:\n' +
+                report.value.diagnostics
+                    .map((d) => '- [${d.severity.name}] ${d.message}')
+                    .join('\n');
+
+        return _formatTransformationResult(
+          title: 'Chomsky Normal Form (CNF) Conversion',
+          original: original,
+          transformed: report.value.grammar,
+          notes: [...report.notes, diagnosticsText]
+              .where((s) => s.trim().isNotEmpty)
+              .toList(),
+          derivations: report.derivations,
+        );
+      },
     );
   }
 
   void _convertToGnf() {
-    _performAnalysis<Grammar>(
+    _performAnalysis<GrammarGnfTransformationReport>(
       'Convert to GNF',
       (grammar) async {
-        final result = CFGToolkit.toGNF(grammar);
-        if (result.isSuccess) {
-          final gnfGrammar = result.data!;
-          final notes = <String>[
-            'Grammar successfully converted to Greibach Normal Form (GNF).',
-            'GNF rules: A→aα (terminal followed by nonterminals).',
-          ];
-          if (CFGToolkit.isGNF(gnfGrammar)) {
-            notes.add('Verification: Resulting grammar is in valid GNF.');
-          }
-          return ResultFactory.success(
-            GrammarAnalysisReport<Grammar>(value: gnfGrammar, notes: notes),
-          );
-        } else {
+        final report = GrammarGnfTransformer.toGnf(grammar);
+        final hasError = report.diagnostics.any(
+          (d) => d.severity == GrammarDiagnosticSeverity.error,
+        );
+
+        if (hasError) {
           return ResultFactory.failure(
-            result.error ?? 'GNF conversion failed.',
+            report.diagnostics
+                .where((d) => d.severity == GrammarDiagnosticSeverity.error)
+                .map((d) => d.message)
+                .join('\n'),
           );
         }
+
+        return ResultFactory.success(
+          GrammarAnalysisReport<GrammarGnfTransformationReport>(
+            value: report,
+            notes: const [
+              'Converted grammar to Greibach Normal Form (GNF).',
+              'GNF rules: A→aα (terminal followed by nonterminals).',
+            ],
+          ),
+        );
       },
-      (original, report) => _formatTransformationResult(
-        title: 'Greibach Normal Form (GNF) Conversion',
-        original: original,
-        transformed: report.value,
-        notes: report.notes,
-        derivations: report.derivations,
-      ),
+      (original, report) {
+        setState(() {
+          _transformationSteps = report.value.steps;
+        });
+
+        final diagnosticsText = report.value.diagnostics.isEmpty
+            ? ''
+            : '\nDiagnostics:\n' +
+                report.value.diagnostics
+                    .map((d) => '- [${d.severity.name}] ${d.message}')
+                    .join('\n');
+
+        return _formatTransformationResult(
+          title: 'Greibach Normal Form (GNF) Conversion',
+          original: original,
+          transformed: report.value.grammar,
+          notes: [...report.notes, diagnosticsText]
+              .where((s) => s.trim().isNotEmpty)
+              .toList(),
+          derivations: report.derivations,
+        );
+      },
     );
   }
 
@@ -648,6 +709,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
     setState(() {
       _isAnalyzing = true;
       _analysisResult = null;
+      _transformationSteps = const [];
     });
 
     final grammar = ref.read(grammarProvider.notifier).buildGrammar();
@@ -769,11 +831,12 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
   }
 
   String _formatAmbiguityResult(GrammarAnalysisReport<bool> report) {
-    final status = report.value ? 'Unambiguous' : 'Ambiguous';
+    final status =
+        report.value ? 'LL(1) (no conflicts)' : 'Not LL(1) (conflicts)';
     final buffer = StringBuffer()
-      ..writeln('Ambiguity Analysis')
+      ..writeln('LL(1) Classification')
       ..writeln('')
-      ..writeln('Status: $status');
+      ..writeln('Classification: $status');
 
     _appendSection(buffer, 'Notes', report.notes);
     _appendSection(buffer, 'Conflicts', report.conflicts);

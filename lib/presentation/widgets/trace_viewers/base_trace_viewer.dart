@@ -25,6 +25,8 @@ class BaseTraceViewer extends StatefulWidget {
   final SimulationResult result;
   final String title;
   final Widget Function(SimulationStep step, int index) buildStepLine;
+  final Widget? Function(BuildContext context, SimulationStep step, int index)?
+      detailsBuilder;
   final SimulationHighlightService? highlightService;
   final double animationSpeed;
   final ValueChanged<int>? onStepChanged;
@@ -35,6 +37,7 @@ class BaseTraceViewer extends StatefulWidget {
     required this.result,
     required this.title,
     required this.buildStepLine,
+    this.detailsBuilder,
     this.highlightService,
     this.animationSpeed = 1.0,
     this.onStepChanged,
@@ -53,7 +56,8 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
   bool _isPlaying = false;
 
   bool get _highlightEnabled =>
-      widget.highlightService != null && widget.result.steps.isNotEmpty;
+      widget.result.steps.isNotEmpty &&
+      (widget.highlightService != null || widget.detailsBuilder != null);
 
   @override
   void initState() {
@@ -314,6 +318,17 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
                   ),
             ),
           ),
+        if (_highlightEnabled && widget.detailsBuilder != null) ...[
+          const SizedBox(height: 10),
+          Builder(
+            builder: (context) {
+              final index = (_selectedIndex ?? 0).clamp(0, steps.length - 1);
+              final step = steps[index];
+              return widget.detailsBuilder!(context, step, index) ??
+                  const SizedBox.shrink();
+            },
+          ),
+        ],
       ],
     );
   }

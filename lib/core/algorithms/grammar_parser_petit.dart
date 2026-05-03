@@ -10,10 +10,13 @@
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:petitparser/petitparser.dart';
 
 import '../models/grammar.dart';
+import '../models/grammar_parse_report.dart';
 import '../models/production.dart';
 import '../result.dart' as jflutter_result;
 import 'grammar_parser.dart';
@@ -138,12 +141,73 @@ class SimpleCFGParser {
 
 /// Grammar parser using PetitParser
 class GrammarParserPetit {
+  static Future<jflutter_result.Result<GrammarParseReport>> parseWithReport(
+    Grammar grammar,
+    String inputString, {
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    final stopwatch = Stopwatch()..start();
+
+    try {
+      // Validate input
+      final validationResult = _validateInput(grammar, inputString);
+      if (!validationResult.isSuccess) {
+        return jflutter_result.Failure(validationResult.error!);
+      }
+
+      final parser = _buildParser(grammar);
+      if (parser == null) {
+        return const jflutter_result.Failure(
+          'Failed to build parser from grammar',
+        );
+      }
+
+      final result = await Future<Result>(() => parser.parse(inputString))
+          .timeout(timeout);
+
+      if (result is Success) {
+        return jflutter_result.Success(
+          GrammarParseReport.accepted(
+            inputString: inputString,
+            executionTime: stopwatch.elapsed,
+          ),
+        );
+      }
+
+      // PetitParser does not currently expose expected terminals in a stable way
+      // for our dynamic CFG builder, so we return a generic rejected report.
+      return jflutter_result.Success(
+        GrammarParseReport.rejected(
+          inputString: inputString,
+          farthestPosition: (result is Failure) ? result.position : 0,
+          message: 'String "$inputString" cannot be derived from grammar',
+          executionTime: stopwatch.elapsed,
+        ),
+      );
+    } on TimeoutException {
+      return jflutter_result.Success(
+        GrammarParseReport.rejected(
+          inputString: inputString,
+          farthestPosition: 0,
+          message: 'Parsing timed out after ${timeout.inMilliseconds} ms.',
+          executionTime: stopwatch.elapsed,
+        ),
+      );
+    } catch (e) {
+      return jflutter_result.Failure('Error parsing string: $e');
+    } finally {
+      stopwatch.stop();
+    }
+  }
+
   /// Parses a string using a grammar with PetitParser
   static jflutter_result.Result<ParseResult> parse(
     Grammar grammar,
     String inputString, {
     Duration timeout = const Duration(seconds: 5),
   }) {
+    // Legacy API.
+
     try {
       final stopwatch = Stopwatch()..start();
 

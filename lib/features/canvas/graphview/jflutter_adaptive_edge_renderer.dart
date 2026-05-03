@@ -58,6 +58,8 @@ class JFlutterAdaptiveEdgeRenderer extends AnimatedAdaptiveEdgeRenderer {
   final LinkedHashMap<_LabelPainterCacheKey, TextPainter> _labelPainterCache =
       LinkedHashMap<_LabelPainterCacheKey, TextPainter>();
   final Set<TextPainter> _activeLabelPainters = HashSet<TextPainter>.identity();
+  final Set<TextPainter> _usedLabelPaintersInRenderCycle =
+      HashSet<TextPainter>.identity();
   final Set<TextPainter> _transientLabelPainters =
       HashSet<TextPainter>.identity();
   Graph? _edgeCacheGraph;
@@ -77,6 +79,7 @@ class JFlutterAdaptiveEdgeRenderer extends AnimatedAdaptiveEdgeRenderer {
     }
     super.setGraph(graph);
     _invalidateEdgeCaches();
+    invalidatePathGeometryCache();
   }
 
   @override
@@ -111,10 +114,13 @@ class JFlutterAdaptiveEdgeRenderer extends AnimatedAdaptiveEdgeRenderer {
   void prepareForRenderCycle() {
     super.prepareForRenderCycle();
     _ensureEdgeCaches();
+    _pruneCachedLabelPainters();
+    _usedLabelPaintersInRenderCycle.clear();
   }
 
   void invalidateEdgeCaches() {
     _invalidateEdgeCaches();
+    invalidatePathGeometryCache();
   }
 
   @visibleForTesting

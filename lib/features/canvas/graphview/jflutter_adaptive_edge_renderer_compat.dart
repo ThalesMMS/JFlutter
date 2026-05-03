@@ -40,6 +40,12 @@ class EdgeLabelGeometry {
 
 class AnimatedAdaptiveEdgeRenderer extends AdaptiveEdgeRenderer
     implements RenderCycleAware {
+  final Map<Edge, EdgePathGeometry> _pathGeometryCache =
+      <Edge, EdgePathGeometry>{};
+  int _pathGeometryCacheCount = -1;
+  int _pathGeometryCacheSignature = 0;
+  int _pathGeometryCacheGeneration = -1;
+  bool _pathGeometryCacheDirty = true;
   AnimatedAdaptiveEdgeRenderer({
     required super.config,
     this.animationConfig = const AnimatedEdgeConfiguration(),
@@ -61,21 +67,44 @@ class AnimatedAdaptiveEdgeRenderer extends AdaptiveEdgeRenderer
     super.setGraph(graph);
     _graph = graph;
     _clearParallelEdgeCache();
+    _invalidatePathGeometryCache();
   }
 
   void setAnimationValue(double value) {
     animationValue = value;
   }
 
+  void invalidatePathGeometryCache() {
+    _invalidatePathGeometryCache();
+  }
+
   @override
   void prepareForRenderCycle() {
     resetRepulsionCalculation();
     _ensureParallelEdgeCache();
+    _ensurePathGeometryCache(verifyEdgeSignature: true);
   }
 
   EdgePathGeometry? buildEdgeGeometry(
     Edge edge, {
     double arrowLength = ARROW_LENGTH,
+  }) {
+    _ensurePathGeometryCache();
+    final cached = _pathGeometryCache[edge];
+    if (cached != null) {
+      return cached;
+    }
+
+    final geometry = _buildEdgeGeometryUncached(edge, arrowLength: arrowLength);
+    if (geometry != null) {
+      _pathGeometryCache[edge] = geometry;
+    }
+    return geometry;
+  }
+
+  EdgePathGeometry? _buildEdgeGeometryUncached(
+    Edge edge, {
+    required double arrowLength,
   }) {
     if (edge.source == edge.destination) {
       final loopResult = buildSelfLoopPath(edge, arrowLength: arrowLength);
@@ -181,9 +210,8 @@ class AnimatedAdaptiveEdgeRenderer extends AdaptiveEdgeRenderer
 
     final start = metric.getTangentForOffset(0)?.position ?? Offset.zero;
     final end = metric.getTangentForOffset(metric.length)?.position ?? start;
-    final effectiveArrowLength = arrowLength <= 0
-        ? 0.0
-        : math.min(arrowLength, metric.length * 0.3);
+    final effectiveArrowLength =
+        arrowLength <= 0 ? 0.0 : math.min(arrowLength, metric.length * 0.3);
     final arrowBaseOffset = math.max(0.0, metric.length - effectiveArrowLength);
     final arrowBase =
         metric.getTangentForOffset(arrowBaseOffset)?.position ?? end;
@@ -247,7 +275,7 @@ class AnimatedAdaptiveEdgeRenderer extends AdaptiveEdgeRenderer
       final basePosition = i / animationConfig.particleCount;
       final animatedPosition =
           (basePosition + animationValue * animationConfig.animationSpeed) %
-          1.0;
+              1.0;
       final tangent = metric.getTangentForOffset(
         animatedPosition * metric.length,
       );
@@ -314,6 +342,55 @@ class AnimatedAdaptiveEdgeRenderer extends AdaptiveEdgeRenderer
     _parallelEdgeCache.clear();
     _parallelEdgeCacheGraph = null;
     _parallelEdgeCacheCount = -1;
+  }
+
+  void _ensurePathGeometryCache({bool verifyEdgeSignature = false}) {
+    final currentGraph = graph;
+    if (currentGraph == null) {
+      _clearPathGeometryCache();
+      return;
+    }
+
+    final graphEdges = currentGraph.edges;
+    final countChanged = _pathGeometryCacheCount != graphEdges.length;
+    final generationChanged =
+        _pathGeometryCacheGeneration != currentGraph.generation;
+    int? edgeSignature;
+    var signatureChanged = false;
+    if (verifyEdgeSignature ||
+        _pathGeometryCacheDirty ||
+        countChanged ||
+        generationChanged) {
+      edgeSignature = _edgeIdentitySignature(graphEdges);
+      signatureChanged = _pathGeometryCacheSignature != edgeSignature;
+    }
+
+    if (_pathGeometryCacheDirty ||
+        countChanged ||
+        generationChanged ||
+        signatureChanged) {
+      _clearPathGeometryCache();
+      _pathGeometryCacheCount = graphEdges.length;
+      _pathGeometryCacheSignature =
+          edgeSignature ?? _edgeIdentitySignature(graphEdges);
+      _pathGeometryCacheGeneration = currentGraph.generation;
+      _pathGeometryCacheDirty = false;
+    }
+  }
+
+  void _invalidatePathGeometryCache() {
+    _pathGeometryCacheDirty = true;
+  }
+
+  void _clearPathGeometryCache() {
+    _pathGeometryCache.clear();
+    _pathGeometryCacheCount = -1;
+    _pathGeometryCacheSignature = 0;
+    _pathGeometryCacheGeneration = -1;
+  }
+
+  int _edgeIdentitySignature(List<Edge> edges) {
+    return Object.hashAll(edges.map(identityHashCode));
   }
 
   String _parallelEdgeKey(Edge edge) {

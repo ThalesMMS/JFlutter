@@ -100,8 +100,10 @@ const _noPdaResultUpdate = Object();
 /// Provider notifier responsible for updating grammar state and running conversions.
 class GrammarProvider extends StateNotifier<GrammarState> {
   GrammarProvider({ConversionService? conversionService})
-    : _conversionService = conversionService ?? ConversionService(),
-      super(GrammarState.initial());
+      : _conversionService = conversionService ?? ConversionService(),
+        super(GrammarState.initial());
+
+  static final RegExp _productionIdPattern = RegExp(r'^p(\d+)$');
 
   final ConversionService _conversionService;
 
@@ -170,6 +172,20 @@ class GrammarProvider extends StateNotifier<GrammarState> {
     state = state.copyWith(
       productions: const <Production>[],
       nextProductionId: 1,
+      error: null,
+      lastPdaResult: null,
+    );
+  }
+
+  /// Restores the full productions list (used for undo after destructive actions).
+  void setProductions(List<Production> productions) {
+    final maxId = productions
+        .map((production) => _productionIdNumber(production.id))
+        .fold<int>(0, (previous, value) => value > previous ? value : previous);
+
+    state = state.copyWith(
+      productions: productions,
+      nextProductionId: maxId + 1,
       error: null,
       lastPdaResult: null,
     );
@@ -244,6 +260,37 @@ class GrammarProvider extends StateNotifier<GrammarState> {
     );
   }
 
+  void applyGrammar(Grammar grammar) {
+    state = state.copyWith(
+      name: grammar.name,
+      startSymbol: grammar.startSymbol,
+      type: grammar.type,
+      productions: grammar.productions.toList()
+        ..sort((a, b) {
+          final orderComparison = a.order.compareTo(b.order);
+          if (orderComparison != 0) return orderComparison;
+          return a.id.compareTo(b.id);
+        }),
+      error: null,
+      lastPdaResult: null,
+      activeConversion: null,
+      nextProductionId: _nextProductionIdFor(grammar),
+      isConverting: false,
+    );
+  }
+
+  int _nextProductionIdFor(Grammar grammar) {
+    return grammar.productions.map((p) {
+          return _productionIdNumber(p.id);
+        }).fold<int>(0, (prev, value) => value > prev ? value : prev) +
+        1;
+  }
+
+  static int _productionIdNumber(String id) {
+    final match = _productionIdPattern.firstMatch(id);
+    return match == null ? 0 : int.parse(match.group(1)!);
+  }
+
   Future<Result<FSA>> convertToAutomaton() async {
     if (state.productions.isEmpty) {
       final result = ResultFactory.failure<FSA>(
@@ -308,7 +355,7 @@ class GrammarProvider extends StateNotifier<GrammarState> {
 
   Future<Result<PDA>> _performPdaConversion({
     required ConversionRequest Function({required Grammar grammar})
-    requestBuilder,
+        requestBuilder,
     required Result<dynamic> Function(ConversionRequest request) converter,
     required GrammarConversionType conversionType,
   }) async {

@@ -26,6 +26,9 @@ import '../widgets/pda_canvas_graphview.dart';
 import '../widgets/pda_algorithm_panel.dart';
 import '../widgets/pda_simulation_panel.dart';
 import '../widgets/pda/stack_drawer.dart';
+
+import '../../core/models/step_explanation.dart';
+import '../providers/pda_simulation_provider.dart';
 import '../../core/services/simulation_highlight_service.dart';
 import '../../features/canvas/graphview/graphview_highlight_channel.dart';
 import '../../features/canvas/graphview/graphview_pda_canvas_controller.dart';
@@ -157,10 +160,7 @@ class _PDAPageState extends ConsumerState<PDAPage>
 
     final helpContent = helpNotifier.getHelpByContext(helpContextId);
     if (helpContent != null) {
-      ContextAwareHelpPanel.show(
-        context,
-        helpContent: helpContent,
-      );
+      ContextAwareHelpPanel.show(context, helpContent: helpContent);
     } else {
       showAppSnackBar(
         context,
@@ -224,6 +224,7 @@ class _PDAPageState extends ConsumerState<PDAPage>
                 initialStackSymbol: pda.initialStackSymbol,
                 stackAlphabet: pda.stackAlphabet,
                 isSimulating: _isSimulating,
+                highlightedIndex: _inferHighlightedStackIndex(),
                 onClear: () {
                   setState(() {
                     _currentStack = const StackState.empty();
@@ -544,6 +545,7 @@ class _PDAPageState extends ConsumerState<PDAPage>
             stackAlphabet:
                 ref.read(pdaEditorProvider).pda?.stackAlphabet ?? const {},
             isSimulating: _isSimulating,
+            highlightedIndex: _inferHighlightedStackIndex(),
             onClear: () {
               setState(() {
                 _currentStack = const StackState.empty();
@@ -594,6 +596,22 @@ class _PDAPageState extends ConsumerState<PDAPage>
   String _formatCount(String singular, String plural, int count) {
     final label = count == 1 ? singular : plural;
     return '$count $label';
+  }
+
+  int? _inferHighlightedStackIndex() {
+    final step = ref.watch(pdaSimulationProvider).currentStep;
+    final explanation = step?.explanation;
+    if (explanation == null) return null;
+
+    for (final highlight in explanation.highlights) {
+      if (highlight.type != HighlightTargetType.pdaStack) continue;
+      final data = highlight.data;
+      if (data.isEmpty) return null;
+      final index = data['index'];
+      if (index is int) return index;
+    }
+
+    return null;
   }
 
   Widget _buildTabletLayout() {

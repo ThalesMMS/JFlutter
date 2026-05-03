@@ -26,6 +26,7 @@ import '../../l10n/app_localizations.dart';
 import '../providers/automaton_algorithm_provider.dart';
 import '../providers/automaton_state_provider.dart';
 import '../providers/help_provider.dart';
+import '../providers/home_navigation_provider.dart';
 import '../widgets/algorithm_panel.dart';
 import '../widgets/app_snackbar.dart';
 import '../widgets/context_aware_help_panel.dart';
@@ -33,7 +34,6 @@ import '../widgets/error_banner.dart';
 import '../widgets/simulation_panel.dart';
 import '../widgets/switch_setting_tile.dart';
 import '../widgets/tablet_layout_container.dart';
-import 'fsa_page.dart';
 
 part 'regex_page_layout.dart';
 part 'regex_page_simplification.dart';
@@ -282,13 +282,14 @@ class _RegexPageState extends ConsumerState<RegexPage> {
     }
 
     final completedDfa = DFACompleter.complete(nfaToDfaResult.data!);
-    _pushAutomatonToProvider(completedDfa);
 
     _showFeedback(l10n.convertedRegexToDfa, tone: AppSnackBarTone.success);
 
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (context) => const FSAPage()));
+    _pushAutomatonToProvider(completedDfa);
+
+    // Keep navigation consistent with the rest of the app: switch the HomePage
+    // workspace instead of pushing a standalone FSAPage route.
+    ref.read(homeNavigationProvider.notifier).goToFsa();
   }
 
   void _pushAutomatonToProvider(FSA automaton) {

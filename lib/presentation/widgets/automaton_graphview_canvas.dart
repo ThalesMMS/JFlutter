@@ -12,6 +12,7 @@
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
+import 'dart:developer' show Timeline;
 import 'dart:math' as math;
 
 import 'package:collection/collection.dart';
@@ -647,12 +648,14 @@ class _AutomatonGraphViewCanvasState
                                       canvasNode,
                                       highlight,
                                     );
-                                    return _AutomatonGraphNode(
-                                      label: canvasNode.label,
-                                      isInitial: canvasNode.isInitial,
-                                      isAccepting: canvasNode.isAccepting,
-                                      isHighlighted: isHighlighted,
-                                      motionPreset: motionPreset,
+                                    return RepaintBoundary(
+                                      child: _AutomatonGraphNode(
+                                        label: canvasNode.label,
+                                        isInitial: canvasNode.isInitial,
+                                        isAccepting: canvasNode.isAccepting,
+                                        isHighlighted: isHighlighted,
+                                        motionPreset: motionPreset,
+                                      ),
                                     );
                                   },
                                 ),

@@ -292,5 +292,61 @@ void main() {
       expect(find.textContaining('remaining=ε'), findsOneWidget);
       expect(find.textContaining('read'), findsNothing);
     });
+
+    testWidgets('keeps selected step across parent rebuilds', (tester) async {
+      final result = SimulationResult.success(
+        inputString: 'abc',
+        steps: [
+          const SimulationStep(
+            currentState: 'q0',
+            remainingInput: 'abc',
+            stepNumber: 0,
+          ),
+          const SimulationStep(
+            currentState: 'q1',
+            remainingInput: 'bc',
+            usedTransition: 'a',
+            stepNumber: 1,
+          ),
+          const SimulationStep(
+            currentState: 'q2',
+            remainingInput: 'c',
+            usedTransition: 'b',
+            stepNumber: 2,
+          ),
+        ],
+        executionTime: const Duration(milliseconds: 15),
+      );
+
+      var rebuildToken = false;
+      late StateSetter rebuildParent;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: StatefulBuilder(
+            builder: (context, setState) {
+              rebuildParent = setState;
+              return Scaffold(
+                body: Column(
+                  children: [
+                    Text('rebuild: $rebuildToken'),
+                    FATraceViewer(result: result),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Next Step'));
+      await tester.pumpAndSettle();
+      expect(find.text('2 / 3'), findsOneWidget);
+
+      rebuildParent(() => rebuildToken = true);
+      await tester.pumpAndSettle();
+
+      expect(find.text('2 / 3'), findsOneWidget);
+    });
   });
 }

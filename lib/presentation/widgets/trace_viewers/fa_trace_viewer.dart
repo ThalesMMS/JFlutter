@@ -14,34 +14,44 @@ import 'package:flutter/material.dart';
 
 import '../../../core/models/simulation_result.dart';
 import '../../../core/models/simulation_step.dart';
+import '../../../core/services/simulation_highlight_service.dart';
 import '../fsa/input_tape_viewer.dart';
+import '../step_explanation_card.dart';
 import 'base_trace_viewer.dart';
 import 'nfa_computation_tree_viewer.dart';
 
-class FATraceViewer extends StatelessWidget {
+class FATraceViewer extends StatefulWidget {
   final SimulationResult result;
   const FATraceViewer({super.key, required this.result});
 
+  @override
+  State<FATraceViewer> createState() => _FATraceViewerState();
+}
+
+class _FATraceViewerState extends State<FATraceViewer> {
+  final _highlightService = SimulationHighlightService();
+
   InputTapeState _buildTapeState() {
-    if (result.inputString.isEmpty || result.steps.isEmpty) {
+    if (widget.result.inputString.isEmpty || widget.result.steps.isEmpty) {
       return const InputTapeState.initial();
     }
 
     // Calculate position from last step
-    final lastStep = result.steps.last;
-    final position = result.inputString.length - lastStep.remainingInput.length;
+    final lastStep = widget.result.steps.last;
+    final position =
+        widget.result.inputString.length - lastStep.remainingInput.length;
 
     return InputTapeState(
-      symbols: result.inputString.split(''),
+      symbols: widget.result.inputString.split(''),
       currentPosition: position,
     );
   }
 
   Set<String> _extractAlphabet() {
-    if (result.inputString.isEmpty) {
+    if (widget.result.inputString.isEmpty) {
       return {};
     }
-    return result.inputString.split('').toSet();
+    return widget.result.inputString.split('').toSet();
   }
 
   @override
@@ -49,7 +59,7 @@ class FATraceViewer extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (result.inputString.isNotEmpty)
+        if (widget.result.inputString.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: InputTapePanel(
@@ -59,12 +69,12 @@ class FATraceViewer extends StatelessWidget {
             ),
           ),
         BaseTraceViewer(
-          result: result,
-          title: 'FA Trace (${result.stepCount} steps)',
+          result: widget.result,
+          title: 'FA Trace (${widget.result.stepCount} steps)',
+          highlightService: _highlightService,
           buildStepLine: (SimulationStep step, int index) {
-            final remaining = step.remainingInput.isEmpty
-                ? 'ε'
-                : step.remainingInput;
+            final remaining =
+                step.remainingInput.isEmpty ? 'ε' : step.remainingInput;
             final transition = step.usedTransition != null
                 ? ' | read ${step.usedTransition}'
                 : '';
@@ -79,8 +89,8 @@ class FATraceViewer extends StatelessWidget {
                   Text(
                     '${index + 1}.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -91,14 +101,31 @@ class FATraceViewer extends StatelessWidget {
                       ).textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),
                     ),
                   ),
+                  if (step.explanation != null)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 6),
+                      child: Icon(
+                        Icons.info_outline,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
                 ],
               ),
             );
           },
+          detailsBuilder: (context, step, index) {
+            return StepExplanationCard(
+              explanation: step.explanation,
+              titleWhenEmpty: 'Why this step happened',
+            );
+          },
         ),
-        if (result.computationTree != null) ...[
+        if (widget.result.computationTree != null) ...[
           const SizedBox(height: 16),
-          NFAComputationTreeViewer(computationTree: result.computationTree!),
+          NFAComputationTreeViewer(
+            computationTree: widget.result.computationTree!,
+          ),
         ],
       ],
     );

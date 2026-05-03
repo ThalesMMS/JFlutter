@@ -81,6 +81,16 @@ bool _pathIntersectsRect(Path path, Rect rect, {double padding = 0}) {
   return false;
 }
 
+class _ThrowingSourceEdge extends Edge {
+  _ThrowingSourceEdge(super.source, super.destination);
+
+  @override
+  Node get source => throw StateError('forced routing failure');
+
+  @override
+  set source(Node value) {}
+}
+
 void main() {
   group('JFlutterAdaptiveEdgeRenderer', () {
     late Graph graph;
@@ -225,6 +235,15 @@ void main() {
       expect(renderer.debugLabelPainterCacheSize, equals(0));
     });
 
+    test('keeps label painters cached across render cycles', () {
+      expect(renderer.debugGroupedLabelRectForEdge(edge), isNotNull);
+      final cachedPainterCount = renderer.debugLabelPainterCacheSize;
+
+      renderer.prepareForRenderCycle();
+
+      expect(renderer.debugLabelPainterCacheSize, equals(cachedPainterCount));
+    });
+
     test('caps label painter cache at 200 entries', () {
       for (var index = 0; index < 220; index++) {
         graph.addEdgeS(
@@ -329,6 +348,24 @@ void main() {
       expect(rect.left - path.getBounds().right, lessThanOrEqualTo(14));
       expect(rect.center.dx - path.getBounds().right, lessThanOrEqualTo(16));
       expect(rect.center.dy, lessThan(path.getBounds().center.dy));
+    });
+
+    test('GraphView AdaptiveEdgeRenderer routing fallback never throws', () {
+      final baseRenderer = AdaptiveEdgeRenderer(
+        config: EdgeRoutingConfig(
+          anchorMode: AnchorMode.dynamic,
+          routingMode: RoutingMode.bezier,
+        ),
+      )..setGraph(graph);
+      final throwingEdge = _ThrowingSourceEdge(source, destination);
+
+      final fallbackPath = baseRenderer.routeEdgePath(
+        Offset.zero,
+        const Offset(100, 0),
+        throwingEdge,
+      );
+      expect(
+          fallbackPath.getBounds(), equals(const Rect.fromLTWH(0, 0, 100, 0)));
     });
   });
 }

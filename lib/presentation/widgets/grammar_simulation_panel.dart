@@ -7,13 +7,20 @@
 //  Thales Matheus Mendonça Santos - October 2025
 //
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/algorithms/grammar_parser.dart';
+import '../../core/algorithms/cfg/cyk_parser.dart';
+import '../../core/models/cyk_step.dart';
 import '../../core/models/grammar.dart';
+import '../../core/models/grammar_parse_report.dart';
 import '../../core/result.dart';
 import '../providers/grammar_provider.dart';
+import 'derivation_tree_view.dart';
+import 'grammar_sentential_form_card.dart';
+import 'step_explanation_card.dart';
 
 /// Panel for grammar parsing and string testing
 class GrammarSimulationPanel extends ConsumerStatefulWidget {
@@ -31,10 +38,40 @@ class _GrammarSimulationPanelState
   final TextEditingController _inputController = TextEditingController();
 
   bool _isParsing = false;
-  String? _parseResult;
-  List<String> _parseSteps = [];
-  Duration? _executionTime;
+  GrammarParseReport? _parseReport;
   String _selectedAlgorithm = 'CYK';
+
+  // Only used for CYK "with steps" mode.
+  // Keeps UI changes surgical: other parsing strategies keep using GrammarParseReport.
+  ({
+    bool accepted,
+    List<CYKStep> steps,
+  })? _cykStepsResult;
+
+  int _selectedStepIndex = 0;
+
+  static Result<GrammarParseReport> _parseWithReportInBackground(
+    ({
+      Grammar grammar,
+      String inputString,
+      ParsingStrategyHint strategyHint,
+    }) request,
+  ) {
+    return GrammarParser.parseWithReport(
+      request.grammar,
+      request.inputString,
+      strategyHint: request.strategyHint,
+    );
+  }
+
+  static Result<CYKParseResult> _parseCykWithStepsInBackground(
+    ({
+      Grammar grammar,
+      String inputString,
+    }) request,
+  ) {
+    return CYKParser.parseWithSteps(request.grammar, request.inputString);
+  }
 
   @override
   void dispose() {
@@ -102,7 +139,7 @@ class _GrammarSimulationPanelState
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
-            value: _selectedAlgorithm,
+            initialValue: _selectedAlgorithm,
             decoration: const InputDecoration(
               border: OutlineInputBorder(),
               isDense: true,
@@ -197,9 +234,10 @@ class _GrammarSimulationPanelState
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
-        _parseResult == null
-            ? _buildEmptyResults(context)
-            : _buildResults(context),
+        if (_parseReport == null)
+          _buildEmptyResults(context)
+        else
+          _buildResults(context),
       ],
     );
   }
@@ -244,9 +282,14 @@ class _GrammarSimulationPanelState
   }
 
   Widget _buildResults(BuildContext context) {
-    final isAccepted = _parseResult == 'Accepted';
+    final report = _parseReport!;
+    final isAccepted = report.accepted;
     final colorScheme = Theme.of(context).colorScheme;
     final color = isAccepted ? colorScheme.tertiary : colorScheme.error;
+    final expectedSymbols = report.expectedSymbols.toList(growable: false)
+      ..sort();
+
+    final cykSteps = _cykStepsResult?.steps;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -268,7 +311,7 @@ class _GrammarSimulationPanelState
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  _parseResult!,
+                  isAccepted ? 'Accepted' : 'Rejected',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -279,50 +322,86 @@ class _GrammarSimulationPanelState
               ),
             ],
           ),
-          if (_executionTime != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              'Execution time: ${_formatExecutionTime(_executionTime!)}',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ],
-          if (_parseSteps.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text(
+            'Execution time: ${_formatExecutionTime(report.executionTime)}',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          if (cykSteps != null && cykSteps.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Text(
-              'Parse Steps:',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 300),
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: _parseSteps.length,
-                itemBuilder: (context, index) {
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 4),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      '${index + 1}. ${_parseSteps[index]}',
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),
-                    ),
-                  );
-                },
+            _buildCykStepsSection(context, cykSteps),
+          ] else ...[
+            if (!isAccepted) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Farthest position: ${report.farthestPosition} / ${report.inputString.length}',
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
-            ),
+              if (report.expectedSymbols.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Expected:',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: expectedSymbols
+                      .map(
+                        (s) => Chip(
+                          visualDensity: VisualDensity.compact,
+                          label: Text(
+                            s,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(fontFamily: 'monospace'),
+                          ),
+                        ),
+                      )
+                      .toList(growable: false),
+                ),
+              ],
+              if (report.message != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  report.message!,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                ),
+              ],
+            ],
+            if (isAccepted && report.trees.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              ExpansionTile(
+                initiallyExpanded: false,
+                tilePadding: EdgeInsets.zero,
+                title: Text(
+                  report.isAmbiguous
+                      ? 'Derivation Trees (showing first ${report.trees.length}; ambiguous)'
+                      : 'Derivation Tree',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                children: [
+                  for (final tree in report.trees)
+                    Card(
+                      margin: const EdgeInsets.only(top: 8),
+                      child: DerivationTreeView(
+                        tree: tree,
+                        initiallyExpanded: true,
+                      ),
+                    ),
+                ],
+              ),
+            ],
           ],
         ],
       ),
@@ -341,19 +420,60 @@ class _GrammarSimulationPanelState
 
     setState(() {
       _isParsing = true;
-      _parseResult = null;
-      _parseSteps.clear();
-      _executionTime = null;
+      _parseReport = null;
+      _cykStepsResult = null;
+      _selectedStepIndex = 0;
     });
 
     try {
-      final parseOutcome = await Future<Result<ParseResult>>(() {
-        return GrammarParser.parse(
-          grammar,
-          inputString,
-          strategyHint: _mapSelectedAlgorithmToHint(),
-        );
-      });
+      final strategyHint = _mapSelectedAlgorithmToHint();
+
+      // When the user explicitly selects CYK, run the step-producing parser so we
+      // can show per-step explanations and before/after highlights.
+      if (strategyHint == ParsingStrategyHint.cyk) {
+        final cykOutcome = await compute(_parseCykWithStepsInBackground, (
+          grammar: grammar,
+          inputString: inputString,
+        ));
+
+        if (!mounted) {
+          return;
+        }
+
+        if (!cykOutcome.isSuccess) {
+          setState(() {
+            _isParsing = false;
+            _parseReport = null;
+            _cykStepsResult = null;
+          });
+          _showError(cykOutcome.error ?? 'Failed to parse string');
+          return;
+        }
+
+        final cyk = cykOutcome.data!;
+        setState(() {
+          _isParsing = false;
+          _parseReport = GrammarParseReport(
+            inputString: inputString,
+            accepted: cyk.accepted,
+            farthestPosition: cyk.accepted ? inputString.length : 0,
+            expectedSymbols: const <String>{},
+            message: null,
+            trees: const [],
+            isAmbiguous: false,
+            executionTime: cyk.executionTime,
+          );
+          _cykStepsResult = (accepted: cyk.accepted, steps: cyk.steps);
+          _selectedStepIndex = 0;
+        });
+        return;
+      }
+
+      final parseOutcome = await compute(_parseWithReportInBackground, (
+        grammar: grammar,
+        inputString: inputString,
+        strategyHint: strategyHint,
+      ));
 
       if (!mounted) {
         return;
@@ -362,27 +482,22 @@ class _GrammarSimulationPanelState
       if (!parseOutcome.isSuccess) {
         setState(() {
           _isParsing = false;
-          _parseResult = null;
-          _parseSteps = [];
-          _executionTime = null;
+          _parseReport = null;
+          _cykStepsResult = null;
         });
         _showError(parseOutcome.error ?? 'Failed to parse string');
         return;
       }
 
-      final parseResult = parseOutcome.data!;
-      final steps = _buildParseSteps(parseResult);
+      final report = parseOutcome.data!;
 
       setState(() {
         _isParsing = false;
-        _parseResult = parseResult.accepted ? 'Accepted' : 'Rejected';
-        _parseSteps = steps;
-        _executionTime = parseResult.executionTime;
+        _parseReport = report;
+        _cykStepsResult = null;
       });
 
-      if (!parseResult.accepted && parseResult.errorMessage != null) {
-        _showError(parseResult.errorMessage!);
-      }
+      // Rejected reports render their message inline in the results panel.
     } catch (e) {
       if (!mounted) {
         return;
@@ -390,9 +505,8 @@ class _GrammarSimulationPanelState
 
       setState(() {
         _isParsing = false;
-        _parseResult = null;
-        _parseSteps = [];
-        _executionTime = null;
+        _parseReport = null;
+        _cykStepsResult = null;
       });
 
       _showError('Failed to parse string: $e');
@@ -416,73 +530,6 @@ class _GrammarSimulationPanelState
     }
   }
 
-  List<String> _buildParseSteps(ParseResult parseResult) {
-    final steps = <String>[];
-
-    if (parseResult.derivations.isNotEmpty) {
-      final grammar = _buildCurrentGrammar();
-      // Try to interpret derivations as production applications (LL parser format)
-      // Each derivation is [lhs, rhs...] representing a production A → rhs
-      final firstDeriv = parseResult.derivations.first;
-      final isProductionFormat = firstDeriv.length >= 2 &&
-          grammar.nonTerminals.contains(firstDeriv.first);
-
-      if (isProductionFormat && parseResult.derivations.length > 1) {
-        // Build sentential forms from production applications
-        final sententialForms = _buildSententialForms(
-          parseResult.derivations,
-          grammar,
-        );
-        steps.addAll(sententialForms);
-      } else {
-        // Single derivation (recursive descent trace) — display as-is
-        for (final derivation in parseResult.derivations) {
-          steps.add(derivation.join(' ⇒ '));
-        }
-      }
-    } else if (parseResult.accepted) {
-      steps.add('No derivation steps available for this parser.');
-    }
-
-    if (parseResult.errorMessage != null &&
-        parseResult.errorMessage!.isNotEmpty) {
-      steps.add(parseResult.errorMessage!);
-    }
-
-    return steps;
-  }
-
-  List<String> _buildSententialForms(
-    List<List<String>> productions,
-    Grammar grammar,
-  ) {
-    final forms = <String>[];
-    if (productions.isEmpty) return forms;
-
-    // Start with the start symbol
-    var current = [grammar.startSymbol];
-    forms.add(current.join());
-
-    for (final production in productions) {
-      if (production.length < 2) continue;
-      final lhs = production.first;
-      final rhs = production.sublist(1);
-
-      // Find the leftmost occurrence of lhs in current and replace it
-      final idx = current.indexOf(lhs);
-      if (idx >= 0) {
-        current = [
-          ...current.sublist(0, idx),
-          ...rhs,
-          ...current.sublist(idx + 1),
-        ];
-        forms.add(current.join());
-      }
-    }
-
-    return [forms.join(' ⇒ ')];
-  }
-
   String _formatExecutionTime(Duration duration) {
     if (duration.inMicroseconds < 1000) {
       return '${duration.inMicroseconds} μs';
@@ -491,6 +538,80 @@ class _GrammarSimulationPanelState
       return '${duration.inMilliseconds} ms';
     }
     return '${duration.inSeconds}.${(duration.inMilliseconds % 1000).toString().padLeft(3, '0')} s';
+  }
+
+  Widget _buildCykStepsSection(BuildContext context, List<CYKStep> steps) {
+    final selectedStep = steps[_selectedStepIndex];
+    final stepExplanation = selectedStep.baseStep.stepExplanation;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.format_list_numbered,
+                size: 18, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 8),
+            Text(
+              'CYK Steps',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w700),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 44,
+          child: Row(
+            children: [
+              IconButton(
+                tooltip: 'Previous step',
+                onPressed: _selectedStepIndex > 0
+                    ? () => setState(() => _selectedStepIndex--)
+                    : null,
+                icon: const Icon(Icons.chevron_left),
+              ),
+              Expanded(
+                child: steps.length > 1
+                    ? Slider(
+                        value: _selectedStepIndex.toDouble(),
+                        min: 0,
+                        max: (steps.length - 1).toDouble(),
+                        divisions: steps.length - 1,
+                        label: '${_selectedStepIndex + 1} / ${steps.length}',
+                        onChanged: (v) =>
+                            setState(() => _selectedStepIndex = v.round()),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              IconButton(
+                tooltip: 'Next step',
+                onPressed: _selectedStepIndex < steps.length - 1
+                    ? () => setState(() => _selectedStepIndex++)
+                    : null,
+                icon: const Icon(Icons.chevron_right),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          selectedStep.baseStep.title,
+          style: Theme.of(context)
+              .textTheme
+              .titleSmall
+              ?.copyWith(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 8),
+        if (stepExplanation != null && !stepExplanation.isEmpty) ...[
+          GrammarSententialFormCard(explanation: stepExplanation),
+          const SizedBox(height: 8),
+          StepExplanationCard(explanation: stepExplanation),
+        ],
+      ],
+    );
   }
 
   void _showError(String message) {

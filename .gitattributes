@@ -3,3 +3,4 @@
 
 # Exclude generated platform scaffolding and build artifacts
 test/** linguist-vendored
+graphview/test** linguist-vendored

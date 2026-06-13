@@ -13,8 +13,8 @@ import 'app_localizations_pt.dart';
 /// Callers can lookup localized strings with an instance of AppLocalizations
 /// returned by `AppLocalizations.of(context)`.
 ///
-/// Applications need to include `AppLocalizations.localizationsDelegates` in
-/// their app's `localizationsDelegates` list, and the locales they support in
+/// Applications need to include `AppLocalizations.delegate()` in their app's
+/// `localizationDelegates` list, and the locales they support in the app's
 /// `supportedLocales` list. For example:
 ///
 /// ```dart
@@ -511,9 +511,8 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) => AppLocalizations.supportedLocales
-      .map((Locale supportedLocale) => supportedLocale.languageCode)
-      .contains(locale.languageCode);
+  bool isSupported(Locale locale) =>
+      <String>['en', 'pt'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;

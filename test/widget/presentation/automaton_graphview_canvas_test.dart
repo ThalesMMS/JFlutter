@@ -31,8 +31,9 @@ import 'package:jflutter/presentation/providers/automaton_state_provider.dart';
 import 'package:jflutter/presentation/widgets/automaton_canvas_tool.dart';
 import 'package:jflutter/presentation/widgets/automaton_graphview_canvas.dart';
 
-class _RecordingAutomatonProvider extends AutomatonStateNotifier {
-  _RecordingAutomatonProvider() : super(automatonService: AutomatonService());
+class _RecordingAutomatonStateNotifier extends AutomatonStateNotifier {
+  _RecordingAutomatonStateNotifier()
+      : super(automatonService: AutomatonService());
 
   final List<Map<String, Object?>> transitionCalls = [];
   final List<String> removedTransitionIds = [];
@@ -98,12 +99,12 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('AutomatonGraphViewCanvas gestures', () {
-    late _RecordingAutomatonProvider provider;
+    late _RecordingAutomatonStateNotifier provider;
     late _RecordingGraphViewCanvasController controller;
     late AutomatonCanvasToolController toolController;
 
     setUp(() {
-      provider = _RecordingAutomatonProvider();
+      provider = _RecordingAutomatonStateNotifier();
       controller = _RecordingGraphViewCanvasController(
         automatonStateNotifier: provider,
       );
@@ -347,14 +348,14 @@ void main() {
   });
 
   group('AutomatonGraphViewCanvas', () {
-    late _RecordingAutomatonProvider provider;
+    late _RecordingAutomatonStateNotifier provider;
     late GraphViewCanvasController controller;
     late AutomatonCanvasToolController toolController;
     late automaton_state.State stateA;
     late automaton_state.State stateB;
 
     setUp(() {
-      provider = _RecordingAutomatonProvider();
+      provider = _RecordingAutomatonStateNotifier();
       controller = GraphViewCanvasController(automatonStateNotifier: provider);
       toolController = AutomatonCanvasToolController(
         AutomatonCanvasTool.transition,

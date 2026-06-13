@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:jflutter/main.dart' as app;
 import 'package:jflutter/data/data_sources/examples_asset_data_source.dart';
-import 'package:jflutter/presentation/providers/automaton_provider.dart';
+import 'package:jflutter/presentation/providers/automaton_state_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -48,7 +48,7 @@ void main() {
     );
 
     container
-        .read(automatonProvider.notifier)
+        .read(automatonStateProvider.notifier)
         .replaceCurrentAutomaton(automaton!);
     await tester.pumpAndSettle();
 
@@ -57,14 +57,14 @@ void main() {
     await tester.tap(simulateAction);
     await tester.pumpAndSettle();
 
-    final inputField = find.bySemanticsLabel('Input String');
+    final inputField = find.bySemanticsLabel('Simulation input string');
     expect(inputField, findsOneWidget);
 
     Future<void> runSimulation(String input, String expectedLabel) async {
       await tester.enterText(inputField, input);
       await tester.pumpAndSettle();
 
-      final simulateButton = find.text('Simulate');
+      final simulateButton = find.bySemanticsLabel('Run simulation');
       expect(simulateButton, findsWidgets);
 
       await tester.tap(simulateButton.first);

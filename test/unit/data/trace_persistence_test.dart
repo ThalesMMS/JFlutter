@@ -111,6 +111,55 @@ void main() {
       );
     });
 
+    test('loads legacy core trace history when unified history is absent',
+        () async {
+      final trace = traceFixture(input: 'legacy');
+      await prefs.setString(
+        'simulation_trace_history',
+        jsonEncode(<Map<String, dynamic>>[
+          <String, dynamic>{
+            'id': 'legacy-trace',
+            'timestamp': DateTime(2026, 4, 22).toIso8601String(),
+            'inputString': 'legacy',
+            'accepted': true,
+            'stepCount': trace.stepCount,
+            'trace': trace.toJson(),
+          },
+        ]),
+      );
+
+      final history = await service.getTraceHistory();
+
+      expect(history, hasLength(1));
+      expect(history.single['id'], equals('legacy-trace'));
+      expect(history.single['automatonType'], equals('unknown'));
+      expect(
+        (history.single['trace'] as Map<String, dynamic>)['inputString'],
+        equals('legacy'),
+      );
+    });
+
+    test('loads legacy current trace when unified current trace is absent',
+        () async {
+      await prefs.setString(
+        'current_simulation_trace',
+        jsonEncode(traceFixture(input: 'legacy-current').toJson()),
+      );
+
+      final currentTrace = await service.getCurrentTrace();
+
+      expect(currentTrace, isNotNull);
+      expect(currentTrace!['currentStepIndex'], equals(0));
+      expect(currentTrace['timestamp'], isA<String>());
+      expect(currentTrace.containsKey('id'), isFalse);
+      expect(currentTrace.containsKey('automatonType'), isFalse);
+      expect(currentTrace.containsKey('automatonId'), isFalse);
+      expect(
+        (currentTrace['trace'] as Map<String, dynamic>)['inputString'],
+        equals('legacy-current'),
+      );
+    });
+
     test('stores and retrieves trace metadata', () async {
       await service.saveTraceMetadata(
         traceId: 'trace-1',

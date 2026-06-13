@@ -19,7 +19,11 @@ class RegexAnalysis {
   /// Analysis of structure and alphabet
   final RegexStructureAnalysis structureAnalysis;
 
-  /// Generated sample strings that match the regex
+  /// Sample strings attached to the analysis.
+  ///
+  /// `RegexAnalyzer.analyze()` returns this field with an empty sample list and
+  /// acceptance metadata only. `RegexAnalyzer.analyzeWithSamples()` returns it
+  /// with generated examples.
   final RegexSampleStrings sampleStrings;
 
   /// Time taken to perform the analysis
@@ -283,9 +287,9 @@ class RegexStructureAnalysis {
 
   /// Creates from JSON representation
   factory RegexStructureAnalysis.fromJson(Map<String, dynamic> json) {
-    final alphabetList = (json['alphabet'] as List?)
-        ?.map((e) => e as String)
-        .toSet() ?? <String>{};
+    final alphabetList =
+        (json['alphabet'] as List?)?.map((e) => e as String).toSet() ??
+            <String>{};
     return RegexStructureAnalysis(
       operatorCount: Map<String, int>.from(
         json['operatorCount'] as Map<String, dynamic>? ?? {},
@@ -345,9 +349,8 @@ class RegexSampleStrings {
   /// Creates from JSON representation
   factory RegexSampleStrings.fromJson(Map<String, dynamic> json) {
     return RegexSampleStrings(
-      samples: (json['samples'] as List?)
-          ?.map((e) => e as String)
-          .toList() ?? [],
+      samples:
+          (json['samples'] as List?)?.map((e) => e as String).toList() ?? [],
       shortestString: json['shortestString'] as String?,
       acceptsEmptyString: json['acceptsEmptyString'] as bool? ?? false,
     );

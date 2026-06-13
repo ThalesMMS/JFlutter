@@ -56,6 +56,57 @@ final _profiles = <_ScreenshotProfile>[
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  group('field entry helper', () {
+    testWidgets('rejects generic TextField fallback for non input labels', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: Column(
+              children: [
+                TextField(),
+                TextField(),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        _enterField(tester, 'Regex Pattern', 'ab*'),
+        throwsA(isA<TestFailure>()),
+      );
+    });
+
+    testWidgets('keeps legacy Input String TextField fallback', (
+      tester,
+    ) async {
+      final firstController = TextEditingController();
+      final secondController = TextEditingController();
+      addTearDown(firstController.dispose);
+      addTearDown(secondController.dispose);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Column(
+              children: [
+                TextField(controller: firstController),
+                TextField(controller: secondController),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      await _enterField(tester, 'Input String', 'ba');
+
+      expect(firstController.text, isEmpty);
+      expect(secondController.text, equals('ba'));
+    });
+  });
+
   for (final profile in _profiles) {
     testWidgets('captures ${profile.outputDir} 01-fsa', (tester) async {
       await _captureForProfile(
@@ -164,10 +215,16 @@ Future<void> _captureForProfile(
   await getIt.reset();
   await setupDependencyInjection();
 
+  final logicalSize = Size(
+    profile.physicalSize.width / profile.devicePixelRatio,
+    profile.physicalSize.height / profile.devicePixelRatio,
+  );
   tester.view
     ..physicalSize = profile.physicalSize
     ..devicePixelRatio = profile.devicePixelRatio;
-  addTearDown(() {
+  await tester.binding.setSurfaceSize(logicalSize);
+  addTearDown(() async {
+    await tester.binding.setSurfaceSize(null);
     tester.view.resetPhysicalSize();
     tester.view.resetDevicePixelRatio();
   });
@@ -177,7 +234,11 @@ Future<void> _captureForProfile(
     ProviderScope(
       child: RepaintBoundary(
         key: repaintKey,
-        child: const JFlutterApp(),
+        child: SizedBox(
+          width: logicalSize.width,
+          height: logicalSize.height,
+          child: const JFlutterApp(),
+        ),
       ),
     ),
   );
@@ -212,7 +273,7 @@ Future<void> _enterField(
   String label,
   String value,
 ) async {
-  final finder = find.bySemanticsLabel(label);
+  final finder = _findEntryField(label);
   expect(finder, findsOneWidget, reason: 'Expected a unique field: $label');
   await tester.ensureVisible(finder);
   await tester.tap(finder);
@@ -221,8 +282,31 @@ Future<void> _enterField(
   await _settle(tester);
 }
 
+Finder _findEntryField(String label) {
+  var finder = find.bySemanticsLabel(label);
+  if (finder.evaluate().isNotEmpty) {
+    return finder;
+  }
+
+  if (label != 'Input String') {
+    return finder;
+  }
+
+  finder = find.bySemanticsLabel('Simulation input string');
+  if (finder.evaluate().isNotEmpty) {
+    return finder;
+  }
+
+  return find.byType(TextField).last;
+}
+
 Future<void> _tapTooltip(WidgetTester tester, String tooltip) async {
-  final finder = find.byTooltip(tooltip);
+  final finder = find.byWidgetPredicate(
+    (widget) =>
+        widget is IconButton &&
+        widget.tooltip == tooltip &&
+        widget.onPressed != null,
+  );
   expect(finder, findsOneWidget, reason: 'Missing tooltip target: $tooltip');
   await tester.ensureVisible(finder);
   await tester.tap(finder);

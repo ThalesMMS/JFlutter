@@ -5,7 +5,6 @@ import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:jflutter/data/services/trace_persistence_service.dart'
     as data_trace;
-import 'package:jflutter/core/services/trace_persistence_service.dart';
 import 'package:jflutter/presentation/pages/fsa_page.dart';
 import 'package:jflutter/presentation/pages/regex_page.dart';
 import 'package:jflutter/presentation/pages/grammar_page.dart';
@@ -31,11 +30,6 @@ void main() {
       if (!getIt.isRegistered<data_trace.TracePersistenceService>()) {
         getIt.registerLazySingleton<data_trace.TracePersistenceService>(
           () => data_trace.TracePersistenceService(prefs),
-        );
-      }
-      if (!getIt.isRegistered<TracePersistenceService>()) {
-        getIt.registerLazySingleton<TracePersistenceService>(
-          () => createTracePersistenceService(prefs),
         );
       }
 

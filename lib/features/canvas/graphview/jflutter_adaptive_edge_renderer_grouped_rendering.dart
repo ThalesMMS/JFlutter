@@ -27,7 +27,12 @@ extension _JFlutterAdaptiveEdgeRendererGroupedRendering
       selected: anySelected,
     );
 
-    paintEdgeGeometry(canvas, edge, strokePaint, groupedGeometry.geometry);
+    paintEdgeGeometry(
+      canvas,
+      edge,
+      strokePaint,
+      _dashGeometryForEpsilonEdges(groupedGeometry.geometry, groupedEdges),
+    );
 
     if (!noArrow) {
       paintEdgeArrow(
@@ -89,7 +94,12 @@ extension _JFlutterAdaptiveEdgeRendererGroupedRendering
       selected: anySelected,
     );
 
-    paintEdgeGeometry(canvas, edge, strokePaint, geometry);
+    paintEdgeGeometry(
+      canvas,
+      edge,
+      strokePaint,
+      _dashGeometryForEpsilonEdges(geometry, group),
+    );
 
     if (!noArrow) {
       paintEdgeArrow(

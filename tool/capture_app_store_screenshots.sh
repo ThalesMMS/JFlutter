@@ -16,7 +16,6 @@ fi
 
 cd "$ROOT_DIR"
 "$FLUTTER_BIN" pub get
-rm -rf "$OUTPUT_ROOT"
 
 profiles=(
   "iphone-6.9"
@@ -33,6 +32,11 @@ shots=(
   "04-tm"
   "05-regex"
 )
+
+mkdir -p "$OUTPUT_ROOT"
+for profile in "${profiles[@]}"; do
+  rm -rf "${OUTPUT_ROOT}/${profile}"
+done
 
 for profile in "${profiles[@]}"; do
   for shot in "${shots[@]}"; do

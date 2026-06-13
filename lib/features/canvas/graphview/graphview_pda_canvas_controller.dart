@@ -31,7 +31,8 @@ void _logPdaCanvas(String message) {
 /// Controller responsible for synchronising GraphView with the
 /// [PDAEditorNotifier].
 class GraphViewPdaCanvasController
-    extends BaseGraphViewCanvasController<PDAEditorNotifier, PDA> {
+    extends BaseGraphViewCanvasController<PDAEditorNotifier, PDA>
+    with SharedGraphViewStateController<PDAEditorNotifier, PDA> {
   GraphViewPdaCanvasController({
     required PDAEditorNotifier editorNotifier,
     super.graph,
@@ -47,6 +48,25 @@ class GraphViewPdaCanvasController
   PDA? get currentDomainData => _notifier.state.pda;
 
   @override
+  Iterable<String> get domainStateIds {
+    final automaton = currentDomainData;
+    return automaton?.states.map((state) => state.id) ?? const <String>[];
+  }
+
+  @override
+  Iterable<String> get domainStateLabels {
+    final automaton = currentDomainData;
+    return automaton?.states.map((state) => state.label) ?? const <String>[];
+  }
+
+  @override
+  Iterable<String> get domainTransitionIds {
+    final automaton = currentDomainData;
+    return automaton?.pdaTransitions.map((transition) => transition.id) ??
+        const <String>[];
+  }
+
+  @override
   GraphViewAutomatonSnapshot toSnapshot(PDA? automaton) {
     return GraphViewPdaMapper.toSnapshot(automaton);
   }
@@ -59,135 +79,51 @@ class GraphViewPdaCanvasController
     synchronizeGraph(automaton);
   }
 
-  String _generateNodeId() {
-    final reservedIds = <String>{...nodesCache.keys};
-    final automaton = _notifier.state.pda;
-    if (automaton != null) {
-      for (final state in automaton.states) {
-        reservedIds.add(state.id);
-      }
-    }
-    var index = 0;
-    while (true) {
-      final candidate = 'state_$index';
-      if (!reservedIds.contains(candidate)) {
-        return candidate;
-      }
-      index++;
-    }
-  }
-
-  String _generateEdgeId() {
-    final reservedIds = <String>{...edgesCache.keys};
-    final automaton = _notifier.state.pda;
-    if (automaton != null) {
-      for (final transition in automaton.pdaTransitions) {
-        reservedIds.add(transition.id);
-      }
-    }
-    var index = 0;
-    while (true) {
-      final candidate = 'transition_$index';
-      if (!reservedIds.contains(candidate)) {
-        return candidate;
-      }
-      index++;
-    }
-  }
-
-  String _nextAvailableStateLabel() {
-    final reservedLabels = <String>{};
-    final automaton = _notifier.state.pda;
-    if (automaton != null) {
-      for (final state in automaton.states) {
-        final label = state.label.trim();
-        if (label.isNotEmpty) {
-          reservedLabels.add(label);
-        }
-      }
-    }
-    for (final node in nodesCache.values) {
-      final label = node.label.trim();
-      if (label.isNotEmpty) {
-        reservedLabels.add(label);
-      }
-    }
-
-    var index = 0;
-    while (reservedLabels.contains('q$index')) {
-      index++;
-    }
-    return 'q$index';
-  }
-
-  /// Adds a new state centred in the current viewport.
-  void addStateAtCenter() {
-    _logPdaCanvas('addStateAtCenter requested');
-    final worldCenter = resolveViewportCenterWorld();
-    addStateAt(worldCenter);
-  }
-
-  /// Adds a new state at the provided [worldPosition].
   @override
-  void addStateAt(Offset worldPosition) {
-    final nodeId = _generateNodeId();
-    final label = _nextAvailableStateLabel();
-    _logPdaCanvas(
-      'addStateAt -> id=$nodeId label=$label position=(${worldPosition.dx.toStringAsFixed(2)}, ${worldPosition.dy.toStringAsFixed(2)})',
+  void addDomainState({
+    required String id,
+    required String label,
+    required Offset position,
+  }) {
+    _notifier.addOrUpdateState(
+      id: id,
+      label: label,
+      x: position.dx,
+      y: position.dy,
     );
-    performMutation(() {
-      _notifier.addOrUpdateState(
-        id: nodeId,
-        label: label,
-        x: worldPosition.dx,
-        y: worldPosition.dy,
-      );
-    });
   }
 
-  /// Moves an existing state to a new [position].
   @override
-  void moveState(String id, Offset position) {
-    _logPdaCanvas(
-      'moveState -> id=$id position=(${position.dx.toStringAsFixed(2)}, ${position.dy.toStringAsFixed(2)})',
+  void moveDomainState({required String id, required Offset position}) {
+    _notifier.moveState(id: id, x: position.dx, y: position.dy);
+  }
+
+  @override
+  void updateDomainStateLabel({required String id, required String label}) {
+    _notifier.updateStateLabel(id: id, label: label);
+  }
+
+  @override
+  void updateDomainStateFlags({
+    required String id,
+    bool? isInitial,
+    bool? isAccepting,
+  }) {
+    _notifier.updateStateFlags(
+      id: id,
+      isInitial: isInitial,
+      isAccepting: isAccepting,
     );
-    performMutation(() {
-      _notifier.moveState(id: id, x: position.dx, y: position.dy);
-    });
   }
 
-  /// Updates the label displayed for the state identified by [id].
   @override
-  void updateStateLabel(String id, String label) {
-    final resolvedLabel = label.isEmpty ? id : label;
-    _logPdaCanvas('updateStateLabel -> id=$id label=$resolvedLabel');
-    performMutation(() {
-      _notifier.updateStateLabel(id: id, label: resolvedLabel);
-    });
+  void removeDomainState(String id) {
+    _notifier.removeState(id: id);
   }
 
-  /// Updates the flag metadata for the state identified by [id].
   @override
-  void updateStateFlags(String id, {bool? isInitial, bool? isAccepting}) {
-    _logPdaCanvas(
-      'updateStateFlags -> id=$id isInitial=$isInitial isAccepting=$isAccepting',
-    );
-    performMutation(() {
-      _notifier.updateStateFlags(
-        id: id,
-        isInitial: isInitial,
-        isAccepting: isAccepting,
-      );
-    });
-  }
-
-  /// Removes the state identified by [id] from the automaton.
-  @override
-  void removeState(String id) {
-    _logPdaCanvas('removeState -> id=$id');
-    performMutation(() {
-      _notifier.removeState(id: id);
-    });
+  void logCanvasStateMutation(String message) {
+    _logPdaCanvas(message);
   }
 
   /// Adds or updates a transition between [fromStateId] and [toStateId].
@@ -204,7 +140,7 @@ class GraphViewPdaCanvasController
     double? controlPointX,
     double? controlPointY,
   }) {
-    final edgeId = transitionId ?? _generateEdgeId();
+    final edgeId = transitionId ?? generateEdgeId();
     final controlPoint = (controlPointX != null && controlPointY != null)
         ? Vector2(controlPointX, controlPointY)
         : null;
@@ -254,11 +190,9 @@ class GraphViewPdaCanvasController
 
   @override
   void applySnapshotToDomain(GraphViewAutomatonSnapshot snapshot) {
-    final template =
-        _notifier.state.pda ??
+    final template = _notifier.state.pda ??
         PDA(
-          id:
-              snapshot.metadata.id ??
+          id: snapshot.metadata.id ??
               'pda_${DateTime.now().microsecondsSinceEpoch}',
           name: snapshot.metadata.name ?? 'Canvas PDA',
           states: const {},
@@ -275,15 +209,15 @@ class GraphViewPdaCanvasController
           zoomLevel: 1.0,
         );
 
-    final merged = GraphViewPdaMapper.mergeIntoTemplate(snapshot, template)
-        .copyWith(
-          id: snapshot.metadata.id ?? template.id,
-          name: snapshot.metadata.name ?? template.name,
-          alphabet: snapshot.metadata.alphabet.isNotEmpty
-              ? snapshot.metadata.alphabet.toSet()
-              : template.alphabet,
-          modified: DateTime.now(),
-        );
+    final merged =
+        GraphViewPdaMapper.mergeIntoTemplate(snapshot, template).copyWith(
+      id: snapshot.metadata.id ?? template.id,
+      name: snapshot.metadata.name ?? template.name,
+      alphabet: snapshot.metadata.alphabet.isNotEmpty
+          ? snapshot.metadata.alphabet.toSet()
+          : template.alphabet,
+      modified: DateTime.now(),
+    );
 
     _logPdaCanvas(
       'applySnapshotToDomain -> states=${merged.states.length} transitions=${merged.pdaTransitions.length}',

@@ -111,6 +111,50 @@ void main() {
       expect(state.label, isNotEmpty);
     });
 
+    test('addStateAt skips used PDA ids and labels after sync', () {
+      final firstState = automaton_state.State(
+        id: 'state_0',
+        label: 'q0',
+        position: Vector2.zero(),
+        isInitial: true,
+        isAccepting: false,
+      );
+      final laterState = automaton_state.State(
+        id: 'state_2',
+        label: 'q2',
+        position: Vector2(80, 40),
+        isInitial: false,
+        isAccepting: false,
+      );
+      final pda = PDA(
+        id: 'pda-gapped',
+        name: 'Gapped PDA',
+        states: {firstState, laterState},
+        transitions: const {},
+        alphabet: const {},
+        initialState: firstState,
+        acceptingStates: const {},
+        created: DateTime.utc(2023, 1, 1),
+        modified: DateTime.utc(2023, 1, 1),
+        bounds: const math.Rectangle<double>(0, 0, 400, 300),
+        stackAlphabet: const {'Z'},
+        initialStackSymbol: 'Z',
+        zoomLevel: 1,
+        panOffset: Vector2.zero(),
+      );
+      notifier.setPda(pda);
+      controller.synchronize(pda);
+
+      controller.addStateAt(const Offset(24, 48));
+
+      final inserted = notifier.state.pda!.states.singleWhere(
+        (state) => state.id == 'state_1',
+      );
+      expect(inserted.label, equals('q1'));
+      expect(inserted.position.x, closeTo(24, 0.0001));
+      expect(inserted.position.y, closeTo(48, 0.0001));
+    });
+
     test('addStateAtCenter maps viewport centre to PDA world coordinates', () {
       final transformation =
           controller.graphController.transformationController;

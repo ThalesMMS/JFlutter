@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -124,6 +126,28 @@ void main() {
 
       expect(notifier.state.currentTrace, isNull);
       expect(await service.getCurrentTrace(), isNull);
+    });
+
+    test('restores legacy current trace without metadata fields', () async {
+      await prefs.setString(
+        'current_simulation_trace',
+        jsonEncode(_trace(input: 'legacy-current').toJson()),
+      );
+
+      final notifier = UnifiedTraceNotifier(service);
+      addTearDown(notifier.dispose);
+
+      await _flushAsyncWork();
+
+      expect(notifier.state.currentTrace, isNotNull);
+      expect(notifier.state.currentTrace!.inputString, equals('legacy-current'));
+      expect(notifier.state.currentStepIndex, equals(0));
+
+      final migrated = await service.getCurrentTrace();
+      expect(migrated, isNotNull);
+      expect(migrated!.containsKey('id'), isFalse);
+      expect(migrated.containsKey('automatonType'), isFalse);
+      expect(migrated.containsKey('automatonId'), isFalse);
     });
   });
 }

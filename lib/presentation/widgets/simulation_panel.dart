@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import '../../core/models/simulation_result.dart';
 import '../../core/models/simulation_step.dart';
 import '../../core/services/simulation_highlight_service.dart';
+import 'base_simulation_panel.dart';
 import 'common/simulation_speed_control.dart';
 import 'common/simulation_result_card.dart';
 
@@ -166,118 +167,52 @@ class _SimulationPanelState extends State<SimulationPanel> {
 
   @override
   Widget build(BuildContext context) {
-    return FocusTraversalGroup(
-      policy: ReadingOrderTraversalPolicy(),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Simulation',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-
-                // Input field
-                Semantics(
-                  label: 'Simulation input string',
-                  hint:
-                      'Enter the string to test, then activate the Simulate button.',
-                  textField: true,
-                  enabled: true,
-                  excludeSemantics: true,
-                  child: TextField(
-                    controller: _inputController,
-                    decoration: const InputDecoration(
-                      labelText: 'Input String',
-                      hintText: 'Enter string to test',
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                    ),
-                    autocorrect: false,
-                    enableSuggestions: false,
-                    keyboardType: TextInputType.visiblePassword,
-                    onSubmitted: (_) => _simulate(),
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                // Simulate button
-                Semantics(
-                  label: 'Run simulation',
-                  hint:
-                      'Runs the automaton using the currently entered input string.',
-                  value: _isSimulating ? 'Simulating' : null,
-                  button: true,
-                  enabled: !_isSimulating,
-                  excludeSemantics: true,
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: _isSimulating ? null : _simulate,
-                      icon: _isSimulating
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.play_arrow, size: 18),
-                      label: Text(
-                        _isSimulating ? 'Simulating...' : 'Simulate',
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                // Step-by-step controls
-                _buildStepByStepControls(context),
-
-                // Results
-                if (widget.simulationResult != null) ...[
-                  Text(
-                    'Simulation Result',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  SimulationResultCard(result: widget.simulationResult!),
-                ],
-
-                // Step-by-step execution
-                if (_isStepByStep && _simulationSteps.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  _buildStepByStepExecution(context),
-                ],
-
-                // Regex Result
-                if (widget.regexResult != null) ...[
-                  const SizedBox(height: 16),
-                  Text(
-                    'Regex Result',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildRegexResultCard(context, widget.regexResult!),
-                ],
-              ],
-            ),
-          ),
+    return SimulationPanelShell(
+      focusTraversal: true,
+      children: [
+        const SimulationPanelHeader(title: 'Simulation'),
+        const SizedBox(height: 16),
+        SimulationTextField(
+          controller: _inputController,
+          labelText: 'Input String',
+          hintText: 'Enter string to test',
+          semanticsLabel: 'Simulation input string',
+          semanticsHint:
+              'Enter the string to test, then activate the Simulate button.',
+          excludeSemantics: true,
+          onSubmitted: _simulate,
         ),
-      ),
+        const SizedBox(height: 12),
+        SimulationRunButton(
+          isSimulating: _isSimulating,
+          label: 'Simulate',
+          onPressed: _simulate,
+          iconSize: 18,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          semanticsLabel: 'Run simulation',
+          semanticsHint:
+              'Runs the automaton using the currently entered input string.',
+          excludeSemantics: true,
+        ),
+        const SizedBox(height: 12),
+        _buildStepByStepControls(context),
+        if (widget.simulationResult != null)
+          SimulationResultsSection(
+            title: 'Simulation Result',
+            child: SimulationResultCard(result: widget.simulationResult!),
+          ),
+        if (_isStepByStep && _simulationSteps.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          _buildStepByStepExecution(context),
+        ],
+        if (widget.regexResult != null) ...[
+          const SizedBox(height: 16),
+          SimulationResultsSection(
+            title: 'Regex Result',
+            child: _buildRegexResultCard(context, widget.regexResult!),
+          ),
+        ],
+      ],
     );
   }
 

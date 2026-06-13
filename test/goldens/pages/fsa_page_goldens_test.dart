@@ -32,8 +32,8 @@ import 'package:jflutter/presentation/widgets/automaton_canvas_tool.dart';
 import 'package:jflutter/presentation/widgets/fsa/determinism_badge.dart';
 import 'package:jflutter/presentation/widgets/graphview_canvas_toolbar.dart';
 
-class _TestAutomatonProvider extends AutomatonStateNotifier {
-  _TestAutomatonProvider() : super(automatonService: AutomatonService());
+class _TestAutomatonStateNotifier extends AutomatonStateNotifier {
+  _TestAutomatonStateNotifier() : super(automatonService: AutomatonService());
 }
 
 // Widget that composes toolbar + canvas like FSA page does
@@ -55,7 +55,7 @@ class _FSAPageTestWidgetState extends State<_FSAPageTestWidget> {
   @override
   void initState() {
     super.initState();
-    final provider = _TestAutomatonProvider();
+    final provider = _TestAutomatonStateNotifier();
     _canvasController = GraphViewCanvasController(
       automatonStateNotifier: provider,
     );

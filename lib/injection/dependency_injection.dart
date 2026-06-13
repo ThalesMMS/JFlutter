@@ -17,7 +17,6 @@ import 'package:shared_preferences_platform_interface/shared_preferences_platfor
 import '../core/repositories/automaton_repository.dart';
 import '../core/use_cases/automaton_use_cases.dart';
 import '../core/use_cases/algorithm_use_cases.dart';
-import '../data/data_sources/local_storage_data_source.dart';
 import '../data/data_sources/examples_asset_data_source.dart';
 import '../data/repositories/automaton_repository_impl.dart';
 import '../data/repositories/examples_repository_impl.dart';
@@ -26,9 +25,7 @@ import '../features/layout/layout_repository_impl.dart';
 import '../data/services/automaton_service.dart';
 import '../data/services/simulation_service.dart';
 import '../data/services/conversion_service.dart';
-import '../core/services/trace_persistence_service.dart';
 import '../data/services/trace_persistence_service.dart' as data_trace;
-import '../presentation/providers/automaton_provider.dart';
 import '../presentation/providers/algorithm_provider.dart';
 import '../presentation/providers/grammar_provider.dart';
 import '../presentation/providers/unified_trace_provider.dart';
@@ -69,10 +66,6 @@ Future<void> setupDependencyInjection({
 
   // Data Sources
   onStage?.call(DependencyInitializationStage.dataSources);
-  getIt.registerLazySingleton<LocalStorageDataSource>(
-    () => LocalStorageDataSource(),
-  );
-
   getIt.registerLazySingleton<ExamplesAssetDataSource>(
     () => ExamplesAssetDataSource(),
   );
@@ -85,12 +78,7 @@ Future<void> setupDependencyInjection({
 
   getIt.registerLazySingleton<ConversionService>(() => ConversionService());
 
-  // Core trace persistence service (used by AutomatonProvider and legacy trace flows)
-  getIt.registerLazySingleton<TracePersistenceService>(
-    () => createTracePersistenceService(prefs),
-  );
-
-  // Data layer trace persistence service (for UnifiedTraceNotifier)
+  // Canonical trace persistence service used by simulation and trace providers.
   getIt.registerLazySingleton<data_trace.TracePersistenceService>(
     () => data_trace.TracePersistenceService(prefs),
   );
@@ -224,14 +212,6 @@ Future<void> setupDependencyInjection({
 
   // Providers
   onStage?.call(DependencyInitializationStage.providers);
-  getIt.registerFactory<AutomatonProvider>(
-    () => AutomatonProvider(
-      automatonService: getIt<AutomatonService>(),
-      layoutRepository: getIt<LayoutRepository>(),
-      tracePersistenceService: getIt<TracePersistenceService>(),
-    ),
-  );
-
   getIt.registerFactory<AlgorithmProvider>(
     () => AlgorithmProvider(
       nfaToDfaUseCase: getIt<NfaToDfaUseCase>(),

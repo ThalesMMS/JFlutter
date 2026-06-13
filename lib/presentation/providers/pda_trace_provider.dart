@@ -13,14 +13,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/pda.dart';
 import '../../core/models/simulation_step.dart';
 import '../../core/algorithms/pda/pda_simulator_facade.dart';
+import 'trace_step_navigation.dart';
 
 /// Immutable state holding the latest PDA simulation result and flags.
-class PDATraceState {
+class PDATraceState with TraceStepNavigation<PDATraceState> {
   final PDA? pda;
   final PDASimulationResult? result;
   final bool isRunning;
   final bool stepByStep;
   final String lastInput;
+  @override
   final int currentStepIndex; // for navigation through simulation steps
   final List<PDASimulationResult> traceHistory; // persistent trace history
   final String? errorMessage;
@@ -58,50 +60,13 @@ class PDATraceState {
     );
   }
 
-  /// Navigate to a specific step in the current simulation
-  PDATraceState navigateToStep(int stepIndex) {
-    if (result == null || stepIndex < 0 || stepIndex >= result!.steps.length) {
-      return this;
-    }
-    return copyWith(currentStepIndex: stepIndex);
+  @override
+  List<SimulationStep> get steps => result?.steps ?? const <SimulationStep>[];
+
+  @override
+  PDATraceState copyWithStepIndex(int currentStepIndex) {
+    return copyWith(currentStepIndex: currentStepIndex);
   }
-
-  /// Navigate to the next step
-  PDATraceState nextStep() {
-    if (result == null) return this;
-    final nextIndex = currentStepIndex + 1;
-    if (nextIndex >= result!.steps.length) return this;
-    return copyWith(currentStepIndex: nextIndex);
-  }
-
-  /// Navigate to the previous step
-  PDATraceState previousStep() {
-    final prevIndex = currentStepIndex - 1;
-    if (prevIndex < 0) return this;
-    return copyWith(currentStepIndex: prevIndex);
-  }
-
-  /// Navigate to the first step
-  PDATraceState firstStep() => copyWith(currentStepIndex: 0);
-
-  /// Navigate to the last step
-  PDATraceState lastStep() {
-    if (result == null) return this;
-    return copyWith(currentStepIndex: result!.steps.length - 1);
-  }
-
-  /// Get the current simulation step
-  SimulationStep? get currentStep {
-    if (result == null || currentStepIndex >= result!.steps.length) return null;
-    return result!.steps[currentStepIndex];
-  }
-
-  /// Check if we can navigate to the next step
-  bool get canNavigateNext =>
-      result != null && currentStepIndex < result!.steps.length - 1;
-
-  /// Check if we can navigate to the previous step
-  bool get canNavigatePrevious => currentStepIndex > 0;
 }
 
 /// Riverpod notifier driving PDA simulations and trace state.

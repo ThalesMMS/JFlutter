@@ -126,7 +126,9 @@ void main() {
       expect(tappedIndex, 3);
     });
 
-    testWidgets('renders within SafeArea with correct height', (tester) async {
+    testWidgets('renders within SafeArea with expandable minimum height', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -141,16 +143,16 @@ void main() {
 
       expect(find.byType(SafeArea), findsOneWidget);
 
-      final constrainedBox = tester.widget<ConstrainedBox>(
-        find
-            .descendant(
+      final minHeights = tester
+          .widgetList<ConstrainedBox>(
+            find.descendant(
               of: find.byType(MobileNavigation),
               matching: find.byType(ConstrainedBox),
-            )
-            .first,
-      );
+            ),
+          )
+          .map((box) => box.constraints.minHeight);
 
-      expect(constrainedBox.constraints.minHeight, 70);
+      expect(minHeights, contains(80));
     });
 
     testWidgets('applies correct styling to items', (tester) async {
@@ -263,16 +265,11 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      final constrainedBox = find
-          .descendant(
-            of: find.byType(MobileNavigation),
-            matching: find.byType(ConstrainedBox),
-          )
-          .first;
+      final navigationSize = tester.getSize(find.byType(MobileNavigation));
       final navLabel = tester.widget<Text>(find.text('Regular Expressions'));
 
       expect(tester.takeException(), isNull);
-      expect(tester.getSize(constrainedBox).height, greaterThan(70));
+      expect(navigationSize.height, greaterThan(80));
       expect(navLabel.maxLines, 2);
     });
 

@@ -158,6 +158,34 @@ EquivalenceComparisonResult _createNonEquivalentResult({
   );
 }
 
+EquivalenceComparisonResult _createResultWithSteps(
+  List<Map<String, dynamic>> steps,
+) {
+  final automatonA = _createTestFSA(
+    id: 'test-a',
+    name: 'Automaton A',
+    stateCount: 2,
+    transitionCount: 1,
+  );
+  final automatonB = _createTestFSA(
+    id: 'test-b',
+    name: 'Automaton B',
+    stateCount: 3,
+    transitionCount: 2,
+  );
+
+  return EquivalenceComparisonResult(
+    originalAutomaton: automatonA,
+    comparedAutomaton: automatonB,
+    isEquivalent: false,
+    distinguishingString: 'ab',
+    productAutomaton: null,
+    steps: steps,
+    executionTimeMs: 87,
+    timestamp: DateTime(2025, 1, 25),
+  );
+}
+
 Future<void> _pumpLanguageComparisonViewer(
   WidgetTester tester, {
   required EquivalenceComparisonResult comparisonResult,
@@ -287,7 +315,8 @@ void main() {
         expect(find.text('EQUIVALENT'), findsNothing);
       });
 
-      testWidgets('displays counterexample section with distinguishing string', (
+      testWidgets('displays counterexample section with distinguishing string',
+          (
         tester,
       ) async {
         final result = _createNonEquivalentResult(distinguishingString: 'ab');
@@ -515,10 +544,10 @@ void main() {
           showSteps: true,
         );
 
-        // Check step types are displayed
-        expect(find.text('initialization'), findsOneWidget);
-        expect(find.text('bfs_exploration'), findsOneWidget);
-        expect(find.text('counterexample_found'), findsOneWidget);
+        // Check semantic step titles are displayed
+        expect(find.text('Initialization'), findsOneWidget);
+        expect(find.text('State Pair Visit'), findsOneWidget);
+        expect(find.text('Counterexample Found'), findsOneWidget);
 
         // Check step descriptions
         expect(
@@ -532,6 +561,88 @@ void main() {
         expect(find.text('1'), findsAtLeastNWidgets(1));
         expect(find.text('2'), findsAtLeastNWidgets(1));
         expect(find.text('3'), findsAtLeastNWidgets(1));
+      });
+
+      testWidgets('renders semantic alphabet normalization details', (
+        tester,
+      ) async {
+        final result = _createResultWithSteps([
+          {
+            'stepNumber': 1,
+            'type': 'alphabet_normalization',
+            'description': 'Combining alphabets from both automata',
+            'data': {
+              'alphabetA': ['a'],
+              'alphabetB': ['b'],
+              'sharedAlphabet': ['a', 'b'],
+            },
+          },
+        ]);
+
+        await _pumpLanguageComparisonViewer(
+          tester,
+          comparisonResult: result,
+          showSteps: true,
+        );
+
+        expect(find.text('Alphabet Normalization'), findsOneWidget);
+        expect(find.text('Shared alphabet'), findsOneWidget);
+        expect(find.text('a, b'), findsOneWidget);
+      });
+
+      testWidgets('renders semantic counterexample details', (tester) async {
+        final result = _createResultWithSteps([
+          {
+            'stepNumber': 7,
+            'type': 'bfs_distinguishing_found',
+            'description': 'Found distinguishing string: ab',
+            'data': {
+              'stateA': 'q1',
+              'stateB': 'p2',
+              'acceptsA': true,
+              'acceptsB': false,
+              'distinguishingString': 'ab',
+              'symbol': 'b',
+            },
+          },
+        ]);
+
+        await _pumpLanguageComparisonViewer(
+          tester,
+          comparisonResult: result,
+          showSteps: true,
+        );
+
+        expect(find.text('Counterexample Found'), findsOneWidget);
+        expect(find.text('Distinguishing string'), findsOneWidget);
+        expect(find.text('"ab"'), findsAtLeastNWidgets(1));
+        expect(find.text('Acceptance'), findsOneWidget);
+        expect(find.text('A accepts, B rejects'), findsOneWidget);
+      });
+
+      testWidgets('renders a structured fallback for unknown step payloads', (
+        tester,
+      ) async {
+        final result = _createResultWithSteps([
+          {
+            'stepNumber': 3,
+            'type': 'mystery_payload',
+            'description': 'Opaque comparison step',
+            'data': {'rawKey': 'rawValue'},
+          },
+        ]);
+
+        await _pumpLanguageComparisonViewer(
+          tester,
+          comparisonResult: result,
+          showSteps: true,
+        );
+
+        expect(find.text('Unknown Step'), findsOneWidget);
+        expect(find.text('Raw type'), findsOneWidget);
+        expect(find.text('mystery_payload'), findsOneWidget);
+        expect(find.text('rawKey'), findsOneWidget);
+        expect(find.text('rawValue'), findsOneWidget);
       });
     });
 

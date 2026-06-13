@@ -185,6 +185,29 @@ void main() {
       },
     );
 
+    testWidgets('normalizes obsolete Pumping Lemma navigation slot', (
+      tester,
+    ) async {
+      final navigationNotifier = _TestHomeNavigationNotifier()..setIndex(5);
+      final highlightService = _TestSimulationHighlightService();
+
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      await _pumpHomePage(
+        tester,
+        navigationNotifier: navigationNotifier,
+        highlightService: highlightService,
+      );
+
+      expect(find.text('Regex'), findsWidgets);
+      expect(find.text('Regular Expressions'), findsOneWidget);
+      expect(find.text('Pumping'), findsNothing);
+      expect(navigationNotifier.receivedIndices, contains(4));
+    });
+
     testWidgets('updates page view and provider when tapping navigation', (
       tester,
     ) async {

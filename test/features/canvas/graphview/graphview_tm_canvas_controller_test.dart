@@ -109,6 +109,51 @@ void main() {
       expect(state.position.y, closeTo(24, 0.0001));
     });
 
+    test('addStateAt skips used TM ids and labels after sync', () {
+      final firstState = automaton_state.State(
+        id: 'state_0',
+        label: 'q0',
+        position: Vector2.zero(),
+        isInitial: true,
+        isAccepting: false,
+      );
+      final laterState = automaton_state.State(
+        id: 'state_2',
+        label: 'q2',
+        position: Vector2(100, 60),
+        isInitial: false,
+        isAccepting: false,
+      );
+      final tm = TM(
+        id: 'tm-gapped',
+        name: 'Gapped TM',
+        states: {firstState, laterState},
+        transitions: const {},
+        alphabet: const {},
+        initialState: firstState,
+        acceptingStates: const {},
+        created: DateTime.utc(2023, 1, 1),
+        modified: DateTime.utc(2023, 1, 1),
+        bounds: const math.Rectangle<double>(0, 0, 400, 300),
+        tapeAlphabet: const {'B'},
+        blankSymbol: 'B',
+        tapeCount: 1,
+        panOffset: Vector2.zero(),
+        zoomLevel: 1,
+      );
+      notifier.setTm(tm);
+      controller.synchronize(tm);
+
+      controller.addStateAt(const Offset(12, 24));
+
+      final inserted = notifier.state.tm!.states.singleWhere(
+        (state) => state.id == 'state_1',
+      );
+      expect(inserted.label, equals('q1'));
+      expect(inserted.position.x, closeTo(12, 0.0001));
+      expect(inserted.position.y, closeTo(24, 0.0001));
+    });
+
     test('addStateAtCenter resolves world position from viewport centre', () {
       final transformation =
           controller.graphController.transformationController;

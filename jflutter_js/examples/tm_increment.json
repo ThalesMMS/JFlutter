@@ -1,8 +1,8 @@
 {
-  "id": "example_tm_increment",
+  "id": "tm_binary_increment",
   "name": "MT - Incremento binário",
   "type": "tm",
-  "alphabet": ["0", "1", "B"],
+  "alphabet": ["0", "1"],
   "tapeAlphabet": ["0", "1", "B"],
   "states": [
     {
@@ -22,8 +22,8 @@
       "isFinal": false
     },
     {
-      "id": "qf",
-      "name": "qf",
+      "id": "q2",
+      "name": "q2",
       "x": 500.0,
       "y": 200.0,
       "isInitial": false,
@@ -35,10 +35,10 @@
     "q0|1|1": ["q0|1|R"],
     "q0|B|B": ["q1|B|L"],
     "q1|1|1": ["q1|0|L"],
-    "q1|0|0": ["qf|1|R"],
-    "q1|B|B": ["qf|1|R"]
+    "q1|0|0": ["q2|1|S"],
+    "q1|B|B": ["q2|1|S"]
   },
   "initialId": "q0",
-  "finalStates": ["qf"],
+  "finalStates": ["q2"],
   "description": "Máquina de Turing que incrementa um número binário em 1"
 }

@@ -102,7 +102,8 @@ class SvgExporter {
     );
   }
 
-  /// Exports Turing machine visualization (placeholder - not yet implemented)
+  /// Exports a Turing machine SVG with tape cells, head marker, states,
+  /// transitions, and optional legend/title content.
   static String exportTuringMachineToSvg(
     TuringMachineEntity tm, {
     double width = _defaultWidth,
@@ -493,7 +494,7 @@ class SvgExporter {
   }
 
   static String _colorToHex(Color color) {
-    final value = color.value & 0x00FFFFFF;
+    final value = color.toARGB32() & 0x00FFFFFF;
     return '#${value.toRadixString(16).padLeft(6, '0')}';
   }
 

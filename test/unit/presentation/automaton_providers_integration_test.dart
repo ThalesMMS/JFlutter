@@ -1,5 +1,5 @@
 //
-//  automaton_providers_integration_test.dart
+//  automaton_state_providers_integration_test.dart
 //  JFlutter
 //
 //  Integration tests for the refactored automaton providers, verifying that

@@ -9,7 +9,6 @@
 //
 
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:graphview/GraphView.dart';
 import '../../../core/models/fsa_transition.dart';
@@ -32,40 +31,27 @@ class EpsilonTransitionPainter extends EdgeRenderer {
     render(canvas, edge, paint);
   }
 
-  @override
   void render(Canvas canvas, Edge edge, Paint paint) {
     final isEpsilon = fsaTransition?.isEpsilonTransition ?? false;
 
     // Configurar paint baseado no tipo de transição
-    final effectivePaint = Paint()
-      ..color = isEpsilon
-          ? (isHighlighted ? Colors.purple : Colors.grey[600]!)
-          : (isHighlighted
-                ? Theme.of(canvas as BuildContext).colorScheme.primary
-                : Colors.black)
-      ..strokeWidth = isHighlighted ? 2.5 : 2.0
-      ..style = PaintingStyle.stroke;
-
-    // TODO: Aplicar PathEffect para linha tracejada se for epsilon
-    // PathEffect not available in current Flutter SDK version
-    // if (isEpsilon) {
-    //   effectivePaint.pathEffect = _createDashPathEffect();
-    // }
+    final effectivePaint = isEpsilon
+        ? EpsilonTransitionPaintHelper.createEpsilonPaint(
+            isHighlighted: isHighlighted,
+          )
+        : EpsilonTransitionPaintHelper.createRegularPaint(
+            isHighlighted: isHighlighted,
+          );
 
     // Desenhar a linha
     final path = _createEdgePath(edge);
-    canvas.drawPath(path, effectivePaint);
+    final shaftPath =
+        isEpsilon ? EpsilonTransitionPaintHelper.createDashedPath(path) : path;
+    canvas.drawPath(shaftPath, effectivePaint);
 
     // Desenhar a seta
     _drawArrowHead(canvas, edge, effectivePaint);
   }
-
-  /// Cria PathEffect para linha tracejada
-  /// NOTE: PathEffect not available in current Flutter SDK
-  // ui.PathEffect _createDashPathEffect() {
-  //   // Padrão: 8px linha, 4px espaço
-  //   return ui.PathEffect.dash([8.0, 4.0]);
-  // }
 
   /// Cria o caminho da transição
   Path _createEdgePath(Edge edge) {
@@ -158,8 +144,6 @@ class EpsilonTransitionPaintHelper {
       ..color = color ?? (isHighlighted ? Colors.purple : Colors.grey[600]!)
       ..strokeWidth = isHighlighted ? 2.5 : 2.0
       ..style = PaintingStyle.stroke;
-    // TODO: Add pathEffect when SDK supports it
-    // ..pathEffect = ui.PathEffect.dash([8.0, 4.0]);
   }
 
   /// Cria paint para transição regular
@@ -178,6 +162,30 @@ class EpsilonTransitionPaintHelper {
     return transition.isEpsilonTransition
         ? createEpsilonPaint(isHighlighted: isHighlighted)
         : createRegularPaint(isHighlighted: isHighlighted);
+  }
+
+  /// Creates a dashed path by preserving alternating dash segments.
+  static Path createDashedPath(
+    Path source, {
+    double dashLength = 8.0,
+    double gapLength = 4.0,
+  }) {
+    final dashedPath = Path();
+    final safeDashLength = dashLength <= 0 ? 1.0 : dashLength;
+    final safeGapLength = gapLength < 0 ? 0.0 : gapLength;
+
+    for (final metric in source.computeMetrics()) {
+      var distance = 0.0;
+      while (distance < metric.length) {
+        final end = math.min(distance + safeDashLength, metric.length);
+        if (end > distance) {
+          dashedPath.addPath(metric.extractPath(distance, end), Offset.zero);
+        }
+        distance = end + safeGapLength;
+      }
+    }
+
+    return dashedPath;
   }
 }
 

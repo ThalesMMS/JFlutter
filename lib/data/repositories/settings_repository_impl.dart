@@ -29,7 +29,6 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
   static const String _nodeSizeKey = 'settings_node_size';
   static const String _fontSizeKey = 'settings_font_size';
   static const String _animationSpeedKey = 'settings_animation_speed';
-  static const String _legacyUseDraw2dCanvasKey = 'settings_use_draw2d_canvas';
   static const Set<String> _supportedThemeModes = {'system', 'light', 'dark'};
   final SettingsStorage _storage;
 
@@ -69,7 +68,6 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
         defaults.animationSpeed,
       ),
     );
-    await _removeLegacyCanvasPreference();
     return settings;
   }
 
@@ -91,15 +89,6 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
 
     if (results.any((success) => !success)) {
       throw Exception('Failed to save settings');
-    }
-    await _removeLegacyCanvasPreference();
-  }
-
-  Future<void> _removeLegacyCanvasPreference() async {
-    try {
-      await _storage.remove(_legacyUseDraw2dCanvasKey);
-    } catch (_) {
-      // Ignore cleanup failures – they should not block settings operations.
     }
   }
 

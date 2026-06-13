@@ -68,5 +68,4 @@ linter:
 
 analyzer:
   exclude:
-    - References/**
     - build/**

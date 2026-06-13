@@ -32,13 +32,6 @@ class HomeNavigationNotifier extends StateNotifier<int> {
   /// Index for the Regular Expression workspace.
   static const int regexIndex = 4;
 
-  @Deprecated(
-    'Pumping Lemma is hidden for the Apple v1.0 release scope. Do not use this index in new code.',
-  )
-
-  /// Legacy index for the Pumping Lemma workspace.
-  static const int pumpingLemmaIndex = 5;
-
   /// Updates the currently visible workspace.
   void setIndex(int index) {
     if (index == state) {

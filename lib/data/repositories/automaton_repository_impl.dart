@@ -8,15 +8,12 @@
 //
 import 'dart:math' as math;
 
-import 'package:vector_math/vector_math_64.dart';
-
 import '../../core/entities/automaton_entity.dart';
 import '../../core/models/fsa.dart';
-import '../../core/models/fsa_transition.dart';
-import '../../core/models/state.dart';
 import '../../core/result.dart';
 import '../../core/utils/epsilon_utils.dart';
 import '../../core/repositories/automaton_repository.dart';
+import '../mappers/automaton_entity_mapper.dart';
 import '../services/automaton_service.dart';
 
 /// Concrete implementation of AutomatonRepository
@@ -173,135 +170,25 @@ class AutomatonRepositoryImpl implements AutomatonRepository {
   }
 
   AutomatonEntity _convertFsaToEntity(FSA automaton) {
-    final states = automaton.states
-        .map(
-          (state) => StateEntity(
-            id: state.id,
-            name: state.label,
-            x: state.position.x,
-            y: state.position.y,
-            isInitial: state.isInitial,
-            isFinal: state.isAccepting,
-          ),
-        )
-        .toList();
-
-    final transitions = <String, List<String>>{};
-    for (final transition in automaton.transitions.whereType<FSATransition>()) {
-      final symbols = <String>{};
-      if (transition.lambdaSymbol != null) {
-        symbols.add(normalizeToEpsilon(transition.lambdaSymbol));
-      } else {
-        for (final symbol in transition.inputSymbols) {
-          symbols.add(normalizeToEpsilon(symbol));
-        }
-      }
-
-      for (final symbol in symbols) {
-        final key = '${transition.fromState.id}|$symbol';
-        transitions
-            .putIfAbsent(key, () => <String>[])
-            .add(transition.toState.id);
-      }
-    }
-
-    final type = automaton.hasEpsilonTransitions
-        ? AutomatonType.nfaLambda
-        : automaton.isDeterministic
-        ? AutomatonType.dfa
-        : AutomatonType.nfa;
-
-    return AutomatonEntity(
-      id: automaton.id,
-      name: automaton.name,
-      alphabet: automaton.alphabet,
-      states: states,
-      transitions: transitions,
-      initialId: automaton.initialState?.id,
-      nextId: states.length,
-      type: type,
-    );
+    return AutomatonEntityMapper.fromFsa(automaton);
   }
 
   FSA _convertEntityToFsa(AutomatonEntity automaton) {
-    final states = automaton.states
-        .map(
-          (state) => State(
-            id: state.id,
-            label: state.name,
-            position: Vector2(state.x, state.y),
-            isInitial: state.isInitial || automaton.initialId == state.id,
-            isAccepting: state.isFinal,
-          ),
-        )
-        .toSet();
-
-    final stateById = {for (final state in states) state.id: state};
-
-    final transitions = <FSATransition>{};
-    var transitionIndex = 0;
-
-    automaton.transitions.forEach((key, destinations) {
-      final fromId = extractStateIdFromTransitionKey(key);
-      final fromState = stateById[fromId];
-      if (fromState == null) {
-        throw StateError('Unknown from state $fromId');
-      }
-
-      final symbol = normalizeToEpsilon(extractSymbolFromTransitionKey(key));
-      final isLambda = isEpsilonSymbol(symbol);
-
-      for (final destination in destinations) {
-        final toState = stateById[destination];
-        if (toState == null) {
-          throw StateError('Unknown to state $destination');
-        }
-
-        transitions.add(
-          FSATransition(
-            id: 't${automaton.id}_$transitionIndex',
-            fromState: fromState,
-            toState: toState,
-            label: symbol,
-            inputSymbols: isLambda ? <String>{} : {symbol},
-            lambdaSymbol: isLambda ? kEpsilonSymbol : null,
-          ),
-        );
-        transitionIndex++;
-      }
-    });
-
-    final initialState = automaton.initialId != null
-        ? stateById[automaton.initialId!]
-        : () {
-            try {
-              return states.firstWhere((s) => s.isInitial);
-            } catch (_) {
-              return null;
-            }
-          }();
-
-    final acceptingStates = states.where((state) => state.isAccepting).toSet();
-
-    final boundsRect = _calculateBounds(automaton.states);
-    final bounds = math.Rectangle(
-      boundsRect.left,
-      boundsRect.top,
-      boundsRect.right - boundsRect.left,
-      boundsRect.bottom - boundsRect.top,
+    return AutomatonEntityMapper.toFsa(
+      automaton,
+      missingEndpointPolicy: MissingTransitionEndpointPolicy.throwError,
+      transitionIdBuilder: (index) => 't${automaton.id}_$index',
+      bounds: _calculateFsaBounds(automaton.states),
     );
+  }
 
-    return FSA(
-      id: automaton.id,
-      name: automaton.name,
-      states: states,
-      transitions: transitions,
-      alphabet: automaton.alphabet,
-      initialState: initialState,
-      acceptingStates: acceptingStates,
-      created: DateTime.now(),
-      modified: DateTime.now(),
-      bounds: bounds,
+  math.Rectangle<double> _calculateFsaBounds(List<StateEntity> states) {
+    final bounds = _calculateBounds(states);
+    return math.Rectangle<double>(
+      bounds.left,
+      bounds.top,
+      bounds.right - bounds.left,
+      bounds.bottom - bounds.top,
     );
   }
 

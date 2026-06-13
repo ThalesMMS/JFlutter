@@ -16,7 +16,6 @@ jflutter/
 │   │   ├── parsers/               # File parsing utilities
 │   │   ├── repositories/          # Repository interfaces
 │   │   ├── use_cases/             # Business use cases
-│   │   ├── algo_log.dart          # Algorithm logging
 │   │   ├── error_handler.dart     # Error handling utilities
 │   │   └── result.dart            # Result pattern implementation
 │   ├── data/                      # Data layer
@@ -43,8 +42,8 @@ jflutter/
 ├── linux/                         # Linux-specific files
 ├── macos/                         # macOS-specific files
 ├── docs/                          # Additional architecture notes and guides
+├── release/                       # Release QA, signing, and platform validation docs
 ├── jflutter_js/                   # Shared JS runtime assets and examples
-├── References/                    # Implementações de referência (Dart + Python) usadas como base na migração
 ├── screenshots/                   # UI captures and visual references
 ├── tool/                          # Repo tooling and helper scripts
 ├── build.yaml                     # Build orchestration for CI/scripts
@@ -56,8 +55,6 @@ jflutter/
 ├── PROJECT_STRUCTURE.md           # This file
 ├── LEGAL_DISTRIBUTION.md          # Apple App Store and distribution rights determination
 ├── USER_GUIDE.md                  # GraphView canvas working guide
-├── Requisitos.md                  # Requisitos funcionais (PT-BR)
-├── bugs.md                        # Active bug tracker
 ├── LICENSE.txt                    # License information
 ├── LICENSE_JFLAP.txt              # Upstream JFLAP license
 └── icon.png                       # App icon source
@@ -91,9 +88,7 @@ algorithms/
 ├── grammar_analyzer.dart          # Grammar consistency and diagnostics
 ├── grammar_parser.dart            # Hand-rolled parser façade
 ├── grammar_parser_earley.dart     # Earley parser implementation
-├── grammar_parser_petit.dart      # PetitParser-based parser integration
-├── grammar_parser_simple.dart     # Simplified recursive-descent parser
-├── grammar_parser_simple_recursive.dart # Alternate recursive parser prototype
+├── grammar_parser_simple_recursive.dart # Recursive-descent derivation helper
 ├── grammar_to_fsa_converter.dart  # Convert grammars to FSAs
 ├── grammar_to_pda_converter.dart  # Convert grammars to PDAs
 ├── nfa_to_dfa_converter.dart      # Subset construction converter
@@ -148,13 +143,10 @@ entities/
 
 ### Other Core Files
 
-- `algo_log.dart` - Centralized algorithm logging
 - `error_handler.dart` - Global error handling
 - `result.dart` - Result pattern for error handling
 - `services/` - Runtime diagnostics and highlighting utilities such as
-  `diagnostic_service.dart`, `diagnostics_service.dart`,
-  `simulation_highlight_service.dart`, and the platform-aware
-  `trace_persistence_service*.dart` shims used by the UI layer
+  `diagnostics_service.dart` and `simulation_highlight_service.dart`
 
 ## Data Layer (`lib/data/`)
 
@@ -185,8 +177,6 @@ Data source implementations:
 ```
 data_sources/
 ├── examples_asset_data_source.dart  # Rich metadata-backed examples loader
-├── examples_data_source.dart        # Legacy asset loader for simple automata
-└── local_storage_data_source.dart   # SharedPreferences-powered persistence bridge
 ```
 
 ### Repositories (`lib/data/repositories/`)
@@ -207,8 +197,7 @@ Data transfer objects:
 
 ```
 models/
-├── automaton_dto.dart             # Serializes automata payloads for storage/API
-├── automaton_model.dart           # Rich automaton model consumed by the UI
+├── automaton_dto.dart             # Canonical automaton JSON DTO for storage/import/examples
 ├── grammar_dto.dart               # Grammar DTO with production metadata
 └── turing_machine_dto.dart        # Turing machine DTO mapping tape/configurations
 ```
@@ -261,7 +250,6 @@ widgets/
 ├── desktop_navigation.dart          # Desktop navigation rail
 ├── mobile_navigation.dart           # Mobile bottom navigation
 ├── mobile_automaton_controls.dart   # Compact controls for touch devices
-├── canvas_actions_sheet.dart        # Quick actions sheet for canvas interactions
 ├── error_banner.dart                # Inline error messaging
 ├── import_error_dialog.dart         # Import failure dialog
 ├── retry_button.dart                # Retry CTA used across error states
@@ -282,7 +270,7 @@ State management using Riverpod:
 ```
 providers/
 ├── algorithm_provider.dart              # Coordinates algorithm selection
-├── automaton_provider.dart              # Automaton state management
+├── automaton_state_provider.dart        # Automaton state management
 ├── fa_trace_provider.dart               # DFA/NFA trace broadcasting
 ├── grammar_provider.dart                # Grammar editor state
 ├── home_navigation_provider.dart        # Home shell navigation model
@@ -406,8 +394,10 @@ web/
 
 ### Reference Material & Requirements
 
-- `References/` - Authoritative Dart/Python implementations mirrored from upstream projects
-- `Requisitos.md` - Functional requirements in Portuguese
+- `docs/reference-deviations.md` - Current parity anchors, reference targets, and intentional deviations
+- `README.md` - Product overview, supported workflows, setup, and testing commands
+- `release/` - Release requirements, QA matrices, signing notes, and platform validation records
+- GitHub Issues - Active bug tracker and feature backlog
 - `LICENSE.txt` / `LICENSE_JFLAP.txt` - Licensing information
 - `LEGAL_DISTRIBUTION.md` - JFLAP-derived content analysis, App Store distribution determination, and release compliance requirements
 
@@ -445,7 +435,7 @@ Presentation → Core ← Data
 
 ## Referências para a Migração
 
-O diretório `References/` reúne implementações em Dart e o projeto Python `automata-main`. Eles servem como base de conferência durante a reconstrução das estruturas e algoritmos do JFlutter. Sempre que um módulo é reescrito, seu comportamento é comparado com essas referências até que novos testes automatizados entrem em cena.
+Este checkout não inclui snapshots locais das implementações de referência. Use `docs/reference-deviations.md` e os links upstream no README como âncoras de paridade para algoritmos e estruturas de dados. Sempre que um módulo for reescrito, compare o comportamento com essas fontes, valide por testes automatizados e registre desvios intencionais no documento de desvios.
 
 ## Development Guidelines
 

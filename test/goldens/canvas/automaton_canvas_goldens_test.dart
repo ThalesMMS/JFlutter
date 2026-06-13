@@ -28,14 +28,14 @@ import 'package:jflutter/presentation/providers/automaton_state_provider.dart';
 import 'package:jflutter/presentation/widgets/automaton_canvas_tool.dart';
 import 'package:jflutter/presentation/widgets/automaton_graphview_canvas.dart';
 
-class _TestAutomatonProvider extends AutomatonStateNotifier {
-  _TestAutomatonProvider() : super(automatonService: AutomatonService());
+class _TestAutomatonStateNotifier extends AutomatonStateNotifier {
+  _TestAutomatonStateNotifier() : super(automatonService: AutomatonService());
 }
 
 void main() {
   group('AutomatonGraphViewCanvas golden tests', () {
     testGoldens('renders empty canvas', (tester) async {
-      final provider = _TestAutomatonProvider();
+      final provider = _TestAutomatonStateNotifier();
       final controller = GraphViewCanvasController(
         automatonStateNotifier: provider,
       );
@@ -85,7 +85,7 @@ void main() {
     });
 
     testGoldens('renders single normal state', (tester) async {
-      final provider = _TestAutomatonProvider();
+      final provider = _TestAutomatonStateNotifier();
       final controller = GraphViewCanvasController(
         automatonStateNotifier: provider,
       );
@@ -143,7 +143,7 @@ void main() {
     });
 
     testGoldens('renders single initial state', (tester) async {
-      final provider = _TestAutomatonProvider();
+      final provider = _TestAutomatonStateNotifier();
       final controller = GraphViewCanvasController(
         automatonStateNotifier: provider,
       );
@@ -201,7 +201,7 @@ void main() {
     });
 
     testGoldens('renders single accepting state', (tester) async {
-      final provider = _TestAutomatonProvider();
+      final provider = _TestAutomatonStateNotifier();
       final controller = GraphViewCanvasController(
         automatonStateNotifier: provider,
       );
@@ -259,7 +259,7 @@ void main() {
     });
 
     testGoldens('renders initial and accepting state', (tester) async {
-      final provider = _TestAutomatonProvider();
+      final provider = _TestAutomatonStateNotifier();
       final controller = GraphViewCanvasController(
         automatonStateNotifier: provider,
       );
@@ -320,7 +320,7 @@ void main() {
     });
 
     testGoldens('renders multiple states with transitions', (tester) async {
-      final provider = _TestAutomatonProvider();
+      final provider = _TestAutomatonStateNotifier();
       final controller = GraphViewCanvasController(
         automatonStateNotifier: provider,
       );
@@ -397,7 +397,7 @@ void main() {
     });
 
     testGoldens('renders self-loop transition', (tester) async {
-      final provider = _TestAutomatonProvider();
+      final provider = _TestAutomatonStateNotifier();
       final controller = GraphViewCanvasController(
         automatonStateNotifier: provider,
       );
@@ -465,7 +465,7 @@ void main() {
     testGoldens('renders complex automaton with multiple transitions', (
       tester,
     ) async {
-      final provider = _TestAutomatonProvider();
+      final provider = _TestAutomatonStateNotifier();
       final controller = GraphViewCanvasController(
         automatonStateNotifier: provider,
       );
@@ -565,7 +565,7 @@ void main() {
     testGoldens(
       'renders renderer migration scenario with highlighted adaptive edges',
       (tester) async {
-        final provider = _TestAutomatonProvider();
+        final provider = _TestAutomatonStateNotifier();
         final controller = GraphViewCanvasController(
           automatonStateNotifier: provider,
         );

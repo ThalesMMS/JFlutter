@@ -576,64 +576,67 @@ class _GrammarEditorState extends ConsumerState<GrammarEditor> {
         ),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          child: Text(
-            '${index + 1}',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onPrimary,
-              fontWeight: FontWeight.bold,
+      child: Material(
+        type: MaterialType.transparency,
+        child: ListTile(
+          leading: CircleAvatar(
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            child: Text(
+              '${index + 1}',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onPrimary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
-        ),
-        title: Text(
-          '${_formatSymbols(production.leftSide)} → ${_formatRightSide(production)}',
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontFamily: 'monospace',
-                fontWeight: FontWeight.w600,
+          title: Text(
+            '${_formatSymbols(production.leftSide)} → ${_formatRightSide(production)}',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontFamily: 'monospace',
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+          subtitle: Text(
+            'Rule ${index + 1}',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          trailing: PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'edit') {
+                _editProduction(production);
+              } else if (value == 'delete') {
+                _deleteProduction(production);
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'edit',
+                child: Row(
+                  children: [
+                    Icon(Icons.edit, size: 18),
+                    SizedBox(width: 8),
+                    Text('Edit'),
+                  ],
+                ),
               ),
-        ),
-        subtitle: Text(
-          'Rule ${index + 1}',
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        trailing: PopupMenuButton<String>(
-          onSelected: (value) {
-            if (value == 'edit') {
-              _editProduction(production);
-            } else if (value == 'delete') {
-              _deleteProduction(production);
-            }
-          },
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'edit',
-              child: Row(
-                children: [
-                  Icon(Icons.edit, size: 18),
-                  SizedBox(width: 8),
-                  Text('Edit'),
-                ],
+              const PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete, size: 18),
+                    SizedBox(width: 8),
+                    Text('Delete'),
+                  ],
+                ),
               ),
-            ),
-            const PopupMenuItem(
-              value: 'delete',
-              child: Row(
-                children: [
-                  Icon(Icons.delete, size: 18),
-                  SizedBox(width: 8),
-                  Text('Delete'),
-                ],
-              ),
-            ),
-          ],
-          child: const Icon(Icons.more_vert),
+            ],
+            child: const Icon(Icons.more_vert),
+          ),
+          onTap: () => _selectProduction(production),
+          selected: isSelected,
         ),
-        onTap: () => _selectProduction(production),
-        selected: isSelected,
       ),
     );
   }

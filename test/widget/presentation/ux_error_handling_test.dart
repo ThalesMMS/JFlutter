@@ -772,47 +772,54 @@ void main() {
       FilePicker.platform = fakeFilePicker;
     });
 
-    testWidgets('displays inline error banner for recoverable export failure', (
-      tester,
-    ) async {
-      final automaton = _buildSampleAutomaton();
-      final service = _StubFileOperationsService(
-        exportResponses: Queue.of([
-          const Failure<String>('Failed to export automaton: disk is full'),
-          const Success<String>('export.svg'),
-        ]),
-      );
+    testWidgets(
+      'displays inline error banner for recoverable export failure',
+      (tester) async {
+        final automaton = _buildSampleAutomaton();
+        final service = _StubFileOperationsService(
+          exportResponses: Queue.of([
+            const Failure<String>('Failed to export automaton: disk is full'),
+            const Success<String>('export.svg'),
+          ]),
+        );
 
-      fakeFilePicker
-        ..enqueueSaveResult('automaton_export.svg')
-        ..enqueueSaveResult('automaton_export.svg');
+        fakeFilePicker
+          ..enqueueSaveResult('automaton_export.svg')
+          ..enqueueSaveResult('automaton_export.svg');
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: FileOperationsPanel(
-              automaton: automaton,
-              fileService: service,
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: FileOperationsPanel(
+                automaton: automaton,
+                fileService: service,
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      await tester.tap(find.text('Export SVG'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('Export SVG'));
+        await tester.pumpAndSettle();
 
-      expect(find.byType(ErrorBanner), findsOneWidget);
-      expect(find.textContaining('Failed to export automaton'), findsOneWidget);
-      expect(service.exportCallCount, equals(1));
+        expect(find.byType(ErrorBanner), findsOneWidget);
+        expect(
+          find.textContaining('Failed to export automaton'),
+          findsOneWidget,
+        );
+        expect(service.exportCallCount, equals(1));
 
-      await tester.tap(find.text('Retry'));
-      await tester.pump();
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('Retry'));
+        await tester.pump();
+        await tester.pumpAndSettle();
 
-      expect(service.exportCallCount, equals(2));
-      expect(find.text('Automaton exported successfully'), findsOneWidget);
-      expect(find.text('Retry'), findsNothing);
-    });
+        expect(service.exportCallCount, equals(2));
+        expect(find.text('Automaton exported successfully'), findsOneWidget);
+        expect(find.text('Retry'), findsNothing);
+      },
+      variant: const TargetPlatformVariant(<TargetPlatform>{
+        TargetPlatform.macOS,
+      }),
+    );
 
     testWidgets('opens critical import dialog and retries load operation', (
       tester,

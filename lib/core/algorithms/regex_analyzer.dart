@@ -43,7 +43,11 @@ class RegexAnalyzer {
   /// Parses the regex into an AST and traverses it to compute:
   /// - Complexity metrics (star height, nesting depth, complexity score)
   /// - Structure analysis (operator counts, alphabet size)
-  /// - Sample strings placeholder (populated separately via generateSampleStrings)
+  /// - Empty sample list plus empty-string acceptance metadata
+  ///
+  /// This structural analysis does not generate sample strings. Call
+  /// [generateSampleStrings] for sample-only output, or [analyzeWithSamples]
+  /// when a single call should return metrics and populated samples together.
   ///
   /// Returns a [Result] containing [RegexAnalysis] on success, or an error
   /// message on failure if the regex is invalid.
@@ -80,7 +84,8 @@ class RegexAnalyzer {
         totalLength: regex.length,
       );
 
-      // Build sample strings placeholder (empty until generateSampleStrings is called)
+      // analyze() intentionally keeps generated samples empty; callers that
+      // need examples should use generateSampleStrings() or analyzeWithSamples().
       final sampleStrings = RegexSampleStrings(
         samples: [],
         shortestString: null,

@@ -17,6 +17,7 @@ import '../../core/models/simulation_result.dart';
 import '../../core/models/simulation_step.dart';
 import '../../data/services/trace_persistence_service.dart' as data_trace;
 import '../../injection/dependency_injection.dart';
+import 'trace_step_navigation.dart';
 
 Map<String, dynamic> _deepUnmodifiableMap(Map<String, dynamic> source) {
   return Map<String, dynamic>.unmodifiable(
@@ -55,8 +56,9 @@ dynamic _deepFreezeValue(dynamic value) {
 }
 
 /// Unified trace state that can handle traces from any automaton type
-class UnifiedTraceState {
+class UnifiedTraceState with TraceStepNavigation<UnifiedTraceState> {
   final SimulationResult? currentTrace;
+  @override
   final int currentStepIndex;
   final bool isRunning;
   final bool stepByStep;
@@ -106,55 +108,14 @@ class UnifiedTraceState {
     );
   }
 
-  /// Navigate to a specific step in the current simulation
-  UnifiedTraceState navigateToStep(int stepIndex) {
-    if (currentTrace == null ||
-        stepIndex < 0 ||
-        stepIndex >= currentTrace!.steps.length) {
-      return this;
-    }
-    return copyWith(currentStepIndex: stepIndex);
+  @override
+  List<SimulationStep> get steps =>
+      currentTrace?.steps ?? const <SimulationStep>[];
+
+  @override
+  UnifiedTraceState copyWithStepIndex(int currentStepIndex) {
+    return copyWith(currentStepIndex: currentStepIndex);
   }
-
-  /// Navigate to the next step
-  UnifiedTraceState nextStep() {
-    if (currentTrace == null) return this;
-    final nextIndex = currentStepIndex + 1;
-    if (nextIndex >= currentTrace!.steps.length) return this;
-    return copyWith(currentStepIndex: nextIndex);
-  }
-
-  /// Navigate to the previous step
-  UnifiedTraceState previousStep() {
-    final prevIndex = currentStepIndex - 1;
-    if (prevIndex < 0) return this;
-    return copyWith(currentStepIndex: prevIndex);
-  }
-
-  /// Navigate to the first step
-  UnifiedTraceState firstStep() => copyWith(currentStepIndex: 0);
-
-  /// Navigate to the last step
-  UnifiedTraceState lastStep() {
-    if (currentTrace == null) return this;
-    return copyWith(currentStepIndex: currentTrace!.steps.length - 1);
-  }
-
-  /// Get the current simulation step
-  SimulationStep? get currentStep {
-    if (currentTrace == null ||
-        currentStepIndex >= currentTrace!.steps.length) {
-      return null;
-    }
-    return currentTrace!.steps[currentStepIndex];
-  }
-
-  /// Check if we can navigate to the next step
-  bool get canNavigateNext =>
-      currentTrace != null && currentStepIndex < currentTrace!.steps.length - 1;
-
-  /// Check if we can navigate to the previous step
-  bool get canNavigatePrevious => currentStepIndex > 0;
 
   /// Get traces for current automaton type
   List<Map<String, dynamic>> get tracesForCurrentType {

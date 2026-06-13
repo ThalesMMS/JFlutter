@@ -3,8 +3,8 @@
 //  JFlutter
 //
 //  Manages state CRUD operations for automata including states, transitions,
-//  and history tracking. Extracted from AutomatonProvider to follow single
-//  responsibility principle and improve testability.
+//  and history tracking. Replaces the legacy combined automaton provider with
+//  a focused state notifier.
 //
 //  Thales Matheus Mendonça Santos - January 2026
 //
@@ -22,6 +22,7 @@ import '../../core/models/fsa_transition.dart';
 import '../../core/models/state.dart';
 import '../../core/models/transition.dart';
 import '../../core/utils/epsilon_utils.dart';
+import '../../data/mappers/automaton_entity_mapper.dart';
 import '../../data/services/automaton_service.dart';
 
 /// State for automaton CRUD operations
@@ -74,8 +75,8 @@ class AutomatonStateNotifier
   int _graphViewMutationCounter = 0;
 
   AutomatonStateNotifier({required AutomatonService automatonService})
-    : _automatonService = automatonService,
-      super(const AutomatonStateProviderState());
+      : _automatonService = automatonService,
+        super(const AutomatonStateProviderState());
 
   void _traceGraphView(String operation, [Map<String, Object?>? metadata]) {
     if (!kDebugMode) {
@@ -219,16 +220,12 @@ class AutomatonStateNotifier
       final initialStateId = isInitial == true
           ? id
           : current.initialState?.id ??
-                normalizedStates
-                    .firstWhereOrNull((state) => state.isInitial)
-                    ?.id;
-      final initialState = initialStateId != null
-          ? statesById[initialStateId]
-          : null;
+              normalizedStates.firstWhereOrNull((state) => state.isInitial)?.id;
+      final initialState =
+          initialStateId != null ? statesById[initialStateId] : null;
 
-      final acceptingStates = statesById.values
-          .where((state) => state.isAccepting)
-          .toSet();
+      final acceptingStates =
+          statesById.values.where((state) => state.isAccepting).toSet();
 
       return current.copyWith(
         states: statesById.values.toSet(),
@@ -262,16 +259,14 @@ class AutomatonStateNotifier
       );
 
       final initialStateId = current.initialState?.id;
-      final acceptingStates = statesById.values
-          .where((state) => state.isAccepting)
-          .toSet();
+      final acceptingStates =
+          statesById.values.where((state) => state.isAccepting).toSet();
 
       return current.copyWith(
         states: statesById.values.toSet(),
         transitions: updatedTransitions.map<Transition>((t) => t).toSet(),
-        initialState: initialStateId != null
-            ? statesById[initialStateId]
-            : null,
+        initialState:
+            initialStateId != null ? statesById[initialStateId] : null,
         acceptingStates: acceptingStates,
         modified: DateTime.now(),
       );
@@ -344,9 +339,8 @@ class AutomatonStateNotifier
         filteredTransitions,
         statesById,
       );
-      final acceptingStates = statesById.values
-          .where((state) => state.isAccepting)
-          .toSet();
+      final acceptingStates =
+          statesById.values.where((state) => state.isAccepting).toSet();
 
       return current.copyWith(
         states: statesById.values.toSet(),
@@ -390,9 +384,8 @@ class AutomatonStateNotifier
 
       final parsedLabel = _parseTransitionLabel(label);
       final resolvedLabel = _formatTransitionLabel(label, parsedLabel);
-      final transitions = current.transitions
-          .whereType<FSATransition>()
-          .toList();
+      final transitions =
+          current.transitions.whereType<FSATransition>().toList();
       final existingIndex = transitions.indexWhere(
         (transition) => transition.id == id,
       );
@@ -412,8 +405,8 @@ class AutomatonStateNotifier
         final existingControl = controlPoint ?? existing.controlPoint;
         final resolvedControlPoint =
             isSelfLoop && _isZeroVector(existingControl)
-            ? _defaultLoopControlPoint(fromState)
-            : existingControl;
+                ? _defaultLoopControlPoint(fromState)
+                : existingControl;
         transitions[existingIndex] = existing.copyWith(
           fromState: fromState,
           toState: toState,
@@ -453,9 +446,8 @@ class AutomatonStateNotifier
   void removeTransition({required String id}) {
     _traceGraphView('removeTransition', {'id': id});
     _mutateAutomaton((current) {
-      final transitions = current.transitions
-          .whereType<FSATransition>()
-          .toList();
+      final transitions =
+          current.transitions.whereType<FSATransition>().toList();
       final index = transitions.indexWhere((transition) => transition.id == id);
       if (index < 0) {
         _traceGraphView('removeTransition skipped', {
@@ -488,16 +480,14 @@ class AutomatonStateNotifier
       );
 
       final initialStateId = current.initialState?.id;
-      final acceptingStates = statesById.values
-          .where((state) => state.isAccepting)
-          .toSet();
+      final acceptingStates =
+          statesById.values.where((state) => state.isAccepting).toSet();
 
       return current.copyWith(
         states: statesById.values.toSet(),
         transitions: updatedTransitions.map<Transition>((t) => t).toSet(),
-        initialState: initialStateId != null
-            ? statesById[initialStateId]
-            : null,
+        initialState:
+            initialStateId != null ? statesById[initialStateId] : null,
         acceptingStates: acceptingStates,
         modified: DateTime.now(),
       );
@@ -556,9 +546,8 @@ class AutomatonStateNotifier
       final initialState = updatedStates.firstWhereOrNull(
         (state) => state.isInitial,
       );
-      final acceptingStates = statesById.values
-          .where((state) => state.isAccepting)
-          .toSet();
+      final acceptingStates =
+          statesById.values.where((state) => state.isAccepting).toSet();
 
       return current.copyWith(
         states: statesById.values.toSet(),
@@ -574,9 +563,8 @@ class AutomatonStateNotifier
   void updateTransitionLabel({required String id, required String label}) {
     _traceGraphView('updateTransitionLabel', {'id': id, 'label': label});
     _mutateAutomaton((current) {
-      final transitions = current.transitions
-          .whereType<FSATransition>()
-          .toList();
+      final transitions =
+          current.transitions.whereType<FSATransition>().toList();
       final index = transitions.indexWhere((transition) => transition.id == id);
       if (index < 0) {
         _traceGraphView('updateTransitionLabel skipped', {
@@ -592,8 +580,8 @@ class AutomatonStateNotifier
       final isSelfLoop = existing.fromState.id == existing.toState.id;
       final resolvedControlPoint =
           isSelfLoop && _isZeroVector(existing.controlPoint)
-          ? _defaultLoopControlPoint(existing.fromState)
-          : existing.controlPoint;
+              ? _defaultLoopControlPoint(existing.fromState)
+              : existing.controlPoint;
       transitions[index] = existing.copyWith(
         label: resolvedLabel,
         inputSymbols: parsedLabel.symbols,
@@ -762,23 +750,24 @@ class AutomatonStateNotifier
   AutomatonEntity? get currentAutomatonEntity {
     final current = state.currentAutomaton;
     if (current == null) return null;
-    return _convertFsaToEntity(current);
+    return AutomatonEntityMapper.fromFsa(current,
+        nextId: current.states.length + 1);
   }
 
   /// Legacy compatibility: Convert FSA to AutomatonEntity
   AutomatonEntity convertFsaToEntity(FSA fsa) {
-    return _convertFsaToEntity(fsa);
+    return AutomatonEntityMapper.fromFsa(fsa, nextId: fsa.states.length + 1);
   }
 
   /// Legacy compatibility: Convert AutomatonEntity to FSA
   FSA convertEntityToFsa(AutomatonEntity entity) {
-    return _convertEntityToFsa(entity);
+    return AutomatonEntityMapper.toFsa(entity);
   }
 
   /// Legacy compatibility: Replace current automaton from AutomatonEntity
   /// Used by the old algorithm_provider.dart when applying algorithm results
   void replaceCurrentAutomaton(AutomatonEntity entity) {
-    final updated = _convertEntityToFsa(entity);
+    final updated = AutomatonEntityMapper.toFsa(entity);
     state = state.copyWith(
       currentAutomaton: updated,
       error: null,
@@ -786,110 +775,14 @@ class AutomatonStateNotifier
     );
     _traceGraphView('replace_automaton', {'entity_id': entity.id});
   }
-
-  AutomatonEntity _convertFsaToEntity(FSA fsa) {
-    final states = fsa.states
-        .map(
-          (s) => StateEntity(
-            id: s.id,
-            name: s.label,
-            x: s.position.x,
-            y: s.position.y,
-            isInitial: s.isInitial,
-            isFinal: s.isAccepting,
-          ),
-        )
-        .toList();
-
-    final transitions = <String, List<String>>{};
-    for (final transition in fsa.transitions) {
-      if (transition is FSATransition) {
-        for (final symbol in transition.inputSymbols) {
-          final key = '${transition.fromState.id}|$symbol';
-          if (!transitions.containsKey(key)) {
-            transitions[key] = [];
-          }
-          transitions[key]!.add(transition.toState.id);
-        }
-      }
-    }
-
-    return AutomatonEntity(
-      id: fsa.id,
-      name: fsa.name,
-      alphabet: fsa.alphabet,
-      states: states,
-      transitions: transitions,
-      initialId: fsa.initialState?.id,
-      nextId: states.length + 1,
-      type: AutomatonType.dfa,
-    );
-  }
-
-  FSA _convertEntityToFsa(AutomatonEntity entity) {
-    final states = entity.states
-        .map(
-          (s) => State(
-            id: s.id,
-            label: s.name,
-            position: Vector2(s.x, s.y),
-            isInitial: s.isInitial,
-            isAccepting: s.isFinal,
-          ),
-        )
-        .toSet();
-
-    final initialState = states.where((s) => s.isInitial).firstOrNull;
-    final acceptingStates = states.where((s) => s.isAccepting).toSet();
-
-    final transitions = <FSATransition>{};
-    int transitionId = 1;
-
-    for (final entry in entity.transitions.entries) {
-      final parts = entry.key.split('|');
-      if (parts.length == 2) {
-        final fromStateId = parts[0];
-        final symbol = parts[1];
-        final fromState = states.firstWhere((s) => s.id == fromStateId);
-
-        for (final toStateId in entry.value) {
-          final toState = states.firstWhere((s) => s.id == toStateId);
-          transitions.add(
-            FSATransition(
-              id: 't${transitionId++}',
-              fromState: fromState,
-              toState: toState,
-              label: symbol,
-              inputSymbols: {symbol},
-            ),
-          );
-        }
-      }
-    }
-
-    return FSA(
-      id: entity.id,
-      name: entity.name,
-      states: states,
-      transitions: transitions,
-      alphabet: entity.alphabet,
-      initialState: initialState,
-      acceptingStates: acceptingStates,
-      created: DateTime.now(),
-      modified: DateTime.now(),
-      bounds: const Rectangle<double>(0, 0, 800, 600),
-      panOffset: Vector2.zero(),
-      zoomLevel: 1.0,
-    );
-  }
 }
 
 /// Provider for automaton state management
 final automatonStateProvider =
     StateNotifierProvider<AutomatonStateNotifier, AutomatonStateProviderState>((
-      ref,
-    ) {
-      final automatonService = AutomatonService();
+  ref,
+) {
+  final automatonService = AutomatonService();
 
-      return AutomatonStateNotifier(automatonService: automatonService);
-    });
+  return AutomatonStateNotifier(automatonService: automatonService);
+});

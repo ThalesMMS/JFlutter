@@ -5,15 +5,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 import 'package:jflutter/core/models/fsa.dart';
-import 'package:jflutter/core/entities/automaton_entity.dart';
 import 'package:jflutter/core/models/grammar.dart';
 import 'package:jflutter/core/models/pda.dart';
 import 'package:jflutter/core/models/production.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
 import 'package:jflutter/core/result.dart';
 import 'package:jflutter/data/services/automaton_service.dart';
-import 'package:jflutter/core/repositories/automaton_repository.dart';
-import 'package:jflutter/presentation/providers/automaton_provider.dart';
 import 'package:jflutter/presentation/providers/automaton_state_provider.dart';
 import 'package:jflutter/presentation/providers/grammar_provider.dart';
 import 'package:jflutter/presentation/providers/home_navigation_provider.dart';
@@ -69,8 +66,7 @@ class _MockGrammarNotifier extends GrammarProvider {
       isAccepting: false,
     );
 
-    final result =
-        convertToAutomatonResult ??
+    final result = convertToAutomatonResult ??
         Success(
           FSA(
             id: 'test-fsa-${DateTime.now().millisecondsSinceEpoch}',
@@ -108,8 +104,7 @@ class _MockGrammarNotifier extends GrammarProvider {
       isAccepting: false,
     );
 
-    final result =
-        convertToPdaResult ??
+    final result = convertToPdaResult ??
         Success(
           PDA(
             id: 'test-pda-${DateTime.now().millisecondsSinceEpoch}',
@@ -153,8 +148,7 @@ class _MockGrammarNotifier extends GrammarProvider {
       isAccepting: false,
     );
 
-    final result =
-        convertToPdaStandardResult ??
+    final result = convertToPdaStandardResult ??
         Success(
           PDA(
             id: 'test-pda-std-${DateTime.now().millisecondsSinceEpoch}',
@@ -198,8 +192,7 @@ class _MockGrammarNotifier extends GrammarProvider {
       isAccepting: false,
     );
 
-    final result =
-        convertToPdaGreibachResult ??
+    final result = convertToPdaGreibachResult ??
         Success(
           PDA(
             id: 'test-pda-greibach-${DateTime.now().millisecondsSinceEpoch}',
@@ -232,48 +225,6 @@ class _MockAutomatonService extends AutomatonService {
   dynamic noSuchMethod(Invocation invocation) => Future.value();
 }
 
-class _MockLayoutRepository extends LayoutRepository {
-  @override
-  Future<AutomatonResult> applyCompactLayout(AutomatonEntity automaton) async =>
-      Success(automaton);
-
-  @override
-  Future<AutomatonResult> applyBalancedLayout(
-    AutomatonEntity automaton,
-  ) async => Success(automaton);
-
-  @override
-  Future<AutomatonResult> applySpreadLayout(AutomatonEntity automaton) async =>
-      Success(automaton);
-
-  @override
-  Future<AutomatonResult> applyHierarchicalLayout(
-    AutomatonEntity automaton,
-  ) async => Success(automaton);
-
-  @override
-  Future<AutomatonResult> applyAutoLayout(AutomatonEntity automaton) async =>
-      Success(automaton);
-
-  @override
-  Future<AutomatonResult> centerAutomaton(AutomatonEntity automaton) async =>
-      Success(automaton);
-}
-
-class _MockAutomatonNotifier extends AutomatonProvider {
-  @override
-  _MockAutomatonNotifier()
-    : super(
-        automatonService: _MockAutomatonService(),
-        layoutRepository: _MockLayoutRepository(),
-      );
-
-  @override
-  void updateAutomaton(FSA automaton) {
-    state = state.copyWith(currentAutomaton: automaton);
-  }
-}
-
 class _MockPdaEditorNotifier extends PDAEditorNotifier {
   _MockPdaEditorNotifier() : super();
 
@@ -284,7 +235,7 @@ class _MockPdaEditorNotifier extends PDAEditorNotifier {
 
 class _MockAutomatonStateNotifier extends AutomatonStateNotifier {
   _MockAutomatonStateNotifier()
-    : super(automatonService: _MockAutomatonService());
+      : super(automatonService: _MockAutomatonService());
 
   @override
   void updateAutomaton(FSA automaton) {
@@ -329,7 +280,6 @@ Future<void> _pumpGrammarAlgorithmPanel(
     convertToPdaGreibachResult: convertToPdaGreibachResult,
   );
 
-  final mockAutomatonNotifier = _MockAutomatonNotifier();
   final mockAutomatonStateNotifier = _MockAutomatonStateNotifier();
   final mockPdaNotifier = _MockPdaEditorNotifier();
   final mockNavNotifier = navigationNotifier ?? _MockHomeNavigationNotifier();
@@ -338,7 +288,6 @@ Future<void> _pumpGrammarAlgorithmPanel(
     ProviderScope(
       overrides: [
         grammarProvider.overrideWith((ref) => mockGrammarNotifier),
-        automatonProvider.overrideWith((ref) => mockAutomatonNotifier),
         automatonStateProvider.overrideWith(
           (ref) => mockAutomatonStateNotifier,
         ),

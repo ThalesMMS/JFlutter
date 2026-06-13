@@ -430,6 +430,14 @@ void main() {
       expect(result.isSuccess, true);
       expect(result.data!.acceptsEmptyString, true);
     });
+
+    test('does not generate sample strings during structural analysis', () {
+      final result = RegexAnalyzer.analyze('a*');
+      expect(result.isSuccess, true);
+      expect(result.data!.samples, isEmpty);
+      expect(result.data!.sampleStrings.shortestString, isNull);
+      expect(result.data!.acceptsEmptyString, true);
+    });
   });
 
   group('RegexAnalyzer - sample string generation', () {

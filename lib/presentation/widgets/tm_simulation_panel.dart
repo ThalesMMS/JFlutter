@@ -19,6 +19,7 @@ import '../../core/models/simulation_step.dart';
 import '../../core/services/simulation_highlight_service.dart';
 import '../providers/tm_editor_provider.dart';
 import '../../core/models/step_explanation.dart';
+import 'base_simulation_panel.dart';
 import 'tm/tape_drawer.dart';
 import 'trace_viewers/tm_trace_viewer.dart';
 
@@ -43,7 +44,6 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel>
   String? _statusMessage;
   List<SimulationStep> _simulationSteps = const [];
   TMSimulationResult? _result;
-  int _currentStepIndex = 0;
   TapeState _currentTapeState = TapeState.initial();
 
   // Animation controllers for smooth transitions
@@ -77,246 +77,116 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel>
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(context),
-            const SizedBox(height: 16),
-            _buildInputSection(context),
-            const SizedBox(height: 16),
-            _buildSimulateButton(context),
-            const SizedBox(height: 16),
-            _buildResultsSection(context),
-          ],
-        ),
-      ),
+    return SimulationPanelShell(
+      children: [
+        _buildHeader(context),
+        const SizedBox(height: 16),
+        _buildInputSection(context),
+        const SizedBox(height: 16),
+        _buildSimulateButton(context),
+        const SizedBox(height: 16),
+        _buildResultsSection(context),
+      ],
     );
   }
 
   Widget _buildHeader(BuildContext context) {
-    return Row(
-      children: [
-        Icon(Icons.play_arrow, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            'TM Simulation',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-          ),
-        ),
-      ],
+    return const SimulationPanelHeader(
+      title: 'TM Simulation',
+      icon: Icons.play_arrow,
     );
   }
 
   Widget _buildInputSection(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Simulation Input',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _inputController,
-            decoration: const InputDecoration(
-              labelText: 'Input String',
-              hintText: 'e.g., 101, 1100, 111',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Examples: 101 (binary), 1100 (palindrome), 111 (counting)',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.7),
-                ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSimulateButton(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: _isSimulating ? null : _simulateTM,
-        icon: _isSimulating
-            ? const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : const Icon(Icons.play_arrow),
-        label: Text(_isSimulating ? 'Simulating...' : 'Simulate TM'),
-      ),
-    );
-  }
-
-  Widget _buildResultsSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
+    return SimulationInputSection(
+      title: 'Simulation Input',
       children: [
-        Text(
-          'Simulation Results',
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+        SimulationTextField(
+          controller: _inputController,
+          labelText: 'Input String',
+          hintText: 'e.g., 101, 1100, 111',
+          isDense: false,
         ),
         const SizedBox(height: 8),
-        _hasSimulationResult
-            ? _buildResults(context)
-            : _buildEmptyResults(context),
-        if (_hasSimulationResult && _result != null) ...[
-          const SizedBox(height: 12),
-          _buildTapePanel(context),
-        ],
+        Text(
+          'Examples: 101 (binary), 1100 (palindrome), 111 (counting)',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
+        ),
       ],
     );
   }
 
-  Widget _buildEmptyResults(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-        ),
-      ),
+  Widget _buildSimulateButton(BuildContext context) {
+    return SimulationRunButton(
+      isSimulating: _isSimulating,
+      label: 'Simulate TM',
+      onPressed: _simulateTM,
+    );
+  }
+
+  Widget _buildResultsSection(BuildContext context) {
+    return SimulationResultsSection(
+      title: 'Simulation Results',
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.psychology,
-            size: 48,
-            color: Theme.of(context).colorScheme.outline,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'No simulation results yet',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Enter an input string and click Simulate to see results',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
-            textAlign: TextAlign.center,
-          ),
+          if (_hasSimulationResult)
+            _buildResults(context)
+          else
+            _buildEmptyResults(context),
+          if (_hasSimulationResult && _result != null) ...[
+            const SizedBox(height: 12),
+            _buildTapePanel(context),
+          ],
         ],
       ),
     );
   }
 
+  Widget _buildEmptyResults(BuildContext context) {
+    return const SimulationEmptyResults();
+  }
+
   Widget _buildResults(BuildContext context) {
     if (_isAccepted == null) {
-      final colorScheme = Theme.of(context).colorScheme;
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: colorScheme.errorContainer,
-          border: Border.all(color: colorScheme.error.withValues(alpha: 0.4)),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(Icons.error, color: colorScheme.error),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                _statusMessage ?? 'Simulation error',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: colorScheme.onErrorContainer,
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-            ),
-          ],
-        ),
+      return SimulationStatusCard(
+        isAccepted: null,
+        message: _statusMessage ?? 'Simulation error',
       );
     }
 
     final isAccepted = _isAccepted!;
-    final colorScheme = Theme.of(context).colorScheme;
-    final color = isAccepted ? colorScheme.tertiary : colorScheme.error;
     final message = _statusMessage ?? (isAccepted ? 'Accepted' : 'Rejected');
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                isAccepted ? Icons.check_circle : Icons.cancel,
-                color: color,
-                size: 24,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  message,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: color,
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-              ),
-            ],
+    return SimulationStatusCard(
+      isAccepted: isAccepted,
+      message: message,
+      children: [
+        if (_simulationSteps.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Text(
+            'Simulation Steps:',
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
-          if (_simulationSteps.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            Text(
-              'Simulation Steps:',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            if (_hasSimulationResult && _result != null)
-              FadeTransition(
-                opacity: _stepFadeAnimation,
-                child: TMTraceViewer(
-                  result: _result!,
-                  highlightService: widget.highlightService,
-                  onStepChanged: _handleStepChanged,
-                ),
+          const SizedBox(height: 8),
+          if (_hasSimulationResult && _result != null)
+            FadeTransition(
+              opacity: _stepFadeAnimation,
+              child: TMTraceViewer(
+                result: _result!,
+                highlightService: widget.highlightService,
+                onStepChanged: _handleStepChanged,
               ),
-          ],
+            ),
         ],
-      ),
+      ],
     );
   }
 
@@ -340,7 +210,6 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel>
       _statusMessage = null;
       _simulationSteps = const [];
       _result = null;
-      _currentStepIndex = 0;
       _currentTapeState = TapeState.initial();
     });
 
@@ -382,7 +251,6 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel>
               : 'Rejected');
       _simulationSteps = simulation.steps;
       _result = simulation;
-      _currentStepIndex = 0;
       _currentTapeState = simulation.steps.isNotEmpty
           ? _convertStepToTapeState(simulation.steps[0])
           : TapeState.initial();
@@ -419,7 +287,6 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel>
     // Update state with new step
     if (mounted) {
       setState(() {
-        _currentStepIndex = stepIndex;
         _currentTapeState = _convertStepToTapeState(_result!.steps[stepIndex]);
       });
     }

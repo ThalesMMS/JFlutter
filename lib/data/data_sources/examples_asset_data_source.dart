@@ -2,14 +2,14 @@
 //  examples_asset_data_source.dart
 //  JFlutter
 //
-//  Disponibiliza exemplos enriquecidos a partir de assets, combinando metadados de categoria com validação por tipo de máquina para montar AutomatonModel coerentes.
+//  Disponibiliza exemplos enriquecidos a partir de assets, combinando metadados de categoria com validação por tipo de máquina para montar AutomatonDto coerentes.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import '../models/automaton_model.dart';
+import '../models/automaton_dto.dart';
 import '../../core/result.dart';
 import '../../core/repositories/automaton_repository.dart';
 
@@ -225,8 +225,8 @@ class ExamplesAssetDataSource {
         return Failure(conversionResult.error!);
       }
 
-      final automatonModel = conversionResult.data;
-      final automaton = automatonModel?.toEntity();
+      final automatonDto = conversionResult.data;
+      final automaton = automatonDto?.toEntity();
 
       final example = ExampleEntity(
         name: name,
@@ -263,8 +263,8 @@ class ExamplesAssetDataSource {
     }
   }
 
-  /// Converts JSON format to AutomatonModel
-  Result<AutomatonModel?> _convertExampleJson(
+  /// Converts JSON format to AutomatonDto
+  Result<AutomatonDto?> _convertExampleJson(
     Map<String, dynamic> json,
     ExampleMetadata metadata, {
     required String exampleName,
@@ -282,7 +282,7 @@ class ExamplesAssetDataSource {
     }
   }
 
-  Result<AutomatonModel?> _convertFiniteAutomaton(
+  Result<AutomatonDto?> _convertFiniteAutomaton(
     Map<String, dynamic> json,
     ExampleMetadata metadata,
     String exampleName,
@@ -329,7 +329,7 @@ class ExamplesAssetDataSource {
     final type = (json['type'] as String?) ?? metadata.category.name;
 
     return Success(
-      AutomatonModel(
+      AutomatonDto(
         id: json['id'] as String? ??
             'example_${exampleName.toLowerCase().replaceAll(' ', '_')}',
         name: json['name'] as String? ?? exampleName,
@@ -343,7 +343,7 @@ class ExamplesAssetDataSource {
     );
   }
 
-  Result<AutomatonModel?> _validateCfgExample(
+  Result<AutomatonDto?> _validateCfgExample(
     Map<String, dynamic> json,
     String exampleName,
   ) {
@@ -409,10 +409,10 @@ class ExamplesAssetDataSource {
       }
     }
 
-    return const Success<AutomatonModel?>(null);
+    return const Success<AutomatonDto?>(null);
   }
 
-  Result<AutomatonModel?> _validatePdaExample(
+  Result<AutomatonDto?> _validatePdaExample(
     Map<String, dynamic> json,
     String exampleName,
   ) {
@@ -465,10 +465,10 @@ class ExamplesAssetDataSource {
       );
     }
 
-    return const Success<AutomatonModel?>(null);
+    return const Success<AutomatonDto?>(null);
   }
 
-  Result<AutomatonModel?> _validateTmExample(
+  Result<AutomatonDto?> _validateTmExample(
     Map<String, dynamic> json,
     String exampleName,
   ) {
@@ -524,10 +524,10 @@ class ExamplesAssetDataSource {
       );
     }
 
-    return const Success<AutomatonModel?>(null);
+    return const Success<AutomatonDto?>(null);
   }
 
-  Result<List<StateModel>> _parseStates(
+  Result<List<StateDto>> _parseStates(
     dynamic statesRaw,
     String exampleName,
     ExampleCategory category,
@@ -544,7 +544,7 @@ class ExamplesAssetDataSource {
       );
     }
 
-    final states = <StateModel>[];
+    final states = <StateDto>[];
     for (var i = 0; i < statesRaw.length; i++) {
       final state = statesRaw[i];
       if (state is! Map) {
@@ -552,7 +552,7 @@ class ExamplesAssetDataSource {
           'Example "$exampleName" has an invalid state entry at index $i; expected an object.',
         );
       }
-      states.add(StateModel.fromJson(Map<String, dynamic>.from(state)));
+      states.add(StateDto.fromJson(Map<String, dynamic>.from(state)));
     }
 
     return Success(states);
@@ -625,7 +625,7 @@ class ExamplesAssetDataSource {
   }
 
   @visibleForTesting
-  Result<AutomatonModel?> convertJsonForTesting(
+  Result<AutomatonDto?> convertJsonForTesting(
     Map<String, dynamic> json,
     ExampleMetadata metadata,
     String exampleName,

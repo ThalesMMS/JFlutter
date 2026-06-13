@@ -14,15 +14,17 @@ import '../../core/models/fsa.dart';
 import '../../core/models/simulation_result.dart';
 import '../../core/models/simulation_step.dart';
 import '../../data/services/simulation_service.dart';
+import 'trace_step_navigation.dart';
 
 /// Immutable state holding the latest FA simulation result and flags.
-class FATraceState {
+class FATraceState with TraceStepNavigation<FATraceState> {
   final FSA? automaton;
   final SimulationResult? result;
   final bool isRunning;
   final bool stepByStep;
   final String lastInput;
   final bool forceNfaMode; // explicit choice: false=DFA (default), true=NFA
+  @override
   final int currentStepIndex; // for navigation through simulation steps
   final List<SimulationResult> traceHistory; // persistent trace history
   final String? errorMessage;
@@ -63,50 +65,13 @@ class FATraceState {
     );
   }
 
-  /// Navigate to a specific step in the current simulation
-  FATraceState navigateToStep(int stepIndex) {
-    if (result == null || stepIndex < 0 || stepIndex >= result!.steps.length) {
-      return this;
-    }
-    return copyWith(currentStepIndex: stepIndex);
+  @override
+  List<SimulationStep> get steps => result?.steps ?? const <SimulationStep>[];
+
+  @override
+  FATraceState copyWithStepIndex(int currentStepIndex) {
+    return copyWith(currentStepIndex: currentStepIndex);
   }
-
-  /// Navigate to the next step
-  FATraceState nextStep() {
-    if (result == null) return this;
-    final nextIndex = currentStepIndex + 1;
-    if (nextIndex >= result!.steps.length) return this;
-    return copyWith(currentStepIndex: nextIndex);
-  }
-
-  /// Navigate to the previous step
-  FATraceState previousStep() {
-    final prevIndex = currentStepIndex - 1;
-    if (prevIndex < 0) return this;
-    return copyWith(currentStepIndex: prevIndex);
-  }
-
-  /// Navigate to the first step
-  FATraceState firstStep() => copyWith(currentStepIndex: 0);
-
-  /// Navigate to the last step
-  FATraceState lastStep() {
-    if (result == null) return this;
-    return copyWith(currentStepIndex: result!.steps.length - 1);
-  }
-
-  /// Get the current simulation step
-  SimulationStep? get currentStep {
-    if (result == null || currentStepIndex >= result!.steps.length) return null;
-    return result!.steps[currentStepIndex];
-  }
-
-  /// Check if we can navigate to the next step
-  bool get canNavigateNext =>
-      result != null && currentStepIndex < result!.steps.length - 1;
-
-  /// Check if we can navigate to the previous step
-  bool get canNavigatePrevious => currentStepIndex > 0;
 }
 
 /// Riverpod notifier driving FA simulations and trace state.
@@ -114,8 +79,8 @@ class FATraceNotifier extends StateNotifier<FATraceState> {
   final SimulationService _simulationService;
 
   FATraceNotifier({SimulationService? simulationService})
-    : _simulationService = simulationService ?? SimulationService(),
-      super(const FATraceState());
+      : _simulationService = simulationService ?? SimulationService(),
+        super(const FATraceState());
 
   void setAutomaton(FSA automaton) {
     state = state.copyWith(automaton: automaton);

@@ -98,7 +98,36 @@ void main() {
       expect(result.error, contains('states'));
     });
 
-    test('Validates CFG example without producing an automaton model', () {
+    test('Converts DFA example through the canonical automaton DTO', () {
+      final json = loadExample('afd_ends_with_a.json');
+      final metadata = metadataFor(
+        category: ExampleCategory.dfa,
+        fileName: 'afd_ends_with_a.json',
+      );
+
+      final result = dataSource.convertJsonForTesting(
+        json,
+        metadata,
+        'AFD - Termina com A',
+      );
+
+      expect(result.isSuccess, isTrue);
+      final dto = result.data!;
+      expect(dto.id, json['id']);
+      expect(dto.name, json['name']);
+      expect(dto.type, json['type']);
+      expect(dto.toJson()['states'], json['states']);
+      expect(dto.toJson()['transitions'], json['transitions']);
+
+      final entity = dto.toEntity();
+      expect(entity.id, dto.id);
+      expect(entity.name, dto.name);
+      expect(entity.type.name, dto.type);
+      expect(entity.states.length, dto.states.length);
+      expect(entity.transitions, dto.transitions);
+    });
+
+    test('Validates CFG example without producing an automaton DTO', () {
       final json = loadExample('glc_balanced_parentheses.json');
       final metadata = metadataFor(
         category: ExampleCategory.cfg,

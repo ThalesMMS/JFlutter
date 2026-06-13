@@ -30,6 +30,168 @@ void _logGraphViewBase(String message) {
   }
 }
 
+/// Shared state CRUD and ID allocation for domain-specific GraphView controllers.
+mixin SharedGraphViewStateController<TNotifier, TSnapshot>
+    on BaseGraphViewCanvasController<TNotifier, TSnapshot> {
+  @protected
+  Iterable<String> get domainStateIds;
+
+  @protected
+  Iterable<String> get domainStateLabels;
+
+  @protected
+  Iterable<String> get domainTransitionIds;
+
+  @protected
+  void addDomainState({
+    required String id,
+    required String label,
+    required Offset position,
+  });
+
+  @protected
+  void moveDomainState({required String id, required Offset position});
+
+  @protected
+  void updateDomainStateLabel({
+    required String id,
+    required String label,
+  });
+
+  @protected
+  void updateDomainStateFlags({
+    required String id,
+    bool? isInitial,
+    bool? isAccepting,
+  });
+
+  @protected
+  void removeDomainState(String id);
+
+  @protected
+  void logCanvasStateMutation(String message);
+
+  @protected
+  String generateNodeId() {
+    return _nextAvailableSequentialId(
+      prefix: 'state',
+      reservedIds: <String>{...nodesCache.keys, ...domainStateIds},
+    );
+  }
+
+  @protected
+  String generateEdgeId() {
+    return _nextAvailableSequentialId(
+      prefix: 'transition',
+      reservedIds: <String>{...edgesCache.keys, ...domainTransitionIds},
+    );
+  }
+
+  @protected
+  String nextAvailableStateLabel() {
+    final reservedLabels = <String>{};
+
+    for (final label in domainStateLabels) {
+      final trimmed = label.trim();
+      if (trimmed.isNotEmpty) {
+        reservedLabels.add(trimmed);
+      }
+    }
+
+    for (final node in nodesCache.values) {
+      final trimmed = node.label.trim();
+      if (trimmed.isNotEmpty) {
+        reservedLabels.add(trimmed);
+      }
+    }
+
+    var index = 0;
+    while (reservedLabels.contains('q$index')) {
+      index++;
+    }
+    return 'q$index';
+  }
+
+  /// Adds a new state centred in the current viewport.
+  void addStateAtCenter() {
+    logCanvasStateMutation('addStateAtCenter requested');
+    final worldCenter = resolveViewportCenterWorld();
+    addStateAt(worldCenter);
+  }
+
+  /// Adds a new state at the provided [worldPosition].
+  @override
+  void addStateAt(Offset worldPosition) {
+    final nodeId = generateNodeId();
+    final label = nextAvailableStateLabel();
+    logCanvasStateMutation(
+      'addStateAt -> id=$nodeId label=$label position=(${worldPosition.dx.toStringAsFixed(2)}, ${worldPosition.dy.toStringAsFixed(2)})',
+    );
+    performMutation(() {
+      addDomainState(id: nodeId, label: label, position: worldPosition);
+    });
+  }
+
+  /// Moves an existing state to a new [position].
+  @override
+  void moveState(String id, Offset position) {
+    logCanvasStateMutation(
+      'moveState -> id=$id position=(${position.dx.toStringAsFixed(2)}, ${position.dy.toStringAsFixed(2)})',
+    );
+    performMutation(() {
+      moveDomainState(id: id, position: position);
+    });
+  }
+
+  /// Updates the label displayed for the state identified by [id].
+  @override
+  void updateStateLabel(String id, String label) {
+    final resolvedLabel = label.isEmpty ? id : label;
+    logCanvasStateMutation('updateStateLabel -> id=$id label=$resolvedLabel');
+    performMutation(() {
+      updateDomainStateLabel(id: id, label: resolvedLabel);
+    });
+  }
+
+  /// Updates the flag metadata for the state identified by [id].
+  @override
+  void updateStateFlags(String id, {bool? isInitial, bool? isAccepting}) {
+    logCanvasStateMutation(
+      'updateStateFlags -> id=$id isInitial=$isInitial isAccepting=$isAccepting',
+    );
+    performMutation(() {
+      updateDomainStateFlags(
+        id: id,
+        isInitial: isInitial,
+        isAccepting: isAccepting,
+      );
+    });
+  }
+
+  /// Removes the state identified by [id] from the domain.
+  @override
+  void removeState(String id) {
+    logCanvasStateMutation('removeState -> id=$id');
+    performMutation(() {
+      removeDomainState(id);
+    });
+  }
+
+  String _nextAvailableSequentialId({
+    required String prefix,
+    required Set<String> reservedIds,
+  }) {
+    var index = 0;
+    while (true) {
+      final candidate = '${prefix}_$index';
+      if (!reservedIds.contains(candidate)) {
+        return candidate;
+      }
+      index++;
+    }
+  }
+}
+
 class _InvisibleGraphEdgeRenderer extends EdgeRenderer {
   @override
   void renderEdge(Canvas canvas, Edge edge, Paint paint) {}

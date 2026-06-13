@@ -18,6 +18,7 @@ import '../../core/models/state.dart';
 import '../../core/models/tm.dart';
 import '../../core/models/tm_transition.dart';
 import '../../core/models/transition.dart';
+import 'editor_state_helpers.dart';
 
 /// Holds the current TM being edited in the canvas together with metadata
 /// that other widgets might be interested in (like tape symbol usage and
@@ -102,78 +103,48 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
     bool? isInitial,
     bool? isAccepting,
   }) {
-    final index = _states.indexWhere((state) => state.id == id);
-    final existing = index != -1 ? _states[index] : null;
-
-    final hasInitial = _states.any((state) => state.isInitial);
-    final resolvedInitial =
-        isInitial ?? existing?.isInitial ?? (!hasInitial && index == -1);
-    final resolvedAccepting = isAccepting ?? existing?.isAccepting ?? false;
-
-    final updated =
-        (existing ??
-                State(
-                  id: id,
-                  label: label,
-                  position: Vector2(x, y),
-                  isInitial: resolvedInitial || _states.isEmpty,
-                  isAccepting: resolvedAccepting,
-                ))
-            .copyWith(
-              label: label,
-              position: Vector2(x, y),
-              isInitial: resolvedInitial,
-              isAccepting: resolvedAccepting,
-            );
-
-    if (index == -1) {
-      _states.add(updated);
-    } else {
-      _states[index] = updated;
-    }
-
-    if (updated.isInitial) {
-      for (var i = 0; i < _states.length; i++) {
-        if (_states[i].id != updated.id && _states[i].isInitial) {
-          _states[i] = _states[i].copyWith(isInitial: false);
-        }
-      }
-    } else if (!_states.any((state) => state.isInitial) && _states.isNotEmpty) {
-      final normalisedInitial = _states[0].copyWith(isInitial: true);
-      _states[0] = normalisedInitial;
-      _rebindTransitionsForState(normalisedInitial);
-    }
-
-    final storedState = index == -1 ? _states.last : _states[index];
-    _rebindTransitionsForState(storedState);
+    final update = upsertEditorState(
+      states: _states,
+      id: id,
+      label: label,
+      position: Vector2(x, y),
+      isInitial: isInitial,
+      isAccepting: isAccepting,
+      normalizeInitial: true,
+    );
+    _applyStateMutation(update);
 
     return _rebuildState();
   }
 
   /// Moves a state to a new position on the canvas.
   TM? moveState({required String id, required double x, required double y}) {
-    final index = _states.indexWhere((state) => state.id == id);
-    if (index == -1) {
+    final update = updateEditorStateById(
+      states: _states,
+      id: id,
+      update: (state) => state.copyWith(position: Vector2(x, y)),
+    );
+    if (!update.targetFound) {
       return state.tm;
     }
 
-    final updated = _states[index].copyWith(position: Vector2(x, y));
-    _states[index] = updated;
-    _rebindTransitionsForState(updated);
+    _applyStateMutation(update);
 
     return _rebuildState();
   }
 
   /// Updates the label of the state matching [id].
   TM? updateStateLabel({required String id, required String label}) {
-    final index = _states.indexWhere((state) => state.id == id);
-    if (index == -1) {
+    final update = updateEditorStateById(
+      states: _states,
+      id: id,
+      update: (state) => state.copyWith(label: label),
+    );
+    if (!update.targetFound) {
       return state.tm;
     }
 
-    final updated = _states[index].copyWith(label: label);
-    _states[index] = updated;
-    _rebindTransitionsForState(updated);
+    _applyStateMutation(update);
 
     return _rebuildState();
   }
@@ -187,62 +158,45 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
       return state.tm;
     }
 
-    final updates = <int, State>{};
-
-    for (var i = 0; i < _states.length; i++) {
-      final state = _states[i];
-      var newInitial = state.isInitial;
-      var newAccepting = state.isAccepting;
-
-      if (state.id == id) {
-        newInitial = isInitial ?? state.isInitial;
-        newAccepting = isAccepting ?? state.isAccepting;
-      } else if (isInitial == true) {
-        newInitial = false;
-      }
-
-      if (newInitial != state.isInitial || newAccepting != state.isAccepting) {
-        updates[i] = state.copyWith(
-          isInitial: newInitial,
-          isAccepting: newAccepting,
-        );
-      }
-    }
-
-    if (updates.isEmpty) {
+    final update = updateEditorStateFlags(
+      states: _states,
+      id: id,
+      isInitial: isInitial,
+      isAccepting: isAccepting,
+      fallbackInitial: true,
+    );
+    if (!update.targetFound || !update.hasChanges) {
       return state.tm;
     }
 
-    updates.forEach((index, updatedState) {
-      _states[index] = updatedState;
-      _rebindTransitionsForState(updatedState);
-    });
-
-    if (_states.isNotEmpty && !_states.any((state) => state.isInitial)) {
-      final fallback = _states[0].copyWith(isInitial: true);
-      _states[0] = fallback;
-      _rebindTransitionsForState(fallback);
-    }
+    _applyStateMutation(update);
 
     return _rebuildState();
   }
 
   TM? removeState({required String id}) {
-    final index = _states.indexWhere((state) => state.id == id);
-    if (index == -1) {
+    final removal = removeEditorStateById(
+      states: _states,
+      id: id,
+      fallbackInitial: true,
+    );
+    if (!removal.targetFound) {
       return state.tm;
     }
 
-    _states.removeAt(index);
+    _states
+      ..clear()
+      ..addAll(removal.states);
     _transitions.removeWhere(
-      (transition) =>
-          transition.fromState.id == id || transition.toState.id == id,
+      (transition) => transitionTouchesState(
+        stateId: id,
+        fromStateId: transition.fromState.id,
+        toStateId: transition.toState.id,
+      ),
     );
 
-    if (_states.isNotEmpty && !_states.any((state) => state.isInitial)) {
-      final fallback = _states[0].copyWith(isInitial: true);
-      _states[0] = fallback;
-      _rebindTransitionsForState(fallback);
+    for (final changedState in removal.changedStates) {
+      _rebindTransitionsForState(changedState);
     }
 
     return _rebuildState();
@@ -276,8 +230,7 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
     final resolvedControlPoint =
         controlPoint ?? existing?.controlPoint ?? Vector2.zero();
 
-    final base =
-        existing ??
+    final base = existing ??
         TMTransition(
           id: id,
           fromState: _states[fromIndex],
@@ -357,33 +310,29 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
 
     final stateById = {for (final state in _states) state.id: state};
 
-    final clonedTransitions = tm.transitions
-        .whereType<TMTransition>()
-        .map((transition) {
-          final fromState =
-              stateById[transition.fromState.id] ?? transition.fromState;
-          final toState =
-              stateById[transition.toState.id] ?? transition.toState;
-          return transition.copyWith(
-            fromState: fromState,
-            toState: toState,
-            controlPoint: transition.controlPoint.clone(),
-            readSymbol: transition.readSymbol,
-            writeSymbol: transition.writeSymbol,
-            direction: transition.direction,
-            tapeNumber: transition.tapeNumber,
-          );
-        })
-        .toList(growable: false);
+    final clonedTransitions =
+        tm.transitions.whereType<TMTransition>().map((transition) {
+      final fromState =
+          stateById[transition.fromState.id] ?? transition.fromState;
+      final toState = stateById[transition.toState.id] ?? transition.toState;
+      return transition.copyWith(
+        fromState: fromState,
+        toState: toState,
+        controlPoint: transition.controlPoint.clone(),
+        readSymbol: transition.readSymbol,
+        writeSymbol: transition.writeSymbol,
+        direction: transition.direction,
+        tapeNumber: transition.tapeNumber,
+      );
+    }).toList(growable: false);
 
     _transitions
       ..clear()
       ..addAll(clonedTransitions);
 
     final transitionSet = _transitions.toSet();
-    final moveDirections = transitionSet
-        .map((transition) => transition.direction.name)
-        .toSet();
+    final moveDirections =
+        transitionSet.map((transition) => transition.direction.name).toSet();
     final nondeterministicTransitionIds = _findNondeterministicTransitions(
       transitionSet,
     );
@@ -505,6 +454,16 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
               : transition.toState,
         );
       }
+    }
+  }
+
+  void _applyStateMutation(EditorStateMutation update) {
+    _states
+      ..clear()
+      ..addAll(update.states);
+
+    for (final changedState in update.changedStates) {
+      _rebindTransitionsForState(changedState);
     }
   }
 

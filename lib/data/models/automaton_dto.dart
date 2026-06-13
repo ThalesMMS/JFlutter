@@ -10,6 +10,8 @@
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
+import '../../core/entities/automaton_entity.dart';
+
 class AutomatonDto {
   final String id;
   final String name;
@@ -29,11 +31,24 @@ class AutomatonDto {
     required Map<String, List<String>> transitions,
     this.initialId,
     required this.nextId,
-  }) : alphabet = List<String>.unmodifiable(alphabet),
-       states = List<StateDto>.unmodifiable(states),
-       transitions = Map<String, List<String>>.unmodifiable(
-         transitions.map((k, v) => MapEntry(k, List<String>.unmodifiable(v))),
-       );
+  })  : alphabet = List<String>.unmodifiable(alphabet),
+        states = List<StateDto>.unmodifiable(states),
+        transitions = Map<String, List<String>>.unmodifiable(
+          transitions.map((k, v) => MapEntry(k, List<String>.unmodifiable(v))),
+        );
+
+  factory AutomatonDto.fromEntity(AutomatonEntity entity) {
+    return AutomatonDto(
+      id: entity.id,
+      name: entity.name,
+      type: entity.type.name,
+      alphabet: entity.alphabet.toList(),
+      states: entity.states.map(StateDto.fromEntity).toList(),
+      transitions: entity.transitions,
+      initialId: entity.initialId,
+      nextId: entity.nextId,
+    );
+  }
 
   factory AutomatonDto.fromJson(Map<String, dynamic> json) {
     return AutomatonDto(
@@ -64,6 +79,22 @@ class AutomatonDto {
       'nextId': nextId,
     };
   }
+
+  AutomatonEntity toEntity() {
+    return AutomatonEntity(
+      id: id,
+      name: name,
+      alphabet: alphabet.toSet(),
+      states: states.map((s) => s.toEntity()).toList(),
+      transitions: transitions,
+      initialId: initialId,
+      nextId: nextId,
+      type: AutomatonType.values.firstWhere(
+        (t) => t.name == type,
+        orElse: () => AutomatonType.dfa,
+      ),
+    );
+  }
 }
 
 /// DTO for serializing state data
@@ -83,6 +114,17 @@ class StateDto {
     this.isInitial = false,
     this.isFinal = false,
   });
+
+  factory StateDto.fromEntity(StateEntity entity) {
+    return StateDto(
+      id: entity.id,
+      name: entity.name,
+      x: entity.x,
+      y: entity.y,
+      isInitial: entity.isInitial,
+      isFinal: entity.isFinal,
+    );
+  }
 
   factory StateDto.fromJson(Map<String, dynamic> json) {
     return StateDto(
@@ -104,6 +146,17 @@ class StateDto {
       'isInitial': isInitial,
       'isFinal': isFinal,
     };
+  }
+
+  StateEntity toEntity() {
+    return StateEntity(
+      id: id,
+      name: name,
+      x: x,
+      y: y,
+      isInitial: isInitial,
+      isFinal: isFinal,
+    );
   }
 }
 

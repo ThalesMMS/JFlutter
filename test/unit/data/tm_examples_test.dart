@@ -1,7 +1,10 @@
+import 'dart:convert';
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/algorithms/tm_simulator.dart';
+import 'package:jflutter/core/models/tm.dart';
 import 'package:jflutter/data/examples/tm_examples.dart';
 
 void main() {
@@ -370,6 +373,31 @@ void main() {
       });
     });
 
+    group('asset-backed examples', () {
+      test('JSON fixtures stay semantically equivalent to Dart factories', () {
+        const fixtures = <String, TM Function()>{
+          'tm_binary_to_unary.json': TMExamples.binaryToUnary,
+          'tm_copy_string.json': TMExamples.copyString,
+          'tm_increment.json': TMExamples.binaryIncrement,
+          'tm_palindrome.json': TMExamples.palindrome,
+        };
+
+        for (final entry in fixtures.entries) {
+          final assetSignature = _tmSignatureFromJson(
+            _loadTmExampleAsset(entry.key),
+          );
+          final factorySignature = _tmSignatureFromFactory(entry.value());
+
+          expect(
+            assetSignature,
+            equals(factorySignature),
+            reason:
+                '${entry.key} must mirror the canonical TMExamples factory.',
+          );
+        }
+      });
+    });
+
     // ---------------------------------------------------------------------------
     // All examples — structural invariants
     // ---------------------------------------------------------------------------
@@ -445,4 +473,113 @@ void main() {
       });
     });
   });
+}
+
+Map<String, dynamic> _loadTmExampleAsset(String fileName) {
+  final jsonString = File('jflutter_js/examples/$fileName').readAsStringSync();
+  final decoded = jsonDecode(jsonString);
+  expect(decoded, isA<Map<String, dynamic>>());
+  return decoded as Map<String, dynamic>;
+}
+
+Map<String, Object?> _tmSignatureFromJson(Map<String, dynamic> json) {
+  final states = (json['states'] as List)
+      .cast<Map<String, dynamic>>()
+      .map(
+        (state) => <String, Object?>{
+          'id': state['id'],
+          'label': state['name'],
+          'isInitial': state['isInitial'],
+          'isAccepting': state['isFinal'],
+        },
+      )
+      .toList()
+    ..sort(_compareStateSignatures);
+
+  final transitions = <String>[];
+  final transitionMap = (json['transitions'] as Map).cast<String, dynamic>();
+  for (final entry in transitionMap.entries) {
+    final keyParts = entry.key.split('|');
+    final values = (entry.value as List).cast<String>();
+    for (final value in values) {
+      final valueParts = value.split('|');
+      transitions.add(
+        '${keyParts[0]}|${keyParts[1]}->'
+        '${valueParts[0]}|${valueParts[1]}|'
+        '${_assetDirectionName(valueParts[2])}',
+      );
+    }
+  }
+  transitions.sort();
+
+  return <String, Object?>{
+    'id': json['id'],
+    'name': json['name'],
+    'alphabet': _sortedStrings((json['alphabet'] as List).cast<String>()),
+    'tapeAlphabet':
+        _sortedStrings((json['tapeAlphabet'] as List).cast<String>()),
+    'blankSymbol': json['blankSymbol'] as String? ?? 'B',
+    'initialId': json['initialId'],
+    'acceptingStates': _sortedStrings(
+      (json['finalStates'] as List).cast<String>(),
+    ),
+    'states': states,
+    'transitions': transitions,
+  };
+}
+
+Map<String, Object?> _tmSignatureFromFactory(TM tm) {
+  final states = tm.states
+      .map(
+        (state) => <String, Object?>{
+          'id': state.id,
+          'label': state.label,
+          'isInitial': state.isInitial,
+          'isAccepting': state.isAccepting,
+        },
+      )
+      .toList()
+    ..sort(_compareStateSignatures);
+
+  final transitions = tm.tmTransitions
+      .map(
+        (transition) => '${transition.fromState.id}|'
+            '${transition.readSymbol}->'
+            '${transition.toState.id}|'
+            '${transition.writeSymbol}|'
+            '${transition.direction.name}',
+      )
+      .toList()
+    ..sort();
+
+  return <String, Object?>{
+    'id': tm.id,
+    'name': tm.name,
+    'alphabet': _sortedStrings(tm.alphabet),
+    'tapeAlphabet': _sortedStrings(tm.tapeAlphabet),
+    'blankSymbol': tm.blankSymbol,
+    'initialId': tm.initialState?.id,
+    'acceptingStates': _sortedStrings(
+      tm.acceptingStates.map((state) => state.id),
+    ),
+    'states': states,
+    'transitions': transitions,
+  };
+}
+
+int _compareStateSignatures(
+  Map<String, Object?> a,
+  Map<String, Object?> b,
+) =>
+    (a['id'] as String).compareTo(b['id'] as String);
+
+List<String> _sortedStrings(Iterable<String> values) => values.toList()..sort();
+
+String _assetDirectionName(String direction) {
+  return switch (direction) {
+    'L' => 'left',
+    'R' => 'right',
+    'S' => 'stay',
+    _ => direction,
+  };
 }

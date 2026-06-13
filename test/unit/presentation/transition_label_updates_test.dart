@@ -21,19 +21,17 @@ import 'package:jflutter/core/models/fsa_transition.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
 import 'package:jflutter/core/models/tm_transition.dart';
 import 'package:jflutter/data/services/automaton_service.dart';
-import 'package:jflutter/features/layout/layout_repository_impl.dart';
-import 'package:jflutter/presentation/providers/automaton_provider.dart';
+import 'package:jflutter/presentation/providers/automaton_state_provider.dart';
 import 'package:jflutter/presentation/providers/pda_editor_provider.dart';
 import 'package:jflutter/presentation/providers/tm_editor_provider.dart';
 
 void main() {
   group('Transition updates', () {
     test(
-      'AutomatonProvider.updateTransitionLabel updates labels and symbols',
+      'AutomatonStateNotifier.updateTransitionLabel updates labels and symbols',
       () {
-        final provider = AutomatonProvider(
+        final provider = AutomatonStateNotifier(
           automatonService: AutomatonService(),
-          layoutRepository: LayoutRepositoryImpl(),
         );
 
         final stateA = automaton_state.State(
@@ -84,10 +82,9 @@ void main() {
       },
     );
 
-    test('AutomatonProvider conversion preserves epsilon transitions', () {
-      final provider = AutomatonProvider(
+    test('AutomatonStateNotifier conversion preserves epsilon transitions', () {
+      final provider = AutomatonStateNotifier(
         automatonService: AutomatonService(),
-        layoutRepository: LayoutRepositoryImpl(),
       );
 
       final stateA = automaton_state.State(
@@ -132,10 +129,10 @@ void main() {
       expect(roundTripTransition.lambdaSymbol, 'ε');
     });
 
-    test('AutomatonProvider conversion infers nondeterministic FSA type', () {
-      final provider = AutomatonProvider(
+    test('AutomatonStateNotifier conversion infers nondeterministic FSA type',
+        () {
+      final provider = AutomatonStateNotifier(
         automatonService: AutomatonService(),
-        layoutRepository: LayoutRepositoryImpl(),
       );
 
       final stateA = automaton_state.State(
@@ -188,10 +185,10 @@ void main() {
       expect(entity.type, AutomatonType.nfa);
     });
 
-    test('AutomatonProvider conversion skips missing transition endpoints', () {
-      final provider = AutomatonProvider(
+    test('AutomatonStateNotifier conversion skips missing transition endpoints',
+        () {
+      final provider = AutomatonStateNotifier(
         automatonService: AutomatonService(),
-        layoutRepository: LayoutRepositoryImpl(),
       );
 
       const entity = AutomatonEntity(

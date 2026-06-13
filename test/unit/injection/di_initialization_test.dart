@@ -3,11 +3,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
 import 'package:jflutter/core/repositories/automaton_repository.dart';
-import 'package:jflutter/core/services/trace_persistence_service.dart';
 import 'package:jflutter/core/use_cases/algorithm_use_cases.dart';
 import 'package:jflutter/core/use_cases/automaton_use_cases.dart';
 import 'package:jflutter/data/data_sources/examples_asset_data_source.dart';
-import 'package:jflutter/data/data_sources/local_storage_data_source.dart';
 import 'package:jflutter/data/services/automaton_service.dart';
 import 'package:jflutter/data/services/conversion_service.dart';
 import 'package:jflutter/data/services/simulation_service.dart';
@@ -15,7 +13,6 @@ import 'package:jflutter/data/services/trace_persistence_service.dart'
     as data_trace;
 import 'package:jflutter/injection/dependency_injection.dart';
 import 'package:jflutter/presentation/providers/algorithm_provider.dart';
-import 'package:jflutter/presentation/providers/automaton_provider.dart';
 import 'package:jflutter/presentation/providers/grammar_provider.dart';
 import 'package:jflutter/presentation/providers/unified_trace_provider.dart';
 
@@ -50,12 +47,10 @@ void main() {
 
       expect(() => getIt<SharedPreferences>(), returnsNormally);
       expect(() => getIt<DependencyInitializationStatus>(), returnsNormally);
-      expect(() => getIt<LocalStorageDataSource>(), returnsNormally);
       expect(() => getIt<ExamplesAssetDataSource>(), returnsNormally);
       expect(() => getIt<AutomatonService>(), returnsNormally);
       expect(() => getIt<SimulationService>(), returnsNormally);
       expect(() => getIt<ConversionService>(), returnsNormally);
-      expect(() => getIt<TracePersistenceService>(), returnsNormally);
       expect(
           () => getIt<data_trace.TracePersistenceService>(), returnsNormally);
       expect(() => getIt<AutomatonRepository>(), returnsNormally);
@@ -89,7 +84,6 @@ void main() {
       expect(() => getIt<CheckEquivalenceUseCase>(), returnsNormally);
       expect(() => getIt<SimulateWordUseCase>(), returnsNormally);
       expect(() => getIt<CreateStepByStepSimulationUseCase>(), returnsNormally);
-      expect(() => getIt<AutomatonProvider>(), returnsNormally);
       expect(() => getIt<AlgorithmProvider>(), returnsNormally);
       expect(() => getIt<GrammarProvider>(), returnsNormally);
       expect(() => getIt<UnifiedTraceNotifier>(), returnsNormally);

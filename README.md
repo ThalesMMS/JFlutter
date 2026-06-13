@@ -12,6 +12,13 @@ JFlutter is a Flutter reimplementation of the JFLAP educational tool. It offers 
 
 **Status:** Work in Progress. The Apple v1.0 release scope is frozen to the FSA, Grammar, PDA, TM, and Regex workspaces documented in `V1_SCOPE.md`.
 
+## Public Links
+
+- Website: https://thalesmms.github.io/JFlutter/
+- Support: https://thalesmms.github.io/JFlutter/support.html
+- Privacy Policy: https://thalesmms.github.io/JFlutter/privacy.html
+- Issues: https://github.com/ThalesMMS/jflutter/issues
+
 ## Highlights
 
 ### Learning tools
@@ -67,7 +74,6 @@ lib/
 │   ├── services/                   # Core services (diagnostics, trace, etc.)
 │   ├── use_cases/                  # Application-specific business rules
 │   ├── validators/                 # Input and semantic validators
-│   ├── algo_log.dart               # Algorithm execution logging
 │   ├── error_handler.dart          # Error handling helpers
 │   └── result.dart                 # Result/Either pattern implementation
 ├── data/                           # Data layer implementations
@@ -204,10 +210,10 @@ flutter analyze
 
 ## Reference Implementation Methodology
 
-During the ongoing migration we rely on the projects stored in `References/` as the source of truth for algorithms and data structures. The Dart repositories and the Python `automata-main` module provide validation checkpoints while the Flutter core is rebuilt.
+During the ongoing migration, algorithm parity is tracked through `docs/reference-deviations.md` and stable upstream source links. The historical local reference snapshots are not committed in this checkout, so the Dart repositories and Python `automata-main` module are used through their upstream anchors as validation checkpoints while the Flutter core is rebuilt.
 
 ### Validation Approach
-The `References/` directory contains authoritative implementations used as the source of truth for algorithms and data structures during the migration process. Each algorithm modification is cross-validated against these references to ensure correctness and maintainability.
+Each algorithm modification is cross-validated against the recorded upstream reference anchors and the local automated suites to ensure correctness and maintainability.
 
 ### Reference Usage Process
 1. **Algorithm Development** - Implement new algorithms based on reference implementations
@@ -225,8 +231,8 @@ The `References/` directory contains authoritative implementations used as the s
 - **Continuous Validation** - Ongoing comparison with reference implementations.
 
 ### Reference Maintenance
-- **Version Control** - References maintained in separate directories
-- **Update Process** - Regular updates to reference implementations
+- **Version Control** - Reference targets are tracked as upstream source anchors instead of local snapshots
+- **Update Process** - Update `docs/reference-deviations.md` whenever parity targets or intentional deviations change
 - **Compatibility** - Ensure compatibility with reference API changes
 - **Documentation** - Keep reference usage documentation current
 
@@ -318,22 +324,22 @@ This project is distributed under a dual license structure:
 ### Reference Implementations & Algorithm Sources
 
 #### Core Algorithm References
-- **`References/automata-main/`** - Python implementation of automata algorithms
+- **automata-main upstream** - Python implementation of automata algorithms
   - **Source**: [automata-main](https://github.com/caleb531/automata) by Caleb Evans
   - **Usage**: Primary reference for NFA to DFA conversion, DFA minimization, regex operations
   - **Validation**: All core algorithms validated against this implementation
 
-- **`References/dart-petitparser-examples-main/`** - Dart parser examples and utilities
+- **dart-petitparser-examples upstream** - Dart parser examples and utilities
   - **Source**: [dart-petitparser-examples](https://github.com/petitparser/dart-petitparser-examples) by PetitParser
   - **Usage**: Regex parsing, grammar analysis, parser construction
   - **Validation**: Parser implementations validated against these examples
 
-- **`References/AutomataTheory-master/`** - Dart automata theory implementations
+- **AutomataTheory upstream** - Dart automata theory implementations
   - **Source**: [AutomataTheory](https://github.com/dart-lang/samples/tree/master/automata_theory) by Pedro Lemos
   - **Usage**: Finite automata operations, language theory concepts
   - **Validation**: Automaton operations validated against this reference
 
-- **`References/nfa_2_dfa-main/`** - NFA to DFA conversion algorithms
+- **nfa_2_dfa upstream** - NFA to DFA conversion algorithms
   - **Source**: [nfa_2_dfa](https://github.com/7Na7iD7/nfa_2_dfa) by Na7iD
   - **Usage**: NFA to DFA conversion algorithms, state minimization
   - **Validation**: Conversion algorithms validated against this implementation

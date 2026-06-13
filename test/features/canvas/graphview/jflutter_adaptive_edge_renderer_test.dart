@@ -19,6 +19,7 @@ class _InspectableJFlutterAdaptiveEdgeRenderer
 
   Paint? lastStrokePaint;
   Paint? lastArrowPaint;
+  Path? lastGeometryPath;
   int geometryPaintCount = 0;
 
   @override
@@ -29,6 +30,7 @@ class _InspectableJFlutterAdaptiveEdgeRenderer
     EdgePathGeometry geometry,
   ) {
     geometryPaintCount++;
+    lastGeometryPath = geometry.path;
     lastStrokePaint = Paint()
       ..color = paint.color
       ..style = paint.style
@@ -79,6 +81,10 @@ bool _pathIntersectsRect(Path path, Rect rect, {double padding = 0}) {
     }
   }
   return false;
+}
+
+int _pathContourCount(Path path) {
+  return path.computeMetrics().length;
 }
 
 class _ThrowingSourceEdge extends Edge {
@@ -185,6 +191,45 @@ void main() {
       renderer.renderEdge(canvas, groupedEdge, Paint()..color = Colors.black);
 
       expect(renderer.geometryPaintCount, equals(1));
+    });
+
+    test('keeps regular grouped FSA edge geometry solid', () {
+      final recorder = PictureRecorder();
+      final canvas = Canvas(recorder);
+
+      renderer.renderEdge(canvas, edge, Paint()..color = Colors.black);
+
+      expect(renderer.lastGeometryPath, isNotNull);
+      expect(_pathContourCount(renderer.lastGeometryPath!), equals(1));
+    });
+
+    test('uses dashed geometry for epsilon grouped FSA edges', () {
+      edge.label = 'ε';
+      final recorder = PictureRecorder();
+      final canvas = Canvas(recorder);
+
+      renderer.renderEdge(canvas, edge, Paint()..color = Colors.black);
+
+      expect(renderer.lastGeometryPath, isNotNull);
+      expect(_pathContourCount(renderer.lastGeometryPath!), greaterThan(1));
+    });
+
+    test('uses dashed geometry for epsilon self-loop grouped FSA edges', () {
+      final loopEdge = Edge(
+        source,
+        source,
+        key: const ValueKey('epsilon-loop'),
+        label: 'ε',
+      );
+      graph.addEdgeS(loopEdge);
+      renderer.setGraph(graph);
+      final recorder = PictureRecorder();
+      final canvas = Canvas(recorder);
+
+      renderer.renderEdge(canvas, loopEdge, Paint()..color = Colors.black);
+
+      expect(renderer.lastGeometryPath, isNotNull);
+      expect(_pathContourCount(renderer.lastGeometryPath!), greaterThan(1));
     });
 
     test('updates grouped representative after explicit cache invalidation',

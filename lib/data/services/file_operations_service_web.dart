@@ -13,10 +13,8 @@
 import 'dart:convert';
 // ignore: avoid_web_libraries_in_flutter, deprecated_member_use
 import 'dart:html' as html;
-import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:collection/collection.dart';
-import 'package:vector_math/vector_math_64.dart';
 import 'package:xml/xml.dart';
 import '../../core/entities/automaton_entity.dart';
 import '../../core/entities/grammar_entity.dart';
@@ -24,17 +22,16 @@ import '../../core/entities/turing_machine_entity.dart';
 import '../../core/models/fsa.dart';
 import '../../core/models/grammar.dart';
 import '../../core/models/production.dart';
-import '../../core/models/state.dart' as automaton_state;
 import '../../core/models/fsa_transition.dart';
+import '../../core/parsers/jflap_xml_codec.dart';
 import '../../core/result.dart';
-import '../../core/utils/epsilon_utils.dart';
 import '../../presentation/widgets/export/svg_exporter.dart';
 
 /// Service for file operations tailored for web environments.
 class FileOperationsService {
   /// Creates the JFLAP XML payload without starting a download.
   String serializeAutomatonToJFLAPString(FSA automaton) {
-    return _buildJFLAPXML(automaton);
+    return const JflapXmlCodec().encodeFsa(automaton);
   }
 
   /// Creates the JSON payload without starting a download.
@@ -111,7 +108,7 @@ class FileOperationsService {
     try {
       final xmlString = utf8.decode(bytes);
       final document = XmlDocument.parse(xmlString);
-      return _parseJFLAPXML(document);
+      return const JflapXmlCodec().decodeFsaDocument(document);
     } catch (e) {
       return Failure('Failed to load automaton from provided data: $e');
     }
@@ -257,62 +254,6 @@ class FileOperationsService {
     return const Failure('Deleting files is not supported on web.');
   }
 
-  String _buildJFLAPXML(FSA automaton) {
-    final builder = XmlBuilder();
-    builder.processing('xml', 'version="1.0" encoding="UTF-8"');
-    builder.element(
-      'structure',
-      nest: () {
-        builder.attribute('type', 'fa');
-        builder.element(
-          'automaton',
-          nest: () {
-            for (final state in automaton.states) {
-              builder.element(
-                'state',
-                nest: () {
-                  builder.attribute('id', state.id);
-                  builder.attribute('name', state.label);
-                  if (state.isInitial) {
-                    builder.element('initial');
-                  }
-                  if (state.isAccepting) {
-                    builder.element('final');
-                  }
-                  builder.element('x', nest: state.position.x.toString());
-                  builder.element('y', nest: state.position.y.toString());
-                },
-              );
-            }
-
-            for (final transition in automaton.transitions) {
-              if (transition is! FSATransition) continue;
-              final symbols = transition.inputSymbols.isEmpty
-                  ? <String>{transition.symbol}
-                  : transition.inputSymbols;
-              for (final symbol in symbols) {
-                builder.element(
-                  'transition',
-                  nest: () {
-                    builder.element('from', nest: transition.fromState.id);
-                    builder.element('to', nest: transition.toState.id);
-                    if (isEpsilonSymbol(symbol)) {
-                      builder.element('read', isSelfClosing: true);
-                    } else {
-                      builder.element('read', nest: symbol);
-                    }
-                  },
-                );
-              }
-            }
-          },
-        );
-      },
-    );
-
-    return builder.buildDocument().toXmlString(pretty: true);
-  }
-
   String _buildGrammarXML(Grammar grammar) {
     final builder = XmlBuilder();
     builder.processing('xml', 'version="1.0" encoding="UTF-8"');
@@ -421,114 +362,6 @@ class FileOperationsService {
     } catch (e) {
       return Failure('Failed to start download: $e');
     }
-  }
-
-  Result<FSA> _parseJFLAPXML(XmlDocument document) {
-    final automatonElement = document.findAllElements('automaton').firstOrNull;
-    if (automatonElement == null) {
-      return const Failure('JFLAP import is missing the <automaton> element.');
-    }
-    final states = <automaton_state.State>[];
-    final transitions = <FSATransition>[];
-    final alphabet = <String>{};
-
-    for (final stateElement in automatonElement.findAllElements('state')) {
-      final id = stateElement.getAttribute('id');
-      final name = stateElement.getAttribute('name');
-      final idOrName = id ?? name;
-      if (idOrName == null || idOrName.isEmpty) {
-        continue;
-      }
-      final stateName = name ?? idOrName;
-      final xText = stateElement.getAttribute('x') ??
-          stateElement.findElements('x').firstOrNull?.innerText ??
-          '0.0';
-      final yText = stateElement.getAttribute('y') ??
-          stateElement.findElements('y').firstOrNull?.innerText ??
-          '0.0';
-      final x = double.tryParse(xText) ?? 0.0;
-      final y = double.tryParse(yText) ?? 0.0;
-      final isInitial = stateElement.findElements('initial').isNotEmpty;
-      final isAccepting = stateElement.findElements('final').isNotEmpty;
-
-      states.add(
-        automaton_state.State(
-          id: idOrName,
-          label: stateName,
-          position: Vector2(x, y),
-          isInitial: isInitial,
-          isAccepting: isAccepting,
-        ),
-      );
-    }
-
-    if (states.isEmpty) {
-      return const Failure(
-        'JFLAP import does not contain any states. Empty automata cannot be loaded into the editor.',
-      );
-    }
-
-    for (final transitionElement in automatonElement.findAllElements(
-      'transition',
-    )) {
-      final fromId =
-          transitionElement.findElements('from').firstOrNull?.innerText.trim();
-      final toId =
-          transitionElement.findElements('to').firstOrNull?.innerText.trim();
-      if (fromId == null || fromId.isEmpty || toId == null || toId.isEmpty) {
-        return const Failure(
-          'JFLAP import contains a transition without valid origin and destination states.',
-        );
-      }
-      final symbol = normalizeToEpsilon(
-        transitionElement.findElements('read').firstOrNull?.innerText,
-      );
-
-      final fromState = states.firstWhereOrNull(
-        (s) => s.id == fromId || s.label == fromId,
-      );
-      final toState = states.firstWhereOrNull(
-        (s) => s.id == toId || s.label == toId,
-      );
-      if (fromState == null || toState == null) {
-        return Failure(
-          'JFLAP import references an unknown state in transition $fromId -> $toId.',
-        );
-      }
-
-      if (!isEpsilonSymbol(symbol) && symbol.isNotEmpty) {
-        alphabet.add(symbol);
-      }
-
-      transitions.add(
-        FSATransition(
-          id: 't${transitions.length}',
-          fromState: fromState,
-          toState: toState,
-          label: symbol,
-          inputSymbols: isEpsilonSymbol(symbol) ? <String>{} : <String>{symbol},
-          lambdaSymbol: isEpsilonSymbol(symbol) ? kEpsilonSymbol : null,
-        ),
-      );
-    }
-
-    return Success(
-      FSA(
-        id: 'imported_${DateTime.now().millisecondsSinceEpoch}',
-        name: 'Imported Automaton',
-        states: states.toSet(),
-        transitions: transitions.toSet(),
-        alphabet: alphabet,
-        initialState: states.firstWhere(
-          (s) => s.isInitial,
-          orElse: () => states.first,
-        ),
-        acceptingStates: states.where((s) => s.isAccepting).toSet(),
-        bounds: const math.Rectangle(0, 0, 400, 300),
-        created: DateTime.now(),
-        modified: DateTime.now(),
-      ),
-    );
   }
 
   Grammar _parseGrammarXML(XmlDocument document) {

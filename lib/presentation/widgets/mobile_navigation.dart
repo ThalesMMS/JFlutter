@@ -39,27 +39,30 @@ class MobileNavigation extends StatelessWidget {
         ],
       ),
       child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
+        top: false,
+        child: IntrinsicHeight(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 70),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: items.asMap().entries.map((entry) {
-                final index = entry.key;
-                final item = entry.value;
-                final isSelected = currentIndex == index;
+            constraints: const BoxConstraints(minHeight: 80),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: items.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final item = entry.value;
+                  final isSelected = currentIndex == index;
 
-                return Expanded(
-                  child: _buildNavigationItem(
-                    context,
-                    item,
-                    isSelected,
-                    () => onTap(index),
-                  ),
-                );
-              }).toList(),
+                  return Expanded(
+                    child: _buildNavigationItem(
+                      context,
+                      item,
+                      isSelected,
+                      () => onTap(index),
+                    ),
+                  );
+                }).toList(),
+              ),
             ),
           ),
         ),

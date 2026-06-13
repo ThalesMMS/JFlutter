@@ -31,9 +31,54 @@ const double _labelCollisionStep = 14.0;
 const double _labelPathClearance = 10.0;
 const double _labelNodeClearance = 12.0;
 const double _labelCardSpacing = 12.0;
+const double _epsilonDashLength = 8.0;
+const double _epsilonDashGap = 4.0;
 const int _maxVisibleGroupedLabels = 5;
 const int _labelCollisionAttempts = 6;
 const int _maxCachedLabelPainters = 200;
+
+bool _isEpsilonEdge(Edge edge) {
+  final label = (edge.label ?? '').trim().toLowerCase();
+  return label == 'ε' ||
+      label == 'λ' ||
+      label == 'epsilon' ||
+      label == 'lambda';
+}
+
+EdgePathGeometry _dashGeometryForEpsilonEdges(
+  EdgePathGeometry geometry,
+  Iterable<Edge> edges,
+) {
+  if (!edges.any(_isEpsilonEdge)) {
+    return geometry;
+  }
+
+  return EdgePathGeometry(
+    path: _createDashedPath(geometry.path),
+    start: geometry.start,
+    end: geometry.end,
+    arrowBase: geometry.arrowBase,
+    arrowTip: geometry.arrowTip,
+    isSelfLoop: geometry.isSelfLoop,
+  );
+}
+
+Path _createDashedPath(Path source) {
+  final dashedPath = Path();
+
+  for (final metric in source.computeMetrics()) {
+    var distance = 0.0;
+    while (distance < metric.length) {
+      final end = math.min(distance + _epsilonDashLength, metric.length);
+      if (end > distance) {
+        dashedPath.addPath(metric.extractPath(distance, end), Offset.zero);
+      }
+      distance = end + _epsilonDashGap;
+    }
+  }
+
+  return dashedPath;
+}
 
 /// Thin JFlutter-specific edge renderer layered on top of GraphView's adaptive
 /// routing and animation primitives.
@@ -212,7 +257,12 @@ class JFlutterAdaptiveEdgeRenderer extends AnimatedAdaptiveEdgeRenderer {
       selected: _isSelected(edgeId),
     );
 
-    paintEdgeGeometry(canvas, edge, strokePaint, geometry);
+    paintEdgeGeometry(
+      canvas,
+      edge,
+      strokePaint,
+      _dashGeometryForEpsilonEdges(geometry, [edge]),
+    );
 
     if (!noArrow) {
       paintEdgeArrow(

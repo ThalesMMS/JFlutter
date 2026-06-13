@@ -10,7 +10,6 @@
 //
 //  Thales Matheus Mendonça Santos - January 2026
 //
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/dfa_minimization_step.dart';
@@ -19,86 +18,61 @@ import '../models/regex_to_nfa_step.dart';
 import '../models/simulation_highlight.dart';
 import '../models/state.dart';
 import '../models/transition.dart';
+import 'highlight_channel.dart';
 
 /// Provides access to the algorithm step highlight service associated with the
 /// active canvas.
 final canvasAlgorithmStepHighlightServiceProvider =
     Provider<AlgorithmStepHighlightService>((ref) {
-      return AlgorithmStepHighlightService();
-    });
+  return AlgorithmStepHighlightService();
+});
 
 /// Utility responsible for deriving and broadcasting algorithm step highlights.
-typedef AlgorithmStepHighlightDispatcher =
-    void Function(SimulationHighlight highlight);
+typedef AlgorithmStepHighlightDispatcher = HighlightDispatcher;
 
 /// Destination that consumes highlight payloads emitted by the
 /// [AlgorithmStepHighlightService].
-abstract class AlgorithmStepHighlightChannel {
-  /// Sends the provided [highlight] to the underlying consumer.
-  void send(SimulationHighlight highlight);
-
-  /// Clears any pending highlight from the consumer.
-  void clear();
-}
+abstract class AlgorithmStepHighlightChannel implements HighlightChannel {}
 
 /// Adapter that forwards highlights to a legacy dispatcher callback.
-class FunctionAlgorithmStepHighlightChannel
+class FunctionAlgorithmStepHighlightChannel extends FunctionHighlightChannel
     implements AlgorithmStepHighlightChannel {
-  FunctionAlgorithmStepHighlightChannel(this._dispatcher);
-
-  final AlgorithmStepHighlightDispatcher _dispatcher;
-
-  @override
-  void clear() {
-    _dispatcher(SimulationHighlight.empty);
-  }
-
-  @override
-  void send(SimulationHighlight highlight) {
-    _dispatcher(highlight);
-  }
-}
-
-void _logHighlightEvent(String message) {
-  if (kDebugMode) {
-    debugPrint('[AlgorithmStepHighlightService] $message');
-  }
+  FunctionAlgorithmStepHighlightChannel(super.dispatcher);
 }
 
 class AlgorithmStepHighlightService {
   AlgorithmStepHighlightService({
     AlgorithmStepHighlightChannel? channel,
     AlgorithmStepHighlightDispatcher? dispatcher,
-  }) : assert(
-         channel == null || dispatcher == null,
-         'Pass either a channel or a dispatcher, not both.',
-       ),
-       _channel =
-           channel ??
-           (dispatcher == null
-               ? null
-               : FunctionAlgorithmStepHighlightChannel(dispatcher));
+  }) : _highlightDispatch =
+            HighlightDispatchController<AlgorithmStepHighlightChannel>(
+          debugLabel: 'AlgorithmStepHighlightService',
+          channel: channel,
+          dispatcher: dispatcher,
+          channelFromDispatcher: FunctionAlgorithmStepHighlightChannel.new,
+        );
 
-  AlgorithmStepHighlightChannel? _channel;
-  int _dispatchCount = 0;
-  SimulationHighlight? _lastHighlight;
+  final HighlightDispatchController<AlgorithmStepHighlightChannel>
+      _highlightDispatch;
 
-  AlgorithmStepHighlightChannel? get channel => _channel;
+  AlgorithmStepHighlightChannel? get channel => _highlightDispatch.channel;
 
   set channel(AlgorithmStepHighlightChannel? value) {
-    _channel = value;
+    _highlightDispatch.channel = value;
   }
 
   /// Number of highlight payloads dispatched since the service was created.
-  int get dispatchCount => _dispatchCount;
+  int get dispatchCount => _highlightDispatch.dispatchCount;
 
   /// Last highlight payload emitted by the service, if any.
-  SimulationHighlight? get lastHighlight => _lastHighlight;
+  SimulationHighlight? get lastHighlight => _highlightDispatch.lastHighlight;
 
   /// Computes a highlight payload from step metadata.
   SimulationHighlight computeFromMetadata(Map<String, dynamic>? metadata) {
     if (metadata == null || metadata.isEmpty) {
-      _logHighlightEvent('Skipping highlight computation: no step metadata');
+      _highlightDispatch.log(
+        'Skipping highlight computation: no step metadata',
+      );
       return SimulationHighlight.empty;
     }
 
@@ -113,7 +87,7 @@ class AlgorithmStepHighlightService {
     if (metadataList.isEmpty ||
         stepIndex < 0 ||
         stepIndex >= metadataList.length) {
-      _logHighlightEvent(
+      _highlightDispatch.log(
         'Ignoring highlight request for step $stepIndex (available: ${metadataList.length})',
       );
       return SimulationHighlight.empty;
@@ -125,7 +99,7 @@ class AlgorithmStepHighlightService {
   /// Emits a highlight event derived from [metadata].
   SimulationHighlight emitFromMetadata(Map<String, dynamic>? metadata) {
     final highlight = computeFromMetadata(metadata);
-    _logHighlightEvent(
+    _highlightDispatch.log(
       'Computed highlight from metadata (states: ${highlight.stateIds.length}, transitions: ${highlight.transitionIds.length})',
     );
     dispatch(highlight);
@@ -138,7 +112,7 @@ class AlgorithmStepHighlightService {
     int stepIndex,
   ) {
     final highlight = computeFromMetadataList(metadataList, stepIndex);
-    _logHighlightEvent(
+    _highlightDispatch.log(
       'Computed highlight from metadata list at index $stepIndex (states: ${highlight.stateIds.length}, transitions: ${highlight.transitionIds.length})',
     );
     dispatch(highlight);
@@ -147,21 +121,12 @@ class AlgorithmStepHighlightService {
 
   /// Dispatches [highlight] to the active canvas highlight channel.
   void dispatch(SimulationHighlight highlight) {
-    _dispatchCount++;
-    _lastHighlight = highlight;
-    _logHighlightEvent(
-      'Dispatch #$_dispatchCount (states: ${highlight.stateIds.length}, transitions: ${highlight.transitionIds.length})',
-    );
-    channel?.send(highlight);
+    _highlightDispatch.dispatch(highlight);
   }
 
   /// Sends a clear highlight event.
   void clear() {
-    if (_dispatchCount > 0 || _lastHighlight != null) {
-      _logHighlightEvent('Clearing highlight after $_dispatchCount dispatches');
-    }
-    _lastHighlight = null;
-    channel?.clear();
+    _highlightDispatch.clear();
   }
 
   /// Extracts state and transition IDs from step metadata

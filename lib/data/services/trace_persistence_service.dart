@@ -18,6 +18,8 @@ class TracePersistenceService {
   static const String _traceHistoryKey = 'trace_history';
   static const String _currentTraceKey = 'current_trace';
   static const String _traceMetadataKey = 'trace_metadata';
+  static const String _legacyTraceHistoryKey = 'simulation_trace_history';
+  static const String _legacyCurrentTraceKey = 'current_simulation_trace';
   static const int _maxHistorySize = 50; // Limit trace history size
 
   final SharedPreferences _prefs;
@@ -60,7 +62,7 @@ class TracePersistenceService {
   Future<List<Map<String, dynamic>>> getTraceHistory() async {
     try {
       final historyJson = _prefs.getString(_traceHistoryKey);
-      if (historyJson == null) return [];
+      if (historyJson == null) return _getLegacyTraceHistory();
 
       final decoded = jsonDecode(historyJson);
       if (decoded is! List) {
@@ -117,7 +119,7 @@ class TracePersistenceService {
   Future<Map<String, dynamic>?> getCurrentTrace() async {
     try {
       final currentTraceJson = _prefs.getString(_currentTraceKey);
-      if (currentTraceJson == null) return null;
+      if (currentTraceJson == null) return _getLegacyCurrentTrace();
 
       final decoded = _asStringKeyedMap(jsonDecode(currentTraceJson));
       if (decoded == null) {
@@ -227,6 +229,8 @@ class TracePersistenceService {
     await _prefs.remove(_traceHistoryKey);
     await _prefs.remove(_currentTraceKey);
     await _prefs.remove(_traceMetadataKey);
+    await _prefs.remove(_legacyTraceHistoryKey);
+    await _prefs.remove(_legacyCurrentTraceKey);
   }
 
   /// Export trace history as JSON
@@ -302,6 +306,71 @@ class TracePersistenceService {
         ...map,
         'automatonType':
             map['automatonType'] is String ? map['automatonType'] : 'unknown',
+        'trace': nestedTrace,
+      });
+    }
+    return traces;
+  }
+
+  List<Map<String, dynamic>> _getLegacyTraceHistory() {
+    try {
+      final legacyHistoryJson = _prefs.getString(_legacyTraceHistoryKey);
+      if (legacyHistoryJson == null) {
+        return <Map<String, dynamic>>[];
+      }
+
+      final decoded = jsonDecode(legacyHistoryJson);
+      return _sanitizeLegacyTraceList(decoded);
+    } catch (e) {
+      return <Map<String, dynamic>>[];
+    }
+  }
+
+  Map<String, dynamic>? _getLegacyCurrentTrace() {
+    try {
+      final currentTraceJson = _prefs.getString(_legacyCurrentTraceKey);
+      if (currentTraceJson == null) {
+        return null;
+      }
+
+      final trace = _asStringKeyedMap(jsonDecode(currentTraceJson));
+      if (trace == null) {
+        return null;
+      }
+
+      return <String, dynamic>{
+        'trace': trace,
+        'currentStepIndex': 0,
+        'timestamp': DateTime.now().toIso8601String(),
+      };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  List<Map<String, dynamic>> _sanitizeLegacyTraceList(dynamic raw) {
+    if (raw is! List) {
+      return <Map<String, dynamic>>[];
+    }
+
+    final traces = <Map<String, dynamic>>[];
+    for (final entry in raw) {
+      final map = _asStringKeyedMap(entry);
+      if (map == null) {
+        continue;
+      }
+
+      final id = map['id'];
+      final nestedTrace = _asStringKeyedMap(map['trace']);
+      if (id is! String || nestedTrace == null) {
+        continue;
+      }
+
+      traces.add(<String, dynamic>{
+        ...map,
+        'id': id,
+        'automatonType': 'unknown',
+        'automatonId': null,
         'trace': nestedTrace,
       });
     }

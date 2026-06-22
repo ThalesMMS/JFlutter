@@ -122,10 +122,7 @@ class _TMTapePanelState extends State<TMTapePanel>
   late Animation<double> _cellScaleAnimation;
   late Animation<double> _expansionSlideAnimation;
   late Animation<double> _expansionGlowAnimation;
-  int _previousHeadPosition = 0;
   int _previousTapeLength = 0;
-  String? _previousReadSymbol;
-  String? _previousWriteSymbol;
   String? _previousCellContent;
   bool _isExpanding = false;
 
@@ -157,10 +154,7 @@ class _TMTapePanelState extends State<TMTapePanel>
       duration: const Duration(milliseconds: 600),
     );
     _horizontalScrollController = ScrollController();
-    _previousHeadPosition = widget.tapeState.headPosition;
     _previousTapeLength = widget.tapeState.cells.length;
-    _previousReadSymbol = widget.tapeState.lastReadSymbol;
-    _previousWriteSymbol = widget.tapeState.lastWriteSymbol;
     _previousCellContent = widget.tapeState.currentCell;
 
     // Initialize animations
@@ -240,7 +234,6 @@ class _TMTapePanelState extends State<TMTapePanel>
     // Handle head position change
     if (oldWidget.tapeState.headPosition != widget.tapeState.headPosition) {
       _headAnimationController.forward(from: 0);
-      _previousHeadPosition = oldWidget.tapeState.headPosition;
       _scrollToHead();
     }
 
@@ -251,7 +244,6 @@ class _TMTapePanelState extends State<TMTapePanel>
       } else {
         _readBadgeController.reset();
       }
-      _previousReadSymbol = widget.tapeState.lastReadSymbol;
     }
 
     // Trigger write badge animation when write symbol changes
@@ -262,7 +254,6 @@ class _TMTapePanelState extends State<TMTapePanel>
       } else {
         _writeBadgeController.reset();
       }
-      _previousWriteSymbol = widget.tapeState.lastWriteSymbol;
     }
 
     // Trigger cell content scale animation when cell content changes
@@ -487,7 +478,7 @@ class _TMTapePanelState extends State<TMTapePanel>
             // Tape Visual
             SizedBox(
               height: 60,
-              child: _buildTapeContent(theme, true), // Always compact mode
+              child: _buildTapeContent(theme), // Always compact mode
             ),
           ],
         ),
@@ -495,7 +486,7 @@ class _TMTapePanelState extends State<TMTapePanel>
     );
   }
 
-  Widget _buildTapeContent(ThemeData theme, bool isMobile) {
+  Widget _buildTapeContent(ThemeData theme) {
     if (widget.tapeState.isEmpty) {
       return Center(
         child: Text(
@@ -509,7 +500,7 @@ class _TMTapePanelState extends State<TMTapePanel>
 
     final visibleCells = widget.tapeState.getVisibleCells(padding: 4);
     final headIndex = widget.tapeState.getHeadIndexInVisible(padding: 4);
-    final padding = 4;
+    const padding = 4;
     final startIndex = widget.tapeState.headPosition - padding;
 
     return SingleChildScrollView(
@@ -522,8 +513,8 @@ class _TMTapePanelState extends State<TMTapePanel>
           final wasRead = isHead && widget.tapeState.wasRead;
           final wasWritten = isHead && widget.tapeState.wasWritten;
           final actualCellIndex = startIndex + index;
-          final isHighlighted = widget.tapeState.highlightedCellIndices
-              .contains(actualCellIndex);
+          final isHighlighted =
+              widget.tapeState.highlightedCellIndices.contains(actualCellIndex);
 
           // Determine if this cell is at the edge (newly expanded)
           final isAtLeftEdge = index == 0;
@@ -538,7 +529,6 @@ class _TMTapePanelState extends State<TMTapePanel>
             wasWritten,
             isHighlighted,
             theme,
-            true,
             isNewCell: isNewCell,
             slideFromLeft: isAtLeftEdge,
           );
@@ -554,8 +544,7 @@ class _TMTapePanelState extends State<TMTapePanel>
     bool wasRead,
     bool wasWritten,
     bool isHighlighted,
-    ThemeData theme,
-    bool isMobile, {
+    ThemeData theme, {
     bool isNewCell = false,
     bool slideFromLeft = false,
   }) {

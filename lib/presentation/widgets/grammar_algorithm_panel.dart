@@ -13,7 +13,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/algorithms/cfg/cfg_toolkit.dart';
 import '../../core/algorithms/grammar_analyzer.dart';
 import '../../core/algorithms/grammar_cnf_transformer.dart';
 import '../../core/algorithms/grammar_gnf_transformer.dart';
@@ -628,10 +627,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
 
         final diagnosticsText = report.value.diagnostics.isEmpty
             ? ''
-            : '\nDiagnostics:\n' +
-                report.value.diagnostics
-                    .map((d) => '- [${d.severity.name}] ${d.message}')
-                    .join('\n');
+            : '\nDiagnostics:\n${report.value.diagnostics.map((d) => '- [${d.severity.name}] ${d.message}').join('\n')}';
 
         return _formatTransformationResult(
           title: 'Chomsky Normal Form (CNF) Conversion',
@@ -681,10 +677,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
 
         final diagnosticsText = report.value.diagnostics.isEmpty
             ? ''
-            : '\nDiagnostics:\n' +
-                report.value.diagnostics
-                    .map((d) => '- [${d.severity.name}] ${d.message}')
-                    .join('\n');
+            : '\nDiagnostics:\n${report.value.diagnostics.map((d) => '- [${d.severity.name}] ${d.message}').join('\n')}';
 
         return _formatTransformationResult(
           title: 'Greibach Normal Form (GNF) Conversion',

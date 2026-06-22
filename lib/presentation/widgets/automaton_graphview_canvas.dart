@@ -138,6 +138,13 @@ class _AutomatonGraphViewCanvasState
     });
   }
 
+  void _updateCanvasState(VoidCallback callback) {
+    if (!mounted) {
+      return;
+    }
+    setState(callback);
+  }
+
   TransformationController? get _transformationController =>
       _controller.graphController.transformationController;
 
@@ -396,10 +403,8 @@ class _AutomatonGraphViewCanvasState
       }
       final target = _pendingSyncAutomaton;
       _pendingSyncAutomaton = null;
-      final dynamic synchronizable = _controller;
       try {
-        // ignore: avoid_dynamic_calls
-        synchronizable.synchronize(target);
+        _controller.synchronize(target);
       } catch (error, stackTrace) {
         if (kDebugMode) {
           debugPrint(
@@ -422,22 +427,22 @@ class _AutomatonGraphViewCanvasState
   }
 
   Offset _screenToWorld(Offset localPosition) =>
-      this._screenToWorldExtracted(localPosition);
+      _screenToWorldExtracted(localPosition);
 
   GraphViewCanvasNode? _hitTestNode(
     Offset localPosition, {
     bool logDetails = true,
   }) =>
-      this._hitTestNodeExtracted(localPosition, logDetails: logDetails);
+      _hitTestNodeExtracted(localPosition, logDetails: logDetails);
 
   Offset _globalToCanvasLocal(Offset globalPosition) =>
-      this._globalToCanvasLocalExtracted(globalPosition);
+      _globalToCanvasLocalExtracted(globalPosition);
 
   void _logCanvasTapFromLocal({
     required String source,
     required Offset localPosition,
   }) =>
-      this._logCanvasTapFromLocalExtracted(
+      _logCanvasTapFromLocalExtracted(
         source: source,
         localPosition: localPosition,
       );
@@ -446,66 +451,64 @@ class _AutomatonGraphViewCanvasState
     required String source,
     required Offset globalPosition,
   }) =>
-      this._logCanvasTapFromGlobalExtracted(
+      _logCanvasTapFromGlobalExtracted(
         source: source,
         globalPosition: globalPosition,
       );
 
   void _handleCanvasTapDown(TapDownDetails details) =>
-      this._handleCanvasTapDownExtracted(details);
+      _handleCanvasTapDownExtracted(details);
 
   void _beginNodeDrag(GraphViewCanvasNode node, Offset localPosition) =>
-      this._beginNodeDragExtracted(node, localPosition);
+      _beginNodeDragExtracted(node, localPosition);
 
   void _updateNodeDrag(Offset localPosition) =>
-      this._updateNodeDragExtracted(localPosition);
+      _updateNodeDragExtracted(localPosition);
 
-  void _endNodeDrag() => this._endNodeDragExtracted();
+  void _endNodeDrag() => _endNodeDragExtracted();
 
   Future<void> _handleCanvasTapUp(TapUpDetails details) =>
-      this._handleCanvasTapUpExtracted(details);
+      _handleCanvasTapUpExtracted(details);
 
   void _handleNodePanStart(DragStartDetails details) =>
-      this._handleNodePanStartExtracted(details);
+      _handleNodePanStartExtracted(details);
 
   void _handleNodePanUpdate(DragUpdateDetails details) =>
-      this._handleNodePanUpdateExtracted(details);
+      _handleNodePanUpdateExtracted(details);
 
   void _handleNodePanEnd(DragEndDetails details) =>
-      this._handleNodePanEndExtracted(details);
+      _handleNodePanEndExtracted(details);
 
-  void _handleNodePanCancel() => this._handleNodePanCancelExtracted();
+  void _handleNodePanCancel() => _handleNodePanCancelExtracted();
 
-  void _handleNodeTap(String nodeId) => this._handleNodeTapExtracted(nodeId);
+  void _handleNodeTap(String nodeId) => _handleNodeTapExtracted(nodeId);
 
   void _handleNodeContextTap(String nodeId) =>
-      this._handleNodeContextTapExtracted(nodeId);
+      _handleNodeContextTapExtracted(nodeId);
 
   void _handleNodeTapFromPan(String nodeId) =>
-      this._handleNodeTapFromPanExtracted(nodeId);
+      _handleNodeTapFromPanExtracted(nodeId);
 
-  void _registerNodeTap(String nodeId) =>
-      this._registerNodeTapExtracted(nodeId);
+  void _registerNodeTap(String nodeId) => _registerNodeTapExtracted(nodeId);
 
   Future<void> _showStateOptions(GraphViewCanvasNode node) =>
-      this._showStateOptionsExtracted(node);
+      _showStateOptionsExtracted(node);
 
   List<GraphViewCanvasEdge> _findExistingEdges(String fromId, String toId) =>
-      this._findExistingEdgesExtracted(fromId, toId);
+      _findExistingEdgesExtracted(fromId, toId);
 
   Future<void> _showTransitionEditor(String fromId, String toId) =>
-      this._showTransitionEditorExtracted(fromId, toId);
+      _showTransitionEditorExtracted(fromId, toId);
 
   Future<_TransitionEditChoice?> _promptTransitionEditChoice(
     List<GraphViewCanvasEdge> edges,
   ) =>
-      this._promptTransitionEditChoiceExtracted(edges);
+      _promptTransitionEditChoiceExtracted(edges);
 
   Offset _deriveControlPoint(String fromId, String toId) =>
-      this._deriveControlPointExtracted(fromId, toId);
+      _deriveControlPointExtracted(fromId, toId);
 
-  void _handleGraphRevisionChanged() =>
-      this._handleGraphRevisionChangedExtracted();
+  void _handleGraphRevisionChanged() => _handleGraphRevisionChangedExtracted();
 
   void _invalidateEdgeRendererCachesIfNeeded() {
     final signature = _computeEdgeStructureSignature();
@@ -536,30 +539,30 @@ class _AutomatonGraphViewCanvasState
   }
 
   void _refreshTransitionOverlayFromGraph() =>
-      this._refreshTransitionOverlayFromGraphExtracted();
+      _refreshTransitionOverlayFromGraphExtracted();
 
   void _updateTransitionOverlayPosition() =>
-      this._updateTransitionOverlayPositionExtracted();
+      _updateTransitionOverlayPositionExtracted();
 
   bool _showTransitionOverlay(AutomatonTransitionOverlayData data) =>
-      this._showTransitionOverlayExtracted(data);
+      _showTransitionOverlayExtracted(data);
 
   void _ensureTransitionOverlay(OverlayState overlayState) =>
-      this._ensureTransitionOverlayExtracted(overlayState);
+      _ensureTransitionOverlayExtracted(overlayState);
 
   void _handleOverlaySubmit(
     _GraphViewTransitionOverlayState state,
     AutomatonTransitionPayload payload,
   ) =>
-      this._handleOverlaySubmitExtracted(state, payload);
+      _handleOverlaySubmitExtracted(state, payload);
 
-  void _hideTransitionOverlay() => this._hideTransitionOverlayExtracted();
+  void _hideTransitionOverlay() => _hideTransitionOverlayExtracted();
 
   bool _isNodeHighlighted(
     GraphViewCanvasNode node,
     SimulationHighlight highlight,
   ) =>
-      this._isNodeHighlightedExtracted(node, highlight);
+      _isNodeHighlightedExtracted(node, highlight);
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

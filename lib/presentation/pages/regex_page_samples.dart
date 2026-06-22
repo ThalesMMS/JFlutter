@@ -30,7 +30,7 @@ extension _RegexPageSampleSections on _RegexPageState {
                 if (_sampleStrings != null)
                   IconButton(
                     onPressed: () {
-                      setState(() {
+                      _updatePageState(() {
                         _showSampleStringsDetails = !_showSampleStringsDetails;
                       });
                     },
@@ -76,7 +76,7 @@ extension _RegexPageSampleSections on _RegexPageState {
                 children: [
                   TextButton.icon(
                     onPressed: () {
-                      setState(() {
+                      _updatePageState(() {
                         _sampleStrings = null;
                         _showSampleStringsDetails = false;
                       });

@@ -95,9 +95,6 @@ class FSA extends Automaton {
 
   /// Creates an FSA from a JSON representation
   factory FSA.fromJson(Map<String, dynamic> json) {
-    final boundsData = (json['bounds'] as Map?)?.cast<String, dynamic>();
-    final panOffsetData = (json['panOffset'] as Map?)?.cast<String, dynamic>();
-
     return FSA(
       id: json['id'] as String,
       name: json['name'] as String,

@@ -27,7 +27,7 @@ extension _RegexPageSimplificationSections on _RegexPageState {
                 if (_simplificationResult != null)
                   IconButton(
                     onPressed: () {
-                      setState(() {
+                      _updatePageState(() {
                         _showSimplificationSteps = !_showSimplificationSteps;
                       });
                     },
@@ -73,7 +73,7 @@ extension _RegexPageSimplificationSections on _RegexPageState {
                 children: [
                   TextButton.icon(
                     onPressed: () {
-                      setState(() {
+                      _updatePageState(() {
                         _simplificationResult = null;
                         _showSimplificationSteps = false;
                         _selectedStepIndex = 0;
@@ -305,14 +305,14 @@ extension _RegexPageSimplificationSections on _RegexPageState {
               const Spacer(),
               IconButton(
                 onPressed: _selectedStepIndex > 0
-                    ? () => setState(() => _selectedStepIndex--)
+                    ? () => _updatePageState(() => _selectedStepIndex--)
                     : null,
                 icon: const Icon(Icons.chevron_left),
                 tooltip: l10n.previousStep,
               ),
               IconButton(
                 onPressed: _selectedStepIndex < result.steps.length - 1
-                    ? () => setState(() => _selectedStepIndex++)
+                    ? () => _updatePageState(() => _selectedStepIndex++)
                     : null,
                 icon: const Icon(Icons.chevron_right),
                 tooltip: l10n.nextStep,
@@ -669,7 +669,7 @@ extension _RegexPageSimplificationSections on _RegexPageState {
     final textTheme = Theme.of(context).textTheme;
 
     return InkWell(
-      onTap: () => setState(() => _selectedStepIndex = index),
+      onTap: () => _updatePageState(() => _selectedStepIndex = index),
       borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

@@ -356,7 +356,7 @@ class DFAMinimizer {
       if (unreachableStates.isNotEmpty) {
         steps.add(
           DFAMinimizationStep.removeUnreachable(
-            id: 'step_${stepCounter}',
+            id: 'step_$stepCounter',
             stepNumber: stepCounter++,
             unreachableStates: unreachableStates,
             reachableStates: reachableStates,
@@ -418,7 +418,7 @@ class DFAMinimizer {
     // Capture initial partition step
     steps.add(
       DFAMinimizationStep.initialPartition(
-        id: 'step_${stepCounter}',
+        id: 'step_$stepCounter',
         stepNumber: stepCounter++,
         acceptingStates: dfa.acceptingStates.toSet(),
         nonAcceptingStates: dfa.nonAcceptingStates.toSet(),
@@ -440,7 +440,7 @@ class DFAMinimizer {
       // Capture set selection step
       steps.add(
         DFAMinimizationStep.selectProcessingSet(
-          id: 'step_${stepCounter}',
+          id: 'step_$stepCounter',
           stepNumber: stepCounter++,
           currentPartition: List.from(partition),
           processingSet: currentSet,
@@ -463,7 +463,7 @@ class DFAMinimizer {
         // Capture predecessor finding step
         steps.add(
           DFAMinimizationStep.findPredecessors(
-            id: 'step_${stepCounter}',
+            id: 'step_$stepCounter',
             stepNumber: stepCounter++,
             currentPartition: List.from(partition),
             processingSet: currentSet,
@@ -488,7 +488,7 @@ class DFAMinimizer {
               // Capture split step
               steps.add(
                 DFAMinimizationStep.splitClass(
-                  id: 'step_${stepCounter}',
+                  id: 'step_$stepCounter',
                   stepNumber: stepCounter++,
                   currentPartition: List.from(partition),
                   splitSet: set,
@@ -512,7 +512,7 @@ class DFAMinimizer {
                   (intersection.isNotEmpty || difference.isNotEmpty)) {
                 steps.add(
                   DFAMinimizationStep.noSplit(
-                    id: 'step_${stepCounter}',
+                    id: 'step_$stepCounter',
                     stepNumber: stepCounter++,
                     currentPartition: List.from(partition),
                     checkedSet: set,
@@ -532,7 +532,7 @@ class DFAMinimizer {
     // Capture partition stabilization step
     steps.add(
       DFAMinimizationStep.partitionStable(
-        id: 'step_${stepCounter}',
+        id: 'step_$stepCounter',
         stepNumber: stepCounter++,
         finalPartition: List.from(partition),
       ),
@@ -551,7 +551,7 @@ class DFAMinimizer {
 
       steps.add(
         DFAMinimizationStep.createMinimizedState(
-          id: 'step_${stepCounter}',
+          id: 'step_$stepCounter',
           stepNumber: stepCounter++,
           stateId: stateId,
           equivalenceClass: equivalenceClass,
@@ -565,7 +565,7 @@ class DFAMinimizer {
     // Capture completion step
     steps.add(
       DFAMinimizationStep.completion(
-        id: 'step_${stepCounter}',
+        id: 'step_$stepCounter',
         stepNumber: stepCounter++,
         originalStates: dfa.states.length,
         minimizedStates: minimizedDFA.states.length,

@@ -10,8 +10,8 @@
 //  Thales Matheus Mendonça Santos - January 2026
 //
 
-/// Represents a single step in an algorithm execution
-/// This is the base model that can be extended by specific algorithm step types
+// Represents a single step in an algorithm execution.
+// This is the base model that can be extended by specific algorithm step types.
 import 'step_explanation.dart';
 
 class AlgorithmStep {

@@ -48,8 +48,6 @@ class _PDAPageState extends ConsumerState<PDAPage>
   bool get wantKeepAlive => true;
 
   PDA? _latestPda;
-  int _stateCount = 0;
-  int _transitionCount = 0;
   bool _hasUnsavedChanges = false;
   ProviderSubscription<PDAEditorState>? _pdaEditorSub;
   StackState _currentStack = const StackState.empty();
@@ -79,8 +77,6 @@ class _PDAPageState extends ConsumerState<PDAPage>
       if (next.pda == null && _latestPda != null) {
         setState(() {
           _latestPda = null;
-          _stateCount = 0;
-          _transitionCount = 0;
           _hasUnsavedChanges = false;
         });
       }
@@ -116,8 +112,6 @@ class _PDAPageState extends ConsumerState<PDAPage>
   void _handlePdaModified(PDA pda) {
     setState(() {
       _latestPda = pda;
-      _stateCount = pda.states.length;
-      _transitionCount = pda.pdaTransitions.length;
       _hasUnsavedChanges = true;
     });
   }
@@ -359,62 +353,6 @@ class _PDAPageState extends ConsumerState<PDAPage>
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildPdaInfoMetrics(BuildContext context) {
-    final chips = <Widget>[
-      _buildInfoChip(
-        context,
-        label: 'States',
-        value: _stateCount.toString(),
-        key: const ValueKey('pda_info_state_count'),
-      ),
-      _buildInfoChip(
-        context,
-        label: 'Transitions',
-        value: _transitionCount.toString(),
-        key: const ValueKey('pda_info_transition_count'),
-      ),
-    ];
-
-    if (_latestPda != null) {
-      chips.add(
-        _buildInfoChip(
-          context,
-          label: 'Stack symbols',
-          value: _latestPda!.stackAlphabet.length.toString(),
-          key: const ValueKey('pda_info_stack_count'),
-        ),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Current PDA: ${_latestPda?.name ?? 'None'}',
-          key: const ValueKey('pda_info_current_name'),
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 12),
-        Wrap(spacing: 8, runSpacing: 8, children: chips),
-      ],
-    );
-  }
-
-  Widget _buildInfoChip(
-    BuildContext context, {
-    required String label,
-    required String value,
-    Key? key,
-  }) {
-    return Chip(
-      key: key,
-      label: Text('$label: $value'),
-      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
     );
   }
 

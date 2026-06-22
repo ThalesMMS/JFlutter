@@ -70,7 +70,7 @@ extension _AutomatonGraphViewCanvasOverlay on _AutomatonGraphViewCanvasState {
         'Showing transition editor '
         'for $fromId → $toId (transitionId: ${existing?.id})',
       );
-      setState(() {
+      _updateCanvasState(() {
         _selectedTransitions.clear();
         if (!createNew && existing?.id != null) {
           _selectedTransitions.add(existing!.id);
@@ -259,7 +259,7 @@ extension _AutomatonGraphViewCanvasOverlay on _AutomatonGraphViewCanvasState {
       final shouldUpdateSelection = _selectedTransitions.length != 1 ||
           !_selectedTransitions.contains(transitionId);
       if (shouldUpdateSelection) {
-        setState(() {
+        _updateCanvasState(() {
           _selectedTransitions
             ..clear()
             ..add(transitionId);
@@ -389,7 +389,7 @@ extension _AutomatonGraphViewCanvasOverlay on _AutomatonGraphViewCanvasState {
       if (!mounted) {
         return;
       }
-      setState(() {
+      _updateCanvasState(() {
         _selectedTransitions.clear();
       });
     }

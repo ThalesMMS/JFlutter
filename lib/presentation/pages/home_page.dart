@@ -11,7 +11,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/config/v1_feature_flags.dart';
-import '../providers/automaton_state_provider.dart';
 import '../providers/home_navigation_provider.dart';
 import '../widgets/mobile_navigation.dart';
 import '../widgets/desktop_navigation.dart';
@@ -284,27 +283,6 @@ class _HomePageState extends ConsumerState<HomePage> {
       default:
         return null;
     }
-  }
-
-  Future<void> _createNewAutomaton(BuildContext context) async {
-    final automatonNotifier = ref.read(automatonStateProvider.notifier);
-
-    await automatonNotifier.createAutomaton(
-      name: 'Untitled Automaton',
-      alphabet: const ['0', '1'],
-    );
-
-    if (!mounted) return;
-
-    final automatonState = ref.read(automatonStateProvider);
-    if (automatonState.error != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(automatonState.error!)));
-      return;
-    }
-
-    ref.read(homeNavigationProvider.notifier).goToFsa();
   }
 
   void _showHelpDialog(BuildContext context) {

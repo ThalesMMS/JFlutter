@@ -30,7 +30,7 @@ extension _RegexPageComplexitySections on _RegexPageState {
                 if (_regexAnalysis != null)
                   IconButton(
                     onPressed: () {
-                      setState(() {
+                      _updatePageState(() {
                         _showAnalysisDetails = !_showAnalysisDetails;
                       });
                     },
@@ -75,7 +75,7 @@ extension _RegexPageComplexitySections on _RegexPageState {
                 children: [
                   TextButton.icon(
                     onPressed: () {
-                      setState(() {
+                      _updatePageState(() {
                         _regexAnalysis = null;
                         _showAnalysisDetails = false;
                       });

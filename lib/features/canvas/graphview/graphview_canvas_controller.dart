@@ -18,7 +18,6 @@ import 'package:graphview/GraphView.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 import '../../../core/models/fsa.dart';
-import '../../../core/models/simulation_highlight.dart';
 import '../../../core/services/algorithm_step_highlight_service.dart';
 import '../../../presentation/providers/automaton_state_provider.dart';
 import 'base_graphview_canvas_controller.dart';
@@ -31,7 +30,7 @@ void _logAutomatonCanvas(String message) {
   }
 }
 
-/// Controller that keeps the [Graph] in sync with the [AutomatonStateProvider].
+/// Controller that keeps the [Graph] in sync with the [AutomatonStateNotifier].
 class GraphViewCanvasController
     extends BaseGraphViewCanvasController<AutomatonStateNotifier, FSA> {
   GraphViewCanvasController({
@@ -45,19 +44,11 @@ class GraphViewCanvasController
 
   AutomatonStateNotifier get _provider => notifier;
 
-  AlgorithmStepHighlightService? _algorithmStepHighlightService;
-
-  /// Gets the algorithm step highlight service, if configured.
-  AlgorithmStepHighlightService? get algorithmStepHighlightService =>
-      _algorithmStepHighlightService;
-
-  /// Configures the algorithm step highlight service for this controller.
-  set algorithmStepHighlightService(AlgorithmStepHighlightService? service) {
-    _algorithmStepHighlightService = service;
-  }
+  /// Algorithm step highlight service, if configured.
+  AlgorithmStepHighlightService? algorithmStepHighlightService;
 
   @override
-  FSA? get currentDomainData => _provider.state.currentAutomaton;
+  FSA? get currentDomainData => _provider.currentAutomaton;
 
   @override
   GraphViewAutomatonSnapshot toSnapshot(FSA? automaton) {
@@ -65,6 +56,7 @@ class GraphViewCanvasController
   }
 
   /// Synchronises the GraphView controller with the latest [automaton].
+  @override
   void synchronize(FSA? automaton) {
     _logAutomatonCanvas(
       'Synchronizing canvas with automaton id=${automaton?.id} states=${automaton?.states.length ?? 0} transitions=${automaton?.transitions.length ?? 0}',
@@ -74,7 +66,7 @@ class GraphViewCanvasController
 
   String _generateNodeId() {
     final reservedIds = <String>{...nodesCache.keys};
-    final automaton = _provider.state.currentAutomaton;
+    final automaton = _provider.currentAutomaton;
     if (automaton != null) {
       for (final state in automaton.states) {
         reservedIds.add(state.id);
@@ -92,7 +84,7 @@ class GraphViewCanvasController
 
   String _generateEdgeId() {
     final reservedIds = <String>{...edgesCache.keys};
-    final automaton = _provider.state.currentAutomaton;
+    final automaton = _provider.currentAutomaton;
     if (automaton != null) {
       for (final transition in automaton.transitions) {
         reservedIds.add(transition.id);
@@ -111,7 +103,7 @@ class GraphViewCanvasController
   String _nextAvailableStateLabel() {
     final reservedLabels = <String>{};
 
-    final automaton = _provider.state.currentAutomaton;
+    final automaton = _provider.currentAutomaton;
     if (automaton != null) {
       for (final state in automaton.states) {
         final label = state.label.trim();
@@ -147,9 +139,8 @@ class GraphViewCanvasController
   void addStateAt(Offset worldPosition) {
     final nodeId = _generateNodeId();
     final label = _nextAvailableStateLabel();
-    final isFirstState =
-        nodesCache.isEmpty &&
-        (_provider.state.currentAutomaton?.states.isEmpty ?? true);
+    final isFirstState = nodesCache.isEmpty &&
+        (_provider.currentAutomaton?.states.isEmpty ?? true);
 
     _logAutomatonCanvas(
       'addStateAt -> id=$nodeId label=$label position=(${worldPosition.dx.toStringAsFixed(2)}, ${worldPosition.dy.toStringAsFixed(2)}) isFirstState=$isFirstState',
@@ -254,7 +245,7 @@ class GraphViewCanvasController
       return;
     }
 
-    final service = _algorithmStepHighlightService;
+    final service = algorithmStepHighlightService;
     if (service == null) {
       _logAutomatonCanvas(
         'Cannot apply algorithm step highlight: service not configured',
@@ -277,11 +268,9 @@ class GraphViewCanvasController
 
   @override
   void applySnapshotToDomain(GraphViewAutomatonSnapshot snapshot) {
-    final template =
-        _provider.state.currentAutomaton ??
+    final template = _provider.currentAutomaton ??
         FSA(
-          id:
-              snapshot.metadata.id ??
+          id: snapshot.metadata.id ??
               'automaton_${DateTime.now().microsecondsSinceEpoch}',
           name: snapshot.metadata.name ?? 'Untitled Automaton',
           states: const {},
@@ -298,13 +287,13 @@ class GraphViewCanvasController
 
     final merged =
         GraphViewAutomatonMapper.mergeIntoTemplate(snapshot, template).copyWith(
-          id: snapshot.metadata.id ?? template.id,
-          name: snapshot.metadata.name ?? template.name,
-          alphabet: snapshot.metadata.alphabet.isNotEmpty
-              ? snapshot.metadata.alphabet.toSet()
-              : template.alphabet,
-          modified: DateTime.now(),
-        );
+      id: snapshot.metadata.id ?? template.id,
+      name: snapshot.metadata.name ?? template.name,
+      alphabet: snapshot.metadata.alphabet.isNotEmpty
+          ? snapshot.metadata.alphabet.toSet()
+          : template.alphabet,
+      modified: DateTime.now(),
+    );
 
     _logAutomatonCanvas(
       'applySnapshotToDomain -> states=${merged.states.length} transitions=${merged.transitions.length}',

@@ -15,7 +15,6 @@ import '../models/fsa.dart';
 import '../models/state.dart';
 import '../models/fsa_transition.dart';
 import '../models/fa_to_regex_step.dart';
-import '../models/algorithm_step.dart';
 import '../result.dart';
 import 'regex_simplifier.dart';
 
@@ -371,7 +370,7 @@ class FAToRegexConverter {
 
     // Create new final state if needed
     State newFinalState;
-    bool needsNewFinal = fa.acceptingStates.length != 1;
+    final needsNewFinal = fa.acceptingStates.length != 1;
     if (fa.acceptingStates.length == 1) {
       newFinalState = fa.acceptingStates.first;
     } else {

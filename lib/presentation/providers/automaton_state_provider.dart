@@ -78,6 +78,10 @@ class AutomatonStateNotifier
       : _automatonService = automatonService,
         super(const AutomatonStateProviderState());
 
+  /// Current automaton snapshot for collaborators that should not read the
+  /// protected StateNotifier state directly.
+  FSA? get currentAutomaton => state.currentAutomaton;
+
   void _traceGraphView(String operation, [Map<String, Object?>? metadata]) {
     if (!kDebugMode) {
       return;

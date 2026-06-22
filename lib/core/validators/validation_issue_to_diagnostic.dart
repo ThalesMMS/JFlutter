@@ -6,7 +6,7 @@
 //  richer ValidationDiagnostic model used by UI overlays.
 //
 
-import '../models/step_explanation.dart';
+import '../models/step_explanation.dart' show SuggestedFix;
 import '../models/validation_diagnostic.dart';
 import 'input_validators.dart';
 
@@ -145,7 +145,8 @@ class ValidationIssueToDiagnostic {
           suggestedFixes: const [
             SuggestedFix(
               label: 'Add at least one state',
-              details: 'Create a state on the canvas before adding transitions.',
+              details:
+                  'Create a state on the canvas before adding transitions.',
               actionId: 'canvas.addState',
             ),
           ],
@@ -288,7 +289,8 @@ class ValidationIssueToDiagnostic {
           suggestedFixes: const [
             SuggestedFix(
               label: 'Add at least one state',
-              details: 'Create a state on the canvas before adding transitions.',
+              details:
+                  'Create a state on the canvas before adding transitions.',
               actionId: 'canvas.addState',
             ),
           ],
@@ -334,8 +336,7 @@ class ValidationIssueToDiagnostic {
           suggestedFixes: const [
             SuggestedFix(
               label: 'Define the input alphabet',
-              details:
-                  'Add input symbols that may appear in the input string.',
+              details: 'Add input symbols that may appear in the input string.',
               actionId: 'tm.editAlphabet',
             ),
           ],

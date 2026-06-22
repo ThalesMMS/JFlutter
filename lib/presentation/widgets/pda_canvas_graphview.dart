@@ -40,7 +40,6 @@ class _PDACanvasGraphViewState extends ConsumerState<PDACanvasGraphView> {
   late bool _ownsController;
   SimulationHighlightService? _highlightService;
   SimulationHighlightChannel? _previousHighlightChannel;
-  GraphViewSimulationHighlightChannel? _highlightChannel;
   ProviderSubscription<PDAEditorState>? _subscription;
   PDA? _lastDeliveredPda;
 
@@ -63,7 +62,6 @@ class _PDACanvasGraphViewState extends ConsumerState<PDACanvasGraphView> {
       _highlightService = highlightService;
       _previousHighlightChannel = highlightService.channel;
       final highlightChannel = GraphViewSimulationHighlightChannel(_controller);
-      _highlightChannel = highlightChannel;
       highlightService.channel = highlightChannel;
     }
 
@@ -107,7 +105,6 @@ class _PDACanvasGraphViewState extends ConsumerState<PDACanvasGraphView> {
     }
     if (_highlightService != null) {
       _highlightService!.channel = _previousHighlightChannel;
-      _highlightChannel = null;
     }
     super.dispose();
   }

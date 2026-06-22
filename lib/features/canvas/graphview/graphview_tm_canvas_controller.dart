@@ -51,7 +51,7 @@ class GraphViewTmCanvasController
   double get fitToContentMaxScale => _kTmFitToContentMaxScale;
 
   @override
-  TM? get currentDomainData => _notifier.state.tm;
+  TM? get currentDomainData => _notifier.currentTm;
 
   @override
   Iterable<String> get domainStateIds {
@@ -78,6 +78,7 @@ class GraphViewTmCanvasController
   }
 
   /// Synchronises the GraphView controller with the latest [machine].
+  @override
   void synchronize(TM? machine) {
     _logTmCanvas(
       'Synchronizing TM canvas (states=${machine?.states.length ?? 0}, transitions=${machine?.tmTransitions.length ?? 0})',
@@ -202,7 +203,7 @@ class GraphViewTmCanvasController
 
   @override
   void applySnapshotToDomain(GraphViewAutomatonSnapshot snapshot) {
-    final template = _notifier.state.tm ??
+    final template = _notifier.currentTm ??
         TM(
           id: snapshot.metadata.id ??
               'tm_${DateTime.now().microsecondsSinceEpoch}',

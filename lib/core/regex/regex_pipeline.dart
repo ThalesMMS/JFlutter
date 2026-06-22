@@ -91,34 +91,33 @@ class RegexPipeline {
 
     // Primary: group | dot | literal
     final primaryRef = pp.undefined<RegexNode>();
-    final pp.Parser<RegexNode> dotParser = pp
-        .char('.')
-        .map<RegexNode>((_) => const DotNode());
-    final pp.Parser<RegexNode> groupParser = (lparen & primaryRef & rparen)
-        .map<RegexNode>((v) => v[1] as RegexNode);
-    final pp.Parser<RegexNode> primary = (groupParser | dotParser | literal)
-        .cast<RegexNode>();
+    final pp.Parser<RegexNode> dotParser =
+        pp.char('.').map<RegexNode>((_) => const DotNode());
+    final pp.Parser<RegexNode> groupParser =
+        (lparen & primaryRef & rparen).map<RegexNode>((v) => v[1] as RegexNode);
+    final pp.Parser<RegexNode> primary =
+        (groupParser | dotParser | literal).cast<RegexNode>();
 
     // Unary: primary followed by postfix operators (*, +, ?), multiple allowed
     final pp.Parser<RegexNode> unary =
         (primary & (star | plus | question).star()).map<RegexNode>((values) {
-          RegexNode node = values[0] as RegexNode;
-          final ops = values[1] as List<String>;
-          for (final op in ops) {
-            switch (op) {
-              case '*':
-                node = KleeneStarNode(child: node);
-                break;
-              case '+':
-                node = PlusNode(child: node);
-                break;
-              case '?':
-                node = QuestionNode(child: node);
-                break;
-            }
-          }
-          return node;
-        });
+      RegexNode node = values[0] as RegexNode;
+      final ops = values[1] as List<String>;
+      for (final op in ops) {
+        switch (op) {
+          case '*':
+            node = KleeneStarNode(child: node);
+            break;
+          case '+':
+            node = PlusNode(child: node);
+            break;
+          case '?':
+            node = QuestionNode(child: node);
+            break;
+        }
+      }
+      return node;
+    });
 
     // Concatenation: one or more unary, folded left-associative
     final pp.Parser<RegexNode> concat = unary.plus().map<RegexNode>((list) {
@@ -131,16 +130,16 @@ class RegexPipeline {
     });
 
     // Union: concatenation separated by |
-    final pp.Parser<RegexNode> expression = (concat & (union & concat).star())
-        .map<RegexNode>((values) {
-          RegexNode node = values[0] as RegexNode;
-          final rest = values[1] as List;
-          for (final pair in rest) {
-            final right = pair[1] as RegexNode; // pair = ['|', concat]
-            node = UnionNode(left: node, right: right);
-          }
-          return node;
-        });
+    final pp.Parser<RegexNode> expression =
+        (concat & (union & concat).star()).map<RegexNode>((values) {
+      RegexNode node = values[0] as RegexNode;
+      final rest = values[1] as List;
+      for (final pair in rest) {
+        final right = pair[1] as RegexNode; // pair = ['|', concat]
+        node = UnionNode(left: node, right: right);
+      }
+      return node;
+    });
 
     primaryRef.set(expression);
     return expression; // top-level
@@ -148,28 +147,28 @@ class RegexPipeline {
 
   /// Thompson construction from AST → FSA. Independent from the older converter.
   static FSA _buildFromAst(RegexNode node) {
-    switch (node.runtimeType) {
-      case SymbolNode:
-        return _buildSymbol((node as SymbolNode).symbol);
-      case DotNode:
+    switch (node) {
+      case final SymbolNode symbolNode:
+        return _buildSymbol(symbolNode.symbol);
+      case DotNode _:
         return _buildDot();
-      case UnionNode:
+      case final UnionNode unionNode:
         return _buildUnion(
-          _buildFromAst((node as UnionNode).left),
-          _buildFromAst(node.right),
+          _buildFromAst(unionNode.left),
+          _buildFromAst(unionNode.right),
         );
-      case ConcatenationNode:
+      case final ConcatenationNode concatenationNode:
         return _concatenate(
-          _buildFromAst((node as ConcatenationNode).left),
-          _buildFromAst(node.right),
+          _buildFromAst(concatenationNode.left),
+          _buildFromAst(concatenationNode.right),
         );
-      case KleeneStarNode:
-        return _kleene(_buildFromAst((node as KleeneStarNode).child));
-      case PlusNode:
-        final child = _buildFromAst((node as PlusNode).child);
+      case final KleeneStarNode starNode:
+        return _kleene(_buildFromAst(starNode.child));
+      case final PlusNode plusNode:
+        final child = _buildFromAst(plusNode.child);
         return _concatenate(child, _kleene(child));
-      case QuestionNode:
-        final child = _buildFromAst((node as QuestionNode).child);
+      case final QuestionNode questionNode:
+        final child = _buildFromAst(questionNode.child);
         return _union(_epsilon(), child);
       default:
         throw ArgumentError('Unknown regex node: ${node.runtimeType}');

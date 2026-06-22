@@ -704,7 +704,7 @@ _TransformResult _replaceTerminalsAndBinarize(
       }
 
       final freshNt = GrammarCnfTransformer._freshNonTerminal(
-        base: 'X_${left}_${i}',
+        base: 'X_${left}_$i',
         used: usedSymbols.union(nonterminals).union(grammar.terminals),
       );
       final nt = freshNt ??

@@ -163,21 +163,18 @@ class CYKStep {
       leftCol: leftCol,
       rightRow: rightRow,
       rightCol: rightCol,
-      leftNonTerminals: leftNonTerminals != null
-          ? Set.unmodifiable(leftNonTerminals)
-          : null,
+      leftNonTerminals:
+          leftNonTerminals != null ? Set.unmodifiable(leftNonTerminals) : null,
       rightNonTerminals: rightNonTerminals != null
           ? Set.unmodifiable(rightNonTerminals)
           : null,
       production: production,
       productionLeft: productionLeft,
-      productionRight: productionRight != null
-          ? List.unmodifiable(productionRight)
-          : null,
+      productionRight:
+          productionRight != null ? List.unmodifiable(productionRight) : null,
       addedNonTerminal: addedNonTerminal,
-      cellNonTerminals: cellNonTerminals != null
-          ? Set.unmodifiable(cellNonTerminals)
-          : null,
+      cellNonTerminals:
+          cellNonTerminals != null ? Set.unmodifiable(cellNonTerminals) : null,
       terminal: terminal,
       isAccepted: isAccepted,
       cellModified: cellModified,
@@ -222,16 +219,14 @@ class CYKStep {
     required String terminal,
     required Set<String> derivingVariables,
   }) {
-    final varList = derivingVariables.isEmpty
-        ? 'none'
-        : derivingVariables.join(', ');
+    final varList =
+        derivingVariables.isEmpty ? 'none' : derivingVariables.join(', ');
     return CYKStep(
       baseStep: AlgorithmStep(
         id: id,
         stepNumber: stepNumber,
         title: 'Fill base case for "$terminal"',
-        explanation:
-            'Processing terminal "$terminal" at position $position. '
+        explanation: 'Processing terminal "$terminal" at position $position. '
             'Looking for productions of the form A → "$terminal". '
             '${derivingVariables.isEmpty ? "No variables produce this terminal." : "Variables that derive this terminal: $varList."}',
         stepExplanation: StepExplanation(
@@ -319,12 +314,10 @@ class CYKStep {
     required Set<String> leftNonTerminals,
     required Set<String> rightNonTerminals,
   }) {
-    final leftVars = leftNonTerminals.isEmpty
-        ? '∅'
-        : leftNonTerminals.join(', ');
-    final rightVars = rightNonTerminals.isEmpty
-        ? '∅'
-        : rightNonTerminals.join(', ');
+    final leftVars =
+        leftNonTerminals.isEmpty ? '∅' : leftNonTerminals.join(', ');
+    final rightVars =
+        rightNonTerminals.isEmpty ? '∅' : rightNonTerminals.join(', ');
     final leftLen = splitPoint + 1;
     final leftSub = substring.substring(0, leftLen);
     final rightSub = substring.substring(leftLen);
@@ -381,8 +374,7 @@ class CYKStep {
         id: id,
         stepNumber: stepNumber,
         title: 'Apply production $variable → $leftVar $rightVar',
-        explanation:
-            'Found production $variable → $leftVar $rightVar. '
+        explanation: 'Found production $variable → $leftVar $rightVar. '
             'Since $leftVar is in the left cell and $rightVar is in the right cell, '
             'we can derive "$substring" using $variable. Adding $variable to cell [$row][$col].',
         stepExplanation: StepExplanation(
@@ -428,9 +420,8 @@ class CYKStep {
     required String substring,
     required Set<String> cellNonTerminals,
   }) {
-    final varList = cellNonTerminals.isEmpty
-        ? 'none'
-        : cellNonTerminals.join(', ');
+    final varList =
+        cellNonTerminals.isEmpty ? 'none' : cellNonTerminals.join(', ');
     return CYKStep(
       baseStep: AlgorithmStep(
         id: id,
@@ -479,17 +470,17 @@ class CYKStep {
         id: id,
         stepNumber: stepNumber,
         title: 'Check acceptance',
-        explanation:
-            'Checking if input string "$inputString" is accepted. '
+        explanation: 'Checking if input string "$inputString" is accepted. '
             'The top cell of the table contains: {$varList}. '
             '${isAccepted ? "The start symbol $startSymbol is present, so the string IS accepted by the grammar." : "The start symbol $startSymbol is NOT present, so the string is NOT accepted by the grammar."}',
         stepExplanation: StepExplanation(
           title: 'Acceptance check',
           bullets: [
             'Final (top) cell contains: {$varList}.',
-            isAccepted
-                ? 'Start symbol $startSymbol is present → ACCEPT.'
-                : 'Start symbol $startSymbol is missing → REJECT.',
+            if (isAccepted)
+              'Start symbol $startSymbol is present → ACCEPT.'
+            else
+              'Start symbol $startSymbol is missing → REJECT.',
           ],
           categories: const [ExplanationCategory.grammarDerivation],
         ),
@@ -515,17 +506,17 @@ class CYKStep {
         id: id,
         stepNumber: stepNumber,
         title: 'Parsing complete',
-        explanation:
-            'CYK parsing completed for input string "$inputString". '
+        explanation: 'CYK parsing completed for input string "$inputString". '
             'Processed $filledCells out of $totalCells cells in the parse table. '
             '${isAccepted ? "The string IS in the language generated by the grammar." : "The string is NOT in the language generated by the grammar."}',
         stepExplanation: StepExplanation(
           title: 'CYK parsing complete',
           bullets: [
             'Filled $filledCells / $totalCells cells.',
-            isAccepted
-                ? 'Result: ACCEPT (string is generated by the grammar).'
-                : 'Result: REJECT (string is not generated by the grammar).',
+            if (isAccepted)
+              'Result: ACCEPT (string is generated by the grammar).'
+            else
+              'Result: REJECT (string is not generated by the grammar).',
           ],
           categories: const [ExplanationCategory.grammarDerivation],
         ),
@@ -647,19 +638,16 @@ class CYKStep {
       leftCol: json['leftCol'] as int?,
       rightRow: json['rightRow'] as int?,
       rightCol: json['rightCol'] as int?,
-      leftNonTerminals: (json['leftNonTerminals'] as List?)
-          ?.cast<String>()
-          .toSet(),
-      rightNonTerminals: (json['rightNonTerminals'] as List?)
-          ?.cast<String>()
-          .toSet(),
+      leftNonTerminals:
+          (json['leftNonTerminals'] as List?)?.cast<String>().toSet(),
+      rightNonTerminals:
+          (json['rightNonTerminals'] as List?)?.cast<String>().toSet(),
       production: json['production'] as String?,
       productionLeft: json['productionLeft'] as String?,
       productionRight: (json['productionRight'] as List?)?.cast<String>(),
       addedNonTerminal: json['addedNonTerminal'] as String?,
-      cellNonTerminals: (json['cellNonTerminals'] as List?)
-          ?.cast<String>()
-          .toSet(),
+      cellNonTerminals:
+          (json['cellNonTerminals'] as List?)?.cast<String>().toSet(),
       terminal: json['terminal'] as String?,
       isAccepted: json['isAccepted'] as bool? ?? false,
       cellModified: json['cellModified'] as bool? ?? false,

@@ -135,8 +135,6 @@ class _PDAStackPanelState extends State<PDAStackPanel>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late ScrollController _scrollController;
-  late Animation<Offset> _slideAnimation;
-  int _previousStackSize = 0;
   bool _isPushAnimation = false;
   int _numPushedSymbols = 0; // Track how many symbols were pushed
   bool _isPopAnimation = false;
@@ -155,14 +153,7 @@ class _PDAStackPanelState extends State<PDAStackPanel>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 1), // Start from bottom
-      end: Offset.zero, // End at normal position
-    ).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
-    );
     _scrollController = ScrollController();
-    _previousStackSize = widget.stackState.size;
   }
 
   @override
@@ -212,7 +203,6 @@ class _PDAStackPanelState extends State<PDAStackPanel>
           });
         }
       });
-      _previousStackSize = widget.stackState.size;
       _scrollToTop();
     }
   }
@@ -253,7 +243,7 @@ class _PDAStackPanelState extends State<PDAStackPanel>
   void _handleHorizontalDragEnd(int index, DragEndDetails details) {
     // Detect swipe direction and velocity
     final velocity = details.primaryVelocity ?? 0;
-    final threshold = 30.0; // Minimum swipe distance in pixels
+    const threshold = 30.0; // Minimum swipe distance in pixels
 
     setState(() {
       if (_swipeOffset.abs() > threshold || velocity.abs() > 300) {

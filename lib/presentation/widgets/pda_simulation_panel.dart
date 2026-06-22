@@ -537,10 +537,7 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
         final simNotifier = ref.read(pdaSimulationProvider.notifier);
         simNotifier.setPda(simulationPda);
         simNotifier.setStepByStep(_stepByStep);
-        // Manually set the result since we're using the old simulator
-        ref.read(pdaSimulationProvider.notifier).state = ref
-            .read(pdaSimulationProvider)
-            .copyWith(result: simulation, currentStepIndex: 0);
+        simNotifier.setResult(simulation);
 
         widget.highlightService.emitFromSteps(simulation.steps, 0);
         // Update stack to first step for step-by-step mode

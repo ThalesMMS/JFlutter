@@ -14,7 +14,6 @@ import '../models/fsa.dart';
 import '../models/state.dart';
 import '../models/fsa_transition.dart';
 import '../models/nfa_to_dfa_step.dart';
-import '../models/algorithm_step.dart';
 import '../result.dart';
 import 'state_renamer.dart';
 
@@ -74,102 +73,6 @@ class NFAToDFAConverter {
     }
 
     return ResultFactory.success(null);
-  }
-
-  /// Removes epsilon transitions from the NFA
-  static FSA _removeEpsilonTransitions(FSA nfa) {
-    // Treat typical epsilon markers uniformly, regardless of encoding.
-    bool isEpsilonSymbol(String s) {
-      final normalized = s.trim().toLowerCase();
-      return normalized.isEmpty ||
-          normalized == 'ε' ||
-          normalized == 'λ' ||
-          normalized == 'lambda';
-    }
-
-    if (!nfa.hasEpsilonTransitions &&
-        !nfa.fsaTransitions.any(
-          (t) =>
-              (t.lambdaSymbol != null && isEpsilonSymbol(t.lambdaSymbol!)) ||
-              (t.inputSymbols.any(isEpsilonSymbol)),
-        )) {
-      return nfa;
-    }
-
-    final newTransitions = <FSATransition>{};
-    final newStates = Set<State>.from(nfa.states);
-    final newAcceptingStates = Set<State>.from(nfa.acceptingStates);
-
-    // For each state, compute its epsilon closure (include transitions encoded via
-    // lambdaSymbol or inputSymbols containing an epsilon-like marker)
-    final epsilonClosures = <State, Set<State>>{};
-    for (final state in nfa.states) {
-      epsilonClosures[state] = _epsilonClosureFlexible(
-        nfa,
-        state,
-        isEpsilonSymbol,
-      );
-    }
-
-    // Add new transitions for epsilon closure
-    for (final state in nfa.states) {
-      final closure = epsilonClosures[state]!;
-
-      // If any state in the closure is accepting, make the original state accepting
-      for (final closureState in closure) {
-        if (nfa.acceptingStates.contains(closureState)) {
-          newAcceptingStates.add(state);
-        }
-      }
-
-      // For each symbol in the alphabet (excluding epsilon-like markers)
-      final workingAlphabet =
-          nfa.alphabet.where((s) => !isEpsilonSymbol(s)).toSet();
-      for (final symbol in workingAlphabet) {
-        final reachableStates = <State>{};
-
-        // Find all states reachable from the closure on this symbol
-        for (final closureState in closure) {
-          final transitions = nfa
-              .getTransitionsFromStateOnSymbol(closureState, symbol)
-              .where((t) => !t.isEpsilonTransition)
-              .toList();
-          for (final transition in transitions) {
-            reachableStates.add(transition.toState);
-          }
-        }
-
-        // Add transitions for all reachable states
-        for (final reachableState in reachableStates) {
-          final reachableClosure = epsilonClosures[reachableState]!;
-          for (final finalState in reachableClosure) {
-            final newTransition = FSATransition.deterministic(
-              id: 't_${state.id}_${symbol}_${finalState.id}',
-              fromState: state,
-              toState: finalState,
-              symbol: symbol,
-            );
-            newTransitions.add(newTransition);
-          }
-        }
-      }
-    }
-
-    // Create new FSA without epsilon transitions
-    return FSA(
-      id: '${nfa.id}_no_epsilon',
-      name: '${nfa.name} (No Epsilon)',
-      states: newStates,
-      transitions: newTransitions,
-      alphabet: nfa.alphabet.where((s) => !isEpsilonSymbol(s)).toSet(),
-      initialState: nfa.initialState,
-      acceptingStates: newAcceptingStates,
-      created: nfa.created,
-      modified: DateTime.now(),
-      bounds: nfa.bounds,
-      zoomLevel: nfa.zoomLevel,
-      panOffset: nfa.panOffset,
-    );
   }
 
   /// Builds DFA using subset construction with epsilon-closures over the original NFA
@@ -378,7 +281,7 @@ class NFAToDFAConverter {
         initialStateSet.intersection(nfa.acceptingStates).isNotEmpty;
     steps.add(
       NFAToDFAStep.initialEpsilonClosure(
-        id: 'step_${stepCounter}',
+        id: 'step_$stepCounter',
         stepNumber: stepCounter++,
         initialState: nfa.initialState!,
         epsilonClosure: initialStateSet,
@@ -421,7 +324,7 @@ class NFAToDFAConverter {
         if (reachableBeforeEpsilon.isNotEmpty) {
           steps.add(
             NFAToDFAStep.processSymbol(
-              id: 'step_${stepCounter}',
+              id: 'step_$stepCounter',
               stepNumber: stepCounter++,
               currentStateSet: currentStateSet,
               symbol: symbol,
@@ -447,7 +350,7 @@ class NFAToDFAConverter {
           // Capture epsilon closure of reachable states step
           steps.add(
             NFAToDFAStep.epsilonClosureOfReachable(
-              id: 'step_${stepCounter}',
+              id: 'step_$stepCounter',
               stepNumber: stepCounter++,
               reachableStates: reachableBeforeEpsilon,
               epsilonClosure: nextStateSet,
@@ -474,7 +377,7 @@ class NFAToDFAConverter {
             // Capture create DFA state step
             steps.add(
               NFAToDFAStep.createDFAState(
-                id: 'step_${stepCounter}',
+                id: 'step_$stepCounter',
                 stepNumber: stepCounter++,
                 nfaStateSet: nextStateSet,
                 dfaStateId: nextDFAState.id,
@@ -498,7 +401,7 @@ class NFAToDFAConverter {
           // Capture create DFA transition step
           steps.add(
             NFAToDFAStep.createDFATransition(
-              id: 'step_${stepCounter}',
+              id: 'step_$stepCounter',
               stepNumber: stepCounter++,
               fromStateSet: currentStateSet,
               fromDfaStateId: currentDFAState.id,
@@ -514,7 +417,7 @@ class NFAToDFAConverter {
     // Capture completion step
     steps.add(
       NFAToDFAStep.completion(
-        id: 'step_${stepCounter}',
+        id: 'step_$stepCounter',
         stepNumber: stepCounter,
         totalStates: dfaStates.length,
         totalTransitions: dfaTransitions.length,

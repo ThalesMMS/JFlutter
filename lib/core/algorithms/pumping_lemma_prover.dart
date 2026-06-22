@@ -122,9 +122,8 @@ class PumpingLemmaProver {
 
     // The pumping length is at most the number of states
     final numStates = automaton.states.length;
-    final pumpingLength = numStates < maxPumpingLength
-        ? numStates
-        : maxPumpingLength;
+    final pumpingLength =
+        numStates < maxPumpingLength ? numStates : maxPumpingLength;
 
     // Check timeout
     if (DateTime.now().difference(startTime) > timeout) {
@@ -363,42 +362,6 @@ class PumpingLemmaProver {
     }
   }
 
-  /// Finds a string that cannot be pumped
-  static NonPumpableString? _findNonPumpableString(
-    FSA automaton,
-    int pumpingLength,
-    Duration timeout,
-  ) {
-    final startTime = DateTime.now();
-
-    // Generate strings of length >= pumpingLength
-    final alphabet = automaton.alphabet.toList();
-    final strings = <String>[];
-
-    // Generate strings of length pumpingLength to pumpingLength + 10
-    for (int length = pumpingLength; length <= pumpingLength + 10; length++) {
-      _generateStrings(alphabet, '', length, strings, 100);
-    }
-
-    // Test each string for non-pumpability
-    for (final string in strings) {
-      if (DateTime.now().difference(startTime) > timeout) {
-        break;
-      }
-
-      final nonPumpableString = _testStringNonPumpability(
-        automaton,
-        string,
-        pumpingLength,
-      );
-      if (nonPumpableString != null) {
-        return nonPumpableString;
-      }
-    }
-
-    return null;
-  }
-
   /// Finds a string that has at least one decomposition that fails pumping
   /// (exists-decomposition heuristic used for disproof/tests).
   static NonPumpableString? _findNonPumpableStringExists(
@@ -444,99 +407,6 @@ class PumpingLemmaProver {
     }
 
     return null;
-  }
-
-  /// Tests if a string cannot be pumped
-  static NonPumpableString? _testStringNonPumpability(
-    FSA automaton,
-    String string,
-    int pumpingLength,
-  ) {
-    // Check if string is accepted by automaton
-    if (!_isStringAccepted(automaton, string)) {
-      return null;
-    }
-
-    // Check if string length >= pumpingLength
-    if (string.length < pumpingLength) {
-      return null;
-    }
-
-    // For non-regularity evidence, we need that for all decompositions
-    // with |xy| <= p and |y| > 0, some pumping (k) breaks acceptance.
-    // We search bounded k in [0..3] as a heuristic.
-    bool allDecompositionsFail = true;
-    String foundX = '';
-    String foundY = '';
-    String foundZ = '';
-    String foundCounter = '';
-
-    for (int i = 0; i <= pumpingLength; i++) {
-      for (int j = i + 1; j <= pumpingLength; j++) {
-        if (j > string.length) break;
-
-        final x = string.substring(0, i);
-        final y = string.substring(i, j);
-        final z = string.substring(j);
-        if (y.isEmpty) continue;
-
-        bool thisDecompositionHasCounter = false;
-        String localCounter = '';
-        for (int k = 0; k <= 3; k++) {
-          final pumpedString = x + (y * k) + z;
-          if (!_isStringAccepted(automaton, pumpedString)) {
-            thisDecompositionHasCounter = true;
-            localCounter = pumpedString;
-            break;
-          }
-        }
-
-        if (!thisDecompositionHasCounter) {
-          // Found a decomposition that appears to pump (for tested k),
-          // so string does not witness non-regularity.
-          allDecompositionsFail = false;
-          break;
-        } else if (foundCounter.isEmpty) {
-          // Record one counterexample to return if all decompositions fail.
-          foundX = x;
-          foundY = y;
-          foundZ = z;
-          foundCounter = localCounter;
-        }
-      }
-      if (!allDecompositionsFail) break;
-    }
-
-    if (allDecompositionsFail && foundCounter.isNotEmpty) {
-      return NonPumpableString(
-        originalString: string,
-        x: foundX,
-        y: foundY,
-        z: foundZ,
-        pumpingLength: pumpingLength,
-        counterExample: foundCounter,
-      );
-    }
-
-    return null;
-  }
-
-  /// Finds a counter example for non-pumpability
-  static String _findCounterExample(
-    FSA automaton,
-    String x,
-    String y,
-    String z,
-  ) {
-    // Try different values of i to find a counter example
-    for (int i = 0; i <= 5; i++) {
-      final pumpedString = x + (y * i) + z;
-      if (!_isStringAccepted(automaton, pumpedString)) {
-        return pumpedString;
-      }
-    }
-
-    return '';
   }
 
   /// Tests if a language is regular using the pumping lemma

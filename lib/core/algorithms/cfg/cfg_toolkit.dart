@@ -41,9 +41,8 @@ class CFGToolkit {
       final needsAugment = reduced.productions.any(
         (p) => p.rightSide.contains(reduced.startSymbol),
       );
-      final start = needsAugment
-          ? '${reduced.startSymbol}0'
-          : reduced.startSymbol;
+      final start =
+          needsAugment ? '${reduced.startSymbol}0' : reduced.startSymbol;
       final nonterminals = {...reduced.nonterminals, if (needsAugment) start};
       final productions = <Production>{
         if (needsAugment)
@@ -225,9 +224,8 @@ class CFGToolkit {
 
   static Grammar _removeUselessSymbols(Grammar g) {
     final useful = g.usefulNonterminals;
-    final newProds = g.productions
-        .where((p) => useful.contains(p.leftSide.first))
-        .toSet();
+    final newProds =
+        g.productions.where((p) => useful.contains(p.leftSide.first)).toSet();
     final newNon = g.nonterminals.intersection(useful);
     return g.copyWith(nonterminals: newNon, productions: newProds);
   }
@@ -307,8 +305,8 @@ class CFGToolkit {
   }
 
   static Grammar _transformToGNF(Grammar g, List<String> orderedNonterminals) {
-    var prods = Set<Production>.from(g.productions);
-    var nonterminals = Set<String>.from(g.nonterminals);
+    final prods = Set<Production>.from(g.productions);
+    final nonterminals = Set<String>.from(g.nonterminals);
     final terminals = Set<String>.from(g.terminals);
     int freshCounter = 0;
 
@@ -440,15 +438,13 @@ class CFGToolkit {
     // We go backwards and substitute any leading nonterminal.
     // Also handle the new left-recursion-elimination nonterminals (e.g., AP0).
     // We need to process all nonterminals that have productions.
-    final allNonterminalsInProds = prods
-        .map((p) => p.leftSide.first)
-        .toSet();
+    final allNonterminalsInProds = prods.map((p) => p.leftSide.first).toSet();
 
     // Build the processing order: the original ordered list reversed,
     // then any additional nonterminals (from left-recursion elimination).
     final backOrder = orderedNonterminals.reversed.toList();
-    final extraNonterminals = allNonterminalsInProds
-        .difference(orderedNonterminals.toSet());
+    final extraNonterminals =
+        allNonterminalsInProds.difference(orderedNonterminals.toSet());
     backOrder.addAll(extraNonterminals);
 
     // Iterative back-substitution until all productions start with a terminal.

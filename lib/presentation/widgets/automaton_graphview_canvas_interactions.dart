@@ -35,7 +35,7 @@ extension _AutomatonGraphViewCanvasInteractions
     // the intended node instead of falling through to the canvas pan gesture.
     const dragHitSlop = 8.0;
     const hitRadius = _kNodeRadius + dragHitSlop;
-    final hitRadiusSquared = hitRadius * hitRadius;
+    const hitRadiusSquared = hitRadius * hitRadius;
 
     GraphViewCanvasNode? closest;
     var closestDistanceSquared = double.infinity;

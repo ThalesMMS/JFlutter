@@ -57,7 +57,7 @@ class GrammarGnfTransformer {
 
     if (!CFGToolkit.isGNF(gnfGrammar)) {
       diagnostics.add(
-        GrammarDiagnostic(
+        const GrammarDiagnostic(
           code: 'gnf_transform_not_gnf',
           severity: GrammarDiagnosticSeverity.warning,
           message:

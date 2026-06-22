@@ -112,6 +112,13 @@ class PDASimulationNotifier extends StateNotifier<PDASimulationState> {
     state = state.copyWith(mode: mode);
   }
 
+  void setResult(PDASimulationResult result, {int currentStepIndex = 0}) {
+    state = state.copyWith(
+      result: result,
+      currentStepIndex: currentStepIndex,
+    );
+  }
+
   Future<void> simulate(String input) async {
     if (state.pda == null) return;
     state = state.copyWith(
@@ -185,5 +192,5 @@ class PDASimulationNotifier extends StateNotifier<PDASimulationState> {
 
 final pdaSimulationProvider =
     StateNotifierProvider<PDASimulationNotifier, PDASimulationState>((ref) {
-      return PDASimulationNotifier();
-    });
+  return PDASimulationNotifier();
+});

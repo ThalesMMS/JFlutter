@@ -45,7 +45,6 @@ class _TMCanvasGraphViewState extends ConsumerState<TMCanvasGraphView> {
   late bool _ownsController;
   SimulationHighlightService? _highlightService;
   SimulationHighlightChannel? _previousHighlightChannel;
-  GraphViewSimulationHighlightChannel? _highlightChannel;
   ProviderSubscription<TMEditorState>? _subscription;
   TM? _lastDeliveredTm;
 
@@ -66,20 +65,19 @@ class _TMCanvasGraphViewState extends ConsumerState<TMCanvasGraphView> {
                 initialRead: payload.readSymbol,
                 initialWrite: payload.writeSymbol,
                 initialDirection: payload.direction,
-                onSubmit:
-                    ({
-                      required String readSymbol,
-                      required String writeSymbol,
-                      required TapeDirection direction,
-                    }) {
-                      overlayController.submit(
-                        AutomatonTmTransitionPayload(
-                          readSymbol: readSymbol,
-                          writeSymbol: writeSymbol,
-                          direction: direction,
-                        ),
-                      );
-                    },
+                onSubmit: ({
+                  required String readSymbol,
+                  required String writeSymbol,
+                  required TapeDirection direction,
+                }) {
+                  overlayController.submit(
+                    AutomatonTmTransitionPayload(
+                      readSymbol: readSymbol,
+                      writeSymbol: writeSymbol,
+                      direction: direction,
+                    ),
+                  );
+                },
                 onCancel: overlayController.cancel,
               );
             },
@@ -118,7 +116,6 @@ class _TMCanvasGraphViewState extends ConsumerState<TMCanvasGraphView> {
       _highlightService = highlightService;
       _previousHighlightChannel = highlightService.channel;
       final highlightChannel = GraphViewSimulationHighlightChannel(_controller);
-      _highlightChannel = highlightChannel;
       highlightService.channel = highlightChannel;
     }
 
@@ -162,7 +159,6 @@ class _TMCanvasGraphViewState extends ConsumerState<TMCanvasGraphView> {
     }
     if (_highlightService != null) {
       _highlightService!.channel = _previousHighlightChannel;
-      _highlightChannel = null;
     }
     super.dispose();
   }

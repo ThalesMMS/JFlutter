@@ -79,6 +79,8 @@ class _RegexPageState extends ConsumerState<RegexPage> {
     super.dispose();
   }
 
+  void _updatePageState(VoidCallback callback) => setState(callback);
+
   void _showFeedback(String message,
       {AppSnackBarTone tone = AppSnackBarTone.info}) {
     showAppSnackBar(context, message: message, tone: tone);

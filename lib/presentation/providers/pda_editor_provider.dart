@@ -57,6 +57,10 @@ class PDAEditorState {
 class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
   PDAEditorNotifier() : super(const PDAEditorState());
 
+  /// Current PDA snapshot for collaborators that should not read the protected
+  /// StateNotifier state directly.
+  PDA? get currentPda => state.pda;
+
   PDA _createEmptyPda() {
     final now = DateTime.now();
     return PDA(

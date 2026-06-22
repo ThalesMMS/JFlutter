@@ -78,6 +78,10 @@ class TMEditorNotifier extends StateNotifier<TMEditorState> {
   final List<State> _states = [];
   final List<TMTransition> _transitions = [];
 
+  /// Current TM snapshot for collaborators that should not read the protected
+  /// StateNotifier state directly.
+  TM? get currentTm => state.tm;
+
   /// Updates the notifier using the raw state and transition collections
   /// maintained by the canvas and returns the resulting TM.
   TM? updateFromCanvas({

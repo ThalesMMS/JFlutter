@@ -45,7 +45,7 @@ class GraphViewPdaCanvasController
   PDAEditorNotifier get _notifier => notifier;
 
   @override
-  PDA? get currentDomainData => _notifier.state.pda;
+  PDA? get currentDomainData => _notifier.currentPda;
 
   @override
   Iterable<String> get domainStateIds {
@@ -72,6 +72,7 @@ class GraphViewPdaCanvasController
   }
 
   /// Synchronises the GraphView controller with the latest [automaton].
+  @override
   void synchronize(PDA? automaton) {
     _logPdaCanvas(
       'Synchronizing PDA canvas (states=${automaton?.states.length ?? 0}, transitions=${automaton?.pdaTransitions.length ?? 0})',
@@ -190,7 +191,7 @@ class GraphViewPdaCanvasController
 
   @override
   void applySnapshotToDomain(GraphViewAutomatonSnapshot snapshot) {
-    final template = _notifier.state.pda ??
+    final template = _notifier.currentPda ??
         PDA(
           id: snapshot.metadata.id ??
               'pda_${DateTime.now().microsecondsSinceEpoch}',

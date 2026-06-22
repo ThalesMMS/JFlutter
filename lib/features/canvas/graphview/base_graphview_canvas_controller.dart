@@ -394,6 +394,11 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
     // skip manual disposal even when we created it.
   }
 
+  /// Synchronises the canvas with the provided domain [data].
+  void synchronize(TSnapshot? data) {
+    synchronizeGraph(data);
+  }
+
   /// Converts domain state into a snapshot consumed by the canvas.
   @protected
   GraphViewAutomatonSnapshot toSnapshot(TSnapshot? data);

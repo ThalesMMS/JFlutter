@@ -38,8 +38,6 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  flutter_web_plugins:
-    sdk: flutter
   intl: any
 
   # State persistence (localStorage analogue)
@@ -55,14 +53,8 @@ dependencies:
   graphview:
     path: graphview
 
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.8
-
   # State management and dependency injection
-  provider: ^6.1.2
   get_it: ^8.0.0
-  riverpod: ^2.5.1
   flutter_riverpod: ^2.5.1
   
   # XML parsing for JFLAP file import

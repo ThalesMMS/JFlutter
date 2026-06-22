@@ -7,27 +7,26 @@ void _runCrossFormatTests() {
       final automatonData = _convertEntityToData(originalAutomaton);
 
       // Convert to JFF format
-      final jffXml = serializationService.serializeAutomatonToJflap(
+      final jffXml = _serializeAutomatonToJflap(
         automatonData,
       );
       expect(jffXml, isNotEmpty);
 
       // Parse JFF back to data
-      final jffParseResult = JFLAPXMLParser.parseJFLAPFile(jffXml);
+      final jffParseResult = _deserializeAutomatonFromJflap(jffXml);
       expect(jffParseResult.isSuccess, true);
 
       if (jffParseResult.isSuccess) {
         final jffData = jffParseResult.data!;
 
         // Convert JFF data to JSON
-        final jsonString = serializationService.serializeAutomatonToJson(
+        final jsonString = _serializeAutomatonToJson(
           jffData,
         );
         expect(jsonString, isNotEmpty);
 
         // Parse JSON back to data
-        final jsonParseResult = serializationService
-            .deserializeAutomatonFromJson(jsonString);
+        final jsonParseResult = _deserializeAutomatonFromJson(jsonString);
         expect(jsonParseResult.isSuccess, true);
 
         if (jsonParseResult.isSuccess) {
@@ -46,13 +45,13 @@ void _runCrossFormatTests() {
       final automatonData = _convertEntityToData(originalAutomaton);
 
       // Convert to JSON format
-      final jsonString = serializationService.serializeAutomatonToJson(
+      final jsonString = _serializeAutomatonToJson(
         automatonData,
       );
       expect(jsonString, isNotEmpty);
 
       // Parse JSON back to data
-      final jsonParseResult = serializationService.deserializeAutomatonFromJson(
+      final jsonParseResult = _deserializeAutomatonFromJson(
         jsonString,
       );
       expect(jsonParseResult.isSuccess, true);
@@ -61,11 +60,11 @@ void _runCrossFormatTests() {
         final jsonData = jsonParseResult.data!;
 
         // Convert JSON data to JFF
-        final jffXml = serializationService.serializeAutomatonToJflap(jsonData);
+        final jffXml = _serializeAutomatonToJflap(jsonData);
         expect(jffXml, isNotEmpty);
 
         // Parse JFF back to data
-        final jffParseResult = JFLAPXMLParser.parseJFLAPFile(jffXml);
+        final jffParseResult = _deserializeAutomatonFromJflap(jffXml);
         expect(jffParseResult.isSuccess, true);
 
         if (jffParseResult.isSuccess) {
@@ -84,29 +83,28 @@ void _runCrossFormatTests() {
       final automatonData = _convertEntityToData(originalAutomaton);
 
       // Original -> JFF -> JSON -> JFF -> Final
-      final jffXml1 = serializationService.serializeAutomatonToJflap(
+      final jffXml1 = _serializeAutomatonToJflap(
         automatonData,
       );
-      final jffParseResult1 = JFLAPXMLParser.parseJFLAPFile(jffXml1);
+      final jffParseResult1 = _deserializeAutomatonFromJflap(jffXml1);
       expect(jffParseResult1.isSuccess, true);
 
       if (jffParseResult1.isSuccess) {
         final jffData1 = jffParseResult1.data!;
 
-        final jsonString = serializationService.serializeAutomatonToJson(
+        final jsonString = _serializeAutomatonToJson(
           jffData1,
         );
-        final jsonParseResult = serializationService
-            .deserializeAutomatonFromJson(jsonString);
+        final jsonParseResult = _deserializeAutomatonFromJson(jsonString);
         expect(jsonParseResult.isSuccess, true);
 
         if (jsonParseResult.isSuccess) {
           final jsonData = jsonParseResult.data!;
 
-          final jffXml2 = serializationService.serializeAutomatonToJflap(
+          final jffXml2 = _serializeAutomatonToJflap(
             jsonData,
           );
-          final jffParseResult2 = JFLAPXMLParser.parseJFLAPFile(jffXml2);
+          final jffParseResult2 = _deserializeAutomatonFromJflap(jffXml2);
           expect(jffParseResult2.isSuccess, true);
 
           if (jffParseResult2.isSuccess) {

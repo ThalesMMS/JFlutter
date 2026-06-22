@@ -14,60 +14,18 @@ import 'dart:convert';
 // ignore: avoid_web_libraries_in_flutter, deprecated_member_use
 import 'dart:html' as html;
 import 'dart:typed_data';
-import 'package:collection/collection.dart';
-import 'package:xml/xml.dart';
 import '../../core/entities/automaton_entity.dart';
 import '../../core/entities/grammar_entity.dart';
 import '../../core/entities/turing_machine_entity.dart';
 import '../../core/models/fsa.dart';
 import '../../core/models/grammar.dart';
-import '../../core/models/production.dart';
 import '../../core/models/fsa_transition.dart';
-import '../../core/parsers/jflap_xml_codec.dart';
 import '../../core/result.dart';
 import '../../presentation/widgets/export/svg_exporter.dart';
+import 'file_operations_payload_mixin.dart';
 
 /// Service for file operations tailored for web environments.
-class FileOperationsService {
-  /// Creates the JFLAP XML payload without starting a download.
-  String serializeAutomatonToJFLAPString(FSA automaton) {
-    return const JflapXmlCodec().encodeFsa(automaton);
-  }
-
-  /// Creates the JSON payload without starting a download.
-  String serializeAutomatonToJsonString(FSA automaton) {
-    return jsonEncode(automaton.toJson());
-  }
-
-  /// Creates the grammar JFLAP payload without starting a download.
-  String serializeGrammarToJFLAPString(Grammar grammar) {
-    return _buildGrammarXML(grammar);
-  }
-
-  /// Creates the SVG payload without starting a download.
-  String exportAutomatonToSvgString(
-    AutomatonEntity automaton, {
-    SvgExportOptions? options,
-  }) {
-    return SvgExporter.exportAutomatonToSvg(automaton, options: options);
-  }
-
-  /// Creates the grammar SVG payload without starting a download.
-  String exportGrammarToSvgString(
-    GrammarEntity grammar, {
-    SvgExportOptions? options,
-  }) {
-    return SvgExporter.exportGrammarToSvg(grammar, options: options);
-  }
-
-  /// Creates the Turing machine SVG payload without starting a download.
-  String exportTuringMachineToSvgString(
-    TuringMachineEntity machine, {
-    SvgExportOptions? options,
-  }) {
-    return SvgExporter.exportTuringMachineToSvg(machine, options: options);
-  }
-
+class FileOperationsService with FileOperationsPayloadMixin {
   /// Creates the legacy FSA SVG payload without starting a download.
   String exportLegacyAutomatonToSvgString(FSA automaton) {
     return _buildLegacySVG(automaton);
@@ -104,16 +62,6 @@ class FileOperationsService {
     );
   }
 
-  Future<Result<FSA>> loadAutomatonFromBytes(Uint8List bytes) async {
-    try {
-      final xmlString = utf8.decode(bytes);
-      final document = XmlDocument.parse(xmlString);
-      return const JflapXmlCodec().decodeFsaDocument(document);
-    } catch (e) {
-      return Failure('Failed to load automaton from provided data: $e');
-    }
-  }
-
   Future<StringResult> saveAutomatonToJson(
     FSA automaton,
     String filePath,
@@ -132,19 +80,6 @@ class FileOperationsService {
     );
   }
 
-  Future<Result<FSA>> loadAutomatonFromJsonBytes(Uint8List bytes) async {
-    try {
-      final jsonString = utf8.decode(bytes);
-      final decoded = jsonDecode(jsonString);
-      if (decoded is! Map<String, dynamic>) {
-        return const Failure('Invalid automaton JSON format');
-      }
-      return Success(FSA.fromJson(decoded));
-    } catch (e) {
-      return Failure('Failed to load automaton from provided JSON data: $e');
-    }
-  }
-
   Future<StringResult> saveGrammarToJFLAP(
     Grammar grammar,
     String filePath,
@@ -161,17 +96,6 @@ class FileOperationsService {
     return const Failure(
       'Loading grammars from a path is not supported on web.',
     );
-  }
-
-  Future<Result<Grammar>> loadGrammarFromBytes(Uint8List bytes) async {
-    try {
-      final xmlString = utf8.decode(bytes);
-      final document = XmlDocument.parse(xmlString);
-      final grammar = _parseGrammarXML(document);
-      return Success(grammar);
-    } catch (e) {
-      return Failure('Failed to load grammar from provided data: $e');
-    }
   }
 
   Future<StringResult> exportAutomatonToPNG(
@@ -254,39 +178,6 @@ class FileOperationsService {
     return const Failure('Deleting files is not supported on web.');
   }
 
-  String _buildGrammarXML(Grammar grammar) {
-    final builder = XmlBuilder();
-    builder.processing('xml', 'version="1.0" encoding="UTF-8"');
-    builder.element(
-      'structure',
-      nest: () {
-        builder.attribute('type', 'grammar');
-        builder.element(
-          'grammar',
-          nest: () {
-            builder.attribute('type', grammar.type.name);
-            builder.element('start', nest: grammar.startSymbol);
-
-            for (final production in grammar.productions) {
-              builder.element(
-                'production',
-                nest: () {
-                  builder.element('left', nest: production.leftSide.join(' '));
-                  builder.element(
-                    'right',
-                    nest: production.rightSide.join(' '),
-                  );
-                },
-              );
-            }
-          },
-        );
-      },
-    );
-
-    return builder.buildDocument().toXmlString(pretty: true);
-  }
-
   String _buildLegacySVG(FSA automaton) {
     final states = automaton.states.toList()
       ..sort((a, b) => a.id.compareTo(b.id));
@@ -362,86 +253,6 @@ class FileOperationsService {
     } catch (e) {
       return Failure('Failed to start download: $e');
     }
-  }
-
-  Grammar _parseGrammarXML(XmlDocument document) {
-    final grammarElement = document.findAllElements('grammar').firstOrNull;
-    if (grammarElement == null) {
-      throw const FormatException(
-        'JFLAP grammar import is missing the <grammar> element.',
-      );
-    }
-
-    final startElement = grammarElement.findElements('start').firstOrNull;
-    if (startElement == null) {
-      throw const FormatException(
-        'JFLAP grammar import is missing the <start> element.',
-      );
-    }
-    final startSymbols = _splitGrammarSymbols(startElement.innerText);
-    if (startSymbols.isEmpty) {
-      throw const FormatException(
-        'JFLAP grammar import has an empty <start> element.',
-      );
-    }
-    if (startSymbols.length != 1) {
-      throw const FormatException(
-        'JFLAP grammar import must declare exactly one start symbol.',
-      );
-    }
-    final startSymbol = startSymbols.single;
-    final productions = <Production>{};
-
-    for (final productionElement in grammarElement.findAllElements(
-      'production',
-    )) {
-      final leftElement = productionElement.findElements('left').firstOrNull;
-      final rightElement = productionElement.findElements('right').firstOrNull;
-      if (leftElement == null || rightElement == null) {
-        throw const FormatException(
-          'JFLAP grammar import has a <production> without <left> or <right>.',
-        );
-      }
-      final leftSide = _splitGrammarSymbols(
-        leftElement.innerText,
-      );
-      final rightSide = _splitGrammarSymbols(
-        rightElement.innerText,
-      );
-
-      productions.add(
-        Production(
-          id: 'p${productions.length}',
-          leftSide: leftSide,
-          rightSide: rightSide,
-          isLambda: rightSide.isEmpty,
-          order: productions.length,
-        ),
-      );
-    }
-
-    return Grammar(
-      id: 'imported_grammar_${DateTime.now().millisecondsSinceEpoch}',
-      name: 'Imported Grammar',
-      terminals: productions
-          .expand((p) => p.rightSide)
-          .where((s) => s.isNotEmpty)
-          .toSet(),
-      nonterminals: productions.expand((p) => p.leftSide).toSet(),
-      startSymbol: startSymbol,
-      productions: productions,
-      type: GrammarType.contextFree,
-      created: DateTime.now(),
-      modified: DateTime.now(),
-    );
-  }
-
-  List<String> _splitGrammarSymbols(String value) {
-    final trimmed = value.trim();
-    if (trimmed.isEmpty) {
-      return const <String>[];
-    }
-    return trimmed.split(RegExp(r'\s+'));
   }
 }
 

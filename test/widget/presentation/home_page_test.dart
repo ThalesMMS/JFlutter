@@ -143,7 +143,7 @@ void main() {
         expect(find.byType(DesktopNavigation), findsNothing);
         expect(find.text('Grammar'), findsWidgets);
         expect(find.text('Context-Free Grammars'), findsOneWidget);
-        expect(find.text('Pumping'), findsNothing);
+        expect(find.text('Pumping'), findsOneWidget);
         expect(find.byIcon(Icons.help_outline), findsWidgets);
         expect(find.byIcon(Icons.settings), findsWidgets);
 
@@ -173,7 +173,7 @@ void main() {
         expect(find.byType(DesktopNavigation), findsOneWidget);
         expect(find.byType(NavigationRail), findsOneWidget);
         expect(find.text('FSA'), findsWidgets);
-        expect(find.text('Pumping'), findsNothing);
+        expect(find.text('Pumping'), findsOneWidget);
         expect(
           find.byTooltip('Finite State Automata'),
           findsWidgets,
@@ -185,10 +185,11 @@ void main() {
       },
     );
 
-    testWidgets('normalizes obsolete Pumping Lemma navigation slot', (
+    testWidgets('keeps Pumping Lemma navigation slot selectable', (
       tester,
     ) async {
-      final navigationNotifier = _TestHomeNavigationNotifier()..setIndex(5);
+      final navigationNotifier = _TestHomeNavigationNotifier()
+        ..setIndex(HomeNavigationNotifier.pumpingLemmaIndex);
       final highlightService = _TestSimulationHighlightService();
 
       addTearDown(() {
@@ -202,10 +203,12 @@ void main() {
         highlightService: highlightService,
       );
 
-      expect(find.text('Regex'), findsWidgets);
-      expect(find.text('Regular Expressions'), findsOneWidget);
-      expect(find.text('Pumping'), findsNothing);
-      expect(navigationNotifier.receivedIndices, contains(4));
+      expect(find.text('Pumping'), findsWidgets);
+      expect(find.text('Pumping Lemma'), findsOneWidget);
+      expect(
+        navigationNotifier.receivedIndices,
+        isNot(contains(HomeNavigationNotifier.regexIndex)),
+      );
     });
 
     testWidgets('updates page view and provider when tapping navigation', (

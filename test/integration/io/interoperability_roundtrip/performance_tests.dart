@@ -9,10 +9,10 @@ void _runPerformanceTests() {
       final stopwatch = Stopwatch()..start();
 
       // Test JSON round-trip
-      final jsonString = serializationService.serializeAutomatonToJson(
+      final jsonString = _serializeAutomatonToJson(
         automatonData,
       );
-      final jsonParseResult = serializationService.deserializeAutomatonFromJson(
+      final jsonParseResult = _deserializeAutomatonFromJson(
         jsonString,
       );
 
@@ -54,16 +54,16 @@ void _runPerformanceTests() {
       final stopwatch = Stopwatch()..start();
 
       // Multiple conversions
-      final jffXml = serializationService.serializeAutomatonToJflap(
+      final jffXml = _serializeAutomatonToJflap(
         automatonData,
       );
-      final jffParseResult = JFLAPXMLParser.parseJFLAPFile(jffXml);
+      final jffParseResult = _deserializeAutomatonFromJflap(jffXml);
       expect(jffParseResult.isSuccess, true);
 
-      final jsonString = serializationService.serializeAutomatonToJson(
+      final jsonString = _serializeAutomatonToJson(
         automatonData,
       );
-      final jsonParseResult = serializationService.deserializeAutomatonFromJson(
+      final jsonParseResult = _deserializeAutomatonFromJson(
         jsonString,
       );
       expect(jsonParseResult.isSuccess, true);

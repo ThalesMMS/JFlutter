@@ -7,10 +7,10 @@ void _runDataIntegrityTests() {
       final automatonData = _convertEntityToData(originalAutomaton);
 
       // Test JSON round-trip
-      final jsonString = serializationService.serializeAutomatonToJson(
+      final jsonString = _serializeAutomatonToJson(
         automatonData,
       );
-      final jsonParseResult = serializationService.deserializeAutomatonFromJson(
+      final jsonParseResult = _deserializeAutomatonFromJson(
         jsonString,
       );
       expect(jsonParseResult.isSuccess, true);
@@ -32,10 +32,10 @@ void _runDataIntegrityTests() {
       final automatonData = _convertEntityToData(originalAutomaton);
 
       // Test JSON round-trip
-      final jsonString = serializationService.serializeAutomatonToJson(
+      final jsonString = _serializeAutomatonToJson(
         automatonData,
       );
-      final jsonParseResult = serializationService.deserializeAutomatonFromJson(
+      final jsonParseResult = _deserializeAutomatonFromJson(
         jsonString,
       );
       expect(jsonParseResult.isSuccess, true);
@@ -66,10 +66,10 @@ void _runDataIntegrityTests() {
       final automatonData = _convertEntityToData(originalAutomaton);
 
       // Test JSON round-trip
-      final jsonString = serializationService.serializeAutomatonToJson(
+      final jsonString = _serializeAutomatonToJson(
         automatonData,
       );
-      final jsonParseResult = serializationService.deserializeAutomatonFromJson(
+      final jsonParseResult = _deserializeAutomatonFromJson(
         jsonString,
       );
       expect(jsonParseResult.isSuccess, true);
@@ -106,11 +106,10 @@ void _runDataIntegrityTests() {
         final automatonData = _convertEntityToData(automaton);
 
         // Test JSON round-trip
-        final jsonString = serializationService.serializeAutomatonToJson(
+        final jsonString = _serializeAutomatonToJson(
           automatonData,
         );
-        final jsonParseResult = serializationService
-            .deserializeAutomatonFromJson(jsonString);
+        final jsonParseResult = _deserializeAutomatonFromJson(jsonString);
         expect(
           jsonParseResult.isSuccess,
           true,

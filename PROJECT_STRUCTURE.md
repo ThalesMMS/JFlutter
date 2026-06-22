@@ -47,7 +47,6 @@ jflutter/
 ├── screenshots/                   # UI captures and visual references
 ├── tool/                          # Repo tooling and helper scripts
 ├── build.yaml                     # Build orchestration for CI/scripts
-├── fix_compilation.sh             # Helper script for resolving build issues
 ├── pubspec.yaml                   # Project dependencies
 ├── analysis_options.yaml          # Static analysis configuration
 ├── pubspec.lock                   # Locked dependency versions

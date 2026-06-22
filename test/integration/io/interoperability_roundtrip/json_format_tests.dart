@@ -7,7 +7,7 @@ void _runJsonFormatTests() {
       final automatonData = _convertEntityToData(originalAutomaton);
 
       // Convert to JSON format
-      final jsonString = serializationService.serializeAutomatonToJson(
+      final jsonString = _serializeAutomatonToJson(
         automatonData,
       );
       expect(jsonString, isNotEmpty);
@@ -21,7 +21,7 @@ void _runJsonFormatTests() {
       expect(jsonData['transitions'], isNotNull);
 
       // Parse back from JSON format
-      final parseResult = serializationService.deserializeAutomatonFromJson(
+      final parseResult = _deserializeAutomatonFromJson(
         jsonString,
       );
       expect(
@@ -46,13 +46,13 @@ void _runJsonFormatTests() {
       final automatonData = _convertEntityToData(complexAutomaton);
 
       // Convert to JSON format
-      final jsonString = serializationService.serializeAutomatonToJson(
+      final jsonString = _serializeAutomatonToJson(
         automatonData,
       );
       expect(jsonString, isNotEmpty);
 
       // Parse back from JSON format
-      final parseResult = serializationService.deserializeAutomatonFromJson(
+      final parseResult = _deserializeAutomatonFromJson(
         jsonString,
       );
       expect(
@@ -82,13 +82,13 @@ void _runJsonFormatTests() {
         final automatonData = _convertEntityToData(automaton);
 
         // Convert to JSON format
-        final jsonString = serializationService.serializeAutomatonToJson(
+        final jsonString = _serializeAutomatonToJson(
           automatonData,
         );
         expect(jsonString, isNotEmpty);
 
         // Parse back from JSON format
-        final parseResult = serializationService.deserializeAutomatonFromJson(
+        final parseResult = _deserializeAutomatonFromJson(
           jsonString,
         );
         expect(
@@ -102,7 +102,7 @@ void _runJsonFormatTests() {
     test('JSON handles malformed data gracefully', () {
       const malformedJson = '{"invalid": json}';
 
-      final parseResult = serializationService.deserializeAutomatonFromJson(
+      final parseResult = _deserializeAutomatonFromJson(
         malformedJson,
       );
       expect(
@@ -116,7 +116,7 @@ void _runJsonFormatTests() {
     test('JSON validates required fields', () {
       const incompleteJson = '{"id": "test", "name": "Test"}';
 
-      final parseResult = serializationService.deserializeAutomatonFromJson(
+      final parseResult = _deserializeAutomatonFromJson(
         incompleteJson,
       );
       expect(

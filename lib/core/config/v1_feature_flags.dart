@@ -8,9 +8,8 @@ class V1FeatureFlags {
   static const bool showTmModule = true;
   static const bool showRegexModule = true;
 
-  /// Pumping Lemma remains outside the Apple v1.0 navigation surface.
-  /// Home navigation does not reserve an index while this flag is false.
-  static const bool showPumpingLemma = false;
+  /// Pumping Lemma is part of the visible navigation surface.
+  static const bool showPumpingLemma = true;
 
   static const bool fsaSupportsJflapImport = true;
   static const bool fsaSupportsJflapExport = true;

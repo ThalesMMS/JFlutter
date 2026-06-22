@@ -15,8 +15,7 @@ class _HelpPageTestHelpers {
   static const JFLAP_LICENSE_TEXT =
       'JFLAP 7.1 LICENSE\nFor use by students and educators\njflap@cs.duke.edu';
   // ignore: constant_identifier_names
-  static const GRAPHVIEW_LICENSE_TEXT =
-      'MIT License\n'
+  static const GRAPHVIEW_LICENSE_TEXT = 'MIT License\n'
       'Copyright (c) 2025 Nabil Mosharraf';
   // ignore: constant_identifier_names
   static const APPLE_THIRD_PARTY_NOTICES_TEXT =
@@ -753,6 +752,7 @@ void main() {
         'PDA',
         'Turing Machine',
         'Regular Expression',
+        'Pumping Lemma',
         'File Operations',
         'Troubleshooting',
         'Licenses',
@@ -763,7 +763,6 @@ void main() {
           reason: 'Section "$title" not found in HelpPage navigation',
         );
       }
-      expect(find.text('Pumping Lemma'), findsNothing);
     });
 
     testWidgets('Licenses section does not break other sections', (

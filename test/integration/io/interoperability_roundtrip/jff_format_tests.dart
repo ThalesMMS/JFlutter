@@ -7,7 +7,7 @@ void _runJffFormatTests() {
       final automatonData = _convertEntityToData(originalAutomaton);
 
       // Convert to JFF format
-      final jffXml = serializationService.serializeAutomatonToJflap(
+      final jffXml = _serializeAutomatonToJflap(
         automatonData,
       );
       expect(jffXml, isNotEmpty);
@@ -16,7 +16,7 @@ void _runJffFormatTests() {
       expect(jffXml, contains('<automaton'));
 
       // Parse back from JFF format
-      final parseResult = JFLAPXMLParser.parseJFLAPFile(jffXml);
+      final parseResult = _deserializeAutomatonFromJflap(jffXml);
       expect(parseResult.isSuccess, true, reason: 'JFF parsing should succeed');
 
       if (parseResult.isSuccess) {
@@ -35,7 +35,7 @@ void _runJffFormatTests() {
       final originalAutomaton = _createTestDFA();
       final automatonData = _convertEntityToData(originalAutomaton);
 
-      final jffXml = serializationService.serializeAutomatonToJflap(
+      final jffXml = _serializeAutomatonToJflap(
         automatonData,
       );
 
@@ -49,13 +49,13 @@ void _runJffFormatTests() {
       final automatonData = _convertEntityToData(complexAutomaton);
 
       // Convert to JFF format
-      final jffXml = serializationService.serializeAutomatonToJflap(
+      final jffXml = _serializeAutomatonToJflap(
         automatonData,
       );
       expect(jffXml, isNotEmpty);
 
       // Parse back from JFF format
-      final parseResult = JFLAPXMLParser.parseJFLAPFile(jffXml);
+      final parseResult = _deserializeAutomatonFromJflap(jffXml);
       expect(
         parseResult.isSuccess,
         true,
@@ -77,7 +77,7 @@ void _runJffFormatTests() {
       final automatonData = _convertEntityToData(epsilonNFA);
 
       // Convert to JFF format
-      final jffXml = serializationService.serializeAutomatonToJflap(
+      final jffXml = _serializeAutomatonToJflap(
         automatonData,
       );
       expect(jffXml, isNotEmpty);
@@ -86,15 +86,14 @@ void _runJffFormatTests() {
       expect(jffXml, contains(RegExp(r'<read\s*/>')));
 
       // Parse back from JFF format
-      final parseResult = JFLAPXMLParser.parseJFLAPFile(jffXml);
+      final parseResult = _deserializeAutomatonFromJflap(jffXml);
       expect(
         parseResult.isSuccess,
         true,
         reason: 'Epsilon NFA JFF parsing should succeed',
       );
 
-      final roundTripResult = serializationService
-          .deserializeAutomatonFromJflap(jffXml);
+      final roundTripResult = _deserializeAutomatonFromJflap(jffXml);
       expect(
         roundTripResult.isSuccess,
         true,
@@ -103,8 +102,7 @@ void _runJffFormatTests() {
 
       if (roundTripResult.isSuccess) {
         final data = roundTripResult.data!;
-        final transitions =
-            data['transitions'] as Map<String, List<String>>? ??
+        final transitions = data['transitions'] as Map<String, List<String>>? ??
             <String, List<String>>{};
 
         expect(data['type'], equals('nfa'));
@@ -148,7 +146,7 @@ void _runJffFormatTests() {
   </automaton>
 </structure>''';
 
-      final result = serializationService.deserializeAutomatonFromJflap(xml);
+      final result = _deserializeAutomatonFromJflap(xml);
 
       expect(result.isSuccess, isTrue);
       expect(result.data!['type'], equals('nfa'));
@@ -182,10 +180,10 @@ void _runJffFormatTests() {
   </automaton>
 </structure>''';
 
-      final serviceResult = serializationService.deserializeAutomatonFromJflap(
+      final serviceResult = _deserializeAutomatonFromJflap(
         xml,
       );
-      final parserResult = JFLAPXMLParser.parseJFLAPFile(xml);
+      final parserResult = _deserializeAutomatonFromJflap(xml);
 
       expect(serviceResult.isSuccess, isTrue);
       expect(serviceResult.data!['type'], equals('dfa'));
@@ -232,13 +230,13 @@ void _runJffFormatTests() {
       expect(aliasAutomaton.hasLambda, isTrue);
 
       final aliasData = _convertEntityToData(aliasAutomaton);
-      final jffXml = serializationService.serializeAutomatonToJflap(aliasData);
+      final jffXml = _serializeAutomatonToJflap(aliasData);
 
       // JFLAP XML spec: epsilon transitions should use empty <read/> tags
       final epsilonTags = RegExp(r'<read\s*/>').allMatches(jffXml).length;
       expect(epsilonTags, equals(3));
 
-      final roundTrip = serializationService.deserializeAutomatonFromJflap(
+      final roundTrip = _deserializeAutomatonFromJflap(
         jffXml,
       );
       expect(roundTrip.isSuccess, isTrue);
@@ -273,7 +271,7 @@ void _runJffFormatTests() {
   </automaton>
 </structure>''';
 
-      final result = serializationService.deserializeAutomatonFromJflap(xml);
+      final result = _deserializeAutomatonFromJflap(xml);
 
       expect(result.isSuccess, isTrue);
       final transitions =
@@ -305,7 +303,7 @@ void _runJffFormatTests() {
   </automaton>
 </structure>''';
 
-      final result = serializationService.deserializeAutomatonFromJflap(xml);
+      final result = _deserializeAutomatonFromJflap(xml);
 
       expect(result.isSuccess, isTrue);
       final transitions =
@@ -337,7 +335,7 @@ void _runJffFormatTests() {
   </automaton>
 </structure>''';
 
-      final result = serializationService.deserializeAutomatonFromJflap(xml);
+      final result = _deserializeAutomatonFromJflap(xml);
 
       expect(result.isSuccess, isTrue);
       final transitions =
@@ -349,7 +347,7 @@ void _runJffFormatTests() {
     test('JFF handles malformed XML gracefully', () {
       const malformedXml = '<invalid>xml</invalid>';
 
-      final parseResult = JFLAPXMLParser.parseJFLAPFile(malformedXml);
+      final parseResult = _deserializeAutomatonFromJflap(malformedXml);
       expect(
         parseResult.isSuccess,
         false,
@@ -368,7 +366,7 @@ void _runJffFormatTests() {
   </automaton>
 </structure>''';
 
-      final parseResult = JFLAPXMLParser.parseJFLAPFile(incompleteXml);
+      final parseResult = _deserializeAutomatonFromJflap(incompleteXml);
       expect(
         parseResult.isSuccess,
         true,
@@ -401,7 +399,7 @@ void _runJffFormatTests() {
   </automaton>
 </structure>''';
 
-        final result = serializationService.deserializeAutomatonFromJflap(xml);
+        final result = _deserializeAutomatonFromJflap(xml);
 
         expect(result.isSuccess, isTrue);
         final data = result.data!;
@@ -416,7 +414,7 @@ void _runJffFormatTests() {
     test('JFF deserialization rejects invalid root structures predictably', () {
       const xml = '<invalid><automaton/></invalid>';
 
-      final result = serializationService.deserializeAutomatonFromJflap(xml);
+      final result = _deserializeAutomatonFromJflap(xml);
 
       expect(result.isFailure, isTrue);
       expect(result.error, contains('Root element must be <structure>'));
@@ -442,7 +440,7 @@ void _runJffFormatTests() {
   </automaton>
 </structure>''';
 
-        final result = serializationService.deserializeAutomatonFromJflap(xml);
+        final result = _deserializeAutomatonFromJflap(xml);
 
         expect(result.isFailure, isTrue);
         expect(result.error, contains('unknown state'));
@@ -453,12 +451,12 @@ void _runJffFormatTests() {
       final emptyAutomaton = _createEmptyAutomaton();
       final automatonData = _convertEntityToData(emptyAutomaton);
 
-      final jffXml = serializationService.serializeAutomatonToJflap(
+      final jffXml = _serializeAutomatonToJflap(
         automatonData,
       );
       expect(jffXml, contains('<automaton>'));
 
-      final jffRoundTrip = serializationService.deserializeAutomatonFromJflap(
+      final jffRoundTrip = _deserializeAutomatonFromJflap(
         jffXml,
       );
       expect(jffRoundTrip.isSuccess, isTrue);
@@ -468,10 +466,10 @@ void _runJffFormatTests() {
           jffRoundTrip.data!['transitions'] as Map<String, List<String>>;
       expect(jffTransitions, isEmpty);
 
-      final jsonString = serializationService.serializeAutomatonToJson(
+      final jsonString = _serializeAutomatonToJson(
         automatonData,
       );
-      final jsonRoundTrip = serializationService.deserializeAutomatonFromJson(
+      final jsonRoundTrip = _deserializeAutomatonFromJson(
         jsonString,
       );
       expect(jsonRoundTrip.isSuccess, isTrue);
@@ -484,10 +482,10 @@ void _runJffFormatTests() {
       final originalAutomaton = _createEpsilonNFA();
       final automatonData = _convertEntityToData(originalAutomaton);
 
-      final jffXml = serializationService.serializeAutomatonToJflap(
+      final jffXml = _serializeAutomatonToJflap(
         automatonData,
       );
-      final result = serializationService.deserializeAutomatonFromJflap(jffXml);
+      final result = _deserializeAutomatonFromJflap(jffXml);
 
       expect(result.isSuccess, isTrue);
       expect(result.data!['type'], equals('nfa'));

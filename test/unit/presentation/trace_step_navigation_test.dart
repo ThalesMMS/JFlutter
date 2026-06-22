@@ -1,9 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:jflutter/core/algorithms/pda/pda_simulator_facade.dart';
 import 'package:jflutter/core/models/simulation_result.dart';
 import 'package:jflutter/core/models/simulation_step.dart';
-import 'package:jflutter/presentation/providers/fa_trace_provider.dart';
-import 'package:jflutter/presentation/providers/pda_trace_provider.dart';
 import 'package:jflutter/presentation/providers/trace_step_navigation.dart';
 import 'package:jflutter/presentation/providers/unified_trace_provider.dart';
 
@@ -39,13 +36,9 @@ void main() {
       expect(state.canNavigatePrevious, isFalse);
     });
 
-    test('FA, PDA, and unified states use the same step boundaries', () {
-      final faState = FATraceState(
-        result: _faResult(3),
-        currentStepIndex: 1,
-      );
-      final pdaState = PDATraceState(
-        result: _pdaResult(3),
+    test('fake and unified states use the same step boundaries', () {
+      final fakeState = _FakeTraceState(
+        steps: _steps(3),
         currentStepIndex: 1,
       );
       final unifiedState = UnifiedTraceState(
@@ -53,27 +46,24 @@ void main() {
         currentStepIndex: 1,
       );
 
-      expect(faState.previousStep().currentStepIndex, equals(0));
-      expect(pdaState.previousStep().currentStepIndex, equals(0));
+      expect(fakeState.previousStep().currentStepIndex, equals(0));
       expect(unifiedState.previousStep().currentStepIndex, equals(0));
 
-      expect(faState.lastStep().currentStepIndex, equals(2));
-      expect(pdaState.lastStep().currentStepIndex, equals(2));
+      expect(fakeState.lastStep().currentStepIndex, equals(2));
       expect(unifiedState.lastStep().currentStepIndex, equals(2));
 
-      expect(faState.navigateToStep(3), same(faState));
-      expect(pdaState.navigateToStep(3), same(pdaState));
+      expect(fakeState.navigateToStep(3), same(fakeState));
       expect(unifiedState.navigateToStep(3), same(unifiedState));
     });
 
-    test('FA, PDA, and unified states do not move lastStep on empty traces',
-        () {
-      final faState = FATraceState(result: _faResult(0));
-      final pdaState = PDATraceState(result: _pdaResult(0));
+    test('fake and unified states do not move lastStep on empty traces', () {
+      const fakeState = _FakeTraceState(
+        steps: [],
+        currentStepIndex: 0,
+      );
       final unifiedState = UnifiedTraceState(currentTrace: _faResult(0));
 
-      expect(faState.lastStep().currentStepIndex, equals(0));
-      expect(pdaState.lastStep().currentStepIndex, equals(0));
+      expect(fakeState.lastStep().currentStepIndex, equals(0));
       expect(unifiedState.lastStep().currentStepIndex, equals(0));
     });
   });
@@ -102,14 +92,6 @@ class _FakeTraceState with TraceStepNavigation<_FakeTraceState> {
 
 SimulationResult _faResult(int stepCount) {
   return SimulationResult.success(
-    inputString: 'abba',
-    steps: _steps(stepCount),
-    executionTime: const Duration(milliseconds: 1),
-  );
-}
-
-PDASimulationResult _pdaResult(int stepCount) {
-  return PDASimulationResult.success(
     inputString: 'abba',
     steps: _steps(stepCount),
     executionTime: const Duration(milliseconds: 1),

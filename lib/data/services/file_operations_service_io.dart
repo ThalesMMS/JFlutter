@@ -12,20 +12,20 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:xml/xml.dart';
 import '../../core/entities/automaton_entity.dart';
 import '../../core/entities/grammar_entity.dart';
 import '../../core/entities/turing_machine_entity.dart';
 import '../../core/models/fsa.dart';
 import '../../core/models/grammar.dart';
-import '../../core/models/production.dart';
 import '../../core/models/fsa_transition.dart';
+import '../../core/parsers/grammar_xml_codec.dart';
 import '../../core/parsers/jflap_xml_codec.dart';
 import '../../core/result.dart';
 import '../../presentation/widgets/export/svg_exporter.dart';
+import 'file_operations_payload_mixin.dart';
 
 /// Service for file operations including JFLAP format support
-class FileOperationsService {
+class FileOperationsService with FileOperationsPayloadMixin {
   static const _writeAccessRetryMessage =
       'JFlutter could not write to the selected location. The file may be outside the app sandbox or no longer writable. Choose a destination again from the system save dialog and try again.';
   static const _readAccessRetryMessage =
@@ -34,45 +34,6 @@ class FileOperationsService {
       'The selected save location is no longer available. Choose a different destination and try again.';
   static const _missingReadLocationMessage =
       'The selected file is no longer available. Pick the file again and try again.';
-
-  /// Creates the JFLAP XML payload without writing it to disk.
-  String serializeAutomatonToJFLAPString(FSA automaton) {
-    return const JflapXmlCodec().encodeFsa(automaton);
-  }
-
-  /// Creates the JSON payload without writing it to disk.
-  String serializeAutomatonToJsonString(FSA automaton) {
-    return jsonEncode(automaton.toJson());
-  }
-
-  /// Creates the grammar JFLAP payload without writing it to disk.
-  String serializeGrammarToJFLAPString(Grammar grammar) {
-    return _buildGrammarXML(grammar);
-  }
-
-  /// Creates the SVG payload without writing it to disk.
-  String exportAutomatonToSvgString(
-    AutomatonEntity automaton, {
-    SvgExportOptions? options,
-  }) {
-    return SvgExporter.exportAutomatonToSvg(automaton, options: options);
-  }
-
-  /// Creates the grammar SVG payload without writing it to disk.
-  String exportGrammarToSvgString(
-    GrammarEntity grammar, {
-    SvgExportOptions? options,
-  }) {
-    return SvgExporter.exportGrammarToSvg(grammar, options: options);
-  }
-
-  /// Creates the Turing machine SVG payload without writing it to disk.
-  String exportTuringMachineToSvgString(
-    TuringMachineEntity tm, {
-    SvgExportOptions? options,
-  }) {
-    return SvgExporter.exportTuringMachineToSvg(tm, options: options);
-  }
 
   /// Creates the legacy FSA SVG payload without writing it to disk.
   String exportLegacyAutomatonToSvgString(FSA automaton) {
@@ -185,25 +146,13 @@ class FileOperationsService {
     try {
       final file = File(filePath);
       final xmlString = await file.readAsString();
-      final document = XmlDocument.parse(xmlString);
-      return const JflapXmlCodec().decodeFsaDocument(document);
+      return const JflapXmlCodec().decodeFsaXml(xmlString);
     } on FileSystemException catch (e) {
       return Failure(
         'Failed to load automaton from JFLAP format: ${describeFileAccessFailure(e, isWrite: false)}',
       );
     } catch (e) {
       return Failure('Failed to load automaton from JFLAP format: $e');
-    }
-  }
-
-  /// Loads automaton from in-memory bytes (JFLAP XML format)
-  Future<Result<FSA>> loadAutomatonFromBytes(Uint8List bytes) async {
-    try {
-      final xmlString = utf8.decode(bytes);
-      final document = XmlDocument.parse(xmlString);
-      return const JflapXmlCodec().decodeFsaDocument(document);
-    } catch (e) {
-      return Failure('Failed to load automaton from provided data: $e');
     }
   }
 
@@ -244,20 +193,6 @@ class FileOperationsService {
     }
   }
 
-  /// Loads automaton from in-memory bytes (JSON format).
-  Future<Result<FSA>> loadAutomatonFromJsonBytes(Uint8List bytes) async {
-    try {
-      final jsonString = utf8.decode(bytes);
-      final decoded = jsonDecode(jsonString);
-      if (decoded is! Map<String, dynamic>) {
-        return const Failure('Invalid automaton JSON format');
-      }
-      return Success(FSA.fromJson(decoded));
-    } catch (e) {
-      return Failure('Failed to load automaton from provided JSON data: $e');
-    }
-  }
-
   /// Saves grammar to JFLAP XML format (.cfg)
   Future<StringResult> saveGrammarToJFLAP(
     Grammar grammar,
@@ -281,27 +216,19 @@ class FileOperationsService {
     try {
       final file = File(filePath);
       final xmlString = await file.readAsString();
-      final document = XmlDocument.parse(xmlString);
-      final grammar = _parseGrammarXML(document);
-      return Success(grammar);
+      final result = const GrammarXmlCodec().decodeGrammarXml(xmlString);
+      if (result.isFailure) {
+        return Failure(
+          'Failed to load grammar from JFLAP format: ${result.error}',
+        );
+      }
+      return result;
     } on FileSystemException catch (e) {
       return Failure(
         'Failed to load grammar from JFLAP format: ${describeFileAccessFailure(e, isWrite: false)}',
       );
     } catch (e) {
       return Failure('Failed to load grammar from JFLAP format: $e');
-    }
-  }
-
-  /// Loads grammar from in-memory bytes (JFLAP XML format)
-  Future<Result<Grammar>> loadGrammarFromBytes(Uint8List bytes) async {
-    try {
-      final xmlString = utf8.decode(bytes);
-      final document = XmlDocument.parse(xmlString);
-      final grammar = _parseGrammarXML(document);
-      return Success(grammar);
-    } catch (e) {
-      return Failure('Failed to load grammar from provided data: $e');
     }
   }
 
@@ -481,91 +408,6 @@ class FileOperationsService {
     } catch (e) {
       return Failure('Failed to delete file: $e');
     }
-  }
-
-  /// Builds grammar XML
-  String _buildGrammarXML(Grammar grammar) {
-    final builder = XmlBuilder();
-    builder.processing('xml', 'version="1.0" encoding="UTF-8"');
-    builder.element(
-      'structure',
-      nest: () {
-        builder.attribute('type', 'grammar');
-        builder.element(
-          'grammar',
-          nest: () {
-            builder.attribute('type', grammar.type.name);
-            builder.element('start', nest: grammar.startSymbol);
-
-            for (final production in grammar.productions) {
-              builder.element(
-                'production',
-                nest: () {
-                  builder.element('left', nest: production.leftSide.join(' '));
-                  builder.element(
-                    'right',
-                    nest: production.rightSide.join(' '),
-                  );
-                },
-              );
-            }
-          },
-        );
-      },
-    );
-
-    return builder.buildDocument().toXmlString(pretty: true);
-  }
-
-  /// Parses grammar XML
-  Grammar _parseGrammarXML(XmlDocument document) {
-    final grammarElement = document.findAllElements('grammar').first;
-    final startSymbol = grammarElement.findElements('start').first.innerText;
-    final productions = <Production>{};
-
-    for (final productionElement in grammarElement.findAllElements(
-      'production',
-    )) {
-      final leftSide = _splitGrammarSymbols(
-        productionElement.findElements('left').first.innerText,
-      );
-      final rightSide = _splitGrammarSymbols(
-        productionElement.findElements('right').first.innerText,
-      );
-
-      productions.add(
-        Production(
-          id: 'p${productions.length}',
-          leftSide: leftSide,
-          rightSide: rightSide,
-          isLambda: rightSide.isEmpty,
-          order: productions.length,
-        ),
-      );
-    }
-
-    return Grammar(
-      id: 'imported_grammar_${DateTime.now().millisecondsSinceEpoch}',
-      name: 'Imported Grammar',
-      terminals: productions
-          .expand((p) => p.rightSide)
-          .where((s) => s.isNotEmpty)
-          .toSet(),
-      nonterminals: productions.expand((p) => p.leftSide).toSet(),
-      startSymbol: startSymbol,
-      productions: productions,
-      type: GrammarType.contextFree,
-      created: DateTime.now(),
-      modified: DateTime.now(),
-    );
-  }
-
-  List<String> _splitGrammarSymbols(String value) {
-    final trimmed = value.trim();
-    if (trimmed.isEmpty) {
-      return const <String>[];
-    }
-    return trimmed.split(RegExp(r'\s+'));
   }
 
   /// Builds SVG representation of automaton

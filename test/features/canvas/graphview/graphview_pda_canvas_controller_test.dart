@@ -172,8 +172,8 @@ void main() {
       expect(states.first.position.y, closeTo(250, 0.0001));
 
       transformation.value = Matrix4.identity()
-        ..translate(60.0, 140.0)
-        ..scale(1.2);
+        ..translateByDouble(60.0, 140.0, 0.0, 1.0)
+        ..scaleByDouble(1.2, 1.2, 1.2, 1.0);
       controller.addStateAtCenter();
 
       pda = notifier.state.pda;

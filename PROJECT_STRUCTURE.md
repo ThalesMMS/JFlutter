@@ -184,7 +184,6 @@ Repository pattern implementations:
 
 ```
 repositories/
-├── algorithm_repository_impl.dart # Wraps algorithm metadata and persistence glue
 ├── automaton_repository_impl.dart # Automaton repository backed by services/data sources
 ├── examples_repository_impl.dart  # Provides curated example listings and search
 └── settings_repository_impl.dart  # SharedPreferences-powered user settings storage
@@ -268,7 +267,7 @@ State management using Riverpod:
 
 ```
 providers/
-├── algorithm_provider.dart              # Coordinates algorithm selection
+├── automaton_algorithm_provider.dart    # Coordinates FSA algorithm execution
 ├── automaton_state_provider.dart        # Automaton state management
 ├── fa_trace_provider.dart               # DFA/NFA trace broadcasting
 ├── grammar_provider.dart                # Grammar editor state

@@ -41,28 +41,28 @@ void main() {
         nonterminals: {'S', 'A', 'B', 'C'},
         startSymbol: 'S',
         productions: {
-          Production(
+          const Production(
             id: 'p1',
-            leftSide: const ['S'],
-            rightSide: const ['A', 'B', 'C'],
+            leftSide: ['S'],
+            rightSide: ['A', 'B', 'C'],
             order: 0,
           ),
-          Production(
+          const Production(
             id: 'p2',
-            leftSide: const ['A'],
-            rightSide: const ['a'],
+            leftSide: ['A'],
+            rightSide: ['a'],
             order: 1,
           ),
-          Production(
+          const Production(
             id: 'p3',
-            leftSide: const ['B'],
-            rightSide: const ['b'],
+            leftSide: ['B'],
+            rightSide: ['b'],
             order: 2,
           ),
-          Production(
+          const Production(
             id: 'p4',
-            leftSide: const ['C'],
-            rightSide: const ['c'],
+            leftSide: ['C'],
+            rightSide: ['c'],
             order: 3,
           ),
         },
@@ -110,16 +110,16 @@ void main() {
         nonterminals: {'S'},
         startSymbol: 'S',
         productions: {
-          Production(
+          const Production(
             id: 'p1',
-            leftSide: const ['S'],
-            rightSide: const ['S', 'a'],
+            leftSide: ['S'],
+            rightSide: ['S', 'a'],
             order: 0,
           ),
-          Production(
+          const Production(
             id: 'p2',
-            leftSide: const ['S'],
-            rightSide: const ['b'],
+            leftSide: ['S'],
+            rightSide: ['b'],
             order: 1,
           ),
         },
@@ -155,22 +155,22 @@ void main() {
         nonterminals: {'S', 'A', 'B'},
         startSymbol: 'S',
         productions: {
-          Production(
+          const Production(
             id: 'p1',
-            leftSide: const ['S'],
-            rightSide: const ['A'],
+            leftSide: ['S'],
+            rightSide: ['A'],
             order: 0,
           ),
-          Production(
+          const Production(
             id: 'p2',
-            leftSide: const ['A'],
-            rightSide: const ['B'],
+            leftSide: ['A'],
+            rightSide: ['B'],
             order: 1,
           ),
-          Production(
+          const Production(
             id: 'p3',
-            leftSide: const ['B'],
-            rightSide: const ['b'],
+            leftSide: ['B'],
+            rightSide: ['b'],
             order: 2,
           ),
         },
@@ -200,17 +200,17 @@ void main() {
         nonterminals: {'S'},
         startSymbol: 'S',
         productions: {
-          Production(
+          const Production(
             id: 'p1',
-            leftSide: const ['S'],
-            rightSide: const [],
+            leftSide: ['S'],
+            rightSide: [],
             isLambda: true,
             order: 0,
           ),
-          Production(
+          const Production(
             id: 'p2',
-            leftSide: const ['S'],
-            rightSide: const ['a'],
+            leftSide: ['S'],
+            rightSide: ['a'],
             order: 1,
           ),
         },

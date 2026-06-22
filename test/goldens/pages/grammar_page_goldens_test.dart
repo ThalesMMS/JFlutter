@@ -63,9 +63,8 @@ Future<void> _pumpGrammarPage(
   Size size = const Size(1400, 900),
   bool isMobile = false,
 }) async {
-  final binding = tester.binding;
-  binding.window.physicalSizeTestValue = size;
-  binding.window.devicePixelRatioTestValue = 1.0;
+  tester.view.physicalSize = size;
+  tester.view.devicePixelRatio = 1.0;
 
   await tester.pumpWidgetBuilder(
     ProviderScope(
@@ -93,8 +92,8 @@ void main() {
   group('Grammar Page Components golden tests', () {
     testGoldens('renders empty page in desktop layout', (tester) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       await _pumpGrammarPage(
@@ -108,8 +107,8 @@ void main() {
 
     testGoldens('renders empty page in tablet layout', (tester) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       await _pumpGrammarPage(
@@ -123,8 +122,8 @@ void main() {
 
     testGoldens('renders empty page in mobile layout', (tester) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       await _pumpGrammarPage(
@@ -140,8 +139,8 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       final grammar = Grammar.simpleRegular(
@@ -163,8 +162,8 @@ void main() {
       'renders page with simple context-free grammar in desktop layout',
       (tester) async {
         addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
         });
 
         final grammar = Grammar.simpleContextFree(
@@ -187,36 +186,36 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       final now = DateTime.utc(2024, 1, 1);
-      final p1 = Production(
+      const p1 = Production(
         id: 'p1',
-        leftSide: const ['S'],
-        rightSide: const ['a', 'S', 'b'],
+        leftSide: ['S'],
+        rightSide: ['a', 'S', 'b'],
         isLambda: false,
         order: 1,
       );
-      final p2 = Production(
+      const p2 = Production(
         id: 'p2',
-        leftSide: const ['S'],
-        rightSide: const ['a', 'B'],
+        leftSide: ['S'],
+        rightSide: ['a', 'B'],
         isLambda: false,
         order: 2,
       );
-      final p3 = Production(
+      const p3 = Production(
         id: 'p3',
-        leftSide: const ['B'],
-        rightSide: const ['b', 'B'],
+        leftSide: ['B'],
+        rightSide: ['b', 'B'],
         isLambda: false,
         order: 3,
       );
-      final p4 = Production(
+      const p4 = Production(
         id: 'p4',
-        leftSide: const ['B'],
-        rightSide: const [],
+        leftSide: ['B'],
+        rightSide: [],
         isLambda: true,
         order: 4,
       );
@@ -245,8 +244,8 @@ void main() {
 
     testGoldens('renders page with grammar in tablet layout', (tester) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       final grammar = Grammar.simpleContextFree(
@@ -266,8 +265,8 @@ void main() {
 
     testGoldens('renders page with grammar in mobile layout', (tester) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       final grammar = Grammar.simpleRegular(
@@ -289,22 +288,22 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       final now = DateTime.utc(2024, 1, 1);
-      final p1 = Production(
+      const p1 = Production(
         id: 'p1',
-        leftSide: const ['S'],
-        rightSide: const ['a', 'S'],
+        leftSide: ['S'],
+        rightSide: ['a', 'S'],
         isLambda: false,
         order: 1,
       );
-      final p2 = Production(
+      const p2 = Production(
         id: 'p2',
-        leftSide: const ['S'],
-        rightSide: const [],
+        leftSide: ['S'],
+        rightSide: [],
         isLambda: true,
         order: 2,
       );

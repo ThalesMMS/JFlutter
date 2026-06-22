@@ -18,12 +18,14 @@ import 'package:jflutter/core/models/simulation_step.dart';
 void main() {
   group('SimulationResult', () {
     final testSteps = [
-      SimulationStep(currentState: 'q0', remainingInput: 'abc', stepNumber: 0),
-      SimulationStep(currentState: 'q1', remainingInput: 'bc', stepNumber: 1),
+      const SimulationStep(
+          currentState: 'q0', remainingInput: 'abc', stepNumber: 0),
+      const SimulationStep(
+          currentState: 'q1', remainingInput: 'bc', stepNumber: 1),
     ];
 
     final testTree = NFAComputationTree.accepted(
-      root: NFAPathNode(
+      root: const NFAPathNode(
         currentState: 'q0',
         remainingInput: 'test',
         stepNumber: 0,
@@ -37,7 +39,7 @@ void main() {
         final result = SimulationResult.success(
           inputString: 'abc',
           steps: testSteps,
-          executionTime: Duration(milliseconds: 100),
+          executionTime: const Duration(milliseconds: 100),
         );
 
         expect(result.accepted, true);
@@ -51,7 +53,7 @@ void main() {
         final result = SimulationResult.success(
           inputString: 'test',
           steps: testSteps,
-          executionTime: Duration(milliseconds: 100),
+          executionTime: const Duration(milliseconds: 100),
           computationTree: testTree,
         );
 
@@ -64,7 +66,7 @@ void main() {
           inputString: 'test',
           steps: testSteps,
           errorMessage: 'Test error',
-          executionTime: Duration(milliseconds: 100),
+          executionTime: const Duration(milliseconds: 100),
           computationTree: testTree,
         );
 
@@ -77,7 +79,7 @@ void main() {
         final result = SimulationResult.timeout(
           inputString: 'test',
           steps: testSteps,
-          executionTime: Duration(seconds: 5),
+          executionTime: const Duration(seconds: 5),
           computationTree: testTree,
         );
 
@@ -90,7 +92,7 @@ void main() {
         final result = SimulationResult.infiniteLoop(
           inputString: 'test',
           steps: testSteps,
-          executionTime: Duration(milliseconds: 100),
+          executionTime: const Duration(milliseconds: 100),
           computationTree: testTree,
         );
 
@@ -103,7 +105,7 @@ void main() {
         final result = SimulationResult.error(
           inputString: 'test',
           errorMessage: 'Test error',
-          executionTime: Duration(milliseconds: 100),
+          executionTime: const Duration(milliseconds: 100),
           computationTree: testTree,
         );
 
@@ -118,7 +120,7 @@ void main() {
         final result = SimulationResult.success(
           inputString: 'test',
           steps: testSteps,
-          executionTime: Duration(milliseconds: 100),
+          executionTime: const Duration(milliseconds: 100),
           computationTree: testTree,
         );
 
@@ -132,7 +134,7 @@ void main() {
         final result = SimulationResult.success(
           inputString: 'test',
           steps: testSteps,
-          executionTime: Duration(milliseconds: 100),
+          executionTime: const Duration(milliseconds: 100),
         );
 
         final copied = result.copyWith(computationTree: testTree);
@@ -146,7 +148,7 @@ void main() {
         final result = SimulationResult.success(
           inputString: 'test',
           steps: testSteps,
-          executionTime: Duration(milliseconds: 100),
+          executionTime: const Duration(milliseconds: 100),
           computationTree: testTree,
         );
 
@@ -162,7 +164,7 @@ void main() {
         final result = SimulationResult.success(
           inputString: 'test',
           steps: testSteps,
-          executionTime: Duration(milliseconds: 100),
+          executionTime: const Duration(milliseconds: 100),
         );
 
         final json = result.toJson();
@@ -213,14 +215,14 @@ void main() {
         final result1 = SimulationResult.success(
           inputString: 'test',
           steps: testSteps,
-          executionTime: Duration(milliseconds: 100),
+          executionTime: const Duration(milliseconds: 100),
           computationTree: testTree,
         );
 
         final result2 = SimulationResult.success(
           inputString: 'test',
           steps: testSteps,
-          executionTime: Duration(milliseconds: 100),
+          executionTime: const Duration(milliseconds: 100),
         );
 
         // Results with different computation trees should not be equal
@@ -231,14 +233,14 @@ void main() {
         final result1 = SimulationResult.success(
           inputString: 'test',
           steps: testSteps,
-          executionTime: Duration(milliseconds: 100),
+          executionTime: const Duration(milliseconds: 100),
           computationTree: testTree,
         );
 
         final result2 = SimulationResult.success(
           inputString: 'test',
           steps: testSteps,
-          executionTime: Duration(milliseconds: 100),
+          executionTime: const Duration(milliseconds: 100),
         );
 
         // Results with different computation trees should have different hash codes
@@ -249,7 +251,7 @@ void main() {
         final result = SimulationResult.success(
           inputString: 'test',
           steps: testSteps,
-          executionTime: Duration(milliseconds: 100),
+          executionTime: const Duration(milliseconds: 100),
           computationTree: testTree,
         );
 
@@ -265,7 +267,7 @@ void main() {
         final result = SimulationResult.success(
           inputString: 'test',
           steps: testSteps,
-          executionTime: Duration(milliseconds: 100),
+          executionTime: const Duration(milliseconds: 100),
         );
 
         expect(result.accepted, true);
@@ -278,7 +280,7 @@ void main() {
         final success = SimulationResult.success(
           inputString: 'test',
           steps: testSteps,
-          executionTime: Duration(milliseconds: 100),
+          executionTime: const Duration(milliseconds: 100),
         );
         expect(success.computationTree, null);
 
@@ -287,7 +289,7 @@ void main() {
           inputString: 'test',
           steps: testSteps,
           errorMessage: 'error',
-          executionTime: Duration(milliseconds: 100),
+          executionTime: const Duration(milliseconds: 100),
         );
         expect(failure.computationTree, null);
 
@@ -295,7 +297,7 @@ void main() {
         final timeout = SimulationResult.timeout(
           inputString: 'test',
           steps: testSteps,
-          executionTime: Duration(milliseconds: 100),
+          executionTime: const Duration(milliseconds: 100),
         );
         expect(timeout.computationTree, null);
 
@@ -303,7 +305,7 @@ void main() {
         final infiniteLoop = SimulationResult.infiniteLoop(
           inputString: 'test',
           steps: testSteps,
-          executionTime: Duration(milliseconds: 100),
+          executionTime: const Duration(milliseconds: 100),
         );
         expect(infiniteLoop.computationTree, null);
 
@@ -311,7 +313,7 @@ void main() {
         final error = SimulationResult.error(
           inputString: 'test',
           errorMessage: 'error',
-          executionTime: Duration(milliseconds: 100),
+          executionTime: const Duration(milliseconds: 100),
         );
         expect(error.computationTree, null);
       });

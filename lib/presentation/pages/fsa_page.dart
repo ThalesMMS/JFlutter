@@ -10,12 +10,10 @@
 //
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/entities/automaton_entity.dart';
 import '../../core/models/conversion_step_history.dart';
 import '../../core/models/fsa.dart';
 import '../../core/models/simulation_highlight.dart';
 import '../../core/models/validation_diagnostic.dart';
-import '../providers/algorithm_provider.dart';
 import '../providers/algorithm_step_provider.dart';
 import '../providers/automaton_algorithm_provider.dart';
 import '../providers/conversion_history_provider.dart';

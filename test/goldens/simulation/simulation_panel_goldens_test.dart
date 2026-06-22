@@ -24,11 +24,6 @@ import 'package:jflutter/presentation/widgets/simulation_panel.dart';
 
 class _TestSimulationHighlightService extends SimulationHighlightService {
   @override
-  void clear() {
-    super.clear();
-  }
-
-  @override
   SimulationHighlight emitFromSteps(
     List<SimulationStep> steps,
     int currentIndex,
@@ -50,16 +45,15 @@ Future<void> _pumpSimulationPanel(
   final callback = _SimulationCallback();
   final highlightService = _TestSimulationHighlightService();
 
-  final binding = tester.binding;
-  binding.window.physicalSizeTestValue = size;
-  binding.window.devicePixelRatioTestValue = 1.0;
+  tester.view.physicalSize = size;
+  tester.view.devicePixelRatio = 1.0;
 
   await tester.pumpWidgetBuilder(
     ProviderScope(
       child: MaterialApp(
         home: Scaffold(
           body: SimulationPanel(
-            onSimulate: callback,
+            onSimulate: callback.call,
             simulationResult: simulationResult,
             regexResult: regexResult,
             highlightService: highlightService,
@@ -87,8 +81,8 @@ void main() {
   group('SimulationPanel golden tests', () {
     testGoldens('renders empty panel in desktop layout', (tester) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       await _pumpSimulationPanel(tester, size: const Size(800, 600));
@@ -98,8 +92,8 @@ void main() {
 
     testGoldens('renders empty panel in tablet layout', (tester) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       await _pumpSimulationPanel(tester, size: const Size(600, 800));
@@ -109,8 +103,8 @@ void main() {
 
     testGoldens('renders empty panel in mobile layout', (tester) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       await _pumpSimulationPanel(tester, size: const Size(400, 700));
@@ -120,8 +114,8 @@ void main() {
 
     testGoldens('renders accepted simulation result', (tester) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       final result = SimulationResult.success(
@@ -167,8 +161,8 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       final result = SimulationResult.failure(
@@ -201,8 +195,8 @@ void main() {
 
     testGoldens('renders regex result', (tester) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       await _pumpSimulationPanel(
@@ -216,8 +210,8 @@ void main() {
 
     testGoldens('renders step-by-step mode at first step', (tester) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       final result = SimulationResult.success(
@@ -259,8 +253,8 @@ void main() {
 
     testGoldens('renders step-by-step mode at middle step', (tester) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       final result = SimulationResult.success(
@@ -306,8 +300,8 @@ void main() {
 
     testGoldens('renders step-by-step mode at final step', (tester) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       final result = SimulationResult.success(
@@ -357,8 +351,8 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       final result = SimulationResult.success(
@@ -394,8 +388,8 @@ void main() {
 
     testGoldens('renders accepted result in mobile layout', (tester) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       final result = SimulationResult.success(
@@ -426,8 +420,8 @@ void main() {
 
     testGoldens('renders rejected result in tablet layout', (tester) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       final result = SimulationResult.failure(

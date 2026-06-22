@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -32,6 +33,30 @@ Future<void> _flushAsyncWork() async {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  group('Trace persistence providers', () {
+    test('build service from Riverpod SharedPreferences override', () async {
+      SharedPreferences.setMockInitialValues(const {});
+      final prefs = await SharedPreferences.getInstance();
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final service = container.read(dataTracePersistenceServiceProvider);
+      await service.saveTraceToHistory(_trace(input: 'riverpod'));
+
+      final restartedService = TracePersistenceService(prefs);
+      final history = await restartedService.getTraceHistory();
+      expect(history, hasLength(1));
+      expect(
+        (history.single['trace'] as Map<String, dynamic>)['inputString'],
+        equals('riverpod'),
+      );
+    });
+  });
 
   group('UnifiedTraceNotifier restoration', () {
     late SharedPreferences prefs;
@@ -140,7 +165,8 @@ void main() {
       await _flushAsyncWork();
 
       expect(notifier.state.currentTrace, isNotNull);
-      expect(notifier.state.currentTrace!.inputString, equals('legacy-current'));
+      expect(
+          notifier.state.currentTrace!.inputString, equals('legacy-current'));
       expect(notifier.state.currentStepIndex, equals(0));
 
       final migrated = await service.getCurrentTrace();

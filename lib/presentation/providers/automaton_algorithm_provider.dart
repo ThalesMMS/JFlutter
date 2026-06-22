@@ -12,6 +12,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/algorithms/dfa_completer.dart';
 import '../../core/algorithms/dfa_minimizer.dart';
+import '../../core/algorithms/dfa_operations.dart';
 import '../../core/algorithms/equivalence_checker.dart';
 import '../../core/algorithms/fa_to_regex_converter.dart';
 import '../../core/algorithms/fsa_to_grammar_converter.dart';
@@ -273,6 +274,211 @@ class AutomatonAlgorithmNotifier
       state = state.copyWith(
         isLoading: false,
         error: 'Error minimizing DFA: $e',
+      );
+    }
+  }
+
+  /// Removes lambda transitions from the current FSA.
+  Future<void> removeLambdaTransitions() async {
+    final currentAutomaton = ref.read(automatonStateProvider).currentAutomaton;
+    if (currentAutomaton == null || !currentAutomaton.hasEpsilonTransitions) {
+      return;
+    }
+
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      equivalenceResult: null,
+      equivalenceDetails: null,
+    );
+
+    try {
+      final result = FSAOperations.removeLambdaTransitions(currentAutomaton);
+
+      if (result.isSuccess) {
+        ref.read(automatonStateProvider.notifier).updateAutomaton(result.data!);
+        state = state.copyWith(isLoading: false);
+      } else {
+        state = state.copyWith(isLoading: false, error: result.error);
+      }
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Error removing λ-transitions: $e',
+      );
+    }
+  }
+
+  /// Computes the complement of the current DFA.
+  Future<void> complementDfa() async {
+    final currentAutomaton = ref.read(automatonStateProvider).currentAutomaton;
+    if (currentAutomaton == null) return;
+
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      equivalenceResult: null,
+      equivalenceDetails: null,
+    );
+
+    try {
+      final result = DFAOperations.complement(currentAutomaton);
+
+      if (result.isSuccess) {
+        ref.read(automatonStateProvider.notifier).updateAutomaton(result.data!);
+        state = state.copyWith(isLoading: false);
+      } else {
+        state = state.copyWith(isLoading: false, error: result.error);
+      }
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Error computing DFA complement: $e',
+      );
+    }
+  }
+
+  /// Computes the union of the current DFA and another DFA.
+  Future<void> unionDfa(FSA other) async {
+    final currentAutomaton = ref.read(automatonStateProvider).currentAutomaton;
+    if (currentAutomaton == null) return;
+
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      equivalenceResult: null,
+      equivalenceDetails: null,
+    );
+
+    try {
+      final result = DFAOperations.union(currentAutomaton, other);
+
+      if (result.isSuccess) {
+        ref.read(automatonStateProvider.notifier).updateAutomaton(result.data!);
+        state = state.copyWith(isLoading: false);
+      } else {
+        state = state.copyWith(isLoading: false, error: result.error);
+      }
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Error computing DFA union: $e',
+      );
+    }
+  }
+
+  /// Computes the intersection of the current DFA and another DFA.
+  Future<void> intersectionDfa(FSA other) async {
+    final currentAutomaton = ref.read(automatonStateProvider).currentAutomaton;
+    if (currentAutomaton == null) return;
+
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      equivalenceResult: null,
+      equivalenceDetails: null,
+    );
+
+    try {
+      final result = DFAOperations.intersection(currentAutomaton, other);
+
+      if (result.isSuccess) {
+        ref.read(automatonStateProvider.notifier).updateAutomaton(result.data!);
+        state = state.copyWith(isLoading: false);
+      } else {
+        state = state.copyWith(isLoading: false, error: result.error);
+      }
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Error computing DFA intersection: $e',
+      );
+    }
+  }
+
+  /// Computes the language difference between the current DFA and another DFA.
+  Future<void> differenceDfa(FSA other) async {
+    final currentAutomaton = ref.read(automatonStateProvider).currentAutomaton;
+    if (currentAutomaton == null) return;
+
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      equivalenceResult: null,
+      equivalenceDetails: null,
+    );
+
+    try {
+      final result = DFAOperations.difference(currentAutomaton, other);
+
+      if (result.isSuccess) {
+        ref.read(automatonStateProvider.notifier).updateAutomaton(result.data!);
+        state = state.copyWith(isLoading: false);
+      } else {
+        state = state.copyWith(isLoading: false, error: result.error);
+      }
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Error computing DFA difference: $e',
+      );
+    }
+  }
+
+  /// Computes the prefix closure of the current DFA.
+  Future<void> prefixClosureDfa() async {
+    final currentAutomaton = ref.read(automatonStateProvider).currentAutomaton;
+    if (currentAutomaton == null) return;
+
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      equivalenceResult: null,
+      equivalenceDetails: null,
+    );
+
+    try {
+      final result = DFAOperations.prefixClosure(currentAutomaton);
+
+      if (result.isSuccess) {
+        ref.read(automatonStateProvider.notifier).updateAutomaton(result.data!);
+        state = state.copyWith(isLoading: false);
+      } else {
+        state = state.copyWith(isLoading: false, error: result.error);
+      }
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Error computing DFA prefix closure: $e',
+      );
+    }
+  }
+
+  /// Computes the suffix closure of the current DFA.
+  Future<void> suffixClosureDfa() async {
+    final currentAutomaton = ref.read(automatonStateProvider).currentAutomaton;
+    if (currentAutomaton == null) return;
+
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      equivalenceResult: null,
+      equivalenceDetails: null,
+    );
+
+    try {
+      final result = DFAOperations.suffixClosure(currentAutomaton);
+
+      if (result.isSuccess) {
+        ref.read(automatonStateProvider.notifier).updateAutomaton(result.data!);
+        state = state.copyWith(isLoading: false);
+      } else {
+        state = state.copyWith(isLoading: false, error: result.error);
+      }
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Error computing DFA suffix closure: $e',
       );
     }
   }

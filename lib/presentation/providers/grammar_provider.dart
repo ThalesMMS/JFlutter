@@ -17,7 +17,6 @@ import '../../core/models/pda.dart';
 import '../../core/models/production.dart';
 import '../../core/result.dart';
 import '../../data/services/conversion_service.dart';
-import '../../injection/dependency_injection.dart';
 
 /// Types of conversions that can be triggered from the grammar workspace.
 enum GrammarConversionType {
@@ -424,5 +423,5 @@ class GrammarProvider extends StateNotifier<GrammarState> {
 final grammarProvider = StateNotifierProvider<GrammarProvider, GrammarState>((
   ref,
 ) {
-  return getIt<GrammarProvider>();
+  return GrammarProvider(conversionService: ConversionService());
 });

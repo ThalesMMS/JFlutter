@@ -16,13 +16,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 import '../../core/constants/automaton_canvas.dart';
-import '../../core/entities/automaton_entity.dart';
 import '../../core/models/fsa.dart';
 import '../../core/models/fsa_transition.dart';
 import '../../core/models/state.dart';
 import '../../core/models/transition.dart';
 import '../../core/utils/epsilon_utils.dart';
-import '../../data/mappers/automaton_entity_mapper.dart';
 import '../../data/services/automaton_service.dart';
 
 /// State for automaton CRUD operations
@@ -747,37 +745,6 @@ class AutomatonStateNotifier
       panOffset: Vector2.zero(),
       zoomLevel: 1.0,
     );
-  }
-
-  /// Legacy compatibility: Get current automaton as AutomatonEntity
-  /// This is used by the old algorithm_provider.dart infrastructure
-  AutomatonEntity? get currentAutomatonEntity {
-    final current = state.currentAutomaton;
-    if (current == null) return null;
-    return AutomatonEntityMapper.fromFsa(current,
-        nextId: current.states.length + 1);
-  }
-
-  /// Legacy compatibility: Convert FSA to AutomatonEntity
-  AutomatonEntity convertFsaToEntity(FSA fsa) {
-    return AutomatonEntityMapper.fromFsa(fsa, nextId: fsa.states.length + 1);
-  }
-
-  /// Legacy compatibility: Convert AutomatonEntity to FSA
-  FSA convertEntityToFsa(AutomatonEntity entity) {
-    return AutomatonEntityMapper.toFsa(entity);
-  }
-
-  /// Legacy compatibility: Replace current automaton from AutomatonEntity
-  /// Used by the old algorithm_provider.dart when applying algorithm results
-  void replaceCurrentAutomaton(AutomatonEntity entity) {
-    final updated = AutomatonEntityMapper.toFsa(entity);
-    state = state.copyWith(
-      currentAutomaton: updated,
-      error: null,
-      isLoading: false,
-    );
-    _traceGraphView('replace_automaton', {'entity_id': entity.id});
   }
 }
 

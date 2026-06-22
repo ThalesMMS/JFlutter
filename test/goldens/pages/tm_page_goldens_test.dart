@@ -128,9 +128,8 @@ Future<void> _pumpTMPageComponents(
   Size size = const Size(1400, 900),
   bool isMobile = false,
 }) async {
-  final binding = tester.binding;
-  binding.window.physicalSizeTestValue = size;
-  binding.window.devicePixelRatioTestValue = 1.0;
+  tester.view.physicalSize = size;
+  tester.view.devicePixelRatio = 1.0;
 
   await tester.pumpWidgetBuilder(
     MaterialApp(
@@ -158,8 +157,8 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       await _pumpTMPageComponents(
@@ -175,8 +174,8 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       await _pumpTMPageComponents(
@@ -192,8 +191,8 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       await _pumpTMPageComponents(
@@ -209,8 +208,8 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       final q0 = automaton_state.State(
@@ -269,8 +268,8 @@ void main() {
       'renders canvas with toolbar and copy machine in desktop layout',
       (tester) async {
         addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
         });
 
         final q0 = automaton_state.State(
@@ -346,8 +345,8 @@ void main() {
       'renders page with TM with different directions in desktop layout',
       (tester) async {
         addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
         });
 
         final q0 = automaton_state.State(
@@ -409,8 +408,8 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       final q0 = automaton_state.State(
@@ -500,8 +499,8 @@ void main() {
 
     testGoldens('renders page with TM in mobile layout', (tester) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       final q0 = automaton_state.State(

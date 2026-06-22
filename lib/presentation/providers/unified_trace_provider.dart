@@ -13,6 +13,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/models/simulation_result.dart';
 import '../../core/models/simulation_step.dart';
 import '../../data/services/trace_persistence_service.dart' as data_trace;
@@ -366,10 +367,16 @@ class UnifiedTraceNotifier extends StateNotifier<UnifiedTraceState> {
       _deepUnmodifiableTraceList(state.tracesForCurrentType);
 }
 
+/// Bridge for startup-initialized platform preferences.
+final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
+  return getIt<SharedPreferences>();
+});
+
 /// Provider for trace persistence service (data layer version)
 final dataTracePersistenceServiceProvider =
     Provider<data_trace.TracePersistenceService>((ref) {
-  return getIt<data_trace.TracePersistenceService>();
+  final prefs = ref.watch(sharedPreferencesProvider);
+  return data_trace.TracePersistenceService(prefs);
 });
 
 /// Provider for unified trace state
@@ -398,26 +405,3 @@ final currentTypeTracesProvider = Provider<List<Map<String, dynamic>>>((ref) {
   final traceState = ref.watch(unifiedTraceProvider);
   return traceState.tracesForCurrentType;
 });
-
-/// GetIt-based provider for unified trace notifier
-UnifiedTraceNotifier getUnifiedTraceNotifier() {
-  return getIt<UnifiedTraceNotifier>();
-}
-
-/// GetIt-based provider for trace statistics
-Map<String, dynamic> getTraceStatistics() {
-  final notifier = getIt<UnifiedTraceNotifier>();
-  return notifier.traceStatisticsSnapshot;
-}
-
-/// GetIt-based provider for current automaton traces
-List<Map<String, dynamic>> getCurrentAutomatonTraces() {
-  final notifier = getIt<UnifiedTraceNotifier>();
-  return notifier.currentAutomatonTracesSnapshot;
-}
-
-/// GetIt-based provider for current automaton type traces
-List<Map<String, dynamic>> getCurrentTypeTraces() {
-  final notifier = getIt<UnifiedTraceNotifier>();
-  return notifier.currentTypeTracesSnapshot;
-}

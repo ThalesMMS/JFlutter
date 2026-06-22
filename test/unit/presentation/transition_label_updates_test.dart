@@ -20,6 +20,7 @@ import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/fsa_transition.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
 import 'package:jflutter/core/models/tm_transition.dart';
+import 'package:jflutter/data/mappers/automaton_entity_mapper.dart';
 import 'package:jflutter/data/services/automaton_service.dart';
 import 'package:jflutter/presentation/providers/automaton_state_provider.dart';
 import 'package:jflutter/presentation/providers/pda_editor_provider.dart';
@@ -82,11 +83,7 @@ void main() {
       },
     );
 
-    test('AutomatonStateNotifier conversion preserves epsilon transitions', () {
-      final provider = AutomatonStateNotifier(
-        automatonService: AutomatonService(),
-      );
-
+    test('AutomatonEntityMapper preserves epsilon transitions', () {
       final stateA = automaton_state.State(
         id: 'q0',
         label: 'q0',
@@ -117,8 +114,11 @@ void main() {
         bounds: const math.Rectangle(0, 0, 400, 300),
       );
 
-      final entity = provider.convertFsaToEntity(automaton);
-      final roundTrip = provider.convertEntityToFsa(entity);
+      final entity = AutomatonEntityMapper.fromFsa(
+        automaton,
+        nextId: automaton.states.length + 1,
+      );
+      final roundTrip = AutomatonEntityMapper.toFsa(entity);
       final roundTripTransition =
           roundTrip.transitions.whereType<FSATransition>().single;
 
@@ -129,12 +129,7 @@ void main() {
       expect(roundTripTransition.lambdaSymbol, 'ε');
     });
 
-    test('AutomatonStateNotifier conversion infers nondeterministic FSA type',
-        () {
-      final provider = AutomatonStateNotifier(
-        automatonService: AutomatonService(),
-      );
-
+    test('AutomatonEntityMapper infers nondeterministic FSA type', () {
       final stateA = automaton_state.State(
         id: 'q0',
         label: 'q0',
@@ -180,17 +175,15 @@ void main() {
         bounds: const math.Rectangle(0, 0, 400, 300),
       );
 
-      final entity = provider.convertFsaToEntity(automaton);
+      final entity = AutomatonEntityMapper.fromFsa(
+        automaton,
+        nextId: automaton.states.length + 1,
+      );
 
       expect(entity.type, AutomatonType.nfa);
     });
 
-    test('AutomatonStateNotifier conversion skips missing transition endpoints',
-        () {
-      final provider = AutomatonStateNotifier(
-        automatonService: AutomatonService(),
-      );
-
+    test('AutomatonEntityMapper skips missing transition endpoints', () {
       const entity = AutomatonEntity(
         id: 'fa',
         name: 'test',
@@ -222,7 +215,7 @@ void main() {
         type: AutomatonType.nfa,
       );
 
-      final automaton = provider.convertEntityToFsa(entity);
+      final automaton = AutomatonEntityMapper.toFsa(entity);
 
       expect(automaton.transitions, isEmpty);
     });

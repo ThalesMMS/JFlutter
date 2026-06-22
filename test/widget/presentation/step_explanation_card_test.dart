@@ -7,22 +7,23 @@ import 'package:jflutter/presentation/widgets/step_explanation_card.dart';
 void main() {
   testWidgets('StepExplanationCard renders title, bullets, and suggested fixes',
       (tester) async {
-    final explanation = StepExplanation(
+    const explanation = StepExplanation(
       title: 'Why this step happened',
-      bullets: const [
+      bullets: [
         'Consumed symbol: a',
         'Transition taken: q0 → q1',
       ],
-      suggestedFixes: const [
+      suggestedFixes: [
         SuggestedFix(
           label: 'Add a missing transition',
-          details: 'If no transition matches the input symbol, the automaton halts.',
+          details:
+              'If no transition matches the input symbol, the automaton halts.',
         ),
       ],
     );
 
     await tester.pumpWidget(
-      MaterialApp(
+      const MaterialApp(
         home: Material(
           child: StepExplanationCard(explanation: explanation),
         ),
@@ -35,7 +36,8 @@ void main() {
     expect(find.text('Suggested fixes'), findsOneWidget);
     expect(find.text('Add a missing transition'), findsOneWidget);
     expect(
-      find.text('If no transition matches the input symbol, the automaton halts.'),
+      find.text(
+          'If no transition matches the input symbol, the automaton halts.'),
       findsOneWidget,
     );
   });

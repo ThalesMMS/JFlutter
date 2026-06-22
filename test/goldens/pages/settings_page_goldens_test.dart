@@ -50,8 +50,6 @@ class _MockSettingsPageWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
@@ -433,9 +431,8 @@ Future<void> _pumpSettingsPage(
   double fontSize = 14.0,
   Size size = const Size(1400, 900),
 }) async {
-  final binding = tester.binding;
-  binding.window.physicalSizeTestValue = size;
-  binding.window.devicePixelRatioTestValue = 1.0;
+  tester.view.physicalSize = size;
+  tester.view.devicePixelRatio = 1.0;
 
   await tester.pumpWidget(
     MaterialApp(
@@ -469,8 +466,8 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       await _pumpSettingsPage(tester, size: const Size(1400, 900));
@@ -482,8 +479,8 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       await _pumpSettingsPage(tester, size: const Size(1200, 800));
@@ -495,8 +492,8 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       await _pumpSettingsPage(tester, size: const Size(430, 932));
@@ -508,8 +505,8 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       await _pumpSettingsPage(
@@ -526,8 +523,8 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       await _pumpSettingsPage(
@@ -543,8 +540,8 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       await _pumpSettingsPage(
@@ -560,8 +557,8 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       await _pumpSettingsPage(
@@ -581,8 +578,8 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       await _pumpSettingsPage(
@@ -599,8 +596,8 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       await _pumpSettingsPage(
@@ -625,8 +622,8 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       await _pumpSettingsPage(
@@ -644,8 +641,8 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       await _pumpSettingsPage(
@@ -663,8 +660,8 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       await _pumpSettingsPage(
@@ -683,8 +680,8 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       await _pumpSettingsPage(

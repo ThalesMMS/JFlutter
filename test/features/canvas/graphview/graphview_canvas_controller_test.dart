@@ -201,8 +201,8 @@ void main() {
         expect(firstCall['y'], closeTo(300, 0.0001));
 
         transformation.value = Matrix4.identity()
-          ..translate(150.0, -50.0)
-          ..scale(1.5);
+          ..translateByDouble(150.0, -50.0, 0.0, 1.0)
+          ..scaleByDouble(1.5, 1.5, 1.5, 1.0);
         controller.addStateAtCenter();
 
         expect(provider.addStateCalls, hasLength(2));

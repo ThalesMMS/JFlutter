@@ -21,7 +21,6 @@ void main() {
     late FSA dfa2;
     late FSA nfa1;
     late FSA nfa2;
-    late FSA equivalentDFA;
     late FSA nonEquivalentDFA;
 
     setUp(() {
@@ -32,9 +31,6 @@ void main() {
       // Test Case 2: Equivalent NFAs
       nfa1 = _createNFA1();
       nfa2 = _createNFA2();
-
-      // Test Case 3: Equivalent DFA (same as dfa1)
-      equivalentDFA = _createDFA1();
 
       // Test Case 4: Non-equivalent DFA
       nonEquivalentDFA = _createNonEquivalentDFA();

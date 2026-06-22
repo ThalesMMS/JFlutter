@@ -140,9 +140,8 @@ Future<void> _pumpFSAPageComponents(
   bool isMobile = false,
   ThemeMode themeMode = ThemeMode.light,
 }) async {
-  final binding = tester.binding;
-  binding.window.physicalSizeTestValue = size;
-  binding.window.devicePixelRatioTestValue = 1.0;
+  tester.view.physicalSize = size;
+  tester.view.devicePixelRatio = 1.0;
 
   await tester.pumpWidgetBuilder(
     MaterialApp(
@@ -173,8 +172,8 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       await _pumpFSAPageComponents(
@@ -190,8 +189,8 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       await _pumpFSAPageComponents(
@@ -207,8 +206,8 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       await _pumpFSAPageComponents(
@@ -224,8 +223,8 @@ void main() {
       'renders canvas with toolbar and simple DFA in desktop layout',
       (tester) async {
         addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
         });
 
         final q0 = automaton_state.State(
@@ -282,8 +281,8 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       final q0 = automaton_state.State(
@@ -348,8 +347,8 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       final q0 = automaton_state.State(
@@ -406,8 +405,8 @@ void main() {
       'renders opposing vertical transitions with separated labels',
       (tester) async {
         addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
         });
 
         final q0 = automaton_state.State(
@@ -472,8 +471,8 @@ void main() {
       'renders grouped same-direction labels as a stacked card',
       (tester) async {
         addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
         });
 
         final q0 = automaton_state.State(
@@ -546,8 +545,8 @@ void main() {
       'renders grouped labels with dark theme surfaces',
       (tester) async {
         addTearDown(() {
-          tester.binding.window.clearPhysicalSizeTestValue();
-          tester.binding.window.clearDevicePixelRatioTestValue();
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
         });
 
         final q0 = automaton_state.State(
@@ -606,8 +605,8 @@ void main() {
       tester,
     ) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       final q0 = automaton_state.State(
@@ -693,8 +692,8 @@ void main() {
 
     testGoldens('renders page with automaton in mobile layout', (tester) async {
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
 
       final q0 = automaton_state.State(

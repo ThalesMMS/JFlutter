@@ -318,9 +318,7 @@ Future<void> _prepareFsa(
   ProviderContainer container,
 ) async {
   final notifier = container.read(automatonStateProvider.notifier);
-  notifier.replaceCurrentAutomaton(
-    notifier.convertFsaToEntity(_buildFsaExample()),
-  );
+  notifier.updateAutomaton(_buildFsaExample());
   await _settle(tester);
 
   if (_isMobile(tester)) {

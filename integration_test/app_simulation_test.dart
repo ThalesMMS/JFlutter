@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:jflutter/main.dart' as app;
 import 'package:jflutter/data/data_sources/examples_asset_data_source.dart';
+import 'package:jflutter/data/mappers/automaton_entity_mapper.dart';
+import 'package:jflutter/main.dart' as app;
 import 'package:jflutter/presentation/providers/automaton_state_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -47,9 +48,8 @@ void main() {
       reason: 'The loaded example should contain an automaton.',
     );
 
-    container
-        .read(automatonStateProvider.notifier)
-        .replaceCurrentAutomaton(automaton!);
+    final fsa = AutomatonEntityMapper.toFsa(automaton!);
+    container.read(automatonStateProvider.notifier).updateAutomaton(fsa);
     await tester.pumpAndSettle();
 
     // Open the simulation sheet through the quick action.

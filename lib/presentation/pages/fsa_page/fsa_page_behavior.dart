@@ -62,36 +62,9 @@ extension _FSAPageStateBehavior on _FSAPageState {
     return automaton;
   }
 
-  Future<void> _applyAlgorithmResult({required String successMessage}) async {
-    final algorithmState = ref.read(algorithmProvider);
-    final notifier = ref.read(algorithmProvider.notifier);
-    final error = algorithmState.error;
-    final result = algorithmState.result;
-
-    if (error != null) {
-      _showSnack(error, isError: true);
-      notifier.clearResult();
-      return;
-    }
-
-    if (result is AutomatonEntity) {
-      ref.read(automatonStateProvider.notifier).replaceCurrentAutomaton(result);
-      _showSnack(successMessage);
-      notifier.clearResult();
-      return;
-    }
-
-    notifier.clearResult();
-    if (result != null) {
-      _showSnack('Unexpected result returned by the algorithm.', isError: true);
-    }
-  }
-
-  Future<void> _runUnaryAlgorithm({
-    required Future<void> Function(
-      AlgorithmProvider notifier,
-      AutomatonEntity entity,
-    ) algorithm,
+  Future<void> _runCurrentAutomatonOperation({
+    required Future<void> Function(AutomatonAlgorithmNotifier notifier)
+        operation,
     required String successMessage,
     bool requireDfa = false,
     bool requireLambda = false,
@@ -104,57 +77,18 @@ extension _FSAPageStateBehavior on _FSAPageState {
     );
     if (automaton == null) return;
 
-    final automatonNotifier = ref.read(automatonStateProvider.notifier);
-    final entity = automatonNotifier.currentAutomatonEntity;
-    if (entity == null) {
-      _showSnack(
-        'Unable to prepare the current automaton for processing.',
-        isError: true,
-      );
+    final notifier = ref.read(automatonAlgorithmProvider.notifier);
+    await operation(notifier);
+    if (!mounted) return;
+
+    final algorithmState = ref.read(automatonAlgorithmProvider);
+    if (algorithmState.error != null) {
+      _showSnack(algorithmState.error!, isError: true);
+      notifier.clearError();
       return;
     }
 
-    await algorithm(ref.read(algorithmProvider.notifier), entity);
-    if (!mounted) return;
-    await _applyAlgorithmResult(successMessage: successMessage);
-  }
-
-  Future<void> _runBinaryAlgorithm({
-    required FSA other,
-    required Future<void> Function(
-      AlgorithmProvider notifier,
-      AutomatonEntity current,
-      AutomatonEntity other,
-    ) algorithm,
-    required String successMessage,
-    bool requireDfa = false,
-    String? invalidMessage,
-  }) async {
-    final automaton = _requireAutomaton(
-      requireDfa: requireDfa,
-      invalidMessage: invalidMessage,
-    );
-    if (automaton == null) return;
-
-    final automatonNotifier = ref.read(automatonStateProvider.notifier);
-    final currentEntity = automatonNotifier.currentAutomatonEntity;
-    if (currentEntity == null) {
-      _showSnack(
-        'Unable to prepare the current automaton for processing.',
-        isError: true,
-      );
-      return;
-    }
-
-    final otherEntity = automatonNotifier.convertFsaToEntity(other);
-
-    await algorithm(
-      ref.read(algorithmProvider.notifier),
-      currentEntity,
-      otherEntity,
-    );
-    if (!mounted) return;
-    await _applyAlgorithmResult(successMessage: successMessage);
+    _showSnack(successMessage);
   }
 
   void _handleStepByStepModeChanged(bool enabled) {
@@ -199,8 +133,8 @@ extension _FSAPageStateBehavior on _FSAPageState {
   }
 
   Future<void> _handleRemoveLambda() async {
-    await _runUnaryAlgorithm(
-      algorithm: (notifier, entity) => notifier.removeLambdaTransitions(entity),
+    await _runCurrentAutomatonOperation(
+      operation: (notifier) => notifier.removeLambdaTransitions(),
       successMessage: 'λ-transitions removed successfully.',
       requireLambda: true,
       invalidMessage:
@@ -209,8 +143,8 @@ extension _FSAPageStateBehavior on _FSAPageState {
   }
 
   Future<void> _handleComplementDfa() async {
-    await _runUnaryAlgorithm(
-      algorithm: (notifier, entity) => notifier.complementDfa(entity),
+    await _runCurrentAutomatonOperation(
+      operation: (notifier) => notifier.complementDfa(),
       successMessage: 'Complement computed successfully.',
       requireDfa: true,
       invalidMessage:
@@ -219,8 +153,8 @@ extension _FSAPageStateBehavior on _FSAPageState {
   }
 
   Future<void> _handlePrefixClosure() async {
-    await _runUnaryAlgorithm(
-      algorithm: (notifier, entity) => notifier.prefixClosureDfa(entity),
+    await _runCurrentAutomatonOperation(
+      operation: (notifier) => notifier.prefixClosureDfa(),
       successMessage: 'Prefix closure computed successfully.',
       requireDfa: true,
       invalidMessage:
@@ -229,8 +163,8 @@ extension _FSAPageStateBehavior on _FSAPageState {
   }
 
   Future<void> _handleSuffixClosure() async {
-    await _runUnaryAlgorithm(
-      algorithm: (notifier, entity) => notifier.suffixClosureDfa(entity),
+    await _runCurrentAutomatonOperation(
+      operation: (notifier) => notifier.suffixClosureDfa(),
       successMessage: 'Suffix closure computed successfully.',
       requireDfa: true,
       invalidMessage:
@@ -239,10 +173,8 @@ extension _FSAPageStateBehavior on _FSAPageState {
   }
 
   Future<void> _handleUnionDfa(FSA other) async {
-    await _runBinaryAlgorithm(
-      other: other,
-      algorithm: (notifier, current, loaded) =>
-          notifier.unionDfa(current, loaded),
+    await _runCurrentAutomatonOperation(
+      operation: (notifier) => notifier.unionDfa(other),
       successMessage: 'Union computed successfully.',
       requireDfa: true,
       invalidMessage:
@@ -251,10 +183,8 @@ extension _FSAPageStateBehavior on _FSAPageState {
   }
 
   Future<void> _handleIntersectionDfa(FSA other) async {
-    await _runBinaryAlgorithm(
-      other: other,
-      algorithm: (notifier, current, loaded) =>
-          notifier.intersectionDfa(current, loaded),
+    await _runCurrentAutomatonOperation(
+      operation: (notifier) => notifier.intersectionDfa(other),
       successMessage: 'Intersection computed successfully.',
       requireDfa: true,
       invalidMessage:
@@ -263,10 +193,8 @@ extension _FSAPageStateBehavior on _FSAPageState {
   }
 
   Future<void> _handleDifferenceDfa(FSA other) async {
-    await _runBinaryAlgorithm(
-      other: other,
-      algorithm: (notifier, current, loaded) =>
-          notifier.differenceDfa(current, loaded),
+    await _runCurrentAutomatonOperation(
+      operation: (notifier) => notifier.differenceDfa(other),
       successMessage: 'Difference computed successfully.',
       requireDfa: true,
       invalidMessage:

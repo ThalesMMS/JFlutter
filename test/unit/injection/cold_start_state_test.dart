@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -58,8 +56,6 @@ void main() {
 
   tearDown(() async {
     await getIt.reset();
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMessageHandler('flutter/assets', null);
   });
 
   group('Cold start state', () {
@@ -109,24 +105,6 @@ void main() {
 
       expect(notifier.state.traceHistory, hasLength(1));
       expect(notifier.state.traceHistory.single['id'], equals('trace-1'));
-    });
-
-    test('examples remain lazy and are not pre-loaded during startup',
-        () async {
-      SharedPreferences.setMockInitialValues(const <String, Object>{});
-      final assetRequests = <String>[];
-
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMessageHandler('flutter/assets', (ByteData? message) async {
-        if (message != null) {
-          assetRequests.add(utf8.decode(message.buffer.asUint8List()));
-        }
-        return ByteData.sublistView(Uint8List(0));
-      });
-
-      await setupDependencyInjection();
-
-      expect(assetRequests, isEmpty);
     });
   });
 }

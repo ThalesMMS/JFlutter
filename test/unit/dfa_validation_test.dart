@@ -20,7 +20,6 @@ void main() {
   group('DFA Validation Tests', () {
     late FSA binaryDivisibleBy3DFA;
     late FSA endsWithADFA;
-    late FSA parityABDFA;
     late FSA noConsecutive11DFA;
     late FSA atLeastFourOnesDFA;
 
@@ -30,9 +29,6 @@ void main() {
 
       // Test Case 2: Ends with 'a' (from jflutter_js/examples)
       endsWithADFA = _createEndsWithADFA();
-
-      // Test Case 3: Parity AB (from jflutter_js/examples)
-      parityABDFA = _createParityABDFA();
 
       // Test Case 4: No consecutive 11s (from Python reference)
       noConsecutive11DFA = _createNoConsecutive11DFA();
@@ -620,69 +616,6 @@ FSA _createEndsWithADFA() {
     states: states,
     transitions: transitions,
     alphabet: {'a', 'b'},
-    initialState: states.firstWhere((s) => s.isInitial),
-    acceptingStates: states.where((s) => s.isAccepting).toSet(),
-    created: DateTime.now(),
-    modified: DateTime.now(),
-    bounds: const math.Rectangle(0, 0, 400, 300),
-  );
-}
-
-FSA _createParityABDFA() {
-  final states = {
-    State(
-      id: 'q0',
-      label: 'q0',
-      position: Vector2(100.0, 200.0),
-      isInitial: true,
-      isAccepting: true,
-    ),
-    State(
-      id: 'q1',
-      label: 'q1',
-      position: Vector2(300.0, 200.0),
-      isInitial: false,
-      isAccepting: false,
-    ),
-  };
-
-  final transitions = {
-    FSATransition(
-      id: 't1',
-      fromState: states.firstWhere((s) => s.id == 'q0'),
-      toState: states.firstWhere((s) => s.id == 'q1'),
-      label: 'A',
-      inputSymbols: {'A'},
-    ),
-    FSATransition(
-      id: 't2',
-      fromState: states.firstWhere((s) => s.id == 'q0'),
-      toState: states.firstWhere((s) => s.id == 'q1'),
-      label: 'B',
-      inputSymbols: {'B'},
-    ),
-    FSATransition(
-      id: 't3',
-      fromState: states.firstWhere((s) => s.id == 'q1'),
-      toState: states.firstWhere((s) => s.id == 'q0'),
-      label: 'A',
-      inputSymbols: {'A'},
-    ),
-    FSATransition(
-      id: 't4',
-      fromState: states.firstWhere((s) => s.id == 'q1'),
-      toState: states.firstWhere((s) => s.id == 'q0'),
-      label: 'B',
-      inputSymbols: {'B'},
-    ),
-  };
-
-  return FSA(
-    id: 'parity_ab',
-    name: 'Parity AB',
-    states: states,
-    transitions: transitions,
-    alphabet: {'A', 'B'},
     initialState: states.firstWhere((s) => s.isInitial),
     acceptingStates: states.where((s) => s.isAccepting).toSet(),
     created: DateTime.now(),

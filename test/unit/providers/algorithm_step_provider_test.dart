@@ -69,7 +69,7 @@ void main() {
       });
 
       test('copyWith preserves isHistoryVisible when not specified', () {
-        final state = const AlgorithmStepState(isHistoryVisible: true);
+        const state = AlgorithmStepState(isHistoryVisible: true);
         final newState = state.copyWith(currentStepIndex: 1);
 
         expect(newState.isHistoryVisible, true);

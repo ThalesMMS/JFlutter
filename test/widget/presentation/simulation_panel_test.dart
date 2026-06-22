@@ -50,7 +50,7 @@ Future<void> _pumpSimulationPanel(
     MaterialApp(
       home: Scaffold(
         body: SimulationPanel(
-          onSimulate: onSimulate,
+          onSimulate: onSimulate.call,
           simulationResult: simulationResult,
           regexResult: regexResult,
           highlightService:

@@ -16,8 +16,6 @@ void main() {
   group('CYK Validation Tests', () {
     late Grammar balancedParenthesesGrammar;
     late Grammar palindromeGrammar;
-    late Grammar simpleGrammar;
-    late Grammar complexGrammar;
     late Grammar cnfGrammar;
 
     setUp(() {
@@ -26,12 +24,6 @@ void main() {
 
       // Test Case 2: Palindrome Grammar
       palindromeGrammar = _createPalindromeGrammar();
-
-      // Test Case 3: Simple Grammar
-      simpleGrammar = _createSimpleGrammar();
-
-      // Test Case 4: Complex Grammar
-      complexGrammar = _createComplexGrammar();
 
       // Test Case 5: CNF Grammar
       cnfGrammar = _createCNFGrammar();
@@ -530,8 +522,6 @@ void main() {
       });
 
       test('CYK should handle all possible substrings correctly', () async {
-        const testString = 'ab';
-
         // Test all possible substrings
         final substrings = ['', 'a', 'b', 'ab'];
 
@@ -637,82 +627,6 @@ Grammar _createPalindromeGrammar() {
     name: 'Palindrome',
     terminals: {'a', 'b'},
     nonterminals: {'S'},
-    startSymbol: 'S',
-    productions: productions,
-    type: GrammarType.contextFree,
-    created: DateTime.now(),
-    modified: DateTime.now(),
-  );
-}
-
-Grammar _createSimpleGrammar() {
-  final productions = {
-    const Production(
-      id: 'p1',
-      leftSide: ['S'],
-      rightSide: ['a'],
-      isLambda: false,
-      order: 1,
-    ),
-  };
-
-  return Grammar(
-    id: 'simple',
-    name: 'Simple Grammar',
-    terminals: {'a'},
-    nonterminals: {'S'},
-    startSymbol: 'S',
-    productions: productions,
-    type: GrammarType.contextFree,
-    created: DateTime.now(),
-    modified: DateTime.now(),
-  );
-}
-
-Grammar _createComplexGrammar() {
-  final productions = {
-    const Production(
-      id: 'p1',
-      leftSide: ['S'],
-      rightSide: ['A', 'B'],
-      isLambda: false,
-      order: 1,
-    ),
-    const Production(
-      id: 'p2',
-      leftSide: ['A'],
-      rightSide: ['a', 'A'],
-      isLambda: false,
-      order: 2,
-    ),
-    const Production(
-      id: 'p3',
-      leftSide: ['A'],
-      rightSide: [],
-      isLambda: true,
-      order: 3,
-    ),
-    const Production(
-      id: 'p4',
-      leftSide: ['B'],
-      rightSide: ['b', 'B'],
-      isLambda: false,
-      order: 4,
-    ),
-    const Production(
-      id: 'p5',
-      leftSide: ['B'],
-      rightSide: [],
-      isLambda: true,
-      order: 5,
-    ),
-  };
-
-  return Grammar(
-    id: 'complex',
-    name: 'Complex Grammar',
-    terminals: {'a', 'b'},
-    nonterminals: {'S', 'A', 'B'},
     startSymbol: 'S',
     productions: productions,
     type: GrammarType.contextFree,

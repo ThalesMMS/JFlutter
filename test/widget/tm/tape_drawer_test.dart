@@ -72,14 +72,14 @@ void main() {
     });
 
     test('returns current cell at head position', () {
-      final state = TapeState(cells: const ['a', 'b', 'c'], headPosition: 1);
+      const state = TapeState(cells: ['a', 'b', 'c'], headPosition: 1);
 
       expect(state.currentCell, 'b');
     });
 
     test('returns blank symbol when head is out of bounds', () {
-      final state = TapeState(
-        cells: const ['a', 'b', 'c'],
+      const state = TapeState(
+        cells: ['a', 'b', 'c'],
         headPosition: 5,
         blankSymbol: '□',
       );
@@ -88,8 +88,8 @@ void main() {
     });
 
     test('detects read operation', () {
-      final state = TapeState(
-        cells: const ['a', 'b'],
+      const state = TapeState(
+        cells: ['a', 'b'],
         headPosition: 0,
         lastReadSymbol: 'a',
       );
@@ -99,8 +99,8 @@ void main() {
     });
 
     test('detects write operation', () {
-      final state = TapeState(
-        cells: const ['a', 'b'],
+      const state = TapeState(
+        cells: ['a', 'b'],
         headPosition: 0,
         lastWriteSymbol: 'x',
       );
@@ -110,8 +110,8 @@ void main() {
     });
 
     test('returns visible cells with padding', () {
-      final state = TapeState(
-        cells: const ['a', 'b', 'c', 'd', 'e'],
+      const state = TapeState(
+        cells: ['a', 'b', 'c', 'd', 'e'],
         headPosition: 2,
         blankSymbol: '□',
       );
@@ -124,8 +124,8 @@ void main() {
     });
 
     test('pads visible cells with blanks when near edges', () {
-      final state = TapeState(
-        cells: const ['a', 'b'],
+      const state = TapeState(
+        cells: ['a', 'b'],
         headPosition: 0,
         blankSymbol: '□',
       );
@@ -142,7 +142,7 @@ void main() {
     });
 
     test('returns correct head index in visible cells', () {
-      final state = TapeState(cells: const ['a', 'b', 'c'], headPosition: 1);
+      const state = TapeState(cells: ['a', 'b', 'c'], headPosition: 1);
 
       final headIndex = state.getHeadIndexInVisible(padding: 3);
 
@@ -162,8 +162,8 @@ void main() {
     });
 
     testWidgets('renders tape with cells', (tester) async {
-      final tapeState = TapeState(
-        cells: const ['0', '1', '0', '1'],
+      const tapeState = TapeState(
+        cells: ['0', '1', '0', '1'],
         headPosition: 2,
       );
 
@@ -175,8 +175,8 @@ void main() {
     });
 
     testWidgets('highlights head position with arrow', (tester) async {
-      final tapeState = TapeState(
-        cells: const ['a', 'b', 'c'],
+      const tapeState = TapeState(
+        cells: ['a', 'b', 'c'],
         headPosition: 1,
       );
 
@@ -186,8 +186,8 @@ void main() {
     });
 
     testWidgets('shows read operation indicator', (tester) async {
-      final tapeState = TapeState(
-        cells: const ['a', 'b', 'c'],
+      const tapeState = TapeState(
+        cells: ['a', 'b', 'c'],
         headPosition: 1,
         lastReadSymbol: 'b',
       );
@@ -198,8 +198,8 @@ void main() {
     });
 
     testWidgets('shows write operation indicator', (tester) async {
-      final tapeState = TapeState(
-        cells: const ['a', 'b', 'c'],
+      const tapeState = TapeState(
+        cells: ['a', 'b', 'c'],
         headPosition: 1,
         lastWriteSymbol: 'x',
       );
@@ -210,8 +210,8 @@ void main() {
     });
 
     testWidgets('shows both read and write indicators', (tester) async {
-      final tapeState = TapeState(
-        cells: const ['a', 'b', 'c'],
+      const tapeState = TapeState(
+        cells: ['a', 'b', 'c'],
         headPosition: 1,
         lastReadSymbol: 'b',
         lastWriteSymbol: 'x',
@@ -224,7 +224,7 @@ void main() {
     });
 
     testWidgets('displays clear button when onClear provided', (tester) async {
-      final tapeState = TapeState(cells: const ['a', 'b'], headPosition: 0);
+      const tapeState = TapeState(cells: ['a', 'b'], headPosition: 0);
       var clearCalled = false;
 
       await _pumpTapePanel(
@@ -242,7 +242,7 @@ void main() {
     });
 
     testWidgets('hides clear button when onClear not provided', (tester) async {
-      final tapeState = TapeState(cells: const ['a', 'b'], headPosition: 0);
+      const tapeState = TapeState(cells: ['a', 'b'], headPosition: 0);
 
       await _pumpTapePanel(tester, tapeState: tapeState);
 
@@ -250,8 +250,8 @@ void main() {
     });
 
     testWidgets('allows cell editing when not simulating', (tester) async {
-      final tapeState = TapeState(
-        cells: const ['a', 'b', 'c'],
+      const tapeState = TapeState(
+        cells: ['a', 'b', 'c'],
         headPosition: 1,
       );
       final editCallback = _CellEditCallback();
@@ -260,7 +260,7 @@ void main() {
         tester,
         tapeState: tapeState,
         isSimulating: false,
-        onCellEdit: editCallback,
+        onCellEdit: editCallback.call,
       );
 
       // Find and tap a tape cell (they are wrapped in InkWell)
@@ -278,8 +278,8 @@ void main() {
     });
 
     testWidgets('disables cell editing when simulating', (tester) async {
-      final tapeState = TapeState(
-        cells: const ['a', 'b', 'c'],
+      const tapeState = TapeState(
+        cells: ['a', 'b', 'c'],
         headPosition: 1,
       );
       final editCallback = _CellEditCallback();
@@ -288,7 +288,7 @@ void main() {
         tester,
         tapeState: tapeState,
         isSimulating: true,
-        onCellEdit: editCallback,
+        onCellEdit: editCallback.call,
       );
 
       // Cells should not be wrapped in InkWell when simulating
@@ -297,14 +297,14 @@ void main() {
     });
 
     testWidgets('shows tape alphabet buttons in edit dialog', (tester) async {
-      final tapeState = TapeState(cells: const ['0', '1'], headPosition: 0);
+      const tapeState = TapeState(cells: ['0', '1'], headPosition: 0);
       final editCallback = _CellEditCallback();
 
       await _pumpTapePanel(
         tester,
         tapeState: tapeState,
         tapeAlphabet: {'0', '1', 'X'},
-        onCellEdit: editCallback,
+        onCellEdit: editCallback.call,
       );
 
       await tester.tap(find.byType(InkWell).first);
@@ -319,13 +319,13 @@ void main() {
     });
 
     testWidgets('cell edit dialog allows manual symbol entry', (tester) async {
-      final tapeState = TapeState(cells: const ['a', 'b'], headPosition: 0);
+      const tapeState = TapeState(cells: ['a', 'b'], headPosition: 0);
       final editCallback = _CellEditCallback();
 
       await _pumpTapePanel(
         tester,
         tapeState: tapeState,
-        onCellEdit: editCallback,
+        onCellEdit: editCallback.call,
       );
 
       await tester.tap(find.byType(InkWell).first);
@@ -348,13 +348,13 @@ void main() {
     });
 
     testWidgets('cell edit dialog can be cancelled', (tester) async {
-      final tapeState = TapeState(cells: const ['a', 'b'], headPosition: 0);
+      const tapeState = TapeState(cells: ['a', 'b'], headPosition: 0);
       final editCallback = _CellEditCallback();
 
       await _pumpTapePanel(
         tester,
         tapeState: tapeState,
-        onCellEdit: editCallback,
+        onCellEdit: editCallback.call,
       );
 
       await tester.tap(find.byType(InkWell).first);
@@ -369,8 +369,8 @@ void main() {
     });
 
     testWidgets('uses blank symbol when text field is empty', (tester) async {
-      final tapeState = TapeState(
-        cells: const ['a', 'b'],
+      const tapeState = TapeState(
+        cells: ['a', 'b'],
         headPosition: 0,
         blankSymbol: '□',
       );
@@ -379,7 +379,7 @@ void main() {
       await _pumpTapePanel(
         tester,
         tapeState: tapeState,
-        onCellEdit: editCallback,
+        onCellEdit: editCallback.call,
       );
 
       await tester.tap(find.byType(InkWell).first);
@@ -400,20 +400,20 @@ void main() {
     });
 
     testWidgets('updates when tape state changes', (tester) async {
-      final initialState = TapeState(cells: const ['a', 'b'], headPosition: 0);
+      const initialState = TapeState(cells: ['a', 'b'], headPosition: 0);
 
       await _pumpTapePanel(tester, tapeState: initialState);
       expect(find.text('Tape (Head: 0)'), findsOneWidget);
 
       // Update with new tape state
-      final newState = TapeState(cells: const ['x', 'y', 'z'], headPosition: 2);
+      const newState = TapeState(cells: ['x', 'y', 'z'], headPosition: 2);
 
       await _pumpTapePanel(tester, tapeState: newState);
       expect(find.text('Tape (Head: 2)'), findsOneWidget);
     });
 
     testWidgets('renders within Card with proper styling', (tester) async {
-      final tapeState = TapeState(cells: const ['a'], headPosition: 0);
+      const tapeState = TapeState(cells: ['a'], headPosition: 0);
 
       await _pumpTapePanel(tester, tapeState: tapeState);
 
@@ -442,13 +442,13 @@ void main() {
     });
 
     testWidgets('cell clear button in edit dialog clears text', (tester) async {
-      final tapeState = TapeState(cells: const ['a', 'b'], headPosition: 0);
+      const tapeState = TapeState(cells: ['a', 'b'], headPosition: 0);
       final editCallback = _CellEditCallback();
 
       await _pumpTapePanel(
         tester,
         tapeState: tapeState,
-        onCellEdit: editCallback,
+        onCellEdit: editCallback.call,
       );
 
       await tester.tap(find.byType(InkWell).first);
@@ -475,8 +475,8 @@ void main() {
     });
 
     testWidgets('edit dialog title shows cell index', (tester) async {
-      final tapeState = TapeState(
-        cells: const ['a', 'b', 'c'],
+      const tapeState = TapeState(
+        cells: ['a', 'b', 'c'],
         headPosition: 1,
       );
       final editCallback = _CellEditCallback();
@@ -484,7 +484,7 @@ void main() {
       await _pumpTapePanel(
         tester,
         tapeState: tapeState,
-        onCellEdit: editCallback,
+        onCellEdit: editCallback.call,
       );
 
       // Tap a cell to open edit dialog
@@ -496,13 +496,13 @@ void main() {
     });
 
     testWidgets('limits text field input to 1 character', (tester) async {
-      final tapeState = TapeState(cells: const ['a'], headPosition: 0);
+      const tapeState = TapeState(cells: ['a'], headPosition: 0);
       final editCallback = _CellEditCallback();
 
       await _pumpTapePanel(
         tester,
         tapeState: tapeState,
-        onCellEdit: editCallback,
+        onCellEdit: editCallback.call,
       );
 
       await tester.tap(find.byType(InkWell).first);

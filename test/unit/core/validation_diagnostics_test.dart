@@ -42,12 +42,14 @@ void main() {
 
       expect(diag.code, 'FSA_NO_INITIAL');
       expect(
-        diag.suggestedFixes?.any((f) => f.actionId == 'canvas.setInitialState'),
+        diag.suggestedFixes.any((f) => f.actionId == 'canvas.setInitialState'),
         isTrue,
       );
     });
 
-    test('Explicit diagnostics payload is preserved (including highlight target)', () {
+    test(
+        'Explicit diagnostics payload is preserved (including highlight target)',
+        () {
       const issue = ValidationIssue(
         'FSA_NO_INITIAL',
         'Automaton has no initial state',
@@ -68,8 +70,8 @@ void main() {
       expect(diag.code, 'FSA_NO_INITIAL');
       expect(diag.summary, 'Missing initial state');
       expect(diag.highlights, isNotNull);
-      expect(diag.highlights!.single.type, HighlightTargetType.state);
-      expect(diag.highlights!.single.id, 'q0');
+      expect(diag.highlights.single.type, HighlightTargetType.state);
+      expect(diag.highlights.single.id, 'q0');
     });
   });
 }

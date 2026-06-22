@@ -228,6 +228,7 @@ class _MockAutomatonService extends AutomatonService {
 class _MockPdaEditorNotifier extends PDAEditorNotifier {
   _MockPdaEditorNotifier() : super();
 
+  @override
   void setPda(PDA pda) {
     state = state.copyWith(pda: pda);
   }
@@ -398,8 +399,8 @@ void main() {
             const Production(
               id: 'p1',
               order: 0,
-              leftSide: const ['S'],
-              rightSide: const ['a', 'B'],
+              leftSide: ['S'],
+              rightSide: ['a', 'B'],
               isLambda: false,
             ),
           ],
@@ -438,8 +439,8 @@ void main() {
             const Production(
               id: 'p1',
               order: 0,
-              leftSide: const ['S'],
-              rightSide: const ['a'],
+              leftSide: ['S'],
+              rightSide: ['a'],
               isLambda: false,
             ),
           ],
@@ -463,8 +464,8 @@ void main() {
             const Production(
               id: 'p1',
               order: 0,
-              leftSide: const ['S'],
-              rightSide: const ['a'],
+              leftSide: ['S'],
+              rightSide: ['a'],
               isLambda: false,
             ),
           ],
@@ -488,8 +489,8 @@ void main() {
               const Production(
                 id: 'p1',
                 order: 0,
-                leftSide: const ['S'],
-                rightSide: const ['a'],
+                leftSide: ['S'],
+                rightSide: ['a'],
                 isLambda: false,
               ),
             ],
@@ -514,8 +515,8 @@ void main() {
               const Production(
                 id: 'p1',
                 order: 0,
-                leftSide: const ['S'],
-                rightSide: const ['a'],
+                leftSide: ['S'],
+                rightSide: ['a'],
                 isLambda: false,
               ),
             ],
@@ -542,8 +543,8 @@ void main() {
             const Production(
               id: 'p1',
               order: 0,
-              leftSide: const ['S'],
-              rightSide: const ['a'],
+              leftSide: ['S'],
+              rightSide: ['a'],
               isLambda: false,
             ),
           ],
@@ -580,8 +581,8 @@ void main() {
             const Production(
               id: 'p1',
               order: 0,
-              leftSide: const ['S'],
-              rightSide: const ['a'],
+              leftSide: ['S'],
+              rightSide: ['a'],
               isLambda: false,
             ),
           ],
@@ -618,8 +619,8 @@ void main() {
             const Production(
               id: 'p1',
               order: 0,
-              leftSide: const ['S'],
-              rightSide: const ['a'],
+              leftSide: ['S'],
+              rightSide: ['a'],
               isLambda: false,
             ),
           ],
@@ -658,8 +659,8 @@ void main() {
             const Production(
               id: 'p1',
               order: 0,
-              leftSide: const ['S'],
-              rightSide: const ['a'],
+              leftSide: ['S'],
+              rightSide: ['a'],
               isLambda: false,
             ),
           ],
@@ -695,13 +696,13 @@ void main() {
             const Production(
               id: 'p1',
               order: 0,
-              leftSide: const ['S'],
-              rightSide: const ['a'],
+              leftSide: ['S'],
+              rightSide: ['a'],
               isLambda: false,
             ),
           ],
         ),
-        convertToAutomatonResult: Failure(errorMessage),
+        convertToAutomatonResult: const Failure(errorMessage),
       );
 
       await tester.ensureVisible(
@@ -724,13 +725,13 @@ void main() {
             const Production(
               id: 'p1',
               order: 0,
-              leftSide: const ['S'],
-              rightSide: const ['a'],
+              leftSide: ['S'],
+              rightSide: ['a'],
               isLambda: false,
             ),
           ],
         ),
-        convertToPdaResult: Failure(errorMessage),
+        convertToPdaResult: const Failure(errorMessage),
       );
 
       await tester.ensureVisible(find.text('Convert Grammar to PDA (General)'));

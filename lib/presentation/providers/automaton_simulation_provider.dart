@@ -14,8 +14,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/algorithms/automaton_simulator.dart';
 import '../../core/models/simulation_result.dart';
 import '../../data/services/trace_persistence_service.dart' as data_trace;
-import '../../injection/dependency_injection.dart';
 import 'automaton_state_provider.dart';
+import 'unified_trace_provider.dart';
 
 /// State for simulation operations
 class SimulationState {
@@ -73,8 +73,8 @@ class AutomatonSimulationNotifier extends StateNotifier<SimulationState> {
   AutomatonSimulationNotifier({
     required this.ref,
     required data_trace.TracePersistenceService tracePersistenceService,
-  }) : _tracePersistenceService = tracePersistenceService,
-       super(const SimulationState()) {
+  })  : _tracePersistenceService = tracePersistenceService,
+        super(const SimulationState()) {
     // Listen to automaton state changes and clear simulation when automaton changes
     ref.listen<AutomatonStateProviderState>(automatonStateProvider, (
       previous,
@@ -142,18 +142,12 @@ class AutomatonSimulationNotifier extends StateNotifier<SimulationState> {
   }
 }
 
-/// Provider for trace persistence service (data layer version)
-final tracePersistenceServiceProvider =
-    Provider<data_trace.TracePersistenceService>((ref) {
-      return getIt<data_trace.TracePersistenceService>();
-    });
-
 /// Provider registration for automaton simulation operations
 final automatonSimulationProvider =
     StateNotifierProvider<AutomatonSimulationNotifier, SimulationState>((ref) {
-      final persistenceService = ref.watch(tracePersistenceServiceProvider);
-      return AutomatonSimulationNotifier(
-        ref: ref,
-        tracePersistenceService: persistenceService,
-      );
-    });
+  final persistenceService = ref.watch(dataTracePersistenceServiceProvider);
+  return AutomatonSimulationNotifier(
+    ref: ref,
+    tracePersistenceService: persistenceService,
+  );
+});

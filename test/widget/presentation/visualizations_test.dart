@@ -46,12 +46,12 @@ void main() {
     testGoldens('verifies font loading for text rendering consistency', (
       tester,
     ) async {
-      final widget = MaterialApp(
+      const widget = MaterialApp(
         home: Scaffold(
           body: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
+              children: [
                 Text(
                   'JFlutter',
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),

@@ -22,7 +22,6 @@ import 'package:jflutter/core/models/fsa_transition.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
 import 'package:jflutter/data/services/automaton_service.dart';
 import 'package:jflutter/data/services/trace_persistence_service.dart';
-import 'package:jflutter/features/layout/layout_repository_impl.dart';
 import 'package:jflutter/presentation/providers/algorithm_step_provider.dart';
 import 'package:jflutter/presentation/providers/automaton_algorithm_provider.dart';
 import 'package:jflutter/presentation/providers/automaton_layout_provider.dart';
@@ -56,7 +55,7 @@ void main() {
             );
           }),
           automatonLayoutProvider.overrideWith((ref) {
-            return AutomatonLayoutNotifier(ref, LayoutRepositoryImpl());
+            return AutomatonLayoutNotifier(ref);
           }),
           algorithmStepProvider.overrideWith((ref) {
             return AlgorithmStepNotifier(ref);

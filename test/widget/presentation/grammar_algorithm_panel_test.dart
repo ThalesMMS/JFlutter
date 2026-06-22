@@ -15,6 +15,7 @@ import 'package:jflutter/presentation/providers/automaton_state_provider.dart';
 import 'package:jflutter/presentation/providers/grammar_provider.dart';
 import 'package:jflutter/presentation/providers/home_navigation_provider.dart';
 import 'package:jflutter/presentation/providers/pda_editor_provider.dart';
+import 'package:jflutter/presentation/widgets/common/algorithm_button.dart';
 import 'package:jflutter/presentation/widgets/grammar_algorithm_panel.dart';
 
 class _MockGrammarNotifier extends GrammarProvider {
@@ -338,6 +339,7 @@ void main() {
     testWidgets('renders all algorithm buttons', (tester) async {
       await _pumpGrammarAlgorithmPanel(tester);
 
+      expect(find.byType(AlgorithmButton), findsNWidgets(12));
       expect(find.text('Remove Left Recursion'), findsOneWidget);
       expect(find.text('Left Factor'), findsOneWidget);
       expect(find.text('Find First Sets'), findsOneWidget);
@@ -377,10 +379,10 @@ void main() {
         grammarState: GrammarState.initial(),
       );
 
-      final conversionButtons = tester.widgetList<ButtonStyleButton>(
+      final conversionButtons = tester.widgetList<AlgorithmButton>(
         find.ancestor(
           of: find.text('Convert Right-Linear Grammar to FSA'),
-          matching: find.bySubtype<ButtonStyleButton>(),
+          matching: find.byType(AlgorithmButton),
         ),
       );
 
@@ -407,10 +409,10 @@ void main() {
         ),
       );
 
-      final conversionButtons = tester.widgetList<ButtonStyleButton>(
+      final conversionButtons = tester.widgetList<AlgorithmButton>(
         find.ancestor(
           of: find.text('Convert Right-Linear Grammar to FSA'),
-          matching: find.bySubtype<ButtonStyleButton>(),
+          matching: find.byType(AlgorithmButton),
         ),
       );
 

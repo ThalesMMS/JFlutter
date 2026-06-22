@@ -19,6 +19,7 @@ import '../../data/services/file_operations_service.dart';
 import '../providers/algorithm_step_provider.dart';
 import 'app_snackbar.dart';
 import 'algorithm_step_navigator.dart';
+import 'algorithm_step_renderer_registry.dart';
 import 'algorithm_step_viewer.dart';
 import 'common/algorithm_button.dart';
 import 'utils/platform_file_loader.dart';
@@ -48,6 +49,7 @@ class AlgorithmPanel extends ConsumerStatefulWidget {
   final String? equivalenceDetails;
   final ValueChanged<bool>? onStepByStepModeChanged;
   final FileOperationsService fileService;
+  final AlgorithmStepRendererRegistry? rendererRegistry;
 
   AlgorithmPanel({
     super.key,
@@ -71,6 +73,7 @@ class AlgorithmPanel extends ConsumerStatefulWidget {
     this.equivalenceResult,
     this.equivalenceDetails,
     this.onStepByStepModeChanged,
+    this.rendererRegistry,
     FileOperationsService? fileService,
   }) : fileService = fileService ?? FileOperationsService();
 
@@ -926,6 +929,7 @@ class _AlgorithmPanelState extends ConsumerState<AlgorithmPanel> {
         AlgorithmStepViewer(
           step: stepState.currentStep!,
           showExpandedDetails: false,
+          rendererRegistry: widget.rendererRegistry,
         ),
       ],
     );

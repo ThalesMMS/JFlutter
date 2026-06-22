@@ -13,7 +13,10 @@
 import 'algorithm_step.dart';
 import 'state.dart';
 
-/// Represents a single step in DFA minimization using Hopcroft's algorithm
+/// Represents a single step in DFA minimization using Hopcroft's algorithm.
+///
+/// TODO(#143): Keep for algorithm-internal construction. UI consumers should
+/// use [toProperties] through generic [AlgorithmStep.properties].
 class DFAMinimizationStep {
   /// Base algorithm step information
   final AlgorithmStep baseStep;
@@ -96,20 +99,17 @@ class DFAMinimizationStep {
       currentPartition: List.unmodifiable(
         currentPartition.map((set) => Set<State>.unmodifiable(set)).toList(),
       ),
-      processingSet: processingSet != null
-          ? Set.unmodifiable(processingSet)
-          : null,
+      processingSet:
+          processingSet != null ? Set.unmodifiable(processingSet) : null,
       distinguishingSymbol: distinguishingSymbol,
-      predecessors: predecessors != null
-          ? Set.unmodifiable(predecessors)
-          : null,
+      predecessors:
+          predecessors != null ? Set.unmodifiable(predecessors) : null,
       splitSet: splitSet != null ? Set.unmodifiable(splitSet) : null,
       splitIntersection: splitIntersection != null
           ? Set.unmodifiable(splitIntersection)
           : null,
-      splitDifference: splitDifference != null
-          ? Set.unmodifiable(splitDifference)
-          : null,
+      splitDifference:
+          splitDifference != null ? Set.unmodifiable(splitDifference) : null,
       newPartition: newPartition != null
           ? List.unmodifiable(
               newPartition.map((set) => Set<State>.unmodifiable(set)).toList(),
@@ -137,9 +137,8 @@ class DFAMinimizationStep {
     ];
 
     final acceptingLabels = acceptingStates.map((s) => s.label).join(', ');
-    final nonAcceptingLabels = nonAcceptingStates
-        .map((s) => s.label)
-        .join(', ');
+    final nonAcceptingLabels =
+        nonAcceptingStates.map((s) => s.label).join(', ');
 
     return DFAMinimizationStep(
       baseStep: AlgorithmStep(
@@ -394,8 +393,7 @@ class DFAMinimizationStep {
         id: id,
         stepNumber: stepNumber,
         title: 'Minimization complete',
-        explanation:
-            'DFA minimization completed successfully. '
+        explanation: 'DFA minimization completed successfully. '
             'Original DFA had $originalStates state(s), minimized DFA has $minimizedStates state(s). '
             '${reduction > 0 ? "Reduced by $reduction state(s). " : "DFA was already minimal. "}'
             'The minimized DFA has $totalTransitions transition(s) and accepts the same language as the original.',
@@ -442,6 +440,35 @@ class DFAMinimizationStep {
     );
   }
 
+  /// Converts this specialized step to generic, JSON-friendly step properties.
+  Map<String, dynamic> toProperties() {
+    final properties = <String, dynamic>{
+      'stepType': stepType.displayName,
+      'partitionSize': partitionSize,
+      'causedSplit': causedSplit,
+    };
+
+    final partitionIds = currentPartition
+        .map(_stateIds)
+        .where((ids) => ids.isNotEmpty)
+        .toList(growable: false);
+    if (partitionIds.isNotEmpty) {
+      properties['currentPartitionIds'] = partitionIds;
+    }
+
+    _putStateIds(properties, 'processingSetIds', processingSet);
+    _putStateIds(properties, 'predecessorStateIds', predecessors);
+    _putStateIds(properties, 'splitSetIds', splitSet);
+    _putStateIds(properties, 'splitIntersectionIds', splitIntersection);
+    _putStateIds(properties, 'splitDifferenceIds', splitDifference);
+    _putStateIds(
+        properties, 'equivalenceClassStateIds', equivalenceClassStates);
+    _putIfNotNull(properties, 'distinguishingSymbol', distinguishingSymbol);
+    _putIfNotNull(properties, 'equivalenceClassId', equivalenceClassId);
+
+    return Map<String, dynamic>.unmodifiable(properties);
+  }
+
   /// Converts the step to a JSON representation
   Map<String, dynamic> toJson() {
     return {
@@ -462,9 +489,8 @@ class DFAMinimizationStep {
       'partitionSize': partitionSize,
       'causedSplit': causedSplit,
       'equivalenceClassId': equivalenceClassId,
-      'equivalenceClassStates': equivalenceClassStates
-          ?.map((s) => s.toJson())
-          .toList(),
+      'equivalenceClassStates':
+          equivalenceClassStates?.map((s) => s.toJson()).toList(),
     };
   }
 
@@ -478,8 +504,7 @@ class DFAMinimizationStep {
         (e) => e.name == json['stepType'],
         orElse: () => DFAMinimizationStepType.initialPartition,
       ),
-      currentPartition:
-          (json['currentPartition'] as List?)
+      currentPartition: (json['currentPartition'] as List?)
               ?.map(
                 (partition) => (partition as List)
                     .map((s) => State.fromJson(s as Map<String, dynamic>))
@@ -561,11 +586,9 @@ class DFAMinimizationStep {
   /// Gets a summary of the partition state
   String get partitionSummary {
     if (currentPartition.isEmpty) return 'No partition data';
-    final classes = currentPartition
-        .map((set) {
-          return '{${set.map((s) => s.label).join(',')}}';
-        })
-        .join(', ');
+    final classes = currentPartition.map((set) {
+      return '{${set.map((s) => s.label).join(',')}}';
+    }).join(', ');
     return 'Partition ($partitionSize class${partitionSize != 1 ? 'es' : ''}): $classes';
   }
 
@@ -591,6 +614,34 @@ class DFAMinimizationStep {
       return '${splitIntersection!.length}:${splitDifference!.length}';
     }
     return null;
+  }
+
+  static void _putStateIds(
+    Map<String, dynamic> properties,
+    String key,
+    Set<State>? states,
+  ) {
+    final ids = states == null ? null : _stateIds(states);
+    if (ids != null && ids.isNotEmpty) {
+      properties[key] = ids;
+    }
+  }
+
+  static List<String> _stateIds(Set<State> states) {
+    return states
+        .map((state) => state.id.trim())
+        .where((id) => id.isNotEmpty)
+        .toList(growable: false);
+  }
+
+  static void _putIfNotNull(
+    Map<String, dynamic> properties,
+    String key,
+    Object? value,
+  ) {
+    if (value != null) {
+      properties[key] = value;
+    }
   }
 }
 

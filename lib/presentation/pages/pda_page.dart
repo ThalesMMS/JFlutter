@@ -18,6 +18,7 @@ import '../../core/models/state.dart' as automaton_state;
 import '../providers/help_provider.dart';
 import '../providers/pda_editor_provider.dart';
 import '../widgets/app_snackbar.dart';
+import '../widgets/automaton_workspace_scaffold.dart';
 import '../widgets/context_aware_help_panel.dart';
 import '../widgets/graphview_canvas_toolbar.dart';
 import '../widgets/automaton_canvas_tool.dart';
@@ -26,13 +27,13 @@ import '../widgets/pda_canvas_graphview.dart';
 import '../widgets/pda_algorithm_panel.dart';
 import '../widgets/pda_simulation_panel.dart';
 import '../widgets/pda/stack_drawer.dart';
+import '../widgets/common/workspace_helpers.dart';
 
 import '../../core/models/step_explanation.dart';
 import '../providers/pda_simulation_provider.dart';
 import '../../core/services/simulation_highlight_service.dart';
 import '../../features/canvas/graphview/graphview_highlight_channel.dart';
 import '../../features/canvas/graphview/graphview_pda_canvas_controller.dart';
-import '../widgets/tablet_layout_container.dart';
 
 /// Page for working with Pushdown Automata
 class PDAPage extends ConsumerStatefulWidget {
@@ -167,53 +168,26 @@ class _PDAPageState extends ConsumerState<PDAPage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final screenSize = MediaQuery.of(context).size;
-    final isMobile = screenSize.width < 1024;
+    final editorState = ref.watch(pdaEditorProvider);
+    final pda = editorState.pda;
 
     return ProviderScope(
       overrides: [
         canvasHighlightServiceProvider.overrideWithValue(_highlightService),
       ],
-      child: FocusTraversalGroup(
-        policy: ReadingOrderTraversalPolicy(),
-        child: Scaffold(
-          body: isMobile
-              ? _buildMobileLayout()
-              : screenSize.width < 1400
-                  ? _buildTabletLayout()
-                  : _buildDesktopLayout(),
-          floatingActionButton: !isMobile
-              ? FloatingActionButton(
-                  heroTag: 'pda_context_help_fab',
-                  onPressed: _showContextualHelp,
-                  tooltip: 'Context-Aware Help',
-                  child: const Icon(Icons.help_outline),
-                )
-              : null,
+      child: AutomatonWorkspaceScaffold(
+        canvasWithToolbar: _buildCanvasWithToolbar,
+        algorithmPanel: const PDAAlgorithmPanel(),
+        tabletAlgorithmPanel: const PDAAlgorithmPanel(useExpanded: false),
+        simulationPanel: PDASimulationPanel(
+          highlightService: _highlightService,
+          onStackChanged: _handleStackChanged,
+          onSimulationStart: _handleSimulationStart,
+          onSimulationEnd: _handleSimulationEnd,
         ),
-      ),
-    );
-  }
-
-  Widget _buildMobileLayout() {
-    final editorState = ref.watch(pdaEditorProvider);
-    final pda = editorState.pda;
-
-    return SafeArea(
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: _buildCanvasWithToolbar(isMobile: true),
-            ),
-          ),
-          // Floating Stack panel
-          if (pda != null)
-            Positioned(
-              top: 16,
-              right: 16,
-              child: PDAStackPanel(
+        mobileFloatingPanel: pda == null
+            ? null
+            : PDAStackPanel(
                 stackState: _currentStack,
                 initialStackSymbol: pda.initialStackSymbol,
                 stackAlphabet: pda.stackAlphabet,
@@ -225,8 +199,12 @@ class _PDAPageState extends ConsumerState<PDAPage>
                   });
                 },
               ),
-            ),
-        ],
+        floatingActionButton: FloatingActionButton(
+          heroTag: 'pda_context_help_fab',
+          onPressed: _showContextualHelp,
+          tooltip: 'Context-Aware Help',
+          child: const Icon(Icons.help_outline),
+        ),
       ),
     );
   }
@@ -315,44 +293,6 @@ class _PDAPageState extends ConsumerState<PDAPage>
           },
         );
       },
-    );
-  }
-
-  Widget _buildDesktopLayout() {
-    return Row(
-      children: [
-        // Left panel - PDA Canvas
-        Expanded(
-          flex: 2,
-          child: Container(
-            margin: const EdgeInsets.all(8),
-            child: _buildCanvasWithToolbar(isMobile: false),
-          ),
-        ),
-        const SizedBox(width: 16),
-        // Center panel - Simulation
-        Expanded(
-          flex: 1,
-          child: Container(
-            margin: const EdgeInsets.all(8),
-            child: PDASimulationPanel(
-              highlightService: _highlightService,
-              onStackChanged: _handleStackChanged,
-              onSimulationStart: _handleSimulationStart,
-              onSimulationEnd: _handleSimulationEnd,
-            ),
-          ),
-        ),
-        const SizedBox(width: 16),
-        // Right panel - Algorithms
-        Expanded(
-          flex: 1,
-          child: Container(
-            margin: const EdgeInsets.all(8),
-            child: const PDAAlgorithmPanel(),
-          ),
-        ),
-      ],
     );
   }
 
@@ -521,19 +461,14 @@ class _PDAPageState extends ConsumerState<PDAPage>
 
     if (hasPda) {
       messageParts.add(
-        '${_formatCount('state', 'states', stateCount)} · '
-        '${_formatCount('transition', 'transitions', transitionCount)}',
+        '${formatCount('state', 'states', stateCount)} · '
+        '${formatCount('transition', 'transitions', transitionCount)}',
       );
     } else {
       messageParts.add('No PDA loaded');
     }
 
     return messageParts.join(' · ');
-  }
-
-  String _formatCount(String singular, String plural, int count) {
-    final label = count == 1 ? singular : plural;
-    return '$count $label';
   }
 
   int? _inferHighlightedStackIndex() {
@@ -550,19 +485,6 @@ class _PDAPageState extends ConsumerState<PDAPage>
     }
 
     return null;
-  }
-
-  Widget _buildTabletLayout() {
-    return TabletLayoutContainer(
-      canvas: _buildCanvasWithToolbar(isMobile: false),
-      algorithmPanel: const PDAAlgorithmPanel(useExpanded: false),
-      simulationPanel: PDASimulationPanel(
-        highlightService: _highlightService,
-        onStackChanged: _handleStackChanged,
-        onSimulationStart: _handleSimulationStart,
-        onSimulationEnd: _handleSimulationEnd,
-      ),
-    );
   }
 }
 

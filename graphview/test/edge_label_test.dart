@@ -24,7 +24,8 @@ void main() {
         fontSize: 16.0,
         fontWeight: FontWeight.bold,
       );
-      final edge = Edge(node1, node2, label: 'Styled Label', labelStyle: customStyle);
+      final edge =
+          Edge(node1, node2, label: 'Styled Label', labelStyle: customStyle);
 
       expect(edge.label, 'Styled Label');
       expect(edge.labelStyle, customStyle);
@@ -70,7 +71,8 @@ void main() {
       final node2 = Node.Id('B');
       const style = TextStyle(color: Colors.blue, fontSize: 14.0);
 
-      final edge = graph.addEdge(node1, node2, label: 'Styled Edge', labelStyle: style);
+      final edge =
+          graph.addEdge(node1, node2, label: 'Styled Edge', labelStyle: style);
 
       expect(edge.label, 'Styled Edge');
       expect(edge.labelStyle, style);
@@ -162,25 +164,6 @@ void main() {
       }, returnsNormally);
     });
 
-    test('TreeEdgeRenderer handles edge with label', () {
-      final renderer = TreeEdgeRenderer(BuchheimWalkerConfiguration());
-      final node1 = Node.Id('A')
-        ..size = const Size(40, 40)
-        ..position = const Offset(0, 0);
-      final node2 = Node.Id('B')
-        ..size = const Size(40, 40)
-        ..position = const Offset(100, 100);
-      final edge = Edge(node1, node2, label: 'Tree Edge');
-      final paint = Paint();
-
-      expect(() {
-        final recorder = PictureRecorder();
-        final canvas = Canvas(recorder);
-        renderer.renderEdge(canvas, edge, paint);
-        recorder.endRecording();
-      }, returnsNormally);
-    });
-
     test('SugiyamaEdgeRenderer handles edge with label', () {
       final nodeData = <Node, SugiyamaNodeData>{};
       final edgeData = <Edge, SugiyamaEdgeData>{};
@@ -198,26 +181,6 @@ void main() {
         ..size = const Size(40, 40)
         ..position = const Offset(100, 100);
       final edge = Edge(node1, node2, label: 'Sugiyama Edge');
-      final paint = Paint();
-
-      expect(() {
-        final recorder = PictureRecorder();
-        final canvas = Canvas(recorder);
-        renderer.renderEdge(canvas, edge, paint);
-        recorder.endRecording();
-      }, returnsNormally);
-    });
-
-    test('MindmapEdgeRenderer handles edge with label', () {
-      final config = BuchheimWalkerConfiguration();
-      final renderer = MindmapEdgeRenderer(config);
-      final node1 = Node.Id('A')
-        ..size = const Size(40, 40)
-        ..position = const Offset(0, 0);
-      final node2 = Node.Id('B')
-        ..size = const Size(40, 40)
-        ..position = const Offset(100, 100);
-      final edge = Edge(node1, node2, label: 'Mindmap Edge');
       final paint = Paint();
 
       expect(() {
@@ -412,7 +375,8 @@ void main() {
     test('Edge label can be positioned at start', () {
       final node1 = Node.Id('A');
       final node2 = Node.Id('B');
-      final edge = Edge(node1, node2, label: 'Start', labelPosition: EdgeLabelPosition.start);
+      final edge = Edge(node1, node2,
+          label: 'Start', labelPosition: EdgeLabelPosition.start);
 
       expect(edge.label, 'Start');
       expect(edge.labelPosition, EdgeLabelPosition.start);
@@ -421,7 +385,8 @@ void main() {
     test('Edge label can be positioned at middle', () {
       final node1 = Node.Id('A');
       final node2 = Node.Id('B');
-      final edge = Edge(node1, node2, label: 'Middle', labelPosition: EdgeLabelPosition.middle);
+      final edge = Edge(node1, node2,
+          label: 'Middle', labelPosition: EdgeLabelPosition.middle);
 
       expect(edge.label, 'Middle');
       expect(edge.labelPosition, EdgeLabelPosition.middle);
@@ -430,19 +395,22 @@ void main() {
     test('Edge label can be positioned at end', () {
       final node1 = Node.Id('A');
       final node2 = Node.Id('B');
-      final edge = Edge(node1, node2, label: 'End', labelPosition: EdgeLabelPosition.end);
+      final edge = Edge(node1, node2,
+          label: 'End', labelPosition: EdgeLabelPosition.end);
 
       expect(edge.label, 'End');
       expect(edge.labelPosition, EdgeLabelPosition.end);
     });
 
-    test('Edge label defaults to middle position when labelPosition is null', () {
+    test('Edge label defaults to middle position when labelPosition is null',
+        () {
       final node1 = Node.Id('A');
       final node2 = Node.Id('B');
       final edge = Edge(node1, node2, label: 'Default');
 
       expect(edge.label, 'Default');
-      expect(edge.labelPosition, isNull); // Null means middle is used by default
+      expect(
+          edge.labelPosition, isNull); // Null means middle is used by default
     });
 
     test('Edge label follows edge direction by default', () {
@@ -451,13 +419,15 @@ void main() {
       final edge = Edge(node1, node2, label: 'Rotated');
 
       expect(edge.label, 'Rotated');
-      expect(edge.labelFollowsEdgeDirection, isNull); // Null means true (follows edge)
+      expect(edge.labelFollowsEdgeDirection,
+          isNull); // Null means true (follows edge)
     });
 
     test('Edge label can be set to follow edge direction explicitly', () {
       final node1 = Node.Id('A');
       final node2 = Node.Id('B');
-      final edge = Edge(node1, node2, label: 'Rotated', labelFollowsEdgeDirection: true);
+      final edge =
+          Edge(node1, node2, label: 'Rotated', labelFollowsEdgeDirection: true);
 
       expect(edge.label, 'Rotated');
       expect(edge.labelFollowsEdgeDirection, true);
@@ -466,7 +436,8 @@ void main() {
     test('Edge label can be set to remain horizontal', () {
       final node1 = Node.Id('A');
       final node2 = Node.Id('B');
-      final edge = Edge(node1, node2, label: 'Horizontal', labelFollowsEdgeDirection: false);
+      final edge = Edge(node1, node2,
+          label: 'Horizontal', labelFollowsEdgeDirection: false);
 
       expect(edge.label, 'Horizontal');
       expect(edge.labelFollowsEdgeDirection, false);
@@ -479,7 +450,8 @@ void main() {
       graph.addNode(node1);
       graph.addNode(node2);
 
-      final edge = graph.addEdge(node1, node2, label: 'Positioned', labelPosition: EdgeLabelPosition.end);
+      final edge = graph.addEdge(node1, node2,
+          label: 'Positioned', labelPosition: EdgeLabelPosition.end);
 
       expect(edge.label, 'Positioned');
       expect(edge.labelPosition, EdgeLabelPosition.end);
@@ -492,7 +464,8 @@ void main() {
       graph.addNode(node1);
       graph.addNode(node2);
 
-      final edge = graph.addEdge(node1, node2, label: 'Horizontal', labelFollowsEdgeDirection: false);
+      final edge = graph.addEdge(node1, node2,
+          label: 'Horizontal', labelFollowsEdgeDirection: false);
 
       expect(edge.label, 'Horizontal');
       expect(edge.labelFollowsEdgeDirection, false);
@@ -506,7 +479,8 @@ void main() {
       final node2 = Node.Id('B')
         ..size = const Size(40, 40)
         ..position = const Offset(100, 0);
-      final edge = Edge(node1, node2, label: 'Start', labelPosition: EdgeLabelPosition.start);
+      final edge = Edge(node1, node2,
+          label: 'Start', labelPosition: EdgeLabelPosition.start);
       final paint = Paint();
 
       expect(() {
@@ -525,7 +499,8 @@ void main() {
       final node2 = Node.Id('B')
         ..size = const Size(40, 40)
         ..position = const Offset(100, 0);
-      final edge = Edge(node1, node2, label: 'End', labelPosition: EdgeLabelPosition.end);
+      final edge = Edge(node1, node2,
+          label: 'End', labelPosition: EdgeLabelPosition.end);
       final paint = Paint();
 
       expect(() {
@@ -536,7 +511,9 @@ void main() {
       }, returnsNormally);
     });
 
-    test('Edge label remains horizontal when labelFollowsEdgeDirection is false', () {
+    test(
+        'Edge label remains horizontal when labelFollowsEdgeDirection is false',
+        () {
       final renderer = ArrowEdgeRenderer();
       final node1 = Node.Id('A')
         ..size = const Size(40, 40)
@@ -544,7 +521,8 @@ void main() {
       final node2 = Node.Id('B')
         ..size = const Size(40, 40)
         ..position = const Offset(100, 100);
-      final edge = Edge(node1, node2, label: 'Horizontal', labelFollowsEdgeDirection: false);
+      final edge = Edge(node1, node2,
+          label: 'Horizontal', labelFollowsEdgeDirection: false);
       final paint = Paint();
 
       expect(() {

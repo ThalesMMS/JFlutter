@@ -13,10 +13,12 @@ part of graphview;
 ///   routingMode: RoutingMode.direct,
 /// );
 /// final renderer = AdaptiveEdgeRenderer(config: config);
-/// final builder = GraphView(
+/// final algorithm = SugiyamaAlgorithm(SugiyamaConfiguration())
+///   ..renderer = renderer;
+/// final view = GraphView(
 ///   graph: graph,
-///   algorithm: BuchheimWalkerAlgorithm(builder, config),
-///   renderer: renderer,
+///   algorithm: algorithm,
+///   builder: (node) => Text('${node.key?.value}'),
 /// );
 /// ```
 class AdaptiveEdgeRenderer extends EdgeRenderer {

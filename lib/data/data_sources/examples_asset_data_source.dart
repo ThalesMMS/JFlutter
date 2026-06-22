@@ -9,9 +9,17 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import '../converters/asset_example_converters.dart';
+import '../models/asset_example.dart';
 import '../models/automaton_dto.dart';
+import '../../core/models/fsa.dart';
+import '../../core/models/grammar.dart';
+import '../../core/models/pda.dart';
+import '../../core/models/tm.dart';
 import '../../core/result.dart';
 import '../../core/repositories/automaton_repository.dart';
+
+export '../models/asset_example.dart' show AssetExample, ExampleCategory;
 
 /// Enhanced data source for loading example automatons from assets (Examples v1)
 class ExamplesAssetDataSource {
@@ -83,6 +91,26 @@ class ExamplesAssetDataSource {
     ),
 
     // PDA Examples - Pushdown concepts
+    'APD - Parênteses Balanceados': ExampleMetadata(
+      fileName: 'apda_balanced_parentheses.json',
+      category: ExampleCategory.pda,
+      subcategory: 'Stack Verification',
+      difficulty: DifficultyLevel.medium,
+      description:
+          'Autômato de pilha que reconhece cadeias de parênteses balanceados usando a pilha para rastrear aberturas pendentes.',
+      tags: ['pda', 'parentheses', 'balanced', 'stack'],
+      estimatedComplexity: ComplexityLevel.medium,
+    ),
+    'APD - a^n b^n': ExampleMetadata(
+      fileName: 'apda_anbn.json',
+      category: ExampleCategory.pda,
+      subcategory: 'Language Recognition',
+      difficulty: DifficultyLevel.hard,
+      description:
+          'Autômato de pilha que reconhece a linguagem a^n b^n ao empilhar símbolos para cada a e desempilhar para cada b.',
+      tags: ['pda', 'anbn', 'stack', 'context-free'],
+      estimatedComplexity: ComplexityLevel.high,
+    ),
     'APD - Palíndromo': ExampleMetadata(
       fileName: 'apda_palindrome.json',
       category: ExampleCategory.pda,
@@ -95,6 +123,16 @@ class ExamplesAssetDataSource {
     ),
 
     // Turing Machine Examples - Computational power
+    'MT - a^n b^n': ExampleMetadata(
+      fileName: 'tm_anbn.json',
+      category: ExampleCategory.tm,
+      subcategory: 'Language Recognition',
+      difficulty: DifficultyLevel.hard,
+      description:
+          'Máquina de Turing que reconhece a linguagem a^n b^n marcando pares correspondentes de a e b na fita.',
+      tags: ['tm', 'anbn', 'language', 'recognition'],
+      estimatedComplexity: ComplexityLevel.high,
+    ),
     'MT - Binário para unário': ExampleMetadata(
       fileName: 'tm_binary_to_unary.json',
       category: ExampleCategory.tm,
@@ -198,6 +236,153 @@ class ExamplesAssetDataSource {
     }
 
     return _loadExampleWithMetadata(name, metadata);
+  }
+
+  Future<Result<AssetExample<FSA>>> loadTypedFsaExample(String name) {
+    return _loadTypedExample(
+      name,
+      {ExampleCategory.dfa, ExampleCategory.nfa},
+      convertAssetJsonToFsa,
+    );
+  }
+
+  Future<Result<AssetExample<Grammar>>> loadTypedCfgExample(String name) {
+    return _loadTypedExample(
+      name,
+      {ExampleCategory.cfg},
+      convertAssetJsonToGrammar,
+    );
+  }
+
+  Future<Result<AssetExample<PDA>>> loadTypedPdaExample(String name) {
+    return _loadTypedExample(
+      name,
+      {ExampleCategory.pda},
+      convertAssetJsonToPda,
+    );
+  }
+
+  Future<Result<AssetExample<TM>>> loadTypedTmExample(String name) {
+    return _loadTypedExample(
+      name,
+      {ExampleCategory.tm},
+      convertAssetJsonToTm,
+    );
+  }
+
+  Future<ListResult<AssetExample<FSA>>> loadAllTypedFsaExamples() {
+    return _loadAllTypedExamples(
+      {ExampleCategory.dfa, ExampleCategory.nfa},
+      loadTypedFsaExample,
+    );
+  }
+
+  Future<ListResult<AssetExample<Grammar>>> loadAllTypedCfgExamples() {
+    return _loadAllTypedExamples(
+      {ExampleCategory.cfg},
+      loadTypedCfgExample,
+    );
+  }
+
+  Future<ListResult<AssetExample<PDA>>> loadAllTypedPdaExamples() {
+    return _loadAllTypedExamples(
+      {ExampleCategory.pda},
+      loadTypedPdaExample,
+    );
+  }
+
+  Future<ListResult<AssetExample<TM>>> loadAllTypedTmExamples() {
+    return _loadAllTypedExamples(
+      {ExampleCategory.tm},
+      loadTypedTmExample,
+    );
+  }
+
+  Future<ListResult<AssetExample<T>>> _loadAllTypedExamples<T extends Object>(
+    Set<ExampleCategory> categories,
+    Future<Result<AssetExample<T>>> Function(String name) load,
+  ) async {
+    final examples = <AssetExample<T>>[];
+
+    for (final entry in _exampleMetadata.entries) {
+      if (!categories.contains(entry.value.category)) {
+        continue;
+      }
+
+      final result = await load(entry.key);
+      if (result.isFailure) {
+        return Failure(result.error!);
+      }
+      examples.add(result.data!);
+    }
+
+    return Success(examples);
+  }
+
+  Future<Result<AssetExample<T>>> _loadTypedExample<T extends Object>(
+    String name,
+    Set<ExampleCategory> categories,
+    Result<T> Function(Map<String, dynamic> json, String exampleName) convert,
+  ) async {
+    final metadata = _exampleMetadata[name];
+    if (metadata == null) {
+      return Failure('Example not found: $name');
+    }
+
+    if (!categories.contains(metadata.category)) {
+      return Failure(
+        'Example "$name" belongs to ${metadata.category.displayName}, not ${categories.map((category) => category.displayName).join('/')}',
+      );
+    }
+
+    final assetPath = 'jflutter_js/examples/${metadata.fileName}';
+
+    try {
+      final jsonString = await rootBundle.loadString(assetPath);
+      final decoded = jsonDecode(jsonString);
+      if (decoded is! Map<String, dynamic>) {
+        return Failure(
+          'Example $name has invalid JSON structure. Expected an object.',
+        );
+      }
+
+      final conversionResult = convert(decoded, name);
+      if (conversionResult.isFailure) {
+        return Failure(conversionResult.error!);
+      }
+
+      return Success(
+        AssetExample<T>(
+          name: name,
+          description: metadata.description,
+          category: metadata.category,
+          difficultyLevel: metadata.difficulty,
+          complexityLevel: metadata.estimatedComplexity,
+          tags: metadata.tags,
+          payload: conversionResult.data!,
+        ),
+      );
+    } on FlutterError catch (e) {
+      final message = e.message;
+      if (message.contains('Unable to load asset')) {
+        return Failure(
+          'Example asset not found for $name. Expected at $assetPath',
+        );
+      }
+      return Failure('Error loading example $name: $message');
+    } on PlatformException catch (e) {
+      final message = e.message ?? e.toString();
+      if (message.contains('Unable to load asset')) {
+        return Failure(
+          'Example asset not found for $name. Expected at $assetPath',
+        );
+      }
+      return Failure('Error loading example $name: $e');
+    } on FormatException catch (e) {
+      return Failure('Invalid JSON for example $name: ${e.message}');
+    } on TypeError catch (e) {
+      return Failure('Example $name has invalid data: ${e.toString()}');
+    }
   }
 
   /// Internal method to load example with metadata
@@ -687,18 +872,4 @@ class ExampleMetadata {
     required this.tags,
     required this.estimatedComplexity,
   });
-}
-
-/// Categories of examples
-enum ExampleCategory {
-  dfa('DFA', 'Deterministic Finite Automaton'),
-  nfa('NFA', 'Nondeterministic Finite Automaton'),
-  cfg('CFG', 'Context-Free Grammar'),
-  pda('PDA', 'Pushdown Automaton'),
-  tm('TM', 'Turing Machine');
-
-  const ExampleCategory(this.displayName, this.fullName);
-
-  final String displayName;
-  final String fullName;
 }

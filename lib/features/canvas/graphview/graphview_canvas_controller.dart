@@ -14,7 +14,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:graphview/GraphView.dart';
+import 'package:graphview/graphview_jflutter.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 import '../../../core/models/fsa.dart';
@@ -32,7 +32,8 @@ void _logAutomatonCanvas(String message) {
 
 /// Controller that keeps the [Graph] in sync with the [AutomatonStateNotifier].
 class GraphViewCanvasController
-    extends BaseGraphViewCanvasController<AutomatonStateNotifier, FSA> {
+    extends BaseGraphViewCanvasController<AutomatonStateNotifier, FSA>
+    with SharedGraphViewStateController<AutomatonStateNotifier, FSA> {
   GraphViewCanvasController({
     required AutomatonStateNotifier automatonStateNotifier,
     super.graph,
@@ -51,6 +52,25 @@ class GraphViewCanvasController
   FSA? get currentDomainData => _provider.currentAutomaton;
 
   @override
+  Iterable<String> get domainStateIds {
+    final automaton = currentDomainData;
+    return automaton?.states.map((state) => state.id) ?? const <String>[];
+  }
+
+  @override
+  Iterable<String> get domainStateLabels {
+    final automaton = currentDomainData;
+    return automaton?.states.map((state) => state.label) ?? const <String>[];
+  }
+
+  @override
+  Iterable<String> get domainTransitionIds {
+    final automaton = currentDomainData;
+    return automaton?.transitions.map((transition) => transition.id) ??
+        const <String>[];
+  }
+
+  @override
   GraphViewAutomatonSnapshot toSnapshot(FSA? automaton) {
     return GraphViewAutomatonMapper.toSnapshot(automaton);
   }
@@ -64,145 +84,55 @@ class GraphViewCanvasController
     synchronizeGraph(automaton);
   }
 
-  String _generateNodeId() {
-    final reservedIds = <String>{...nodesCache.keys};
-    final automaton = _provider.currentAutomaton;
-    if (automaton != null) {
-      for (final state in automaton.states) {
-        reservedIds.add(state.id);
-      }
-    }
-    var index = 0;
-    while (true) {
-      final candidate = 'state_$index';
-      if (!reservedIds.contains(candidate)) {
-        return candidate;
-      }
-      index++;
-    }
-  }
-
-  String _generateEdgeId() {
-    final reservedIds = <String>{...edgesCache.keys};
-    final automaton = _provider.currentAutomaton;
-    if (automaton != null) {
-      for (final transition in automaton.transitions) {
-        reservedIds.add(transition.id);
-      }
-    }
-    var index = 0;
-    while (true) {
-      final candidate = 'transition_$index';
-      if (!reservedIds.contains(candidate)) {
-        return candidate;
-      }
-      index++;
-    }
-  }
-
-  String _nextAvailableStateLabel() {
-    final reservedLabels = <String>{};
-
-    final automaton = _provider.currentAutomaton;
-    if (automaton != null) {
-      for (final state in automaton.states) {
-        final label = state.label.trim();
-        if (label.isNotEmpty) {
-          reservedLabels.add(label);
-        }
-      }
-    }
-
-    for (final node in nodesCache.values) {
-      final label = node.label.trim();
-      if (label.isNotEmpty) {
-        reservedLabels.add(label);
-      }
-    }
-
-    var index = 0;
-    while (reservedLabels.contains('q$index')) {
-      index++;
-    }
-    return 'q$index';
-  }
-
-  /// Adds a new state centred in the current viewport.
-  void addStateAtCenter() {
-    _logAutomatonCanvas('addStateAtCenter requested');
-    final worldCenter = resolveViewportCenterWorld();
-    addStateAt(worldCenter);
-  }
-
-  /// Adds a new state at the provided [worldPosition].
   @override
-  void addStateAt(Offset worldPosition) {
-    final nodeId = _generateNodeId();
-    final label = _nextAvailableStateLabel();
+  void addDomainState({
+    required String id,
+    required String label,
+    required Offset position,
+  }) {
     final isFirstState = nodesCache.isEmpty &&
         (_provider.currentAutomaton?.states.isEmpty ?? true);
-
-    _logAutomatonCanvas(
-      'addStateAt -> id=$nodeId label=$label position=(${worldPosition.dx.toStringAsFixed(2)}, ${worldPosition.dy.toStringAsFixed(2)}) isFirstState=$isFirstState',
+    _provider.addState(
+      id: id,
+      label: label,
+      x: position.dx,
+      y: position.dy,
+      isInitial: isFirstState ? true : null,
+      isAccepting: false,
     );
-    performMutation(() {
-      _provider.addState(
-        id: nodeId,
-        label: label,
-        x: worldPosition.dx,
-        y: worldPosition.dy,
-        isInitial: isFirstState ? true : null,
-        isAccepting: false,
-      );
-    });
   }
 
-  /// Moves an existing state to a new [position].
   @override
-  void moveState(String id, Offset position) {
-    _logAutomatonCanvas(
-      'moveState -> id=$id position=(${position.dx.toStringAsFixed(2)}, ${position.dy.toStringAsFixed(2)})',
+  void moveDomainState({required String id, required Offset position}) {
+    _provider.moveState(id: id, x: position.dx, y: position.dy);
+  }
+
+  @override
+  void updateDomainStateLabel({required String id, required String label}) {
+    _provider.updateStateLabel(id: id, label: label);
+  }
+
+  @override
+  void updateDomainStateFlags({
+    required String id,
+    bool? isInitial,
+    bool? isAccepting,
+  }) {
+    _provider.updateStateFlags(
+      id: id,
+      isInitial: isInitial,
+      isAccepting: isAccepting,
     );
-    performMutation(() {
-      _provider.moveState(id: id, x: position.dx, y: position.dy);
-    });
   }
 
-  /// Updates the label displayed for the state identified by [id].
   @override
-  void updateStateLabel(String id, String label) {
-    final resolvedLabel = label.isEmpty ? id : label;
-    _logAutomatonCanvas('updateStateLabel -> id=$id label=$resolvedLabel');
-    performMutation(() {
-      _provider.updateStateLabel(id: id, label: resolvedLabel);
-    });
+  void removeDomainState(String id) {
+    _provider.removeState(id: id);
   }
 
-  /// Removes the state identified by [id] from the automaton.
   @override
-  void removeState(String id) {
-    _logAutomatonCanvas('removeState -> id=$id');
-    performMutation(() {
-      _provider.removeState(id: id);
-    });
-  }
-
-  /// Updates the initial/final flags associated with the state [id].
-  @override
-  void updateStateFlags(String id, {bool? isInitial, bool? isAccepting}) {
-    _logAutomatonCanvas(
-      'updateStateFlags -> id=$id isInitial=$isInitial isAccepting=$isAccepting',
-    );
-    if (isInitial == null && isAccepting == null) {
-      return;
-    }
-    performMutation(() {
-      _provider.updateStateFlags(
-        id: id,
-        isInitial: isInitial,
-        isAccepting: isAccepting,
-      );
-    });
+  void logCanvasStateMutation(String message) {
+    _logAutomatonCanvas(message);
   }
 
   /// Adds or updates a transition between [fromStateId] and [toStateId].
@@ -214,7 +144,7 @@ class GraphViewCanvasController
     double? controlPointX,
     double? controlPointY,
   }) {
-    final edgeId = transitionId ?? _generateEdgeId();
+    final edgeId = transitionId ?? generateEdgeId();
     _logAutomatonCanvas(
       'addOrUpdateTransition -> id=$edgeId from=$fromStateId to=$toStateId label=$label cp=(${controlPointX?.toStringAsFixed(2)}, ${controlPointY?.toStringAsFixed(2)})',
     );

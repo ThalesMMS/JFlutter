@@ -9,13 +9,11 @@
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
-import 'package:vector_math/vector_math_64.dart';
-
-import '../../../core/models/state.dart';
 import '../../../core/models/tm.dart';
 import '../../../core/models/tm_transition.dart';
 import '../../../core/models/transition.dart';
 import 'graphview_canvas_models.dart';
+import 'graphview_mapper_helpers.dart';
 
 /// Converts between [TM] instances and GraphView snapshots consumed by the TM
 /// canvas controller.
@@ -28,18 +26,11 @@ class GraphViewTmMapper {
       return const GraphViewAutomatonSnapshot.empty();
     }
 
-    final nodes = machine.states.map((state) {
-      return GraphViewCanvasNode(
-        id: state.id,
-        label: state.label,
-        x: state.position.x,
-        y: state.position.y,
-        isInitial: machine.initialState?.id == state.id,
-        isAccepting: machine.acceptingStates.any(
-          (candidate) => candidate.id == state.id,
-        ),
-      );
-    }).toList();
+    final nodes = GraphViewMapperHelpers.nodesToGraphViewNodes(
+      states: machine.states,
+      initialState: machine.initialState,
+      acceptingStates: machine.acceptingStates,
+    );
 
     final edges = machine.tmTransitions.map((transition) {
       return GraphViewCanvasEdge(
@@ -56,10 +47,10 @@ class GraphViewTmMapper {
       );
     }).toList();
 
-    final metadata = GraphViewAutomatonMetadata(
+    final metadata = GraphViewMapperHelpers.buildMetadata(
       id: machine.id,
       name: machine.name,
-      alphabet: machine.alphabet.toList(),
+      alphabet: machine.alphabet,
     );
 
     return GraphViewAutomatonSnapshot(
@@ -74,38 +65,22 @@ class GraphViewTmMapper {
     GraphViewAutomatonSnapshot snapshot,
     TM template,
   ) {
-    final states = snapshot.nodes
-        .map(
-          (node) => State(
-            id: node.id,
-            label: node.label,
-            position: Vector2(node.x, node.y),
-            isInitial: node.isInitial,
-            isAccepting: node.isAccepting,
-          ),
-        )
-        .toSet();
-
-    final stateMap = {for (final state in states) state.id: state};
+    final states = GraphViewMapperHelpers.nodesFromSnapshot(snapshot.nodes);
+    final stateMap = GraphViewMapperHelpers.buildStateMap(states);
 
     final transitions = snapshot.edges.map((edge) {
-      final fromState = stateMap[edge.fromStateId];
-      final toState = stateMap[edge.toStateId];
-      if (fromState == null || toState == null) {
-        throw StateError('Edge references missing state: ${edge.toJson()}');
-      }
-
-      final controlPoint =
-          (edge.controlPointX != null && edge.controlPointY != null)
-          ? Vector2(edge.controlPointX!, edge.controlPointY!)
-          : Vector2.zero();
+      final endpoints = GraphViewMapperHelpers.resolveEdgeEndpoints(
+        stateMap: stateMap,
+        edge: edge,
+      );
+      final controlPoint = GraphViewMapperHelpers.resolveControlPoint(edge);
 
       final direction = edge.direction ?? TapeDirection.right;
 
       return TMTransition(
         id: edge.id,
-        fromState: fromState,
-        toState: toState,
+        fromState: endpoints.fromState,
+        toState: endpoints.toState,
         label: edge.label,
         controlPoint: controlPoint,
         readSymbol: edge.readSymbol ?? '',
@@ -115,18 +90,10 @@ class GraphViewTmMapper {
       );
     }).toSet();
 
-    final acceptingStates = {
-      for (final node in snapshot.nodes.where((node) => node.isAccepting))
-        stateMap[node.id]!,
-    };
-
-    GraphViewCanvasNode? initialNode;
-    for (final node in snapshot.nodes) {
-      if (node.isInitial) {
-        initialNode = node;
-        break;
-      }
-    }
+    final acceptingStates = GraphViewMapperHelpers.buildAcceptingStates(
+      nodes: snapshot.nodes,
+      stateMap: stateMap,
+    );
 
     final alphabet = <String>{
       ...template.alphabet,
@@ -138,9 +105,11 @@ class GraphViewTmMapper {
           edge.writeSymbol!,
     };
 
-    final initialState = initialNode != null
-        ? stateMap[initialNode.id]
-        : template.initialState;
+    final initialState = GraphViewMapperHelpers.resolveInitialState(
+      nodes: snapshot.nodes,
+      stateMap: stateMap,
+      fallbackInitialState: template.initialState,
+    );
 
     return template.copyWith(
       states: states,

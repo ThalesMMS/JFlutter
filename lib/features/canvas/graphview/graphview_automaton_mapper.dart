@@ -11,13 +11,12 @@
 //
 import 'package:jflutter/features/canvas/graphview/graphview_canvas_controller.dart'
     show GraphViewCanvasController;
-import 'package:vector_math/vector_math_64.dart';
 
 import '../../../core/models/fsa.dart';
 import '../../../core/models/fsa_transition.dart';
-import '../../../core/models/state.dart';
 import '../../../core/models/transition.dart';
 import 'graphview_canvas_models.dart';
+import 'graphview_mapper_helpers.dart';
 
 /// Utility helpers to convert between [FSA] instances and GraphView snapshots.
 class GraphViewAutomatonMapper {
@@ -30,18 +29,11 @@ class GraphViewAutomatonMapper {
       return const GraphViewAutomatonSnapshot.empty();
     }
 
-    final nodes = automaton.states.map((state) {
-      return GraphViewCanvasNode(
-        id: state.id,
-        label: state.label,
-        x: state.position.x,
-        y: state.position.y,
-        isInitial: automaton.initialState?.id == state.id,
-        isAccepting: automaton.acceptingStates.any(
-          (candidate) => candidate.id == state.id,
-        ),
-      );
-    }).toList();
+    final nodes = GraphViewMapperHelpers.nodesToGraphViewNodes(
+      states: automaton.states,
+      initialState: automaton.initialState,
+      acceptingStates: automaton.acceptingStates,
+    );
 
     final edges = automaton.fsaTransitions.map((transition) {
       return GraphViewCanvasEdge(
@@ -55,10 +47,10 @@ class GraphViewAutomatonMapper {
       );
     }).toList();
 
-    final metadata = GraphViewAutomatonMetadata(
+    final metadata = GraphViewMapperHelpers.buildMetadata(
       id: automaton.id,
       name: automaton.name,
-      alphabet: automaton.alphabet.toList(),
+      alphabet: automaton.alphabet,
     );
 
     return GraphViewAutomatonSnapshot(
@@ -73,60 +65,40 @@ class GraphViewAutomatonMapper {
     GraphViewAutomatonSnapshot snapshot,
     FSA template,
   ) {
-    final states = snapshot.nodes
-        .map(
-          (node) => State(
-            id: node.id,
-            label: node.label,
-            position: Vector2(node.x, node.y),
-            isInitial: node.isInitial,
-            isAccepting: node.isAccepting,
-          ),
-        )
-        .toSet();
-
-    final stateMap = {for (final state in states) state.id: state};
+    final states = GraphViewMapperHelpers.nodesFromSnapshot(snapshot.nodes);
+    final stateMap = GraphViewMapperHelpers.buildStateMap(states);
 
     final transitions = snapshot.edges.map((edge) {
-      final fromState = stateMap[edge.fromStateId];
-      final toState = stateMap[edge.toStateId];
-      if (fromState == null || toState == null) {
-        throw StateError('Edge references missing state: ${edge.toJson()}');
-      }
+      final endpoints = GraphViewMapperHelpers.resolveEdgeEndpoints(
+        stateMap: stateMap,
+        edge: edge,
+      );
       return FSATransition(
         id: edge.id,
-        fromState: fromState,
-        toState: toState,
+        fromState: endpoints.fromState,
+        toState: endpoints.toState,
         inputSymbols: edge.symbols.toSet(),
         lambdaSymbol: edge.lambdaSymbol,
         label: edge.label,
-        controlPoint: edge.controlPointX != null && edge.controlPointY != null
-            ? Vector2(edge.controlPointX!, edge.controlPointY!)
-            : null,
+        controlPoint: GraphViewMapperHelpers.resolveOptionalControlPoint(edge),
       );
     }).toSet();
 
-    final acceptingStates = {
-      for (final node in snapshot.nodes.where((node) => node.isAccepting))
-        stateMap[node.id]!,
-    };
-
-    GraphViewCanvasNode? initialNode;
-    for (final node in snapshot.nodes) {
-      if (node.isInitial) {
-        initialNode = node;
-        break;
-      }
-    }
+    final acceptingStates = GraphViewMapperHelpers.buildAcceptingStates(
+      nodes: snapshot.nodes,
+      stateMap: stateMap,
+    );
 
     final alphabet = <String>{
       ...template.alphabet,
       for (final edge in snapshot.edges) ...edge.symbols,
     }..removeWhere((symbol) => symbol.isEmpty);
 
-    final initialState = initialNode != null
-        ? stateMap[initialNode.id]
-        : template.initialState;
+    final initialState = GraphViewMapperHelpers.resolveInitialState(
+      nodes: snapshot.nodes,
+      stateMap: stateMap,
+      fallbackInitialState: template.initialState,
+    );
 
     return template.copyWith(
       states: states,

@@ -14,7 +14,10 @@ import 'algorithm_step.dart';
 import 'state.dart';
 import 'step_explanation.dart';
 
-/// Represents a single step in NFA to DFA conversion using subset construction
+/// Represents a single step in NFA to DFA conversion using subset construction.
+///
+/// TODO(#143): Keep for algorithm-internal construction. UI consumers should
+/// use [toProperties] through generic [AlgorithmStep.properties].
 class NFAToDFAStep {
   /// Base algorithm step information
   final AlgorithmStep baseStep;
@@ -400,6 +403,25 @@ class NFAToDFAStep {
     );
   }
 
+  /// Converts this specialized step to generic, JSON-friendly step properties.
+  Map<String, dynamic> toProperties() {
+    final properties = <String, dynamic>{
+      'stepType': stepType.displayName,
+      'isAcceptingState': isAcceptingState,
+      'isNewState': isNewState,
+    };
+
+    _putStateIds(properties, 'currentStateIds', currentStateSet);
+    _putStateIds(properties, 'epsilonClosureIds', epsilonClosure);
+    _putStateIds(properties, 'reachableStateIds', reachableStates);
+    _putStateIds(properties, 'nextStateIds', nextStateSet);
+    _putIfNotNull(properties, 'processedSymbol', processedSymbol);
+    _putIfNotNull(properties, 'dfaStateId', dfaStateId);
+    _putIfNotNull(properties, 'dfaStateLabel', dfaStateLabel);
+
+    return Map<String, dynamic>.unmodifiable(properties);
+  }
+
   /// Converts the step to a JSON representation
   Map<String, dynamic> toJson() {
     return {
@@ -530,6 +552,30 @@ class NFAToDFAStep {
   bool get createsNewComponent =>
       stepType == NFAToDFAStepType.createState ||
       stepType == NFAToDFAStepType.createTransition;
+
+  static void _putStateIds(
+    Map<String, dynamic> properties,
+    String key,
+    Set<State>? states,
+  ) {
+    final ids = states
+        ?.map((state) => state.id.trim())
+        .where((id) => id.isNotEmpty)
+        .toList(growable: false);
+    if (ids != null && ids.isNotEmpty) {
+      properties[key] = ids;
+    }
+  }
+
+  static void _putIfNotNull(
+    Map<String, dynamic> properties,
+    String key,
+    Object? value,
+  ) {
+    if (value != null) {
+      properties[key] = value;
+    }
+  }
 }
 
 /// Types of steps in NFA to DFA conversion

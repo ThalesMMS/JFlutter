@@ -14,7 +14,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:graphview/GraphView.dart';
+import 'package:graphview/graphview_jflutter.dart';
 
 import '../../../core/models/simulation_highlight.dart';
 import 'graphview_canvas_models.dart';
@@ -109,7 +109,8 @@ mixin GraphViewViewportHighlightMixin on GraphViewHighlightController {
     final safeCurrent = currentScale == 0 ? 1.0 : currentScale;
     final targetScale = (safeCurrent * factor).clamp(0.05, 10.0);
     final relativeScale = targetScale / safeCurrent;
-    final target = Matrix4.copy(matrix)..scale(relativeScale);
+    final target = Matrix4.copy(matrix)
+      ..scaleByDouble(relativeScale, relativeScale, relativeScale, 1.0);
     graphController.animateToMatrix(target);
     _logViewportEvent(
       'Applied scale factor $relativeScale (target=$targetScale)',
@@ -166,11 +167,13 @@ mixin GraphViewViewportHighlightMixin on GraphViewHighlightController {
     final targetCenterY = viewport.height / 2;
 
     final matrix = Matrix4.identity()
-      ..translate(
+      ..translateByDouble(
         targetCenterX - contentCenterX * targetScale,
         targetCenterY - contentCenterY * targetScale,
+        0.0,
+        1.0,
       )
-      ..scale(targetScale);
+      ..scaleByDouble(targetScale, targetScale, targetScale, 1.0);
 
     graphController.animateToMatrix(matrix);
     _logViewportEvent(

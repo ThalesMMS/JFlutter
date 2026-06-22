@@ -118,9 +118,12 @@ flutter:
     # Context-free grammar examples
     - jflutter_js/examples/glc_balanced_parentheses.json
     - jflutter_js/examples/glc_palindrome.json
-    # Pushdown automaton example
+    # Pushdown automaton examples
+    - jflutter_js/examples/apda_balanced_parentheses.json
+    - jflutter_js/examples/apda_anbn.json
     - jflutter_js/examples/apda_palindrome.json
     # Turing machine examples
+    - jflutter_js/examples/tm_anbn.json
     - jflutter_js/examples/tm_binary_to_unary.json
     - jflutter_js/examples/tm_copy_string.json
     - jflutter_js/examples/tm_increment.json

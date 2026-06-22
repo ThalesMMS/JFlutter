@@ -16,8 +16,10 @@ import '../../core/algorithms/cfg/cyk_parser.dart';
 import '../../core/models/cyk_step.dart';
 import '../../core/models/grammar.dart';
 import '../../core/models/grammar_parse_report.dart';
+import '../../core/models/typed_algorithm_step.dart';
 import '../../core/result.dart';
 import '../providers/grammar_provider.dart';
+import 'algorithm_step_renderer_registry.dart';
 import 'derivation_tree_view.dart';
 import 'grammar_sentential_form_card.dart';
 import 'step_explanation_card.dart';
@@ -36,6 +38,8 @@ class GrammarSimulationPanel extends ConsumerStatefulWidget {
 class _GrammarSimulationPanelState
     extends ConsumerState<GrammarSimulationPanel> {
   final TextEditingController _inputController = TextEditingController();
+  final AlgorithmStepRendererRegistry _cykStepRendererRegistry =
+      AlgorithmStepRendererRegistry.withDefaults();
 
   bool _isParsing = false;
   GrammarParseReport? _parseReport;
@@ -543,6 +547,15 @@ class _GrammarSimulationPanelState
   Widget _buildCykStepsSection(BuildContext context, List<CYKStep> steps) {
     final selectedStep = steps[_selectedStepIndex];
     final stepExplanation = selectedStep.baseStep.stepExplanation;
+    final renderedStep = _cykStepRendererRegistry.render(
+      context,
+      selectedStep.baseStep.copyWith(
+        properties: {
+          ...selectedStep.baseStep.properties,
+          kCykStepKey: selectedStep,
+        },
+      ),
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -605,7 +618,9 @@ class _GrammarSimulationPanelState
               ?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
-        if (stepExplanation != null && !stepExplanation.isEmpty) ...[
+        if (renderedStep != null)
+          renderedStep
+        else if (stepExplanation != null && !stepExplanation.isEmpty) ...[
           GrammarSententialFormCard(explanation: stepExplanation),
           const SizedBox(height: 8),
           StepExplanationCard(explanation: stepExplanation),

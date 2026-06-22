@@ -192,7 +192,7 @@ builder: (Node node) {
 
 ## Code Examples
 
-### Complete Example: Tree Layout
+### Complete Example: Layered Layout
 
 **Before (Deprecated):**
 ```dart
@@ -232,10 +232,7 @@ class _TreeViewPageState extends State<TreeViewPage> {
     return Scaffold(
       body: GraphView(
         graph: graph,
-        algorithm: BuchheimWalkerAlgorithm(
-          BuchheimWalkerConfiguration(),
-          TreeEdgeRenderer(BuchheimWalkerConfiguration()),
-        ),
+        algorithm: SugiyamaAlgorithm(SugiyamaConfiguration()),
       ),
     );
   }
@@ -250,7 +247,7 @@ class TreeViewPage extends StatefulWidget {
 }
 
 class _TreeViewPageState extends State<TreeViewPage> {
-  final Graph graph = Graph()..isTree = true;
+  final Graph graph = Graph();
   final GraphViewController controller = GraphViewController();
 
   @override
@@ -281,10 +278,7 @@ class _TreeViewPageState extends State<TreeViewPage> {
     return Scaffold(
       body: GraphView.builder(
         graph: graph,
-        algorithm: BuchheimWalkerAlgorithm(
-          BuchheimWalkerConfiguration(),
-          TreeEdgeRenderer(BuchheimWalkerConfiguration()),
-        ),
+        algorithm: SugiyamaAlgorithm(SugiyamaConfiguration()),
         controller: controller,
         builder: (Node node) {
           final id = node.key!.value as int;
@@ -332,10 +326,7 @@ class _MultiTypeGraphPageState extends State<MultiTypeGraphPage> {
     return Scaffold(
       body: GraphView.builder(
         graph: graph,
-        algorithm: BuchheimWalkerAlgorithm(
-          BuchheimWalkerConfiguration(),
-          TreeEdgeRenderer(BuchheimWalkerConfiguration()),
-        ),
+        algorithm: SugiyamaAlgorithm(SugiyamaConfiguration()),
         builder: (Node node) {
           final id = node.key!.value;
 
@@ -460,7 +451,7 @@ controller.setInitiallyCollapsedNodes(graph, [node1, node2, node3]);
 |---------|--------|-------|
 | **0.7.0** | Initial deprecation | Builder pattern introduced, old API deprecated |
 | **1.5.0** | Enhanced builder API | Added animations, navigation, expand/collapse features |
-| **1.5.1** | Current | Improved deprecation messages with clear migration guidance |
+| **1.5.3** | Current | Restricted the JFlutter fork surface to retained app APIs |
 | **1.6.0** | Planned | Further improvements to builder pattern |
 | **2.0.0** | Planned removal | Deprecated APIs will be removed (estimated Q3 2026) |
 
@@ -577,17 +568,15 @@ test('graph should contain node', () {
 
 ### Q: Where can I find more examples?
 
-**A:** Check out the example directory in the GraphView repository:
-- `example/lib/tree_graphview.dart` - Tree layout with builder pattern
-- `example/lib/layer_graphview.dart` - Layered graph with controls
-- `example/lib/mindmap_graphview.dart` - Mindmap layout
-- All examples use the modern builder pattern
+**A:** In this vendored JFlutter fork, the old example app has been removed.
+Use the package tests and the JFlutter app canvas integration as the current
+examples of the retained builder API.
 
 ### Q: What if I encounter issues during migration?
 
 **A:**
 1. Check this migration guide for common patterns
-2. Review the example apps in the `example/` directory
+2. Review the package tests and JFlutter app canvas integration
 3. Run `flutter analyze` to catch deprecated API usage
 4. Open an issue on GitHub if you find a use case not covered here
 
@@ -602,7 +591,7 @@ test('graph should contain node', () {
 If you have questions or encounter issues during migration:
 
 - **Documentation**: See [README.md](README.md) for full API reference
-- **Examples**: Check the `example/` directory for working code
+- **Examples**: Check the package tests and JFlutter app canvas integration
 - **Issues**: Report problems at https://github.com/nabil6391/graphview/issues
 - **Discussions**: Ask questions in GitHub Discussions
 
@@ -615,8 +604,8 @@ This migration guide covers the core `Node.Id()` and `GraphView.builder()` migra
 Relevant fork API sections:
 
 - [Edge Rendering Patches](FORK_PATCHES.md#edge-rendering-patches) - `AdaptiveEdgeRenderer`, routing and anchor modes, per-edge renderers, and edge labels.
-- [Performance Patches](FORK_PATCHES.md#performance-patches) - Barnes-Hut force-directed optimization, rectangle-based repulsion, path caching, and dirty edge tracking.
+- [Performance Patches](FORK_PATCHES.md#performance-patches) - path caching and dirty edge tracking.
 - [Interaction Patches](FORK_PATCHES.md#interaction-patches) - `GraphViewController` navigation and visibility APIs, plus `NodeDraggingConfiguration`.
-- [Algorithm Patches](FORK_PATCHES.md#algorithm-patches) - Additional tree layouts, `MindmapAlgorithm`, `MindmapEdgeRenderer`, and tree renderer enhancements.
 
-Working demonstrations of fork features are available in the `example/lib/` directory.
+Working demonstrations of fork features are covered by package tests and the
+JFlutter app canvas integration.

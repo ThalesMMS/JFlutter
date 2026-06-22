@@ -11,6 +11,7 @@
 //
 import 'package:flutter/material.dart';
 import '../../core/models/algorithm_step.dart';
+import 'algorithm_step_renderer_registry.dart';
 
 /// Widget for displaying algorithm step details and explanations
 ///
@@ -26,17 +27,22 @@ class AlgorithmStepViewer extends StatelessWidget {
   /// Whether to show expanded details by default
   final bool showExpandedDetails;
 
+  /// Optional typed renderer registry for specialized step payloads.
+  final AlgorithmStepRendererRegistry? rendererRegistry;
+
   const AlgorithmStepViewer({
     super.key,
     required this.step,
     this.onShowDetails,
     this.showExpandedDetails = false,
+    this.rendererRegistry,
   });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final typedStepData = rendererRegistry?.render(context, step);
 
     return Card(
       elevation: 2,
@@ -55,8 +61,9 @@ class AlgorithmStepViewer extends StatelessWidget {
             const SizedBox(height: 16),
 
             // Algorithm-specific data
-            if (step.properties.isNotEmpty) ...[
-              _buildPropertiesSection(context, colorScheme, textTheme),
+            if (typedStepData != null || step.properties.isNotEmpty) ...[
+              typedStepData ??
+                  _buildPropertiesSection(context, colorScheme, textTheme),
               const SizedBox(height: 12),
             ],
 

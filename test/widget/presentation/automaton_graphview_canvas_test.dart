@@ -16,7 +16,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:graphview/GraphView.dart';
+import 'package:graphview/graphview_jflutter.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 import 'package:jflutter/core/models/fsa.dart';

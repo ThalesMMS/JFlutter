@@ -21,9 +21,11 @@ import '../../core/models/tm_analysis.dart';
 import '../../core/models/tm_transition.dart';
 import '../../core/models/tm_transition.dart' as tm_models show TapeDirection;
 import '../../core/result.dart';
-import '../../data/examples/tm_examples.dart';
+import '../../data/data_sources/examples_asset_data_source.dart';
 import '../providers/tm_editor_provider.dart';
 import 'app_snackbar.dart';
+import 'common/algorithm_button.dart';
+import 'common/algorithm_button_config.dart';
 import 'file_operations_panel.dart';
 
 enum _TMAnalysisFocus {
@@ -46,9 +48,14 @@ enum _TMAnalysisSection {
 
 /// Panel for Turing Machine analysis algorithms
 class TMAlgorithmPanel extends ConsumerStatefulWidget {
-  const TMAlgorithmPanel({super.key, this.useExpanded = true});
+  const TMAlgorithmPanel({
+    super.key,
+    this.useExpanded = true,
+    this.examplesDataSource,
+  });
 
   final bool useExpanded;
+  final ExamplesAssetDataSource? examplesDataSource;
 
   @override
   ConsumerState<TMAlgorithmPanel> createState() => _TMAlgorithmPanelState();
@@ -60,6 +67,17 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
   String? _analysisError;
   TM? _analyzedTm;
   _TMAnalysisFocus? _currentFocus;
+  String? _loadingExampleName;
+  late final ExamplesAssetDataSource _examplesDataSource;
+  late final Future<ListResult<AssetExample<TM>>> _tmExamplesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _examplesDataSource =
+        widget.examplesDataSource ?? ExamplesAssetDataSource();
+    _tmExamplesFuture = _examplesDataSource.loadAllTypedTmExamples();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -104,139 +122,91 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
   }
 
   Widget _buildAlgorithmButtons(BuildContext context) {
+    final algorithmConfigs = _algorithmButtonConfigs();
+
     return Column(
       children: [
         _buildExamplesSection(context),
         const SizedBox(height: 16),
         const Divider(),
         const SizedBox(height: 16),
-        _buildAlgorithmButton(
-          context,
-          title: 'Check Decidability',
-          description: 'Verify halting states and potential infinite loops',
-          icon: Icons.help_outline,
-          focus: _TMAnalysisFocus.decidability,
-        ),
-        const SizedBox(height: 12),
-        _buildAlgorithmButton(
-          context,
-          title: 'Find Reachable States',
-          description: 'Identify which states can be reached from the start',
-          icon: Icons.explore,
-          focus: _TMAnalysisFocus.reachability,
-        ),
-        const SizedBox(height: 12),
-        _buildAlgorithmButton(
-          context,
-          title: 'Language Analysis',
-          description: 'Inspect accepting structure and transition coverage',
-          icon: Icons.analytics,
-          focus: _TMAnalysisFocus.language,
-        ),
-        const SizedBox(height: 12),
-        _buildAlgorithmButton(
-          context,
-          title: 'Tape Operations',
-          description: 'Review read/write symbols and head movements',
-          icon: Icons.storage,
-          focus: _TMAnalysisFocus.tape,
-        ),
-        const SizedBox(height: 12),
-        _buildAlgorithmButton(
-          context,
-          title: 'Time Characteristics',
-          description: 'Understand analysis runtime and processed elements',
-          icon: Icons.timer,
-          focus: _TMAnalysisFocus.time,
-        ),
-        const SizedBox(height: 12),
-        _buildAlgorithmButton(
-          context,
-          title: 'Space Characteristics',
-          description: 'Assess tape alphabet and movement coverage',
-          icon: Icons.memory,
-          focus: _TMAnalysisFocus.space,
-        ),
+        for (var index = 0; index < algorithmConfigs.length; index++) ...[
+          _buildConfiguredAlgorithmButton(algorithmConfigs[index]),
+          if (index < algorithmConfigs.length - 1) const SizedBox(height: 12),
+        ],
       ],
     );
   }
 
-  Widget _buildAlgorithmButton(
-    BuildContext context, {
+  List<AlgorithmButtonConfig> _algorithmButtonConfigs() {
+    return [
+      _algorithmButtonConfig(
+        title: 'Check Decidability',
+        description: 'Verify halting states and potential infinite loops',
+        icon: Icons.help_outline,
+        focus: _TMAnalysisFocus.decidability,
+      ),
+      _algorithmButtonConfig(
+        title: 'Find Reachable States',
+        description: 'Identify which states can be reached from the start',
+        icon: Icons.explore,
+        focus: _TMAnalysisFocus.reachability,
+      ),
+      _algorithmButtonConfig(
+        title: 'Language Analysis',
+        description: 'Inspect accepting structure and transition coverage',
+        icon: Icons.analytics,
+        focus: _TMAnalysisFocus.language,
+      ),
+      _algorithmButtonConfig(
+        title: 'Tape Operations',
+        description: 'Review read/write symbols and head movements',
+        icon: Icons.storage,
+        focus: _TMAnalysisFocus.tape,
+      ),
+      _algorithmButtonConfig(
+        title: 'Time Characteristics',
+        description: 'Understand analysis runtime and processed elements',
+        icon: Icons.timer,
+        focus: _TMAnalysisFocus.time,
+      ),
+      _algorithmButtonConfig(
+        title: 'Space Characteristics',
+        description: 'Assess tape alphabet and movement coverage',
+        icon: Icons.memory,
+        focus: _TMAnalysisFocus.space,
+      ),
+    ];
+  }
+
+  AlgorithmButtonConfig _algorithmButtonConfig({
     required String title,
     required String description,
     required IconData icon,
     required _TMAnalysisFocus focus,
   }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isSelected = _currentFocus == focus;
+    return AlgorithmButtonConfig(
+      title: title,
+      description: description,
+      icon: icon,
+      isEnabled: !_isAnalyzing,
+      isExecuting: _isAnalyzing,
+      isSelected: _currentFocus == focus,
+      onPressed: () => _performAnalysis(focus),
+    );
+  }
 
-    return InkWell(
-      onTap: _isAnalyzing ? null : () => _performAnalysis(focus),
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: _isAnalyzing
-                ? colorScheme.outline.withValues(alpha: 0.3)
-                : isSelected
-                    ? colorScheme.primary
-                    : colorScheme.primary.withValues(alpha: 0.3),
-          ),
-          borderRadius: BorderRadius.circular(8),
-          color: _isAnalyzing
-              ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
-              : isSelected
-                  ? colorScheme.primaryContainer.withValues(alpha: 0.35)
-                  : null,
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: _isAnalyzing ? colorScheme.outline : colorScheme.primary,
-              size: 24,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: _isAnalyzing
-                              ? colorScheme.outline
-                              : colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurface.withValues(alpha: 0.7),
-                        ),
-                  ),
-                ],
-              ),
-            ),
-            if (_isAnalyzing)
-              const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            else
-              Icon(
-                Icons.arrow_forward_ios,
-                color: colorScheme.primary.withValues(alpha: 0.5),
-                size: 16,
-              ),
-          ],
-        ),
-      ),
+  Widget _buildConfiguredAlgorithmButton(AlgorithmButtonConfig config) {
+    return AlgorithmButton(
+      title: config.title,
+      description: config.description,
+      icon: config.icon,
+      onPressed: config.effectiveOnPressed,
+      isExecuting: config.isExecuting,
+      isDestructive: config.isDestructive,
+      isSelected: config.isSelected,
+      executionProgress: config.executionProgress,
+      executionStatus: config.executionStatus,
     );
   }
 
@@ -549,7 +519,6 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
 
   Widget _buildExamplesSection(BuildContext context) {
     final theme = Theme.of(context);
-    final examples = TMExamples.getExampleFactories();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -567,15 +536,52 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
           ],
         ),
         const SizedBox(height: 12),
-        ...examples.entries.map(
-          (entry) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: _buildExampleButton(
-              context,
-              title: entry.key,
-              onPressed: () => _loadExample(entry.value),
-            ),
-          ),
+        FutureBuilder<ListResult<AssetExample<TM>>>(
+          future: _tmExamplesFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState != ConnectionState.done) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: LinearProgressIndicator(),
+              );
+            }
+
+            final result = snapshot.data;
+            if (result == null || result.isFailure) {
+              return Text(
+                result?.error ?? 'Failed to load TM examples.',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              );
+            }
+
+            final examples = result.data!;
+            if (examples.isEmpty) {
+              return Text(
+                'No TM examples available.',
+                style: theme.textTheme.bodySmall,
+              );
+            }
+
+            return Column(
+              children: examples
+                  .map(
+                    (example) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: _buildExampleButton(
+                        context,
+                        title: example.name,
+                        isLoading: _loadingExampleName == example.name,
+                        onPressed: _loadingExampleName == null
+                            ? () => _loadExample(example.name)
+                            : null,
+                      ),
+                    ),
+                  )
+                  .toList(),
+            );
+          },
         ),
       ],
     );
@@ -584,7 +590,8 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
   Widget _buildExampleButton(
     BuildContext context, {
     required String title,
-    required VoidCallback onPressed,
+    required bool isLoading,
+    required VoidCallback? onPressed,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -592,7 +599,13 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
       width: double.infinity,
       child: OutlinedButton.icon(
         onPressed: onPressed,
-        icon: const Icon(Icons.file_open, size: 18),
+        icon: isLoading
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Icon(Icons.file_open, size: 18),
         label: Text(
           title,
           maxLines: 2,
@@ -608,9 +621,25 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
     );
   }
 
-  void _loadExample(TM Function() exampleFactory) {
+  Future<void> _loadExample(String exampleName) async {
+    setState(() {
+      _loadingExampleName = exampleName;
+    });
+
     try {
-      final tm = exampleFactory();
+      final result = await _examplesDataSource.loadTypedTmExample(exampleName);
+      if (!mounted) return;
+
+      if (result.isFailure) {
+        showAppSnackBar(
+          context,
+          message: 'Failed to load example: ${result.error}',
+          tone: AppSnackBarTone.error,
+        );
+        return;
+      }
+
+      final tm = result.data!.payload;
       ref.read(tmEditorProvider.notifier).setTm(tm);
       showAppSnackBar(
         context,
@@ -623,6 +652,12 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
         message: 'Failed to load example: $error',
         tone: AppSnackBarTone.error,
       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loadingExampleName = null;
+        });
+      }
     }
   }
 

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:graphview/GraphView.dart';
 
+SugiyamaAlgorithm buildTestAlgorithm() =>
+    SugiyamaAlgorithm(SugiyamaConfiguration());
+
 void main() {
   group('GraphView Controller Tests', () {
     testWidgets('animateToNode centers the target node',
@@ -17,9 +20,7 @@ void main() {
       final transformationController = TransformationController();
       final controller = GraphViewController(
           transformationController: transformationController);
-      final configuration = BuchheimWalkerConfiguration();
-      final algorithm = BuchheimWalkerAlgorithm(
-          configuration, TreeEdgeRenderer(configuration));
+      final algorithm = buildTestAlgorithm();
 
       // Build widget
       await tester.pumpWidget(
@@ -87,8 +88,7 @@ void main() {
       final transformationController = TransformationController();
       final controller = GraphViewController(
           transformationController: transformationController);
-      final algorithm = BuchheimWalkerAlgorithm(BuchheimWalkerConfiguration(),
-          TreeEdgeRenderer(BuchheimWalkerConfiguration()));
+      final algorithm = buildTestAlgorithm();
 
       await tester.pumpWidget(
         MaterialApp(
@@ -126,9 +126,7 @@ void main() {
       final transformationController = TransformationController();
       final controller = GraphViewController(
           transformationController: transformationController);
-      final configuration = BuchheimWalkerConfiguration();
-      final algorithm = BuchheimWalkerAlgorithm(
-          configuration, TreeEdgeRenderer(configuration));
+      final algorithm = buildTestAlgorithm();
 
       await tester.pumpWidget(
         MaterialApp(
@@ -179,14 +177,12 @@ void main() {
       final transformationController = TransformationController();
       final controller = GraphViewController(
           transformationController: transformationController);
-      final configuration = BuchheimWalkerConfiguration();
 
       await tester.pumpWidget(
         MaterialApp(
           home: GraphView.builder(
             graph: graph,
-            algorithm: BuchheimWalkerAlgorithm(
-                configuration, TreeEdgeRenderer(configuration)),
+            algorithm: buildTestAlgorithm(),
             controller: controller,
             builder: (node) => const SizedBox(width: 20, height: 20),
           ),

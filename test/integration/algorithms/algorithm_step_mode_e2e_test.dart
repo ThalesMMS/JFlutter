@@ -150,6 +150,8 @@ void main() {
           expect(stepState.hasSteps, isTrue);
           expect(stepState.totalSteps, greaterThan(0));
           expect(stepState.currentStepIndex, 0);
+          expect(stepState.currentStep!.properties, isNotEmpty);
+          expect(stepState.currentStep!.properties['stepType'], isA<String>());
 
           // 3. Navigate forward through all steps
           final stepNotifier = container.read(algorithmStepProvider.notifier);
@@ -365,6 +367,8 @@ void main() {
           final stepState = container.read(algorithmStepProvider);
           expect(stepState.hasSteps, isTrue);
           expect(stepState.totalSteps, greaterThan(0));
+          expect(stepState.currentStep!.properties, isNotEmpty);
+          expect(stepState.currentStep!.properties['stepType'], isA<String>());
 
           // 3. Navigate through steps
           final stepNotifier = container.read(algorithmStepProvider.notifier);

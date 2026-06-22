@@ -14,12 +14,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/algorithm_step.dart';
-import '../../core/models/dfa_minimization_step.dart';
-import '../../core/models/nfa_to_dfa_step.dart';
-import '../../core/models/regex_to_nfa_step.dart';
 import '../../core/models/simulation_highlight.dart';
-import '../../core/models/state.dart';
-import '../../core/models/transition.dart';
+import '../../core/services/algorithm_step_highlight_extractor.dart';
 
 /// State for algorithm step navigation
 class AlgorithmStepState {
@@ -113,100 +109,7 @@ class AlgorithmStepState {
 SimulationHighlight extractHighlightFromProperties(
   Map<String, dynamic> properties,
 ) {
-  final stateIds = <String>{};
-  final transitionIds = <String>{};
-
-  // Handle NFAToDFAStep
-  if (properties.containsKey('nfaToDfaStep')) {
-    final step = properties['nfaToDfaStep'];
-    if (step is NFAToDFAStep) {
-      _addStateIdsFromSet(stateIds, step.currentStateSet);
-      if (step.epsilonClosure != null) {
-        _addStateIdsFromSet(stateIds, step.epsilonClosure!);
-      }
-      if (step.reachableStates != null) {
-        _addStateIdsFromSet(stateIds, step.reachableStates!);
-      }
-      if (step.nextStateSet != null) {
-        _addStateIdsFromSet(stateIds, step.nextStateSet!);
-      }
-      if (step.dfaStateId != null) {
-        stateIds.add(step.dfaStateId!);
-      }
-    }
-  }
-
-  // Handle DFAMinimizationStep
-  if (properties.containsKey('dfaMinimizationStep')) {
-    final step = properties['dfaMinimizationStep'];
-    if (step is DFAMinimizationStep) {
-      if (step.processingSet != null) {
-        _addStateIdsFromSet(stateIds, step.processingSet!);
-      }
-      if (step.splitSet != null) {
-        _addStateIdsFromSet(stateIds, step.splitSet!);
-      }
-      if (step.splitIntersection != null) {
-        _addStateIdsFromSet(stateIds, step.splitIntersection!);
-      }
-      if (step.splitDifference != null) {
-        _addStateIdsFromSet(stateIds, step.splitDifference!);
-      }
-      if (step.equivalenceClassStates != null) {
-        _addStateIdsFromSet(stateIds, step.equivalenceClassStates!);
-      }
-      if (step.equivalenceClassId != null) {
-        stateIds.add(step.equivalenceClassId!);
-      }
-    }
-  }
-
-  // Handle RegexToNFAStep
-  if (properties.containsKey('regexToNfaStep')) {
-    final step = properties['regexToNfaStep'];
-    if (step is RegexToNFAStep) {
-      if (step.createdStates != null) {
-        _addStateIdsFromSet(stateIds, step.createdStates!);
-      }
-      if (step.createdTransitions != null) {
-        _addTransitionIdsFromSet(transitionIds, step.createdTransitions!);
-      }
-      if (step.fragmentStartState != null) {
-        stateIds.add(step.fragmentStartState!.id);
-      }
-      if (step.fragmentAcceptState != null) {
-        stateIds.add(step.fragmentAcceptState!.id);
-      }
-    }
-  }
-
-  return SimulationHighlight(
-    stateIds: Set.unmodifiable(stateIds),
-    transitionIds: Set.unmodifiable(transitionIds),
-  );
-}
-
-/// Helper to add state IDs from a set of States
-void _addStateIdsFromSet(Set<String> targetSet, Set<State> states) {
-  for (final state in states) {
-    final trimmed = state.id.trim();
-    if (trimmed.isNotEmpty) {
-      targetSet.add(trimmed);
-    }
-  }
-}
-
-/// Helper to add transition IDs from a set of Transitions
-void _addTransitionIdsFromSet(
-  Set<String> targetSet,
-  Set<Transition> transitions,
-) {
-  for (final transition in transitions) {
-    final trimmed = transition.id.trim();
-    if (trimmed.isNotEmpty) {
-      targetSet.add(trimmed);
-    }
-  }
+  return extractAlgorithmStepHighlight(properties);
 }
 
 void _logStepEvent(String message) {
@@ -395,5 +298,5 @@ class AlgorithmStepNotifier extends StateNotifier<AlgorithmStepState> {
 /// Provider registration for algorithm step navigation
 final algorithmStepProvider =
     StateNotifierProvider<AlgorithmStepNotifier, AlgorithmStepState>(
-      (ref) => AlgorithmStepNotifier(ref),
-    );
+  (ref) => AlgorithmStepNotifier(ref),
+);

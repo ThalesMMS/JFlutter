@@ -14,7 +14,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:graphview/GraphView.dart';
+import 'package:graphview/graphview_jflutter.dart';
 import 'package:vector_math/vector_math_64.dart' as vmath;
 
 import '../../../core/models/simulation_highlight.dart';
@@ -159,6 +159,9 @@ mixin SharedGraphViewStateController<TNotifier, TSnapshot>
     logCanvasStateMutation(
       'updateStateFlags -> id=$id isInitial=$isInitial isAccepting=$isAccepting',
     );
+    if (isInitial == null && isAccepting == null) {
+      return;
+    }
     performMutation(() {
       updateDomainStateFlags(
         id: id,

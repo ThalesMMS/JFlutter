@@ -16,7 +16,6 @@ import 'package:jflutter/core/entities/grammar_entity.dart';
 import 'package:jflutter/core/entities/turing_machine_entity.dart';
 import 'package:jflutter/core/repositories/automaton_repository.dart';
 import 'package:jflutter/data/data_sources/examples_asset_data_source.dart';
-import 'package:jflutter/data/services/examples_service.dart';
 import 'package:jflutter/presentation/widgets/export/svg_exporter.dart';
 import 'package:flutter/material.dart';
 
@@ -95,11 +94,9 @@ TuringTransitionEntity _tmTransition({
 void main() {
   group('Examples v1 Library Tests', () {
     late ExamplesAssetDataSource dataSource;
-    late ExamplesService service;
 
     setUp(() {
       dataSource = ExamplesAssetDataSource();
-      service = ExamplesService(dataSource);
     });
 
     group('Metadata and Structure', () {
@@ -123,7 +120,7 @@ void main() {
         expect(counts[ExampleCategory.dfa], greaterThan(0));
         expect(counts.containsKey(ExampleCategory.cfg), isTrue);
         expect(counts[ExampleCategory.nfa], greaterThanOrEqualTo(0));
-        expect(counts[ExampleCategory.tm], equals(4));
+        expect(counts[ExampleCategory.tm], equals(5));
       });
 
       test('Search functionality works correctly', () {
@@ -153,7 +150,7 @@ void main() {
       });
     });
 
-    group('Service Logic', () {
+    group('Metadata Logic', () {
       test('Difficulty level enum works correctly', () {
         expect(DifficultyLevel.easy.displayName, equals('Fácil'));
         expect(DifficultyLevel.medium.displayName, equals('Médio'));
@@ -179,8 +176,8 @@ void main() {
         expect(ExampleCategory.values.length, equals(5));
       });
 
-      test('Service provides category information', () {
-        final categories = service.getAvailableCategories();
+      test('Data source provides category information', () {
+        final categories = dataSource.getAvailableCategories();
 
         expect(categories, contains(ExampleCategory.dfa));
         expect(categories, contains(ExampleCategory.cfg));
@@ -188,8 +185,8 @@ void main() {
         expect(categories, contains(ExampleCategory.tm));
       });
 
-      test('Service provides category counts', () {
-        final counts = service.getExamplesCountByCategory();
+      test('Data source provides category counts', () {
+        final counts = dataSource.getExamplesCountByCategory();
 
         expect(counts[ExampleCategory.dfa], greaterThan(0));
         expect(counts.containsKey(ExampleCategory.cfg), isTrue);
@@ -274,15 +271,18 @@ void main() {
         expect(searchResults, isNotEmpty);
       });
 
-      test('ExamplesService loads all TM examples from assets', () async {
-        final result = await service.loadExamplesByCategory(ExampleCategory.tm);
+      test('ExamplesAssetDataSource loads all TM examples from assets',
+          () async {
+        final result =
+            await dataSource.loadExamplesByCategory(ExampleCategory.tm);
 
         expect(result.isSuccess, isTrue);
         expect(result.data, isNotNull);
-        expect(result.data!, hasLength(4));
+        expect(result.data!, hasLength(5));
         expect(
           result.data!.map((example) => example.name),
           containsAll(<String>[
+            'MT - a^n b^n',
             'MT - Binário para unário',
             'MT - Cópia de string',
             'MT - Incremento binário',
@@ -291,12 +291,109 @@ void main() {
         );
       });
 
-      test('ExamplesService provides service methods correctly', () {
-        final categories = service.getAvailableCategories();
+      test('ExamplesAssetDataSource provides query methods correctly', () {
+        final categories = dataSource.getAvailableCategories();
         expect(categories, contains(ExampleCategory.dfa));
 
-        final counts = service.getExamplesCountByCategory();
+        final counts = dataSource.getExamplesCountByCategory();
         expect(counts.isNotEmpty, isTrue);
+      });
+    });
+
+    group('Typed Asset Catalog', () {
+      test('Loads current model payloads from bundled JSON examples', () async {
+        final fsaResult = await dataSource.loadAllTypedFsaExamples();
+        final cfgResult = await dataSource.loadAllTypedCfgExamples();
+        final pdaResult = await dataSource.loadAllTypedPdaExamples();
+        final tmResult = await dataSource.loadAllTypedTmExamples();
+
+        expect(fsaResult.isSuccess, isTrue);
+        expect(cfgResult.isSuccess, isTrue);
+        expect(pdaResult.isSuccess, isTrue);
+        expect(tmResult.isSuccess, isTrue);
+
+        expect(fsaResult.data, hasLength(4));
+        expect(cfgResult.data, hasLength(2));
+        expect(pdaResult.data, hasLength(3));
+        expect(tmResult.data, hasLength(5));
+
+        expect(
+          fsaResult.data!.every((example) => example.payload.states.isNotEmpty),
+          isTrue,
+        );
+        expect(
+          cfgResult.data!.every(
+            (example) => example.payload.productions.isNotEmpty,
+          ),
+          isTrue,
+        );
+        expect(
+          pdaResult.data!.every(
+            (example) => example.payload.transitions.isNotEmpty,
+          ),
+          isTrue,
+        );
+        expect(
+          tmResult.data!.every(
+            (example) => example.payload.transitions.isNotEmpty,
+          ),
+          isTrue,
+        );
+
+        final lambdaFsa = await dataSource.loadTypedFsaExample(
+          'AFNλ - A ou AB',
+        );
+        expect(lambdaFsa.isSuccess, isTrue);
+        expect(lambdaFsa.data!.category, ExampleCategory.nfa);
+        expect(lambdaFsa.data!.payload.epsilonTransitions, isNotEmpty);
+        expect(lambdaFsa.data!.payload.validate(), isEmpty);
+
+        final palindromeGrammar = cfgResult.data!.firstWhere(
+          (example) => example.name == 'GLC - Palíndromo',
+        );
+        expect(
+          palindromeGrammar.payload.productions.any(
+            (production) =>
+                production.leftSide.single == 'S' &&
+                production.rightSide.length == 3 &&
+                production.rightSide[0] == 'a' &&
+                production.rightSide[1] == 'S' &&
+                production.rightSide[2] == 'a',
+          ),
+          isTrue,
+        );
+        expect(palindromeGrammar.payload.validate(), isEmpty);
+
+        final pda = pdaResult.data!
+            .firstWhere((example) => example.name == 'APD - Palíndromo')
+            .payload;
+        expect(pda.initialStackSymbol, equals('Z'));
+        expect(
+          pda.pdaTransitions.any((transition) => transition.pushSymbol == 'aZ'),
+          isTrue,
+        );
+        expect(
+          pda.pdaTransitions.any((transition) => transition.isLambdaInput),
+          isTrue,
+        );
+
+        expect(
+          tmResult.data!.every((example) => example.payload.validate().isEmpty),
+          isTrue,
+        );
+        expect(
+          tmResult.data!.any(
+            (example) => example.payload.rightMovingTransitions.isNotEmpty,
+          ),
+          isTrue,
+        );
+      });
+
+      test('Typed loaders reject category mismatches', () async {
+        final result = await dataSource.loadTypedTmExample('GLC - Palíndromo');
+
+        expect(result.isFailure, isTrue);
+        expect(result.error, contains('belongs to CFG'));
       });
     });
 

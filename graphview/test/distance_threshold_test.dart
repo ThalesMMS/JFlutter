@@ -24,11 +24,8 @@ void main() {
       node2.size = const Size(50, 50);
 
       // Create widget tree with GraphView
-      graph.isTree = true;
       final controller = GraphViewController();
-      final configuration = BuchheimWalkerConfiguration();
-      final algorithm = BuchheimWalkerAlgorithm(
-          configuration, TreeEdgeRenderer(configuration));
+      final algorithm = SugiyamaAlgorithm(SugiyamaConfiguration());
 
       await tester.pumpWidget(
         MaterialApp(

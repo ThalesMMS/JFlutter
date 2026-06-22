@@ -21,6 +21,8 @@ import '../../core/models/grammar_diagnostic_severity.dart';
 import '../../core/models/grammar_transformation_step.dart';
 import '../../core/models/pda.dart';
 import '../../core/result.dart';
+import 'common/algorithm_button.dart';
+import 'common/algorithm_button_config.dart';
 import 'grammar_transformation_history.dart';
 import '../providers/automaton_state_provider.dart';
 import '../providers/grammar_provider.dart';
@@ -86,68 +88,92 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
       children: [
         _buildConversionSection(context, grammarState),
         const SizedBox(height: 24),
-        _buildAlgorithmButton(
-          context,
-          title: 'Convert to CNF',
-          description: 'Convert grammar to Chomsky Normal Form',
-          icon: Icons.filter_list,
-          onPressed: _convertToCnf,
+        _buildConfiguredAlgorithmButton(
+          AlgorithmButtonConfig(
+            title: 'Convert to CNF',
+            description: 'Convert grammar to Chomsky Normal Form',
+            icon: Icons.filter_list,
+            isEnabled: !_isAnalyzing,
+            isExecuting: _isAnalyzing,
+            onPressed: _convertToCnf,
+          ),
         ),
         const SizedBox(height: 12),
-        _buildAlgorithmButton(
-          context,
-          title: 'Convert to GNF',
-          description: 'Convert grammar to Greibach Normal Form',
-          icon: Icons.format_list_numbered,
-          onPressed: _convertToGnf,
+        _buildConfiguredAlgorithmButton(
+          AlgorithmButtonConfig(
+            title: 'Convert to GNF',
+            description: 'Convert grammar to Greibach Normal Form',
+            icon: Icons.format_list_numbered,
+            isEnabled: !_isAnalyzing,
+            isExecuting: _isAnalyzing,
+            onPressed: _convertToGnf,
+          ),
         ),
         const SizedBox(height: 12),
-        _buildAlgorithmButton(
-          context,
-          title: 'Remove Left Recursion',
-          description: 'Eliminate left recursion from grammar',
-          icon: Icons.transform,
-          onPressed: _removeLeftRecursion,
+        _buildConfiguredAlgorithmButton(
+          AlgorithmButtonConfig(
+            title: 'Remove Left Recursion',
+            description: 'Eliminate left recursion from grammar',
+            icon: Icons.transform,
+            isEnabled: !_isAnalyzing,
+            isExecuting: _isAnalyzing,
+            onPressed: _removeLeftRecursion,
+          ),
         ),
         const SizedBox(height: 12),
-        _buildAlgorithmButton(
-          context,
-          title: 'Left Factor',
-          description: 'Apply left factoring to grammar',
-          icon: Icons.account_tree,
-          onPressed: _leftFactor,
+        _buildConfiguredAlgorithmButton(
+          AlgorithmButtonConfig(
+            title: 'Left Factor',
+            description: 'Apply left factoring to grammar',
+            icon: Icons.account_tree,
+            isEnabled: !_isAnalyzing,
+            isExecuting: _isAnalyzing,
+            onPressed: _leftFactor,
+          ),
         ),
         const SizedBox(height: 12),
-        _buildAlgorithmButton(
-          context,
-          title: 'Find First Sets',
-          description: 'Calculate FIRST sets for all variables',
-          icon: Icons.first_page,
-          onPressed: _findFirstSets,
+        _buildConfiguredAlgorithmButton(
+          AlgorithmButtonConfig(
+            title: 'Find First Sets',
+            description: 'Calculate FIRST sets for all variables',
+            icon: Icons.first_page,
+            isEnabled: !_isAnalyzing,
+            isExecuting: _isAnalyzing,
+            onPressed: _findFirstSets,
+          ),
         ),
         const SizedBox(height: 12),
-        _buildAlgorithmButton(
-          context,
-          title: 'Find Follow Sets',
-          description: 'Calculate FOLLOW sets for all variables',
-          icon: Icons.last_page,
-          onPressed: _findFollowSets,
+        _buildConfiguredAlgorithmButton(
+          AlgorithmButtonConfig(
+            title: 'Find Follow Sets',
+            description: 'Calculate FOLLOW sets for all variables',
+            icon: Icons.last_page,
+            isEnabled: !_isAnalyzing,
+            isExecuting: _isAnalyzing,
+            onPressed: _findFollowSets,
+          ),
         ),
         const SizedBox(height: 12),
-        _buildAlgorithmButton(
-          context,
-          title: 'Build Parse Table',
-          description: 'Generate LL(1) or LR(1) parse table',
-          icon: Icons.table_chart,
-          onPressed: _buildParseTable,
+        _buildConfiguredAlgorithmButton(
+          AlgorithmButtonConfig(
+            title: 'Build Parse Table',
+            description: 'Generate LL(1) or LR(1) parse table',
+            icon: Icons.table_chart,
+            isEnabled: !_isAnalyzing,
+            isExecuting: _isAnalyzing,
+            onPressed: _buildParseTable,
+          ),
         ),
         const SizedBox(height: 12),
-        _buildAlgorithmButton(
-          context,
-          title: 'Check Ambiguity',
-          description: 'Detect if grammar is ambiguous',
-          icon: Icons.help_outline,
-          onPressed: _checkAmbiguity,
+        _buildConfiguredAlgorithmButton(
+          AlgorithmButtonConfig(
+            title: 'Check Ambiguity',
+            description: 'Detect if grammar is ambiguous',
+            icon: Icons.help_outline,
+            isEnabled: !_isAnalyzing,
+            isExecuting: _isAnalyzing,
+            onPressed: _checkAmbiguity,
+          ),
         ),
       ],
     );
@@ -172,48 +198,56 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
-        _buildConversionButton(
-          context,
-          label: 'Convert Right-Linear Grammar to FSA',
-          processingLabel: 'Converting to FSA...',
-          icon: Icons.sync_alt,
-          isProcessing:
-              isBusy && activeConversion == GrammarConversionType.grammarToFsa,
-          isDisabled: isDisabled,
-          onPressed: _convertToAutomaton,
+        _buildConfiguredAlgorithmButton(
+          AlgorithmButtonConfig(
+            title: 'Convert Right-Linear Grammar to FSA',
+            description: 'Build an FSA from a right-linear grammar',
+            icon: Icons.sync_alt,
+            isExecuting: isBusy &&
+                activeConversion == GrammarConversionType.grammarToFsa,
+            isEnabled: !isDisabled,
+            executionStatus: 'Converting to FSA...',
+            onPressed: _convertToAutomaton,
+          ),
         ),
         const SizedBox(height: 12),
-        _buildConversionButton(
-          context,
-          label: 'Convert Grammar to PDA (General)',
-          processingLabel: 'Converting to PDA...',
-          icon: Icons.auto_fix_high,
-          isProcessing:
-              isBusy && activeConversion == GrammarConversionType.grammarToPda,
-          isDisabled: isDisabled,
-          onPressed: _convertToPdaGeneral,
+        _buildConfiguredAlgorithmButton(
+          AlgorithmButtonConfig(
+            title: 'Convert Grammar to PDA (General)',
+            description: 'Build an equivalent PDA from the grammar',
+            icon: Icons.auto_fix_high,
+            isExecuting: isBusy &&
+                activeConversion == GrammarConversionType.grammarToPda,
+            isEnabled: !isDisabled,
+            executionStatus: 'Converting to PDA...',
+            onPressed: _convertToPdaGeneral,
+          ),
         ),
         const SizedBox(height: 12),
-        _buildConversionButton(
-          context,
-          label: 'Convert Grammar to PDA (Standard)',
-          processingLabel: 'Converting (Standard)...',
-          icon: Icons.layers,
-          isProcessing: isBusy &&
-              activeConversion == GrammarConversionType.grammarToPdaStandard,
-          isDisabled: isDisabled,
-          onPressed: _convertToPdaStandard,
+        _buildConfiguredAlgorithmButton(
+          AlgorithmButtonConfig(
+            title: 'Convert Grammar to PDA (Standard)',
+            description: 'Build a standard-form PDA from the grammar',
+            icon: Icons.layers,
+            isExecuting: isBusy &&
+                activeConversion == GrammarConversionType.grammarToPdaStandard,
+            isEnabled: !isDisabled,
+            executionStatus: 'Converting (Standard)...',
+            onPressed: _convertToPdaStandard,
+          ),
         ),
         const SizedBox(height: 12),
-        _buildConversionButton(
-          context,
-          label: 'Convert Grammar to PDA (Greibach)',
-          processingLabel: 'Converting (Greibach)...',
-          icon: Icons.stacked_bar_chart,
-          isProcessing: isBusy &&
-              activeConversion == GrammarConversionType.grammarToPdaGreibach,
-          isDisabled: isDisabled,
-          onPressed: _convertToPdaGreibach,
+        _buildConfiguredAlgorithmButton(
+          AlgorithmButtonConfig(
+            title: 'Convert Grammar to PDA (Greibach)',
+            description: 'Build a Greibach-form PDA from the grammar',
+            icon: Icons.stacked_bar_chart,
+            isExecuting: isBusy &&
+                activeConversion == GrammarConversionType.grammarToPdaGreibach,
+            isEnabled: !isDisabled,
+            executionStatus: 'Converting (Greibach)...',
+            onPressed: _convertToPdaGreibach,
+          ),
         ),
         if (!hasProductions)
           Padding(
@@ -241,77 +275,17 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
     );
   }
 
-  Widget _buildAlgorithmButton(
-    BuildContext context, {
-    required String title,
-    required String description,
-    required IconData icon,
-    required VoidCallback onPressed,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return InkWell(
-      onTap: _isAnalyzing ? null : onPressed,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: _isAnalyzing
-                ? colorScheme.outline.withValues(alpha: 0.3)
-                : colorScheme.primary.withValues(alpha: 0.3),
-          ),
-          borderRadius: BorderRadius.circular(8),
-          color: _isAnalyzing
-              ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
-              : null,
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: _isAnalyzing ? colorScheme.outline : colorScheme.primary,
-              size: 24,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: _isAnalyzing
-                              ? colorScheme.outline
-                              : colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurface.withValues(alpha: 0.7),
-                        ),
-                  ),
-                ],
-              ),
-            ),
-            if (_isAnalyzing)
-              const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            else
-              Icon(
-                Icons.arrow_forward_ios,
-                color: colorScheme.primary.withValues(alpha: 0.5),
-                size: 16,
-              ),
-          ],
-        ),
-      ),
+  Widget _buildConfiguredAlgorithmButton(AlgorithmButtonConfig config) {
+    return AlgorithmButton(
+      title: config.title,
+      description: config.description,
+      icon: config.icon,
+      onPressed: config.effectiveOnPressed,
+      isExecuting: config.isExecuting,
+      isDestructive: config.isDestructive,
+      isSelected: config.isSelected,
+      executionProgress: config.executionProgress,
+      executionStatus: config.executionStatus,
     );
   }
 
@@ -342,35 +316,6 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
         tone: AppSnackBarTone.error,
       );
     }
-  }
-
-  Widget _buildConversionButton(
-    BuildContext context, {
-    required String label,
-    required String processingLabel,
-    required IconData icon,
-    required bool isProcessing,
-    required bool isDisabled,
-    required Future<void> Function() onPressed,
-  }) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: isDisabled
-            ? null
-            : () async {
-                await onPressed();
-              },
-        icon: isProcessing
-            ? const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : Icon(icon),
-        label: Text(isProcessing ? processingLabel : label),
-      ),
-    );
   }
 
   Future<void> _convertToPdaGeneral() {

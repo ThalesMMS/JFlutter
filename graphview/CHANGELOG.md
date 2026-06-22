@@ -2,6 +2,14 @@
 
 ## JFlutter Fork Releases (versions 1.5.0+)
 
+## 1.5.3 (2026-06-22)
+
+- **REMOVED**: Unused layout families outside the JFlutter app surface:
+    - Tree, radial, balloon, circle, tidier-tree, mindmap, force-directed, Barnes-Hut, and Eiglsperger layout implementations
+    - Layout-specific tests and legacy force-directed painter widget code
+- **RETAINED**: Core graph APIs, controller/widget/renderobject support, adaptive/animated/orthogonal/curved/arrow edge renderers, routing helpers, and Sugiyama layered layout support
+- **DOCUMENTED**: Updated [FORK_PATCHES.md](FORK_PATCHES.md) to reflect the restricted JFlutter-maintained surface
+
 ## 1.5.2 (2026-04-19)
 
 - **IMPROVED**: Enhanced deprecation warnings with clearer migration guidance

@@ -2,8 +2,8 @@
 //  automaton_repository.dart
 //  JFlutter
 //
-//  Declara contratos de repositório responsáveis por persistir autômatos,
-//  distribuir exemplos utilizados pela aplicação nas camadas de dados.
+//  Declara contratos de repositório responsáveis por persistir autômatos e
+//  mantém tipos compartilhados de metadados dos exemplos embarcados.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
@@ -34,15 +34,6 @@ abstract class AutomatonRepository {
 
   /// Validates an automaton
   Future<BoolResult> validateAutomaton(AutomatonEntity automaton);
-}
-
-/// Repository interface for examples
-abstract class ExamplesRepository {
-  /// Loads all available examples
-  Future<ListResult<ExampleEntity>> loadExamples();
-
-  /// Loads a specific example by name
-  Future<AutomatonResult> loadExample(String name);
 }
 
 /// Enhanced example entity with metadata for Examples v1

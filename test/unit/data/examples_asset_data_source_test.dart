@@ -144,21 +144,33 @@ void main() {
       expect(result.data, isNull);
     });
 
-    test('Validates PDA example structure', () {
-      final json = loadExample('apda_palindrome.json');
-      final metadata = metadataFor(
-        category: ExampleCategory.pda,
-        fileName: 'apda_palindrome.json',
-      );
+    test('Validates all registered PDA example structures', () {
+      const fixtures = [
+        ('apda_balanced_parentheses.json', 'APD - Parênteses Balanceados'),
+        ('apda_anbn.json', 'APD - a^n b^n'),
+        ('apda_palindrome.json', 'APD - Palíndromo'),
+      ];
 
-      final result = dataSource.convertJsonForTesting(
-        json,
-        metadata,
-        'APD - Palíndromo',
-      );
+      for (final (fileName, exampleName) in fixtures) {
+        final json = loadExample(fileName);
+        final metadata = metadataFor(
+          category: ExampleCategory.pda,
+          fileName: fileName,
+        );
 
-      expect(result.isSuccess, isTrue);
-      expect(result.data, isNull);
+        final result = dataSource.convertJsonForTesting(
+          json,
+          metadata,
+          exampleName,
+        );
+
+        expect(
+          result.isSuccess,
+          isTrue,
+          reason: 'Expected $fileName to validate as a PDA example.',
+        );
+        expect(result.data, isNull);
+      }
     });
 
     bool runPda(Map<String, dynamic> json, String input) {
@@ -351,6 +363,7 @@ void main() {
 
     test('Validates all registered TM example structures', () {
       const fixtures = [
+        ('tm_anbn.json', 'MT - a^n b^n'),
         ('tm_binary_to_unary.json', 'MT - Binário para unário'),
         ('tm_copy_string.json', 'MT - Cópia de string'),
         ('tm_increment.json', 'MT - Incremento binário'),

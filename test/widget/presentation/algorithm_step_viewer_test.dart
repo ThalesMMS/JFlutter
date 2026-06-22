@@ -2,8 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:jflutter/core/models/algorithm_step.dart';
+import 'package:jflutter/core/models/cyk_step.dart';
+import 'package:jflutter/core/models/nfa_to_dfa_step.dart';
+import 'package:jflutter/core/models/state.dart' as automata;
+import 'package:jflutter/core/models/typed_algorithm_step.dart';
+import 'package:jflutter/presentation/widgets/algorithm_step_renderer_registry.dart';
 import 'package:jflutter/presentation/widgets/algorithm_step_viewer.dart';
 import 'package:jflutter/presentation/widgets/step_navigation_controls.dart';
+import 'package:vector_math/vector_math_64.dart';
 
 class _TestCallbacks {
   int showDetailsCallCount = 0;
@@ -43,6 +49,7 @@ Future<void> _pumpStepViewer(
   required AlgorithmStep step,
   VoidCallback? onShowDetails,
   bool showExpandedDetails = false,
+  AlgorithmStepRendererRegistry? rendererRegistry,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
@@ -52,6 +59,7 @@ Future<void> _pumpStepViewer(
             step: step,
             onShowDetails: onShowDetails,
             showExpandedDetails: showExpandedDetails,
+            rendererRegistry: rendererRegistry,
           ),
         ),
       ),
@@ -296,6 +304,107 @@ void main() {
 
       expect(find.text('Step Data'), findsNothing);
       expect(find.byIcon(Icons.data_object), findsNothing);
+    });
+
+    testWidgets('uses matching typed renderer from registry', (tester) async {
+      var rendererCallCount = 0;
+      final payload = _nfaToDfaStep();
+      final step = AlgorithmStep(
+        id: 'step-1',
+        stepNumber: 0,
+        title: 'Test Step',
+        explanation: 'Test explanation',
+        type: AlgorithmType.nfaToDfa,
+        properties: {kNfaToDfaStepKey: payload},
+      );
+      final registry = AlgorithmStepRendererRegistry()
+        ..register<NFAToDFAStep>((context, step, payload) {
+          rendererCallCount++;
+          return const Text('Custom typed step renderer');
+        });
+
+      await _pumpStepViewer(
+        tester,
+        step: step,
+        rendererRegistry: registry,
+      );
+
+      expect(rendererCallCount, 1);
+      expect(find.text('Custom typed step renderer'), findsOneWidget);
+      expect(find.text('Nfa To Dfa Step'), findsNothing);
+    });
+
+    testWidgets('falls back to properties when registry has no renderer', (
+      tester,
+    ) async {
+      final step = AlgorithmStep(
+        id: 'step-1',
+        stepNumber: 0,
+        title: 'Test Step',
+        explanation: 'Test explanation',
+        type: AlgorithmType.nfaToDfa,
+        properties: {kNfaToDfaStepKey: _nfaToDfaStep()},
+      );
+
+      await _pumpStepViewer(
+        tester,
+        step: step,
+        rendererRegistry: AlgorithmStepRendererRegistry(),
+      );
+
+      expect(find.text('Step Data'), findsOneWidget);
+      expect(find.text('Nfa To Dfa Step'), findsOneWidget);
+    });
+
+    testWidgets('renders default typed adapter output when registered', (
+      tester,
+    ) async {
+      final step = AlgorithmStep(
+        id: 'step-1',
+        stepNumber: 0,
+        title: 'Test Step',
+        explanation: 'Test explanation',
+        type: AlgorithmType.nfaToDfa,
+        properties: {kNfaToDfaStepKey: _nfaToDfaStep()},
+      );
+
+      await _pumpStepViewer(
+        tester,
+        step: step,
+        rendererRegistry: AlgorithmStepRendererRegistry.withDefaults(),
+      );
+
+      expect(find.text('Typed Step Data'), findsOneWidget);
+      expect(find.text('Operation'), findsOneWidget);
+      expect(find.text('Epsilon Closure'), findsOneWidget);
+      expect(find.text('Nfa To Dfa Step'), findsNothing);
+    });
+
+    testWidgets('renders CYK typed adapter output when registered', (
+      tester,
+    ) async {
+      final cykStep = CYKStep.fillBaseCase(
+        id: 'cyk-step',
+        stepNumber: 0,
+        position: 0,
+        terminal: 'a',
+        derivingVariables: {'A'},
+      );
+      final step = cykStep.baseStep.copyWith(
+        properties: {kCykStepKey: cykStep},
+      );
+
+      await _pumpStepViewer(
+        tester,
+        step: step,
+        rendererRegistry: AlgorithmStepRendererRegistry.withDefaults(),
+      );
+
+      expect(find.text('CYK Step Data'), findsOneWidget);
+      expect(find.text('Fill Base Case'), findsOneWidget);
+      expect(find.text('Terminal'), findsOneWidget);
+      expect(find.text('a'), findsWidgets);
+      expect(find.text('Cyk Step'), findsNothing);
     });
 
     testWidgets('shows details button when callback is provided', (
@@ -695,4 +804,25 @@ void main() {
       );
     });
   });
+}
+
+automata.State _state(String id) {
+  return automata.State(id: id, label: id, position: Vector2.zero());
+}
+
+NFAToDFAStep _nfaToDfaStep() {
+  return NFAToDFAStep(
+    baseStep: AlgorithmStep(
+      id: 'typed-step',
+      stepNumber: 0,
+      title: 'Typed step',
+      explanation: 'Typed explanation',
+      type: AlgorithmType.nfaToDfa,
+    ),
+    stepType: NFAToDFAStepType.epsilonClosure,
+    currentStateSet: {_state('q0')},
+    epsilonClosure: {_state('q0'), _state('q1')},
+    isAcceptingState: false,
+    isNewState: true,
+  );
 }

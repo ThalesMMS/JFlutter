@@ -208,8 +208,10 @@ class AutomatonAlgorithmNotifier
         );
 
         // Initialize step provider with algorithm steps
-        final algorithmSteps =
-            conversionResult.steps.map((step) => step.baseStep).toList();
+        final algorithmSteps = conversionResult.steps
+            .map((step) =>
+                step.baseStep.copyWith(properties: step.toProperties()))
+            .toList();
 
         ref
             .read(algorithmStepProvider.notifier)
@@ -515,8 +517,10 @@ class AutomatonAlgorithmNotifier
         );
 
         // Initialize step provider with algorithm steps
-        final algorithmSteps =
-            minimizationResult.steps.map((step) => step.baseStep).toList();
+        final algorithmSteps = minimizationResult.steps
+            .map((step) =>
+                step.baseStep.copyWith(properties: step.toProperties()))
+            .toList();
 
         ref
             .read(algorithmStepProvider.notifier)
@@ -634,8 +638,10 @@ class AutomatonAlgorithmNotifier
         );
 
         // Initialize step provider with algorithm steps
-        final algorithmSteps =
-            conversionResult.steps.map((step) => step.baseStep).toList();
+        final algorithmSteps = conversionResult.steps
+            .map((step) =>
+                step.baseStep.copyWith(properties: step.toProperties()))
+            .toList();
 
         ref
             .read(algorithmStepProvider.notifier)

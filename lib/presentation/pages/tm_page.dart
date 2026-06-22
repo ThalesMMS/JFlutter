@@ -15,6 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/state.dart' as automaton_state;
 import '../../core/models/tm.dart';
 import '../../core/models/tm_transition.dart';
+import '../widgets/automaton_workspace_scaffold.dart';
 import '../providers/help_provider.dart';
 import '../providers/tm_editor_provider.dart';
 import '../widgets/context_aware_help_panel.dart';
@@ -22,13 +23,13 @@ import '../widgets/tm_canvas_graphview.dart';
 import '../widgets/tm_algorithm_panel.dart';
 import '../widgets/tm_simulation_panel.dart';
 import '../widgets/tm/tape_drawer.dart';
+import '../widgets/common/workspace_helpers.dart';
 import '../widgets/graphview_canvas_toolbar.dart';
 import '../widgets/automaton_canvas_tool.dart';
 import '../widgets/mobile_automaton_controls.dart';
 import '../../core/services/simulation_highlight_service.dart';
 import '../../features/canvas/graphview/graphview_highlight_channel.dart';
 import '../../features/canvas/graphview/graphview_tm_canvas_controller.dart';
-import '../widgets/tablet_layout_container.dart';
 
 /// Page for working with Turing Machines
 class TMPage extends ConsumerStatefulWidget {
@@ -166,53 +167,21 @@ class _TMPageState extends ConsumerState<TMPage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final screenSize = MediaQuery.of(context).size;
-    final isMobile = screenSize.width < 1024;
+    final tm = ref.watch(tmEditorProvider).tm;
 
     return ProviderScope(
       overrides: [
         canvasHighlightServiceProvider.overrideWithValue(_highlightService),
       ],
-      child: FocusTraversalGroup(
-        policy: ReadingOrderTraversalPolicy(),
-        child: Scaffold(
-          body: isMobile
-              ? _buildMobileLayout()
-              : screenSize.width < 1400
-                  ? _buildTabletLayout()
-                  : _buildDesktopLayout(),
-          floatingActionButton: !isMobile
-              ? FloatingActionButton(
-                  heroTag: 'tm_context_help_fab',
-                  onPressed: _showContextualHelp,
-                  tooltip: 'Context-Aware Help',
-                  child: const Icon(Icons.help_outline),
-                )
-              : null,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMobileLayout() {
-    final editorState = ref.watch(tmEditorProvider);
-    final tm = editorState.tm;
-
-    return SafeArea(
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: _buildCanvasWithToolbar(isMobile: true),
-            ),
-          ),
-          // Floating Tape panel
-          if (tm != null)
-            Positioned(
-              top: 16,
-              right: 16,
-              child: TMTapePanel(
+      child: AutomatonWorkspaceScaffold(
+        canvasWithToolbar: _buildCanvasWithToolbar,
+        algorithmPanel: const TMAlgorithmPanel(),
+        tabletAlgorithmPanel: const TMAlgorithmPanel(useExpanded: false),
+        simulationPanel: TMSimulationPanel(highlightService: _highlightService),
+        infoPanel: _buildInfoPanel(context),
+        mobileFloatingPanel: tm == null
+            ? null
+            : TMTapePanel(
                 tapeState: _currentTape,
                 tapeAlphabet: tm.tapeAlphabet,
                 onClear: () {
@@ -223,49 +192,13 @@ class _TMPageState extends ConsumerState<TMPage>
                   });
                 },
               ),
-            ),
-        ],
+        floatingActionButton: FloatingActionButton(
+          heroTag: 'tm_context_help_fab',
+          onPressed: _showContextualHelp,
+          tooltip: 'Context-Aware Help',
+          child: const Icon(Icons.help_outline),
+        ),
       ),
-    );
-  }
-
-  Widget _buildDesktopLayout() {
-    return Row(
-      children: [
-        // Left panel - TM Canvas
-        Expanded(
-          flex: 2,
-          child: Container(
-            margin: const EdgeInsets.all(8),
-            child: _buildCanvasWithToolbar(isMobile: false),
-          ),
-        ),
-        const SizedBox(width: 16),
-        // Center panel - Simulation
-        Expanded(
-          flex: 1,
-          child: Container(
-            margin: const EdgeInsets.all(8),
-            child: TMSimulationPanel(highlightService: _highlightService),
-          ),
-        ),
-        const SizedBox(width: 16),
-        // Right panel - Algorithms
-        Expanded(
-          flex: 1,
-          child: Container(
-            margin: const EdgeInsets.all(8),
-            child: const TMAlgorithmPanel(),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Flexible(
-          child: Container(
-            margin: const EdgeInsets.all(8),
-            child: _buildInfoPanel(context),
-          ),
-        ),
-      ],
     );
   }
 
@@ -396,26 +329,12 @@ class _TMPageState extends ConsumerState<TMPage>
       messageParts.add('No machine defined');
     } else {
       messageParts.add(
-        '${_formatCount('state', 'states', stateCount)} · '
-        '${_formatCount('transition', 'transitions', transitionCount)}',
+        '${formatCount('state', 'states', stateCount)} · '
+        '${formatCount('transition', 'transitions', transitionCount)}',
       );
     }
 
     return messageParts.join(' · ');
-  }
-
-  String _formatCount(String singular, String plural, int count) {
-    final label = count == 1 ? singular : plural;
-    return '$count $label';
-  }
-
-  Widget _buildTabletLayout() {
-    return TabletLayoutContainer(
-      canvas: _buildCanvasWithToolbar(isMobile: false),
-      algorithmPanel: const TMAlgorithmPanel(useExpanded: false),
-      simulationPanel: TMSimulationPanel(highlightService: _highlightService),
-      infoPanel: _buildInfoPanel(context),
-    );
   }
 
   void _handleTMUpdate(TM tm) {

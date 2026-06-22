@@ -15,7 +15,10 @@ import 'algorithm_step.dart';
 import 'state.dart';
 import 'transition.dart';
 
-/// Represents a single step in Regex to NFA conversion using Thompson's construction
+/// Represents a single step in Regex to NFA conversion using Thompson's construction.
+///
+/// TODO(#143): Keep for algorithm-internal construction. UI consumers should
+/// use [toProperties] through generic [AlgorithmStep.properties].
 class RegexToNFAStep {
   /// Base algorithm step information
   final AlgorithmStep baseStep;
@@ -457,6 +460,31 @@ class RegexToNFAStep {
     );
   }
 
+  /// Converts this specialized step to generic, JSON-friendly step properties.
+  Map<String, dynamic> toProperties() {
+    final properties = <String, dynamic>{
+      'stepType': stepType.displayName,
+      'combinesFragments': combinesFragments,
+      'isFinalNFA': isFinalNFA,
+    };
+
+    _putStateIds(properties, 'createdStateIds', createdStates);
+    _putTransitionIds(properties, 'createdTransitionIds', createdTransitions);
+    _putIfNotNull(properties, 'fragmentStartStateId', fragmentStartState?.id);
+    _putIfNotNull(properties, 'fragmentAcceptStateId', fragmentAcceptState?.id);
+    _putIfNotNull(properties, 'regexFragment', regexFragment);
+    _putIfNotNull(properties, 'regexPosition', regexPosition);
+    _putIfNotNull(properties, 'processedSymbol', processedSymbol);
+    _putIfNotNull(properties, 'stackSize', stackSize);
+    _putIfNotNull(properties, 'firstFragmentLabel', firstFragmentLabel);
+    _putIfNotNull(properties, 'secondFragmentLabel', secondFragmentLabel);
+    _putIfNotNull(properties, 'modifiedFragmentLabel', modifiedFragmentLabel);
+    _putIfNotNull(properties, 'totalStates', totalStates);
+    _putIfNotNull(properties, 'totalTransitions', totalTransitions);
+
+    return Map<String, dynamic>.unmodifiable(properties);
+  }
+
   static String _stateLabels(Set<State> states) {
     final labels = states.map((state) => state.label).toList()..sort();
     return labels.join(', ');
@@ -473,6 +501,44 @@ class RegexToNFAStep {
         return a.label.compareTo(b.label);
       });
     return sorted.first;
+  }
+
+  static void _putStateIds(
+    Map<String, dynamic> properties,
+    String key,
+    Set<State>? states,
+  ) {
+    final ids = states
+        ?.map((state) => state.id.trim())
+        .where((id) => id.isNotEmpty)
+        .toList(growable: false);
+    if (ids != null && ids.isNotEmpty) {
+      properties[key] = ids;
+    }
+  }
+
+  static void _putTransitionIds(
+    Map<String, dynamic> properties,
+    String key,
+    Set<Transition>? transitions,
+  ) {
+    final ids = transitions
+        ?.map((transition) => transition.id.trim())
+        .where((id) => id.isNotEmpty)
+        .toList(growable: false);
+    if (ids != null && ids.isNotEmpty) {
+      properties[key] = ids;
+    }
+  }
+
+  static void _putIfNotNull(
+    Map<String, dynamic> properties,
+    String key,
+    Object? value,
+  ) {
+    if (value != null) {
+      properties[key] = value;
+    }
   }
 }
 

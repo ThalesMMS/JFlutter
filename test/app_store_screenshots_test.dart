@@ -11,8 +11,7 @@ import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/fsa_transition.dart';
 import 'package:jflutter/core/models/grammar.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
-import 'package:jflutter/data/examples/pda_examples.dart';
-import 'package:jflutter/data/examples/tm_examples.dart';
+import 'package:jflutter/data/data_sources/examples_asset_data_source.dart';
 import 'package:jflutter/injection/dependency_injection.dart';
 import 'package:jflutter/presentation/providers/automaton_simulation_provider.dart';
 import 'package:jflutter/presentation/providers/automaton_state_provider.dart';
@@ -360,7 +359,10 @@ Future<void> _preparePda(
   WidgetTester tester,
   ProviderContainer container,
 ) async {
-  container.read(pdaEditorProvider.notifier).setPda(PDAExamples.aNbN());
+  final example =
+      await ExamplesAssetDataSource().loadTypedPdaExample('APD - a^n b^n');
+  expect(example.isSuccess, isTrue);
+  container.read(pdaEditorProvider.notifier).setPda(example.data!.payload);
   container.read(homeNavigationProvider.notifier).setIndex(
         HomeNavigationNotifier.pdaIndex,
       );
@@ -371,7 +373,11 @@ Future<void> _prepareTm(
   WidgetTester tester,
   ProviderContainer container,
 ) async {
-  container.read(tmEditorProvider.notifier).setTm(TMExamples.binaryIncrement());
+  final example = await ExamplesAssetDataSource().loadTypedTmExample(
+    'MT - Incremento binário',
+  );
+  expect(example.isSuccess, isTrue);
+  container.read(tmEditorProvider.notifier).setTm(example.data!.payload);
   container
       .read(homeNavigationProvider.notifier)
       .setIndex(HomeNavigationNotifier.tmIndex);

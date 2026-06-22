@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:graphview/GraphView.dart';
+import 'package:graphview/graphview_jflutter.dart';
 import 'package:jflutter/features/canvas/graphview/jflutter_adaptive_edge_renderer.dart';
 
 class _InspectableJFlutterAdaptiveEdgeRenderer

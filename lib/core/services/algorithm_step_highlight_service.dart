@@ -12,12 +12,8 @@
 //
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../models/dfa_minimization_step.dart';
-import '../models/nfa_to_dfa_step.dart';
-import '../models/regex_to_nfa_step.dart';
 import '../models/simulation_highlight.dart';
-import '../models/state.dart';
-import '../models/transition.dart';
+import 'algorithm_step_highlight_extractor.dart';
 import 'highlight_channel.dart';
 
 /// Provides access to the algorithm step highlight service associated with the
@@ -133,99 +129,6 @@ class AlgorithmStepHighlightService {
   SimulationHighlight _extractHighlightFromMetadata(
     Map<String, dynamic> metadata,
   ) {
-    final stateIds = <String>{};
-    final transitionIds = <String>{};
-
-    // Handle NFAToDFAStep
-    if (metadata.containsKey('nfaToDfaStep')) {
-      final step = metadata['nfaToDfaStep'];
-      if (step is NFAToDFAStep) {
-        _addStateIdsFromSet(stateIds, step.currentStateSet);
-        if (step.epsilonClosure != null) {
-          _addStateIdsFromSet(stateIds, step.epsilonClosure!);
-        }
-        if (step.reachableStates != null) {
-          _addStateIdsFromSet(stateIds, step.reachableStates!);
-        }
-        if (step.nextStateSet != null) {
-          _addStateIdsFromSet(stateIds, step.nextStateSet!);
-        }
-        if (step.dfaStateId != null) {
-          stateIds.add(step.dfaStateId!);
-        }
-      }
-    }
-
-    // Handle DFAMinimizationStep
-    if (metadata.containsKey('dfaMinimizationStep')) {
-      final step = metadata['dfaMinimizationStep'];
-      if (step is DFAMinimizationStep) {
-        if (step.processingSet != null) {
-          _addStateIdsFromSet(stateIds, step.processingSet!);
-        }
-        if (step.splitSet != null) {
-          _addStateIdsFromSet(stateIds, step.splitSet!);
-        }
-        if (step.splitIntersection != null) {
-          _addStateIdsFromSet(stateIds, step.splitIntersection!);
-        }
-        if (step.splitDifference != null) {
-          _addStateIdsFromSet(stateIds, step.splitDifference!);
-        }
-        if (step.equivalenceClassStates != null) {
-          _addStateIdsFromSet(stateIds, step.equivalenceClassStates!);
-        }
-        if (step.equivalenceClassId != null) {
-          stateIds.add(step.equivalenceClassId!);
-        }
-      }
-    }
-
-    // Handle RegexToNFAStep
-    if (metadata.containsKey('regexToNfaStep')) {
-      final step = metadata['regexToNfaStep'];
-      if (step is RegexToNFAStep) {
-        if (step.createdStates != null) {
-          _addStateIdsFromSet(stateIds, step.createdStates!);
-        }
-        if (step.createdTransitions != null) {
-          _addTransitionIdsFromSet(transitionIds, step.createdTransitions!);
-        }
-        if (step.fragmentStartState != null) {
-          stateIds.add(step.fragmentStartState!.id);
-        }
-        if (step.fragmentAcceptState != null) {
-          stateIds.add(step.fragmentAcceptState!.id);
-        }
-      }
-    }
-
-    return SimulationHighlight(
-      stateIds: Set.unmodifiable(stateIds),
-      transitionIds: Set.unmodifiable(transitionIds),
-    );
-  }
-
-  /// Helper to add state IDs from a set of States
-  void _addStateIdsFromSet(Set<String> targetSet, Set<State> states) {
-    for (final state in states) {
-      final trimmed = state.id.trim();
-      if (trimmed.isNotEmpty) {
-        targetSet.add(trimmed);
-      }
-    }
-  }
-
-  /// Helper to add transition IDs from a set of Transitions
-  void _addTransitionIdsFromSet(
-    Set<String> targetSet,
-    Set<Transition> transitions,
-  ) {
-    for (final transition in transitions) {
-      final trimmed = transition.id.trim();
-      if (trimmed.isNotEmpty) {
-        targetSet.add(trimmed);
-      }
-    }
+    return extractAlgorithmStepHighlight(metadata);
   }
 }
